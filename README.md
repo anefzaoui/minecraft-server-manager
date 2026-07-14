@@ -350,6 +350,53 @@ The field catalog in `src/config/` is the single source of truth for server sett
 | `npm test`           | unit tests (`node:test`) — runs on a clean clone        |
 | `npm run test:smoke` | live QA sweep against a running panel (needs Docker)    |
 
+## Status & areas that need work
+
+This is an early public release (`v0.1.0`). The core lifecycle is solid, but several features are
+deliberately "good enough for now" — honest contribution targets rather than finished work. If you
+want to help, start here.
+
+- **Custom RTP (random teleport)** — the panel's own random-teleport picks a point in a ring around
+  the player and lands them on the highest solid block via `spreadplayers`. It retries a few times to
+  dodge ocean/void, but there's **no real safety scan** — you can still land on tree canopy, a cave
+  roof, or an exposed cliff. It's **online-only**, runs **one search at a time per server** (a
+  `/locate`/`spreadplayers` sweep briefly stalls the server's main thread), seeds distance from the
+  player's **last-saved** position (can be stale), and its point distribution clusters toward the
+  centre rather than being area-uniform.
+
+- **Structure finding** — nearest-structure teleport uses a bundled vanilla list plus a best-effort
+  scan of the server's structure tags for modded content. Each structure's home dimension is a static
+  lookup that **defaults to the Overworld**, so a modded structure that only generates elsewhere can
+  fail to locate. "Surprise me" just searches from a random ring point, not a genuinely random
+  structure. Online-only, same main-thread stall.
+
+- **Biome finding** — modded biomes are only discovered on **Forge/NeoForge** (via their registry-tag
+  commands). On Fabric/Quilt/Paper the picker falls back to the bundled **vanilla** biome list, so
+  modded biomes won't appear, and cross-dimension biome mapping is partly heuristic.
+
+- **Giving / taking items** — give and clear go over RCON and are **online-only**. `give` hands over a
+  **plain stack — no enchantments, custom NBT/components, names, or contents** (you can't give an
+  enchanted or renamed item from the UI yet). Per-slot god-mode editing _can_ preserve component data
+  offline (direct `.dat` rewrite), but a **live count change resets custom components**, and offline
+  edits are refused while the player is online.
+
+- **Item listing** — the JEI-style registry is built offline from each server's own jar lang files, so
+  it works for any loader/pack, but it's **`en_us` only**, covers only `item.*`/`block.*` names, and so
+  **misses datapack-added items, entities, and anything without a lang entry**. It's names + ids only —
+  **no icons/textures, NBT variants, or recipes** (not a full JEI). Listing and giving aren't fully
+  wired together: you can find an item but only give its plain form.
+
+- **Live map (BlueMap)** — one-click install works, but it only takes effect on the **next restart**,
+  only manages `accept-download: true` (no in-panel render/marker/storage config), supports a **fixed
+  set of server types**, and the map's web server is bound on all host interfaces — reach it **only**
+  through the panel's authenticated proxy and **don't open that port in your firewall** (binding it
+  loopback-only is on the list).
+
+- **General** — much of the god-mode surface is **online/RCON-first** with thinner offline paths;
+  several version-specific assumptions (1.20.5 item components, 1.21.5 `equipment` layout) are
+  confirmed only against a handful of versions and may drift; and there's no automated end-to-end
+  coverage of these live-server flows yet beyond the manual `npm run test:smoke` sweep.
+
 ## Contributing
 
 Issues and PRs welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) first — it covers the layer
