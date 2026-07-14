@@ -1,12 +1,14 @@
 name: Release
 
-# Publish a GitHub Release whenever the version in package.json changes on main.
-# Our "Release x.y.z" commit bumps package.json, so pushing it cuts a tagged,
-# changelog-noted GitHub Release automatically — watchers get notified, zero manual steps.
+# Publish a GitHub Release for each new package.json version. Runs on every push to
+# main but is idempotent — it only creates a release when one doesn't already exist
+# for the current version, so each version is released exactly once (and pushing an
+# existing version is a no-op). Notes come straight from CHANGELOG.md. Can also be
+# run manually from the Actions tab.
 on:
   push:
     branches: [main]
-    paths: ['package.json']
+  workflow_dispatch:
 
 permissions:
   contents: write # create tags + releases

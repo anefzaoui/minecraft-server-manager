@@ -5,21 +5,27 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
-## [0.6.1] - 2026-07-15
+## [0.6.2] - 2026-07-15
+
+### Added
+
+- **"Why this over Pterodactyl / Crafty Controller / AMP?"** comparison section in the README.
+- **Automated GitHub Releases.** A workflow publishes a tagged Release — with notes pulled straight
+  from this changelog — for each new `package.json` version pushed to `main`. It runs on every push
+  but is idempotent, so a version is released exactly once; it can also be run from the Actions tab.
+
+### Changed
+
+- The quick start now uses the real clone URL, and the in-app footer shows the live `package.json`
+  version instead of a hardcoded "v0.1 preview".
+
+## [0.6.1] - 2026-07-14
 
 ### Added
 
 - **Screenshots in the README.** A hero shot plus a 14-image gallery covering the dashboard, create
   wizard, server overview, admin chat, live console, mods, worlds, settings, backups, history, custom
   chat commands, schedules, storage, and blueprints. Images live under `docs/screenshots/`.
-- **"Why this over Pterodactyl / Crafty Controller / AMP?"** comparison section in the README.
-- **Automated GitHub Releases.** A workflow tags and publishes a Release — with notes pulled straight
-  from this changelog — whenever `package.json`'s version changes on `main`.
-
-### Changed
-
-- The quick start now uses the real clone URL, and the in-app footer shows the live `package.json`
-  version instead of a hardcoded "v0.1 preview".
 
 ## [0.6.0] - 2026-07-14
 
