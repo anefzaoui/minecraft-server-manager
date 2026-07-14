@@ -166,6 +166,41 @@ async function api(url, method = 'GET', body) {
 window.CD.api = api;
 
 // ---- Copy-to-clipboard: [data-copy="text"] or [data-copy-from="#selector"] ----
+// Robust across contexts: the async Clipboard API only works on HTTPS/localhost,
+// so over plain HTTP (LAN/IP) we fall back to execCommand, then to a prompt the
+// user can copy from by hand — which also covers a <select> source that can't be
+// selected in place. Returns true only when the copy landed programmatically.
+async function copyText(value) {
+  const text = String(value ?? '').trim();
+  if (!text) return false;
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      /* fall through to the legacy path */
+    }
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    if (ok) return true;
+  } catch {
+    /* fall through to the manual prompt */
+  }
+  // Last resort — the value is at least selectable here, unlike the <select>.
+  window.prompt('Copy this (Ctrl/Cmd+C):', text);
+  return false;
+}
+window.CD.copyText = copyText;
+
 document.addEventListener('click', async (e) => {
   const el = e.target.closest('[data-copy], [data-copy-from]');
   if (!el) return;
@@ -175,12 +210,7 @@ document.addEventListener('click', async (e) => {
     value = src ? (src.value ?? src.textContent) : '';
   }
   if (!value) value = el.value || el.textContent;
-  try {
-    await navigator.clipboard.writeText(String(value).trim());
-    toast('Copied to clipboard.');
-  } catch {
-    toast('Copy failed — select and copy manually.', { kind: 'error' });
-  }
+  if (await copyText(value)) toast('Copied to clipboard.');
 });
 
 // ---- Boot-phase hydration: keep status-detail chips live on any page ----

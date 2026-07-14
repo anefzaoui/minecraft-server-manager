@@ -108,12 +108,7 @@ async function fetchText(serverId, crash) {
 }
 
 async function copyToClipboard(text, message) {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast(message);
-  } catch {
-    toast('Clipboard unavailable — copy from the viewer instead.', { kind: 'error' });
-  }
+  if (await window.CD.copyText(text)) toast(message);
 }
 
 /** First stacktrace block: the throwable line plus its at/Caused by frames. */

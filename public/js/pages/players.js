@@ -129,10 +129,9 @@ function init(root) {
     else if (act.dataset.act === 'op-level') opLevelModal(name);
     else if (act.dataset.act === 'ban-reason') banModal(name);
     else if (act.dataset.act === 'copy-uuid') {
-      navigator.clipboard
-        .writeText(act.dataset.uuid)
-        .then(() => toast('UUID copied'))
-        .catch(() => toast('Could not copy', { kind: 'error' }));
+      window.CD.copyText(act.dataset.uuid).then((ok) => {
+        if (ok) toast('UUID copied');
+      });
     } else if (act.dataset.act === 'pardon-ip') {
       const ip = act.dataset.ip;
       confirmDialog({ title: `Unban ${ip}?`, confirmLabel: 'Unban' }).then(async (ok) => {

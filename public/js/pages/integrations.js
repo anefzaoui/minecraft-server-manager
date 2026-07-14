@@ -114,12 +114,7 @@ function init() {
 }
 
 async function copy(text, message) {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast(message);
-  } catch {
-    toast('Clipboard blocked by the browser — copy manually.', { kind: 'error' });
-  }
+  if (await window.CD.copyText(text)) toast(message);
 }
 
 async function api(url, method, body) {
