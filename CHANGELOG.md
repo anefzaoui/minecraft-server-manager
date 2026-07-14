@@ -5,6 +5,16 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.5.1] - 2026-07-14
+
+### Fixed
+
+- **Copy buttons now work over plain HTTP (LAN/IP).** The browser's async Clipboard API is only
+  available on HTTPS/localhost, so "Copy address" — and the copy-UUID, crash-trace, and
+  integration-link buttons — failed with _"Copy failed — select and copy manually"_, and that
+  fallback pointed at a `<select>` you couldn't select. Copy now falls back to `execCommand`, and if
+  even that is blocked, to a prompt you can copy the value out of by hand.
+
 ## [0.5.0] - 2026-07-14
 
 ### Added
