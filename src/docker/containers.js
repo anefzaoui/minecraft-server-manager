@@ -4,6 +4,7 @@
 // Container lifecycle for managed Minecraft servers. All containers are
 // labeled msm.id=<serverId> and named msm-<serverId>.
 
+const path = require('node:path');
 const { getDocker } = require('./connect');
 
 const LABEL = 'msm.id';
@@ -185,6 +186,38 @@ async function execCapture(serverId, cmd, { timeoutMs = 15000 } = {}) {
   });
 }
 
+/**
+ * Delete a server's data directory using a throwaway root container.
+ *
+ * The itzg image writes world/mod files as its own UID (default 1000). When the
+ * panel process runs as a different host user it can't remove them — `rm` fails
+ * with EACCES. Root inside a container can delete files of any UID, so we mount
+ * the PARENT directory and remove the target by name. `Cmd: []` is required so
+ * the image's default CMD isn't appended as extra arguments to our entrypoint.
+ */
+async function removeDataDir(hostDir, image) {
+  const docker = getDocker();
+  const parent = path.dirname(hostDir);
+  const base = path.basename(hostDir);
+  const container = await docker.createContainer({
+    Image: image,
+    Entrypoint: ['rm', '-rf', `/work/${base}`],
+    Cmd: [],
+    User: '0:0',
+    Labels: { 'msm.managed': 'true', 'msm.role': 'cleanup' },
+    HostConfig: { Binds: [`${parent}:/work`], AutoRemove: false, NetworkMode: 'none' },
+  });
+  try {
+    await container.start();
+    const res = await container.wait(); // rm exits 0 on success
+    if (res && res.StatusCode !== 0) {
+      throw new Error(`cleanup container exited ${res.StatusCode} while removing ${base}`);
+    }
+  } finally {
+    await container.remove({ force: true }).catch(() => {});
+  }
+}
+
 module.exports = {
   LABEL,
   containerName,
@@ -195,5 +228,6 @@ module.exports = {
   stopContainer,
   killContainer,
   removeContainer,
+  removeDataDir,
   execCapture,
 };

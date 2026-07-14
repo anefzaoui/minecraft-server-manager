@@ -9,7 +9,11 @@ const multer = require('multer');
  */
 function friendlyError(err) {
   const msg = err.message || 'Unexpected error';
-  if (err.code === 'ENOENT' || /connect ENOENT|EACCES.*docker/i.test(msg)) {
+  // Docker daemon connection failures are socket/pipe *connect* errors, or name
+  // the docker socket directly. Do NOT match a bare "docker" substring — it also
+  // appears in data-dir paths like /home/docker/…, which would mislabel an
+  // ordinary filesystem EACCES (e.g. deleting container-owned files) as this.
+  if (/connect (ECONNREFUSED|ENOENT|EACCES|ETIMEDOUT)\b/i.test(msg) || /docker\.sock|docker_engine/i.test(msg)) {
     return 'Docker is not reachable. Is Docker running?';
   }
   if (/port is already allocated/i.test(msg)) return 'That port is already taken by another container.';

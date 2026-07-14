@@ -412,7 +412,19 @@ async function deleteServer(id, { actor = 'system', keepWorld = false } = {}) {
   const dir = dataPath('servers', id);
   if (!keepWorld && fs.existsSync(dir)) {
     freedBytes = dirSize(dir);
-    fs.rmSync(dir, { recursive: true, force: true });
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+    } catch (err) {
+      // The itzg container writes files as its own UID (default 1000). When the
+      // panel runs as a different host user it can't delete them (EACCES/EPERM);
+      // fall back to a root container that removes the directory for us.
+      if (err.code === 'EACCES' || err.code === 'EPERM') {
+        await containers.removeDataDir(dir, resolveImage(server));
+        fs.rmSync(dir, { recursive: true, force: true }); // no-op if the container cleared it
+      } else {
+        throw err;
+      }
+    }
   }
 
   // Full cleanup cascade — without it schedules keep firing, backups pile up,
