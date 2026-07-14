@@ -214,8 +214,15 @@ serverWorlds.post(
 serverWorlds.post(
   '/reset',
   asyncHandler(async (req, res, next) => {
-    const { keepSeed } = z.object({ keepSeed: z.coerce.boolean().default(false) }).parse(req.body);
-    res.json({ ok: true, ...(await worlds.resetWorld(req.params.id, { keepSeed, actor: actorOf(req) })) });
+    const opts = z
+      .object({
+        seedMode: z.enum(['keep', 'random', 'custom']).default('random'),
+        seed: z.string().trim().max(200).optional(),
+        levelType: z.enum(['DEFAULT', 'FLAT', 'LARGEBIOMES', 'AMPLIFIED']).optional(),
+        backup: z.coerce.boolean().default(true),
+      })
+      .parse(req.body);
+    res.json({ ok: true, ...(await worlds.resetWorld(req.params.id, { ...opts, actor: actorOf(req) })) });
   })
 );
 

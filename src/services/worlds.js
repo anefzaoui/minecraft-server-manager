@@ -607,58 +607,91 @@ async function activateWorld(serverId, worldName, { actor = 'system' } = {}) {
   return { active: worldName, changed: true };
 }
 
+const LEVEL_TYPES = new Set(['DEFAULT', 'FLAT', 'LARGEBIOMES', 'AMPLIFIED']);
+
 /**
- * Reset the active world: auto-backup, delete its dirs, and either keep the
- * seed (server.properties level-seed, falling back to level.dat) or clear it
- * for a fresh random one. Server must be stopped.
+ * Reset (re-roll) the active world: optional auto-backup, delete its dirs, and
+ * regenerate on next start with full control over the seed and world type.
+ *   seedMode: 'keep'   → reuse the current seed (server.properties → level.dat)
+ *             'random' → clear the seed for a fresh random world (default)
+ *             'custom' → use the provided seed (numbers or text both work)
+ *   levelType: '' keeps the current type, else DEFAULT/FLAT/LARGEBIOMES/AMPLIFIED
+ *   backup:   take a safety backup first (default true)
+ * Server must be stopped.
  */
-async function resetWorld(serverId, { keepSeed = false, actor = 'system' } = {}) {
+async function resetWorld(
+  serverId,
+  { seedMode = 'random', seed = '', levelType = '', backup = true, actor = 'system' } = {}
+) {
   const server = mustServer(serverId);
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before resetting the world');
   const level = activeLevelName(server);
   const dims = serverWorldDims(serverId, level);
   if (!fs.existsSync(dims[0])) throw httpError(404, `World "${level}" does not exist yet — nothing to reset`);
 
-  let seed = null;
-  if (keepSeed) {
-    seed = readProps(serverId).get('level-seed') || null;
-    if (!seed) seed = readLevelSeed(path.join(dims[0], 'level.dat'));
+  // Resolve the seed to apply (null → cleared → Minecraft picks a random one).
+  let newSeed = null;
+  if (seedMode === 'keep') {
+    newSeed = readProps(serverId).get('level-seed') || readLevelSeed(path.join(dims[0], 'level.dat')) || null;
+  } else if (seedMode === 'custom') {
+    newSeed = String(seed || '').trim() || null;
   }
+  const applyType = LEVEL_TYPES.has(levelType) ? levelType : '';
 
-  const { createBackup } = require('./backups');
-  await createBackup(serverId, { reason: 'manual', actor, note: `Safety backup before resetting world "${level}"` });
+  if (backup) {
+    const { createBackup } = require('./backups');
+    await createBackup(serverId, { reason: 'manual', actor, note: `Safety backup before resetting world "${level}"` });
+  }
 
   const freedBytes = await dirsSize(dims);
   for (const dim of dims) await fsp.rm(dim, { recursive: true, force: true });
 
-  // Persist the seed decision in both server.properties and the SEED env var
-  // (the itzg image applies SEED to level-seed on start).
+  // Persist the seed in server.properties + the SEED env var (itzg applies SEED
+  // to level-seed on start); world type rides on the LEVEL_TYPE env the same way.
   const env = { ...server.env };
-  if (keepSeed && seed) {
-    setProp(serverId, 'level-seed', String(seed));
-    env.SEED = String(seed);
+  if (newSeed) {
+    setProp(serverId, 'level-seed', String(newSeed));
+    env.SEED = String(newSeed);
   } else {
     setProp(serverId, 'level-seed', '');
     delete env.SEED;
   }
+  if (applyType) env.LEVEL_TYPE = applyType;
   if (JSON.stringify(env) !== JSON.stringify(server.env)) {
     require('./servers').updateServer(serverId, { env }, { actor });
   }
 
-  const seedNote = keepSeed
-    ? seed
-      ? `keeping seed ${seed}`
-      : 'seed could not be read — a new random seed will be used'
-    : 'with a new random seed';
+  const seedNote =
+    seedMode === 'keep'
+      ? newSeed
+        ? `keeping seed ${newSeed}`
+        : 'seed could not be read — a new random seed will be used'
+      : newSeed
+        ? `with seed ${newSeed}`
+        : 'with a new random seed';
   recordEvent({
     serverId,
     actor,
     type: 'world-reset',
-    summary: `World "${level}" reset ${seedNote} (${humanBytes(freedBytes)} cleared)`,
-    details: { level, keepSeed, seed: seed ? String(seed) : null, freedBytes },
+    summary: `World "${level}" reset ${seedNote}${applyType ? `, type ${applyType}` : ''} (${humanBytes(freedBytes)} cleared)`,
+    details: {
+      level,
+      seedMode,
+      seed: newSeed ? String(newSeed) : null,
+      levelType: applyType || null,
+      backup,
+      freedBytes,
+    },
   });
   indexer.scan().catch(() => {});
-  return { level, keptSeed: keepSeed && seed ? String(seed) : null, freedBytes };
+  return {
+    level,
+    seedMode,
+    keptSeed: seedMode === 'keep' && newSeed ? String(newSeed) : null,
+    seed: newSeed ? String(newSeed) : null,
+    levelType: applyType || null,
+    freedBytes,
+  };
 }
 
 /** Delete a non-active world from a server. Returns freed bytes. */

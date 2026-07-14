@@ -200,18 +200,44 @@ function init(serverId, serverName, serverStatus) {
     modal.body.querySelector('[data-r-name]').focus();
   }
 
-  // ---- Reset (active world) ----
+  // ---- Reset / re-roll (active world) ----
   function resetModal(world, size) {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
-      <p>Deletes the world "${escapeHtml(world)}" and all its dimension dirs so the server generates a fresh one on next start. A safety backup is taken automatically first.</p>
-      <div class="rounded-md border border-line bg-raised p-2.5 text-xs text-ink-soft">${fmtBytes(size)} will be cleared. The server must be stopped.</div>
-      <label class="msm-toggle flex items-center gap-2">
-        <input type="checkbox" data-keep-seed checked>
-        <span></span>
-        <span class="text-sm">Keep the current seed (read from server.properties or level.dat)</span>
+      <p>Deletes the world "${escapeHtml(world)}" and all its dimension dirs, then the server generates a fresh one on next start. The server must be stopped.</p>
+      <div class="rounded-md border border-line bg-raised p-2.5 text-xs text-ink-soft">${fmtBytes(size)} will be cleared.</div>
+      <div>
+        <label class="label" for="rw-seedmode">Seed</label>
+        <select class="input" id="rw-seedmode" data-label="Seed">
+          <option value="random" selected>New random seed (re-roll)</option>
+          <option value="keep">Keep the current seed</option>
+          <option value="custom">Custom seed…</option>
+        </select>
+      </div>
+      <div class="hidden" id="rw-customwrap">
+        <label class="label" for="rw-seed">Custom seed</label>
+        <input class="input font-mono" id="rw-seed" placeholder="e.g. 12345 or any text" autocomplete="off">
+        <p class="help">Numbers or text both work — Minecraft hashes non-numeric seeds.</p>
+      </div>
+      <div>
+        <label class="label" for="rw-leveltype">World type</label>
+        <select class="input" id="rw-leveltype" data-label="World type">
+          <option value="" selected>Keep current</option>
+          <option value="DEFAULT">Default</option>
+          <option value="FLAT">Superflat</option>
+          <option value="LARGEBIOMES">Large biomes</option>
+          <option value="AMPLIFIED">Amplified</option>
+        </select>
+        <p class="help">More generation knobs (generator settings, structures, nether…) live in Settings → World.</p>
+      </div>
+      <label class="flex cursor-pointer items-center gap-2">
+        <span class="msm-toggle"><input type="checkbox" id="rw-backup" checked><span></span></span>
+        <span>Take a safety backup first</span>
       </label>`;
+    const seedMode = content.querySelector('#rw-seedmode');
+    const customWrap = content.querySelector('#rw-customwrap');
+    seedMode.addEventListener('change', () => customWrap.classList.toggle('hidden', seedMode.value !== 'custom'));
     openModal({
       title: `Reset world "${world}"?`,
       content,
@@ -222,13 +248,28 @@ function init(serverId, serverName, serverStatus) {
           kind: 'danger',
           busyLabel: 'Resetting…',
           onClick: async () => {
-            const keepSeed = content.querySelector('[data-keep-seed]').checked;
-            const res = await postJSON(`${base}/reset`, { keepSeed });
+            const mode = seedMode.value;
+            const seed = content.querySelector('#rw-seed').value.trim();
+            if (mode === 'custom' && !seed) {
+              toast('Enter a custom seed, or pick another seed option.', { kind: 'error' });
+              return false;
+            }
+            const levelType = content.querySelector('#rw-leveltype').value;
+            const res = await postJSON(`${base}/reset`, {
+              seedMode: mode,
+              seed,
+              levelType: levelType || undefined,
+              backup: content.querySelector('#rw-backup').checked,
+            });
             if (!res) return false;
+            const what =
+              res.seedMode === 'keep' && res.keptSeed
+                ? `seed ${res.keptSeed} kept`
+                : res.seed
+                  ? `custom seed ${res.seed}`
+                  : 'a new random seed';
             toast(
-              res.keptSeed
-                ? `World reset — seed ${res.keptSeed} kept (${fmtBytes(res.freedBytes)} cleared).`
-                : `World reset with a new random seed (${fmtBytes(res.freedBytes)} cleared).`
+              `World reset with ${what}${res.levelType ? `, type ${res.levelType}` : ''} (${fmtBytes(res.freedBytes)} cleared).`
             );
             reload();
           },
