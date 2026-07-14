@@ -14,6 +14,12 @@ const GAMERULES = {
   doDaylightCycle: 'do_daylight_cycle',
   doWeatherCycle: 'do_weather_cycle',
   mobGriefing: 'mob_griefing',
+  doMobSpawning: 'do_mob_spawning',
+  doFireTick: 'do_fire_tick',
+  fallDamage: 'fall_damage',
+  naturalRegeneration: 'natural_regeneration',
+  doInsomnia: 'do_insomnia',
+  doImmediateRespawn: 'do_immediate_respawn',
 };
 
 const QUICK_ACTIONS = {
@@ -45,6 +51,21 @@ const QUICK_ACTIONS = {
   'weathercycle-off': { rule: 'doWeatherCycle', value: 'false', label: 'Weather cycle FROZEN' },
   'mobgrief-on': { rule: 'mobGriefing', value: 'true', label: 'Mob griefing ON' },
   'mobgrief-off': { rule: 'mobGriefing', value: 'false', label: 'Mob griefing OFF (no creeper holes)' },
+  'mobspawn-on': { rule: 'doMobSpawning', value: 'true', label: 'Mob spawning ON' },
+  'mobspawn-off': { rule: 'doMobSpawning', value: 'false', label: 'Mob spawning OFF' },
+  'firetick-on': { rule: 'doFireTick', value: 'true', label: 'Fire spread ON' },
+  'firetick-off': { rule: 'doFireTick', value: 'false', label: 'Fire spread OFF' },
+  'falldmg-on': { rule: 'fallDamage', value: 'true', label: 'Fall damage ON' },
+  'falldmg-off': { rule: 'fallDamage', value: 'false', label: 'Fall damage OFF' },
+  'naturalregen-on': { rule: 'naturalRegeneration', value: 'true', label: 'Natural regen ON' },
+  'naturalregen-off': { rule: 'naturalRegeneration', value: 'false', label: 'Natural regen OFF' },
+  'phantoms-on': { rule: 'doInsomnia', value: 'true', label: 'Phantoms ON' },
+  'phantoms-off': { rule: 'doInsomnia', value: 'false', label: 'Phantoms OFF (no insomnia)' },
+  'instantrespawn-on': { rule: 'doImmediateRespawn', value: 'true', label: 'Instant respawn ON' },
+  'instantrespawn-off': { rule: 'doImmediateRespawn', value: 'false', label: 'Instant respawn OFF' },
+  // PvP has no gamerule — toggled live via a friendly-fire-off team (see below).
+  'pvp-on': { pvp: 'on', label: 'PvP enabled' },
+  'pvp-off': { pvp: 'off', label: 'PvP disabled for players online now' },
   'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful' },
   'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy' },
   'difficulty-normal': { cmd: ['difficulty', 'normal'], label: 'Difficulty: Normal' },
@@ -121,6 +142,32 @@ async function queryDay(serverId) {
   return m ? Math.floor(Number(m[1]) / 24000) + 1 : null;
 }
 
+// PvP has no vanilla gamerule. The live, restart-free way to disable it is a
+// scoreboard team with friendlyFire off that every online player is joined to —
+// teammates can't damage each other. Re-enabling simply disbands the team.
+// Caveat: teams only cover players who were online when applied; re-toggle after
+// new joins to include them.
+const PVP_TEAM = 'msm_nopvp';
+
+async function disablePvp(serverId) {
+  await rcon(serverId, ['team', 'add', PVP_TEAM]); // benign "already exists" is just text, not thrown
+  await tryVariants(serverId, [
+    ['team', 'modify', PVP_TEAM, 'friendlyFire', 'false'],
+    ['team', 'modify', PVP_TEAM, 'friendly_fire', 'false'], // option-casing guard for newer builds
+  ]);
+  return rcon(serverId, ['team', 'join', PVP_TEAM, '@a']);
+}
+
+async function enablePvp(serverId) {
+  return rcon(serverId, ['team', 'remove', PVP_TEAM]); // benign "unknown team" is just text
+}
+
+/** True when our no-PvP team exists — i.e. the panel has PvP disabled right now. */
+async function isPvpDisabled(serverId) {
+  const out = await rcon(serverId, ['team', 'list', PVP_TEAM]);
+  return /has\b.*member/i.test(out); // "has N member(s)" / "has no members" → team exists
+}
+
 async function getState(serverId) {
   const state = {};
   const time = await queryTime(serverId);
@@ -138,6 +185,11 @@ async function getState(serverId) {
     const value = await queryGamerule(serverId, rule);
     if (value !== null) state[rule] = value;
   }
+  try {
+    state.pvp = !(await isPvpDisabled(serverId));
+  } catch {
+    /* team list unavailable — leave pvp unknown */
+  }
   return state;
 }
 
@@ -148,12 +200,15 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
     err.status = 400;
     throw err;
   }
-  const out = quick.variants
-    ? await tryVariants(serverId, quick.variants)
-    : quick.rule
-      ? await setGamerule(serverId, quick.rule, quick.value)
-      : await rcon(serverId, quick.cmd);
-  if (looksLikeError(out)) {
+  let out;
+  if (quick.pvp === 'off') out = await disablePvp(serverId);
+  else if (quick.pvp === 'on') out = await enablePvp(serverId);
+  else if (quick.variants) out = await tryVariants(serverId, quick.variants);
+  else if (quick.rule) out = await setGamerule(serverId, quick.rule, quick.value);
+  else out = await rcon(serverId, quick.cmd);
+  // PvP runs a benign multi-command sequence (team add/join) whose intermediate
+  // "already exists" text isn't a failure — skip the RCON error gate for it.
+  if (!quick.pvp && looksLikeError(out)) {
     const err = new Error(`The server rejected the command: ${out.split('\n')[0]}`);
     err.status = 502;
     throw err;
