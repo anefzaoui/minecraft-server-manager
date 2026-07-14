@@ -5,14 +5,43 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.3.0] - 2026-07-14
+
+### Added
+
+- **Create wizard — PvP (and the full gameplay/`server.properties` set) at creation.** The Simple
+  "World & rules" step now has a PvP on/off choice (previously reachable only in Advanced mode), and
+  Advanced mode exposes every image/`server.properties` setting. Everything chosen here is applied by
+  the image at the **first start**, so the server comes up correct with no extra restart.
+
+### Changed
+
+- **The world-controls PvP toggle is now permanent.** It writes the `pvp` value in `server.properties`
+  (applies to everyone, including players who join later; takes effect on the next restart) instead of
+  the live friendly-fire team shipped in 0.2.0, which only covered players online at toggle time.
+  There is no vanilla live+permanent global PvP switch without a server mod/plugin.
+
+### Fixed
+
+- **Containers now run as the panel's own host user (UID/GID) — the root fix for the file `EACCES`
+  errors.** Previously containers wrote files as uid `1000`; when the panel ran as a different host
+  user it could not manage its own servers' files, so installing a mod (`copyfile` denied), deleting a
+  server, and other operations failed with `EACCES`. Every server now creates files owned by the panel
+  user, and servers created before this change are re-owned automatically on their next start,
+  recreate, or file operation. This is the actual cause behind the 0.2.0 delete-permission symptom,
+  whose fix there was only a fallback.
+- **The console no longer shows a `[panel/WARN]: Log stream unavailable … 404 no such container`
+  warning** for a server that hasn't been started yet. A missing container is expected before the
+  first start, so the stream ends quietly and the "start the server" placeholder stands.
+
 ## [0.2.0] - 2026-07-14
 
 ### Added
 
-- **World controls — PvP toggle.** Enable/disable PvP from the world-controls rail. Writes the `pvp`
-  value in `server.properties`, so it's permanent and applies to everyone (including players who join
-  later); it takes effect on the next restart. (There is no vanilla live+permanent global PvP switch
-  without a server mod/plugin.)
+- **World controls — live PvP toggle.** Enable/disable PvP on a running server without a restart,
+  using a friendly-fire scoreboard team that online players are joined to (teammates can't damage
+  each other); re-enabling disbands the team. Covers players online when toggled — re-toggle after
+  new joins.
 - **World controls — more gamerule quick-toggles.** Mob spawning, fire spread, fall damage, natural
   regeneration, phantoms (insomnia), and instant respawn, alongside the existing keep-inventory,
   day/night cycle, weather cycle, and mob-griefing toggles. All are live over RCON and reflect the
@@ -30,22 +59,13 @@ its own dated entry.
 
 ### Fixed
 
-- **Containers now run as the panel's own host user (UID/GID) — the root fix for all the file
-  `EACCES` errors.** Previously containers wrote files as uid `1000`, so when the panel ran as a
-  different user it could not manage its own servers' files: installing a mod (`copyfile` denied),
-  deleting a server, and other operations failed with `EACCES`. Every server now creates files owned
-  by the panel user, and servers created before this change are re-owned to the panel user
-  automatically on their next start, recreate, or file operation. This is the actual cause behind the
-  delete-permission symptom below.
-- **Deleting a server no longer fails with `EACCES`.** As a safety net (in addition to the ownership
-  fix above), the panel falls back to a throwaway root container to remove a directory it can't
-  delete directly.
+- **Deleting a server no longer fails with `EACCES`.** When the itzg container wrote world/mod files
+  as its own UID (default `1000`) and the panel runs as a different host user, `rm` was denied. The
+  panel now falls back to a throwaway root container that removes the directory regardless of file
+  ownership.
 - **Permission errors are no longer mislabeled "Docker is not reachable".** That message is now
   reserved for genuine daemon-connection failures; a filesystem `EACCES` whose path merely contains
   "docker" (e.g. `/home/docker/…`) is reported accurately.
-- **The console no longer shows a `[panel/WARN]: Log stream unavailable … 404 no such container`
-  warning** for a server that hasn't been started yet. A missing container is expected before the
-  first start, so the stream ends quietly and the "start the server" placeholder stands.
 
 ## [0.1.0] - 2026-07-14
 
