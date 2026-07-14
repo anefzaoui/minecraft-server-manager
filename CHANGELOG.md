@@ -5,6 +5,14 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.6.1] - 2026-07-14
+
+### Added
+
+- **Screenshots in the README.** A hero shot plus a 14-image gallery covering the dashboard, create
+  wizard, server overview, admin chat, live console, mods, worlds, settings, backups, history, custom
+  chat commands, schedules, storage, and blueprints. Images live under `docs/screenshots/`.
+
 ## [0.6.0] - 2026-07-14
 
 ### Added
