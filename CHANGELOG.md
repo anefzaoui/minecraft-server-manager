@@ -5,6 +5,17 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.6.0] - 2026-07-14
+
+### Added
+
+- **Admin Chat tab.** A console-style panel (Console → Chat) for sending styled messages in-game
+  without hand-writing `tellraw`. Pick a recipient (Everyone or an online player), a mode (**Tellraw**
+  styled, or **Say** plain `[Server]` broadcast), a **color** from the 16 vanilla swatches, and any of
+  **bold / italic / underline / strikethrough / obfuscated** — laid out as clickable swatches and
+  chips. Type, hit Enter, and the message appears in-game and in the panel's chat log (rendered with
+  its styling). Targets are validated so entity selectors like `@e[…]` can't be injected.
+
 ## [0.5.1] - 2026-07-14
 
 ### Fixed
