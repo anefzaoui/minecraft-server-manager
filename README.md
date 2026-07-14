@@ -10,6 +10,10 @@ storage analytics, a live world map, and more — wrapped in a fast, Minecraft-f
 **Zero paid services. Everything runs on your machine, and your entire panel is one folder you can
 copy to migrate.**
 
+<p align="center">
+  <img src="docs/screenshots/01-dashboard.png" alt="Dashboard — all your Minecraft servers at a glance" width="920">
+</p>
+
 ---
 
 ## Features
@@ -70,6 +74,39 @@ copy to migrate.**
   player count only).
 
 ---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/03-server-overview.png" alt="Server overview"><br><sub><b>Server overview & controls</b> — connect address, live usage, and the world-controls rail that rides along on every tab.</sub></td>
+    <td width="50%"><img src="docs/screenshots/02-create-wizard.png" alt="Create wizard"><br><sub><b>Guided create wizard</b> — Simple or Advanced; every <code>server.properties</code> knob applied from the first start.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/04-chat.png" alt="Admin chat"><br><sub><b>Admin chat</b> — styled <code>tellraw</code>/<code>say</code> to everyone or one player: colors, bold/italic/underline, chat-style log.</sub></td>
+    <td><img src="docs/screenshots/05-console.png" alt="Live console"><br><sub><b>Live console &amp; RCON</b> — streamed logs with level filters and a command bar with history.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b> — pack-managed + custom overlay, one-click toggle, Modrinth/CurseForge search.</sub></td>
+    <td><img src="docs/screenshots/07-worlds.png" alt="Worlds"><br><sub><b>Worlds</b> — reset/re-roll with a custom or random seed, duplicate, and a shared world library.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/09-settings.png" alt="Settings"><br><sub><b>Settings</b> — the full image env catalog with plain-English help, resource sliders, and a MOTD editor.</sub></td>
+    <td><img src="docs/screenshots/08-backups.png" alt="Backups"><br><sub><b>Backups</b> — save-safe archives with retention classes and one-click restore.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/10-history.png" alt="History"><br><sub><b>History</b> — every action is a structured event with its actor and captured log excerpts.</sub></td>
+    <td><img src="docs/screenshots/11-chat-commands.png" alt="Custom chat commands"><br><sub><b>Custom chat commands</b> — owner-defined <code>!triggers</code> (RTP, warp, console) with cooldowns &amp; permissions.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/14-schedules.png" alt="Schedules"><br><sub><b>Schedules</b> — per-server and global cron tasks (restart / backup / RCON) with next-run previews.</sub></td>
+    <td><img src="docs/screenshots/15-storage.png" alt="Storage analytics"><br><sub><b>Storage analytics</b> — per-server usage, largest files, orphan detection, and panel-enforced quotas.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/13-blueprints.png" alt="Blueprints"><br><sub><b>Blueprints</b> — portable <code>.mcserver.zip</code> recipes; export a server, import it anywhere, get the same server.</sub></td>
+    <td></td>
+  </tr>
+</table>
 
 ## Requirements
 
