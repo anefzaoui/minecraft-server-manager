@@ -5,6 +5,18 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.4.0] - 2026-07-14
+
+### Fixed
+
+- **Mod installs now match the server's loader — no more a Fabric jar landing on a NeoForge server.**
+  For modpack servers (`AUTO_CURSEFORGE` / Modrinth / FTBA) the loader isn't in an env var, so the
+  panel had nothing to filter by and installed whichever build came first (often Fabric). It now
+  detects the pack's real loader from the manifest mc-image-helper writes (e.g.
+  `.neoforge-manifest.json`), so the Modrinth search list, the search **Install** button, and
+  add-by-URL all resolve the correct loader's build — or fail with a clear "no build matches" message
+  instead of silently installing the wrong one.
+
 ## [0.3.0] - 2026-07-14
 
 ### Added
