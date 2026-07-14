@@ -204,6 +204,7 @@ function init() {
       MOTD: toSectionCodes(motd.value), // vanilla renders § codes only
       DIFFICULTY: document.getElementById('wz-difficulty').value,
       MODE: document.getElementById('wz-mode').value,
+      PVP: document.getElementById('wz-pvp').value,
       MAX_PLAYERS: String(Number(document.getElementById('wz-maxplayers').value) || 10),
       ...(document.getElementById('wz-seed').value.trim()
         ? { SEED: document.getElementById('wz-seed').value.trim() }
