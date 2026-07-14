@@ -5,9 +5,11 @@
 // timelines ("time query day"); ≤1.21 uses camelCase + "time query daytime".
 // Every op tries the modern form first and falls back to legacy.
 
+const fs = require('node:fs');
 const { execCapture } = require('../docker/containers');
 const { cleanText } = require('../utils/ansi');
 const { recordEvent } = require('../events');
+const { dataPath } = require('../storage/pathGuard');
 
 const GAMERULES = {
   keepInventory: 'keep_inventory',
@@ -63,9 +65,9 @@ const QUICK_ACTIONS = {
   'phantoms-off': { rule: 'doInsomnia', value: 'false', label: 'Phantoms OFF (no insomnia)' },
   'instantrespawn-on': { rule: 'doImmediateRespawn', value: 'true', label: 'Instant respawn ON' },
   'instantrespawn-off': { rule: 'doImmediateRespawn', value: 'false', label: 'Instant respawn OFF' },
-  // PvP has no gamerule — toggled live via a friendly-fire-off team (see below).
-  'pvp-on': { pvp: 'on', label: 'PvP enabled' },
-  'pvp-off': { pvp: 'off', label: 'PvP disabled for players online now' },
+  // PvP has no gamerule — it's the server.properties `pvp` value (see below).
+  'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled — applies on restart' },
+  'pvp-off': { prop: 'pvp', value: false, label: 'PvP disabled — applies on restart' },
   'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful' },
   'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy' },
   'difficulty-normal': { cmd: ['difficulty', 'normal'], label: 'Difficulty: Normal' },
@@ -142,30 +144,36 @@ async function queryDay(serverId) {
   return m ? Math.floor(Number(m[1]) / 24000) + 1 : null;
 }
 
-// PvP has no vanilla gamerule. The live, restart-free way to disable it is a
-// scoreboard team with friendlyFire off that every online player is joined to —
-// teammates can't damage each other. Re-enabling simply disbands the team.
-// Caveat: teams only cover players who were online when applied; re-toggle after
-// new joins to include them.
-const PVP_TEAM = 'msm_nopvp';
-
-async function disablePvp(serverId) {
-  await rcon(serverId, ['team', 'add', PVP_TEAM]); // benign "already exists" is just text, not thrown
-  await tryVariants(serverId, [
-    ['team', 'modify', PVP_TEAM, 'friendlyFire', 'false'],
-    ['team', 'modify', PVP_TEAM, 'friendly_fire', 'false'], // option-casing guard for newer builds
-  ]);
-  return rcon(serverId, ['team', 'join', PVP_TEAM, '@a']);
+// PvP isn't a gamerule — it's the server.properties `pvp` value, applied at
+// (re)start and then in force for everyone, including players who join later.
+// We edit the file directly (like the whitelist toggle); the itzg image leaves a
+// property alone when its matching env var isn't set, so the edit persists.
+// Vanilla default is on (pvp=true). There is no vanilla live+permanent global
+// switch — that needs a server mod/plugin (e.g. Essential) with engine access.
+function readPvp(serverId) {
+  try {
+    const text = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
+    const m = /^pvp=(.*)$/m.exec(text);
+    return m ? m[1].trim() !== 'false' : true;
+  } catch {
+    return true; // fresh server — vanilla default
+  }
 }
 
-async function enablePvp(serverId) {
-  return rcon(serverId, ['team', 'remove', PVP_TEAM]); // benign "unknown team" is just text
-}
-
-/** True when our no-PvP team exists — i.e. the panel has PvP disabled right now. */
-async function isPvpDisabled(serverId) {
-  const out = await rcon(serverId, ['team', 'list', PVP_TEAM]);
-  return /has\b.*member/i.test(out); // "has N member(s)" / "has no members" → team exists
+function writePvp(serverId, on) {
+  const file = dataPath('servers', serverId, 'server.properties');
+  let text = '';
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch {
+    /* fresh server — create the file */
+  }
+  if (/^pvp=.*$/m.test(text)) text = text.replace(/^pvp=.*$/m, `pvp=${on}`);
+  else text += `${text && !text.endsWith('\n') ? '\n' : ''}pvp=${on}\n`;
+  const tmp = dataPath('servers', serverId, 'server.properties.tmp');
+  fs.mkdirSync(dataPath('servers', serverId), { recursive: true });
+  fs.writeFileSync(tmp, text);
+  fs.renameSync(tmp, file);
 }
 
 async function getState(serverId) {
@@ -185,11 +193,7 @@ async function getState(serverId) {
     const value = await queryGamerule(serverId, rule);
     if (value !== null) state[rule] = value;
   }
-  try {
-    state.pvp = !(await isPvpDisabled(serverId));
-  } catch {
-    /* team list unavailable — leave pvp unknown */
-  }
+  state.pvp = readPvp(serverId); // from server.properties — the pending/effective value
   return state;
 }
 
@@ -201,14 +205,14 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
     throw err;
   }
   let out;
-  if (quick.pvp === 'off') out = await disablePvp(serverId);
-  else if (quick.pvp === 'on') out = await enablePvp(serverId);
-  else if (quick.variants) out = await tryVariants(serverId, quick.variants);
+  if (quick.prop === 'pvp') {
+    writePvp(serverId, quick.value); // server.properties edit — takes effect on next restart
+    out = '';
+  } else if (quick.variants) out = await tryVariants(serverId, quick.variants);
   else if (quick.rule) out = await setGamerule(serverId, quick.rule, quick.value);
   else out = await rcon(serverId, quick.cmd);
-  // PvP runs a benign multi-command sequence (team add/join) whose intermediate
-  // "already exists" text isn't a failure — skip the RCON error gate for it.
-  if (!quick.pvp && looksLikeError(out)) {
+  // A server.properties edit isn't an RCON command — skip the RCON error gate.
+  if (!quick.prop && looksLikeError(out)) {
     const err = new Error(`The server rejected the command: ${out.split('\n')[0]}`);
     err.status = 502;
     throw err;

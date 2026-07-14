@@ -136,7 +136,14 @@ async function handleConsole(ws, serverId, user) {
     follower.stream.on('end', () => send({ kind: 'log-end' }));
     follower.stream.on('error', (err) => send({ kind: 'error', message: `Log stream error: ${err.message}` }));
   } catch (err) {
-    send({ kind: 'error', message: `Log stream unavailable: ${err.message}` });
+    // A missing container (404) just means the server has never been started —
+    // an expected state, not an error. The console already shows a "start the
+    // server" placeholder, so end the stream quietly instead of alarming the user.
+    if (err.statusCode === 404) {
+      send({ kind: 'log-end' });
+    } else {
+      send({ kind: 'error', message: `Log stream unavailable: ${err.message}` });
+    }
   }
 }
 

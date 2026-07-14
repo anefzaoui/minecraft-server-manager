@@ -9,10 +9,10 @@ its own dated entry.
 
 ### Added
 
-- **World controls — live PvP toggle.** Enable/disable PvP on a running server without a restart,
-  using a friendly-fire scoreboard team that online players are joined to (teammates can't damage
-  each other); re-enabling disbands the team. Covers players online when toggled — re-toggle after
-  new joins.
+- **World controls — PvP toggle.** Enable/disable PvP from the world-controls rail. Writes the `pvp`
+  value in `server.properties`, so it's permanent and applies to everyone (including players who join
+  later); it takes effect on the next restart. (There is no vanilla live+permanent global PvP switch
+  without a server mod/plugin.)
 - **World controls — more gamerule quick-toggles.** Mob spawning, fire spread, fall damage, natural
   regeneration, phantoms (insomnia), and instant respawn, alongside the existing keep-inventory,
   day/night cycle, weather cycle, and mob-griefing toggles. All are live over RCON and reflect the
@@ -37,6 +37,9 @@ its own dated entry.
 - **Permission errors are no longer mislabeled "Docker is not reachable".** That message is now
   reserved for genuine daemon-connection failures; a filesystem `EACCES` whose path merely contains
   "docker" (e.g. `/home/docker/…`) is reported accurately.
+- **The console no longer shows a `[panel/WARN]: Log stream unavailable … 404 no such container`
+  warning** for a server that hasn't been started yet. A missing container is expected before the
+  first start, so the stream ends quietly and the "start the server" placeholder stands.
 
 ## [0.1.0] - 2026-07-14
 
