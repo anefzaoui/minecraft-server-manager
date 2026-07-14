@@ -288,14 +288,19 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
     return { applied: 'instant' };
   }
 
-  // Pack-managed: manipulate the exclusion env var (project slug preferred, filename fallback).
+  // Pack-managed: manipulate the exclusion env var. Prefer the real CF project
+  // slug/ID from the pack manifest — a name-derived token misses renamed/unofficial
+  // mods (e.g. display name "cc tweaked" vs slug "unofficial-cc-tweaked-…"), which
+  // silently fails to exclude anything.
   const env = { ...server.env };
   const isCF = server.type === 'AUTO_CURSEFORGE';
   const varName = isCF ? 'CF_EXCLUDE_MODS' : 'MODRINTH_EXCLUDE_FILES';
+  const fromManifest = packManifestIndex(serverId).get(file.replace(/\.disabled$/, ''));
   const token =
-    row && row.icon_url && row.name
+    (fromManifest && (fromManifest.slug || fromManifest.projectId)) ||
+    (row && row.icon_url && row.name
       ? row.name.toLowerCase().replace(/\s+/g, '-')
-      : file.replace(/(-[\d.]+.*)?\.jar$/, '');
+      : file.replace(/(-[\d.]+.*)?\.jar$/, ''));
   const list = (env[varName] || '')
     .split(/[\n,]/)
     .map((s) => s.trim())
@@ -377,6 +382,154 @@ function prettifyJarName(file) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Manual-download handling. A CurseForge pack can pin mods whose authors disallow
+// automated download (or that were pulled from CF). mc-image-helper then writes
+// MODS_NEED_DOWNLOAD.txt and the pack install FAILS until each is excluded or
+// supplied by hand — this turns that dead-end into guided actions.
+
+/** Best-effort filename -> {slug, projectId} map from the pack's CF manifest. */
+function packManifestIndex(serverId) {
+  const map = new Map();
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(dataPath('servers', serverId, '.curseforge-manifest.json'), 'utf8'));
+  } catch {
+    return map;
+  }
+  const visit = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) return node.forEach(visit);
+    const fname = node.fileName || node.filename;
+    const slug = node.slug || node.projectSlug;
+    const pid = node.projectID ?? node.projectId ?? node.modId;
+    if (typeof fname === 'string' && /\.jar$/i.test(fname) && (slug || pid != null)) {
+      map.set(fname, { slug: slug || null, projectId: pid != null ? String(pid) : null });
+    }
+    for (const v of Object.values(node)) visit(v);
+  };
+  visit(data);
+  return map;
+}
+
+/** Parse MODS_NEED_DOWNLOAD.txt text → [{ name, versionName, filename, url, slug, fileId }]. */
+function parseModsNeedDownload(text) {
+  const out = [];
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const m = /(https?:\/\/\S*curseforge\.com\/\S+)/i.exec(line); // only data rows carry a URL
+    if (!m) continue;
+    const cols = line
+      .slice(0, m.index)
+      .split(/\s{2,}/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const filename = cols[cols.length - 1] || '';
+    const versionName = cols.length > 1 ? cols[cols.length - 2] : '';
+    const name = cols.length > 2 ? cols.slice(0, -2).join(' ') : cols[0] || filename;
+    const slug = (/curseforge\.com\/minecraft\/mc-mods\/([^/]+)/i.exec(m[1]) || [])[1] || null;
+    const fileId = (/\/download\/(\d+)/.exec(m[1]) || [])[1] || null;
+    out.push({ name, versionName, filename, url: m[1], slug, fileId });
+  }
+  return out;
+}
+
+/** Mods a CF pack needs supplied by hand, parsed from the server's MODS_NEED_DOWNLOAD.txt. */
+function pendingDownloads(serverId) {
+  try {
+    return parseModsNeedDownload(fs.readFileSync(dataPath('servers', serverId, 'MODS_NEED_DOWNLOAD.txt'), 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+/** The exclusion token (slug preferred) for a pending mod identified by filename. */
+function pendingExcludeToken(serverId, filename) {
+  const entry = pendingDownloads(serverId).find((p) => p.filename === filename);
+  return (entry && entry.slug) || String(filename).replace(/(-[\d.]+.*)?\.jar$/, '');
+}
+
+/** Drop a resolved mod's line from MODS_NEED_DOWNLOAD.txt (best-effort). */
+function clearPendingLine(serverId, filename) {
+  const file = dataPath('servers', serverId, 'MODS_NEED_DOWNLOAD.txt');
+  let text;
+  try {
+    text = fs.readFileSync(file, 'utf8');
+  } catch {
+    return;
+  }
+  const kept = text.split(/\r?\n/).filter((l) => !filename || !l.includes(filename));
+  try {
+    if (kept.some((l) => /curseforge\.com/i.test(l))) fs.writeFileSync(file, kept.join('\n'));
+    else fs.rmSync(file, { force: true });
+  } catch {
+    /* ownership not aligned yet — the banner clears on the next successful start */
+  }
+}
+
+/** Add a project slug/ID to the pack's exclusion env var (applies on recreate). */
+function excludePackMod(serverId, token, { actor = 'system' } = {}) {
+  const server = serversService.getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
+  if (!token) throw httpError(400, 'Nothing to exclude');
+  const isCF = server.type === 'AUTO_CURSEFORGE';
+  const varName = isCF ? 'CF_EXCLUDE_MODS' : 'MODRINTH_EXCLUDE_FILES';
+  const env = { ...server.env };
+  const list = (env[varName] || '')
+    .split(/[\n,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!list.includes(token)) list.push(token);
+  env[varName] = list.join('\n');
+  env[isCF ? 'CF_FORCE_SYNCHRONIZE' : 'MODRINTH_FORCE_SYNCHRONIZE'] = 'true';
+  serversService.updateServer(serverId, { env }, { actor });
+  recordEvent({
+    serverId,
+    actor,
+    type: 'mod-excluded',
+    summary: `Excluded pack mod "${token}" via ${varName} — applies on recreate`,
+  });
+  return { excluded: token };
+}
+
+/** Install a manually-uploaded jar as an overlay (optionally excluding the pack's copy). */
+async function importUploadedMod(serverId, tmpPath, origName, { excludeToken, actor = 'system' } = {}) {
+  const server = serversService.getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
+  const filename = origName || 'mod.jar';
+  if (!/\.(jar|zip)$/i.test(filename)) throw httpError(400, 'Only .jar or .zip files can be uploaded');
+  const targetKind = PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
+  const lib = await library.importFile(
+    tmpPath,
+    { name: prettifyJarName(filename), filename, category: targetKind },
+    { actor }
+  );
+  indexer.assertUnderQuota(server, lib.size_bytes);
+  const { filename: installed } = await library.installToServer(lib.id, serverId, contentDir(server, targetKind));
+  db.run(
+    `INSERT INTO server_content (id, server_id, library_id, kind, managed_by, name, filename, version, icon_url)
+     VALUES (?, ?, ?, ?, 'overlay', ?, ?, ?, ?)
+     ON CONFLICT(server_id, filename) DO UPDATE SET library_id = excluded.library_id`,
+    `sc_${nanoid(8)}`,
+    serverId,
+    lib.id,
+    targetKind,
+    lib.name,
+    installed,
+    lib.version,
+    lib.icon_url
+  );
+  if (excludeToken) excludePackMod(serverId, excludeToken, { actor });
+  recordEvent({
+    serverId,
+    actor,
+    type: 'mod-installed',
+    summary: `Uploaded ${targetKind} installed: ${lib.name} (overlay)`,
+    details: { filename: installed },
+  });
+  indexer.scan().catch(() => {});
+  return { filename: installed, excluded: excludeToken || null };
+}
+
 module.exports = {
   listContent,
   installFromUrl,
@@ -387,4 +540,10 @@ module.exports = {
   contentDir,
   loaderOf,
   isPackServer,
+  parseModsNeedDownload,
+  pendingDownloads,
+  pendingExcludeToken,
+  excludePackMod,
+  clearPendingLine,
+  importUploadedMod,
 };

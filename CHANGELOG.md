@@ -7,8 +7,21 @@ its own dated entry.
 
 ## [0.4.0] - 2026-07-14
 
+### Added
+
+- **Guided fix for modpack mods that can't be auto-downloaded.** When a CurseForge pack pins a mod
+  whose author disallows automated download (or that was pulled from CurseForge), the install used to
+  dead-end with `Failed to auto-install`. The Mods tab now detects itzg's `MODS_NEED_DOWNLOAD.txt`,
+  shows a banner, and opens a resolver where each mod offers one-click **Exclude from pack**, **Find
+  on Modrinth** (installs a loader-correct replacement and excludes the dead one), or **Upload jar**
+  (drops your manually-downloaded file in as an overlay). Exclusions use the mod's real CurseForge
+  slug parsed from the download link, so they actually match `CF_EXCLUDE_MODS`.
+
 ### Fixed
 
+- **Pack-mod "Disable" now excludes the right project.** It reads the real CF slug/ID from the pack
+  manifest instead of guessing from the display name — the old guess silently failed for
+  renamed/unofficial mods (e.g. "cc tweaked", whose slug is `unofficial-cc-tweaked-…`).
 - **Mod installs now match the server's loader — no more a Fabric jar landing on a NeoForge server.**
   For modpack servers (`AUTO_CURSEFORGE` / Modrinth / FTBA) the loader isn't in an env var, so the
   panel had nothing to filter by and installed whichever build came first (often Fabric). It now

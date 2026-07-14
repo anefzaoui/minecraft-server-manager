@@ -1010,6 +1010,53 @@ router.delete(
   })
 );
 
+// ---- Modpack manual-download resolver ----
+// A CurseForge pack can pin mods that can't be auto-downloaded; itzg writes
+// MODS_NEED_DOWNLOAD.txt and the install fails. These endpoints turn that into
+// one-click Exclude / Modrinth-install / manual-jar upload.
+const modUpload = multer({ dest: dataPath('tmp'), limits: { fileSize: 250 * 1024 * 1024, files: 1 } });
+
+router.get(
+  '/servers/:id/pending-downloads',
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    res.json({ ok: true, mods: mods.pendingDownloads(req.params.id) });
+  })
+);
+
+router.post(
+  '/servers/:id/pending-downloads/exclude',
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    const { filename } = z.object({ filename: z.string().min(1).max(300) }).parse(req.body);
+    const token = mods.pendingExcludeToken(req.params.id, filename);
+    mods.excludePackMod(req.params.id, token, { actor: req.user.username });
+    mods.clearPendingLine(req.params.id, filename);
+    res.json({ ok: true, excluded: token, mods: mods.pendingDownloads(req.params.id) });
+  })
+);
+
+router.post(
+  '/servers/:id/mods/upload',
+  modUpload.single('file'),
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    if (!req.file) throw Object.assign(new Error('No file uploaded'), { status: 400 });
+    const excludeFilename = (req.body && req.body.excludeFilename) || null;
+    const excludeToken = excludeFilename ? mods.pendingExcludeToken(req.params.id, excludeFilename) : null;
+    try {
+      const result = await mods.importUploadedMod(req.params.id, req.file.path, req.file.originalname, {
+        excludeToken,
+        actor: req.user.username,
+      });
+      if (excludeFilename) mods.clearPendingLine(req.params.id, excludeFilename);
+      res.status(201).json({ ok: true, ...result, mods: mods.pendingDownloads(req.params.id) });
+    } finally {
+      fs.promises.rm(req.file.path, { force: true }).catch(() => {});
+    }
+  })
+);
+
 // ---- Events: export, excerpts, retention ----
 
 function sendEventExport(req, res, serverId) {

@@ -12,6 +12,9 @@
     </div>
   </div>
 
+  {{! Populated by JS when the pack has mods that need manual action (MODS_NEED_DOWNLOAD.txt). }}
+  <div id="mods-pending" class="mb-4 hidden"></div>
+
   {{#if server.pack}}
     <div class="mb-4 max-w-prose rounded-md border border-diamond-800/50 bg-diamond-900/20 p-3 text-xs text-ink-soft">
       <b class="text-diamond-400">Pack-managed</b> mods are installed by {{server.pack.platform}} ({{server.pack.name}} @ {{server.pack.version}}).

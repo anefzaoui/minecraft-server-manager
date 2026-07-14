@@ -179,6 +179,57 @@ async function installToServer(libraryId, serverId, destRel, { filename } = {}) 
   return { installedPath: target, filename: path.basename(target) };
 }
 
+/**
+ * Import a locally-uploaded file (e.g. a manually-downloaded mod jar) into the
+ * library with sha256 dedupe. Mirrors downloadToLibrary but from a local path.
+ */
+async function importFile(localPath, meta, { actor = 'system' } = {}) {
+  const category = meta.category || 'mod';
+  const buf = await fsp.readFile(localPath);
+  if (buf.length > MAX_DOWNLOAD_BYTES) throw httpError(413, 'File is too large');
+  const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
+  const existing = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
+  if (existing) return existing;
+  const filename = sanitizeFilename(meta.filename || path.basename(localPath));
+  const relPath = `${CATEGORY_DIR[category]}/${sha256.slice(0, 8)}-${filename}`;
+  await fsp.mkdir(path.dirname(dataPath(relPath)), { recursive: true });
+  await fsp.writeFile(dataPath(relPath), buf);
+  const id = `lib_${nanoid(8)}`;
+  db.run(
+    `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, source_url,
+       platform, project_id, file_id, version, mc_versions_json, loaders_json, icon_url, world_source, world_flavor)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(sha256, category) DO NOTHING`,
+    id,
+    category,
+    meta.name || filename,
+    filename,
+    relPath,
+    sha256,
+    buf.length,
+    null,
+    meta.platform || 'upload',
+    null,
+    null,
+    meta.version || null,
+    JSON.stringify([]),
+    JSON.stringify([]),
+    null,
+    null,
+    null
+  );
+  const row = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
+  if (row && row.id === id) {
+    recordEvent({
+      actor,
+      type: 'library-added',
+      summary: `Uploaded to library: ${meta.name || filename} (${humanBytes(buf.length)})`,
+      details: { id, category, sha256 },
+    });
+  }
+  return row;
+}
+
 function usageCount(libraryId) {
   return db.get('SELECT COUNT(*) AS n FROM server_content WHERE library_id = ?', libraryId)?.n || 0;
 }
@@ -220,6 +271,7 @@ function humanBytes(n) {
 
 module.exports = {
   downloadToLibrary,
+  importFile,
   installToServer,
   deleteLibraryFile,
   cacheIcon,
