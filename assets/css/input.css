@@ -1,0 +1,385 @@
+@import 'tailwindcss';
+
+/* Dark is the default theme; light mode is opt-in via <html data-theme="light">.
+   Toggling swaps the semantic tokens below, so components only ever reference
+   semantic names (surface, ink, line…) — never raw palette values. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  /* ---- Minecraft-flavored brand palette ---- */
+  --color-grass-50: #edfbe8;
+  --color-grass-100: #d5f5c9;
+  --color-grass-200: #aeea99;
+  --color-grass-300: #7fd965;
+  --color-grass-400: #59c53e;
+  --color-grass-500: #3fa62b;
+  --color-grass-600: #2f8520;
+  --color-grass-700: #27661d;
+  --color-grass-800: #22521c;
+  --color-grass-900: #1e461b;
+
+  --color-diamond-50: #ecfdfb;
+  --color-diamond-100: #d0f7f4;
+  --color-diamond-200: #a6efeb;
+  --color-diamond-300: #6ce0dd;
+  --color-diamond-400: #3cc5c7;
+  --color-diamond-500: #21a7ab;
+  --color-diamond-600: #1b8589;
+  --color-diamond-700: #1a6a6e;
+  --color-diamond-800: #1a5558;
+  --color-diamond-900: #1a474a;
+
+  --color-redstone-50: #fef2f2;
+  --color-redstone-100: #fee2e2;
+  --color-redstone-200: #fecaca;
+  --color-redstone-300: #fca5a5;
+  --color-redstone-400: #f87171;
+  --color-redstone-500: #e5484d;
+  --color-redstone-600: #d13438;
+  --color-redstone-700: #b02a2e;
+  --color-redstone-800: #922727;
+  --color-redstone-900: #7a2524;
+
+  --color-gold-50: #fefaec;
+  --color-gold-100: #fbf0ca;
+  --color-gold-200: #f7e090;
+  --color-gold-300: #f3ca56;
+  --color-gold-400: #f0b42f;
+  --color-gold-500: #e99417;
+  --color-gold-600: #ce7011;
+  --color-gold-700: #ab4f12;
+  --color-gold-800: #8b3d15;
+  --color-gold-900: #723315;
+
+  /* Stone — the neutral ramp used for both themes */
+  --color-stone-25: #fafbfb;
+  --color-stone-50: #f4f5f6;
+  --color-stone-100: #e8eaec;
+  --color-stone-200: #d3d7db;
+  --color-stone-300: #b1b8bf;
+  --color-stone-400: #87919b;
+  --color-stone-500: #6a747f;
+  --color-stone-600: #555e68;
+  --color-stone-700: #464d55;
+  --color-stone-800: #33383e;
+  --color-stone-850: #262b30;
+  --color-stone-900: #1b1f23;
+  --color-stone-925: #16191c;
+  --color-stone-950: #0e1113;
+
+  --font-pixel: 'Press Start 2P', 'Courier New', monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+
+  /* ---- Semantic tokens (dark values — the default) ---- */
+  --color-canvas: var(--color-stone-950);
+  --color-surface: var(--color-stone-925);
+  --color-raised: var(--color-stone-900);
+  --color-inset: var(--color-stone-850);
+  --color-line: var(--color-stone-800);
+  --color-line-strong: var(--color-stone-700);
+  --color-ink: var(--color-stone-50);
+  --color-ink-soft: var(--color-stone-300);
+  --color-ink-faint: var(--color-stone-400);
+}
+
+:root[data-theme='light'] {
+  --color-canvas: var(--color-stone-50);
+  --color-surface: #ffffff;
+  --color-raised: var(--color-stone-25);
+  --color-inset: var(--color-stone-100);
+  --color-line: var(--color-stone-200);
+  --color-line-strong: var(--color-stone-300);
+  --color-ink: var(--color-stone-900);
+  --color-ink-soft: var(--color-stone-700);
+  /* stone-600 (not 500) so the pervasive text-xs help copy clears WCAG AA on the
+     near-white light canvas. */
+  --color-ink-faint: var(--color-stone-600);
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('/fonts/PressStart2P-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Variable.ttf') format('truetype-variations');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer base {
+  html {
+    @apply bg-canvas text-ink antialiased;
+    color-scheme: dark;
+  }
+  :root[data-theme='light'] {
+    color-scheme: light;
+  }
+  body {
+    @apply font-sans text-[0.9375rem] leading-relaxed;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold tracking-tight text-ink;
+  }
+  ::selection {
+    @apply bg-grass-600/60 text-white;
+  }
+  /* Everything clickable gets a physical press, even outside .btn (flavor
+     tiles, icon pickers, chips) — part of the Minecraft tactility. */
+  button:not(.btn):not(.msm-toggle):active {
+    transform: translateY(1px);
+  }
+  /* Keep pixel-art crisp if the browser ever rasterizes/scales it. */
+  img[src^='/icons/servers/'] {
+    image-rendering: pixelated;
+  }
+}
+
+@layer components {
+  /* Pixel heading — titles only, per design spec */
+  .pixel {
+    font-family: var(--font-pixel);
+    letter-spacing: 0;
+    line-height: 1.6;
+  }
+
+  /* Minecraft-style buttons: blocky, beveled (light top edge, dark bottom
+     edge), and they physically PRESS — on :active the button shifts down and
+     the bevel inverts, exactly like clicking a button in-game. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm border border-line-strong
+      bg-raised px-3.5 py-2 text-sm font-medium text-ink transition-[background,transform,box-shadow]
+      duration-75 hover:bg-inset focus-visible:outline-2 focus-visible:outline-offset-2
+      focus-visible:outline-diamond-400 disabled:pointer-events-none disabled:opacity-50;
+    box-shadow:
+      inset 0 2px 0 rgb(255 255 255 / 0.07),
+      inset 0 -3px 0 rgb(0 0 0 / 0.28);
+  }
+  .btn:active {
+    transform: translateY(2px);
+    box-shadow:
+      inset 0 2px 0 rgb(0 0 0 / 0.22),
+      inset 0 -1px 0 rgb(255 255 255 / 0.05);
+  }
+  .btn-primary {
+    @apply border-grass-800 bg-grass-600 text-white hover:bg-grass-500;
+    box-shadow:
+      inset 0 2px 0 rgb(255 255 255 / 0.22),
+      inset 0 -3px 0 rgb(0 0 0 / 0.32);
+    text-shadow: 0 1px 0 rgb(0 0 0 / 0.35);
+  }
+  .btn-primary:active {
+    box-shadow:
+      inset 0 2px 0 rgb(0 0 0 / 0.28),
+      inset 0 -1px 0 rgb(255 255 255 / 0.08);
+  }
+  .btn-danger {
+    @apply border-redstone-800 bg-redstone-600 text-white hover:bg-redstone-500;
+    box-shadow:
+      inset 0 2px 0 rgb(255 255 255 / 0.18),
+      inset 0 -3px 0 rgb(0 0 0 / 0.32);
+    text-shadow: 0 1px 0 rgb(0 0 0 / 0.35);
+  }
+  .btn-danger:active {
+    box-shadow:
+      inset 0 2px 0 rgb(0 0 0 / 0.28),
+      inset 0 -1px 0 rgb(255 255 255 / 0.08);
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent hover:bg-inset;
+    box-shadow: none;
+    text-shadow: none;
+  }
+  .btn-ghost:active {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+  .btn-sm {
+    @apply px-2.5 py-1.5 text-xs;
+  }
+
+  .card {
+    @apply rounded-lg border border-line bg-surface shadow-sm;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-line bg-inset px-2 py-0.5 text-xs text-ink-soft;
+  }
+
+  .input {
+    @apply w-full rounded-md border border-line-strong bg-inset px-3 py-2 text-sm text-ink
+      placeholder:text-ink-faint focus:border-diamond-400 focus:outline-none
+      focus:ring-1 focus:ring-diamond-400;
+  }
+
+  .label {
+    @apply mb-1 block text-sm font-medium text-ink;
+  }
+  .help {
+    @apply mt-1 text-xs leading-relaxed text-ink-faint;
+  }
+
+  .table-base {
+    @apply w-full text-left text-sm;
+  }
+  .table-base th {
+    @apply border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wider text-ink-faint;
+  }
+  .table-base td {
+    @apply border-b border-line/60 px-3 py-2.5 align-middle;
+  }
+  .table-base tbody tr:hover {
+    @apply bg-inset/50;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-soft
+      transition hover:bg-inset hover:text-ink;
+  }
+  .nav-item.active {
+    @apply bg-grass-600/15 text-grass-300;
+    box-shadow: inset 2px 0 0 var(--color-grass-500);
+  }
+  :root[data-theme='light'] .nav-item.active {
+    @apply text-grass-700;
+  }
+
+  /* Meters read like the in-game XP bar: blocky, with a beveled trough and a
+     glossy top edge on the fill. */
+  .meter {
+    @apply h-2.5 w-full overflow-hidden rounded-sm bg-inset;
+    box-shadow:
+      inset 0 1px 2px rgb(0 0 0 / 0.4),
+      inset 0 -1px 0 rgb(255 255 255 / 0.05);
+  }
+  .meter > div {
+    @apply h-full rounded-sm transition-all;
+    box-shadow:
+      inset 0 2px 0 rgb(255 255 255 / 0.3),
+      inset 0 -2px 0 rgb(0 0 0 / 0.25);
+  }
+
+  .status-dot {
+    @apply inline-block size-2.5 rounded-full;
+  }
+  .status-dot.pulse::after {
+    content: '';
+    @apply absolute inline-block size-2.5 animate-ping rounded-full opacity-60;
+    background: inherit;
+  }
+
+  /* Console */
+  .console {
+    @apply rounded-md border border-line bg-stone-950 p-3 font-mono text-[13px] leading-6 text-stone-200;
+  }
+
+  /* ---- Custom form controls: no native browser widgets, ever ---- */
+
+  .icon {
+    display: inline-block;
+    vertical-align: -0.125em;
+  }
+
+  input[type='checkbox'].msm-check,
+  input[type='radio'].msm-radio {
+    @apply size-4 shrink-0 cursor-pointer appearance-none border border-line-strong bg-inset
+      transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400;
+  }
+  input[type='checkbox'].msm-check {
+    @apply rounded;
+  }
+  input[type='checkbox'].msm-check:checked {
+    @apply border-grass-500 bg-grass-600;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    background-size: 80%;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  input[type='radio'].msm-radio {
+    @apply rounded-full;
+  }
+  input[type='radio'].msm-radio:checked {
+    @apply border-grass-500;
+    background: radial-gradient(circle, var(--color-grass-500) 0 38%, var(--color-inset) 42%);
+  }
+
+  /* Toggle switch: <label class="msm-toggle"><input type="checkbox"><span></span></label> */
+  .msm-toggle {
+    @apply relative inline-flex cursor-pointer items-center;
+  }
+  .msm-toggle input {
+    @apply absolute inset-0 cursor-pointer appearance-none rounded-full
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400;
+  }
+  .msm-toggle span {
+    @apply pointer-events-none relative h-5 w-9 rounded-full bg-inset ring-1 ring-inset ring-line-strong transition;
+  }
+  .msm-toggle span::after {
+    content: '';
+    @apply absolute left-0.5 top-0.5 size-4 rounded-full bg-stone-300 transition-all;
+  }
+  .msm-toggle input:checked + span {
+    @apply bg-grass-600 ring-grass-700;
+  }
+  .msm-toggle input:checked + span::after {
+    @apply left-[1.125rem] bg-white;
+  }
+
+  /* Range sliders */
+  input[type='range'].msm-range {
+    @apply h-2 w-full cursor-pointer appearance-none rounded-full bg-inset
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400;
+  }
+  input[type='range'].msm-range::-webkit-slider-thumb {
+    @apply size-4 appearance-none rounded-sm border border-grass-700 bg-grass-500 shadow;
+  }
+  input[type='range'].msm-range::-moz-range-thumb {
+    @apply size-4 rounded-sm border border-grass-700 bg-grass-500 shadow;
+  }
+  input[type='range'].msm-range.msm-range-alt::-webkit-slider-thumb {
+    @apply border-diamond-700 bg-diamond-400;
+  }
+  input[type='range'].msm-range.msm-range-alt::-moz-range-thumb {
+    @apply border-diamond-700 bg-diamond-400;
+  }
+
+  .msm-select {
+    @apply cursor-pointer;
+  }
+
+  /* Subtle "dirt" texture strip used on page headers */
+  .texture-top {
+    background-image:
+      linear-gradient(to bottom, rgb(63 166 43 / 0.08), transparent 60%),
+      repeating-linear-gradient(90deg, rgb(255 255 255 / 0.015) 0 8px, transparent 8px 16px);
+  }
+}

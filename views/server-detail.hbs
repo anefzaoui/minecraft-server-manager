@@ -1,0 +1,12 @@
+{{> server/chrome}}
+
+{{! World controls ride along on every tab as a right rail (stacks below on
+    smaller screens) — always within reach while managing players/files/etc. }}
+<div class="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+  <div class="min-w-0">
+    {{> (concat 'server/' tab)}}
+  </div>
+  <aside class="xl:sticky xl:top-20">
+    {{> server/world-controls}}
+  </aside>
+</div>

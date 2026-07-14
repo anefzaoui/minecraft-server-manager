@@ -1,0 +1,14 @@
+# Application data (worlds, mods, backups, DB, generated secret — everything lives here)
+data/
+
+node_modules/
+public/css/app.css
+.env
+
+
+# Logs / editor / OS noise
+*.log
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

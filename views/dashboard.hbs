@@ -1,0 +1,83 @@
+﻿<div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if serversOnly}}hidden{{/if}}">
+  <div class="card p-4">
+    <div class="text-xs text-ink-faint">Servers online</div>
+    <div class="mt-1 text-2xl font-bold text-grass-400">{{totals.running}}<span class="text-base font-medium text-ink-faint"> / {{totals.total}}</span></div>
+  </div>
+  <div class="card p-4">
+    <div class="text-xs text-ink-faint">Players connected</div>
+    <div class="mt-1 text-2xl font-bold">{{totals.players}}</div>
+  </div>
+  <div class="card p-4">
+    <div class="text-xs text-ink-faint">Updates available</div>
+    <div class="mt-1 text-2xl font-bold {{#if totals.updates}}text-gold-400{{/if}}">{{totals.updates}}</div>
+  </div>
+  <div class="card p-4">
+    <div class="text-xs text-ink-faint">Docker</div>
+    <div class="mt-1 flex items-center gap-2 text-sm font-semibold text-ink-faint" id="docker-status">
+      <span class="status-dot relative bg-stone-500"></span> Checking…
+    </div>
+  </div>
+</div>
+
+<div id="docker-warning" class="mb-4 hidden items-start gap-2.5 rounded-md border border-redstone-800/60 bg-redstone-900/20 p-3 text-sm text-redstone-200">
+  {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0'}}}
+  <div>
+    <span class="font-semibold">Docker isn’t reachable.</span>
+    <span id="docker-warning-reason">Start Docker, then reload — creating or starting servers needs the daemon running.</span>
+  </div>
+</div>
+
+{{#unless noServers}}
+<div class="mb-4 flex flex-wrap items-center gap-2">
+  <input class="input max-w-xs" placeholder="Search servers, tags…" id="server-filter">
+  <select class="input w-auto" id="server-sort" data-label="Sort servers">
+    <option value="status" {{#if (eq sort 'status')}}selected{{/if}}>Sort: Status</option>
+    <option value="name" {{#if (eq sort 'name')}}selected{{/if}}>Name</option>
+    <option value="size" {{#if (eq sort 'size')}}selected{{/if}}>Size</option>
+    <option value="started" {{#if (eq sort 'started')}}selected{{/if}}>Last started</option>
+    <option value="created" {{#if (eq sort 'created')}}selected{{/if}}>Created</option>
+  </select>
+  <div class="ml-auto flex rounded-md border border-line-strong p-0.5">
+    <button class="btn btn-ghost btn-sm" id="view-grid" data-tip="Grid view">{{{icon 'layout-grid' 'size-4'}}}</button>
+    <button class="btn btn-ghost btn-sm" id="view-list" data-tip="List view">{{{icon 'list' 'size-4'}}}</button>
+  </div>
+</div>
+
+{{/unless}}
+
+{{#if noServers}}
+  {{> empty-state iconName='pickaxe' title='No servers yet' message='Create your first Minecraft server — pick a server type and version, or start from a blueprint. You will be playing in minutes.' ctaHref='/servers/new' ctaLabel='Create your first server'}}
+{{else}}
+<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="server-grid">
+  {{#each servers}}
+    {{> server-card}}
+  {{/each}}
+
+  <a href="/servers/new" class="grid min-h-44 place-items-center rounded-lg border-2 border-dashed border-line text-ink-faint transition hover:border-grass-600 hover:text-grass-400">
+    <div class="grid place-items-center text-center">
+      {{{icon 'plus' 'size-8'}}}
+      <div class="mt-2 text-sm font-medium">Create a server</div>
+    </div>
+  </a>
+</div>
+{{/if}}
+
+<div class="mt-8 {{#if serversOnly}}hidden{{/if}}">
+  <div class="mb-3 flex items-center justify-between">
+    <h2 class="font-semibold">Recent activity</h2>
+    <a href="/activity" class="text-sm text-diamond-400 hover:underline">View all →</a>
+  </div>
+  <div class="card divide-y divide-line">
+    {{#each activity}}
+      <div class="flex items-center gap-3 px-4 py-3 text-sm">
+        <span class="badge shrink-0 bg-inset text-ink-soft">{{type}}</span>
+        <span class="min-w-0 flex-1 truncate">{{summary}}</span>
+        {{#if serverId}}<a href="/servers/{{serverId}}" class="hidden shrink-0 text-xs text-diamond-400 hover:underline sm:block">{{server}}</a>{{else}}<span class="hidden shrink-0 text-xs text-diamond-400 hover:underline sm:block">{{server}}</span>{{/if}}
+        <span class="shrink-0 text-xs text-ink-faint">{{ts}}</span>
+      </div>
+    {{else}}
+      <div class="px-4 py-8 text-center text-sm text-ink-faint">No activity yet — actions on your servers will show up here.</div>
+    {{/each}}
+  </div>
+</div>
+<script type="module" src="/js/pages/dashboard.js"></script>

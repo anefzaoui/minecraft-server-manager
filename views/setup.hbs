@@ -1,0 +1,121 @@
+<div class="w-full max-w-lg" id="setup-wizard">
+  <div class="mb-5 flex items-center justify-center gap-2.5">
+    <span class="grid size-10 place-items-center rounded-md bg-grass-600 text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)]">{{{icon 'pickaxe' 'size-5'}}}</span>
+    <span class="pixel text-sm">Minecraft <span class="text-grass-400">Server Manager</span></span>
+  </div>
+
+  {{! Progress dots — one per step, driven by setup.js }}
+  <div class="mb-4 flex items-center justify-center gap-2" id="setup-dots" aria-hidden="true">
+    <span class="h-1.5 w-6 rounded-full bg-grass-500 transition-colors" data-dot></span>
+    <span class="h-1.5 w-6 rounded-full bg-line transition-colors" data-dot></span>
+    <span class="h-1.5 w-6 rounded-full bg-line transition-colors" data-dot></span>
+    <span class="h-1.5 w-6 rounded-full bg-line transition-colors" data-dot></span>
+    <span class="h-1.5 w-6 rounded-full bg-line transition-colors" data-dot></span>
+  </div>
+
+  <div class="card p-6">
+    {{! ---- Step 0: Welcome ---- }}
+    <section data-step="0">
+      <h2 class="text-center text-lg font-semibold">Welcome to Minecraft Server Manager</h2>
+      <p class="mx-auto mt-2 max-w-sm text-center text-sm text-ink-faint">
+        Your control panel for Minecraft servers on Docker — create, configure, back up, and manage
+        modpacks, worlds, players, and more. Let's get a few things set up. It only takes a minute.
+      </p>
+      <button class="btn btn-primary mt-6 w-full" data-next>Get started {{{icon 'arrow-right' 'size-4'}}}</button>
+    </section>
+
+    {{! ---- Step 1: System checks ---- }}
+    <section data-step="1" hidden>
+      <h2 class="text-lg font-semibold">System check</h2>
+      <p class="mt-1 text-sm text-ink-faint">Making sure everything Minecraft Server Manager needs is in place.</p>
+      <div class="mt-4 space-y-2" id="checks-list">
+        <div class="flex items-center gap-2 py-6 text-sm text-ink-faint">
+          <span class="size-4 animate-spin rounded-full border-2 border-line border-t-grass-500"></span> Running checks…
+        </div>
+      </div>
+      <div class="mt-6 flex items-center gap-2">
+        <button class="btn btn-ghost" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
+        <button class="btn btn-ghost" data-recheck>{{{icon 'rotate-cw' 'size-4'}}} Re-check</button>
+        <button class="btn btn-primary ml-auto" data-next>Continue {{{icon 'arrow-right' 'size-4'}}}</button>
+      </div>
+    </section>
+
+    {{! ---- Step 2: Create admin ---- }}
+    <section data-step="2" hidden>
+      <h2 class="text-lg font-semibold">Create your admin account</h2>
+      <p class="mt-1 text-sm text-ink-faint">This is the owner account for the panel. You can add more users later.</p>
+      <div class="mt-4 hidden rounded-md border border-redstone-700 bg-redstone-900/20 p-2.5 text-sm text-redstone-300" id="admin-error"></div>
+      <form id="setup-admin" class="mt-4 space-y-4">
+        <div>
+          <label class="label" for="su-user">Username</label>
+          <input class="input" id="su-user" name="username" autocomplete="username" required minlength="2" maxlength="32">
+        </div>
+        <div>
+          <label class="label" for="su-pass">Password</label>
+          <input class="input" id="su-pass" name="password" type="password" autocomplete="new-password" required minlength="8">
+          <p class="help">At least 8 characters. If you ever get locked out, reset it from the server with <code>node scripts/reset-password.js &lt;username&gt;</code> (see the README).</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="btn btn-ghost" type="button" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
+          <button class="btn btn-primary ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} Create admin</button>
+        </div>
+      </form>
+    </section>
+
+    {{! ---- Step 3: Panel configuration (optional) ---- }}
+    <section data-step="3" hidden>
+      <div class="flex items-center gap-2">
+        <h2 class="text-lg font-semibold">Panel configuration</h2>
+        <span class="badge bg-line/60 text-ink-faint">optional</span>
+      </div>
+      <p class="mt-1 text-sm text-ink-faint">You can change all of this later in Settings.</p>
+
+      <div class="mt-5">
+        <label class="label" for="su-domain">Public domain <span class="text-ink-faint">(optional)</span></label>
+        <div class="flex gap-2">
+          <input class="input" id="su-domain" placeholder="mc.example.com" autocomplete="off" spellcheck="false">
+          <button class="btn shrink-0" type="button" id="su-domain-save">Save</button>
+        </div>
+        <p class="help">Shown to players instead of your IP in connect addresses, e.g. <code>mc.example.com:25565</code>. No scheme or port.</p>
+      </div>
+
+      <div class="mt-5">
+        <label class="label" for="su-cf">CurseForge API key <span class="text-ink-faint">(optional)</span></label>
+        <div class="flex gap-2">
+          <input class="input" id="su-cf" type="password" placeholder="$2a$10$…" autocomplete="off" spellcheck="false">
+          <button class="btn shrink-0" type="button" id="su-cf-save">Test &amp; save</button>
+        </div>
+        <p class="help">Needed only for automated CurseForge modpacks. Get one at
+          <a class="text-diamond-500 underline hover:text-diamond-400" href="https://console.curseforge.com/" target="_blank" rel="noopener">console.curseforge.com</a>.</p>
+      </div>
+
+      <div class="mt-5">
+        <span class="label">Time zone &amp; region</span>
+        <div class="grid gap-2 sm:grid-cols-2">
+          <select class="input" id="su-tz" data-native aria-label="Time zone"></select>
+          <select class="input" id="su-country" data-native aria-label="Country"></select>
+        </div>
+        <p class="help">Detected from your system. Sets how dates and player activity times display across the panel.</p>
+        <button class="btn mt-2" type="button" id="su-loc-save">Save time zone &amp; region</button>
+      </div>
+
+      <div class="mt-6 flex items-center">
+        <button class="btn btn-primary ml-auto" data-next>Continue {{{icon 'arrow-right' 'size-4'}}}</button>
+      </div>
+    </section>
+
+    {{! ---- Step 4: Done ---- }}
+    <section data-step="4" hidden>
+      <div class="grid place-items-center py-2 text-center">
+        <span class="grid size-12 place-items-center rounded-full bg-grass-600/15 text-grass-400">{{{icon 'party-popper' 'size-6'}}}</span>
+        <h2 class="mt-3 text-lg font-semibold">You're all set!</h2>
+        <p class="mt-1 max-w-sm text-sm text-ink-faint">Minecraft Server Manager is ready. Spin up your first Minecraft server whenever you like.</p>
+      </div>
+      <div class="mt-4 flex flex-col gap-2">
+        <a class="btn btn-primary w-full" href="/servers/new">{{{icon 'plus' 'size-4'}}} Create your first server</a>
+        <a class="btn btn-ghost w-full" href="/">Go to the dashboard</a>
+      </div>
+    </section>
+  </div>
+</div>
+<script type="module" src="/js/pages/setup.js"></script>

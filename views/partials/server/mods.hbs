@@ -1,0 +1,91 @@
+<div data-mods-server="{{server.id}}" data-mods-loader="{{server.type}}" data-mods-mc="{{server.mcVersion}}">
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    {{#if mods.length}}
+    <input class="input max-w-xs" placeholder="Search installed mods…" id="mods-filter">
+    <select class="input w-auto" data-label="Filter by source" id="mods-source">
+      <option value="">All sources</option><option value="pack">Pack-managed</option><option value="overlay">Custom overlay</option>
+    </select>
+    {{/if}}
+    <div class="ml-auto flex flex-wrap gap-2">
+      <button class="btn btn-sm" id="mods-search-modrinth">{{{icon 'search' 'size-3.5'}}} Search Modrinth</button>
+      <button class="btn btn-primary btn-sm" id="mods-add-url">{{{icon 'plus' 'size-3.5'}}} Add by URL</button>
+    </div>
+  </div>
+
+  {{#if server.pack}}
+    <div class="mb-4 max-w-prose rounded-md border border-diamond-800/50 bg-diamond-900/20 p-3 text-xs text-ink-soft">
+      <b class="text-diamond-400">Pack-managed</b> mods are installed by {{server.pack.platform}} ({{server.pack.name}} @ {{server.pack.version}}).
+      Disabling one uses the image's exclude list and applies on next restart. <b class="text-grass-400">Custom overlay</b> mods are yours —
+      they live in the shared library, survive pack updates, and can be toggled instantly.
+    </div>
+  {{/if}}
+
+  {{#if mods.length}}
+  <div class="card overflow-x-auto">
+    <table class="table-base" id="mods-table">
+      <thead><tr>
+        <th>Mod</th><th>Source</th><th>Version</th><th class="text-right">Size</th><th>Status</th><th class="text-right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {{#each mods}}
+          <tr class="{{#unless enabled}}opacity-60{{/unless}}" data-mod-row data-file="{{file}}" data-source="{{source}}" data-enabled="{{enabled}}">
+            <td>
+              <div class="flex items-center gap-2.5">
+                {{#if iconUrl}}
+                  <img src="{{iconUrl}}" alt="" class="size-8 shrink-0 rounded bg-inset object-cover">
+                {{else}}
+                  <span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-ink-faint">{{{icon 'puzzle' 'size-4'}}}</span>
+                {{/if}}
+                <div class="min-w-0">
+                  <div class="truncate font-medium">{{name}}</div>
+                  <div class="truncate font-mono text-xs text-ink-faint">{{file}}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              {{#if (eq source 'pack')}}
+                <span class="badge bg-diamond-400/15 text-diamond-400">pack</span>
+              {{else if (eq source 'overlay')}}
+                <span class="badge bg-grass-500/15 text-grass-400">overlay</span>
+                {{#if sharedWith}}<div class="mt-1 text-[11px] text-ink-faint">on {{sharedWith}} server{{#if (gt sharedWith 1)}}s{{/if}}</div>{{/if}}
+              {{else}}
+                <span class="badge bg-inset text-ink-soft">file</span>
+              {{/if}}
+            </td>
+            <td>
+              {{default version '—'}}
+              {{#if updateAvailable}}<span class="badge ml-1 bg-gold-400/15 text-gold-400" data-tip="Update available">→ {{updateAvailable}}</span>{{/if}}
+            </td>
+            <td class="text-right text-ink-faint">{{bytes size}}</td>
+            <td>
+              {{#if missing}}
+                <span class="text-xs font-medium text-redstone-400" data-tip="File missing on disk — reinstall from library">missing</span>
+              {{else if enabled}}
+                <span class="text-xs font-medium text-grass-400">Enabled</span>
+              {{else}}
+                <span class="text-xs font-medium text-ink-faint">Disabled</span>
+              {{/if}}
+            </td>
+            <td class="text-right">
+              <div class="inline-flex gap-1">
+                {{#if updateAvailable}}
+                  <button class="btn btn-ghost btn-sm text-gold-400" data-mod-update data-tip="Update to {{updateAvailable}}">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
+                {{/if}}
+                {{#unless missing}}
+                  <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}Pack mods apply on restart{{else}}Applies instantly{{/if}}">{{#if enabled}}Disable{{else}}Enable{{/if}}</button>
+                {{/unless}}
+                {{#if (ne source 'pack')}}
+                  <button class="btn btn-ghost btn-sm text-redstone-400" data-mod-delete aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+                {{/if}}
+              </div>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+    {{> empty-state iconName='puzzle' title='No mods installed yet' message='Search Modrinth or add a mod by URL with the buttons above — custom mods live in the shared library and survive pack updates.'}}
+  {{/if}}
+</div>
+<script type="module" src="/js/pages/mods.js"></script>

@@ -1,0 +1,75 @@
+// Tooltips for any element with data-tip="text". Hover + keyboard focus on
+// desktop, tap on touch. Single floating element, viewport-aware placement.
+
+let tipEl;
+let currentTarget = null;
+let showTimer;
+
+function ensure() {
+  if (tipEl) return tipEl;
+  tipEl = document.createElement('div');
+  tipEl.className =
+    'pointer-events-none fixed z-[70] hidden max-w-64 rounded-md border border-line-strong bg-raised px-2.5 py-1.5 text-xs text-ink shadow-lg';
+  tipEl.setAttribute('role', 'tooltip');
+  document.body.appendChild(tipEl);
+  return tipEl;
+}
+
+// Icon-only controls carry their meaning in data-tip, which assistive tech can't
+// read. Promote it to an accessible name when the element has no other label, so
+// screen readers announce "Restore backup" instead of just "button".
+function labelFromTip(el) {
+  if (!el.dataset.tip) return;
+  if (el.getAttribute('aria-label') || el.getAttribute('aria-labelledby')) return;
+  if ((el.textContent || '').trim()) return;
+  el.setAttribute('aria-label', el.dataset.tip);
+}
+
+export function labelTips(root = document) {
+  for (const el of root.querySelectorAll('[data-tip]')) labelFromTip(el);
+}
+
+function show(target) {
+  const text = target.dataset.tip;
+  if (!text) return;
+  labelFromTip(target);
+  const el = ensure();
+  el.textContent = text;
+  el.classList.remove('hidden');
+  currentTarget = target;
+
+  const r = target.getBoundingClientRect();
+  const tr = el.getBoundingClientRect();
+  // Prefer above; flip below if it would clip.
+  let top = r.top - tr.height - 8;
+  if (top < 4) top = r.bottom + 8;
+  let left = r.left + r.width / 2 - tr.width / 2;
+  left = Math.max(4, Math.min(left, window.innerWidth - tr.width - 4));
+  el.style.top = `${Math.round(top)}px`;
+  el.style.left = `${Math.round(left)}px`;
+}
+
+function hide() {
+  clearTimeout(showTimer);
+  currentTarget = null;
+  if (tipEl) tipEl.classList.add('hidden');
+}
+
+document.addEventListener('pointerover', (e) => {
+  const t = e.target.closest('[data-tip]');
+  if (!t || t === currentTarget) return;
+  clearTimeout(showTimer);
+  showTimer = setTimeout(() => show(t), 350);
+});
+document.addEventListener('pointerout', (e) => {
+  if (e.target.closest('[data-tip]')) hide();
+});
+document.addEventListener('focusin', (e) => {
+  const t = e.target.closest('[data-tip]');
+  if (t) show(t);
+});
+document.addEventListener('focusout', hide);
+document.addEventListener('scroll', hide, true);
+
+// Give every server-rendered tooltipped control an accessible name up front.
+labelTips();

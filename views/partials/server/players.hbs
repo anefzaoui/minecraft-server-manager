@@ -1,0 +1,151 @@
+<div data-players-root data-server-id="{{server.id}}" data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{else}}0{{/if}}">
+
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    {{#if players.length}}
+    <input class="input max-w-xs" placeholder="Search players…" id="players-search">
+    <select class="input w-auto" id="players-filter" data-label="Filter players">
+      <option value="all">All players</option>
+      <option value="online">Online</option>
+      <option value="whitelisted">Whitelisted</option>
+      <option value="ops">Ops</option>
+      <option value="banned">Banned</option>
+    </select>
+    {{/if}}
+    <label class="flex cursor-pointer items-center gap-2 text-sm">
+      <span class="msm-toggle"><input type="checkbox" id="players-wl-enforce" {{#if whitelistEnforced}}checked{{/if}}><span></span></span>
+      Whitelist enforced
+    </label>
+    <div class="ml-auto flex gap-2">
+      <button class="btn btn-primary btn-sm" id="players-add">{{{icon 'user-plus' 'size-3.5'}}} Add player</button>
+    </div>
+  </div>
+
+  {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
+    <div class="mb-4 max-w-prose rounded-md border border-gold-800/50 bg-gold-900/20 p-3 text-xs text-ink-soft">
+      Server is offline — whitelist, op and ban changes are written straight to the server files and apply on the next start.
+      Kicks and teleports need a running server.
+    </div>
+  {{/unless}}
+
+  {{#if players.length}}
+  <div class="card overflow-x-auto">
+    <table class="table-base">
+      <thead><tr>
+        <th>Player</th><th>Status</th><th>Roles</th><th>Details</th><th class="text-right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {{#each players}}
+          <tr data-player-row
+              data-name="{{name}}"
+              data-online="{{#if online}}1{{else}}0{{/if}}"
+              data-whitelisted="{{#if whitelisted}}1{{else}}0{{/if}}"
+              data-op="{{#if op}}1{{else}}0{{/if}}"
+              data-banned="{{#if banned}}1{{else}}0{{/if}}">
+            <td>
+              <a href="/servers/{{../server.id}}/players/{{name}}" class="group flex items-center gap-2.5" data-tip="Open {{name}}'s page — roles, teleport &amp; inventory">
+                <span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-xs font-bold">{{name.[0]}}</span>
+                <div class="min-w-0">
+                  <div class="font-medium transition group-hover:text-diamond-400">{{name}}</div>
+                  {{#if uuid}}<div class="max-w-36 truncate font-mono text-[11px] text-ink-faint">{{uuid}}</div>{{/if}}
+                </div>
+              </a>
+            </td>
+            <td>
+              {{#if online}}
+                <span class="flex items-center gap-1.5 text-xs font-medium text-grass-400"><span class="status-dot relative bg-grass-500 pulse"></span> Online</span>
+              {{else}}
+                <span class="flex items-center gap-1.5 text-xs font-medium text-ink-faint"><span class="status-dot bg-stone-500"></span> Offline</span>
+                {{#if lastSeen}}<div class="mt-0.5 text-[11px] text-ink-faint" data-tip="From usercache — name cached until this date">seen ~{{lastSeen}}</div>{{/if}}
+              {{/if}}
+            </td>
+            <td>
+              <div class="flex flex-wrap gap-1.5">
+                <button class="chip transition {{#if whitelisted}}border-grass-700 bg-grass-500/15 text-grass-400{{else}}opacity-60 hover:opacity-100{{/if}}"
+                        data-role-toggle="whitelist" data-name="{{name}}" data-on="{{#if whitelisted}}1{{else}}0{{/if}}"
+                        data-tip="{{#if whitelisted}}Remove from whitelist{{else}}Add to whitelist{{/if}}">
+                  {{{icon 'shield-check' 'size-3.5'}}} Whitelist
+                </button>
+                <button class="chip transition {{#if op}}border-diamond-700 bg-diamond-400/15 text-diamond-400{{else}}opacity-60 hover:opacity-100{{/if}}"
+                        data-role-toggle="op" data-name="{{name}}" data-on="{{#if op}}1{{else}}0{{/if}}"
+                        data-tip="{{#if op}}Remove operator status{{else}}Make operator (level 4){{/if}}">
+                  {{{icon 'shield' 'size-3.5'}}} Op{{#if op}} L{{opLevel}}{{/if}}
+                </button>
+                <button class="chip transition {{#if banned}}border-redstone-700 bg-redstone-500/15 text-redstone-400{{else}}opacity-60 hover:opacity-100{{/if}}"
+                        data-role-toggle="ban" data-name="{{name}}" data-on="{{#if banned}}1{{else}}0{{/if}}"
+                        data-tip="{{#if banned}}Pardon this player{{else}}Ban this player{{/if}}">
+                  {{{icon 'ban' 'size-3.5'}}} {{#if banned}}Banned{{else}}Ban{{/if}}
+                </button>
+              </div>
+            </td>
+            <td class="text-xs text-ink-faint">
+              {{#if banned}}
+                <div class="text-redstone-400">{{default banReason 'No reason recorded'}}</div>
+                {{#if banDate}}<div class="mt-0.5">{{banDate}}{{#if banSource}} · {{banSource}}{{/if}}</div>{{/if}}
+              {{else}}
+                —
+              {{/if}}
+            </td>
+            <td class="text-right">
+              <div class="inline-flex gap-1">
+                {{#if online}}
+                  <button class="btn btn-ghost btn-sm" data-act="kick" data-name="{{name}}" data-tip="Kick with a message">{{{icon 'log-out' 'size-3.5'}}}</button>
+                {{/if}}
+                {{#if (or (eq ../server.status 'running') (eq ../server.status 'unhealthy'))}}
+                  <button class="btn btn-ghost btn-sm" data-act="teleport" data-name="{{name}}" data-tip="Teleport (coordinates / biome / player)">{{{icon 'compass' 'size-3.5'}}}</button>
+                {{else}}
+                  <span data-tip="Start the server to teleport players"><button class="btn btn-ghost btn-sm" data-act="teleport" data-name="{{name}}" disabled>{{{icon 'compass' 'size-3.5'}}}</button></span>
+                {{/if}}
+                <button class="btn btn-ghost btn-sm" data-menu="player-menu-{{@index}}" data-tip="More actions">{{{icon 'ellipsis' 'size-3.5'}}}</button>
+                <template id="player-menu-{{@index}}">
+                  <button data-act="op-level" data-name="{{name}}">{{{icon 'shield' 'size-3.5'}}} Set op level…</button>
+                  <button data-act="ban-reason" data-name="{{name}}">{{{icon 'ban' 'size-3.5'}}} Ban with reason…</button>
+                  {{#if uuid}}<button data-act="copy-uuid" data-uuid="{{uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
+                </template>
+              </div>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    <div class="hidden p-8 text-center text-sm text-ink-faint" id="players-no-match">No players match this filter.</div>
+  </div>
+  {{else}}
+    {{> empty-state iconName='users' title='No players seen yet' message='Add a player by name — it is resolved to a UUID via Mojang — or players appear here automatically the first time they join.'}}
+  {{/if}}
+
+  <div class="card mt-6 p-4">
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <h3 class="font-semibold">Banned IPs</h3>
+      <div class="ml-auto flex flex-wrap justify-end gap-2">
+        <input class="input w-44 max-w-full" placeholder="IP address" id="banip-ip">
+        <input class="input w-56 max-w-full" placeholder="Reason (optional)" id="banip-reason">
+        <button class="btn btn-sm" id="banip-add">{{{icon 'ban' 'size-3.5'}}} Ban IP</button>
+      </div>
+    </div>
+    {{#if bannedIps.length}}
+      <div class="overflow-x-auto">
+        <table class="table-base">
+          <thead><tr><th>IP</th><th>Reason</th><th>Date</th><th>Source</th><th class="text-right">Actions</th></tr></thead>
+          <tbody>
+            {{#each bannedIps}}
+              <tr>
+                <td class="font-mono">{{ip}}</td>
+                <td class="text-xs text-ink-soft">{{default reason '—'}}</td>
+                <td class="text-xs text-ink-faint">{{default created '—'}}</td>
+                <td class="text-xs text-ink-faint">{{default source '—'}}</td>
+                <td class="text-right">
+                  <button class="btn btn-ghost btn-sm text-redstone-400" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban">{{{icon 'x' 'size-3.5'}}}</button>
+                </td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{else}}
+      <p class="text-sm text-ink-faint">No banned IPs.</p>
+    {{/if}}
+  </div>
+</div>
+
+<script type="application/json" id="players-data">{{{json players}}}</script>
+<script type="module" src="/js/pages/players.js"></script>

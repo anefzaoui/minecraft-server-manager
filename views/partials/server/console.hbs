@@ -1,0 +1,40 @@
+<div class="card p-4" data-console-server="{{server.id}}">
+  <div class="mb-3 flex flex-wrap items-center gap-2">
+    <input class="input max-w-xs" placeholder="Filter log lines… (/regex/ supported)" id="console-filter" aria-label="Filter log lines">
+    <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="INFO" checked> INFO</label>
+    <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="WARN" checked> WARN</label>
+    <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="ERROR" checked> ERROR</label>
+    <div class="ml-auto flex flex-wrap items-center gap-2">
+      <div class="flex items-center gap-1.5" data-tip="Announce your console commands in game chat under this name (e.g. Server Admin). Leave blank to stay silent. The vanilla '[Rcon]' line is separate.">
+        {{{icon 'megaphone' 'size-3.5 text-ink-faint'}}}
+        <input class="input w-36" id="console-label" placeholder="Announce as…" aria-label="Announce console commands as" value="{{server.consoleLabel}}" maxlength="48" autocomplete="off" spellcheck="false">
+        <button class="btn btn-sm" id="console-label-save">Save</button>
+      </div>
+      <button class="btn btn-sm" id="console-download">{{{icon 'download' 'size-3.5'}}} Download</button>
+    </div>
+  </div>
+
+  <div class="console h-96 overflow-y-auto" id="console-log">
+    {{#if consoleLines}}
+      {{#each consoleLines}}
+        <div data-level="{{level}}"{{#if (eq level 'WARN')}} class="text-gold-300"{{/if}}{{#if (eq level 'ERROR')}} class="text-redstone-400"{{/if}}>{{text}}</div>
+      {{/each}}
+    {{else}}
+      <div class="grid h-full place-items-center px-4 text-center text-sm text-ink-faint" data-console-empty>No console output yet — start the server to see live logs.</div>
+    {{/if}}
+  </div>
+
+  <div class="mt-3 flex gap-2">
+    <span class="grid place-items-center rounded-md border border-line-strong bg-inset px-3 font-mono text-sm text-grass-400">/</span>
+    <input class="input flex-1 font-mono" placeholder="Type a command — Enter to send, ↑ for history" id="console-input" aria-label="Server command" autocomplete="off">
+    <button class="btn btn-primary" id="console-send">{{{icon 'terminal' 'size-4'}}} Send</button>
+  </div>
+  <div class="mt-2 flex flex-wrap gap-1.5">
+    <button class="chip hover:border-grass-600" data-quick-cmd="time set day">{{{icon 'sun' 'size-3.5'}}} time set day</button>
+    <button class="chip hover:border-grass-600" data-quick-cmd="weather clear">{{{icon 'cloud-sun' 'size-3.5'}}} weather clear</button>
+    <button class="chip hover:border-grass-600" data-quick-cmd="save-all">{{{icon 'save' 'size-3.5'}}} save-all</button>
+    <button class="chip hover:border-grass-600" data-quick-cmd="whitelist list">{{{icon 'clipboard-copy' 'size-3.5'}}} whitelist list</button>
+    <button class="chip hover:border-grass-600" data-quick-cmd="list">{{{icon 'users' 'size-3.5'}}} list</button>
+  </div>
+</div>
+<script type="module" src="/js/pages/console.js"></script>

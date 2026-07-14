@@ -1,0 +1,40 @@
+{{> page-header heading="BLUEPRINTS" sub="Portable server recipes (.mcserver.zip) — export a server, import it anywhere, get the same server."}}
+
+<div class="mb-4 flex flex-wrap gap-2">
+  <button class="btn btn-primary" id="bp-import-btn">{{{icon 'upload' 'size-4'}}} Import blueprint</button>
+  <input type="file" id="bp-import-file" class="hidden" accept=".zip,application/zip">
+</div>
+
+<div class="contents" data-blueprints-page>
+{{#if blueprints.length}}
+<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="bp-grid">
+  {{#each blueprints}}
+    <div class="card p-4" data-bp-card data-bp-id="{{id}}" data-bp-name="{{name}}">
+      <div class="flex items-start gap-3">
+        <span class="grid size-10 place-items-center rounded-md bg-inset text-xl">{{{icon 'drafting-compass' 'size-5'}}}</span>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <h3 class="truncate font-semibold">{{name}}</h3>
+            {{#if builtin}}<span class="badge bg-diamond-400/15 text-diamond-400">starter</span>{{/if}}
+          </div>
+          <p class="mt-0.5 text-xs text-ink-faint">{{notes}}</p>
+        </div>
+      </div>
+      <dl class="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 text-xs">
+        <div><dt class="text-ink-faint">Pack</dt><dd class="mt-0.5 font-medium">{{default pack '—'}}</dd></div>
+        <div><dt class="text-ink-faint">Overlay mods</dt><dd class="mt-0.5 font-medium">{{overlayCount}}</dd></div>
+        <div><dt class="text-ink-faint">Size</dt><dd class="mt-0.5 font-medium">{{bytes size_bytes}}</dd></div>
+      </dl>
+      <div class="mt-3 flex gap-2">
+        <button class="btn btn-sm flex-1" data-bp-create>{{{icon 'pickaxe' 'size-3.5'}}} Create server</button>
+        <a class="btn btn-ghost btn-sm" href="/api/blueprints/{{id}}/download" aria-label="Download {{name}}">{{{icon 'download' 'size-3.5'}}}</a>
+        {{#unless builtin}}<button class="btn btn-ghost btn-sm text-redstone-400" data-bp-delete aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>{{/unless}}
+      </div>
+    </div>
+  {{/each}}
+</div>
+{{else}}
+  {{> empty-state iconName='drafting-compass' title='No blueprints yet' message='Export one from a server&apos;s Settings tab, or import a .mcserver.zip with the button above — the same recipe then rebuilds the server anywhere.'}}
+{{/if}}
+</div>
+<script type="module" src="/js/pages/blueprints.js"></script>

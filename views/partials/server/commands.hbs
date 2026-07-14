@@ -1,0 +1,113 @@
+<div data-commands-root data-server-id="{{server.id}}" data-prefix="{{chatPrefix}}"
+     data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{else}}0{{/if}}">
+
+  <div class="card mb-4 p-4">
+    <div class="flex flex-wrap items-start gap-4">
+      <div class="min-w-0 flex-1">
+        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-diamond-400'}}} Custom chat commands</h3>
+        <p class="mt-1 max-w-prose text-sm text-ink-faint">
+          Players type a trigger in game chat — like <code class="rounded bg-inset px-1 font-mono text-ink-soft">{{chatPrefix}}rtp2</code> —
+          and the panel runs the bound action <b class="text-ink-soft">as that player</b>: random teleport, structure or biome
+          teleport, or your own console commands. Works on any server, version or modpack — no mods needed.
+          Each command has its own permission level and per-player cooldown.
+        </p>
+      </div>
+      <div class="flex items-end gap-2">
+        <div>
+          <label class="label" for="cc-prefix">Prefix</label>
+          <input class="input w-16 text-center font-mono" id="cc-prefix" value="{{chatPrefix}}" maxlength="2" autocomplete="off" spellcheck="false" data-tip="1-2 characters, e.g. ! or . — never /">
+        </div>
+        <button class="btn btn-sm" id="cc-prefix-save">{{{icon 'check' 'size-3.5'}}} Save</button>
+      </div>
+    </div>
+  </div>
+
+  {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
+    <div class="mb-4 max-w-prose rounded-md border border-gold-800/50 bg-gold-900/20 p-3 text-xs text-ink-soft">
+      Server is offline — commands are saved and start working the moment the server is running again.
+      The Test button needs a running server.
+    </div>
+  {{/unless}}
+
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    <h3 class="font-semibold">Commands</h3>
+    <div class="ml-auto">
+      <button class="btn btn-primary btn-sm" id="cc-add">{{{icon 'plus' 'size-3.5'}}} Add command</button>
+    </div>
+  </div>
+
+  {{#if chatCommands.length}}
+  <div class="card overflow-x-auto">
+    <table class="table-base">
+      <thead><tr>
+        <th>Command</th><th>Action</th><th>Permission</th><th>Cooldown</th><th class="text-right">Uses</th><th>Enabled</th><th class="text-right">Actions</th>
+      </tr></thead>
+      <tbody>
+        {{#each chatCommands}}
+          <tr data-cc-row data-id="{{id}}">
+            <td>
+              <div class="font-mono font-medium">{{../chatPrefix}}{{trigger}}</div>
+              {{#if description}}<div class="max-w-56 truncate text-xs text-ink-faint" data-tip="{{description}}">{{description}}</div>{{/if}}
+            </td>
+            <td>
+              <span class="chip">{{action}}</span>
+              <div class="mt-0.5 max-w-56 truncate text-xs text-ink-faint" data-tip="{{actionSummary}}">{{actionSummary}}</div>
+            </td>
+            <td>
+              {{#if (eq permission 'ops')}}
+                <span class="badge bg-redstone-500/15 text-redstone-400">ops only</span>
+              {{else if (eq permission 'whitelist')}}
+                <span class="badge bg-diamond-400/15 text-diamond-400">whitelisted</span>
+              {{else}}
+                <span class="badge bg-grass-500/15 text-grass-400">everyone</span>
+              {{/if}}
+            </td>
+            <td class="text-sm text-ink-soft">{{cooldownLabel}}</td>
+            <td class="text-right text-sm text-ink-soft">
+              {{uses}}
+              {{#if lastUsed}}<div class="text-[11px] text-ink-faint">last {{lastUsed}}</div>{{/if}}
+            </td>
+            <td>
+              <label class="inline-flex cursor-pointer"><span class="msm-toggle"><input type="checkbox" data-cc-toggle {{#if enabled}}checked{{/if}}><span></span></span></label>
+            </td>
+            <td class="text-right">
+              <div class="inline-flex gap-1">
+                <button class="btn btn-ghost btn-sm" data-cc-test data-tip="Run now as a named player (skips permission &amp; cooldown)">{{{icon 'play' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-cc-edit data-tip="Edit command">{{{icon 'pencil' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-redstone-400" data-cc-delete data-tip="Delete command" aria-label="Delete {{trigger}}">{{{icon 'x' 'size-3.5'}}}</button>
+              </div>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+    <div class="card grid place-items-center px-6 py-14 text-center">
+      <div class="grid size-14 place-items-center rounded-lg bg-inset text-ink-faint">{{{icon 'terminal' 'size-7'}}}</div>
+      <h3 class="mt-3 font-semibold">No chat commands yet</h3>
+      <p class="mt-1 max-w-sm text-sm text-ink-faint">Create your first one — a custom <code class="font-mono">{{chatPrefix}}rtp</code> that randomly teleports whoever types it takes about 20 seconds to set up.</p>
+      <button class="btn btn-primary mt-4" id="cc-add-empty">{{{icon 'plus' 'size-4'}}} Add command</button>
+    </div>
+  {{/if}}
+
+  <div class="card mt-6 p-4">
+    <h3 class="mb-3 font-semibold">Recent uses</h3>
+    {{#if chatCommandEvents.length}}
+      <div class="divide-y divide-line text-sm">
+        {{#each chatCommandEvents}}
+          <div class="flex items-start gap-2.5 py-2">
+            {{#if failed}}{{{icon 'circle-x' 'size-4 shrink-0 text-redstone-400'}}}{{else}}{{{icon 'circle-check' 'size-4 shrink-0 text-grass-400'}}}{{/if}}
+            <span class="min-w-0 flex-1">{{summary}}</span>
+            <span class="shrink-0 text-xs text-ink-faint">{{ts}}</span>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <p class="text-sm text-ink-faint">Nothing yet — every use (from chat or the Test button) shows up here and in the History tab.</p>
+    {{/if}}
+  </div>
+</div>
+
+<script type="application/json" id="chat-commands-data">{{{json chatCommands}}}</script>
+<script type="module" src="/js/pages/commands.js"></script>

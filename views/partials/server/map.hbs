@@ -1,0 +1,31 @@
+{{#if mapEnabled}}
+  <div class="card overflow-hidden">
+    <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
+      <span class="flex items-center gap-1.5 text-sm font-medium text-grass-400">
+        <span class="status-dot relative bg-grass-500 pulse"></span> Live map
+      </span>
+      <span class="text-xs text-ink-faint">BlueMap renders in the background — freshly enabled maps take a few minutes to draw the first tiles.</span>
+      <div class="ml-auto flex gap-2">
+        <a class="btn btn-sm" href="/map/{{server.id}}/" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Fullscreen</a>
+        <button class="btn btn-ghost btn-sm text-redstone-400" data-map-disable data-server-id="{{server.id}}">Disable map</button>
+      </div>
+    </div>
+    <iframe src="/map/{{server.id}}/" class="h-[70vh] w-full border-0 bg-stone-950" title="Live world map"></iframe>
+  </div>
+{{else}}
+  <div class="card grid place-items-center px-6 py-16 text-center">
+    <div class="grid size-14 place-items-center rounded-lg bg-inset text-ink-faint">{{{icon 'map' 'size-7'}}}</div>
+    <h3 class="mt-3 font-semibold">Live world map</h3>
+    <p class="mt-1 max-w-md text-sm text-ink-faint">
+      One click installs <b class="text-ink-soft">BlueMap</b> (free, open source) into this server and embeds a zoomable,
+      real-time 3D map here — player positions, dimensions, the works. Served only through the panel, never exposed directly.
+    </p>
+    {{#if mapSupported}}
+      <button class="btn btn-primary mt-5" data-map-enable data-server-id="{{server.id}}">{{{icon 'map' 'size-4'}}} Enable live map</button>
+      <p class="help mt-2">Installs the right BlueMap build for this server's loader; applies on next restart.</p>
+    {{else}}
+      <p class="mt-4 rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">BlueMap has no build for <b>{{server.flavor}}</b> servers — it needs a mod loader (Fabric/Forge/NeoForge/Quilt) or a plugin server (Paper family).</p>
+    {{/if}}
+  </div>
+{{/if}}
+<script type="module" src="/js/pages/map.js"></script>

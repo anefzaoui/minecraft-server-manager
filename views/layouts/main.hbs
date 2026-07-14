@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}} · Minecraft Server Manager</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <script>
+    // Apply persisted theme before first paint to avoid a flash.
+    try {
+      var t = localStorage.getItem('msm-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  </script>
+</head>
+<body class="min-h-screen">
+  <div class="flex min-h-screen">
+    {{> sidebar}}
+
+    <div class="flex min-w-0 flex-1 flex-col">
+      {{> topbar}}
+      <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        {{{body}}}
+      </main>
+      <footer class="border-t border-line px-6 py-3 text-xs text-ink-faint">
+        Minecraft Server Manager <span class="text-ink-soft">v0.1 preview</span> — powering itzg/docker-minecraft-server
+      </footer>
+    </div>
+  </div>
+
+  <div id="toasts" class="fixed bottom-4 right-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2"></div>
+  {{#if panelLocalization}}<script>window.MSM = Object.assign(window.MSM || {}, {{{json panelLocalization}}});</script>{{/if}}
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

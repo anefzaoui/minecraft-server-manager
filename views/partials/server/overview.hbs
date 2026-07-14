@@ -1,0 +1,80 @@
+﻿<div class="grid gap-4 lg:grid-cols-3">
+  <div class="card p-4 lg:col-span-2">
+    {{#if addresses.length}}
+      <div class="mb-4 border-b border-line pb-4">
+        <label class="label" for="ov-address">Server address <span class="text-xs font-normal text-ink-faint">— share this with players on your network</span></label>
+        <div class="flex flex-wrap items-center gap-2">
+          {{#if (gt addresses.length 1)}}
+            <select class="input w-auto font-mono" id="ov-address" data-label="Server address">
+              {{#each addresses}}<option value="{{this}}">{{this}}</option>{{/each}}
+            </select>
+          {{else}}
+            <input class="input w-auto min-w-56 font-mono" id="ov-address" value="{{addresses.[0]}}" readonly>
+          {{/if}}
+          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy address</button>
+        </div>
+        <p class="help">Playing from the internet? Set up port forwarding or grab the full invite from the Integrations tab.</p>
+      </div>
+    {{/if}}
+    <h3 class="mb-3 font-semibold">About</h3>
+    <div class="prose-sm max-w-prose text-sm text-ink-soft [&_a]:text-diamond-400 [&_code]:rounded [&_code]:bg-inset [&_code]:px-1">{{{markdown server.description}}}</div>
+    <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
+      <div><dt class="text-xs text-ink-faint">Created</dt><dd class="font-medium">{{server.created}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Update policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Start on boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
+    </dl>
+    {{#if server.pack}}
+      <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="badge bg-diamond-400/15 text-diamond-400">{{server.pack.platform}}</span>
+          <b>{{server.pack.name}}</b>
+          <span class="chip">pinned @ {{server.pack.version}}</span>
+          {{#if server.updateAvailable}}
+            <a class="btn btn-sm ml-auto" href="/updates">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{server.pack.latest}} available</a>
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
+  </div>
+
+  <div class="space-y-4">
+    <div class="card p-4">
+      <h3 class="mb-3 font-semibold">Live usage</h3>
+      <div class="space-y-3 text-xs">
+        <div>
+          <div class="mb-1 flex justify-between text-ink-faint"><span>CPU</span><span>{{server.stats.cpuPct}}% {{#if server.resources.cpus}}of {{server.resources.cpus}} cores{{/if}}</span></div>
+          <div class="meter"><div class="bg-diamond-400" style="width: {{server.stats.cpuPct}}%"></div></div>
+        </div>
+        <div>
+          <div class="mb-1 flex justify-between text-ink-faint"><span>Memory</span><span>{{server.stats.memUsedMb}} / {{server.resources.containerMemoryMb}} MB</span></div>
+          <div class="meter"><div class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div></div>
+        </div>
+        <div>
+          <div class="mb-1 flex justify-between text-ink-faint"><span>Disk quota</span><span>{{bytes server.disk.used}} / {{bytes server.disk.quota}}</span></div>
+          <div class="meter"><div class="{{meterColor server.disk.used server.disk.quota}}" style="width: {{pct server.disk.used server.disk.quota}}%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <h3 class="mb-3 font-semibold">Players <span class="text-sm font-normal text-ink-faint">{{server.players.online}}/{{server.players.max}}</span></h3>
+      {{#if server.players.names.length}}
+        <ul class="space-y-1.5 text-sm">
+          {{#each server.players.names}}
+            <li class="flex items-center gap-2">
+              <span class="grid size-6 place-items-center rounded bg-inset text-[10px] font-bold">{{this.[0]}}</span>
+              <span class="flex-1 truncate">{{this}}</span>
+              <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="Manage on the Players tab" aria-label="Manage {{this}}">{{{icon 'ellipsis' 'size-3.5'}}}</a>
+            </li>
+          {{/each}}
+        </ul>
+      {{else}}
+        <p class="text-sm text-ink-faint">No players online.</p>
+      {{/if}}
+    </div>
+  </div>
+</div>
+

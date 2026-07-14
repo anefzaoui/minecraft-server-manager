@@ -1,0 +1,50 @@
+<div class="card p-4" data-world-controls="{{server.id}}" data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{/if}}">
+  <h3 class="mb-1 font-semibold">World controls</h3>
+  <p class="mb-3 text-xs text-ink-faint" data-wc-state>{{#if (eq server.status 'running')}}Loading world state…{{else}}Available while the server runs.{{/if}}</p>
+  <div class="mb-3 hidden items-center justify-between rounded-md border border-line bg-inset px-3 py-2" data-wc-clock-box>
+    <div>
+      <div class="text-lg font-bold tabular-nums leading-tight" data-wc-clock>–:––</div>
+      <div class="text-[11px] text-ink-faint"><span data-wc-phase></span><span data-wc-day-wrap class="hidden"> · Day <span data-wc-day></span></span></div>
+    </div>
+    {{{icon 'clock' 'size-5 text-ink-faint'}}}
+  </div>
+  <div class="space-y-3 {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}pointer-events-none opacity-50{{/unless}}">
+    <div>
+      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Time</div>
+      <div class="flex flex-wrap gap-1.5">
+        <button class="chip hover:border-grass-600" data-wc="time-day">{{{icon 'sun' 'size-3.5'}}} Day</button>
+        <button class="chip hover:border-grass-600" data-wc="time-noon">{{{icon 'sun' 'size-3.5'}}} Noon</button>
+        <button class="chip hover:border-grass-600" data-wc="time-night">{{{icon 'moon' 'size-3.5'}}} Night</button>
+        <button class="chip hover:border-grass-600" data-wc="time-midnight">{{{icon 'moon-star' 'size-3.5'}}} Midnight</button>
+      </div>
+    </div>
+    <div>
+      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Weather</div>
+      <div class="flex flex-wrap gap-1.5">
+        <button class="chip hover:border-grass-600" data-wc="weather-clear">{{{icon 'sun' 'size-3.5'}}} Clear</button>
+        <button class="chip hover:border-grass-600" data-wc="weather-rain">{{{icon 'cloud-rain' 'size-3.5'}}} Rain</button>
+        <button class="chip hover:border-grass-600" data-wc="weather-thunder">{{{icon 'cloud-lightning' 'size-3.5'}}} Thunder</button>
+      </div>
+    </div>
+    <div>
+      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Rules</div>
+      <div class="flex flex-wrap gap-1.5">
+        <button class="chip hover:border-grass-600" data-wc-toggle="keepinv" data-rule="keepInventory">Keep inventory</button>
+        <button class="chip hover:border-grass-600" data-wc-toggle="daycycle" data-rule="doDaylightCycle">Day/night cycle</button>
+        <button class="chip hover:border-grass-600" data-wc-toggle="weathercycle" data-rule="doWeatherCycle">Weather cycle</button>
+        <button class="chip hover:border-grass-600" data-wc-toggle="mobgrief" data-rule="mobGriefing">Mob griefing</button>
+      </div>
+    </div>
+    <div>
+      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Difficulty & ops</div>
+      <div class="flex flex-wrap gap-1.5">
+        <button class="chip hover:border-grass-600" data-wc="difficulty-peaceful">Peaceful</button>
+        <button class="chip hover:border-grass-600" data-wc="difficulty-easy">Easy</button>
+        <button class="chip hover:border-grass-600" data-wc="difficulty-normal">Normal</button>
+        <button class="chip hover:border-grass-600" data-wc="difficulty-hard">Hard</button>
+        <button class="chip hover:border-grass-600" data-wc="save-all">{{{icon 'save' 'size-3.5'}}} Save world</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="/js/pages/overview.js"></script>

@@ -1,0 +1,68 @@
+<div data-history-server="{{server.id}}" class="contents">
+{{#if events.length}}
+<div class="mb-4 flex flex-wrap items-center gap-2">
+  <input class="input max-w-xs" id="hist-search" placeholder="Search events…">
+  <select class="input w-auto" id="hist-type" data-label="Filter by type"><option value="">All types</option></select>
+  <select class="input w-auto" id="hist-actor" data-label="Filter by actor"><option value="">All actors</option></select>
+  <button class="btn btn-sm ml-auto" data-menu="hist-export-menu">{{{icon 'download' 'size-3.5'}}} Export</button>
+  <template id="hist-export-menu">
+    <a href="/api/servers/{{server.id}}/events/export?format=json" target="_blank" rel="noopener">{{{icon 'file-text' 'size-3.5'}}} Export as JSON</a>
+    <a href="/api/servers/{{server.id}}/events/export?format=csv" target="_blank" rel="noopener">{{{icon 'download' 'size-3.5'}}} Export as CSV</a>
+  </template>
+</div>
+{{/if}}
+
+{{#if crashReports.length}}
+  <div class="card mb-4 border-redstone-800/60">
+    <div class="border-b border-line p-3 font-semibold text-redstone-400">{{{icon 'flame' 'size-4'}}} Crash reports</div>
+    <div class="divide-y divide-line">
+      {{#each crashReports}}
+        <div class="p-3" data-crash-card data-crash-id="{{id}}" data-crash-file="{{file}}">
+          <div class="flex flex-wrap items-center gap-2 text-sm">
+            {{#unless viewed}}<span class="badge bg-redstone-500/15 text-redstone-400">new</span>{{/unless}}
+            <span class="font-mono text-xs text-ink-faint">{{file}}</span>
+            <span class="ml-auto text-xs text-ink-faint">{{ts}} · {{bytes size}}</span>
+          </div>
+          <p class="mt-1.5 font-mono text-xs text-ink-soft">{{summary}}</p>
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            {{#each suspected}}
+              <span class="badge bg-gold-400/15 text-gold-400" title="Suspected from stack trace">suspect: {{this}}</span>
+            {{/each}}
+            <button class="btn btn-ghost btn-sm" data-crash-action="view">Open viewer</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="copy">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy trace</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="download" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</button>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+{{/if}}
+
+{{#if events.length}}
+<div class="card">
+  <ol class="divide-y divide-line" id="hist-events">
+    {{#each events}}
+      <li class="p-3" data-event-row data-type="{{type}}" data-actor="{{actor}}">
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <span class="badge bg-inset text-ink-soft">{{type}}</span>
+          <span class="min-w-0 flex-1">{{summary}}</span>
+          <span class="text-xs text-ink-faint">{{actor}} · {{ts}}</span>
+        </div>
+        {{#if diff}}
+          <div class="mt-2 rounded bg-raised p-2 font-mono text-xs">
+            {{#each diff}}<div><span class="text-ink-faint">{{@key}}:</span> <span class="text-redstone-400 line-through">{{this.[0]}}</span> → <span class="text-grass-400">{{this.[1]}}</span></div>{{/each}}
+          </div>
+        {{/if}}
+        {{#if hasLog}}
+          <button class="btn btn-ghost btn-sm mt-1.5" data-event-log data-event-id="{{id}}">{{{icon 'file-text' 'size-3.5'}}} View captured log</button>
+        {{/if}}
+      </li>
+    {{/each}}
+  </ol>
+  <div class="hidden p-8 text-center text-sm text-ink-faint" id="hist-no-match">No events match this filter.</div>
+</div>
+{{else}}
+  {{> empty-state iconName='history' title='No events recorded yet' message='Everything that happens to this server — starts, stops, setting changes, backups, crashes — is logged here with who did it and when.'}}
+{{/if}}
+</div>
+<script type="module" src="/js/pages/history.js"></script>

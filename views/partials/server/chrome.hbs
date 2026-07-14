@@ -1,0 +1,65 @@
+<div class="card mb-6 overflow-hidden" style="border-top: 3px solid {{server.accent}}">
+  <div class="texture-top flex flex-wrap items-center gap-4 p-4 sm:p-5">
+    <img src="{{iconSrc server.icon}}" alt="" class="size-14 shrink-0 rounded-lg" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'">
+
+    <div class="min-w-0 flex-1">
+      <div class="flex flex-wrap items-center gap-2">
+        <h2 class="text-xl font-bold">{{server.name}}</h2>
+        <span class="flex items-center gap-1.5 text-xs font-medium text-{{statusColor server.status}}-400">
+          <span class="status-dot relative bg-{{statusColor server.status}}-500 {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
+          {{statusLabel server.status}}
+        </span>
+        <span class="badge bg-gold-400/15 text-gold-400 {{#unless server.statusDetail}}hidden{{/unless}}" data-status-detail="{{server.id}}">{{server.statusDetail}}</span>
+        {{#if server.updateAvailable}}<span class="badge bg-gold-400/15 text-gold-400">update available</span>{{/if}}
+        {{#if server.crashesUnread}}<span class="badge bg-redstone-500/15 text-redstone-400">{{server.crashesUnread}} new crashes</span>{{/if}}
+      </div>
+      <p class="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-faint">
+        <span><b class="font-semibold text-ink-soft">{{server.flavor}}</b> {{server.mcVersion}}</span>
+        <span>Java: {{server.javaTag}}</span>
+        <span>Port {{server.ports.game}}</span>
+        {{#if server.pack}}<span>{{server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
+        {{#if server.stats.uptime}}<span>Up {{server.stats.uptime}}</span>{{/if}}
+      </p>
+      {{#if server.tags.length}}
+        <div class="mt-2 flex flex-wrap gap-1.5">{{#each server.tags}}<span class="chip">{{this}}</span>{{/each}}</div>
+      {{/if}}
+    </div>
+    <div class="flex flex-wrap gap-2">
+      {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy'))}}
+        <button class="btn" data-server-action="restart" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'rotate-cw' 'size-4'}}} Restart</button>
+        <button class="btn btn-danger" data-server-action="stop" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'square' 'size-4'}}} Stop</button>
+        <button class="btn btn-ghost" data-server-action="kill" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Force kill — skips world save">{{{icon 'zap' 'size-4'}}}</button>
+      {{else}}
+        <button class="btn btn-primary" data-server-action="start" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'play' 'size-4'}}} Start</button>
+        {{#if (eq server.status 'crashed')}}<a class="btn" href="/servers/{{server.id}}/history">{{{icon 'flame' 'size-4'}}} Latest crash</a>{{/if}}
+      {{/if}}
+      {{#if server.pendingRecreate}}
+        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Config changed — recreate to apply">{{{icon 'rotate-cw' 'size-4'}}} Apply changes</button>
+      {{/if}}
+    </div>
+  </div>
+
+  {{! Top-level domain sections. }}
+  <nav class="flex flex-wrap items-center gap-0.5 border-t border-line px-2">
+    {{#each nav.groups}}
+      <a href="{{href}}"
+         class="inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition
+           {{#if active}}border-grass-500 text-ink{{else}}border-transparent text-ink-faint hover:text-ink{{/if}}">
+        {{{icon icon 'size-4'}}} {{label}}
+        {{#if badge}}<span class="badge bg-redstone-500/15 text-redstone-400">{{badge}}</span>{{/if}}
+      </a>
+    {{/each}}
+  </nav>
+  {{! Sub-nav for the active section (only when it has more than one). }}
+  {{#if nav.sub}}
+    <div class="flex flex-wrap items-center gap-1 border-t border-line bg-inset/40 px-3 py-1.5">
+      {{#each nav.sub}}
+        <a href="{{href}}"
+           class="rounded-md px-2.5 py-1 text-sm font-medium transition
+             {{#if active}}bg-grass-500/15 text-grass-300{{else}}text-ink-faint hover:bg-raised hover:text-ink{{/if}}">
+          {{label}}{{#if badge}} <span class="badge bg-redstone-500/15 text-redstone-400">{{badge}}</span>{{/if}}
+        </a>
+      {{/each}}
+    </div>
+  {{/if}}
+</div>

@@ -1,0 +1,91 @@
+{{> page-header heading="SETTINGS" sub="Panel configuration, API keys, and users."}}
+
+<div class="grid gap-4 lg:grid-cols-2" id="settings-page">
+  <div class="card p-4">
+    <h3 class="mb-4 font-semibold">API keys</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="label" for="set-cf-key">CurseForge API key</label>
+        <div class="flex gap-2">
+          <input class="input flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} (stored){{else}}paste your key from console.curseforge.com{{/if}}" autocomplete="off">
+          <button class="btn" id="set-cf-save">Save</button>
+          <button class="btn btn-ghost" id="set-cf-test" data-tip="Tests the stored key against the CurseForge API">Test</button>
+        </div>
+        <p class="help">Required for Auto-CurseForge packs and CF mod downloads. Stored encrypted at rest; new keys are live-tested before saving.</p>
+      </div>
+      <div>
+        <label class="label">Modrinth</label>
+        <p class="help">No key needed — Modrinth's public API is used directly.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-4">
+    <h3 class="mb-4 font-semibold">Panel</h3>
+    <div class="mb-4">
+      <label class="label" for="set-domain">Public domain</label>
+      <div class="flex gap-2">
+        <input class="input flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
+        <button class="btn" id="set-domain-save">Save</button>
+      </div>
+      <p class="help">Shown to players instead of your IP in connect addresses (e.g. <span class="font-mono">mc.example.com:25565</span>). Leave blank to use the server's IP. No scheme or port.</p>
+    </div>
+    <div class="mb-4">
+      <span class="label">Time zone &amp; region</span>
+      <div class="grid gap-2 sm:grid-cols-2">
+        <select class="input" id="set-tz" data-native aria-label="Time zone"></select>
+        <select class="input" id="set-country" data-native aria-label="Country"></select>
+      </div>
+      <div class="mt-2 flex items-center gap-2">
+        <button class="btn" id="set-loc-save">Save</button>
+        <span class="help" id="set-loc-note"></span>
+      </div>
+      <p class="help">Controls how dates and player-activity times display across the panel. "Auto" follows this machine's system settings.</p>
+    </div>
+    <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      <div><dt class="text-xs text-ink-faint">Bind address</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Port</dt><dd class="font-mono font-medium">{{panel.port}}</dd></div>
+    </dl>
+    <p class="help mt-3 max-w-prose">Set via <span class="font-mono">.env</span> (PANEL_HOST / PANEL_PORT) — a restart applies changes. Theme is per-browser via the topbar toggle.</p>
+    <h3 class="mt-6 mb-3 font-semibold">Defaults for new servers</h3>
+    <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      <div><dt class="text-xs text-ink-faint">Java heap</dt><dd class="font-medium">{{defaults.heapMb}} MB</dd></div>
+      <div><dt class="text-xs text-ink-faint">Container limit</dt><dd class="font-medium">{{defaults.containerMemoryMb}} MB</dd></div>
+      <div><dt class="text-xs text-ink-faint">Disk quota</dt><dd class="font-medium">{{defaults.diskQuotaGb}} GB</dd></div>
+      <div><dt class="text-xs text-ink-faint">Quota warnings</dt><dd class="font-medium">{{defaults.quotaWarnPct}}% / {{defaults.quotaCriticalPct}}%</dd></div>
+    </dl>
+  </div>
+
+  <div class="card p-4 lg:col-span-2">
+    <h3 class="mb-4 font-semibold">Users</h3>
+    <div class="overflow-x-auto">
+      <table class="table-base" id="users-table">
+        <thead><tr><th>User</th><th>Role</th><th>Created</th><th class="text-right"></th></tr></thead>
+        <tbody>
+          {{#each users}}
+            <tr data-user-id="{{id}}" data-username="{{username}}">
+              <td class="font-medium">{{username}}{{#if (eq id ../user.id)}} <span class="badge bg-inset text-ink-faint">you</span>{{/if}}</td>
+              <td>
+                <select class="input w-auto text-xs" data-user-role data-label="Role for {{username}}">
+                  <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>admin</option>
+                  <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>operator</option>
+                  <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>viewer</option>
+                </select>
+              </td>
+              <td class="text-xs text-ink-faint">{{createdAt}}</td>
+              <td class="text-right">
+                <div class="inline-flex gap-1">
+                  <button class="btn btn-ghost btn-sm" data-user-password data-tip="Set a new password">{{{icon 'key' 'size-3.5'}}}</button>
+                  <button class="btn btn-ghost btn-sm text-redstone-400" data-user-delete aria-label="Delete {{username}}">{{{icon 'x' 'size-3.5'}}}</button>
+                </div>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+    <button class="btn btn-sm mt-3" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add user</button>
+    <p class="help mt-2 max-w-prose">Roles: <b>admin</b> — everything; <b>operator</b> — manage servers but not storage, users, or update policies; <b>viewer</b> — read-only.</p>
+  </div>
+</div>
+<script type="module" src="/js/pages/settings.js"></script>

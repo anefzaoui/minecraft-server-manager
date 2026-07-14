@@ -1,0 +1,227 @@
+<div class="mx-auto max-w-3xl" id="wizard" data-suggested-port="{{suggestedPort}}">
+  {{> page-header heading="CREATE SERVER" sub="One click to a running server in Simple mode — every option the image supports in Advanced."}}
+
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    <div class="flex rounded-md border border-line-strong p-0.5 text-sm" id="wz-source-tabs" role="tablist" aria-label="Server source">
+      <button class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" type="button" data-source="standard">Standard</button>
+      <button class="btn btn-ghost btn-sm" type="button" data-source="mods">From mods</button>
+      <button class="btn btn-ghost btn-sm" type="button" data-source="modpack">From modpack</button>
+      <button class="btn btn-ghost btn-sm" type="button" data-source="blueprint">From blueprint</button>
+    </div>
+    <div class="ml-auto flex rounded-md border border-line-strong p-0.5 text-sm" id="wz-detail-toggle" role="tablist" aria-label="Form detail level">
+      <button class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" type="button" data-detail="simple">Simple</button>
+      <button class="btn btn-ghost btn-sm" type="button" data-detail="advanced">Advanced</button>
+    </div>
+  </div>
+
+  {{! P8 compatibility solver — the "From mods" source tab }}
+  <div class="card mb-4 hidden p-5" id="wz-solver">
+    <h3 class="mb-1 font-semibold">Pick your mods first</h3>
+    <p class="help mb-4">Search Modrinth, add the mods you want, and Minecraft Server Manager finds the newest loader + Minecraft version that every one of them supports.</p>
+    <div>
+      <label class="label" for="wz-solver-q">Search Modrinth</label>
+      <input class="input" id="wz-solver-q" placeholder="e.g. sodium, create, jei…" autocomplete="off">
+    </div>
+    <div class="mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-line" id="wz-solver-results"></div>
+    <div class="mt-3 hidden flex-wrap gap-1.5" id="wz-solver-chips"></div>
+    <div class="mt-4 flex items-center gap-3">
+      <button class="btn btn-primary" id="wz-solver-run" type="button" disabled>{{{icon 'wand-sparkles' 'size-4'}}} Solve compatibility</button>
+      <span class="text-xs text-ink-faint" id="wz-solver-hint">Add at least one mod to solve.</span>
+    </div>
+    <div class="mt-4 hidden" id="wz-solver-result"></div>
+    <input type="hidden" id="wz-solver-mods" value="">
+  </div>
+
+  {{! U1/U2: "From modpack" source tab — search, pin a version, real one-task install }}
+  <div class="card mb-4 hidden p-5" id="wz-modpack">
+    <h3 class="mb-1 font-semibold">Pick a modpack</h3>
+    <p class="help mb-4">Search Modrinth or CurseForge. The pack decides the loader and Minecraft version, and the install is always pinned to the exact pack version you choose — restarts never silently upgrade.</p>
+    <div class="flex flex-wrap items-center gap-2">
+      <input class="input min-w-48 flex-1" id="wz-pack-q" placeholder="e.g. Simply Optimized, All the Mods…" autocomplete="off">
+      <div class="flex gap-1.5" id="wz-pack-platforms">
+        <button type="button" class="chip border-grass-500 text-grass-300" data-platform="modrinth">Modrinth</button>
+        <button type="button" class="chip" data-platform="curseforge">CurseForge</button>
+      </div>
+    </div>
+    <div class="mt-2 hidden max-h-80 overflow-y-auto rounded-md border border-line" id="wz-pack-results"></div>
+    <div class="mt-4 hidden" id="wz-pack-selected">
+      <div class="flex items-center gap-3 rounded-md border border-grass-700 bg-grass-600/10 p-3" id="wz-pack-summary"></div>
+      <div class="mt-3 grid items-end gap-4 sm:grid-cols-[1fr_auto]">
+        <div>
+          <label class="label" for="wz-pack-version">Pack version <span class="text-xs font-normal text-ink-faint">(always pinned)</span></label>
+          <select class="input" id="wz-pack-version" data-label="Pack version"></select>
+        </div>
+        <button type="button" class="btn mb-0.5" id="wz-pack-details-btn">{{{icon 'book-open' 'size-4'}}} View details</button>
+      </div>
+    </div>
+  </div>
+
+  {{! "From blueprint" source tab — identity stays editable, the blueprint owns the rest }}
+  <div class="card mb-4 hidden p-5" id="wz-blueprint-panel">
+    <h3 class="mb-1 font-semibold">Start from a blueprint</h3>
+    <p class="help mb-4">A blueprint sets the server type, Minecraft version, modpack, mods, config and resources — you choose the name, icon and color below. The sections a blueprint owns are greyed out.</p>
+    <label class="label" for="wz-blueprint">Blueprint</label>
+    <select class="input" id="wz-blueprint" data-label="Blueprint">
+      <option value="">Choose a blueprint…</option>
+      {{#each blueprints}}<option value="{{id}}" data-desc="{{notes}}">{{name}}</option>{{/each}}
+    </select>
+    {{#unless blueprints.length}}
+      <p class="help mt-2">No blueprints in the library yet — export one from a server's Settings tab, or import a .mcserver.zip on the <a href="/blueprints" class="text-diamond-400 hover:underline">Blueprints page</a>.</p>
+    {{/unless}}
+  </div>
+
+  <div class="card p-5">
+    <h3 class="mb-4 font-semibold">1 · Identity</h3>
+    <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
+      <div>
+        <label class="label" for="wz-name">Server name</label>
+        <input class="input" id="wz-name" placeholder="e.g. Weekend Survival" autocomplete="off">
+      </div>
+      <div>
+        <label class="label">Icon & color</label>
+        <div class="flex gap-1.5" id="wz-icons">
+          <button type="button" data-icon="grass" class="grid size-10 place-items-center rounded-md border-2 border-grass-500 bg-inset p-1"><img src="/icons/servers/grass.svg" alt="Grass" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="creeper" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/creeper.svg" alt="Creeper" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="diamond" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/diamond.svg" alt="Diamond" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="tnt" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/tnt.svg" alt="TNT" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="portal" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/portal.svg" alt="Portal" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="chest" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/chest.svg" alt="Chest" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="sword" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/sword.svg" alt="Sword" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="potion" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/potion.svg" alt="Potion" class="size-full rounded-sm"></button>
+        </div>
+      </div>
+    </div>
+    <div class="mt-3 grid gap-4 sm:grid-cols-[1fr_auto]">
+      <div>
+        <label class="label" for="wz-desc">Description <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
+        <input class="input" id="wz-desc" placeholder="What is this server for?">
+      </div>
+      <div>
+        <label class="label">Accent</label>
+        <div class="flex gap-1.5" id="wz-colors">
+          <button type="button" data-accent="#3fa62b" class="size-10 rounded-md border-2 border-white/60" style="background:#3fa62b"></button>
+          <button type="button" data-accent="#21a7ab" class="size-10 rounded-md" style="background:#21a7ab"></button>
+          <button type="button" data-accent="#e5484d" class="size-10 rounded-md" style="background:#e5484d"></button>
+          <button type="button" data-accent="#e99417" class="size-10 rounded-md" style="background:#e99417"></button>
+          <button type="button" data-accent="#8b5cf6" class="size-10 rounded-md" style="background:#8b5cf6"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4 p-5" id="wz-card-flavor">
+    <h3 class="mb-4 font-semibold">2 · Server type & version</h3>
+    <div class="mb-3 hidden rounded-md border border-grass-700 bg-grass-600/10 p-2.5 text-xs text-grass-300" id="wz-solver-applied-hint"></div>
+    <div class="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-7" id="wz-flavors">
+      <button type="button" data-type="VANILLA" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-grass-300">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
+      <button type="button" data-type="PAPER" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
+      <button type="button" data-type="FABRIC" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'layers' 'size-5'}}}<span class="text-xs font-semibold">Fabric</span></button>
+      <button type="button" data-type="FORGE" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'hammer' 'size-5'}}}<span class="text-xs font-semibold">Forge</span></button>
+      <button type="button" data-type="NEOFORGE" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'flame' 'size-5'}}}<span class="text-xs font-semibold">NeoForge</span></button>
+      <button type="button" data-type="PURPUR" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'gem' 'size-5'}}}<span class="text-xs font-semibold">Purpur</span></button>
+      <button type="button" data-type="QUILT" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'grid-2x2' 'size-5'}}}<span class="text-xs font-semibold">Quilt</span></button>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="label" for="wz-version">Minecraft version</label>
+        <select class="input" id="wz-version" data-label="Minecraft version">
+          <option value="LATEST" selected>LATEST ({{latestRelease}})</option>
+          {{#each versions}}<option value="{{id}}">{{id}}</option>{{/each}}
+        </select>
+        <p class="help">Live from Mojang's manifest. The matching Java image is picked automatically.</p>
+      </div>
+      <div>
+        <label class="label" for="wz-port">Game port</label>
+        <input class="input max-w-48 font-mono" id="wz-port" value="{{suggestedPort}}" inputmode="numeric">
+        <p class="help" id="wz-port-help">Auto-suggested free port. RCON gets port + 1000.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4 p-5" id="wz-card-world">
+    <h3 class="mb-4 font-semibold">3 · World & rules</h3>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="label" for="wz-seed">World seed <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
+        <input class="input font-mono" id="wz-seed" placeholder="random">
+      </div>
+      <div>
+        <label class="label" for="wz-maxplayers">Max players</label>
+        <input class="input max-w-48" id="wz-maxplayers" type="number" inputmode="numeric" value="10" min="1" max="1000">
+      </div>
+      <div>
+        <label class="label" for="wz-difficulty">Difficulty</label>
+        <select class="input" id="wz-difficulty" data-label="Difficulty">
+          <option value="peaceful">Peaceful</option><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="wz-mode">Game mode</label>
+        <select class="input" id="wz-mode" data-label="Game mode">
+          <option value="survival" selected>Survival</option><option value="creative">Creative</option><option value="adventure">Adventure</option><option value="spectator">Spectator</option>
+        </select>
+      </div>
+    </div>
+    <div class="mt-4">
+      <label class="label" for="wz-motd">MOTD <span class="text-xs font-normal text-ink-faint">— &amp; color codes supported</span></label>
+      <input class="input font-mono" id="wz-motd" value="&aA Minecraft server">
+      <div class="console mt-2 py-2 text-sm" id="wz-motd-preview"></div>
+    </div>
+  </div>
+
+  <div class="card mt-4 p-5" id="wz-card-resources">
+    <h3 class="mb-4 font-semibold">4 · Resources</h3>
+    <div>
+      <label class="label">RAM (Java heap)</label>
+      <div class="flex items-center gap-3">
+        <input type="range" min="1024" max="16384" step="512" value="4096" class="msm-range flex-1" id="wz-ram" data-out="wz-ram-out" data-unit=" MB">
+        <span class="w-24 text-right font-mono text-sm" id="wz-ram-out">4096 MB</span>
+      </div>
+      <p class="help">The container's hard limit is set automatically with 50% headroom.</p>
+    </div>
+    <div class="mt-4">
+      <label class="label">Disk quota</label>
+      <div class="flex items-center gap-3">
+        <input type="range" min="0" max="200" step="5" value="25" class="msm-range flex-1" id="wz-quota" data-out="wz-quota-out" data-unit=" GB" data-zero="off">
+        <span class="w-24 text-right font-mono text-sm" id="wz-quota-out">25 GB</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="wz-advanced" class="mt-4 hidden space-y-3">
+    <div class="rounded-md border border-diamond-800/50 bg-diamond-900/20 p-3 text-xs text-ink-soft">
+      {{{icon 'info' 'size-3.5'}}} Every environment variable the Docker image supports, straight from its docs. Leave a field empty to use the image default —
+      only values you change are applied. Simple-mode picks above (version, port, world rules, resources) still apply.
+    </div>
+    {{#each advancedSections}}
+      <details class="card group">
+        <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
+          {{{icon icon 'size-4 text-ink-faint'}}} {{label}}
+          <span class="badge ml-1 bg-inset text-ink-faint">{{fields.length}}</span>
+          <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
+        </summary>
+        <div class="divide-y divide-line/60 border-t border-line px-4 pb-4">
+          {{#each fields}}
+            {{> catalog-field}}
+          {{/each}}
+        </div>
+      </details>
+    {{/each}}
+    <details class="card group">
+      <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
+        {{{icon 'terminal' 'size-4 text-ink-faint'}}} Extra environment variables
+        <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
+      </summary>
+      <div class="border-t border-line p-4">
+        <textarea class="input font-mono text-xs" id="wz-extra-env" rows="4" placeholder="KEY=value&#10;ANOTHER_KEY=value"></textarea>
+        <p class="help">Raw escape hatch for anything new the image adds before the catalog catches up. One KEY=value per line; these override everything above.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="mt-6 flex items-center justify-between">
+    <a href="/" class="btn">Cancel</a>
+    <button class="btn btn-primary" id="wz-create" type="button">{{{icon 'pickaxe' 'size-4'}}} Create &amp; start</button>
+  </div>
+</div>
+<script type="module" src="/js/pages/wizard.js"></script>

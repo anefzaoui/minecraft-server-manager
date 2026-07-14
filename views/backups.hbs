@@ -1,0 +1,42 @@
+{{> page-header heading="BACKUPS" sub="Every archive across all servers, with reason and retention tracking."}}
+
+{{#if backups.length}}
+<div class="mb-4 flex flex-wrap items-center gap-2">
+  <select class="input w-auto" id="backups-filter-server" data-label="Filter by server">
+    <option value="">All servers</option>
+    {{#each servers}}<option value="{{id}}">{{name}}</option>{{/each}}
+  </select>
+  <select class="input w-auto" id="backups-filter-reason" data-label="Filter by reason">
+    <option value="">All reasons</option>
+    <option value="manual">Manual</option>
+    <option value="scheduled">Scheduled</option>
+    <option value="pre-update">Pre-update</option>
+  </select>
+  <span class="ml-auto text-sm text-ink-faint" id="backups-total" data-count="{{totals.count}}" data-bytes="{{totals.bytes}}">Total: {{bytes totals.bytes}} in {{totals.count}} archive{{#if (ne totals.count 1)}}s{{/if}}</span>
+</div>
+
+<div class="card overflow-x-auto">
+  <table class="table-base" id="backups-table">
+    <thead><tr><th>Server</th><th>Archive</th><th>Reason</th><th class="text-right">Size</th><th class="text-right">Created</th><th class="text-right">Actions</th></tr></thead>
+    <tbody>
+      {{#each backups}}
+        <tr data-backup-row data-backup-id="{{id}}" data-server-id="{{serverId}}" data-server-name="{{server}}" data-file="{{file}}" data-size="{{size}}" data-reason="{{reason}}">
+          <td><a class="text-diamond-400 hover:underline" href="/servers/{{serverId}}/backups">{{server}}</a></td>
+          <td class="font-mono text-xs">{{file}}</td>
+          <td><span class="badge {{#if (eq reason 'pre-update')}}bg-gold-400/15 text-gold-400{{else}}bg-inset text-ink-soft{{/if}}">{{reason}}</span></td>
+          <td class="text-right text-ink-faint">{{bytes size}}</td>
+          <td class="text-right text-ink-faint">{{ts}}</td>
+          <td class="text-right"><div class="inline-flex gap-1">
+            <button class="btn btn-ghost btn-sm" data-backup-action="restore" data-tip="Restore (stops the server, safety backup taken first)">{{{icon 'undo-2' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm" data-backup-action="download" data-tip="Download archive">{{{icon 'download' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-redstone-400" data-backup-action="delete" data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'x' 'size-3.5'}}}</button>
+          </div></td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+{{else}}
+  {{> empty-state iconName='archive' title='No backups yet' message='Create one from a server&apos;s Backups tab — scheduled and pre-update backups will also collect here, with reason and retention tracking.'}}
+{{/if}}
+<script type="module" src="/js/pages/backups.js"></script>

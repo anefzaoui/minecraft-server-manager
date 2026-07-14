@@ -1,0 +1,48 @@
+{{> page-header heading="WORLD LIBRARY" sub="Every world archive under ./data/library/worlds — upload, extract from servers, install anywhere, copy between instances."}}
+
+<div data-worlds-page class="contents">
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    <button class="btn btn-primary" id="world-upload" data-tip="Any zip/tar — world root auto-detected (level.dat anywhere, .mcworld, Bukkit split dirs)">{{{icon 'upload' 'size-4'}}} Upload world</button>
+    <button class="btn" id="world-extract" data-tip="Snapshot a server's live world into the library (save-off/save-all dance)">{{{icon 'camera' 'size-4'}}} Extract from server</button>
+  </div>
+
+  {{#if worlds.length}}
+  <div class="card overflow-x-auto">
+    <table class="table-base" id="worlds-table">
+      <thead><tr><th>World</th><th>Source</th><th>Compat</th><th class="text-right">Size</th><th class="text-right">Actions</th></tr></thead>
+      <tbody>
+        {{#each worlds}}
+          <tr data-world-row data-id="{{id}}" data-name="{{name}}" data-size="{{size}}">
+            <td><div class="flex items-center gap-2">{{{icon 'earth' 'size-5 text-diamond-400'}}}<div><div class="font-medium">{{name}}</div><div class="text-xs text-ink-faint">{{created}} · {{hash}}</div></div></div></td>
+            <td class="text-xs text-ink-soft">{{source}}</td>
+            <td>
+              {{#if flavor}}
+                <span class="chip">{{flavor}}{{#if mcVersion}} {{mcVersion}}{{/if}}</span>
+              {{else if mcVersion}}
+                <span class="chip">{{mcVersion}}</span>
+              {{else}}
+                <span class="text-xs text-ink-faint">unknown</span>
+              {{/if}}
+            </td>
+            <td class="text-right text-ink-faint">{{bytes size}}</td>
+            <td class="text-right"><div class="inline-flex gap-1">
+              <button class="btn btn-ghost btn-sm" data-world-install data-tip="Pick a target server — compat check runs before install">{{{icon 'import' 'size-3.5'}}} Install to…</button>
+              <a class="btn btn-ghost btn-sm" href="/api/worlds/{{id}}/download" data-tip="Download archive">{{{icon 'download' 'size-3.5'}}}</a>
+              <button class="btn btn-ghost btn-sm text-redstone-400" data-world-delete data-tip="Delete from library ({{bytes size}} freed)" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+            </div></td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 max-w-prose rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">
+    {{{icon 'lightbulb' 'size-4'}}} Installing a world into a server offers <b class="text-ink-soft">replace</b> (current world auto-backed-up first) or <b class="text-ink-soft">install alongside</b> (switch via level-name/LEVEL). Instance→instance copy works even while the source is running — the panel takes a consistent snapshot with the save-off/save-all dance.
+  </div>
+  {{else}}
+    {{> empty-state iconName='earth' title='No worlds in the library yet' message='Upload a world archive or extract one from a running server with the buttons above — installs, copies and downloads all start from here.'}}
+  {{/if}}
+
+  <div id="msm-server-options" hidden data-options="[{{#each servers}}{&quot;id&quot;:{{json id}},&quot;name&quot;:{{json name}},&quot;flavor&quot;:{{json flavor}},&quot;status&quot;:{{json status}} }{{#unless @last}},{{/unless}}{{/each}}]"></div>
+</div>
+<script type="module" src="/js/pages/worlds.js"></script>

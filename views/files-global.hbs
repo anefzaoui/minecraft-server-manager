@@ -1,0 +1,72 @@
+{{> page-header heading="FILE MANAGER" sub="The entire ./data directory — servers, backups, library, logs. Admin only; the panel database itself is protected."}}
+
+<div data-files-global data-files-path="{{filePath}}" class="contents">
+  <div class="card">
+    <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
+      <nav class="flex min-w-0 flex-wrap items-center gap-1 font-mono text-sm text-ink-soft" aria-label="Breadcrumb">
+        {{#if crumbs.length}}
+          <a class="hover:text-diamond-400" href="/files">data</a>
+          {{#each crumbs}}
+            <span class="text-ink-faint">/</span>
+            {{#if @last}}
+              <span class="truncate text-ink">{{name}}</span>
+            {{else}}
+              <a class="hover:text-diamond-400" href="/files?path={{enc}}">{{name}}</a>
+            {{/if}}
+          {{/each}}
+        {{else}}
+          <span class="text-ink">data</span>
+        {{/if}}
+      </nav>
+      <div class="ml-auto flex gap-2">
+        <button class="btn btn-sm" id="files-upload">{{{icon 'upload' 'size-3.5'}}} Upload</button>
+        <button class="btn btn-sm" id="files-mkdir">{{{icon 'folder-plus' 'size-3.5'}}} Folder</button>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="table-base" id="files-table">
+        <thead><tr><th>Name</th><th class="text-right">Size</th><th class="text-right">Modified</th><th class="text-right">Actions</th></tr></thead>
+        <tbody>
+          {{#if filePath}}
+            <tr>
+              <td colspan="4">
+                <a class="flex items-center gap-2 text-ink-faint hover:text-diamond-400" href="/files{{#if parentEnc}}?path={{parentEnc}}{{/if}}">{{{icon 'corner-left-up' 'size-4'}}} ..</a>
+              </td>
+            </tr>
+          {{/if}}
+          {{#each files}}
+            <tr data-file-row data-path="{{path}}" data-name="{{name}}" data-dir="{{dir}}" data-size="{{size}}">
+              <td>
+                <div class="flex items-center gap-2">
+                  {{#if dir}}
+                    {{{icon 'folder' 'size-4 text-gold-400'}}}
+                    <a class="min-w-0 truncate font-medium hover:text-diamond-400" href="/files?path={{enc}}">{{name}}</a>
+                  {{else}}
+                    {{{icon 'file-text' 'size-4 text-ink-faint'}}}
+                    <span class="min-w-0 truncate font-medium">{{name}}</span>
+                  {{/if}}
+                </div>
+              </td>
+              <td class="text-right text-ink-faint">{{bytes size}}</td>
+              <td class="text-right text-ink-faint">{{mtime}}</td>
+              <td class="text-right"><div class="inline-flex gap-1">
+                {{#unless dir}}
+                  <button class="btn btn-ghost btn-sm" data-file-edit data-tip="Edit as text (≤ 2 MB)">{{{icon 'file-code' 'size-3.5'}}}</button>
+                  <button class="btn btn-ghost btn-sm" data-file-download data-tip="Download">{{{icon 'download' 'size-3.5'}}}</button>
+                {{/unless}}
+                <button class="btn btn-ghost btn-sm" data-file-rename data-tip="Rename">{{{icon 'pencil' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-file-move data-tip="Move to…">{{{icon 'move' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-file-copy data-tip="Copy to…">{{{icon 'copy' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-redstone-400" data-file-delete data-tip="Delete ({{bytes size}})" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+              </div></td>
+            </tr>
+          {{else}}
+            <tr><td colspan="4" class="py-10 text-center text-ink-faint">This folder is empty.</td></tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="help mt-2 max-w-prose">Careful — this is the panel's whole data root. Deleting server or backup files here bypasses the usual safety rails.</p>
+</div>
+<script type="module" src="/js/pages/files-global.js"></script>

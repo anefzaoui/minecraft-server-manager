@@ -1,0 +1,72 @@
+<div data-worlds-server="{{server.id}}" data-worlds-server-name="{{server.name}}" data-worlds-status="{{server.status}}" class="contents">
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    <h3 class="font-semibold">Worlds on this server</h3>
+    <div class="ml-auto flex gap-2">
+      <button class="btn btn-sm" id="worlds-extract" data-tip="Snapshot the active world into the library (works while running)">{{{icon 'camera' 'size-3.5'}}} Save to library</button>
+      <button class="btn btn-primary btn-sm" id="worlds-upload" data-tip="Upload a world archive — root auto-detected, lands in the library below">{{{icon 'upload' 'size-3.5'}}} Upload world</button>
+    </div>
+  </div>
+
+  {{#if worlds.length}}
+  <div class="card overflow-x-auto">
+    <table class="table-base" id="server-worlds-table">
+      <thead><tr><th>World</th><th>Dimension dirs</th><th class="text-right">Size</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+      <tbody>
+        {{#each worlds}}
+          <tr data-world-row data-world="{{name}}" data-size="{{sizeBytes}}" data-active="{{active}}">
+            <td>
+              <div class="font-medium">{{name}}</div>
+              {{#if seed}}<div class="text-xs text-ink-faint">seed {{seed}}</div>{{/if}}
+            </td>
+            <td class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
+            <td class="text-right text-ink-faint">{{bytes sizeBytes}}</td>
+            <td>
+              {{#if active}}
+                <span class="badge bg-grass-500/15 text-grass-400">active</span>
+              {{else}}
+                <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Sets level-name — server must be stopped">Activate</button>
+              {{/if}}
+            </td>
+            <td class="text-right"><div class="inline-flex gap-1">
+              <button class="btn btn-ghost btn-sm" data-world-download data-tip="Download as zip (consistent snapshot)">{{{icon 'download' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-duplicate data-tip="Duplicate world (fork a copy)">{{{icon 'copy' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-copy data-tip="Copy to another instance — compat check + safety backup">{{{icon 'arrow-right' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-rename data-tip="Rename world (server must be stopped)">{{{icon 'pencil' 'size-3.5'}}}</button>
+              {{#if active}}
+                <button class="btn btn-ghost btn-sm text-redstone-400" data-world-reset data-tip="Reset world — auto-backup, keep or reroll seed">{{{icon 'undo-2' 'size-3.5'}}}</button>
+              {{else}}
+                <button class="btn btn-ghost btn-sm text-redstone-400" data-world-delete data-tip="Delete world ({{bytes sizeBytes}} freed)" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+              {{/if}}
+            </div></td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+    {{> empty-state iconName='earth' title='No worlds yet' message='Start the server once to generate a world, or install one from the library below.'}}
+  {{/if}}
+
+  <h3 class="mt-6 mb-3 font-semibold">World library</h3>
+  {{#if libraryWorlds.length}}
+    <div class="card divide-y divide-line">
+      {{#each libraryWorlds}}
+        <div class="flex flex-wrap items-center gap-3 p-3 text-sm" data-lib-row data-id="{{id}}" data-name="{{name}}">
+          {{{icon 'earth' 'size-5 text-diamond-400'}}}
+          <div class="min-w-0 flex-1">
+            <div class="font-medium">{{name}}</div>
+            <div class="text-xs text-ink-faint">{{source}}{{#if flavor}} · {{flavor}}{{/if}}{{#if mcVersion}} {{mcVersion}}{{/if}} · {{created}}</div>
+          </div>
+          <span class="text-xs text-ink-faint">{{bytes size}}</span>
+          <button class="btn btn-sm" data-lib-install data-tip="Install into this server — replace or alongside">{{{icon 'import' 'size-3.5'}}} Install here</button>
+          <a href="/worlds" class="btn btn-ghost btn-sm">Open in Worlds →</a>
+        </div>
+      {{/each}}
+    </div>
+  {{else}}
+    <div class="card p-6 text-center text-sm text-ink-faint">The world library is empty — save this server's world to it, upload an archive, or visit the <a class="text-diamond-400 hover:underline" href="/worlds">Worlds page</a>.</div>
+  {{/if}}
+
+  <div id="msm-server-options" hidden data-options="[{{#each servers}}{&quot;id&quot;:{{json id}},&quot;name&quot;:{{json name}},&quot;flavor&quot;:{{json flavor}},&quot;status&quot;:{{json status}} }{{#unless @last}},{{/unless}}{{/each}}]"></div>
+</div>
+<script type="module" src="/js/pages/worlds-tab.js"></script>

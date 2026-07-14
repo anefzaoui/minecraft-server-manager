@@ -1,0 +1,39 @@
+{{#if (or (eq server.status 'stopped') (eq server.status 'crashed'))}}
+  <div class="mb-4 rounded-md border border-line bg-raised p-3 text-sm text-ink-faint">Live CPU, memory and network charts stream while the server is running. Start the server to see metrics.</div>
+{{/if}}
+<div class="grid gap-4 lg:grid-cols-2" data-metrics-server="{{server.id}}" data-metrics-mem-limit="{{server.resources.containerMemoryMb}}" data-metrics-cpu-limit="{{server.resources.cpus}}">
+  <div class="card p-4">
+    <h3 class="mb-2 font-semibold">CPU <span class="text-xs font-normal text-ink-faint">vs limit</span></h3>
+    <canvas data-chart="cpu" height="140"></canvas>
+  </div>
+  <div class="card p-4">
+    <h3 class="mb-2 font-semibold">Memory <span class="text-xs font-normal text-ink-faint">vs container limit</span></h3>
+    <canvas data-chart="memory" height="140"></canvas>
+  </div>
+  <div class="card p-4">
+    <h3 class="mb-2 font-semibold">Network</h3>
+    <canvas data-chart="network" height="140"></canvas>
+  </div>
+  <div class="card p-4">
+    <h3 class="mb-3 font-semibold">Storage breakdown</h3>
+    {{#if breakdown}}
+      <div class="space-y-2.5 text-xs">
+        {{#each breakdown}}
+          <div>
+            <div class="mb-1 flex justify-between"><span>{{label}}</span><span class="text-ink-faint">{{bytes size}}</span></div>
+            <div class="meter"><div class="{{default color 'bg-stone-500'}}" style="width: {{this.pct}}%"></div></div>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <p class="text-sm text-ink-faint">No per-directory sizes yet — run a storage scan from the <a class="text-diamond-400 hover:underline" href="/storage">Storage page</a> to see the breakdown.</p>
+    {{/if}}
+    <div class="mt-4 border-t border-line pt-3">
+      <div class="mb-1 flex justify-between text-xs"><span>Quota</span><span class="text-ink-faint">{{bytes server.disk.used}} / {{bytes server.disk.quota}}</span></div>
+      <div class="meter"><div class="{{meterColor server.disk.used server.disk.quota}}" style="width: {{pct server.disk.used server.disk.quota}}%"></div></div>
+    </div>
+  </div>
+</div>
+<p class="help mt-3">Charts stream live over WebSocket while the server runs.</p>
+<script src="/vendor/chart.umd.js"></script>
+<script type="module" src="/js/pages/metrics.js"></script>

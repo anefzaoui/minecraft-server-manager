@@ -1,0 +1,60 @@
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-40 h-dvh w-60 -translate-x-full border-r border-line bg-surface transition-transform lg:sticky lg:top-0 lg:translate-x-0">
+  <div class="flex h-full flex-col">
+    <a href="/" class="flex items-center gap-2.5 border-b border-line px-4 py-4 texture-top">
+      <span class="grid size-9 place-items-center rounded-md bg-grass-600 text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)]">{{{icon 'pickaxe' 'size-5'}}}</span>
+      <span class="pixel text-[11px] leading-tight text-ink">Minecraft <span class="text-grass-400">Server Manager</span></span>
+    </a>
+
+    <nav class="flex-1 space-y-0.5 overflow-y-auto p-3">
+      <a class="nav-item {{#if (eq active 'dashboard')}}active{{/if}}" href="/">
+        {{{icon 'house' 'size-4'}}} Dashboard
+      </a>
+      <a class="nav-item {{#if (eq active 'servers')}}active{{/if}}" href="/servers">
+        {{{icon 'server' 'size-4'}}} Servers
+      </a>
+      <a class="nav-item {{#if (eq active 'modpacks')}}active{{/if}}" href="/modpacks">
+        {{{icon 'package' 'size-4'}}} Modpacks
+      </a>
+      <a class="nav-item {{#if (eq active 'worlds')}}active{{/if}}" href="/worlds">
+        {{{icon 'earth' 'size-4'}}} Worlds
+      </a>
+      <a class="nav-item {{#if (eq active 'blueprints')}}active{{/if}}" href="/blueprints">
+        {{{icon 'drafting-compass' 'size-4'}}} Blueprints
+      </a>
+      <a class="nav-item {{#if (eq active 'updates')}}active{{/if}}" href="/updates">
+        {{{icon 'circle-arrow-up' 'size-4'}}} Updates
+        {{#if updatesCount}}<span class="badge ml-auto bg-gold-400/15 text-gold-400">{{updatesCount}}</span>{{/if}}
+      </a>
+      <a class="nav-item {{#if (eq active 'backups')}}active{{/if}}" href="/backups">
+        {{{icon 'archive' 'size-4'}}} Backups
+      </a>
+      <a class="nav-item {{#if (eq active 'schedules')}}active{{/if}}" href="/schedules">
+        {{{icon 'calendar-clock' 'size-4'}}} Schedules
+      </a>
+      <a class="nav-item {{#if (eq active 'storage')}}active{{/if}}" href="/storage">
+        {{{icon 'hard-drive' 'size-4'}}} Storage
+      </a>
+      <a class="nav-item {{#if (eq active 'activity')}}active{{/if}}" href="/activity">
+        {{{icon 'history' 'size-4'}}} Activity
+      </a>
+
+      {{#if servers.length}}
+        <div class="pt-3 pb-1 pl-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Servers</div>
+        {{#each servers}}
+          <a class="nav-item" href="/servers/{{id}}">
+            <img src="{{iconSrc this.icon}}" alt="" class="size-5 rounded-sm" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'">
+            <span class="truncate">{{name}}</span>
+            <span class="status-dot ml-auto shrink-0 bg-{{statusColor status}}-500 {{#if (statusPulse status)}}relative pulse{{/if}}"></span>
+          </a>
+        {{/each}}
+      {{/if}}
+    </nav>
+
+    <div class="border-t border-line p-3">
+      <a href="/settings" class="nav-item {{#if (eq active 'settings')}}active{{/if}}">
+        {{{icon 'settings' 'size-4'}}} Settings
+      </a>
+    </div>
+  </div>
+</aside>
+<div id="sidebar-backdrop" class="fixed inset-0 z-30 hidden bg-black/50 lg:hidden"></div>

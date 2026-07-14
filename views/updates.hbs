@@ -1,0 +1,38 @@
+{{> page-header heading="UPDATES" sub="Everything outdated across all instances. Nothing updates itself — every upgrade is deliberate, backed up, and reversible."}}
+
+<div class="mb-4 flex flex-wrap items-center gap-2">
+  <span class="text-sm text-ink-faint">Last checked: {{lastChecked}}</span>
+  <button class="btn btn-sm ml-auto" id="updates-check-all">{{{icon 'rotate-cw' 'size-3.5'}}} Check all now</button>
+</div>
+
+{{#if updates.length}}
+<div class="card overflow-x-auto">
+  <table class="table-base" id="updates-table">
+    <thead><tr><th>Server</th><th>Type</th><th>Subject</th><th>Current</th><th>Latest</th><th class="text-right">Actions</th></tr></thead>
+    <tbody>
+      {{#each updates}}
+        <tr data-update-row data-server-id="{{serverId}}" data-server-name="{{server}}"
+            data-kind="{{kind}}" data-subject="{{subject}}" data-current="{{current}}" data-latest="{{latest}}"
+            {{#if versionId}}data-version-id="{{versionId}}"{{/if}} {{#if contentId}}data-content-id="{{contentId}}"{{/if}}>
+          <td>{{#if serverId}}<a class="text-diamond-400 hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
+          <td><span class="badge bg-inset text-ink-soft">{{kind}}</span></td>
+          <td class="font-medium">{{subject}}</td>
+          <td class="font-mono text-xs text-ink-faint">{{current}}</td>
+          <td class="font-mono text-xs text-gold-400">{{latest}}</td>
+          <td class="text-right"><div class="inline-flex gap-1">
+            {{#if changelog}}<a class="btn btn-ghost btn-sm" href="{{changelog}}" target="_blank" rel="noopener">Changelog ↗</a>{{/if}}
+            <button class="btn btn-sm" data-update-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
+          </div></td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4 max-w-prose rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">
+  {{{icon 'info' 'size-4'}}} Custom overlay mods are always preserved across pack updates. If a pack update changes MC or loader version, each overlay mod is compat-checked — with one-click "update this mod too" when a matching build exists.
+</div>
+{{else}}
+  {{> empty-state iconName='circle-check' title='Everything is up to date' message='No pending updates across your servers. Run a check to query CurseForge, Modrinth and the version registry for anything new.'}}
+{{/if}}
+<script type="module" src="/js/pages/updates.js"></script>

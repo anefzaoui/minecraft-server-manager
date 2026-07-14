@@ -1,0 +1,13 @@
+node_modules
+data
+data-*
+public/css
+public/vendor
+public/fonts
+public/icons
+docker-minecraft-server
+discovery
+package-lock.json
+# Handlebars templates: Prettier's hbs formatting reflows markup in ways that hurt
+# readability here — keep them hand-formatted.
+*.hbs

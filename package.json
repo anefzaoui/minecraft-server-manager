@@ -1,0 +1,66 @@
+{
+  "name": "minecraft-server-manager",
+  "version": "0.1.0",
+  "description": "Minecraft Server Manager — a complete control panel for itzg/docker-minecraft-server",
+  "private": true,
+  "license": "MIT",
+  "author": "anefzaoui",
+  "type": "commonjs",
+  "main": "src/server.js",
+  "homepage": "https://github.com/anefzaoui/minecraft-server-manager#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anefzaoui/minecraft-server-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anefzaoui/minecraft-server-manager/issues"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "start": "node src/server.js",
+    "build": "npm run build:css",
+    "build:css": "tailwindcss -i assets/css/input.css -o public/css/app.css --minify",
+    "watch:css": "tailwindcss -i assets/css/input.css -o public/css/app.css --watch",
+    "postinstall": "node scripts/postinstall.js",
+    "lint": "eslint src scripts public/js test eslint.config.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc",
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:unit": "node --test \"test/**/*.test.js\"",
+    "test:smoke": "node scripts/qa-sweep.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "bcryptjs": "^3.0.2",
+    "croner": "^9.0.0",
+    "dockerode": "^4.0.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "express-handlebars": "^8.0.1",
+    "express-session": "^1.18.1",
+    "lucide-static": "^1.24.0",
+    "marked": "^15.0.7",
+    "multer": "^1.4.5-lts.2",
+    "nanoid": "^3.3.8",
+    "prismarine-nbt": "^2.8.0",
+    "sanitize-html": "^2.14.0",
+    "tar": "^7.4.3",
+    "ws": "^8.18.1",
+    "yauzl": "^3.2.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@tailwindcss/cli": "^4.1.4",
+    "@types/node": "^22.10.0",
+    "eslint": "^9.39.5",
+    "globals": "^17.7.0",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^4.1.4",
+    "typescript": "^5.7.2"
+  }
+}

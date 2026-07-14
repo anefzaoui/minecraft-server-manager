@@ -1,0 +1,7 @@
+<div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+  <div>
+    <h2 class="pixel text-sm text-ink">{{heading}}</h2>
+    {{#if sub}}<p class="mt-2 max-w-prose text-sm text-ink-faint">{{sub}}</p>{{/if}}
+  </div>
+  {{#if actionsPartial}}{{> (lookup . 'actionsPartial')}}{{/if}}
+</div>

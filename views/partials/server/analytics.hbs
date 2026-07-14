@@ -1,0 +1,67 @@
+<div data-analytics-server="{{server.id}}">
+  <div class="grid items-start gap-4 xl:grid-cols-5">
+
+    <div class="card xl:col-span-2">
+      <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
+        <h3 class="flex items-center gap-1.5 font-semibold">{{{icon 'trophy' 'size-4'}}} Scoreboard</h3>
+        <button class="btn btn-ghost btn-sm ml-auto" id="an-refresh" data-tip="Re-read stat files and recent logs now">{{{icon 'refresh-cw' 'size-3.5'}}} Refresh</button>
+      </div>
+      <div class="flex flex-wrap gap-2 border-b border-line p-3">
+        <select class="input w-auto flex-1" id="an-metric" data-label="Rank by metric">
+          <option value="playtimeTicks">Playtime</option>
+          <option value="deaths">Deaths</option>
+          <option value="mobKills">Mob kills</option>
+          <option value="playerKills">Player kills</option>
+          <option value="blocksMinedTotal">Blocks mined</option>
+          <option value="diamondsMined">Diamonds mined</option>
+          <option value="distanceCm">Distance</option>
+        </select>
+        <select class="input w-auto" id="an-window" data-label="Time window">
+          <option value="all">All time</option>
+          <option value="7d">Last 7 days</option>
+          <option value="24h">Last 24 h</option>
+        </select>
+      </div>
+      <table class="table-base">
+        <thead><tr><th class="w-10">#</th><th>Player</th><th class="text-right">Value</th></tr></thead>
+        <tbody id="an-scoreboard">
+          <tr><td colspan="3" class="p-6 text-center text-ink-faint">Loading…</td></tr>
+        </tbody>
+      </table>
+      <p class="help border-t border-line p-3">Stats come from the world's stat files and refresh every 5 minutes while the server runs. Click a row for the player's profile.</p>
+    </div>
+
+    <div class="card xl:col-span-3">
+      <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
+        <h3 class="flex items-center gap-1.5 font-semibold">{{{icon 'activity' 'size-4'}}} Timeline</h3>
+        <input class="input ml-auto w-full max-w-xs" id="an-search" placeholder="Search chat, deaths, players…" autocomplete="off">
+      </div>
+      <div class="flex flex-wrap gap-2 border-b border-line p-3">
+        <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-an-type="chat" checked> Chat</label>
+        <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-an-type="join" checked> Joins</label>
+        <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-an-type="leave" checked> Leaves</label>
+        <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-an-type="death" checked> Deaths</label>
+        <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-an-type="advancement" checked> Advancements</label>
+      </div>
+      <ol class="divide-y divide-line" id="an-timeline">
+        <li class="p-6 text-center text-ink-faint">Loading…</li>
+      </ol>
+      <div class="border-t border-line p-3">
+        <button class="btn btn-sm w-full" id="an-older">Load older</button>
+      </div>
+      <p class="help border-x-0 border-b-0 px-3 pb-3">Chat and events are parsed from the server log and stored locally only — nothing leaves this machine.</p>
+    </div>
+
+  </div>
+</div>
+<script type="module" src="/js/pages/analytics.js"></script>
+
+<div class="card mt-4" data-investigation-server="{{server.id}}">
+  <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
+    <span class="font-semibold">{{{icon 'shield' 'size-4'}}} Investigation</span>
+    <span class="text-xs text-ink-faint">X-ray suspicion from mining ratios vs the server median — advisory evidence, never auto-punishment.</span>
+    <button class="btn btn-sm ml-auto" id="inv-run">{{{icon 'search' 'size-3.5'}}} Analyze mining patterns</button>
+  </div>
+  <div id="inv-results" class="p-4 text-sm text-ink-faint">Run the analysis to check every player's ore-discovery rates.</div>
+</div>
+<script type="module" src="/js/pages/investigation.js"></script>
