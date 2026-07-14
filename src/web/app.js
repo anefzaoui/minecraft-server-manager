@@ -63,6 +63,9 @@ function jsonForScript(v) {
 function createApp() {
   const app = express();
 
+  // Package version, exposed to every template (footer) so it never goes stale.
+  app.locals.appVersion = require('../../package.json').version;
+
   // Behind a TLS-terminating reverse proxy, trust the configured hops so req.ip
   // (login rate-limiting) and secure-cookie 'auto' see the real client + scheme.
   if (config.trustProxy !== false) app.set('trust proxy', config.trustProxy);

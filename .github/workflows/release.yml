@@ -1,0 +1,47 @@
+name: Release
+
+# Publish a GitHub Release whenever the version in package.json changes on main.
+# Our "Release x.y.z" commit bumps package.json, so pushing it cuts a tagged,
+# changelog-noted GitHub Release automatically — watchers get notified, zero manual steps.
+on:
+  push:
+    branches: [main]
+    paths: ['package.json']
+
+permissions:
+  contents: write # create tags + releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: version
+        run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.value }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build release notes from CHANGELOG
+        if: steps.check.outputs.exists == 'false'
+        run: node scripts/changelog-notes.js "${{ steps.version.outputs.value }}" > release-notes.md
+
+      - name: Create GitHub Release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "v${{ steps.version.outputs.value }}"
+          --title "v${{ steps.version.outputs.value }}"
+          --notes-file release-notes.md
+          --target "$GITHUB_SHA"

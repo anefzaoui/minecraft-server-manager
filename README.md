@@ -75,6 +75,25 @@ copy to migrate.**
 
 ---
 
+## Why this over Pterodactyl, Crafty Controller, or AMP?
+
+Those are excellent general game panels. This one is **purpose-built for Minecraft on the
+[itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) image**, so the parts
+that are fiddly elsewhere are first-class here:
+
+- **vs [Pterodactyl](https://pterodactyl.io/)** — no separate Wings daemon, database server, or "egg"
+  setup to run; it's one Node process talking to your Docker socket. Minecraft-specific features
+  (pinned modpacks, a shared deduplicated mod library, crash forensics, portable blueprints) are built
+  in, not community add-ons.
+- **vs [Crafty Controller](https://craftycontrol.com/)** — same free, self-hosted spirit, but every
+  server is a clean, resource-capped **Docker container** rather than a bare process, with per-server
+  disk quotas, a one-click live map, and portable `.mcserver.zip` blueprints.
+- **vs [AMP](https://cubecoders.com/AMP)** — no per-machine licence and no paid tiers: **MIT-licensed
+  and free**, with the itzg image's entire environment-variable surface exposed and explained in plain
+  English.
+
+Not affiliated with any of them — and it stands on the shoulders of the excellent itzg image.
+
 ## Screenshots
 
 <table>
@@ -124,7 +143,7 @@ by host path).
 ## Quick start
 
 ```bash
-git clone <this-repo> minecraft-server-manager
+git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
 cd minecraft-server-manager
 npm install               # installs deps and builds the Tailwind CSS (postinstall)
 cp .env.example .env      # optional — all values have sane defaults
@@ -389,7 +408,7 @@ The field catalog in `src/config/` is the single source of truth for server sett
 
 ## Status & areas that need work
 
-This is an early public release (`v0.1.0`). The core lifecycle is solid, but several features are
+This is an early public release. The core lifecycle is solid, but several features are
 deliberately "good enough for now" — honest contribution targets rather than finished work. If you
 want to help, start here.
 
