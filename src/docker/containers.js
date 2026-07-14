@@ -218,6 +218,35 @@ async function removeDataDir(hostDir, image) {
   }
 }
 
+/**
+ * Chown a server's data directory to uid:gid using a throwaway root container.
+ * Migrates servers whose files the container wrote under its old default uid so
+ * the panel (running as uid:gid) can manage them. Mounts the PARENT and chowns
+ * the target by name; `Cmd: []` clears the image's default CMD (see removeDataDir).
+ */
+async function chownDataDir(hostDir, image, uid, gid) {
+  const docker = getDocker();
+  const parent = path.dirname(hostDir);
+  const base = path.basename(hostDir);
+  const container = await docker.createContainer({
+    Image: image,
+    Entrypoint: ['chown', '-R', `${uid}:${gid}`, `/work/${base}`],
+    Cmd: [],
+    User: '0:0',
+    Labels: { 'msm.managed': 'true', 'msm.role': 'chown' },
+    HostConfig: { Binds: [`${parent}:/work`], AutoRemove: false, NetworkMode: 'none' },
+  });
+  try {
+    await container.start();
+    const res = await container.wait();
+    if (res && res.StatusCode !== 0) {
+      throw new Error(`chown container exited ${res.StatusCode} for ${base}`);
+    }
+  } finally {
+    await container.remove({ force: true }).catch(() => {});
+  }
+}
+
 module.exports = {
   LABEL,
   containerName,
@@ -229,5 +258,6 @@ module.exports = {
   killContainer,
   removeContainer,
   removeDataDir,
+  chownDataDir,
   execCapture,
 };

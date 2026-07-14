@@ -41,6 +41,13 @@ function getServer(id) {
  * (EULA, RCON, memory, STOP_DURATION) are applied last so user env in
  * env_json can never break panel management.
  */
+/** The host uid/gid the panel process runs as, or null where it doesn't apply
+ *  (Windows / macOS Docker Desktop don't have this bind-mount ownership problem). */
+function panelUidGid() {
+  if (process.platform === 'win32' || typeof process.getuid !== 'function') return null;
+  return { uid: process.getuid(), gid: process.getgid() };
+}
+
 function assembleEnv(server) {
   const env = { ...server.env };
   env.EULA = 'TRUE';
@@ -80,6 +87,15 @@ function assembleEnv(server) {
   delete env.LOAD_ENV_FROM_GENERIC_PACK;
   delete env.LOAD_ENV_FROM_ARCHIVE;
   delete env.REMOVE_OLD_MODS;
+  // Run the container as the panel's own host user so every file it writes under
+  // ./data is owned by us. Otherwise it writes as its default uid (1000) and the
+  // panel — a different user — can't manage those files (mod installs, deletes,
+  // backups) and hits EACCES. This is the itzg image's intended ownership knob.
+  const ids = panelUidGid();
+  if (ids) {
+    env.UID = String(ids.uid);
+    env.GID = String(ids.gid);
+  }
   return env;
 }
 
@@ -262,8 +278,29 @@ function guardOp(op, fn) {
   };
 }
 
+/**
+ * Ensure a server's data dir is owned by the panel user so we can manage its
+ * files. Containers now run as our uid (see assembleEnv), so this only does real
+ * work once — migrating servers created before that, whose files the container
+ * wrote as uid 1000. No-op when already aligned or on platforms without uids.
+ */
+async function ensureOwnership(id) {
+  const ids = panelUidGid();
+  if (!ids) return;
+  const dir = dataPath('servers', id);
+  let st;
+  try {
+    st = fs.statSync(dir);
+  } catch {
+    return; // no data dir yet
+  }
+  if (st.uid === ids.uid && st.gid === ids.gid) return; // already ours — fast path
+  await containers.chownDataDir(dir, resolveImage(mustGet(id)), ids.uid, ids.gid);
+}
+
 async function startServerImpl(id, { actor = 'system' } = {}) {
   const server = mustGet(id);
+  await ensureOwnership(id);
   const info = await containers.inspectStatus(id);
   if (!info.exists || server.pending_recreate) {
     await recreateServerImpl(id, { actor, quiet: true });
@@ -310,6 +347,7 @@ async function killServer(id, { actor = 'system' } = {}) {
 /** Recreate: remove + create with current env/resources. Applies pending changes. */
 async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) {
   const server = mustGet(id);
+  await ensureOwnership(id);
   const info = await containers.inspectStatus(id);
   const wasRunning = info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
   if (wasRunning) await containers.stopContainer(id);
@@ -558,6 +596,7 @@ module.exports = {
   refreshStatuses,
   assembleEnv,
   resolveImage,
+  ensureOwnership,
   dirSize,
   setConsoleLabel,
 };

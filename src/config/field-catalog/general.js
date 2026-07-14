@@ -251,7 +251,7 @@ module.exports = [
     key: 'UID',
     scope: 'env',
     label: 'File owner user ID',
-    help: 'Linux user ID the server process runs as, so files in the server folder get the right owner. Only change if your host uses a different user for the data directory.',
+    help: 'Linux user ID the server process runs as. The panel sets this to its own user automatically so it can manage the server’s files (mods, backups, deletes); on Linux a value here is overridden. Only relevant on hosts that must pin a specific owner.',
     type: 'number',
     default: 1000,
     mode: 'advanced',

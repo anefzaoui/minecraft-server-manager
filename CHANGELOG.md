@@ -30,10 +30,16 @@ its own dated entry.
 
 ### Fixed
 
-- **Deleting a server no longer fails with `EACCES`.** When the itzg container wrote world/mod files
-  as its own UID (default `1000`) and the panel runs as a different host user, `rm` was denied. The
-  panel now falls back to a throwaway root container that removes the directory regardless of file
-  ownership.
+- **Containers now run as the panel's own host user (UID/GID) — the root fix for all the file
+  `EACCES` errors.** Previously containers wrote files as uid `1000`, so when the panel ran as a
+  different user it could not manage its own servers' files: installing a mod (`copyfile` denied),
+  deleting a server, and other operations failed with `EACCES`. Every server now creates files owned
+  by the panel user, and servers created before this change are re-owned to the panel user
+  automatically on their next start, recreate, or file operation. This is the actual cause behind the
+  delete-permission symptom below.
+- **Deleting a server no longer fails with `EACCES`.** As a safety net (in addition to the ownership
+  fix above), the panel falls back to a throwaway root container to remove a directory it can't
+  delete directly.
 - **Permission errors are no longer mislabeled "Docker is not reachable".** That message is now
   reserved for genuine daemon-connection failures; a filesystem `EACCES` whose path merely contains
   "docker" (e.g. `/home/docker/…`) is reported accurately.

@@ -163,6 +163,10 @@ async function cacheIcon(libraryId, iconUrl) {
 async function installToServer(libraryId, serverId, destRel, { filename } = {}) {
   const lib = db.get('SELECT * FROM library_files WHERE id = ?', libraryId);
   if (!lib) throw httpError(404, 'Library file not found');
+  // The panel must own the server dir to write into it — a server created before
+  // container-runs-as-panel-user has files owned by uid 1000. Lazy require breaks
+  // the servers<->library cycle.
+  await require('./servers').ensureOwnership(serverId);
   const destDir = dataPath('servers', serverId, destRel);
   await fsp.mkdir(destDir, { recursive: true });
   const target = path.join(destDir, sanitizeFilename(filename || lib.filename));
