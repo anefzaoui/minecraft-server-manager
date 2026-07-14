@@ -857,6 +857,31 @@ router.post(
   })
 );
 
+// ---- Admin chat (tellraw / say over RCON) ----
+const chat = require('../../services/chat');
+
+router.post(
+  '/servers/:id/chat',
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    const body = z
+      .object({
+        mode: z.enum(['tellraw', 'say']).default('tellraw'),
+        target: z.string().trim().max(32).default('@a'),
+        text: z.string().min(1).max(512),
+        color: z.string().trim().max(20).optional(),
+        bold: z.coerce.boolean().optional(),
+        italic: z.coerce.boolean().optional(),
+        underlined: z.coerce.boolean().optional(),
+        strikethrough: z.coerce.boolean().optional(),
+        obfuscated: z.coerce.boolean().optional(),
+      })
+      .parse(req.body);
+    const result = await chat.sendChat(req.params.id, { ...body, actor: req.user.username });
+    res.status(201).json({ ok: true, ...result });
+  })
+);
+
 // ---- Live map (BlueMap) ----
 const mapService = require('../../services/map');
 

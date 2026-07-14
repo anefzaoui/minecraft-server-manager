@@ -17,6 +17,7 @@ const router = express.Router();
 const SERVER_TABS = [
   'overview',
   'console',
+  'chat',
   'players',
   'commands',
   'inventory',
@@ -38,7 +39,7 @@ const SERVER_TABS = [
 // routes still work; only the navigation is reorganized.
 const TAB_GROUPS = [
   { key: 'overview', label: 'Overview', icon: 'layout-dashboard', tabs: ['overview'] },
-  { key: 'console', label: 'Console', icon: 'terminal', tabs: ['console'] },
+  { key: 'console', label: 'Console', icon: 'terminal', tabs: ['console', 'chat'] },
   { key: 'players', label: 'Players', icon: 'users', tabs: ['players', 'inventory', 'analytics', 'commands'] },
   { key: 'world', label: 'World', icon: 'earth', tabs: ['worlds', 'mods', 'map', 'files'] },
   { key: 'backups', label: 'Backups', icon: 'archive', tabs: ['backups'] },
@@ -46,6 +47,8 @@ const TAB_GROUPS = [
   { key: 'settings', label: 'Settings', icon: 'settings', tabs: ['settings', 'integrations'] },
 ];
 const SUB_LABELS = {
+  console: 'Console',
+  chat: 'Chat',
   players: 'Roster',
   inventory: 'Inventory',
   analytics: 'Stats',
@@ -253,6 +256,9 @@ router.get(
       }
       addrs.push(`localhost:${row.port_game}`);
       context.addresses = [...new Set(addrs)];
+    } else if (tab === 'chat') {
+      const live = require('../../services/liveCache').get(row.id);
+      context.onlinePlayers = (live && live.players && live.players.names) || [];
     } else if (tab === 'mods') {
       context.mods = await require('../../services/mods')
         .listContent(row.id)

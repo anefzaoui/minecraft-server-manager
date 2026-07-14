@@ -1,0 +1,49 @@
+<div class="card p-4" data-chat-server="{{server.id}}" data-chat-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{/if}}">
+  <h3 class="mb-1 font-semibold">Chat</h3>
+  <p class="mb-3 text-xs text-ink-faint">Send styled messages to everyone or one player, shown in-game. Available while the server runs.</p>
+
+  <div class="console h-80 overflow-y-auto" id="chat-log">
+    <div class="grid h-full place-items-center px-4 text-center text-sm text-ink-faint" data-chat-empty>No messages sent yet — type below and hit Enter.</div>
+  </div>
+
+  <div class="mt-3 space-y-3 {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}pointer-events-none opacity-50{{/unless}}">
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="label" for="chat-target">To</label>
+        <select class="input w-auto" id="chat-target" data-label="Recipient">
+          <option value="@a" selected>Everyone</option>
+          {{#each onlinePlayers}}<option value="{{this}}">{{this}}</option>{{/each}}
+        </select>
+      </div>
+      <div>
+        <label class="label">Mode</label>
+        <div class="flex rounded-md border border-line-strong p-0.5 text-sm" id="chat-mode">
+          <button type="button" class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" data-mode="tellraw">Tellraw</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-mode="say">Say</button>
+        </div>
+        <p class="help">Tellraw = styled, per recipient. Say = plain <span class="font-mono">[Server]</span> broadcast.</p>
+      </div>
+    </div>
+
+    <div data-chat-styles>
+      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Color</div>
+      <div class="flex flex-wrap items-center gap-1.5" id="chat-colors">
+        <button type="button" class="chip" data-color="">Default</button>
+      </div>
+      <div class="mb-1 mt-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Style</div>
+      <div class="flex flex-wrap gap-1.5" id="chat-formats">
+        <button type="button" class="chip" data-format="bold"><b>Bold</b></button>
+        <button type="button" class="chip" data-format="italic"><i>Italic</i></button>
+        <button type="button" class="chip" data-format="underlined"><u>Underline</u></button>
+        <button type="button" class="chip" data-format="strikethrough"><s>Strike</s></button>
+        <button type="button" class="chip" data-format="obfuscated">Obfuscated</button>
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <input class="input flex-1" id="chat-input" placeholder="Message — Enter to send" autocomplete="off" maxlength="512" />
+      <button class="btn btn-primary" id="chat-send">{{{icon 'megaphone' 'size-4'}}} Send</button>
+    </div>
+  </div>
+</div>
+<script type="module" src="/js/pages/chat.js"></script>
