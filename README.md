@@ -141,13 +141,13 @@ it runs on. This section covers how to reach it from elsewhere and exactly which
 
 ### Ports at a glance
 
-| What                     | Port(s)                                     | Protocol  | Open to the internet?                     |
-| ------------------------ | ------------------------------------------- | --------- | ----------------------------------------- |
-| **Admin panel (web UI)** | `PANEL_PORT` — default **25564**            | TCP       | Only behind TLS (reverse proxy), not raw  |
-| **Game server (Java)**   | from `PORT_GAME_START` (**25565**) upward   | TCP + UDP | **Yes** — this is how players connect     |
-| **RCON**                 | game port **+ 1000** (from **26565**)       | TCP       | **No — never.** Panel-internal management |
-| **Bedrock / Geyser**     | from `PORT_BEDROCK_START` (**19132**) upward | UDP       | Only if you run Bedrock                    |
-| **Live map (BlueMap)**   | auto-allocated                              | TCP       | **No** — served through the panel's proxy |
+| What                     | Port(s)                                      | Protocol  | Open to the internet?                     |
+| ------------------------ | -------------------------------------------- | --------- | ----------------------------------------- |
+| **Admin panel (web UI)** | `PANEL_PORT` — default **25564**             | TCP       | Only behind TLS (reverse proxy), not raw  |
+| **Game server (Java)**   | from `PORT_GAME_START` (**25565**) upward    | TCP + UDP | **Yes** — this is how players connect     |
+| **RCON**                 | game port **+ 1000** (from **26565**)        | TCP       | **No — never.** Panel-internal management |
+| **Bedrock / Geyser**     | from `PORT_BEDROCK_START` (**19132**) upward | UDP       | Only if you run Bedrock                   |
+| **Live map (BlueMap)**   | auto-allocated                               | TCP       | **No** — served through the panel's proxy |
 
 The panel itself sits at **25564** — one below the game runway — so game instances count cleanly
 upward from 25565 with nothing interrupting the sequence. Game ports are then assigned **first-free**,
