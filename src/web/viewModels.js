@@ -32,6 +32,7 @@ async function serverVM(s, { withLive = true } = {}) {
     tags: s.tags,
     type: s.type,
     flavor: flavorLabel(s.type),
+    loader: require('../services/mods').loaderOf(s), // resolved loader (detects the pack's for modpacks)
     mcVersion: await displayVersion(s.mc_version),
     javaTag: s.java_tag || 'auto',
     status: s.status,

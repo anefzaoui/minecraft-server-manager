@@ -14,9 +14,9 @@ const escAttr = (s) =>
     .replace(/>/g, '&gt;');
 
 const root = document.querySelector('[data-mods-server]');
-if (root) init(root.dataset.modsServer, root.dataset.modsLoader, root.dataset.modsMc);
+if (root) init(root.dataset.modsServer, root.dataset.modsType, root.dataset.modsMc, root.dataset.modsLoader);
 
-function init(serverId, serverType, mcVersion) {
+function init(serverId, serverType, mcVersion, serverLoader) {
   const mc = (mcVersion || '').replace(/^(LATEST|SNAPSHOT) \((.+)\)$/, '$2');
 
   // ---- Filters ----
@@ -139,7 +139,8 @@ function init(serverId, serverType, mcVersion) {
       const query = q.value.trim();
       if (!query) return;
       results.innerHTML = '<p class="p-6 text-center text-sm text-ink-faint">Searching…</p>';
-      const loader = { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
+      const loader =
+        serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
       const kind = ['PAPER', 'PURPUR', 'SPIGOT', 'BUKKIT', 'FOLIA', 'LEAF', 'PUFFERFISH'].includes(serverType)
         ? 'plugin'
         : 'mod';

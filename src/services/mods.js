@@ -31,12 +31,30 @@ function contentDir(server, kind) {
   return PLUGIN_TYPES.has(server.type) ? 'plugins' : 'mods';
 }
 
+// Modpack servers don't set CF_MOD_LOADER/MODRINTH_LOADER — the pack itself
+// decides the loader. mc-image-helper writes a per-loader manifest into the data
+// dir (e.g. .neoforge-manifest.json), so detect from that; otherwise mod installs
+// have no loader to match and grab an arbitrary (e.g. Fabric) build.
+function detectPackLoader(serverId) {
+  let names = [];
+  try {
+    names = fs.readdirSync(dataPath('servers', serverId));
+  } catch {
+    return null;
+  }
+  for (const loader of ['neoforge', 'forge', 'fabric', 'quilt']) {
+    if (names.includes(`.${loader}-manifest.json`)) return loader;
+  }
+  return null;
+}
+
 function loaderOf(server) {
   const map = { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' };
   if (map[server.type]) return map[server.type];
   if (PLUGIN_TYPES.has(server.type)) return 'paper';
   if (server.type === 'AUTO_CURSEFORGE' || server.type === 'MODRINTH' || server.type === 'FTBA') {
-    return (server.env.MODRINTH_LOADER || server.env.CF_MOD_LOADER || '').toLowerCase() || null;
+    const envLoader = (server.env.MODRINTH_LOADER || server.env.CF_MOD_LOADER || '').toLowerCase();
+    return envLoader || detectPackLoader(server.id) || null;
   }
   return null;
 }
