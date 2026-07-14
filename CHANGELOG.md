@@ -5,6 +5,21 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.5.0] - 2026-07-14
+
+### Added
+
+- **Full control when resetting (re-rolling) a world.** The Reset dialog now lets you keep the current
+  seed, roll a **new random** seed, or enter a **custom** seed; optionally switch the **world type**
+  (Default / Superflat / Large biomes / Amplified); and choose whether to take a safety backup first —
+  all applied on the next start, without recreating the server.
+
+### Fixed
+
+- **The Reset-world dialog no longer renders broken.** Its seed toggle put the label text _inside_ the
+  toggle element, so the CSS styled it as a switch track and the text wrapped one word per line. The
+  dialog is now a proper form.
+
 ## [0.4.0] - 2026-07-14
 
 ### Added
@@ -16,16 +31,9 @@ its own dated entry.
   on Modrinth** (installs a loader-correct replacement and excludes the dead one), or **Upload jar**
   (drops your manually-downloaded file in as an overlay). Exclusions use the mod's real CurseForge
   slug parsed from the download link, so they actually match `CF_EXCLUDE_MODS`.
-- **Full control when resetting (re-rolling) a world.** The Reset dialog now lets you keep the current
-  seed, roll a **new random** seed, or enter a **custom** seed; optionally switch the **world type**
-  (Default / Superflat / Large biomes / Amplified); and choose whether to take a safety backup first —
-  all applied on the next start, without recreating the server.
 
 ### Fixed
 
-- **The Reset-world dialog no longer renders broken.** Its seed toggle put the label text _inside_ the
-  toggle element, so the CSS styled it as a switch track and the text wrapped one word per line. The
-  dialog is now a proper form.
 - **Pack-mod "Disable" now excludes the right project.** It reads the real CF slug/ID from the pack
   manifest instead of guessing from the display name — the old guess silently failed for
   renamed/unofficial mods (e.g. "cc tweaked", whose slug is `unofficial-cc-tweaked-…`).
