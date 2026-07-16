@@ -701,18 +701,24 @@
   .msm-toggle span::after {
     content: '';
     @apply absolute left-0.5 top-0.5 size-4 rounded-full bg-stone-300;
-    /* Spring easing: the knob overshoots a touch and settles, like a real switch. */
+    /* NO overshoot on travel: both resting positions sit flush against the
+       track edges, so an overshooting spring pokes the knob OUTSIDE the track
+       (visible when switching off). The tactile character comes from the
+       held-down squash below instead. */
+    transform-origin: left center;
     transition:
-      transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
-      background-color 200ms,
-      width 150ms ease;
+      transform 200ms cubic-bezier(0.3, 0.7, 0.4, 1),
+      background-color 200ms;
   }
-  /* Held down, the knob squashes toward the direction of travel. */
-  .msm-toggle:active input:not(:disabled) + span::after {
-    width: 1.25rem;
+  /* Held down, the knob squashes toward the direction of travel — scaleX
+     anchored to the trailing edge, so it can never leave the track, and the
+     release (:active clears a beat before :checked flips) stays smooth because
+     travel and squash live on ONE animated property. */
+  .msm-toggle:active input:not(:disabled):not(:checked) + span::after {
+    transform: scaleX(1.2);
   }
   .msm-toggle:active input:checked:not(:disabled) + span::after {
-    transform: translateX(0.75rem);
+    transform: translateX(1rem) scaleX(1.2);
   }
   .msm-toggle:has(input:disabled) {
     @apply cursor-not-allowed;
@@ -725,7 +731,9 @@
     @apply bg-grass-600 ring-grass-700;
   }
   .msm-toggle input:checked + span::after {
-    @apply translate-x-4 bg-white;
+    @apply bg-white;
+    transform: translateX(1rem);
+    transform-origin: right center;
   }
 
   /* Range sliders */

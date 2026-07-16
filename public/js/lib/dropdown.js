@@ -38,7 +38,10 @@ function open(trigger) {
   document.body.appendChild(menu);
 
   const r = trigger.getBoundingClientRect();
-  const mr = menu.getBoundingClientRect();
+  // offsetWidth/Height, NOT getBoundingClientRect: the entrance animation may
+  // already have the menu at scale(0.95) when we measure, which would skew the
+  // position and the flip decision.
+  const mr = { width: menu.offsetWidth, height: menu.offsetHeight };
   let left = Math.min(r.right - mr.width, window.innerWidth - mr.width - 8);
   let top = r.bottom + 4;
   const flipped = top + mr.height > window.innerHeight - 8;

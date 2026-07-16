@@ -87,8 +87,10 @@ UI bug originated server-side.
     plain CSS state remains the no-JS fallback.
   - **Checkboxes** grow their checkmark in with a small overshoot (and shrink it out on
     uncheck); **radios** animate the dot out from the center via a registered
-    `--msm-radio-r` custom property; **toggles** get spring physics — the knob overshoots
-    and settles, and squashes toward the direction of travel while held down.
+    `--msm-radio-r` custom property; **toggles** get tactile physics — the knob squashes
+    toward the direction of travel while held down (edge-anchored `scaleX`, so it can never
+    leave the track) and glides with a fast-settle curve, deliberately without overshoot:
+    both resting positions sit flush against the track edges.
   - **Modals** fade their backdrop in and out with a subtle panel shrink on close (logic
     still fires immediately — only the removal waits); **dropdown menus** and the **task
     tray panel** scale out of their trigger edge, origin-aware when a menu flips upward.
