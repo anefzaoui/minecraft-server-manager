@@ -1,4 +1,4 @@
-<div data-backups-server="{{server.id}}" data-server-status="{{server.status}}" class="contents">
+<div data-backups-server="{{server.id}}" class="contents">
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <p class="text-sm text-ink-faint">Retention: keep 10 scheduled + all pre-update backups</p>
   <button class="btn btn-primary btn-sm ml-auto" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back up now</button>
@@ -10,14 +10,18 @@
     <tbody>
       {{#each backups}}
         <tr data-backup-row data-backup-id="{{id}}" data-file="{{file}}" data-size="{{size}}">
-          <td class="font-mono text-xs">{{file}}</td>
+          {{! w-full + max-w-0 so long archive names truncate instead of pushing
+              the Actions column into horizontal scroll. }}
+          <td class="w-full max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
           <td><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
-          <td class="text-right text-ink-faint">{{bytes size}}</td>
-          <td class="text-right text-ink-faint">{{ts}}</td>
+          <td class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
+          <td class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
           <td class="text-right"><div class="inline-flex gap-1">
-            <button class="btn btn-ghost btn-sm" data-backup-restore data-tip="Stops the server, restores this archive, restarts">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
+            {{! Restore stops the server and replaces its data — it must not scan
+                identically to the harmless Download beside it. }}
+            <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="Stops the server, restores this archive, restarts">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
             <a class="btn btn-ghost btn-sm" href="/api/backups/{{id}}/download" data-tip="Download archive" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</a>
-            <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'x' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
           </div></td>
         </tr>
       {{/each}}

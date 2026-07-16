@@ -82,7 +82,7 @@ function showPreview(preview, importBody) {
     <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
       <div><dt class="text-ink-faint">Server type</dt><dd class="mt-0.5 font-medium">${esc(m.config.type)} · MC ${esc(m.config.mcVersion)}</dd></div>
       <div><dt class="text-ink-faint">Modpack</dt><dd class="mt-0.5 font-medium">${m.pack ? esc(`${m.pack.projectName || m.pack.projectRef} @ ${m.pack.versionName || m.pack.versionId}`) : 'None'}</dd></div>
-      <div><dt class="text-ink-faint">Resources</dt><dd class="mt-0.5 font-medium">${m.resources.heapMb} MB heap · ${m.resources.containerMemoryMb} MB limit · ${m.resources.cpus || 'unlimited'} CPU · ${m.resources.diskQuotaGb} GB quota</dd></div>
+      <div><dt class="text-ink-faint">Resources</dt><dd class="mt-0.5 font-medium">${esc(m.resources.heapMb)} MB heap · ${esc(m.resources.containerMemoryMb)} MB limit · ${esc(m.resources.cpus || 'unlimited')} CPU · ${esc(m.resources.diskQuotaGb)} GB quota</dd></div>
       <div><dt class="text-ink-faint">Includes</dt><dd class="mt-0.5 font-medium">${m.configFiles.length} config file${m.configFiles.length === 1 ? '' : 's'} · ${m.world ? 'world included' : 'no world'} · ${m.embedFiles ? 'files embedded' : 'manifest-only'}</dd></div>
     </dl>
     ${
@@ -123,7 +123,14 @@ function showPreview(preview, importBody) {
   });
 }
 
+let importInFlight = false; // dismissing the progress modal must not allow a second, duplicate create
+
 async function createFrom(body, name) {
+  if (importInFlight) {
+    toast('A server is already being created from a blueprint — hold on.', { kind: 'info' });
+    return;
+  }
+  importInFlight = true;
   const progress = openProgress(
     `Creating server from "${name}" — pulling the image, installing the pack and mods. This can take a few minutes…`
   );
@@ -138,6 +145,8 @@ async function createFrom(body, name) {
   } catch (err) {
     progress.close();
     return toast(`Import failed: ${err.message}`, { kind: 'error' });
+  } finally {
+    importInFlight = false;
   }
   progress.close();
   if (!data.ok) return toast(data.error || 'Import failed', { kind: 'error', timeout: 9000 });
@@ -197,7 +206,8 @@ function openProgress(text) {
   content.className = 'space-y-3 text-sm';
   content.innerHTML = `
     <p></p>
-    <div class="meter"><div class="bg-grass-500 animate-pulse" style="width:100%"></div></div>`;
+    <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
+    <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import — it keeps running server-side.</p>`;
   content.querySelector('p').textContent = text;
   return openModal({ title: 'Working…', content, actions: [] });
 }

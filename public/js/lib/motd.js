@@ -134,11 +134,13 @@ export function attachMotdEditor(input, { preview, getName = () => 'My Server' }
   const wrap = document.createElement('div');
   wrap.className = 'mt-1.5 flex flex-wrap items-center gap-1';
 
-  // Color swatches
+  // Color swatches — .swatch borders are theme-aware; the old white ring was
+  // invisible around the White/Yellow swatches on the light theme's white card.
+  // size-6 override: align with the format buttons on one toolbar baseline.
   for (const [code, hex, label] of MC_COLORS) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'size-5 rounded-sm ring-1 ring-inset ring-white/20 transition hover:ring-2 hover:ring-white/70';
+    b.className = 'swatch size-6';
     b.style.background = hex;
     b.dataset.tip = `${label} (&${code})`;
     b.addEventListener('click', () => insert(`&${code}`));

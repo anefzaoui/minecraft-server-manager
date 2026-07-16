@@ -14,28 +14,36 @@
       <tbody>
         {{#each worlds}}
           <tr data-world-row data-world="{{name}}" data-size="{{sizeBytes}}" data-active="{{active}}">
-            <td>
-              <div class="font-medium">{{name}}</div>
+            <td class="w-full max-w-0">
+              <div class="truncate font-medium" title="{{name}}">{{name}}</div>
               {{#if seed}}<div class="text-xs text-ink-faint">seed {{seed}}</div>{{/if}}
             </td>
             <td class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
-            <td class="text-right text-ink-faint">{{bytes sizeBytes}}</td>
+            <td class="whitespace-nowrap text-right text-ink-faint">{{bytes sizeBytes}}</td>
+            {{! Status shows STATE only (both branches same height); the
+                Activate control lives with the other actions — mixed badge
+                and button here made row heights visibly alternate. }}
             <td>
               {{#if active}}
                 <span class="badge badge-ok">active</span>
               {{else}}
-                <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Sets level-name — server must be stopped">Activate</button>
+                <span class="badge">inactive</span>
               {{/if}}
             </td>
             <td class="text-right"><div class="inline-flex gap-1">
+              {{#unless active}}
+                <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Sets level-name — server must be stopped">{{{icon 'play' 'size-3.5'}}} Activate</button>
+              {{/unless}}
               <button class="btn btn-ghost btn-sm" data-world-download data-tip="Download as zip (consistent snapshot)">{{{icon 'download' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-duplicate data-tip="Duplicate world (fork a copy)">{{{icon 'copy' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-copy data-tip="Copy to another instance — compat check + safety backup">{{{icon 'arrow-right' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-rename data-tip="Rename world (server must be stopped)">{{{icon 'pencil' 'size-3.5'}}}</button>
               {{#if active}}
-                <button class="btn btn-ghost btn-sm text-danger" data-world-reset data-tip="Reset world — auto-backup, keep or reroll seed">{{{icon 'undo-2' 'size-3.5'}}}</button>
+                {{! refresh-ccw, not undo-2 — this DELETES the world; undo-2 is
+                    what the (recovering) backup Restore uses. }}
+                <button class="btn btn-ghost btn-sm text-danger" data-world-reset data-tip="Reset world — auto-backup, keep or reroll seed">{{{icon 'refresh-ccw' 'size-3.5'}}}</button>
               {{else}}
-                <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete world ({{bytes sizeBytes}} freed)" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete world ({{bytes sizeBytes}} freed)" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               {{/if}}
             </div></td>
           </tr>
@@ -55,11 +63,11 @@
           {{{icon 'earth' 'size-5 text-link'}}}
           <div class="min-w-0 flex-1">
             <div class="font-medium">{{name}}</div>
-            <div class="text-xs text-ink-faint">{{source}}{{#if flavor}} · {{flavor}}{{/if}}{{#if mcVersion}} {{mcVersion}}{{/if}} · {{created}}</div>
+            <div class="text-xs text-ink-faint">{{source}}{{#if flavor}} · {{flavor}}{{/if}}{{#if mcVersion}} {{mcVersion}}{{/if}} · <span data-ts="{{created}}">{{created}}</span></div>
           </div>
           <span class="text-xs text-ink-faint">{{bytes size}}</span>
           <button class="btn btn-sm" data-lib-install data-tip="Install into this server — replace or alongside">{{{icon 'import' 'size-3.5'}}} Install here</button>
-          <a href="/worlds" class="btn btn-ghost btn-sm">Open in Worlds →</a>
+          <a href="/worlds" class="btn btn-ghost btn-sm">Open in Worlds {{{icon 'arrow-right' 'size-3.5'}}}</a>
         </div>
       {{/each}}
     </div>
@@ -67,6 +75,6 @@
     <div class="card p-6 text-center text-sm text-ink-faint">The world library is empty — save this server's world to it, upload an archive, or visit the <a class="text-link hover:underline" href="/worlds">Worlds page</a>.</div>
   {{/if}}
 
-  <div id="msm-server-options" hidden data-options="[{{#each servers}}{&quot;id&quot;:{{json id}},&quot;name&quot;:{{json name}},&quot;flavor&quot;:{{json flavor}},&quot;status&quot;:{{json status}} }{{#unless @last}},{{/unless}}{{/each}}]"></div>
+  <div id="msm-server-options" hidden data-options="{{json serverOptions}}"></div>
 </div>
 <script type="module" src="/js/pages/worlds-tab.js"></script>

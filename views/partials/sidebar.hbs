@@ -43,8 +43,8 @@
         {{#each servers}}
           <a class="nav-item" href="/servers/{{id}}">
             <img src="{{iconSrc this.icon}}" alt="" class="size-5 rounded-sm" onerror="this.onerror=null;this.src='/icons/servers/grass.png'">
-            <span class="truncate">{{name}}</span>
-            <span class="status-dot ml-auto shrink-0 bg-{{statusColor status}}-500 {{#if (statusPulse status)}}relative pulse{{/if}}"></span>
+            <span class="truncate" title="{{name}}">{{name}}</span>
+            <span class="status-dot relative ml-auto shrink-0 {{statusDot status}} {{#if (statusPulse status)}}pulse{{/if}}" title="{{statusLabel status}}"></span>
           </a>
         {{/each}}
       {{/if}}

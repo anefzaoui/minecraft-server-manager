@@ -2,6 +2,7 @@
 // teleport modal. Uses the same /api/servers/:id/players endpoints as the roster.
 import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
+import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 
 const root = document.querySelector('[data-player-detail]');
@@ -50,6 +51,44 @@ function init(root) {
         prettyBiome(a.id).localeCompare(prettyBiome(b.id))
     );
 
+  // ---- in-place chip/banner patching (mirrors the roster page — same
+  // action, same UI, no page flash and no silent success) ----
+  const CHIP_ON = {
+    whitelist: ['border-grass-700', 'bg-grass-500/15', 'text-ok'],
+    op: ['border-diamond-700', 'bg-diamond-400/15', 'text-link'],
+    ban: ['border-danger/40', 'bg-redstone-500/15', 'text-danger'],
+  };
+  function setChip(role, on, label) {
+    const chip = root.querySelector(`[data-role-toggle="${role}"]`);
+    if (!chip) return;
+    chip.dataset.on = on ? '1' : '0';
+    chip.classList.remove(...Object.values(CHIP_ON).flat());
+    if (on) chip.classList.add(...CHIP_ON[role]);
+    if (label) chip.querySelector('[data-chip-label]').textContent = label;
+    const tips = {
+      whitelist: on ? 'Remove from whitelist' : 'Add to whitelist',
+      op: on ? 'Remove operator status' : 'Make operator (level 4)',
+      ban: on ? 'Pardon this player' : 'Ban this player',
+    };
+    chip.dataset.tip = tips[role];
+  }
+  function setBanBanner(reason) {
+    root.querySelector('[data-ban-banner]')?.remove();
+    if (reason === false) return;
+    const banner = document.createElement('div');
+    banner.dataset.banBanner = '';
+    banner.className = 'notice notice-danger mt-3 text-xs text-danger';
+    banner.textContent = `Banned: ${reason || 'no reason recorded'}`;
+    root.querySelector('.card')?.appendChild(banner);
+  }
+  function setOffline() {
+    const status = root.querySelector('[data-player-status]');
+    if (status)
+      status.innerHTML =
+        '<span class="flex items-center gap-1.5 text-xs font-medium text-ink-faint"><span class="status-dot bg-stone-500"></span> Offline</span>';
+    root.querySelector('[data-act="kick"]')?.remove();
+  }
+
   // ---- role chips (whitelist / op / ban) ----
   root.addEventListener('click', async (e) => {
     const chip = e.target.closest('[data-role-toggle]');
@@ -57,17 +96,31 @@ function init(root) {
       const kind = chip.dataset.roleToggle;
       const on = chip.dataset.on === '1';
       try {
-        if (kind === 'whitelist') await withBusy(chip, () => api('/whitelist', { name, on: !on }));
-        else if (kind === 'op') await withBusy(chip, () => api('/op', { name, on: !on }));
-        else if (kind === 'ban') {
-          if (on) await withBusy(chip, () => api('/pardon', { name }));
-          else {
-            const reason = await promptText('Ban ' + name, 'Reason (optional)', 'Ban', true);
-            if (reason === null) return; // cancelled — don't reload
-            await withBusy(chip, () => api('/ban', { name, reason: reason || undefined }));
+        if (kind === 'whitelist') {
+          await withBusy(chip, () => api('/whitelist', { name, on: !on }));
+          setChip('whitelist', !on);
+          toast(`${name} ${on ? 'removed from whitelist' : 'whitelisted'}`);
+        } else if (kind === 'op') {
+          const { result } = await withBusy(chip, () => api('/op', { name, on: !on }));
+          if (result.note) toast(result.note, { kind: 'info', timeout: 8000 });
+          setChip('op', !on, !on && result.opLevel ? `Op L${result.opLevel}` : 'Op');
+          toast(`${name} ${on ? 'de-opped' : 'is now an operator'}`);
+        } else if (kind === 'ban') {
+          if (on) {
+            const ok = await confirmDialog({
+              title: `Pardon ${name}?`,
+              message: 'The player will be able to join again.',
+              confirmLabel: 'Pardon',
+            });
+            if (!ok) return;
+            await withBusy(chip, () => api('/pardon', { name }));
+            setChip('ban', false, 'Ban');
+            setBanBanner(false);
+            toast(`${name} pardoned`);
+          } else {
+            banModal();
           }
         }
-        location.reload();
       } catch (err) {
         fail(err);
       }
@@ -79,6 +132,39 @@ function init(root) {
     else if (act.dataset.act === 'teleport') teleportModal();
     // copy-uuid is handled by the global [data-copy] handler in app.js
   });
+
+  // ---- ban (same labeled dialog as the roster page — one action, one UI) ----
+  function banModal() {
+    const content = document.createElement('div');
+    content.innerHTML = `
+      <label class="label">Ban reason (recorded in the ban list)</label>
+      <input class="input" data-f="reason" placeholder="Banned by an operator." maxlength="256">`;
+    openModal({
+      title: `Ban ${name}`,
+      content,
+      size: 'sm',
+      actions: [
+        { label: 'Cancel', kind: 'ghost' },
+        {
+          label: 'Ban player',
+          kind: 'danger',
+          busyLabel: 'Banning…',
+          onClick: async ({ body }) => {
+            const reason = body.querySelector('[data-f="reason"]').value.trim();
+            try {
+              await api('/ban', { name, reason: reason || undefined });
+              setChip('ban', true, 'Banned');
+              setBanBanner(reason);
+              toast(`${name} banned`);
+            } catch (err) {
+              fail(err);
+              return false;
+            }
+          },
+        },
+      ],
+    });
+  }
 
   // ---- kick ----
   function kickModal() {
@@ -98,6 +184,7 @@ function init(root) {
           onClick: async ({ body }) => {
             try {
               await api('/kick', { name, message: body.querySelector('[data-f="message"]').value.trim() || undefined });
+              setOffline(); // no stale pulsing "Online" + re-clickable Kick
               toast(`${name} kicked.`);
             } catch (err) {
               fail(err);
@@ -303,39 +390,6 @@ function init(root) {
           },
         },
       ],
-    });
-  }
-
-  // Small text prompt via the modal lib.
-  function promptText(title, label, confirmLabel, allowEmpty) {
-    return new Promise((resolve) => {
-      const content = document.createElement('div');
-      content.innerHTML = `<label class="label">${label}</label><input class="input" data-f="v" maxlength="200" autocomplete="off">`;
-      let done = false;
-      openModal({
-        title,
-        content,
-        size: 'sm',
-        onClose: () => {
-          if (!done) resolve(null);
-        },
-        actions: [
-          { label: 'Cancel', kind: 'ghost' },
-          {
-            label: confirmLabel,
-            kind: 'danger',
-            onClick: ({ body }) => {
-              const v = body.querySelector('[data-f="v"]').value.trim();
-              if (!allowEmpty && !v) {
-                toast('Enter a value', { kind: 'error' });
-                return false;
-              }
-              done = true;
-              resolve(v);
-            },
-          },
-        ],
-      });
     });
   }
 }

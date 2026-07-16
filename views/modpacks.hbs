@@ -8,7 +8,8 @@
       <button type="button" class="seg-btn" aria-pressed="false" data-platform="curseforge">CurseForge</button>
     </div>
     <div class="ml-auto flex gap-2">
-      <button class="btn btn-primary" id="packs-install-btn">{{{icon 'plus' 'size-4'}}} Install a pack</button>
+      {{! Honest label + weight: this button focuses the search field, it doesn't install anything. }}
+      <button class="btn" id="packs-install-btn">{{{icon 'search' 'size-4'}}} Search packs</button>
       <a href="/settings" class="btn">{{{icon 'key' 'size-4'}}} API keys</a>
     </div>
   </div>
@@ -24,7 +25,9 @@
     {{> empty-state iconName='package' title='No modpacks installed' message='No server is running a managed modpack yet. Search above and hit "Create server", or start from the wizard — installs are always version-pinned so restarts never surprise you.' ctaHref='/servers/new' ctaLabel='Create a server'}}
   {{/unless}}
 
-  <div class="grid gap-4 md:grid-cols-2" id="packs-installed">
+  {{! Same column count as search results — the same card width jumped between
+      the two sections at xl. }}
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="packs-installed">
     {{#each packServers}}
       <div class="card cursor-pointer p-4 transition hover:border-line-strong hover:shadow-raised" style="border-top: 3px solid {{accent}}"
            data-pack-card data-server-id="{{id}}" data-server-name="{{name}}"
@@ -32,15 +35,16 @@
         <div class="flex items-center gap-3">
           <img src="{{iconSrc this.icon}}" alt="" class="size-10 shrink-0 rounded-md" onerror="this.src='/icons/servers/grass.png'">
           <div class="min-w-0 flex-1">
-            <div class="truncate font-semibold">{{pack.name}}</div>
-            <div class="text-xs text-ink-faint">{{pack.platform}} · on <a href="/servers/{{id}}" class="text-link hover:underline">{{name}}</a></div>
+            <div class="truncate font-semibold" title="{{pack.name}}">{{pack.name}}</div>
+            <div class="text-xs text-ink-faint">{{platformName pack.platform}} · on <a href="/servers/{{id}}" class="text-link hover:underline">{{name}}</a></div>
           </div>
-          <span class="chip shrink-0">pinned @ {{pack.version}}</span>
+          {{! CurseForge version names run long — truncate the chip, never the layout. }}
+          <span class="chip max-w-40 shrink-0" title="pinned @ {{pack.version}}"><span class="truncate">pinned @ {{pack.version}}</span></span>
         </div>
         <div class="mt-3 flex items-center gap-2 border-t border-line pt-3 text-sm">
           {{#if updateAvailable}}
-            <span class="badge badge-warn">{{pack.latest}} available</span>
-            <button class="btn btn-sm ml-auto" data-pack-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
+            <span class="badge badge-warn min-w-0"><span class="truncate" title="{{pack.latest}} available">{{pack.latest}} available</span></span>
+            <button class="btn btn-sm ml-auto shrink-0" data-pack-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
           {{else}}
             <span class="text-xs text-ok">{{{icon 'check' 'size-3.5'}}} Up to date</span>
             <button class="btn btn-ghost btn-sm ml-auto" data-pack-check>{{{icon 'rotate-cw' 'size-3.5'}}} Check now</button>

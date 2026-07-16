@@ -30,6 +30,8 @@ function init(root) {
     return data;
   }
 
+  // Full reload only where a re-render is genuinely the refresh (new player
+  // rows) — role toggles patch their row in place instead of flashing the page.
   function refresh(message) {
     toast(message);
     setTimeout(() => location.reload(), 700);
@@ -37,6 +39,75 @@ function init(root) {
 
   function fail(err) {
     toast(err.message || 'Something went wrong', { kind: 'error' });
+  }
+
+  // ------------------------------------------------- in-place row patching
+  const CHIP_ON = {
+    whitelist: ['border-grass-700', 'bg-grass-500/15', 'text-ok'],
+    op: ['border-diamond-700', 'bg-diamond-400/15', 'text-link'],
+    ban: ['border-danger/40', 'bg-redstone-500/15', 'text-danger'],
+  };
+  const rowFor = (name) => root.querySelector(`[data-player-row][data-name="${CSS.escape(name)}"]`);
+
+  function setChip(row, role, on, { label, tip } = {}) {
+    const chip = row.querySelector(`[data-role-toggle="${role}"]`);
+    if (!chip) return;
+    chip.dataset.on = on ? '1' : '0';
+    chip.classList.remove(...Object.values(CHIP_ON).flat());
+    if (on) chip.classList.add(...CHIP_ON[role]);
+    if (label) chip.querySelector('[data-chip-label]').textContent = label;
+    if (tip) chip.dataset.tip = tip;
+  }
+
+  /** Patch a roster row after a role mutation; falls back to reload if the row vanished. */
+  function patchRow(name, changes, message) {
+    const row = rowFor(name);
+    if (!row) return refresh(message); // filtered island drift — re-render is the safe refresh
+    if ('whitelisted' in changes) {
+      row.dataset.whitelisted = changes.whitelisted ? '1' : '0';
+      setChip(row, 'whitelist', changes.whitelisted, {
+        tip: changes.whitelisted ? 'Remove from whitelist' : 'Add to whitelist',
+      });
+    }
+    if ('op' in changes) {
+      row.dataset.op = changes.op ? '1' : '0';
+      setChip(row, 'op', changes.op, {
+        label: changes.op && changes.opLevel ? `Op L${changes.opLevel}` : 'Op',
+        tip: changes.op ? 'Remove operator status' : 'Make operator (level 4)',
+      });
+    }
+    if ('banned' in changes) {
+      row.dataset.banned = changes.banned ? '1' : '0';
+      setChip(row, 'ban', changes.banned, {
+        label: changes.banned ? 'Banned' : 'Ban',
+        tip: changes.banned ? 'Pardon this player' : 'Ban this player',
+      });
+      const details = row.querySelector('[data-ban-details]');
+      if (details) {
+        if (changes.banned) {
+          const reason = changes.banReason || 'No reason recorded';
+          details.innerHTML = '';
+          const div = document.createElement('div');
+          div.className = 'max-w-56 truncate text-danger';
+          div.textContent = reason;
+          div.title = reason;
+          details.appendChild(div);
+        } else {
+          details.textContent = '—';
+        }
+      }
+    }
+    if ('online' in changes && !changes.online) {
+      const status = row.querySelector('[data-player-status]');
+      if (status) {
+        row.dataset.online = '0';
+        status.innerHTML =
+          '<span class="flex items-center gap-1.5 text-xs font-medium text-ink-faint"><span class="status-dot bg-stone-500"></span> Offline</span>';
+      }
+      row.querySelector('[data-act="kick"]')?.remove();
+    }
+    applyFilter(); // the row may enter/leave the active filter
+    if (message) toast(message);
   }
 
   // ------------------------------------------------------------------ filter
@@ -91,13 +162,13 @@ function init(root) {
         if (role === 'whitelist') {
           await withBusy(toggle, async () => {
             await api('/whitelist', { name, on });
-            refresh(`${name} ${on ? 'whitelisted' : 'removed from whitelist'}`);
+            patchRow(name, { whitelisted: on }, `${name} ${on ? 'whitelisted' : 'removed from whitelist'}`);
           });
         } else if (role === 'op') {
           await withBusy(toggle, async () => {
             const { result } = await api('/op', { name, on });
             if (result.note) toast(result.note, { kind: 'info', timeout: 8000 });
-            refresh(`${name} ${on ? 'is now an operator' : 'de-opped'}`);
+            patchRow(name, { op: on, opLevel: result.opLevel }, `${name} ${on ? 'is now an operator' : 'de-opped'}`);
           });
         } else if (role === 'ban') {
           if (on) banModal(name);
@@ -110,7 +181,7 @@ function init(root) {
           ) {
             await withBusy(toggle, async () => {
               await api('/pardon', { name });
-              refresh(`${name} pardoned`);
+              patchRow(name, { banned: false }, `${name} pardoned`);
             });
           }
         }
@@ -139,7 +210,12 @@ function init(root) {
         try {
           await withBusy(act, async () => {
             await api('/pardon-ip', { ip });
-            refresh(`IP ${ip} unbanned`);
+            root.querySelector(`[data-banip-row="${CSS.escape(ip)}"]`)?.remove();
+            if (!root.querySelector('[data-banip-row]')) {
+              document.getElementById('banip-table')?.classList.add('hidden');
+              document.getElementById('banip-empty')?.classList.remove('hidden');
+            }
+            toast(`IP ${ip} unbanned`);
           });
         } catch (err) {
           fail(err);
@@ -216,7 +292,7 @@ function init(root) {
           onClick: async ({ body }) => {
             try {
               await api('/kick', { name, message: body.querySelector('[data-f="message"]').value.trim() || undefined });
-              refresh(`${name} kicked`);
+              patchRow(name, { online: false }, `${name} kicked`);
             } catch (err) {
               fail(err);
               return false;
@@ -244,9 +320,10 @@ function init(root) {
           kind: 'danger',
           busyLabel: 'Banning…',
           onClick: async ({ body }) => {
+            const reason = body.querySelector('[data-f="reason"]').value.trim();
             try {
-              await api('/ban', { name, reason: body.querySelector('[data-f="reason"]').value.trim() || undefined });
-              refresh(`${name} banned`);
+              await api('/ban', { name, reason: reason || undefined });
+              patchRow(name, { banned: true, banReason: reason }, `${name} banned`);
             } catch (err) {
               fail(err);
               return false;
@@ -287,7 +364,7 @@ function init(root) {
                 level: Number(body.querySelector('[data-f="level"]').value),
               });
               if (result.note) toast(result.note, { kind: 'info', timeout: 8000 });
-              refresh(`${name} opped at level ${result.opLevel}`);
+              patchRow(name, { op: true, opLevel: result.opLevel }, `${name} opped at level ${result.opLevel}`);
             } catch (err) {
               fail(err);
               return false;
@@ -541,21 +618,65 @@ function init(root) {
 
   // ---------------------------------------------------------------- ban IPs
   const banIpBtn = document.getElementById('banip-add');
-  if (banIpBtn)
-    banIpBtn.addEventListener('click', async () => {
-      const ip = document.getElementById('banip-ip').value.trim();
-      const reason = document.getElementById('banip-reason').value.trim();
-      if (!ip) {
-        toast('Enter an IP address', { kind: 'error' });
-        return;
-      }
-      try {
-        await withBusy(banIpBtn, 'Banning…', async () => {
-          await api('/ban-ip', { ip, reason: reason || undefined });
-          refresh(`IP ${ip} banned`);
-        });
-      } catch (err) {
-        fail(err);
-      }
-    });
+  const banIpIp = document.getElementById('banip-ip');
+  const banIpReason = document.getElementById('banip-reason');
+
+  function addBanIpRow(ip, reason) {
+    const tr = document.createElement('tr');
+    tr.dataset.banipRow = ip;
+    const cells = [
+      ['font-mono', ip],
+      ['text-xs text-ink-soft', reason || '—'],
+      ['text-xs text-ink-faint', 'just now'],
+      ['text-xs text-ink-faint', 'panel'],
+    ];
+    for (const [cls, text] of cells) {
+      const td = document.createElement('td');
+      td.className = cls;
+      td.textContent = text;
+      tr.appendChild(td);
+    }
+    const actions = document.createElement('td');
+    actions.className = 'text-right';
+    actions.innerHTML = `<button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-tip="Remove this IP ban">
+      <svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
+    actions.querySelector('button').dataset.ip = ip;
+    tr.appendChild(actions);
+    document.getElementById('banip-rows')?.appendChild(tr);
+    document.getElementById('banip-table')?.classList.remove('hidden');
+    document.getElementById('banip-empty')?.classList.add('hidden');
+  }
+
+  async function submitBanIp() {
+    const ip = banIpIp.value.trim();
+    const reason = banIpReason.value.trim();
+    if (!ip) {
+      toast('Enter an IP address', { kind: 'error' });
+      banIpIp.focus();
+      return;
+    }
+    try {
+      await withBusy(banIpBtn, 'Banning…', async () => {
+        await api('/ban-ip', { ip, reason: reason || undefined });
+        addBanIpRow(ip, reason);
+        banIpIp.value = '';
+        banIpReason.value = '';
+        toast(`IP ${ip} banned`);
+      });
+    } catch (err) {
+      fail(err);
+    }
+  }
+  if (banIpBtn) {
+    banIpBtn.addEventListener('click', submitBanIp);
+    // Enter anywhere in the two fields submits — there is no form to do it.
+    for (const el of [banIpIp, banIpReason]) {
+      el?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitBanIp();
+        }
+      });
+    }
+  }
 }

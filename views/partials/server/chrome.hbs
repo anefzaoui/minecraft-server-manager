@@ -4,20 +4,20 @@
 
     <div class="min-w-0 flex-1">
       <div class="flex flex-wrap items-center gap-2">
-        <h2 class="text-xl font-bold">{{server.name}}</h2>
+        <h2 class="min-w-0 max-w-full break-words text-xl font-bold">{{server.name}}</h2>
         <span class="flex items-center gap-1.5 text-xs font-medium {{statusText server.status}}">
-          <span class="status-dot relative bg-{{statusColor server.status}}-500 {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
+          <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
           {{statusLabel server.status}}
         </span>
         <span class="badge badge-warn {{#unless server.statusDetail}}hidden{{/unless}}" data-status-detail="{{server.id}}">{{server.statusDetail}}</span>
         {{#if server.updateAvailable}}<span class="badge badge-warn">update available</span>{{/if}}
-        {{#if server.crashesUnread}}<span class="badge badge-danger">{{server.crashesUnread}} new crashes</span>{{/if}}
+        {{#if server.crashesUnread}}<span class="badge badge-danger">{{server.crashesUnread}} new {{plural server.crashesUnread 'crash' 'crashes'}}</span>{{/if}}
       </div>
       <p class="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-faint">
         <span><b class="font-semibold text-ink-soft">{{server.flavor}}</b> {{server.mcVersion}}</span>
         <span>Java: {{server.javaTag}}</span>
         <span>Port {{server.ports.game}}</span>
-        {{#if server.pack}}<span>{{server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
+        {{#if server.pack}}<span>{{platformName server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
         {{#if server.stats.uptime}}<span>Up {{server.stats.uptime}}</span>{{/if}}
       </p>
       {{#if server.tags.length}}
@@ -34,7 +34,7 @@
         {{#if (eq server.status 'crashed')}}<a class="btn" href="/servers/{{server.id}}/history">{{{icon 'flame' 'size-4'}}} Latest crash</a>{{/if}}
       {{/if}}
       {{#if server.pendingRecreate}}
-        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Config changed — recreate to apply">{{{icon 'rotate-cw' 'size-4'}}} Apply changes</button>
+        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Config changed — recreate to apply">{{{icon 'wrench' 'size-4'}}} Apply changes</button>
       {{/if}}
     </div>
   </div>
@@ -54,9 +54,7 @@
   {{#if nav.sub}}
     <div class="flex flex-wrap items-center gap-1 border-t border-line bg-inset/40 px-3 py-1.5">
       {{#each nav.sub}}
-        <a href="{{href}}"
-           class="rounded-md px-2.5 py-1 text-sm font-medium transition
-             {{#if active}}bg-grass-500/15 text-ok{{else}}text-ink-faint hover:bg-raised hover:text-ink{{/if}}">
+        <a href="{{href}}" class="subtab {{#if active}}active{{/if}}">
           {{label}}{{#if badge}} <span class="badge badge-danger">{{badge}}</span>{{/if}}
         </a>
       {{/each}}

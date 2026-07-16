@@ -59,7 +59,12 @@ function init(serverId, serverName, serverStatus) {
         reload();
       }
     } else if (e.target.closest('[data-world-download]')) {
+      // Navigation download — no completion event exists, so busy the button
+      // for the snapshot-prep window instead of leaving a dead-looking click.
+      const dlBtn = e.target.closest('[data-world-download]');
       toast('Preparing a consistent snapshot — the download starts when it is ready…', { kind: 'info', timeout: 8000 });
+      const restore = setBusy(dlBtn, 'Preparing…');
+      setTimeout(restore, 8000);
       location.href = `${base}/${encodeURIComponent(world)}/download`;
     } else if (e.target.closest('[data-world-duplicate]')) {
       const btn = e.target.closest('[data-world-duplicate]');
@@ -117,7 +122,7 @@ function init(serverId, serverName, serverStatus) {
     content.innerHTML = `
       <label class="label">Target server</label>
       <select class="input" data-c-target data-label="Copy world to server">
-        ${targets.map((s) => `<option value="${s.id}" data-desc="${escapeHtml(s.flavor)} · ${escapeHtml(s.status)}">${escapeHtml(s.name)}</option>`).join('')}
+        ${targets.map((s) => `<option value="${escapeHtml(s.id)}" data-desc="${escapeHtml(s.flavor)} · ${escapeHtml(s.status)}">${escapeHtml(s.name)}</option>`).join('')}
       </select>
       <label class="label mt-3">Install mode on the target</label>
       <select class="input" data-c-mode data-label="Install mode">
@@ -129,7 +134,7 @@ function init(serverId, serverName, serverStatus) {
         <input class="input" data-c-name value="${escapeHtml(world)}" autocomplete="off">
       </div>
       <p class="help">Works while this server is running — the panel snapshots with the save-off/save-all dance, then installs via the library.</p>
-      <div class="mt-3 hidden" data-c-progress><div class="meter"><div class="bg-grass-500 animate-pulse" style="width:100%"></div></div></div>`;
+      <div class="mt-3 hidden" data-c-progress><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
 
     const mode = content.querySelector('[data-c-mode]');
     mode.addEventListener('change', () => {

@@ -121,7 +121,7 @@ function renderPackDetails(pack) {
   versionSel.value =
     (pack.installed && pack.installed.versionId) ||
     pack.defaultVersionId ||
-    (pack.versions[0] && pack.versions[0].id) ||
+    ((pack.versions || [])[0] && pack.versions[0].id) ||
     '';
 
   const actions = [
@@ -222,18 +222,30 @@ function initPage() {
     timer = setTimeout(search, 350);
   });
 
+  let searchSeq = 0; // slow earlier responses must not repaint over newer ones
   async function search() {
     const term = q.value.trim();
     if (!term) return;
+    const seq = ++searchSeq;
     resultsWrap.classList.remove('hidden');
-    resultsEl.innerHTML = '<div class="card p-4 text-sm text-ink-faint">Searching…</div>';
+    // Skeleton cards matching the grid, not a lone text card.
+    resultsEl.innerHTML = Array.from(
+      { length: 3 },
+      () =>
+        `<div class="card animate-pulse p-4" aria-hidden="true">
+          <div class="flex items-center gap-3"><div class="size-10 rounded-md bg-inset"></div>
+          <div class="flex-1 space-y-2"><div class="h-3 w-2/3 rounded bg-inset"></div><div class="h-2.5 w-1/2 rounded bg-inset"></div></div></div>
+        </div>`
+    ).join('');
     try {
       const res = await fetch(`/api/packs/search?q=${encodeURIComponent(term)}&platform=${platform}`);
       const data = await res.json();
+      if (seq !== searchSeq) return;
       if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
       lastResults = data.results;
       renderResults();
     } catch (err) {
+      if (seq !== searchSeq) return;
       resultsEl.innerHTML = `<div class="card p-4 text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' — <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
     }
   }
@@ -244,6 +256,9 @@ function initPage() {
         '<div class="card p-4 text-sm text-ink-faint">No modpacks found — try another search term.</div>';
       return;
     }
+    // Both platforms return a capped page — say what's shown, never imply "all".
+    const heading = resultsWrap.querySelector('h3');
+    if (heading) heading.textContent = `Search results — top ${lastResults.length} matches`;
     resultsEl.innerHTML = lastResults
       .map(
         (p, i) => `
@@ -251,7 +266,7 @@ function initPage() {
         <div class="flex items-center gap-3">
           ${packIconHtml(p.iconUrl, 'size-10')}
           <div class="min-w-0 flex-1">
-            <div class="truncate font-semibold">${escapeHtml(p.name)}</div>
+            <div class="truncate font-semibold" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
             <div class="text-xs text-ink-faint">${formatDownloads(p.downloads)} downloads</div>
           </div>
         </div>
@@ -292,9 +307,10 @@ function initPage() {
           start: async () => (await postJSON(`/api/servers/${serverId}/updates/check`, {})).taskId,
         });
         const n = result && result.findings ? result.findings.length : 0;
-        toast(n ? `${n} update(s) available for ${serverName}.` : `${packName} is up to date.`);
+        toast(n ? `${n} ${n === 1 ? 'update' : 'updates'} available for ${serverName}.` : `${packName} is up to date.`);
         if (n) setTimeout(() => location.reload(), 900);
       } catch (err) {
+        if (err.dismissed) return; // progress hidden — the task tray takes over
         toast(err.message || 'Update check failed', { kind: 'error', timeout: 9000 });
       }
       return;
@@ -323,6 +339,7 @@ function initPage() {
         toast(`Upgraded: ${result.from} → ${result.to}.`);
         setTimeout(() => location.reload(), 900);
       } catch (err) {
+        if (err.dismissed) return; // progress hidden — the task tray takes over
         toast(err.message || 'Upgrade failed', { kind: 'error', timeout: 12000 });
       }
       return;

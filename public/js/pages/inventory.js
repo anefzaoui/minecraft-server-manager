@@ -124,7 +124,7 @@ function init(root) {
     cell.className =
       'relative grid size-10 place-items-center rounded border text-[10px] font-semibold select-none ' +
       (editable
-        ? 'cursor-pointer transition hover:ring-2 hover:ring-diamond-500/60 focus-visible:ring-2 focus-visible:ring-diamond-500 '
+        ? 'cursor-pointer transition hover:ring-2 hover:ring-diamond-400/60 focus-visible:ring-2 focus-visible:ring-diamond-400 '
         : '');
     const hasNested = Boolean(item && item.nested && item.nested.length);
     if (!item) {
@@ -294,6 +294,7 @@ function init(root) {
             title: `Delete ${item.displayName || prettyId(item.id)}?`,
             message: `Removes ${item.count} × ${item.id} from ${where}. Take a snapshot first if you might want it back.`,
             confirmLabel: 'Delete item',
+            danger: true, // without this the destructive confirm rendered as a green primary
           }))
         )
           return;
@@ -531,6 +532,7 @@ function init(root) {
       if (!fixed) fail(err);
       players = [];
     }
+    el('inv-loading')?.classList.add('hidden'); // the fetch decided which state shows
     // Player page: pinned to one player — skip the picker and load them directly.
     if (fixed) {
       el('inv-empty').classList.add('hidden');
@@ -628,7 +630,7 @@ function init(root) {
     }
     box.innerHTML = `
       <div class="overflow-x-auto"><table class="table-base">
-        <thead><tr><th class="w-8"></th><th>Taken</th><th>Trigger</th><th>Size</th></tr></thead>
+        <thead><tr><th class="w-8"></th><th>Taken</th><th>Trigger</th><th class="text-right">Size</th></tr></thead>
         <tbody>
           ${snapshots
             .map(
@@ -637,7 +639,7 @@ function init(root) {
               <td><input type="checkbox" class="msm-check" data-snap-file="${esc(s.file)}" aria-label="Select snapshot"></td>
               <td class="text-sm">${esc(when(s.ts))}</td>
               <td><span class="chip">${esc(s.reason)}</span></td>
-              <td class="text-xs text-ink-faint">${(s.size / 1024).toFixed(1)} KB</td>
+              <td class="text-right text-xs text-ink-faint">${(s.size / 1024).toFixed(1)} KB</td>
             </tr>`
             )
             .join('')}
@@ -732,6 +734,9 @@ function init(root) {
 
   // ----------------------------------------------------------------- search
   async function runSearch() {
+    // setBusy on an already-busy control is a no-op that still runs the fn —
+    // the Enter path was double-firing the request during flight.
+    if (el('inv-search-go').dataset.busy) return;
     const q = el('inv-search-q').value.trim();
     if (!q) return toast('Enter something to search for', { kind: 'error' });
     const box = el('inv-search-results');
@@ -938,8 +943,10 @@ function init(root) {
               !item &&
               !(await confirmDialog({
                 title: `Clear the ENTIRE inventory of ${player}?`,
-                message: 'Every item they carry will be deleted. This cannot be undone — take a snapshot first if you might need it back.',
+                message:
+                  'Every item they carry will be deleted. This cannot be undone — take a snapshot first if you might need it back.',
                 confirmLabel: 'Clear everything',
+                danger: true, // the most destructive dialog on the tab must not look like a positive action
               }))
             )
               return false;

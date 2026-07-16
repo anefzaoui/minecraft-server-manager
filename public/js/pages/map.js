@@ -1,7 +1,42 @@
-// Map tab: enable/disable BlueMap.
+// Map tab: enable/disable BlueMap, plus a probe so the embed never shows the
+// proxy's raw error page while the map isn't serving yet.
 import { toast } from '../lib/toast.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy } from '../lib/loading.js';
+
+// ---- Probe the map endpoint; swap in the styled placeholder while it's down ----
+(() => {
+  const frame = document.querySelector('[data-map-frame]');
+  const placeholder = document.querySelector('[data-map-placeholder]');
+  if (!frame || !placeholder) return;
+  let retry = 10000;
+  async function probe() {
+    let up = false;
+    try {
+      up = (await fetch(frame.dataset.src || frame.src, { method: 'HEAD' })).ok;
+    } catch {
+      /* down */
+    }
+    if (up) {
+      if (frame.dataset.src) {
+        frame.src = frame.dataset.src; // (re)load only once it actually serves
+        delete frame.dataset.src;
+      }
+      frame.classList.remove('hidden');
+      placeholder.classList.add('hidden');
+      placeholder.classList.remove('grid');
+    } else {
+      if (!frame.dataset.src) frame.dataset.src = frame.src; // park the URL, blank the frame
+      frame.removeAttribute('src');
+      frame.classList.add('hidden');
+      placeholder.classList.remove('hidden');
+      placeholder.classList.add('grid');
+      setTimeout(probe, retry);
+      retry = Math.min(retry * 1.5, 60000);
+    }
+  }
+  probe();
+})();
 
 document.addEventListener('click', async (e) => {
   const enableBtn = e.target.closest('[data-map-enable]');

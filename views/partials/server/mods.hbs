@@ -31,8 +31,10 @@
       </tr></thead>
       <tbody>
         {{#each mods}}
-          <tr class="{{#unless enabled}}opacity-60{{/unless}}" data-mod-row data-file="{{file}}" data-source="{{source}}" data-enabled="{{enabled}}">
-            <td>
+          <tr class="{{#unless enabled}}opacity-60{{/unless}}" data-mod-row data-file="{{file}}" data-name="{{name}}" data-source="{{source}}" data-enabled="{{enabled}}">
+            {{! w-full + max-w-0 so `truncate` actually engages — long mod file
+                names were widening the table into horizontal scroll. }}
+            <td class="w-full max-w-0">
               <div class="flex items-center gap-2.5">
                 {{#if iconUrl}}
                   <img src="{{iconUrl}}" alt="" class="size-8 shrink-0 rounded bg-inset object-cover">
@@ -40,8 +42,8 @@
                   <span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-ink-faint">{{{icon 'puzzle' 'size-4'}}}</span>
                 {{/if}}
                 <div class="min-w-0">
-                  <div class="truncate font-medium">{{name}}</div>
-                  <div class="truncate font-mono text-xs text-ink-faint">{{file}}</div>
+                  <div class="truncate font-medium" title="{{name}}">{{name}}</div>
+                  <div class="truncate font-mono text-xs text-ink-faint" title="{{file}}">{{file}}</div>
                 </div>
               </div>
             </td>

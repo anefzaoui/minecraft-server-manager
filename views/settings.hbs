@@ -32,9 +32,10 @@
     </div>
     <div class="mb-4">
       <span class="label">Time zone &amp; region</span>
+      {{! data-native only until tzPicker fills them — it enhances post-fill. }}
       <div class="grid gap-2 sm:grid-cols-2">
-        <select class="input" id="set-tz" data-native aria-label="Time zone"></select>
-        <select class="input" id="set-country" data-native aria-label="Country"></select>
+        <select class="input" id="set-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
+        <select class="input" id="set-country" data-native aria-label="Country" data-label="Country"></select>
       </div>
       <div class="mt-2 flex items-center gap-2">
         <button class="btn" id="set-loc-save">Save time zone</button>
@@ -66,17 +67,20 @@
             <tr data-user-id="{{id}}" data-username="{{username}}">
               <td class="font-medium">{{username}}{{#if (eq id ../user.id)}} <span class="badge">you</span>{{/if}}</td>
               <td>
-                <select class="input w-auto text-xs" data-user-role data-label="Role for {{username}}">
+                <select class="input w-auto" data-user-role data-prev-role="{{role}}" data-label="Role for {{username}}">
                   <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>admin</option>
                   <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>operator</option>
                   <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>viewer</option>
                 </select>
               </td>
-              <td class="text-xs text-ink-faint">{{createdAt}}</td>
+              <td class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
               <td class="text-right">
                 <div class="inline-flex gap-1">
                   <button class="btn btn-ghost btn-sm" data-user-password data-tip="Set a new password">{{{icon 'key' 'size-3.5'}}}</button>
-                  <button class="btn btn-ghost btn-sm text-danger" data-user-delete aria-label="Delete {{username}}">{{{icon 'x' 'size-3.5'}}}</button>
+                  {{! No self-delete affordance — deleting your own account mid-session is a trap, not a feature. }}
+                  {{#unless (eq id ../user.id)}}
+                    <button class="btn btn-ghost btn-sm text-danger" data-user-delete data-tip="Delete user" aria-label="Delete {{username}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+                  {{/unless}}
                 </div>
               </td>
             </tr>

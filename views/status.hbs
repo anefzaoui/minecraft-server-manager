@@ -1,6 +1,6 @@
 {{#if notFound}}
   <div class="card w-full max-w-sm p-8 text-center">
-    <div class="pixel text-4xl text-redstone-500">404</div>
+    <div class="pixel text-4xl text-danger">404</div>
     <h1 class="mt-4 text-lg font-semibold">No status page here</h1>
     <p class="mt-1 text-sm text-ink-faint">This status page does not exist or has been turned off by the server owner.</p>
   </div>
@@ -11,7 +11,7 @@
       <h1 class="mt-3 text-xl font-bold">{{page.name}}</h1>
       {{#if page.motd}}<p class="mt-1 text-sm text-ink-soft">{{page.motd}}</p>{{/if}}
       <div class="mt-3 flex items-center justify-center gap-1.5 text-sm font-medium {{statusText page.status}}">
-        <span class="status-dot relative bg-{{statusColor page.status}}-500 {{#if (statusPulse page.status)}}pulse{{/if}}"></span>
+        <span class="status-dot relative {{statusDot page.status}} {{#if (statusPulse page.status)}}pulse{{/if}}"></span>
         {{statusLabel page.status}}
       </div>
     </div>
@@ -31,4 +31,7 @@
     </dl>
     <p class="border-t border-line p-2.5 text-center text-[11px] text-ink-faint">Powered by Minecraft Server Manager</p>
   </div>
+  {{! A public status page that renders once goes stale in minutes — a plain
+      meta refresh keeps it honest with zero JS on an anonymous page. }}
+  <meta http-equiv="refresh" content="60">
 {{/if}}

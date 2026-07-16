@@ -8,7 +8,9 @@
     </div>
     {{{icon 'clock' 'size-5 text-ink-faint'}}}
   </div>
-  <div class="space-y-3 {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}pointer-events-none opacity-50{{/unless}}">
+  {{! Real fieldset-level disable — pointer-events-none left the buttons in the
+      tab order, and Enter/Space fired commands at a stopped server. }}
+  <fieldset class="min-w-0 space-y-3" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
     <div>
       <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Time</div>
       <div class="flex flex-wrap gap-1.5">
@@ -63,6 +65,6 @@
         <button class="chip hover:border-grass-600" data-wc="save-all">{{{icon 'save' 'size-3.5'}}} Save world</button>
       </div>
     </div>
-  </div>
+  </fieldset>
 </div>
-<script type="module" src="/js/pages/overview.js"></script>
+<script type="module" src="/js/pages/world-controls.js"></script>

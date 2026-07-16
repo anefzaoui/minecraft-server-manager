@@ -22,31 +22,15 @@ function init() {
   let accent = '#3fa62b';
   let type = 'VANILLA';
 
-  pickGroup(
-    'wz-icons',
-    'icon',
-    (v) => {
-      icon = v;
-    },
-    ['border-grass-500']
-  );
-  pickGroup(
-    'wz-colors',
-    'accent',
-    (v) => {
-      accent = v;
-    },
-    ['border-white/60'],
-    ['border-transparent']
-  );
-  pickGroup(
-    'wz-flavors',
-    'type',
-    (v) => {
-      type = v;
-    },
-    ['border-grass-500', 'text-ok']
-  );
+  pickGroup('wz-icons', 'icon', (v) => {
+    icon = v;
+  });
+  pickGroup('wz-colors', 'accent', (v) => {
+    accent = v;
+  });
+  pickGroup('wz-flavors', 'type', (v) => {
+    type = v;
+  });
 
   // Visual MOTD editor (shared lib: toolbar + presets + live preview)
   const motd = document.getElementById('wz-motd');
@@ -230,17 +214,26 @@ function init() {
     };
   }
 
-  document.getElementById('wz-create').addEventListener('click', async () => {
+  document.getElementById('wz-create').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    if (btn.dataset.busy) return;
     const name = document.getElementById('wz-name').value.trim();
     if (!name) {
       toast('Give the server a name first.', { kind: 'error' });
       document.getElementById('wz-name').focus();
       return;
     }
-    if (sourceTab === 'blueprint') return createFromBlueprint(name);
-    if (sourceTab === 'modpack') return createFromPack(name);
-    if (sourceTab === 'mods') return createFromMods(name);
-    return createVanilla(name);
+    // Busy for the WHOLE flow: dismissing a progress modal used to leave this
+    // button clickable while the create still ran — duplicate servers.
+    const restore = setBusy(btn, 'Creating…');
+    try {
+      if (sourceTab === 'blueprint') await createFromBlueprint(name);
+      else if (sourceTab === 'modpack') await createFromPack(name);
+      else if (sourceTab === 'mods') await createFromMods(name);
+      else await createVanilla(name);
+    } finally {
+      restore();
+    }
   });
 
   // ---- Create: blueprint (import with full identity overrides) ----
@@ -254,7 +247,7 @@ function init() {
       title: `Creating ${name} from blueprint…`,
       size: 'sm',
       content:
-        '<div class="space-y-3 text-sm"><p>Installing the blueprint: pinned pack, overlay mods (hash-verified), and config files.</p><div class="meter"><div class="bg-grass-500 animate-pulse" style="width:100%"></div></div></div>',
+        '<div class="space-y-3 text-sm"><p>Installing the blueprint: pinned pack, overlay mods (hash-verified), and config files.</p><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div><p class="text-xs text-ink-faint">Closing this window doesn\'t cancel the import — it keeps running server-side.</p></div>',
     });
     try {
       const res = await fetch('/api/blueprints/import', {
@@ -323,6 +316,7 @@ function init() {
       toast(`${name} created — ${result.pack.name} @ ${result.pack.version} pinned. Starting up.`);
       location.href = `/servers/${result.serverId}`;
     } catch (err) {
+      if (err.dismissed) return; // creation continues server-side — task tray takes over
       toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
     }
   }
@@ -394,6 +388,7 @@ function init() {
       }
       location.href = `/servers/${result.serverId}`;
     } catch (err) {
+      if (err.dismissed) return; // creation continues server-side — task tray takes over
       toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
     }
   }
@@ -417,7 +412,8 @@ function init() {
       size: 'sm',
       content: `<div class="space-y-3 text-sm">
         <p>Pulling the server image if needed (first time can take a few minutes), creating the container, and starting it.</p>
-        <div class="meter"><div class="bg-grass-500 animate-pulse" style="width:100%"></div></div>
+        <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
+        <p class="text-xs text-ink-faint">Closing this window doesn't cancel the creation — it keeps running server-side.</p>
       </div>`,
     });
 
@@ -717,13 +713,17 @@ function initModBrowser() {
       for (const [k, v] of next) deps.set(k, v);
       if (depHintEl) {
         const warn = (data.warnings || []).length ? ` · ${data.warnings.length} skipped` : '';
+        depHintEl.classList.remove('text-danger');
         depHintEl.textContent = deps.size
-          ? `${deps.size} dependency${deps.size === 1 ? '' : 'ies'} added${warn}`
+          ? `${deps.size} ${deps.size === 1 ? 'dependency' : 'dependencies'} added${warn}`
           : warn.replace(/^ · /, '');
       }
       renderSelected();
     } catch (err) {
-      if (depHintEl) depHintEl.textContent = `Dependency check failed: ${err.message}`;
+      if (depHintEl) {
+        depHintEl.classList.add('text-danger'); // a failure in faint gray read as a status note
+        depHintEl.textContent = `Dependency check failed: ${err.message}`;
+      }
     }
   }
 
@@ -757,7 +757,7 @@ function initModBrowser() {
             <select class="input" data-modkey="${escapeHtml(k)}" data-label="Version">${versionOptions(m)}</select>
           </div>
         </div>
-        <button type="button" class="grid size-7 shrink-0 place-items-center rounded-md text-ink-faint transition hover:bg-line hover:text-ink" data-remove="${escapeHtml(k)}" aria-label="Remove ${escapeHtml(m.name)}">
+        <button type="button" class="icon-btn size-7" data-remove="${escapeHtml(k)}" aria-label="Remove ${escapeHtml(m.name)}">
           <svg class="icon size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
       </div>`;
@@ -964,15 +964,19 @@ function initPackPicker() {
     }
   }
 
+  let resolveSeq = 0; // rapid version changes: a slow earlier resolve must not win
   versionSel.addEventListener('change', async () => {
     if (syncing || !selection) return;
     const versionId = versionSel.value;
+    const seq = ++resolveSeq;
     summaryEl.innerHTML = '<span class="text-sm text-ink-faint">Resolving pack versions…</span>';
     try {
       const pack = await resolve(selection.ref, versionId);
+      if (seq !== resolveSeq) return;
       selection.resolved = pack;
       renderSummary();
     } catch (err) {
+      if (seq !== resolveSeq) return;
       renderSummary(); // put the previous (still valid) summary back
       toast(err.message, { kind: 'error', timeout: 9000 });
     }
@@ -1169,7 +1173,7 @@ function initSolver({ onApplied = () => {} } = {}) {
 
     if (!pair) {
       resultEl.innerHTML =
-        '<div class="rounded-md border border-danger/40 bg-redstone-600/10 p-4 text-sm">No loader has builds for any of these mods. Try removing one and solving again.</div>';
+        '<div class="notice notice-danger">No loader has builds for any of these mods. Try removing one and solving again.</div>';
       return;
     }
 
@@ -1178,9 +1182,9 @@ function initSolver({ onApplied = () => {} } = {}) {
       solveData.best && pair.loader === solveData.best.loader && pair.mcVersion === solveData.best.mcVersion;
 
     const head = document.createElement('div');
-    head.className = isPartial
-      ? 'rounded-md border border-gold-700 bg-gold-600/10 p-4'
-      : 'rounded-md border border-grass-700 bg-grass-600/10 p-4';
+    // Semantic notice tints — these callouts had raw palette borders while
+    // sibling callouts on the same page already used the token pairs.
+    head.className = isPartial ? 'notice notice-warn block p-4' : 'notice notice-ok block p-4';
     head.innerHTML = `
       <p class="text-xs font-semibold uppercase tracking-wider ${isPartial ? 'text-warn' : 'text-ok'}">${isPartial ? 'Best partial match' : 'Best match'}</p>
       <p class="mt-1 text-lg font-semibold">${escapeHtml(pair.loaderLabel)} on Minecraft ${escapeHtml(pair.mcVersion)}</p>
@@ -1210,7 +1214,7 @@ function initSolver({ onApplied = () => {} } = {}) {
 
     if (isPartial && solveData.partial.dropped.length) {
       const warn = document.createElement('div');
-      warn.className = 'mt-3 rounded-md border border-gold-700 bg-gold-600/10 p-3 text-sm';
+      warn.className = 'notice notice-warn mt-3 block';
       warn.innerHTML =
         `<p class="mb-1.5 font-semibold text-warn">These mods would be left out:</p>` +
         solveData.partial.dropped
@@ -1248,11 +1252,13 @@ function initSolver({ onApplied = () => {} } = {}) {
     resultEl.appendChild(applyRow);
   }
 
-  function altButton(idx, alt, active) {
+  // Alternatives are always rendered non-active (the active pair is the
+  // headline above), so no selected styling is needed here.
+  function altButton(idx, alt) {
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.alt = String(idx);
-    b.className = 'btn btn-ghost btn-sm text-xs' + (active ? ' bg-grass-600/20 text-ok' : '');
+    b.className = 'btn btn-ghost btn-sm text-xs';
     b.textContent = `${alt.loaderLabel} · ${alt.mcVersion}`;
     return b;
   }
@@ -1288,20 +1294,18 @@ function escapeHtml(s) {
   );
 }
 
-// Tile pickers keep a CONSTANT border-2 (idle border color from idleClasses,
-// active from activeClasses) so selection never shifts the layout by a pixel.
-function pickGroup(containerId, dataKey, onPick, activeClasses, idleClasses = ['border-line']) {
+// Tile/swatch pickers: selection lives in aria-pressed — the .tile/.swatch CSS
+// carries the look, so no class juggling (which used to strip the hover
+// affordance from whichever tile started selected).
+function pickGroup(containerId, dataKey, onPick) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.addEventListener('click', (e) => {
     const btn = e.target.closest(`[data-${dataKey}]`);
     if (!btn) return;
-    for (const b of container.children) {
-      b.classList.remove(...activeClasses);
-      b.classList.add(...idleClasses);
+    for (const b of container.querySelectorAll(`[data-${dataKey}]`)) {
+      b.setAttribute('aria-pressed', String(b === btn));
     }
-    btn.classList.remove(...idleClasses);
-    btn.classList.add(...activeClasses);
     onPick(btn.dataset[dataKey]);
   });
 }

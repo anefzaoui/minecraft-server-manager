@@ -21,16 +21,17 @@
           <div class="flex flex-wrap items-center gap-2 text-sm">
             {{#unless viewed}}<span class="badge badge-danger">new</span>{{/unless}}
             <span class="font-mono text-xs text-ink-faint">{{file}}</span>
-            <span class="ml-auto text-xs text-ink-faint">{{ts}} · {{bytes size}}</span>
+            <span class="ml-auto text-xs tabular-nums text-ink-faint"><span data-ts="{{ts}}">{{ts}}</span> · {{bytes size}}</span>
           </div>
           <p class="mt-1.5 font-mono text-xs text-ink-soft">{{summary}}</p>
           <div class="mt-2 flex flex-wrap items-center gap-2">
             {{#each suspected}}
               <span class="badge badge-warn" title="Suspected from stack trace">suspect: {{this}}</span>
             {{/each}}
-            <button class="btn btn-ghost btn-sm" data-crash-action="view">Open viewer</button>
+            {{! One treatment (icon + label) for all three sibling actions. }}
+            <button class="btn btn-ghost btn-sm" data-crash-action="view">{{{icon 'file-search' 'size-3.5'}}} Open viewer</button>
             <button class="btn btn-ghost btn-sm" data-crash-action="copy">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy trace</button>
-            <button class="btn btn-ghost btn-sm" data-crash-action="download" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="download">{{{icon 'download' 'size-3.5'}}} Download</button>
           </div>
         </div>
       {{/each}}
@@ -46,10 +47,11 @@
         <div class="flex flex-wrap items-center gap-2 text-sm">
           <span class="badge">{{type}}</span>
           <span class="min-w-0 flex-1">{{summary}}</span>
-          <span class="text-xs text-ink-faint">{{actor}} · {{ts}}</span>
+          <span class="text-xs text-ink-faint">{{actor}} · <span data-ts="{{ts}}">{{ts}}</span></span>
         </div>
         {{#if diff}}
-          <div class="mt-2 rounded bg-raised p-2 font-mono text-xs">
+          {{! break-all: unbroken values (paths, JVM flag strings) must wrap, not push past the card. }}
+          <div class="mt-2 break-all rounded bg-raised p-2 font-mono text-xs">
             {{#each diff}}<div><span class="text-ink-faint">{{@key}}:</span> <span class="text-danger line-through">{{this.[0]}}</span> → <span class="text-ok">{{this.[1]}}</span></div>{{/each}}
           </div>
         {{/if}}

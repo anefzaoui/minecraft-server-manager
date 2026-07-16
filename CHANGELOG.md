@@ -5,6 +5,119 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.8.0] - 2026-07-16
+
+Full-surface UI overhaul: every page, tab, partial, layout and page script audited
+(five parallel review passes, ~150 element-level findings) and fixed — visual bugs,
+broken states, dated patterns, and consistency drift. Backend touched only where a
+UI bug originated server-side.
+
+### Fixed
+
+- **Invisible status dot for starting/unhealthy servers** — the dot class was assembled at
+  render time (`bg-{{color}}-500`) so Tailwind never generated `.bg-gold-500`; the new
+  `statusDot` helper emits full literal classes. Affected the sidebar, dashboard cards, the
+  server header, and the public status page.
+- **Duplicate server creation closed off** — dismissing a progress modal now settles its
+  promise (`runTask` rejects with `dismissed`, callers show a "still running — see the task
+  tray" notice) and the wizard's Create button stays busy for the whole flow; the blueprint
+  page adds an in-flight guard. Previously a dismissed modal left creation running silently
+  with the button re-clickable.
+- **Chat double-send** — Enter bypassed the busied Send button; sends are now in-flight
+  guarded, and the composer is disabled with a real `<fieldset disabled>` while the server is
+  stopped (the old `pointer-events-none` trick let keyboard users send anyway; same fix for
+  the world-controls rail).
+- **Schedule edits can no longer destroy the schedule** — edit now creates the replacement
+  before deleting the original (worst case is a labeled duplicate, never a loss).
+- **Toasts rendered behind modal backdrops** (z-50 under z-60) — toasts move to z-65,
+  dropdown menus to z-68, and the whole stacking scale is documented in input.css. The
+  task-tray panel drops a z-index that was silently capped by the topbar's stacking context.
+- **Table truncation that could never engage** — `truncate` inside auto-layout cells let long
+  file/mod/backup/world/pack names push actions into horizontal scroll; name columns now use
+  `w-full max-w-0` (+ `title`) across files, mods, backups, updates and worlds tables.
+- **Handlebars falsy-zero bugs** — `min="0"`, `max`, `step` and zero defaults were silently
+  dropped in catalog fields; a new `isDefined` helper fixes constraints and placeholders.
+- **Console**: command replies no longer hide below the full-height empty placeholder; the
+  empty state clears on first output; filters that hide every line say so; the stream shows a
+  visible "disconnected — reconnecting" marker; a leading `/` is stripped to match the
+  decorative prompt; command history is deduped.
+- **Metrics charts were never themed** — a dead expression left Chart.js's default #666 axes;
+  axes/grid/legend now derive from the theme tokens and re-theme on toggle. Reconnects back
+  off (a stopped server was polled flat-out every 5s forever) and pause while the tab is
+  hidden so gaps aren't drawn as continuous lines.
+- **Dashboard live hydration now moves the status dot** — a crashed server used to keep a
+  green pulsing "Running" until manual reload (`/api/servers/live` now includes each server's
+  status; stale CPU/memory numbers are cleared for stopped servers). The Docker tile shows an
+  "Unknown — retrying" state instead of an eternal "Checking…"; the card filter matches
+  name/flavor/version/tags instead of the whole card text (typing "cpu" matched every card)
+  and shows a "no matches" message.
+- **`fmtBytes` floor bug** — three drifted copies all rendered 0 bytes as "1 KB" ("Total:
+  1 KB in 0 archives"); one shared `lib/format.js` matches the server-side `bytes` helper.
+- **Light-theme-invisible selection** on accent/icon pickers (white ring on white card) —
+  all pickers now use the theme-aware `.swatch`/`.tile` selected ring driven by
+  `aria-pressed`.
+- Inventory: Enter in item search double-fired the request; the Delete-item and
+  Clear-ENTIRE-inventory confirms rendered as green primary buttons (now `danger`).
+- Mods: a network error stranded "Searching…" forever (try/catch + stale-response guard);
+  the URL-install meter never reset after a failed install; the filter matched button labels
+  ("disable" matched every row); pack-manifest links are scheme-checked.
+- Worlds: cancelling an upload now aborts the XHR (a "cancelled" upload used to finish and
+  reload the page minutes later); copy-to option values are escaped.
+- Modpacks/settings/etc.: `pack.versions[0]` TypeError guard; role-change failures revert in
+  place instead of reloading over their own error toast; search/timeline/version-resolve
+  requests carry stale-response guards (modpacks, analytics, wizard, Modrinth search).
+- Kick now flips the player page/roster to Offline instead of leaving a pulsing "Online" dot
+  with a re-clickable Kick; modal initial focus lands on the first body field instead of the
+  close-X; opening a modal no longer shifts the page by the scrollbar width
+  (`scrollbar-gutter: stable`); Escape closes the mobile sidebar; a flex-centered bare layout
+  (login/setup/status) no longer clips content taller than the viewport; future timestamps no
+  longer render "just now"; remote changelog URLs are validated to http(s) server-side;
+  "1 crash"/"dependencyies"-style pluralization fixed everywhere via a `plural` helper.
+
+### Changed
+
+- **Chat tab redesigned** (the priority): recipient + mode share one aligned 38px row; the
+  17 color swatches and five style toggles are a compact toolbar attached to the message
+  input; a live preview line renders the styled message exactly as it lands in-game
+  (including a scrambling §k obfuscated preview and a readable glow for dark colors on the
+  dark trough); messages get panel-TZ timestamps and sender tooltips; auto-scroll only sticks
+  when already at the bottom; long messages wrap. **Chat history is now server-side** —
+  recent sends (already recorded as events) render on load, shared across admins, surviving
+  reloads.
+- **Toast-then-reload is gone from day-to-day flows** — player role toggles, ban/pardon/kick,
+  ban-IP add/remove, command prefix saves, test runs and deletes all patch the DOM in place;
+  deletes that empty a table restore its empty state instead of leaving orphaned headers.
+- **Timestamps honor the panel timezone everywhere** — views emit `data-ts`/`data-ts-ago`
+  hydrated through the shared datetime lib (dashboard activity, activity page, backups,
+  worlds, schedules — which showed UTC in the table and panel-TZ in the modal for the same
+  schedule — settings users, updates, storage, file managers, crash cards).
+- **New primitives**: `.notice` (+ ok/warn/danger/info) replaces every ad-hoc callout box;
+  `.swatch` (color tiles with a theme-aware gap-ring selected state); `.tile` (wizard
+  pickers); `.subtab` (server sub-nav pills); `.meter-indeterminate` (honest sliding-block
+  meter replacing all fake `animate-pulse` bars — task tray, wizard, blueprints, worlds,
+  mods); disabled styles for `.input`, `.msm-toggle`, `.seg-btn` and `fieldset:disabled`;
+  pressed-state styling for chip toggles via `aria-pressed`.
+- **Destructive actions separated from safe ones**: Delete server sits behind a divider with
+  its own explainer; backup Restore is visually distinct from Download; file/backup/world
+  deletes use the trash icon (not the "dismiss" ✕); world Reset uses a distinct glyph from
+  backup Restore; the map's Disable is divided from Fullscreen.
+- **Dirty-state awareness**: server Settings tracks edits (Discard confirms, leaving warns);
+  integrations toggles flag "Unsaved changes" until saved; setup's step 3 blocks Continue
+  while typed values are unsaved and reflects the stored CF key.
+- Files/file manager: rare row actions (rename/move/copy) collapse into an overflow menu;
+  uploads report per-count results safely; the timezone/country pickers are now enhanced
+  searchable selects (the last two native selects in the app); the copy-to-clipboard last
+  resort is a small modal instead of `window.prompt`; console/chat/map empty states are
+  designed (icon + line + action) and theme-correct on the always-dark console; the console
+  Download button is a real download link; ANSI log colors map to the brand ramps where they
+  exist; wizard cards drop their broken 1-3-4 numbering; Cancel is ghost-weight next to the
+  primary; modpack search shows skeleton cards and an honest "top N matches" count; the
+  public status page auto-refreshes every 60s; the dashboard list view is a real compact
+  list (stats/disk/tags hidden) instead of a cosmetic column change; `overview.js` is renamed
+  `world-controls.js` to match what it drives, and the Overview tab gets its own script that
+  keeps the "Live usage" card actually live over the stats WebSocket with threshold-colored,
+  core-normalized CPU (the raw value exceeded 100% on multi-core servers).
+
 ## [0.7.4] - 2026-07-16
 
 ### Changed

@@ -2,13 +2,29 @@
   <h3 class="mb-1 font-semibold">Chat</h3>
   <p class="mb-3 text-xs text-ink-faint">Send styled messages to everyone or one player, shown in-game. Available while the server runs.</p>
 
-  <div class="console h-80 overflow-y-auto" id="chat-log">
-    <div class="grid h-full place-items-center px-4 text-center text-sm text-ink-faint" data-chat-empty>No messages sent yet — type below and hit Enter.</div>
+  {{! Always-dark console trough: literal stone steps on purpose (ink tokens
+      flip in light mode and would vanish here). break-words: chat wraps,
+      unlike raw logs. }}
+  <div class="console h-80 overflow-y-auto break-words" id="chat-log">
+    <div class="grid h-full place-items-center px-4 text-center text-sm text-stone-400" data-chat-empty>
+      <div>
+        {{{icon 'megaphone' 'mx-auto size-6 text-stone-500'}}}
+        {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
+          <p class="mt-2">No messages yet — everything you send appears here, styled as players see it.</p>
+        {{else}}
+          <p class="mt-2">Recent messages appear here. Start the server to send chat.</p>
+        {{/if}}
+      </div>
+    </div>
   </div>
 
-  <div class="mt-3 space-y-3 {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}pointer-events-none opacity-50{{/unless}}">
-    <div class="flex flex-wrap items-end gap-3">
-      <div>
+  {{! Real fieldset-level disable while stopped — pointer-events tricks let
+      keyboard events straight through. }}
+  <fieldset class="mt-3 min-w-0 space-y-2" id="chat-composer" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
+    {{! Target + mode on one row; the help line lives OUTSIDE the flex row so
+        the select and the seg share one 38px baseline instead of staggering. }}
+    <div class="flex flex-wrap items-start gap-x-4 gap-y-2">
+      <div data-chat-target-wrap>
         <label class="label" for="chat-target">To</label>
         <select class="input w-auto" id="chat-target" data-label="Recipient">
           <option value="@a" selected>Everyone</option>
@@ -16,34 +32,34 @@
         </select>
       </div>
       <div>
-        <label class="label">Mode</label>
+        <span class="label">Mode</span>
         <div class="seg" id="chat-mode" role="group" aria-label="Message mode">
           <button type="button" class="seg-btn" aria-pressed="true" data-mode="tellraw">Tellraw</button>
           <button type="button" class="seg-btn" aria-pressed="false" data-mode="say">Say</button>
         </div>
-        <p class="help">Tellraw = styled, per recipient. Say = plain <span class="font-mono">[Server]</span> broadcast.</p>
       </div>
     </div>
+    <p class="help">Tellraw = styled, per recipient. Say = plain <span class="font-mono">[Server]</span> broadcast.</p>
 
-    <div data-chat-styles>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Color</div>
-      <div class="flex flex-wrap items-center gap-1.5" id="chat-colors">
-        <button type="button" class="chip" data-color="">Default</button>
+    {{! The composer group: formatting toolbar and live preview attached
+        directly to the message input, not floating bands. Controls are
+        injected by chat.js (swatches need the color map anyway). }}
+    <div class="space-y-2 rounded-md border border-line bg-inset/30 p-2.5">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1.5" data-chat-styles>
+        <div class="flex flex-wrap items-center gap-1" id="chat-colors" role="group" aria-label="Text color"></div>
+        <span class="h-5 w-px shrink-0 bg-line-strong" aria-hidden="true"></span>
+        <div class="flex items-center gap-1" id="chat-formats" role="group" aria-label="Text style"></div>
       </div>
-      <div class="mb-1 mt-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Style</div>
-      <div class="flex flex-wrap gap-1.5" id="chat-formats">
-        <button type="button" class="chip" data-format="bold"><b>Bold</b></button>
-        <button type="button" class="chip" data-format="italic"><i>Italic</i></button>
-        <button type="button" class="chip" data-format="underlined"><u>Underline</u></button>
-        <button type="button" class="chip" data-format="strikethrough"><s>Strike</s></button>
-        <button type="button" class="chip" data-format="obfuscated">Obfuscated</button>
+      <div class="flex min-w-0 items-baseline gap-2 rounded-sm bg-stone-950 px-2.5 py-1.5 font-mono text-[13px] leading-6" data-chat-preview-row hidden>
+        <span class="shrink-0 text-[10px] uppercase tracking-wider text-stone-500">Preview</span>
+        <span class="min-w-0 break-words text-stone-200" data-chat-preview></span>
+      </div>
+      <div class="flex gap-2">
+        <input class="input flex-1" id="chat-input" placeholder="Message — Enter to send" autocomplete="off" maxlength="512" />
+        <button class="btn btn-primary" id="chat-send">{{{icon 'megaphone' 'size-4'}}} Send</button>
       </div>
     </div>
-
-    <div class="flex gap-2">
-      <input class="input flex-1" id="chat-input" placeholder="Message — Enter to send" autocomplete="off" maxlength="512" />
-      <button class="btn btn-primary" id="chat-send">{{{icon 'megaphone' 'size-4'}}} Send</button>
-    </div>
-  </div>
+  </fieldset>
 </div>
+<script type="application/json" id="chat-history">{{{json chatHistory}}}</script>
 <script type="module" src="/js/pages/chat.js"></script>

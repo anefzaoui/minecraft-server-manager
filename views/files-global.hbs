@@ -36,32 +36,40 @@
           {{/if}}
           {{#each files}}
             <tr data-file-row data-path="{{path}}" data-name="{{name}}" data-dir="{{dir}}" data-size="{{size}}">
-              <td>
+              {{! w-full + max-w-0: makes `truncate` actually engage in an
+                  auto-layout table — long names no longer force horizontal scroll. }}
+              <td class="w-full max-w-0">
                 <div class="flex items-center gap-2">
                   {{#if dir}}
-                    {{{icon 'folder' 'size-4 text-warn'}}}
-                    <a class="min-w-0 truncate font-medium hover:text-link" href="/files?path={{enc}}">{{name}}</a>
+                    {{{icon 'folder' 'size-4 shrink-0 text-warn'}}}
+                    <a class="min-w-0 truncate font-medium hover:text-link" href="/files?path={{enc}}" title="{{name}}">{{name}}</a>
                   {{else}}
-                    {{{icon 'file-text' 'size-4 text-ink-faint'}}}
-                    <span class="min-w-0 truncate font-medium">{{name}}</span>
+                    {{{icon 'file-text' 'size-4 shrink-0 text-ink-faint'}}}
+                    <span class="min-w-0 truncate font-medium" title="{{name}}">{{name}}</span>
                   {{/if}}
                 </div>
               </td>
-              <td class="text-right text-ink-faint">{{bytes size}}</td>
-              <td class="text-right text-ink-faint">{{mtime}}</td>
+              <td class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
+              <td class="whitespace-nowrap text-right text-ink-faint" data-ts="{{mtime}}">{{mtime}}</td>
               <td class="text-right"><div class="inline-flex gap-1">
                 {{#unless dir}}
                   <button class="btn btn-ghost btn-sm" data-file-edit data-tip="Edit as text (≤ 2 MB)">{{{icon 'file-code' 'size-3.5'}}}</button>
                   <button class="btn btn-ghost btn-sm" data-file-download data-tip="Download">{{{icon 'download' 'size-3.5'}}}</button>
                 {{/unless}}
-                <button class="btn btn-ghost btn-sm" data-file-rename data-tip="Rename">{{{icon 'pencil' 'size-3.5'}}}</button>
-                <button class="btn btn-ghost btn-sm" data-file-move data-tip="Move to…">{{{icon 'move' 'size-3.5'}}}</button>
-                <button class="btn btn-ghost btn-sm" data-file-copy data-tip="Copy to…">{{{icon 'copy' 'size-3.5'}}}</button>
-                <button class="btn btn-ghost btn-sm text-danger" data-file-delete data-tip="Delete ({{bytes size}})" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-menu="file-menu-{{@index}}" data-tip="Rename, move, copy…">{{{icon 'ellipsis' 'size-3.5'}}}</button>
+                <template id="file-menu-{{@index}}">
+                  <button data-file-rename data-path="{{path}}" data-name="{{name}}">{{{icon 'pencil' 'size-3.5'}}} Rename</button>
+                  <button data-file-move data-path="{{path}}" data-name="{{name}}">{{{icon 'move' 'size-3.5'}}} Move to…</button>
+                  <button data-file-copy data-path="{{path}}" data-name="{{name}}">{{{icon 'copy' 'size-3.5'}}} Copy to…</button>
+                </template>
+                <button class="btn btn-ghost btn-sm text-danger" data-file-delete data-tip="Delete ({{bytes size}})" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               </div></td>
             </tr>
           {{else}}
-            <tr><td colspan="4" class="py-10 text-center text-ink-faint">This folder is empty.</td></tr>
+            <tr data-files-empty><td colspan="4" class="py-10 text-center text-sm text-ink-faint">
+              {{{icon 'folder-open' 'mx-auto size-6'}}}
+              <p class="mt-2">This folder is empty.</p>
+            </td></tr>
           {{/each}}
         </tbody>
       </table>

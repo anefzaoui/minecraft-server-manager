@@ -9,7 +9,9 @@ function ensureHost() {
   if (!host) {
     host = document.createElement('div');
     host.id = 'toasts';
-    host.className = 'fixed bottom-4 right-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2';
+    // z-[65]: above modals (60) — errors fired from modal actions must be
+    // readable — below tooltips (70). See the stacking scale in input.css.
+    host.className = 'fixed bottom-4 right-4 z-[65] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2';
     document.body.appendChild(host);
   }
   host.setAttribute('role', 'status');
@@ -17,17 +19,22 @@ function ensureHost() {
   return host;
 }
 
+// Borders go through the semantic tokens (one tokening scheme for the family).
 const KIND = {
   success: {
-    border: 'border-grass-700',
+    border: 'border-ok/40',
     icon: '<svg class="icon size-4 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
   },
   error: {
     border: 'border-danger/40',
-    icon: '<svg class="icon size-4 text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+    icon: '<svg class="icon size-4 text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>',
+  },
+  warn: {
+    border: 'border-warn/40',
+    icon: '<svg class="icon size-4 text-warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
   },
   info: {
-    border: 'border-diamond-700',
+    border: 'border-link/40',
     icon: '<svg class="icon size-4 text-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
   },
 };
@@ -56,6 +63,8 @@ export function toast(message, { kind = 'success', timeout = 4500 } = {}) {
   if (timeout > 0) timer = setTimeout(dismiss, timeout);
 
   h.appendChild(el);
+  // Cap the stack: a burst of completions must not pile toasts past the viewport.
+  while (h.children.length > 4) h.firstElementChild.remove();
   return dismiss;
 }
 

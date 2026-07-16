@@ -35,6 +35,17 @@ const STATUS_TEXT = {
   redstone: 'text-danger',
   stone: 'text-ink-faint',
 };
+// Full literal classes on purpose: Tailwind's scanner only generates utilities
+// it can see verbatim in source. Assembling `bg-${color}-500` in a template
+// produces a class the build never emits (bg-gold-500 was missing for exactly
+// this reason, rendering the Starting/Unhealthy dot invisible).
+const STATUS_DOT = {
+  grass: 'bg-grass-500',
+  gold: 'bg-gold-500',
+  diamond: 'bg-diamond-500',
+  redstone: 'bg-redstone-500',
+  stone: 'bg-stone-500',
+};
 
 // The 8 icons bundled in public/icons/servers. Icon names are free text in the
 // schemas, so anything unknown falls back to grass instead of a broken image.
@@ -90,6 +101,7 @@ function createApp() {
         icon,
         markdown,
         eq: (a, b) => a === b,
+        startsWith: (s, p) => typeof s === 'string' && s.startsWith(p),
         ne: (a, b) => a !== b,
         gt: (a, b) => a > b,
         and: (a, b) => a && b,
@@ -101,7 +113,7 @@ function createApp() {
         bytes: formatBytes,
         pct: (used, total) => (total ? Math.min(100, Math.round((used / total) * 100)) : 0),
         statusLabel: (s) => (STATUS_META[s] || STATUS_META.stopped).label,
-        statusColor: (s) => (STATUS_META[s] || STATUS_META.stopped).color,
+        statusDot: (s) => STATUS_DOT[(STATUS_META[s] || STATUS_META.stopped).color],
         statusPulse: (s) => (STATUS_META[s] || STATUS_META.stopped).pulse,
         // Status *text* goes through the theme-aware semantic tokens (the raw
         // 400-step palette classes fail contrast on the light canvas).
@@ -119,6 +131,12 @@ function createApp() {
         default: (v, fallback) => (v === undefined || v === null || v === '' ? fallback : v),
         concat: (...args) => args.slice(0, -1).join(''),
         inc: (v) => Number(v) + 1,
+        mul: (a, b) => Number(a) * Number(b),
+        plural: (n, one, many) => (Number(n) === 1 ? one : many),
+        platformName: (p) => ({ modrinth: 'Modrinth', curseforge: 'CurseForge' })[p] || p,
+        // Handlebars {{#if}} treats 0 as falsy, which silently drops min="0"
+        // attributes and zero defaults — this helper exists for those tests.
+        isDefined: (v) => v !== undefined && v !== null && v !== '',
       },
     })
   );

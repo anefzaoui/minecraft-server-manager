@@ -1,7 +1,10 @@
 {{#if (or (eq server.status 'stopped') (eq server.status 'crashed'))}}
-  <div class="mb-4 rounded-md border border-line bg-raised p-3 text-sm text-ink-faint">Live CPU, memory and network charts stream while the server is running. Start the server to see metrics.</div>
+  <div class="notice mb-4">Live CPU, memory and network charts stream while the server is running. Start the server to see metrics.</div>
+{{else if (or (eq server.status 'starting') (eq server.status 'updating'))}}
+  {{! Without this, starting/updating shows three blank grids with no explanation. }}
+  <div class="notice mb-4">Server is {{server.status}} — charts begin streaming as soon as it is up.</div>
 {{/if}}
-<div class="grid gap-4 lg:grid-cols-2" data-metrics-server="{{server.id}}" data-metrics-mem-limit="{{server.resources.containerMemoryMb}}" data-metrics-cpu-limit="{{server.resources.cpus}}">
+<div class="grid gap-4 lg:grid-cols-2" data-metrics-server="{{server.id}}" data-metrics-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{else}}0{{/if}}" data-metrics-mem-limit="{{server.resources.containerMemoryMb}}" data-metrics-cpu-limit="{{server.resources.cpus}}">
   <div class="card p-4">
     <h3 class="mb-2 font-semibold">CPU <span class="text-xs font-normal text-ink-faint">vs limit</span></h3>
     <canvas data-chart="cpu" height="140"></canvas>

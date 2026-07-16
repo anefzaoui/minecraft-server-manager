@@ -40,6 +40,7 @@ export function confirmDialog({
     }
 
     let input = null;
+    let mismatch = null;
     if (requireText) {
       const wrap = document.createElement('div');
       const label = document.createElement('label');
@@ -49,7 +50,10 @@ export function confirmDialog({
       input.className = 'input font-mono';
       input.autocomplete = 'off';
       input.spellcheck = false;
-      wrap.append(label, input);
+      mismatch = document.createElement('p');
+      mismatch.className = 'mt-1 hidden text-xs text-danger';
+      mismatch.textContent = "The name doesn't match.";
+      wrap.append(label, input, mismatch);
       content.appendChild(wrap);
     }
 
@@ -65,7 +69,8 @@ export function confirmDialog({
           kind: danger ? 'danger' : 'primary',
           onClick: () => {
             if (input && input.value !== requireText) {
-              input.classList.add('border-redstone-500');
+              input.classList.add('border-danger');
+              mismatch.classList.remove('hidden');
               input.focus();
               return false; // keep open
             }
@@ -80,7 +85,21 @@ export function confirmDialog({
       confirmBtn.disabled = true;
       input.addEventListener('input', () => {
         confirmBtn.disabled = input.value !== requireText;
-        input.classList.remove('border-redstone-500');
+        input.classList.remove('border-danger');
+        mismatch.classList.add('hidden');
+      });
+      // Enter in the field confirms once the name matches (and shows the
+      // mismatch hint when it doesn't) — typing the name then hitting Enter
+      // previously did nothing.
+      input.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        if (confirmBtn.disabled) {
+          input.classList.add('border-danger');
+          mismatch.classList.remove('hidden');
+          return;
+        }
+        confirmBtn.click();
       });
     }
   });

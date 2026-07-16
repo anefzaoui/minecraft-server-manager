@@ -26,10 +26,29 @@ function init() {
   }
 
   wizard.addEventListener('click', (e) => {
-    if (e.target.closest('[data-next]')) goTo(step + 1);
-    else if (e.target.closest('[data-back]')) goTo(step - 1);
+    if (e.target.closest('[data-next]')) {
+      // Step 3 fields save individually — Continue must not silently discard
+      // something typed but never saved.
+      if (step === 3 && unsavedStep3()) {
+        toast('You have unsaved values above — press their Save buttons, or clear the fields to skip.', {
+          kind: 'warn',
+          timeout: 8000,
+        });
+        return;
+      }
+      goTo(step + 1);
+    } else if (e.target.closest('[data-back]')) goTo(step - 1);
     else if (e.target.closest('[data-recheck]')) loadChecks();
   });
+
+  // ---- Step 3 dirty tracking (domain + CF key) ----
+  let savedDomain = null; // set on first visit to step 3
+  function unsavedStep3() {
+    const domain = document.getElementById('su-domain');
+    const cf = document.getElementById('su-cf');
+    if (savedDomain === null) savedDomain = '';
+    return (domain && domain.value.trim() !== savedDomain) || (cf && cf.value.trim() !== '');
+  }
 
   // ---- Step 1: system checks ----
   const ICONS = {
@@ -54,6 +73,10 @@ function init() {
   }
 
   async function loadChecks() {
+    // Continue waits for the first check round — "checks passed" and "checks
+    // never ran" must not look identical.
+    const continueBtn = sections[1].querySelector('[data-next]');
+    if (continueBtn) continueBtn.disabled = true;
     list.innerHTML =
       '<div class="flex items-center gap-2 py-6 text-sm text-ink-faint"><span class="size-4 animate-spin rounded-full border-2 border-line border-t-grass-500"></span> Running checks…</div>';
     let checks;
@@ -64,8 +87,12 @@ function init() {
       checks = data.checks;
       checksLoaded = true;
     } catch (err) {
-      list.innerHTML = `<div class="rounded-md border border-danger/40 bg-redstone-500/10 p-3 text-sm text-danger">Could not run checks: ${esc(err.message)}</div>`;
+      list.innerHTML = `<div class="notice notice-danger text-danger">Could not run checks: ${esc(err.message)} — re-check to try again.</div>`;
       return;
+    } finally {
+      // Docker being down must not trap setup (the panel works without it) —
+      // Continue unlocks once a round finished, pass or fail.
+      if (continueBtn && checksLoaded) continueBtn.disabled = false;
     }
 
     list.innerHTML = '';
@@ -142,7 +169,10 @@ function init() {
     const publicHost = document.getElementById('su-domain').value.trim();
     await withBusy(btn, 'Saving…', async () => {
       const data = await post('/api/settings', { publicHost });
-      if (data) toast(publicHost ? `Public domain set to ${data.publicHost}.` : 'Public domain cleared.');
+      if (data) {
+        savedDomain = data.publicHost || '';
+        toast(publicHost ? `Public domain set to ${data.publicHost}.` : 'Public domain cleared.');
+      }
     });
   });
 
@@ -157,7 +187,11 @@ function init() {
       const data = await post('/api/keys/curseforge', { key });
       if (data) {
         toast('Key verified with CurseForge and saved (encrypted).');
-        document.getElementById('su-cf').value = '';
+        const cf = document.getElementById('su-cf');
+        cf.value = '';
+        // Reflect the stored state — an emptied field with an example
+        // placeholder read as "nothing saved".
+        cf.placeholder = 'Stored ✓ — paste a new key to replace it';
       }
     });
   });

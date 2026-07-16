@@ -1,8 +1,10 @@
 // Populates a timezone <select> (from Intl.supportedValuesOf) and a country
 // <select> (ISO-3166 alpha-2 + Intl.DisplayNames for names), each with an
 // "Auto — system …" option at the top. Shared by the setup wizard and Settings.
-// The selects are marked data-native so they aren't wrapped by the custom-select
-// enhancer (which reads options once at load — these are filled dynamically).
+// The selects start data-native (they're empty at page load) and are enhanced
+// HERE, after filling — the styled searchable picker beats a native list of
+// 400 timezones, and these were the last two native selects in the app.
+import { enhanceSelect } from './select.js';
 
 // ISO-3166-1 alpha-2 country codes.
 const COUNTRY_CODES =
@@ -44,19 +46,25 @@ export function countries() {
 }
 
 export function fillTimezoneSelect(select, current, systemTz) {
-  select.setAttribute('data-native', '');
   select.innerHTML = '';
   const auto = new Option(`Auto — system time zone${systemTz ? ` (${systemTz})` : ''}`, 'auto');
   select.add(auto);
   for (const tz of timezones()) select.add(new Option(tz, tz));
   select.value = current && current !== 'auto' ? current : 'auto';
+  enhance(select);
 }
 
 export function fillCountrySelect(select, current, systemCc) {
-  select.setAttribute('data-native', '');
   select.innerHTML = '';
   const auto = new Option(`Auto — system country${systemCc ? ` (${systemCc})` : ''}`, 'auto');
   select.add(auto);
   for (const { code, name } of countries()) select.add(new Option(`${name} (${code})`, code));
   select.value = current && current !== 'auto' ? current : 'auto';
+  enhance(select);
+}
+
+function enhance(select) {
+  select.removeAttribute('data-native');
+  enhanceSelect(select); // no-op when already enhanced (option lists are read at open time)
+  select.dispatchEvent(new Event('change', { bubbles: true })); // resync the trigger label
 }

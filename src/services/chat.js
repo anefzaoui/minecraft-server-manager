@@ -79,14 +79,7 @@ async function sendChat(serverId, opts = {}) {
     throw httpError(502, `The server rejected the message: ${out.split('\n')[0]}`);
   }
 
-  recordEvent({
-    serverId,
-    actor,
-    type: 'chat-sent',
-    summary: `Chat (${mode}) → ${target}: ${text.slice(0, 80)}`,
-    details: { mode, target, color: opts.color || null, text: text.slice(0, 300) },
-  });
-  return {
+  const message = {
     mode,
     target,
     text,
@@ -97,6 +90,16 @@ async function sendChat(serverId, opts = {}) {
     strikethrough: !!opts.strikethrough,
     obfuscated: !!opts.obfuscated,
   };
+  // Full style flags in the event details: the panel's chat history replays
+  // these events with a live tellraw preview, so the styling must round-trip.
+  recordEvent({
+    serverId,
+    actor,
+    type: 'chat-sent',
+    summary: `Chat (${mode}) → ${target}: ${text.slice(0, 80)}`,
+    details: { ...message, text: text.slice(0, 300) },
+  });
+  return { ...message, actor, ts: new Date().toISOString() };
 }
 
 module.exports = { sendChat, buildComponent, normalizeTarget, COLORS, FORMATS };

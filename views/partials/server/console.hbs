@@ -10,7 +10,8 @@
         <input class="input w-36" id="console-label" placeholder="Announce as…" aria-label="Announce console commands as" value="{{server.consoleLabel}}" maxlength="48" autocomplete="off" spellcheck="false">
         <button class="btn btn-sm" id="console-label-save">Save</button>
       </div>
-      <button class="btn btn-sm" id="console-download">{{{icon 'download' 'size-3.5'}}} Download</button>
+      {{! A real download link — window.open gave no feedback and no download semantics. }}
+      <a class="btn btn-sm" href="/api/servers/{{server.id}}/logs?tail=5000" download="{{server.name}}-console.log">{{{icon 'download' 'size-3.5'}}} Download</a>
     </div>
   </div>
 
@@ -20,7 +21,13 @@
         <div data-level="{{level}}"{{#if (eq level 'WARN')}} class="text-gold-300"{{/if}}{{#if (eq level 'ERROR')}} class="text-redstone-400"{{/if}}>{{text}}</div>
       {{/each}}
     {{else}}
-      <div class="grid h-full place-items-center px-4 text-center text-sm text-ink-faint" data-console-empty>No console output yet — start the server to see live logs.</div>
+      {{! stone literal, not ink token — the console stays dark in both themes. }}
+      <div class="grid h-full place-items-center px-4 text-center text-sm text-stone-400" data-console-empty>
+        <div>
+          {{{icon 'terminal' 'mx-auto size-6 text-stone-500'}}}
+          <p class="mt-2">No console output yet — start the server to see live logs.</p>
+        </div>
+      </div>
     {{/if}}
   </div>
 

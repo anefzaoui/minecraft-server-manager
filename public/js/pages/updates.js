@@ -17,9 +17,14 @@ document.getElementById('updates-check-all')?.addEventListener('click', async ()
       start: async () => (await postJSON('/api/updates/check', {})).taskId,
     });
     const n = result && result.findings ? result.findings.length : 0;
-    toast(n ? `Update check finished: ${n} update(s) available.` : 'Update check finished: everything up to date.');
+    toast(
+      n
+        ? `Update check finished: ${n} ${n === 1 ? 'update' : 'updates'} available.`
+        : 'Update check finished: everything up to date.'
+    );
     setTimeout(() => location.reload(), 900);
   } catch (err) {
+    if (err.dismissed) return; // progress hidden — the task tray takes over
     toast(err.message || 'Update check failed', { kind: 'error', timeout: 9000 });
   }
 });
@@ -58,6 +63,7 @@ async function upgradePack(row, { serverId, serverName, subject, current, latest
     toast(`Upgraded: ${result.from} → ${result.to}.`);
     setTimeout(() => location.reload(), 900);
   } catch (err) {
+    if (err.dismissed) return; // progress hidden — the task tray takes over
     toast(err.message || 'Upgrade failed', { kind: 'error', timeout: 12000 });
   }
 }
@@ -79,6 +85,7 @@ async function offerRollback(serverId, serverName, errorMessage) {
     toast(`Rolled back to ${result && result.version ? result.version : 'the previous version'}.`);
     setTimeout(() => location.reload(), 900);
   } catch (err) {
+    if (err.dismissed) return; // progress hidden — the task tray takes over
     toast(err.message || 'Rollback failed', { kind: 'error', timeout: 12000 });
   }
 }
@@ -95,7 +102,10 @@ async function upgradeMod(row, btn, { serverId, subject, current, latest, conten
     await withBusy(btn, 'Updating…', async () => {
       const data = await postJSON(`/api/servers/${serverId}/mods/update`, { contentId });
       toast(`${data.installed.name} updated to ${data.installed.version || latest}.`);
+      const tbody = row.closest('tbody');
       row.remove();
+      // Last row gone → re-render for the "everything up to date" empty state.
+      if (tbody && !tbody.querySelector('[data-update-row]')) setTimeout(() => location.reload(), 900);
     });
   } catch (err) {
     toast(err.message || 'Mod update failed', { kind: 'error', timeout: 9000 });

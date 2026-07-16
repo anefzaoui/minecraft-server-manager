@@ -44,7 +44,9 @@ function init() {
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok !== false) {
           toast('Schedule deleted.');
+          const tbody = row.closest('tbody');
           row.remove();
+          if (tbody && !tbody.querySelector('[data-schedule-row]')) setTimeout(() => location.reload(), 600);
         } else {
           toast(data.error || 'Delete failed', { kind: 'error' });
         }
@@ -115,7 +117,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
     <div class="mt-2 rounded-md border border-line bg-raised p-2.5 text-xs" data-sc-preview>
       <span class="text-ink-faint">Type a cron expression to preview the next runs.</span>
     </div>
-    ${edit ? '<p class="help mt-3">Saving recreates the schedule (delete + create) — its id changes but timing continues seamlessly.</p>' : ''}`;
+    ${edit ? '<p class="help mt-3">Saving replaces the schedule (create, then remove the old one) — timing continues seamlessly.</p>' : ''}`;
 
   const serverSel = content.querySelector('[data-sc-server]');
   const typeSel = content.querySelector('[data-sc-type]');
@@ -134,6 +136,11 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   const typeMeta = () => taskTypes.find((t) => t.value === typeSel.value) || {};
   const syncTypeUi = () => {
     cmdWrap.classList.toggle('hidden', typeSel.value !== 'rcon');
+    // Panel-wide tasks ignore the server — disable the picker instead of
+    // silently discarding whatever was selected in it.
+    const scoped = Boolean(typeMeta().serverScoped);
+    serverSel.disabled = !scoped;
+    if (!scoped) serverSel.value = '';
   };
   typeSel.addEventListener('change', syncTypeUi);
   syncTypeUi();
@@ -171,7 +178,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       {
-        label: edit ? 'Save (recreates)' : 'Create schedule',
+        label: edit ? 'Save changes' : 'Create schedule',
         kind: 'primary',
         busyLabel: edit ? 'Saving…' : 'Creating…',
         onClick: async () => {
@@ -202,11 +209,8 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
             payload,
           };
           try {
-            if (edit) {
-              const del = await fetch(`/api/schedules/${edit.id}`, { method: 'DELETE' });
-              const delData = await del.json().catch(() => ({}));
-              if (!del.ok || delData.ok === false) throw new Error(delData.error || 'Could not replace the schedule');
-            }
+            // CREATE first, delete after: the old order destroyed the schedule
+            // when the re-create failed, leaving a stale row over lost data.
             const res = await fetch('/api/schedules', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -214,6 +218,17 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok || data.ok === false) throw new Error(data.error || `Save failed (${res.status})`);
+            if (edit) {
+              const del = await fetch(`/api/schedules/${edit.id}`, { method: 'DELETE' });
+              const delData = await del.json().catch(() => ({}));
+              if (!del.ok || delData.ok === false) {
+                // Worst case is a duplicate, never a loss — say so plainly.
+                toast('Saved as a new schedule, but the old one could not be removed — delete it manually.', {
+                  kind: 'warn',
+                  timeout: 10000,
+                });
+              }
+            }
             toast(edit ? 'Schedule updated.' : 'Schedule created.');
             setTimeout(() => location.reload(), 600);
           } catch (err) {

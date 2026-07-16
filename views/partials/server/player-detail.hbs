@@ -9,34 +9,37 @@
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="text-lg font-bold">{{player.name}}</h2>
-          {{#if player.online}}
-            <span class="flex items-center gap-1.5 text-xs font-medium text-ok"><span class="status-dot relative bg-grass-500 pulse"></span> Online</span>
-          {{else}}
-            <span class="flex items-center gap-1.5 text-xs font-medium text-ink-faint"><span class="status-dot bg-stone-500"></span> Offline</span>
-          {{/if}}
+          <span data-player-status>
+            {{#if player.online}}
+              <span class="flex items-center gap-1.5 text-xs font-medium text-ok"><span class="status-dot relative bg-grass-500 pulse"></span> Online</span>
+            {{else}}
+              <span class="flex items-center gap-1.5 text-xs font-medium text-ink-faint"><span class="status-dot bg-stone-500"></span> Offline</span>
+            {{/if}}
+          </span>
         </div>
         {{#if player.uuid}}<div class="mt-0.5 font-mono text-xs text-ink-faint">{{player.uuid}}</div>{{/if}}
         {{#if player.lastSeen}}<div class="text-xs text-ink-faint">seen ~{{player.lastSeen}}</div>{{/if}}
       </div>
       <div class="flex flex-wrap items-center gap-1.5">
-        <button class="chip transition {{#if player.whitelisted}}border-grass-700 bg-grass-500/15 text-ok{{else}}opacity-60 hover:opacity-100{{/if}}"
+        <button class="chip {{#if player.whitelisted}}border-grass-700 bg-grass-500/15 text-ok{{/if}}"
                 data-role-toggle="whitelist" data-on="{{#if player.whitelisted}}1{{else}}0{{/if}}"
-                data-tip="{{#if player.whitelisted}}Remove from whitelist{{else}}Add to whitelist{{/if}}">{{{icon 'shield-check' 'size-3.5'}}} Whitelist</button>
-        <button class="chip transition {{#if player.op}}border-diamond-700 bg-diamond-400/15 text-link{{else}}opacity-60 hover:opacity-100{{/if}}"
+                data-tip="{{#if player.whitelisted}}Remove from whitelist{{else}}Add to whitelist{{/if}}">{{{icon 'shield-check' 'size-3.5'}}} <span data-chip-label>Whitelist</span></button>
+        <button class="chip {{#if player.op}}border-diamond-700 bg-diamond-400/15 text-link{{/if}}"
                 data-role-toggle="op" data-on="{{#if player.op}}1{{else}}0{{/if}}"
-                data-tip="{{#if player.op}}Remove operator status{{else}}Make operator (level 4){{/if}}">{{{icon 'shield' 'size-3.5'}}} Op{{#if player.op}} L{{player.opLevel}}{{/if}}</button>
-        <button class="chip transition {{#if player.banned}}border-danger/40 bg-redstone-500/15 text-danger{{else}}opacity-60 hover:opacity-100{{/if}}"
+                data-tip="{{#if player.op}}Remove operator status{{else}}Make operator (level 4){{/if}}">{{{icon 'shield' 'size-3.5'}}} <span data-chip-label>Op{{#if player.op}} L{{player.opLevel}}{{/if}}</span></button>
+        <button class="chip {{#if player.banned}}border-danger/40 bg-redstone-500/15 text-danger{{/if}}"
                 data-role-toggle="ban" data-on="{{#if player.banned}}1{{else}}0{{/if}}"
-                data-tip="{{#if player.banned}}Pardon this player{{else}}Ban this player{{/if}}">{{{icon 'ban' 'size-3.5'}}} {{#if player.banned}}Banned{{else}}Ban{{/if}}</button>
+                data-tip="{{#if player.banned}}Pardon this player{{else}}Ban this player{{/if}}">{{{icon 'ban' 'size-3.5'}}} <span data-chip-label>{{#if player.banned}}Banned{{else}}Ban{{/if}}</span></button>
         {{#if player.online}}<button class="btn btn-ghost btn-sm" data-act="kick" data-tip="Kick with a message">{{{icon 'log-out' 'size-3.5'}}} Kick</button>{{/if}}
         {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
           <button class="btn btn-ghost btn-sm" data-act="teleport" data-tip="Teleport (coordinates / biome / player)">{{{icon 'compass' 'size-3.5'}}} Teleport</button>
         {{/if}}
-        {{#if player.uuid}}<button class="btn btn-ghost btn-sm" data-act="copy-uuid" data-copy="{{player.uuid}}" data-tip="Copy UUID">{{{icon 'clipboard-copy' 'size-3.5'}}}</button>{{/if}}
+        {{! Labeled like its siblings — a lone glyph in a row of labeled actions reads as noise. }}
+        {{#if player.uuid}}<button class="btn btn-ghost btn-sm" data-act="copy-uuid" data-copy="{{player.uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
       </div>
     </div>
     {{#if player.banned}}
-      <div class="mt-3 rounded-md border border-danger/40 bg-redstone-500/10 p-2.5 text-xs text-danger">Banned: {{default player.banReason 'no reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}</div>
+      <div class="notice notice-danger mt-3 text-xs text-danger" data-ban-banner>Banned: {{default player.banReason 'no reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}</div>
     {{/if}}
   </div>
 

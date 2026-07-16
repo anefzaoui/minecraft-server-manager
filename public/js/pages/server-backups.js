@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { runTask } from '../lib/progress.js';
 import { setBusy } from '../lib/loading.js';
+import { fmtBytes } from '../lib/format.js';
 
 const root = document.querySelector('[data-backups-server]');
 if (root) init(root.dataset.backupsServer);
@@ -32,6 +33,7 @@ function init(serverId) {
       toast('Backup created.');
       reload();
     } catch (err) {
+      if (err.dismissed) return; // progress hidden — the task tray takes over
       toast(err.message || 'Backup failed', { kind: 'error', timeout: 9000 });
     }
   });
@@ -61,6 +63,7 @@ function init(serverId) {
         toast('Backup restored.');
         reload();
       } catch (err) {
+        if (err.dismissed) return; // progress hidden — the task tray takes over
         toast(err.message || 'Restore failed', { kind: 'error', timeout: 9000 });
       }
     } else if (e.target.closest('[data-backup-delete]')) {
@@ -79,7 +82,11 @@ function init(serverId) {
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
         toast(`${file} deleted (${fmtBytes(size)} freed).`);
+        const tbody = row.closest('tbody');
         row.remove();
+        // Last one gone → re-render for the proper empty state instead of a
+        // header-only table.
+        if (tbody && !tbody.querySelector('[data-backup-row]')) reload();
       } catch (err) {
         toast(err.message || 'Delete failed', { kind: 'error' });
       } finally {
@@ -87,11 +94,4 @@ function init(serverId) {
       }
     }
   });
-}
-
-function fmtBytes(n) {
-  n = Number(n) || 0;
-  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)} GB`;
-  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(n / 1024))} KB`;
 }

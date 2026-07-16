@@ -44,7 +44,7 @@
     <section data-step="2" hidden>
       <h2 class="text-lg font-semibold">Create your admin account</h2>
       <p class="mt-1 text-sm text-ink-faint">This is the owner account for the panel. You can add more users later.</p>
-      <div class="mt-4 hidden rounded-md border border-danger/40 bg-redstone-500/10 p-2.5 text-sm text-danger" id="admin-error"></div>
+      <div class="notice notice-danger mt-4 hidden text-danger" id="admin-error"></div>
       <form id="setup-admin" class="mt-4 space-y-4">
         <div>
           <label class="label" for="su-user">Username</label>
@@ -91,9 +91,10 @@
 
       <div class="mt-5">
         <span class="label">Time zone &amp; region</span>
+        {{! data-native only until tzPicker fills them — it enhances post-fill. }}
         <div class="grid gap-2 sm:grid-cols-2">
-          <select class="input" id="su-tz" data-native aria-label="Time zone"></select>
-          <select class="input" id="su-country" data-native aria-label="Country"></select>
+          <select class="input" id="su-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
+          <select class="input" id="su-country" data-native aria-label="Country" data-label="Country"></select>
         </div>
         <p class="help">Detected from your system. Sets how dates and player activity times display across the panel.</p>
         <button class="btn mt-2" type="button" id="su-loc-save">Save time zone &amp; region</button>

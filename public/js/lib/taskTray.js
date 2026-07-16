@@ -41,7 +41,7 @@ function init() {
     for (const t of tasks) {
       const prev = known.get(t.id);
       if (prev === 'running' && t.state !== 'running') {
-        toast(t.state === 'done' ? `${t.title} — finished.` : `${t.title} — failed: ${t.error}`, {
+        toast(t.state === 'done' ? `${t.title} — finished.` : `${t.title} — failed${t.error ? `: ${t.error}` : ''}`, {
           kind: t.state === 'done' ? 'success' : 'error',
           timeout: 7000,
         });
@@ -51,9 +51,15 @@ function init() {
 
     mount.classList.toggle('hidden', tasks.length === 0);
     badge.textContent = String(running.length || tasks.length);
+    // Swap the background explicitly — stacking bg-grass-600 onto the baked-in
+    // bg-inset leaves the winner to stylesheet order, not intent.
     badge.classList.toggle('bg-grass-600', running.length > 0);
+    badge.classList.toggle('text-white', running.length > 0);
+    badge.classList.toggle('bg-inset', running.length === 0);
     btn.querySelector('svg')?.classList.toggle('animate-spin', running.length > 0);
 
+    // Rebuilding every poll resets the open panel's scroll mid-read — keep it.
+    const scrollTop = list.scrollTop;
     list.innerHTML = '';
     for (const t of tasks) {
       const row = document.createElement('div');
@@ -67,11 +73,12 @@ function init() {
           </span>
         </div>
         <div class="truncate text-xs text-ink-faint" data-step></div>
-        <div class="meter h-1.5"><div class="${t.state === 'failed' ? 'bg-redstone-500' : 'bg-grass-500'} ${pct === null ? 'animate-pulse' : ''}" style="width:${pct === null ? 60 : Math.max(4, pct)}%"></div></div>`;
+        <div class="meter h-1.5 ${pct === null ? 'meter-indeterminate' : ''}"><div class="${t.state === 'failed' ? 'bg-redstone-500' : 'bg-grass-500'}" style="width:${pct === null ? 25 : Math.max(4, pct)}%"></div></div>`;
       row.querySelector('.font-medium').textContent = t.title;
       row.querySelector('[data-step]').textContent = t.step || '';
       list.appendChild(row);
     }
+    list.scrollTop = scrollTop;
     if (!tasks.length && open) {
       open = false;
       panel.classList.add('hidden');

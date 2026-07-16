@@ -1,13 +1,17 @@
 <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-canvas/90 px-4 py-3 backdrop-blur sm:px-6">
   <button id="sidebar-toggle" class="btn btn-ghost btn-sm lg:hidden" aria-label="Toggle navigation">{{{icon 'menu' 'size-4'}}}</button>
-  <h1 class="truncate text-lg font-semibold">{{title}}</h1>
-  <div class="ml-auto flex items-center gap-2">
+  {{! min-w-0: a flex child won't shrink below its intrinsic width, so without
+      it `truncate` never engages and a long title pushes the actions off-screen. }}
+  <h1 class="min-w-0 flex-1 truncate text-lg font-semibold">{{title}}</h1>
+  <div class="ml-auto flex shrink-0 items-center gap-2">
     <div id="task-tray" class="relative hidden">
       <button class="btn btn-ghost btn-sm relative" aria-label="Background tasks" data-tip="Background tasks">
         {{{icon 'loader-circle' 'size-4'}}}
         <span data-task-count class="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-inset text-[11px] font-bold">0</span>
       </button>
-      <div data-task-panel class="card absolute right-0 top-10 z-50 hidden w-80 shadow-overlay">
+      {{! No z needed: the sticky header (z-20) already stacks above the page,
+          and within it DOM order wins. A z here would be capped at 20 anyway. }}
+      <div data-task-panel class="card absolute right-0 top-10 hidden w-80 shadow-overlay">
         <div class="border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">Background tasks</div>
         <div data-task-list class="max-h-96 overflow-y-auto"></div>
       </div>
@@ -16,7 +20,9 @@
     <button id="theme-toggle" class="btn btn-ghost btn-sm" aria-label="Toggle theme" data-tip="Switch theme">
       <span data-theme-icon="dark">{{{icon 'moon' 'size-4'}}}</span><span data-theme-icon="light" class="hidden">{{{icon 'sun' 'size-4'}}}</span>
     </button>
-    <button class="grid size-8 place-items-center rounded-full bg-diamond-700 text-xs font-bold text-white" data-menu="user-menu" data-tip="{{user.username}} ({{user.role}})">{{initial user.username}}</button>
+    {{! rounded-md, not a circle — the only fully-round control would break the
+        blocky register. Diamond is identity color here (decorative, not meaning). }}
+    <button class="grid size-8 place-items-center rounded-md bg-diamond-700 text-xs font-bold text-white" data-menu="user-menu" data-tip="{{user.username}} ({{user.role}})">{{initial user.username}}</button>
     <template id="user-menu">
       <div class="px-3 py-2 text-xs text-ink-faint">{{user.username}} · {{user.role}}</div>
       <form method="post" action="/logout"><button type="submit" class="w-full text-left">Sign out</button></form>

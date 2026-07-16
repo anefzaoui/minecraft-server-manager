@@ -11,16 +11,19 @@
     <tbody>
       {{#each schedules}}
         <tr data-schedule-row data-schedule-id="{{id}}" data-server-id="{{serverId}}" data-task-type="{{taskType}}" data-task="{{task}}" data-cron="{{cron}}" data-payload="{{json payload}}">
-          <td class="{{#if (eq server '— global —')}}text-ink-faint{{/if}}">{{server}}</td>
+          {{! Global rows are faint by the serverId FACT, not by matching the display string. }}
+          <td class="{{#unless serverId}}text-ink-faint{{/unless}}">{{server}}</td>
           <td class="font-medium">{{task}}</td>
           <td class="font-mono text-xs text-ink-faint">{{cron}}</td>
-          <td class="text-right text-ink-faint">{{next}}</td>
+          {{! nextMs + the panel-TZ hydrator: the table used to show UTC while
+              the modal preview showed panel time for the SAME schedule. }}
+          <td class="whitespace-nowrap text-right tabular-nums text-ink-faint">{{#if nextMs}}<span data-ts="{{nextMs}}">{{next}}</span>{{else}}—{{/if}}</td>
           <td>
             <label class="msm-toggle"><input type="checkbox" data-schedule-toggle {{#if enabled}}checked{{/if}}><span></span></label>
           </td>
           <td class="text-right"><div class="inline-flex gap-1">
-            <button class="btn btn-ghost btn-sm" data-schedule-edit data-tip="Edit (deletes and recreates the schedule)">{{{icon 'pencil' 'size-3.5'}}}</button>
-            <button class="btn btn-ghost btn-sm text-danger" data-schedule-delete data-tip="Delete schedule" aria-label="Delete schedule">{{{icon 'x' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm" data-schedule-edit data-tip="Edit schedule">{{{icon 'pencil' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-danger" data-schedule-delete data-tip="Delete schedule" aria-label="Delete schedule">{{{icon 'trash-2' 'size-3.5'}}}</button>
           </div></td>
         </tr>
       {{/each}}

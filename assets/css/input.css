@@ -139,18 +139,18 @@
   src: url('/fonts/IBMPlexSans-latin.woff2') format('woff2-variations');
   font-weight: 100 700;
   font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
-    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
-    U+FEFF, U+FFFD;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC,
+    U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'IBM Plex Sans';
   src: url('/fonts/IBMPlexSans-latin-ext.woff2') format('woff2-variations');
   font-weight: 100 700;
   font-display: swap;
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
-    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
-    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
   font-family: 'IBM Plex Sans';
@@ -187,11 +187,22 @@
     transform: none;
   }
 }
+@keyframes meter-indeterminate {
+  from {
+    margin-left: -25%;
+  }
+  to {
+    margin-left: 100%;
+  }
+}
 
 @layer base {
   html {
     @apply bg-canvas text-ink antialiased;
     color-scheme: dark;
+    /* Keep the scrollbar gutter reserved while modals lock scrolling, so
+       opening one doesn't shift the whole page by the scrollbar width. */
+    scrollbar-gutter: stable;
   }
   /* Themed scrollbars — the OS-default grey bar is the last piece of stock
      chrome on an otherwise committed surface. Thin, line-colored, no track. */
@@ -242,6 +253,12 @@
 }
 
 @layer components {
+  /* ---- Stacking scale (the ONLY z values in the app) ----
+     topbar shell 20 · sidebar backdrop 30 · sidebar 40 · modal 60 · toasts 65
+     (above modals — errors fired from modal actions must be readable) ·
+     dropdown menus 68 (they can open from inside a modal) · tooltip 70.
+     Anything new picks a slot here first. ---- */
+
   /* Pixel heading — titles only, per design spec */
   .pixel {
     font-family: var(--font-pixel);
@@ -328,6 +345,20 @@
       inset 0 1px 0 rgb(255 255 255 / 0.06),
       inset 0 0 0 1px var(--color-line-strong);
   }
+  .seg-btn:disabled {
+    @apply pointer-events-none opacity-50;
+  }
+
+  /* Sub-navigation pill (server sub-tabs) — a link, not a seg-btn: segments are
+     pick-one-of-N controls, these navigate. One shared class instead of the
+     same utility string hand-rolled per template. */
+  .subtab {
+    @apply rounded-md px-2.5 py-1 text-sm font-medium text-ink-faint transition hover:bg-raised hover:text-ink
+      focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-diamond-400;
+  }
+  .subtab.active {
+    @apply bg-grass-500/15 text-ok hover:bg-grass-500/15 hover:text-ok;
+  }
 
   /* Icon-only buttons (modal/toast close, inline glyph actions): a real hit
      area and a visible focus state instead of a naked 16px glyph. */
@@ -366,6 +397,80 @@
     @apply inline-flex items-center gap-1 rounded-sm border border-line bg-inset px-2 py-0.5 text-xs text-ink-soft;
   }
 
+  /* Notices: the ONE inline callout. Border and tint pairs are fixed per
+     meaning — no ad-hoc border/background combinations at call sites. */
+  .notice {
+    @apply flex items-start gap-2 rounded-md border border-line bg-inset/40 px-3 py-2 text-sm text-ink-soft;
+  }
+  .notice-ok {
+    @apply border-ok/40 bg-grass-500/10;
+  }
+  .notice-warn {
+    @apply border-warn/40 bg-gold-500/10;
+  }
+  .notice-danger {
+    @apply border-danger/40 bg-redstone-500/10;
+  }
+  .notice-info {
+    @apply border-link/40 bg-diamond-500/10;
+  }
+
+  /* Color-picker swatch (chat colors, MOTD, accent pickers). Selection is a
+     theme-aware gap ring — an ink halo separated by the surface color — so it
+     stays visible on ANY swatch color in BOTH themes (a white ring on a white
+     card was invisible; this is the fix). State lives in aria-pressed. */
+  .swatch {
+    @apply size-7 shrink-0 cursor-pointer rounded-sm border border-line-strong transition
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400;
+  }
+  .swatch:hover {
+    border-color: var(--color-stone-500);
+  }
+  .swatch[aria-pressed='true'] {
+    box-shadow:
+      0 0 0 2px var(--color-surface),
+      0 0 0 4px var(--color-ink);
+  }
+  /* The "no color" swatch: neutral tile with a diagonal strike. */
+  .swatch-none {
+    background:
+      linear-gradient(
+        to top right,
+        transparent calc(50% - 1px),
+        var(--color-danger) calc(50% - 1px) calc(50% + 1px),
+        transparent calc(50% + 1px)
+      ),
+      var(--color-inset);
+  }
+
+  /* Pick-one tiles (wizard loader/flavor/icon pickers): selection lives in
+     aria-pressed; the border stays 2px in every state so picking never shifts
+     the layout by a pixel. Padding/size set at the call site. */
+  .tile {
+    @apply grid place-items-center gap-1 rounded-md border-2 border-line bg-inset transition
+      hover:border-line-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400;
+  }
+  .tile[aria-pressed='true'] {
+    @apply border-grass-500 text-ok hover:border-grass-500;
+  }
+
+  /* Toggle chips (multi-select, unlike .seg which is pick-one): state lives in
+     aria-pressed, matching the segmented control's contract. */
+  button.chip {
+    @apply cursor-pointer transition hover:border-line-strong focus-visible:outline-2
+      focus-visible:outline-offset-1 focus-visible:outline-diamond-400 disabled:cursor-default disabled:opacity-50;
+  }
+  button.chip[aria-pressed='true'] {
+    @apply border-grass-500 bg-grass-600/10 text-ok;
+  }
+
+  /* Whole-group disable (composers while the server is stopped): real
+     disabled — the old pointer-events-none trick let keyboard events straight
+     through to "disabled" controls. */
+  fieldset:disabled {
+    @apply opacity-60;
+  }
+
   .input {
     @apply w-full rounded-md border border-line-strong bg-inset px-3 py-2 text-sm text-ink
       placeholder:text-ink-faint focus:border-diamond-400 focus:outline-none
@@ -373,8 +478,11 @@
   }
   /* Fields advertise interactivity on hover (stone-500 reads stronger than
      line-strong in BOTH themes); focus keeps the diamond ring. */
-  .input:hover:not(:focus) {
+  .input:hover:not(:focus):not(:disabled) {
     border-color: var(--color-stone-500);
+  }
+  .input:disabled {
+    @apply cursor-not-allowed opacity-60;
   }
 
   .label {
@@ -427,6 +535,11 @@
       inset 0 2px 0 rgb(255 255 255 / 0.3),
       inset 0 -2px 0 rgb(0 0 0 / 0.25);
   }
+  /* Indeterminate meter: an honest sliding block (progress unknown), replacing
+     fake pulsing bars stuck at an arbitrary percentage. Set the fill to ~25%. */
+  .meter-indeterminate > div {
+    animation: meter-indeterminate 1.4s ease-in-out infinite;
+  }
 
   .status-dot {
     @apply inline-block size-2.5 rounded-full;
@@ -438,7 +551,10 @@
   }
 
   /* Console — always dark regardless of theme; the inset shadow gives it the
-     same recessed-trough depth as the meters. */
+     same recessed-trough depth as the meters. NOTE: log-level colors inside a
+     .console use RAW palette steps (text-gold-300, text-redstone-400) on
+     purpose — the semantic warn/danger tokens flip to 700-steps in light mode
+     and would vanish on this always-dark surface. Don't "fix" them. */
   .console {
     @apply rounded-md border border-line bg-stone-950 p-3 font-mono text-[13px] leading-6 text-stone-200;
     box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.35);
@@ -495,6 +611,13 @@
     content: '';
     @apply absolute left-0.5 top-0.5 size-4 rounded-full bg-stone-300 transition-[transform,background-color];
   }
+  .msm-toggle:has(input:disabled) {
+    @apply cursor-not-allowed;
+  }
+  .msm-toggle input:disabled,
+  .msm-toggle input:disabled + span {
+    @apply cursor-not-allowed opacity-50;
+  }
   .msm-toggle input:checked + span {
     @apply bg-grass-600 ring-grass-700;
   }
@@ -522,6 +645,14 @@
 
   .msm-select {
     @apply cursor-pointer;
+  }
+
+  /* Dashboard list view: a genuinely compact row — name, status and meta only.
+     The toggle used to change nothing but the column count. */
+  .view-list [data-card-stats],
+  .view-list [data-card-disk],
+  .view-list [data-card-tags] {
+    display: none;
   }
 
   /* Subtle "dirt" texture strip used on page headers */

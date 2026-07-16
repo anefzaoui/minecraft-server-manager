@@ -80,22 +80,31 @@ function init() {
   document.getElementById('set-cf-test')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     await withBusy(btn, 'Checking…', async () => {
+      // post() returns null (and toasts) on any failure — success is the only branch left.
       const res = await post('/api/keys/curseforge/test', {});
-      if (res)
-        toast(res.ok === false ? res.error : 'Stored key is valid.', { kind: res.ok === false ? 'error' : 'success' });
+      if (res) toast('Stored key is valid.');
     });
   });
 
   // ---- Users ----
   document.getElementById('users-table')?.addEventListener('change', async (e) => {
     const select = e.target.closest('[data-user-role]');
-    if (!select) return;
+    if (!select || select.dataset.reverting) return;
     const row = select.closest('[data-user-id]');
-    select.disabled = true; // lock the control in flight — keeps the select visual
+    select.disabled = true; // locks the enhanced trigger too (select.js mirrors it)
     try {
       const res = await post(`/api/users/${row.dataset.userId}/role`, { role: select.value });
-      if (res) toast(`${row.dataset.username} is now ${select.value}.`);
-      else location.reload();
+      if (res) {
+        select.dataset.prevRole = select.value;
+        toast(`${row.dataset.username} is now ${select.value}.`);
+      } else {
+        // Revert in place — the old reload wiped the error toast before it
+        // could be read. The change dispatch only resyncs the trigger label.
+        select.dataset.reverting = '1';
+        select.value = select.dataset.prevRole || select.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        delete select.dataset.reverting;
+      }
     } finally {
       select.disabled = false;
     }

@@ -122,7 +122,8 @@ async function renderServerList(req, res, next, { page }) {
       sort,
       noServers: servers.length === 0,
       totals: {
-        running: servers.filter((s) => s.status === 'running' || s.status === 'starting').length,
+        // "online" means answering — a server still booting isn't.
+        running: servers.filter((s) => s.status === 'running' || s.status === 'unhealthy').length,
         total: servers.length,
         players: servers.reduce((n, s) => n + s.players.online, 0),
         updates: res.locals.updatesCount,
@@ -270,6 +271,12 @@ router.get(
     } else if (tab === 'chat') {
       const live = require('../../services/liveCache').get(row.id);
       context.onlinePlayers = (live && live.players && live.players.names) || [];
+      // Recent sends (oldest first) so the history pane survives reloads and
+      // is shared across admins — chat.js replays them with the live preview.
+      context.chatHistory = require('../../events')
+        .listEvents({ serverId: row.id, type: 'chat-sent', limit: 50 })
+        .map((e) => ({ ts: e.created_at, actor: e.actor, ...e.details }))
+        .reverse();
     } else if (tab === 'mods') {
       context.mods = await require('../../services/mods')
         .listContent(row.id)
@@ -278,6 +285,14 @@ router.get(
       const worldsService = require('../../services/worlds');
       context.worlds = await worldsService.listServerWorlds(row.id).catch(() => []);
       context.libraryWorlds = worldsService.libraryWorlds();
+      // Copy-to target list, serialized in one piece by the json helper — the
+      // view used to hand-assemble this JSON attribute field by field.
+      context.serverOptions = (res.locals.servers || []).map((s) => ({
+        id: s.id,
+        name: s.name,
+        flavor: s.flavor,
+        status: s.status,
+      }));
     } else if (tab === 'files') {
       const filesService = require('../../services/files');
       const rel = String(req.query.path || '');
@@ -410,6 +425,13 @@ router.get('/worlds', (req, res) => {
     title: 'Worlds',
     active: 'worlds',
     worlds: require('../../services/worlds').libraryWorlds(),
+    // Install/extract target list — one json call, not hand-assembled JSON.
+    serverOptions: (res.locals.servers || []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      flavor: s.flavor,
+      status: s.status,
+    })),
   });
 });
 
@@ -426,8 +448,13 @@ router.get('/updates', (req, res) => {
   res.render('updates', {
     title: 'Updates',
     active: 'updates',
-    updates: checker.listOutdated(),
-    lastChecked: checker.lastCheckedAt() || 'never',
+    // Changelog URLs come from remote platform APIs — allow only http(s) so a
+    // hostile response can never plant a javascript: link.
+    updates: checker.listOutdated().map((u) => ({
+      ...u,
+      changelog: /^https?:\/\//i.test(u.changelog || '') ? u.changelog : null,
+    })),
+    lastChecked: checker.lastCheckedAt() || null,
   });
 });
 

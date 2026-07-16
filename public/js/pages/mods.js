@@ -26,7 +26,10 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     const q = (filter.value || '').toLowerCase();
     const src = source.value;
     document.querySelectorAll('[data-mod-row]').forEach((row) => {
-      const matches = (!q || row.textContent.toLowerCase().includes(q)) && (!src || row.dataset.source === src);
+      // Match name/file only — full row text includes button labels and status
+      // words, so searching "disable" or "update" matched virtually every row.
+      const hay = `${row.dataset.name || ''} ${row.dataset.file || ''}`.toLowerCase();
+      const matches = (!q || hay.includes(q)) && (!src || row.dataset.source === src);
       row.classList.toggle('hidden', !matches);
     });
   }
@@ -72,10 +75,13 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       const restore = setBusy(btn);
       try {
         const res = await fetch(`/api/servers/${serverId}/mods/${encodeURIComponent(file)}`, { method: 'DELETE' });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (data.ok) {
           toast(`${file} removed.`);
+          const tbody = row.closest('tbody');
           row.remove();
+          // Last row gone → re-render for the proper empty state.
+          if (tbody && !tbody.querySelector('[data-mod-row]')) setTimeout(() => location.reload(), 600);
         } else {
           toast(data.error || 'Delete failed', { kind: 'error' });
         }
@@ -92,7 +98,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       <label class="label">Mod URL or Modrinth slug</label>
       <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium — or any direct .jar URL" autocomplete="off">
       <p class="help">Direct .jar URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work. The right build for this server's loader and MC version is picked automatically.</p>
-      <div class="mt-3 hidden" id="mod-url-progress"><div class="meter"><div class="bg-grass-500 animate-pulse" style="width:100%"></div></div></div>`;
+      <div class="mt-3 hidden" id="mod-url-progress"><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
     const modal = openModal({
       title: 'Add mod by URL',
       content,
@@ -105,9 +111,13 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           onClick: async () => {
             const url = content.querySelector('#mod-url').value.trim();
             if (!url) return false;
-            content.querySelector('#mod-url-progress').classList.remove('hidden');
+            const progress = content.querySelector('#mod-url-progress');
+            progress.classList.remove('hidden');
             const res = await post(`/api/servers/${serverId}/mods`, { url });
-            if (!res) return false;
+            if (!res) {
+              progress.classList.add('hidden'); // failure keeps the modal open — no zombie meter
+              return false;
+            }
             toast(`Installed ${res.installed.name}${res.installed.version ? ` ${res.installed.version}` : ''}.`);
             setTimeout(() => location.reload(), 700);
           },
@@ -137,9 +147,11 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     q.focus();
     if (prefill) runSearch();
 
+    let searchSeq = 0; // a slow earlier response must not overwrite a newer one
     async function runSearch() {
       const query = q.value.trim();
       if (!query) return;
+      const seq = ++searchSeq;
       results.innerHTML = '<p class="p-6 text-center text-sm text-ink-faint">Searching…</p>';
       const loader =
         serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
@@ -149,10 +161,20 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       const params = new URLSearchParams({ q: query, kind });
       if (loader) params.set('loader', loader);
       if (mc && !mc.startsWith('LATEST')) params.set('mc', mc);
-      const res = await fetch(`/api/modrinth/search?${params}`);
-      const data = await res.json();
+      let data;
+      try {
+        const res = await fetch(`/api/modrinth/search?${params}`);
+        data = await res.json();
+      } catch {
+        // a network error used to strand "Searching…" on screen forever
+        data = { ok: false, error: 'Search failed — check the connection and try again.' };
+      }
+      if (seq !== searchSeq) return;
       if (!data.ok) {
-        results.innerHTML = `<p class="p-6 text-center text-sm text-danger">${data.error || 'Search failed'}</p>`;
+        const p = document.createElement('p');
+        p.className = 'p-6 text-center text-sm text-danger';
+        p.textContent = data.error || 'Search failed'; // upstream text — never innerHTML
+        results.replaceChildren(p);
         return;
       }
       if (!data.results.length) {
@@ -211,8 +233,8 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     }
     pendingBox.classList.remove('hidden');
     pendingBox.innerHTML = `
-      <div class="flex flex-wrap items-center gap-3 rounded-md border border-warn/40 bg-gold-500/10 p-3 text-sm">
-        <span class="text-warn">${list.length} mod(s) in this modpack couldn't be auto-downloaded — the pack won't finish installing until each is resolved.</span>
+      <div class="notice notice-warn flex-wrap gap-3">
+        <span class="text-warn">${list.length} ${list.length === 1 ? 'mod' : 'mods'} in this modpack couldn't be auto-downloaded — the pack won't finish installing until each is resolved.</span>
         <button class="btn btn-sm ml-auto" id="mods-pending-open">Resolve now</button>
       </div>`;
     pendingBox.querySelector('#mods-pending-open').addEventListener('click', () => openPendingModal(list));
@@ -232,8 +254,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
 
     function render(mods) {
       if (!mods.length) {
-        listEl.innerHTML =
-          '<p class="rounded-md border border-grass-700 bg-grass-600/10 p-3 text-sm text-ok">All resolved — recreate the server to apply.</p>';
+        listEl.innerHTML = '<p class="notice notice-ok text-ok">All resolved — recreate the server to apply.</p>';
         return;
       }
       listEl.innerHTML = '';
@@ -262,7 +283,10 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           <input type="file" accept=".jar,.zip" class="hidden" data-role="file">`;
         row.querySelector('.font-semibold').textContent = m.name || m.filename;
         row.querySelector('.font-mono').textContent = m.filename;
-        row.querySelector('[data-act="open"]').href = m.url;
+        // Pack-manifest URL is third-party data — allow only http(s).
+        const cfLink = row.querySelector('[data-act="open"]');
+        if (/^https?:\/\//i.test(m.url || '')) cfLink.href = m.url;
+        else cfLink.remove();
         const fileInput = row.querySelector('[data-role="file"]');
 
         row.querySelector('[data-act="exclude"]').addEventListener('click', async (ev) => {
@@ -326,7 +350,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 9000 });
         return null;

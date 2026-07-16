@@ -21,7 +21,7 @@
   </div>
 
   {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-    <div class="mb-4 max-w-prose rounded-md border border-warn/40 bg-gold-500/10 p-3 text-xs text-ink-soft">
+    <div class="notice notice-warn mb-4 max-w-prose text-xs">
       Server is offline — whitelist, op and ban changes are written straight to the server files and apply on the next start.
       Kicks and teleports need a running server.
     </div>
@@ -50,7 +50,7 @@
                 </div>
               </a>
             </td>
-            <td>
+            <td data-player-status>
               {{#if online}}
                 <span class="flex items-center gap-1.5 text-xs font-medium text-ok"><span class="status-dot relative bg-grass-500 pulse"></span> Online</span>
               {{else}}
@@ -58,28 +58,30 @@
                 {{#if lastSeen}}<div class="mt-0.5 text-[11px] text-ink-faint" data-tip="From usercache — name cached until this date">seen ~{{lastSeen}}</div>{{/if}}
               {{/if}}
             </td>
+            {{! Off-state chips keep full opacity — dimming reads as disabled,
+                and genuinely disabled composers already use opacity for that. }}
             <td>
               <div class="flex flex-wrap gap-1.5">
-                <button class="chip transition {{#if whitelisted}}border-grass-700 bg-grass-500/15 text-ok{{else}}opacity-60 hover:opacity-100{{/if}}"
+                <button class="chip {{#if whitelisted}}border-grass-700 bg-grass-500/15 text-ok{{/if}}"
                         data-role-toggle="whitelist" data-name="{{name}}" data-on="{{#if whitelisted}}1{{else}}0{{/if}}"
                         data-tip="{{#if whitelisted}}Remove from whitelist{{else}}Add to whitelist{{/if}}">
-                  {{{icon 'shield-check' 'size-3.5'}}} Whitelist
+                  {{{icon 'shield-check' 'size-3.5'}}} <span data-chip-label>Whitelist</span>
                 </button>
-                <button class="chip transition {{#if op}}border-diamond-700 bg-diamond-400/15 text-link{{else}}opacity-60 hover:opacity-100{{/if}}"
+                <button class="chip {{#if op}}border-diamond-700 bg-diamond-400/15 text-link{{/if}}"
                         data-role-toggle="op" data-name="{{name}}" data-on="{{#if op}}1{{else}}0{{/if}}"
                         data-tip="{{#if op}}Remove operator status{{else}}Make operator (level 4){{/if}}">
-                  {{{icon 'shield' 'size-3.5'}}} Op{{#if op}} L{{opLevel}}{{/if}}
+                  {{{icon 'shield' 'size-3.5'}}} <span data-chip-label>Op{{#if op}} L{{opLevel}}{{/if}}</span>
                 </button>
-                <button class="chip transition {{#if banned}}border-danger/40 bg-redstone-500/15 text-danger{{else}}opacity-60 hover:opacity-100{{/if}}"
+                <button class="chip {{#if banned}}border-danger/40 bg-redstone-500/15 text-danger{{/if}}"
                         data-role-toggle="ban" data-name="{{name}}" data-on="{{#if banned}}1{{else}}0{{/if}}"
                         data-tip="{{#if banned}}Pardon this player{{else}}Ban this player{{/if}}">
-                  {{{icon 'ban' 'size-3.5'}}} {{#if banned}}Banned{{else}}Ban{{/if}}
+                  {{{icon 'ban' 'size-3.5'}}} <span data-chip-label>{{#if banned}}Banned{{else}}Ban{{/if}}</span>
                 </button>
               </div>
             </td>
-            <td class="text-xs text-ink-faint">
+            <td class="text-xs text-ink-faint" data-ban-details>
               {{#if banned}}
-                <div class="text-danger">{{default banReason 'No reason recorded'}}</div>
+                <div class="max-w-56 truncate text-danger" title="{{default banReason 'No reason recorded'}}">{{default banReason 'No reason recorded'}}</div>
                 {{#if banDate}}<div class="mt-0.5">{{banDate}}{{#if banSource}} · {{banSource}}{{/if}}</div>{{/if}}
               {{else}}
                 —
@@ -122,28 +124,26 @@
         <button class="btn btn-sm" id="banip-add">{{{icon 'ban' 'size-3.5'}}} Ban IP</button>
       </div>
     </div>
-    {{#if bannedIps.length}}
-      <div class="overflow-x-auto">
-        <table class="table-base">
-          <thead><tr><th>IP</th><th>Reason</th><th>Date</th><th>Source</th><th class="text-right">Actions</th></tr></thead>
-          <tbody>
-            {{#each bannedIps}}
-              <tr>
-                <td class="font-mono">{{ip}}</td>
-                <td class="text-xs text-ink-soft">{{default reason '—'}}</td>
-                <td class="text-xs text-ink-faint">{{default created '—'}}</td>
-                <td class="text-xs text-ink-faint">{{default source '—'}}</td>
-                <td class="text-right">
-                  <button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban">{{{icon 'x' 'size-3.5'}}}</button>
-                </td>
-              </tr>
-            {{/each}}
-          </tbody>
-        </table>
-      </div>
-    {{else}}
-      <p class="text-sm text-ink-faint">No banned IPs.</p>
-    {{/if}}
+    {{! Both branches stay in the DOM so bans/pardons can swap them in place. }}
+    <div class="overflow-x-auto {{#unless bannedIps.length}}hidden{{/unless}}" id="banip-table">
+      <table class="table-base">
+        <thead><tr><th>IP</th><th>Reason</th><th>Date</th><th>Source</th><th class="text-right">Actions</th></tr></thead>
+        <tbody id="banip-rows">
+          {{#each bannedIps}}
+            <tr data-banip-row="{{ip}}">
+              <td class="font-mono">{{ip}}</td>
+              <td class="text-xs text-ink-soft">{{default reason '—'}}</td>
+              <td class="text-xs text-ink-faint">{{default created '—'}}</td>
+              <td class="text-xs text-ink-faint">{{default source '—'}}</td>
+              <td class="text-right">
+                <button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban">{{{icon 'x' 'size-3.5'}}}</button>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+    <p class="text-sm text-ink-faint {{#if bannedIps.length}}hidden{{/if}}" id="banip-empty">No banned IPs.</p>
   </div>
 </div>
 

@@ -2,5 +2,6 @@
   <div class="grid size-14 place-items-center rounded-lg bg-inset text-ink-faint">{{{icon (default iconName 'boxes') 'size-7'}}}</div>
   <h3 class="mt-3 font-semibold">{{title}}</h3>
   <p class="mt-1 max-w-sm text-sm text-ink-faint">{{message}}</p>
-  {{#if ctaHref}}<a href="{{ctaHref}}" class="btn btn-primary mt-4">{{ctaLabel}}</a>{{/if}}
+  {{#if ctaHref}}<a href="{{ctaHref}}" class="btn btn-primary mt-4">{{ctaLabel}}</a>
+  {{else if ctaId}}<button id="{{ctaId}}" class="btn btn-primary mt-4" type="button">{{ctaLabel}}</button>{{/if}}
 </div>

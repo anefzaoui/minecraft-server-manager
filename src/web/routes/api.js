@@ -168,16 +168,22 @@ router.get(
 );
 
 // Batched live data for client-side hydration (dashboard cards, headers).
+// Includes the DB status for EVERY server so the dashboard can move the
+// status dot when a server crashes or stops — hydration used to update only
+// the numbers, leaving a crashed server pulsing green "Running" until reload.
 router.get('/servers/live', (req, res) => {
   const liveCache = require('../../services/liveCache');
+  const db = require('../../db');
   const all = liveCache.getAll();
   const out = {};
-  for (const [id, e] of Object.entries(all)) {
-    out[id] = {
+  for (const row of db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL')) {
+    const e = all[row.id] || {};
+    out[row.id] = {
+      status: row.status,
       cpuPct: e.stats ? e.stats.cpuPct : null,
       memUsedMb: e.stats ? Math.round(e.stats.memUsedBytes / 1024 / 1024) : null,
       players: e.players ? { online: e.players.online, max: e.players.max, names: e.players.names } : null,
-      startedAt: e.startedAt,
+      startedAt: e.startedAt || null,
       phase: e.phase ? e.phase.label : null,
     };
   }

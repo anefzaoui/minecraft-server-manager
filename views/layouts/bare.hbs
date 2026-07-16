@@ -13,7 +13,10 @@
     } catch (e) {}
   </script>
 </head>
-<body class="flex min-h-screen items-center justify-center p-4">
+{{! Centering via child margin:auto, not items/justify-center: a flex-centered
+    child taller than the viewport gets its top clipped beyond scroll reach —
+    auto margins center the same way but overflow gracefully. }}
+<body class="flex min-h-screen p-4 *:m-auto">
   {{{body}}}
   <script type="module" src="/js/app.js"></script>
 </body>

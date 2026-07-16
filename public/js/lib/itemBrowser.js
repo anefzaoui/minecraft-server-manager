@@ -40,12 +40,11 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
           <option value="">All mods</option>
         </select>
       </div>
-      <div class="flex rounded-md border border-line" data-ib-kinds role="group" aria-label="Kind">
+      <div class="seg" data-ib-kinds role="group" aria-label="Kind">
         ${KINDS.map(
           (k) => `
-          <button type="button" data-kind="${k.value}"
-                  class="px-2.5 py-1.5 text-xs font-medium transition first:rounded-l-md last:rounded-r-md
-                         ${k.value === '' ? 'bg-inset text-ink' : 'text-ink-faint hover:text-ink'}">${k.label}</button>`
+          <button type="button" data-kind="${k.value}" class="seg-btn h-7 px-2.5 text-xs"
+                  aria-pressed="${k.value === '' ? 'true' : 'false'}">${k.label}</button>`
         ).join('')}
       </div>
     </div>
@@ -54,7 +53,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       <span class="text-xs text-ink-faint" data-ib-status></span>
       <button class="btn btn-sm hidden" data-ib-more>Load more</button>
       <span class="ml-auto flex items-center gap-3">
-        ${onManual ? '<a href="#" class="text-xs text-ink-faint underline hover:text-ink" data-ib-manual>enter id manually</a>' : ''}
+        ${onManual ? '<a href="#" class="text-xs text-link hover:underline" data-ib-manual>Enter ID manually</a>' : ''}
         <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="Re-scan the mod jars and server jar (use after adding or removing mods)">Rebuild registry</button>
       </span>
     </div>`;
@@ -134,8 +133,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       moreBtn.classList.toggle('hidden', shown >= state.total);
       moreBtn.disabled = false;
     } catch (err) {
-      if (!append)
-        listEl.innerHTML = `<div class="p-6 text-center text-sm text-danger">${esc(err.message)}</div>`;
+      if (!append) listEl.innerHTML = `<div class="p-6 text-center text-sm text-danger">${esc(err.message)}</div>`;
       else toast(err.message, { kind: 'error' });
     } finally {
       state.loading = false;
@@ -164,15 +162,14 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     load();
   });
 
+  // .seg is the ONE pick-one-of-N component — selection lives in aria-pressed
+  // and the CSS carries the look (this was a hand-rolled joined-button group).
   content.querySelectorAll('[data-ib-kinds] [data-kind]').forEach((btn) => {
     btn.addEventListener('click', () => {
       state.kind = btn.dataset.kind;
-      content.querySelectorAll('[data-ib-kinds] [data-kind]').forEach((b) => {
-        const active = b === btn;
-        b.classList.toggle('bg-inset', active);
-        b.classList.toggle('text-ink', active);
-        b.classList.toggle('text-ink-faint', !active);
-      });
+      content
+        .querySelectorAll('[data-ib-kinds] [data-kind]')
+        .forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
       load();
     });
   });
@@ -196,6 +193,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       state.mod = '';
       modSel.dispatchEvent(new Event('change', { bubbles: true })); // resync enhanced trigger + reload
     } catch (err) {
+      if (err.dismissed) return; // progress hidden — the task tray takes over
       toast(err.message, { kind: 'error' });
     }
   });

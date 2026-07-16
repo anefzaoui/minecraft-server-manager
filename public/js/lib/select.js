@@ -74,7 +74,6 @@ function openPicker(select, btn) {
     select.dispatchEvent(new Event('change', { bubbles: true }));
     syncTrigger(select, btn);
     modal.close();
-    btn.setAttribute('aria-expanded', 'false');
     btn.focus();
   }
 
@@ -150,7 +149,9 @@ function openPicker(select, btn) {
     }
   }
 
-  modal = openModal({ title: label, content, size: 'sm' });
+  // onClose covers EVERY dismissal path (Esc, backdrop, X) — without it the
+  // trigger stayed stuck announcing aria-expanded="true".
+  modal = openModal({ title: label, content, size: 'sm', onClose: () => btn.setAttribute('aria-expanded', 'false') });
   btn.setAttribute('aria-expanded', 'true');
   modal.el.addEventListener('keydown', onKeydown);
   if (search) search.addEventListener('input', () => render(search.value));
@@ -179,6 +180,13 @@ export function enhanceSelect(select) {
   select.after(btn);
   btn.addEventListener('click', () => openPicker(select, btn));
   select.addEventListener('change', () => syncTrigger(select, btn));
+  // The hidden native select is the source of truth for disabled too: scripts
+  // set select.disabled and the visible trigger must follow, or an "in-flight"
+  // lock leaves a fully clickable picker (double-fire).
+  btn.disabled = select.disabled;
+  new MutationObserver(() => {
+    btn.disabled = select.disabled;
+  }).observe(select, { attributes: true, attributeFilter: ['disabled'] });
 }
 
 export function enhanceAll(root = document) {

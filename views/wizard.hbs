@@ -30,11 +30,14 @@
       <p class="help mb-4">Pick a loader and version, then search {{#if curseforgeEnabled}}Modrinth &amp; CurseForge{{else}}Modrinth{{/if}} for mods — required dependencies are added automatically for you to review.</p>
 
       <label class="label">Mod loader</label>
+      {{! .tile carries hover + focus ring + aria-pressed selection for every
+          state — the initially-selected tile used to lose its hover affordance
+          after deselection, and keyboard focus was invisible on all of them. }}
       <div class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4" id="wz-loaders">
-        <button type="button" data-loader="fabric" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-ok">{{{icon 'layers' 'size-5'}}}<span class="text-xs font-semibold">Fabric</span></button>
-        <button type="button" data-loader="forge" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'hammer' 'size-5'}}}<span class="text-xs font-semibold">Forge</span></button>
-        <button type="button" data-loader="neoforge" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'flame' 'size-5'}}}<span class="text-xs font-semibold">NeoForge</span></button>
-        <button type="button" data-loader="quilt" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'grid-2x2' 'size-5'}}}<span class="text-xs font-semibold">Quilt</span></button>
+        <button type="button" data-loader="fabric" class="tile p-3" aria-pressed="true">{{{icon 'layers' 'size-5'}}}<span class="text-xs font-semibold">Fabric</span></button>
+        <button type="button" data-loader="forge" class="tile p-3" aria-pressed="false">{{{icon 'hammer' 'size-5'}}}<span class="text-xs font-semibold">Forge</span></button>
+        <button type="button" data-loader="neoforge" class="tile p-3" aria-pressed="false">{{{icon 'flame' 'size-5'}}}<span class="text-xs font-semibold">NeoForge</span></button>
+        <button type="button" data-loader="quilt" class="tile p-3" aria-pressed="false">{{{icon 'grid-2x2' 'size-5'}}}<span class="text-xs font-semibold">Quilt</span></button>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
@@ -129,53 +132,58 @@
     {{/unless}}
   </div>
 
+  {{! Cards are unnumbered on purpose: tabs hide the type card, so hard-coded
+      "1…4" used to count 1 → 3 → 4. }}
   <div class="card p-5">
-    <h3 class="mb-4 font-semibold">1 · Identity</h3>
-    <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
+    <h3 class="mb-4 font-semibold">Identity</h3>
+    <div class="grid gap-4 sm:grid-cols-[minmax(14rem,1fr)_auto]">
       <div>
         <label class="label" for="wz-name">Server name</label>
         <input class="input" id="wz-name" placeholder="e.g. Weekend Survival" autocomplete="off">
       </div>
       <div>
         <label class="label">Icon & color</label>
-        <div class="flex gap-1.5" id="wz-icons">
-          <button type="button" data-icon="grass" class="grid size-10 place-items-center rounded-md border-2 border-grass-500 bg-inset p-1"><img src="/icons/servers/grass.png" alt="Grass" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="creeper" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/creeper.png" alt="Creeper" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="diamond" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/diamond.png" alt="Diamond" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="tnt" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/tnt.png" alt="TNT" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="portal" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/portal.png" alt="Portal" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="chest" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/chest.png" alt="Chest" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="sword" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/sword.png" alt="Sword" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="potion" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/potion.png" alt="Potion" class="size-full rounded-sm"></button>
+        {{! flex-wrap: the icon row must give way instead of crushing the name input at ~700px. }}
+        <div class="flex flex-wrap gap-1.5" id="wz-icons">
+          <button type="button" data-icon="grass" class="tile size-10 p-1" aria-pressed="true"><img src="/icons/servers/grass.png" alt="Grass" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="creeper" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/creeper.png" alt="Creeper" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="diamond" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/diamond.png" alt="Diamond" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="tnt" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/tnt.png" alt="TNT" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="portal" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/portal.png" alt="Portal" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="chest" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/chest.png" alt="Chest" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="sword" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/sword.png" alt="Sword" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="potion" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/potion.png" alt="Potion" class="size-full rounded-sm"></button>
         </div>
       </div>
     </div>
-    <div class="mt-3 grid gap-4 sm:grid-cols-[1fr_auto]">
+    <div class="mt-3 grid gap-4 sm:grid-cols-[minmax(14rem,1fr)_auto]">
       <div>
         <label class="label" for="wz-desc">Description <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
         <input class="input" id="wz-desc" placeholder="What is this server for?">
       </div>
       <div>
         <label class="label">Accent</label>
-        <div class="flex gap-1.5" id="wz-colors">
-          <button type="button" data-accent="#3fa62b" class="size-10 rounded-md border-2 border-white/60" style="background:#3fa62b"></button>
-          <button type="button" data-accent="#21a7ab" class="size-10 rounded-md border-2 border-transparent" style="background:#21a7ab"></button>
-          <button type="button" data-accent="#e5484d" class="size-10 rounded-md border-2 border-transparent" style="background:#e5484d"></button>
-          <button type="button" data-accent="#e99417" class="size-10 rounded-md border-2 border-transparent" style="background:#e99417"></button>
+        {{! .swatch: theme-aware selected ring — the old border-white/60 marker
+            was invisible on the light theme's white card. }}
+        <div class="flex flex-wrap gap-1.5" id="wz-colors">
+          <button type="button" data-accent="#3fa62b" class="swatch size-10" style="background:#3fa62b" data-tip="Grass" aria-pressed="true"></button>
+          <button type="button" data-accent="#21a7ab" class="swatch size-10" style="background:#21a7ab" data-tip="Diamond" aria-pressed="false"></button>
+          <button type="button" data-accent="#e5484d" class="swatch size-10" style="background:#e5484d" data-tip="Redstone" aria-pressed="false"></button>
+          <button type="button" data-accent="#e99417" class="swatch size-10" style="background:#e99417" data-tip="Gold" aria-pressed="false"></button>
           {{! Amethyst — the palette's purple, from the in-game block }}
-          <button type="button" data-accent="#9a5cc6" class="size-10 rounded-md border-2 border-transparent" style="background:#9a5cc6"></button>
+          <button type="button" data-accent="#9a5cc6" class="swatch size-10" style="background:#9a5cc6" data-tip="Amethyst" aria-pressed="false"></button>
         </div>
       </div>
     </div>
   </div>
 
   <div class="card mt-4 p-5" id="wz-card-flavor">
-    <h3 class="mb-4 font-semibold">2 · Server type & version</h3>
+    <h3 class="mb-4 font-semibold">Server type &amp; version</h3>
     <p class="help mb-3">Vanilla and plugin servers. Want mods? Use the <b>From mods</b> tab — that's where the mod loaders (Fabric, Forge, NeoForge, Quilt) live.</p>
     <div class="mb-4 grid grid-cols-3 gap-2" id="wz-flavors">
-      <button type="button" data-type="VANILLA" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-ok">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
-      <button type="button" data-type="PAPER" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
-      <button type="button" data-type="PURPUR" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'gem' 'size-5'}}}<span class="text-xs font-semibold">Purpur</span></button>
+      <button type="button" data-type="VANILLA" class="tile p-3" aria-pressed="true">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
+      <button type="button" data-type="PAPER" class="tile p-3" aria-pressed="false">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
+      <button type="button" data-type="PURPUR" class="tile p-3" aria-pressed="false">{{{icon 'gem' 'size-5'}}}<span class="text-xs font-semibold">Purpur</span></button>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
@@ -195,7 +203,7 @@
   </div>
 
   <div class="card mt-4 p-5" id="wz-card-world">
-    <h3 class="mb-4 font-semibold">3 · World & rules</h3>
+    <h3 class="mb-4 font-semibold">World &amp; rules</h3>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <label class="label" for="wz-seed">World seed <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
@@ -233,7 +241,7 @@
   </div>
 
   <div class="card mt-4 p-5" id="wz-card-resources">
-    <h3 class="mb-4 font-semibold">4 · Resources</h3>
+    <h3 class="mb-4 font-semibold">Resources</h3>
     <div>
       <label class="label">RAM (Java heap)</label>
       <div class="flex items-center gap-3">
@@ -283,7 +291,7 @@
   </div>
 
   <div class="mt-6 flex items-center justify-between">
-    <a href="/" class="btn">Cancel</a>
+    <a href="/" class="btn btn-ghost">Cancel</a>
     <button class="btn btn-primary" id="wz-create" type="button">{{{icon 'pickaxe' 'size-4'}}} Create &amp; start</button>
   </div>
 </div>

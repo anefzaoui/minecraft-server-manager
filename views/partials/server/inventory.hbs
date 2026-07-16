@@ -32,6 +32,13 @@
     No player data yet — inventories appear after the first player joins this server.
   </div>
 
+  {{! Visible until inventory.js swaps in the real grids or the empty state —
+      the tab used to show only the toolbar while the fetches ran. }}
+  <div class="card p-10 text-center text-sm text-ink-faint" id="inv-loading" aria-busy="true">
+    <svg class="icon mx-auto size-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    <p class="mt-2">Loading inventories…</p>
+  </div>
+
   <div class="hidden" id="inv-view">
     <div class="mb-2 flex flex-wrap gap-1.5 text-xs" id="inv-meta"></div>
     <div class="mb-4 flex items-center gap-1.5 text-xs text-ink-faint" id="inv-mech"></div>
@@ -80,5 +87,5 @@
   </div>
 </div>
 
-<script type="application/json" id="inventory-data">{"serverId":{{{json server.id}}},"running":{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}true{{else}}false{{/if}} }</script>
+{{! inventory.js reads the data-* attributes on the root — a JSON island here was dead markup. }}
 <script type="module" src="/js/pages/inventory.js"></script>

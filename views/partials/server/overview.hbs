@@ -9,7 +9,8 @@
               {{#each addresses}}<option value="{{this}}">{{this}}</option>{{/each}}
             </select>
           {{else}}
-            <input class="input w-auto min-w-56 font-mono" id="ov-address" value="{{addresses.[0]}}" readonly>
+            {{! size attr: the field grows with the address instead of clipping long LAN hostnames. }}
+            <input class="input w-auto font-mono" id="ov-address" value="{{addresses.[0]}}" size="{{addresses.[0].length}}" readonly>
           {{/if}}
           <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy address</button>
         </div>
@@ -29,7 +30,7 @@
     {{#if server.pack}}
       <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">
         <div class="flex flex-wrap items-center gap-2">
-          <span class="badge badge-info">{{server.pack.platform}}</span>
+          <span class="badge badge-info">{{platformName server.pack.platform}}</span>
           <b>{{server.pack.name}}</b>
           <span class="chip">pinned @ {{server.pack.version}}</span>
           {{#if server.updateAvailable}}
@@ -41,16 +42,20 @@
   </div>
 
   <div class="space-y-4">
-    <div class="card p-4">
+    <div class="card p-4" data-ov-live="{{server.id}}"
+         data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{/if}}"
+         data-mem-limit="{{server.resources.containerMemoryMb}}" data-cpus="{{server.resources.cpus}}">
       <h3 class="mb-3 font-semibold">Live usage</h3>
       <div class="space-y-3 text-xs tabular-nums">
         <div>
-          <div class="mb-1 flex justify-between text-ink-faint"><span>CPU</span><span>{{server.stats.cpuPct}}% {{#if server.resources.cpus}}of {{server.resources.cpus}} cores{{/if}}</span></div>
-          <div class="meter"><div class="bg-diamond-400" style="width: {{server.stats.cpuPct}}%"></div></div>
+          {{! CPU normalized against the core limit and clamped via pct — the raw
+              value exceeds 100% on multi-core servers and clipped misleadingly. }}
+          <div class="mb-1 flex justify-between text-ink-faint"><span>CPU</span><span data-ov-cpu-label>{{server.stats.cpuPct}}% {{#if server.resources.cpus}}of {{server.resources.cpus}} cores{{/if}}</span></div>
+          <div class="meter"><div data-ov-cpu-bar class="{{#if server.resources.cpus}}{{meterColor server.stats.cpuPct (mul server.resources.cpus 100)}}{{else}}{{meterColor server.stats.cpuPct 100}}{{/if}}" style="width: {{#if server.resources.cpus}}{{pct server.stats.cpuPct (mul server.resources.cpus 100)}}{{else}}{{pct server.stats.cpuPct 100}}{{/if}}%"></div></div>
         </div>
         <div>
-          <div class="mb-1 flex justify-between text-ink-faint"><span>Memory</span><span>{{server.stats.memUsedMb}} / {{server.resources.containerMemoryMb}} MB</span></div>
-          <div class="meter"><div class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div></div>
+          <div class="mb-1 flex justify-between text-ink-faint"><span>Memory</span><span data-ov-mem-label>{{server.stats.memUsedMb}} / {{server.resources.containerMemoryMb}} MB</span></div>
+          <div class="meter"><div data-ov-mem-bar class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div></div>
         </div>
         <div>
           <div class="mb-1 flex justify-between text-ink-faint"><span>Disk quota</span><span>{{bytes server.disk.used}} / {{bytes server.disk.quota}}</span></div>
@@ -67,7 +72,8 @@
             <li class="flex items-center gap-2">
               <span class="grid size-6 place-items-center rounded bg-inset text-[11px] font-bold">{{this.[0]}}</span>
               <span class="flex-1 truncate">{{this}}</span>
-              <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="Manage on the Players tab" aria-label="Manage {{this}}">{{{icon 'ellipsis' 'size-3.5'}}}</a>
+              {{! arrow, not "⋯" — the ellipsis glyph means "menu" everywhere else, this navigates. }}
+              <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="Manage on the Players tab" aria-label="Manage {{this}}">{{{icon 'arrow-right' 'size-3.5'}}}</a>
             </li>
           {{/each}}
         </ul>
@@ -77,4 +83,5 @@
     </div>
   </div>
 </div>
+<script type="module" src="/js/pages/overview.js"></script>
 

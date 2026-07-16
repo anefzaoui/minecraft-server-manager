@@ -6,7 +6,7 @@
       <div class="min-w-0 flex-1">
         <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-link'}}} Custom chat commands</h3>
         <p class="mt-1 max-w-prose text-sm text-ink-faint">
-          Players type a trigger in game chat — like <code class="rounded bg-inset px-1 font-mono text-ink-soft">{{chatPrefix}}rtp2</code> —
+          Players type a trigger in game chat — like <code class="rounded bg-inset px-1 font-mono text-ink-soft" data-cc-prefix-sample>{{chatPrefix}}rtp2</code> —
           and the panel runs the bound action <b class="text-ink-soft">as that player</b>: random teleport, structure or biome
           teleport, or your own console commands. Works on any server, version or modpack — no mods needed.
           Each command has its own permission level and per-player cooldown.
@@ -23,7 +23,7 @@
   </div>
 
   {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-    <div class="mb-4 max-w-prose rounded-md border border-warn/40 bg-gold-500/10 p-3 text-xs text-ink-soft">
+    <div class="notice notice-warn mb-4 max-w-prose text-xs">
       Server is offline — commands are saved and start working the moment the server is running again.
       The Test button needs a running server.
     </div>
@@ -63,8 +63,8 @@
               {{/if}}
             </td>
             <td class="text-sm text-ink-soft">{{cooldownLabel}}</td>
-            <td class="text-right text-sm text-ink-soft">
-              {{uses}}
+            <td class="text-right text-sm tabular-nums text-ink-soft">
+              <span data-cc-uses>{{uses}}</span>
               {{#if lastUsed}}<div class="text-[11px] text-ink-faint">last {{lastUsed}}</div>{{/if}}
             </td>
             <td>
@@ -74,7 +74,7 @@
               <div class="inline-flex gap-1">
                 <button class="btn btn-ghost btn-sm" data-cc-test data-tip="Run now as a named player (skips permission &amp; cooldown)">{{{icon 'play' 'size-3.5'}}}</button>
                 <button class="btn btn-ghost btn-sm" data-cc-edit data-tip="Edit command">{{{icon 'pencil' 'size-3.5'}}}</button>
-                <button class="btn btn-ghost btn-sm text-danger" data-cc-delete data-tip="Delete command" aria-label="Delete {{trigger}}">{{{icon 'x' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-cc-delete data-tip="Delete command" aria-label="Delete {{trigger}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               </div>
             </td>
           </tr>
@@ -83,12 +83,9 @@
     </table>
   </div>
   {{else}}
-    <div class="card grid place-items-center px-6 py-14 text-center">
-      <div class="grid size-14 place-items-center rounded-lg bg-inset text-ink-faint">{{{icon 'terminal' 'size-7'}}}</div>
-      <h3 class="mt-3 font-semibold">No chat commands yet</h3>
-      <p class="mt-1 max-w-sm text-sm text-ink-faint">Create your first one — a custom <code class="font-mono">{{chatPrefix}}rtp</code> that randomly teleports whoever types it takes about 20 seconds to set up.</p>
-      <button class="btn btn-primary mt-4" id="cc-add-empty">{{{icon 'plus' 'size-4'}}} Add command</button>
-    </div>
+    {{> empty-state iconName='terminal' title='No chat commands yet'
+        message=(concat 'Create your first one — a custom ' chatPrefix 'rtp that randomly teleports whoever types it takes about 20 seconds to set up.')
+        ctaId='cc-add-empty' ctaLabel='Add command'}}
   {{/if}}
 
   <div class="card mt-6 p-4">
@@ -99,7 +96,7 @@
           <div class="flex items-start gap-2.5 py-2">
             {{#if failed}}{{{icon 'circle-x' 'size-4 shrink-0 text-danger'}}}{{else}}{{{icon 'circle-check' 'size-4 shrink-0 text-ok'}}}{{/if}}
             <span class="min-w-0 flex-1">{{summary}}</span>
-            <span class="shrink-0 text-xs text-ink-faint">{{ts}}</span>
+            <span class="shrink-0 text-xs text-ink-faint" data-ts-ago="{{ts}}">{{ts}}</span>
           </div>
         {{/each}}
       </div>

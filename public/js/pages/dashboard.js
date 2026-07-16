@@ -25,6 +25,9 @@ function init() {
   const applyView = (mode) => {
     grid.classList.toggle('md:grid-cols-2', mode === 'grid');
     grid.classList.toggle('xl:grid-cols-3', mode === 'grid');
+    // view-list hides the stats/disk/tags blocks (CSS) — a real compact list,
+    // not just the same cards stacked full-width.
+    grid.classList.toggle('view-list', mode === 'list');
     btnGrid?.setAttribute('aria-pressed', String(mode === 'grid'));
     btnList?.setAttribute('aria-pressed', String(mode === 'list'));
     try {
@@ -79,7 +82,42 @@ async function hydrateDocker() {
       }
     }
   } catch {
-    /* transient network error — next page load retries */
+    // No eternal "Checking…" — say we don't know, and retry shortly.
+    el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-ink-faint';
+    el.innerHTML = '<span class="status-dot relative bg-stone-500"></span> ';
+    el.append('Unknown — retrying…');
+    setTimeout(hydrateDocker, 8000);
+  }
+}
+
+// Client-side mirror of the server's STATUS_META (src/web/app.js) so live
+// hydration can move the dot when a server crashes/stops between reloads.
+const STATUS_META = {
+  running: { label: 'Running', dot: 'bg-grass-500', text: 'text-ok', pulse: true },
+  starting: { label: 'Starting', dot: 'bg-gold-500', text: 'text-warn', pulse: true },
+  unhealthy: { label: 'Unhealthy', dot: 'bg-gold-500', text: 'text-warn', pulse: true },
+  updating: { label: 'Updating', dot: 'bg-diamond-500', text: 'text-link', pulse: true },
+  stopped: { label: 'Stopped', dot: 'bg-stone-500', text: 'text-ink-faint', pulse: false },
+  crashed: { label: 'Crashed', dot: 'bg-redstone-500', text: 'text-danger', pulse: false },
+  'over-quota': { label: 'Over quota', dot: 'bg-redstone-500', text: 'text-danger', pulse: false },
+};
+
+function applyStatus(card, status) {
+  const meta = STATUS_META[status];
+  if (!meta) return;
+  const dot = card.querySelector('.status-dot');
+  const wrap = dot?.parentElement;
+  if (!dot || !wrap) return;
+  if (wrap.dataset.status === status) return;
+  wrap.dataset.status = status;
+  wrap.className = `flex items-center gap-1.5 text-xs font-medium ${meta.text}`;
+  dot.className = `status-dot relative ${meta.dot} ${meta.pulse ? 'pulse' : ''}`;
+  // The label is the text node after the dot.
+  for (const node of wrap.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
+      node.nodeValue = ` ${meta.label}`;
+      break;
+    }
   }
 }
 
@@ -95,10 +133,16 @@ async function hydrate() {
   for (const [id, live] of Object.entries(data.servers || {})) {
     const card = grid.querySelector(`a[href="/servers/${id}"]`);
     if (!card) continue;
+    if (live.status) applyStatus(card, live.status);
     const cells = card.querySelectorAll('.grid.grid-cols-3 > div');
     if (cells.length !== 3) continue;
     const [playersCell, cpuCell, memCell] = [...cells].map((c) => c.children[1]);
 
+    // A stopped/crashed server must not keep showing its last-known load.
+    if (live.status && !['running', 'unhealthy'].includes(live.status)) {
+      if (cpuCell) cpuCell.textContent = '—';
+      if (memCell && !memCell.querySelector('span')) memCell.textContent = '—';
+    }
     if (live.players && playersCell) {
       setLeadingText(playersCell, String(live.players.online));
       const maxSpan = playersCell.querySelector('span');

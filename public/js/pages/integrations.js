@@ -9,6 +9,21 @@ function init() {
   const serverId = root.dataset.serverId;
   const invite = JSON.parse(root.dataset.invite || '{}');
 
+  // ---- Dirty hints: the enable toggles LOOK live but only apply on Save —
+  // flag the pending state so flipping one and leaving isn't a silent no-op.
+  function bindDirty(key, controls) {
+    const hint = root.querySelector(`[data-ig-dirty="${key}"]`);
+    if (!hint) return () => {};
+    for (const el of controls) el?.addEventListener('change', () => hint.classList.remove('hidden'));
+    return () => hint.classList.add('hidden');
+  }
+  const cleanDc = bindDirty('dc', [
+    document.getElementById('ig-dc-enabled'),
+    document.getElementById('ig-dc-url'),
+    ...root.querySelectorAll('[data-dc-event]'),
+  ]);
+  const cleanSp = bindDirty('sp', [document.getElementById('ig-sp-enabled'), document.getElementById('ig-sp-slug')]);
+
   // ---- Discord ----
   document.getElementById('ig-dc-save')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget; // capture before await — currentTarget is null afterwards
@@ -25,6 +40,7 @@ function init() {
       const res = await api(`/api/servers/${serverId}/integrations/discord`, 'POST', body);
       if (res.ok) {
         toast('Discord settings saved.');
+        cleanDc();
         document.getElementById('ig-dc-url').value = '';
         document.getElementById('ig-dc-test').disabled = !res.data.discord.hasWebhook;
       }
@@ -102,6 +118,7 @@ function init() {
       const res = await api(`/api/servers/${serverId}/integrations/status-page`, 'POST', body);
       if (res.ok) {
         toast(res.data.statusPage.enabled ? `Status page live at /status/${slug}` : 'Status page turned off.');
+        cleanSp();
         setTimeout(() => location.reload(), 900);
       }
     });
@@ -114,7 +131,9 @@ function init() {
 }
 
 async function copy(text, message) {
-  if (await window.CD.copyText(text)) toast(message);
+  // copyText's last-resort fallback shows its own "copy manually" modal, so a
+  // false return needs no extra toast — but a missing global must not throw.
+  if (window.CD?.copyText && (await window.CD.copyText(text))) toast(message);
 }
 
 async function api(url, method, body) {

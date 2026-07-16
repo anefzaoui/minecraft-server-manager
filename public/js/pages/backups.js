@@ -10,6 +10,7 @@
 
 import { toast } from '../lib/toast.js';
 import { confirmDialog } from '../lib/confirm.js';
+import { fmtBytes } from '../lib/format.js';
 import { runTask } from '../lib/progress.js';
 import { setBusy } from '../lib/loading.js';
 
@@ -53,6 +54,7 @@ document.addEventListener('click', async (e) => {
       toast('Backup restored. Start the server when you are ready.');
       setTimeout(() => location.reload(), 800);
     } catch (err) {
+      if (err.dismissed) return; // progress hidden — the task tray takes over
       toast(err.message || 'Restore failed', { kind: 'error', timeout: 9000 });
     }
     return;
@@ -98,6 +100,7 @@ async function createBackup(serverId, serverName) {
     );
     setTimeout(() => location.reload(), 800);
   } catch (err) {
+    if (err.dismissed) return; // progress hidden — the task tray takes over
     toast(err.message || 'Backup failed', { kind: 'error', timeout: 9000 });
   }
 }
@@ -109,10 +112,14 @@ if (serverFilter || reasonFilter) {
   const apply = () => {
     const sid = serverFilter ? serverFilter.value : '';
     const reason = reasonFilter ? reasonFilter.value : '';
+    let visible = 0;
     document.querySelectorAll('#backups-table [data-backup-row]').forEach((row) => {
       const match = (!sid || row.dataset.serverId === sid) && (!reason || row.dataset.reason === reason);
       row.classList.toggle('hidden', !match);
+      if (match) visible += 1;
     });
+    // Filters can hide every row — say so instead of showing a bare header.
+    document.getElementById('backups-no-match')?.classList.toggle('hidden', visible > 0);
     refreshTotal();
   };
   serverFilter?.addEventListener('change', apply);
@@ -137,11 +144,4 @@ async function postJSON(url, body) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
   return data;
-}
-
-function fmtBytes(n) {
-  n = Number(n) || 0;
-  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)} GB`;
-  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(n / 1024))} KB`;
 }

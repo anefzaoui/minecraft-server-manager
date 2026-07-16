@@ -43,8 +43,9 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
 
   const ctx = { el: panel, body, close };
 
+  let footer = null;
   if (actions.length) {
-    const footer = document.createElement('div');
+    footer = document.createElement('div');
     footer.className = 'flex justify-end gap-2 border-t border-line px-5 py-3.5';
     for (const action of actions) {
       const btn = document.createElement('button');
@@ -124,7 +125,13 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
   document.body.appendChild(backdrop);
   document.documentElement.style.overflow = 'hidden';
 
-  const firstInput = panel.querySelector('input, textarea, ' + FOCUSABLE);
+  // Initial focus: querySelector returns the first match in DOCUMENT order, so
+  // querying the whole panel always landed on the close-X (it precedes the
+  // body). Prefer a body field, then a footer action, then anything focusable.
+  const firstInput =
+    body.querySelector('input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), button.msm-select') ||
+    (footer && footer.querySelector('button:not([disabled])')) ||
+    panel.querySelector(FOCUSABLE);
   if (firstInput) firstInput.focus();
 
   return ctx;

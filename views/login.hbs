@@ -3,8 +3,8 @@
     <span class="grid size-10 place-items-center rounded-md bg-grass-600 text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)]">{{{icon 'pickaxe' 'size-5'}}}</span>
     <span class="pixel text-sm">Minecraft <span class="text-ok">Server Manager</span></span>
   </div>
-  {{#if error}}<div class="mb-4 rounded-md border border-danger/40 bg-redstone-500/10 p-2.5 text-sm text-danger">{{error}}</div>{{/if}}
-  <form method="post" action="/login" class="space-y-4">
+  {{#if error}}<div class="notice notice-danger mb-4 text-danger">{{error}}</div>{{/if}}
+  <form method="post" action="/login" class="space-y-4" data-disable-on-submit>
     <input type="hidden" name="next" value="{{next}}">
     <div>
       <label class="label" for="li-user">Username</label>

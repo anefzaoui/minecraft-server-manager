@@ -8,9 +8,14 @@
     <div class="space-y-4">
       <div>
         <label class="label" for="ig-dc-url">Webhook URL</label>
-        <input class="input font-mono text-xs" type="password" id="ig-dc-url" autocomplete="off"
-               placeholder="{{#if integrations.discord.hasWebhook}}{{integrations.discord.webhookMasked}}{{else}}https://discord.com/api/webhooks/…{{/if}}">
-        <p class="help">Server Settings → Integrations → Webhooks in your Discord server. Stored encrypted; leave blank to keep the current one.</p>
+        <input class="input font-mono text-xs" type="password" id="ig-dc-url" autocomplete="off" placeholder="https://discord.com/api/webhooks/…">
+        {{! The stored webhook is shown as a fact, not a placeholder — a
+            placeholder disappears on focus and reads as example text. }}
+        {{#if integrations.discord.hasWebhook}}
+          <p class="help">Stored: <code class="rounded bg-inset px-1 font-mono">{{integrations.discord.webhookMasked}}</code> — leave blank to keep it, paste a new URL to replace it.</p>
+        {{else}}
+          <p class="help">Server Settings → Integrations → Webhooks in your Discord server. Stored encrypted.</p>
+        {{/if}}
       </div>
       <div>
         <span class="label">Send notifications for</span>
@@ -22,9 +27,15 @@
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="players" {{#if integrations.discord.events.players}}checked{{/if}}> Kicks / bans</label>
         </div>
       </div>
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
         <button class="btn btn-primary" id="ig-dc-save">Save</button>
-        <button class="btn" id="ig-dc-test" {{#unless integrations.discord.hasWebhook}}disabled{{/unless}}>{{{icon 'send' 'size-4'}}} Send test</button>
+        {{#if integrations.discord.hasWebhook}}
+          <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} Send test</button>
+        {{else}}
+          {{! Disabled controls swallow hover — the wrapper carries the "why". }}
+          <span data-tip="Save a webhook URL first"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} Send test</button></span>
+        {{/if}}
+        <span class="hidden text-xs text-warn" data-ig-dirty="dc">Unsaved changes</span>
       </div>
     </div>
   </div>
@@ -49,6 +60,7 @@
           <a class="btn" href="{{integrations.statusPage.path}}" target="_blank" rel="noopener" id="ig-sp-link">{{{icon 'link' 'size-4'}}} Open page</a>
           <button class="btn btn-ghost" id="ig-sp-copy">{{{icon 'copy' 'size-4'}}} Copy link</button>
         {{/if}}
+        <span class="hidden text-xs text-warn" data-ig-dirty="sp">Unsaved changes</span>
       </div>
     </div>
   </div>
@@ -100,7 +112,7 @@
           </div>
         {{/if}}
         {{#if integrations.invite.whitelistEnforced}}
-          <div class="rounded-md border border-warn/40 bg-gold-500/10 p-3 text-xs text-warn">Whitelist is enforced — add each friend on the Players tab before they join.</div>
+          <div class="notice notice-warn text-xs text-warn">Whitelist is enforced — add each friend on the Players tab before they join.</div>
         {{/if}}
         <details class="rounded-md border border-line bg-raised p-3 text-xs">
           <summary class="cursor-pointer font-medium text-sm">Playing over the internet (port forwarding)</summary>

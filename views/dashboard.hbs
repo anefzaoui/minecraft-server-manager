@@ -1,7 +1,8 @@
 <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if serversOnly}}hidden{{/if}}">
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Servers online</div>
-    <div class="mt-1 text-2xl font-bold tabular-nums text-ok">{{totals.running}}<span class="text-base font-medium text-ink-faint"> / {{totals.total}}</span></div>
+    {{! Green only when something IS online — 0/3 in success green lied. }}
+    <div class="mt-1 text-2xl font-bold tabular-nums {{#if totals.running}}text-ok{{/if}}">{{totals.running}}<span class="text-base font-medium text-ink-faint"> / {{totals.total}}</span></div>
   </div>
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Players connected</div>
@@ -19,7 +20,7 @@
   </div>
 </div>
 
-<div id="docker-warning" class="mb-4 hidden items-start gap-2.5 rounded-md border border-danger/40 bg-redstone-500/10 p-3 text-sm text-ink-soft">
+<div id="docker-warning" class="notice notice-danger mb-4 hidden">
   {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
   <div>
     <span class="font-semibold text-danger">Docker isn’t reachable.</span>
@@ -30,8 +31,11 @@
 {{#unless noServers}}
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <input class="input max-w-xs" placeholder="Search servers, tags…" id="server-filter">
+  {{! Visible "Sort" label: only the first option carried a "Sort:" prefix, so
+      the closed trigger read context-free once anything else was picked. }}
+  <label class="text-xs text-ink-faint" for="server-sort">Sort</label>
   <select class="input w-auto" id="server-sort" data-label="Sort servers">
-    <option value="status" {{#if (eq sort 'status')}}selected{{/if}}>Sort: Status</option>
+    <option value="status" {{#if (eq sort 'status')}}selected{{/if}}>Status</option>
     <option value="name" {{#if (eq sort 'name')}}selected{{/if}}>Name</option>
     <option value="size" {{#if (eq sort 'size')}}selected{{/if}}>Size</option>
     <option value="started" {{#if (eq sort 'started')}}selected{{/if}}>Last started</option>
@@ -72,8 +76,9 @@
       <div class="flex items-center gap-3 px-4 py-3 text-sm">
         <span class="badge shrink-0">{{type}}</span>
         <span class="min-w-0 flex-1 truncate">{{summary}}</span>
-        {{#if serverId}}<a href="/servers/{{serverId}}" class="hidden shrink-0 text-xs text-link hover:underline sm:block">{{server}}</a>{{else}}<span class="hidden shrink-0 text-xs text-link hover:underline sm:block">{{server}}</span>{{/if}}
-        <span class="shrink-0 text-xs text-ink-faint">{{ts}}</span>
+        {{! deleted-server names are plain faint text — link-styled dead spans read as broken. }}
+        {{#if serverId}}<a href="/servers/{{serverId}}" class="hidden shrink-0 text-xs text-link hover:underline sm:block">{{server}}</a>{{else}}<span class="hidden shrink-0 text-xs text-ink-faint sm:block">{{server}}</span>{{/if}}
+        <span class="shrink-0 text-xs text-ink-faint" data-ts-ago="{{ts}}">{{ts}}</span>
       </div>
     {{else}}
       <div class="px-4 py-8 text-center text-sm text-ink-faint">No activity yet — actions on your servers will show up here.</div>

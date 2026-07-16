@@ -1,6 +1,6 @@
 // Live console: WebSocket log stream + RCON command bar with history.
 import { toast } from '../lib/toast.js';
-import { setBusy } from '../lib/loading.js';
+import { setBusy, withBusy } from '../lib/loading.js';
 
 const log = document.getElementById('console-log');
 const input = document.getElementById('console-input');
@@ -19,26 +19,30 @@ function init(serverId) {
   log.scrollTop = log.scrollHeight;
 
   // ---- "Announce as" label: attribute panel console commands in game chat ----
-  document.getElementById('console-label-save')?.addEventListener('click', async () => {
-    const label = document.getElementById('console-label').value.trim();
-    try {
-      const res = await fetch(`/api/servers/${serverId}/console-label`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) {
-        toast(data.error || 'Could not save the label', { kind: 'error' });
-        return;
+  document.getElementById('console-label-save')?.addEventListener('click', (e) =>
+    withBusy(e.currentTarget, 'Saving…', async () => {
+      const label = document.getElementById('console-label').value.trim();
+      try {
+        const res = await fetch(`/api/servers/${serverId}/console-label`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          toast(data.error || 'Could not save the label', { kind: 'error' });
+          return;
+        }
+        toast(
+          data.label
+            ? `Console commands now announce as "[${data.label}]" in chat.`
+            : 'Console announcements turned off.'
+        );
+      } catch (err) {
+        toast(`Network error: ${err.message}`, { kind: 'error' });
       }
-      toast(
-        data.label ? `Console commands now announce as "[${data.label}]" in chat.` : 'Console announcements turned off.'
-      );
-    } catch (err) {
-      toast(`Network error: ${err.message}`, { kind: 'error' });
-    }
-  });
+    })
+  );
 
   const filters = { INFO: true, WARN: true, ERROR: true };
   const filterInput = document.getElementById('console-filter');
@@ -50,23 +54,27 @@ function init(serverId) {
   }
 
   // ANSI SGR → colored spans (mc-image-helper and rcon-cli colorize output).
+  // Where the brand ramps cover an ANSI hue (red/green/yellow/grays/white)
+  // the values come from them; blue/magenta/cyan keep neutral defaults — ANSI
+  // semantics beat palette purity for log readability, and the brand has no
+  // blue or purple ramp to borrow from.
   const ANSI_COLORS = {
-    30: '#4b5563',
-    31: '#f87171',
-    32: '#4ade80',
-    33: '#facc15',
+    30: '#555e68', // stone-600
+    31: '#f87171', // redstone-400
+    32: '#59c53e', // grass-400
+    33: '#f3ca56', // gold-300
     34: '#60a5fa',
     35: '#c084fc',
-    36: '#22d3ee',
-    37: '#d1d5db',
-    90: '#6b7280',
-    91: '#fca5a5',
-    92: '#86efac',
-    93: '#fde047',
+    36: '#3cc5c7', // diamond-400
+    37: '#d3d7db', // stone-200
+    90: '#6a747f', // stone-500
+    91: '#fca5a5', // redstone-300
+    92: '#7fd965', // grass-300
+    93: '#f7e090', // gold-200
     94: '#93c5fd',
     95: '#d8b4fe',
-    96: '#67e8f9',
-    97: '#f9fafb',
+    96: '#6ce0dd', // diamond-300
+    97: '#f4f5f6', // stone-50
   };
   function renderAnsi(target, text) {
     // Tolerate both real escapes (\x1b[…m) and bare "[0;39m" fragments that
@@ -98,9 +106,15 @@ function init(serverId) {
   }
 
   function appendLine(text) {
+    // A command reply can arrive before any WS log batch (stopped server) —
+    // the full-height placeholder would otherwise push it out of view.
+    log.querySelector('[data-console-empty]')?.remove();
     const level = classify(text);
     const div = document.createElement('div');
     div.dataset.level = level;
+    // Raw palette steps on purpose: the console is always dark, and the
+    // semantic warn/danger tokens flip to 700-steps in light mode (invisible
+    // here). See the .console note in input.css.
     if (level === 'WARN') div.className = 'text-gold-300';
     if (level === 'ERROR') div.className = 'text-redstone-400';
     renderAnsi(div, text);
@@ -108,6 +122,7 @@ function init(serverId) {
     log.appendChild(div);
     while (log.childElementCount > 3000) log.firstElementChild.remove();
     if (autoScroll) log.scrollTop = log.scrollHeight;
+    syncNoMatch();
   }
 
   function applyVisibility(el) {
@@ -129,13 +144,40 @@ function init(serverId) {
 
   function refilter() {
     log.querySelectorAll('[data-level]').forEach(applyVisibility);
+    syncNoMatch();
   }
 
+  // Filters hiding every line left a silent black box, indistinguishable from
+  // "no output" — say so instead.
+  function syncNoMatch() {
+    const lines = log.querySelectorAll('[data-level]');
+    const anyVisible = [...lines].some((el) => !el.classList.contains('hidden'));
+    let note = log.querySelector('[data-console-nomatch]');
+    if (lines.length && !anyVisible) {
+      if (!note) {
+        note = document.createElement('div');
+        note.dataset.consoleNomatch = '';
+        note.className = 'py-2 text-center text-stone-500';
+        note.textContent = 'No lines match the current filters.';
+        log.appendChild(note);
+      }
+    } else if (note) {
+      note.remove();
+    }
+  }
+
+  // One visible marker while the stream is down — the log just stopping is
+  // indistinguishable from a quiet server.
+  let disconnectNote = null;
   function connect() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}/ws/console/${serverId}`);
     ws.addEventListener('open', () => {
       reconnectDelay = 1000;
+      if (disconnectNote) {
+        disconnectNote.remove();
+        disconnectNote = null;
+      }
     });
     ws.addEventListener('message', (e) => {
       let msg;
@@ -162,6 +204,13 @@ function init(serverId) {
     });
     ws.addEventListener('close', () => {
       ackAllPending(); // no ack is coming — release busy send controls
+      if (!disconnectNote) {
+        disconnectNote = document.createElement('div');
+        disconnectNote.className = 'text-gold-300';
+        disconnectNote.textContent = '[panel/WARN]: Log stream disconnected — reconnecting…';
+        log.appendChild(disconnectNote);
+        if (autoScroll) log.scrollTop = log.scrollHeight;
+      }
       setTimeout(connect, reconnectDelay);
       reconnectDelay = Math.min(reconnectDelay * 2, 15000);
     });
@@ -209,8 +258,11 @@ function init(serverId) {
       const timer = setTimeout(entry, 15000);
       pendingAcks.push(entry);
     }
+    // The UI advertises slash-less input (the decorative "/" prefix box) —
+    // honor a habitual "/list" instead of sending it verbatim.
+    command = command.replace(/^\//, '');
     ws.send(JSON.stringify({ kind: 'cmd', command }));
-    history.push(command);
+    if (history[history.length - 1] !== command) history.push(command); // no dupes back-to-back
     historyIdx = history.length;
   }
 
@@ -238,10 +290,4 @@ function init(serverId) {
   document.querySelectorAll('[data-quick-cmd]').forEach((chip) => {
     chip.addEventListener('click', () => send(chip.dataset.quickCmd, chip));
   });
-
-  const dlBtn = document.getElementById('console-download');
-  if (dlBtn)
-    dlBtn.addEventListener('click', () => {
-      window.open(`/api/servers/${serverId}/logs?tail=5000`, '_blank');
-    });
 }

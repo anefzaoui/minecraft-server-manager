@@ -47,9 +47,10 @@
         <li class="p-6 text-center text-ink-faint">Loading…</li>
       </ol>
       <div class="border-t border-line p-3">
-        <button class="btn btn-sm w-full" id="an-older">Load older</button>
+        {{! hidden until the first response proves there IS anything older. }}
+        <button class="btn btn-sm w-full hidden" id="an-older">Load older</button>
       </div>
-      <p class="help border-x-0 border-b-0 px-3 pb-3">Chat and events are parsed from the server log and stored locally only — nothing leaves this machine.</p>
+      <p class="help px-3 pb-3">Chat and events are parsed from the server log and stored locally only — nothing leaves this machine.</p>
     </div>
 
   </div>
@@ -58,7 +59,7 @@
 
 <div class="card mt-4" data-investigation-server="{{server.id}}">
   <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
-    <span class="font-semibold">{{{icon 'shield' 'size-4'}}} Investigation</span>
+    <h3 class="flex items-center gap-1.5 font-semibold">{{{icon 'shield' 'size-4'}}} Investigation</h3>
     <span class="text-xs text-ink-faint">X-ray suspicion from mining ratios vs the server median — advisory evidence, never auto-punishment.</span>
     <button class="btn btn-sm ml-auto" id="inv-run">{{{icon 'search' 'size-3.5'}}} Analyze mining patterns</button>
   </div>

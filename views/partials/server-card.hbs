@@ -1,4 +1,5 @@
 <a href="/servers/{{id}}" class="card group relative block overflow-hidden transition hover:border-line-strong hover:shadow-raised"
+   data-filter="{{name}} {{flavor}} {{mcVersion}}{{#each tags}} {{this}}{{/each}}"
    style="border-top: 3px solid {{accent}}">
   <div class="p-4">
     <div class="flex items-start gap-3">
@@ -8,7 +9,7 @@
         <div class="flex items-center gap-2">
           <h3 class="truncate font-semibold group-hover:text-ok">{{name}}</h3>
           {{#if updateAvailable}}<span class="badge badge-warn shrink-0" title="Update available">update</span>{{/if}}
-          {{#if crashesUnread}}<span class="badge badge-danger shrink-0" title="New crash reports">{{crashesUnread}} crash</span>{{/if}}
+          {{#if crashesUnread}}<span class="badge badge-danger shrink-0" title="New crash reports">{{crashesUnread}} {{plural crashesUnread 'crash' 'crashes'}}</span>{{/if}}
         </div>
         <p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-ink-faint">
           <span class="font-medium text-ink-soft">{{flavor}}</span>
@@ -19,14 +20,14 @@
       </div>
       <span class="flex flex-col items-end gap-0.5">
         <span class="flex items-center gap-1.5 text-xs font-medium {{statusText status}}">
-          <span class="status-dot relative bg-{{statusColor status}}-500 {{#if (statusPulse status)}}pulse{{/if}}"></span>
+          <span class="status-dot relative {{statusDot status}} {{#if (statusPulse status)}}pulse{{/if}}"></span>
           {{statusLabel status}}
         </span>
-        <span class="max-w-40 truncate text-right text-[11px] text-warn {{#unless statusDetail}}hidden{{/unless}}" data-status-detail="{{id}}">{{statusDetail}}</span>
+        <span class="max-w-40 truncate text-right text-[11px] text-warn {{#unless statusDetail}}hidden{{/unless}}" data-status-detail="{{id}}" title="{{statusDetail}}">{{statusDetail}}</span>
       </span>
     </div>
 
-    <div class="mt-3 grid grid-cols-3 gap-3 text-xs">
+    <div class="mt-3 grid grid-cols-3 gap-3 text-xs tabular-nums" data-card-stats>
       <div>
         <div class="text-ink-faint">Players</div>
         <div class="mt-0.5 font-semibold">{{players.online}}<span class="font-normal text-ink-faint">/{{players.max}}</span></div>
@@ -41,7 +42,7 @@
       </div>
     </div>
 
-    <div class="mt-3">
+    <div class="mt-3" data-card-disk>
       <div class="mb-1 flex justify-between text-[11px] text-ink-faint">
         <span>Disk</span><span>{{bytes disk.used}} of {{bytes disk.quota}}</span>
       </div>
@@ -49,7 +50,7 @@
     </div>
 
     {{#if tags.length}}
-      <div class="mt-3 flex flex-wrap gap-1.5">
+      <div class="mt-3 flex flex-wrap gap-1.5" data-card-tags>
         {{#each tags}}<span class="chip">{{this}}</span>{{/each}}
       </div>
     {{/if}}

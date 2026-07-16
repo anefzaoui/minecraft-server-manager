@@ -79,8 +79,16 @@ function init(serverId) {
   async function loadScoreboard() {
     const metric = metricSel.value;
     const data = await api(`/scoreboard?metric=${metric}&window=${windowSel.value}`);
+    if (!data) {
+      // Keep whatever was on screen — a toast plus a silently emptied tbody
+      // reads as broken once the toast fades.
+      if (!scoreBody.querySelector('td')) {
+        scoreBody.innerHTML =
+          '<tr><td colspan="3" class="p-6 text-center text-ink-faint">Could not load the scoreboard — try Refresh.</td></tr>';
+      }
+      return;
+    }
     scoreBody.innerHTML = '';
-    if (!data) return;
     if (!data.rows.length) {
       const tr = document.createElement('tr');
       tr.innerHTML =
@@ -90,11 +98,13 @@ function init(serverId) {
     }
     for (const row of data.rows) {
       const tr = document.createElement('tr');
-      tr.className = 'cursor-pointer transition hover:bg-raised';
+      // table-base already provides the row hover — a second hover:bg here
+      // disagreed with every other table in the app.
+      tr.className = 'cursor-pointer';
       tr.innerHTML = `
         <td class="text-ink-faint">${row.rank}</td>
         <td><span class="inline-flex items-center gap-1.5">${row.crown ? CROWN_SVG : ''}<span class="font-medium" data-name></span></span></td>
-        <td class="text-right font-mono text-xs" data-value></td>`;
+        <td class="text-right" data-value></td>`;
       tr.querySelector('[data-name]').textContent = row.name;
       tr.querySelector('[data-value]').textContent = fmtValue(metric, row.value);
       // Profile fetch happens before the drawer opens — spin the value cell.
@@ -176,7 +186,9 @@ function init(serverId) {
     return li;
   }
 
+  let timelineSeq = 0; // a slow earlier search must not repaint over a newer one
   async function loadTimeline({ reset = false } = {}) {
+    const seq = ++timelineSeq;
     const types = selectedTypes();
     if (!types.length) {
       // Nothing checked — render the empty state locally, no request needed.
@@ -196,7 +208,7 @@ function init(serverId) {
     if (!reset && state.nextBefore) params.set('before', String(state.nextBefore));
 
     const data = await api(`/timeline?${params}`);
-    if (!data) return;
+    if (!data || seq !== timelineSeq) return;
     if (reset) list.innerHTML = '';
     if (!data.events.length && !list.children.length) {
       const li = document.createElement('li');

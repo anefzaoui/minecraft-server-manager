@@ -29,7 +29,7 @@
         {{else}}
           <span class="shrink-0 text-xs text-ink-faint">{{server}}</span>
         {{/if}}
-        <span class="shrink-0 text-xs text-ink-faint">{{actor}} · {{ts}}</span>
+        <span class="shrink-0 text-xs text-ink-faint">{{actor}} · <span data-ts="{{ts}}">{{ts}}</span></span>
         {{#if hasLog}}<button class="btn btn-ghost btn-sm shrink-0" data-event-excerpt data-event-id="{{id}}" data-event-type="{{type}}" data-tip="View captured log excerpt">{{{icon 'file-text' 'size-3.5'}}}</button>{{/if}}
       </li>
     {{else}}
@@ -40,9 +40,9 @@
   <div class="flex items-center justify-between border-t border-line p-3 text-xs text-ink-faint">
     <span>Showing {{from}}–{{to}} of {{total}} events</span>
     <div class="flex items-center gap-2">
-      {{#if prevHref}}<a class="btn btn-ghost btn-sm" href="{{prevHref}}" aria-label="Previous page">←</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="Previous page">←</button>{{/if}}
-      <span>Page {{page}} of {{pages}}</span>
-      {{#if nextHref}}<a class="btn btn-ghost btn-sm" href="{{nextHref}}" aria-label="Next page">→</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="Next page">→</button>{{/if}}
+      {{#if prevHref}}<a class="btn btn-ghost btn-sm" href="{{prevHref}}" aria-label="Previous page">{{{icon 'chevron-left' 'size-4'}}}</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="Previous page">{{{icon 'chevron-left' 'size-4'}}}</button>{{/if}}
+      <span class="tabular-nums">Page {{page}} of {{pages}}</span>
+      {{#if nextHref}}<a class="btn btn-ghost btn-sm" href="{{nextHref}}" aria-label="Next page">{{{icon 'chevron-right' 'size-4'}}}</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="Next page">{{{icon 'chevron-right' 'size-4'}}}</button>{{/if}}
     </div>
   </div>
   {{/if}}

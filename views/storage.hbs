@@ -4,13 +4,15 @@
   <div class="card p-4 lg:col-span-2">
     <div class="flex items-baseline justify-between">
       <h3 class="font-semibold">Disk usage</h3>
-      <span class="text-xs text-ink-faint">Last scanned {{storage.lastScan}} · <button class="text-link hover:underline" id="storage-rescan">re-scan now</button></span>
+      <span class="text-xs text-ink-faint">Last scanned <span data-ts="{{storage.lastScan}}">{{storage.lastScan}}</span> · <button class="text-link hover:underline" id="storage-rescan">re-scan now</button></span>
     </div>
     <div class="mt-3 flex items-end gap-2">
       <span class="text-3xl font-bold tabular-nums">{{bytes storage.totalUsed}}</span>
       <span class="pb-1 text-sm text-ink-faint">panel data · {{bytes storage.diskFree}} free of {{bytes storage.diskTotal}} on drive</span>
     </div>
-    <div class="meter mt-3 h-3"><div class="bg-grass-500" style="width: {{pct storage.totalUsed storage.diskTotal}}%"></div></div>
+    {{! meterColor: the headline bar must go gold/red as the drive fills — it
+        stayed success-green even at 95%. }}
+    <div class="meter mt-3 h-3"><div class="{{meterColor storage.totalUsed storage.diskTotal}}" style="width: {{pct storage.totalUsed storage.diskTotal}}%"></div></div>
     <div class="mt-4 flex h-6 w-full overflow-hidden rounded-md" title="Breakdown by category">
       {{#each storage.breakdown}}
         <div class="{{cls}}" style="width: {{width}}%" title="{{label}} — {{bytes size}}"></div>
@@ -25,12 +27,16 @@
 
   <div class="card p-4">
     <h3 class="mb-2 font-semibold">Growth trend</h3>
-    <div class="flex h-24 items-end gap-1">
-      {{#each storage.trend}}
-        <div class="flex-1 rounded-t bg-diamond-500/70" style="height: {{this}}%"></div>
-      {{/each}}
-    </div>
-    <p class="help">GB used over the last scans. Snapshots recorded on every scan.</p>
+    {{#if storage.trend.length}}
+      <div class="flex h-24 items-end gap-1">
+        {{#each storage.trend}}
+          <div class="flex-1 rounded-t bg-diamond-500/70" style="height: {{this}}%" title="{{this}}% of the largest scan"></div>
+        {{/each}}
+      </div>
+      <p class="help">GB used over the last scans. Snapshots recorded on every scan.</p>
+    {{else}}
+      <p class="grid h-24 place-items-center text-sm text-ink-faint">No scans recorded yet — run one to start the trend.</p>
+    {{/if}}
   </div>
 </div>
 

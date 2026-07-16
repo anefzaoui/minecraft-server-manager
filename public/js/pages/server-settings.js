@@ -14,6 +14,18 @@ function init(serverId) {
   let accent = root.dataset.settingsAccent;
   const tags = new Set(JSON.parse(root.dataset.settingsTags || '[]'));
 
+  // ---- dirty tracking: Save always works, but Discard/leave now warn instead
+  // of silently dropping edits ----
+  let dirty = false;
+  const markDirty = () => {
+    dirty = true;
+  };
+  root.addEventListener('input', markDirty);
+  root.addEventListener('change', markDirty);
+  window.addEventListener('beforeunload', (e) => {
+    if (dirty) e.preventDefault(); // the browser's own unsaved-changes prompt
+  });
+
   // Visual MOTD editor (shared lib)
   const motdInput = document.getElementById('st-motd');
   if (motdInput) {
@@ -23,39 +35,49 @@ function init(serverId) {
     });
   }
 
-  // Icon + accent pickers
-  bindPicker(
-    '[data-pick-icon]',
-    (btn) => {
-      icon = btn.dataset.pickIcon;
-    },
-    'border-grass-500'
-  );
-  bindPicker(
-    '[data-pick-accent]',
-    (btn) => {
-      accent = btn.dataset.pickAccent;
-    },
-    'border-white/70',
-    'border-transparent'
-  );
+  // Icon + accent pickers — selection lives in aria-pressed; .swatch CSS
+  // draws the theme-aware ring, so JS only flips the attribute.
+  bindPicker('[data-pick-icon]', (btn) => {
+    icon = btn.dataset.pickIcon;
+  });
+  bindPicker('[data-pick-accent]', (btn) => {
+    accent = btn.dataset.pickAccent;
+  });
 
-  // Borders stay border-2 at all times (only the color swaps), so picking an
-  // item never shifts the row by a pixel.
-  function bindPicker(selector, onPick, activeBorder, idleBorder = 'border-line') {
+  function bindPicker(selector, onPick) {
     const buttons = [...root.querySelectorAll(selector)];
     for (const btn of buttons) {
       btn.addEventListener('click', () => {
-        buttons.forEach((b) => {
-          b.classList.remove(activeBorder);
-          b.classList.add(idleBorder);
-        });
-        btn.classList.remove(idleBorder);
-        btn.classList.add(activeBorder);
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
         onPick(btn);
+        markDirty();
       });
     }
   }
+
+  // A custom accent (set via API) matches no preset — give it its own selected
+  // swatch so the current choice is always visible.
+  (() => {
+    const picker = document.getElementById('st-accent-picker');
+    if (!picker) return;
+    const preset = picker.querySelector(`[data-pick-accent="${CSS.escape(accent)}"]`);
+    if (preset) {
+      preset.setAttribute('aria-pressed', 'true');
+    } else if (accent) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'swatch size-9';
+      btn.style.background = accent;
+      btn.dataset.pickAccent = accent;
+      btn.dataset.tip = 'Current (custom)';
+      btn.setAttribute('aria-pressed', 'true');
+      picker.prepend(btn);
+      btn.addEventListener('click', () => {
+        picker.querySelectorAll('[data-pick-accent]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        accent = btn.dataset.pickAccent;
+      });
+    }
+  })();
 
   // Tag chips
   const tagInput = document.getElementById('st-tag-input');
@@ -66,10 +88,13 @@ function init(serverId) {
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.dataset.tag = t;
-      chip.innerHTML = `${escapeHtml(t)} <button class="text-ink-faint hover:text-danger" aria-label="Remove tag">✕</button>`;
+      // A real icon button with a focus ring, not a bare few-pixel "✕" glyph.
+      chip.innerHTML = `${escapeHtml(t)} <button type="button" class="icon-btn -mr-1 size-4 rounded-sm hover:text-danger" aria-label="Remove tag ${escapeHtml(t)}">
+        <svg class="icon size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
       chip.querySelector('button').addEventListener('click', () => {
         tags.delete(t);
         renderTags();
+        markDirty();
       });
       tagWrap.insertBefore(chip, tagInput);
     }
@@ -241,6 +266,7 @@ function init(serverId) {
           finishClone(direct.server && direct.server.id);
           return;
         }
+        if (err.dismissed) return; // progress hidden — the task tray takes over
         toast(err.message || 'Clone failed', { kind: 'error', timeout: 9000 });
       });
   }
@@ -253,7 +279,20 @@ function init(serverId) {
   }
 
   // ---------------------------------------------------------------- discard
-  document.getElementById('st-discard')?.addEventListener('click', () => location.reload());
+  document.getElementById('st-discard')?.addEventListener('click', async () => {
+    if (dirty) {
+      const { confirmDialog } = await import('../lib/confirm.js');
+      const ok = await confirmDialog({
+        title: 'Discard changes?',
+        message: 'Everything edited on this tab since the last save is thrown away.',
+        confirmLabel: 'Discard',
+        danger: true,
+      });
+      if (!ok) return;
+    }
+    dirty = false;
+    location.reload();
+  });
 
   async function postJson(url, body) {
     const res = await fetch(url, {
@@ -315,6 +354,7 @@ function init(serverId) {
           ? 'Saved — resource changes apply when you Recreate (button appears in the header).'
           : 'Saved.'
       );
+      dirty = false; // saved — leaving must not warn
       setTimeout(() => location.reload(), 900);
     } catch (err) {
       toast(`Network error: ${err.message}`, { kind: 'error' });
@@ -325,5 +365,8 @@ function init(serverId) {
 }
 
 function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  return String(s ?? '').replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+  );
 }

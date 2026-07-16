@@ -6,6 +6,7 @@ import { openModal } from './lib/modal.js';
 import { confirmDialog } from './lib/confirm.js';
 import { enhanceAll } from './lib/select.js';
 import { setBusy, withBusy } from './lib/loading.js';
+import { formatDateTime, timeAgo } from './lib/datetime.js';
 import './lib/tooltip.js';
 import './lib/dropdown.js';
 import './lib/taskTray.js';
@@ -15,6 +16,18 @@ window.CD = { toast, openModal, confirmDialog, setBusy, withBusy };
 
 // ---- Custom selects everywhere ----
 enhanceAll();
+
+// ---- Timestamps: raw UTC DB strings → the panel's timezone + locale ----
+// Views render <span data-ts="…">raw</span> (absolute) or data-ts-ago
+// (relative); the raw value stays as the no-JS fallback and the hover title.
+for (const el of document.querySelectorAll('[data-ts], [data-ts-ago]')) {
+  const raw = el.dataset.ts || el.dataset.tsAgo;
+  const pretty = el.dataset.ts ? formatDateTime(raw) : timeAgo(raw);
+  if (pretty) {
+    el.title = formatDateTime(raw);
+    el.textContent = pretty;
+  }
+}
 
 // ---- Theme toggle (persisted; applied pre-paint by the inline layout script) ----
 (() => {
@@ -42,13 +55,17 @@ enhanceAll();
   const backdrop = document.getElementById('sidebar-backdrop');
   const toggle = document.getElementById('sidebar-toggle');
   if (!sidebar || !toggle) return;
+  const close = () => {
+    sidebar.classList.add('-translate-x-full');
+    backdrop.classList.add('hidden');
+  };
   toggle.addEventListener('click', () => {
     const closed = sidebar.classList.toggle('-translate-x-full');
     backdrop.classList.toggle('hidden', closed);
   });
-  backdrop.addEventListener('click', () => {
-    sidebar.classList.add('-translate-x-full');
-    backdrop.classList.add('hidden');
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !sidebar.classList.contains('-translate-x-full')) close();
   });
 })();
 
@@ -59,11 +76,38 @@ enhanceAll();
   if (!input || !grid) return;
   input.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase();
-    grid.querySelectorAll('a[href^="/servers/"]').forEach((card) => {
-      card.classList.toggle('hidden', Boolean(q) && !card.textContent.toLowerCase().includes(q));
+    let shown = 0;
+    // Match against data-filter (name/flavor/version/tags) — matching the full
+    // card text made "cpu" or "memory" match every card via the stat labels.
+    grid.querySelectorAll('[data-filter]').forEach((card) => {
+      const hide = Boolean(q) && !(card.dataset.filter || '').toLowerCase().includes(q);
+      card.classList.toggle('hidden', hide);
+      if (!hide) shown += 1;
     });
+    let empty = grid.querySelector('[data-filter-empty]');
+    if (q && !shown) {
+      if (!empty) {
+        empty = document.createElement('p');
+        empty.dataset.filterEmpty = '';
+        empty.className = 'col-span-full py-6 text-center text-sm text-ink-faint';
+        grid.appendChild(empty);
+      }
+      empty.textContent = `No servers match “${input.value.trim()}”.`;
+    } else if (empty) {
+      empty.remove();
+    }
   });
 })();
+
+// ---- Plain form posts: spinner + disable the submit on the way out ----
+// (fetch-based flows use setBusy directly; this covers full-page posts like
+// login, where a slow round-trip otherwise allows double submits)
+document.addEventListener('submit', (e) => {
+  const form = e.target.closest('form[data-disable-on-submit]');
+  if (!form) return;
+  const btn = form.querySelector('button[type="submit"], input[type="submit"]');
+  if (btn) setBusy(btn);
+});
 
 // (Console behavior lives in pages/console.js — no bindings here.)
 
@@ -195,8 +239,21 @@ async function copyText(value) {
   } catch {
     /* fall through to the manual prompt */
   }
-  // Last resort — the value is at least selectable here, unlike the <select>.
-  window.prompt('Copy this (Ctrl/Cmd+C):', text);
+  // Last resort — a small modal with the value selected, ready for Ctrl/Cmd+C
+  // (no native browser chrome; the modal core exists to avoid exactly that).
+  const input = document.createElement('input');
+  input.className = 'input font-mono';
+  input.readOnly = true;
+  input.value = text;
+  input.addEventListener('focus', () => input.select());
+  const wrap = document.createElement('div');
+  wrap.className = 'space-y-2';
+  const help = document.createElement('p');
+  help.className = 'text-xs text-ink-faint';
+  help.textContent = 'Automatic copy is unavailable here — press Ctrl/Cmd+C to copy the selected value.';
+  wrap.append(input, help);
+  openModal({ title: 'Copy manually', content: wrap, size: 'sm' });
+  input.select();
   return false;
 }
 window.CD.copyText = copyText;
@@ -226,6 +283,7 @@ document.addEventListener('click', async (e) => {
           const live = data.servers[el.dataset.statusDetail];
           const phase = live && live.phase;
           el.textContent = phase || '';
+          el.title = phase || ''; // truncated chips stay readable on hover
           el.classList.toggle('hidden', !phase);
         }
       }

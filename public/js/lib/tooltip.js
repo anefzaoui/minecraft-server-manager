@@ -9,8 +9,10 @@ let lastShownAt = 0; // sibling tooltips within the grace window skip the delay
 function ensure() {
   if (tipEl) return tipEl;
   tipEl = document.createElement('div');
+  // Shown/hidden via opacity (not `hidden`) so it gets the same ~120ms ease
+  // as every other surface instead of snapping; pointer-events stay off.
   tipEl.className =
-    'pointer-events-none fixed z-[70] hidden max-w-64 rounded-md border border-line-strong bg-raised px-2.5 py-1.5 text-xs text-ink shadow-overlay';
+    'pointer-events-none fixed z-[70] max-w-64 rounded-md border border-line-strong bg-raised px-2.5 py-1.5 text-xs text-ink opacity-0 shadow-overlay transition-opacity duration-100';
   tipEl.setAttribute('role', 'tooltip');
   document.body.appendChild(tipEl);
   return tipEl;
@@ -36,7 +38,7 @@ function show(target) {
   labelFromTip(target);
   const el = ensure();
   el.textContent = text;
-  el.classList.remove('hidden');
+  el.classList.remove('opacity-0');
   currentTarget = target;
   lastShownAt = Date.now();
 
@@ -54,7 +56,7 @@ function show(target) {
 function hide() {
   clearTimeout(showTimer);
   currentTarget = null;
-  if (tipEl) tipEl.classList.add('hidden');
+  if (tipEl) tipEl.classList.add('opacity-0');
 }
 
 document.addEventListener('pointerover', (e) => {

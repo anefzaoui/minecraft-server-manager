@@ -5,6 +5,7 @@
 import { toast } from '../lib/toast.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
+import { fmtBytes } from '../lib/format.js';
 
 document.getElementById('storage-rescan')?.addEventListener('click', async (e) => {
   const btn = e.currentTarget;
@@ -80,11 +81,4 @@ async function postJSON(url, body) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
   return data;
-}
-
-function fmtBytes(n) {
-  n = Number(n) || 0;
-  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)} GB`;
-  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(n / 1024))} KB`;
 }

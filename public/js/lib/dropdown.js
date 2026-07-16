@@ -5,6 +5,11 @@ let openMenu = null;
 let openTrigger = null;
 
 function close() {
+  const trigger = openTrigger;
+  // Removing the menu while a menuitem is focused would drop keyboard focus to
+  // <body>; hand it back to the trigger (only when the menu actually had it —
+  // an outside click must keep its own target focused).
+  const hadFocus = openMenu && openMenu.contains(document.activeElement);
   if (openTrigger) {
     openTrigger.setAttribute('aria-expanded', 'false');
     openTrigger = null;
@@ -12,6 +17,7 @@ function close() {
   if (!openMenu) return;
   openMenu.remove();
   openMenu = null;
+  if (hadFocus && trigger) trigger.focus();
 }
 
 function open(trigger) {
@@ -20,7 +26,9 @@ function open(trigger) {
   if (!tpl) return;
 
   const menu = document.createElement('div');
-  menu.className = 'card fixed z-[55] min-w-44 p-1 shadow-overlay';
+  // z-[68]: menus must clear a modal backdrop (60) when triggered from inside
+  // one. See the stacking scale in input.css.
+  menu.className = 'card fixed z-[68] min-w-44 p-1 shadow-overlay';
   menu.setAttribute('role', 'menu');
   menu.appendChild(tpl.content.cloneNode(true));
   menu.querySelectorAll('button, a').forEach((el) => {

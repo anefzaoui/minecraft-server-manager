@@ -5,12 +5,22 @@
         <span class="status-dot relative bg-grass-500 pulse"></span> Live map
       </span>
       <span class="text-xs text-ink-faint">BlueMap renders in the background — freshly enabled maps take a few minutes to draw the first tiles.</span>
-      <div class="ml-auto flex gap-2">
+      <div class="ml-auto flex items-center gap-2">
         <a class="btn btn-sm" href="/map/{{server.id}}/" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Fullscreen</a>
+        {{! Divider: destructive Disable must not sit flush against Fullscreen. }}
+        <span class="h-5 w-px bg-line" aria-hidden="true"></span>
         <button class="btn btn-ghost btn-sm text-danger" data-map-disable data-server-id="{{server.id}}">Disable map</button>
       </div>
     </div>
-    <iframe src="/map/{{server.id}}/" class="h-[70vh] w-full border-0 bg-stone-950" title="Live world map"></iframe>
+    {{! map.js probes the proxy first — without this a stopped server showed
+        the proxy's raw error page inside the frame. }}
+    <div class="hidden h-[70vh] place-items-center bg-stone-950 px-6 text-center" data-map-placeholder>
+      <div class="text-sm text-stone-400">
+        {{{icon 'map' 'mx-auto size-6 text-stone-500'}}}
+        <p class="mt-2 max-w-sm">The map isn't up yet — it appears here once the server is running and BlueMap has rendered its first tiles. Checking again automatically…</p>
+      </div>
+    </div>
+    <iframe src="/map/{{server.id}}/" class="h-[70vh] w-full border-0 bg-stone-950" title="Live world map" data-map-frame></iframe>
   </div>
 {{else}}
   <div class="card grid place-items-center px-6 py-16 text-center">

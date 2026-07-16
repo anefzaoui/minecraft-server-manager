@@ -17,7 +17,8 @@
             <h3 class="truncate font-semibold">{{name}}</h3>
             {{#if builtin}}<span class="badge badge-info">starter</span>{{/if}}
           </div>
-          <p class="mt-0.5 text-xs text-ink-faint">{{notes}}</p>
+          {{! line-clamp keeps long notes from making grid card heights ragged. }}
+          <p class="mt-0.5 line-clamp-2 text-xs text-ink-faint" title="{{notes}}">{{notes}}</p>
         </div>
       </div>
       <dl class="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 text-xs">
@@ -27,8 +28,8 @@
       </dl>
       <div class="mt-3 flex gap-2">
         <button class="btn btn-sm flex-1" data-bp-create>{{{icon 'pickaxe' 'size-3.5'}}} Create server</button>
-        <a class="btn btn-ghost btn-sm" href="/api/blueprints/{{id}}/download" aria-label="Download {{name}}">{{{icon 'download' 'size-3.5'}}}</a>
-        {{#unless builtin}}<button class="btn btn-ghost btn-sm text-danger" data-bp-delete aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>{{/unless}}
+        <a class="btn btn-ghost btn-sm" href="/api/blueprints/{{id}}/download" data-tip="Download .zip" aria-label="Download {{name}}">{{{icon 'download' 'size-3.5'}}}</a>
+        {{#unless builtin}}<button class="btn btn-ghost btn-sm text-danger" data-bp-delete data-tip="Delete blueprint ({{bytes size_bytes}})" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>{{/unless}}
       </div>
     </div>
   {{/each}}

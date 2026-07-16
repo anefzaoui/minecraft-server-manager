@@ -5,6 +5,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { enhanceAll } from '../lib/select.js';
 import { setBusy } from '../lib/loading.js';
+import { fmtBytes } from '../lib/format.js';
 
 // ---------------------------------------------------------------------------
 // Shared helpers (imported by worlds-tab.js)
@@ -17,12 +18,7 @@ export function serverOptions() {
   }
 }
 
-export function fmtBytes(n) {
-  n = Number(n) || 0;
-  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)} GB`;
-  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(n / 1024))} KB`;
-}
+export { fmtBytes }; // re-export for worlds-tab.js
 
 export async function postJSON(url, body) {
   try {
@@ -69,9 +65,13 @@ export function uploadWorldModal({ onDone } = {}) {
   });
 
   let busy = false;
+  let activeXhr = null;
   openModal({
     title: 'Upload world to library',
     content,
+    // Closing the modal must actually cancel the transfer — a "cancelled"
+    // upload used to keep running and reload the page when it finished.
+    onClose: () => activeXhr?.abort(),
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       {
@@ -96,6 +96,12 @@ export function uploadWorldModal({ onDone } = {}) {
 
           return new Promise((resolve) => {
             const xhr = new XMLHttpRequest();
+            activeXhr = xhr;
+            xhr.addEventListener('abort', () => {
+              busy = false;
+              toast('Upload cancelled.', { kind: 'info' });
+              resolve(false);
+            });
             xhr.open('POST', '/api/worlds/upload');
             xhr.upload.addEventListener('progress', (e) => {
               if (!e.lengthComputable) return;
@@ -142,13 +148,13 @@ export function extractWorldModal({ serverId = null, onDone } = {}) {
         : `
       <label class="label">Server</label>
       <select class="input" data-x-server data-label="Extract world from server">
-        ${servers.map((s) => `<option value="${s.id}" data-desc="${escapeHtml(s.flavor)} · ${escapeHtml(s.status)}">${escapeHtml(s.name)}</option>`).join('')}
+        ${servers.map((s) => `<option value="${escapeHtml(s.id)}" data-desc="${escapeHtml(s.flavor)} · ${escapeHtml(s.status)}">${escapeHtml(s.name)}</option>`).join('')}
       </select>`
     }
     <label class="label ${serverId ? '' : 'mt-3'}">Library entry name (optional)</label>
     <input class="input" data-x-name placeholder="Leave empty to name it after the server" autocomplete="off">
     <p class="help">Takes a consistent snapshot — safe while the server is running (save-off → save-all → copy → save-on).</p>
-    <div class="mt-3 hidden" data-x-progress><div class="meter"><div class="bg-grass-500 animate-pulse" style="width:100%"></div></div></div>`;
+    <div class="mt-3 hidden" data-x-progress><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
 
   openModal({
     title: 'Save world to library',
@@ -194,7 +200,7 @@ export function installWorldModal(libId, libName, { serverId = null, onDone } = 
         : `
       <label class="label">Target server</label>
       <select class="input" data-i-server data-label="Install into server">
-        ${servers.map((s) => `<option value="${s.id}" data-desc="${escapeHtml(s.flavor)} · ${escapeHtml(s.status)}">${escapeHtml(s.name)}</option>`).join('')}
+        ${servers.map((s) => `<option value="${escapeHtml(s.id)}" data-desc="${escapeHtml(s.flavor)} · ${escapeHtml(s.status)}">${escapeHtml(s.name)}</option>`).join('')}
       </select>`
     }
     <label class="label ${serverId ? '' : 'mt-3'}">Install mode</label>
@@ -207,7 +213,7 @@ export function installWorldModal(libId, libName, { serverId = null, onDone } = 
       <input class="input" data-i-name value="${escapeHtml(libName.replace(/[\\/:*?"<>|]/g, '_').slice(0, 64))}" autocomplete="off">
     </div>
     <p class="help">Compatibility (flavor + MC version) is checked before anything is touched; replace mode takes a safety backup automatically.</p>
-    <div class="mt-3 hidden" data-i-progress><div class="meter"><div class="bg-grass-500 animate-pulse" style="width:100%"></div></div></div>`;
+    <div class="mt-3 hidden" data-i-progress><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
 
   const mode = content.querySelector('[data-i-mode]');
   mode.addEventListener('change', () => {

@@ -8,11 +8,13 @@ function cfg() {
   return { timeZone: m.timezone || undefined, locale: m.locale || undefined };
 }
 
-// Accept Date | epoch ms | ISO string | SQLite 'YYYY-MM-DD HH:MM:SS' (UTC).
+// Accept Date | epoch ms (number or data-attribute string) | ISO string |
+// SQLite 'YYYY-MM-DD HH:MM:SS' (UTC).
 function toDate(v) {
   if (v instanceof Date) return v;
   if (typeof v === 'number') return new Date(v);
   if (typeof v === 'string') {
+    if (/^\d{10,}$/.test(v)) return new Date(Number(v)); // epoch ms via dataset
     const s = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(v) ? v.replace(' ', 'T') + 'Z' : v;
     return new Date(s);
   }
@@ -45,6 +47,7 @@ export function timeAgo(v) {
   const d = toDate(v);
   if (isNaN(d.getTime())) return '';
   const secs = Math.round((Date.now() - d.getTime()) / 1000);
+  if (secs < 0) return formatDateTime(d); // future timestamp — not "just now"
   if (secs < 45) return 'just now';
   if (secs < 3600) return `${Math.round(secs / 60)}m ago`;
   if (secs < 86400) return `${Math.round(secs / 3600)}h ago`;

@@ -5,6 +5,7 @@ import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
+import { fmtBytes } from '../lib/format.js';
 
 const root = document.querySelector('[data-files-server], [data-files-global]');
 if (root) init(root);
@@ -35,7 +36,8 @@ function init(rootEl) {
           });
           const data = await res.json().catch(() => ({}));
           if (res.ok && data.ok !== false) {
-            toast(`Uploaded ${data.uploaded.length} file${data.uploaded.length > 1 ? 's' : ''}.`);
+            const n = (data.uploaded || []).length;
+            toast(`Uploaded ${n} file${n === 1 ? '' : 's'}.`);
             reload();
           } else {
             toast(data.error || 'Upload failed', { kind: 'error', timeout: 9000 });
@@ -89,12 +91,6 @@ function init(rootEl) {
       await withBusy(e.target.closest('[data-file-edit]'), () => openEditor(path, name));
     } else if (e.target.closest('[data-file-download]')) {
       location.href = `${base}/download?path=${encodeURIComponent(path)}`;
-    } else if (e.target.closest('[data-file-rename]')) {
-      renameModal(path, name);
-    } else if (e.target.closest('[data-file-move]')) {
-      destinationModal('Move', path, name, `${base}/move`);
-    } else if (e.target.closest('[data-file-copy]')) {
-      destinationModal('Copy', path, name, `${base}/copy`);
     } else if (e.target.closest('[data-file-delete]')) {
       const btn = e.target.closest('[data-file-delete]');
       const ok = await confirmDialog({
@@ -111,7 +107,17 @@ function init(rootEl) {
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok !== false) {
           toast(`"${name}" deleted (${fmtBytes(data.freedBytes)} freed).`);
+          const tbody = row.closest('tbody');
           row.remove();
+          // A header-only table after the last delete looks broken — restore
+          // the empty state the server renders on first load.
+          if (tbody && !tbody.querySelector('[data-file-row]')) {
+            const tr = document.createElement('tr');
+            tr.dataset.filesEmpty = '';
+            tr.innerHTML =
+              '<td colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty — upload files or create a folder above.</td>';
+            tbody.appendChild(tr);
+          }
         } else {
           toast(data.error || 'Delete failed', { kind: 'error' });
         }
@@ -119,6 +125,17 @@ function init(rootEl) {
         restore();
       }
     }
+  });
+
+  // Rename/move/copy live in the row overflow menu, which dropdown.js portals
+  // to <body> — so these are document-delegated and carry their own data-path.
+  document.addEventListener('click', (e) => {
+    const act = e.target.closest('[data-file-rename], [data-file-move], [data-file-copy]');
+    if (!act || !act.dataset.path) return;
+    const { path, name } = act.dataset;
+    if (act.hasAttribute('data-file-rename')) renameModal(path, name);
+    else if (act.hasAttribute('data-file-move')) destinationModal('Move', path, name, `${base}/move`);
+    else destinationModal('Copy', path, name, `${base}/copy`);
   });
 
   // ---- Text editor (modal textarea, v1) ----
@@ -171,6 +188,7 @@ function init(rootEl) {
         {
           label: 'Rename',
           kind: 'primary',
+          busyLabel: 'Renaming…',
           onClick: async () => {
             const newName = input.value.trim();
             if (!newName || newName === name) return false;
@@ -232,13 +250,6 @@ function init(rootEl) {
       return null;
     }
   }
-}
-
-function fmtBytes(n) {
-  n = Number(n) || 0;
-  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)} GB`;
-  if (n >= 1024 ** 2) return `${(n / 1024 ** 2).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(n / 1024))} KB`;
 }
 
 function escapeHtml(s) {

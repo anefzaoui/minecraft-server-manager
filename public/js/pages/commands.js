@@ -11,7 +11,7 @@ if (root) init(root);
 
 function init(root) {
   const serverId = root.dataset.serverId;
-  const prefix = root.dataset.prefix || '!';
+  let prefix = root.dataset.prefix || '!';
   const running = root.dataset.running === '1';
 
   let commands = [];
@@ -20,6 +20,7 @@ function init(root) {
   } catch {
     /* island missing — actions still work */
   }
+  const rowFor = (id) => root.querySelector(`[data-cc-row][data-id="${CSS.escape(id)}"]`);
 
   async function api(method, path, body) {
     const res = await fetch(`/api/servers/${serverId}/chat-commands${path}`, {
@@ -66,7 +67,18 @@ function init(root) {
       }
       try {
         await withBusy(prefixSave, 'Saving…', () => api('PUT', '/prefix', { prefix: value }));
-        refresh(`Prefix set to "${value}" — commands now start with ${value}`);
+        // Patch every rendered trigger in place — a full reload for a
+        // one-character setting flashed the page and lost scroll position.
+        prefix = value;
+        root.dataset.prefix = value;
+        for (const row of root.querySelectorAll('[data-cc-row]')) {
+          const cmd = commands.find((c) => c.id === row.dataset.id);
+          const cell = row.querySelector('.font-mono');
+          if (cmd && cell) cell.textContent = prefix + cmd.trigger;
+        }
+        const sample = root.querySelector('[data-cc-prefix-sample]');
+        if (sample) sample.textContent = `${prefix}rtp2`;
+        toast(`Prefix set to "${value}" — commands now start with ${value}`);
       } catch (err) {
         fail(err);
       }
@@ -92,7 +104,13 @@ function init(root) {
 
   // -------------------------------------------------------- add / edit modal
   function commandModal(existing) {
+    // Seed each action panel ONLY from params saved for THAT action —
+    // maxDistance means "RTP ring" on one and "structure search radius" on the
+    // other, and cross-seeding bled one into the other when switching panels.
     const p = (existing && existing.params) || {};
+    const pFor = (action) => (existing && existing.action === action ? p : {});
+    const pRtp = pFor('rtp');
+    const pStruct = pFor('structure');
     const content = document.createElement('div');
     content.className = 'space-y-4 text-sm';
     content.innerHTML = `
@@ -101,7 +119,7 @@ function init(root) {
           <label class="label">Trigger</label>
           <div class="relative">
             <span class="pointer-events-none absolute inset-y-0 left-2.5 grid place-items-center font-mono text-ink-faint" data-f="prefix-preview">${esc(prefix)}</span>
-            <input class="input pl-7 font-mono" data-f="trigger" maxlength="24" autocomplete="off" spellcheck="false" placeholder="rtp2" value="${esc(existing ? existing.trigger : '')}">
+            <input class="input ${prefix.length > 1 ? 'pl-10' : 'pl-7'} font-mono" data-f="trigger" maxlength="24" autocomplete="off" spellcheck="false" placeholder="rtp2" value="${esc(existing ? existing.trigger : '')}">
           </div>
         </div>
         <div>
@@ -122,8 +140,8 @@ function init(root) {
 
       <div data-cc-panel="rtp" class="space-y-3">
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="label">Min distance</label><input class="input" type="number" data-f="minDistance" min="0" value="${Number(p.minDistance ?? 500)}"></div>
-          <div><label class="label">Max distance</label><input class="input" type="number" data-f="maxDistance" min="16" value="${Number(p.maxDistance ?? 5000)}"></div>
+          <div><label class="label">Min distance</label><input class="input" type="number" data-f="minDistance" min="0" value="${Number(pRtp.minDistance ?? 500)}"></div>
+          <div><label class="label">Max distance</label><input class="input" type="number" data-f="maxDistance" min="16" value="${Number(pRtp.maxDistance ?? 5000)}"></div>
         </div>
         <div>
           <label class="label">Around</label>
@@ -141,8 +159,8 @@ function init(root) {
           <select class="input" data-f="structure" data-label="Structure"><option value="">Loading structures…</option></select>
         </div>
         <div class="grid grid-cols-2 items-end gap-2">
-          <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" min="16" value="${Number(p.maxDistance ?? 5000)}"></div>
-          <label class="flex items-center gap-2 pb-2"><input type="checkbox" class="msm-check" data-f="structRandom" ${p.random === false ? '' : 'checked'}> Surprise me (random one, not nearest)</label>
+          <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" min="16" value="${Number(pStruct.maxDistance ?? 5000)}"></div>
+          <label class="flex items-center gap-2 pb-2"><input type="checkbox" class="msm-check" data-f="structRandom" ${pStruct.random === false ? '' : 'checked'}> Surprise me (random one, not nearest)</label>
         </div>
       </div>
 
@@ -202,7 +220,7 @@ function init(root) {
 
     const f = (k) => content.querySelector(`[data-f="${k}"]`);
     if (existing) f('action').value = existing.action;
-    if (p.center) f('center').value = p.center;
+    if (pRtp.center) f('center').value = pRtp.center;
     if (existing) f('permission').value = existing.permission;
 
     function syncPanels() {
@@ -387,7 +405,10 @@ function init(root) {
       try {
         await withBusy(e.target.closest('[data-cc-delete]'), async () => {
           await api('DELETE', `/${cmd.id}`);
-          refresh(`${prefix}${cmd.trigger} deleted`);
+          commands = commands.filter((c) => c.id !== cmd.id);
+          if (!commands.length) return refresh(`${prefix}${cmd.trigger} deleted`); // re-render shows the empty state
+          row.remove();
+          toast(`${prefix}${cmd.trigger} deleted`);
         });
       } catch (err) {
         fail(err);
@@ -450,7 +471,12 @@ function init(root) {
             localStorage.setItem('cc-test-player', player);
             try {
               const { message } = await api('POST', `/${cmd.id}/test`, { player });
-              refresh(message || `${prefix}${cmd.trigger} ran for ${player}`);
+              // Only the use-counter changed — bump it in place instead of
+              // reloading out from under the success message.
+              cmd.uses = (Number(cmd.uses) || 0) + 1;
+              const uses = rowFor(cmd.id)?.querySelector('[data-cc-uses]');
+              if (uses) uses.textContent = String(cmd.uses);
+              toast(message || `${prefix}${cmd.trigger} ran for ${player}`);
             } catch (err) {
               fail(err);
               return false;
