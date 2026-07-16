@@ -5,6 +5,34 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.7.1] - 2026-07-16
+
+### Security
+
+- **Read-only viewers can no longer exfiltrate RCON passwords or server data.** Two GET routes were
+  reachable by the `viewer` role (which `requireWrite` only blocks from writes): the per-server file
+  manager and the backup-archive download. Both expose `server.properties`, which the itzg image writes
+  with the plaintext `rcon.password` — so a nominally read-only account could recover RCON credentials
+  and full server contents. The per-server file manager (`/api/servers/:id/files`) and backup download
+  (`/api/backups/:id/download`) are now restricted to `admin`/`operator`.
+- **Path traversal in the mod content routes is fixed.** `POST /api/servers/:id/mods/toggle` and
+  `DELETE /api/servers/:id/mods/:file` passed the `file` name into a single `dataPath()` join, which
+  only guarantees containment within `DATA_DIR` — not within the server's own directory. A crafted
+  `../../../panel.db` (or `.session-secret`) name could rename or delete panel-internal files (the auth
+  database and the at-rest secret key), a destructive/DoS primitive available to any `operator`. Content
+  filenames are now validated as bare names (no separators, NUL, or dot-segments) before any path join.
+- **Admin-only pages are now gated.** `/settings` (full user roster, masked API key) and `/storage`
+  (largest-file paths across `DATA_DIR`) rendered for any authenticated user, even though their JSON/API
+  and file-manager equivalents were already admin-only. Both now require `admin`.
+- **Custom SVG server icons can no longer execute scripts.** User-uploaded icons are served under a
+  locked-down, sandboxed `Content-Security-Policy` (plus `nosniff`), so a `<script>` embedded in an SVG
+  cannot run if the file is opened directly.
+
+### Added
+
+- Regression tests (`test/security-authz.test.js`) asserting the viewer lockout on backup/file routes,
+  the mod-route traversal rejection, and the admin gate on `/settings` and `/storage`.
+
 ## [0.7.0] - 2026-07-16
 
 ### Added

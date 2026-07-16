@@ -25,6 +25,18 @@ const indexer = require('../storage/indexer');
 
 const PLUGIN_TYPES = new Set(['PAPER', 'PURPUR', 'PUFFERFISH', 'LEAF', 'FOLIA', 'SPIGOT', 'BUKKIT', 'CANYON']);
 
+// Content filenames must be bare names inside the server's content dir. dataPath()
+// only guarantees containment within DATA_DIR, so a `file` like "../../../panel.db"
+// would still resolve (escaping the server dir to a panel-internal file). Reject any
+// separator, NUL, or dot-segment before it reaches a path join.
+function assertBareContentName(file) {
+  const name = String(file || '');
+  if (!name || name === '.' || name === '..' || /[\\/\0]/.test(name)) {
+    throw httpError(400, 'Invalid content filename');
+  }
+  return name;
+}
+
 function contentDir(server, kind) {
   if (kind === 'datapack') return 'world/datapacks';
   if (kind === 'resourcepack') return 'resourcepacks';
@@ -267,6 +279,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
 
 /** Toggle content. Overlay: rename instantly. Pack: exclusion env + recreate flag. */
 async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
+  assertBareContentName(file);
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   const row = db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', serverId, file);
@@ -320,6 +333,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
 
 /** Remove overlay content (file + row); pack content is excluded, not removed. */
 async function removeContent(serverId, file, { actor = 'system' } = {}) {
+  assertBareContentName(file);
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   const row = db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', serverId, file);
