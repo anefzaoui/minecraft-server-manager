@@ -135,7 +135,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       moreBtn.disabled = false;
     } catch (err) {
       if (!append)
-        listEl.innerHTML = `<div class="p-6 text-center text-sm text-redstone-400">${esc(err.message)}</div>`;
+        listEl.innerHTML = `<div class="p-6 text-center text-sm text-danger">${esc(err.message)}</div>`;
       else toast(err.message, { kind: 'error' });
     } finally {
       state.loading = false;

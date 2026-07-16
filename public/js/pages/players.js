@@ -303,12 +303,12 @@ function init(root) {
     const content = document.createElement('div');
     content.className = 'space-y-4 text-sm';
     content.innerHTML = `
-      <div class="flex gap-1 rounded-md border border-line bg-inset p-1" role="tablist">
-        <button type="button" class="btn btn-sm flex-1" data-tp-mode="coords" role="tab">Coordinates</button>
-        <button type="button" class="btn btn-sm flex-1" data-tp-mode="biome" role="tab">Nearest biome</button>
-        <button type="button" class="btn btn-sm flex-1" data-tp-mode="player" role="tab">To player</button>
-        <button type="button" class="btn btn-sm flex-1" data-tp-mode="rtp" role="tab">Random</button>
-        <button type="button" class="btn btn-sm flex-1" data-tp-mode="structure" role="tab">Structure</button>
+      <div class="seg w-full" role="tablist">
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="biome">Nearest biome</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
       </div>
 
       <div data-tp-panel="coords" class="space-y-3">
@@ -376,7 +376,7 @@ function init(root) {
     const tabs = content.querySelectorAll('[data-tp-mode]');
     function setMode(next) {
       mode = next;
-      tabs.forEach((t) => t.classList.toggle('btn-primary', t.dataset.tpMode === mode));
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tpMode === mode)));
       content
         .querySelectorAll('[data-tp-panel]')
         .forEach((p) => p.classList.toggle('hidden', p.dataset.tpPanel !== mode));

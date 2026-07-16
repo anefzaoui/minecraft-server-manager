@@ -43,7 +43,7 @@ function init(serverId) {
         <td class="text-right text-ink-faint">${Number(p.stoneMined || 0).toLocaleString()}</td>
         <td class="text-right text-ink-faint">${Number(p.diamondsMined || 0).toLocaleString()}</td>
         <td class="text-right font-mono text-xs">${p.diamondRatio != null ? Number(p.diamondRatio).toFixed(4) : '—'}${p.medianRatio != null ? ` <span class="text-ink-faint">(median ${Number(p.medianRatio).toFixed(4)})</span>` : ''}</td>
-        <td>${flagged ? '<span class="badge bg-redstone-500/15 text-redstone-400">suspicious</span>' : '<span class="badge bg-grass-500/15 text-grass-400">normal</span>'}</td>`;
+        <td>${flagged ? '<span class="badge badge-danger">suspicious</span>' : '<span class="badge badge-ok">normal</span>'}</td>`;
       tr.querySelector('td').textContent = p.name || p.uuid;
       tbody.appendChild(tr);
     }

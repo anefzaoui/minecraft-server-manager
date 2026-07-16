@@ -62,7 +62,7 @@ function init() {
       row.innerHTML = `
         <div class="flex items-center gap-2">
           <span class="min-w-0 flex-1 truncate font-medium"></span>
-          <span class="shrink-0 text-[11px] ${t.state === 'failed' ? 'text-redstone-400' : t.state === 'done' ? 'text-grass-400' : 'text-ink-faint'}">
+          <span class="shrink-0 text-[11px] ${t.state === 'failed' ? 'text-danger' : t.state === 'done' ? 'text-ok' : 'text-ink-faint'}">
             ${t.state === 'running' ? `${Math.round(t.elapsedMs / 1000)}s` : t.state}
           </span>
         </div>

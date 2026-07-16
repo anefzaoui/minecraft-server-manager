@@ -98,7 +98,7 @@ function showPreview(preview, importBody) {
       preview.warnings.length
         ? `
       <div class="rounded-md border border-gold-400/40 bg-gold-400/10 p-2.5 text-xs">
-        <div class="mb-1 font-medium text-gold-400">Warnings</div>
+        <div class="mb-1 font-medium text-warn">Warnings</div>
         <ul class="list-inside list-disc space-y-0.5 text-ink-soft">${preview.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
       </div>`
         : ''
@@ -153,9 +153,9 @@ async function createFrom(body, name) {
 
 function showReport(server, report) {
   const BADGE = {
-    ok: '<span class="badge bg-grass-500/15 text-grass-400">ok</span>',
-    'hash-mismatch': '<span class="badge bg-gold-400/15 text-gold-400">hash mismatch</span>',
-    failed: '<span class="badge bg-redstone-400/15 text-redstone-400">failed</span>',
+    ok: '<span class="badge badge-ok">ok</span>',
+    'hash-mismatch': '<span class="badge badge-warn">hash mismatch</span>',
+    failed: '<span class="badge badge-danger">failed</span>',
   };
   const content = document.createElement('div');
   content.className = 'space-y-3 text-sm';

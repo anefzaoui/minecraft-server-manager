@@ -1,4 +1,4 @@
-﻿{{> page-header heading="ACTIVITY" sub="Every action across every server — who did what, when, with the receipts."}}
+{{> page-header heading="ACTIVITY" sub="Every action across every server — who did what, when, with the receipts."}}
 
 {{#if (or events.length (or filters.q (or filters.server filters.type)))}}
 <form class="mb-4 flex flex-wrap items-center gap-2" method="get" action="/activity" id="activity-filters">
@@ -11,7 +11,7 @@
     <option value="">All types</option>
     {{#each types}}<option value="{{this}}" {{#if (eq this ../filters.type)}}selected{{/if}}>{{this}}</option>{{/each}}
   </select>
-  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply</button>
+  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply filters</button>
   <div class="ml-auto flex gap-1">
     <a class="btn btn-sm" href="/api/events/export?format=csv{{exportQs}}" data-tip="Export the filtered events as CSV">{{{icon 'download' 'size-3.5'}}} CSV</a>
     <a class="btn btn-sm" href="/api/events/export?format=json{{exportQs}}" data-tip="Export the filtered events as JSON">{{{icon 'download' 'size-3.5'}}} JSON</a>
@@ -22,10 +22,10 @@
   <ol class="divide-y divide-line">
     {{#each events}}
       <li class="flex flex-wrap items-center gap-2 p-3 text-sm">
-        <span class="badge shrink-0 bg-inset text-ink-soft">{{type}}</span>
+        <span class="badge shrink-0">{{type}}</span>
         <span class="min-w-0 flex-1">{{summary}}</span>
         {{#if serverId}}
-          <a href="/servers/{{serverId}}" class="shrink-0 text-xs text-diamond-400 hover:underline">{{server}}</a>
+          <a href="/servers/{{serverId}}" class="shrink-0 text-xs text-link hover:underline">{{server}}</a>
         {{else}}
           <span class="shrink-0 text-xs text-ink-faint">{{server}}</span>
         {{/if}}

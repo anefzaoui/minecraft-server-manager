@@ -72,7 +72,7 @@ function init(serverId, running) {
         const value = s[chip.dataset.rule];
         chip.dataset.on = value ? '1' : '0';
         chip.classList.toggle('border-grass-500', value === true);
-        chip.classList.toggle('text-grass-300', value === true);
+        chip.classList.toggle('text-ok', value === true);
         chip.title = value === undefined ? '' : value ? 'ON — click to turn off' : 'OFF — click to turn on';
       });
     } catch {

@@ -2,7 +2,7 @@
 
   <div class="card p-4">
     <div class="mb-4 flex items-center justify-between gap-3">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-diamond-400'}}} Discord notifications</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-link'}}} Discord notifications</h3>
       <span class="msm-toggle"><input type="checkbox" id="ig-dc-enabled" {{#if integrations.discord.enabled}}checked{{/if}}><span></span></span>
     </div>
     <div class="space-y-4">
@@ -31,7 +31,7 @@
 
   <div class="card p-4">
     <div class="mb-4 flex items-center justify-between gap-3">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'globe' 'size-4 text-grass-400'}}} Public status page</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'globe' 'size-4 text-ok'}}} Public status page</h3>
       <span class="msm-toggle"><input type="checkbox" id="ig-sp-enabled" {{#if integrations.statusPage.enabled}}checked{{/if}}><span></span></span>
     </div>
     <div class="space-y-4">
@@ -54,7 +54,7 @@
   </div>
 
   <div class="card p-4 lg:col-span-2">
-    <h3 class="mb-4 flex items-center gap-2 font-semibold">{{{icon 'send' 'size-4 text-gold-400'}}} Invite friends</h3>
+    <h3 class="mb-4 flex items-center gap-2 font-semibold">{{{icon 'send' 'size-4 text-warn'}}} Invite friends</h3>
     <div class="grid gap-4 lg:grid-cols-2">
       <div class="space-y-4">
         <div>
@@ -87,7 +87,7 @@
             <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
             <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App — it installs the right Minecraft version, the mods, and pre-adds this server to their multiplayer list.</p>
             {{#if integrations.invite.manualMods.length}}
-              <p class="mt-2 text-xs text-gold-400">These mods are not on Modrinth, so friends must add the files to their <code class="rounded bg-inset px-1">mods</code> folder themselves:</p>
+              <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="rounded bg-inset px-1">mods</code> folder themselves:</p>
               <ul class="mt-1 list-inside list-disc text-xs text-ink-soft">
                 {{#each integrations.invite.manualMods}}<li>{{name}} <span class="font-mono text-ink-faint">({{filename}})</span></li>{{/each}}
               </ul>
@@ -100,7 +100,7 @@
           </div>
         {{/if}}
         {{#if integrations.invite.whitelistEnforced}}
-          <div class="rounded-md border border-gold-800/50 bg-gold-900/15 p-3 text-xs text-gold-300">Whitelist is enforced — add each friend on the Players tab before they join.</div>
+          <div class="rounded-md border border-warn/40 bg-gold-500/10 p-3 text-xs text-warn">Whitelist is enforced — add each friend on the Players tab before they join.</div>
         {{/if}}
         <details class="rounded-md border border-line bg-raised p-3 text-xs">
           <summary class="cursor-pointer font-medium text-sm">Playing over the internet (port forwarding)</summary>

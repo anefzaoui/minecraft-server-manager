@@ -5,9 +5,9 @@
     <div class="min-w-0">
       <span class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm font-medium text-ink">
         {{label}}
-        <span class="font-mono text-[10px] font-normal text-ink-faint">{{key}}</span>
-        {{#if note}}<span class="badge bg-gold-400/15 font-normal normal-case tracking-normal text-gold-400">{{note}}</span>{{/if}}
-        {{#if danger}}<span class="badge bg-redstone-500/15 font-normal normal-case tracking-normal text-redstone-400">caution</span>{{/if}}
+        <span class="font-mono text-[11px] font-normal text-ink-faint">{{key}}</span>
+        {{#if note}}<span class="badge badge-warn font-normal normal-case tracking-normal">{{note}}</span>{{/if}}
+        {{#if danger}}<span class="badge badge-danger font-normal normal-case tracking-normal">caution</span>{{/if}}
       </span>
       <p class="mt-1 max-w-prose text-xs leading-relaxed text-ink-faint">{{help}}</p>
     </div>
@@ -20,10 +20,10 @@
   <div class="space-y-1.5 py-3.5 first:pt-1 last:pb-1">
     <label class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm font-medium text-ink">
       {{label}}
-      <span class="font-mono text-[10px] font-normal text-ink-faint">{{key}}</span>
+      <span class="font-mono text-[11px] font-normal text-ink-faint">{{key}}</span>
       {{#if unit}}<span class="text-xs font-normal text-ink-faint">({{unit}})</span>{{/if}}
-      {{#if note}}<span class="badge bg-gold-400/15 font-normal normal-case tracking-normal text-gold-400">{{note}}</span>{{/if}}
-      {{#if danger}}<span class="badge bg-redstone-500/15 font-normal normal-case tracking-normal text-redstone-400">caution</span>{{/if}}
+      {{#if note}}<span class="badge badge-warn font-normal normal-case tracking-normal">{{note}}</span>{{/if}}
+      {{#if danger}}<span class="badge badge-danger font-normal normal-case tracking-normal">caution</span>{{/if}}
     </label>
 
     {{#if (eq type 'enum')}}

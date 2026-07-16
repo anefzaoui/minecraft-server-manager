@@ -5,13 +5,13 @@
     <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
       <nav class="flex min-w-0 flex-wrap items-center gap-1 font-mono text-sm text-ink-soft" aria-label="Breadcrumb">
         {{#if crumbs.length}}
-          <a class="hover:text-diamond-400" href="/files">data</a>
+          <a class="hover:text-link" href="/files">data</a>
           {{#each crumbs}}
             <span class="text-ink-faint">/</span>
             {{#if @last}}
               <span class="truncate text-ink">{{name}}</span>
             {{else}}
-              <a class="hover:text-diamond-400" href="/files?path={{enc}}">{{name}}</a>
+              <a class="hover:text-link" href="/files?path={{enc}}">{{name}}</a>
             {{/if}}
           {{/each}}
         {{else}}
@@ -30,7 +30,7 @@
           {{#if filePath}}
             <tr>
               <td colspan="4">
-                <a class="flex items-center gap-2 text-ink-faint hover:text-diamond-400" href="/files{{#if parentEnc}}?path={{parentEnc}}{{/if}}">{{{icon 'corner-left-up' 'size-4'}}} ..</a>
+                <a class="flex items-center gap-2 text-ink-faint hover:text-link" href="/files{{#if parentEnc}}?path={{parentEnc}}{{/if}}">{{{icon 'corner-left-up' 'size-4'}}} ..</a>
               </td>
             </tr>
           {{/if}}
@@ -39,8 +39,8 @@
               <td>
                 <div class="flex items-center gap-2">
                   {{#if dir}}
-                    {{{icon 'folder' 'size-4 text-gold-400'}}}
-                    <a class="min-w-0 truncate font-medium hover:text-diamond-400" href="/files?path={{enc}}">{{name}}</a>
+                    {{{icon 'folder' 'size-4 text-warn'}}}
+                    <a class="min-w-0 truncate font-medium hover:text-link" href="/files?path={{enc}}">{{name}}</a>
                   {{else}}
                     {{{icon 'file-text' 'size-4 text-ink-faint'}}}
                     <span class="min-w-0 truncate font-medium">{{name}}</span>
@@ -57,7 +57,7 @@
                 <button class="btn btn-ghost btn-sm" data-file-rename data-tip="Rename">{{{icon 'pencil' 'size-3.5'}}}</button>
                 <button class="btn btn-ghost btn-sm" data-file-move data-tip="Move to…">{{{icon 'move' 'size-3.5'}}}</button>
                 <button class="btn btn-ghost btn-sm" data-file-copy data-tip="Copy to…">{{{icon 'copy' 'size-3.5'}}}</button>
-                <button class="btn btn-ghost btn-sm text-redstone-400" data-file-delete data-tip="Delete ({{bytes size}})" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-file-delete data-tip="Delete ({{bytes size}})" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
               </div></td>
             </tr>
           {{else}}

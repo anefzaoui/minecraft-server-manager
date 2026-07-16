@@ -1,13 +1,13 @@
 {{#if mapEnabled}}
   <div class="card overflow-hidden">
     <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
-      <span class="flex items-center gap-1.5 text-sm font-medium text-grass-400">
+      <span class="flex items-center gap-1.5 text-sm font-medium text-ok">
         <span class="status-dot relative bg-grass-500 pulse"></span> Live map
       </span>
       <span class="text-xs text-ink-faint">BlueMap renders in the background — freshly enabled maps take a few minutes to draw the first tiles.</span>
       <div class="ml-auto flex gap-2">
         <a class="btn btn-sm" href="/map/{{server.id}}/" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Fullscreen</a>
-        <button class="btn btn-ghost btn-sm text-redstone-400" data-map-disable data-server-id="{{server.id}}">Disable map</button>
+        <button class="btn btn-ghost btn-sm text-danger" data-map-disable data-server-id="{{server.id}}">Disable map</button>
       </div>
     </div>
     <iframe src="/map/{{server.id}}/" class="h-[70vh] w-full border-0 bg-stone-950" title="Live world map"></iframe>

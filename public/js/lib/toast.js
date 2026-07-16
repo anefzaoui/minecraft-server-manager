@@ -20,15 +20,15 @@ function ensureHost() {
 const KIND = {
   success: {
     border: 'border-grass-700',
-    icon: '<svg class="icon size-4 text-grass-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    icon: '<svg class="icon size-4 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
   },
   error: {
-    border: 'border-redstone-700',
-    icon: '<svg class="icon size-4 text-redstone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+    border: 'border-danger/40',
+    icon: '<svg class="icon size-4 text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
   },
   info: {
     border: 'border-diamond-700',
-    icon: '<svg class="icon size-4 text-diamond-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+    icon: '<svg class="icon size-4 text-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
   },
 };
 
@@ -37,9 +37,9 @@ export function toast(message, { kind = 'success', timeout = 4500 } = {}) {
   const meta = KIND[kind] || KIND.success;
 
   const el = document.createElement('div');
-  el.className = `card flex items-start gap-2.5 p-3 text-sm shadow-lg ${meta.border} animate-[toast-in_.18s_ease-out]`;
+  el.className = `card flex items-start gap-2.5 p-3 text-sm shadow-overlay ${meta.border} animate-[toast-in_.18s_ease-out]`;
   el.innerHTML = `${meta.icon}<span class="min-w-0 flex-1 break-words"></span>
-    <button class="text-ink-faint transition hover:text-ink" aria-label="Dismiss">
+    <button class="icon-btn -my-1.5 -mr-1.5" aria-label="Dismiss">
       <svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
     </button>`;
   el.querySelector('span').textContent = message;

@@ -149,7 +149,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
       const res = await fetch(`/api/schedules/preview?cron=${encodeURIComponent(expr)}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.ok === false) {
-        preview.innerHTML = `<span class="text-redstone-400">${escapeHtml(data.error || 'Invalid cron expression')}</span>`;
+        preview.innerHTML = `<span class="text-danger">${escapeHtml(data.error || 'Invalid cron expression')}</span>`;
         return;
       }
       preview.innerHTML = `<span class="text-ink-faint">Next runs:</span> ${data.runs

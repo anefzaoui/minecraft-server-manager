@@ -5,6 +5,106 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.7.4] - 2026-07-16
+
+### Changed
+
+- **Badges are a closed system**: `.badge` is neutral by default with exactly four semantic
+  variants (`badge-ok/warn/danger/info`); all ~40 ad-hoc bg/text colorway combos across every page
+  and page script now use them (including the activity-timeline type badges).
+- **Themed scrollbars** everywhere — thin, line-colored, transparent track — replacing the stock
+  OS bar on both themes.
+- **Tables**: cells move to `px-4` so first/last columns align with card headers and padding.
+- **Inputs**: hover now strengthens the border (stone-500, reads stronger in both themes); help
+  text is capped at prose width instead of running the full card.
+- **Numbers that update live** (dashboard stat cards, server live-usage, storage total, status
+  page) render with tabular numerals so they don't jitter as values change.
+- **Modals**: header/body/footer padding normalized to the card rhythm (p-5).
+- Sidebar/menu items get a visible focus ring; collapsible catalog sections highlight their
+  summary row on hover; the console gets the same recessed-trough inner shadow as the meters;
+  the wizard's selected-mod chips move from pills to the blocky register; the last three
+  dark-only notice boxes (mods manual-download, commands/players whitelist notes, settings
+  headroom "healthy" state) are theme-safe; "Export" → "Export blueprint".
+
+## [0.7.3] - 2026-07-16
+
+### Changed
+
+- **One segmented control for every pick-one-of-N group.** New `.seg`/`.seg-btn` component replaces
+  four divergent ad-hoc patterns (ghost-buttons-in-a-box, chip toggles, inset tablists). Segments are
+  the exact height of inputs (38px) so platform pickers align with their search field, have real gaps
+  between items, style their active state off `aria-selected`/`aria-pressed` (raised key + lit top
+  edge + green text), and inactive hover changes text only — a hovered segment can no longer be
+  mistaken for the selected one. Converted: wizard source tabs, mod-mode, all three
+  Modrinth/CurseForge pickers, dashboard grid/list toggle, chat Tellraw/Say, and both
+  teleport-dialog tab rows. Segments are exempt from the global press-down effect (selected tabs
+  no longer bounce).
+- **Simple/Advanced is now an "Advanced options" switch** in the wizard toolbar — a boolean control
+  for a boolean choice — instead of a two-item tab group.
+- **Server icons are the official Minecraft sprites** (isometric grass block, creeper head, diamond,
+  TNT, chest, diamond sword, potion, end portal frame) from minecraft.wiki, replacing the hand-drawn
+  rect-mosaic SVGs. © Mojang, attributed in the README, excluded from the MIT license.
+- Tile pickers (loader, server type, icon, accent color — wizard and server Settings) keep a
+  constant 2px border and swap only its color, so selecting no longer shifts the row by a pixel.
+- Tooltips: only the first tooltip of a scan waits 350ms; neighbors shown while one is (or was just)
+  visible appear instantly.
+- Modal and toast close buttons are real 32px-hit-target icon buttons (`.icon-btn`) with hover and
+  focus-visible states, replacing naked 16px glyphs.
+
+## [0.7.2] - 2026-07-16
+
+### Changed
+
+- **Body font is now IBM Plex Sans** (self-hosted variable woff2, latin/latin-ext/cyrillic/greek
+  subsets, 126 KB total), replacing the 876 KB Inter ttf. Plex's engineered grotesque character fits
+  a server-infrastructure tool and sits more naturally under the Press Start 2P display face. The
+  stylesheet header now states the design system's three commitments (palette, type, structural
+  primitive) so future changes have a reference point.
+- The wizard's fifth accent swatch is amethyst `#9a5cc6` (from the in-game block) instead of the
+  off-palette `#8b5cf6`; the Fabric starter blueprint's accent is diamond `#21a7ab` instead of the
+  off-palette `#2f9bd6`.
+- MOTD editor: the presets button is plain "Examples" (no emoji), and color swatches highlight with
+  a ring on hover instead of scaling.
+- Toast and confirm copy: "Starting up!" and "(take a snapshot first!)" reworded without
+  exclamation marks.
+- README: full copy pass — em-dash density cut to ~1 per 320 words, glossary bullets now use colon
+  separators, two ornamental "excellent"s removed. No factual content changed.
+
+### Fixed
+
+- **Light theme now passes WCAG AA for all accent-colored text.** Links and status text previously
+  used raw palette classes (`text-diamond-400`, `text-grass-400`, `text-gold-400`,
+  `text-redstone-400`) in both themes; on the light canvas those measure 1.9–2.8:1. New semantic
+  tokens (`link`, `ok`, `warn`, `danger`) resolve to the 400 steps in dark (6.4–9.5:1) and the
+  600/700 steps in light (4.9–7.0:1), and 200+ call sites across every view and page script now go
+  through them. Server status text goes through a new `statusText` helper. The always-dark console
+  keeps its raw palette classes on purpose.
+- **Primary/danger button hover states now pass contrast.** Hover used to lighten
+  (grass-500 = 3.1:1, redstone-500 = 3.9:1 under white text); hover now darkens to the 700 step
+  (7.0:1 / 6.5:1).
+- **Error/warning boxes are theme-safe**: the dark-only `border-*-800 bg-*-900/15 text-*-300`
+  pattern is replaced with `border-danger/40 bg-*-500/10` + semantic text, and the dashboard Docker
+  warning colors only its title, not the whole paragraph.
+- **`prefers-reduced-motion` is now honored globally**: all animations and transitions collapse to a
+  single instant frame (status-dot ping, indeterminate meter pulse, spinners, entrance movements);
+  state remains readable through color. This was a WCAG-floor gap.
+- Progress meters transition `width` only and the settings toggle knob moves via `transform`,
+  replacing two `transition-all` rules that animated layout properties.
+
+### Changed (design system)
+
+- **Shadows are a three-level scale mapped to meaning** (`raised` / `overlay` / `modal`, one light
+  source, cool-tinted like the stone ramp); the six ad-hoc `shadow-sm/lg/xl` uses (cards, task
+  panel, dropdowns, modals, toasts, tooltips) now pick a level. Cards drop their shadow entirely —
+  the border and the dark-mode lightness step carry that edge alone.
+- Chips move from pill (`rounded-full`) to `rounded-sm`, staying in the product's blocky register.
+- Tables set `font-variant-numeric: tabular-nums` so sizes, ports and dates align.
+- Table row hover is gated behind `@media (hover: hover)` so touch devices don't stick.
+- Sub-scale `text-[10px]` labels bump to the 11px micro-label step (the in-slot inventory stamps
+  keep their game-register sizes; full info lives in their tooltips).
+- Bare "Save" / "Test" / "Apply" buttons are now verb + object: "Save key", "Test key",
+  "Save domain", "Save time zone", "Apply filters".
+
 ## [0.7.1] - 2026-07-16
 
 ### Security

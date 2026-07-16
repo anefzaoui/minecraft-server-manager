@@ -1,7 +1,7 @@
 <div class="w-full max-w-lg" id="setup-wizard">
   <div class="mb-5 flex items-center justify-center gap-2.5">
     <span class="grid size-10 place-items-center rounded-md bg-grass-600 text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)]">{{{icon 'pickaxe' 'size-5'}}}</span>
-    <span class="pixel text-sm">Minecraft <span class="text-grass-400">Server Manager</span></span>
+    <span class="pixel text-sm">Minecraft <span class="text-ok">Server Manager</span></span>
   </div>
 
   {{! Progress dots — one per step, driven by setup.js }}
@@ -44,7 +44,7 @@
     <section data-step="2" hidden>
       <h2 class="text-lg font-semibold">Create your admin account</h2>
       <p class="mt-1 text-sm text-ink-faint">This is the owner account for the panel. You can add more users later.</p>
-      <div class="mt-4 hidden rounded-md border border-redstone-700 bg-redstone-900/20 p-2.5 text-sm text-redstone-300" id="admin-error"></div>
+      <div class="mt-4 hidden rounded-md border border-danger/40 bg-redstone-500/10 p-2.5 text-sm text-danger" id="admin-error"></div>
       <form id="setup-admin" class="mt-4 space-y-4">
         <div>
           <label class="label" for="su-user">Username</label>
@@ -66,7 +66,7 @@
     <section data-step="3" hidden>
       <div class="flex items-center gap-2">
         <h2 class="text-lg font-semibold">Panel configuration</h2>
-        <span class="badge bg-line/60 text-ink-faint">optional</span>
+        <span class="badge">optional</span>
       </div>
       <p class="mt-1 text-sm text-ink-faint">You can change all of this later in Settings.</p>
 
@@ -74,7 +74,7 @@
         <label class="label" for="su-domain">Public domain <span class="text-ink-faint">(optional)</span></label>
         <div class="flex gap-2">
           <input class="input" id="su-domain" placeholder="mc.example.com" autocomplete="off" spellcheck="false">
-          <button class="btn shrink-0" type="button" id="su-domain-save">Save</button>
+          <button class="btn shrink-0" type="button" id="su-domain-save">Save domain</button>
         </div>
         <p class="help">Shown to players instead of your IP in connect addresses, e.g. <code>mc.example.com:25565</code>. No scheme or port.</p>
       </div>
@@ -86,7 +86,7 @@
           <button class="btn shrink-0" type="button" id="su-cf-save">Test &amp; save</button>
         </div>
         <p class="help">Needed only for automated CurseForge modpacks. Get one at
-          <a class="text-diamond-500 underline hover:text-diamond-400" href="https://console.curseforge.com/" target="_blank" rel="noopener">console.curseforge.com</a>.</p>
+          <a class="text-link underline hover:text-link" href="https://console.curseforge.com/" target="_blank" rel="noopener">console.curseforge.com</a>.</p>
       </div>
 
       <div class="mt-5">
@@ -107,7 +107,7 @@
     {{! ---- Step 4: Done ---- }}
     <section data-step="4" hidden>
       <div class="grid place-items-center py-2 text-center">
-        <span class="grid size-12 place-items-center rounded-full bg-grass-600/15 text-grass-400">{{{icon 'party-popper' 'size-6'}}}</span>
+        <span class="grid size-12 place-items-center rounded-full bg-grass-600/15 text-ok">{{{icon 'party-popper' 'size-6'}}}</span>
         <h2 class="mt-3 text-lg font-semibold">You're all set!</h2>
         <p class="mt-1 max-w-sm text-sm text-ink-faint">Minecraft Server Manager is ready. Spin up your first Minecraft server whenever you like.</p>
       </div>

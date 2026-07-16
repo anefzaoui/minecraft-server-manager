@@ -16,9 +16,9 @@
   <div id="mods-pending" class="mb-4 hidden"></div>
 
   {{#if server.pack}}
-    <div class="mb-4 max-w-prose rounded-md border border-diamond-800/50 bg-diamond-900/20 p-3 text-xs text-ink-soft">
-      <b class="text-diamond-400">Pack-managed</b> mods are installed by {{server.pack.platform}} ({{server.pack.name}} @ {{server.pack.version}}).
-      Disabling one uses the image's exclude list and applies on next restart. <b class="text-grass-400">Custom overlay</b> mods are yours —
+    <div class="mb-4 max-w-prose rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
+      <b class="text-link">Pack-managed</b> mods are installed by {{server.pack.platform}} ({{server.pack.name}} @ {{server.pack.version}}).
+      Disabling one uses the image's exclude list and applies on next restart. <b class="text-ok">Custom overlay</b> mods are yours —
       they live in the shared library, survive pack updates, and can be toggled instantly.
     </div>
   {{/if}}
@@ -47,24 +47,24 @@
             </td>
             <td>
               {{#if (eq source 'pack')}}
-                <span class="badge bg-diamond-400/15 text-diamond-400">pack</span>
+                <span class="badge badge-info">pack</span>
               {{else if (eq source 'overlay')}}
-                <span class="badge bg-grass-500/15 text-grass-400">overlay</span>
+                <span class="badge badge-ok">overlay</span>
                 {{#if sharedWith}}<div class="mt-1 text-[11px] text-ink-faint">on {{sharedWith}} server{{#if (gt sharedWith 1)}}s{{/if}}</div>{{/if}}
               {{else}}
-                <span class="badge bg-inset text-ink-soft">file</span>
+                <span class="badge">file</span>
               {{/if}}
             </td>
             <td>
               {{default version '—'}}
-              {{#if updateAvailable}}<span class="badge ml-1 bg-gold-400/15 text-gold-400" data-tip="Update available">→ {{updateAvailable}}</span>{{/if}}
+              {{#if updateAvailable}}<span class="badge badge-warn ml-1" data-tip="Update available">→ {{updateAvailable}}</span>{{/if}}
             </td>
             <td class="text-right text-ink-faint">{{bytes size}}</td>
             <td>
               {{#if missing}}
-                <span class="text-xs font-medium text-redstone-400" data-tip="File missing on disk — reinstall from library">missing</span>
+                <span class="text-xs font-medium text-danger" data-tip="File missing on disk — reinstall from library">missing</span>
               {{else if enabled}}
-                <span class="text-xs font-medium text-grass-400">Enabled</span>
+                <span class="text-xs font-medium text-ok">Enabled</span>
               {{else}}
                 <span class="text-xs font-medium text-ink-faint">Disabled</span>
               {{/if}}
@@ -72,13 +72,13 @@
             <td class="text-right">
               <div class="inline-flex gap-1">
                 {{#if updateAvailable}}
-                  <button class="btn btn-ghost btn-sm text-gold-400" data-mod-update data-tip="Update to {{updateAvailable}}">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
+                  <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="Update to {{updateAvailable}}">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
                 {{/if}}
                 {{#unless missing}}
                   <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}Pack mods apply on restart{{else}}Applies instantly{{/if}}">{{#if enabled}}Disable{{else}}Enable{{/if}}</button>
                 {{/unless}}
                 {{#if (ne source 'pack')}}
-                  <button class="btn btn-ghost btn-sm text-redstone-400" data-mod-delete aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+                  <button class="btn btn-ghost btn-sm text-danger" data-mod-delete aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
                 {{/if}}
               </div>
             </td>

@@ -1,4 +1,4 @@
-﻿<div class="grid gap-4 lg:grid-cols-3">
+<div class="grid gap-4 lg:grid-cols-3">
   <div class="card p-4 lg:col-span-2">
     {{#if addresses.length}}
       <div class="mb-4 border-b border-line pb-4">
@@ -17,7 +17,7 @@
       </div>
     {{/if}}
     <h3 class="mb-3 font-semibold">About</h3>
-    <div class="prose-sm max-w-prose text-sm text-ink-soft [&_a]:text-diamond-400 [&_code]:rounded [&_code]:bg-inset [&_code]:px-1">{{{markdown server.description}}}</div>
+    <div class="prose-sm max-w-prose text-sm text-ink-soft [&_a]:text-link [&_code]:rounded [&_code]:bg-inset [&_code]:px-1">{{{markdown server.description}}}</div>
     <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
       <div><dt class="text-xs text-ink-faint">Created</dt><dd class="font-medium">{{server.created}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
@@ -29,7 +29,7 @@
     {{#if server.pack}}
       <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">
         <div class="flex flex-wrap items-center gap-2">
-          <span class="badge bg-diamond-400/15 text-diamond-400">{{server.pack.platform}}</span>
+          <span class="badge badge-info">{{server.pack.platform}}</span>
           <b>{{server.pack.name}}</b>
           <span class="chip">pinned @ {{server.pack.version}}</span>
           {{#if server.updateAvailable}}
@@ -43,7 +43,7 @@
   <div class="space-y-4">
     <div class="card p-4">
       <h3 class="mb-3 font-semibold">Live usage</h3>
-      <div class="space-y-3 text-xs">
+      <div class="space-y-3 text-xs tabular-nums">
         <div>
           <div class="mb-1 flex justify-between text-ink-faint"><span>CPU</span><span>{{server.stats.cpuPct}}% {{#if server.resources.cpus}}of {{server.resources.cpus}} cores{{/if}}</span></div>
           <div class="meter"><div class="bg-diamond-400" style="width: {{server.stats.cpuPct}}%"></div></div>
@@ -65,7 +65,7 @@
         <ul class="space-y-1.5 text-sm">
           {{#each server.players.names}}
             <li class="flex items-center gap-2">
-              <span class="grid size-6 place-items-center rounded bg-inset text-[10px] font-bold">{{this.[0]}}</span>
+              <span class="grid size-6 place-items-center rounded bg-inset text-[11px] font-bold">{{this.[0]}}</span>
               <span class="flex-1 truncate">{{this}}</span>
               <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="Manage on the Players tab" aria-label="Manage {{this}}">{{{icon 'ellipsis' 'size-3.5'}}}</a>
             </li>

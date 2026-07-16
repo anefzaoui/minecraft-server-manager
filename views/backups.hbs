@@ -21,15 +21,15 @@
     <tbody>
       {{#each backups}}
         <tr data-backup-row data-backup-id="{{id}}" data-server-id="{{serverId}}" data-server-name="{{server}}" data-file="{{file}}" data-size="{{size}}" data-reason="{{reason}}">
-          <td><a class="text-diamond-400 hover:underline" href="/servers/{{serverId}}/backups">{{server}}</a></td>
+          <td><a class="text-link hover:underline" href="/servers/{{serverId}}/backups">{{server}}</a></td>
           <td class="font-mono text-xs">{{file}}</td>
-          <td><span class="badge {{#if (eq reason 'pre-update')}}bg-gold-400/15 text-gold-400{{else}}bg-inset text-ink-soft{{/if}}">{{reason}}</span></td>
+          <td><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
           <td class="text-right text-ink-faint">{{bytes size}}</td>
           <td class="text-right text-ink-faint">{{ts}}</td>
           <td class="text-right"><div class="inline-flex gap-1">
             <button class="btn btn-ghost btn-sm" data-backup-action="restore" data-tip="Restore (stops the server, safety backup taken first)">{{{icon 'undo-2' 'size-3.5'}}}</button>
             <button class="btn btn-ghost btn-sm" data-backup-action="download" data-tip="Download archive">{{{icon 'download' 'size-3.5'}}}</button>
-            <button class="btn btn-ghost btn-sm text-redstone-400" data-backup-action="delete" data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'x' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-danger" data-backup-action="delete" data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'x' 'size-3.5'}}}</button>
           </div></td>
         </tr>
       {{/each}}

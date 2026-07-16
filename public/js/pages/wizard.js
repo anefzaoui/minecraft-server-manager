@@ -28,7 +28,7 @@ function init() {
     (v) => {
       icon = v;
     },
-    ['border-2', 'border-grass-500']
+    ['border-grass-500']
   );
   pickGroup(
     'wz-colors',
@@ -36,7 +36,8 @@ function init() {
     (v) => {
       accent = v;
     },
-    ['border-2', 'border-white/60']
+    ['border-white/60'],
+    ['border-transparent']
   );
   pickGroup(
     'wz-flavors',
@@ -44,7 +45,7 @@ function init() {
     (v) => {
       type = v;
     },
-    ['border-2', 'border-grass-500', 'text-grass-300']
+    ['border-grass-500', 'text-ok']
   );
 
   // Visual MOTD editor (shared lib: toolbar + presets + live preview)
@@ -55,10 +56,10 @@ function init() {
     getName: () => document.getElementById('wz-name')?.value.trim() || 'My Server',
   });
 
-  // ---- Source tabs + Simple/Advanced toggle (two INDEPENDENT controls) ----
-  const ACTIVE = ['bg-grass-600/20', 'text-grass-300'];
+  // ---- Source tabs + Advanced switch (two INDEPENDENT controls) ----
   const sourceTabsEl = document.getElementById('wz-source-tabs');
   const detailToggleEl = document.getElementById('wz-detail-toggle');
+  const advSwitch = document.getElementById('wz-advanced-switch');
   const modsPanel = document.getElementById('wz-mods-panel');
   const packPanel = document.getElementById('wz-modpack');
   const bpPanel = document.getElementById('wz-blueprint-panel');
@@ -73,8 +74,10 @@ function init() {
   let modsMode = 'browse';
   const solverState = { pick: null, slugs: [] };
 
+  // Segmented controls carry selection in aria-selected (tabs) / aria-pressed
+  // (toggles); the .seg-btn CSS styles off the attribute.
   function setClasses(btn, on) {
-    for (const c of ACTIVE) btn.classList.toggle(c, on);
+    btn.setAttribute(btn.getAttribute('role') === 'tab' ? 'aria-selected' : 'aria-pressed', String(on));
   }
 
   /** Grey out a whole section: dim it and disable every control inside. */
@@ -93,7 +96,7 @@ function init() {
     const allowAdvanced = sourceTab !== 'blueprint';
     detailToggleEl?.classList.toggle('hidden', !allowAdvanced);
     advPanel?.classList.toggle('hidden', !(allowAdvanced && detail === 'advanced'));
-    detailToggleEl?.querySelectorAll('[data-detail]').forEach((b) => setClasses(b, b.dataset.detail === detail));
+    if (advSwitch) advSwitch.checked = detail === 'advanced';
   }
 
   /** Show/hide the From-mods sub-panels for the current sub-mode. */
@@ -142,10 +145,8 @@ function init() {
     const btn = e.target.closest('[data-source]');
     if (btn) setSourceTab(btn.dataset.source);
   });
-  detailToggleEl?.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-detail]');
-    if (!btn) return;
-    detail = btn.dataset.detail;
+  advSwitch?.addEventListener('change', () => {
+    detail = advSwitch.checked ? 'advanced' : 'simple';
     refreshDetailUI();
   });
   document.getElementById('wz-mods-mode')?.addEventListener('click', (e) => {
@@ -319,7 +320,7 @@ function init() {
           return data.taskId;
         },
       });
-      toast(`${name} created — ${result.pack.name} @ ${result.pack.version} pinned. Starting up!`);
+      toast(`${name} created — ${result.pack.name} @ ${result.pack.version} pinned. Starting up.`);
       location.href = `/servers/${result.serverId}`;
     } catch (err) {
       toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
@@ -388,7 +389,7 @@ function init() {
         );
       } else {
         toast(
-          `${name} created${result.total ? ` — ${result.total} mod${result.total === 1 ? '' : 's'} installed` : ''}. Starting up!`
+          `${name} created${result.total ? ` — ${result.total} mod${result.total === 1 ? '' : 's'} installed` : ''}. Starting up.`
         );
       }
       location.href = `/servers/${result.serverId}`;
@@ -432,7 +433,7 @@ function init() {
         toast(data.error || 'Creation failed', { kind: 'error', timeout: 10000 });
         return;
       }
-      toast(`${name} created — starting up!`);
+      toast(`${name} created — starting up.`);
       location.href = `/servers/${data.server.id}`;
     } catch (err) {
       modal.close();
@@ -459,7 +460,7 @@ function initPortCheck() {
   async function check() {
     const port = Number(input.value);
     if (!Number.isInteger(port) || port < 1024 || port > 65535) {
-      setHelp('Enter a port between 1024 and 65535.', 'text-redstone-400');
+      setHelp('Enter a port between 1024 and 65535.', 'text-danger');
       return;
     }
     try {
@@ -467,8 +468,8 @@ function initPortCheck() {
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'check failed');
       if (Number(input.value) !== port) return; // user kept typing — stale
-      if (data.free) setHelp(`✓ Port ${port} is free — RCON gets ${port + 1000}.`, 'text-grass-400');
-      else setHelp(`✗ Port ${port} is already in use — pick another.`, 'text-redstone-400');
+      if (data.free) setHelp(`✓ Port ${port} is free — RCON gets ${port + 1000}.`, 'text-ok');
+      else setHelp(`✗ Port ${port} is already in use — pick another.`, 'text-danger');
     } catch {
       setHelp('Could not check the port right now.', 'text-ink-faint');
     }
@@ -531,14 +532,12 @@ function initModBrowser() {
       refreshLoaderBuilds();
       if (q.value.trim()) search();
     },
-    ['border-2', 'border-grass-500', 'text-grass-300']
+    ['border-grass-500', 'text-ok']
   );
 
   function syncPlatformChips() {
     platformsEl?.querySelectorAll('[data-platform]').forEach((b) => {
-      const on = b.dataset.platform === platform;
-      b.classList.toggle('border-grass-500', on);
-      b.classList.toggle('text-grass-300', on);
+      b.setAttribute('aria-pressed', String(b.dataset.platform === platform));
     });
   }
   platformsEl?.addEventListener('click', (e) => {
@@ -600,7 +599,7 @@ function initModBrowser() {
       lastResults = data.results;
       renderResults();
     } catch (err) {
-      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-redstone-400">${escapeHtml(err.message)}</div>`;
+      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-danger">${escapeHtml(err.message)}</div>`;
     }
   }
 
@@ -743,7 +742,7 @@ function initModBrowser() {
   function rowHtml(m, isDep) {
     const k = key(m.platform, m.ref);
     const platChip = `<span class="chip shrink-0 text-[11px]">${m.platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}</span>`;
-    const depBadge = isDep ? '<span class="badge bg-diamond-400/15 text-diamond-300">dependency</span>' : '';
+    const depBadge = isDep ? '<span class="badge badge-info">dependency</span>' : '';
     return `
       <div class="flex items-start gap-3 rounded-md border border-line bg-raised p-3" data-key="${escapeHtml(k)}">
         ${packIconHtml(m.iconUrl, 'size-10')}
@@ -841,9 +840,7 @@ function initPackPicker() {
 
   function syncChips() {
     platformsEl.querySelectorAll('[data-platform]').forEach((b) => {
-      const on = b.dataset.platform === platform;
-      b.classList.toggle('border-grass-500', on);
-      b.classList.toggle('text-grass-300', on);
+      b.setAttribute('aria-pressed', String(b.dataset.platform === platform));
     });
   }
 
@@ -878,7 +875,7 @@ function initPackPicker() {
       lastResults = data.results;
       renderResults();
     } catch (err) {
-      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-redstone-400">${escapeHtml(err.message)}${platform === 'curseforge' ? ' — <a href="/settings" class="text-diamond-400 hover:underline">API keys</a>' : ''}</div>`;
+      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' — <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
     }
   }
 
@@ -962,7 +959,7 @@ function initPackPicker() {
       renderSummary();
     } catch (err) {
       selection = null;
-      summaryEl.innerHTML = `<span class="text-sm text-redstone-400">${escapeHtml(err.message)}</span>`;
+      summaryEl.innerHTML = `<span class="text-sm text-danger">${escapeHtml(err.message)}</span>`;
       toast(err.message, { kind: 'error', timeout: 9000 });
     }
   }
@@ -1009,7 +1006,7 @@ function initPackPicker() {
 // ---- From-mods "Auto-detect": compatibility solver --------------------------
 
 const CHECK_SVG =
-  '<svg class="icon size-3.5 shrink-0 text-grass-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  '<svg class="icon size-3.5 shrink-0 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 const X_SVG =
   '<svg class="icon size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
 
@@ -1130,11 +1127,11 @@ function initSolver({ onApplied = () => {} } = {}) {
     for (const mod of picked.values()) {
       const chip = document.createElement('span');
       chip.className =
-        'inline-flex items-center gap-1.5 rounded-full border border-line bg-inset py-1 pl-1.5 pr-1 text-xs';
+        'inline-flex items-center gap-1.5 rounded-md border border-line bg-inset py-1 pl-1.5 pr-1 text-xs';
       chip.innerHTML = `
         ${mod.iconUrl ? `<img src="${escapeHtml(mod.iconUrl)}" alt="" class="size-4 rounded-sm">` : ''}
         <span class="max-w-40 truncate">${escapeHtml(mod.title)}</span>
-        <button type="button" data-remove="${escapeHtml(mod.slug)}" class="grid size-5 place-items-center rounded-full text-ink-faint transition hover:bg-line hover:text-ink" aria-label="Remove ${escapeHtml(mod.title)}">${X_SVG}</button>`;
+        <button type="button" data-remove="${escapeHtml(mod.slug)}" class="grid size-5 place-items-center rounded-sm text-ink-faint transition hover:bg-line hover:text-ink" aria-label="Remove ${escapeHtml(mod.title)}">${X_SVG}</button>`;
       chipsEl.appendChild(chip);
     }
   }
@@ -1172,7 +1169,7 @@ function initSolver({ onApplied = () => {} } = {}) {
 
     if (!pair) {
       resultEl.innerHTML =
-        '<div class="rounded-md border border-redstone-700 bg-redstone-600/10 p-4 text-sm">No loader has builds for any of these mods. Try removing one and solving again.</div>';
+        '<div class="rounded-md border border-danger/40 bg-redstone-600/10 p-4 text-sm">No loader has builds for any of these mods. Try removing one and solving again.</div>';
       return;
     }
 
@@ -1185,7 +1182,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       ? 'rounded-md border border-gold-700 bg-gold-600/10 p-4'
       : 'rounded-md border border-grass-700 bg-grass-600/10 p-4';
     head.innerHTML = `
-      <p class="text-xs font-semibold uppercase tracking-wider ${isPartial ? 'text-gold-400' : 'text-grass-400'}">${isPartial ? 'Best partial match' : 'Best match'}</p>
+      <p class="text-xs font-semibold uppercase tracking-wider ${isPartial ? 'text-warn' : 'text-ok'}">${isPartial ? 'Best partial match' : 'Best match'}</p>
       <p class="mt-1 text-lg font-semibold">${escapeHtml(pair.loaderLabel)} on Minecraft ${escapeHtml(pair.mcVersion)}</p>
       <p class="text-sm text-ink-faint">${
         isPartial
@@ -1215,7 +1212,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       const warn = document.createElement('div');
       warn.className = 'mt-3 rounded-md border border-gold-700 bg-gold-600/10 p-3 text-sm';
       warn.innerHTML =
-        `<p class="mb-1.5 font-semibold text-gold-400">These mods would be left out:</p>` +
+        `<p class="mb-1.5 font-semibold text-warn">These mods would be left out:</p>` +
         solveData.partial.dropped
           .map(
             (d) => `
@@ -1235,7 +1232,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       const row = document.createElement('div');
       row.className = 'flex items-center gap-2 text-sm';
       row.innerHTML = `
-        ${p.supported ? CHECK_SVG : `<span class="text-redstone-400">${X_SVG}</span>`}
+        ${p.supported ? CHECK_SVG : `<span class="text-danger">${X_SVG}</span>`}
         ${p.iconUrl ? `<img src="${escapeHtml(p.iconUrl)}" alt="" class="size-5 rounded-sm">` : ''}
         <span class="min-w-0 flex-1 truncate">${escapeHtml(p.title)}</span>
         <span class="shrink-0 font-mono text-xs text-ink-faint">${p.bestOwnVersions.versions.length ? escapeHtml(`${p.bestOwnVersions.loader}: ${p.bestOwnVersions.versions.slice(0, 3).join(', ')}`) : 'no release builds'}</span>`;
@@ -1255,7 +1252,7 @@ function initSolver({ onApplied = () => {} } = {}) {
     const b = document.createElement('button');
     b.type = 'button';
     b.dataset.alt = String(idx);
-    b.className = 'btn btn-ghost btn-sm text-xs' + (active ? ' bg-grass-600/20 text-grass-300' : '');
+    b.className = 'btn btn-ghost btn-sm text-xs' + (active ? ' bg-grass-600/20 text-ok' : '');
     b.textContent = `${alt.loaderLabel} · ${alt.mcVersion}`;
     return b;
   }
@@ -1291,7 +1288,9 @@ function escapeHtml(s) {
   );
 }
 
-function pickGroup(containerId, dataKey, onPick, activeClasses) {
+// Tile pickers keep a CONSTANT border-2 (idle border color from idleClasses,
+// active from activeClasses) so selection never shifts the layout by a pixel.
+function pickGroup(containerId, dataKey, onPick, activeClasses, idleClasses = ['border-line']) {
   const container = document.getElementById(containerId);
   if (!container) return;
   container.addEventListener('click', (e) => {
@@ -1299,9 +1298,9 @@ function pickGroup(containerId, dataKey, onPick, activeClasses) {
     if (!btn) return;
     for (const b of container.children) {
       b.classList.remove(...activeClasses);
-      if (!b.className.includes('border ')) b.classList.add('border', 'border-line');
+      b.classList.add(...idleClasses);
     }
-    btn.classList.remove('border', 'border-line');
+    btn.classList.remove(...idleClasses);
     btn.classList.add(...activeClasses);
     onPick(btn.dataset[dataKey]);
   });

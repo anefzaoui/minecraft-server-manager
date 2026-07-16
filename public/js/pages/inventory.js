@@ -140,9 +140,9 @@ function init(root) {
       const named = Boolean(item.displayName);
       const enchanted = Boolean(item.enchants && item.enchants.length);
       cell.className += named
-        ? 'border-gold-500 bg-gold-400/10 text-gold-400'
+        ? 'border-gold-500 bg-gold-400/10 text-warn'
         : enchanted
-          ? 'border-diamond-700 bg-diamond-400/10 text-diamond-300'
+          ? 'border-diamond-700 bg-diamond-400/10 text-link'
           : 'border-line-strong bg-inset text-ink';
       const where = label
         ? `${label} slot`
@@ -197,8 +197,8 @@ function init(root) {
     if (editInfo) {
       mech.innerHTML =
         editInfo.mechanism === 'rcon'
-          ? `${icon('zap', 'size-3.5 text-gold-400')} <span>Player is online — edits run live via commands. Backpack contents are read-only until they leave.</span>`
-          : `${icon('file', 'size-3.5 text-diamond-300')} <span>Editing the save file directly — a backup of the previous state is kept (last 3).</span>`;
+          ? `${icon('zap', 'size-3.5 text-warn')} <span>Player is online — edits run live via commands. Backpack contents are read-only until they leave.</span>`
+          : `${icon('file', 'size-3.5 text-link')} <span>Editing the save file directly — a backup of the previous state is kept (last 3).</span>`;
     } else {
       mech.innerHTML = '';
     }
@@ -242,7 +242,7 @@ function init(root) {
     btn.type = 'button';
     btn.className =
       'flex w-full items-center gap-2.5 rounded-md border border-line px-3 py-2 text-left text-sm transition hover:bg-inset ' +
-      (danger ? 'text-redstone-400 hover:border-redstone-700' : 'hover:border-line-strong');
+      (danger ? 'text-danger hover:border-danger/40' : 'hover:border-line-strong');
     btn.innerHTML = `${icon(iconName, 'size-4 shrink-0')} <span>${esc(label)}</span>`;
     return btn;
   }
@@ -250,9 +250,9 @@ function init(root) {
   function itemHeader(item, where) {
     return `
       <div class="rounded-md border border-line bg-inset/50 p-3">
-        <div class="font-semibold ${item.displayName ? 'text-gold-400' : ''}">${esc(item.displayName || prettyId(item.id))}</div>
+        <div class="font-semibold ${item.displayName ? 'text-warn' : ''}">${esc(item.displayName || prettyId(item.id))}</div>
         <div class="font-mono text-xs text-ink-faint">${esc(item.id)} · x${esc(item.count)} · ${esc(where)}</div>
-        ${item.enchants && item.enchants.length ? `<div class="mt-1 text-xs text-diamond-300">${esc(item.enchants.map(prettyEnchant).join(', '))}</div>` : ''}
+        ${item.enchants && item.enchants.length ? `<div class="mt-1 text-xs text-link">${esc(item.enchants.map(prettyEnchant).join(', '))}</div>` : ''}
       </div>`;
   }
 
@@ -490,7 +490,7 @@ function init(root) {
     if (!editable) {
       content.insertAdjacentHTML(
         'beforeend',
-        '<p class="rounded-md border border-gold-500/40 bg-gold-400/5 p-2.5 text-xs text-gold-400">Read-only while the player is online — stop the server or kick the player to edit backpack contents.</p>'
+        '<p class="rounded-md border border-gold-500/40 bg-gold-400/5 p-2.5 text-xs text-warn">Read-only while the player is online — stop the server or kick the player to edit backpack contents.</p>'
       );
     }
     const grid = document.createElement('div');
@@ -700,7 +700,7 @@ function init(root) {
 
   function diffLine(entry, kind) {
     const name = entry.displayName
-      ? `<span class="text-gold-400">"${esc(entry.displayName)}"</span> <span class="text-ink-faint">(${esc(prettyId(entry.id))})</span>`
+      ? `<span class="text-warn">"${esc(entry.displayName)}"</span> <span class="text-ink-faint">(${esc(prettyId(entry.id))})</span>`
       : esc(prettyId(entry.id));
     const qty =
       kind === 'changed'
@@ -722,9 +722,9 @@ function init(root) {
         &rarr; <b class="text-ink-soft">${esc(when(diff.b.ts))}</b> (${esc(diff.b.reason)}) — counts pooled across inventory, armor, offhand and ender chest.
       </div>
       <div class="grid gap-3 md:grid-cols-3">
-        ${section('Added', 'text-grass-400', diff.added, 'added')}
-        ${section('Removed', 'text-redstone-400', diff.removed, 'removed')}
-        ${section('Changed', 'text-gold-400', diff.changed, 'changed')}
+        ${section('Added', 'text-ok', diff.added, 'added')}
+        ${section('Removed', 'text-danger', diff.removed, 'removed')}
+        ${section('Changed', 'text-warn', diff.changed, 'changed')}
       </div>`;
     box.classList.remove('hidden');
     box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -756,7 +756,7 @@ function init(root) {
                 <td><span class="chip">${esc(whereLabel(r.where))}</span></td>
                 <td class="font-mono text-xs">${r.slot === null ? '—' : esc(r.slot)}</td>
                 <td class="text-sm">
-                  ${r.displayName ? `<span class="text-gold-400">"${esc(r.displayName)}"</span> <span class="text-xs text-ink-faint">(${esc(r.id)})</span>` : `<span class="font-mono text-xs">${esc(r.id)}</span>`}
+                  ${r.displayName ? `<span class="text-warn">"${esc(r.displayName)}"</span> <span class="text-xs text-ink-faint">(${esc(r.id)})</span>` : `<span class="font-mono text-xs">${esc(r.id)}</span>`}
                 </td>
                 <td class="text-right font-mono text-xs">${esc(r.count)}</td>
               </tr>`
@@ -938,7 +938,7 @@ function init(root) {
               !item &&
               !(await confirmDialog({
                 title: `Clear the ENTIRE inventory of ${player}?`,
-                message: 'Every item they carry will be deleted. This cannot be undone (take a snapshot first!).',
+                message: 'Every item they carry will be deleted. This cannot be undone — take a snapshot first if you might need it back.',
                 confirmLabel: 'Clear everything',
               }))
             )

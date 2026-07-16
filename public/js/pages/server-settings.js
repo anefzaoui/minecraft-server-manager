@@ -36,17 +36,22 @@ function init(serverId) {
     (btn) => {
       accent = btn.dataset.pickAccent;
     },
-    'border-white/70'
+    'border-white/70',
+    'border-transparent'
   );
 
-  function bindPicker(selector, onPick, activeBorder) {
+  // Borders stay border-2 at all times (only the color swaps), so picking an
+  // item never shifts the row by a pixel.
+  function bindPicker(selector, onPick, activeBorder, idleBorder = 'border-line') {
     const buttons = [...root.querySelectorAll(selector)];
     for (const btn of buttons) {
       btn.addEventListener('click', () => {
-        buttons.forEach((b) => b.classList.remove('border-2', activeBorder));
-        buttons.forEach((b) => b.classList.add('border', 'border-line'));
-        btn.classList.remove('border', 'border-line');
-        btn.classList.add('border-2', activeBorder);
+        buttons.forEach((b) => {
+          b.classList.remove(activeBorder);
+          b.classList.add(idleBorder);
+        });
+        btn.classList.remove(idleBorder);
+        btn.classList.add(activeBorder);
         onPick(btn);
       });
     }
@@ -61,7 +66,7 @@ function init(serverId) {
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.dataset.tag = t;
-      chip.innerHTML = `${escapeHtml(t)} <button class="text-ink-faint hover:text-redstone-400" aria-label="Remove tag">✕</button>`;
+      chip.innerHTML = `${escapeHtml(t)} <button class="text-ink-faint hover:text-danger" aria-label="Remove tag">✕</button>`;
       chip.querySelector('button').addEventListener('click', () => {
         tags.delete(t);
         renderTags();
@@ -90,13 +95,13 @@ function init(serverId) {
     const pctAbove = heap ? Math.round(((cmem - heap) / heap) * 100) : 0;
     const base = 'rounded-md border p-2.5 text-xs ';
     if (cmem <= heap) {
-      headroomBox.className = base + 'border-redstone-800/50 bg-redstone-900/15 text-redstone-300';
+      headroomBox.className = base + 'border-danger/40 bg-redstone-500/10 text-danger';
       headroomBox.textContent = `Container limit (${cmem} MB) is at or below the heap (${heap} MB) — the JVM will be OOM-killed on start. Raise the limit or lower the heap.`;
     } else if (cmem < heap * 1.25) {
-      headroomBox.className = base + 'border-gold-800/50 bg-gold-900/15 text-gold-300';
+      headroomBox.className = base + 'border-warn/40 bg-gold-500/10 text-warn';
       headroomBox.textContent = `Tight headroom: container limit is only ${pctAbove}% above the heap. Java needs off-heap room — aim for 25% or more.`;
     } else {
-      headroomBox.className = base + 'border-grass-800/50 bg-grass-900/15 text-grass-300';
+      headroomBox.className = base + 'border-ok/40 bg-grass-500/10 text-ok';
       headroomBox.textContent = `Healthy headroom: container limit is ${pctAbove}% above the heap.`;
     }
   }
@@ -154,7 +159,7 @@ function init(serverId) {
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
-          label: 'Export',
+          label: 'Export blueprint',
           kind: 'primary',
           busyLabel: 'Exporting…',
           onClick: async ({ body }) => {
@@ -184,7 +189,7 @@ function init(serverId) {
     content.innerHTML = `
       <p>Blueprint <b data-bp-name></b> saved to the library.</p>
       <a class="btn btn-primary" data-bp-dl>Download .zip</a>
-      <p class="text-xs text-ink-faint">Also available any time on the <a class="text-diamond-400 hover:underline" href="/blueprints">Blueprints page</a>.</p>`;
+      <p class="text-xs text-ink-faint">Also available any time on the <a class="text-link hover:underline" href="/blueprints">Blueprints page</a>.</p>`;
     content.querySelector('[data-bp-name]').textContent = bp.name || 'exported';
     content.querySelector('[data-bp-dl]').href = `/api/blueprints/${encodeURIComponent(bp.id)}/download`;
     openModal({ title: 'Blueprint exported', content, size: 'sm', actions: [{ label: 'Done', kind: 'ghost' }] });

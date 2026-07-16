@@ -66,7 +66,7 @@ function init(serverId) {
     const on = b.dataset.on !== '1';
     b.dataset.on = on ? '1' : '';
     b.classList.toggle('border-grass-500', on);
-    b.classList.toggle('text-grass-300', on);
+    b.classList.toggle('text-ok', on);
   });
 
   modeBox.addEventListener('click', (e) => {
@@ -74,9 +74,7 @@ function init(serverId) {
     if (!b) return;
     mode = b.dataset.mode;
     modeBox.querySelectorAll('[data-mode]').forEach((el) => {
-      const on = el === b;
-      el.classList.toggle('bg-grass-600/20', on);
-      el.classList.toggle('text-grass-300', on);
+      el.setAttribute('aria-pressed', String(el === b));
     });
     // Say is a plain broadcast — no target, no styling.
     const plain = mode === 'say';

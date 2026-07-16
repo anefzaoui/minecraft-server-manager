@@ -17,9 +17,9 @@
       </div>
       <div>
         <label class="label">Mode</label>
-        <div class="flex rounded-md border border-line-strong p-0.5 text-sm" id="chat-mode">
-          <button type="button" class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" data-mode="tellraw">Tellraw</button>
-          <button type="button" class="btn btn-ghost btn-sm" data-mode="say">Say</button>
+        <div class="seg" id="chat-mode" role="group" aria-label="Message mode">
+          <button type="button" class="seg-btn" aria-pressed="true" data-mode="tellraw">Tellraw</button>
+          <button type="button" class="seg-btn" aria-pressed="false" data-mode="say">Say</button>
         </div>
         <p class="help">Tellraw = styled, per recipient. Say = plain <span class="font-mono">[Server]</span> broadcast.</p>
       </div>

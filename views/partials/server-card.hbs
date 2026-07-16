@@ -1,14 +1,14 @@
-﻿<a href="/servers/{{id}}" class="card group relative block overflow-hidden transition hover:border-line-strong hover:shadow-md"
+<a href="/servers/{{id}}" class="card group relative block overflow-hidden transition hover:border-line-strong hover:shadow-raised"
    style="border-top: 3px solid {{accent}}">
   <div class="p-4">
     <div class="flex items-start gap-3">
-      <img src="{{iconSrc this.icon}}" alt="" class="size-11 shrink-0 rounded-md" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'">
+      <img src="{{iconSrc this.icon}}" alt="" class="size-11 shrink-0 rounded-md" onerror="this.onerror=null;this.src='/icons/servers/grass.png'">
 
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-2">
-          <h3 class="truncate font-semibold group-hover:text-grass-300">{{name}}</h3>
-          {{#if updateAvailable}}<span class="badge shrink-0 bg-gold-400/15 text-gold-400" title="Update available">update</span>{{/if}}
-          {{#if crashesUnread}}<span class="badge shrink-0 bg-redstone-500/15 text-redstone-400" title="New crash reports">{{crashesUnread}} crash</span>{{/if}}
+          <h3 class="truncate font-semibold group-hover:text-ok">{{name}}</h3>
+          {{#if updateAvailable}}<span class="badge badge-warn shrink-0" title="Update available">update</span>{{/if}}
+          {{#if crashesUnread}}<span class="badge badge-danger shrink-0" title="New crash reports">{{crashesUnread}} crash</span>{{/if}}
         </div>
         <p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-ink-faint">
           <span class="font-medium text-ink-soft">{{flavor}}</span>
@@ -18,11 +18,11 @@
         </p>
       </div>
       <span class="flex flex-col items-end gap-0.5">
-        <span class="flex items-center gap-1.5 text-xs font-medium text-{{statusColor status}}-400">
+        <span class="flex items-center gap-1.5 text-xs font-medium {{statusText status}}">
           <span class="status-dot relative bg-{{statusColor status}}-500 {{#if (statusPulse status)}}pulse{{/if}}"></span>
           {{statusLabel status}}
         </span>
-        <span class="max-w-40 truncate text-right text-[11px] text-gold-400 {{#unless statusDetail}}hidden{{/unless}}" data-status-detail="{{id}}">{{statusDetail}}</span>
+        <span class="max-w-40 truncate text-right text-[11px] text-warn {{#unless statusDetail}}hidden{{/unless}}" data-status-detail="{{id}}">{{statusDetail}}</span>
       </span>
     </div>
 

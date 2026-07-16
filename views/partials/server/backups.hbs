@@ -11,13 +11,13 @@
       {{#each backups}}
         <tr data-backup-row data-backup-id="{{id}}" data-file="{{file}}" data-size="{{size}}">
           <td class="font-mono text-xs">{{file}}</td>
-          <td><span class="badge {{#if (eq reason 'pre-update')}}bg-gold-400/15 text-gold-400{{else}}bg-inset text-ink-soft{{/if}}">{{reason}}</span></td>
+          <td><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
           <td class="text-right text-ink-faint">{{bytes size}}</td>
           <td class="text-right text-ink-faint">{{ts}}</td>
           <td class="text-right"><div class="inline-flex gap-1">
             <button class="btn btn-ghost btn-sm" data-backup-restore data-tip="Stops the server, restores this archive, restarts">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
             <a class="btn btn-ghost btn-sm" href="/api/backups/{{id}}/download" data-tip="Download archive" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</a>
-            <button class="btn btn-ghost btn-sm text-redstone-400" data-backup-delete data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'x' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'x' 'size-3.5'}}}</button>
           </div></td>
         </tr>
       {{/each}}

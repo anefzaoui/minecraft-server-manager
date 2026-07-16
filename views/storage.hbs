@@ -4,10 +4,10 @@
   <div class="card p-4 lg:col-span-2">
     <div class="flex items-baseline justify-between">
       <h3 class="font-semibold">Disk usage</h3>
-      <span class="text-xs text-ink-faint">Last scanned {{storage.lastScan}} · <button class="text-diamond-400 hover:underline" id="storage-rescan">re-scan now</button></span>
+      <span class="text-xs text-ink-faint">Last scanned {{storage.lastScan}} · <button class="text-link hover:underline" id="storage-rescan">re-scan now</button></span>
     </div>
     <div class="mt-3 flex items-end gap-2">
-      <span class="text-3xl font-bold">{{bytes storage.totalUsed}}</span>
+      <span class="text-3xl font-bold tabular-nums">{{bytes storage.totalUsed}}</span>
       <span class="pb-1 text-sm text-ink-faint">panel data · {{bytes storage.diskFree}} free of {{bytes storage.diskTotal}} on drive</span>
     </div>
     <div class="meter mt-3 h-3"><div class="bg-grass-500" style="width: {{pct storage.totalUsed storage.diskTotal}}%"></div></div>
@@ -60,7 +60,7 @@
         {{#each storage.cleanup}}
           <div class="flex items-center gap-3 p-3 text-sm">
             <span class="flex-1">{{action}}{{#if count}} <span class="text-xs text-ink-faint">({{count}} item{{#if (ne count 1)}}s{{/if}})</span>{{/if}}</span>
-            <span class="text-xs text-grass-400">frees {{bytes frees}}</span>
+            <span class="text-xs text-ok">frees {{bytes frees}}</span>
             <button class="btn btn-sm" data-cleanup-action="{{key}}" data-cleanup-label="{{action}}" {{#if days}}data-cleanup-days="{{days}}"{{/if}}>Preview…</button>
           </div>
         {{/each}}
@@ -74,7 +74,7 @@
           <tbody>
             {{#each servers}}
               <tr>
-                <td><a class="font-medium text-diamond-400 hover:underline" href="/servers/{{id}}">{{name}}</a></td>
+                <td><a class="font-medium text-link hover:underline" href="/servers/{{id}}">{{name}}</a></td>
                 <td class="w-40"><div class="meter"><div class="{{meterColor disk.used disk.quota}}" style="width: {{pct disk.used disk.quota}}%"></div></div></td>
                 <td class="w-32 text-right text-xs text-ink-faint">{{bytes disk.used}} / {{bytes disk.quota}}</td>
               </tr>

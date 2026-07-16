@@ -5,9 +5,9 @@
     <div id="task-tray" class="relative hidden">
       <button class="btn btn-ghost btn-sm relative" aria-label="Background tasks" data-tip="Background tasks">
         {{{icon 'loader-circle' 'size-4'}}}
-        <span data-task-count class="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-inset text-[10px] font-bold">0</span>
+        <span data-task-count class="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-inset text-[11px] font-bold">0</span>
       </button>
-      <div data-task-panel class="card absolute right-0 top-10 z-50 hidden w-80 shadow-xl">
+      <div data-task-panel class="card absolute right-0 top-10 z-50 hidden w-80 shadow-overlay">
         <div class="border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">Background tasks</div>
         <div data-task-list class="max-h-96 overflow-y-auto"></div>
       </div>

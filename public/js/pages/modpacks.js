@@ -77,10 +77,10 @@ function renderPackDetails(pack) {
       <div class="min-w-0 flex-1">
         <div class="truncate text-base font-semibold">${escapeHtml(pack.name)}</div>
         <div class="text-xs text-ink-faint">
-          <span class="badge bg-inset text-ink-soft">${pack.platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}</span>
+          <span class="badge">${pack.platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}</span>
           ${meta.length ? `<span class="ml-1">${meta.join(' · ')}</span>` : ''}
         </div>
-        ${pack.installed ? `<div class="mt-1 text-xs text-grass-400">Installed on ${escapeHtml(pack.installed.serverName)} — pinned @ ${escapeHtml(pack.installed.versionName)}</div>` : ''}
+        ${pack.installed ? `<div class="mt-1 text-xs text-ok">Installed on ${escapeHtml(pack.installed.serverName)} — pinned @ ${escapeHtml(pack.installed.versionName)}</div>` : ''}
       </div>
     </div>
     <div data-desc class="max-h-72 overflow-y-auto rounded-md border border-line bg-inset p-4 text-sm leading-relaxed"></div>
@@ -104,7 +104,7 @@ function renderPackDetails(pack) {
     img.style.borderRadius = '4px';
   });
   descEl.querySelectorAll('a').forEach((a) => {
-    a.className = 'text-diamond-400 hover:underline';
+    a.className = 'text-link hover:underline';
   });
   descEl.querySelectorAll('p, ul, ol, pre, blockquote, h1, h2, h3, h4').forEach((el) => {
     el.style.margin = '0 0 .6em';
@@ -174,12 +174,12 @@ async function loadInstalledMods(content, serverId) {
           <span class="block truncate font-mono text-[11px] text-ink-faint">${escapeHtml(m.file)}</span>
         </span>
         ${m.version ? `<span class="shrink-0 font-mono text-xs text-ink-faint">${escapeHtml(m.version)}</span>` : ''}
-        ${m.enabled ? '' : '<span class="badge shrink-0 bg-inset text-ink-faint">disabled</span>'}
+        ${m.enabled ? '' : '<span class="badge shrink-0">disabled</span>'}
       </div>`
       )
       .join('');
   } catch (err) {
-    list.innerHTML = `<div class="p-3 text-center text-xs text-redstone-400">${escapeHtml(err.message)}</div>`;
+    list.innerHTML = `<div class="p-3 text-center text-xs text-danger">${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -206,8 +206,7 @@ function initPage() {
     if (!btn) return;
     platform = btn.dataset.platform;
     for (const b of platformsEl.querySelectorAll('[data-platform]')) {
-      b.classList.toggle('border-grass-500', b === btn);
-      b.classList.toggle('text-grass-300', b === btn);
+      b.setAttribute('aria-pressed', String(b === btn));
     }
     if (q.value.trim()) search();
   });
@@ -235,7 +234,7 @@ function initPage() {
       lastResults = data.results;
       renderResults();
     } catch (err) {
-      resultsEl.innerHTML = `<div class="card p-4 text-sm text-redstone-400">${escapeHtml(err.message)}${platform === 'curseforge' ? ' — <a href="/settings" class="text-diamond-400 hover:underline">API keys</a>' : ''}</div>`;
+      resultsEl.innerHTML = `<div class="card p-4 text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' — <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
     }
   }
 

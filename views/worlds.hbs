@@ -13,7 +13,7 @@
       <tbody>
         {{#each worlds}}
           <tr data-world-row data-id="{{id}}" data-name="{{name}}" data-size="{{size}}">
-            <td><div class="flex items-center gap-2">{{{icon 'earth' 'size-5 text-diamond-400'}}}<div><div class="font-medium">{{name}}</div><div class="text-xs text-ink-faint">{{created}} · {{hash}}</div></div></div></td>
+            <td><div class="flex items-center gap-2">{{{icon 'earth' 'size-5 text-link'}}}<div><div class="font-medium">{{name}}</div><div class="text-xs text-ink-faint">{{created}} · {{hash}}</div></div></div></td>
             <td class="text-xs text-ink-soft">{{source}}</td>
             <td>
               {{#if flavor}}
@@ -28,7 +28,7 @@
             <td class="text-right"><div class="inline-flex gap-1">
               <button class="btn btn-ghost btn-sm" data-world-install data-tip="Pick a target server — compat check runs before install">{{{icon 'import' 'size-3.5'}}} Install to…</button>
               <a class="btn btn-ghost btn-sm" href="/api/worlds/{{id}}/download" data-tip="Download archive">{{{icon 'download' 'size-3.5'}}}</a>
-              <button class="btn btn-ghost btn-sm text-redstone-400" data-world-delete data-tip="Delete from library ({{bytes size}} freed)" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete from library ({{bytes size}} freed)" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
             </div></td>
           </tr>
         {{/each}}

@@ -12,7 +12,7 @@ export function runTask({ title, start, pollMs = 700 }) {
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
       <p data-step class="font-medium">Starting…</p>
-      <div class="meter"><div data-bar class="bg-grass-500 transition-all" style="width:3%"></div></div>
+      <div class="meter"><div data-bar class="bg-grass-500 transition-[width]" style="width:3%"></div></div>
       <p data-detail class="text-xs text-ink-faint"></p>
       <pre data-logs class="console hidden max-h-32 overflow-y-auto whitespace-pre-wrap text-[11px]"></pre>`;
     const modal = openModal({ title, content, size: 'sm' });

@@ -14,11 +14,11 @@
         <tr data-update-row data-server-id="{{serverId}}" data-server-name="{{server}}"
             data-kind="{{kind}}" data-subject="{{subject}}" data-current="{{current}}" data-latest="{{latest}}"
             {{#if versionId}}data-version-id="{{versionId}}"{{/if}} {{#if contentId}}data-content-id="{{contentId}}"{{/if}}>
-          <td>{{#if serverId}}<a class="text-diamond-400 hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
-          <td><span class="badge bg-inset text-ink-soft">{{kind}}</span></td>
+          <td>{{#if serverId}}<a class="text-link hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
+          <td><span class="badge">{{kind}}</span></td>
           <td class="font-medium">{{subject}}</td>
           <td class="font-mono text-xs text-ink-faint">{{current}}</td>
-          <td class="font-mono text-xs text-gold-400">{{latest}}</td>
+          <td class="font-mono text-xs text-warn">{{latest}}</td>
           <td class="text-right"><div class="inline-flex gap-1">
             {{#if changelog}}<a class="btn btn-ghost btn-sm" href="{{changelog}}" target="_blank" rel="noopener">Changelog ↗</a>{{/if}}
             <button class="btn btn-sm" data-update-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>

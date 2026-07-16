@@ -1,15 +1,15 @@
-﻿<div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if serversOnly}}hidden{{/if}}">
+<div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if serversOnly}}hidden{{/if}}">
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Servers online</div>
-    <div class="mt-1 text-2xl font-bold text-grass-400">{{totals.running}}<span class="text-base font-medium text-ink-faint"> / {{totals.total}}</span></div>
+    <div class="mt-1 text-2xl font-bold tabular-nums text-ok">{{totals.running}}<span class="text-base font-medium text-ink-faint"> / {{totals.total}}</span></div>
   </div>
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Players connected</div>
-    <div class="mt-1 text-2xl font-bold">{{totals.players}}</div>
+    <div class="mt-1 text-2xl font-bold tabular-nums">{{totals.players}}</div>
   </div>
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Updates available</div>
-    <div class="mt-1 text-2xl font-bold {{#if totals.updates}}text-gold-400{{/if}}">{{totals.updates}}</div>
+    <div class="mt-1 text-2xl font-bold tabular-nums {{#if totals.updates}}text-warn{{/if}}">{{totals.updates}}</div>
   </div>
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Docker</div>
@@ -19,10 +19,10 @@
   </div>
 </div>
 
-<div id="docker-warning" class="mb-4 hidden items-start gap-2.5 rounded-md border border-redstone-800/60 bg-redstone-900/20 p-3 text-sm text-redstone-200">
-  {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0'}}}
+<div id="docker-warning" class="mb-4 hidden items-start gap-2.5 rounded-md border border-danger/40 bg-redstone-500/10 p-3 text-sm text-ink-soft">
+  {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
   <div>
-    <span class="font-semibold">Docker isn’t reachable.</span>
+    <span class="font-semibold text-danger">Docker isn’t reachable.</span>
     <span id="docker-warning-reason">Start Docker, then reload — creating or starting servers needs the daemon running.</span>
   </div>
 </div>
@@ -37,9 +37,9 @@
     <option value="started" {{#if (eq sort 'started')}}selected{{/if}}>Last started</option>
     <option value="created" {{#if (eq sort 'created')}}selected{{/if}}>Created</option>
   </select>
-  <div class="ml-auto flex rounded-md border border-line-strong p-0.5">
-    <button class="btn btn-ghost btn-sm" id="view-grid" data-tip="Grid view">{{{icon 'layout-grid' 'size-4'}}}</button>
-    <button class="btn btn-ghost btn-sm" id="view-list" data-tip="List view">{{{icon 'list' 'size-4'}}}</button>
+  <div class="seg ml-auto" role="group" aria-label="View">
+    <button class="seg-btn" id="view-grid" aria-pressed="false" data-tip="Grid view">{{{icon 'layout-grid' 'size-4'}}}</button>
+    <button class="seg-btn" id="view-list" aria-pressed="false" data-tip="List view">{{{icon 'list' 'size-4'}}}</button>
   </div>
 </div>
 
@@ -53,7 +53,7 @@
     {{> server-card}}
   {{/each}}
 
-  <a href="/servers/new" class="grid min-h-44 place-items-center rounded-lg border-2 border-dashed border-line text-ink-faint transition hover:border-grass-600 hover:text-grass-400">
+  <a href="/servers/new" class="grid min-h-44 place-items-center rounded-lg border-2 border-dashed border-line text-ink-faint transition hover:border-grass-600 hover:text-ok">
     <div class="grid place-items-center text-center">
       {{{icon 'plus' 'size-8'}}}
       <div class="mt-2 text-sm font-medium">Create a server</div>
@@ -65,14 +65,14 @@
 <div class="mt-8 {{#if serversOnly}}hidden{{/if}}">
   <div class="mb-3 flex items-center justify-between">
     <h2 class="font-semibold">Recent activity</h2>
-    <a href="/activity" class="text-sm text-diamond-400 hover:underline">View all →</a>
+    <a href="/activity" class="text-sm text-link hover:underline">View all →</a>
   </div>
   <div class="card divide-y divide-line">
     {{#each activity}}
       <div class="flex items-center gap-3 px-4 py-3 text-sm">
-        <span class="badge shrink-0 bg-inset text-ink-soft">{{type}}</span>
+        <span class="badge shrink-0">{{type}}</span>
         <span class="min-w-0 flex-1 truncate">{{summary}}</span>
-        {{#if serverId}}<a href="/servers/{{serverId}}" class="hidden shrink-0 text-xs text-diamond-400 hover:underline sm:block">{{server}}</a>{{else}}<span class="hidden shrink-0 text-xs text-diamond-400 hover:underline sm:block">{{server}}</span>{{/if}}
+        {{#if serverId}}<a href="/servers/{{serverId}}" class="hidden shrink-0 text-xs text-link hover:underline sm:block">{{server}}</a>{{else}}<span class="hidden shrink-0 text-xs text-link hover:underline sm:block">{{server}}</span>{{/if}}
         <span class="shrink-0 text-xs text-ink-faint">{{ts}}</span>
       </div>
     {{else}}

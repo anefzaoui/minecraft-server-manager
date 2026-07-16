@@ -220,7 +220,7 @@ function renderReport(text) {
   const appendLines = (parent, sectionLines) => {
     for (const line of sectionLines) {
       const div = document.createElement('div');
-      if (isImportant(line)) div.className = 'font-semibold text-redstone-400';
+      if (isImportant(line)) div.className = 'font-semibold text-danger';
       div.textContent = line || ' ';
       parent.appendChild(div);
     }
@@ -235,7 +235,7 @@ function renderReport(text) {
     // The huge system-details / walkthrough blocks start collapsed.
     details.open = !/System Details|detailed walkthrough/i.test(s.title);
     const summary = document.createElement('summary');
-    summary.className = 'cursor-pointer select-none font-semibold text-diamond-400';
+    summary.className = 'cursor-pointer select-none font-semibold text-link';
     summary.textContent = s.title;
     details.appendChild(summary);
     const body = document.createElement('div');

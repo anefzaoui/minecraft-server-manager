@@ -152,7 +152,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       const res = await fetch(`/api/modrinth/search?${params}`);
       const data = await res.json();
       if (!data.ok) {
-        results.innerHTML = `<p class="p-6 text-center text-sm text-redstone-400">${data.error || 'Search failed'}</p>`;
+        results.innerHTML = `<p class="p-6 text-center text-sm text-danger">${data.error || 'Search failed'}</p>`;
         return;
       }
       if (!data.results.length) {
@@ -211,8 +211,8 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     }
     pendingBox.classList.remove('hidden');
     pendingBox.innerHTML = `
-      <div class="flex flex-wrap items-center gap-3 rounded-md border border-gold-700/60 bg-gold-900/20 p-3 text-sm">
-        <span class="text-gold-300">${list.length} mod(s) in this modpack couldn't be auto-downloaded — the pack won't finish installing until each is resolved.</span>
+      <div class="flex flex-wrap items-center gap-3 rounded-md border border-warn/40 bg-gold-500/10 p-3 text-sm">
+        <span class="text-warn">${list.length} mod(s) in this modpack couldn't be auto-downloaded — the pack won't finish installing until each is resolved.</span>
         <button class="btn btn-sm ml-auto" id="mods-pending-open">Resolve now</button>
       </div>`;
     pendingBox.querySelector('#mods-pending-open').addEventListener('click', () => openPendingModal(list));
@@ -233,7 +233,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     function render(mods) {
       if (!mods.length) {
         listEl.innerHTML =
-          '<p class="rounded-md border border-grass-700 bg-grass-600/10 p-3 text-sm text-grass-300">All resolved — recreate the server to apply.</p>';
+          '<p class="rounded-md border border-grass-700 bg-grass-600/10 p-3 text-sm text-ok">All resolved — recreate the server to apply.</p>';
         return;
       }
       listEl.innerHTML = '';

@@ -22,18 +22,18 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
 
   const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' };
   const panel = document.createElement('div');
-  panel.className = `card w-full ${widths[size] || widths.md} max-h-[85vh] flex flex-col shadow-xl animate-[modal-in_.15s_ease-out]`;
+  panel.className = `card w-full ${widths[size] || widths.md} max-h-[85vh] flex flex-col shadow-modal animate-[modal-in_.15s_ease-out]`;
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
 
   panel.innerHTML = `
-    <div class="flex items-center gap-3 border-b border-line px-4 py-3">
+    <div class="flex items-center gap-3 border-b border-line py-3 pl-5 pr-3">
       <h3 class="min-w-0 flex-1 truncate font-semibold"></h3>
-      <button data-modal-x class="text-ink-faint transition hover:text-ink" aria-label="Close">
+      <button data-modal-x class="icon-btn" aria-label="Close">
         <svg class="icon size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
-    <div data-modal-body class="min-h-0 flex-1 overflow-y-auto p-4"></div>`;
+    <div data-modal-body class="min-h-0 flex-1 overflow-y-auto p-5"></div>`;
   panel.querySelector('h3').textContent = title;
 
   const body = panel.querySelector('[data-modal-body]');
@@ -45,7 +45,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
 
   if (actions.length) {
     const footer = document.createElement('div');
-    footer.className = 'flex justify-end gap-2 border-t border-line px-4 py-3';
+    footer.className = 'flex justify-end gap-2 border-t border-line px-5 py-3.5';
     for (const action of actions) {
       const btn = document.createElement('button');
       const kinds = { primary: 'btn btn-primary', danger: 'btn btn-danger', ghost: 'btn btn-ghost', default: 'btn' };

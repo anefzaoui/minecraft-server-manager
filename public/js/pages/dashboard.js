@@ -25,8 +25,8 @@ function init() {
   const applyView = (mode) => {
     grid.classList.toggle('md:grid-cols-2', mode === 'grid');
     grid.classList.toggle('xl:grid-cols-3', mode === 'grid');
-    btnGrid?.classList.toggle('bg-inset', mode === 'grid');
-    btnList?.classList.toggle('bg-inset', mode === 'list');
+    btnGrid?.setAttribute('aria-pressed', String(mode === 'grid'));
+    btnList?.setAttribute('aria-pressed', String(mode === 'list'));
     try {
       localStorage.setItem('msm-dash-view', mode);
     } catch {}
@@ -61,11 +61,11 @@ async function hydrateDocker() {
     const data = await res.json();
     const d = data.docker || {};
     if (d.available) {
-      el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-grass-400';
+      el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-ok';
       el.innerHTML = '<span class="status-dot relative bg-grass-500 pulse"></span> ';
       el.append(`Connected${d.version ? ` · v${d.version}` : ''}`);
     } else {
-      el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-redstone-400';
+      el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-danger';
       el.innerHTML = '<span class="status-dot relative bg-redstone-500"></span> ';
       el.append('Unreachable');
       el.title = d.error || 'Docker is not reachable. Is Docker running?';

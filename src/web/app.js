@@ -28,6 +28,13 @@ const STATUS_META = {
   crashed: { label: 'Crashed', color: 'redstone', pulse: false },
   'over-quota': { label: 'Over quota', color: 'redstone', pulse: false },
 };
+const STATUS_TEXT = {
+  grass: 'text-ok',
+  gold: 'text-warn',
+  diamond: 'text-link',
+  redstone: 'text-danger',
+  stone: 'text-ink-faint',
+};
 
 // The 8 icons bundled in public/icons/servers. Icon names are free text in the
 // schemas, so anything unknown falls back to grass instead of a broken image.
@@ -37,7 +44,7 @@ function iconSrc(name) {
   if (typeof name === 'string' && name.startsWith('custom:')) {
     return `/api/icons/custom/${encodeURIComponent(name.slice('custom:'.length))}`;
   }
-  return `/icons/servers/${BUNDLED_ICONS.has(name) ? name : 'grass'}.svg`;
+  return `/icons/servers/${BUNDLED_ICONS.has(name) ? name : 'grass'}.png`;
 }
 
 function formatBytes(bytes) {
@@ -96,6 +103,9 @@ function createApp() {
         statusLabel: (s) => (STATUS_META[s] || STATUS_META.stopped).label,
         statusColor: (s) => (STATUS_META[s] || STATUS_META.stopped).color,
         statusPulse: (s) => (STATUS_META[s] || STATUS_META.stopped).pulse,
+        // Status *text* goes through the theme-aware semantic tokens (the raw
+        // 400-step palette classes fail contrast on the light canvas).
+        statusText: (s) => STATUS_TEXT[(STATUS_META[s] || STATUS_META.stopped).color],
         // Quota bar color by usage percentage against the configured thresholds.
         meterColor: (used, total) => {
           if (!total) return 'bg-diamond-400';

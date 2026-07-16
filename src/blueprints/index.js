@@ -744,7 +744,7 @@ function fabricStarterManifest() {
       name: 'Fabric Performance Base',
       description: 'Fabric with Lithium, FerriteCore, Krypton and Spark — a lean modded starting point.',
       icon: 'diamond',
-      accent: '#2f9bd6',
+      accent: '#21a7ab',
       tags: ['fabric', 'performance'],
     },
     config: { type: 'FABRIC', mcVersion: 'LATEST', javaTag: '', env: {} },

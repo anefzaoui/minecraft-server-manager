@@ -7,15 +7,15 @@
 {{else}}
   <div class="card w-full max-w-md overflow-hidden" style="border-top: 3px solid {{page.accent}}">
     <div class="texture-top p-6 text-center">
-      <img src="{{iconSrc page.icon}}" alt="" class="mx-auto size-16 rounded-lg" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'">
+      <img src="{{iconSrc page.icon}}" alt="" class="mx-auto size-16 rounded-lg" onerror="this.onerror=null;this.src='/icons/servers/grass.png'">
       <h1 class="mt-3 text-xl font-bold">{{page.name}}</h1>
       {{#if page.motd}}<p class="mt-1 text-sm text-ink-soft">{{page.motd}}</p>{{/if}}
-      <div class="mt-3 flex items-center justify-center gap-1.5 text-sm font-medium text-{{statusColor page.status}}-400">
+      <div class="mt-3 flex items-center justify-center gap-1.5 text-sm font-medium {{statusText page.status}}">
         <span class="status-dot relative bg-{{statusColor page.status}}-500 {{#if (statusPulse page.status)}}pulse{{/if}}"></span>
         {{statusLabel page.status}}
       </div>
     </div>
-    <dl class="grid grid-cols-3 gap-px border-t border-line bg-line text-center">
+    <dl class="grid grid-cols-3 gap-px border-t border-line bg-line text-center tabular-nums">
       <div class="bg-raised p-3">
         <dt class="text-[11px] uppercase tracking-wider text-ink-faint">Version</dt>
         <dd class="mt-0.5 text-sm font-semibold">{{page.flavor}} {{page.mcVersion}}</dd>

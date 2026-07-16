@@ -1,4 +1,4 @@
-﻿<div class="grid gap-4 lg:grid-cols-2" data-settings-server="{{server.id}}" data-settings-icon="{{server.icon}}" data-settings-accent="{{server.accent}}" data-settings-tags="{{json server.tags}}" data-settings-env="{{settingsEnv}}">
+<div class="grid gap-4 lg:grid-cols-2" data-settings-server="{{server.id}}" data-settings-icon="{{server.icon}}" data-settings-accent="{{server.accent}}" data-settings-tags="{{json server.tags}}" data-settings-env="{{settingsEnv}}">
   <div class="card p-4">
     <h3 class="mb-4 font-semibold">Identity</h3>
     <div class="space-y-4">
@@ -22,27 +22,27 @@
         <div>
           <span class="label">Icon</span>
           <div class="flex flex-wrap gap-1.5">
-            <button class="grid size-9 place-items-center rounded-md border-2 border-grass-500 bg-inset p-1" data-pick-icon="{{server.icon}}" data-tip="Current icon"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="grass"><img src="/icons/servers/grass.svg" alt="Grass block" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="creeper"><img src="/icons/servers/creeper.svg" alt="Creeper" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="diamond"><img src="/icons/servers/diamond.svg" alt="Diamond" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="portal"><img src="/icons/servers/portal.svg" alt="Nether portal" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="chest"><img src="/icons/servers/chest.svg" alt="Chest" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="sword"><img src="/icons/servers/sword.svg" alt="Sword" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="potion"><img src="/icons/servers/potion.svg" alt="Potion" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="tnt"><img src="/icons/servers/tnt.svg" alt="TNT" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-md border border-dashed border-line text-ink-faint hover:border-line-strong" id="st-icon-upload" data-tip="Upload a custom icon (PNG/SVG)">{{{icon 'upload' 'size-4'}}}</button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-grass-500 bg-inset p-1" data-pick-icon="{{server.icon}}" data-tip="Current icon"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" onerror="this.onerror=null;this.src='/icons/servers/grass.png'"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="grass"><img src="/icons/servers/grass.png" alt="Grass block" class="size-full rounded-sm"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="creeper"><img src="/icons/servers/creeper.png" alt="Creeper" class="size-full rounded-sm"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="diamond"><img src="/icons/servers/diamond.png" alt="Diamond" class="size-full rounded-sm"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="portal"><img src="/icons/servers/portal.png" alt="Nether portal" class="size-full rounded-sm"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="chest"><img src="/icons/servers/chest.png" alt="Chest" class="size-full rounded-sm"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="sword"><img src="/icons/servers/sword.png" alt="Sword" class="size-full rounded-sm"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="potion"><img src="/icons/servers/potion.png" alt="Potion" class="size-full rounded-sm"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong" data-pick-icon="tnt"><img src="/icons/servers/tnt.png" alt="TNT" class="size-full rounded-sm"></button>
+            <button class="grid size-9 place-items-center rounded-md border-2 border-dashed border-line text-ink-faint hover:border-line-strong" id="st-icon-upload" data-tip="Upload a custom icon (PNG/SVG)">{{{icon 'upload' 'size-4'}}}</button>
           </div>
         </div>
         <div>
           <span class="label">Accent color</span>
           <div class="flex flex-wrap items-center gap-1.5">
             <button class="size-9 rounded-md border-2 border-white/70" style="background: {{server.accent}}" data-pick-accent="{{server.accent}}" data-tip="Current"></button>
-            <button class="size-9 rounded-md" style="background: #3fa62b" data-pick-accent="#3fa62b" data-tip="Grass"></button>
-            <button class="size-9 rounded-md" style="background: #21a7ab" data-pick-accent="#21a7ab" data-tip="Diamond"></button>
-            <button class="size-9 rounded-md" style="background: #e5484d" data-pick-accent="#e5484d" data-tip="Redstone"></button>
-            <button class="size-9 rounded-md" style="background: #e99417" data-pick-accent="#e99417" data-tip="Gold"></button>
-            <button class="size-9 rounded-md" style="background: #8b5cf6" data-pick-accent="#8b5cf6" data-tip="Amethyst"></button>
+            <button class="size-9 rounded-md border-2 border-transparent" style="background: #3fa62b" data-pick-accent="#3fa62b" data-tip="Grass"></button>
+            <button class="size-9 rounded-md border-2 border-transparent" style="background: #21a7ab" data-pick-accent="#21a7ab" data-tip="Diamond"></button>
+            <button class="size-9 rounded-md border-2 border-transparent" style="background: #e5484d" data-pick-accent="#e5484d" data-tip="Redstone"></button>
+            <button class="size-9 rounded-md border-2 border-transparent" style="background: #e99417" data-pick-accent="#e99417" data-tip="Gold"></button>
+            <button class="size-9 rounded-md border-2 border-transparent" style="background: #9a5cc6" data-pick-accent="#9a5cc6" data-tip="Amethyst"></button>
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@
         </div>
       </div>
       <div>
-        <label class="label" for="st-notes">Private notes <span class="badge ml-1 bg-inset text-ink-faint">admin only</span></label>
+        <label class="label" for="st-notes">Private notes <span class="badge ml-1">admin only</span></label>
         <textarea class="input font-mono text-xs" id="st-notes" rows="2" placeholder="Scratchpad — never shown to viewers">{{server.notes}}</textarea>
       </div>
       <div class="space-y-2.5 border-t border-line pt-3">
@@ -75,7 +75,7 @@
       <h3 class="mb-4 font-semibold">Resources</h3>
       <div class="space-y-4">
         <div>
-          <label class="label" for="st-heap">Java heap <span class="ml-1 font-mono text-[10px] text-ink-faint">MEMORY</span></label>
+          <label class="label" for="st-heap">Java heap <span class="ml-1 font-mono text-[11px] text-ink-faint">MEMORY</span></label>
           <div class="flex items-center gap-3">
             <input type="range" min="1024" max="16384" step="512" value="{{server.resources.heapMb}}" id="st-heap" class="msm-range flex-1" data-out="out-heap" data-unit=" MB">
             <span class="w-20 text-right font-mono text-sm" id="out-heap">{{server.resources.heapMb}} MB</span>
@@ -83,7 +83,7 @@
           <p class="help">RAM the Minecraft/Java process may use. The image passes this to the JVM as both initial and max heap.</p>
         </div>
         <div>
-          <label class="label" for="st-cmem">Container memory limit <span class="ml-1 font-mono text-[10px] text-ink-faint">HostConfig.Memory</span></label>
+          <label class="label" for="st-cmem">Container memory limit <span class="ml-1 font-mono text-[11px] text-ink-faint">HostConfig.Memory</span></label>
           <div class="flex items-center gap-3">
             <input type="range" min="1024" max="20480" step="512" value="{{server.resources.containerMemoryMb}}" id="st-cmem" class="msm-range msm-range-alt flex-1" data-out="out-cmem" data-unit=" MB">
             <span class="w-20 text-right font-mono text-sm" id="out-cmem">{{server.resources.containerMemoryMb}} MB</span>
@@ -100,7 +100,7 @@
           <p class="help">0 = unlimited. When capped, the server slows down instead of being killed.</p>
         </div>
         <div>
-          <label class="label" for="st-quota">Disk quota <span class="badge ml-1 bg-inset text-ink-faint">panel-enforced</span></label>
+          <label class="label" for="st-quota">Disk quota <span class="badge ml-1">panel-enforced</span></label>
           <div class="flex items-center gap-3">
             <input type="range" min="0" max="200" step="5" value="{{quotaGb}}" id="st-quota" class="msm-range flex-1" data-out="out-quota" data-unit=" GB" data-zero="off">
             <span class="w-20 text-right font-mono text-sm" id="out-quota">{{quotaGb}} GB</span>

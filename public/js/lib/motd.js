@@ -138,7 +138,7 @@ export function attachMotdEditor(input, { preview, getName = () => 'My Server' }
   for (const [code, hex, label] of MC_COLORS) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'size-5 rounded-sm ring-1 ring-inset ring-white/20 transition hover:scale-125';
+    b.className = 'size-5 rounded-sm ring-1 ring-inset ring-white/20 transition hover:ring-2 hover:ring-white/70';
     b.style.background = hex;
     b.dataset.tip = `${label} (&${code})`;
     b.addEventListener('click', () => insert(`&${code}`));
@@ -172,7 +172,7 @@ export function attachMotdEditor(input, { preview, getName = () => 'My Server' }
   const presetsBtn = document.createElement('button');
   presetsBtn.type = 'button';
   presetsBtn.className = 'btn btn-ghost btn-sm ml-auto';
-  presetsBtn.textContent = '✨ Examples';
+  presetsBtn.textContent = 'Examples';
   presetsBtn.addEventListener('click', showPresets);
   wrap.appendChild(presetsBtn);
 

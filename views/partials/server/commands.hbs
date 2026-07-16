@@ -4,7 +4,7 @@
   <div class="card mb-4 p-4">
     <div class="flex flex-wrap items-start gap-4">
       <div class="min-w-0 flex-1">
-        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-diamond-400'}}} Custom chat commands</h3>
+        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-link'}}} Custom chat commands</h3>
         <p class="mt-1 max-w-prose text-sm text-ink-faint">
           Players type a trigger in game chat — like <code class="rounded bg-inset px-1 font-mono text-ink-soft">{{chatPrefix}}rtp2</code> —
           and the panel runs the bound action <b class="text-ink-soft">as that player</b>: random teleport, structure or biome
@@ -23,7 +23,7 @@
   </div>
 
   {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-    <div class="mb-4 max-w-prose rounded-md border border-gold-800/50 bg-gold-900/20 p-3 text-xs text-ink-soft">
+    <div class="mb-4 max-w-prose rounded-md border border-warn/40 bg-gold-500/10 p-3 text-xs text-ink-soft">
       Server is offline — commands are saved and start working the moment the server is running again.
       The Test button needs a running server.
     </div>
@@ -55,11 +55,11 @@
             </td>
             <td>
               {{#if (eq permission 'ops')}}
-                <span class="badge bg-redstone-500/15 text-redstone-400">ops only</span>
+                <span class="badge badge-danger">ops only</span>
               {{else if (eq permission 'whitelist')}}
-                <span class="badge bg-diamond-400/15 text-diamond-400">whitelisted</span>
+                <span class="badge badge-info">whitelisted</span>
               {{else}}
-                <span class="badge bg-grass-500/15 text-grass-400">everyone</span>
+                <span class="badge badge-ok">everyone</span>
               {{/if}}
             </td>
             <td class="text-sm text-ink-soft">{{cooldownLabel}}</td>
@@ -74,7 +74,7 @@
               <div class="inline-flex gap-1">
                 <button class="btn btn-ghost btn-sm" data-cc-test data-tip="Run now as a named player (skips permission &amp; cooldown)">{{{icon 'play' 'size-3.5'}}}</button>
                 <button class="btn btn-ghost btn-sm" data-cc-edit data-tip="Edit command">{{{icon 'pencil' 'size-3.5'}}}</button>
-                <button class="btn btn-ghost btn-sm text-redstone-400" data-cc-delete data-tip="Delete command" aria-label="Delete {{trigger}}">{{{icon 'x' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-cc-delete data-tip="Delete command" aria-label="Delete {{trigger}}">{{{icon 'x' 'size-3.5'}}}</button>
               </div>
             </td>
           </tr>
@@ -97,7 +97,7 @@
       <div class="divide-y divide-line text-sm">
         {{#each chatCommandEvents}}
           <div class="flex items-start gap-2.5 py-2">
-            {{#if failed}}{{{icon 'circle-x' 'size-4 shrink-0 text-redstone-400'}}}{{else}}{{{icon 'circle-check' 'size-4 shrink-0 text-grass-400'}}}{{/if}}
+            {{#if failed}}{{{icon 'circle-x' 'size-4 shrink-0 text-danger'}}}{{else}}{{{icon 'circle-check' 'size-4 shrink-0 text-ok'}}}{{/if}}
             <span class="min-w-0 flex-1">{{summary}}</span>
             <span class="shrink-0 text-xs text-ink-faint">{{ts}}</span>
           </div>

@@ -1,9 +1,9 @@
 <div class="card w-full max-w-sm p-6">
   <div class="mb-6 flex items-center justify-center gap-2.5">
     <span class="grid size-10 place-items-center rounded-md bg-grass-600 text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)]">{{{icon 'pickaxe' 'size-5'}}}</span>
-    <span class="pixel text-sm">Minecraft <span class="text-grass-400">Server Manager</span></span>
+    <span class="pixel text-sm">Minecraft <span class="text-ok">Server Manager</span></span>
   </div>
-  {{#if error}}<div class="mb-4 rounded-md border border-redstone-700 bg-redstone-900/20 p-2.5 text-sm text-redstone-300">{{error}}</div>{{/if}}
+  {{#if error}}<div class="mb-4 rounded-md border border-danger/40 bg-redstone-500/10 p-2.5 text-sm text-danger">{{error}}</div>{{/if}}
   <form method="post" action="/login" class="space-y-4">
     <input type="hidden" name="next" value="{{next}}">
     <div>

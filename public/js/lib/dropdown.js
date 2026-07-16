@@ -20,7 +20,7 @@ function open(trigger) {
   if (!tpl) return;
 
   const menu = document.createElement('div');
-  menu.className = 'card fixed z-[55] min-w-44 p-1 shadow-xl';
+  menu.className = 'card fixed z-[55] min-w-44 p-1 shadow-overlay';
   menu.setAttribute('role', 'menu');
   menu.appendChild(tpl.content.cloneNode(true));
   menu.querySelectorAll('button, a').forEach((el) => {

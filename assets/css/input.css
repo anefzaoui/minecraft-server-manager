@@ -1,5 +1,15 @@
 @import 'tailwindcss';
 
+/* ---- The three commitments ----
+   Palette: a cool-tinted "stone" neutral ramp (#0e1113 → #fafbfb) with grass green
+   #3fa62b as the single accent, taken from the grass block itself; diamond, redstone
+   and gold serve info/danger/warning and come from the same source material.
+   Type: IBM Plex Sans for body — an engineered grotesque that suits an infrastructure
+   tool and stays quiet under Press Start 2P, the pixel display face (titles only)
+   that carries the product's character.
+   Structural primitive: cards on the canvas inside a fixed sidebar + topbar shell;
+   surfaces separate by background shift first, hairline border second. */
+
 /* Dark is the default theme; light mode is opt-in via <html data-theme="light">.
    Toggling swaps the semantic tokens below, so components only ever reference
    semantic names (surface, ink, line…) — never raw palette values. */
@@ -68,8 +78,16 @@
   --color-stone-950: #0e1113;
 
   --font-pixel: 'Press Start 2P', 'Courier New', monospace;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+
+  /* ---- Elevation: three shadow levels mapped to meaning, one light source
+     (above), tinted with the stone ramp's cool hue. Dark mode separates raised
+     surfaces by background lightness, so these mostly carry the light theme.
+     Never write an ad-hoc shadow — pick the level that matches the meaning. ---- */
+  --shadow-raised: 0 1px 2px rgb(14 17 19 / 0.07), 0 1px 1px rgb(14 17 19 / 0.05);
+  --shadow-overlay: 0 8px 24px rgb(14 17 19 / 0.18), 0 2px 6px rgb(14 17 19 / 0.1);
+  --shadow-modal: 0 16px 48px rgb(14 17 19 / 0.3), 0 4px 12px rgb(14 17 19 / 0.15);
 
   /* ---- Semantic tokens (dark values — the default) ---- */
   --color-canvas: var(--color-stone-950);
@@ -81,6 +99,14 @@
   --color-ink: var(--color-stone-50);
   --color-ink-soft: var(--color-stone-300);
   --color-ink-faint: var(--color-stone-400);
+
+  /* Accent-as-text tokens. The 400 steps read well on dark surfaces (6.4–9.5:1)
+     but fail hard on white (1.9–2.8:1), so text colored by meaning must go
+     through these — never through a raw palette step. Light mode swaps them. */
+  --color-link: var(--color-diamond-400);
+  --color-ok: var(--color-grass-400);
+  --color-warn: var(--color-gold-400);
+  --color-danger: var(--color-redstone-400);
 }
 
 :root[data-theme='light'] {
@@ -95,6 +121,12 @@
   /* stone-600 (not 500) so the pervasive text-xs help copy clears WCAG AA on the
      near-white light canvas. */
   --color-ink-faint: var(--color-stone-600);
+  /* Measured on white: diamond-700 6.3:1, grass-700 7.0:1, gold-700 5.4:1,
+     redstone-700 6.5:1 (redstone-600 dips to 4.2:1 on the error-box tint). */
+  --color-link: var(--color-diamond-700);
+  --color-ok: var(--color-grass-700);
+  --color-warn: var(--color-gold-700);
+  --color-danger: var(--color-redstone-700);
 }
 
 @font-face {
@@ -103,10 +135,36 @@
   font-display: swap;
 }
 @font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter-Variable.ttf') format('truetype-variations');
-  font-weight: 100 900;
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBMPlexSans-latin.woff2') format('woff2-variations');
+  font-weight: 100 700;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBMPlexSans-latin-ext.woff2') format('woff2-variations');
+  font-weight: 100 700;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBMPlexSans-cyrillic.woff2') format('woff2-variations');
+  font-weight: 100 700;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/IBMPlexSans-greek.woff2') format('woff2-variations');
+  font-weight: 100 700;
+  font-display: swap;
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
 }
 
 @keyframes modal-in {
@@ -135,6 +193,28 @@
     @apply bg-canvas text-ink antialiased;
     color-scheme: dark;
   }
+  /* Themed scrollbars — the OS-default grey bar is the last piece of stock
+     chrome on an otherwise committed surface. Thin, line-colored, no track. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border: 3px solid transparent;
+    border-radius: 5px;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-stone-500);
+  }
   :root[data-theme='light'] {
     color-scheme: light;
   }
@@ -150,8 +230,9 @@
     @apply bg-grass-600/60 text-white;
   }
   /* Everything clickable gets a physical press, even outside .btn (flavor
-     tiles, icon pickers, chips) — part of the Minecraft tactility. */
-  button:not(.btn):not(.msm-toggle):active {
+     tiles, icon pickers, chips) — part of the Minecraft tactility. Segmented
+     controls are exempt: a selected tab that keeps bouncing reads as broken. */
+  button:not(.btn):not(.msm-toggle):not(.seg-btn):active {
     transform: translateY(1px);
   }
   /* Keep pixel-art crisp if the browser ever rasterizes/scales it. */
@@ -187,7 +268,8 @@
       inset 0 -1px 0 rgb(255 255 255 / 0.05);
   }
   .btn-primary {
-    @apply border-grass-800 bg-grass-600 text-white hover:bg-grass-500;
+    /* Hover darkens: white text passes 4.5:1 on grass-600/700 but not grass-500. */
+    @apply border-grass-800 bg-grass-600 text-white hover:bg-grass-700;
     box-shadow:
       inset 0 2px 0 rgb(255 255 255 / 0.22),
       inset 0 -3px 0 rgb(0 0 0 / 0.32);
@@ -199,7 +281,7 @@
       inset 0 -1px 0 rgb(255 255 255 / 0.08);
   }
   .btn-danger {
-    @apply border-redstone-800 bg-redstone-600 text-white hover:bg-redstone-500;
+    @apply border-redstone-800 bg-redstone-600 text-white hover:bg-redstone-700;
     box-shadow:
       inset 0 2px 0 rgb(255 255 255 / 0.18),
       inset 0 -3px 0 rgb(0 0 0 / 0.32);
@@ -223,16 +305,65 @@
     @apply px-2.5 py-1.5 text-xs;
   }
 
-  .card {
-    @apply rounded-lg border border-line bg-surface shadow-sm;
+  /* Segmented control — the ONE component for every pick-one-of-N group
+     (source tabs, platform pickers, view toggles, sub-mode switches).
+     Selection state lives in aria-selected / aria-pressed; pages toggle the
+     attribute, never style classes. Sizing: 1px border + 2px padding + 32px
+     button = 38px total, identical to .input, so segments align with inputs
+     on the same row. The active segment is the raised key of the group (lit
+     top edge + green text); inactive hover moves TEXT only, so a hovered
+     segment can never be mistaken for the selected one. */
+  .seg {
+    @apply inline-flex items-center gap-1 rounded-md border border-line bg-inset/40 p-0.5;
+  }
+  .seg-btn {
+    @apply inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded px-3 text-sm
+      font-medium text-ink-faint transition-colors hover:text-ink
+      focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-diamond-400;
+  }
+  .seg-btn[aria-selected='true'],
+  .seg-btn[aria-pressed='true'] {
+    @apply bg-raised text-ok;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      inset 0 0 0 1px var(--color-line-strong);
   }
 
+  /* Icon-only buttons (modal/toast close, inline glyph actions): a real hit
+     area and a visible focus state instead of a naked 16px glyph. */
+  .icon-btn {
+    @apply grid size-8 shrink-0 place-items-center rounded-md text-ink-faint transition-colors
+      hover:bg-inset hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-1
+      focus-visible:outline-diamond-400;
+  }
+
+  .card {
+    /* One elevation language per edge: the border carries it (plus the surface
+       lightness step in dark mode) — no shadow doubling the same edge. */
+    @apply rounded-lg border border-line bg-surface;
+  }
+
+  /* Badges: neutral by default; the four semantic variants are the ONLY badge
+     colorways — no ad-hoc bg/text pairs at call sites. */
   .badge {
-    @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+    @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide bg-inset text-ink-soft;
+  }
+  .badge-ok {
+    @apply bg-grass-500/15 text-ok;
+  }
+  .badge-warn {
+    @apply bg-gold-400/15 text-warn;
+  }
+  .badge-danger {
+    @apply bg-redstone-500/15 text-danger;
+  }
+  .badge-info {
+    @apply bg-diamond-400/15 text-link;
   }
 
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-line bg-inset px-2 py-0.5 text-xs text-ink-soft;
+    /* rounded-sm, not a pill — the whole product sits in the blocky register. */
+    @apply inline-flex items-center gap-1 rounded-sm border border-line bg-inset px-2 py-0.5 text-xs text-ink-soft;
   }
 
   .input {
@@ -240,37 +371,44 @@
       placeholder:text-ink-faint focus:border-diamond-400 focus:outline-none
       focus:ring-1 focus:ring-diamond-400;
   }
+  /* Fields advertise interactivity on hover (stone-500 reads stronger than
+     line-strong in BOTH themes); focus keeps the diamond ring. */
+  .input:hover:not(:focus) {
+    border-color: var(--color-stone-500);
+  }
 
   .label {
     @apply mb-1 block text-sm font-medium text-ink;
   }
   .help {
-    @apply mt-1 text-xs leading-relaxed text-ink-faint;
+    @apply mt-1 max-w-prose text-xs leading-relaxed text-ink-faint;
   }
 
   .table-base {
     @apply w-full text-left text-sm;
+    font-variant-numeric: tabular-nums;
   }
+  /* px-4 so the first/last columns align with card headers and card padding. */
   .table-base th {
-    @apply border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wider text-ink-faint;
+    @apply border-b border-line px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-ink-faint;
   }
   .table-base td {
-    @apply border-b border-line/60 px-3 py-2.5 align-middle;
+    @apply border-b border-line/60 px-4 py-2.5 align-middle;
   }
-  .table-base tbody tr:hover {
-    @apply bg-inset/50;
+  @media (hover: hover) {
+    .table-base tbody tr:hover {
+      @apply bg-inset/50;
+    }
   }
 
   .nav-item {
     @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink-soft
-      transition hover:bg-inset hover:text-ink;
+      transition hover:bg-inset hover:text-ink focus-visible:outline-2
+      focus-visible:outline-offset-[-2px] focus-visible:outline-diamond-400;
   }
   .nav-item.active {
-    @apply bg-grass-600/15 text-grass-300;
+    @apply bg-grass-600/15 text-ok;
     box-shadow: inset 2px 0 0 var(--color-grass-500);
-  }
-  :root[data-theme='light'] .nav-item.active {
-    @apply text-grass-700;
   }
 
   /* Meters read like the in-game XP bar: blocky, with a beveled trough and a
@@ -282,7 +420,9 @@
       inset 0 -1px 0 rgb(255 255 255 / 0.05);
   }
   .meter > div {
-    @apply h-full rounded-sm transition-all;
+    /* Width (not scaleX) is transitioned on purpose: scaling would distort the
+       fill's beveled inset shadows. */
+    @apply h-full rounded-sm transition-[width];
     box-shadow:
       inset 0 2px 0 rgb(255 255 255 / 0.3),
       inset 0 -2px 0 rgb(0 0 0 / 0.25);
@@ -297,9 +437,17 @@
     background: inherit;
   }
 
-  /* Console */
+  /* Console — always dark regardless of theme; the inset shadow gives it the
+     same recessed-trough depth as the meters. */
   .console {
     @apply rounded-md border border-line bg-stone-950 p-3 font-mono text-[13px] leading-6 text-stone-200;
+    box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.35);
+  }
+
+  /* Collapsible catalog sections (<details class="card">): the summary row is
+     a control — show it on hover. */
+  details.card > summary:hover {
+    @apply rounded-lg bg-inset/40;
   }
 
   /* ---- Custom form controls: no native browser widgets, ever ---- */
@@ -345,13 +493,13 @@
   }
   .msm-toggle span::after {
     content: '';
-    @apply absolute left-0.5 top-0.5 size-4 rounded-full bg-stone-300 transition-all;
+    @apply absolute left-0.5 top-0.5 size-4 rounded-full bg-stone-300 transition-[transform,background-color];
   }
   .msm-toggle input:checked + span {
     @apply bg-grass-600 ring-grass-700;
   }
   .msm-toggle input:checked + span::after {
-    @apply left-[1.125rem] bg-white;
+    @apply translate-x-4 bg-white;
   }
 
   /* Range sliders */
@@ -360,10 +508,10 @@
       focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400;
   }
   input[type='range'].msm-range::-webkit-slider-thumb {
-    @apply size-4 appearance-none rounded-sm border border-grass-700 bg-grass-500 shadow;
+    @apply size-4 appearance-none rounded-sm border border-grass-700 bg-grass-500 shadow-raised;
   }
   input[type='range'].msm-range::-moz-range-thumb {
-    @apply size-4 rounded-sm border border-grass-700 bg-grass-500 shadow;
+    @apply size-4 rounded-sm border border-grass-700 bg-grass-500 shadow-raised;
   }
   input[type='range'].msm-range.msm-range-alt::-webkit-slider-thumb {
     @apply border-diamond-700 bg-diamond-400;
@@ -381,5 +529,19 @@
     background-image:
       linear-gradient(to bottom, rgb(63 166 43 / 0.08), transparent 60%),
       repeating-linear-gradient(90deg, rgb(255 255 255 / 0.015) 0 8px, transparent 8px 16px);
+  }
+}
+
+/* Reduced motion: collapse every animation and transition to a single instant
+   frame. Status stays readable through color alone — the ping echo, indeterminate
+   meter pulse and entrance movements are all decorative on top of it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

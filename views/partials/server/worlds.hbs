@@ -22,7 +22,7 @@
             <td class="text-right text-ink-faint">{{bytes sizeBytes}}</td>
             <td>
               {{#if active}}
-                <span class="badge bg-grass-500/15 text-grass-400">active</span>
+                <span class="badge badge-ok">active</span>
               {{else}}
                 <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Sets level-name — server must be stopped">Activate</button>
               {{/if}}
@@ -33,9 +33,9 @@
               <button class="btn btn-ghost btn-sm" data-world-copy data-tip="Copy to another instance — compat check + safety backup">{{{icon 'arrow-right' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-rename data-tip="Rename world (server must be stopped)">{{{icon 'pencil' 'size-3.5'}}}</button>
               {{#if active}}
-                <button class="btn btn-ghost btn-sm text-redstone-400" data-world-reset data-tip="Reset world — auto-backup, keep or reroll seed">{{{icon 'undo-2' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-world-reset data-tip="Reset world — auto-backup, keep or reroll seed">{{{icon 'undo-2' 'size-3.5'}}}</button>
               {{else}}
-                <button class="btn btn-ghost btn-sm text-redstone-400" data-world-delete data-tip="Delete world ({{bytes sizeBytes}} freed)" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete world ({{bytes sizeBytes}} freed)" aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
               {{/if}}
             </div></td>
           </tr>
@@ -52,7 +52,7 @@
     <div class="card divide-y divide-line">
       {{#each libraryWorlds}}
         <div class="flex flex-wrap items-center gap-3 p-3 text-sm" data-lib-row data-id="{{id}}" data-name="{{name}}">
-          {{{icon 'earth' 'size-5 text-diamond-400'}}}
+          {{{icon 'earth' 'size-5 text-link'}}}
           <div class="min-w-0 flex-1">
             <div class="font-medium">{{name}}</div>
             <div class="text-xs text-ink-faint">{{source}}{{#if flavor}} · {{flavor}}{{/if}}{{#if mcVersion}} {{mcVersion}}{{/if}} · {{created}}</div>
@@ -64,7 +64,7 @@
       {{/each}}
     </div>
   {{else}}
-    <div class="card p-6 text-center text-sm text-ink-faint">The world library is empty — save this server's world to it, upload an archive, or visit the <a class="text-diamond-400 hover:underline" href="/worlds">Worlds page</a>.</div>
+    <div class="card p-6 text-center text-sm text-ink-faint">The world library is empty — save this server's world to it, upload an archive, or visit the <a class="text-link hover:underline" href="/worlds">Worlds page</a>.</div>
   {{/if}}
 
   <div id="msm-server-options" hidden data-options="[{{#each servers}}{&quot;id&quot;:{{json id}},&quot;name&quot;:{{json name}},&quot;flavor&quot;:{{json flavor}},&quot;status&quot;:{{json status}} }{{#unless @last}},{{/unless}}{{/each}}]"></div>

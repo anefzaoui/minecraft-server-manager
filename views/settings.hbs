@@ -8,8 +8,8 @@
         <label class="label" for="set-cf-key">CurseForge API key</label>
         <div class="flex gap-2">
           <input class="input flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} (stored){{else}}paste your key from console.curseforge.com{{/if}}" autocomplete="off">
-          <button class="btn" id="set-cf-save">Save</button>
-          <button class="btn btn-ghost" id="set-cf-test" data-tip="Tests the stored key against the CurseForge API">Test</button>
+          <button class="btn" id="set-cf-save">Save key</button>
+          <button class="btn btn-ghost" id="set-cf-test" data-tip="Tests the stored key against the CurseForge API">Test key</button>
         </div>
         <p class="help">Required for Auto-CurseForge packs and CF mod downloads. Stored encrypted at rest; new keys are live-tested before saving.</p>
       </div>
@@ -26,7 +26,7 @@
       <label class="label" for="set-domain">Public domain</label>
       <div class="flex gap-2">
         <input class="input flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
-        <button class="btn" id="set-domain-save">Save</button>
+        <button class="btn" id="set-domain-save">Save domain</button>
       </div>
       <p class="help">Shown to players instead of your IP in connect addresses (e.g. <span class="font-mono">mc.example.com:25565</span>). Leave blank to use the server's IP. No scheme or port.</p>
     </div>
@@ -37,7 +37,7 @@
         <select class="input" id="set-country" data-native aria-label="Country"></select>
       </div>
       <div class="mt-2 flex items-center gap-2">
-        <button class="btn" id="set-loc-save">Save</button>
+        <button class="btn" id="set-loc-save">Save time zone</button>
         <span class="help" id="set-loc-note"></span>
       </div>
       <p class="help">Controls how dates and player-activity times display across the panel. "Auto" follows this machine's system settings.</p>
@@ -64,7 +64,7 @@
         <tbody>
           {{#each users}}
             <tr data-user-id="{{id}}" data-username="{{username}}">
-              <td class="font-medium">{{username}}{{#if (eq id ../user.id)}} <span class="badge bg-inset text-ink-faint">you</span>{{/if}}</td>
+              <td class="font-medium">{{username}}{{#if (eq id ../user.id)}} <span class="badge">you</span>{{/if}}</td>
               <td>
                 <select class="input w-auto text-xs" data-user-role data-label="Role for {{username}}">
                   <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>admin</option>
@@ -76,7 +76,7 @@
               <td class="text-right">
                 <div class="inline-flex gap-1">
                   <button class="btn btn-ghost btn-sm" data-user-password data-tip="Set a new password">{{{icon 'key' 'size-3.5'}}}</button>
-                  <button class="btn btn-ghost btn-sm text-redstone-400" data-user-delete aria-label="Delete {{username}}">{{{icon 'x' 'size-3.5'}}}</button>
+                  <button class="btn btn-ghost btn-sm text-danger" data-user-delete aria-label="Delete {{username}}">{{{icon 'x' 'size-3.5'}}}</button>
                 </div>
               </td>
             </tr>

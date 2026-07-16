@@ -107,7 +107,7 @@ function openPicker(select, btn) {
       row.id = `msm-opt-${i}`;
       row.className =
         'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm transition ' +
-        'hover:bg-inset disabled:opacity-40 aria-selected:bg-grass-600/15 aria-selected:text-grass-300';
+        'hover:bg-inset disabled:opacity-40 aria-selected:bg-grass-600/15 aria-selected:text-ok';
       row.setAttribute('role', 'option');
       if (opt.value === select.value) row.setAttribute('aria-selected', 'true');
       row.innerHTML = `
@@ -116,7 +116,7 @@ function openPicker(select, btn) {
           <span class="block truncate">${escapeHtml(opt.label)}</span>
           ${opt.desc ? `<span class="block truncate text-xs text-ink-faint">${escapeHtml(opt.desc)}</span>` : ''}
         </span>
-        ${opt.value === select.value ? '<svg class="icon size-4 shrink-0 text-grass-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : ''}`;
+        ${opt.value === select.value ? '<svg class="icon size-4 shrink-0 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : ''}`;
       row.addEventListener('click', () => choose(opt));
       list.appendChild(row);
     }

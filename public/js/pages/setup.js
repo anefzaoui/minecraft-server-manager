@@ -33,9 +33,9 @@ function init() {
 
   // ---- Step 1: system checks ----
   const ICONS = {
-    pass: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shrink-0 text-grass-400"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',
-    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shrink-0 text-gold-400"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
-    fail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shrink-0 text-redstone-400"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>',
+    pass: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shrink-0 text-ok"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shrink-0 text-warn"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+    fail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shrink-0 text-danger"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>',
   };
   const list = document.getElementById('checks-list');
 
@@ -64,7 +64,7 @@ function init() {
       checks = data.checks;
       checksLoaded = true;
     } catch (err) {
-      list.innerHTML = `<div class="rounded-md border border-redstone-700 bg-redstone-900/20 p-3 text-sm text-redstone-300">Could not run checks: ${esc(err.message)}</div>`;
+      list.innerHTML = `<div class="rounded-md border border-danger/40 bg-redstone-500/10 p-3 text-sm text-danger">Could not run checks: ${esc(err.message)}</div>`;
       return;
     }
 

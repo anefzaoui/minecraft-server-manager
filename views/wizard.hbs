@@ -2,25 +2,25 @@
   {{> page-header heading="CREATE SERVER" sub="One click to a running server in Simple mode — every option the image supports in Advanced."}}
 
   <div class="mb-4 flex flex-wrap items-center gap-2">
-    <div class="flex rounded-md border border-line-strong p-0.5 text-sm" id="wz-source-tabs" role="tablist" aria-label="Server source">
-      <button class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" type="button" data-source="vanilla">Vanilla</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-source="mods">From mods</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-source="modpack">From modpack</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-source="blueprint">From blueprint</button>
+    <div class="seg" id="wz-source-tabs" role="tablist" aria-label="Server source">
+      <button class="seg-btn" type="button" role="tab" aria-selected="true" data-source="vanilla">Vanilla</button>
+      <button class="seg-btn" type="button" role="tab" aria-selected="false" data-source="mods">From mods</button>
+      <button class="seg-btn" type="button" role="tab" aria-selected="false" data-source="modpack">From modpack</button>
+      <button class="seg-btn" type="button" role="tab" aria-selected="false" data-source="blueprint">From blueprint</button>
     </div>
-    <div class="ml-auto flex rounded-md border border-line-strong p-0.5 text-sm" id="wz-detail-toggle" role="tablist" aria-label="Form detail level">
-      <button class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" type="button" data-detail="simple">Simple</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-detail="advanced">Advanced</button>
-    </div>
+    <label class="ml-auto flex cursor-pointer items-center gap-2.5 text-sm font-medium" id="wz-detail-toggle">
+      Advanced options
+      <span class="msm-toggle"><input type="checkbox" id="wz-advanced-switch"><span></span></span>
+    </label>
   </div>
 
   {{! "From mods" source tab — the server's creation hub. Two sub-modes:
       Choose loader (loader-first browser, default) and Auto-detect (the solver). }}
   <div class="mb-4 hidden space-y-3" id="wz-mods-panel">
     <div class="flex flex-wrap items-center gap-2">
-      <div class="flex rounded-md border border-line-strong p-0.5 text-sm" id="wz-mods-mode" role="tablist" aria-label="Mod selection mode">
-        <button class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" type="button" data-mode="browse">Choose loader &amp; mods</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-mode="auto">Auto-detect from mods</button>
+      <div class="seg" id="wz-mods-mode" role="tablist" aria-label="Mod selection mode">
+        <button class="seg-btn" type="button" role="tab" aria-selected="true" data-mode="browse">Choose loader &amp; mods</button>
+        <button class="seg-btn" type="button" role="tab" aria-selected="false" data-mode="auto">Auto-detect from mods</button>
       </div>
     </div>
 
@@ -31,10 +31,10 @@
 
       <label class="label">Mod loader</label>
       <div class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4" id="wz-loaders">
-        <button type="button" data-loader="fabric" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-grass-300">{{{icon 'layers' 'size-5'}}}<span class="text-xs font-semibold">Fabric</span></button>
-        <button type="button" data-loader="forge" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'hammer' 'size-5'}}}<span class="text-xs font-semibold">Forge</span></button>
-        <button type="button" data-loader="neoforge" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'flame' 'size-5'}}}<span class="text-xs font-semibold">NeoForge</span></button>
-        <button type="button" data-loader="quilt" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'grid-2x2' 'size-5'}}}<span class="text-xs font-semibold">Quilt</span></button>
+        <button type="button" data-loader="fabric" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-ok">{{{icon 'layers' 'size-5'}}}<span class="text-xs font-semibold">Fabric</span></button>
+        <button type="button" data-loader="forge" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'hammer' 'size-5'}}}<span class="text-xs font-semibold">Forge</span></button>
+        <button type="button" data-loader="neoforge" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'flame' 'size-5'}}}<span class="text-xs font-semibold">NeoForge</span></button>
+        <button type="button" data-loader="quilt" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'grid-2x2' 'size-5'}}}<span class="text-xs font-semibold">Quilt</span></button>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
@@ -53,9 +53,9 @@
         <div class="flex flex-wrap items-center gap-2">
           <input class="input min-w-48 flex-1" id="wz-mods-q" placeholder="Search mods… e.g. sodium, create, jei" autocomplete="off">
           {{#if curseforgeEnabled}}
-            <div class="flex gap-1.5" id="wz-mods-platforms">
-              <button type="button" class="chip border-grass-500 text-grass-300" data-platform="modrinth">Modrinth</button>
-              <button type="button" class="chip" data-platform="curseforge">CurseForge</button>
+            <div class="seg" id="wz-mods-platforms" role="group" aria-label="Search platform">
+              <button type="button" class="seg-btn" aria-pressed="true" data-platform="modrinth">Modrinth</button>
+              <button type="button" class="seg-btn" aria-pressed="false" data-platform="curseforge">CurseForge</button>
             </div>
           {{/if}}
         </div>
@@ -65,7 +65,7 @@
       <div class="mt-4 hidden" id="wz-mods-selected-wrap">
         <div class="mb-2 flex items-center gap-2">
           <span class="text-sm font-semibold">Selected mods</span>
-          <span class="badge bg-inset text-ink-faint" id="wz-mods-count">0</span>
+          <span class="badge" id="wz-mods-count">0</span>
           <span class="ml-auto text-xs text-ink-faint" id="wz-mods-dephint"></span>
         </div>
         <div class="space-y-2" id="wz-mods-selected"></div>
@@ -97,9 +97,9 @@
     <p class="help mb-4">Search Modrinth or CurseForge. The pack decides the loader and Minecraft version, and the install is always pinned to the exact pack version you choose — restarts never silently upgrade.</p>
     <div class="flex flex-wrap items-center gap-2">
       <input class="input min-w-48 flex-1" id="wz-pack-q" placeholder="e.g. Simply Optimized, All the Mods…" autocomplete="off">
-      <div class="flex gap-1.5" id="wz-pack-platforms">
-        <button type="button" class="chip border-grass-500 text-grass-300" data-platform="modrinth">Modrinth</button>
-        <button type="button" class="chip" data-platform="curseforge">CurseForge</button>
+      <div class="seg" id="wz-pack-platforms" role="group" aria-label="Search platform">
+        <button type="button" class="seg-btn" aria-pressed="true" data-platform="modrinth">Modrinth</button>
+        <button type="button" class="seg-btn" aria-pressed="false" data-platform="curseforge">CurseForge</button>
       </div>
     </div>
     <div class="mt-2 hidden max-h-80 overflow-y-auto rounded-md border border-line" id="wz-pack-results"></div>
@@ -125,7 +125,7 @@
       {{#each blueprints}}<option value="{{id}}" data-desc="{{notes}}">{{name}}</option>{{/each}}
     </select>
     {{#unless blueprints.length}}
-      <p class="help mt-2">No blueprints in the library yet — export one from a server's Settings tab, or import a .mcserver.zip on the <a href="/blueprints" class="text-diamond-400 hover:underline">Blueprints page</a>.</p>
+      <p class="help mt-2">No blueprints in the library yet — export one from a server's Settings tab, or import a .mcserver.zip on the <a href="/blueprints" class="text-link hover:underline">Blueprints page</a>.</p>
     {{/unless}}
   </div>
 
@@ -139,14 +139,14 @@
       <div>
         <label class="label">Icon & color</label>
         <div class="flex gap-1.5" id="wz-icons">
-          <button type="button" data-icon="grass" class="grid size-10 place-items-center rounded-md border-2 border-grass-500 bg-inset p-1"><img src="/icons/servers/grass.svg" alt="Grass" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="creeper" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/creeper.svg" alt="Creeper" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="diamond" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/diamond.svg" alt="Diamond" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="tnt" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/tnt.svg" alt="TNT" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="portal" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/portal.svg" alt="Portal" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="chest" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/chest.svg" alt="Chest" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="sword" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/sword.svg" alt="Sword" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="potion" class="grid size-10 place-items-center rounded-md border border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/potion.svg" alt="Potion" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="grass" class="grid size-10 place-items-center rounded-md border-2 border-grass-500 bg-inset p-1"><img src="/icons/servers/grass.png" alt="Grass" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="creeper" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/creeper.png" alt="Creeper" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="diamond" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/diamond.png" alt="Diamond" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="tnt" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/tnt.png" alt="TNT" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="portal" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/portal.png" alt="Portal" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="chest" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/chest.png" alt="Chest" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="sword" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/sword.png" alt="Sword" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="potion" class="grid size-10 place-items-center rounded-md border-2 border-line bg-inset p-1 hover:border-line-strong"><img src="/icons/servers/potion.png" alt="Potion" class="size-full rounded-sm"></button>
         </div>
       </div>
     </div>
@@ -159,10 +159,11 @@
         <label class="label">Accent</label>
         <div class="flex gap-1.5" id="wz-colors">
           <button type="button" data-accent="#3fa62b" class="size-10 rounded-md border-2 border-white/60" style="background:#3fa62b"></button>
-          <button type="button" data-accent="#21a7ab" class="size-10 rounded-md" style="background:#21a7ab"></button>
-          <button type="button" data-accent="#e5484d" class="size-10 rounded-md" style="background:#e5484d"></button>
-          <button type="button" data-accent="#e99417" class="size-10 rounded-md" style="background:#e99417"></button>
-          <button type="button" data-accent="#8b5cf6" class="size-10 rounded-md" style="background:#8b5cf6"></button>
+          <button type="button" data-accent="#21a7ab" class="size-10 rounded-md border-2 border-transparent" style="background:#21a7ab"></button>
+          <button type="button" data-accent="#e5484d" class="size-10 rounded-md border-2 border-transparent" style="background:#e5484d"></button>
+          <button type="button" data-accent="#e99417" class="size-10 rounded-md border-2 border-transparent" style="background:#e99417"></button>
+          {{! Amethyst — the palette's purple, from the in-game block }}
+          <button type="button" data-accent="#9a5cc6" class="size-10 rounded-md border-2 border-transparent" style="background:#9a5cc6"></button>
         </div>
       </div>
     </div>
@@ -172,9 +173,9 @@
     <h3 class="mb-4 font-semibold">2 · Server type & version</h3>
     <p class="help mb-3">Vanilla and plugin servers. Want mods? Use the <b>From mods</b> tab — that's where the mod loaders (Fabric, Forge, NeoForge, Quilt) live.</p>
     <div class="mb-4 grid grid-cols-3 gap-2" id="wz-flavors">
-      <button type="button" data-type="VANILLA" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-grass-300">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
-      <button type="button" data-type="PAPER" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
-      <button type="button" data-type="PURPUR" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'gem' 'size-5'}}}<span class="text-xs font-semibold">Purpur</span></button>
+      <button type="button" data-type="VANILLA" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-ok">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
+      <button type="button" data-type="PAPER" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
+      <button type="button" data-type="PURPUR" class="grid place-items-center gap-1 rounded-md border-2 border-line bg-inset p-3 hover:border-line-strong">{{{icon 'gem' 'size-5'}}}<span class="text-xs font-semibold">Purpur</span></button>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
@@ -251,7 +252,7 @@
   </div>
 
   <div id="wz-advanced" class="mt-4 hidden space-y-3">
-    <div class="rounded-md border border-diamond-800/50 bg-diamond-900/20 p-3 text-xs text-ink-soft">
+    <div class="rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
       {{{icon 'info' 'size-3.5'}}} Every environment variable the Docker image supports, straight from its docs. Leave a field empty to use the image default —
       only values you change are applied. Simple-mode picks above (version, port, world rules, resources) still apply.
     </div>
@@ -259,7 +260,7 @@
       <details class="card group">
         <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
           {{{icon icon 'size-4 text-ink-faint'}}} {{label}}
-          <span class="badge ml-1 bg-inset text-ink-faint">{{fields.length}}</span>
+          <span class="badge ml-1">{{fields.length}}</span>
           <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
         </summary>
         <div class="divide-y divide-line/60 border-t border-line px-4 pb-4">
