@@ -10,8 +10,9 @@
         <span data-task-count class="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-inset text-[11px] font-bold">0</span>
       </button>
       {{! No z needed: the sticky header (z-20) already stacks above the page,
-          and within it DOM order wins. A z here would be capped at 20 anyway. }}
-      <div data-task-panel class="card absolute right-0 top-10 hidden w-80 shadow-overlay">
+          and within it DOM order wins. A z here would be capped at 20 anyway.
+          The menu-in animation replays each open (display none → block). }}
+      <div data-task-panel class="card absolute right-0 top-10 hidden w-80 origin-top-right shadow-overlay animate-[menu-in_.12s_ease-out]">
         <div class="border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">Background tasks</div>
         <div data-task-list class="max-h-96 overflow-y-auto"></div>
       </div>

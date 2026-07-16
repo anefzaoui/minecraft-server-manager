@@ -195,6 +195,42 @@
     margin-left: 100%;
   }
 }
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Registered so the radio dot's gradient stop can TRANSITION — unregistered
+   custom properties snap. Browsers without @property just snap (fine). */
+@property --msm-radio-r {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
 
 @layer base {
   html {
@@ -203,6 +239,9 @@
     /* Keep the scrollbar gutter reserved while modals lock scrolling, so
        opening one doesn't shift the whole page by the scrollbar width. */
     scrollbar-gutter: stable;
+    /* Lets height:auto participate in transitions (details animation above)
+       on browsers that support it; ignored elsewhere. */
+    interpolate-size: allow-keywords;
   }
   /* Themed scrollbars — the OS-default grey bar is the last piece of stock
      chrome on an otherwise committed surface. Thin, line-colored, no track. */
@@ -331,7 +370,29 @@
      top edge + green text); inactive hover moves TEXT only, so a hovered
      segment can never be mistaken for the selected one. */
   .seg {
-    @apply inline-flex items-center gap-1 rounded-md border border-line bg-inset/40 p-0.5;
+    @apply relative inline-flex items-center gap-1 rounded-md border border-line bg-inset/40 p-0.5;
+  }
+  /* Sliding pill (injected by lib/seg.js): the raised key GLIDES between
+     segments instead of teleporting. It carries the exact selected-state
+     visuals; when active, the buttons keep only their text color. */
+  .seg-pill {
+    @apply pointer-events-none absolute left-0 top-0 rounded bg-raised opacity-0;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      inset 0 0 0 1px var(--color-line-strong);
+    transition:
+      transform 200ms cubic-bezier(0.3, 0.7, 0.4, 1),
+      width 200ms cubic-bezier(0.3, 0.7, 0.4, 1),
+      height 200ms cubic-bezier(0.3, 0.7, 0.4, 1),
+      opacity 150ms ease;
+  }
+  .seg[data-seg-animated] .seg-btn {
+    @apply relative; /* paint above the pill (DOM order wins among positioned) */
+  }
+  .seg[data-seg-animated] .seg-btn[aria-selected='true'],
+  .seg[data-seg-animated] .seg-btn[aria-pressed='true'] {
+    background: transparent;
+    box-shadow: none;
   }
   .seg-btn {
     @apply inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded px-3 text-sm
@@ -473,6 +534,7 @@
 
   .input {
     @apply w-full rounded-md border border-line-strong bg-inset px-3 py-2 text-sm text-ink
+      transition-[border-color,box-shadow] duration-150
       placeholder:text-ink-faint focus:border-diamond-400 focus:outline-none
       focus:ring-1 focus:ring-diamond-400;
   }
@@ -565,6 +627,18 @@
   details.card > summary:hover {
     @apply rounded-lg bg-inset/40;
   }
+  /* Progressive: browsers with interpolate-size (Chrome 131+) animate the
+     open/close height of collapsibles; everyone else keeps the instant snap. */
+  details.card::details-content {
+    height: 0;
+    overflow: clip;
+    transition:
+      height 200ms ease,
+      content-visibility 200ms allow-discrete;
+  }
+  details.card[open]::details-content {
+    height: auto;
+  }
 
   /* ---- Custom form controls: no native browser widgets, ever ---- */
 
@@ -580,20 +654,37 @@
   }
   input[type='checkbox'].msm-check {
     @apply rounded;
+    /* The checkmark lives on the element at size 0, so checking GROWS it in
+       with a small overshoot and unchecking shrinks it away. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    background-size: 0%;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition-property: background-color, border-color, background-size;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   input[type='checkbox'].msm-check:checked {
     @apply border-grass-500 bg-grass-600;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
     background-size: 80%;
-    background-position: center;
-    background-repeat: no-repeat;
   }
   input[type='radio'].msm-radio {
     @apply rounded-full;
+    /* The dot radius rides the registered --msm-radio-r custom property, so it
+       grows out from the center instead of popping in. */
+    --msm-radio-r: 0%;
+    background: radial-gradient(
+      circle,
+      var(--color-grass-500) 0 var(--msm-radio-r),
+      var(--color-inset) calc(var(--msm-radio-r) + 4%)
+    );
+    transition:
+      --msm-radio-r 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      border-color 180ms;
   }
   input[type='radio'].msm-radio:checked {
     @apply border-grass-500;
-    background: radial-gradient(circle, var(--color-grass-500) 0 38%, var(--color-inset) 42%);
+    --msm-radio-r: 38%;
   }
 
   /* Toggle switch: <label class="msm-toggle"><input type="checkbox"><span></span></label> */
@@ -609,7 +700,19 @@
   }
   .msm-toggle span::after {
     content: '';
-    @apply absolute left-0.5 top-0.5 size-4 rounded-full bg-stone-300 transition-[transform,background-color];
+    @apply absolute left-0.5 top-0.5 size-4 rounded-full bg-stone-300;
+    /* Spring easing: the knob overshoots a touch and settles, like a real switch. */
+    transition:
+      transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      background-color 200ms,
+      width 150ms ease;
+  }
+  /* Held down, the knob squashes toward the direction of travel. */
+  .msm-toggle:active input:not(:disabled) + span::after {
+    width: 1.25rem;
+  }
+  .msm-toggle:active input:checked:not(:disabled) + span::after {
+    transform: translateX(0.75rem);
   }
   .msm-toggle:has(input:disabled) {
     @apply cursor-not-allowed;

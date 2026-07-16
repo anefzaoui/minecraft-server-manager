@@ -112,10 +112,12 @@ function init(serverId) {
   }
 
   // ---- Message log ----
-  function appendMessage(m, { autoScroll = true } = {}) {
+  function appendMessage(m, { autoScroll = true, animate = true } = {}) {
     log.querySelector('[data-chat-empty]')?.remove();
     const line = document.createElement('div');
-    line.className = 'py-0.5';
+    // Entrance only for genuinely new messages — a 50-line history replay
+    // animating on load would be noise, not feedback.
+    line.className = animate ? 'py-0.5 animate-[msg-in_.15s_ease-out]' : 'py-0.5';
     const time = document.createElement('span');
     time.className = 'mr-2 text-stone-500';
     time.textContent = formatTime(m.ts || Date.now());
@@ -134,7 +136,7 @@ function init(serverId) {
   // Replay persisted history (oldest first), then jump to the latest.
   try {
     const history = JSON.parse(document.getElementById('chat-history')?.textContent || '[]');
-    for (const m of history) appendMessage(m, { autoScroll: false });
+    for (const m of history) appendMessage(m, { autoScroll: false, animate: false });
     if (history.length) log.scrollTop = log.scrollHeight;
   } catch {
     /* corrupt island — start with the empty state */

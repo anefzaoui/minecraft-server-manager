@@ -18,7 +18,8 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
   const previouslyFocused = document.activeElement;
 
   const backdrop = document.createElement('div');
-  backdrop.className = 'fixed inset-0 z-[60] grid place-items-center bg-black/60 p-4 backdrop-blur-[2px]';
+  backdrop.className =
+    'fixed inset-0 z-[60] grid place-items-center bg-black/60 p-4 backdrop-blur-[2px] animate-[fade-in_.15s_ease-out]';
 
   const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' };
   const panel = document.createElement('div');
@@ -85,7 +86,15 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
     if (idx === -1) return;
     stack.splice(idx, 1);
     document.removeEventListener('keydown', onKeydown);
-    backdrop.remove();
+    // Exit beat: fade the backdrop and shrink the panel, THEN remove. All the
+    // logic (focus return, onClose, scroll unlock) still fires immediately —
+    // only the removal waits, with pointer events off so nothing is blocked.
+    backdrop.style.pointerEvents = 'none';
+    backdrop.style.transition = 'opacity 120ms ease';
+    backdrop.style.opacity = '0';
+    panel.style.transition = 'transform 120ms ease';
+    panel.style.transform = 'scale(0.98)';
+    setTimeout(() => backdrop.remove(), 120);
     if (!stack.length) document.documentElement.style.overflow = '';
     if (previouslyFocused && previouslyFocused.focus) previouslyFocused.focus();
     if (onClose) onClose(value);

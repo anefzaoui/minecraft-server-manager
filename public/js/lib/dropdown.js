@@ -28,7 +28,7 @@ function open(trigger) {
   const menu = document.createElement('div');
   // z-[68]: menus must clear a modal backdrop (60) when triggered from inside
   // one. See the stacking scale in input.css.
-  menu.className = 'card fixed z-[68] min-w-44 p-1 shadow-overlay';
+  menu.className = 'card fixed z-[68] min-w-44 p-1 shadow-overlay animate-[menu-in_.12s_ease-out]';
   menu.setAttribute('role', 'menu');
   menu.appendChild(tpl.content.cloneNode(true));
   menu.querySelectorAll('button, a').forEach((el) => {
@@ -41,9 +41,12 @@ function open(trigger) {
   const mr = menu.getBoundingClientRect();
   let left = Math.min(r.right - mr.width, window.innerWidth - mr.width - 8);
   let top = r.bottom + 4;
-  if (top + mr.height > window.innerHeight - 8) top = r.top - mr.height - 4;
+  const flipped = top + mr.height > window.innerHeight - 8;
+  if (flipped) top = r.top - mr.height - 4;
   menu.style.left = `${Math.max(8, left)}px`;
   menu.style.top = `${top}px`;
+  // Scale out of the trigger's edge, whichever side the menu landed on.
+  menu.style.transformOrigin = flipped ? 'bottom right' : 'top right';
 
   openMenu = menu;
   openTrigger = trigger;

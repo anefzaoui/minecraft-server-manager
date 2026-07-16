@@ -10,6 +10,7 @@ import { formatDateTime, timeAgo } from './lib/datetime.js';
 import './lib/tooltip.js';
 import './lib/dropdown.js';
 import './lib/taskTray.js';
+import './lib/seg.js';
 
 // Expose for inline handlers and future page scripts.
 window.CD = { toast, openModal, confirmDialog, setBusy, withBusy };

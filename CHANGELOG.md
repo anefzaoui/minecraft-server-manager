@@ -74,6 +74,30 @@ UI bug originated server-side.
   longer render "just now"; remote changelog URLs are validated to http(s) server-side;
   "1 crash"/"dependencyies"-style pluralization fixed everywhere via a `plural` helper.
 
+### Added
+
+- **Motion pass — everything that changes state now moves** (all of it collapsed to a single
+  instant frame under `prefers-reduced-motion`):
+  - **Segmented controls become sliding pills.** A new `lib/seg.js` injects a `.seg-pill`
+    into every `.seg` — the raised key glides between segments instead of teleporting.
+    Selection already lives in `aria-pressed`/`aria-selected`, so every existing segmented
+    control (wizard tabs, chat Tellraw/Say, dashboard view toggle, platform pickers, item
+    browser, teleport dialogs — including ones created later inside modals) is upgraded with
+    zero page-code changes; layout shifts reposition without a misleading glide, and the
+    plain CSS state remains the no-JS fallback.
+  - **Checkboxes** grow their checkmark in with a small overshoot (and shrink it out on
+    uncheck); **radios** animate the dot out from the center via a registered
+    `--msm-radio-r` custom property; **toggles** get spring physics — the knob overshoots
+    and settles, and squashes toward the direction of travel while held down.
+  - **Modals** fade their backdrop in and out with a subtle panel shrink on close (logic
+    still fires immediately — only the removal waits); **dropdown menus** and the **task
+    tray panel** scale out of their trigger edge, origin-aware when a menu flips upward.
+  - **Chat messages** slide in as they arrive (history replay deliberately doesn't);
+    **inputs** ease their focus ring in; swatch/tile selection rings animate via their
+    existing transitions.
+  - Progressive extra: on browsers with `interpolate-size`, collapsible
+    `<details class="card">` sections animate open/closed instead of snapping.
+
 ### Changed
 
 - **Chat tab redesigned** (the priority): recipient + mode share one aligned 38px row; the
