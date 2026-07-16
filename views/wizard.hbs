@@ -3,7 +3,7 @@
 
   <div class="mb-4 flex flex-wrap items-center gap-2">
     <div class="flex rounded-md border border-line-strong p-0.5 text-sm" id="wz-source-tabs" role="tablist" aria-label="Server source">
-      <button class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" type="button" data-source="standard">Standard</button>
+      <button class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" type="button" data-source="vanilla">Vanilla</button>
       <button class="btn btn-ghost btn-sm" type="button" data-source="mods">From mods</button>
       <button class="btn btn-ghost btn-sm" type="button" data-source="modpack">From modpack</button>
       <button class="btn btn-ghost btn-sm" type="button" data-source="blueprint">From blueprint</button>
@@ -14,22 +14,81 @@
     </div>
   </div>
 
-  {{! P8 compatibility solver — the "From mods" source tab }}
-  <div class="card mb-4 hidden p-5" id="wz-solver">
-    <h3 class="mb-1 font-semibold">Pick your mods first</h3>
-    <p class="help mb-4">Search Modrinth, add the mods you want, and Minecraft Server Manager finds the newest loader + Minecraft version that every one of them supports.</p>
-    <div>
-      <label class="label" for="wz-solver-q">Search Modrinth</label>
-      <input class="input" id="wz-solver-q" placeholder="e.g. sodium, create, jei…" autocomplete="off">
+  {{! "From mods" source tab — the server's creation hub. Two sub-modes:
+      Choose loader (loader-first browser, default) and Auto-detect (the solver). }}
+  <div class="mb-4 hidden space-y-3" id="wz-mods-panel">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="flex rounded-md border border-line-strong p-0.5 text-sm" id="wz-mods-mode" role="tablist" aria-label="Mod selection mode">
+        <button class="btn btn-ghost btn-sm bg-grass-600/20 text-grass-300" type="button" data-mode="browse">Choose loader &amp; mods</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-mode="auto">Auto-detect from mods</button>
+      </div>
     </div>
-    <div class="mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-line" id="wz-solver-results"></div>
-    <div class="mt-3 hidden flex-wrap gap-1.5" id="wz-solver-chips"></div>
-    <div class="mt-4 flex items-center gap-3">
-      <button class="btn btn-primary" id="wz-solver-run" type="button" disabled>{{{icon 'wand-sparkles' 'size-4'}}} Solve compatibility</button>
-      <span class="text-xs text-ink-faint" id="wz-solver-hint">Add at least one mod to solve.</span>
+
+    {{! ---- Choose-loader browser (default) ---- }}
+    <div class="card p-5" id="wz-mods-browse">
+      <h3 class="mb-1 font-semibold">Build a modded server</h3>
+      <p class="help mb-4">Pick a loader and version, then search {{#if curseforgeEnabled}}Modrinth &amp; CurseForge{{else}}Modrinth{{/if}} for mods — required dependencies are added automatically for you to review.</p>
+
+      <label class="label">Mod loader</label>
+      <div class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4" id="wz-loaders">
+        <button type="button" data-loader="fabric" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-grass-300">{{{icon 'layers' 'size-5'}}}<span class="text-xs font-semibold">Fabric</span></button>
+        <button type="button" data-loader="forge" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'hammer' 'size-5'}}}<span class="text-xs font-semibold">Forge</span></button>
+        <button type="button" data-loader="neoforge" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'flame' 'size-5'}}}<span class="text-xs font-semibold">NeoForge</span></button>
+        <button type="button" data-loader="quilt" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'grid-2x2' 'size-5'}}}<span class="text-xs font-semibold">Quilt</span></button>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="wz-mods-mc">Minecraft version</label>
+          <select class="input" id="wz-mods-mc" data-label="Minecraft version"></select>
+        </div>
+        <div>
+          <label class="label" for="wz-mods-loaderver">Loader build</label>
+          <select class="input" id="wz-mods-loaderver" data-label="Loader build"><option value="">Latest (recommended)</option></select>
+          <p class="help">Pin a specific loader build, or track the latest.</p>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <input class="input min-w-48 flex-1" id="wz-mods-q" placeholder="Search mods… e.g. sodium, create, jei" autocomplete="off">
+          {{#if curseforgeEnabled}}
+            <div class="flex gap-1.5" id="wz-mods-platforms">
+              <button type="button" class="chip border-grass-500 text-grass-300" data-platform="modrinth">Modrinth</button>
+              <button type="button" class="chip" data-platform="curseforge">CurseForge</button>
+            </div>
+          {{/if}}
+        </div>
+        <div class="mt-2 hidden max-h-80 overflow-y-auto rounded-md border border-line" id="wz-mods-results"></div>
+      </div>
+
+      <div class="mt-4 hidden" id="wz-mods-selected-wrap">
+        <div class="mb-2 flex items-center gap-2">
+          <span class="text-sm font-semibold">Selected mods</span>
+          <span class="badge bg-inset text-ink-faint" id="wz-mods-count">0</span>
+          <span class="ml-auto text-xs text-ink-faint" id="wz-mods-dephint"></span>
+        </div>
+        <div class="space-y-2" id="wz-mods-selected"></div>
+      </div>
     </div>
-    <div class="mt-4 hidden" id="wz-solver-result"></div>
-    <input type="hidden" id="wz-solver-mods" value="">
+
+    {{! ---- Auto-detect (the compatibility solver) ---- }}
+    <div class="card p-5 hidden" id="wz-solver">
+      <h3 class="mb-1 font-semibold">Auto-detect loader &amp; version</h3>
+      <p class="help mb-4">Search Modrinth, add the mods you want, and Minecraft Server Manager finds the newest loader + Minecraft version that every one of them supports.</p>
+      <div>
+        <label class="label" for="wz-solver-q">Search Modrinth</label>
+        <input class="input" id="wz-solver-q" placeholder="e.g. sodium, create, jei…" autocomplete="off">
+      </div>
+      <div class="mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-line" id="wz-solver-results"></div>
+      <div class="mt-3 hidden flex-wrap gap-1.5" id="wz-solver-chips"></div>
+      <div class="mt-4 flex items-center gap-3">
+        <button class="btn btn-primary" id="wz-solver-run" type="button" disabled>{{{icon 'wand-sparkles' 'size-4'}}} Solve compatibility</button>
+        <span class="text-xs text-ink-faint" id="wz-solver-hint">Add at least one mod to solve.</span>
+      </div>
+      <div class="mt-4 hidden" id="wz-solver-result"></div>
+      <input type="hidden" id="wz-solver-mods" value="">
+    </div>
   </div>
 
   {{! U1/U2: "From modpack" source tab — search, pin a version, real one-task install }}
@@ -111,24 +170,20 @@
 
   <div class="card mt-4 p-5" id="wz-card-flavor">
     <h3 class="mb-4 font-semibold">2 · Server type & version</h3>
-    <div class="mb-3 hidden rounded-md border border-grass-700 bg-grass-600/10 p-2.5 text-xs text-grass-300" id="wz-solver-applied-hint"></div>
-    <div class="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-7" id="wz-flavors">
+    <p class="help mb-3">Vanilla and plugin servers. Want mods? Use the <b>From mods</b> tab — that's where the mod loaders (Fabric, Forge, NeoForge, Quilt) live.</p>
+    <div class="mb-4 grid grid-cols-3 gap-2" id="wz-flavors">
       <button type="button" data-type="VANILLA" class="grid place-items-center gap-1 rounded-md border-2 border-grass-500 bg-inset p-3 text-grass-300">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
       <button type="button" data-type="PAPER" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
-      <button type="button" data-type="FABRIC" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'layers' 'size-5'}}}<span class="text-xs font-semibold">Fabric</span></button>
-      <button type="button" data-type="FORGE" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'hammer' 'size-5'}}}<span class="text-xs font-semibold">Forge</span></button>
-      <button type="button" data-type="NEOFORGE" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'flame' 'size-5'}}}<span class="text-xs font-semibold">NeoForge</span></button>
       <button type="button" data-type="PURPUR" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'gem' 'size-5'}}}<span class="text-xs font-semibold">Purpur</span></button>
-      <button type="button" data-type="QUILT" class="grid place-items-center gap-1 rounded-md border border-line bg-inset p-3 hover:border-line-strong">{{{icon 'grid-2x2' 'size-5'}}}<span class="text-xs font-semibold">Quilt</span></button>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <label class="label" for="wz-version">Minecraft version</label>
         <select class="input" id="wz-version" data-label="Minecraft version">
           <option value="LATEST" selected>LATEST ({{latestRelease}})</option>
-          {{#each versions}}<option value="{{id}}">{{id}}</option>{{/each}}
+          {{#each versions}}<option value="{{id}}"{{#unless (eq type "release")}} data-desc="{{#if (eq type "snapshot")}}Snapshot{{else if (eq type "old_beta")}}Beta{{else}}Alpha{{/if}}"{{/unless}}>{{id}}</option>{{/each}}
         </select>
-        <p class="help">Live from Mojang's manifest. The matching Java image is picked automatically.</p>
+        <p class="help">Every Mojang version — releases, snapshots, betas and alphas. The matching Java image is picked automatically.</p>
       </div>
       <div>
         <label class="label" for="wz-port">Game port</label>

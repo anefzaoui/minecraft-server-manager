@@ -810,9 +810,12 @@ router.post(
   })
 );
 
-// Download a backup archive.
+// Download a backup archive. Admin/operator only — the archive contains the
+// whole server dir, including server.properties (plaintext rcon.password), so a
+// read-only viewer must never be able to pull it.
 router.get(
   '/backups/:backupId/download',
+  requireRoleKeys('admin', 'operator'),
   asyncHandler((req, res, next) => {
     const backup = db.get('SELECT * FROM backups WHERE id = ?', req.params.backupId);
     if (!backup) throw Object.assign(new Error('Backup not found'), { status: 404 });
@@ -903,7 +906,10 @@ router.post(
 // ---- Worlds & files ----
 router.use('/worlds', require('./worlds'));
 router.use('/servers/:id/worlds', require('./worlds').serverWorlds);
-router.use('/servers/:id/files', require('./files').serverFiles);
+// Admin/operator only: read/download expose raw server files (server.properties
+// carries the plaintext rcon.password), so viewers are kept out of the whole tree
+// rather than relying on requireWrite, which only blocks their non-GET requests.
+router.use('/servers/:id/files', requireRoleKeys('admin', 'operator'), require('./files').serverFiles);
 router.use('/files', require('../middleware/auth').requireRole('admin'), require('./files').globalFiles);
 
 // ---- Crash reports ----
@@ -1215,6 +1221,11 @@ router.get(
       .parse(req.params.file);
     const abs = dataPath('library', 'icons', 'custom', file);
     if (!fs.existsSync(abs)) throw Object.assign(new Error('Icon not found'), { status: 404 });
+    // Custom icons may be user-uploaded SVGs (not sanitized). Serve them under a
+    // locked-down, sandboxed CSP so a <script> embedded in the SVG can't execute
+    // if the file is opened directly, and block content-type sniffing.
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.sendFile(abs);
   })
 );
@@ -1286,6 +1297,188 @@ router.get(
       mcVersion: req.query.mc ? String(req.query.mc) : undefined,
     });
     res.json({ ok: true, results });
+  })
+);
+
+// ---- "From mods" wizard browser (loader-first) ----
+const modBrowser = require('../../services/modBrowser');
+const loaderVersions = require('../../services/loaderVersions');
+
+const MOD_LOADERS = ['fabric', 'forge', 'neoforge', 'quilt'];
+
+// Loader build versions to pin (fabric/quilt are MC-independent; neoforge/forge need mc).
+router.get(
+  '/loaders/versions',
+  asyncHandler(async (req, res, next) => {
+    const { loader, mc } = z
+      .object({ loader: z.enum(MOD_LOADERS), mc: z.string().trim().max(32).optional() })
+      .parse({ loader: req.query.loader, mc: req.query.mc || undefined });
+    res.json({ ok: true, ...(await loaderVersions.getBuilds(loader, mc)) });
+  })
+);
+
+// Unified mod search across Modrinth / CurseForge, filtered to loader + MC.
+router.get(
+  '/mods/search',
+  asyncHandler(async (req, res, next) => {
+    const { q, platform, loader, mc } = z
+      .object({
+        q: z.string().trim().max(120).default(''),
+        platform: z.enum(['modrinth', 'curseforge']).default('modrinth'),
+        loader: z.enum(MOD_LOADERS).optional(),
+        mc: z.string().trim().max(32).optional(),
+      })
+      .parse({
+        q: req.query.q || '',
+        platform: req.query.platform || undefined,
+        loader: req.query.loader || undefined,
+        mc: req.query.mc || undefined,
+      });
+    res.json({ ok: true, results: await modBrowser.search({ query: q, platform, loader, mc }) });
+  })
+);
+
+// A mod's builds for the chosen loader + MC, newest first (for its version picker).
+router.get(
+  '/mods/versions',
+  asyncHandler(async (req, res, next) => {
+    const { platform, ref, loader, mc } = z
+      .object({
+        platform: z.enum(['modrinth', 'curseforge']),
+        ref: z.string().trim().min(1).max(200),
+        loader: z.enum(MOD_LOADERS).optional(),
+        mc: z.string().trim().max(32).optional(),
+      })
+      .parse({
+        platform: req.query.platform,
+        ref: req.query.ref,
+        loader: req.query.loader || undefined,
+        mc: req.query.mc || undefined,
+      });
+    res.json({ ok: true, versions: await modBrowser.versions({ platform, ref, loader, mc }) });
+  })
+);
+
+// Required-dependency closure of the current selection ("added as dependency" rows).
+router.post(
+  '/mods/deps',
+  asyncHandler(async (req, res, next) => {
+    const { loader, mc, selection } = z
+      .object({
+        loader: z.enum(MOD_LOADERS),
+        mc: z.string().trim().max(32).optional(),
+        selection: z
+          .array(
+            z.object({
+              platform: z.enum(['modrinth', 'curseforge']),
+              ref: z.string().trim().min(1).max(200),
+              versionId: z.string().trim().min(1).max(60),
+            })
+          )
+          .max(50),
+      })
+      .parse(req.body);
+    res.json({ ok: true, ...(await modBrowser.resolveDependencies({ loader, mc, selection })) });
+  })
+);
+
+const fromModsSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    description: z.string().max(4000).optional(),
+    icon: z.string().max(64).optional(),
+    accent: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
+    // 'paper' is accepted for the Auto-detect (solver) path, which can pick a
+    // plugin loader; the browse UI only offers the four mod loaders.
+    loader: z.enum([...MOD_LOADERS, 'paper']),
+    mcVersion: z.string().trim().min(1).max(32),
+    loaderVersion: z.string().trim().max(40).optional(),
+    mods: z
+      .array(
+        z.object({
+          platform: z.enum(['modrinth', 'curseforge']),
+          ref: z.string().trim().min(1).max(200),
+          versionId: z.string().trim().min(1).max(60).optional(),
+        })
+      )
+      .max(100)
+      .default([]),
+    heapMb: z.coerce.number().int().min(512).max(262144).optional(),
+    containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
+    diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
+    portGame: z.coerce.number().int().min(1024).max(65535).optional(),
+    env: z.record(z.string(), z.string()).optional(),
+  })
+  .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
+    message: 'Container memory limit must be higher than the Java heap (or the JVM will be OOM-killed)',
+  });
+
+// One-shot "create server from mods": create (no start) → install each mod
+// pinned to its chosen build → start, all inside ONE task with real progress.
+// Individual mod failures are tolerated and reported; the server still comes up.
+router.post(
+  '/servers/from-mods',
+  asyncHandler((req, res, next) => {
+    const input = fromModsSchema.parse(req.body);
+    const actor = req.user.username;
+    const type = input.loader.toUpperCase(); // fabric → FABRIC, etc. (all valid TYPEs)
+    const taskId = tasks.run(`Creating ${input.name} (${input.loader})`, { actor }, async (t) => {
+      const env = { ...(input.env || {}) };
+      const envKey = loaderVersions.envKeyFor(input.loader);
+      if (input.loaderVersion && envKey) env[envKey] = input.loaderVersion;
+      t.step('Creating server');
+      const server = await servers.createServer(
+        {
+          name: input.name,
+          description: input.description,
+          icon: input.icon,
+          accent: input.accent,
+          type,
+          mcVersion: input.mcVersion,
+          env,
+          heapMb: input.heapMb,
+          containerMemoryMb: input.containerMemoryMb,
+          diskQuotaGb: input.diskQuotaGb,
+          portGame: input.portGame,
+        },
+        { actor, start: false, onProgress: (s) => t.step(s) }
+      );
+      // Install mods BEFORE first boot so a loader server starts with them present.
+      const failed = [];
+      for (let i = 0; i < input.mods.length; i += 1) {
+        const m = input.mods[i];
+        // With a versionId the build is pinned; without one (the solver path)
+        // installFromUrl picks the newest build matching this server's loader+MC.
+        const base =
+          m.platform === 'curseforge'
+            ? `https://www.curseforge.com/minecraft/mc-mods/${m.ref}`
+            : `https://modrinth.com/mod/${m.ref}`;
+        const url = m.versionId
+          ? m.platform === 'curseforge'
+            ? `${base}/files/${m.versionId}`
+            : `${base}/version/${m.versionId}`
+          : base;
+        t.step(`Installing mod ${i + 1}/${input.mods.length}: ${m.ref}`);
+        try {
+          await mods.installFromUrl(server.id, url, { actor });
+        } catch (err) {
+          failed.push(`${m.ref} (${err.message})`);
+        }
+      }
+      t.step('Starting server');
+      await servers.startServer(server.id, { actor });
+      return {
+        serverId: server.id,
+        name: server.display_name,
+        installed: input.mods.length - failed.length,
+        total: input.mods.length,
+        failed,
+      };
+    });
+    res.status(202).json({ ok: true, taskId });
   })
 );
 

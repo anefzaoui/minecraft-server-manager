@@ -11,6 +11,7 @@ const eventsService = require('../../events');
 const { serverVM, eventVM, crashVM, safeJsonParse } = require('../viewModels');
 const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
+const { requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -146,10 +147,19 @@ router.get('/servers/new', async (req, res) => {
   let latestRelease = '';
   try {
     const mojang = require('../../services/mojang');
-    versions = await mojang.listVersions({ limit: 60 });
+    // Every channel — releases, snapshots, betas and alphas — so the picker can
+    // offer the full history; the template groups them by type.
+    versions = await mojang.listVersions({ includeAll: true, limit: 5000 });
     latestRelease = (await mojang.getVersionManifest()).latest.release;
   } catch {
     /* offline — manual entry still works */
+  }
+  // Whether the "From mods" tab can offer CurseForge search (needs the stored key).
+  let curseforgeEnabled = false;
+  try {
+    curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
+  } catch {
+    /* no key store yet */
   }
   let suggestedPort = 25565;
   try {
@@ -170,6 +180,7 @@ router.get('/servers/new', async (req, res) => {
     latestRelease,
     suggestedPort,
     advancedSections,
+    curseforgeEnabled,
   });
 });
 
@@ -457,6 +468,7 @@ router.get('/schedules', (req, res) => {
 
 router.get(
   '/storage',
+  requireRole('admin'),
   asyncHandler(async (req, res, next) => {
     const indexer = require('../../storage/indexer');
     const { free, total } = await indexer.diskFree().catch(() => ({ free: 0, total: 0 }));
@@ -628,7 +640,7 @@ router.get(
   })
 );
 
-router.get('/settings', (req, res) => {
+router.get('/settings', requireRole('admin'), (req, res) => {
   const apiKeys = require('../../services/apiKeys');
   const config = require('../../config');
   res.render('settings', {

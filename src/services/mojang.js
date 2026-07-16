@@ -38,11 +38,17 @@ async function getVersionManifest() {
   }
 }
 
-/** Releases (and optionally snapshots), newest first, for pickers. */
-async function listVersions({ includeSnapshots = false, limit = 200 } = {}) {
+/**
+ * Version list, newest first, for pickers. By default releases only.
+ *   includeSnapshots → also include the 'snapshot' channel.
+ *   includeAll       → every channel Mojang publishes: release, snapshot,
+ *                      old_beta and old_alpha (for "all versions incl. alphas").
+ * Each entry keeps its {id, type, releaseTime} so callers can label channels.
+ */
+async function listVersions({ includeSnapshots = false, includeAll = false, limit = 200 } = {}) {
   const manifest = await getVersionManifest();
   return manifest.versions
-    .filter((v) => v.type === 'release' || (includeSnapshots && v.type === 'snapshot'))
+    .filter((v) => (includeAll ? true : v.type === 'release' || (includeSnapshots && v.type === 'snapshot')))
     .slice(0, limit);
 }
 

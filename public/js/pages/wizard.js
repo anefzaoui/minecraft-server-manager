@@ -1,13 +1,16 @@
-// Create-server wizard (U1 source-tabs redesign). TWO independent controls:
-//   SOURCE TABS  — Standard | From mods (P8 solver) | From modpack | From blueprint
+// Create-server wizard. TWO independent controls:
+//   SOURCE TABS  — Vanilla | From mods | From modpack | From blueprint
 //   SIMPLE/ADVANCED — whether the full itzg catalog (#wz-advanced) renders
-// Mutually-exclusive by construction: each tab shows only its panel + the
-// sections it owns. Modpack creation runs as ONE server-side task (resolve →
-// create → pin → start) with real progress via runTask.
+// "From mods" is the modded-server hub: a loader-first browser (pick loader +
+// MC → search Modrinth/CurseForge → per-mod version pinning with required
+// dependencies auto-resolved for review) plus an optional "Auto-detect" solver.
+// Vanilla/modpack/mods creation each run as ONE server-side task with real
+// progress; blueprint imports via its own endpoint.
 import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { runTask } from '../lib/progress.js';
 import { setBusy, withBusy } from '../lib/loading.js';
+import { enhanceSelect } from '../lib/select.js';
 import { showPackDetails, packIconHtml, formatDownloads } from './modpacks.js';
 import { attachMotdEditor, toSectionCodes } from '../lib/motd.js';
 
@@ -56,18 +59,19 @@ function init() {
   const ACTIVE = ['bg-grass-600/20', 'text-grass-300'];
   const sourceTabsEl = document.getElementById('wz-source-tabs');
   const detailToggleEl = document.getElementById('wz-detail-toggle');
-  const solverPanel = document.getElementById('wz-solver');
+  const modsPanel = document.getElementById('wz-mods-panel');
   const packPanel = document.getElementById('wz-modpack');
   const bpPanel = document.getElementById('wz-blueprint-panel');
   const flavorCard = document.getElementById('wz-card-flavor');
   const worldCard = document.getElementById('wz-card-world');
   const resourcesCard = document.getElementById('wz-card-resources');
   const advPanel = document.getElementById('wz-advanced');
-  const solverHint = document.getElementById('wz-solver-applied-hint');
 
-  let sourceTab = 'standard';
+  let sourceTab = 'vanilla';
   let detail = 'simple';
-  let solverApplied = null; // {loaderLabel, mcVersion, …} once the solver's Apply ran
+  // From-mods sub-mode + the loader/version chosen by the Auto-detect solver.
+  let modsMode = 'browse';
+  const solverState = { pick: null, slugs: [] };
 
   function setClasses(btn, on) {
     for (const c of ACTIVE) btn.classList.toggle(c, on);
@@ -83,18 +87,8 @@ function init() {
     });
   }
 
-  /** In From-mods the solver owns flavor+version; keep them visible but locked. */
-  function setFlavorLocked(locked) {
-    const flavors = document.getElementById('wz-flavors');
-    const versionWrap = document.getElementById('wz-version')?.closest('div');
-    for (const el of [flavors, versionWrap]) {
-      el?.classList.toggle('opacity-60', locked);
-      el?.classList.toggle('pointer-events-none', locked);
-    }
-  }
-
   function refreshDetailUI() {
-    // Advanced env applies to standard, solver AND pack servers (extra env is
+    // Advanced env applies to vanilla, from-mods AND pack servers (extra env is
     // honored by the image); a blueprint owns its env, so hide it there.
     const allowAdvanced = sourceTab !== 'blueprint';
     detailToggleEl?.classList.toggle('hidden', !allowAdvanced);
@@ -102,38 +96,45 @@ function init() {
     detailToggleEl?.querySelectorAll('[data-detail]').forEach((b) => setClasses(b, b.dataset.detail === detail));
   }
 
+  /** Show/hide the From-mods sub-panels for the current sub-mode. */
+  function refreshModsMode() {
+    document.getElementById('wz-mods-browse')?.classList.toggle('hidden', modsMode !== 'browse');
+    document.getElementById('wz-solver')?.classList.toggle('hidden', modsMode !== 'auto');
+    document
+      .getElementById('wz-mods-mode')
+      ?.querySelectorAll('[data-mode]')
+      .forEach((b) => setClasses(b, b.dataset.mode === modsMode));
+  }
+
   function refreshPanels() {
-    solverPanel?.classList.toggle('hidden', sourceTab !== 'mods');
+    modsPanel?.classList.toggle('hidden', sourceTab !== 'mods');
     packPanel?.classList.toggle('hidden', sourceTab !== 'modpack');
     bpPanel?.classList.toggle('hidden', sourceTab !== 'blueprint');
-    // Flavor & version: standard owns it; From-mods reveals it (locked) once
-    // the solver applied; a modpack/blueprint dictates it → hidden entirely.
-    const showFlavor = sourceTab === 'standard' || (sourceTab === 'mods' && Boolean(solverApplied));
-    flavorCard?.classList.toggle('hidden', !showFlavor);
-    solverHint?.classList.toggle('hidden', !(sourceTab === 'mods' && solverApplied));
-    setFlavorLocked(sourceTab === 'mods');
+    // Flavor & version card is the Vanilla tab's own — the mod loaders live in
+    // the From-mods browser, and modpack/blueprint dictate their own type.
+    flavorCard?.classList.toggle('hidden', sourceTab !== 'vanilla');
     // Blueprint owns world/rules/resources (audit F2): grey them out for real.
     setSectionDisabled(worldCard, sourceTab === 'blueprint');
     setSectionDisabled(resourcesCard, sourceTab === 'blueprint');
+    if (sourceTab === 'mods') refreshModsMode();
     refreshDetailUI();
   }
 
   function setSourceTab(tab) {
     if (sourceTab === tab) return;
-    // Leaving From-mods clears its queued mods so Create never silently
-    // installs them from another tab.
+    // Leaving From-mods clears its queued selection so Create never silently
+    // installs mods chosen under another tab.
     if (sourceTab === 'mods') {
-      const hidden = document.getElementById('wz-solver-mods');
-      if (hidden && hidden.value && hidden.value !== '[]') {
-        toast('Left "From mods" — the queued mods were cleared.', { kind: 'info' });
-      }
-      if (hidden) hidden.value = '';
-      solverApplied = null;
+      const hadSelection = browser.count() > 0 || solverState.pick;
+      browser.clear();
+      solverState.pick = null;
+      solverState.slugs = [];
+      if (hadSelection) toast('Left "From mods" — the queued mods were cleared.', { kind: 'info' });
     }
     sourceTab = tab;
     sourceTabsEl?.querySelectorAll('[data-source]').forEach((b) => setClasses(b, b.dataset.source === tab));
     refreshPanels();
-    if (tab === 'mods') document.getElementById('wz-solver-q')?.focus();
+    if (tab === 'mods') document.getElementById('wz-mods-q')?.focus();
     if (tab === 'modpack') document.getElementById('wz-pack-q')?.focus();
   }
 
@@ -147,17 +148,22 @@ function init() {
     detail = btn.dataset.detail;
     refreshDetailUI();
   });
+  document.getElementById('wz-mods-mode')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-mode]');
+    if (!btn) return;
+    modsMode = btn.dataset.mode;
+    refreshModsMode();
+    document.getElementById(modsMode === 'auto' ? 'wz-solver-q' : 'wz-mods-q')?.focus();
+  });
 
   initSolver({
-    onApplied: (pair, count) => {
-      solverApplied = pair;
-      if (solverHint) {
-        solverHint.textContent = `${pair.loaderLabel} on Minecraft ${pair.mcVersion} — picked by the solver; ${count} mod${count === 1 ? '' : 's'} install after creation. Switch to Standard to override.`;
-      }
-      refreshPanels();
+    onApplied: (pair, slugs) => {
+      solverState.pick = pair;
+      solverState.slugs = slugs;
     },
   });
 
+  const browser = initModBrowser();
   const packPicker = initPackPicker();
   initPortCheck();
   refreshPanels();
@@ -198,7 +204,7 @@ function init() {
   }
   window.__wzCollectAdvancedEnv = collectAdvancedEnv;
 
-  /** Simple-mode world/rules env, shared by the standard and modpack paths. */
+  /** Simple-mode world/rules env, shared by the vanilla, modpack and mods paths. */
   function collectSimpleEnv() {
     return {
       MOTD: toSectionCodes(motd.value), // vanilla renders § codes only
@@ -213,6 +219,16 @@ function init() {
     };
   }
 
+  function resources() {
+    const heapMb = Number(document.getElementById('wz-ram').value);
+    return {
+      heapMb,
+      containerMemoryMb: Math.round((heapMb * 1.5) / 512) * 512,
+      diskQuotaGb: Number(document.getElementById('wz-quota').value),
+      portGame: Number(document.getElementById('wz-port').value) || undefined,
+    };
+  }
+
   document.getElementById('wz-create').addEventListener('click', async () => {
     const name = document.getElementById('wz-name').value.trim();
     if (!name) {
@@ -222,12 +238,8 @@ function init() {
     }
     if (sourceTab === 'blueprint') return createFromBlueprint(name);
     if (sourceTab === 'modpack') return createFromPack(name);
-    if (sourceTab === 'mods' && !parseSolverSlugs().length) {
-      toast('Solve compatibility and press "Apply to wizard" first.', { kind: 'error' });
-      document.getElementById('wz-solver-q')?.focus();
-      return;
-    }
-    return createStandard(name);
+    if (sourceTab === 'mods') return createFromMods(name);
+    return createVanilla(name);
   });
 
   // ---- Create: blueprint (import with full identity overrides) ----
@@ -281,7 +293,7 @@ function init() {
       document.getElementById('wz-pack-q')?.focus();
       return;
     }
-    const heapMb = Number(document.getElementById('wz-ram').value);
+    const r = resources();
     const body = {
       name,
       description: document.getElementById('wz-desc').value.trim(),
@@ -290,10 +302,7 @@ function init() {
       platform: selection.platform,
       ref: selection.ref,
       versionId: document.getElementById('wz-pack-version')?.value || selection.resolved.versionId,
-      heapMb,
-      containerMemoryMb: Math.round((heapMb * 1.5) / 512) * 512,
-      diskQuotaGb: Number(document.getElementById('wz-quota').value),
-      portGame: Number(document.getElementById('wz-port').value) || undefined,
+      ...r,
       env: collectSimpleEnv(),
     };
     try {
@@ -317,9 +326,79 @@ function init() {
     }
   }
 
-  // ---- Create: standard / from-mods (existing flow) ----
-  async function createStandard(name) {
-    const heapMb = Number(document.getElementById('wz-ram').value);
+  // ---- Create: from mods (ONE server-side task — create → install pinned → start) ----
+  async function createFromMods(name) {
+    let loader;
+    let mcVersion;
+    let loaderVersion = '';
+    let mods = [];
+    if (modsMode === 'auto') {
+      if (!solverState.pick) {
+        toast('Solve compatibility and press "Apply" first.', { kind: 'error' });
+        document.getElementById('wz-solver-q')?.focus();
+        return;
+      }
+      loader = solverState.pick.loader;
+      mcVersion = solverState.pick.mcVersion;
+      mods = solverState.slugs.map((slug) => ({ platform: 'modrinth', ref: slug })); // latest matching build
+    } else {
+      const state = browser.getState();
+      loader = state.loader;
+      mcVersion = state.mc;
+      loaderVersion = state.loaderVersion;
+      mods = state.mods;
+    }
+    if (!loader || !mcVersion) {
+      toast('Pick a loader and Minecraft version first.', { kind: 'error' });
+      return;
+    }
+    const body = {
+      name,
+      description: document.getElementById('wz-desc').value.trim(),
+      icon,
+      accent,
+      loader,
+      mcVersion,
+      ...(loaderVersion ? { loaderVersion } : {}),
+      mods,
+      ...resources(),
+      env: collectSimpleEnv(),
+    };
+    try {
+      const result = await runTask({
+        title: `Creating ${name} (${loader})`,
+        start: async () => {
+          const res = await fetch('/api/servers/from-mods', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Creation failed');
+          return data.taskId;
+        },
+      });
+      if (result.failed && result.failed.length) {
+        toast(
+          `${name} created — ${result.installed}/${result.total} mods installed. Failed: ${result.failed.join(', ')}`,
+          {
+            kind: 'error',
+            timeout: 14000,
+          }
+        );
+      } else {
+        toast(
+          `${name} created${result.total ? ` — ${result.total} mod${result.total === 1 ? '' : 's'} installed` : ''}. Starting up!`
+        );
+      }
+      location.href = `/servers/${result.serverId}`;
+    } catch (err) {
+      toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
+    }
+  }
+
+  // ---- Create: vanilla / plugin server (no mods) ----
+  async function createVanilla(name) {
     const body = {
       name,
       description: document.getElementById('wz-desc').value.trim(),
@@ -327,10 +406,7 @@ function init() {
       accent,
       type,
       mcVersion: document.getElementById('wz-version').value,
-      portGame: Number(document.getElementById('wz-port').value) || undefined,
-      heapMb,
-      containerMemoryMb: Math.round((heapMb * 1.5) / 512) * 512,
-      diskQuotaGb: Number(document.getElementById('wz-quota').value),
+      ...resources(),
       env: collectSimpleEnv(),
       start: true,
     };
@@ -351,48 +427,11 @@ function init() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
+      modal.close();
       if (!res.ok || !data.ok) {
-        modal.close();
         toast(data.error || 'Creation failed', { kind: 'error', timeout: 10000 });
         return;
       }
-
-      // From-mods: install the picked mods as overlay content on the new
-      // server, one by one, tolerating individual failures.
-      const solverSlugs = parseSolverSlugs();
-      if (solverSlugs.length) {
-        const failed = [];
-        const progressLine = modal.body.querySelector('p');
-        for (let i = 0; i < solverSlugs.length; i++) {
-          const slug = solverSlugs[i];
-          if (progressLine)
-            progressLine.textContent = `Server created. Installing mod ${i + 1}/${solverSlugs.length}: ${slug}…`;
-          try {
-            const r = await fetch(`/api/servers/${data.server.id}/mods`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: `https://modrinth.com/mod/${slug}` }),
-            });
-            const d = await r.json();
-            if (!r.ok || !d.ok) failed.push(`${slug} (${d.error || 'failed'})`);
-          } catch (err) {
-            failed.push(`${slug} (${err.message})`);
-          }
-        }
-        modal.close();
-        if (failed.length) {
-          toast(
-            `${name} created — ${solverSlugs.length - failed.length}/${solverSlugs.length} mods installed. Failed: ${failed.join(', ')}`,
-            { kind: 'error', timeout: 12000 }
-          );
-        } else {
-          toast(`${name} created — all ${solverSlugs.length} mods installed.`);
-        }
-        location.href = `/servers/${data.server.id}`;
-        return;
-      }
-
-      modal.close();
       toast(`${name} created — starting up!`);
       location.href = `/servers/${data.server.id}`;
     } catch (err) {
@@ -434,6 +473,352 @@ function initPortCheck() {
       setHelp('Could not check the port right now.', 'text-ink-faint');
     }
   }
+}
+
+// ---- From-mods: loader-first browser ----------------------------------------
+// Pick loader + MC → search Modrinth/CurseForge → a full list of selected mods
+// (icon, name, description, version dropdown) with required dependencies
+// auto-resolved into "added as dependency" rows the user can edit or remove.
+
+function initModBrowser() {
+  const panel = document.getElementById('wz-mods-browse');
+  if (!panel)
+    return { getState: () => ({ loader: '', mc: '', loaderVersion: '', mods: [] }), clear() {}, count: () => 0 };
+
+  const mcSel = document.getElementById('wz-mods-mc');
+  const loaderVerSel = document.getElementById('wz-mods-loaderver');
+  const q = document.getElementById('wz-mods-q');
+  const platformsEl = document.getElementById('wz-mods-platforms'); // absent when no CF key
+  const resultsEl = document.getElementById('wz-mods-results');
+  const selectedWrap = document.getElementById('wz-mods-selected-wrap');
+  const selectedEl = document.getElementById('wz-mods-selected');
+  const countEl = document.getElementById('wz-mods-count');
+  const depHintEl = document.getElementById('wz-mods-dephint');
+
+  let loader = 'fabric';
+  let platform = 'modrinth';
+  const picked = new Map(); // key -> {platform, ref, projectId, name, description, iconUrl, versions, versionId}
+  const deps = new Map(); // key -> {platform, ref, projectId, name, iconUrl, versions, versionId, dependency:true}
+  const suppressed = new Set(); // dep keys the user removed — don't re-add
+  let lastResults = [];
+
+  const key = (p, ref) => `${p}:${ref}`;
+  const mc = () => mcSel?.value || '';
+
+  // Seed the MC picker from the Vanilla tab's full version list (concrete
+  // versions only — mods need a real MC), defaulting to the newest release.
+  (function seedMcOptions() {
+    const src = document.getElementById('wz-version');
+    if (!src || !mcSel) return;
+    const opts = [...src.options].filter((o) => o.value !== 'LATEST');
+    mcSel.innerHTML = opts
+      .map(
+        (o) =>
+          `<option value="${escapeHtml(o.value)}"${o.dataset.desc ? ` data-desc="${escapeHtml(o.dataset.desc)}"` : ''}>${escapeHtml(o.value)}</option>`
+      )
+      .join('');
+    const latestRelease = opts.find((o) => !o.dataset.desc); // releases carry no channel desc
+    mcSel.value = latestRelease ? latestRelease.value : opts[0]?.value || '';
+    mcSel.dispatchEvent(new Event('change', { bubbles: true }));
+  })();
+
+  pickGroup(
+    'wz-loaders',
+    'loader',
+    (v) => {
+      loader = v;
+      clearSelection(true);
+      refreshLoaderBuilds();
+      if (q.value.trim()) search();
+    },
+    ['border-2', 'border-grass-500', 'text-grass-300']
+  );
+
+  function syncPlatformChips() {
+    platformsEl?.querySelectorAll('[data-platform]').forEach((b) => {
+      const on = b.dataset.platform === platform;
+      b.classList.toggle('border-grass-500', on);
+      b.classList.toggle('text-grass-300', on);
+    });
+  }
+  platformsEl?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-platform]');
+    if (!btn) return;
+    platform = btn.dataset.platform;
+    syncPlatformChips();
+    if (q.value.trim()) search();
+  });
+
+  mcSel?.addEventListener('change', () => {
+    clearSelection(true);
+    refreshLoaderBuilds();
+    if (q.value.trim()) search();
+  });
+  loaderVerSel?.addEventListener('change', () => {}); // value read on demand in getState
+
+  let searchTimer;
+  q.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    if (!q.value.trim()) {
+      resultsEl.classList.add('hidden');
+      resultsEl.innerHTML = '';
+      return;
+    }
+    searchTimer = setTimeout(search, 350);
+  });
+
+  async function refreshLoaderBuilds() {
+    if (!loaderVerSel) return;
+    loaderVerSel.innerHTML = '<option value="">Latest (recommended)</option>';
+    loaderVerSel.dispatchEvent(new Event('change', { bubbles: true }));
+    try {
+      const res = await fetch(
+        `/api/loaders/versions?loader=${encodeURIComponent(loader)}&mc=${encodeURIComponent(mc())}`
+      );
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      loaderVerSel.innerHTML = (data.builds || [{ version: '', label: 'Latest (recommended)' }])
+        .map((b) => `<option value="${escapeHtml(b.version)}">${escapeHtml(b.label)}</option>`)
+        .join('');
+      loaderVerSel.value = data.default || '';
+      loaderVerSel.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch {
+      /* offline — the Latest option still works */
+    }
+  }
+
+  async function search() {
+    const term = q.value.trim();
+    if (!term) return;
+    resultsEl.classList.remove('hidden');
+    resultsEl.innerHTML = '<div class="p-3 text-center text-sm text-ink-faint">Searching…</div>';
+    try {
+      const url = `/api/mods/search?q=${encodeURIComponent(term)}&platform=${platform}&loader=${encodeURIComponent(loader)}&mc=${encodeURIComponent(mc())}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
+      lastResults = data.results;
+      renderResults();
+    } catch (err) {
+      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-redstone-400">${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function renderResults() {
+    if (!lastResults.length) {
+      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-ink-faint">No ${escapeHtml(loader)} mods found for ${escapeHtml(mc())}.</div>`;
+      return;
+    }
+    resultsEl.innerHTML = lastResults
+      .map((m, i) => {
+        const added = picked.has(key(m.platform, m.ref));
+        return `
+      <div class="flex items-center gap-2.5 border-b border-line px-2.5 py-2 text-sm last:border-b-0">
+        ${packIconHtml(m.iconUrl, 'size-9')}
+        <span class="min-w-0 flex-1">
+          <span class="block truncate font-medium">${escapeHtml(m.name)}</span>
+          <span class="block truncate text-xs text-ink-faint">${escapeHtml(m.description || '')}</span>
+        </span>
+        <span class="shrink-0 font-mono text-xs text-ink-faint">${formatDownloads(m.downloads)}</span>
+        <button type="button" class="btn btn-sm shrink-0" data-add="${i}" ${added ? 'disabled' : ''}>${added ? 'Added' : 'Add'}</button>
+      </div>`;
+      })
+      .join('');
+  }
+
+  resultsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-add]');
+    if (!btn) return;
+    const hit = lastResults[Number(btn.dataset.add)];
+    if (hit) withBusy(btn, 'Adding…', () => addMod(hit));
+  });
+
+  async function fetchVersions(p, ref) {
+    const url = `/api/mods/versions?platform=${p}&ref=${encodeURIComponent(ref)}&loader=${encodeURIComponent(loader)}&mc=${encodeURIComponent(mc())}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load versions');
+    return data.versions || [];
+  }
+
+  async function addMod(hit) {
+    const k = key(hit.platform, hit.ref);
+    if (picked.has(k)) return;
+    try {
+      const versions = await fetchVersions(hit.platform, hit.ref);
+      if (!versions.length) {
+        toast(`${hit.name} has no ${loader} build for ${mc()}.`, { kind: 'error' });
+        return;
+      }
+      picked.set(k, {
+        platform: hit.platform,
+        ref: hit.ref,
+        projectId: hit.projectId,
+        name: hit.name,
+        description: hit.description || '',
+        iconUrl: hit.iconUrl,
+        versions,
+        versionId: versions[0].versionId,
+      });
+      suppressed.delete(k); // re-adding a manually-removed dep un-suppresses it
+      renderSelected();
+      renderResults();
+      resolveDeps();
+    } catch (err) {
+      toast(err.message, { kind: 'error' });
+    }
+  }
+
+  function removeEntry(k) {
+    if (picked.has(k)) {
+      picked.delete(k);
+      resolveDeps(); // orphaned dependencies drop out on the next resolve
+    } else if (deps.has(k)) {
+      deps.delete(k);
+      suppressed.add(k); // don't let the resolver bring it straight back
+    }
+    renderSelected();
+    renderResults();
+  }
+
+  let depTimer;
+  function resolveDeps() {
+    clearTimeout(depTimer);
+    depTimer = setTimeout(doResolveDeps, 300);
+  }
+
+  async function doResolveDeps() {
+    const selection = [...picked.values()].map((m) => ({ platform: m.platform, ref: m.ref, versionId: m.versionId }));
+    if (!selection.length) {
+      deps.clear();
+      renderSelected();
+      return;
+    }
+    if (depHintEl) depHintEl.textContent = 'Resolving dependencies…';
+    try {
+      const res = await fetch('/api/mods/deps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loader, mc: mc(), selection }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Dependency resolve failed');
+      // Rebuild the dependency set from the fresh closure so removing a mod also
+      // removes its now-orphaned deps; keep a user's version pick where the dep
+      // persists, and never re-add a dep the user explicitly removed.
+      const next = new Map();
+      for (const d of data.deps || []) {
+        const k = key(d.platform, d.ref);
+        if (suppressed.has(k) || picked.has(k)) continue;
+        const prev = deps.get(k);
+        const versionId = prev && d.versions.some((v) => v.versionId === prev.versionId) ? prev.versionId : d.versionId;
+        next.set(k, { ...d, versionId, dependency: true });
+      }
+      deps.clear();
+      for (const [k, v] of next) deps.set(k, v);
+      if (depHintEl) {
+        const warn = (data.warnings || []).length ? ` · ${data.warnings.length} skipped` : '';
+        depHintEl.textContent = deps.size
+          ? `${deps.size} dependency${deps.size === 1 ? '' : 'ies'} added${warn}`
+          : warn.replace(/^ · /, '');
+      }
+      renderSelected();
+    } catch (err) {
+      if (depHintEl) depHintEl.textContent = `Dependency check failed: ${err.message}`;
+    }
+  }
+
+  function versionOptions(m) {
+    if (!m.versions || !m.versions.length) return '<option value="">(no compatible build)</option>';
+    return m.versions
+      .map((v) => {
+        const nonRelease = v.versionType && v.versionType !== 'release';
+        const desc = nonRelease ? ` data-desc="${escapeHtml(capitalize(v.versionType))}"` : '';
+        const sel = v.versionId === m.versionId ? ' selected' : '';
+        return `<option value="${escapeHtml(v.versionId)}"${desc}${sel}>${escapeHtml(v.name || v.versionNumber)}</option>`;
+      })
+      .join('');
+  }
+
+  function rowHtml(m, isDep) {
+    const k = key(m.platform, m.ref);
+    const platChip = `<span class="chip shrink-0 text-[11px]">${m.platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}</span>`;
+    const depBadge = isDep ? '<span class="badge bg-diamond-400/15 text-diamond-300">dependency</span>' : '';
+    return `
+      <div class="flex items-start gap-3 rounded-md border border-line bg-raised p-3" data-key="${escapeHtml(k)}">
+        ${packIconHtml(m.iconUrl, 'size-10')}
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="truncate font-semibold">${escapeHtml(m.name)}</span>
+            ${depBadge}
+            ${platChip}
+          </div>
+          ${m.description ? `<div class="truncate text-xs text-ink-faint">${escapeHtml(m.description)}</div>` : isDep ? '<div class="text-xs text-ink-faint">Required by your selection</div>' : ''}
+          <div class="mt-2 max-w-xs">
+            <select class="input" data-modkey="${escapeHtml(k)}" data-label="Version">${versionOptions(m)}</select>
+          </div>
+        </div>
+        <button type="button" class="grid size-7 shrink-0 place-items-center rounded-md text-ink-faint transition hover:bg-line hover:text-ink" data-remove="${escapeHtml(k)}" aria-label="Remove ${escapeHtml(m.name)}">
+          <svg class="icon size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>`;
+  }
+
+  function renderSelected() {
+    const total = picked.size + deps.size;
+    if (countEl) countEl.textContent = String(total);
+    selectedWrap?.classList.toggle('hidden', total === 0);
+    if (!total) {
+      selectedEl.innerHTML = '';
+      return;
+    }
+    const rows = [...picked.values()]
+      .map((m) => rowHtml(m, false))
+      .concat([...deps.values()].map((m) => rowHtml(m, true)));
+    selectedEl.innerHTML = rows.join('');
+    // Style each freshly-created version <select> (enhanceAll already ran on load).
+    selectedEl.querySelectorAll('select[data-modkey]').forEach((el) => enhanceSelect(el));
+  }
+
+  selectedEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-remove]');
+    if (btn) removeEntry(btn.dataset.remove);
+  });
+  selectedEl.addEventListener('change', (e) => {
+    const sel = e.target.closest('select[data-modkey]');
+    if (!sel) return;
+    const k = sel.dataset.modkey;
+    const entry = picked.get(k) || deps.get(k);
+    if (!entry) return;
+    entry.versionId = sel.value;
+    if (picked.has(k)) resolveDeps(); // a different build may pull different deps
+  });
+
+  function clearSelection(silent) {
+    const had = picked.size + deps.size;
+    picked.clear();
+    deps.clear();
+    suppressed.clear();
+    if (depHintEl) depHintEl.textContent = '';
+    renderSelected();
+    if (had && !silent) toast('Selection cleared.', { kind: 'info' });
+  }
+
+  refreshLoaderBuilds();
+  syncPlatformChips();
+
+  return {
+    count: () => picked.size + deps.size,
+    clear: () => clearSelection(true),
+    getState: () => ({
+      loader,
+      mc: mc(),
+      loaderVersion: loaderVerSel?.value || '',
+      mods: [...picked.values(), ...deps.values()]
+        .filter((m) => m.versionId)
+        .map((m) => ({ platform: m.platform, ref: m.ref, versionId: m.versionId })),
+    }),
+  };
 }
 
 // ---- From-modpack tab: search → select → pin a version -----------------------
@@ -621,17 +1006,7 @@ function initPackPicker() {
   };
 }
 
-// ---- P8: "From mods" compatibility solver ----------------------------------
-
-function parseSolverSlugs() {
-  try {
-    const raw = document.getElementById('wz-solver-mods')?.value;
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr.filter((s) => typeof s === 'string' && s) : [];
-  } catch {
-    return [];
-  }
-}
+// ---- From-mods "Auto-detect": compatibility solver --------------------------
 
 const CHECK_SVG =
   '<svg class="icon size-3.5 shrink-0 text-grass-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
@@ -805,7 +1180,6 @@ function initSolver({ onApplied = () => {} } = {}) {
     const chosenIsBest =
       solveData.best && pair.loader === solveData.best.loader && pair.mcVersion === solveData.best.mcVersion;
 
-    // Big result card
     const head = document.createElement('div');
     head.className = isPartial
       ? 'rounded-md border border-gold-700 bg-gold-600/10 p-4'
@@ -820,7 +1194,6 @@ function initSolver({ onApplied = () => {} } = {}) {
       }</p>`;
     resultEl.appendChild(head);
 
-    // Alternatives as small pair buttons
     if (solveData.alternatives.length) {
       const alts = document.createElement('div');
       alts.className = 'mt-2 flex flex-wrap items-center gap-1.5';
@@ -838,7 +1211,6 @@ function initSolver({ onApplied = () => {} } = {}) {
       resultEl.appendChild(alts);
     }
 
-    // Partial: amber warning listing the dropped mods
     if (isPartial && solveData.partial.dropped.length) {
       const warn = document.createElement('div');
       warn.className = 'mt-3 rounded-md border border-gold-700 bg-gold-600/10 p-3 text-sm';
@@ -857,7 +1229,6 @@ function initSolver({ onApplied = () => {} } = {}) {
       resultEl.appendChild(warn);
     }
 
-    // Per-mod compatibility list
     const list = document.createElement('div');
     list.className = 'mt-3 space-y-1';
     for (const p of solveData.perProject) {
@@ -872,12 +1243,11 @@ function initSolver({ onApplied = () => {} } = {}) {
     }
     resultEl.appendChild(list);
 
-    // Apply
     const applyRow = document.createElement('div');
     applyRow.className = 'mt-3 flex items-center gap-2';
     applyRow.innerHTML = `
-      <button type="button" data-apply class="btn btn-primary btn-sm">Apply to wizard</button>
-      <span class="text-xs text-ink-faint">Sets the flavor + version below and installs the mods after the server is created.</span>`;
+      <button type="button" data-apply class="btn btn-primary btn-sm">Apply</button>
+      <span class="text-xs text-ink-faint">Sets the loader + version; press "Create &amp; start" to build the server and install the mods.</span>`;
     resultEl.appendChild(applyRow);
   }
 
@@ -892,26 +1262,8 @@ function initSolver({ onApplied = () => {} } = {}) {
 
   function applyChoice() {
     if (!chosenPair) return;
-    // 1) Flavor tile — reuse the existing tile click handler
-    const tile = document.querySelector(`#wz-flavors [data-type="${chosenPair.type}"]`);
-    if (tile) tile.click();
-
-    // 2) Version select — add the option if the manifest list lacks it, then
-    // sync the custom-select trigger by firing a real change event.
-    const versionSel = document.getElementById('wz-version');
-    if (versionSel) {
-      if (![...versionSel.options].some((o) => o.value === chosenPair.mcVersion)) {
-        const opt = document.createElement('option');
-        opt.value = chosenPair.mcVersion;
-        opt.textContent = chosenPair.mcVersion;
-        versionSel.insertBefore(opt, versionSel.options[1] || null);
-      }
-      versionSel.value = chosenPair.mcVersion;
-      versionSel.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-
-    // 3) Remember the slugs to install after creation. On a partial apply only
-    // the covered mods are installed — the dropped ones would not load anyway.
+    // On a partial apply only the covered mods are installed — the dropped ones
+    // would not load anyway.
     const usePartial =
       !solveData.best &&
       solveData.partial &&
@@ -922,11 +1274,14 @@ function initSolver({ onApplied = () => {} } = {}) {
 
     const skipped = picked.size - slugs.length;
     toast(
-      `Applied: ${chosenPair.loaderLabel} on ${chosenPair.mcVersion}. ${slugs.length} mod${slugs.length === 1 ? '' : 's'} will install after creation${skipped > 0 ? ` (${skipped} incompatible skipped)` : ''}.`
+      `Applied: ${chosenPair.loaderLabel} on ${chosenPair.mcVersion}. ${slugs.length} mod${slugs.length === 1 ? '' : 's'} will install after creation${skipped > 0 ? ` (${skipped} incompatible skipped)` : ''}. Press "Create & start".`
     );
-    onApplied(chosenPair, slugs.length);
-    document.getElementById('wz-flavors')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    onApplied(chosenPair, slugs);
   }
+}
+
+function capitalize(s) {
+  return typeof s === 'string' && s ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
 function escapeHtml(s) {

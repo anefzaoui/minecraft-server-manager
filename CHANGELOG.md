@@ -5,6 +5,42 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.7.0] - 2026-07-16
+
+### Added
+
+- **"From mods" is now a real modded-server creation hub.** The old chips-and-solver panel is replaced
+  by a loader-first browser: pick a **mod loader** (Fabric, Forge, NeoForge, Quilt), a **Minecraft
+  version**, and an optional **loader build** to pin, then search **Modrinth and CurseForge** for mods
+  compatible with that choice. Results and picks render as a full list — mod icon, name, description,
+  downloads — and every selected mod gets its **own version dropdown** so you can pin an exact build.
+- **Automatic dependency resolution.** Adding a mod pulls in its **required dependencies** recursively
+  (e.g. REI → Architectury API, Cloth Config, Fabric API). Dependencies appear in the list badged
+  _"dependency"_ with their own version pickers; you can change a build or remove one, and removals are
+  remembered so the resolver won't re-add them. Dependencies with no compatible build are reported, not
+  silently dropped.
+- **Loader build pinning.** A new service fetches build lists from the Fabric, Quilt, NeoForge and
+  Forge registries (cached, best-effort, always offering a "Latest" default), mapped to the matching
+  itzg env var (`FABRIC_LOADER_VERSION`, `QUILT_LOADER_VERSION`, `NEOFORGE_VERSION`, `FORGE_VERSION`).
+- **One-task modded creation.** "From mods" servers are built by a single server-side task with real
+  progress — create (without starting) → install every mod pinned to its chosen build → start — so a
+  loader server boots with its mods already present. Individual mod failures are tolerated and reported.
+
+### Changed
+
+- **The "Standard" tab is now "Vanilla."** It covers Vanilla and the plugin flavors (Paper, Purpur);
+  the mod loaders moved to "From mods", which is where you pick mods for them.
+- **The version picker lists every Mojang channel** — releases, snapshots, betas and alphas — instead
+  of releases only, each labelled by channel. (From modpack and From blueprint are unchanged.)
+- The compatibility solver is kept as an optional **"Auto-detect from mods"** sub-mode inside From mods
+  for when you'd rather have the loader and version chosen from your mod list.
+
+### Notes
+
+- No database schema change was required — loader builds are stored as env vars and pinned mods as
+  overlay content, both existing structures. The versioned migration runner already applies any future
+  schema changes to your existing `data/panel.db` on startup, so upgrades never assume a fresh database.
+
 ## [0.6.2] - 2026-07-15
 
 ### Added
