@@ -1,0 +1,16 @@
+services:
+  minecraft-server-manager:
+    image: ghcr.io/anefzaoui/minecraft-server-manager:latest
+    container_name: minecraft-server-manager
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=UTC
+      - DATA_DIR=/data
+      - PORT=8080
+      # - SESSION_SECRET=your-secure-secret-here
+    volumes:
+      - ./data:/data
+      # Required to manage Docker containers via the Docker API
+      - /var/run/docker.sock:/var/run/docker.sock:ro
