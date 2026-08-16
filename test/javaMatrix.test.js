@@ -31,3 +31,25 @@ test('pickJavaTag maps MC versions to the right image tag', () => {
 test('pickJavaTag treats the 25.x/26.x era as latest', () => {
   assert.equal(pickJavaTag('26.2'), 'latest');
 });
+
+test('pickJavaTag picks the newest Java a GTNH pack version allows', () => {
+  assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 25 }), 'java25');
+  assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 21 }), 'java21');
+  // No java24/java20 image is published — ladder down to the next tag that exists.
+  assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 24 }), 'java21');
+  assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 20 }), 'java17');
+  // Ancient caps fall back to the legacy pack.
+  assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 8 }), 'java8');
+});
+
+test('pickJavaTag defaults GTNH to java17 when the cap is unknown', () => {
+  // No pin yet, or the index was unreachable. Every indexed GTNH version
+  // supports at least Java 17, so this always boots.
+  assert.equal(pickJavaTag('1.7.10', 'GTNH'), 'java17');
+  assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: null }), 'java17');
+});
+
+test('pickJavaTag ignores maxJavaVersion for non-GTNH types', () => {
+  assert.equal(pickJavaTag('1.7.10', 'FORGE', { maxJavaVersion: 25 }), 'java8');
+  assert.equal(pickJavaTag('1.21.4', 'PAPER', { maxJavaVersion: 17 }), 'java21');
+});
