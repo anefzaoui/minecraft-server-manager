@@ -209,7 +209,7 @@ test('latestFor("gtnh") offers the newest stable to a server pinned on an older 
     const info = await packs.latestFor(id);
     assert.deepEqual(
       Object.keys(info).sort(),
-      ['current', 'latest', 'platform', 'projectName', 'projectRef', 'updateAvailable'].sort()
+      ['changelogUrl', 'current', 'latest', 'platform', 'projectName', 'projectRef', 'updateAvailable'].sort()
     );
     assert.equal(info.current.id, '2.7.4');
     assert.equal(info.latest.id, '2.8.4'); // newest stable, not the newer 2.9.0-beta-2
@@ -217,6 +217,11 @@ test('latestFor("gtnh") offers the newest stable to a server pinned on an older 
     assert.equal(info.projectName, 'GT New Horizons');
     assert.equal(info.projectRef, 'gtnh');
     assert.equal(info.platform, 'gtnh');
+    // The per-version diff link from the index entry, not a generic "all files" page.
+    assert.equal(
+      info.changelogUrl,
+      'https://github.com/GTNewHorizons/DreamAssemblerXXL/blob/master/releases/changelogs/changelog%20from%202.8.3%20to%202.8.4.md'
+    );
   } finally {
     restore();
   }

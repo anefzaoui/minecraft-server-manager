@@ -20,7 +20,12 @@ async function checkAll({ actor = 'scheduler' } = {}) {
     try {
       const result = await packsService.latestFor(server.id);
       if (result) {
-        const changelog = result.updateAvailable ? packChangelogUrl(result.platform, result.projectRef) : null;
+        // GTNH's latestFor already surfaces a real per-version diff link off the
+        // index entry itself — prefer that over the platform-derived fallback
+        // (which, for GTNH, is only the generic changelogs directory).
+        const changelog = result.updateAvailable
+          ? result.changelogUrl || packChangelogUrl(result.platform, result.projectRef)
+          : null;
         upsertCheck('pack', server.id, result.current.name, {
           isNew: result.updateAvailable,
           latestId: result.latest.id,
@@ -129,6 +134,11 @@ function upsertCheck(subjectType, subjectId, current, { isNew, latestId, latestN
 function packChangelogUrl(platform, projectRef) {
   if (platform === 'modrinth') return `https://modrinth.com/project/${projectRef}/changelog`;
   if (platform === 'curseforge') return `https://www.curseforge.com/minecraft/modpacks/${projectRef}/files`;
+  // Fallback only: latestFor's gtnh branch normally supplies a real per-version
+  // link straight from the index entry (see checkAll above). This is the "all
+  // files" equivalent for the rare case a version's changelog href didn't pass
+  // safeChangelogUrl's github.com/https check.
+  if (platform === 'gtnh') return 'https://github.com/GTNewHorizons/DreamAssemblerXXL/tree/master/releases/changelogs';
   return null;
 }
 
