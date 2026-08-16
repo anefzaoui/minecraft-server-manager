@@ -187,12 +187,13 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
   }
 
   const previous = db.get('SELECT * FROM server_packs WHERE server_id = ?', serverId);
-  // Strip EVERY previous pack-selection/exclusion env var (CF_/MODRINTH_/FTB_)
+  // Strip EVERY previous pack-selection/exclusion env var (CF_/MODRINTH_/FTB_/GTNH_)
   // before merging the new pack env: switching platform (or even version)
   // must not leave stale slugs, file pins or exclusion lists behind. Unrelated
-  // user env is preserved.
+  // user env is preserved. SKIP_GTNH_ is its own prefix (not GTNH_-prefixed)
+  // because that env var name is dictated by the container image's contract.
   const cleanedEnv = Object.fromEntries(
-    Object.entries(server.env).filter(([key]) => !/^(CF_|MODRINTH_|FTB_|GTNH_)/.test(key))
+    Object.entries(server.env).filter(([key]) => !/^(CF_|MODRINTH_|FTB_|GTNH_|SKIP_GTNH_)/.test(key))
   );
   const env = { ...cleanedEnv, ...packEnv(resolved) };
   // The TYPE lives in its own column; keep env's TYPE out of the extras.
