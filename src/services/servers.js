@@ -110,14 +110,26 @@ function assembleEnv(server) {
   return env;
 }
 
-function resolveImage(server) {
+/**
+ * javaTagHint: a non-persisted, create-time-only fallback (see createServerImpl).
+ * At create time no server_packs row exists yet, so the pin lookup below always
+ * misses for a brand-new GTNH server — without the hint that resolves to java17,
+ * the image is pulled once, then re-pulled at the correct tag on the recreate
+ * `applyPack` schedules moments later. It's never used once a pin exists, and
+ * it never overrides an explicit `server.java_tag` (that column means "the user
+ * overrode auto" and must keep winning).
+ */
+function resolveImage(server, { javaTagHint } = {}) {
   // GTNH's Java support is a property of the pinned pack version, not of the
   // Minecraft version. Read it straight from the pin: packs.js requires this
   // module, so requiring it back would need a lazy-require cycle-breaker that a
   // single-column read doesn't justify.
   const pin =
     server.type === 'GTNH' ? db.get('SELECT max_java_version FROM server_packs WHERE server_id = ?', server.id) : null;
-  const tag = server.java_tag || pickJavaTag(server.mc_version, server.type, { maxJavaVersion: pin?.max_java_version });
+  const tag =
+    server.java_tag ||
+    (pin?.max_java_version == null && javaTagHint) ||
+    pickJavaTag(server.mc_version, server.type, { maxJavaVersion: pin?.max_java_version });
   return images.imageRef(tag);
 }
 
@@ -223,7 +235,7 @@ function createServer(input, opts = {}) {
  * On any failure before the container exists, the half-created row + data dirs
  * are rolled back so no ghost server holds ports.
  */
-async function createServerImpl(input, { actor = 'system', start = false, onProgress = () => {} } = {}) {
+async function createServerImpl(input, { actor = 'system', start = false, onProgress = () => {}, javaTagHint } = {}) {
   // Fail fast instead of shipping a crash-looping container: anything
   // CurseForge needs the API key present in the panel's store.
   const inputEnv = input.env || {};
@@ -312,7 +324,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     fs.mkdirSync(dataPath('servers', id), { recursive: true });
     fs.mkdirSync(dataPath('logs', id, 'events'), { recursive: true });
 
-    const image = resolveImage(server);
+    const image = resolveImage(server, { javaTagHint });
     onProgress(`Pulling image ${image} (first time can take a few minutes)…`);
     await images.ensureImage(image, ({ current, total }) => {
       if (total) onProgress(`Downloading image: ${Math.round((current / total) * 100)}%`);

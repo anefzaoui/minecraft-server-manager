@@ -288,3 +288,37 @@ test('resolveImage still honors an explicit user override', () => {
   db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10', java_tag = 'java8' WHERE id = ?`, id);
   assert.match(serversService.resolveImage(serversService.getServer(id)), /:java8$/);
 });
+
+test('resolveImage uses javaTagHint only before a pin exists (first-create fast path)', () => {
+  const id = app.seedServer('srv_gtnhhint');
+  db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10' WHERE id = ?`, id);
+  const server = serversService.getServer(id);
+
+  // No pin yet: the hint (what from-pack already resolved) wins over the java17
+  // fallback — avoids pulling java17 and then immediately re-pulling java25.
+  assert.match(serversService.resolveImage(server, { javaTagHint: 'java25' }), /:java25$/);
+  // No hint given: unchanged fallback behavior.
+  assert.match(serversService.resolveImage(server), /:java17$/);
+});
+
+test('resolveImage ignores javaTagHint once a real pin exists', async () => {
+  const restore = stubIndex();
+  try {
+    const id = app.seedServer('srv_gtnhhint2');
+    db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10' WHERE id = ?`, id);
+    await packs.applyPack(id, await packs.resolvePack('gtnh', 'gtnh', { versionId: '2.7.4' }), {
+      actor: 'test',
+      force: true,
+    });
+    // Pin caps at java21 — a stale/incorrect hint must not override the real pin.
+    assert.match(serversService.resolveImage(serversService.getServer(id), { javaTagHint: 'java25' }), /:java21$/);
+  } finally {
+    restore();
+  }
+});
+
+test('resolveImage ignores javaTagHint when the user set an explicit java_tag', () => {
+  const id = app.seedServer('srv_gtnhhint3');
+  db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10', java_tag = 'java8' WHERE id = ?`, id);
+  assert.match(serversService.resolveImage(serversService.getServer(id), { javaTagHint: 'java25' }), /:java8$/);
+});

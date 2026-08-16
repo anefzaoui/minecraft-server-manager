@@ -743,7 +743,11 @@ router.post(
           extraPorts: input.extraPorts,
           extraBinds: input.extraBinds,
         },
-        { actor, start: false, onProgress: (s) => t.step(s) }
+        // javaTagHint (not persisted as java_tag — that column means "user override"):
+        // at create time there's no server_packs row yet, so resolveImage() would
+        // otherwise fall back to java17 for GTNH, pull that image, then immediately
+        // re-pull the correct one when the applyPack below flags a recreate.
+        { actor, start: false, onProgress: (s) => t.step(s), javaTagHint: resolved.javaTag }
       );
       t.step(`Pinning ${resolved.projectName} @ ${resolved.versionName}`);
       // force: fresh server — there is no world yet to version-guard.
