@@ -387,7 +387,11 @@ router.post(
       .object({
         platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
         ref: z.string().trim().min(1).max(400),
-        versionId: z.string().trim().max(60).optional(),
+        versionId: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,64}$/)
+          .optional(),
         mcVersion: z.string().trim().max(32).optional(),
       })
       .parse(req.body);
@@ -401,7 +405,11 @@ router.post('/servers/:id/pack', async (req, res, next) => {
       .object({
         platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
         ref: z.string().trim().min(1).max(400),
-        versionId: z.string().trim().max(60).optional(),
+        versionId: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,64}$/)
+          .optional(),
         force: z.coerce.boolean().optional(),
       })
       .parse(req.body);
@@ -434,7 +442,14 @@ router.post(
   asyncHandler((req, res, next) => {
     const { versionId, skipBackup } = z
       .object({
-        versionId: z.string().trim().max(60).optional(),
+        // Same shape constraint as the other pack versionId fields (finding #5) —
+        // this one wasn't in the reviewed list, but it reaches the exact same
+        // GTNH_PACK_VERSION/CF_FILE_ID/etc. container env path via upgradePack.
+        versionId: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,64}$/)
+          .optional(),
         skipBackup: z.coerce.boolean().optional(),
       })
       .parse(req.body);
@@ -680,7 +695,11 @@ const fromPackSchema = z
       .optional(),
     platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
     ref: z.string().trim().min(1).max(400),
-    versionId: z.string().trim().max(60).optional(),
+    versionId: z
+      .string()
+      .trim()
+      .regex(/^[\w.-]{1,64}$/)
+      .optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
     diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),

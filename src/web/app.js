@@ -133,7 +133,8 @@ function createApp() {
         inc: (v) => Number(v) + 1,
         mul: (a, b) => Number(a) * Number(b),
         plural: (n, one, many) => (Number(n) === 1 ? one : many),
-        platformName: (p) => ({ modrinth: 'Modrinth', curseforge: 'CurseForge' })[p] || p,
+        platformName: (p) =>
+          ({ modrinth: 'Modrinth', curseforge: 'CurseForge', gtnh: 'GT New Horizons', ftb: 'FTB' })[p] || p,
         // Handlebars {{#if}} treats 0 as falsy, which silently drops min="0"
         // attributes and zero defaults — this helper exists for those tests.
         isDefined: (v) => v !== undefined && v !== null && v !== '',

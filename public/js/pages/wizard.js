@@ -871,7 +871,13 @@ function raiseResourceFloor(minHeapMb, minQuotaGb) {
     ['wz-quota', minQuotaGb],
   ]) {
     const el = document.getElementById(id);
-    if (el && Number(el.value) < min) {
+    if (!el) continue;
+    // data-zero="off" sliders (the quota slider) treat 0 as "unlimited", not the
+    // smallest possible value — raising it to a floor would silently turn a
+    // deliberate "no quota" choice into a 20 GB cap, tightening the one setting
+    // most likely to matter for GTNH's disk footprint.
+    if (el.dataset.zero === 'off' && Number(el.value) === 0) continue;
+    if (Number(el.value) < min) {
       el.value = String(min);
       el.dispatchEvent(new Event('input', { bubbles: true })); // refresh the readout
     }
@@ -988,11 +994,15 @@ function initPackPicker() {
     }
   });
 
-  async function resolve(ref, versionId) {
+  // pf defaults to the module-level `platform`, but callers that already have a
+  // trustworthy platform (the version-change handler below has selection.platform)
+  // must pass it explicitly — `platform` drifts once a GTNH pick is followed by a
+  // search (or the platform-chip handler runs), and posting the stale value 404s.
+  async function resolve(ref, versionId, pf = platform) {
     const res = await fetch('/api/packs/resolve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ platform, ref, ...(versionId ? { versionId } : {}) }),
+      body: JSON.stringify({ platform: pf, ref, ...(versionId ? { versionId } : {}) }),
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || 'Could not resolve the pack');
@@ -1061,7 +1071,7 @@ function initPackPicker() {
     const seq = ++resolveSeq;
     summaryEl.innerHTML = '<span class="text-sm text-ink-faint">Resolving pack versions…</span>';
     try {
-      const pack = await resolve(selection.ref, versionId);
+      const pack = await resolve(selection.ref, versionId, selection.platform);
       if (seq !== resolveSeq) return;
       selection.resolved = pack;
       renderSummary();

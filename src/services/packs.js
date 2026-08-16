@@ -18,7 +18,7 @@ const { pickJavaTag } = require('./javaMatrix');
 
 /**
  * Resolve a pack reference to install candidates.
- * platform: 'curseforge' | 'modrinth' | 'ftb'
+ * platform: 'curseforge' | 'modrinth' | 'ftb' | 'gtnh'
  * ref: slug/URL/id — versionId optional (null → resolve latest now, then pin).
  */
 /**
@@ -268,6 +268,9 @@ async function latestFor(serverId) {
       projectName: pack.project_name,
       projectRef: pack.project_ref,
       platform: pack.platform,
+      // A real per-version diff link (from the index entry) rather than the
+      // generic "all files" page the checker falls back to for other platforms.
+      changelogUrl: newest.changelogUrl,
     };
   }
   // Scope "latest" to the server's own MC version — otherwise the checker
