@@ -933,6 +933,12 @@ function initPackPicker() {
   async function search() {
     const term = q.value.trim();
     if (!term) return;
+    // GTNH isn't searchable — /api/packs/search only knows modrinth/curseforge. Fall
+    // back to the picker's original default so the request (and the chips) stay truthful.
+    if (platform === 'gtnh') {
+      platform = 'modrinth';
+      syncChips();
+    }
     resultsEl.classList.remove('hidden');
     resultsEl.innerHTML = '<div class="p-3 text-center text-sm text-ink-faint">Searching…</div>';
     try {
