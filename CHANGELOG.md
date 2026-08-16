@@ -5,6 +5,27 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [Unreleased]
+
+### Added
+
+- **GT New Horizons is now a first-class modpack.** The creation wizard's "From modpack" tab has a
+  dedicated GTNH card: pick a pack version (stable by default, betas behind a toggle) and the panel
+  pins it, sizes the server for it, and installs it in one task. Pinning means restarts can never
+  silently upgrade the pack — the same rule every other modpack already followed.
+- **GTNH servers pick their own Java.** GTNH's release index states the highest Java each pack
+  version supports, so the panel runs 2.8.0+ on **Java 25** and older releases on Java 21 or 17
+  automatically, instead of stranding a 1.7.10 pack on Java 8. Overriding the image tag by hand
+  still wins.
+- GTNH packs take part in update checks (respecting the channel they were pinned from), blueprint
+  export/import, and the guarded upgrade flow with pre-update backup and rollback.
+
+### Fixed
+
+- Pack upgrades no longer time out at 10 minutes for GTNH, which downloads a ~1–2 GB server pack
+  and builds a several-hundred-mod world on first boot; it now gets 30 minutes before the upgrade
+  is treated as failed.
+
 ## [0.9.6] - 2026-08-10
 
 Fixes the item browser (used for giving/placing items) coming up empty on vanilla-ish
