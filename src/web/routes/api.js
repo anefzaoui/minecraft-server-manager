@@ -385,7 +385,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const { platform, ref, versionId, mcVersion } = z
       .object({
-        platform: z.enum(['curseforge', 'modrinth', 'ftb']),
+        platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
         ref: z.string().trim().min(1).max(400),
         versionId: z.string().trim().max(60).optional(),
         mcVersion: z.string().trim().max(32).optional(),
@@ -399,7 +399,7 @@ router.post('/servers/:id/pack', async (req, res, next) => {
   try {
     const { platform, ref, versionId, force } = z
       .object({
-        platform: z.enum(['curseforge', 'modrinth', 'ftb']),
+        platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
         ref: z.string().trim().min(1).max(400),
         versionId: z.string().trim().max(60).optional(),
         force: z.coerce.boolean().optional(),
@@ -607,6 +607,8 @@ router.get(
       if (!pin) throw Object.assign(new Error('This server has no managed modpack'), { status: 404 });
       if (pin.platform === 'ftb')
         throw Object.assign(new Error('FTB pack details are not supported yet'), { status: 400 });
+      if (pin.platform === 'gtnh')
+        throw Object.assign(new Error('GTNH pack details live on the GTNH site'), { status: 400 });
       platform = pin.platform;
       ref = pin.project_ref;
       installed = {
@@ -676,7 +678,7 @@ const fromPackSchema = z
       .string()
       .regex(/^#[0-9a-fA-F]{6}$/)
       .optional(),
-    platform: z.enum(['curseforge', 'modrinth', 'ftb']),
+    platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
     ref: z.string().trim().min(1).max(400),
     versionId: z.string().trim().max(60).optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),

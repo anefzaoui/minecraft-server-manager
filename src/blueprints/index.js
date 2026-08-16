@@ -117,7 +117,7 @@ const manifestSchema = z.object({
   }),
   pack: z
     .object({
-      platform: z.enum(['curseforge', 'modrinth', 'ftb']),
+      platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
       projectRef: z.string().min(1).max(400),
       projectName: z.string().max(200).default(''),
       versionId: z.string().min(1).max(60),
