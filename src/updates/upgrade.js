@@ -112,8 +112,10 @@ async function upgradePack(
 
     step('monitoring');
     // CF/Modrinth installs download the whole pack on first boot — give them
-    // twice the window.
-    const timeoutMs = ['curseforge', 'modrinth'].includes(pack.platform) ? 20 * 60 * 1000 : 10 * 60 * 1000;
+    // twice the window. GTNH downloads a ~1-2 GB server pack and then builds a
+    // 1.7.10 world with several hundred mods, which routinely outlasts both.
+    const INSTALL_TIMEOUTS_MS = { gtnh: 30 * 60 * 1000, curseforge: 20 * 60 * 1000, modrinth: 20 * 60 * 1000 };
+    const timeoutMs = INSTALL_TIMEOUTS_MS[pack.platform] || 10 * 60 * 1000;
     const healthy = await waitForHealthy(serverId, { timeoutMs });
     const excerpt = await fetchLogs(serverId, { tail: 200 }).catch(() => '');
 
