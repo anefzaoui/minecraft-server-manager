@@ -161,12 +161,13 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
       : [type, JSON.stringify(env), serverId])
   );
   db.run(
-    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name, previous_version_id, previous_version_name)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name, previous_version_id, previous_version_name, max_java_version, channel)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(server_id) DO UPDATE SET
        platform = excluded.platform, project_ref = excluded.project_ref, project_name = excluded.project_name,
        pinned_version_id = excluded.pinned_version_id, pinned_version_name = excluded.pinned_version_name,
        previous_version_id = excluded.previous_version_id, previous_version_name = excluded.previous_version_name,
+       max_java_version = excluded.max_java_version, channel = excluded.channel,
        installed_at = datetime('now')`,
     serverId,
     resolved.platform,
@@ -175,7 +176,9 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
     resolved.versionId,
     resolved.versionName,
     previous ? previous.pinned_version_id : null,
-    previous ? previous.pinned_version_name : null
+    previous ? previous.pinned_version_name : null,
+    resolved.maxJavaVersion ?? null,
+    resolved.channel ?? null
   );
   recordEvent({
     serverId,
