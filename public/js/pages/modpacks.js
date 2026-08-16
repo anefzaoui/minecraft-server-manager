@@ -298,7 +298,7 @@ function initPage() {
   document.getElementById('packs-installed')?.addEventListener('click', async (e) => {
     const card = e.target.closest('[data-pack-card]');
     if (!card) return;
-    const { serverId, serverName, packName, current, latest } = card.dataset;
+    const { serverId, serverName, packName, current, latest, versionId } = card.dataset;
 
     if (e.target.closest('[data-pack-check]')) {
       try {
@@ -327,7 +327,11 @@ function initPage() {
       try {
         const result = await runTask({
           title: `Upgrading ${packName} on ${serverName}`,
-          start: async () => (await postJSON(`/api/servers/${serverId}/pack/upgrade`, {})).taskId,
+          // Post the exact version the card showed as "latest" (belt and braces —
+          // the server independently re-resolves and honours the pin's channel;
+          // this just makes the request name what the user actually confirmed).
+          start: async () =>
+            (await postJSON(`/api/servers/${serverId}/pack/upgrade`, versionId ? { versionId } : {})).taskId,
         });
         if (result && result.ok === false) {
           toast(

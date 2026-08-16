@@ -59,7 +59,15 @@ async function upgradePack(
 
   try {
     step('resolving');
-    const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, { versionId });
+    // Thread the pin's own channel through: without this, an explicit versionId-less
+    // upgrade on a beta-pinned GTNH server silently resolves to the newest STABLE
+    // (pickLatest's default), while the UI (latestFor) showed the newest BETA — a
+    // downgrade the user never confirmed. includeBeta is a no-op for every other
+    // platform/branch, which doesn't key off a stored channel.
+    const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
+      versionId,
+      includeBeta: pack.channel === 'beta',
+    });
     if (resolved.versionId === pack.pinned_version_id) {
       throw httpError(400, `Already on ${pack.pinned_version_name} — nothing to upgrade`);
     }

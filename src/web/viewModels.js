@@ -75,7 +75,7 @@ function packVM(serverId) {
   const pack = db.get('SELECT * FROM server_packs WHERE server_id = ?', serverId);
   if (!pack) return null;
   const check = db.get(
-    "SELECT latest_name FROM update_checks WHERE subject_type = 'pack' AND subject_id = ?",
+    "SELECT latest_version, latest_name FROM update_checks WHERE subject_type = 'pack' AND subject_id = ?",
     serverId
   );
   return {
@@ -84,6 +84,11 @@ function packVM(serverId) {
     version: pack.pinned_version_name,
     versionId: pack.pinned_version_id,
     latest: check && check.latest_name ? check.latest_name : pack.pinned_version_name,
+    // The real platform id behind `latest` (a display NAME — differs from the id
+    // for CurseForge/Modrinth). Modpacks-page "Upgrade" posts this so the request
+    // names the exact version the card showed, rather than trusting the server to
+    // re-derive "latest" itself. Same pattern as updates.hbs's data-version-id.
+    latestVersionId: check && check.latest_version ? check.latest_version : null,
   };
 }
 

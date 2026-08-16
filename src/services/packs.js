@@ -32,7 +32,7 @@ function normalizeCurseforgeRef(ref) {
   return `https://www.curseforge.com/minecraft/modpacks/${s}`;
 }
 
-async function resolvePack(platform, ref, { versionId = null, mcVersion } = {}) {
+async function resolvePack(platform, ref, { versionId = null, mcVersion, includeBeta = false } = {}) {
   if (platform === 'curseforge') {
     const project = await curseforge.resolveUrl(normalizeCurseforgeRef(ref));
     const files = await curseforge.getFiles(project.modId, { mcVersion });
@@ -95,7 +95,12 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion } = {}) 
     // and a pack version is its own id. The Minecraft version is hardcoded
     // because the index does not state one — GTNH is a 1.7.10 pack by definition.
     const all = await gtnhApi.listVersions({ includeBeta: true });
-    const entry = versionId ? await gtnhApi.getVersion(String(versionId)) : gtnhApi.pickLatest(all, {});
+    // includeBeta only matters when versionId is absent (pickLatest's default
+    // path) — an explicit versionId always resolves that exact entry regardless
+    // of channel. Callers that already know a pin's channel (the upgrade
+    // orchestrator) must pass it, or a beta-pinned server silently resolves to
+    // the newest stable instead of the newest beta.
+    const entry = versionId ? await gtnhApi.getVersion(String(versionId)) : gtnhApi.pickLatest(all, { includeBeta });
     if (!entry) throw httpError(502, 'The GTNH release index returned no installable versions');
     return {
       platform,

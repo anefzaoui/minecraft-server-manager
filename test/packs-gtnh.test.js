@@ -88,6 +88,25 @@ test('resolvePack("gtnh") defaults to the newest stable version', async () => {
   }
 });
 
+test('resolvePack("gtnh") honours includeBeta when no explicit versionId is given', async () => {
+  const restore = stubIndex();
+  try {
+    // Default (includeBeta omitted → false): newest STABLE, matching the
+    // fixture's newest stable entry (2.8.4), never the newer 2.9.0-beta-2.
+    const stableDefault = await packs.resolvePack('gtnh', 'gtnh', {});
+    assert.equal(stableDefault.versionId, '2.8.4');
+    assert.equal(stableDefault.channel, 'stable');
+
+    // Regression coverage for the upgrade-button downgrade bug: a caller that
+    // knows the pin is beta-tracking must be able to ask for the newest beta.
+    const betaLatest = await packs.resolvePack('gtnh', 'gtnh', { includeBeta: true });
+    assert.equal(betaLatest.versionId, '2.9.0-beta-2');
+    assert.equal(betaLatest.channel, 'beta');
+  } finally {
+    restore();
+  }
+});
+
 test('resolvePack("gtnh") pins an explicit version and reports its own java tag', async () => {
   const restore = stubIndex();
   try {
