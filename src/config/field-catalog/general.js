@@ -213,7 +213,7 @@ module.exports = [
     key: 'javaTag',
     scope: 'panel',
     label: 'Java version (image tag)',
-    help: "Which Java runtime image the server runs on. Auto picks the right one for your Minecraft version — and for GT New Horizons, the newest Java the pinned pack version supports. Override only for special cases like old Forge (needs Java 8) or mods that break on newer Java. Forcing a GTNH server to Java 8 makes the image install GTNH's legacy Java 8 server pack instead of the faster lwjgl3ify one.",
+    help: 'Which Java runtime image the server runs on. Auto picks the right one for your Minecraft version — and for GT New Horizons, the newest Java the pinned pack version supports. Override only for special cases like old Forge (needs Java 8) or mods that break on newer Java. Forcing a GTNH server to Java 8 makes the image install GTNH’s legacy Java 8 server pack instead of the faster lwjgl3ify one.',
     type: 'enum',
     default: '',
     options: [

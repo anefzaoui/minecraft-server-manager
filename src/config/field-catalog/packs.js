@@ -410,7 +410,7 @@ module.exports = [
   {
     key: 'SKIP_GTNH_UPDATE_CHECK',
     scope: 'env',
-    label: "Skip the image's GTNH update check",
+    label: 'Skip the image’s GTNH update check',
     help: 'Stops the container checking for newer GTNH releases on every boot. The panel sets this because it pins the pack version itself and owns the update flow.',
     type: 'boolean',
     mode: 'advanced',
@@ -421,7 +421,7 @@ module.exports = [
   {
     key: 'GTNH_DELETE_BACKUPS',
     scope: 'env',
-    label: "Delete GTNH's own backups on update",
+    label: 'Delete GTNH’s own backups on update',
     help: 'Removes the backup copies the GTNH updater leaves behind in the server folder. The panel takes its own backups before any pack upgrade, so this mainly saves disk.',
     type: 'boolean',
     default: false,
