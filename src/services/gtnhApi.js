@@ -91,7 +91,12 @@ async function fetchIndex() {
   if (!res.ok) {
     return stale() || Promise.reject(httpError(502, `GTNH download server answered HTTP ${res.status}`));
   }
-  const raw = await res.json();
+  let raw;
+  try {
+    raw = await res.json();
+  } catch (err) {
+    return stale() || Promise.reject(httpError(502, `GTNH index is malformed JSON (${err.message})`));
+  }
   db.run(
     `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))
      ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, fetched_at = excluded.fetched_at`,
