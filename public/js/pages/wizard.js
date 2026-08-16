@@ -864,6 +864,20 @@ function initModBrowser() {
 
 // ---- From-modpack tab: search → select → pin a version -----------------------
 
+/** Raise the RAM/disk sliders to a pack's minimum — never lower what's already set. */
+function raiseResourceFloor(minHeapMb, minQuotaGb) {
+  for (const [id, min] of [
+    ['wz-ram', minHeapMb],
+    ['wz-quota', minQuotaGb],
+  ]) {
+    const el = document.getElementById(id);
+    if (el && Number(el.value) < min) {
+      el.value = String(min);
+      el.dispatchEvent(new Event('input', { bubbles: true })); // refresh the readout
+    }
+  }
+}
+
 function initPackPicker() {
   const panel = document.getElementById('wz-modpack');
   if (!panel) return null;
@@ -874,6 +888,17 @@ function initPackPicker() {
   const summaryEl = document.getElementById('wz-pack-summary');
   const versionSel = document.getElementById('wz-pack-version');
   const detailsBtn = document.getElementById('wz-pack-details-btn');
+  const gtnhBtn = document.getElementById('wz-gtnh-pick');
+  const betaRow = document.getElementById('wz-gtnh-beta-row');
+  const betaBox = document.getElementById('wz-gtnh-beta');
+
+  gtnhBtn?.addEventListener('click', () => withBusy(gtnhBtn, () => select('gtnh', 'gtnh')));
+
+  // Beta is a pure client-side filter over the already-resolved list: the pin's
+  // channel comes from whichever version is actually chosen, so no round trip.
+  betaBox?.addEventListener('change', () => {
+    if (selection?.platform === 'gtnh') fillVersions(selection.resolved);
+  });
 
   let platform = 'modrinth';
   let lastResults = [];
@@ -976,34 +1001,51 @@ function initPackPicker() {
     try {
       const pack = await resolve(ref, versionId);
       selection = { platform: pf, ref: pack.projectRef, resolved: pack };
-      syncing = true;
-      versionSel.innerHTML = '';
-      const versions =
-        pack.allVersions && pack.allVersions.length
-          ? pack.allVersions
-          : [{ id: pack.versionId, name: pack.versionName, type: 'release' }];
-      for (const v of versions) {
-        const opt = document.createElement('option');
-        opt.value = v.id;
-        opt.textContent = `${v.name}${v.type && v.type !== 'release' ? ` (${v.type})` : ''}`;
-        if (v.date) opt.dataset.desc = String(v.date).slice(0, 10);
-        versionSel.appendChild(opt);
-      }
-      if (![...versionSel.options].some((o) => o.value === pack.versionId)) {
-        const opt = document.createElement('option');
-        opt.value = pack.versionId;
-        opt.textContent = pack.versionName;
-        versionSel.insertBefore(opt, versionSel.firstChild);
-      }
-      versionSel.value = pack.versionId;
-      versionSel.dispatchEvent(new Event('change', { bubbles: true })); // sync the styled trigger
-      syncing = false;
+      const isGtnh = pf === 'gtnh';
+      betaRow?.classList.toggle('hidden', !isGtnh);
+      betaRow?.classList.toggle('flex', isGtnh);
+      // GTNH has no project API behind the details modal — the summary carries
+      // a changelog link instead.
+      detailsBtn.classList.toggle('hidden', isGtnh);
+      if (isGtnh) raiseResourceFloor(6144, 20);
+      fillVersions(pack);
       renderSummary();
     } catch (err) {
       selection = null;
       summaryEl.innerHTML = `<span class="text-sm text-danger">${escapeHtml(err.message)}</span>`;
       toast(err.message, { kind: 'error', timeout: 9000 });
     }
+  }
+
+  function fillVersions(pack) {
+    syncing = true;
+    versionSel.innerHTML = '';
+    const isGtnh = pack.platform === 'gtnh';
+    let versions =
+      pack.allVersions && pack.allVersions.length
+        ? pack.allVersions
+        : [{ id: pack.versionId, name: pack.versionName, type: 'release' }];
+    // GTNH betas are listed but hidden until asked for. Never hide the version
+    // that is actually selected, or the select would silently jump to another.
+    if (isGtnh && !betaBox?.checked) {
+      versions = versions.filter((v) => v.type !== 'beta' || v.id === pack.versionId);
+    }
+    for (const v of versions) {
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = `${v.name}${v.type && v.type !== 'release' ? ` (${v.type})` : ''}`;
+      if (v.date) opt.dataset.desc = String(v.date).slice(0, 10);
+      versionSel.appendChild(opt);
+    }
+    if (![...versionSel.options].some((o) => o.value === pack.versionId)) {
+      const opt = document.createElement('option');
+      opt.value = pack.versionId;
+      opt.textContent = pack.versionName;
+      versionSel.insertBefore(opt, versionSel.firstChild);
+    }
+    versionSel.value = pack.versionId;
+    versionSel.dispatchEvent(new Event('change', { bubbles: true })); // sync the styled trigger
+    syncing = false;
   }
 
   let resolveSeq = 0; // rapid version changes: a slow earlier resolve must not win
@@ -1034,12 +1076,18 @@ function initPackPicker() {
     if (p.mcVersion) bits.push(`Minecraft ${escapeHtml(p.mcVersion)}`);
     const loader = (p.loaders || []).find((l) => ['fabric', 'forge', 'neoforge', 'quilt'].includes(l));
     if (loader) bits.push(escapeHtml(loader));
+    // Server-resolved so the browser never re-implements the java matrix.
+    if (p.javaTag) bits.push(`Java ${escapeHtml(p.javaTag.replace('java', ''))}`);
+    const changelog = p.changelogUrl
+      ? `<a class="text-link hover:underline" href="${escapeHtml(p.changelogUrl)}" target="_blank" rel="noopener">changelog</a>`
+      : '';
     summaryEl.innerHTML = `
       ${packIconHtml(p.iconUrl, 'size-10')}
       <div class="min-w-0 flex-1">
         <div class="truncate font-semibold">${escapeHtml(p.projectName)}</div>
         <div class="text-xs text-ink-faint">${bits.join(' · ') || 'Loader & MC version come from the pack'} — the pack dictates flavor and version</div>
       </div>
+      <span class="shrink-0 space-x-2 text-xs">${changelog}</span>
       <span class="chip shrink-0">pinned @ ${escapeHtml(p.versionName)}</span>`;
   }
 
