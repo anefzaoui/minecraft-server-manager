@@ -13,6 +13,8 @@ const serversService = require('./servers');
 const modrinth = require('./modrinthApi');
 const curseforge = require('./curseforgeApi');
 const modsService = require('./mods');
+const gtnhApi = require('./gtnhApi');
+const { pickJavaTag } = require('./javaMatrix');
 
 /**
  * Resolve a pack reference to install candidates.
@@ -88,6 +90,40 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion } = {}) 
       mcVersion: null,
     };
   }
+  if (platform === 'gtnh') {
+    // GTNH is a single project with no search API: `ref` is the constant 'gtnh',
+    // and a pack version is its own id. The Minecraft version is hardcoded
+    // because the index does not state one — GTNH is a 1.7.10 pack by definition.
+    const all = await gtnhApi.listVersions({ includeBeta: true });
+    const entry = versionId ? await gtnhApi.getVersion(String(versionId)) : gtnhApi.pickLatest(all, {});
+    if (!entry) throw httpError(502, 'The GTNH release index returned no installable versions');
+    return {
+      platform,
+      projectRef: 'gtnh',
+      projectId: 'gtnh',
+      projectName: 'GT New Horizons',
+      iconUrl: null,
+      versionId: entry.version,
+      versionName: entry.version,
+      mcVersion: '1.7.10',
+      maxJavaVersion: entry.maxJavaVersion,
+      channel: entry.channel,
+      // Resolved here so the wizard can show the Java version without
+      // re-implementing the matrix in the browser.
+      javaTag: pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: entry.maxJavaVersion }),
+      changelogUrl: entry.changelogUrl,
+      // 'release' rather than 'stable': the version picker already suppresses
+      // the channel suffix for 'release', so GTNH options render like every
+      // other platform's with no display-code change.
+      allVersions: all.map((e) => ({
+        id: e.version,
+        name: e.version,
+        type: e.channel === 'beta' ? 'beta' : 'release',
+        date: e.releaseDate,
+        maxJavaVersion: e.maxJavaVersion,
+      })),
+    };
+  }
   throw httpError(400, `Unknown modpack platform: ${platform}`);
 }
 
@@ -111,6 +147,15 @@ function packEnv(resolved) {
     const loader = (resolved.loaders || []).find((l) => ['fabric', 'forge', 'neoforge', 'quilt'].includes(l));
     if (loader) env.MODRINTH_LOADER = loader;
     return env;
+  }
+  if (resolved.platform === 'gtnh') {
+    return {
+      TYPE: 'GTNH',
+      GTNH_PACK_VERSION: resolved.versionId,
+      // The image runs its own update check on boot, which is redundant against
+      // a pinned version and would fight the panel for ownership of updates.
+      SKIP_GTNH_UPDATE_CHECK: 'true',
+    };
   }
   return {
     TYPE: 'FTBA',
@@ -147,7 +192,7 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
   // must not leave stale slugs, file pins or exclusion lists behind. Unrelated
   // user env is preserved.
   const cleanedEnv = Object.fromEntries(
-    Object.entries(server.env).filter(([key]) => !/^(CF_|MODRINTH_|FTB_)/.test(key))
+    Object.entries(server.env).filter(([key]) => !/^(CF_|MODRINTH_|FTB_|GTNH_)/.test(key))
   );
   const env = { ...cleanedEnv, ...packEnv(resolved) };
   // The TYPE lives in its own column; keep env's TYPE out of the extras.
@@ -205,6 +250,20 @@ async function latestFor(serverId) {
   const pack = getPack(serverId);
   if (!pack) return null;
   if (pack.platform === 'ftb') return null; // FTB API not wired for checks yet
+  if (pack.platform === 'gtnh') {
+    // Track the channel this server was pinned from: a stable server must never
+    // be offered a beta, and a beta server should see beta releases.
+    const newest = await gtnhApi.latest({ includeBeta: pack.channel === 'beta' });
+    if (!newest) return null;
+    return {
+      current: { id: pack.pinned_version_id, name: pack.pinned_version_name },
+      latest: { id: newest.version, name: newest.version },
+      updateAvailable: newest.version !== pack.pinned_version_id,
+      projectName: pack.project_name,
+      projectRef: pack.project_ref,
+      platform: pack.platform,
+    };
+  }
   // Scope "latest" to the server's own MC version — otherwise the checker
   // offers upgrades that silently cross MC versions.
   const server = serversService.getServer(serverId);
