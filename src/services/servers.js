@@ -111,7 +111,13 @@ function assembleEnv(server) {
 }
 
 function resolveImage(server) {
-  const tag = server.java_tag || pickJavaTag(server.mc_version, server.type);
+  // GTNH's Java support is a property of the pinned pack version, not of the
+  // Minecraft version. Read it straight from the pin: packs.js requires this
+  // module, so requiring it back would need a lazy-require cycle-breaker that a
+  // single-column read doesn't justify.
+  const pin =
+    server.type === 'GTNH' ? db.get('SELECT max_java_version FROM server_packs WHERE server_id = ?', server.id) : null;
+  const tag = server.java_tag || pickJavaTag(server.mc_version, server.type, { maxJavaVersion: pin?.max_java_version });
   return images.imageRef(tag);
 }
 

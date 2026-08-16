@@ -231,3 +231,36 @@ test('latestFor("gtnh") tracks betas for a server pinned to a beta', async () =>
     restore();
   }
 });
+
+const serversService = require('../src/services/servers');
+
+test('resolveImage uses the pinned pack java cap for GTNH servers', async () => {
+  const restore = stubIndex();
+  try {
+    const id = app.seedServer('srv_gtnhimg');
+    db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10' WHERE id = ?`, id);
+    await packs.applyPack(id, await packs.resolvePack('gtnh', 'gtnh', {}), { actor: 'test', force: true });
+    assert.match(serversService.resolveImage(serversService.getServer(id)), /:java25$/);
+
+    await packs.applyPack(id, await packs.resolvePack('gtnh', 'gtnh', { versionId: '2.7.4' }), {
+      actor: 'test',
+      force: true,
+    });
+    assert.match(serversService.resolveImage(serversService.getServer(id)), /:java21$/);
+  } finally {
+    restore();
+  }
+});
+
+test('resolveImage falls back to java17 for an unpinned GTNH server', () => {
+  const id = app.seedServer('srv_gtnhbare');
+  db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10' WHERE id = ?`, id);
+  // Hand-made GTNH servers from before the pack platform existed have no pin.
+  assert.match(serversService.resolveImage(serversService.getServer(id)), /:java17$/);
+});
+
+test('resolveImage still honors an explicit user override', () => {
+  const id = app.seedServer('srv_gtnhoverride');
+  db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10', java_tag = 'java8' WHERE id = ?`, id);
+  assert.match(serversService.resolveImage(serversService.getServer(id)), /:java8$/);
+});
