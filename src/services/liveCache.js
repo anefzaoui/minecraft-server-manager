@@ -109,7 +109,7 @@ async function attach(serverId) {
     try {
       const raw = await execCapture(serverId, ['rcon-cli', 'list']);
       const out = require('../utils/ansi').cleanText(raw); // rcon-cli colorizes
-      const m = /There are (\d+) of a max of (\d+) players online:?\s*(.*)/i.exec(out);
+      const m = /There are (\d+) (?:of a max of|out of maximum) (\d+) players online:?\.?\s*(.*)/i.exec(out);
       if (m) {
         entry.players = {
           online: Number(m[1]),
@@ -123,6 +123,13 @@ async function attach(serverId) {
           at: Date.now(),
         };
         entry.phase = null; // rcon answering = fully up, no boot phase
+      } else if (out) {
+        // rcon answered but the "/list" phrasing didn't match any known pattern.
+        // We can't parse player counts, but rcon answering at all means the
+        // server is fully up — stop deriving the boot-phase label from logs so
+        // the UI doesn't get stuck showing e.g. "Finishing startup" forever.
+        entry.upConfirmed = true;
+        entry.phase = null;
       }
     } catch {
       /* rcon not up yet — keep last value */
@@ -135,7 +142,7 @@ async function attach(serverId) {
   // log tail and classify what the startup pipeline is doing right now.
   let phaseInFlight = false;
   const refreshPhase = async () => {
-    if (entry.players || phaseInFlight) return; // already up, or a probe is running
+    if (entry.players || entry.upConfirmed || phaseInFlight) return; // already up, or a probe is running
     phaseInFlight = true;
     try {
       const tail = await fetchLogs(serverId, { tail: 40 });
