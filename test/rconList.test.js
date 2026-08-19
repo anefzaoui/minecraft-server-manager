@@ -40,3 +40,8 @@ test('returns null for unrecognized output instead of guessing', () => {
   assert.equal(parsePlayerList('Unknown command'), null);
   assert.equal(parsePlayerList(''), null);
 });
+
+test('keeps a Bedrock name\'s leading "." when it lands right after the colon with no space', () => {
+  assert.deepEqual(parsePlayerList('There are 1 of a max of 20 players online:.Steve').names, ['.Steve']);
+  assert.deepEqual(parsePlayerList('There are 1 out of maximum 20 players online:.Steve').names, ['.Steve']);
+});

@@ -7,7 +7,7 @@
 
 const db = require('../db');
 const { statsStream, statsOnce } = require('../docker/stats');
-const { execCapture, inspectStatus } = require('../docker/containers');
+const { execCaptureChecked, inspectStatus } = require('../docker/containers');
 const { fetchLogs } = require('../docker/logs');
 const { parsePlayerList } = require('../utils/rconList');
 
@@ -107,17 +107,21 @@ async function attach(serverId) {
     if (playersInFlight) return; // don't stack calls if one is slow/hung
     playersInFlight = true;
     try {
-      const raw = await execCapture(serverId, ['rcon-cli', 'list']);
-      const out = require('../utils/ansi').cleanText(raw); // rcon-cli colorizes
+      const { stdout, exitCode } = await execCaptureChecked(serverId, ['rcon-cli', 'list']);
+      const out = require('../utils/ansi').cleanText(stdout); // rcon-cli colorizes
       const parsed = parsePlayerList(out);
       if (parsed) {
         entry.players = { ...parsed, at: Date.now() };
         entry.phase = null; // rcon answering = fully up, no boot phase
-      } else if (out) {
-        // rcon answered but the "/list" phrasing didn't match any known pattern.
-        // We can't parse player counts, but rcon answering at all means the
-        // server is fully up — stop deriving the boot-phase label from logs so
-        // the UI doesn't get stuck showing e.g. "Finishing startup" forever.
+      } else if (exitCode === 0 && out) {
+        // rcon-cli exited successfully — RCON is genuinely answering — but the
+        // "/list" phrasing didn't match any known pattern. We can't parse player
+        // counts, but a clean exit means the server is fully up — stop deriving
+        // the boot-phase label from logs so the UI doesn't get stuck showing
+        // e.g. "Finishing startup" forever. A non-zero exit (e.g. rcon-cli's own
+        // "connection refused" while RCON isn't listening yet, which docker exec
+        // itself treats as a normal successful command) must NOT hit this branch,
+        // or every server would latch "up" on its very first, pre-RCON poll.
         entry.upConfirmed = true;
         entry.phase = null;
       }

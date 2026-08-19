@@ -172,16 +172,17 @@ async function removeContainer(serverId) {
 }
 
 /**
- * Run a command via docker exec and capture its output (used for rcon-cli).
- * A timeout guards against a hung exec (unresponsive/deadlocked JVM) leaving the
- * hijacked stream + connection open forever — critical because liveCache fires
- * this on an interval and hung calls would otherwise stack without bound.
+ * Run a command via docker exec and capture its raw output + the process's exit
+ * code. A timeout guards against a hung exec (unresponsive/deadlocked JVM)
+ * leaving the hijacked stream + connection open forever — critical because
+ * liveCache fires this on an interval and hung calls would otherwise stack
+ * without bound.
  */
-async function execCapture(serverId, cmd, { timeoutMs = 15000 } = {}) {
+async function execRaw(serverId, cmd, { timeoutMs = 15000 } = {}) {
   const container = getContainer(serverId);
   const exec = await container.exec({ Cmd: cmd, AttachStdout: true, AttachStderr: true });
   const stream = await exec.start({});
-  return new Promise((resolve, reject) => {
+  const stdout = await new Promise((resolve, reject) => {
     const chunks = [];
     // Demux the Docker stream framing (8-byte headers).
     const out = { write: (b) => chunks.push(b) };
@@ -206,6 +207,26 @@ async function execCapture(serverId, cmd, { timeoutMs = 15000 } = {}) {
     stream.on('end', () => finish(resolve, Buffer.concat(chunks).toString('utf8')));
     stream.on('error', (err) => finish(reject, err));
   });
+  const { ExitCode } = await exec.inspect();
+  return { stdout, exitCode: ExitCode };
+}
+
+/** Run a command via docker exec and capture its output (used for rcon-cli). */
+async function execCapture(serverId, cmd, opts = {}) {
+  const { stdout } = await execRaw(serverId, cmd, opts);
+  return stdout;
+}
+
+/**
+ * Like execCapture, but also resolves the command's exit code so callers can
+ * tell "ran successfully but printed something unexpected" apart from "the
+ * command itself failed" (e.g. rcon-cli exits non-zero and prints a connection
+ * error to stderr when RCON isn't listening yet — docker exec itself still
+ * succeeds since the container process is running, so execCapture alone can't
+ * distinguish that from a genuine, parseable response).
+ */
+async function execCaptureChecked(serverId, cmd, opts = {}) {
+  return execRaw(serverId, cmd, opts);
 }
 
 /**
@@ -282,4 +303,5 @@ module.exports = {
   removeDataDir,
   chownDataDir,
   execCapture,
+  execCaptureChecked,
 };
