@@ -10,6 +10,7 @@ const { statsStream, statsOnce } = require('../docker/stats');
 const { execCaptureChecked, inspectStatus } = require('../docker/containers');
 const { fetchLogs } = require('../docker/logs');
 const { parsePlayerList } = require('../utils/rconList');
+const { cleanText } = require('../utils/ansi');
 
 // Boot-phase detection: a modded first boot passes through many meaningful
 // states — surface them instead of a flat "starting/unhealthy". Ordered by
@@ -61,12 +62,18 @@ const entries = new Map(); // serverId -> {stats, players, uptimeStartedAt, stop
 let syncTimer = null;
 let syncing = false;
 
-const EMPTY = { stats: null, players: null, startedAt: null };
+const EMPTY = { stats: null, players: null, startedAt: null, phase: null, upConfirmed: false };
 
 function get(serverId) {
   const e = entries.get(serverId);
   if (!e) return EMPTY;
-  return { stats: e.stats || null, players: e.players || null, startedAt: e.startedAt || null, phase: e.phase || null };
+  return {
+    stats: e.stats || null,
+    players: e.players || null,
+    startedAt: e.startedAt || null,
+    phase: e.phase || null,
+    upConfirmed: e.upConfirmed || false,
+  };
 }
 
 function getAll() {
@@ -77,6 +84,7 @@ function getAll() {
       players: e.players || null,
       startedAt: e.startedAt || null,
       phase: e.phase || null,
+      upConfirmed: e.upConfirmed || false,
     };
   }
   return out;
@@ -84,7 +92,14 @@ function getAll() {
 
 async function attach(serverId) {
   if (entries.has(serverId)) return;
-  const entry = { stats: null, players: null, startedAt: null, stopStats: null, playerTimer: null };
+  const entry = {
+    stats: null,
+    players: null,
+    startedAt: null,
+    upConfirmed: false,
+    stopStats: null,
+    playerTimer: null,
+  };
   entries.set(serverId, entry);
 
   try {
@@ -107,8 +122,27 @@ async function attach(serverId) {
     if (playersInFlight) return; // don't stack calls if one is slow/hung
     playersInFlight = true;
     try {
+      // A missed 'start' Docker event (the events stream reconnects after
+      // drops — see watcher.js's retryLater()) can leave the DB status never
+      // leaving running/starting/unhealthy across a real container restart,
+      // so sync() never re-attaches and this stale latch would otherwise
+      // survive the restart. Only worth the extra inspect call in the exact
+      // state it can bite: latched "up" but never got a real player count.
+      if (entry.upConfirmed && !entry.players) {
+        try {
+          const info = await inspectStatus(serverId);
+          if (info.startedAt && info.startedAt !== entry.startedAt) {
+            entry.startedAt = info.startedAt;
+            entry.upConfirmed = false;
+            entry.phase = null; // let refreshPhase classify the new boot
+          }
+        } catch {
+          /* inspect failed — leave the latch as-is, retry next tick */
+        }
+      }
+
       const { stdout, exitCode } = await execCaptureChecked(serverId, ['rcon-cli', 'list']);
-      const out = require('../utils/ansi').cleanText(stdout); // rcon-cli colorizes
+      const out = cleanText(stdout); // rcon-cli colorizes
       const parsed = parsePlayerList(out);
       if (parsed) {
         entry.players = { ...parsed, at: Date.now() };

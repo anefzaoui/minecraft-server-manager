@@ -2,9 +2,14 @@
 
 // Parses `rcon-cli list` output. Paper 26.2 changed the phrasing from
 // "There are N of a max of M players online:" to
-// "There are N out of maximum M players online." — accept both so the two
-// callers (liveCache boot-status polling, players.listOnlineNames) never
-// drift out of sync with each other again.
+// "There are N out of maximum M players online." — accept both, so the two
+// callers (liveCache boot-status polling, players.listOnlineNames) share one
+// regex instead of two copies that can silently drift apart, as happened
+// here. This only unifies the parsing: a null return still means "couldn't
+// read player counts", and each caller decides for itself what that implies
+// (liveCache treats a successful-but-unparseable rcon reply as "server's up,
+// counts unknown"; listOnlineNames treats it as "couldn't ask" and, when
+// asked to, throws rather than guessing).
 
 const { PLAYER_NAME_RE } = require('./playerName');
 
