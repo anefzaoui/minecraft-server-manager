@@ -262,7 +262,11 @@ router.get('/servers/live', (req, res) => {
       memUsedMb: e.stats ? Math.round(e.stats.memUsedBytes / 1024 / 1024) : null,
       players: e.players ? { online: e.players.online, max: e.players.max, names: e.players.names } : null,
       startedAt: e.startedAt || null,
-      phase: e.phase ? e.phase.label : null,
+      // rcon answered with an unrecognized "/list" phrasing: up, but player
+      // counts are unavailable — distinct from "still booting" (e.phase set)
+      // and from "not classified yet" (both null), which look identical
+      // otherwise on the client hydration in public/js/app.js.
+      phase: e.phase ? e.phase.label : e.upConfirmed && !e.players ? 'Player count unavailable' : null,
     };
   }
   res.json({ ok: true, servers: out });

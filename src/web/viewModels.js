@@ -67,6 +67,10 @@ async function serverVM(s, { withLive = true } = {}) {
     // Boot-phase detail ("Downloading mods…", "Generating world") replaces the
     // flat starting/unhealthy label while the server hasn't answered rcon yet.
     if (live.phase && !live.players) vm.statusDetail = live.phase.label;
+    // rcon answered but /list didn't match a known phrasing — up, but we can't
+    // read player counts. Distinct from "still booting" (live.phase above) so
+    // that state isn't silently indistinguishable from "not classified yet".
+    else if (live.upConfirmed && !live.players) vm.statusDetail = 'Player count unavailable';
   }
   return vm;
 }
