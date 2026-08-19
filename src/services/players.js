@@ -13,6 +13,7 @@ const { recordEvent } = require('../events');
 const { execCapture } = require('../docker/containers');
 const mojangProfiles = require('./mojangProfiles');
 const { PLAYER_NAME_RE, isBedrockName } = require('../utils/playerName');
+const { parsePlayerList } = require('../utils/rconList');
 
 // Only these fixed filenames are ever touched — no user input reaches a path.
 const FILES = new Set(['usercache.json', 'whitelist.json', 'ops.json', 'banned-players.json', 'banned-ips.json']);
@@ -123,14 +124,12 @@ async function listOnlineNames(serverId, { throwOnError = false } = {}) {
     // rcon-cli colorizes output — strip ANSI/§ codes before parsing, and only
     // accept strict Minecraft name shapes so escapes never become "players".
     const out = require('../utils/ansi').cleanText(await rcon(serverId, 'list'));
-    const m = /There are \d+ of a max of \d+ players online:?\s*(.*)/i.exec(out);
-    if (!m) return [];
-    return m[1]
-      ? m[1]
-          .split(',')
-          .map((n) => n.trim())
-          .filter((n) => PLAYER_NAME_RE.test(n))
-      : [];
+    const parsed = parsePlayerList(out);
+    // An unparseable response is NOT "confirmed nobody online" — callers like
+    // editContext rely on throwOnError to tell those apart before an offline
+    // .dat edit, where guessing wrong risks corrupting a live player's save.
+    if (!parsed) throw httpError(502, 'Could not parse player list from RCON output');
+    return parsed.names;
   } catch (err) {
     if (throwOnError) throw err;
     return [];

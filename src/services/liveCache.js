@@ -9,7 +9,7 @@ const db = require('../db');
 const { statsStream, statsOnce } = require('../docker/stats');
 const { execCapture, inspectStatus } = require('../docker/containers');
 const { fetchLogs } = require('../docker/logs');
-const { PLAYER_NAME_RE } = require('../utils/playerName');
+const { parsePlayerList } = require('../utils/rconList');
 
 // Boot-phase detection: a modded first boot passes through many meaningful
 // states — surface them instead of a flat "starting/unhealthy". Ordered by
@@ -109,19 +109,9 @@ async function attach(serverId) {
     try {
       const raw = await execCapture(serverId, ['rcon-cli', 'list']);
       const out = require('../utils/ansi').cleanText(raw); // rcon-cli colorizes
-      const m = /There are (\d+) (?:of a max of|out of maximum) (\d+) players online:?\.?\s*(.*)/i.exec(out);
-      if (m) {
-        entry.players = {
-          online: Number(m[1]),
-          max: Number(m[2]),
-          names: m[3]
-            ? m[3]
-                .split(',')
-                .map((n) => n.trim())
-                .filter((n) => PLAYER_NAME_RE.test(n))
-            : [],
-          at: Date.now(),
-        };
+      const parsed = parsePlayerList(out);
+      if (parsed) {
+        entry.players = { ...parsed, at: Date.now() };
         entry.phase = null; // rcon answering = fully up, no boot phase
       } else if (out) {
         // rcon answered but the "/list" phrasing didn't match any known pattern.
