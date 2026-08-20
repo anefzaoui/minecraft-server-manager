@@ -205,6 +205,24 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
     Object.entries(server.env).filter(([key]) => !/^(CF_|MODRINTH_|FTB_|GTNH_|SKIP_GTNH_)/.test(key))
   );
   const env = { ...cleanedEnv, ...packEnv(resolved) };
+  // GTNH's own server start scripts ship -Dfml.queryResult=confirm, and the
+  // itzg launcher path loses it. Without it, the FIRST boot after any pack
+  // version change over an existing world blocks forever on Forge's
+  // "/fml confirm" world-migration console prompt — which RCON can't reach
+  // (it isn't listening yet), so the upgrade monitor burns its whole window
+  // and reports a timeout (verified live on a 2.7.4 → 2.8.4 world). The panel
+  // always takes a pre-update backup, so confirming is the intended path.
+  // Merge, don't clobber: a user-set JVM_DD_OPTS keeps its own pairs.
+  const FML_CONFIRM = 'fml.queryResult=confirm';
+  if (resolved.platform === 'gtnh') {
+    const user = cleanedEnv.JVM_DD_OPTS;
+    env.JVM_DD_OPTS = user ? (user.includes(FML_CONFIRM) ? user : `${user} ${FML_CONFIRM}`) : FML_CONFIRM;
+  } else if (previous && previous.platform === 'gtnh' && env.JVM_DD_OPTS) {
+    // Leaving GTNH: take back only the panel's own token; user pairs survive.
+    const stripped = env.JVM_DD_OPTS.split(/[\s,]+/).filter((pair) => pair && pair !== FML_CONFIRM);
+    if (stripped.length) env.JVM_DD_OPTS = stripped.join(' ');
+    else delete env.JVM_DD_OPTS;
+  }
   // The TYPE lives in its own column; keep env's TYPE out of the extras.
   const type = env.TYPE;
   delete env.TYPE;

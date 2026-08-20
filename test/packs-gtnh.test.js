@@ -162,6 +162,38 @@ test('applying GTNH over a CurseForge pin strips the stale CF_ vars', async () =
     assert.equal(env.CF_SLUG, undefined);
     assert.equal(env.GTNH_PACK_VERSION, '2.8.4');
     assert.equal(env.VIEW_DISTANCE, '10'); // unrelated user env survives
+    // The FML world-migration auto-confirm rides along on every GTNH apply.
+    assert.equal(env.JVM_DD_OPTS, 'fml.queryResult=confirm');
+  } finally {
+    restore();
+  }
+});
+
+test('applying GTNH merges fml.queryResult=confirm into a user-set JVM_DD_OPTS', async () => {
+  const restore = stubIndex();
+  try {
+    const id = app.seedServer('srv_ddopts');
+    db.run(`UPDATE servers SET env_json = ? WHERE id = ?`, JSON.stringify({ JVM_DD_OPTS: 'user.flag=1' }), id);
+    const resolved = await packs.resolvePack('gtnh', 'gtnh', {});
+    await packs.applyPack(id, resolved, { actor: 'test', force: true });
+    let env = JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', id).env_json);
+    assert.equal(env.JVM_DD_OPTS, 'user.flag=1 fml.queryResult=confirm');
+
+    // Switching away takes back only the panel's token; user pairs survive.
+    await packs.applyPack(
+      id,
+      {
+        platform: 'modrinth',
+        projectRef: 'sop',
+        projectName: 'Simply Optimized',
+        versionId: 'abc123',
+        versionName: '1.0.0',
+        mcVersion: '1.21.1',
+      },
+      { actor: 'test', force: true }
+    );
+    env = JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', id).env_json);
+    assert.equal(env.JVM_DD_OPTS, 'user.flag=1');
   } finally {
     restore();
   }
