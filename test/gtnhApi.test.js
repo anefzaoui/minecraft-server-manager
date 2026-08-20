@@ -38,12 +38,6 @@ test('normalizeIndex accepts only https github changelog links', () => {
   assert.equal(byVersion['9.9.8-synthetic-badlink'].changelogUrl, null);
 });
 
-test('normalizeIndex prefers the modern server pack url', () => {
-  const byVersion = Object.fromEntries(gtnh.normalizeIndex(raw).map((e) => [e.version, e]));
-  assert.match(byVersion['2.8.4'].serverUrl, /Server_Java_17-25\.zip$/);
-  assert.match(byVersion['9.9.9-synthetic-nojava'].serverUrl, /Java_8\.zip$/);
-});
-
 test('normalizeIndex tolerates junk input', () => {
   assert.deepEqual(gtnh.normalizeIndex(null), []);
   assert.deepEqual(gtnh.normalizeIndex('nope'), []);

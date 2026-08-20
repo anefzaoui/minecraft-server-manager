@@ -43,16 +43,16 @@ function safeChangelogUrl(description) {
  */
 function normalizeIndex(raw) {
   if (!raw || typeof raw !== 'object') return [];
+  // No serverUrl here on purpose: the itzg image downloads the pack itself,
+  // keyed by GTNH_PACK_VERSION — the panel never fetches the archive.
   return Object.entries(raw).map(([version, entry]) => {
     const e = entry || {};
-    const server = e.server || {};
     return {
       version,
       channel: /beta/i.test(String(e.title || '')) ? 'beta' : 'stable',
       releaseDate: e.releaseDate || null,
       maxJavaVersion: Number.isInteger(e.maxJavaVersion) ? e.maxJavaVersion : null,
       changelogUrl: safeChangelogUrl(e.description),
-      serverUrl: server.java17_2XUrl || server.java8Url || null,
     };
   });
 }

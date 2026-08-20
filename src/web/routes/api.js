@@ -442,9 +442,9 @@ router.post(
   asyncHandler((req, res, next) => {
     const { versionId, skipBackup } = z
       .object({
-        // Same shape constraint as the other pack versionId fields (finding #5) —
-        // this one wasn't in the reviewed list, but it reaches the exact same
-        // GTNH_PACK_VERSION/CF_FILE_ID/etc. container env path via upgradePack.
+        // Same shape constraint as the other pack versionId fields: this one
+        // reaches the exact same GTNH_PACK_VERSION/CF_FILE_ID/etc. container
+        // env path via upgradePack.
         versionId: z
           .string()
           .trim()
