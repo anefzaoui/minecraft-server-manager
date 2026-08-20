@@ -74,9 +74,14 @@ document.addEventListener('click', (e) => {
   }
   if (!openMenu) return;
   // A click on a menu item performs its action (delegated handlers still run —
-  // the event has already been dispatched) and the menu closes itself.
+  // the event has already been dispatched) and the menu closes itself. Deferred
+  // to the next tick: a menu item that's a submit button (e.g. Sign out) only
+  // fires its native form submission AFTER this click handler returns, so
+  // removing it from the DOM synchronously here (openMenu.remove(), inside
+  // close()) cancelled that submission outright — the button appeared to do
+  // nothing.
   if (openMenu.contains(e.target)) {
-    if (e.target.closest('[role="menuitem"]')) close();
+    if (e.target.closest('[role="menuitem"]')) setTimeout(close, 0);
     return;
   }
   close();
