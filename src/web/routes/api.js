@@ -1408,6 +1408,18 @@ router.delete(
   })
 );
 
+// Recovery path when a user loses both their authenticator and their backup
+// codes — an admin can force-clear 2FA without knowing their password (same
+// trust level as the admin password-reset above). The user re-enrolls fresh.
+router.post(
+  '/users/:id/totp/disable',
+  requireRole('admin'),
+  asyncHandler((req, res, next) => {
+    authService.adminDisableTotp(req.params.id, { actor: req.user.username });
+    res.json({ ok: true });
+  })
+);
+
 // ---- Modrinth search (mods manager) ----
 const modrinth = require('../../services/modrinthApi');
 

@@ -184,6 +184,10 @@ function createApp() {
   app.use(require('./routes/auth'));
   app.use('/status', require('./routes/status')); // public, read-only, opt-in per server
   app.use(requireAuth);
+  // Account security (2FA) is self-service for every role, including viewer —
+  // mounted ahead of the viewer-read-only gate below since protecting your own
+  // account isn't a server-management action.
+  app.use('/api/account', require('./routes/account'));
   // Read-only roles (viewer) may never perform state changes. Admin-only areas
   // (users, storage, API keys, global files) add their own requireRole on top.
   app.use(requireWrite);

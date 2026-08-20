@@ -61,7 +61,7 @@
     <h3 class="mb-4 font-semibold">Users</h3>
     <div class="overflow-x-auto">
       <table class="table-base" id="users-table">
-        <thead><tr><th>User</th><th>Role</th><th>Created</th><th class="text-right"></th></tr></thead>
+        <thead><tr><th>User</th><th>Role</th><th>2FA</th><th>Created</th><th class="text-right"></th></tr></thead>
         <tbody>
           {{#each users}}
             <tr data-user-id="{{id}}" data-username="{{username}}">
@@ -72,6 +72,14 @@
                   <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>operator</option>
                   <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>viewer</option>
                 </select>
+              </td>
+              <td>
+                {{#if totpEnabled}}
+                  <span class="badge badge-ok">on</span>
+                  <button class="btn btn-ghost btn-sm" data-user-totp-reset data-tip="Reset their 2FA — they will need to re-enroll">Reset</button>
+                {{else}}
+                  <span class="text-xs text-ink-faint">off</span>
+                {{/if}}
               </td>
               <td class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
               <td class="text-right">
