@@ -7,9 +7,10 @@
 
 const db = require('../db');
 const { statsStream, statsOnce } = require('../docker/stats');
-const { execCapture, inspectStatus } = require('../docker/containers');
+const { execCaptureChecked, inspectStatus } = require('../docker/containers');
 const { fetchLogs } = require('../docker/logs');
-const { PLAYER_NAME_RE } = require('../utils/playerName');
+const { parsePlayerList } = require('../utils/rconList');
+const { cleanText } = require('../utils/ansi');
 
 // Boot-phase detection: a modded first boot passes through many meaningful
 // states — surface them instead of a flat "starting/unhealthy". Ordered by
@@ -61,12 +62,18 @@ const entries = new Map(); // serverId -> {stats, players, uptimeStartedAt, stop
 let syncTimer = null;
 let syncing = false;
 
-const EMPTY = { stats: null, players: null, startedAt: null };
+const EMPTY = { stats: null, players: null, startedAt: null, phase: null, upConfirmed: false };
 
 function get(serverId) {
   const e = entries.get(serverId);
   if (!e) return EMPTY;
-  return { stats: e.stats || null, players: e.players || null, startedAt: e.startedAt || null, phase: e.phase || null };
+  return {
+    stats: e.stats || null,
+    players: e.players || null,
+    startedAt: e.startedAt || null,
+    phase: e.phase || null,
+    upConfirmed: e.upConfirmed || false,
+  };
 }
 
 function getAll() {
@@ -77,14 +84,37 @@ function getAll() {
       players: e.players || null,
       startedAt: e.startedAt || null,
       phase: e.phase || null,
+      upConfirmed: e.upConfirmed || false,
     };
   }
   return out;
 }
 
+/**
+ * The status-detail chip for a live entry, or null when there's nothing to
+ * show. One definition shared by the SSR view model and the live-poll JSON
+ * route, so the label a page renders on load can't drift from the one the
+ * poll swaps in. While the server hasn't answered rcon yet the boot phase
+ * wins; "Player count unavailable" is the latched "rcon answers but /list is
+ * unparseable" state; a parsed player list means neither applies.
+ */
+function statusDetail(live) {
+  if (live.players) return null;
+  if (live.phase) return live.phase.label;
+  if (live.upConfirmed) return 'Player count unavailable';
+  return null;
+}
+
 async function attach(serverId) {
   if (entries.has(serverId)) return;
-  const entry = { stats: null, players: null, startedAt: null, stopStats: null, playerTimer: null };
+  const entry = {
+    stats: null,
+    players: null,
+    startedAt: null,
+    upConfirmed: false,
+    stopStats: null,
+    playerTimer: null,
+  };
   entries.set(serverId, entry);
 
   try {
@@ -103,26 +133,58 @@ async function attach(serverId) {
   }
 
   let playersInFlight = false;
+  let lastRestartCheckAt = 0;
   const refreshPlayers = async () => {
     if (playersInFlight) return; // don't stack calls if one is slow/hung
     playersInFlight = true;
     try {
-      const raw = await execCapture(serverId, ['rcon-cli', 'list']);
-      const out = require('../utils/ansi').cleanText(raw); // rcon-cli colorizes
-      const m = /There are (\d+) of a max of (\d+) players online:?\s*(.*)/i.exec(out);
-      if (m) {
-        entry.players = {
-          online: Number(m[1]),
-          max: Number(m[2]),
-          names: m[3]
-            ? m[3]
-                .split(',')
-                .map((n) => n.trim())
-                .filter((n) => PLAYER_NAME_RE.test(n))
-            : [],
-          at: Date.now(),
-        };
+      // A container restart the cache didn't see must reset the latched state,
+      // or the old boot's player list / upConfirmed survive into the new boot
+      // as convincing-but-stale live data (verified live: a panel restart shows
+      // the previous list for the whole reboot and suppresses boot phases).
+      // sync() only detaches when the DB status leaves running/starting, and a
+      // restart's die→start usually completes inside one 10s sync interval, so
+      // the entry never detaches; a missed 'start' Docker event (the events
+      // stream reconnects after drops — see watcher.js's retryLater()) has the
+      // same effect. Compare Docker's own StartedAt whenever ANY latched state
+      // exists, throttled to once a minute to keep the extra inspect off the
+      // 20s hot path.
+      if ((entry.upConfirmed || entry.players) && Date.now() - lastRestartCheckAt > 60000) {
+        lastRestartCheckAt = Date.now();
+        try {
+          const info = await inspectStatus(serverId);
+          if (info.startedAt && entry.startedAt && info.startedAt !== entry.startedAt) {
+            entry.startedAt = info.startedAt;
+            entry.players = null; // the old boot's list is not this boot's
+            entry.upConfirmed = false;
+            entry.phase = null; // let refreshPhase classify the new boot
+          } else if (info.startedAt && !entry.startedAt) {
+            // attach() ran before the container was Running (startedAt null) —
+            // record the real boot time WITHOUT treating it as a restart.
+            entry.startedAt = info.startedAt;
+          }
+        } catch {
+          /* inspect failed — leave the latch as-is, retry next time */
+        }
+      }
+
+      const { stdout, exitCode } = await execCaptureChecked(serverId, ['rcon-cli', 'list']);
+      const out = cleanText(stdout); // rcon-cli colorizes
+      const parsed = parsePlayerList(out);
+      if (parsed) {
+        entry.players = { ...parsed, at: Date.now() };
         entry.phase = null; // rcon answering = fully up, no boot phase
+      } else if (exitCode === 0 && out) {
+        // rcon-cli exited successfully — RCON is genuinely answering — but the
+        // "/list" phrasing didn't match any known pattern. We can't parse player
+        // counts, but a clean exit means the server is fully up — stop deriving
+        // the boot-phase label from logs so the UI doesn't get stuck showing
+        // e.g. "Finishing startup" forever. A non-zero exit (e.g. rcon-cli's own
+        // "connection refused" while RCON isn't listening yet, which docker exec
+        // itself treats as a normal successful command) must NOT hit this branch,
+        // or every server would latch "up" on its very first, pre-RCON poll.
+        entry.upConfirmed = true;
+        entry.phase = null;
       }
     } catch {
       /* rcon not up yet — keep last value */
@@ -135,7 +197,7 @@ async function attach(serverId) {
   // log tail and classify what the startup pipeline is doing right now.
   let phaseInFlight = false;
   const refreshPhase = async () => {
-    if (entry.players || phaseInFlight) return; // already up, or a probe is running
+    if (entry.players || entry.upConfirmed || phaseInFlight) return; // already up, or a probe is running
     phaseInFlight = true;
     try {
       const tail = await fetchLogs(serverId, { tail: 40 });
@@ -203,4 +265,4 @@ async function sampleOnce(serverId) {
   }
 }
 
-module.exports = { get, getAll, startLiveCache, sync, detach, sampleOnce };
+module.exports = { get, getAll, statusDetail, startLiveCache, sync, detach, sampleOnce };

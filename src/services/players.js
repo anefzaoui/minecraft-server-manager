@@ -13,6 +13,10 @@ const { recordEvent } = require('../events');
 const { execCapture } = require('../docker/containers');
 const mojangProfiles = require('./mojangProfiles');
 const { PLAYER_NAME_RE, isBedrockName } = require('../utils/playerName');
+const { parsePlayerList } = require('../utils/rconList');
+// Aliased: this file already has its own cleanText() below (strips control
+// chars from RCON-bound messages) — this one strips ANSI/§ colour codes.
+const { cleanText: cleanAnsiText } = require('../utils/ansi');
 
 // Only these fixed filenames are ever touched — no user input reaches a path.
 const FILES = new Set(['usercache.json', 'whitelist.json', 'ops.json', 'banned-players.json', 'banned-ips.json']);
@@ -96,7 +100,7 @@ async function rcon(serverId, ...args) {
 // Same, but strip the ANSI/§ colour codes rcon-cli injects — REQUIRED before
 // regex-parsing any rcon output (e.g. "\x1b[0m" otherwise becomes a stray "[0m").
 async function rconClean(serverId, ...args) {
-  return require('../utils/ansi').cleanText(await rcon(serverId, ...args));
+  return cleanAnsiText(await rcon(serverId, ...args));
 }
 
 // ANSI-clean rcon with an explicit timeout — /locate and spreadplayers can be slow
@@ -104,7 +108,7 @@ async function rconClean(serverId, ...args) {
 // stacking searches that freeze the server). Give teleport commands more room.
 async function rconT(serverId, timeoutMs, ...args) {
   const out = await execCapture(serverId, ['rcon-cli', '--', ...args.map(String)], { timeoutMs });
-  return require('../utils/ansi').cleanText(String(out || '').trim());
+  return cleanAnsiText(String(out || '').trim());
 }
 const TP_TIMEOUT_MS = 45000;
 
@@ -122,15 +126,12 @@ async function listOnlineNames(serverId, { throwOnError = false } = {}) {
   try {
     // rcon-cli colorizes output — strip ANSI/§ codes before parsing, and only
     // accept strict Minecraft name shapes so escapes never become "players".
-    const out = require('../utils/ansi').cleanText(await rcon(serverId, 'list'));
-    const m = /There are \d+ of a max of \d+ players online:?\s*(.*)/i.exec(out);
-    if (!m) return [];
-    return m[1]
-      ? m[1]
-          .split(',')
-          .map((n) => n.trim())
-          .filter((n) => PLAYER_NAME_RE.test(n))
-      : [];
+    const out = cleanAnsiText(await rcon(serverId, 'list'));
+    const parsed = parsePlayerList(out);
+    // Unparseable is "couldn't ask", not "confirmed nobody online" — see the
+    // throwOnError note above.
+    if (!parsed) throw httpError(502, 'Could not parse player list from RCON output');
+    return parsed.names;
   } catch (err) {
     if (throwOnError) throw err;
     return [];
@@ -723,7 +724,7 @@ async function scanServerStructures(serverId, running) {
         let page = 1;
         let totalPages = 1;
         do {
-          const out = require('../utils/ansi').cleanText(
+          const out = cleanAnsiText(
             await execCapture(serverId, ['rcon-cli', prefix, 'tags', 'worldgen/structure', 'list', String(page)])
           );
           const pm = /<page (\d+) \/ (\d+)>/.exec(out);
@@ -879,7 +880,7 @@ async function fetchTagElements(serverId, prefix, tag) {
   let page = 1;
   let totalPages = 1;
   do {
-    const out = require('../utils/ansi').cleanText(
+    const out = cleanAnsiText(
       await execCapture(serverId, ['rcon-cli', prefix, 'tags', 'worldgen/biome', 'get', tag, String(page)])
     );
     const pm = /<page (\d+) \/ (\d+)>/.exec(out);

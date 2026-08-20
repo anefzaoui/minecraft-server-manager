@@ -262,7 +262,9 @@ router.get('/servers/live', (req, res) => {
       memUsedMb: e.stats ? Math.round(e.stats.memUsedBytes / 1024 / 1024) : null,
       players: e.players ? { online: e.players.online, max: e.players.max, names: e.players.names } : null,
       startedAt: e.startedAt || null,
-      phase: e.phase ? e.phase.label : null,
+      // Shared with the SSR statusDetail (viewModels.js) so the label the page
+      // rendered on load and the one this poll hydrates in can never disagree.
+      phase: liveCache.statusDetail(e),
     };
   }
   res.json({ ok: true, servers: out });

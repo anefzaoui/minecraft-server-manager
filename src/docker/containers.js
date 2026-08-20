@@ -172,16 +172,17 @@ async function removeContainer(serverId) {
 }
 
 /**
- * Run a command via docker exec and capture its output (used for rcon-cli).
- * A timeout guards against a hung exec (unresponsive/deadlocked JVM) leaving the
- * hijacked stream + connection open forever — critical because liveCache fires
- * this on an interval and hung calls would otherwise stack without bound.
+ * Run a command via docker exec and capture its raw output (+ exit code on
+ * request). A timeout guards against a hung exec (unresponsive/deadlocked JVM)
+ * leaving the hijacked stream + connection open forever — critical because
+ * liveCache fires this on an interval and hung calls would otherwise stack
+ * without bound.
  */
-async function execCapture(serverId, cmd, { timeoutMs = 15000 } = {}) {
+async function execRaw(serverId, cmd, { timeoutMs = 15000, wantExitCode = false } = {}) {
   const container = getContainer(serverId);
   const exec = await container.exec({ Cmd: cmd, AttachStdout: true, AttachStderr: true });
   const stream = await exec.start({});
-  return new Promise((resolve, reject) => {
+  const stdout = await new Promise((resolve, reject) => {
     const chunks = [];
     // Demux the Docker stream framing (8-byte headers).
     const out = { write: (b) => chunks.push(b) };
@@ -206,6 +207,45 @@ async function execCapture(serverId, cmd, { timeoutMs = 15000 } = {}) {
     stream.on('end', () => finish(resolve, Buffer.concat(chunks).toString('utf8')));
     stream.on('error', (err) => finish(reject, err));
   });
+  // The inspect is a second daemon round trip, opted into by the one caller
+  // that reads the code — everyone else skips both its cost and its failure
+  // modes. It must never hang past the timeout contract above, and it must
+  // never fail a command whose output was already captured: the exit code is
+  // best-effort, and null means "unknown" (callers already treat non-zero and
+  // unknown the same, as "not a confirmed success").
+  let exitCode = null;
+  if (wantExitCode) {
+    try {
+      const inspected = await Promise.race([
+        exec.inspect(),
+        new Promise((resolve) => setTimeout(resolve, timeoutMs, null).unref?.()),
+      ]);
+      if (inspected && typeof inspected.ExitCode === 'number') exitCode = inspected.ExitCode;
+    } catch {
+      /* exit code stays unknown */
+    }
+  }
+  return { stdout, exitCode };
+}
+
+/** Run a command via docker exec and capture its output (used for rcon-cli). */
+async function execCapture(serverId, cmd, opts = {}) {
+  const { stdout } = await execRaw(serverId, cmd, opts);
+  return stdout;
+}
+
+/**
+ * Like execCapture, but also resolves the command's exit code so callers can
+ * tell "ran successfully but printed something unexpected" apart from "the
+ * command itself failed" (e.g. rcon-cli exits non-zero and prints a connection
+ * error to stderr when RCON isn't listening yet — docker exec itself still
+ * succeeds since the container process is running, so execCapture alone can't
+ * distinguish that from a genuine, parseable response). The code is best-effort:
+ * `exitCode` is null when the daemon didn't answer the inspect in time, which
+ * callers must treat as "not a confirmed success", never as an error.
+ */
+async function execCaptureChecked(serverId, cmd, opts = {}) {
+  return execRaw(serverId, cmd, { ...opts, wantExitCode: true });
 }
 
 /**
@@ -282,4 +322,5 @@ module.exports = {
   removeDataDir,
   chownDataDir,
   execCapture,
+  execCaptureChecked,
 };
