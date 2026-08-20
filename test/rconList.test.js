@@ -51,3 +51,18 @@ test('keeps a Bedrock name glued to the 26.2 sentence period ("online..Steve")',
   // The sentence period before a space is still consumed as punctuation.
   assert.deepEqual(parsePlayerList('There are 1 out of maximum 20 players online. .Steve').names, ['.Steve']);
 });
+
+test('parses the 1.7.10-era Forge phrasing ("N/M") that every GTNH server speaks', () => {
+  // Verified against a live GTNH 2.7.4 server: `rcon-cli list` answers
+  // "There are 0/20 players online:".
+  assert.deepEqual(parsePlayerList('There are 0/20 players online:'), {
+    online: 0,
+    max: 20,
+    names: [],
+  });
+  assert.deepEqual(parsePlayerList('There are 2/20 players online: Steve, Alex'), {
+    online: 2,
+    max: 20,
+    names: ['Steve', 'Alex'],
+  });
+});
