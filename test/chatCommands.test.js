@@ -26,3 +26,16 @@ test('DANGEROUS_RE does not flag ordinary commands', () => {
     assert.equal(DANGEROUS_RE.test(cmd), false, `${cmd} should not be flagged`);
   }
 });
+
+test('DANGEROUS_RE does not flag free chat text that merely contains " run <verb>"', () => {
+  // `run` is a command-nesting keyword ONLY inside `execute`, so these are just
+  // arbitrary message payloads and must not be blocked for a non-ops trigger.
+  for (const cmd of [
+    'say we run stop now',
+    'msg someone run pardon me',
+    'tellraw @a {"text":"first one to run stop wins"}',
+    'me will run ban evasion later',
+  ]) {
+    assert.equal(DANGEROUS_RE.test(cmd), false, `${cmd} should not be flagged`);
+  }
+});

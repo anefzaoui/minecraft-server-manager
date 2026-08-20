@@ -25,10 +25,14 @@ const ARG_RE = /^[A-Za-z0-9_:\-.]{0,32}$/;
 const ACTIONS = new Set(['rtp', 'structure', 'biome', 'console']);
 const PERMISSIONS = new Set(['everyone', 'whitelist', 'ops']);
 // Console commands that can wreck a server — ops-only triggers may use them.
-// Matched both at the start of the command AND after a `run` keyword, since
-// `execute as @a at @s run stop` reaches the same effect via command nesting
-// and must not slip past a non-ops trigger just because it isn't first.
-const DANGEROUS_RE = /(^|\srun\s)\/?\s*(stop\b|op\s|deop\b|ban\b|ban-ip\b|pardon\b|pardon-ip\b|whitelist\b)/i;
+// Flagged when the command IS one of these (start of string) OR is an `execute`
+// chain that ends in `run <dangerous>` — `execute as @a at @s run stop` reaches
+// the same effect via command nesting and must not slip past a non-ops trigger.
+// The nesting branch is gated on a leading `execute` on purpose: `run` is only a
+// command-nesting keyword inside `execute`, so a plain `say we run stop now` is
+// arbitrary chat text, not a nested command, and must NOT be blocked.
+const DANGER = String.raw`stop\b|op\s|deop\b|ban\b|ban-ip\b|pardon\b|pardon-ip\b|whitelist\b`;
+const DANGEROUS_RE = new RegExp(String.raw`^\s*\/?\s*(?:(?:${DANGER})|execute\b.*\srun\s+\/?\s*(?:${DANGER}))`, 'i');
 const WHISPER_MAX = 120;
 const CACHE_MS = 60_000;
 

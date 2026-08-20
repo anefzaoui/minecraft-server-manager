@@ -72,6 +72,46 @@ test('safeJoin rejects a symlink that resolves outside the base', (t) => {
   }
 });
 
+test('safeJoin rejects a DANGLING symlink whose target is outside the base', (t) => {
+  // The nastier case: a symlink to a not-yet-existing outside path. existsSync
+  // follows the link and reports false, so a naive walk skips past it and lets a
+  // WRITE through the link land on the host outside the base. lstat catches it.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-guard-dangle-'));
+  const outsideTarget = path.join(os.tmpdir(), `msm-guard-nonexistent-${process.pid}`, 'newfile');
+  const linkPath = path.join(dir, 'danglink');
+  try {
+    fs.symlinkSync(outsideTarget, linkPath);
+  } catch (err) {
+    fs.rmSync(dir, { recursive: true, force: true });
+    t.skip(`cannot create symlinks in this environment: ${err.message}`);
+    return;
+  }
+  try {
+    assert.throws(() => safeJoin(dir, 'danglink'), PathEscapeError);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('safeJoin allows a dangling symlink whose target is inside the base', (t) => {
+  // Symmetric guard: a link to a not-yet-created path INSIDE the base is a
+  // legitimate "write here soon" and must not be rejected.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-guard-dangle-ok-'));
+  const linkPath = path.join(dir, 'pending');
+  try {
+    fs.symlinkSync(path.join(dir, 'sub', 'willcreate.txt'), linkPath);
+  } catch (err) {
+    fs.rmSync(dir, { recursive: true, force: true });
+    t.skip(`cannot create symlinks in this environment: ${err.message}`);
+    return;
+  }
+  try {
+    assert.doesNotThrow(() => safeJoin(dir, 'pending'));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('safeJoin allows a symlink that resolves inside the base', (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-guard-symlink-ok-'));
   const real = path.join(dir, 'real');

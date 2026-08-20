@@ -16,33 +16,67 @@ class PathEscapeError extends Error {
   }
 }
 
+// realpath(base) is stable at runtime (the data roots don't move), and safeJoin
+// is on the hot path for nearly every filesystem op — so resolve each base once
+// and reuse it, instead of a realpath syscall per call. A base that doesn't yet
+// exist caches nothing and is retried next time.
+const realBaseCache = new Map();
+function realBaseOf(base) {
+  const cached = realBaseCache.get(base);
+  if (cached !== undefined) return cached;
+  let real = null;
+  try {
+    real = fs.realpathSync.native(base);
+  } catch {
+    return null; // base doesn't exist yet — don't cache, retry later
+  }
+  realBaseCache.set(base, real);
+  return real;
+}
+
 /**
- * Reject a symlink escape the lexical check above can't see: walk up from
- * `resolved` to the nearest ancestor that actually exists, realpath it, and
- * confirm it's still inside `base`. A symlink planted under `base` (e.g. by a
- * mod/plugin running inside the Minecraft container) pointing at an absolute
- * host path would otherwise let the file manager follow it straight out.
- * The non-existent tail (if any) can't itself be a symlink, so checking the
- * deepest existing ancestor is sufficient.
+ * Reject a symlink escape the lexical check above can't see: find the deepest
+ * component of `resolved` that exists on disk, resolve it through any symlinks,
+ * and confirm it's still inside `base`. A symlink planted under `base` (e.g. by
+ * a mod/plugin running inside the Minecraft container) pointing at an absolute
+ * host path would otherwise let a read — or, via a dangling link, a write —
+ * follow it straight out.
  */
 function assertRealContainment(base, resolved, attempted) {
-  let realBase;
-  try {
-    realBase = fs.realpathSync.native(base);
-  } catch {
-    return; // base doesn't exist yet — nothing to escape
-  }
+  const realBase = realBaseOf(base);
+  if (realBase === null) return; // base doesn't exist yet — nothing to escape
+
+  // Walk up to the deepest component that exists AS A FILESYSTEM ENTRY, using
+  // lstat (which does NOT follow symlinks). existsSync follows links, so it
+  // returns false for a BROKEN symlink and would skip right past it — letting a
+  // write through `base/link` (link -> /outside/newfile, not yet created)
+  // escape base. lstat sees the link itself, so the dangling tail is caught.
   let dir = resolved;
-  while (!fs.existsSync(dir)) {
-    const parent = path.dirname(dir);
-    if (parent === dir) return; // reached filesystem root without an anchor
-    dir = parent;
+  for (;;) {
+    try {
+      fs.lstatSync(dir);
+      break;
+    } catch {
+      const parent = path.dirname(dir);
+      if (parent === dir) return; // reached filesystem root without an anchor
+      dir = parent;
+    }
   }
+
+  // Resolve that entry to its true location. realpath follows the whole symlink
+  // chain, catching an existing link out of base. If the deepest entry is a
+  // BROKEN symlink, realpath throws — resolve its target textually against the
+  // (real) parent instead, so an escape through a dangling link is still caught.
   let realDir;
   try {
     realDir = fs.realpathSync.native(dir);
   } catch {
-    return; // vanished between checks — the caller's own stat will 404
+    try {
+      const parentReal = fs.realpathSync.native(path.dirname(dir));
+      realDir = path.resolve(parentReal, fs.readlinkSync(dir));
+    } catch {
+      return; // vanished between checks — the caller's own op will fail
+    }
   }
   const rel = path.relative(realBase, realDir);
   if (rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
