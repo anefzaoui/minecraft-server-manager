@@ -430,7 +430,9 @@ const UPGRADE_STEP_LABELS = {
   stopping: 'Stopping server',
   applying: 'Re-pinning pack version',
   recreating: 'Recreating container',
-  monitoring: 'Starting & monitoring (up to 10 min)',
+  // No fixed minutes in the label: the window is per-platform (30 min for
+  // GTNH, 20 for CurseForge/Modrinth, 10 otherwise — see upgrade.js).
+  monitoring: 'Starting & monitoring the new version',
   overlay: 'Re-applying custom overlay mods',
 };
 
