@@ -133,26 +133,38 @@ async function attach(serverId) {
   }
 
   let playersInFlight = false;
+  let lastRestartCheckAt = 0;
   const refreshPlayers = async () => {
     if (playersInFlight) return; // don't stack calls if one is slow/hung
     playersInFlight = true;
     try {
-      // A missed 'start' Docker event (the events stream reconnects after
-      // drops — see watcher.js's retryLater()) can leave the DB status never
-      // leaving running/starting/unhealthy across a real container restart,
-      // so sync() never re-attaches and this stale latch would otherwise
-      // survive the restart. Only worth the extra inspect call in the exact
-      // state it can bite: latched "up" but never got a real player count.
-      if (entry.upConfirmed && !entry.players) {
+      // A container restart the cache didn't see must reset the latched state,
+      // or the old boot's player list / upConfirmed survive into the new boot
+      // as convincing-but-stale live data (verified live: a panel restart shows
+      // the previous list for the whole reboot and suppresses boot phases).
+      // sync() only detaches when the DB status leaves running/starting, and a
+      // restart's die→start usually completes inside one 10s sync interval, so
+      // the entry never detaches; a missed 'start' Docker event (the events
+      // stream reconnects after drops — see watcher.js's retryLater()) has the
+      // same effect. Compare Docker's own StartedAt whenever ANY latched state
+      // exists, throttled to once a minute to keep the extra inspect off the
+      // 20s hot path.
+      if ((entry.upConfirmed || entry.players) && Date.now() - lastRestartCheckAt > 60000) {
+        lastRestartCheckAt = Date.now();
         try {
           const info = await inspectStatus(serverId);
-          if (info.startedAt && info.startedAt !== entry.startedAt) {
+          if (info.startedAt && entry.startedAt && info.startedAt !== entry.startedAt) {
             entry.startedAt = info.startedAt;
+            entry.players = null; // the old boot's list is not this boot's
             entry.upConfirmed = false;
             entry.phase = null; // let refreshPhase classify the new boot
+          } else if (info.startedAt && !entry.startedAt) {
+            // attach() ran before the container was Running (startedAt null) —
+            // record the real boot time WITHOUT treating it as a restart.
+            entry.startedAt = info.startedAt;
           }
         } catch {
-          /* inspect failed — leave the latch as-is, retry next tick */
+          /* inspect failed — leave the latch as-is, retry next time */
         }
       }
 
