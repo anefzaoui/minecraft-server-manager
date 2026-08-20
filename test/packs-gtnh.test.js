@@ -146,9 +146,9 @@ test('resolvePack("gtnh") rejects a version that is not in the index', async () 
   }
 });
 
-test('packEnv("gtnh") pins the version and disables the image update check', () => {
+test('packEnv("gtnh") pins the version and does NOT skip the image check (it is the installer)', () => {
   const env = packs.packEnv({ platform: 'gtnh', projectRef: 'gtnh', versionId: '2.8.4' });
-  assert.deepEqual(env, { TYPE: 'GTNH', GTNH_PACK_VERSION: '2.8.4', SKIP_GTNH_UPDATE_CHECK: 'true' });
+  assert.deepEqual(env, { TYPE: 'GTNH', GTNH_PACK_VERSION: '2.8.4' });
 });
 
 test('applying GTNH over a CurseForge pin strips the stale CF_ vars', async () => {
@@ -175,8 +175,13 @@ test('applying a non-GTNH pack over a GTNH pin strips GTNH_PACK_VERSION and SKIP
     await packs.applyPack(id, resolved, { actor: 'test', force: true });
     let env = JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', id).env_json);
     assert.equal(env.GTNH_PACK_VERSION, '2.8.4');
-    assert.equal(env.SKIP_GTNH_UPDATE_CHECK, 'true');
-    db.run(`UPDATE servers SET env_json = ? WHERE id = ?`, JSON.stringify({ ...env, VIEW_DISTANCE: '10' }), id);
+    // Simulate a user having toggled the skip flag by hand: switching
+    // platforms must still strip it (SKIP_GTNH_ is in the strip prefixes).
+    db.run(
+      `UPDATE servers SET env_json = ? WHERE id = ?`,
+      JSON.stringify({ ...env, SKIP_GTNH_UPDATE_CHECK: 'true', VIEW_DISTANCE: '10' }),
+      id
+    );
 
     // Hand-built descriptor, the way the Task 3 tests do — no stub needed for a non-GTNH platform.
     await packs.applyPack(

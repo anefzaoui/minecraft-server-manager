@@ -27,6 +27,10 @@ test('the GTNH pack vars are catalogued and panel-managed', () => {
   assert.equal(version.section, 'packs');
   // Panel-managed: the installer UI owns it, so it must never render as a form field.
   assert.equal(version.hidden, true);
-  assert.equal(getField('env', 'SKIP_GTNH_UPDATE_CHECK').hidden, true);
+  // NOT panel-set and NOT hidden: the image's check doubles as its installer,
+  // so this is a user-visible advanced toggle with an off default.
+  const skip = getField('env', 'SKIP_GTNH_UPDATE_CHECK');
+  assert.equal(skip.hidden, undefined);
+  assert.equal(skip.default, false);
   assert.equal(getField('env', 'GTNH_DELETE_BACKUPS').type, 'boolean');
 });

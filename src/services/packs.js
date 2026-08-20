@@ -154,12 +154,16 @@ function packEnv(resolved) {
     return env;
   }
   if (resolved.platform === 'gtnh') {
+    // Deliberately NO SKIP_GTNH_UPDATE_CHECK here: the image's "update check"
+    // is also its INSTALLER — with the check skipped, a fresh server never
+    // downloads the pack at all and crash-loops on the missing files
+    // (verified live: "Skipping GTNH Update/Install" → "could not open
+    // `java9args.txt'"). Pinning GTNH_PACK_VERSION alone is what prevents
+    // silent upgrades: the image installs exactly the pinned version and the
+    // boot-time check just verifies the install matches the pin.
     return {
       TYPE: 'GTNH',
       GTNH_PACK_VERSION: resolved.versionId,
-      // The image runs its own update check on boot, which is redundant against
-      // a pinned version and would fight the panel for ownership of updates.
-      SKIP_GTNH_UPDATE_CHECK: 'true',
     };
   }
   return {

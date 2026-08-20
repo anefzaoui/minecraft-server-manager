@@ -411,11 +411,11 @@ module.exports = [
     key: 'SKIP_GTNH_UPDATE_CHECK',
     scope: 'env',
     label: 'Skip the image’s GTNH update check',
-    help: 'Stops the container checking for newer GTNH releases on every boot. The panel sets this because it pins the pack version itself and owns the update flow.',
+    help: 'Stops the container comparing the installed pack against GTNH_PACK_VERSION on boot. Leave off: the check is also the INSTALLER, so skipping it on a server whose pack hasn’t installed yet means the pack never downloads and the server crash-loops on missing files. The pinned version already prevents surprise upgrades.',
     type: 'boolean',
+    default: false,
     mode: 'advanced',
     section: 'packs',
-    hidden: true,
     requiresRestart: true,
   },
   {
