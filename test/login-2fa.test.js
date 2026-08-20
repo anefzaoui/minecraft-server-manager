@@ -176,3 +176,35 @@ test("an admin can force-reset another user's 2FA without their password", async
   const authed = await app.req('GET', '/api/servers/live', { cookie: cookie2 });
   assert.equal(authed.status, 200);
 });
+
+test('an admin cannot use the force-reset route on their own account (no password-free self-disable)', async () => {
+  const users = await app.req('GET', '/api/users', { cookie: adminCookie });
+  const adminId = users.json.users.find((u) => u.username === 'admin').id;
+  await enroll(adminCookie);
+
+  const selfReset = await app.req('POST', `/api/users/${adminId}/totp/disable`, { cookie: adminCookie, body: {} });
+  assert.equal(selfReset.status, 400);
+
+  // Still enabled — must go through the password-gated self-service path instead.
+  const stillOn = await app.req('POST', '/api/account/totp/disable', {
+    cookie: adminCookie,
+    body: { password: 'wrong' },
+  });
+  assert.equal(stillOn.status, 401);
+  await app.req('POST', '/api/account/totp/disable', { cookie: adminCookie, body: { password: 'supersecret123' } });
+});
+
+test('repeated wrong passwords against the self-service disable route get locked out', async () => {
+  await enroll(adminCookie);
+  let last;
+  for (let i = 0; i < 9; i++) {
+    last = await app.req('POST', '/api/account/totp/disable', { cookie: adminCookie, body: { password: 'wrong' } });
+  }
+  assert.equal(last.status, 429);
+  // Even the CORRECT password is refused while locked out.
+  const correctButLocked = await app.req('POST', '/api/account/totp/disable', {
+    cookie: adminCookie,
+    body: { password: 'supersecret123' },
+  });
+  assert.equal(correctButLocked.status, 429);
+});

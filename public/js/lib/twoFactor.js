@@ -49,7 +49,10 @@ async function openEnrollModal(trigger) {
           if (!res) return false;
           if (trigger) trigger.dataset.userTotpEnabled = '1';
           toast('Two-factor authentication is now enabled.');
-          showBackupCodes(res.backupCodes, 'Save your backup codes');
+          // Reload once they've saved their codes — the users table (Settings)
+          // and this dataset flag are both server-rendered/read at page-load,
+          // so a stale page would still show "off" until refreshed.
+          showBackupCodes(res.backupCodes, 'Save your backup codes', { reloadOnClose: true });
         },
       },
     ],
@@ -91,13 +94,14 @@ function openManageModal(trigger) {
           if (!res) return false;
           if (trigger) trigger.dataset.userTotpEnabled = '';
           toast('Two-factor authentication disabled.');
+          setTimeout(() => location.reload(), 600);
         },
       },
     ],
   });
 }
 
-function showBackupCodes(codes, title) {
+function showBackupCodes(codes, title, { reloadOnClose = false } = {}) {
   const content = document.createElement('div');
   content.className = 'space-y-3';
   const list = document.createElement('div');
@@ -120,7 +124,12 @@ function showBackupCodes(codes, title) {
   copyBtn.dataset.copy = codes.join('\n');
   content.append(list, warn, copyBtn);
 
-  openModal({ title, content, actions: [{ label: 'Done' }] });
+  openModal({
+    title,
+    content,
+    actions: [{ label: 'Done' }],
+    onClose: reloadOnClose ? () => location.reload() : undefined,
+  });
 }
 
 async function post(url, body) {
