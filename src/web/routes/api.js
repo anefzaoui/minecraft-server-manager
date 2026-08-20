@@ -387,9 +387,13 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const { platform, ref, versionId, mcVersion } = z
       .object({
-        platform: z.enum(['curseforge', 'modrinth', 'ftb']),
+        platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
         ref: z.string().trim().min(1).max(400),
-        versionId: z.string().trim().max(60).optional(),
+        versionId: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,64}$/)
+          .optional(),
         mcVersion: z.string().trim().max(32).optional(),
       })
       .parse(req.body);
@@ -401,9 +405,13 @@ router.post('/servers/:id/pack', async (req, res, next) => {
   try {
     const { platform, ref, versionId, force } = z
       .object({
-        platform: z.enum(['curseforge', 'modrinth', 'ftb']),
+        platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
         ref: z.string().trim().min(1).max(400),
-        versionId: z.string().trim().max(60).optional(),
+        versionId: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,64}$/)
+          .optional(),
         force: z.coerce.boolean().optional(),
       })
       .parse(req.body);
@@ -424,7 +432,9 @@ const UPGRADE_STEP_LABELS = {
   stopping: 'Stopping server',
   applying: 'Re-pinning pack version',
   recreating: 'Recreating container',
-  monitoring: 'Starting & monitoring (up to 10 min)',
+  // No fixed minutes in the label: the window is per-platform (30 min for
+  // GTNH, 20 for CurseForge/Modrinth, 10 otherwise — see upgrade.js).
+  monitoring: 'Starting & monitoring the new version',
   overlay: 'Re-applying custom overlay mods',
 };
 
@@ -436,7 +446,14 @@ router.post(
   asyncHandler((req, res, next) => {
     const { versionId, skipBackup } = z
       .object({
-        versionId: z.string().trim().max(60).optional(),
+        // Same shape constraint as the other pack versionId fields: this one
+        // reaches the exact same GTNH_PACK_VERSION/CF_FILE_ID/etc. container
+        // env path via upgradePack.
+        versionId: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,64}$/)
+          .optional(),
         skipBackup: z.coerce.boolean().optional(),
       })
       .parse(req.body);
@@ -609,6 +626,8 @@ router.get(
       if (!pin) throw Object.assign(new Error('This server has no managed modpack'), { status: 404 });
       if (pin.platform === 'ftb')
         throw Object.assign(new Error('FTB pack details are not supported yet'), { status: 400 });
+      if (pin.platform === 'gtnh')
+        throw Object.assign(new Error('GTNH pack details live on the GTNH site'), { status: 400 });
       platform = pin.platform;
       ref = pin.project_ref;
       installed = {
@@ -678,9 +697,13 @@ const fromPackSchema = z
       .string()
       .regex(/^#[0-9a-fA-F]{6}$/)
       .optional(),
-    platform: z.enum(['curseforge', 'modrinth', 'ftb']),
+    platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
     ref: z.string().trim().min(1).max(400),
-    versionId: z.string().trim().max(60).optional(),
+    versionId: z
+      .string()
+      .trim()
+      .regex(/^[\w.-]{1,64}$/)
+      .optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
     diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
@@ -724,7 +747,11 @@ router.post(
           extraPorts: input.extraPorts,
           extraBinds: input.extraBinds,
         },
-        { actor, start: false, onProgress: (s) => t.step(s) }
+        // javaTagHint (not persisted as java_tag — that column means "user override"):
+        // at create time there's no server_packs row yet, so resolveImage() would
+        // otherwise fall back to java17 for GTNH, pull that image, then immediately
+        // re-pull the correct one when the applyPack below flags a recreate.
+        { actor, start: false, onProgress: (s) => t.step(s), javaTagHint: resolved.javaTag }
       );
       t.step(`Pinning ${resolved.projectName} @ ${resolved.versionName}`);
       // force: fresh server — there is no world yet to version-guard.

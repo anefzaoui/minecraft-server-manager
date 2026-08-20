@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('./helpers/app');
 const eventsService = require('../src/events');
+const db = require('../src/db');
 
 let cookie;
 
@@ -66,4 +67,28 @@ test('console-label (extracted to servers service) sanitizes and 404s unknown se
   const ok = await app.req('PUT', '/api/servers/srv_label01/console-label', { cookie, body: { label: 'A§dmin\n\tX' } });
   assert.equal(ok.status, 200);
   assert.equal(ok.json.label, 'AdminX'); // § byte + control chars stripped
+});
+
+test('the pack platform enum accepts gtnh', async () => {
+  // Seed the cached index so the resolver never reaches the network.
+  db.run(
+    `INSERT INTO api_cache (key, value_json, fetched_at) VALUES ('gtnh:versions', ?, datetime('now'))
+     ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, fetched_at = excluded.fetched_at`,
+    JSON.stringify(require('./fixtures/gtnh-versions.json'))
+  );
+
+  // A bad version is rejected by the resolver with 404, not by the enum with 400.
+  const res = await app.req('POST', '/api/packs/resolve', {
+    cookie,
+    body: { platform: 'gtnh', ref: 'gtnh', versionId: 'definitely-not-a-version' },
+  });
+  assert.equal(res.status, 404);
+});
+
+test('an unknown pack platform is still rejected', async () => {
+  const res = await app.req('POST', '/api/packs/resolve', {
+    cookie,
+    body: { platform: 'technic', ref: 'tekkit' },
+  });
+  assert.equal(res.status, 400);
 });

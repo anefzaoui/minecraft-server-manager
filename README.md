@@ -383,6 +383,13 @@ form validates it.
 The image does **not** pick Java for you. The panel maps MC version → image tag
 (`java8/16/17/21/latest`) with a per-server override in Advanced settings.
 
+### GT New Horizons
+
+GTNH is installed from its own release index rather than CurseForge, and the panel always pins an
+exact pack version. Java is chosen per version from the index's own `maxJavaVersion`: GTNH 2.8.0 and
+later run on **Java 25** via the pack's bundled lwjgl3ify patches, older releases on Java 21 or 17.
+Budget **6 GB of heap and 20 GB of disk** to start — the wizard raises both for you.
+
 ### Disk quotas are panel-enforced
 
 Docker can't cap bind-mount disk usage, so a background size-indexer walks `./data`, caches sizes in

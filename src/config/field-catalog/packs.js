@@ -394,6 +394,42 @@ module.exports = [
     requiresRestart: true,
   },
 
+  // --- GT New Horizons ---
+  {
+    key: 'GTNH_PACK_VERSION',
+    scope: 'env',
+    label: 'GTNH pack version',
+    help: 'The exact GT New Horizons release to install. Managed by the modpack installer UI — the panel always pins a concrete version so restarts never upgrade the pack behind your back.',
+    type: 'text',
+    mode: 'advanced',
+    section: 'packs',
+    hidden: true,
+    note: 'Managed by the modpack installer UI',
+    requiresRestart: true,
+  },
+  {
+    key: 'SKIP_GTNH_UPDATE_CHECK',
+    scope: 'env',
+    label: 'Skip the image’s GTNH update check',
+    help: 'Stops the container comparing the installed pack against GTNH_PACK_VERSION on boot. Leave off: the check is also the INSTALLER, so skipping it on a server whose pack hasn’t installed yet means the pack never downloads and the server crash-loops on missing files. The pinned version already prevents surprise upgrades.',
+    type: 'boolean',
+    default: false,
+    mode: 'advanced',
+    section: 'packs',
+    requiresRestart: true,
+  },
+  {
+    key: 'GTNH_DELETE_BACKUPS',
+    scope: 'env',
+    label: 'Delete GTNH’s own backups on update',
+    help: 'Removes the backup copies the GTNH updater leaves behind in the server folder. The panel takes its own backups before any pack upgrade, so this mainly saves disk.',
+    type: 'boolean',
+    default: false,
+    mode: 'advanced',
+    section: 'packs',
+    requiresRestart: true,
+  },
+
   // --- Dangerous cleanup ---
   {
     key: 'REMOVE_OLD_MODS',

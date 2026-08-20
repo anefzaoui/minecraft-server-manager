@@ -10,11 +10,29 @@ function parseVersion(v) {
   return { major: +m[1], minor: +m[2], patch: +(m[3] || 0) };
 }
 
+// GTNH is a 1.7.10 pack that also runs on modern Java via its bundled lwjgl3ify
+// patches, and its release index states the highest Java each version supports.
+// Ladder down to the newest tag the panel actually ships that fits under the cap.
+const GTNH_JAVA_LADDER = [
+  { min: 25, tag: 'java25' },
+  { min: 21, tag: 'java21' },
+  { min: 17, tag: 'java17' },
+];
+
 /**
  * @param {string} mcVersion 'LATEST' | 'SNAPSHOT' | '1.20.4' | '26w02a'…
  * @param {string} type      itzg TYPE (FORGE needs java8 below 1.18)
+ * @param {object} options   { maxJavaVersion } — GTNH-specific cap
  */
-function pickJavaTag(mcVersion, type = 'VANILLA') {
+function pickJavaTag(mcVersion, type = 'VANILLA', { maxJavaVersion = null } = {}) {
+  // GTNH: the pinned pack version decides, not the 1.7.10 → java8 rule below.
+  // Unknown cap (no pin yet, or the index was unreachable) → java17, which every
+  // version in the GTNH index supports.
+  if (type === 'GTNH') {
+    const cap = Number.isInteger(maxJavaVersion) ? maxJavaVersion : 17;
+    if (cap < 17) return 'java8';
+    return (GTNH_JAVA_LADDER.find((step) => cap >= step.min) || { tag: 'java17' }).tag;
+  }
   // LATEST/SNAPSHOT and Mojang's 2026+ version scheme (e.g. "26.2") need the
   // newest Java the image ships (:latest tag) — verified live: 26.x class
   // files are version 69 (Java 25), which java21 refuses to load.

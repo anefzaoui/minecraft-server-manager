@@ -1,0 +1,55 @@
+{
+  "2.9.0-beta-2": {
+    "title": "Beta release",
+    "description": "<a href=\"https://github.com/GTNewHorizons/DreamAssemblerXXL/blob/master/releases/changelogs/changelog%20from%202.9.0-beta-1%20to%202.9.0-beta-2.md\">Click here to get the changelog</a>",
+    "releaseDate": "2026/07/05",
+    "maxJavaVersion": 25,
+    "server": {
+      "java8Url": "https://downloads.gtnewhorizons.com/ServerPacks/betas/GT_New_Horizons_2.9.0-beta-2_Server_Java_8.zip",
+      "java17_2XUrl": "https://downloads.gtnewhorizons.com/ServerPacks/betas/GT_New_Horizons_2.9.0-beta-2_Server_Java_17-25.zip"
+    }
+  },
+  "2.8.4": {
+    "title": "Stable release",
+    "description": "<a href=\"https://github.com/GTNewHorizons/DreamAssemblerXXL/blob/master/releases/changelogs/changelog%20from%202.8.3%20to%202.8.4.md\">Click here to get the changelog</a>",
+    "releaseDate": "2025/12/23",
+    "maxJavaVersion": 25,
+    "server": {
+      "java8Url": "https://downloads.gtnewhorizons.com/ServerPacks/GT_New_Horizons_2.8.4_Server_Java_8.zip",
+      "java17_2XUrl": "https://downloads.gtnewhorizons.com/ServerPacks/GT_New_Horizons_2.8.4_Server_Java_17-25.zip"
+    }
+  },
+  "2.7.4": {
+    "title": "Stable release",
+    "description": "<a href=\"https://github.com/GTNewHorizons/DreamAssemblerXXL/blob/master/releases/changelogs/changelog%20from%202.7.3%20to%202.7.4.md\">Click here to get the changelog</a>",
+    "releaseDate": "2025/04/13",
+    "maxJavaVersion": 21,
+    "server": {
+      "java8Url": "https://downloads.gtnewhorizons.com/ServerPacks/GT_New_Horizons_2.7.4_Server_Java_8.zip",
+      "java17_2XUrl": "https://downloads.gtnewhorizons.com/ServerPacks/GT_New_Horizons_2.7.4_Server_Java_17-21.zip"
+    }
+  },
+  "2.4.0": {
+    "title": "Stable release",
+    "description": "<a href=\"https://github.com/GTNewHorizons/DreamAssemblerXXL/blob/master/releases/changelogs/older%20changelogs/changelog%20from%202.3.0%20to%202.4.0.md\">Click here to get the changelog</a>",
+    "releaseDate": "2023/09/03",
+    "maxJavaVersion": 20,
+    "server": {
+      "java8Url": "https://downloads.gtnewhorizons.com/ServerPacks/GT_New_Horizons_2.4.0_Server_Java_8.zip",
+      "java17_2XUrl": "https://downloads.gtnewhorizons.com/ServerPacks/GT_New_Horizons_2.4.0_Server_Java_17-20.zip"
+    }
+  },
+  "9.9.9-synthetic-nojava": {
+    "title": "Stable release",
+    "description": "<a href=\"https://github.com/GTNewHorizons/DreamAssemblerXXL\">changelog</a>",
+    "releaseDate": "2026/01/01",
+    "server": { "java8Url": "https://downloads.gtnewhorizons.com/ServerPacks/synthetic_Java_8.zip" }
+  },
+  "9.9.8-synthetic-badlink": {
+    "title": "Stable release",
+    "description": "<a href=\"javascript:alert(1)\">changelog</a>",
+    "releaseDate": "2026/01/02",
+    "maxJavaVersion": 25,
+    "server": { "java17_2XUrl": "https://downloads.gtnewhorizons.com/ServerPacks/synthetic_Java_17-25.zip" }
+  }
+}

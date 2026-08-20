@@ -31,7 +31,8 @@
     {{#each packServers}}
       <div class="card cursor-pointer p-4 transition hover:border-line-strong hover:shadow-raised" style="border-top: 3px solid {{accent}}"
            data-pack-card data-server-id="{{id}}" data-server-name="{{name}}"
-           data-pack-name="{{pack.name}}" data-current="{{pack.version}}" data-latest="{{pack.latest}}">
+           data-pack-name="{{pack.name}}" data-current="{{pack.version}}" data-latest="{{pack.latest}}"
+           {{#if pack.latestVersionId}}data-version-id="{{pack.latestVersionId}}"{{/if}}>
         <div class="flex items-center gap-3">
           <img src="{{iconSrc this.icon}}" alt="" class="size-10 shrink-0 rounded-md" onerror="this.src='/icons/servers/grass.png'">
           <div class="min-w-0 flex-1">

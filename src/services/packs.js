@@ -13,10 +13,12 @@ const serversService = require('./servers');
 const modrinth = require('./modrinthApi');
 const curseforge = require('./curseforgeApi');
 const modsService = require('./mods');
+const gtnhApi = require('./gtnhApi');
+const { pickJavaTag } = require('./javaMatrix');
 
 /**
  * Resolve a pack reference to install candidates.
- * platform: 'curseforge' | 'modrinth' | 'ftb'
+ * platform: 'curseforge' | 'modrinth' | 'ftb' | 'gtnh'
  * ref: slug/URL/id — versionId optional (null → resolve latest now, then pin).
  */
 /**
@@ -30,7 +32,7 @@ function normalizeCurseforgeRef(ref) {
   return `https://www.curseforge.com/minecraft/modpacks/${s}`;
 }
 
-async function resolvePack(platform, ref, { versionId = null, mcVersion } = {}) {
+async function resolvePack(platform, ref, { versionId = null, mcVersion, includeBeta = false } = {}) {
   if (platform === 'curseforge') {
     const project = await curseforge.resolveUrl(normalizeCurseforgeRef(ref));
     const files = await curseforge.getFiles(project.modId, { mcVersion });
@@ -88,6 +90,45 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion } = {}) 
       mcVersion: null,
     };
   }
+  if (platform === 'gtnh') {
+    // GTNH is a single project with no search API: `ref` is the constant 'gtnh',
+    // and a pack version is its own id. The Minecraft version is hardcoded
+    // because the index does not state one — GTNH is a 1.7.10 pack by definition.
+    const all = await gtnhApi.listVersions({ includeBeta: true });
+    // includeBeta only matters when versionId is absent (pickLatest's default
+    // path) — an explicit versionId always resolves that exact entry regardless
+    // of channel. Callers that already know a pin's channel (the upgrade
+    // orchestrator) must pass it, or a beta-pinned server silently resolves to
+    // the newest stable instead of the newest beta.
+    const entry = versionId ? await gtnhApi.getVersion(String(versionId)) : gtnhApi.pickLatest(all, { includeBeta });
+    if (!entry) throw httpError(502, 'The GTNH release index returned no installable versions');
+    return {
+      platform,
+      projectRef: 'gtnh',
+      projectId: 'gtnh',
+      projectName: 'GT New Horizons',
+      iconUrl: null,
+      versionId: entry.version,
+      versionName: entry.version,
+      mcVersion: '1.7.10',
+      maxJavaVersion: entry.maxJavaVersion,
+      channel: entry.channel,
+      // Resolved here so the wizard can show the Java version without
+      // re-implementing the matrix in the browser.
+      javaTag: pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: entry.maxJavaVersion }),
+      changelogUrl: entry.changelogUrl,
+      // 'release' rather than 'stable': the version picker already suppresses
+      // the channel suffix for 'release', so GTNH options render like every
+      // other platform's with no display-code change.
+      allVersions: all.map((e) => ({
+        id: e.version,
+        name: e.version,
+        type: e.channel === 'beta' ? 'beta' : 'release',
+        date: e.releaseDate,
+        maxJavaVersion: e.maxJavaVersion,
+      })),
+    };
+  }
   throw httpError(400, `Unknown modpack platform: ${platform}`);
 }
 
@@ -111,6 +152,19 @@ function packEnv(resolved) {
     const loader = (resolved.loaders || []).find((l) => ['fabric', 'forge', 'neoforge', 'quilt'].includes(l));
     if (loader) env.MODRINTH_LOADER = loader;
     return env;
+  }
+  if (resolved.platform === 'gtnh') {
+    // Deliberately NO SKIP_GTNH_UPDATE_CHECK here: the image's "update check"
+    // is also its INSTALLER — with the check skipped, a fresh server never
+    // downloads the pack at all and crash-loops on the missing files
+    // (verified live: "Skipping GTNH Update/Install" → "could not open
+    // `java9args.txt'"). Pinning GTNH_PACK_VERSION alone is what prevents
+    // silent upgrades: the image installs exactly the pinned version and the
+    // boot-time check just verifies the install matches the pin.
+    return {
+      TYPE: 'GTNH',
+      GTNH_PACK_VERSION: resolved.versionId,
+    };
   }
   return {
     TYPE: 'FTBA',
@@ -142,14 +196,33 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
   }
 
   const previous = db.get('SELECT * FROM server_packs WHERE server_id = ?', serverId);
-  // Strip EVERY previous pack-selection/exclusion env var (CF_/MODRINTH_/FTB_)
+  // Strip EVERY previous pack-selection/exclusion env var (CF_/MODRINTH_/FTB_/GTNH_)
   // before merging the new pack env: switching platform (or even version)
   // must not leave stale slugs, file pins or exclusion lists behind. Unrelated
-  // user env is preserved.
+  // user env is preserved. SKIP_GTNH_ is its own prefix (not GTNH_-prefixed)
+  // because that env var name is dictated by the container image's contract.
   const cleanedEnv = Object.fromEntries(
-    Object.entries(server.env).filter(([key]) => !/^(CF_|MODRINTH_|FTB_)/.test(key))
+    Object.entries(server.env).filter(([key]) => !/^(CF_|MODRINTH_|FTB_|GTNH_|SKIP_GTNH_)/.test(key))
   );
   const env = { ...cleanedEnv, ...packEnv(resolved) };
+  // GTNH's own server start scripts ship -Dfml.queryResult=confirm, and the
+  // itzg launcher path loses it. Without it, the FIRST boot after any pack
+  // version change over an existing world blocks forever on Forge's
+  // "/fml confirm" world-migration console prompt — which RCON can't reach
+  // (it isn't listening yet), so the upgrade monitor burns its whole window
+  // and reports a timeout (verified live on a 2.7.4 → 2.8.4 world). The panel
+  // always takes a pre-update backup, so confirming is the intended path.
+  // Merge, don't clobber: a user-set JVM_DD_OPTS keeps its own pairs.
+  const FML_CONFIRM = 'fml.queryResult=confirm';
+  if (resolved.platform === 'gtnh') {
+    const user = cleanedEnv.JVM_DD_OPTS;
+    env.JVM_DD_OPTS = user ? (user.includes(FML_CONFIRM) ? user : `${user} ${FML_CONFIRM}`) : FML_CONFIRM;
+  } else if (previous && previous.platform === 'gtnh' && env.JVM_DD_OPTS) {
+    // Leaving GTNH: take back only the panel's own token; user pairs survive.
+    const stripped = env.JVM_DD_OPTS.split(/[\s,]+/).filter((pair) => pair && pair !== FML_CONFIRM);
+    if (stripped.length) env.JVM_DD_OPTS = stripped.join(' ');
+    else delete env.JVM_DD_OPTS;
+  }
   // The TYPE lives in its own column; keep env's TYPE out of the extras.
   const type = env.TYPE;
   delete env.TYPE;
@@ -161,12 +234,13 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
       : [type, JSON.stringify(env), serverId])
   );
   db.run(
-    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name, previous_version_id, previous_version_name)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name, previous_version_id, previous_version_name, max_java_version, channel)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(server_id) DO UPDATE SET
        platform = excluded.platform, project_ref = excluded.project_ref, project_name = excluded.project_name,
        pinned_version_id = excluded.pinned_version_id, pinned_version_name = excluded.pinned_version_name,
        previous_version_id = excluded.previous_version_id, previous_version_name = excluded.previous_version_name,
+       max_java_version = excluded.max_java_version, channel = excluded.channel,
        installed_at = datetime('now')`,
     serverId,
     resolved.platform,
@@ -175,7 +249,9 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
     resolved.versionId,
     resolved.versionName,
     previous ? previous.pinned_version_id : null,
-    previous ? previous.pinned_version_name : null
+    previous ? previous.pinned_version_name : null,
+    resolved.maxJavaVersion ?? null,
+    resolved.channel ?? null
   );
   recordEvent({
     serverId,
@@ -202,6 +278,23 @@ async function latestFor(serverId) {
   const pack = getPack(serverId);
   if (!pack) return null;
   if (pack.platform === 'ftb') return null; // FTB API not wired for checks yet
+  if (pack.platform === 'gtnh') {
+    // Track the channel this server was pinned from: a stable server must never
+    // be offered a beta, and a beta server should see beta releases.
+    const newest = await gtnhApi.latest({ includeBeta: pack.channel === 'beta' });
+    if (!newest) return null;
+    return {
+      current: { id: pack.pinned_version_id, name: pack.pinned_version_name },
+      latest: { id: newest.version, name: newest.version },
+      updateAvailable: newest.version !== pack.pinned_version_id,
+      projectName: pack.project_name,
+      projectRef: pack.project_ref,
+      platform: pack.platform,
+      // A real per-version diff link (from the index entry) rather than the
+      // generic "all files" page the checker falls back to for other platforms.
+      changelogUrl: newest.changelogUrl,
+    };
+  }
   // Scope "latest" to the server's own MC version — otherwise the checker
   // offers upgrades that silently cross MC versions.
   const server = serversService.getServer(serverId);
