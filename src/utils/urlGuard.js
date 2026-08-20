@@ -33,14 +33,49 @@ function isBlockedIpv4(ip) {
   return false;
 }
 
+/** Expand a (possibly `::`-compressed) IPv6 address to 8 explicit hex groups. */
+function expandIpv6(ip) {
+  let s = ip.toLowerCase();
+  if (s.includes('::')) {
+    const [head, tail] = s.split('::');
+    const headParts = head ? head.split(':') : [];
+    const tailParts = tail ? tail.split(':') : [];
+    const missing = 8 - headParts.length - tailParts.length;
+    s = [...headParts, ...Array(Math.max(0, missing)).fill('0'), ...tailParts].join(':');
+  }
+  return s.split(':');
+}
+
+/** IPv4-mapped IPv6 (`::ffff:a.b.c.d` or its fully-expanded hex form) -> dotted v4, else null. */
+function ipv6MappedIpv4(groups) {
+  if (groups.length !== 8) return null;
+  if (!groups.slice(0, 5).every((g) => g === '0' || g === '0000')) return null;
+  if (groups[5] !== 'ffff') return null;
+  const hi = parseInt(groups[6], 16);
+  const lo = parseInt(groups[7], 16);
+  if (!Number.isInteger(hi) || !Number.isInteger(lo)) return null;
+  return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join('.');
+}
+
 function isBlockedIpv6(ip) {
   const s = ip.toLowerCase();
   if (s === '::' || s === '::1') return true; // unspecified / loopback
   if (s.startsWith('fe80')) return true; // link-local
   if (s.startsWith('fc') || s.startsWith('fd')) return true; // unique-local
   if (s.startsWith('ff')) return true; // multicast
+  // Catches every IPv4-mapped spelling, not just the textual "::ffff:a.b.c.d"
+  // shorthand — e.g. the fully-expanded "0:0:0:0:0:ffff:7f00:1" (=127.0.0.1).
+  const mapped = ipv6MappedIpv4(expandIpv6(s));
+  if (mapped) return isBlockedIpv4(mapped);
   return false;
 }
+
+// Alternate IPv4 encodings (decimal, octal, hex, short-dotted) that net.isIP()
+// doesn't recognize as a literal IP but that some resolvers still parse —
+// e.g. 127.0.0.1 written as 2130706433, 0x7f000001, or 127.1. Whether a given
+// libc's getaddrinfo actually accepts these is resolver-dependent, so refuse
+// outright rather than gamble on it; real hostnames never look like this.
+const AMBIGUOUS_NUMERIC_HOST_RE = /^[0-9a-fx.]+$/i;
 
 function isBlockedIp(ip) {
   // Normalize IPv4-mapped IPv6 (::ffff:1.2.3.4) to its v4 form.
@@ -65,6 +100,8 @@ async function assertPublicUrl(rawUrl) {
   let addrs;
   if (net.isIP(host)) {
     addrs = [host];
+  } else if (AMBIGUOUS_NUMERIC_HOST_RE.test(host)) {
+    throw httpError(400, `Refusing to resolve an ambiguous numeric host (${host})`);
   } else {
     let results;
     try {
@@ -97,4 +134,4 @@ async function safeFetch(rawUrl, options = {}) {
   throw httpError(502, `Too many redirects (more than ${MAX_REDIRECTS})`);
 }
 
-module.exports = { safeFetch, assertPublicUrl, isBlockedIp };
+module.exports = { safeFetch, assertPublicUrl, isBlockedIp, AMBIGUOUS_NUMERIC_HOST_RE };

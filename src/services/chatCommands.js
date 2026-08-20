@@ -25,7 +25,10 @@ const ARG_RE = /^[A-Za-z0-9_:\-.]{0,32}$/;
 const ACTIONS = new Set(['rtp', 'structure', 'biome', 'console']);
 const PERMISSIONS = new Set(['everyone', 'whitelist', 'ops']);
 // Console commands that can wreck a server — ops-only triggers may use them.
-const DANGEROUS_RE = /^\s*\/?\s*(stop\b|op\s|deop\b|ban\b|ban-ip\b|pardon\b|pardon-ip\b|whitelist\b)/i;
+// Matched both at the start of the command AND after a `run` keyword, since
+// `execute as @a at @s run stop` reaches the same effect via command nesting
+// and must not slip past a non-ops trigger just because it isn't first.
+const DANGEROUS_RE = /(^|\srun\s)\/?\s*(stop\b|op\s|deop\b|ban\b|ban-ip\b|pardon\b|pardon-ip\b|whitelist\b)/i;
 const WHISPER_MAX = 120;
 const CACHE_MS = 60_000;
 
@@ -641,4 +644,5 @@ module.exports = {
   actionSummary,
   TRIGGER_RE,
   PREFIX_RE,
+  DANGEROUS_RE,
 };
