@@ -5,7 +5,12 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
-## [Unreleased]
+## [0.9.7] - 2026-08-20
+
+Two community contributions, both runtime-tested against live servers before merge: GT New
+Horizons becomes a first-class modpack platform (thanks @pharomwinters), and the server-status
+pipeline learns every known `/list` phrasing plus a set of live-cache hardening fixes
+(thanks @doubleangels).
 
 ### Added
 
@@ -19,9 +24,29 @@ its own dated entry.
   still wins.
 - GTNH packs take part in update checks (respecting the channel they were pinned from), blueprint
   export/import, and the guarded upgrade flow with pre-update backup and rollback.
+- GTNH pack changes pass Forge's world-migration auto-confirm flag (`-Dfml.queryResult=confirm`,
+  the same one GTNH's own start scripts use), so upgrading a pack over an existing world no longer
+  blocks forever on a console prompt nothing can answer. The pre-update backup remains the safety
+  net.
 
 ### Fixed
 
+- **Server cards no longer get stuck on a boot-phase label** (e.g. "Finishing startup") when a
+  server's `/list` reply isn't parseable. The parser now knows all three known phrasings — vanilla
+  "N of a max of M", Paper 26.2's "N out of maximum M", and the 1.7.10-era "N/M" every GTNH server
+  speaks — and when none match but RCON answers cleanly, the card shows "Player count unavailable"
+  instead of a stale boot phase.
+- The two copies of the `/list` regex (live cache and player service) are consolidated into one
+  shared parser, closing a live-save corruption hazard: an unparseable player list used to read as
+  "nobody online", which could let a player's `.dat` file be edited on disk while they were on the
+  server.
+- A container restart the live cache missed no longer keeps the previous boot's player list and
+  uptime as live data; all latched state resets when Docker's own start time changes.
+- `docker exec` calls no longer pay an extra daemon round trip per command, and a command whose
+  output was already captured can no longer be reported as failed by a late inspect error.
+- Fresh GTNH installs actually install: the panel no longer sets `SKIP_GTNH_UPDATE_CHECK`, which
+  told the image to skip the code path that downloads the pack in the first place and crash-looped
+  every new GTNH server on missing files.
 - Pack upgrades no longer time out at 10 minutes for GTNH, which downloads a ~1–2 GB server pack
   and builds a several-hundred-mod world on first boot; it now gets 30 minutes before the upgrade
   is treated as failed.
