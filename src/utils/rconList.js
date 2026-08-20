@@ -14,10 +14,16 @@
 const { PLAYER_NAME_RE } = require('./playerName');
 
 // The trailing period only counts as punctuation when it's followed by
-// whitespace or end-of-string — otherwise a Bedrock name's leading "."
-// (e.g. ".Steve" landing right after the colon with no space) would get
-// eaten as the optional period instead of staying in the name capture.
-const LIST_RE = /There are (\d+) (?:of a max of|out of maximum) (\d+) players online:?(?:\.(?=\s|$))?\s*(.*)/i;
+// whitespace, end-of-string, or another period — otherwise a Bedrock name's
+// leading "." (e.g. ".Steve" landing right after the colon with no space)
+// would get eaten as the optional period instead of staying in the name
+// capture. The extra-period case is the 26.2 mirror of that: "online..Steve"
+// is the sentence period plus Bedrock ".Steve", so the first "." is consumed
+// and the second stays with the name. A lone "online.Steve" is genuinely
+// ambiguous (sentence period + Java "Steve", or no period + Bedrock
+// ".Steve") — we keep the Bedrock reading since not consuming the period is
+// the conservative parse.
+const LIST_RE = /There are (\d+) (?:of a max of|out of maximum) (\d+) players online:?(?:\.(?=\s|$|\.))?\s*(.*)/i;
 
 /**
  * @param {string} text - ANSI/§-stripped `rcon-cli list` output.

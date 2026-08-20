@@ -45,3 +45,9 @@ test('keeps a Bedrock name\'s leading "." when it lands right after the colon wi
   assert.deepEqual(parsePlayerList('There are 1 of a max of 20 players online:.Steve').names, ['.Steve']);
   assert.deepEqual(parsePlayerList('There are 1 out of maximum 20 players online:.Steve').names, ['.Steve']);
 });
+
+test('keeps a Bedrock name glued to the 26.2 sentence period ("online..Steve")', () => {
+  assert.deepEqual(parsePlayerList('There are 1 out of maximum 20 players online..Steve').names, ['.Steve']);
+  // The sentence period before a space is still consumed as punctuation.
+  assert.deepEqual(parsePlayerList('There are 1 out of maximum 20 players online. .Steve').names, ['.Steve']);
+});

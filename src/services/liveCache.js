@@ -90,6 +90,21 @@ function getAll() {
   return out;
 }
 
+/**
+ * The status-detail chip for a live entry, or null when there's nothing to
+ * show. One definition shared by the SSR view model and the live-poll JSON
+ * route, so the label a page renders on load can't drift from the one the
+ * poll swaps in. While the server hasn't answered rcon yet the boot phase
+ * wins; "Player count unavailable" is the latched "rcon answers but /list is
+ * unparseable" state; a parsed player list means neither applies.
+ */
+function statusDetail(live) {
+  if (live.players) return null;
+  if (live.phase) return live.phase.label;
+  if (live.upConfirmed) return 'Player count unavailable';
+  return null;
+}
+
 async function attach(serverId) {
   if (entries.has(serverId)) return;
   const entry = {
@@ -238,4 +253,4 @@ async function sampleOnce(serverId) {
   }
 }
 
-module.exports = { get, getAll, startLiveCache, sync, detach, sampleOnce };
+module.exports = { get, getAll, statusDetail, startLiveCache, sync, detach, sampleOnce };
