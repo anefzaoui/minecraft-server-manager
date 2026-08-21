@@ -46,13 +46,22 @@ test('verify() allows ±1 step of clock drift by default', () => {
   assert.notEqual(nextStep, null);
 });
 
-test('verify() rejects replaying a code at or before lastStep', () => {
+test('verify() rejects replaying a code at or before lastStep (within the drift window)', () => {
   const step = totp.verify(RFC_SECRET, '287082', { atMs: 59_000 }); // step 1
   assert.equal(step, 1);
-  const replay = totp.verify(RFC_SECRET, '287082', { atMs: 59_000, lastStep: step });
-  assert.equal(replay, null);
-  const replayEarlier = totp.verify(RFC_SECRET, '287082', { atMs: 59_000, lastStep: step + 5 });
-  assert.equal(replayEarlier, null);
+  // Same step already used — replay.
+  assert.equal(totp.verify(RFC_SECRET, '287082', { atMs: 59_000, lastStep: step }), null);
+  // A near-future lastStep (the +1 drift step legitimately consumed) still blocks
+  // reuse of any code in the current window.
+  assert.equal(totp.verify(RFC_SECRET, '287082', { atMs: 59_000, lastStep: step + 1 }), null);
+});
+
+test('verify() ignores a stale future lastStep so a backward clock correction cannot lock the user out', () => {
+  // lastStep sits well beyond the drift window: the clock ran fast at last login
+  // and was corrected backward (NTP). A genuine current code must still work,
+  // rather than every candidate being skipped as a replay forever.
+  const step = totp.verify(RFC_SECRET, '287082', { atMs: 59_000, lastStep: 1 + 5 });
+  assert.equal(step, 1);
 });
 
 test('generateSecret() returns a valid base32 string that round-trips through base32Decode', () => {
@@ -66,6 +75,15 @@ test('buildOtpauthUrl() embeds the secret, issuer, and account', () => {
   assert.match(url, /^otpauth:\/\/totp\//);
   assert.match(url, /secret=JBSWY3DPEHPK3PXP/);
   assert.match(url, /alice/);
+});
+
+test('buildOtpauthUrl() percent-encodes spaces in the issuer (no "+" that apps show literally)', () => {
+  const url = totp.buildOtpauthUrl('JBSWY3DPEHPK3PXP', { account: 'alice' });
+  // The default issuer "Minecraft Server Manager" must appear as %20, never "+",
+  // so it byte-matches the label prefix and apps like Google Authenticator don't
+  // display "Minecraft+Server+Manager".
+  assert.match(url, /issuer=Minecraft%20Server%20Manager/);
+  assert.doesNotMatch(url, /issuer=[^&]*\+/);
 });
 
 test('codeAt() produces a code that verify() accepts at the same instant', () => {

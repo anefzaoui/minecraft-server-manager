@@ -60,14 +60,21 @@ function generateSecret() {
 /** otpauth:// URI for QR/manual enrollment — issuer + account label, standard params. */
 function buildOtpauthUrl(secret, { issuer = 'Minecraft Server Manager', account }) {
   const label = encodeURIComponent(`${issuer}:${account}`);
-  const params = new URLSearchParams({
-    secret,
-    issuer,
-    algorithm: 'SHA1',
-    digits: String(DIGITS),
-    period: String(STEP_SECONDS),
-  });
-  return `otpauth://totp/${label}?${params.toString()}`;
+  // Build the query with encodeURIComponent, NOT URLSearchParams: the latter
+  // form-encodes a space as '+', but per RFC 3986 a '+' in a URI query is a
+  // literal plus, so apps that don't apply x-www-form-urlencoded decoding
+  // (Google Authenticator among them) show the issuer as "Minecraft+Server+
+  // Manager" and see it as conflicting with the %20-encoded label prefix.
+  const params = [
+    ['secret', secret],
+    ['issuer', issuer],
+    ['algorithm', 'SHA1'],
+    ['digits', String(DIGITS)],
+    ['period', String(STEP_SECONDS)],
+  ]
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+    .join('&');
+  return `otpauth://totp/${label}?${params}`;
 }
 
 function hotp(secretBytes, counter) {
@@ -100,9 +107,16 @@ function verify(secret, code, { lastStep = null, window = 1, atMs = Date.now() }
   const secretBytes = base32Decode(secret);
   if (!secretBytes.length) return null;
   const step = currentStep(atMs);
+  // Ignore a stored lastStep that sits in the future beyond the drift window:
+  // that means the clock ran fast at last login and has since been corrected
+  // backward (NTP). Left active, every candidate in the current window is
+  // `<= lastStep` and gets skipped as a replay, locking the user out until wall
+  // time catches back up. It can only ever legitimately be within [step-window,
+  // step+window]; anything past that is stale, not a real prior use.
+  const replayFloor = lastStep != null && lastStep <= step + window ? lastStep : null;
   for (let delta = -window; delta <= window; delta++) {
     const candidateStep = step + delta;
-    if (lastStep != null && candidateStep <= lastStep) continue; // replay
+    if (replayFloor != null && candidateStep <= replayFloor) continue; // replay
     const expected = hotp(secretBytes, candidateStep);
     if (crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(cleanCode))) return candidateStep;
   }

@@ -32,6 +32,10 @@ async function openEnrollModal(trigger) {
     <div>
       <label class="label" for="tf-confirm-code">Enter the 6-digit code from your app</label>
       <input class="input font-mono text-center text-lg tracking-[0.3em]" id="tf-confirm-code" inputmode="numeric" maxlength="6" placeholder="000000">
+    </div>
+    <div>
+      <label class="label" for="tf-confirm-password">Confirm your password</label>
+      <input class="input" id="tf-confirm-password" type="password" autocomplete="current-password" placeholder="Your account password">
     </div>`;
 
   openModal({
@@ -45,7 +49,8 @@ async function openEnrollModal(trigger) {
         busyLabel: 'Verifying…',
         onClick: async () => {
           const code = content.querySelector('#tf-confirm-code').value.trim();
-          const res = await post('/api/account/totp/confirm', { secret: setup.secret, code });
+          const password = content.querySelector('#tf-confirm-password').value;
+          const res = await post('/api/account/totp/confirm', { secret: setup.secret, code, password });
           if (!res) return false;
           if (trigger) trigger.dataset.userTotpEnabled = '1';
           toast('Two-factor authentication is now enabled.');

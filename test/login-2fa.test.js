@@ -16,14 +16,14 @@ test.after(async () => {
   await app.stop();
 });
 
-/** Enroll 2FA on the given (already-authenticated) account and return its secret + fresh cookie jar reference. */
-async function enroll(cookie) {
+/** Enroll 2FA on the given (already-authenticated) account and return its secret + backup codes. */
+async function enroll(cookie, password = 'supersecret123') {
   const setup = await app.req('POST', '/api/account/totp/setup', { cookie, body: {} });
   assert.equal(setup.status, 200);
   const code = totp.codeAt(setup.json.secret);
   const confirm = await app.req('POST', '/api/account/totp/confirm', {
     cookie,
-    body: { secret: setup.json.secret, code },
+    body: { secret: setup.json.secret, code, password },
   });
   assert.equal(confirm.status, 200);
   return { secret: setup.json.secret, backupCodes: confirm.json.backupCodes };
@@ -37,13 +37,32 @@ test('self-service setup/confirm rejects a wrong code and never persists the sec
 
   const bad = await app.req('POST', '/api/account/totp/confirm', {
     cookie: adminCookie,
-    body: { secret: setup.json.secret, code: '000000' },
+    body: { secret: setup.json.secret, code: '000000', password: 'supersecret123' },
   });
   assert.equal(bad.status, 400);
 
   // Never confirmed — logging in still needs only a password, no /login/2fa hop.
   const login = await app.req('POST', '/login', { body: { username: 'admin', password: 'supersecret123' } });
   assert.equal(login.status, 302);
+});
+
+test('enabling 2FA requires the account password (blocks a session-only enroll takeover)', async () => {
+  const setup = await app.req('POST', '/api/account/totp/setup', { cookie: adminCookie, body: {} });
+  assert.equal(setup.status, 200);
+  const code = totp.codeAt(setup.json.secret);
+  // Valid secret + valid code but WRONG password must not enable 2FA.
+  const wrong = await app.req('POST', '/api/account/totp/confirm', {
+    cookie: adminCookie,
+    body: { secret: setup.json.secret, code, password: 'not-the-password' },
+  });
+  assert.equal(wrong.status, 401);
+  // And the account is still 2FA-less: a password login fully authenticates
+  // (a protected route returns 200), rather than parking on a pending 2FA step.
+  const login = await app.req('POST', '/login', { body: { username: 'admin', password: 'supersecret123' } });
+  assert.equal(login.status, 302);
+  const cookie = (login.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+  const authed = await app.req('GET', '/api/servers/live', { cookie });
+  assert.equal(authed.status, 200);
 });
 
 test('enrolling forks the login flow onto /login/2fa, and a correct code completes it', async () => {
@@ -102,7 +121,7 @@ test('confirm refuses to silently replace an already-enabled secret', async () =
   const code = totp.codeAt(setup.json.secret);
   const confirm = await app.req('POST', '/api/account/totp/confirm', {
     cookie: adminCookie,
-    body: { secret: setup.json.secret, code },
+    body: { secret: setup.json.secret, code, password: 'supersecret123' },
   });
   assert.equal(confirm.status, 409);
 
@@ -147,7 +166,7 @@ test('a viewer (read-only role) can still manage their own 2FA', async () => {
   const code = totp.codeAt(setup.json.secret);
   const confirm = await app.req('POST', '/api/account/totp/confirm', {
     cookie: viewerCookie,
-    body: { secret: setup.json.secret, code },
+    body: { secret: setup.json.secret, code, password: 'viewerpass123' },
   });
   assert.equal(confirm.status, 200);
 });
@@ -160,7 +179,7 @@ test("an admin can force-reset another user's 2FA without their password", async
   const userId = create.json.user.id;
   const login = await app.req('POST', '/login', { body: { username: 'resetme', password: 'resetmepass123' } });
   const userCookie = (login.setCookie || []).map((c) => c.split(';')[0]).join('; ');
-  await enroll(userCookie);
+  await enroll(userCookie, 'resetmepass123');
 
   // Non-admin cannot reset their own (or anyone's) 2FA through the admin route.
   const denied = await app.req('POST', `/api/users/${userId}/totp/disable`, { cookie: userCookie, body: {} });

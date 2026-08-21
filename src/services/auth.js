@@ -101,17 +101,20 @@ function beginTotpEnrollment(id) {
   return { secret, otpauthUrl: totp.buildOtpauthUrl(secret, { account: user.username }) };
 }
 
-/** Verify the first live code, then persist the secret + fresh backup codes. */
-function confirmTotp(id, secret, code, { actor = 'system' } = {}) {
+/** Verify the account password + the first live code, then persist the secret + backup codes. */
+function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
-  // A session with no password re-check could otherwise silently swap an
-  // already-configured secret out from under the account (the UI never offers
-  // this path, but the API must not rely on that) — require disableTotp's
-  // password check first, same as everywhere else 2FA state changes.
   if (user.totp_enabled) {
     throw httpError(409, 'Two-factor authentication is already enabled — disable it first to re-enroll.');
   }
+  // Re-check the account's own password before ENABLING 2FA, exactly as disable
+  // and regenerate do. Without it, a hijacked-but-unlocked session (no password
+  // needed) could enroll the attacker's OWN authenticator on an account with no
+  // 2FA yet — locking the real owner out on their next login until an admin
+  // force-reset. The UI always sends the password; the API must not rely on that.
+  // Checked before the code so it can't double as a code-verification oracle.
+  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'Wrong password');
   if (totp.verify(secret, code) == null) {
     throw httpError(400, 'That code is incorrect or expired — try the next one your app shows.');
   }
