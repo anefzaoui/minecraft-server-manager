@@ -5,6 +5,46 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.9.8] - 2026-08-21
+
+Account security lands: opt-in two-factor authentication for every account, plus a round of
+security hardening across the file manager, the SSRF guard, the chat-command gate, and the map
+proxy. Both are community contributions from @doubleangels, each reviewed and runtime-tested
+(including a full upgrade of a populated 0.9.7 install) before merge. New [documentation](docs/)
+ships alongside.
+
+### Added
+
+- **Two-factor authentication (TOTP).** Any account — admin, operator, or viewer — can protect its
+  login with a standard authenticator app (Google Authenticator, Authy, 1Password, and the like).
+  Enroll by scanning a QR code (or entering the key by hand) and confirming a code plus your
+  password; you're given ten one-time **backup codes** for when your phone isn't around. Signing in
+  gains a second step that asks for the code, and the half-finished session is never treated as
+  authenticated until it's passed. Manage or turn off 2FA from the account menu (password required),
+  and admins can reset another user's 2FA from **Settings → Users** for the lost-device case. See the
+  [two-factor authentication guide](docs/two-factor-authentication.md).
+- **A documentation site under [`docs/`](docs/README.md)** — a main index linking to focused,
+  screenshotted guides for the dashboard, servers, console & chat commands, modpacks, worlds & files,
+  backups, blueprints, schedules, storage, updates, activity, users & roles, and 2FA.
+
+### Fixed / Security
+
+- **File-manager path containment now covers symlinks.** Every file operation already refused `..`
+  traversal and absolute paths; it now also rejects symlinks that resolve outside a server's data
+  directory — including dangling links to a not-yet-existing target — so a mod or plugin can't plant
+  a link to read or write elsewhere on the host.
+- **SSRF guard hardened.** Server-side fetches of user-supplied URLs (mod and icon downloads) now
+  block additional IPv4-mapped IPv6 spellings of internal addresses (leading-zero groups and the
+  embedded dotted-quad form) that previously slipped through to loopback and cloud-metadata, while
+  still allowing ordinary public domains.
+- **Chat-command gate tightened.** Dangerous console commands (`stop`, `op`, `ban`, …) are blocked on
+  low-permission triggers even when nested inside an `execute … run …` chain, without wrongly
+  blocking ordinary chat text that merely mentions those words.
+- **Map proxy no longer forwards your session.** The BlueMap proxy strips the panel session cookie
+  and any authorization header before forwarding, so it can't leak to a target reachable by other
+  containers on a shared Docker network.
+- Fixed the account-menu **Sign out** button doing nothing when its click raced the menu closing.
+
 ## [0.9.7] - 2026-08-20
 
 Two community contributions, both runtime-tested against live servers before merge: GT New
