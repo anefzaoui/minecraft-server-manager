@@ -14,6 +14,8 @@ copy to migrate.**
   <img src="docs/screenshots/01-dashboard.png" alt="Dashboard with all Minecraft servers at a glance" width="920">
 </p>
 
+> **📚 New here?** The **[full documentation](docs/README.md)** walks through every feature with screenshots: [getting started](docs/getting-started.md), [servers](docs/servers.md), [modpacks](docs/modpacks.md), [backups](docs/backups.md), [two-factor auth](docs/two-factor-authentication.md), and more.
+
 ---
 
 ## Features
@@ -50,6 +52,10 @@ copy to migrate.**
 - **History & crash reports**: every action (lifecycle, config diffs, mods, packs, backups, RCON,
   player actions, schedules) is a structured event with actor and captured log excerpts. Crash
   reports are auto-detected, parsed (exception + suspected mods), and exportable.
+- **Accounts & two-factor auth**: multi-user with **admin / operator / viewer** roles, plus optional
+  **two-factor authentication (TOTP)** for any account. Enroll with any authenticator app (Google
+  Authenticator, Authy, 1Password, …), keep one-time backup codes, and reset a locked-out user as an
+  admin. See the [2FA guide](docs/two-factor-authentication.md).
 
 **Beyond the basics** (all shipped, all self-hosted)
 
@@ -381,14 +387,15 @@ form validates it.
 ### Java version selection
 
 The image does **not** pick Java for you. The panel maps MC version → image tag
-(`java8/16/17/21/latest`) with a per-server override in Advanced settings.
+(`java8/16/17/21/25/latest`) with a per-server override in Advanced settings.
 
 ### GT New Horizons
 
 GTNH is installed from its own release index rather than CurseForge, and the panel always pins an
 exact pack version. Java is chosen per version from the index's own `maxJavaVersion`: GTNH 2.8.0 and
 later run on **Java 25** via the pack's bundled lwjgl3ify patches, older releases on Java 21 or 17.
-Budget **6 GB of heap and 20 GB of disk** to start — the wizard raises both for you.
+Budget **6 GB of heap and 20 GB of disk** to start — the wizard raises both for you. See the
+[modpacks guide](docs/modpacks.md) for the full pack workflow.
 
 ### Disk quotas are panel-enforced
 
@@ -417,13 +424,18 @@ node scripts/reset-password.js <username>
 
 - **Localhost-only by default**: binds `127.0.0.1` out of the box; LAN/internet exposure is an explicit opt-in.
 - Session auth (SQLite-backed), bcrypt password hashes, login rate-limiting, first-run admin setup.
+- **Two-factor authentication (TOTP)**: opt-in per account (any role), with one-time backup codes and an
+  admin reset path; the login rate-limit is shared across the password and code steps so a correct
+  password can't reset the counter before code-guessing.
 - Roles: **admin / operator / viewer**, enforced on every mutating request (user management in Settings).
 - `SameSite=Strict` cookies + Origin checks on all state-changing requests; WebSockets authenticate
   the session cookie on upgrade. Security headers (CSP, `X-Frame-Options`, `nosniff`) on every response.
 - Secrets encrypted at rest (AES-256-GCM), and never readable through the file manager. Blueprints strip
   secrets on export.
-- Every file path is validated against escape from `./data`; archive extraction is zip-slip-guarded
-  and size-capped. Server-side downloads (mods, icons) are SSRF-guarded against private/internal addresses.
+- Every file path is validated against escape from `./data` (including symlinks that resolve outside it);
+  archive extraction is zip-slip-guarded and size-capped. Server-side downloads (mods, icons) are
+  SSRF-guarded against private/internal addresses. The BlueMap proxy never forwards your session cookie
+  to the map container.
 
 ## Architecture
 
