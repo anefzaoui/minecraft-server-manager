@@ -103,13 +103,19 @@ router.use('/:id', async (req, res) => {
 
   const target = await resolveTarget(server, cfg);
 
+  // Never forward the panel session cookie (or an Authorization header) to the
+  // proxied target — it's just BlueMap's static web UI and doesn't need it,
+  // and the target may be reachable by other containers on a shared Docker
+  // network (see the module comment above), which would otherwise leak it.
+  const { cookie: _cookie, authorization: _authorization, ...forwardHeaders } = req.headers;
+
   const upstream = http.request(
     {
       host: target.host,
       port: target.port,
       path: req.url === '/' ? '/' : req.url,
       method: req.method,
-      headers: { ...req.headers, host: `${target.host}:${target.port}` },
+      headers: { ...forwardHeaders, host: `${target.host}:${target.port}` },
       timeout: 20000,
     },
     (up) => {

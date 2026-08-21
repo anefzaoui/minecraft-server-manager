@@ -33,13 +33,73 @@ function isBlockedIpv4(ip) {
   return false;
 }
 
+/** Expand a (possibly `::`-compressed) IPv6 address to 8 explicit hex groups. */
+function expandIpv6(ip) {
+  let s = ip.toLowerCase();
+  // A trailing dotted-quad ("…:ffff:127.0.0.1") is two groups' worth of bits —
+  // fold it into two hex groups first, or the ':'-split below yields 7 parts
+  // and the mapped-v4 check silently gives up (an SSRF bypass).
+  const dq = s.match(/^(.*:)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (dq) {
+    const [, prefix, a, b, c, d] = dq;
+    const g = (x, y) => ((Number(x) << 8) | Number(y)).toString(16);
+    s = `${prefix}${g(a, b)}:${g(c, d)}`;
+  }
+  if (s.includes('::')) {
+    const [head, tail] = s.split('::');
+    const headParts = head ? head.split(':') : [];
+    const tailParts = tail ? tail.split(':') : [];
+    const missing = 8 - headParts.length - tailParts.length;
+    s = [...headParts, ...Array(Math.max(0, missing)).fill('0'), ...tailParts].join(':');
+  }
+  return s.split(':');
+}
+
+/** IPv4-mapped IPv6 (`::ffff:a.b.c.d` or its fully-expanded hex form) -> dotted v4, else null. */
+function ipv6MappedIpv4(groups) {
+  if (groups.length !== 8) return null;
+  // Compare NUMERICALLY, not by string: a group may be spelled with 1–4 hex
+  // digits, so "0", "00", "0000" are all zero and "ffff"/"FFFF" all 0xffff.
+  // A leading-zero spelling like "0:00:0:0:0:ffff:7f00:1" must not slip past.
+  const hex = (g) => (/^[0-9a-f]{1,4}$/.test(g) ? parseInt(g, 16) : NaN);
+  const parts = groups.map(hex);
+  if (parts.some(Number.isNaN)) return null;
+  if (!parts.slice(0, 5).every((n) => n === 0)) return null;
+  if (parts[5] !== 0xffff) return null;
+  const hi = parts[6];
+  const lo = parts[7];
+  return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join('.');
+}
+
 function isBlockedIpv6(ip) {
   const s = ip.toLowerCase();
   if (s === '::' || s === '::1') return true; // unspecified / loopback
   if (s.startsWith('fe80')) return true; // link-local
   if (s.startsWith('fc') || s.startsWith('fd')) return true; // unique-local
   if (s.startsWith('ff')) return true; // multicast
+  // Catches every IPv4-mapped spelling, not just the textual "::ffff:a.b.c.d"
+  // shorthand — e.g. the fully-expanded "0:0:0:0:0:ffff:7f00:1" (=127.0.0.1).
+  const mapped = ipv6MappedIpv4(expandIpv6(s));
+  if (mapped) return isBlockedIpv4(mapped);
   return false;
+}
+
+// Alternate IPv4 encodings (decimal, octal, hex, short-dotted) that net.isIP()
+// doesn't recognize as a literal IP but that some resolvers still parse —
+// e.g. 127.0.0.1 written as 2130706433, 0x7f000001, or 127.1. Whether a given
+// libc's getaddrinfo actually accepts these is resolver-dependent, so refuse
+// outright rather than gamble on it.
+//
+// A host is "ambiguously numeric" only when EVERY dot-separated label is itself
+// a bare number (decimal, C-octal, or 0x-hex) — that's what makes it parseable
+// as a packed IPv4. A real domain always has at least one non-numeric label
+// (its TLD or a name), so hosts like "cafe.de" or "feed.ac" — all-hex-LETTERS
+// but not numbers — are left alone. The earlier /^[0-9a-fx.]+$/ over-matched
+// those and 400'd legitimate mod/icon fetches.
+const NUMERIC_LABEL_RE = /^(?:0x[0-9a-f]+|\d+)$/i;
+function isAmbiguousNumericHost(host) {
+  const labels = host.split('.');
+  return labels.length > 0 && labels.every((l) => NUMERIC_LABEL_RE.test(l));
 }
 
 function isBlockedIp(ip) {
@@ -65,6 +125,8 @@ async function assertPublicUrl(rawUrl) {
   let addrs;
   if (net.isIP(host)) {
     addrs = [host];
+  } else if (isAmbiguousNumericHost(host)) {
+    throw httpError(400, `Refusing to resolve an ambiguous numeric host (${host})`);
   } else {
     let results;
     try {
@@ -97,4 +159,4 @@ async function safeFetch(rawUrl, options = {}) {
   throw httpError(502, `Too many redirects (more than ${MAX_REDIRECTS})`);
 }
 
-module.exports = { safeFetch, assertPublicUrl, isBlockedIp };
+module.exports = { safeFetch, assertPublicUrl, isBlockedIp, isAmbiguousNumericHost };
