@@ -108,6 +108,13 @@ router.post('/setup', (req, res) => {
 router.get('/login', (req, res) => {
   if (authService.firstRunNeeded()) return res.redirect('/setup');
   if (req.session && req.session.userId) return res.redirect('/');
+  // A fresh visit to /login abandons any in-progress 2FA challenge rather than
+  // leaving it dangling — re-entering credentials should start clean.
+  if (req.session) {
+    delete req.session.pendingTotpUserId;
+    delete req.session.pendingTotpUsername;
+    delete req.session.pendingTotpNext;
+  }
   res.render('login', { title: 'Sign in', layout: 'bare', next: safeNext(req.query.next) });
 });
 
@@ -131,6 +138,17 @@ router.post('/login', (req, res) => {
         next: safeNext(next),
       });
     }
+    if (user.totpEnabled) {
+      // Password alone does not authenticate — session.userId stays unset, so
+      // requireAuth still treats this session as signed out. Deliberately does
+      // NOT clear the login-failure counter yet: it stays shared with the 2FA
+      // code step below, so a correct password can't be used to reset the
+      // lockout right before brute-forcing the 6-digit code.
+      req.session.pendingTotpUserId = user.id;
+      req.session.pendingTotpUsername = user.username;
+      req.session.pendingTotpNext = safeNext(next);
+      return res.redirect('/login/2fa');
+    }
     clearLoginFailures(username, req.ip);
     req.session.regenerate((err) => {
       if (err)
@@ -143,6 +161,46 @@ router.post('/login', (req, res) => {
     });
   } catch (err) {
     res.status(err.status || 400).render('login', { title: 'Sign in', layout: 'bare', error: firstIssue(err) });
+  }
+});
+
+router.get('/login/2fa', (req, res) => {
+  if (!req.session || !req.session.pendingTotpUserId) return res.redirect('/login');
+  res.render('login-2fa', { title: 'Verify it’s you', layout: 'bare' });
+});
+
+router.post('/login/2fa', (req, res) => {
+  const pendingId = req.session && req.session.pendingTotpUserId;
+  const pendingUsername = req.session && req.session.pendingTotpUsername;
+  if (!pendingId) return res.redirect('/login');
+  try {
+    const { code } = z.object({ code: z.string().trim().min(1).max(64) }).parse(req.body);
+    checkLoginAllowed(pendingUsername, req.ip);
+    const ok = authService.verifyTotpLogin(pendingId, code);
+    if (!ok) {
+      recordLoginFailure(pendingUsername, req.ip);
+      return res
+        .status(401)
+        .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: 'Incorrect code.' });
+    }
+    clearLoginFailures(pendingUsername, req.ip);
+    const next = req.session.pendingTotpNext;
+    delete req.session.pendingTotpUserId;
+    delete req.session.pendingTotpUsername;
+    delete req.session.pendingTotpNext;
+    req.session.regenerate((err) => {
+      if (err)
+        return res
+          .status(500)
+          .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: 'Session error — try again.' });
+      req.session.userId = pendingId;
+      recordEvent({ actor: pendingUsername, type: 'login', summary: `${pendingUsername} signed in (2FA)` });
+      res.redirect(safeNext(next) || '/');
+    });
+  } catch (err) {
+    res
+      .status(err.status || 400)
+      .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: firstIssue(err) });
   }
 });
 

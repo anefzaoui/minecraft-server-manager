@@ -114,8 +114,25 @@ function init() {
     const row = e.target.closest('[data-user-id]');
     if (!row) return;
     const delBtn = e.target.closest('[data-user-delete]');
+    const totpResetBtn = e.target.closest('[data-user-totp-reset]');
     if (e.target.closest('[data-user-password]')) {
       passwordModal(row.dataset.userId, row.dataset.username);
+    } else if (totpResetBtn) {
+      const ok = await confirmDialog({
+        title: `Reset 2FA for ${row.dataset.username}?`,
+        message:
+          'They will be signed out of any in-progress 2FA challenge and must set up a new authenticator next time they sign in.',
+        confirmLabel: 'Reset 2FA',
+        danger: true,
+      });
+      if (!ok) return;
+      await withBusy(totpResetBtn, async () => {
+        const res = await post(`/api/users/${row.dataset.userId}/totp/disable`, {});
+        if (res) {
+          toast('2FA reset.');
+          setTimeout(() => location.reload(), 600);
+        }
+      });
     } else if (delBtn) {
       const ok = await confirmDialog({
         title: `Delete user ${row.dataset.username}?`,

@@ -11,6 +11,7 @@ import './lib/tooltip.js';
 import './lib/dropdown.js';
 import './lib/taskTray.js';
 import './lib/seg.js';
+import './lib/twoFactor.js';
 
 // Expose for inline handlers and future page scripts.
 window.CD = { toast, openModal, confirmDialog, setBusy, withBusy };

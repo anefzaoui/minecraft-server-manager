@@ -23,9 +23,10 @@
     </button>
     {{! rounded-md, not a circle — the only fully-round control would break the
         blocky register. Diamond is identity color here (decorative, not meaning). }}
-    <button class="grid size-8 place-items-center rounded-md bg-diamond-700 text-xs font-bold text-white" data-menu="user-menu" data-tip="{{user.username}} ({{user.role}})">{{initial user.username}}</button>
+    <button class="grid size-8 place-items-center rounded-md bg-diamond-700 text-xs font-bold text-white" data-menu="user-menu" data-tip="{{user.username}} ({{user.role}})" data-user-totp-enabled="{{#if user.totpEnabled}}1{{/if}}">{{initial user.username}}</button>
     <template id="user-menu">
       <div class="px-3 py-2 text-xs text-ink-faint">{{user.username}} · {{user.role}}</div>
+      <button type="button" class="w-full text-left" data-open-2fa>Two-factor authentication</button>
       <form method="post" action="/logout"><button type="submit" class="w-full text-left">Sign out</button></form>
     </template>
   </div>

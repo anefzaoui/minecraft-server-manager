@@ -1,0 +1,16 @@
+<div class="card w-full max-w-sm p-6">
+  <div class="mb-6 flex items-center justify-center gap-2.5">
+    <span class="grid size-10 place-items-center rounded-md bg-grass-600 text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)]">{{{icon 'shield-check' 'size-5'}}}</span>
+    <span class="pixel text-sm">Minecraft <span class="text-ok">Server Manager</span></span>
+  </div>
+  {{#if error}}<div class="notice notice-danger mb-4 text-danger">{{error}}</div>{{/if}}
+  <form method="post" action="/login/2fa" class="space-y-4" data-disable-on-submit>
+    <div>
+      <label class="label" for="tf-code">Authenticator code</label>
+      <input class="input font-mono text-center text-lg tracking-[0.3em]" id="tf-code" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus maxlength="12" placeholder="000000" required>
+      <p class="help">Enter the 6-digit code from your authenticator app, or one of your backup codes.</p>
+    </div>
+    <button class="btn btn-primary w-full" type="submit">Verify</button>
+  </form>
+  <a class="mt-4 block text-center text-xs text-ink-faint hover:text-ink" href="/login">Back to sign in</a>
+</div>
