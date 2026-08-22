@@ -2,7 +2,7 @@
 
 // Modpacks & content: CurseForge / Modrinth / FTB installers, individual
 // mods and plugins, generic packs, and datapacks. Pack selection vars are
-// hidden — the panel's modpack installer UI manages them.
+// hidden - the panel's modpack installer UI manages them.
 
 module.exports = [
   // --- CurseForge (AUTO_CURSEFORGE) ---
@@ -69,7 +69,7 @@ module.exports = [
     key: 'CF_EXCLUDE_MODS',
     scope: 'env',
     label: 'Exclude mods',
-    help: 'Mods (project slugs or IDs) to skip when installing the modpack — typically client-only mods that crash a dedicated server.',
+    help: 'Mods (project slugs or IDs) to skip when installing the modpack - typically client-only mods that crash a dedicated server.',
     type: 'list',
     mode: 'advanced',
     section: 'packs',
@@ -119,7 +119,7 @@ module.exports = [
     key: 'CF_FORCE_SYNCHRONIZE',
     scope: 'env',
     label: 'Re-apply exclude/include rules',
-    help: 'Forces the exclusion and inclusion rules to be re-evaluated on the next start — use after changing the lists above.',
+    help: 'Forces the exclusion and inclusion rules to be re-evaluated on the next start - use after changing the lists above.',
     type: 'boolean',
     default: false,
     mode: 'advanced',
@@ -142,7 +142,7 @@ module.exports = [
     key: 'CF_SET_LEVEL_FROM',
     scope: 'env',
     label: 'Use modpack world',
-    help: 'Automatically points the server at world data shipped inside the modpack — either a bundled world file or the pack’s overrides folder.',
+    help: 'Automatically points the server at world data shipped inside the modpack - either a bundled world file or the pack’s overrides folder.',
     type: 'enum',
     options: [
       { value: 'WORLD_FILE', label: 'Bundled world file' },
@@ -197,7 +197,7 @@ module.exports = [
     key: 'MODRINTH_EXCLUDE_FILES',
     scope: 'env',
     label: 'Exclude pack files',
-    help: 'Files from the Modrinth pack to skip installing — typically client-only mods that crash a dedicated server.',
+    help: 'Files from the Modrinth pack to skip installing - typically client-only mods that crash a dedicated server.',
     type: 'list',
     mode: 'advanced',
     section: 'packs',
@@ -237,7 +237,7 @@ module.exports = [
     key: 'MODRINTH_PROJECTS',
     scope: 'env',
     label: 'Individual Modrinth mods/plugins',
-    help: 'Modrinth projects to download individually, outside any modpack — for example fabric-api. One slug or ID per line.',
+    help: 'Modrinth projects to download individually, outside any modpack - for example fabric-api. One slug or ID per line.',
     type: 'list',
     mode: 'advanced',
     section: 'packs',
@@ -285,7 +285,7 @@ module.exports = [
     key: 'MODS',
     scope: 'env',
     label: 'Mod downloads',
-    help: 'Mod jars to install: URLs, container paths, or directories of jars, one per line. Entries removed from this list are also removed from disk — an empty list deletes all managed mods.',
+    help: 'Mod jars to install: URLs, container paths, or directories of jars, one per line. Entries removed from this list are also removed from disk - an empty list deletes all managed mods.',
     type: 'list',
     mode: 'advanced',
     section: 'packs',
@@ -337,7 +337,7 @@ module.exports = [
     key: 'GENERIC_PACKS',
     scope: 'env',
     label: 'Generic content packs (multiple)',
-    help: 'Several archives applied in order, comma separated. The prefix/suffix fields below are added around each entry — useful for building CDN URLs.',
+    help: 'Several archives applied in order, comma separated. The prefix/suffix fields below are added around each entry - useful for building CDN URLs.',
     type: 'list',
     mode: 'advanced',
     section: 'packs',
@@ -399,7 +399,7 @@ module.exports = [
     key: 'GTNH_PACK_VERSION',
     scope: 'env',
     label: 'GTNH pack version',
-    help: 'The exact GT New Horizons release to install. Managed by the modpack installer UI — the panel always pins a concrete version so restarts never upgrade the pack behind your back.',
+    help: 'The exact GT New Horizons release to install. Managed by the modpack installer UI - the panel always pins a concrete version so restarts never upgrade the pack behind your back.',
     type: 'text',
     mode: 'advanced',
     section: 'packs',
@@ -435,13 +435,13 @@ module.exports = [
     key: 'REMOVE_OLD_MODS',
     scope: 'env',
     label: 'Wipe mods before install',
-    help: 'Deletes the ENTIRE mods (or plugins) folder before installing new content. Never set by the panel — wipes the whole mods folder, including anything added by hand.',
+    help: 'Deletes the ENTIRE mods (or plugins) folder before installing new content. Never set by the panel - wipes the whole mods folder, including anything added by hand.',
     type: 'boolean',
     mode: 'advanced',
     section: 'packs',
     hidden: true,
     danger: true,
-    note: 'Never set by the panel — wipes the whole mods folder',
+    note: 'Never set by the panel - wipes the whole mods folder',
     requiresRestart: true,
   },
 ];

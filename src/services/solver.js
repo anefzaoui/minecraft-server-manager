@@ -1,8 +1,8 @@
 'use strict';
 
-// Compatibility Solver — "pick mods first".
+// Compatibility Solver - "pick mods first".
 // Given a list of Modrinth project slugs/ids, fetch every project's version
-// list (cached client, sequential — never hammers the API), build a
+// list (cached client, sequential - never hammers the API), build a
 // loader → supported-MC-versions map per project, and find the newest
 // (loader, MC version) pair that EVERY project supports. When no pair covers
 // all projects, return the best partial pair plus which projects drop.
@@ -15,7 +15,7 @@ const MAX_PROJECTS = 25;
 
 // Panel loader buckets, in preference order (used as the tiebreaker after
 // "newest MC version wins"). Each bucket lists the Modrinth loader tags that
-// count as compatible with it — plugin projects tag bukkit/spigot builds that
+// count as compatible with it - plugin projects tag bukkit/spigot builds that
 // Paper runs fine.
 const LOADERS = [
   { id: 'fabric', label: 'Fabric', type: 'FABRIC', tags: ['fabric'] },
@@ -44,7 +44,7 @@ function buildLoaderMap(versions) {
     for (const loader of LOADERS) {
       if (!loader.tags.some((t) => vLoaders.includes(t))) continue;
       for (const gv of v.game_versions || []) {
-        // Plain release versions only — parseVersion() matches prefixes, so
+        // Plain release versions only - parseVersion() matches prefixes, so
         // also reject snapshots/RCs like "26.2-rc-1" or "1.21.2-pre1".
         if (/^\d+\.\d+(\.\d+)?$/.test(gv) && parseVersion(gv)) map.get(loader.id).add(gv);
       }

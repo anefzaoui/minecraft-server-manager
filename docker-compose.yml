@@ -1,10 +1,10 @@
 # Official compose file for running the PANEL itself in Docker.
 #
 # The panel talks to the HOST's Docker daemon and creates each Minecraft server
-# as a SIBLING container — game ports are published by those containers
+# as a SIBLING container - game ports are published by those containers
 # directly, so only the panel port appears below.
 #
-# One variable is required: DATA_DIR_HOST — the ABSOLUTE host path where all
+# One variable is required: DATA_DIR_HOST - the ABSOLUTE host path where all
 # panel data (worlds, mods, backups, DB) should live. Set it in a `.env` file
 # next to this compose file (or in your Portainer/Dockge stack environment):
 #
@@ -24,7 +24,7 @@ services:
       - '25564:25564'
     extra_hosts:
       # Lets the panel container reach sibling containers' HOST-published ports
-      # (e.g. BlueMap's live map) via host.docker.internal — its own
+      # (e.g. BlueMap's live map) via host.docker.internal - its own
       # 127.0.0.1 is not the host's. Docker Desktop resolves this name for
       # free; plain Linux Engine (this deployment's target) needs it mapped
       # explicitly. Requires Docker Engine 20.10+.
@@ -44,7 +44,7 @@ services:
     # directly over a Docker network (set per-server in Advanced Docker
     # Settings), instead of via its host-published ports? Put the panel on
     # that SAME network too, so features that reach a sibling container
-    # directly (currently just the live map) have a route to it — otherwise
+    # directly (currently just the live map) have a route to it - otherwise
     # they fall back to the host-published-port path, which this kind of
     # setup is often built specifically to avoid exposing at all.
     # networks:

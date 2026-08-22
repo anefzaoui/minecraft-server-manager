@@ -20,7 +20,7 @@ function load(name) {
     svg = fs.readFileSync(file, 'utf8');
   } catch {
     if (name !== FALLBACK) {
-      console.warn(`[icons] unknown icon "${name}" — using fallback`);
+      console.warn(`[icons] unknown icon "${name}" - using fallback`);
       svg = load(FALLBACK);
     } else {
       svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>';

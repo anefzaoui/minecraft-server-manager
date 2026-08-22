@@ -83,7 +83,7 @@ module.exports = [
     key: 'ONLINE_MODE',
     scope: 'env',
     label: 'Online mode (Mojang auth)',
-    help: 'Verifies every player against Mojang’s authentication servers (vanilla default on). Turning it off lets anyone join with any name, including pirated clients — a serious security risk unless you run behind a proxy that handles auth.',
+    help: 'Verifies every player against Mojang’s authentication servers (vanilla default on). Turning it off lets anyone join with any name, including pirated clients - a serious security risk unless you run behind a proxy that handles auth.',
     type: 'boolean',
     mode: 'advanced',
     section: 'gameplay',

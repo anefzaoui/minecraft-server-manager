@@ -9,6 +9,7 @@ const express = require('express');
 const { z } = require('zod');
 const servers = require('../../services/servers');
 const players = require('../../services/players');
+const playerNotes = require('../../services/playerNotes');
 const { inspectStatus } = require('../../docker/containers');
 const biomes = require('../../config/biomes');
 const { PLAYER_NAME_RE } = require('../../utils/playerName');
@@ -26,6 +27,13 @@ const ipSchema = z
   .string()
   .trim()
   .regex(/^[0-9a-fA-F.:]{3,45}$/, 'Enter a valid IPv4 or IPv6 address');
+// Cap at 10 years - a "duration" past that is just a permanent ban with extra steps.
+const durationSchema = z.coerce
+  .number()
+  .int()
+  .positive()
+  .max(10 * 365 * 24 * 3600 * 1000)
+  .optional();
 
 const whitelistSchema = z.object({ name: nameSchema, on: z.coerce.boolean() });
 const enforceSchema = z.object({ on: z.coerce.boolean() });
@@ -34,17 +42,23 @@ const opSchema = z.object({
   on: z.coerce.boolean(),
   level: z.coerce.number().int().min(1).max(4).optional(),
 });
-const banSchema = z.object({ name: nameSchema, reason: reasonSchema });
+const banSchema = z.object({ name: nameSchema, reason: reasonSchema, durationMs: durationSchema });
 const pardonSchema = z.object({ name: nameSchema });
-const banIpSchema = z.object({ ip: ipSchema, reason: reasonSchema });
+const banIpSchema = z.object({
+  ip: ipSchema,
+  reason: reasonSchema,
+  durationMs: durationSchema,
+  player: nameSchema.optional(),
+});
 const pardonIpSchema = z.object({ ip: ipSchema });
+const noteSchema = z.object({ name: nameSchema, note: z.string().trim().min(1).max(1000) });
 const kickSchema = z.object({ name: nameSchema, message: z.string().trim().max(256).optional() });
 const teleportSchema = z.discriminatedUnion('mode', [
   z.object({
     mode: z.literal('coords'),
     player: nameSchema,
     x: z.coerce.number().finite(),
-    // Y omitted/empty = land on the surface (spreadplayers) — never mid-air.
+    // Y omitted/empty = land on the surface (spreadplayers) - never mid-air.
     y: z.preprocess(
       (v) => (v === '' || v === null || v === undefined ? undefined : v),
       z.coerce.number().finite().optional()
@@ -94,7 +108,7 @@ async function loadContext(req) {
     const info = await inspectStatus(server.id);
     running = info.exists && RUNNING_STATES.has(info.status);
   } catch {
-    /* docker down — fall back to file edits */
+    /* docker down - fall back to file edits */
   }
   return { server, ctx: { running, actor: req.user.username } };
 }
@@ -174,9 +188,9 @@ router.post(
 router.post(
   '/ban',
   asyncHandler(async (req, res, next) => {
-    const { name, reason } = banSchema.parse(req.body);
+    const { name, reason, durationMs } = banSchema.parse(req.body);
     const { server, ctx } = await loadContext(req);
-    res.json({ ok: true, result: await players.banPlayer(server.id, name, reason, ctx) });
+    res.json({ ok: true, result: await players.banPlayer(server.id, name, reason, { ...ctx, durationMs }) });
   })
 );
 
@@ -192,9 +206,9 @@ router.post(
 router.post(
   '/ban-ip',
   asyncHandler(async (req, res, next) => {
-    const { ip, reason } = banIpSchema.parse(req.body);
+    const { ip, reason, durationMs, player } = banIpSchema.parse(req.body);
     const { server, ctx } = await loadContext(req);
-    res.json({ ok: true, result: await players.banIp(server.id, ip, reason, ctx) });
+    res.json({ ok: true, result: await players.banIp(server.id, ip, reason, { ...ctx, durationMs, player }) });
   })
 );
 
@@ -221,7 +235,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const body = teleportSchema.parse(req.body);
     const { server, ctx } = await loadContext(req);
-    // One teleport at a time per server — parallel /locate searches stall the
+    // One teleport at a time per server - parallel /locate searches stall the
     // server's main thread hard enough to time out every online player.
     const result = await players.withTeleportSlot(server.id, async () => {
       if (body.mode === 'coords') {
@@ -255,6 +269,35 @@ router.post(
       return players.tpToBiome(server.id, body.player, body.biome, ctx);
     });
     res.json({ ok: true, result });
+  })
+);
+
+router.get(
+  '/notes',
+  asyncHandler(async (req, res, next) => {
+    const { name } = z.object({ name: nameSchema }).parse(req.query);
+    const { server } = await loadContext(req);
+    const who = await players.resolveIdentity(server.id, name);
+    res.json({ ok: true, notes: playerNotes.listNotes(server.id, who.uuid) });
+  })
+);
+
+router.post(
+  '/notes',
+  asyncHandler(async (req, res, next) => {
+    const { name, note } = noteSchema.parse(req.body);
+    const { server, ctx } = await loadContext(req);
+    const who = await players.resolveIdentity(server.id, name);
+    res.json({ ok: true, note: playerNotes.addNote(server.id, who, note, ctx) });
+  })
+);
+
+router.delete(
+  '/notes/:noteId',
+  asyncHandler(async (req, res, next) => {
+    const { server, ctx } = await loadContext(req);
+    playerNotes.deleteNote(server.id, req.params.noteId, ctx);
+    res.json({ ok: true });
   })
 );
 

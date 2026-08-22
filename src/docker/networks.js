@@ -1,7 +1,7 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
-// Host Docker network discovery — lets a server attach to an existing network
+// Host Docker network discovery - lets a server attach to an existing network
 // (e.g. one shared with a reverse proxy like Pangolin or NGINX) instead of
 // the default bridge.
 

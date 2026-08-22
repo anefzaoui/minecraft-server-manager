@@ -1,10 +1,10 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Item registry API (JEI-style browser). Mounted at /api/servers/:id/items
 // (mergeParams carries :id down from the mount point).
 //
-//   GET  /          search — q / mod / kind / limit / offset
+//   GET  /          search - q / mod / kind / limit / offset
 //   POST /rebuild   force a full re-scan (task-wrapped; poll /api/tasks/:id)
 
 const asyncHandler = require('../middleware/asyncHandler');
@@ -47,7 +47,7 @@ router.get(
       offset: req.query.offset || undefined,
     });
     const { items, total } = await itemRegistry.search(server.id, params);
-    const registry = await itemRegistry.getRegistry(server.id); // cache hit — just built above
+    const registry = await itemRegistry.getRegistry(server.id); // cache hit - just built above
     res.json({
       ok: true,
       items,
@@ -59,7 +59,7 @@ router.get(
   })
 );
 
-// Long operation on big packs — returns {ok, taskId}; poll /api/tasks/:id.
+// Long operation on big packs - returns {ok, taskId}; poll /api/tasks/:id.
 router.post(
   '/rebuild',
   asyncHandler((req, res, next) => {

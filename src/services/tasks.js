@@ -2,7 +2,7 @@
 
 // Long-operation tracking: every slow job (pack install/upgrade, image pull,
 // downloads, backups, world ops, blueprint import) runs as a registered task
-// the UI polls for real progress — no more fake pulse bars.
+// the UI polls for real progress - no more fake pulse bars.
 
 const { nanoid } = require('nanoid');
 
@@ -11,10 +11,10 @@ const TTL_MS = 10 * 60 * 1000; // finished tasks linger for late polls
 
 /**
  * createTask('Installing pack …', {serverId}) → task handle:
- *   t.step('Downloading mods')          — set the current step label
- *   t.progress(received, total)         — numeric progress for the active step
- *   t.log('…')                          — append a detail line (kept last 50)
- *   t.done(result) / t.fail(error)      — finish
+ *   t.step('Downloading mods')          - set the current step label
+ *   t.progress(received, total)         - numeric progress for the active step
+ *   t.log('…')                          - append a detail line (kept last 50)
+ *   t.done(result) / t.fail(error)      - finish
  * run(title, opts, fn) wraps a promise-returning fn with automatic done/fail.
  */
 function createTask(title, { serverId = null, actor = 'system' } = {}) {

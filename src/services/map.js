@@ -50,7 +50,7 @@ function mapConfDir(serverId, server) {
   return dataPath('servers', serverId, ...rel);
 }
 
-// world/nether/end, matching BlueMap's OWN default map ids exactly — so this
+// world/nether/end, matching BlueMap's OWN default map ids exactly - so this
 // either preempts BlueMap's auto-generation (fresh install, file doesn't
 // exist yet) or self-heals whatever it already auto-generated (existing file
 // with a stale `world:` line), rather than creating a second, differently
@@ -66,11 +66,11 @@ const DIM_CONFIGS = [
  * folder (server.properties level-name / LEVEL env) instead of BlueMap's own
  * "world" / "world_nether" / "world_the_end" default guess. A server whose
  * active world isn't literally named "world" otherwise makes every
- * auto-generated map invalid — BlueMap logs "problem with your BlueMap
+ * auto-generated map invalid - BlueMap logs "problem with your BlueMap
  * setup" for each one and disables itself entirely ("no valid maps
  * configured"), even though the world exists and is fine.
  *
- * Only ever touches the `world:` line — a file BlueMap (or the admin) already
+ * Only ever touches the `world:` line - a file BlueMap (or the admin) already
  * created keeps every other setting (name, sky-color, start-pos, …) as-is.
  */
 function writeMapConfigs(serverId) {
@@ -82,7 +82,7 @@ function writeMapConfigs(serverId) {
 
   for (const dim of DIM_CONFIGS) {
     const worldFolder = level + dim.suffix;
-    // Nether/end aren't generated until first visited — skip rather than
+    // Nether/end aren't generated until first visited - skip rather than
     // point BlueMap at a dir that doesn't exist yet (same failure this fixes).
     if (dim.suffix && !fs.existsSync(dataPath('servers', serverId, worldFolder))) continue;
 
@@ -104,7 +104,7 @@ async function enableMap(serverId, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   if (!supportsMap(server)) {
-    throw httpError(400, `Live map needs a mod loader or plugin server — ${server.type} isn't supported by BlueMap`);
+    throw httpError(400, `Live map needs a mod loader or plugin server - ${server.type} isn't supported by BlueMap`);
   }
 
   const hostPort = await freePort();
@@ -138,7 +138,7 @@ async function enableMap(serverId, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'map-enabled',
-    summary: `Live map enabled (BlueMap on port ${hostPort}) — applies on next restart`,
+    summary: `Live map enabled (BlueMap on port ${hostPort}) - applies on next restart`,
   });
   return { hostPort };
 }
@@ -157,7 +157,7 @@ async function disableMap(serverId, { actor = 'system' } = {}) {
   );
   if (row) await modsService.removeContent(serverId, row.filename, { actor }).catch(() => {});
   db.run('UPDATE servers SET pending_recreate = 1 WHERE id = ?', serverId);
-  recordEvent({ serverId, actor, type: 'map-disabled', summary: 'Live map disabled — applies on next restart' });
+  recordEvent({ serverId, actor, type: 'map-disabled', summary: 'Live map disabled - applies on next restart' });
 }
 
 /** Extra container ports for a server, consumed by the servers service. */

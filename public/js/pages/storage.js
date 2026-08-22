@@ -53,7 +53,7 @@ document.addEventListener('click', async (e) => {
     detail: days
       ? `Only items older than ${days} days are touched.`
       : action === 'tmp'
-        ? 'Only tmp entries older than 1 hour are touched — in-flight transfers are safe.'
+        ? 'Only tmp entries older than 1 hour are touched - in-flight transfers are safe.'
         : '',
     confirmLabel: `Free ${fmtBytes(preview.freedBytes)}`,
     danger: true,

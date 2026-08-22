@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Controlled upgrade orchestrator: preview → pre-update backup → graceful stop
@@ -23,7 +23,7 @@ function upgradeStatus(serverId) {
  * Run the full safe upgrade to a target pack version.
  * onStep(step: string) is invoked as the flow progresses.
  * opts.allowVersionChange must be true to cross MC versions (409 otherwise).
- * opts.task: optional tasks.js handle — step() calls are mirrored to it.
+ * opts.task: optional tasks.js handle - step() calls are mirrored to it.
  */
 async function upgradePack(
   serverId,
@@ -61,7 +61,7 @@ async function upgradePack(
     step('resolving');
     // Thread the pin's own channel through: without this, an explicit versionId-less
     // upgrade on a beta-pinned GTNH server silently resolves to the newest STABLE
-    // (pickLatest's default), while the UI (latestFor) showed the newest BETA — a
+    // (pickLatest's default), while the UI (latestFor) showed the newest BETA - a
     // downgrade the user never confirmed. includeBeta is a no-op for every other
     // platform/branch, which doesn't key off a stored channel.
     const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
@@ -69,10 +69,10 @@ async function upgradePack(
       includeBeta: pack.channel === 'beta',
     });
     if (resolved.versionId === pack.pinned_version_id) {
-      throw httpError(400, `Already on ${pack.pinned_version_name} — nothing to upgrade`);
+      throw httpError(400, `Already on ${pack.pinned_version_name} - nothing to upgrade`);
     }
 
-    // Cross-MC-version upgrades permanently convert the world — demand
+    // Cross-MC-version upgrades permanently convert the world - demand
     // explicit confirmation BEFORE any backup/stop work happens.
     if (
       resolved.mcVersion &&
@@ -111,7 +111,7 @@ async function upgradePack(
     step('applying');
     // The pre-update backup above is the safety net; still require the caller
     // to have confirmed cross-MC-version upgrades (checked before backup by
-    // the route via resolvePack diff) — here we proceed.
+    // the route via resolvePack diff) - here we proceed.
     const { previous } = await packsService.applyPack(serverId, resolved, { actor, force: true });
 
     step('recreating');
@@ -119,7 +119,7 @@ async function upgradePack(
     await serversService.startServer(serverId, { actor });
 
     step('monitoring');
-    // CF/Modrinth installs download the whole pack on first boot — give them
+    // CF/Modrinth installs download the whole pack on first boot - give them
     // twice the window. GTNH downloads a ~1-2 GB server pack and then builds a
     // 1.7.10 world with several hundred mods, which routinely outlasts both.
     const INSTALL_TIMEOUTS_MS = { gtnh: 30 * 60 * 1000, curseforge: 20 * 60 * 1000, modrinth: 20 * 60 * 1000 };
@@ -132,7 +132,7 @@ async function upgradePack(
         serverId,
         actor,
         type: 'update-failed',
-        summary: `Pack upgrade to ${resolved.versionName} failed to start — rollback available`,
+        summary: `Pack upgrade to ${resolved.versionName} failed to start - rollback available`,
         details: { backupId, previousVersion: previous ? previous.pinned_version_id : null },
         logExcerpt: excerpt || null,
       });
@@ -189,7 +189,7 @@ async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
  * Wait until the server is genuinely up.
  * With a Docker healthcheck: 3 consecutive 'running' (healthy) checks (~15s).
  * WITHOUT one (health null), inspect says 'running' the instant the process
- * starts — require 6 consecutive checks (~30s) AND a 'Done (' line in recent
+ * starts - require 6 consecutive checks (~30s) AND a 'Done (' line in recent
  * logs, or slow-booting packs get a false OK (and false failures on rollback).
  */
 async function waitForHealthy(serverId, { timeoutMs = 10 * 60 * 1000 } = {}) {

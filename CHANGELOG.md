@@ -15,7 +15,7 @@ ships alongside.
 
 ### Added
 
-- **Two-factor authentication (TOTP).** Any account — admin, operator, or viewer — can protect its
+- **Two-factor authentication (TOTP).** Any account - admin, operator, or viewer - can protect its
   login with a standard authenticator app (Google Authenticator, Authy, 1Password, and the like).
   Enroll by scanning a QR code (or entering the key by hand) and confirming a code plus your
   password; you're given ten one-time **backup codes** for when your phone isn't around. Signing in
@@ -23,7 +23,7 @@ ships alongside.
   authenticated until it's passed. Manage or turn off 2FA from the account menu (password required),
   and admins can reset another user's 2FA from **Settings → Users** for the lost-device case. See the
   [two-factor authentication guide](docs/two-factor-authentication.md).
-- **A documentation site under [`docs/`](docs/README.md)** — a main index linking to focused,
+- **A documentation site under [`docs/`](docs/README.md)** - a main index linking to focused,
   screenshotted guides for the dashboard, servers, console & chat commands, modpacks, worlds & files,
   backups, blueprints, schedules, storage, updates, activity, users & roles, and 2FA.
 
@@ -31,7 +31,7 @@ ships alongside.
 
 - **File-manager path containment now covers symlinks.** Every file operation already refused `..`
   traversal and absolute paths; it now also rejects symlinks that resolve outside a server's data
-  directory — including dangling links to a not-yet-existing target — so a mod or plugin can't plant
+  directory - including dangling links to a not-yet-existing target - so a mod or plugin can't plant
   a link to read or write elsewhere on the host.
 - **SSRF guard hardened.** Server-side fetches of user-supplied URLs (mod and icon downloads) now
   block additional IPv4-mapped IPv6 spellings of internal addresses (leading-zero groups and the
@@ -57,7 +57,7 @@ pipeline learns every known `/list` phrasing plus a set of live-cache hardening 
 - **GT New Horizons is now a first-class modpack.** The creation wizard's "From modpack" tab has a
   dedicated GTNH card: pick a pack version (stable by default, betas behind a toggle) and the panel
   pins it, sizes the server for it, and installs it in one task. Pinning means restarts can never
-  silently upgrade the pack — the same rule every other modpack already followed.
+  silently upgrade the pack - the same rule every other modpack already followed.
 - **GTNH servers pick their own Java.** GTNH's release index states the highest Java each pack
   version supports, so the panel runs 2.8.0+ on **Java 25** and older releases on Java 21 or 17
   automatically, instead of stranding a 1.7.10 pack on Java 8. Overriding the image tag by hand
@@ -72,9 +72,9 @@ pipeline learns every known `/list` phrasing plus a set of live-cache hardening 
 ### Fixed
 
 - **Server cards no longer get stuck on a boot-phase label** (e.g. "Finishing startup") when a
-  server's `/list` reply isn't parseable. The parser now knows all three known phrasings — vanilla
+  server's `/list` reply isn't parseable. The parser now knows all three known phrasings - vanilla
   "N of a max of M", Paper 26.2's "N out of maximum M", and the 1.7.10-era "N/M" every GTNH server
-  speaks — and when none match but RCON answers cleanly, the card shows "Player count unavailable"
+  speaks - and when none match but RCON answers cleanly, the card shows "Player count unavailable"
   instead of a stale boot phase.
 - The two copies of the `/list` regex (live cache and player service) are consolidated into one
   shared parser, closing a live-save corruption hazard: an unparseable player list used to read as
@@ -99,20 +99,20 @@ invisible to whitelist/ops/bans/kicks/teleports/inventory/chat and their own pla
 
 ### Fixed
 
-- **Item browser returned no results for vanilla items** — `itemRegistry.js` built its
+- **Item browser returned no results for vanilla items** - `itemRegistry.js` built its
   item list by scanning the server's own jar for `assets/minecraft/lang/en_us.json`, but
   official Mojang **server** jars never actually ship `assets/` (that's client-jar-only),
-  so every `minecraft:*` item silently came up missing — modded items were unaffected
+  so every `minecraft:*` item silently came up missing - modded items were unaffected
   since mod jars do ship unobfuscated lang files. When the server jar has no lang data,
   the registry now falls back to an offline-cached, version-matched vanilla item/block
   list from PrismarineJS/minecraft-data (MIT), with proper nearest-version resolution
-  (minecraft-data's `latest` folder turned out to only hold protocol data, not items —
+  (minecraft-data's `latest` folder turned out to only hold protocol data, not items -
   version discovery now checks the real directory listing instead of trusting it).
-- **Item browser now shows an icon per row** — `GET /api/servers/:id/items` returns an
+- **Item browser now shows an icon per row** - `GET /api/servers/:id/items` returns an
   `iconBase` resolved from PrismarineJS/minecraft-assets (MIT) for the server's MC
   version; the browser tries the item texture, falls back to the block texture, then a
   generic glyph (mainly for modded items, which this asset pack doesn't cover).
-- **Bedrock players were invisible almost everywhere in the panel** — Floodgate prefixes
+- **Bedrock players were invisible almost everywhere in the panel** - Floodgate prefixes
   a Bedrock player's username with a "." (or "*") by default, but roughly a dozen
   hand-duplicated username regexes across the codebase (`^[A-Za-z0-9_]{1,16}$`-shaped)
   never allowed that prefix. Concretely this meant: the player-detail page 404'd the
@@ -131,14 +131,14 @@ scheduler ([0.9.3]) and BlueMap's map configs ([0.9.4]) knowing about it.
 
 ### Fixed
 
-- **Container clock stayed on UTC regardless of Settings → Localization** — `assembleEnv()` in
+- **Container clock stayed on UTC regardless of Settings → Localization** - `assembleEnv()` in
   `src/services/servers.js` built every container's env without ever setting `TZ`, so the itzg
   image defaulted it to UTC. The Minecraft server's own console timestamps, and any other
   in-container tooling that reads `TZ` (e.g. `mc-server-runner`'s own log lines), stayed in UTC
   even after the panel's timezone was set to something else. `assembleEnv()` now defaults
   `env.TZ` to `settings.getTimezone()` when a server doesn't already set its own `TZ` via the
   advanced env fields.
-  - This only takes effect on container **creation** — an already-running server needs to be
+  - This only takes effect on container **creation** - an already-running server needs to be
     recreated (not just restarted) to pick up the new env var, same as any other advanced
     Docker setting change.
 
@@ -149,14 +149,14 @@ Fixes the live map (BlueMap) failing entirely on any server whose world isn't li
 
 ### Fixed
 
-- **BlueMap couldn't find a custom-named world** — enabling the live map never told BlueMap what
+- **BlueMap couldn't find a custom-named world** - enabling the live map never told BlueMap what
   the server's actual world folder is. BlueMap only auto-generates its per-dimension map configs
   (`maps/world.conf`, `world_nether.conf`, `world_the_end.conf`) once, on first launch, guessing
   the folder is literally named `world`/`world_nether`/`world_the_end`. Any server using a custom
   level name (`LEVEL` env, a renamed/switched world) got every generated map pointed at a folder
-  that doesn't exist — BlueMap logged "problem with your BlueMap setup" for each one and disabled
+  that doesn't exist - BlueMap logged "problem with your BlueMap setup" for each one and disabled
   itself entirely ("no valid maps configured"), even though the world was completely fine.
-  `src/services/map.js` now writes (or, for a setup that already hit this, surgically patches —
+  `src/services/map.js` now writes (or, for a setup that already hit this, surgically patches -
   every other line an admin or BlueMap itself set stays untouched) the correct `world:` path for
   whichever world is actually active, both when the map is first enabled and whenever the active
   world changes afterward (rename or switch, via a new hook in `services/worlds.js`'s
@@ -170,7 +170,7 @@ real-world time again.
 
 ### Fixed
 
-- **Schedules ignored the configured panel timezone** — `src/services/scheduler.js` created every
+- **Schedules ignored the configured panel timezone** - `src/services/scheduler.js` created every
   croner job without a `timezone` option, so `"0 3 * * *"` fired at 3am in the SYSTEM's timezone
   (UTC in almost every container) rather than 3am in whatever zone Settings → Localization has
   configured. A scheduled RCON command, restart, or backup could run hours off from what the
@@ -178,7 +178,7 @@ real-world time again.
   the `next run` computation in `listSchedules`, and the `/api/schedules/preview` endpoint used
   by the New Schedule modal's live preview) now pass `{ timezone: settings.getTimezone() }`.
 - Changing the timezone in Settings now re-arms every already-created schedule immediately
-  (new `scheduler.rearmAll()`, called from `POST /api/settings/localization`) — previously an
+  (new `scheduler.rearmAll()`, called from `POST /api/settings/localization`) - previously an
   existing schedule kept running on whichever zone was in effect when it was created until the
   panel restarted.
 
@@ -190,10 +190,10 @@ network is set so the proxy reaches it directly.
 
 ### Fixed
 
-- **Live map proxy couldn't reach a sibling container in several common topologies** —
+- **Live map proxy couldn't reach a sibling container in several common topologies** -
   `src/web/routes/mapProxy.js` previously always dialed `127.0.0.1:<hostPort>`, which is only
   correct on bare metal. It now tries, per server: every Docker-network IP the sibling container
-  has (its own container port, no host-port involved — this is what actually works when a
+  has (its own container port, no host-port involved - this is what actually works when a
   server's network is set in Advanced Docker Settings for a reverse proxy to reach it directly),
   then the host-published-port path via `host.docker.internal` (containerized panel) or
   `127.0.0.1` (bare metal). Whichever answers is cached per server (re-probed if it later stops
@@ -202,7 +202,7 @@ network is set so the proxy reaches it directly.
   fallback path needs on Linux, plus a commented example for joining the panel to a shared
   reverse-proxy network so the direct-container-IP path has a route. New `MAP_PROXY_HOST` env var
   overrides the auto-detected host outright.
-- **Live-map readiness probe used `HEAD`** (`public/js/pages/map.js`) — switched to `GET`, since
+- **Live-map readiness probe used `HEAD`** (`public/js/pages/map.js`) - switched to `GET`, since
   BlueMap's bundled webserver isn't guaranteed to implement `HEAD`; a probe that never succeeds
   looked identical to "BlueMap just isn't up yet" and retried forever.
 - The map proxy's error response now distinguishes "the map-proxy host name itself didn't
@@ -211,36 +211,36 @@ network is set so the proxy reaches it directly.
 
 ## [0.9.1] - 2026-08-09
 
-Full control over the generated Docker container — name, network, ports, volumes — without ever
+Full control over the generated Docker container - name, network, ports, volumes - without ever
 leaving the panel or reaching for the CLI.
 
 ### Added
 
-- **Advanced Docker Settings** — review and override the container the panel is about to create
+- **Advanced Docker Settings** - review and override the container the panel is about to create
   (or has already created):
   - **Custom container name**, overriding the fixed `msm-<id>` pattern (e.g. `survival-smp`
-    instead of a randomized-looking ID). The `msm-` prefix itself is reserved — it's how the
+    instead of a randomized-looking ID). The `msm-` prefix itself is reserved - it's how the
     panel resolves servers without a custom name, so a custom one there could shadow another
     server's container.
-  - **Docker network selection** — attach to an existing host network instead of the default
+  - **Docker network selection** - attach to an existing host network instead of the default
     bridge, for reverse proxies like Pangolin or NGINX. New `src/docker/networks.js` lists the
     host's networks via the Docker Engine API.
   - **Extra port mappings** and **extra volume binds** beyond the built-in game/RCON/Bedrock
-    ports and single `/data` mount — e.g. UDP 19132 for Bedrock/Geyser, TCP 8100 for BlueMap, or
+    ports and single `/data` mount - e.g. UDP 19132 for Bedrock/Geyser, TCP 8100 for BlueMap, or
     a host config directory mounted straight into the container. Volume binds accept any
     absolute host path by design (the panel already holds Docker-socket, root-equivalent access);
     only basic sanity checks (absolute path, no NUL bytes) apply. **Admin-only**: because binds
     reach arbitrary host paths, every entry point (all four creation paths, the Settings PATCH,
     and the preview/networks endpoints) rejects these fields for the operator role, and the UI
     sections render only for admins.
-  - Opt-in, under the wizard's existing "Advanced options" toggle — one-click creation for casual
+  - Opt-in, under the wizard's existing "Advanced options" toggle - one-click creation for casual
     use is unchanged. Available across all four creation paths (vanilla/plugin wizard, from-pack,
     from-mods, blueprint import) and, post-creation, from a new "Docker settings" card on the
     server's Settings tab, applied via the existing Recreate flow.
-- **"Preview as YAML"** — an editable text preview of the generated container params
+- **"Preview as YAML"** - an editable text preview of the generated container params
   (new `src/services/dockerSpec.js`, using the new `js-yaml` dependency) that parses edits back
   into the same structured fields on Apply. Re-validated server-side both on Apply and again on
-  the real create/update request — the textarea's contents are never trusted just because they
+  the real create/update request - the textarea's contents are never trusted just because they
   started from a server-generated preview.
 - Migration `007_docker_advanced.js` adds `container_name`, `network_name`, `extra_ports_json`
   and `extra_binds_json` to `servers`; NULL/`[]` defaults keep every pre-existing server's
@@ -249,11 +249,11 @@ leaving the panel or reaching for the CLI.
 
 ### Fixed
 
-- **GHCR image name is now lowercased before build** — the `Docker` workflow derives `IMAGE_NAME`
+- **GHCR image name is now lowercased before build** - the `Docker` workflow derives `IMAGE_NAME`
   from `${GITHUB_REPOSITORY,,}` before `docker/build-push-action` runs. Docker/OCI tags must be
   all-lowercase, so a mixed-case GitHub owner or repo name (e.g. `OwenWright8/...`) previously
   failed the build outright.
-- **Port-collision check missed ports it should have known about** — `dbPortsInUse` (used to
+- **Port-collision check missed ports it should have known about** - `dbPortsInUse` (used to
   suggest and validate ports) now unions in each server's extra port mappings and BlueMap's own
   web-server port (tracked separately in the `integrations` table), closing a latent gap where a
   freshly suggested port could silently collide with either.
@@ -262,30 +262,30 @@ leaving the panel or reaching for the CLI.
 
 Containerized deployment (closes [#1](https://github.com/anefzaoui/minecraft-server-manager/issues/1)):
 the panel itself can now run as a Docker container, with a pre-built multi-arch image on GHCR and an
-official compose file — no clone-and-build needed for Portainer/Dockge-style hosts.
+official compose file - no clone-and-build needed for Portainer/Dockge-style hosts.
 
 ### Added
 
-- **Pre-built image on GHCR** — a new `Docker` workflow publishes
+- **Pre-built image on GHCR** - a new `Docker` workflow publishes
   `ghcr.io/anefzaoui/minecraft-server-manager` (`:latest` + immutable `:v<version>`) for
   linux/amd64 and linux/arm64 on every push to main.
-- **`Dockerfile`** — two-stage build: full install + Tailwind CSS compile in the build stage,
+- **`Dockerfile`** - two-stage build: full install + Tailwind CSS compile in the build stage,
   production-only `node_modules` in the runtime stage (`views/`, `src/`, and the built `public/`
   included; `scripts/` is copied before `npm ci` so the postinstall hook resolves, with
   `MSM_SKIP_POSTINSTALL` deferring the CSS build to its explicit step). Ships
   container-appropriate defaults (`PANEL_HOST=0.0.0.0`, `DATA_DIR=/data`) and a `/login`
   healthcheck.
-- **Official `docker-compose.yml`** — single required variable (`DATA_DIR_HOST`), used both as the
+- **Official `docker-compose.yml`** - single required variable (`DATA_DIR_HOST`), used both as the
   `/data` bind source and passed to the panel; mounts the host Docker socket; documents
-  reverse-proxy and secret-pinning options inline. Game ports need no mapping here — servers are
+  reverse-proxy and secret-pinning options inline. Game ports need no mapping here - servers are
   sibling containers that publish directly on the host.
-- **`DATA_DIR_HOST` host-path translation** — the piece that makes a containerized panel actually
+- **`DATA_DIR_HOST` host-path translation** - the piece that makes a containerized panel actually
   work: bind mounts are resolved by the Docker daemon against the _host_ filesystem, so a panel
   that sees its data at `/data` must describe it in host terms when creating server containers.
   New `src/docker/hostPath.js` re-roots every panel-local path at the Docker boundary (server
   `/data` binds plus the root-container `rm`/`chown` fallbacks), refuses paths outside `DATA_DIR`,
   follows the host's path-separator convention (Linux container ↔ Windows daemon and vice versa),
-  and is the identity when `DATA_DIR_HOST` is unset (bare metal — behavior unchanged). Config
+  and is the identity when `DATA_DIR_HOST` is unset (bare metal - behavior unchanged). Config
   validates that `DATA_DIR_HOST` is absolute and fails fast otherwise. Covered by a new
   `test/hostPath.test.js` suite.
 - **README**: new "Run the panel itself in Docker" section (quick start, sibling-container model,
@@ -300,52 +300,52 @@ official compose file — no clone-and-build needed for Portainer/Dockge-style h
 ## [0.8.0] - 2026-07-16
 
 Full-surface UI overhaul: every page, tab, partial, layout and page script audited
-(five parallel review passes, ~150 element-level findings) and fixed — visual bugs,
+(five parallel review passes, ~150 element-level findings) and fixed - visual bugs,
 broken states, dated patterns, and consistency drift. Backend touched only where a
 UI bug originated server-side.
 
 ### Fixed
 
-- **Invisible status dot for starting/unhealthy servers** — the dot class was assembled at
+- **Invisible status dot for starting/unhealthy servers** - the dot class was assembled at
   render time (`bg-{{color}}-500`) so Tailwind never generated `.bg-gold-500`; the new
   `statusDot` helper emits full literal classes. Affected the sidebar, dashboard cards, the
   server header, and the public status page.
-- **Duplicate server creation closed off** — dismissing a progress modal now settles its
-  promise (`runTask` rejects with `dismissed`, callers show a "still running — see the task
+- **Duplicate server creation closed off** - dismissing a progress modal now settles its
+  promise (`runTask` rejects with `dismissed`, callers show a "still running - see the task
   tray" notice) and the wizard's Create button stays busy for the whole flow; the blueprint
   page adds an in-flight guard. Previously a dismissed modal left creation running silently
   with the button re-clickable.
-- **Chat double-send** — Enter bypassed the busied Send button; sends are now in-flight
+- **Chat double-send** - Enter bypassed the busied Send button; sends are now in-flight
   guarded, and the composer is disabled with a real `<fieldset disabled>` while the server is
   stopped (the old `pointer-events-none` trick let keyboard users send anyway; same fix for
   the world-controls rail).
-- **Schedule edits can no longer destroy the schedule** — edit now creates the replacement
+- **Schedule edits can no longer destroy the schedule** - edit now creates the replacement
   before deleting the original (worst case is a labeled duplicate, never a loss).
-- **Toasts rendered behind modal backdrops** (z-50 under z-60) — toasts move to z-65,
+- **Toasts rendered behind modal backdrops** (z-50 under z-60) - toasts move to z-65,
   dropdown menus to z-68, and the whole stacking scale is documented in input.css. The
   task-tray panel drops a z-index that was silently capped by the topbar's stacking context.
-- **Table truncation that could never engage** — `truncate` inside auto-layout cells let long
+- **Table truncation that could never engage** - `truncate` inside auto-layout cells let long
   file/mod/backup/world/pack names push actions into horizontal scroll; name columns now use
   `w-full max-w-0` (+ `title`) across files, mods, backups, updates and worlds tables.
-- **Handlebars falsy-zero bugs** — `min="0"`, `max`, `step` and zero defaults were silently
+- **Handlebars falsy-zero bugs** - `min="0"`, `max`, `step` and zero defaults were silently
   dropped in catalog fields; a new `isDefined` helper fixes constraints and placeholders.
 - **Console**: command replies no longer hide below the full-height empty placeholder; the
   empty state clears on first output; filters that hide every line say so; the stream shows a
-  visible "disconnected — reconnecting" marker; a leading `/` is stripped to match the
+  visible "disconnected - reconnecting" marker; a leading `/` is stripped to match the
   decorative prompt; command history is deduped.
-- **Metrics charts were never themed** — a dead expression left Chart.js's default #666 axes;
+- **Metrics charts were never themed** - a dead expression left Chart.js's default #666 axes;
   axes/grid/legend now derive from the theme tokens and re-theme on toggle. Reconnects back
   off (a stopped server was polled flat-out every 5s forever) and pause while the tab is
   hidden so gaps aren't drawn as continuous lines.
-- **Dashboard live hydration now moves the status dot** — a crashed server used to keep a
+- **Dashboard live hydration now moves the status dot** - a crashed server used to keep a
   green pulsing "Running" until manual reload (`/api/servers/live` now includes each server's
   status; stale CPU/memory numbers are cleared for stopped servers). The Docker tile shows an
-  "Unknown — retrying" state instead of an eternal "Checking…"; the card filter matches
+  "Unknown - retrying" state instead of an eternal "Checking…"; the card filter matches
   name/flavor/version/tags instead of the whole card text (typing "cpu" matched every card)
   and shows a "no matches" message.
-- **`fmtBytes` floor bug** — three drifted copies all rendered 0 bytes as "1 KB" ("Total:
+- **`fmtBytes` floor bug** - three drifted copies all rendered 0 bytes as "1 KB" ("Total:
   1 KB in 0 archives"); one shared `lib/format.js` matches the server-side `bytes` helper.
-- **Light-theme-invisible selection** on accent/icon pickers (white ring on white card) —
+- **Light-theme-invisible selection** on accent/icon pickers (white ring on white card) -
   all pickers now use the theme-aware `.swatch`/`.tile` selected ring driven by
   `aria-pressed`.
 - Inventory: Enter in item search double-fired the request; the Delete-item and
@@ -368,23 +368,23 @@ UI bug originated server-side.
 
 ### Added
 
-- **Motion pass — everything that changes state now moves** (all of it collapsed to a single
+- **Motion pass - everything that changes state now moves** (all of it collapsed to a single
   instant frame under `prefers-reduced-motion`):
   - **Segmented controls become sliding pills.** A new `lib/seg.js` injects a `.seg-pill`
-    into every `.seg` — the raised key glides between segments instead of teleporting.
+    into every `.seg` - the raised key glides between segments instead of teleporting.
     Selection already lives in `aria-pressed`/`aria-selected`, so every existing segmented
     control (wizard tabs, chat Tellraw/Say, dashboard view toggle, platform pickers, item
-    browser, teleport dialogs — including ones created later inside modals) is upgraded with
+    browser, teleport dialogs - including ones created later inside modals) is upgraded with
     zero page-code changes; layout shifts reposition without a misleading glide, and the
     plain CSS state remains the no-JS fallback.
   - **Checkboxes** grow their checkmark in with a small overshoot (and shrink it out on
     uncheck); **radios** animate the dot out from the center via a registered
-    `--msm-radio-r` custom property; **toggles** get tactile physics — the knob squashes
+    `--msm-radio-r` custom property; **toggles** get tactile physics - the knob squashes
     toward the direction of travel while held down (edge-anchored `scaleX`, so it can never
     leave the track) and glides with a fast-settle curve, deliberately without overshoot:
     both resting positions sit flush against the track edges.
   - **Modals** fade their backdrop in and out with a subtle panel shrink on close (logic
-    still fires immediately — only the removal waits); **dropdown menus** and the **task
+    still fires immediately - only the removal waits); **dropdown menus** and the **task
     tray panel** scale out of their trigger edge, origin-aware when a menu flips upward.
   - **Chat messages** slide in as they arrive (history replay deliberately doesn't);
     **inputs** ease their focus ring in; swatch/tile selection rings animate via their
@@ -399,20 +399,20 @@ UI bug originated server-side.
   input; a live preview line renders the styled message exactly as it lands in-game
   (including a scrambling §k obfuscated preview and a readable glow for dark colors on the
   dark trough); messages get panel-TZ timestamps and sender tooltips; auto-scroll only sticks
-  when already at the bottom; long messages wrap. **Chat history is now server-side** —
+  when already at the bottom; long messages wrap. **Chat history is now server-side** -
   recent sends (already recorded as events) render on load, shared across admins, surviving
   reloads.
-- **Toast-then-reload is gone from day-to-day flows** — player role toggles, ban/pardon/kick,
+- **Toast-then-reload is gone from day-to-day flows** - player role toggles, ban/pardon/kick,
   ban-IP add/remove, command prefix saves, test runs and deletes all patch the DOM in place;
   deletes that empty a table restore its empty state instead of leaving orphaned headers.
-- **Timestamps honor the panel timezone everywhere** — views emit `data-ts`/`data-ts-ago`
+- **Timestamps honor the panel timezone everywhere** - views emit `data-ts`/`data-ts-ago`
   hydrated through the shared datetime lib (dashboard activity, activity page, backups,
-  worlds, schedules — which showed UTC in the table and panel-TZ in the modal for the same
-  schedule — settings users, updates, storage, file managers, crash cards).
+  worlds, schedules - which showed UTC in the table and panel-TZ in the modal for the same
+  schedule - settings users, updates, storage, file managers, crash cards).
 - **New primitives**: `.notice` (+ ok/warn/danger/info) replaces every ad-hoc callout box;
   `.swatch` (color tiles with a theme-aware gap-ring selected state); `.tile` (wizard
   pickers); `.subtab` (server sub-nav pills); `.meter-indeterminate` (honest sliding-block
-  meter replacing all fake `animate-pulse` bars — task tray, wizard, blueprints, worlds,
+  meter replacing all fake `animate-pulse` bars - task tray, wizard, blueprints, worlds,
   mods); disabled styles for `.input`, `.msm-toggle`, `.seg-btn` and `fieldset:disabled`;
   pressed-state styling for chip toggles via `aria-pressed`.
 - **Destructive actions separated from safe ones**: Delete server sits behind a divider with
@@ -443,7 +443,7 @@ UI bug originated server-side.
 - **Badges are a closed system**: `.badge` is neutral by default with exactly four semantic
   variants (`badge-ok/warn/danger/info`); all ~40 ad-hoc bg/text colorway combos across every page
   and page script now use them (including the activity-timeline type badges).
-- **Themed scrollbars** everywhere — thin, line-colored, transparent track — replacing the stock
+- **Themed scrollbars** everywhere - thin, line-colored, transparent track - replacing the stock
   OS bar on both themes.
 - **Tables**: cells move to `px-4` so first/last columns align with card headers and padding.
 - **Inputs**: hover now strengthens the border (stone-500, reads stronger in both themes); help
@@ -465,17 +465,17 @@ UI bug originated server-side.
   four divergent ad-hoc patterns (ghost-buttons-in-a-box, chip toggles, inset tablists). Segments are
   the exact height of inputs (38px) so platform pickers align with their search field, have real gaps
   between items, style their active state off `aria-selected`/`aria-pressed` (raised key + lit top
-  edge + green text), and inactive hover changes text only — a hovered segment can no longer be
+  edge + green text), and inactive hover changes text only - a hovered segment can no longer be
   mistaken for the selected one. Converted: wizard source tabs, mod-mode, all three
   Modrinth/CurseForge pickers, dashboard grid/list toggle, chat Tellraw/Say, and both
   teleport-dialog tab rows. Segments are exempt from the global press-down effect (selected tabs
   no longer bounce).
-- **Simple/Advanced is now an "Advanced options" switch** in the wizard toolbar — a boolean control
-  for a boolean choice — instead of a two-item tab group.
+- **Simple/Advanced is now an "Advanced options" switch** in the wizard toolbar - a boolean control
+  for a boolean choice - instead of a two-item tab group.
 - **Server icons are the official Minecraft sprites** (isometric grass block, creeper head, diamond,
   TNT, chest, diamond sword, potion, end portal frame) from minecraft.wiki, replacing the hand-drawn
   rect-mosaic SVGs. © Mojang, attributed in the README, excluded from the MIT license.
-- Tile pickers (loader, server type, icon, accent color — wizard and server Settings) keep a
+- Tile pickers (loader, server type, icon, accent color - wizard and server Settings) keep a
   constant 2px border and swap only its color, so selecting no longer shifts the row by a pixel.
 - Tooltips: only the first tooltip of a scan waits 350ms; neighbors shown while one is (or was just)
   visible appear instantly.
@@ -498,7 +498,7 @@ UI bug originated server-side.
   a ring on hover instead of scaling.
 - Toast and confirm copy: "Starting up!" and "(take a snapshot first!)" reworded without
   exclamation marks.
-- README: full copy pass — em-dash density cut to ~1 per 320 words, glossary bullets now use colon
+- README: full copy pass - em-dash density cut to ~1 per 320 words, glossary bullets now use colon
   separators, two ornamental "excellent"s removed. No factual content changed.
 
 ### Fixed
@@ -526,7 +526,7 @@ UI bug originated server-side.
 
 - **Shadows are a three-level scale mapped to meaning** (`raised` / `overlay` / `modal`, one light
   source, cool-tinted like the stone ramp); the six ad-hoc `shadow-sm/lg/xl` uses (cards, task
-  panel, dropdowns, modals, toasts, tooltips) now pick a level. Cards drop their shadow entirely —
+  panel, dropdowns, modals, toasts, tooltips) now pick a level. Cards drop their shadow entirely -
   the border and the dark-mode lightness step carry that edge alone.
 - Chips move from pill (`rounded-full`) to `rounded-sm`, staying in the product's blocky register.
 - Tables set `font-variant-numeric: tabular-nums` so sizes, ports and dates align.
@@ -543,12 +543,12 @@ UI bug originated server-side.
 - **Read-only viewers can no longer exfiltrate RCON passwords or server data.** Two GET routes were
   reachable by the `viewer` role (which `requireWrite` only blocks from writes): the per-server file
   manager and the backup-archive download. Both expose `server.properties`, which the itzg image writes
-  with the plaintext `rcon.password` — so a nominally read-only account could recover RCON credentials
+  with the plaintext `rcon.password` - so a nominally read-only account could recover RCON credentials
   and full server contents. The per-server file manager (`/api/servers/:id/files`) and backup download
   (`/api/backups/:id/download`) are now restricted to `admin`/`operator`.
 - **Path traversal in the mod content routes is fixed.** `POST /api/servers/:id/mods/toggle` and
   `DELETE /api/servers/:id/mods/:file` passed the `file` name into a single `dataPath()` join, which
-  only guarantees containment within `DATA_DIR` — not within the server's own directory. A crafted
+  only guarantees containment within `DATA_DIR` - not within the server's own directory. A crafted
   `../../../panel.db` (or `.session-secret`) name could rename or delete panel-internal files (the auth
   database and the at-rest secret key), a destructive/DoS primitive available to any `operator`. Content
   filenames are now validated as bare names (no separators, NUL, or dot-segments) before any path join.
@@ -571,8 +571,8 @@ UI bug originated server-side.
 - **"From mods" is now a real modded-server creation hub.** The old chips-and-solver panel is replaced
   by a loader-first browser: pick a **mod loader** (Fabric, Forge, NeoForge, Quilt), a **Minecraft
   version**, and an optional **loader build** to pin, then search **Modrinth and CurseForge** for mods
-  compatible with that choice. Results and picks render as a full list — mod icon, name, description,
-  downloads — and every selected mod gets its **own version dropdown** so you can pin an exact build.
+  compatible with that choice. Results and picks render as a full list - mod icon, name, description,
+  downloads - and every selected mod gets its **own version dropdown** so you can pin an exact build.
 - **Automatic dependency resolution.** Adding a mod pulls in its **required dependencies** recursively
   (e.g. REI → Architectury API, Cloth Config, Fabric API). Dependencies appear in the list badged
   _"dependency"_ with their own version pickers; you can change a build or remove one, and removals are
@@ -582,21 +582,21 @@ UI bug originated server-side.
   Forge registries (cached, best-effort, always offering a "Latest" default), mapped to the matching
   itzg env var (`FABRIC_LOADER_VERSION`, `QUILT_LOADER_VERSION`, `NEOFORGE_VERSION`, `FORGE_VERSION`).
 - **One-task modded creation.** "From mods" servers are built by a single server-side task with real
-  progress — create (without starting) → install every mod pinned to its chosen build → start — so a
+  progress - create (without starting) → install every mod pinned to its chosen build → start - so a
   loader server boots with its mods already present. Individual mod failures are tolerated and reported.
 
 ### Changed
 
 - **The "Standard" tab is now "Vanilla."** It covers Vanilla and the plugin flavors (Paper, Purpur);
   the mod loaders moved to "From mods", which is where you pick mods for them.
-- **The version picker lists every Mojang channel** — releases, snapshots, betas and alphas — instead
+- **The version picker lists every Mojang channel** - releases, snapshots, betas and alphas - instead
   of releases only, each labelled by channel. (From modpack and From blueprint are unchanged.)
 - The compatibility solver is kept as an optional **"Auto-detect from mods"** sub-mode inside From mods
   for when you'd rather have the loader and version chosen from your mod list.
 
 ### Notes
 
-- No database schema change was required — loader builds are stored as env vars and pinned mods as
+- No database schema change was required - loader builds are stored as env vars and pinned mods as
   overlay content, both existing structures. The versioned migration runner already applies any future
   schema changes to your existing `data/panel.db` on startup, so upgrades never assume a fresh database.
 
@@ -605,8 +605,8 @@ UI bug originated server-side.
 ### Added
 
 - **"Why this over Pterodactyl / Crafty Controller / AMP?"** comparison section in the README.
-- **Automated GitHub Releases.** A workflow publishes a tagged Release — with notes pulled straight
-  from this changelog — for each new `package.json` version pushed to `main`. It runs on every push
+- **Automated GitHub Releases.** A workflow publishes a tagged Release - with notes pulled straight
+  from this changelog - for each new `package.json` version pushed to `main`. It runs on every push
   but is idempotent, so a version is released exactly once; it can also be run from the Actions tab.
 
 ### Changed
@@ -629,7 +629,7 @@ UI bug originated server-side.
 - **Admin Chat tab.** A console-style panel (Console → Chat) for sending styled messages in-game
   without hand-writing `tellraw`. Pick a recipient (Everyone or an online player), a mode (**Tellraw**
   styled, or **Say** plain `[Server]` broadcast), a **color** from the 16 vanilla swatches, and any of
-  **bold / italic / underline / strikethrough / obfuscated** — laid out as clickable swatches and
+  **bold / italic / underline / strikethrough / obfuscated** - laid out as clickable swatches and
   chips. Type, hit Enter, and the message appears in-game and in the panel's chat log (rendered with
   its styling). Targets are validated so entity selectors like `@e[…]` can't be injected.
 
@@ -638,8 +638,8 @@ UI bug originated server-side.
 ### Fixed
 
 - **Copy buttons now work over plain HTTP (LAN/IP).** The browser's async Clipboard API is only
-  available on HTTPS/localhost, so "Copy address" — and the copy-UUID, crash-trace, and
-  integration-link buttons — failed with _"Copy failed — select and copy manually"_, and that
+  available on HTTPS/localhost, so "Copy address" - and the copy-UUID, crash-trace, and
+  integration-link buttons - failed with _"Copy failed - select and copy manually"_, and that
   fallback pointed at a `<select>` you couldn't select. Copy now falls back to `execCommand`, and if
   even that is blocked, to a prompt you can copy the value out of by hand.
 
@@ -649,7 +649,7 @@ UI bug originated server-side.
 
 - **Full control when resetting (re-rolling) a world.** The Reset dialog now lets you keep the current
   seed, roll a **new random** seed, or enter a **custom** seed; optionally switch the **world type**
-  (Default / Superflat / Large biomes / Amplified); and choose whether to take a safety backup first —
+  (Default / Superflat / Large biomes / Amplified); and choose whether to take a safety backup first -
   all applied on the next start, without recreating the server.
 
 ### Fixed
@@ -673,21 +673,21 @@ UI bug originated server-side.
 ### Fixed
 
 - **Pack-mod "Disable" now excludes the right project.** It reads the real CF slug/ID from the pack
-  manifest instead of guessing from the display name — the old guess silently failed for
+  manifest instead of guessing from the display name - the old guess silently failed for
   renamed/unofficial mods (e.g. "cc tweaked", whose slug is `unofficial-cc-tweaked-…`).
-- **Mod installs now match the server's loader — no more a Fabric jar landing on a NeoForge server.**
+- **Mod installs now match the server's loader - no more a Fabric jar landing on a NeoForge server.**
   For modpack servers (`AUTO_CURSEFORGE` / Modrinth / FTBA) the loader isn't in an env var, so the
   panel had nothing to filter by and installed whichever build came first (often Fabric). It now
   detects the pack's real loader from the manifest mc-image-helper writes (e.g.
   `.neoforge-manifest.json`), so the Modrinth search list, the search **Install** button, and
-  add-by-URL all resolve the correct loader's build — or fail with a clear "no build matches" message
+  add-by-URL all resolve the correct loader's build - or fail with a clear "no build matches" message
   instead of silently installing the wrong one.
 
 ## [0.3.0] - 2026-07-14
 
 ### Added
 
-- **Create wizard — PvP (and the full gameplay/`server.properties` set) at creation.** The Simple
+- **Create wizard - PvP (and the full gameplay/`server.properties` set) at creation.** The Simple
   "World & rules" step now has a PvP on/off choice (previously reachable only in Advanced mode), and
   Advanced mode exposes every image/`server.properties` setting. Everything chosen here is applied by
   the image at the **first start**, so the server comes up correct with no extra restart.
@@ -701,7 +701,7 @@ UI bug originated server-side.
 
 ### Fixed
 
-- **Containers now run as the panel's own host user (UID/GID) — the root fix for the file `EACCES`
+- **Containers now run as the panel's own host user (UID/GID) - the root fix for the file `EACCES`
   errors.** Previously containers wrote files as uid `1000`; when the panel ran as a different host
   user it could not manage its own servers' files, so installing a mod (`copyfile` denied), deleting a
   server, and other operations failed with `EACCES`. Every server now creates files owned by the panel
@@ -716,18 +716,18 @@ UI bug originated server-side.
 
 ### Added
 
-- **World controls — live PvP toggle.** Enable/disable PvP on a running server without a restart,
+- **World controls - live PvP toggle.** Enable/disable PvP on a running server without a restart,
   using a friendly-fire scoreboard team that online players are joined to (teammates can't damage
-  each other); re-enabling disbands the team. Covers players online when toggled — re-toggle after
+  each other); re-enabling disbands the team. Covers players online when toggled - re-toggle after
   new joins.
-- **World controls — more gamerule quick-toggles.** Mob spawning, fire spread, fall damage, natural
+- **World controls - more gamerule quick-toggles.** Mob spawning, fire spread, fall damage, natural
   regeneration, phantoms (insomnia), and instant respawn, alongside the existing keep-inventory,
   day/night cycle, weather cycle, and mob-griefing toggles. All are live over RCON and reflect the
   server's current state.
-- **README — "Networking, ports & remote access".** A ports-at-a-glance table (panel / game / RCON /
+- **README - "Networking, ports & remote access".** A ports-at-a-glance table (panel / game / RCON /
   Bedrock / BlueMap), how to bind `0.0.0.0`, host + provider firewall guidance, reverse-proxy (TLS)
   and SSH-tunnel options, and a note on the PM2 Node-version pinning gotcha.
-- **README — "Status & areas that need work".** Honest, source-verified limitations of the custom
+- **README - "Status & areas that need work".** Honest, source-verified limitations of the custom
   RTP, structure/biome finding, item give/take, item listing, and BlueMap features.
 
 ### Changed
@@ -747,53 +747,53 @@ UI bug originated server-side.
 
 ## [0.1.0] - 2026-07-14
 
-Initial public release — a complete, self-hosted control panel for Minecraft servers running on the
+Initial public release - a complete, self-hosted control panel for Minecraft servers running on the
 [itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) image.
 
 ### Core
 
-- **Multi-server lifecycle** — create / start / stop / restart / recreate / delete, with a graceful
+- **Multi-server lifecycle** - create / start / stop / restart / recreate / delete, with a graceful
   RCON `stop` before container stop, health-aware status, and crash detection with backoff.
-- **Guided wizard** — Simple mode or Advanced mode exposing every supported environment variable with
+- **Guided wizard** - Simple mode or Advanced mode exposing every supported environment variable with
   plain-English help, grouped by section, plus a raw `KEY=value` escape hatch; only non-default
   values are applied.
-- **Pinned modpacks** — "latest" is resolved to a concrete version id and pinned at install time.
+- **Pinned modpacks** - "latest" is resolved to a concrete version id and pinned at install time.
   Upgrades are explicit: preview → automatic pre-update backup → graceful stop → re-pin → recreate →
   health monitoring → one-click rollback.
-- **Custom-mod overlay** — self-added mods are downloaded into a shared, sha256-deduplicated library
+- **Custom-mod overlay** - self-added mods are downloaded into a shared, sha256-deduplicated library
   and hard-linked into the server; they survive pack updates, with class-aware disabling.
-- **Console, logs & RCON** — live console over WebSocket, ANSI rendering, search/level filters, a
+- **Console, logs & RCON** - live console over WebSocket, ANSI rendering, search/level filters, a
   command bar with history, and a player list with quick actions; a generated, encrypted RCON
   password is injected per server.
-- **Player moderation** — whitelist, ops (levels 1–4), bans, IP bans (RCON while running, direct JSON
+- **Player moderation** - whitelist, ops (levels 1–4), bans, IP bans (RCON while running, direct JSON
   edits while stopped), and teleports by coordinates, to a player, or to the nearest biome/structure.
-- **Backups & schedules** — save-safe archive/restore with retention classes and free-space
+- **Backups & schedules** - save-safe archive/restore with retention classes and free-space
   preflight; per-server and global cron tasks (restart / backup / RCON) with next-run previews.
-- **Blueprints (`.mcserver.zip`)** — portable, secret-stripped recipes of an instance (config,
+- **Blueprints (`.mcserver.zip`)** - portable, secret-stripped recipes of an instance (config,
   resources, pinned pack, mod-overlay manifest, chosen config files, optional embedded world); import
   reproduces the server with fresh ports and hash-verified downloads.
-- **Storage analytics & quotas** — a background size-indexer walks `./data`, caches sizes, and
+- **Storage analytics & quotas** - a background size-indexer walks `./data`, caches sizes, and
   panel-enforces per-server disk quotas, with usage breakdowns, largest-files, orphan detection, and
   trends.
-- **History & crash reports** — every action is a structured event with actor and captured log
+- **History & crash reports** - every action is a structured event with actor and captured log
   excerpts; crash reports are auto-detected, parsed, and exportable.
 
 ### Beyond the basics
 
-- **Live world map** — one-click BlueMap install matched to the server's loader, served through the
+- **Live world map** - one-click BlueMap install matched to the server's loader, served through the
   panel's authenticated proxy.
-- **Analytics & scoreboard** — vanilla stats ingested on a schedule, per-player profiles, and a
+- **Analytics & scoreboard** - vanilla stats ingested on a schedule, per-player profiles, and a
   rankable scoreboard.
-- **Activity timeline** — every log line classified (chat, joins, leaves, deaths incl. PvP,
+- **Activity timeline** - every log line classified (chat, joins, leaves, deaths incl. PvP,
   advancements) into a searchable per-server timeline.
-- **Inventory forensics** — read any player's inventory/armor/ender chest from playerdata NBT,
+- **Inventory forensics** - read any player's inventory/armor/ender chest from playerdata NBT,
   automatic snapshots on join/death, snapshot diffs, cross-player item search, give/clear via RCON.
-- **Investigation** — advisory x-ray suspicion scoring from ore-discovery ratios vs the server median.
-- **Discord** — encrypted-webhook notifications with per-event toggles.
-- **Invites & client modpacks** — a paste-ready invite block plus a generated client `.mrpack`.
-- **Pick-mods-first solver** — choose mods and the solver proposes the newest fully-compatible loader
+- **Investigation** - advisory x-ray suspicion scoring from ore-discovery ratios vs the server median.
+- **Discord** - encrypted-webhook notifications with per-event toggles.
+- **Invites & client modpacks** - a paste-ready invite block plus a generated client `.mrpack`.
+- **Pick-mods-first solver** - choose mods and the solver proposes the newest fully-compatible loader
   and MC version pair.
-- **Public status page** — optional unauthenticated `/status/<slug>` per server.
+- **Public status page** - optional unauthenticated `/status/<slug>` per server.
 
 ### Security
 

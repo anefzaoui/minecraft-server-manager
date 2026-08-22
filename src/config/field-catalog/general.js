@@ -12,7 +12,7 @@ module.exports = [
     type: 'enum',
     default: 'VANILLA',
     options: [
-      { value: 'VANILLA', label: 'Vanilla', desc: 'Official Mojang server — no mods or plugins, datapacks only.' },
+      { value: 'VANILLA', label: 'Vanilla', desc: 'Official Mojang server - no mods or plugins, datapacks only.' },
       { value: 'PAPER', label: 'Paper', desc: 'High-performance Spigot fork; the most popular plugin server.' },
       { value: 'PURPUR', label: 'Purpur', desc: 'Paper fork focused on configurability and extra gameplay features.' },
       { value: 'PUFFERFISH', label: 'Pufferfish', desc: 'Optimized Paper fork aimed at large servers.' },
@@ -22,11 +22,11 @@ module.exports = [
         label: 'Folia',
         desc: 'Paper with regionized multithreading; many plugins are not compatible.',
       },
-      { value: 'SPIGOT', label: 'Spigot', desc: 'Automated downloads no longer work — use Paper instead. (legacy)' },
+      { value: 'SPIGOT', label: 'Spigot', desc: 'Automated downloads no longer work - use Paper instead. (legacy)' },
       {
         value: 'BUKKIT',
         label: 'CraftBukkit',
-        desc: 'Automated downloads no longer work — use Paper instead. (legacy)',
+        desc: 'Automated downloads no longer work - use Paper instead. (legacy)',
       },
       {
         value: 'CANYON',
@@ -73,7 +73,7 @@ module.exports = [
       {
         value: 'CURSEFORGE',
         label: 'CurseForge server pack (manual)',
-        desc: 'Deprecated manual server-pack runner — use the automated CurseForge type. (legacy)',
+        desc: 'Deprecated manual server-pack runner - use the automated CurseForge type. (legacy)',
       },
       {
         value: 'FTBA',
@@ -183,7 +183,7 @@ module.exports = [
     key: 'FABRIC_LAUNCHER_VERSION',
     scope: 'env',
     label: 'Fabric launcher version',
-    help: 'Pins a specific version of the Fabric server launcher itself. Rarely needed — leave empty for the latest.',
+    help: 'Pins a specific version of the Fabric server launcher itself. Rarely needed - leave empty for the latest.',
     type: 'text',
     mode: 'advanced',
     section: 'flavor',
@@ -203,7 +203,7 @@ module.exports = [
     key: 'CUSTOM_SERVER',
     scope: 'env',
     label: 'Custom server JAR',
-    help: 'URL or container path of the server jar when the type is Custom. A URL is only downloaded once — to fetch a new copy, delete the jar from the server folder and restart.',
+    help: 'URL or container path of the server jar when the type is Custom. A URL is only downloaded once - to fetch a new copy, delete the jar from the server folder and restart.',
     type: 'text',
     mode: 'advanced',
     section: 'flavor',
@@ -213,7 +213,7 @@ module.exports = [
     key: 'javaTag',
     scope: 'panel',
     label: 'Java version (image tag)',
-    help: 'Which Java runtime image the server runs on. Auto picks the right one for your Minecraft version — and for GT New Horizons, the newest Java the pinned pack version supports. Override only for special cases like old Forge (needs Java 8) or mods that break on newer Java. Forcing a GTNH server to Java 8 makes the image install GTNH’s legacy Java 8 server pack instead of the faster lwjgl3ify one.',
+    help: 'Which Java runtime image the server runs on. Auto picks the right one for your Minecraft version - and for GT New Horizons, the newest Java the pinned pack version supports. Override only for special cases like old Forge (needs Java 8) or mods that break on newer Java. Forcing a GTNH server to Java 8 makes the image install GTNH’s legacy Java 8 server pack instead of the faster lwjgl3ify one.',
     type: 'enum',
     default: '',
     options: [

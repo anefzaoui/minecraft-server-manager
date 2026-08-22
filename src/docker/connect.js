@@ -18,7 +18,7 @@ function detectOptions() {
   if (process.env.DOCKER_HOST) return {}; // dockerode reads DOCKER_HOST itself
   if (process.platform === 'win32') return { socketPath: '//./pipe/docker_engine' };
   // Prefer the classic system socket, but recent Docker Desktop (macOS) and
-  // rootless Docker/Podman only expose a per-user socket — probe those too so a
+  // rootless Docker/Podman only expose a per-user socket - probe those too so a
   // stranger with a default install isn't told "daemon unavailable".
   const candidates = [
     '/var/run/docker.sock',
@@ -41,7 +41,7 @@ function getDocker() {
 }
 
 /**
- * Probe the daemon. Never throws — returns a status object the setup wizard
+ * Probe the daemon. Never throws - returns a status object the setup wizard
  * renders directly.
  */
 async function checkDocker() {

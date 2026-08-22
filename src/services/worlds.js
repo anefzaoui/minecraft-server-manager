@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // TOTAL WORLD MANAGEMENT. The world library (./data/library/worlds) plus every
@@ -66,7 +66,7 @@ const FLAVOR_LABEL = {
   CUSTOM: 'Custom jar',
 };
 
-// Server-type family — used for compat warnings (Bukkit-family splits worlds
+// Server-type family - used for compat warnings (Bukkit-family splits worlds
 // into three dirs; modded worlds carry loader-specific dimensions/data).
 const FAMILY = {
   PAPER: 'bukkit',
@@ -161,7 +161,7 @@ async function importArchive(
   { name = '', originalName = '', actor = 'system', flavor = null, source = 'upload', onProgress = () => {} } = {}
 ) {
   const stat = await fsp.stat(uploadPath).catch(() => null);
-  if (!stat || !stat.isFile()) throw httpError(400, 'Upload not found — try again');
+  if (!stat || !stat.isFile()) throw httpError(400, 'Upload not found - try again');
 
   // Free-space preflight: extraction + re-zip can need ~3x the archive size.
   const { free } = await indexer.diskFree();
@@ -179,7 +179,7 @@ async function importArchive(
 
     const detected = await detectWorldRoot(tmpDir);
     if (!detected) {
-      throw httpError(400, "No level.dat found — this doesn't look like a Minecraft world");
+      throw httpError(400, "No level.dat found - this doesn't look like a Minecraft world");
     }
 
     const mcVersion = readLevelVersion(path.join(detected.rootAbs, 'level.dat'));
@@ -255,14 +255,14 @@ async function addZipToLibrary(zipAbs, { name, actor, worldSource, worldFlavor, 
 
 /**
  * Snapshot a server's active world (plus Bukkit-split dims) into the library.
- * Works while the server runs — wraps the copy in save-off/save-all/save-on.
+ * Works while the server runs - wraps the copy in save-off/save-all/save-on.
  */
 async function extractFromServer(serverId, { name = '', actor = 'system' } = {}) {
   const server = mustServer(serverId);
   const level = activeLevelName(server);
   const dims = serverWorldDims(serverId, level);
   if (!fs.existsSync(path.join(dims[0], 'level.dat'))) {
-    throw httpError(404, `World "${level}" has no level.dat yet — start the server once so it generates the world`);
+    throw httpError(404, `World "${level}" has no level.dat yet - start the server once so it generates the world`);
   }
 
   const worldBytes = await dirsSize(dims);
@@ -277,7 +277,7 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
   await fsp.mkdir(tmpDir, { recursive: true });
 
   try {
-    // Consistent copy: pause saves, flush, copy to tmp, resume — then zip at leisure.
+    // Consistent copy: pause saves, flush, copy to tmp, resume - then zip at leisure.
     await withPausedSaves(serverId, running, async () => {
       for (const dim of dims) {
         await fsp.cp(dim, path.join(tmpDir, path.basename(dim)), { recursive: true });
@@ -293,7 +293,7 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
       (server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT' ? server.mc_version : null);
 
     const row = await addZipToLibrary(zipTmp, {
-      name: (name || '').trim() || `${server.display_name} — ${level}`,
+      name: (name || '').trim() || `${server.display_name} - ${level}`,
       actor,
       worldSource: `extract:${serverId}`,
       worldFlavor: server.type,
@@ -374,7 +374,7 @@ function compatWarnings(world, server) {
   const warnings = [];
   if (world.flavor && familyOf(world.flavor) !== familyOf(server.type)) {
     warnings.push(
-      `This world came from a ${flavorLabel(world.flavor)} server but the target runs ${flavorLabel(server.type)} — ` +
+      `This world came from a ${flavorLabel(world.flavor)} server but the target runs ${flavorLabel(server.type)} - ` +
         'loader- or plugin-specific data (custom dimensions, plugin files) may not load.'
     );
   }
@@ -382,7 +382,7 @@ function compatWarnings(world, server) {
   if (world.version && target && target !== 'LATEST' && target !== 'SNAPSHOT' && world.version !== target) {
     if (compareVersions(world.version, target) > 0) {
       warnings.push(
-        `The world was last played on Minecraft ${world.version} but this server runs ${target} — ` +
+        `The world was last played on Minecraft ${world.version} but this server runs ${target} - ` +
           'Minecraft cannot downgrade worlds safely; expect corruption or a refusal to load.'
       );
     } else {
@@ -398,7 +398,7 @@ function compatWarnings(world, server) {
  * Install a library world into a server.
  * mode 'replace': requires the server stopped; safety backup, then the active
  *                 world dirs are replaced in place (level-name unchanged).
- * mode 'alongside': extracts under `newName` next to existing worlds — switch
+ * mode 'alongside': extracts under `newName` next to existing worlds - switch
  *                   with activateWorld later. Safe while running.
  */
 async function installToServer(libraryId, serverId, { mode = 'replace', newName = '', actor = 'system' } = {}) {
@@ -418,7 +418,7 @@ async function installToServer(libraryId, serverId, { mode = 'replace', newName 
     if (await isRunning(serverId)) {
       throw httpError(
         409,
-        'Stop the server before replacing its active world — swapping it while running would corrupt the save'
+        'Stop the server before replacing its active world - swapping it while running would corrupt the save'
       );
     }
     targetLevel = activeLevelName(server);
@@ -431,7 +431,7 @@ async function installToServer(libraryId, serverId, { mode = 'replace', newName 
   } else {
     targetLevel = sanitizeWorldName(newName || lib.name);
     if (fs.existsSync(dataPath('servers', serverId, targetLevel))) {
-      throw httpError(409, `A world named "${targetLevel}" already exists on this server — pick another name`);
+      throw httpError(409, `A world named "${targetLevel}" already exists on this server - pick another name`);
     }
   }
 
@@ -500,7 +500,7 @@ async function copyBetweenServers(
   const source = mustServer(sourceServerId);
   const target = mustServer(targetServerId);
   if (sourceServerId === targetServerId)
-    throw httpError(400, 'Source and target are the same server — use Duplicate instead');
+    throw httpError(400, 'Source and target are the same server - use Duplicate instead');
 
   const row = await extractFromServer(sourceServerId, {
     name: `${source.display_name} → ${target.display_name} (copy)`,
@@ -580,7 +580,7 @@ async function renameWorld(serverId, worldName, newName, { actor = 'system' } = 
     serverId,
     actor,
     type: 'world-renamed',
-    summary: `World "${worldName}" renamed to "${clean}"${wasActive ? ' (active world — level-name updated)' : ''}`,
+    summary: `World "${worldName}" renamed to "${clean}"${wasActive ? ' (active world - level-name updated)' : ''}`,
     details: { from: worldName, to: clean, wasActive },
   });
   return { name: clean, wasActive };
@@ -627,7 +627,7 @@ async function resetWorld(
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before resetting the world');
   const level = activeLevelName(server);
   const dims = serverWorldDims(serverId, level);
-  if (!fs.existsSync(dims[0])) throw httpError(404, `World "${level}" does not exist yet — nothing to reset`);
+  if (!fs.existsSync(dims[0])) throw httpError(404, `World "${level}" does not exist yet - nothing to reset`);
 
   // Resolve the seed to apply (null → cleared → Minecraft picks a random one).
   let newSeed = null;
@@ -665,7 +665,7 @@ async function resetWorld(
     seedMode === 'keep'
       ? newSeed
         ? `keeping seed ${newSeed}`
-        : 'seed could not be read — a new random seed will be used'
+        : 'seed could not be read - a new random seed will be used'
       : newSeed
         ? `with seed ${newSeed}`
         : 'with a new random seed';
@@ -699,7 +699,7 @@ async function deleteServerWorld(serverId, worldName, { actor = 'system' } = {})
   const server = mustServer(serverId);
   checkWorldName(worldName);
   if (worldName === activeLevelName(server)) {
-    throw httpError(409, 'This is the active world — activate another world first, or use Reset to regenerate it');
+    throw httpError(409, 'This is the active world - activate another world first, or use Reset to regenerate it');
   }
   const dims = serverWorldDims(serverId, worldName);
   if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
@@ -782,7 +782,7 @@ function libraryWorlds() {
       mcVersion: row.version || null,
       size: row.size_bytes,
       created: (row.created_at || '').slice(0, 16),
-      // created_at is SQLite datetime('now') — UTC without a zone marker.
+      // created_at is SQLite datetime('now') - UTC without a zone marker.
       // Epoch ms lets the frontend format in the viewer's locale/timezone.
       createdMs: (() => {
         const ms = Date.parse(String(row.created_at || '').replace(' ', 'T') + 'Z');
@@ -847,7 +847,7 @@ function setActiveLevel(server, levelName, { actor }) {
   if (server.env && server.env.LEVEL !== undefined) {
     require('./servers').updateServer(server.id, { env: { ...server.env, LEVEL: levelName } }, { actor });
   }
-  // Keep BlueMap (if enabled) pointed at whichever world is actually active —
+  // Keep BlueMap (if enabled) pointed at whichever world is actually active -
   // otherwise a rename/switch after enabling the map silently breaks it again.
   const mapService = require('./map');
   if (mapService.getMapConfig(server.id).enabled) mapService.writeMapConfigs(server.id);
@@ -877,7 +877,7 @@ function dimBase(name) {
 }
 
 // ---------------------------------------------------------------------------
-// level.dat best-effort NBT scans (no NBT dependency — gzip + tag-pattern scan)
+// level.dat best-effort NBT scans (no NBT dependency - gzip + tag-pattern scan)
 
 /** Read the MC version name ("1.21.5") out of level.dat, or null. */
 function readLevelVersion(levelDatAbs) {
@@ -964,7 +964,7 @@ async function extractArchive(file, destDir, originalName = '') {
         if (tarTotal > MAX_EXTRACT_BYTES) {
           throw httpError(
             413,
-            `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB) — refusing to extract (possible decompression bomb).`
+            `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
           );
         }
         return true;
@@ -1007,7 +1007,7 @@ function extractZip(zipFile, destDir) {
       zip.on('end', done);
       zip.on('entry', (entry) => {
         if (++entryCount > MAX_EXTRACT_ENTRIES) {
-          return fail(httpError(413, `Archive has too many entries (> ${MAX_EXTRACT_ENTRIES}) — refusing to extract.`));
+          return fail(httpError(413, `Archive has too many entries (> ${MAX_EXTRACT_ENTRIES}) - refusing to extract.`));
         }
         // Fast reject using the declared (central-directory) sizes.
         declaredBytes += entry.uncompressedSize || 0;
@@ -1015,7 +1015,7 @@ function extractZip(zipFile, destDir) {
           return fail(
             httpError(
               413,
-              `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB) — refusing to extract (possible decompression bomb).`
+              `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
             )
           );
         }
@@ -1040,7 +1040,7 @@ function extractZip(zipFile, destDir) {
                 fail(
                   httpError(
                     413,
-                    `Archive exceeds the ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB extraction limit — aborted (possible decompression bomb).`
+                    `Archive exceeds the ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB extraction limit - aborted (possible decompression bomb).`
                   )
                 );
               }

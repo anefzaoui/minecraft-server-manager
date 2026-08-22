@@ -2,7 +2,7 @@
 
 // Runs automatically after `npm install` so a fresh clone is styled without the
 // user having to remember `npm run build`. The Tailwind CSS bundle
-// (public/css/app.css) is a build artifact, not committed — missing it renders
+// (public/css/app.css) is a build artifact, not committed - missing it renders
 // every page unstyled, which is a classic "works on my machine" trap.
 //
 // This degrades gracefully: if build tooling isn't present (e.g. a production

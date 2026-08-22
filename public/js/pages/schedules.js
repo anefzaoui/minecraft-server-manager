@@ -33,7 +33,7 @@ function init() {
     const delBtn = e.target.closest('[data-schedule-delete]');
     if (delBtn) {
       const ok = await confirmDialog({
-        title: 'Delete this schedule?',
+        title: 'Delete This Schedule?',
         message: `${row.dataset.task} (${row.dataset.cron}) stops firing immediately.`,
         confirmLabel: 'Delete',
         danger: true,
@@ -76,7 +76,7 @@ function init() {
     if (!input) return;
     const row = input.closest('[data-schedule-row]');
     const enabled = input.checked;
-    input.disabled = true; // lock the toggle in flight — keeps the switch visual
+    input.disabled = true; // lock the toggle in flight - keeps the switch visual
     try {
       const res = await fetch(`/api/schedules/${row.dataset.scheduleId}/toggle`, {
         method: 'POST',
@@ -100,7 +100,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   content.innerHTML = `
     <label class="label">Runs on</label>
     <select class="input" data-sc-server data-label="Runs on">
-      <option value="">— global (the panel itself) —</option>
+      <option value="">- global (the panel itself) -</option>
       ${servers.map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`).join('')}
     </select>
     <label class="label mt-3">Task</label>
@@ -117,7 +117,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
     <div class="mt-2 rounded-md border border-line bg-raised p-2.5 text-xs" data-sc-preview>
       <span class="text-ink-faint">Type a cron expression to preview the next runs.</span>
     </div>
-    ${edit ? '<p class="help mt-3">Saving replaces the schedule (create, then remove the old one) — timing continues seamlessly.</p>' : ''}`;
+    ${edit ? '<p class="help mt-3">Saving replaces the schedule (create, then remove the old one) - timing continues seamlessly.</p>' : ''}`;
 
   const serverSel = content.querySelector('[data-sc-server]');
   const typeSel = content.querySelector('[data-sc-type]');
@@ -136,7 +136,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   const typeMeta = () => taskTypes.find((t) => t.value === typeSel.value) || {};
   const syncTypeUi = () => {
     cmdWrap.classList.toggle('hidden', typeSel.value !== 'rcon');
-    // Panel-wide tasks ignore the server — disable the picker instead of
+    // Panel-wide tasks ignore the server - disable the picker instead of
     // silently discarding whatever was selected in it.
     const scoped = Boolean(typeMeta().serverScoped);
     serverSel.disabled = !scoped;
@@ -173,7 +173,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   if (edit) renderPreview();
 
   openModal({
-    title: edit ? `Edit schedule — ${edit.taskType}` : 'New scheduled task',
+    title: edit ? `Edit schedule - ${edit.taskType}` : 'New scheduled task',
     content,
     actions: [
       { label: 'Cancel', kind: 'ghost' },
@@ -190,7 +190,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
           const meta = typeMeta();
           const serverId = serverSel.value || null;
           if (meta.serverScoped && !serverId) {
-            toast(`"${meta.label}" runs on a server — pick one.`, { kind: 'error' });
+            toast(`"${meta.label}" runs on a server - pick one.`, { kind: 'error' });
             return false;
           }
           const payload = {};
@@ -222,8 +222,8 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
               const del = await fetch(`/api/schedules/${edit.id}`, { method: 'DELETE' });
               const delData = await del.json().catch(() => ({}));
               if (!del.ok || delData.ok === false) {
-                // Worst case is a duplicate, never a loss — say so plainly.
-                toast('Saved as a new schedule, but the old one could not be removed — delete it manually.', {
+                // Worst case is a duplicate, never a loss - say so plainly.
+                toast('Saved as a new schedule, but the old one could not be removed - delete it manually.', {
                   kind: 'warn',
                   timeout: 10000,
                 });

@@ -1,14 +1,14 @@
-// @ts-nocheck — dynamic HTTP-JSON interop with four loader registries.
+// @ts-nocheck - dynamic HTTP-JSON interop with four loader registries.
 'use strict';
 
 // Loader BUILD versions for the "From mods" wizard, so a server can pin a
 // specific Fabric/Quilt/NeoForge/Forge loader instead of always tracking latest.
 // Each source is a public JSON endpoint; results are cached in api_cache and the
-// call is best-effort — on any failure we still return a usable "Latest" option
+// call is best-effort - on any failure we still return a usable "Latest" option
 // so the picker never dead-ends. The chosen build maps to the itzg env var:
 //   fabric → FABRIC_LOADER_VERSION   quilt → QUILT_LOADER_VERSION
 //   neoforge → NEOFORGE_VERSION      forge → FORGE_VERSION
-// An empty version means "don't pin" — let the image resolve the latest itself.
+// An empty version means "don't pin" - let the image resolve the latest itself.
 
 const db = require('../db');
 
@@ -85,7 +85,7 @@ async function neoforgeBuilds(mc) {
   return matched.slice(0, MAX_BUILDS).map((v) => ({ version: v, label: /-beta$/i.test(v) ? `${v} (beta)` : v }));
 }
 
-// Forge's promotions feed only surfaces the recommended + latest build per MC —
+// Forge's promotions feed only surfaces the recommended + latest build per MC -
 // that covers what almost everyone pins; the advanced FORGE_VERSION field remains
 // for arbitrary builds.
 async function forgeBuilds(mc) {
@@ -105,7 +105,7 @@ async function forgeBuilds(mc) {
 /**
  * Build list for a loader (+ MC where the loader is MC-specific). Always starts
  * with the "Latest" no-pin option, then specific builds newest-first when the
- * registry is reachable. Never throws — a failed fetch yields the Latest option.
+ * registry is reachable. Never throws - a failed fetch yields the Latest option.
  */
 async function getBuilds(loader, mc) {
   const key = String(loader).toLowerCase();
@@ -116,7 +116,7 @@ async function getBuilds(loader, mc) {
     else if (key === 'neoforge') builds = await neoforgeBuilds(mc);
     else if (key === 'forge') builds = await forgeBuilds(mc);
   } catch {
-    builds = []; // best-effort — fall through to Latest-only
+    builds = []; // best-effort - fall through to Latest-only
   }
   return { loader: key, envKey: envKeyFor(key), builds: [LATEST, ...builds], default: '' };
 }

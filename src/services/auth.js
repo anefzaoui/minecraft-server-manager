@@ -9,6 +9,9 @@ const db = require('../db');
 const { recordEvent } = require('../events');
 const totp = require('./totp');
 const secrets = require('./secrets');
+const { AVATAR_PRESETS } = require('../config/avatars');
+
+const AVATAR_PRESET_KEYS = new Set(AVATAR_PRESETS.map((p) => p.key));
 
 function firstRunNeeded() {
   return !db.get('SELECT 1 AS x FROM users LIMIT 1');
@@ -84,12 +87,46 @@ function publicUser(u) {
     role: u.role,
     createdAt: u.created_at,
     totpEnabled: Boolean(u.totp_enabled),
+    avatar: u.avatar || null,
   };
 }
 
 // ---------------------------------------------------------------------------
-// TOTP two-factor auth. Self-service (any role, acts on your own account) —
-// see web/routes/account.js — plus one admin recovery path in web/routes/api.js.
+// Profile picture. Self-service (any role, own account only) - see
+// web/routes/account.js for the preset/upload/clear endpoints and
+// web/routes/api.js for serving an uploaded image back. Uploaded files are
+// NOT cleaned up on user deletion, same accepted trade-off as custom server
+// icons (services/servers.js) - orphaned rather than adding delete-time
+// filesystem coupling here.
+
+/** Set a built-in preset avatar (one of config/avatars.js's AVATAR_PRESETS). */
+function setAvatarPreset(id, key, { actor = 'system' } = {}) {
+  if (!AVATAR_PRESET_KEYS.has(key)) throw httpError(400, 'Unknown avatar preset');
+  const user = db.get('SELECT username FROM users WHERE id = ?', id);
+  if (!user) throw httpError(404, 'User not found');
+  db.run('UPDATE users SET avatar = ? WHERE id = ?', `preset:${key}`, id);
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} set a preset avatar` });
+}
+
+/** Record an uploaded avatar file (the route has already validated + saved it to disk). */
+function setAvatarCustom(id, filename, { actor = 'system' } = {}) {
+  const user = db.get('SELECT username FROM users WHERE id = ?', id);
+  if (!user) throw httpError(404, 'User not found');
+  db.run('UPDATE users SET avatar = ? WHERE id = ?', `custom:${filename}`, id);
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} uploaded a custom avatar` });
+}
+
+/** Revert to the default initial-letter avatar. */
+function clearAvatar(id, { actor = 'system' } = {}) {
+  const user = db.get('SELECT username FROM users WHERE id = ?', id);
+  if (!user) throw httpError(404, 'User not found');
+  db.run('UPDATE users SET avatar = NULL WHERE id = ?', id);
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} reset their avatar` });
+}
+
+// ---------------------------------------------------------------------------
+// TOTP two-factor auth. Self-service (any role, acts on your own account) -
+// see web/routes/account.js - plus one admin recovery path in web/routes/api.js.
 // The secret is only ever written once a live code from it has been verified
 // (confirmTotp), so a setup a user never finishes leaves nothing persisted.
 
@@ -106,17 +143,17 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   if (user.totp_enabled) {
-    throw httpError(409, 'Two-factor authentication is already enabled — disable it first to re-enroll.');
+    throw httpError(409, 'Two-factor authentication is already enabled - disable it first to re-enroll.');
   }
   // Re-check the account's own password before ENABLING 2FA, exactly as disable
   // and regenerate do. Without it, a hijacked-but-unlocked session (no password
   // needed) could enroll the attacker's OWN authenticator on an account with no
-  // 2FA yet — locking the real owner out on their next login until an admin
+  // 2FA yet - locking the real owner out on their next login until an admin
   // force-reset. The UI always sends the password; the API must not rely on that.
   // Checked before the code so it can't double as a code-verification oracle.
   if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'Wrong password');
   if (totp.verify(secret, code) == null) {
-    throw httpError(400, 'That code is incorrect or expired — try the next one your app shows.');
+    throw httpError(400, 'That code is incorrect or expired - try the next one your app shows.');
   }
   const backupCodes = totp.generateBackupCodes();
   const hashed = backupCodes.map((c) => bcrypt.hashSync(c, 11));
@@ -135,7 +172,7 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   return { backupCodes };
 }
 
-/** Self-service disable — re-checks the account's own current password first. */
+/** Self-service disable - re-checks the account's own current password first. */
 function disableTotp(id, password, { actor = 'system' } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
@@ -198,7 +235,7 @@ function verifyTotpLogin(id, code) {
     }
   }
 
-  // Fall back to a backup code — single use, removed once matched.
+  // Fall back to a backup code - single use, removed once matched.
   let codes = [];
   try {
     codes = JSON.parse(user.totp_backup_codes_json || '[]');
@@ -244,4 +281,7 @@ module.exports = {
   adminDisableTotp,
   regenerateBackupCodes,
   verifyTotpLogin,
+  setAvatarPreset,
+  setAvatarCustom,
+  clearAvatar,
 };

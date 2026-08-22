@@ -1,7 +1,7 @@
 {{> page-header heading="SCHEDULES" sub="Cron-driven automation per server plus the panel's own maintenance tasks."}}
 
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <button class="btn btn-primary" id="schedule-new">{{{icon 'plus' 'size-4'}}} New task</button>
+  <button class="btn btn-primary" id="schedule-new">{{{icon 'plus' 'size-4'}}} New Task</button>
 </div>
 
 {{#if schedules.length}}
@@ -17,7 +17,7 @@
           <td class="font-mono text-xs text-ink-faint">{{cron}}</td>
           {{! nextMs + the panel-TZ hydrator: the table used to show UTC while
               the modal preview showed panel time for the SAME schedule. }}
-          <td class="whitespace-nowrap text-right tabular-nums text-ink-faint">{{#if nextMs}}<span data-ts="{{nextMs}}">{{next}}</span>{{else}}—{{/if}}</td>
+          <td class="whitespace-nowrap text-right tabular-nums text-ink-faint">{{#if nextMs}}<span data-ts="{{nextMs}}">{{next}}</span>{{else}}-{{/if}}</td>
           <td>
             <label class="msm-toggle"><input type="checkbox" data-schedule-toggle {{#if enabled}}checked{{/if}}><span></span></label>
           </td>
@@ -31,7 +31,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='calendar-clock' title='No scheduled tasks yet' message='Automate restarts, backups and console commands on a cron schedule — hit New task above to create the first one.'}}
+  {{> empty-state iconName='calendar-clock' title='No Scheduled Tasks Yet' message='Automate restarts, backups and console commands on a cron schedule - hit New task above to create the first one.'}}
 {{/if}}
 
 <div id="msm-schedule-data" hidden data-servers="{{json serverOptions}}" data-task-types="{{json taskTypes}}"></div>

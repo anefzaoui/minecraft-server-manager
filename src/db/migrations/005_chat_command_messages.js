@@ -1,9 +1,9 @@
 'use strict';
 
 // Custom per-command feedback whispered to the player in three states:
-//   msg_pending — sent immediately when the command starts (e.g. slow /locate)
-//   msg_success — sent after it succeeds (supports {player} {x} {z} … placeholders)
-//   msg_failure — sent if it fails
+//   msg_pending - sent immediately when the command starts (e.g. slow /locate)
+//   msg_success - sent after it succeeds (supports {player} {x} {z} … placeholders)
+//   msg_failure - sent if it fails
 // All optional; NULL means "use the built-in default message".
 
 function up(db) {

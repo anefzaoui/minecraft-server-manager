@@ -2,7 +2,7 @@
 
 // GT New Horizons release-index client.
 //
-// GTNH is not served by the Modrinth or CurseForge APIs — its releases are
+// GTNH is not served by the Modrinth or CurseForge APIs - its releases are
 // published as a single JSON index, the same one the itzg image resolves
 // against. The index is an OBJECT keyed by version string and ordered
 // newest-first; we preserve that order rather than inventing a comparator,
@@ -38,13 +38,13 @@ function safeChangelogUrl(description) {
 
 /**
  * Raw index object → normalized entries, newest-first.
- * Pure: no network, no db — this is the part under test.
+ * Pure: no network, no db - this is the part under test.
  * @param {any} raw
  */
 function normalizeIndex(raw) {
   if (!raw || typeof raw !== 'object') return [];
   // No serverUrl here on purpose: the itzg image downloads the pack itself,
-  // keyed by GTNH_PACK_VERSION — the panel never fetches the archive.
+  // keyed by GTNH_PACK_VERSION - the panel never fetches the archive.
   return Object.entries(raw).map(([version, entry]) => {
     const e = entry || {};
     return {
@@ -111,7 +111,7 @@ async function listVersions({ includeBeta = false } = {}) {
   return filterVersions(await fetchIndex(), { includeBeta });
 }
 
-/** One version by exact key. Unknown keys are a 404 — never passed to container env. */
+/** One version by exact key. Unknown keys are a 404 - never passed to container env. */
 async function getVersion(version) {
   const entry = (await fetchIndex()).find((e) => e.version === version);
   if (!entry) throw httpError(404, `Unknown GTNH pack version: ${version}`);

@@ -41,7 +41,7 @@ async function startWatcher() {
     }
   });
   const onDrop = () => {
-    if (stream !== s) return; // stale stream's late event — a newer stream is live
+    if (stream !== s) return; // stale stream's late event - a newer stream is live
     stream = null;
     retryLater();
   };
@@ -93,7 +93,7 @@ async function handleEvent(evt) {
     serverId
   );
   // Clean exits are judged by the exit code, not just the request window:
-  // 0 = normal, 143 = SIGTERM (docker stop), 130 = SIGINT — all intentional.
+  // 0 = normal, 143 = SIGTERM (docker stop), 130 = SIGINT - all intentional.
   const cleanExit = exitCode === 0 || exitCode === 143 || exitCode === 130;
   // 137 = SIGKILL. A graceful `docker stop` escalates SIGTERM→SIGKILL after its
   // grace period, so a slow-saving world that misses the deadline exits 137 during
@@ -108,12 +108,12 @@ async function handleEvent(evt) {
     return;
   }
 
-  // Crash path — even inside a stop/restart window a non-zero, non-signal exit
+  // Crash path - even inside a stop/restart window a non-zero, non-signal exit
   // is a crash and must be recorded as one.
   db.run("UPDATE servers SET status = 'crashed' WHERE id = ?", serverId);
   const excerpt = await fetchLogs(serverId, { tail: 300 }).catch(() => '');
 
-  // Config errors never fix themselves — diagnose them so the crash event
+  // Config errors never fix themselves - diagnose them so the crash event
   // says WHAT to do, and skip auto-restarts that would just burn cycles.
   const diagnosis = diagnoseFatal(excerpt);
   recordEvent({
@@ -131,7 +131,7 @@ async function handleEvent(evt) {
   // lifecycle handling with an auto-restart.
   if (stopRequested) return;
   // SIGKILL with no stop request is typically an external kill / OOM-adjacent
-  // event — recorded above, but don't fight it with an auto-restart loop.
+  // event - recorded above, but don't fight it with an auto-restart loop.
   if (killedBySignal) return;
   if (!server.auto_restart) return;
   const now = Date.now();
@@ -175,34 +175,34 @@ function diagnoseFatal(logText) {
       key: 'cf-api-key',
       re: /API key is not set.*CF_API_KEY/is,
       summary:
-        'CurseForge API key missing in the container — add your key in Settings → API keys, then Recreate this server.',
+        'CurseForge API key missing in the container - add your key in Settings → API keys, then Recreate this server.',
     },
     {
       key: 'eula',
       re: /You need to agree to the EULA/i,
-      summary: 'The Minecraft EULA was not accepted — recreate the server from the panel (it sets EULA automatically).',
+      summary: 'The Minecraft EULA was not accepted - recreate the server from the panel (it sets EULA automatically).',
     },
     {
       key: 'java-version',
       re: /UnsupportedClassVersionError/i,
       summary:
-        'Wrong Java version for this Minecraft build — set the Java image override in Settings (or clear it to auto) and Recreate.',
+        'Wrong Java version for this Minecraft build - set the Java image override in Settings (or clear it to auto) and Recreate.',
     },
     {
       key: 'world-downgrade',
       re: /No key dimensions in MapLike|loading a newer world|created by a newer version/i,
       summary:
-        'The world was created on a newer Minecraft version than this server runs — reset or swap the world (Worlds tab), or raise the MC version.',
+        'The world was created on a newer Minecraft version than this server runs - reset or swap the world (Worlds tab), or raise the MC version.',
     },
     {
       key: 'port-bind',
       re: /Failed to bind to port|Address already in use/i,
-      summary: 'The game port is already in use on this machine — change the port in Settings and Recreate.',
+      summary: 'The game port is already in use on this machine - change the port in Settings and Recreate.',
     },
     {
       key: 'oom',
       re: /OutOfMemoryError/i,
-      summary: 'Java ran out of heap — raise RAM in Settings → Resources (packs usually need 4–8 GB) and Recreate.',
+      summary: 'Java ran out of heap - raise RAM in Settings → Resources (packs usually need 4–8 GB) and Recreate.',
     },
   ];
   for (const k of KNOWN) if (k.re.test(logText)) return k;

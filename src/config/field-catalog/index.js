@@ -1,6 +1,6 @@
 'use strict';
 
-// FIELD CATALOG — the single source of truth for every configurable setting
+// FIELD CATALOG - the single source of truth for every configurable setting
 // the panel exposes: itzg env vars, Docker resource limits, server.properties
 // keys, and panel settings. Forms render from it; server-side validation is
 // derived from it; nothing anywhere shows a raw env var without its friendly
@@ -27,18 +27,18 @@
 
 const SECTIONS = [
   { id: 'identity', label: 'Identity', icon: 'tag' },
-  { id: 'flavor', label: 'Flavor & version', icon: 'box' },
+  { id: 'flavor', label: 'Flavor & Version', icon: 'box' },
   { id: 'resources', label: 'Resources', icon: 'gauge' },
-  { id: 'jvm', label: 'Java / JVM tuning', icon: 'wrench' },
+  { id: 'jvm', label: 'Java / JVM Tuning', icon: 'wrench' },
   { id: 'world', label: 'World', icon: 'earth' },
-  { id: 'gameplay', label: 'Gameplay rules', icon: 'swords' },
-  { id: 'players', label: 'Players, whitelist & ops', icon: 'users' },
-  { id: 'network', label: 'Networking & ports', icon: 'network' },
-  { id: 'rcon', label: 'RCON & console', icon: 'terminal' },
-  { id: 'packs', label: 'Modpacks & content', icon: 'package' },
-  { id: 'autopause', label: 'Auto-pause / auto-stop', icon: 'pause' },
-  { id: 'maintenance', label: 'Logs & maintenance', icon: 'file-text' },
-  { id: 'advanced', label: 'Advanced & experimental', icon: 'flask-conical' },
+  { id: 'gameplay', label: 'Gameplay Rules', icon: 'swords' },
+  { id: 'players', label: 'Players, Whitelist & Ops', icon: 'users' },
+  { id: 'network', label: 'Networking & Ports', icon: 'network' },
+  { id: 'rcon', label: 'RCON & Console', icon: 'terminal' },
+  { id: 'packs', label: 'Modpacks & Content', icon: 'package' },
+  { id: 'autopause', label: 'Auto-Pause / Auto-Stop', icon: 'pause' },
+  { id: 'maintenance', label: 'Logs & Maintenance', icon: 'file-text' },
+  { id: 'advanced', label: 'Advanced & Experimental', icon: 'flask-conical' },
 ];
 
 const fields = [

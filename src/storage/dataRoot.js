@@ -36,7 +36,7 @@ function ensureDataRoot() {
 }
 
 /**
- * Clean tmp/. On boot (no args) everything goes — nothing can be in flight.
+ * Clean tmp/. On boot (no args) everything goes - nothing can be in flight.
  * The scheduled sweep passes { olderThanMs } so in-progress transfers survive.
  */
 function cleanTmp({ olderThanMs = 0 } = {}) {
@@ -51,7 +51,7 @@ function cleanTmp({ olderThanMs = 0 } = {}) {
       } catch {
         continue; // vanished mid-scan
       }
-      if (stat.mtimeMs > cutoff) continue; // too fresh — may be in flight
+      if (stat.mtimeMs > cutoff) continue; // too fresh - may be in flight
     }
     fs.rmSync(abs, { recursive: true, force: true });
   }

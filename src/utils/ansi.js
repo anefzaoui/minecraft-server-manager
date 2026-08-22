@@ -14,7 +14,7 @@ function stripAnsi(text) {
     .replace(BARE_SGR_RE, '');
 }
 
-/** Strip ANSI + Minecraft § codes — for parsing player names etc. */
+/** Strip ANSI + Minecraft § codes - for parsing player names etc. */
 function cleanText(text) {
   return stripAnsi(text).replace(/§[0-9a-fk-orA-FK-OR]/g, '');
 }

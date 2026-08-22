@@ -1,6 +1,6 @@
 'use strict';
 
-// A small set of security response headers — the defense-in-depth a public,
+// A small set of security response headers - the defense-in-depth a public,
 // self-hosted panel should ship by default. Kept as a hand-rolled middleware
 // rather than pulling in `helmet`, since it's a handful of static headers.
 //

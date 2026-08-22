@@ -13,7 +13,7 @@ const { parsePlayerList } = require('../utils/rconList');
 const { cleanText } = require('../utils/ansi');
 
 // Boot-phase detection: a modded first boot passes through many meaningful
-// states — surface them instead of a flat "starting/unhealthy". Ordered by
+// states - surface them instead of a flat "starting/unhealthy". Ordered by
 // precedence (later pipeline stages win when several match the tail).
 const PHASES = [
   {
@@ -129,7 +129,7 @@ async function attach(serverId) {
       entry.stats = { ...sample, at: Date.now() };
     });
   } catch {
-    /* stats unavailable — cache stays null */
+    /* stats unavailable - cache stays null */
   }
 
   let playersInFlight = false;
@@ -145,7 +145,7 @@ async function attach(serverId) {
       // sync() only detaches when the DB status leaves running/starting, and a
       // restart's die→start usually completes inside one 10s sync interval, so
       // the entry never detaches; a missed 'start' Docker event (the events
-      // stream reconnects after drops — see watcher.js's retryLater()) has the
+      // stream reconnects after drops - see watcher.js's retryLater()) has the
       // same effect. Compare Docker's own StartedAt whenever ANY latched state
       // exists, throttled to once a minute to keep the extra inspect off the
       // 20s hot path.
@@ -159,12 +159,12 @@ async function attach(serverId) {
             entry.upConfirmed = false;
             entry.phase = null; // let refreshPhase classify the new boot
           } else if (info.startedAt && !entry.startedAt) {
-            // attach() ran before the container was Running (startedAt null) —
+            // attach() ran before the container was Running (startedAt null) -
             // record the real boot time WITHOUT treating it as a restart.
             entry.startedAt = info.startedAt;
           }
         } catch {
-          /* inspect failed — leave the latch as-is, retry next time */
+          /* inspect failed - leave the latch as-is, retry next time */
         }
       }
 
@@ -175,9 +175,9 @@ async function attach(serverId) {
         entry.players = { ...parsed, at: Date.now() };
         entry.phase = null; // rcon answering = fully up, no boot phase
       } else if (exitCode === 0 && out) {
-        // rcon-cli exited successfully — RCON is genuinely answering — but the
+        // rcon-cli exited successfully - RCON is genuinely answering - but the
         // "/list" phrasing didn't match any known pattern. We can't parse player
-        // counts, but a clean exit means the server is fully up — stop deriving
+        // counts, but a clean exit means the server is fully up - stop deriving
         // the boot-phase label from logs so the UI doesn't get stuck showing
         // e.g. "Finishing startup" forever. A non-zero exit (e.g. rcon-cli's own
         // "connection refused" while RCON isn't listening yet, which docker exec
@@ -187,7 +187,7 @@ async function attach(serverId) {
         entry.phase = null;
       }
     } catch {
-      /* rcon not up yet — keep last value */
+      /* rcon not up yet - keep last value */
     } finally {
       playersInFlight = false;
     }
@@ -203,7 +203,7 @@ async function attach(serverId) {
       const tail = await fetchLogs(serverId, { tail: 40 });
       entry.phase = classifyPhase(tail) || entry.phase || { key: 'boot', label: 'Starting up' };
     } catch {
-      /* container gone — sync() will detach */
+      /* container gone - sync() will detach */
     } finally {
       phaseInFlight = false;
     }

@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Update checker: compares pinned packs, overlay mods, and the itzg image
@@ -21,7 +21,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
       const result = await packsService.latestFor(server.id);
       if (result) {
         // GTNH's latestFor already surfaces a real per-version diff link off the
-        // index entry itself — prefer that over the platform-derived fallback
+        // index entry itself - prefer that over the platform-derived fallback
         // (which, for GTNH, is only the generic changelogs directory).
         const changelog = result.updateAvailable
           ? result.changelogUrl || packChangelogUrl(result.platform, result.projectRef)
@@ -42,7 +42,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
           });
       }
     } catch {
-      /* pack platform unreachable — keep old cache */
+      /* pack platform unreachable - keep old cache */
     }
 
     // Overlay mod updates
@@ -69,7 +69,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
           changelogUrl = `https://www.curseforge.com/projects/${row.project_id}`;
         }
         if (latest) {
-          // Name-to-name comparison — mods.updateFor and listOutdated use the
+          // Name-to-name comparison - mods.updateFor and listOutdated use the
           // same rule, so a check can never invent a phantom update.
           const isNew = latest.name !== row.lib_version;
           upsertCheck('content', row.id, row.lib_version || '?', {
@@ -111,7 +111,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
 
 /**
  * Cache one check result. The latest_* columns are only populated when the
- * subject is ACTUALLY outdated (isNew) — latest_version holds the platform id,
+ * subject is ACTUALLY outdated (isNew) - latest_version holds the platform id,
  * latest_name the human-readable version name. Up-to-date subjects get NULLs,
  * so `latest_version IS NOT NULL` cleanly means "update available".
  */

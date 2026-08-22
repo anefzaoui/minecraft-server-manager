@@ -1,5 +1,5 @@
 <div class="mx-auto max-w-3xl" id="wizard" data-suggested-port="{{suggestedPort}}">
-  {{> page-header heading="CREATE SERVER" sub="One click to a running server in Simple mode — every option the image supports in Advanced."}}
+  {{> page-header heading="CREATE SERVER" sub="One click to a running server in Simple mode - every option the image supports in Advanced."}}
 
   <div class="mb-4 flex flex-wrap items-center gap-2">
     <div class="seg" id="wz-source-tabs" role="tablist" aria-label="Server source">
@@ -14,7 +14,7 @@
     </label>
   </div>
 
-  {{! "From mods" source tab — the server's creation hub. Two sub-modes:
+  {{! "From mods" source tab - the server's creation hub. Two sub-modes:
       Choose loader (loader-first browser, default) and Auto-detect (the solver). }}
   <div class="mb-4 hidden space-y-3" id="wz-mods-panel">
     <div class="flex flex-wrap items-center gap-2">
@@ -26,12 +26,12 @@
 
     {{! ---- Choose-loader browser (default) ---- }}
     <div class="card p-5" id="wz-mods-browse">
-      <h3 class="mb-1 font-semibold">Build a modded server</h3>
-      <p class="help mb-4">Pick a loader and version, then search {{#if curseforgeEnabled}}Modrinth &amp; CurseForge{{else}}Modrinth{{/if}} for mods — required dependencies are added automatically for you to review.</p>
+      <h3 class="mb-1 font-semibold">Build a Modded Server</h3>
+      <p class="help mb-4">Pick a loader and version, then search {{#if curseforgeEnabled}}Modrinth &amp; CurseForge{{else}}Modrinth{{/if}} for mods - required dependencies are added automatically for you to review.</p>
 
       <label class="label">Mod loader</label>
       {{! .tile carries hover + focus ring + aria-pressed selection for every
-          state — the initially-selected tile used to lose its hover affordance
+          state - the initially-selected tile used to lose its hover affordance
           after deselection, and keyboard focus was invisible on all of them. }}
       <div class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4" id="wz-loaders">
         <button type="button" data-loader="fabric" class="tile p-3" aria-pressed="true">{{{icon 'layers' 'size-5'}}}<span class="text-xs font-semibold">Fabric</span></button>
@@ -77,7 +77,7 @@
 
     {{! ---- Auto-detect (the compatibility solver) ---- }}
     <div class="card p-5 hidden" id="wz-solver">
-      <h3 class="mb-1 font-semibold">Auto-detect loader &amp; version</h3>
+      <h3 class="mb-1 font-semibold">Auto-Detect Loader &amp; Version</h3>
       <p class="help mb-4">Search Modrinth, add the mods you want, and Minecraft Server Manager finds the newest loader + Minecraft version that every one of them supports.</p>
       <div>
         <label class="label" for="wz-solver-q">Search Modrinth</label>
@@ -86,7 +86,7 @@
       <div class="mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-line" id="wz-solver-results"></div>
       <div class="mt-3 hidden flex-wrap gap-1.5" id="wz-solver-chips"></div>
       <div class="mt-4 flex items-center gap-3">
-        <button class="btn btn-primary" id="wz-solver-run" type="button" disabled>{{{icon 'wand-sparkles' 'size-4'}}} Solve compatibility</button>
+        <button class="btn btn-primary" id="wz-solver-run" type="button" disabled>{{{icon 'wand-sparkles' 'size-4'}}} Solve Compatibility</button>
         <span class="text-xs text-ink-faint" id="wz-solver-hint">Add at least one mod to solve.</span>
       </div>
       <div class="mt-4 hidden" id="wz-solver-result"></div>
@@ -94,18 +94,18 @@
     </div>
   </div>
 
-  {{! U1/U2: "From modpack" source tab — search, pin a version, real one-task install }}
+  {{! U1/U2: "From modpack" source tab - search, pin a version, real one-task install }}
   <div class="card mb-4 hidden p-5" id="wz-modpack">
-    <h3 class="mb-1 font-semibold">Pick a modpack</h3>
-    <p class="help mb-4">Search Modrinth or CurseForge. The pack decides the loader and Minecraft version, and the install is always pinned to the exact pack version you choose — restarts never silently upgrade.</p>
-    {{! GTNH ships outside Modrinth/CurseForge — a fixed card, not a search result }}
+    <h3 class="mb-1 font-semibold">Pick a Modpack</h3>
+    <p class="help mb-4">Search Modrinth or CurseForge. The pack decides the loader and Minecraft version, and the install is always pinned to the exact pack version you choose - restarts never silently upgrade.</p>
+    {{! GTNH ships outside Modrinth/CurseForge - a fixed card, not a search result }}
     <div class="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-line p-3" id="wz-gtnh-card">
       <div class="min-w-0 flex-1">
         <div class="font-semibold">GT New Horizons</div>
-        <div class="text-xs text-ink-faint">Minecraft 1.7.10 expert pack — needs 6 GB+ RAM and 20 GB+ disk. Runs on modern
+        <div class="text-xs text-ink-faint">Minecraft 1.7.10 expert pack - needs 6 GB+ RAM and 20 GB+ disk. Runs on modern
           Java.</div>
       </div>
-      <button type="button" class="btn shrink-0" id="wz-gtnh-pick">Set up</button>
+      <button type="button" class="btn shrink-0" id="wz-gtnh-pick">Set Up</button>
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <input class="input min-w-48 flex-1" id="wz-pack-q" placeholder="e.g. Simply Optimized, All the Mods…" autocomplete="off">
@@ -127,22 +127,22 @@
             include beta releases
           </label>
         </div>
-        <button type="button" class="btn mb-0.5" id="wz-pack-details-btn">{{{icon 'book-open' 'size-4'}}} View details</button>
+        <button type="button" class="btn mb-0.5" id="wz-pack-details-btn">{{{icon 'book-open' 'size-4'}}} View Details</button>
       </div>
     </div>
   </div>
 
-  {{! "From blueprint" source tab — identity stays editable, the blueprint owns the rest }}
+  {{! "From blueprint" source tab - identity stays editable, the blueprint owns the rest }}
   <div class="card mb-4 hidden p-5" id="wz-blueprint-panel">
-    <h3 class="mb-1 font-semibold">Start from a blueprint</h3>
-    <p class="help mb-4">A blueprint sets the server type, Minecraft version, modpack, mods, config and resources — you choose the name, icon and color below. The sections a blueprint owns are greyed out.</p>
+    <h3 class="mb-1 font-semibold">Start from a Blueprint</h3>
+    <p class="help mb-4">A blueprint sets the server type, Minecraft version, modpack, mods, config and resources - you choose the name, icon and color below. The sections a blueprint owns are greyed out.</p>
     <label class="label" for="wz-blueprint">Blueprint</label>
     <select class="input" id="wz-blueprint" data-label="Blueprint">
       <option value="">Choose a blueprint…</option>
       {{#each blueprints}}<option value="{{id}}" data-desc="{{notes}}">{{name}}</option>{{/each}}
     </select>
     {{#unless blueprints.length}}
-      <p class="help mt-2">No blueprints in the library yet — export one from a server's Settings tab, or import a .mcserver.zip on the <a href="/blueprints" class="text-link hover:underline">Blueprints page</a>.</p>
+      <p class="help mt-2">No blueprints in the library yet - export one from a server's Settings tab, or import a .mcserver.zip on the <a href="/blueprints" class="text-link hover:underline">Blueprints page</a>.</p>
     {{/unless}}
   </div>
 
@@ -159,14 +159,14 @@
         <label class="label">Icon & color</label>
         {{! flex-wrap: the icon row must give way instead of crushing the name input at ~700px. }}
         <div class="flex flex-wrap gap-1.5" id="wz-icons">
-          <button type="button" data-icon="grass" class="tile size-10 p-1" aria-pressed="true"><img src="/icons/servers/grass.png" alt="Grass" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="creeper" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/creeper.png" alt="Creeper" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="diamond" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/diamond.png" alt="Diamond" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="tnt" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/tnt.png" alt="TNT" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="portal" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/portal.png" alt="Portal" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="chest" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/chest.png" alt="Chest" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="sword" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/sword.png" alt="Sword" class="size-full rounded-sm"></button>
-          <button type="button" data-icon="potion" class="tile size-10 p-1" aria-pressed="false"><img src="/icons/servers/potion.png" alt="Potion" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="grass" class="tile size-10 p-1" style="background: #3fa62b" aria-pressed="true"><img src="/icons/servers/grass.svg" alt="Grass" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="creeper" class="tile size-10 p-1" style="background: #3fa62b" aria-pressed="false"><img src="/icons/servers/creeper.svg" alt="Creeper" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="diamond" class="tile size-10 p-1" style="background: #3fa62b" aria-pressed="false"><img src="/icons/servers/diamond.svg" alt="Diamond" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="tnt" class="tile size-10 p-1" style="background: #3fa62b" aria-pressed="false"><img src="/icons/servers/tnt.svg" alt="TNT" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="portal" class="tile size-10 p-1" style="background: #3fa62b" aria-pressed="false"><img src="/icons/servers/portal.svg" alt="Portal" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="chest" class="tile size-10 p-1" style="background: #3fa62b" aria-pressed="false"><img src="/icons/servers/chest.svg" alt="Chest" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="sword" class="tile size-10 p-1" style="background: #3fa62b" aria-pressed="false"><img src="/icons/servers/sword.svg" alt="Sword" class="size-full rounded-sm"></button>
+          <button type="button" data-icon="potion" class="tile size-10 p-1" style="background: #3fa62b" aria-pressed="false"><img src="/icons/servers/potion.svg" alt="Potion" class="size-full rounded-sm"></button>
         </div>
       </div>
     </div>
@@ -177,14 +177,14 @@
       </div>
       <div>
         <label class="label">Accent</label>
-        {{! .swatch: theme-aware selected ring — the old border-white/60 marker
+        {{! .swatch: theme-aware selected ring - the old border-white/60 marker
             was invisible on the light theme's white card. }}
         <div class="flex flex-wrap gap-1.5" id="wz-colors">
           <button type="button" data-accent="#3fa62b" class="swatch size-10" style="background:#3fa62b" data-tip="Grass" aria-pressed="true"></button>
           <button type="button" data-accent="#21a7ab" class="swatch size-10" style="background:#21a7ab" data-tip="Diamond" aria-pressed="false"></button>
           <button type="button" data-accent="#e5484d" class="swatch size-10" style="background:#e5484d" data-tip="Redstone" aria-pressed="false"></button>
           <button type="button" data-accent="#e99417" class="swatch size-10" style="background:#e99417" data-tip="Gold" aria-pressed="false"></button>
-          {{! Amethyst — the palette's purple, from the in-game block }}
+          {{! Amethyst - the palette's purple, from the in-game block }}
           <button type="button" data-accent="#9a5cc6" class="swatch size-10" style="background:#9a5cc6" data-tip="Amethyst" aria-pressed="false"></button>
         </div>
       </div>
@@ -192,8 +192,8 @@
   </div>
 
   <div class="card mt-4 p-5" id="wz-card-flavor">
-    <h3 class="mb-4 font-semibold">Server type &amp; version</h3>
-    <p class="help mb-3">Vanilla and plugin servers. Want mods? Use the <b>From mods</b> tab — that's where the mod loaders (Fabric, Forge, NeoForge, Quilt) live.</p>
+    <h3 class="mb-4 font-semibold">Server Type &amp; Version</h3>
+    <p class="help mb-3">Vanilla and plugin servers. Want mods? Use the <b>From mods</b> tab - that's where the mod loaders (Fabric, Forge, NeoForge, Quilt) live.</p>
     <div class="mb-4 grid grid-cols-3 gap-2" id="wz-flavors">
       <button type="button" data-type="VANILLA" class="tile p-3" aria-pressed="true">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
       <button type="button" data-type="PAPER" class="tile p-3" aria-pressed="false">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
@@ -206,7 +206,7 @@
           <option value="LATEST" selected>LATEST ({{latestRelease}})</option>
           {{#each versions}}<option value="{{id}}"{{#unless (eq type "release")}} data-desc="{{#if (eq type "snapshot")}}Snapshot{{else if (eq type "old_beta")}}Beta{{else}}Alpha{{/if}}"{{/unless}}>{{id}}</option>{{/each}}
         </select>
-        <p class="help">Every Mojang version — releases, snapshots, betas and alphas. The matching Java image is picked automatically.</p>
+        <p class="help">Every Mojang version - releases, snapshots, betas and alphas. The matching Java image is picked automatically.</p>
       </div>
       <div>
         <label class="label" for="wz-port">Game port</label>
@@ -217,7 +217,7 @@
   </div>
 
   <div class="card mt-4 p-5" id="wz-card-world">
-    <h3 class="mb-4 font-semibold">World &amp; rules</h3>
+    <h3 class="mb-4 font-semibold">World &amp; Rules</h3>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <label class="label" for="wz-seed">World seed <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
@@ -244,11 +244,11 @@
         <select class="input" id="wz-pvp" data-label="PvP">
           <option value="true" selected>On</option><option value="false">Off</option>
         </select>
-        <p class="help">Applied from the first start — no restart needed.</p>
+        <p class="help">Applied from the first start - no restart needed.</p>
       </div>
     </div>
     <div class="mt-4">
-      <label class="label" for="wz-motd">MOTD <span class="text-xs font-normal text-ink-faint">— &amp; color codes supported</span></label>
+      <label class="label" for="wz-motd">MOTD <span class="text-xs font-normal text-ink-faint">- &amp; color codes supported</span></label>
       <input class="input font-mono" id="wz-motd" value="&aA Minecraft server">
       <div class="console mt-2 py-2 text-sm" id="wz-motd-preview"></div>
     </div>
@@ -275,7 +275,7 @@
 
   <div id="wz-advanced" class="mt-4 hidden space-y-3">
     <div class="rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
-      {{{icon 'info' 'size-3.5'}}} Every environment variable the Docker image supports, straight from its docs. Leave a field empty to use the image default —
+      {{{icon 'info' 'size-3.5'}}} Every environment variable the Docker image supports, straight from its docs. Leave a field empty to use the image default -
       only values you change are applied. Simple-mode picks above (version, port, world rules, resources) still apply.
     </div>
     {{#each advancedSections}}
@@ -294,7 +294,7 @@
     {{/each}}
     <details class="card group">
       <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
-        {{{icon 'terminal' 'size-4 text-ink-faint'}}} Extra environment variables
+        {{{icon 'terminal' 'size-4 text-ink-faint'}}} Extra Environment Variables
         <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
       </summary>
       <div class="border-t border-line p-4">
@@ -303,12 +303,12 @@
       </div>
     </details>
     {{! Admin-only: extra binds mount arbitrary host paths (root-equivalent
-        through the Docker socket) — the API rejects these fields for other
+        through the Docker socket) - the API rejects these fields for other
         roles, so don't render dead controls for them. }}
     {{#if (eq user.role 'admin')}}
     <details class="card group">
       <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
-        {{{icon 'container' 'size-4 text-ink-faint'}}} Advanced Docker settings
+        {{{icon 'container' 'size-4 text-ink-faint'}}} Advanced Docker Settings
         <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
       </summary>
       <div class="space-y-4 border-t border-line p-4">
@@ -323,14 +323,14 @@
             <select class="input" id="wz-docker-network" data-label="Docker network">
               <option value="">Default (bridge)</option>
             </select>
-            <p class="help">Attach to an existing network — handy for a reverse proxy like Pangolin or NGINX.</p>
+            <p class="help">Attach to an existing network - handy for a reverse proxy like Pangolin or NGINX.</p>
           </div>
         </div>
 
         <div>
           <div class="mb-2 flex items-center justify-between">
             <span class="text-sm font-semibold">Extra port mappings</span>
-            <button type="button" class="btn btn-sm" id="wz-docker-port-add">{{{icon 'plus' 'size-3.5'}}} Add port</button>
+            <button type="button" class="btn btn-sm" id="wz-docker-port-add">{{{icon 'plus' 'size-3.5'}}} Add Port</button>
           </div>
           <div class="space-y-2" id="wz-docker-ports"></div>
           <p class="help">e.g. UDP 19132 for Bedrock/Geyser, TCP 8100 for BlueMap.</p>
@@ -339,10 +339,10 @@
         <div>
           <div class="mb-2 flex items-center justify-between">
             <span class="text-sm font-semibold">Extra volume binds</span>
-            <button type="button" class="btn btn-sm" id="wz-docker-bind-add">{{{icon 'plus' 'size-3.5'}}} Add bind</button>
+            <button type="button" class="btn btn-sm" id="wz-docker-bind-add">{{{icon 'plus' 'size-3.5'}}} Add Bind</button>
           </div>
           <div class="space-y-2" id="wz-docker-binds"></div>
-          <p class="help">Free-form host paths — the panel already has Docker-socket (root-equivalent) access, so double-check these before creating.</p>
+          <p class="help">Free-form host paths - the panel already has Docker-socket (root-equivalent) access, so double-check these before creating.</p>
         </div>
 
         <div class="flex justify-end">
@@ -355,7 +355,7 @@
 
   <div class="mt-6 flex items-center justify-between">
     <a href="/" class="btn btn-ghost">Cancel</a>
-    <button class="btn btn-primary" id="wz-create" type="button">{{{icon 'pickaxe' 'size-4'}}} Create &amp; start</button>
+    <button class="btn btn-primary" id="wz-create" type="button">{{{icon 'pickaxe' 'size-4'}}} Create &amp; Start</button>
   </div>
 </div>
 <script type="module" src="/js/pages/wizard.js"></script>

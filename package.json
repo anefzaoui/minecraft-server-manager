@@ -1,7 +1,7 @@
 {
   "name": "minecraft-server-manager",
   "version": "0.9.8",
-  "description": "Minecraft Server Manager — a complete control panel for itzg/docker-minecraft-server",
+  "description": "Minecraft Server Manager - a complete control panel for itzg/docker-minecraft-server",
   "private": true,
   "license": "MIT",
   "author": "anefzaoui",
@@ -31,6 +31,7 @@
     "typecheck": "tsc",
     "test": "node --test \"test/**/*.test.js\"",
     "test:unit": "node --test \"test/**/*.test.js\"",
+    "test:watch": "node --test --watch \"test/**/*.test.js\"",
     "test:smoke": "node scripts/qa-sweep.js"
   },
   "dependencies": {

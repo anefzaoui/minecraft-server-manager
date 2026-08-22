@@ -2,20 +2,20 @@
 
 <div class="grid gap-4 lg:grid-cols-2" id="settings-page">
   <div class="card p-4">
-    <h3 class="mb-4 font-semibold">API keys</h3>
+    <h3 class="mb-4 font-semibold">API Keys</h3>
     <div class="space-y-4">
       <div>
         <label class="label" for="set-cf-key">CurseForge API key</label>
         <div class="flex gap-2">
           <input class="input flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} (stored){{else}}paste your key from console.curseforge.com{{/if}}" autocomplete="off">
-          <button class="btn" id="set-cf-save">Save key</button>
-          <button class="btn btn-ghost" id="set-cf-test" data-tip="Tests the stored key against the CurseForge API">Test key</button>
+          <button class="btn" id="set-cf-save">Save Key</button>
+          <button class="btn btn-ghost" id="set-cf-test" data-tip="Tests the stored key against the CurseForge API">Test Key</button>
         </div>
         <p class="help">Required for Auto-CurseForge packs and CF mod downloads. Stored encrypted at rest; new keys are live-tested before saving.</p>
       </div>
       <div>
         <label class="label">Modrinth</label>
-        <p class="help">No key needed — Modrinth's public API is used directly.</p>
+        <p class="help">No key needed - Modrinth's public API is used directly.</p>
       </div>
     </div>
   </div>
@@ -26,19 +26,19 @@
       <label class="label" for="set-domain">Public domain</label>
       <div class="flex gap-2">
         <input class="input flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
-        <button class="btn" id="set-domain-save">Save domain</button>
+        <button class="btn" id="set-domain-save">Save Domain</button>
       </div>
       <p class="help">Shown to players instead of your IP in connect addresses (e.g. <span class="font-mono">mc.example.com:25565</span>). Leave blank to use the server's IP. No scheme or port.</p>
     </div>
     <div class="mb-4">
       <span class="label">Time zone &amp; region</span>
-      {{! data-native only until tzPicker fills them — it enhances post-fill. }}
+      {{! data-native only until tzPicker fills them - it enhances post-fill. }}
       <div class="grid gap-2 sm:grid-cols-2">
         <select class="input" id="set-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
         <select class="input" id="set-country" data-native aria-label="Country" data-label="Country"></select>
       </div>
       <div class="mt-2 flex items-center gap-2">
-        <button class="btn" id="set-loc-save">Save time zone</button>
+        <button class="btn" id="set-loc-save">Save Time Zone</button>
         <span class="help" id="set-loc-note"></span>
       </div>
       <p class="help">Controls how dates and player-activity times display across the panel. "Auto" follows this machine's system settings.</p>
@@ -47,8 +47,8 @@
       <div><dt class="text-xs text-ink-faint">Bind address</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Port</dt><dd class="font-mono font-medium">{{panel.port}}</dd></div>
     </dl>
-    <p class="help mt-3 max-w-prose">Set via <span class="font-mono">.env</span> (PANEL_HOST / PANEL_PORT) — a restart applies changes. Theme is per-browser via the topbar toggle.</p>
-    <h3 class="mt-6 mb-3 font-semibold">Defaults for new servers</h3>
+    <p class="help mt-3 max-w-prose">Set via <span class="font-mono">.env</span> (PANEL_HOST / PANEL_PORT) - a restart applies changes. Theme is per-browser via the topbar toggle.</p>
+    <h3 class="mt-6 mb-3 font-semibold">Defaults for New Servers</h3>
     <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
       <div><dt class="text-xs text-ink-faint">Java heap</dt><dd class="font-medium">{{defaults.heapMb}} MB</dd></div>
       <div><dt class="text-xs text-ink-faint">Container limit</dt><dd class="font-medium">{{defaults.containerMemoryMb}} MB</dd></div>
@@ -61,53 +61,62 @@
     <h3 class="mb-4 font-semibold">Users</h3>
     <div class="overflow-x-auto">
       <table class="table-base" id="users-table">
-        <thead><tr><th>User</th><th>Role</th><th>2FA</th><th>Created</th><th class="text-right"></th></tr></thead>
+        <thead><tr><th>User</th><th>Role</th><th>2FA</th><th>Created</th><th class="text-right">Actions</th></tr></thead>
         <tbody>
           {{#each users}}
             <tr data-user-id="{{id}}" data-username="{{username}}">
-              <td class="font-medium">{{username}}{{#if (eq id ../user.id)}} <span class="badge">you</span>{{/if}}</td>
+              <td class="font-medium">
+                <div class="flex items-center gap-2">
+                  <span class="grid size-6 shrink-0 place-items-center overflow-hidden rounded-md bg-diamond-700 text-[10px] font-bold text-white">
+                    {{#if (avatarSrc avatar)}}
+                      <img src="{{avatarSrc avatar}}" alt="" class="size-full object-contain">
+                    {{else}}
+                      {{initial username}}
+                    {{/if}}
+                  </span>
+                  {{username}}{{#if (eq id ../user.id)}} <span class="badge">you</span>{{/if}}
+                </div>
+              </td>
               <td>
                 <select class="input w-auto" data-user-role data-prev-role="{{role}}" data-label="Role for {{username}}">
-                  <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>admin</option>
-                  <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>operator</option>
-                  <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>viewer</option>
+                  <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>Admin</option>
+                  <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>Operator</option>
+                  <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>Viewer</option>
                 </select>
               </td>
               <td>
-                {{#if (eq id ../user.id)}}
-                  {{! Your own row: self-service, same modal as the topbar user menu —
-                      2FA can only ever be set up on the device you're enrolling, so
-                      there's nothing an admin can do here for someone ELSE's row. }}
-                  {{#if totpEnabled}}
-                    <span class="badge badge-ok">on</span>
-                    <button class="btn btn-ghost btn-sm" data-open-2fa data-tip="Manage your 2FA">Manage</button>
-                  {{else}}
-                    <button class="btn btn-ghost btn-sm" data-open-2fa data-tip="Set up 2FA on your account">Set up</button>
-                  {{/if}}
-                {{else if totpEnabled}}
-                  <span class="badge badge-ok">on</span>
-                  <button class="btn btn-ghost btn-sm" data-user-totp-reset data-tip="Reset their 2FA — they will need to re-enroll">Reset</button>
+                {{#if totpEnabled}}
+                  <span class="badge badge-ok">On</span>
                 {{else}}
-                  <span class="text-xs text-ink-faint">off</span>
+                  <span class="text-xs text-ink-faint">Off</span>
                 {{/if}}
               </td>
               <td class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
               <td class="text-right">
-                <div class="inline-flex gap-1">
-                  <button class="btn btn-ghost btn-sm" data-user-password data-tip="Set a new password">{{{icon 'key' 'size-3.5'}}}</button>
-                  {{! No self-delete affordance — deleting your own account mid-session is a trap, not a feature. }}
+                <button class="btn btn-ghost btn-sm" data-menu="user-menu-{{@index}}" data-tip="Actions for {{username}}" aria-label="Actions for {{username}}">{{{icon 'ellipsis' 'size-3.5'}}}</button>
+                <template id="user-menu-{{@index}}">
+                  <button data-user-password data-user-id="{{id}}" data-username="{{username}}">{{{icon 'key' 'size-3.5'}}} Set Password</button>
+                  {{! Your own row: self-service, same modal as the topbar user menu -
+                      2FA can only ever be set up on the device you're enrolling, so
+                      there's nothing an admin can do here for someone ELSE's row. }}
+                  {{#if (eq id ../user.id)}}
+                    <button data-open-2fa>{{{icon 'shield-check' 'size-3.5'}}} {{#if totpEnabled}}Manage 2FA{{else}}Set Up 2FA{{/if}}</button>
+                  {{else if totpEnabled}}
+                    <button data-user-totp-reset data-user-id="{{id}}" data-username="{{username}}">{{{icon 'shield-check' 'size-3.5'}}} Reset 2FA</button>
+                  {{/if}}
+                  {{! No self-delete affordance - deleting your own account mid-session is a trap, not a feature. }}
                   {{#unless (eq id ../user.id)}}
-                    <button class="btn btn-ghost btn-sm text-danger" data-user-delete data-tip="Delete user" aria-label="Delete {{username}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+                    <button class="text-danger" data-user-delete data-user-id="{{id}}" data-username="{{username}}">{{{icon 'trash-2' 'size-3.5'}}} Delete User</button>
                   {{/unless}}
-                </div>
+                </template>
               </td>
             </tr>
           {{/each}}
         </tbody>
       </table>
     </div>
-    <button class="btn btn-sm mt-3" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add user</button>
-    <p class="help mt-2 max-w-prose">Roles: <b>admin</b> — everything; <b>operator</b> — manage servers but not storage, users, or update policies; <b>viewer</b> — read-only.</p>
+    <button class="btn btn-sm mt-3" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add User</button>
+    <p class="help mt-2 max-w-prose">Roles: <b>Admin</b> - everything; <b>Operator</b> - manage servers but not storage, users, or update policies; <b>Viewer</b> - read-only.</p>
   </div>
 </div>
 <script type="module" src="/js/pages/settings.js"></script>

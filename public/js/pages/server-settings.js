@@ -60,14 +60,50 @@ function init(serverId) {
     });
   }
 
-  // Icon + accent pickers — selection lives in aria-pressed; .swatch CSS
+  // ---- Advanced settings (full field catalog, same controls as the wizard) ----
+  // Pre-fill every control with the server's ACTUAL current value (falling
+  // back to the catalog default) - the wizard never needs this since it
+  // starts blank, but here each field represents something really configured.
+  const advPanel = document.getElementById('st-advanced');
+  if (advPanel) {
+    const currentEnv = parseSettingsEnv();
+    advPanel.querySelectorAll('[data-catalog-key][data-catalog-scope="env"]').forEach((el) => {
+      const key = el.dataset.catalogKey;
+      const has = Object.prototype.hasOwnProperty.call(currentEnv, key);
+      if (el.dataset.catalogType === 'boolean') {
+        el.checked = has ? currentEnv[key] === 'true' : el.dataset.catalogDefault === 'true';
+      } else if (has) {
+        el.value = currentEnv[key];
+      }
+    });
+  }
+
+  function parseSettingsEnv() {
+    try {
+      return JSON.parse(root.dataset.settingsEnv || '{}');
+    } catch {
+      return {};
+    }
+  }
+
+  // Icon + accent pickers - selection lives in aria-pressed; .swatch CSS
   // draws the theme-aware ring, so JS only flips the attribute.
   bindPicker('[data-pick-icon]', (btn) => {
     icon = btn.dataset.pickIcon;
   });
   bindPicker('[data-pick-accent]', (btn) => {
     accent = btn.dataset.pickAccent;
+    applyIconAccent();
   });
+
+  // Icon swatches sit on a plate colored to match the chosen accent - keep
+  // every swatch (not just the selected one) in sync so switching accents
+  // previews live, matching how the icon actually renders once picked.
+  function applyIconAccent() {
+    root.querySelectorAll('[data-pick-icon]').forEach((btn) => {
+      btn.style.background = accent;
+    });
+  }
 
   function bindPicker(selector, onPick) {
     const buttons = [...root.querySelectorAll(selector)];
@@ -80,7 +116,7 @@ function init(serverId) {
     }
   }
 
-  // A custom accent (set via API) matches no preset — give it its own selected
+  // A custom accent (set via API) matches no preset - give it its own selected
   // swatch so the current choice is always visible.
   (() => {
     const picker = document.getElementById('st-accent-picker');
@@ -146,10 +182,10 @@ function init(serverId) {
     const base = 'rounded-md border p-2.5 text-xs ';
     if (cmem <= heap) {
       headroomBox.className = base + 'border-danger/40 bg-redstone-500/10 text-danger';
-      headroomBox.textContent = `Container limit (${cmem} MB) is at or below the heap (${heap} MB) — the JVM will be OOM-killed on start. Raise the limit or lower the heap.`;
+      headroomBox.textContent = `Container limit (${cmem} MB) is at or below the heap (${heap} MB) - the JVM will be OOM-killed on start. Raise the limit or lower the heap.`;
     } else if (cmem < heap * 1.25) {
       headroomBox.className = base + 'border-warn/40 bg-gold-500/10 text-warn';
-      headroomBox.textContent = `Tight headroom: container limit is only ${pctAbove}% above the heap. Java needs off-heap room — aim for 25% or more.`;
+      headroomBox.textContent = `Tight headroom: container limit is only ${pctAbove}% above the heap. Java needs off-heap room - aim for 25% or more.`;
     } else {
       headroomBox.className = base + 'border-ok/40 bg-grass-500/10 text-ok';
       headroomBox.textContent = `Healthy headroom: container limit is ${pctAbove}% above the heap.`;
@@ -200,10 +236,10 @@ function init(serverId) {
     content.innerHTML = `
       <p class="text-xs text-ink-faint">Exports this server's setup as a reusable blueprint in the library.</p>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include config directories</label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed overlay files in the archive <span class="text-xs text-ink-faint">— bigger file, fully portable</span></label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">— can be large</span></label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed overlay files in the archive <span class="text-xs text-ink-faint">- bigger file, fully portable</span></label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">- can be large</span></label>`;
     openModal({
-      title: 'Export as blueprint',
+      title: 'Export as Blueprint',
       content,
       size: 'sm',
       actions: [
@@ -242,7 +278,7 @@ function init(serverId) {
       <p class="text-xs text-ink-faint">Also available any time on the <a class="text-link hover:underline" href="/blueprints">Blueprints page</a>.</p>`;
     content.querySelector('[data-bp-name]').textContent = bp.name || 'exported';
     content.querySelector('[data-bp-dl]').href = `/api/blueprints/${encodeURIComponent(bp.id)}/download`;
-    openModal({ title: 'Blueprint exported', content, size: 'sm', actions: [{ label: 'Done', kind: 'ghost' }] });
+    openModal({ title: 'Blueprint Exported', content, size: 'sm', actions: [{ label: 'Done', kind: 'ghost' }] });
   }
 
   // ------------------------------------------------------------------ clone
@@ -253,7 +289,7 @@ function init(serverId) {
       <p class="text-xs text-ink-faint">Creates a copy of this server with fresh ports (blueprint export + import).</p>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Also copy the active world</label>`;
     openModal({
-      title: 'Clone server',
+      title: 'Clone Server',
       content,
       size: 'sm',
       actions: [
@@ -271,11 +307,11 @@ function init(serverId) {
 
   function cloneServer(includeWorld) {
     // The clone route may respond synchronously ({server}) or with a task id
-    // ({taskId}) once the task infrastructure lands — handle both.
+    // ({taskId}) once the task infrastructure lands - handle both.
     const DIRECT = Symbol('direct');
     let direct = null;
     runTask({
-      title: 'Cloning server…',
+      title: 'Cloning Server…',
       start: async () => {
         const data = await postJson('/api/blueprints/clone', { serverId, includeWorld });
         if (data.taskId) return data.taskId;
@@ -291,7 +327,7 @@ function init(serverId) {
           finishClone(direct.server && direct.server.id);
           return;
         }
-        if (err.dismissed) return; // progress hidden — the task tray takes over
+        if (err.dismissed) return; // progress hidden - the task tray takes over
         toast(err.message || 'Clone failed', { kind: 'error', timeout: 9000 });
       });
   }
@@ -308,7 +344,7 @@ function init(serverId) {
     if (dirty) {
       const { confirmDialog } = await import('../lib/confirm.js');
       const ok = await confirmDialog({
-        title: 'Discard changes?',
+        title: 'Discard Changes?',
         message: 'Everything edited on this tab since the last save is thrown away.',
         confirmLabel: 'Discard',
         danger: true,
@@ -331,7 +367,7 @@ function init(serverId) {
   }
 
   document.getElementById('st-save')?.addEventListener('click', async (e) => {
-    const saveBtn = e.currentTarget; // capture before await — currentTarget is null afterwards
+    const saveBtn = e.currentTarget; // capture before await - currentTarget is null afterwards
     const heapMb = Number(document.getElementById('st-heap').value);
     const body = {
       name: document.getElementById('st-name').value.trim(),
@@ -350,11 +386,11 @@ function init(serverId) {
     };
     // Docker settings: only send a field that actually changed from what the
     // server rendered. Sending all 4 unconditionally would run the (Docker-
-    // socket-hitting) validateOverrides check on every unrelated save — e.g. a
+    // socket-hitting) validateOverrides check on every unrelated save - e.g. a
     // Docker hiccup would then block renaming the server, not just changing
     // its container settings. The card is admin-only markup: when absent,
     // collectOverrides would read every field as cleared and an unrelated save
-    // would wipe (well, 403 on) the server's stored overrides — skip entirely.
+    // would wipe (well, 403 on) the server's stored overrides - skip entirely.
     if (document.getElementById('st-docker-name')) {
       const nowDocker = dockerSettings.collectOverrides({ forUpdate: true });
       if (nowDocker.containerName !== initialDocker.containerName) body.containerName = nowDocker.containerName;
@@ -366,19 +402,51 @@ function init(serverId) {
         body.extraBinds = nowDocker.extraBinds;
       }
     }
-    // MOTD lives in env: merge over the server's current env (from the data
-    // island) so nothing else is lost; § codes are what vanilla renders.
-    if (motdInput) {
-      let env = {};
-      try {
-        env = JSON.parse(root.dataset.settingsEnv || '{}');
-      } catch {
-        /* island absent */
+    // MOTD + every advanced-settings field live in env: merge all changes over
+    // the server's current env (from the data island) in one pass so nothing
+    // else is lost, and only send env at all if something actually changed.
+    // Clearing a field back to empty removes the override (reverts to the
+    // image default) rather than sending an empty string.
+    {
+      const current = parseSettingsEnv();
+      const merged = { ...current };
+      let envChanged = false;
+
+      if (motdInput) {
+        const newMotd = toSectionCodes(motdInput.value);
+        if ((current.MOTD || '') !== newMotd) {
+          merged.MOTD = newMotd;
+          envChanged = true;
+        }
       }
-      const newMotd = toSectionCodes(motdInput.value);
-      if ((env.MOTD || '') !== newMotd) {
-        body.env = { ...env, MOTD: newMotd };
+
+      if (advPanel) {
+        advPanel.querySelectorAll('[data-catalog-key][data-catalog-scope="env"]').forEach((el) => {
+          const key = el.dataset.catalogKey;
+          const had = Object.prototype.hasOwnProperty.call(current, key);
+          if (el.dataset.catalogType === 'boolean') {
+            const value = el.checked ? 'true' : 'false';
+            const before = had ? current[key] : el.dataset.catalogDefault === 'true' ? 'true' : 'false';
+            if (value !== before) {
+              merged[key] = value;
+              envChanged = true;
+            }
+          } else {
+            const value = el.value.trim();
+            if (!value) {
+              if (had) {
+                delete merged[key];
+                envChanged = true;
+              }
+            } else if (value !== (had ? current[key] : '')) {
+              merged[key] = value;
+              envChanged = true;
+            }
+          }
+        });
       }
+
+      if (envChanged) body.env = merged;
     }
     const restore = setBusy(saveBtn, 'Saving…');
     try {
@@ -394,10 +462,10 @@ function init(serverId) {
       }
       toast(
         data.needsRecreate
-          ? 'Saved — resource changes apply when you Recreate (button appears in the header).'
+          ? 'Saved - resource changes apply when you Recreate (button appears in the header).'
           : 'Saved.'
       );
-      dirty = false; // saved — leaving must not warn
+      dirty = false; // saved - leaving must not warn
       setTimeout(() => location.reload(), 900);
     } catch (err) {
       toast(`Network error: ${err.message}`, { kind: 'error' });

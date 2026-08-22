@@ -1,6 +1,6 @@
 'use strict';
 
-// Preflight FIRST — fail clearly on an unsupported Node runtime before anything
+// Preflight FIRST - fail clearly on an unsupported Node runtime before anything
 // else (config, DB, the runtime error net) can turn it into a cryptic crash.
 require('./preflight');
 
@@ -41,7 +41,7 @@ try {
     if (config.isExposedBind) {
       console.warn(
         `[security] PANEL_HOST=${config.host} exposes the panel beyond this machine. ` +
-          `Until the admin account exists, anyone who can reach it can claim it — finish ` +
+          `Until the admin account exists, anyone who can reach it can claim it - finish ` +
           `first-run setup now, and only put it on the internet behind a reverse proxy with TLS.`
       );
     }
@@ -56,7 +56,7 @@ try {
       );
     } else if (err.code === 'EACCES') {
       console.error(
-        `\n[boot] Not allowed to bind ${config.host}:${config.port}. Ports below 1024 need elevated privileges — pick a higher PANEL_PORT.\n`
+        `\n[boot] Not allowed to bind ${config.host}:${config.port}. Ports below 1024 need elevated privileges - pick a higher PANEL_PORT.\n`
       );
     } else {
       console.error('\n[boot] HTTP server error:', err.message, '\n');
@@ -97,13 +97,13 @@ function startBackgroundServices(httpServer) {
   setTimeout(runMaintenance, 60_000).unref();
   setInterval(runMaintenance, 24 * 3600 * 1000).unref();
 
-  // Docker integration comes up in the background — the panel must stay usable
+  // Docker integration comes up in the background - the panel must stay usable
   // when the daemon is down (setup wizard handles that state).
   (async () => {
     const { checkDocker } = require('./docker/connect');
     const status = await checkDocker();
     if (!status.available) {
-      console.warn(`[docker] daemon unavailable (${status.error}) — lifecycle features disabled until it comes up`);
+      console.warn(`[docker] daemon unavailable (${status.error}) - lifecycle features disabled until it comes up`);
       return;
     }
     console.log(`[docker] connected: ${status.os} (Docker ${status.version})`);

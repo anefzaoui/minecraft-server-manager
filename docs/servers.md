@@ -11,13 +11,13 @@ Click **New server** (top bar) or the **Create a server** card to open the wizar
 You choose:
 
 - A **name** (and optional icon, accent color, and tags to organize your fleet).
-- A **server type** — vanilla, Paper, Fabric, Forge, NeoForge, and more, each mapped to the right itzg image behind the scenes.
-- A **Minecraft version** — `LATEST`, a snapshot, or a specific version.
-- **Resources** — RAM (heap), container memory limit, CPU, and a disk quota.
+- A **server type** - vanilla, Paper, Fabric, Forge, NeoForge, and more, each mapped to the right itzg image behind the scenes.
+- A **Minecraft version** - `LATEST`, a snapshot, or a specific version.
+- **Resources** - RAM (heap), container memory limit, CPU, and a disk quota.
 
-Prefer a modpack? The **From modpack** tab installs a CurseForge, Modrinth, FTB, or GT New Horizons pack instead — see [Modpacks](modpacks.md). You can also start from a saved [Blueprint](blueprints.md).
+Prefer a modpack? The **From modpack** tab installs a CurseForge, Modrinth, FTB, or GT New Horizons pack instead - see [Modpacks](modpacks.md). You can also start from a saved [Blueprint](blueprints.md).
 
-The panel picks a sensible Java runtime for your version automatically, pulls the image, creates the container, and (optionally) starts it — all from the one form.
+The panel picks a sensible Java runtime for your version automatically, pulls the image, creates the container, and (optionally) starts it - all from the one form.
 
 ## The servers list
 
@@ -29,13 +29,13 @@ The **Servers** page lists your whole fleet with status and quick stats.
 
 Opening a server gives you a tabbed workspace:
 
-- **Overview** — status, live stats, uptime, and the primary start / stop / restart controls.
-- **Console** — the live log stream and command input, plus in-game chat ([details](console-and-chat.md)).
-- **Players** — who's online, plus inventory, analytics, and [chat commands](console-and-chat.md).
-- **World** — [worlds, mods, the live map, and the file manager](worlds-and-files.md).
-- **Backups** — [snapshots and restore](backups.md) for this server.
-- **Insights** — metrics and per-server history.
-- **Settings** — everything about how the server runs.
+- **Overview** - status, live stats, uptime, and the primary start / stop / restart controls.
+- **Console** - the live log stream and command input, plus in-game chat ([details](console-and-chat.md)).
+- **Players** - who's online, plus inventory, analytics, and [chat commands](console-and-chat.md).
+- **World** - [worlds, mods, the live map, and the file manager](worlds-and-files.md).
+- **Backups** - [snapshots and restore](backups.md) for this server.
+- **Insights** - metrics and per-server history.
+- **Settings** - everything about how the server runs.
 
 ![Server overview](images/server-overview.png)
 

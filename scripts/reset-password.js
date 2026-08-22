@@ -29,7 +29,7 @@ if (!user) {
   console.error(
     names.length
       ? `Existing users: ${names.join(', ')}`
-      : 'There are no users yet — start the panel and complete first-run setup.'
+      : 'There are no users yet - start the panel and complete first-run setup.'
   );
   process.exit(1);
 }

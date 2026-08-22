@@ -26,9 +26,9 @@ const failures = [];
 
 function report(kind, label, detail = '') {
   results[kind] += 1;
-  if (kind === 'fail') failures.push(`${label}${detail ? ` — ${detail}` : ''}`);
+  if (kind === 'fail') failures.push(`${label}${detail ? ` - ${detail}` : ''}`);
   const mark = { pass: 'PASS', fail: 'FAIL', warn: 'WARN' }[kind];
-  console.log(`${mark}  ${label}${detail ? ` — ${detail}` : ''}`);
+  console.log(`${mark}  ${label}${detail ? ` - ${detail}` : ''}`);
 }
 
 async function main() {
@@ -41,7 +41,7 @@ async function main() {
   });
   const cookie = (loginRes.headers.getSetCookie?.() || []).map((c) => c.split(';')[0]).join('; ');
   if (!cookie.includes('msm.sid')) {
-    console.error('LOGIN FAILED — aborting');
+    console.error('LOGIN FAILED - aborting');
     process.exit(1);
   }
   const get = (url) => fetch(`${BASE}${url}`, { headers: { cookie } });
@@ -101,7 +101,7 @@ async function main() {
   for (const url of pages) {
     try {
       const html = await (await get(url)).text();
-      // Scope to the sidebar only — page bodies legitimately link to servers
+      // Scope to the sidebar only - page bodies legitimately link to servers
       // (activity rows, cards) and event rows may reference deleted ones.
       const aside = (html.match(/<aside id="sidebar"[\s\S]*?<\/aside>/) || [''])[0];
       const count = (aside.match(/href="\/servers\/srv_[A-Za-z0-9_-]+"/g) || []).filter(

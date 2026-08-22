@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
 const config = require('../config');
 
 if (!config.sessionSecret) {
-  console.warn('[secrets] SESSION_SECRET is empty — set it in .env before storing real credentials');
+  console.warn('[secrets] SESSION_SECRET is empty - set it in .env before storing real credentials');
 }
 const KEY = crypto.scryptSync(config.sessionSecret, 'msm.secrets.v1', 32);
 
@@ -27,7 +27,7 @@ function decrypt(ciphertext) {
   } catch {
     // Almost always: SESSION_SECRET changed since this value was stored.
     const err = new Error(
-      'A stored secret could not be decrypted — SESSION_SECRET has changed since it was saved. ' +
+      'A stored secret could not be decrypted - SESSION_SECRET has changed since it was saved. ' +
         'Re-enter the affected credential (API key / RCON password), or restore the old SESSION_SECRET in .env.'
     );
     err.status = 409;
@@ -36,7 +36,7 @@ function decrypt(ciphertext) {
   }
 }
 
-/** decrypt() that returns null instead of throwing — for callers with a fallback. */
+/** decrypt() that returns null instead of throwing - for callers with a fallback. */
 function tryDecrypt(ciphertext) {
   try {
     return decrypt(ciphertext);

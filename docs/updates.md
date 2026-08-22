@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-The **Updates** page tracks what's out of date across your fleet — server versions, [modpack](modpacks.md) versions, and mods — in one place.
+The **Updates** page tracks what's out of date across your fleet - server versions, [modpack](modpacks.md) versions, and mods - in one place.
 
 ![Updates](images/updates.png)
 
@@ -10,7 +10,7 @@ The **Updates** page tracks what's out of date across your fleet — server vers
 
 The panel checks each server's pinned versions against the upstream source (Modrinth, CurseForge, the GTNH release index, and so on) and lists anything with a newer release. A matching count also appears on the [dashboard](dashboard.md)'s "Updates available" tile.
 
-Checks run on demand and can be scheduled ([Schedules](schedules.md)). Update **policy** is per-server — you decide whether the panel just notifies you, or leaves everything manual.
+Checks run on demand and can be scheduled ([Schedules](schedules.md)). Update **policy** is per-server - you decide whether the panel just notifies you, or leaves everything manual.
 
 ## Applying an update
 

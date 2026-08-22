@@ -1,6 +1,6 @@
 'use strict';
 
-// PUBLIC status pages (MP9). Mounted at /status BEFORE the auth middleware —
+// PUBLIC status pages (MP9). Mounted at /status BEFORE the auth middleware -
 // everything rendered here must be safe for the open internet: no admin data,
 // no panel links, only what the server owner opted to share.
 
@@ -18,10 +18,10 @@ router.get(
     const serverId = statusPage.findBySlug(req.params.slug);
     const row = serverId ? serversService.getServer(serverId) : null;
     if (!row) {
-      return res.status(404).render('status', { layout: 'bare', title: 'Not found', notFound: true });
+      return res.status(404).render('status', { layout: 'bare', title: 'Not Found', notFound: true });
     }
 
-    // serverVM reads only the in-memory live cache — no Docker work per
+    // serverVM reads only the in-memory live cache - no Docker work per
     // request, so anonymous traffic cannot exhaust the daemon.
     const vm = await serverVM(row);
     res.render('status', {

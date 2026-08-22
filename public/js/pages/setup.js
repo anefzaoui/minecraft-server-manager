@@ -27,10 +27,10 @@ function init() {
 
   wizard.addEventListener('click', (e) => {
     if (e.target.closest('[data-next]')) {
-      // Step 3 fields save individually — Continue must not silently discard
+      // Step 3 fields save individually - Continue must not silently discard
       // something typed but never saved.
       if (step === 3 && unsavedStep3()) {
-        toast('You have unsaved values above — press their Save buttons, or clear the fields to skip.', {
+        toast('You have unsaved values above - press their Save buttons, or clear the fields to skip.', {
           kind: 'warn',
           timeout: 8000,
         });
@@ -73,7 +73,7 @@ function init() {
   }
 
   async function loadChecks() {
-    // Continue waits for the first check round — "checks passed" and "checks
+    // Continue waits for the first check round - "checks passed" and "checks
     // never ran" must not look identical.
     const continueBtn = sections[1].querySelector('[data-next]');
     if (continueBtn) continueBtn.disabled = true;
@@ -87,10 +87,10 @@ function init() {
       checks = data.checks;
       checksLoaded = true;
     } catch (err) {
-      list.innerHTML = `<div class="notice notice-danger text-danger">Could not run checks: ${esc(err.message)} — re-check to try again.</div>`;
+      list.innerHTML = `<div class="notice notice-danger text-danger">Could not run checks: ${esc(err.message)} - re-check to try again.</div>`;
       return;
     } finally {
-      // Docker being down must not trap setup (the panel works without it) —
+      // Docker being down must not trap setup (the panel works without it) -
       // Continue unlocks once a round finished, pass or fail.
       if (continueBtn && checksLoaded) continueBtn.disabled = false;
     }
@@ -101,13 +101,13 @@ function init() {
     const d = checks.docker;
     const dDetail = d.available
       ? `${esc(d.version)} · ${esc(d.os || 'Docker')} · ${d.ncpu ?? '?'} CPUs${gb(d.memTotal) ? ` · ${gb(d.memTotal)} RAM` : ''}`
-      : `Not reachable — server create/start/stop stay disabled until Docker is running. The panel works fine meanwhile.${d.installed === false ? ' Docker doesn’t appear to be installed.' : ' Start Docker Desktop, then re-check.'}`;
+      : `Not reachable - server create/start/stop stay disabled until Docker is running. The panel works fine meanwhile.${d.installed === false ? ' Docker doesn’t appear to be installed.' : ' Start Docker Desktop, then re-check.'}`;
     list.appendChild(row(d.level, 'Docker', dDetail));
 
     // Node
     const n = checks.node;
     list.appendChild(
-      row(n.level, 'Node.js', `${esc(n.version)}${n.level === 'fail' ? ` — need ${esc(n.required)} or newer` : ''}`)
+      row(n.level, 'Node.js', `${esc(n.version)}${n.level === 'fail' ? ` - need ${esc(n.required)} or newer` : ''}`)
     );
 
     // Data dir
@@ -116,7 +116,7 @@ function init() {
       row(
         dd.level,
         'Data directory',
-        dd.level === 'pass' ? `${esc(dd.path)} — writable` : `${esc(dd.path)} — NOT writable. Fix folder permissions.`
+        dd.level === 'pass' ? `${esc(dd.path)} - writable` : `${esc(dd.path)} - NOT writable. Fix folder permissions.`
       )
     );
 
@@ -125,7 +125,7 @@ function init() {
     const sDetail =
       s.level === 'pass'
         ? 'A strong secret is set (auto-generated and saved to your data dir if you didn’t set SESSION_SECRET). It signs sessions and encrypts stored keys.'
-        : 'Weak SESSION_SECRET — use at least 16 random characters, or leave it blank to let the panel generate one. Rotating it later invalidates stored server passwords.';
+        : 'Weak SESSION_SECRET - use at least 16 random characters, or leave it blank to let the panel generate one. Rotating it later invalidates stored server passwords.';
     list.appendChild(row(s.level, 'Session secret', sDetail));
   }
 
@@ -158,7 +158,7 @@ function init() {
         adminError.classList.remove('hidden');
         return;
       }
-      // Admin created and signed in — advance (no going back past this point).
+      // Admin created and signed in - advance (no going back past this point).
       goTo(3);
     });
   });
@@ -189,9 +189,9 @@ function init() {
         toast('Key verified with CurseForge and saved (encrypted).');
         const cf = document.getElementById('su-cf');
         cf.value = '';
-        // Reflect the stored state — an emptied field with an example
+        // Reflect the stored state - an emptied field with an example
         // placeholder read as "nothing saved".
-        cf.placeholder = 'Stored ✓ — paste a new key to replace it';
+        cf.placeholder = 'Stored ✓ - paste a new key to replace it';
       }
     });
   });

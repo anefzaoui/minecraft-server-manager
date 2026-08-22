@@ -16,9 +16,9 @@ From a server's **Backups** tab (or via a [schedule](schedules.md)) you can snap
 
 Backups are tagged by why they were taken:
 
-- **manual** — you clicked the button.
-- **scheduled** — created by a [schedule](schedules.md).
-- **pre-update** — taken automatically before a pack upgrade, so an upgrade is always reversible.
+- **manual** - you clicked the button.
+- **scheduled** - created by a [schedule](schedules.md).
+- **pre-update** - taken automatically before a pack upgrade, so an upgrade is always reversible.
 
 ## Restoring
 

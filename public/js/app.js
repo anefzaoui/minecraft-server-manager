@@ -1,4 +1,4 @@
-// Minecraft Server Manager client entry. Shared behaviors live in ./lib/* — every page gets
+// Minecraft Server Manager client entry. Shared behaviors live in ./lib/* - every page gets
 // the same modals, tooltips, toasts, dropdowns, and custom selects.
 
 import { toast } from './lib/toast.js';
@@ -12,6 +12,7 @@ import './lib/dropdown.js';
 import './lib/taskTray.js';
 import './lib/seg.js';
 import './lib/twoFactor.js';
+import './lib/avatar.js';
 
 // Expose for inline handlers and future page scripts.
 window.CD = { toast, openModal, confirmDialog, setBusy, withBusy };
@@ -79,7 +80,7 @@ for (const el of document.querySelectorAll('[data-ts], [data-ts-ago]')) {
   input.addEventListener('input', () => {
     const q = input.value.trim().toLowerCase();
     let shown = 0;
-    // Match against data-filter (name/flavor/version/tags) — matching the full
+    // Match against data-filter (name/flavor/version/tags) - matching the full
     // card text made "cpu" or "memory" match every card via the stat labels.
     grid.querySelectorAll('[data-filter]').forEach((card) => {
       const hide = Boolean(q) && !(card.dataset.filter || '').toLowerCase().includes(q);
@@ -111,7 +112,7 @@ document.addEventListener('submit', (e) => {
   if (btn) setBusy(btn);
 });
 
-// (Console behavior lives in pages/console.js — no bindings here.)
+// (Console behavior lives in pages/console.js - no bindings here.)
 
 // ---- Range sliders: live value readout ----
 document.querySelectorAll('input[type="range"][data-out]').forEach((range) => {
@@ -162,8 +163,8 @@ document.addEventListener('click', async (e) => {
   };
   if (action === 'kill') {
     const ok = await confirmDialog({
-      title: `Force kill ${name}?`,
-      message: 'Kill skips the graceful stop — unsaved world data may be lost. Use Stop unless the server is frozen.',
+      title: `Force Kill ${name}?`,
+      message: 'Kill skips the graceful stop - unsaved world data may be lost. Use Stop unless the server is frozen.',
       confirmLabel: 'Kill it',
       danger: true,
     });
@@ -178,7 +179,7 @@ document.addEventListener('click', async (e) => {
   siblings.forEach((b) => {
     b.disabled = true;
   });
-  if (action === 'stop') toast('Stopping — the world saves first…', { kind: 'info' });
+  if (action === 'stop') toast('Stopping - the world saves first…', { kind: 'info' });
   const res = await api(`/api/servers/${id}/${action}`, 'POST');
   if (res.ok) {
     toast(`${name}: ${action} complete.`);
@@ -214,7 +215,7 @@ window.CD.api = api;
 // ---- Copy-to-clipboard: [data-copy="text"] or [data-copy-from="#selector"] ----
 // Robust across contexts: the async Clipboard API only works on HTTPS/localhost,
 // so over plain HTTP (LAN/IP) we fall back to execCommand, then to a prompt the
-// user can copy from by hand — which also covers a <select> source that can't be
+// user can copy from by hand - which also covers a <select> source that can't be
 // selected in place. Returns true only when the copy landed programmatically.
 async function copyText(value) {
   const text = String(value ?? '').trim();
@@ -241,7 +242,7 @@ async function copyText(value) {
   } catch {
     /* fall through to the manual prompt */
   }
-  // Last resort — a small modal with the value selected, ready for Ctrl/Cmd+C
+  // Last resort - a small modal with the value selected, ready for Ctrl/Cmd+C
   // (no native browser chrome; the modal core exists to avoid exactly that).
   const input = document.createElement('input');
   input.className = 'input font-mono';
@@ -252,9 +253,9 @@ async function copyText(value) {
   wrap.className = 'space-y-2';
   const help = document.createElement('p');
   help.className = 'text-xs text-ink-faint';
-  help.textContent = 'Automatic copy is unavailable here — press Ctrl/Cmd+C to copy the selected value.';
+  help.textContent = 'Automatic copy is unavailable here - press Ctrl/Cmd+C to copy the selected value.';
   wrap.append(input, help);
-  openModal({ title: 'Copy manually', content: wrap, size: 'sm' });
+  openModal({ title: 'Copy Manually', content: wrap, size: 'sm' });
   input.select();
   return false;
 }

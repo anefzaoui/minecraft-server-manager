@@ -1,9 +1,9 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Storage maintenance helpers shared by the /api/storage/cleanup endpoint and
 // the /storage page (which shows the same numbers as a dry-run preview).
-// Route-layer only — services stay untouched.
+// Route-layer only - services stay untouched.
 
 const fsp = require('node:fs/promises');
 const path = require('node:path');

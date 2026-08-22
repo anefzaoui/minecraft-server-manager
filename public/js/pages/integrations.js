@@ -9,7 +9,7 @@ function init() {
   const serverId = root.dataset.serverId;
   const invite = JSON.parse(root.dataset.invite || '{}');
 
-  // ---- Dirty hints: the enable toggles LOOK live but only apply on Save —
+  // ---- Dirty hints: the enable toggles LOOK live but only apply on Save -
   // flag the pending state so flipping one and leaving isn't a silent no-op.
   function bindDirty(key, controls) {
     const hint = root.querySelector(`[data-ig-dirty="${key}"]`);
@@ -26,7 +26,7 @@ function init() {
 
   // ---- Discord ----
   document.getElementById('ig-dc-save')?.addEventListener('click', async (e) => {
-    const btn = e.currentTarget; // capture before await — currentTarget is null afterwards
+    const btn = e.currentTarget; // capture before await - currentTarget is null afterwards
     const url = document.getElementById('ig-dc-url').value.trim();
     const body = {
       enabled: document.getElementById('ig-dc-enabled').checked,
@@ -48,10 +48,10 @@ function init() {
   });
 
   document.getElementById('ig-dc-test')?.addEventListener('click', async (e) => {
-    const btn = e.currentTarget; // capture before await — currentTarget is null afterwards
+    const btn = e.currentTarget; // capture before await - currentTarget is null afterwards
     await withBusy(btn, 'Sending…', async () => {
       const res = await api(`/api/servers/${serverId}/integrations/discord/test`, 'POST');
-      if (res.ok) toast('Test message sent — check your Discord channel.');
+      if (res.ok) toast('Test message sent - check your Discord channel.');
     });
   });
 
@@ -83,18 +83,18 @@ function init() {
       toast('Enter the custom address first.', { kind: 'error' });
       return;
     }
-    copy(textEl.textContent, 'Invite text copied — paste it to your friends.');
+    copy(textEl.textContent, 'Invite text copied - paste it to your friends.');
   });
 
   document.getElementById('ig-mrpack')?.addEventListener('click', (e) => {
     const btn = e.currentTarget;
     const host = chosenHost();
     if (!host) {
-      toast('Pick or enter an address first — it gets baked into the pack.', { kind: 'error' });
+      toast('Pick or enter an address first - it gets baked into the pack.', { kind: 'error' });
       return;
     }
     toast('Building the client modpack…', { kind: 'info' });
-    // Navigation download — the browser gives no completion event, so show
+    // Navigation download - the browser gives no completion event, so show
     // busy for the server-side build window and release after a beat.
     const restore = setBusy(btn, 'Building…');
     setTimeout(restore, 8000);
@@ -106,7 +106,7 @@ function init() {
     const btn = e.currentTarget;
     const enabled = document.getElementById('ig-sp-enabled').checked;
     const slug = document.getElementById('ig-sp-slug').value.trim();
-    // A valid slug is only mandatory when turning the page ON — turning it off
+    // A valid slug is only mandatory when turning the page ON - turning it off
     // must work even for a page that never had a slug.
     if (enabled && !/^[a-z0-9-]{3,40}$/.test(slug)) {
       toast('Slug must be 3–40 lowercase letters, digits, or dashes.', { kind: 'error' });
@@ -132,7 +132,7 @@ function init() {
 
 async function copy(text, message) {
   // copyText's last-resort fallback shows its own "copy manually" modal, so a
-  // false return needs no extra toast — but a missing global must not throw.
+  // false return needs no extra toast - but a missing global must not throw.
   if (window.CD?.copyText && (await window.CD.copyText(text))) toast(message);
 }
 

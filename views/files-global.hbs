@@ -1,4 +1,4 @@
-{{> page-header heading="FILE MANAGER" sub="The entire ./data directory — servers, backups, library, logs. Admin only; the panel database itself is protected."}}
+{{> page-header heading="FILE MANAGER" sub="The entire ./data directory - servers, backups, library, logs. Admin only; the panel database itself is protected."}}
 
 <div data-files-global data-files-path="{{filePath}}" class="contents">
   <div class="card">
@@ -37,7 +37,7 @@
           {{#each files}}
             <tr data-file-row data-path="{{path}}" data-name="{{name}}" data-dir="{{dir}}" data-size="{{size}}">
               {{! w-full + max-w-0: makes `truncate` actually engage in an
-                  auto-layout table — long names no longer force horizontal scroll. }}
+                  auto-layout table - long names no longer force horizontal scroll. }}
               <td class="w-full max-w-0">
                 <div class="flex items-center gap-2">
                   {{#if dir}}
@@ -59,8 +59,8 @@
                 <button class="btn btn-ghost btn-sm" data-menu="file-menu-{{@index}}" data-tip="Rename, move, copy…">{{{icon 'ellipsis' 'size-3.5'}}}</button>
                 <template id="file-menu-{{@index}}">
                   <button data-file-rename data-path="{{path}}" data-name="{{name}}">{{{icon 'pencil' 'size-3.5'}}} Rename</button>
-                  <button data-file-move data-path="{{path}}" data-name="{{name}}">{{{icon 'move' 'size-3.5'}}} Move to…</button>
-                  <button data-file-copy data-path="{{path}}" data-name="{{name}}">{{{icon 'copy' 'size-3.5'}}} Copy to…</button>
+                  <button data-file-move data-path="{{path}}" data-name="{{name}}">{{{icon 'move' 'size-3.5'}}} Move To…</button>
+                  <button data-file-copy data-path="{{path}}" data-name="{{name}}">{{{icon 'copy' 'size-3.5'}}} Copy To…</button>
                 </template>
                 <button class="btn btn-ghost btn-sm text-danger" data-file-delete data-tip="Delete ({{bytes size}})" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               </div></td>
@@ -75,6 +75,6 @@
       </table>
     </div>
   </div>
-  <p class="help mt-2 max-w-prose">Careful — this is the panel's whole data root. Deleting server or backup files here bypasses the usual safety rails.</p>
+  <p class="help mt-2 max-w-prose">Careful - this is the panel's whole data root. Deleting server or backup files here bypasses the usual safety rails.</p>
 </div>
 <script type="module" src="/js/pages/files-global.js"></script>

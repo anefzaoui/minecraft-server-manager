@@ -3,7 +3,7 @@
 // Advanced Docker settings: YAML round-trip for the "Preview as YAML" editor,
 // and the authoritative server-side validation for the 4 editable knobs
 // (container name, network, extra ports, extra volume binds). Never requires
-// ./servers — servers.js requires this module, and a cycle would break it.
+// ./servers - servers.js requires this module, and a cycle would break it.
 
 const path = require('node:path');
 const yaml = require('js-yaml');
@@ -15,7 +15,7 @@ const HEADER =
   '# Advanced Docker settings.\n' +
   '# Only these fields are read back when you Apply: containerName, network,\n' +
   '# ports.extra, volumes.extra. Everything else here (image, standard ports,\n' +
-  '# resources, env) is read-only context — edit it from the other wizard/\n' +
+  '# resources, env) is read-only context - edit it from the other wizard/\n' +
   '# settings sections instead.\n\n';
 
 function toYaml(spec) {
@@ -53,14 +53,14 @@ function fromYaml(text) {
 const NAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,62}$/;
 
 /**
- * Authoritative validation for the 4 override fields — must be run on every
+ * Authoritative validation for the 4 override fields - must be run on every
  * path that can persist them (creation, and the Settings-tab PATCH), even
  * when the values came from a server-generated preview: the user can type
  * anything into the YAML textarea before Apply.
  *
  * `previousExtraPorts` lets an update skip the free-port probe for ports the
  * server already legitimately holds (its own running container has them
- * bound, so isPortFree would otherwise — wrongly — report a collision).
+ * bound, so isPortFree would otherwise - wrongly - report a collision).
  */
 async function validateOverrides(
   { containerName, networkName, extraPorts = [], extraBinds = [] },
@@ -70,15 +70,15 @@ async function validateOverrides(
 
   if (containerName != null && !NAME_RE.test(containerName)) {
     errors.push(
-      `Container name "${containerName}" is invalid — use letters, digits, "_", ".", "-", starting with a letter or digit, up to 63 characters.`
+      `Container name "${containerName}" is invalid - use letters, digits, "_", ".", "-", starting with a letter or digit, up to 63 characters.`
     );
   }
-  // getContainer() resolves servers WITHOUT a custom name as msm-<id> — a
+  // getContainer() resolves servers WITHOUT a custom name as msm-<id> - a
   // custom name in that namespace could shadow another server's container and
   // route every lifecycle action (stop, kill, exec…) to the wrong instance.
   if (containerName != null && /^msm-/i.test(containerName)) {
     errors.push(
-      `Container name "${containerName}" is reserved — the "msm-" prefix is used for the panel's own naming.`
+      `Container name "${containerName}" is reserved - the "msm-" prefix is used for the panel's own naming.`
     );
   }
 
@@ -115,7 +115,7 @@ async function validateOverrides(
 
   for (const b of extraBinds || []) {
     if (!b.hostPath || typeof b.hostPath !== 'string' || b.hostPath.includes('\0') || !path.isAbsolute(b.hostPath)) {
-      errors.push(`Extra volume bind has an invalid host path: "${b.hostPath || ''}" — must be an absolute path.`);
+      errors.push(`Extra volume bind has an invalid host path: "${b.hostPath || ''}" - must be an absolute path.`);
     }
     if (
       !b.containerPath ||
@@ -124,7 +124,7 @@ async function validateOverrides(
       !b.containerPath.startsWith('/')
     ) {
       errors.push(
-        `Extra volume bind has an invalid container path: "${b.containerPath || ''}" — must be an absolute path.`
+        `Extra volume bind has an invalid container path: "${b.containerPath || ''}" - must be an absolute path.`
       );
     }
     if (b.mode && !['rw', 'ro'].includes(b.mode)) {

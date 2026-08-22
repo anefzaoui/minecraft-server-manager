@@ -20,7 +20,7 @@ function init() {
       createFrom({ blueprintId: id }, name);
     } else if (delBtn) {
       const ok = await confirmDialog({
-        title: `Delete blueprint "${name}"?`,
+        title: `Delete Blueprint "${name}"?`,
         message: 'Removes the .mcserver.zip from the library. Servers already created from it are not affected.',
         confirmLabel: 'Delete',
         danger: true,
@@ -127,12 +127,12 @@ let importInFlight = false; // dismissing the progress modal must not allow a se
 
 async function createFrom(body, name) {
   if (importInFlight) {
-    toast('A server is already being created from a blueprint — hold on.', { kind: 'info' });
+    toast('A server is already being created from a blueprint - hold on.', { kind: 'info' });
     return;
   }
   importInFlight = true;
   const progress = openProgress(
-    `Creating server from "${name}" — pulling the image, installing the pack and mods. This can take a few minutes…`
+    `Creating server from "${name}" - pulling the image, installing the pack and mods. This can take a few minutes…`
   );
   let data;
   try {
@@ -186,7 +186,7 @@ function showReport(server, report) {
     </ul>
     ${report.some((r) => r.status !== 'ok') ? '<p class="text-xs text-ink-faint">Failed items can be added later from the server’s Mods tab.</p>' : ''}`;
   openModal({
-    title: 'Blueprint import finished',
+    title: 'Blueprint Import Finished',
     content,
     actions: [
       { label: 'Stay here', kind: 'ghost' },
@@ -207,7 +207,7 @@ function openProgress(text) {
   content.innerHTML = `
     <p></p>
     <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
-    <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import — it keeps running server-side.</p>`;
+    <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import - it keeps running server-side.</p>`;
   content.querySelector('p').textContent = text;
   return openModal({ title: 'Working…', content, actions: [] });
 }

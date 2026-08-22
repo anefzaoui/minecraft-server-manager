@@ -1,4 +1,4 @@
-// Shared backups behavior — used by BOTH the global /backups page and the
+// Shared backups behavior - used by BOTH the global /backups page and the
 // per-server Backups tab. Contract (document-level delegation):
 //   rows:    [data-backup-row] with data-backup-id, data-server-id,
 //            data-server-name, data-file, data-size, data-reason
@@ -36,7 +36,7 @@ document.addEventListener('click', async (e) => {
 
   if (action === 'restore') {
     const ok = await confirmDialog({
-      title: `Restore this backup?`,
+      title: `Restore This Backup?`,
       message: `${serverName || 'The server'} is stopped first, a safety backup of the current state is taken, then the server directory is replaced with the archive.`,
       detail: `${file}\n${fmtBytes(size)} · ${reason || 'manual'}`,
       confirmLabel: 'Restore backup',
@@ -54,7 +54,7 @@ document.addEventListener('click', async (e) => {
       toast('Backup restored. Start the server when you are ready.');
       setTimeout(() => location.reload(), 800);
     } catch (err) {
-      if (err.dismissed) return; // progress hidden — the task tray takes over
+      if (err.dismissed) return; // progress hidden - the task tray takes over
       toast(err.message || 'Restore failed', { kind: 'error', timeout: 9000 });
     }
     return;
@@ -62,7 +62,7 @@ document.addEventListener('click', async (e) => {
 
   if (action === 'delete') {
     const ok = await confirmDialog({
-      title: 'Delete this backup?',
+      title: 'Delete This Backup?',
       message: 'The archive is removed permanently.',
       detail: `${file}\n${fmtBytes(size)} will be freed.`,
       confirmLabel: 'Delete',
@@ -89,7 +89,7 @@ async function createBackup(serverId, serverName) {
   if (!serverId) return;
   try {
     const result = await runTask({
-      title: `Backing up ${serverName}`,
+      title: `Backing Up ${serverName}`,
       start: async () => {
         const res = await postJSON(`/api/servers/${serverId}/backups`, {});
         return res.taskId;
@@ -100,7 +100,7 @@ async function createBackup(serverId, serverName) {
     );
     setTimeout(() => location.reload(), 800);
   } catch (err) {
-    if (err.dismissed) return; // progress hidden — the task tray takes over
+    if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'Backup failed', { kind: 'error', timeout: 9000 });
   }
 }
@@ -118,7 +118,7 @@ if (serverFilter || reasonFilter) {
       row.classList.toggle('hidden', !match);
       if (match) visible += 1;
     });
-    // Filters can hide every row — say so instead of showing a bare header.
+    // Filters can hide every row - say so instead of showing a bare header.
     document.getElementById('backups-no-match')?.classList.toggle('hidden', visible > 0);
     refreshTotal();
   };

@@ -42,7 +42,7 @@ export async function showPackDetails({ platform, ref, installedServerId } = {})
     ? `serverId=${encodeURIComponent(installedServerId)}`
     : `platform=${encodeURIComponent(platform)}&ref=${encodeURIComponent(ref)}`;
   const loading = openModal({
-    title: 'Loading pack details…',
+    title: 'Loading Pack Details…',
     size: 'sm',
     content: '<p class="text-sm text-ink-faint">Fetching from the platform…</p>',
   });
@@ -80,14 +80,14 @@ function renderPackDetails(pack) {
           <span class="badge">${pack.platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}</span>
           ${meta.length ? `<span class="ml-1">${meta.join(' · ')}</span>` : ''}
         </div>
-        ${pack.installed ? `<div class="mt-1 text-xs text-ok">Installed on ${escapeHtml(pack.installed.serverName)} — pinned @ ${escapeHtml(pack.installed.versionName)}</div>` : ''}
+        ${pack.installed ? `<div class="mt-1 text-xs text-ok">Installed on ${escapeHtml(pack.installed.serverName)} - pinned @ ${escapeHtml(pack.installed.versionName)}</div>` : ''}
       </div>
     </div>
     <div data-desc class="max-h-72 overflow-y-auto rounded-md border border-line bg-inset p-4 text-sm leading-relaxed"></div>
     <div>
       <label class="label" for="pd-version">Version to pin</label>
       <select class="input" id="pd-version" data-label="Pack version"></select>
-      <p class="help">Installs are always pinned to this exact version — a restart can never silently upgrade.</p>
+      <p class="help">Installs are always pinned to this exact version - a restart can never silently upgrade.</p>
     </div>
     <div data-mods class="hidden">
       <div class="label" data-mods-title>Pack contents</div>
@@ -161,7 +161,7 @@ async function loadInstalledMods(content, serverId) {
     if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to list pack content');
     if (!data.mods.length) {
       list.innerHTML =
-        '<div class="p-3 text-center text-xs text-ink-faint">No pack-managed files on disk yet — they appear after the first start finishes installing the pack.</div>';
+        '<div class="p-3 text-center text-xs text-ink-faint">No pack-managed files on disk yet - they appear after the first start finishes installing the pack.</div>';
       return;
     }
     title.textContent = `Pack contents (${data.mods.length} pack-managed file${data.mods.length === 1 ? '' : 's'})`;
@@ -246,19 +246,19 @@ function initPage() {
       renderResults();
     } catch (err) {
       if (seq !== searchSeq) return;
-      resultsEl.innerHTML = `<div class="card p-4 text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' — <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
+      resultsEl.innerHTML = `<div class="card p-4 text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' - <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
     }
   }
 
   function renderResults() {
     if (!lastResults.length) {
       resultsEl.innerHTML =
-        '<div class="card p-4 text-sm text-ink-faint">No modpacks found — try another search term.</div>';
+        '<div class="card p-4 text-sm text-ink-faint">No modpacks found - try another search term.</div>';
       return;
     }
-    // Both platforms return a capped page — say what's shown, never imply "all".
+    // Both platforms return a capped page - say what's shown, never imply "all".
     const heading = resultsWrap.querySelector('h3');
-    if (heading) heading.textContent = `Search results — top ${lastResults.length} matches`;
+    if (heading) heading.textContent = `Search results - top ${lastResults.length} matches`;
     resultsEl.innerHTML = lastResults
       .map(
         (p, i) => `
@@ -303,14 +303,14 @@ function initPage() {
     if (e.target.closest('[data-pack-check]')) {
       try {
         const result = await runTask({
-          title: `Checking ${packName} for updates`,
+          title: `Checking ${packName} for Updates`,
           start: async () => (await postJSON(`/api/servers/${serverId}/updates/check`, {})).taskId,
         });
         const n = result && result.findings ? result.findings.length : 0;
         toast(n ? `${n} ${n === 1 ? 'update' : 'updates'} available for ${serverName}.` : `${packName} is up to date.`);
         if (n) setTimeout(() => location.reload(), 900);
       } catch (err) {
-        if (err.dismissed) return; // progress hidden — the task tray takes over
+        if (err.dismissed) return; // progress hidden - the task tray takes over
         toast(err.message || 'Update check failed', { kind: 'error', timeout: 9000 });
       }
       return;
@@ -327,7 +327,7 @@ function initPage() {
       try {
         const result = await runTask({
           title: `Upgrading ${packName} on ${serverName}`,
-          // Post the exact version the card showed as "latest" (belt and braces —
+          // Post the exact version the card showed as "latest" (belt and braces -
           // the server independently re-resolves and honours the pin's channel;
           // this just makes the request name what the user actually confirmed).
           start: async () =>
@@ -335,7 +335,7 @@ function initPage() {
         });
         if (result && result.ok === false) {
           toast(
-            `Upgrade failed: ${result.error || 'server did not come up healthy'} — roll back from the Updates page.`,
+            `Upgrade failed: ${result.error || 'server did not come up healthy'} - roll back from the Updates page.`,
             { kind: 'error', timeout: 12000 }
           );
           return;
@@ -343,7 +343,7 @@ function initPage() {
         toast(`Upgraded: ${result.from} → ${result.to}.`);
         setTimeout(() => location.reload(), 900);
       } catch (err) {
-        if (err.dismissed) return; // progress hidden — the task tray takes over
+        if (err.dismissed) return; // progress hidden - the task tray takes over
         toast(err.message || 'Upgrade failed', { kind: 'error', timeout: 12000 });
       }
       return;

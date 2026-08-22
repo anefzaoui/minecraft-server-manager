@@ -89,7 +89,7 @@ export function confirmDialog({
         mismatch.classList.add('hidden');
       });
       // Enter in the field confirms once the name matches (and shows the
-      // mismatch hint when it doesn't) — typing the name then hitting Enter
+      // mismatch hint when it doesn't) - typing the name then hitting Enter
       // previously did nothing.
       input.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter') return;

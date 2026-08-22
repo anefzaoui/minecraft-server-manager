@@ -4,6 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{title}} · Minecraft Server Manager</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#2f8520">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MSM">
   <link rel="stylesheet" href="/css/app.css">
   <script>
     try {
@@ -14,7 +22,7 @@
   </script>
 </head>
 {{! Centering via child margin:auto, not items/justify-center: a flex-centered
-    child taller than the viewport gets its top clipped beyond scroll reach —
+    child taller than the viewport gets its top clipped beyond scroll reach -
     auto margins center the same way but overflow gracefully. }}
 <body class="flex min-h-screen p-4 *:m-auto">
   {{{body}}}

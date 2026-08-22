@@ -8,7 +8,7 @@ const db = require('../db');
 const GB = 1024 ** 3;
 
 /**
- * UX rule (user-mandated): LATEST/SNAPSHOT are never shown bare — always
+ * UX rule (user-mandated): LATEST/SNAPSHOT are never shown bare - always
  * resolve to "LATEST (26.2)" style using the cached Mojang manifest.
  */
 async function displayVersion(mcVersion) {
@@ -49,7 +49,7 @@ async function serverVM(s, { withLive = true } = {}) {
     notes: s.notes,
     updatePolicy: s.update_policy,
     pendingRecreate: Boolean(s.pending_recreate),
-    lastStarted: s.last_started_at || '—',
+    lastStarted: s.last_started_at || '-',
     created: s.created_at,
     consoleLabel: s.console_label || '',
   };
@@ -66,7 +66,7 @@ async function serverVM(s, { withLive = true } = {}) {
     if (live.startedAt) vm.stats.uptime = formatUptime(Date.now() - Date.parse(live.startedAt));
     if (live.players) vm.players = { ...vm.players, ...live.players };
     // Boot-phase detail ("Downloading mods…", "Generating world") or the
-    // latched "Player count unavailable" state — one shared derivation with
+    // latched "Player count unavailable" state - one shared derivation with
     // the live-poll route, so the SSR chip and the hydrated one can't drift.
     const detail = liveCache.statusDetail(live);
     if (detail) vm.statusDetail = detail;
@@ -87,7 +87,7 @@ function packVM(serverId) {
     version: pack.pinned_version_name,
     versionId: pack.pinned_version_id,
     latest: check && check.latest_name ? check.latest_name : pack.pinned_version_name,
-    // The real platform id behind `latest` (a display NAME — differs from the id
+    // The real platform id behind `latest` (a display NAME - differs from the id
     // for CurseForge/Modrinth). Modpacks-page "Upgrade" posts this so the request
     // names the exact version the card showed, rather than trusting the server to
     // re-derive "latest" itself. Same pattern as updates.hbs's data-version-id.
@@ -154,7 +154,7 @@ function eventVM(e) {
     id: e.id,
     // Deleted servers keep their name in history but must not be linked (404).
     serverId: server && !server.deleted_at ? e.server_id : null,
-    server: server ? server.display_name + (server.deleted_at ? ' (deleted)' : '') : '— panel —',
+    server: server ? server.display_name + (server.deleted_at ? ' (deleted)' : '') : '- panel -',
     type: e.type,
     actor: e.actor,
     ts: e.created_at,

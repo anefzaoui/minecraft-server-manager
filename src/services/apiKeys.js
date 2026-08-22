@@ -13,10 +13,10 @@ function getKey(provider) {
   if (!row) return null;
   const key = secrets.tryDecrypt(row.key_cipher);
   if (key === null) {
-    // SESSION_SECRET changed — treat as "no key" so features degrade to their
+    // SESSION_SECRET changed - treat as "no key" so features degrade to their
     // friendly "add your key in Settings" paths instead of crashing.
     console.warn(
-      `[keys] stored ${provider} key cannot be decrypted (SESSION_SECRET changed) — re-enter it in Settings`
+      `[keys] stored ${provider} key cannot be decrypted (SESSION_SECRET changed) - re-enter it in Settings`
     );
   }
   return key;
@@ -31,7 +31,7 @@ function setKey(provider, key, { actor = 'system' } = {}) {
   );
   recordEvent({ actor, type: 'api-key-set', summary: `API key updated for ${provider}` });
 
-  // Containers bake the key into their env at create time — a rotated key
+  // Containers bake the key into their env at create time - a rotated key
   // only reaches CurseForge servers after a recreate. Flag them.
   if (provider === 'curseforge') {
     const flagged = db.run(
@@ -71,7 +71,7 @@ async function testCurseForgeKey(key = getKey('curseforge')) {
       "UPDATE api_keys SET last_tested_at = datetime('now'), last_test_ok = ? WHERE provider = 'curseforge'",
       ok ? 1 : 0
     );
-    return ok ? { ok: true } : { ok: false, error: `CurseForge answered HTTP ${res.status} — check the key` };
+    return ok ? { ok: true } : { ok: false, error: `CurseForge answered HTTP ${res.status} - check the key` };
   } catch (err) {
     return { ok: false, error: `Could not reach CurseForge: ${err.message}` };
   }

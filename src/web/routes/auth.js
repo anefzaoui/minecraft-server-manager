@@ -14,10 +14,20 @@ const { checkDocker } = require('../../docker/connect');
 
 const router = express.Router();
 
+// "Remember me" checked (the default): a long-lived cookie, refreshed on
+// activity (rolling: true in the session middleware). Unchecked: a real
+// browser-session cookie (cookie.expires = false - no Max-Age/Expires sent),
+// gone the moment the browser closes.
+const REMEMBER_MAX_AGE_MS = 30 * 24 * 3600 * 1000;
+function applyRememberCookie(req, remember) {
+  if (remember) req.session.cookie.maxAge = REMEMBER_MAX_AGE_MS;
+  else req.session.cookie.expires = false;
+}
+
 /**
  * First-run environment checks for the onboarding wizard. Levels: 'pass' (green),
- * 'warn' (amber, can proceed — e.g. Docker down / weak secret), 'fail' (red,
- * something is genuinely broken). Booleans only for the secret — the value never leaves.
+ * 'warn' (amber, can proceed - e.g. Docker down / weak secret), 'fail' (red,
+ * something is genuinely broken). Booleans only for the secret - the value never leaves.
  */
 async function buildSetupChecks() {
   const docker = await checkDocker();
@@ -88,8 +98,8 @@ router.post('/setup', (req, res) => {
     req.session.regenerate((err) => {
       if (err) {
         return wantsJson
-          ? res.status(500).json({ ok: false, error: 'Session error — try again.' })
-          : res.status(500).render('setup', { title: 'Welcome', layout: 'bare', error: 'Session error — try again.' });
+          ? res.status(500).json({ ok: false, error: 'Session error - try again.' })
+          : res.status(500).render('setup', { title: 'Welcome', layout: 'bare', error: 'Session error - try again.' });
       }
       req.session.userId = user.id;
       recordEvent({
@@ -109,22 +119,24 @@ router.get('/login', (req, res) => {
   if (authService.firstRunNeeded()) return res.redirect('/setup');
   if (req.session && req.session.userId) return res.redirect('/');
   // A fresh visit to /login abandons any in-progress 2FA challenge rather than
-  // leaving it dangling — re-entering credentials should start clean.
+  // leaving it dangling - re-entering credentials should start clean.
   if (req.session) {
     delete req.session.pendingTotpUserId;
     delete req.session.pendingTotpUsername;
     delete req.session.pendingTotpNext;
+    delete req.session.pendingRemember;
   }
-  res.render('login', { title: 'Sign in', layout: 'bare', next: safeNext(req.query.next) });
+  res.render('login', { title: 'Sign In', layout: 'bare', next: safeNext(req.query.next) });
 });
 
 router.post('/login', (req, res) => {
   try {
-    const { username, password, next } = z
+    const { username, password, next, remember } = z
       .object({
         username: z.string().trim().min(1).max(64),
         password: z.string().min(1).max(200),
         next: z.string().max(300).optional(),
+        remember: z.coerce.boolean().optional(),
       })
       .parse(req.body);
     checkLoginAllowed(username, req.ip);
@@ -132,14 +144,14 @@ router.post('/login', (req, res) => {
     if (!user) {
       recordLoginFailure(username, req.ip);
       return res.status(401).render('login', {
-        title: 'Sign in',
+        title: 'Sign In',
         layout: 'bare',
         error: 'Wrong username or password.',
         next: safeNext(next),
       });
     }
     if (user.totpEnabled) {
-      // Password alone does not authenticate — session.userId stays unset, so
+      // Password alone does not authenticate - session.userId stays unset, so
       // requireAuth still treats this session as signed out. Deliberately does
       // NOT clear the login-failure counter yet: it stays shared with the 2FA
       // code step below, so a correct password can't be used to reset the
@@ -147,6 +159,7 @@ router.post('/login', (req, res) => {
       req.session.pendingTotpUserId = user.id;
       req.session.pendingTotpUsername = user.username;
       req.session.pendingTotpNext = safeNext(next);
+      req.session.pendingRemember = Boolean(remember);
       return res.redirect('/login/2fa');
     }
     clearLoginFailures(username, req.ip);
@@ -154,19 +167,20 @@ router.post('/login', (req, res) => {
       if (err)
         return res
           .status(500)
-          .render('login', { title: 'Sign in', layout: 'bare', error: 'Session error — try again.' });
+          .render('login', { title: 'Sign In', layout: 'bare', error: 'Session error - try again.' });
       req.session.userId = user.id;
+      applyRememberCookie(req, Boolean(remember));
       recordEvent({ actor: user.username, type: 'login', summary: `${user.username} signed in` });
       res.redirect(safeNext(next) || '/');
     });
   } catch (err) {
-    res.status(err.status || 400).render('login', { title: 'Sign in', layout: 'bare', error: firstIssue(err) });
+    res.status(err.status || 400).render('login', { title: 'Sign In', layout: 'bare', error: firstIssue(err) });
   }
 });
 
 router.get('/login/2fa', (req, res) => {
   if (!req.session || !req.session.pendingTotpUserId) return res.redirect('/login');
-  res.render('login-2fa', { title: 'Verify it’s you', layout: 'bare' });
+  res.render('login-2fa', { title: 'Verify It’s You', layout: 'bare' });
 });
 
 router.post('/login/2fa', (req, res) => {
@@ -181,26 +195,29 @@ router.post('/login/2fa', (req, res) => {
       recordLoginFailure(pendingUsername, req.ip);
       return res
         .status(401)
-        .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: 'Incorrect code.' });
+        .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: 'Incorrect code.' });
     }
     clearLoginFailures(pendingUsername, req.ip);
     const next = req.session.pendingTotpNext;
+    const remember = req.session.pendingRemember;
     delete req.session.pendingTotpUserId;
     delete req.session.pendingTotpUsername;
     delete req.session.pendingTotpNext;
+    delete req.session.pendingRemember;
     req.session.regenerate((err) => {
       if (err)
         return res
           .status(500)
-          .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: 'Session error — try again.' });
+          .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: 'Session error - try again.' });
       req.session.userId = pendingId;
+      applyRememberCookie(req, Boolean(remember));
       recordEvent({ actor: pendingUsername, type: 'login', summary: `${pendingUsername} signed in (2FA)` });
       res.redirect(safeNext(next) || '/');
     });
   } catch (err) {
     res
       .status(err.status || 400)
-      .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: firstIssue(err) });
+      .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: firstIssue(err) });
   }
 });
 
@@ -214,7 +231,7 @@ router.post('/logout', (req, res) => {
 
 function safeNext(next) {
   if (typeof next !== 'string' || !next.startsWith('/')) return '';
-  // Reject protocol-relative ("//host"), backslash tricks ("/\\host" — browsers
+  // Reject protocol-relative ("//host"), backslash tricks ("/\\host" - browsers
   // normalize \ to / making it "//host"), and any whitespace/control chars.
   if (next.startsWith('//') || /[\\\s\x00-\x1f]/.test(next)) return '';
   return next;

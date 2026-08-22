@@ -9,7 +9,7 @@ Docker daemon over its API (never by shelling out to the `docker` CLI).
 
 - **Express + Handlebars** render pages server-side. There is no SPA and no client bundler; the
   browser JS in `public/js/` is hand-written and progressively enhances the rendered HTML.
-- **`node:sqlite`** (built into Node ≥ 22.5) is the database — synchronous, zero native modules,
+- **`node:sqlite`** (built into Node ≥ 22.5) is the database - synchronous, zero native modules,
   WAL mode. A small versioned-migration runner applies `src/db/migrations/*` on boot.
 - **`ws`** carries the live console and stats streams.
 - **dockerode** is the only way the app talks to Docker. The endpoint is auto-detected per platform
@@ -27,7 +27,7 @@ Dependencies flow in one direction:
                  └──────────────┬──────────────┘
                                 │
                  ┌──────────────▼──────────────┐
-                 │         services/*          │   domain logic — the actual features
+                 │         services/*          │   domain logic - the actual features
                  └───┬─────────┬─────────┬─────┘
                      │         │         │
         ┌────────────▼──┐ ┌────▼────┐ ┌──▼──────────┐
@@ -35,27 +35,27 @@ Dependencies flow in one direction:
         └───────────────┘ └─────────┘ └─────────────┘
 ```
 
-- **`web/routes/`** — one router per domain (`servers`, `players`, `worlds`, `crashes`, `blueprints`,
+- **`web/routes/`** - one router per domain (`servers`, `players`, `worlds`, `crashes`, `blueprints`,
   `files`, …), mounted in `web/app.js`. Routers validate with zod, call a service, and return JSON
   or render a view. Business logic does not belong here.
-- **`services/`** — the heart of the app. Each service owns one domain and may depend on
+- **`services/`** - the heart of the app. Each service owns one domain and may depend on
   infrastructure and on other services.
-- **`docker/`** — dockerode wrappers: `connect` (endpoint detection + daemon health), `containers`
+- **`docker/`** - dockerode wrappers: `connect` (endpoint detection + daemon health), `containers`
   (create/start/stop/recreate with bind mounts, memory/CPU limits, and labels), `logs`, `stats`,
   `images`, and a `watcher` that turns Docker events into history + crash detection.
-- **`db/`** — the SQLite wrapper and migration runner.
-- **`storage/`** — the `./data` bootstrap, the **path guard** (`safeJoin`, the file-safety
+- **`db/`** - the SQLite wrapper and migration runner.
+- **`storage/`** - the `./data` bootstrap, the **path guard** (`safeJoin`, the file-safety
   backbone), and the background size-indexer + quota enforcement.
 
 Cross-cutting:
 
-- **`config/`** — environment config plus the **field catalog**: the single source of truth for
+- **`config/`** - environment config plus the **field catalog**: the single source of truth for
   server settings. Every itzg environment variable is catalogued (label, help, type, unit, default,
   validation, section, danger flags). The wizard, settings forms, and zod validation are all derived
   from it, so exposing a new setting is a data change, not new UI plumbing.
-- **`events/`** — `recordEvent()` is the one entry point for the history log; lifecycle events also
+- **`events/`** - `recordEvent()` is the one entry point for the history log; lifecycle events also
   capture container-log excerpts to `data/logs/<id>/events/`.
-- **`ws/`** — authenticated console + stats WebSockets (session cookie verified on upgrade).
+- **`ws/`** - authenticated console + stats WebSockets (session cookie verified on upgrade).
 
 ## Key domain behaviors
 
@@ -75,11 +75,11 @@ Cross-cutting:
 
 ## Data & wire formats
 
-- **`data/panel.db`** — the SQLite database.
-- **`data/.session-secret`** — the auto-generated panel secret, created on first run if
+- **`data/panel.db`** - the SQLite database.
+- **`data/.session-secret`** - the auto-generated panel secret, created on first run if
   `SESSION_SECRET` is unset. Deleting it rotates the secret (which invalidates sessions and stored
   encrypted secrets).
-- **Blueprints (`.mcserver.zip`)** — a zip with a `manifest.json` describing config, resources, the
+- **Blueprints (`.mcserver.zip`)** - a zip with a `manifest.json` describing config, resources, the
   pinned pack reference, the overlay manifest (source URLs + sha256), chosen config files, and
   optionally a world. Import re-downloads and hash-verifies each mod and assigns fresh ports.
 - **Docker containers** created by the panel are named and labelled so the watcher can find them;
@@ -88,9 +88,9 @@ Cross-cutting:
 ## Boot sequence
 
 1. Load config; ensure/generate the session secret.
-2. `ensureDataRoot()` — create the `./data` layout, wipe `tmp/`.
+2. `ensureDataRoot()` - create the `./data` layout, wipe `tmp/`.
 3. Run DB migrations.
 4. Seed starter blueprints (guarded).
 5. Start the HTTP + WS server.
-6. Initialize Docker **in the background** — the UI is fully usable while the daemon is down; Docker
+6. Initialize Docker **in the background** - the UI is fully usable while the daemon is down; Docker
    features light up when it becomes reachable.

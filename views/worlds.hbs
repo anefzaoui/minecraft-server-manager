@@ -1,9 +1,9 @@
-{{> page-header heading="WORLD LIBRARY" sub="Every world archive under ./data/library/worlds — upload, extract from servers, install anywhere, copy between instances."}}
+{{> page-header heading="WORLD LIBRARY" sub="Every world archive under ./data/library/worlds - upload, extract from servers, install anywhere, copy between instances."}}
 
 <div data-worlds-page class="contents">
   <div class="mb-4 flex flex-wrap items-center gap-2">
-    <button class="btn btn-primary" id="world-upload" data-tip="Any zip/tar — world root auto-detected (level.dat anywhere, .mcworld, Bukkit split dirs)">{{{icon 'upload' 'size-4'}}} Upload world</button>
-    <button class="btn" id="world-extract" data-tip="Snapshot a server's live world into the library (save-off/save-all dance)">{{{icon 'camera' 'size-4'}}} Extract from server</button>
+    <button class="btn btn-primary" id="world-upload" data-tip="Any zip/tar - world root auto-detected (level.dat anywhere, .mcworld, Bukkit split dirs)">{{{icon 'upload' 'size-4'}}} Upload World</button>
+    <button class="btn" id="world-extract" data-tip="Snapshot a server's live world into the library (save-off/save-all dance)">{{{icon 'camera' 'size-4'}}} Extract from Server</button>
   </div>
 
   {{#if worlds.length}}
@@ -26,7 +26,7 @@
             </td>
             <td class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
             <td class="text-right"><div class="inline-flex gap-1">
-              <button class="btn btn-ghost btn-sm" data-world-install data-tip="Pick a target server — compat check runs before install">{{{icon 'import' 'size-3.5'}}} Install to…</button>
+              <button class="btn btn-ghost btn-sm" data-world-install data-tip="Pick a target server - compat check runs before install">{{{icon 'import' 'size-3.5'}}} Install To…</button>
               <a class="btn btn-ghost btn-sm" href="/api/worlds/{{id}}/download" data-tip="Download archive">{{{icon 'download' 'size-3.5'}}}</a>
               <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete from library ({{bytes size}} freed)" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
             </div></td>
@@ -37,10 +37,10 @@
   </div>
 
   <div class="mt-4 max-w-prose rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">
-    {{{icon 'lightbulb' 'size-4'}}} Installing a world into a server offers <b class="text-ink-soft">replace</b> (current world auto-backed-up first) or <b class="text-ink-soft">install alongside</b> (switch via level-name/LEVEL). Instance→instance copy works even while the source is running — the panel takes a consistent snapshot with the save-off/save-all dance.
+    {{{icon 'lightbulb' 'size-4'}}} Installing a world into a server offers <b class="text-ink-soft">replace</b> (current world auto-backed-up first) or <b class="text-ink-soft">install alongside</b> (switch via level-name/LEVEL). Instance→instance copy works even while the source is running - the panel takes a consistent snapshot with the save-off/save-all dance.
   </div>
   {{else}}
-    {{> empty-state iconName='earth' title='No worlds in the library yet' message='Upload a world archive or extract one from a running server with the buttons above — installs, copies and downloads all start from here.'}}
+    {{> empty-state iconName='earth' title='No Worlds in the Library Yet' message='Upload a world archive or extract one from a running server with the buttons above - installs, copies and downloads all start from here.'}}
   {{/if}}
 
   <div id="msm-server-options" hidden data-options="{{json serverOptions}}"></div>

@@ -1,7 +1,7 @@
 name: Release
 
 # Publish a GitHub Release for each new package.json version. Runs on every push to
-# main but is idempotent — it only creates a release when one doesn't already exist
+# main but is idempotent - it only creates a release when one doesn't already exist
 # for the current version, so each version is released exactly once (and pushing an
 # existing version is a no-op). Notes come straight from CHANGELOG.md. Can also be
 # run manually from the Actions tab.

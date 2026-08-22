@@ -1,7 +1,7 @@
 <div data-player-detail data-server-id="{{server.id}}" data-player-name="{{player.name}}" data-player-uuid="{{player.uuid}}"
      data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{else}}0{{/if}}">
 
-  <a href="/servers/{{server.id}}/players" class="mb-3 inline-flex items-center gap-1 text-sm text-ink-faint transition hover:text-ink">{{{icon 'arrow-left' 'size-4'}}} All players</a>
+  <a href="/servers/{{server.id}}/players" class="mb-3 inline-flex items-center gap-1 text-sm text-ink-faint transition hover:text-ink">{{{icon 'arrow-left' 'size-4'}}} All Players</a>
 
   <div class="card mb-4 p-4">
     <div class="flex flex-wrap items-center gap-4">
@@ -37,16 +37,25 @@
         {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
           <button class="btn btn-ghost btn-sm" data-act="teleport" data-tip="Teleport (coordinates / biome / player)">{{{icon 'compass' 'size-3.5'}}} Teleport</button>
         {{/if}}
-        {{! Labeled like its siblings — a lone glyph in a row of labeled actions reads as noise. }}
+        {{! Labeled like its siblings - a lone glyph in a row of labeled actions reads as noise. }}
         {{#if player.uuid}}<button class="btn btn-ghost btn-sm" data-act="copy-uuid" data-copy="{{player.uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
       </div>
     </div>
     {{#if player.banned}}
-      <div class="notice notice-danger mt-3 text-xs text-danger" data-ban-banner>Banned: {{default player.banReason 'no reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}</div>
+      <div class="notice notice-danger mt-3 text-xs text-danger" data-ban-banner>Banned: {{default player.banReason 'no reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}{{#if player.banExpires}} · expires {{player.banExpires}}{{/if}}</div>
     {{/if}}
   </div>
 
-  {{! The player's inventory — reuses the inventory editor, pinned to this player
+  <div class="card mb-4 p-4" data-notes-card>
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="font-semibold">Moderator Notes</h3>
+      <button class="btn btn-ghost btn-sm" data-notes-add>{{{icon 'plus' 'size-3.5'}}} Add Note</button>
+    </div>
+    <div class="space-y-2" data-notes-list></div>
+    <p class="text-sm text-ink-faint" data-notes-empty>No notes yet - only visible to panel users.</p>
+  </div>
+
+  {{! The player's inventory - reuses the inventory editor, pinned to this player
       (no picker, no server-wide search). }}
   {{> server/inventory fixedPlayer=player}}
 </div>

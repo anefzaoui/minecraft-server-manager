@@ -65,7 +65,7 @@ function demuxBuffer(buf) {
   while (offset + 8 <= buf.length) {
     const type = buf[offset];
     if (type !== 0 && type !== 1 && type !== 2) {
-      // Not framed (TTY container) — return as-is from here.
+      // Not framed (TTY container) - return as-is from here.
       parts.push(buf.subarray(offset).toString('utf8'));
       break;
     }

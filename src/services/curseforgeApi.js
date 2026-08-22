@@ -1,8 +1,8 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // CurseForge API client (requires the user's API key from the encrypted
-// store). Docs: https://docs.curseforge.com — Minecraft gameId = 432.
+// store). Docs: https://docs.curseforge.com - Minecraft gameId = 432.
 
 const httpError = require('../utils/httpError');
 const db = require('../db');
@@ -16,7 +16,7 @@ const CLASS_PLUGINS = 5;
 
 async function cfFetch(pathname, { search, ttlMs = 10 * 60 * 1000, method = 'GET', body } = {}) {
   const key = apiKeys.getKey('curseforge');
-  if (!key) throw httpError(412, 'CurseForge API key not set — add it in Settings');
+  if (!key) throw httpError(412, 'CurseForge API key not set - add it in Settings');
 
   const url = new URL(BASE + pathname);
   if (search) for (const [k, v] of Object.entries(search)) url.searchParams.set(k, String(v));
@@ -34,9 +34,9 @@ async function cfFetch(pathname, { search, ttlMs = 10 * 60 * 1000, method = 'GET
     // Rate-limited: a stale cached answer beats a hard failure (same policy
     // as the Modrinth client).
     if (cached) return JSON.parse(cached.value_json);
-    throw httpError(429, 'CurseForge rate limit hit — try again in a minute');
+    throw httpError(429, 'CurseForge rate limit hit - try again in a minute');
   }
-  if (res.status === 403) throw httpError(403, 'CurseForge rejected the API key — re-check it in Settings');
+  if (res.status === 403) throw httpError(403, 'CurseForge rejected the API key - re-check it in Settings');
   if (res.status === 404) throw httpError(404, 'Not found on CurseForge');
   if (!res.ok) throw httpError(502, `CurseForge answered HTTP ${res.status}`);
   const data = await res.json();
@@ -96,7 +96,7 @@ async function getFile(modId, fileId) {
 
 /**
  * Project description as an HTML string (GET /v1/mods/{id}/description).
- * CurseForge serves raw author HTML — callers MUST sanitize before rendering.
+ * CurseForge serves raw author HTML - callers MUST sanitize before rendering.
  */
 async function getDescription(modId) {
   const data = await cfFetch(`/mods/${modId}/description`, { ttlMs: 30 * 60 * 1000 });

@@ -2,7 +2,7 @@
   <div class="notice mb-4">Live CPU, memory and network charts stream while the server is running. Start the server to see metrics.</div>
 {{else if (or (eq server.status 'starting') (eq server.status 'updating'))}}
   {{! Without this, starting/updating shows three blank grids with no explanation. }}
-  <div class="notice mb-4">Server is {{server.status}} — charts begin streaming as soon as it is up.</div>
+  <div class="notice mb-4">Server is {{server.status}} - charts begin streaming as soon as it is up.</div>
 {{/if}}
 <div class="grid gap-4 lg:grid-cols-2" data-metrics-server="{{server.id}}" data-metrics-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{else}}0{{/if}}" data-metrics-mem-limit="{{server.resources.containerMemoryMb}}" data-metrics-cpu-limit="{{server.resources.cpus}}">
   <div class="card p-4">
@@ -18,7 +18,7 @@
     <canvas data-chart="network" height="140"></canvas>
   </div>
   <div class="card p-4">
-    <h3 class="mb-3 font-semibold">Storage breakdown</h3>
+    <h3 class="mb-3 font-semibold">Storage Breakdown</h3>
     {{#if breakdown}}
       <div class="space-y-2.5 text-xs">
         {{#each breakdown}}
@@ -29,7 +29,7 @@
         {{/each}}
       </div>
     {{else}}
-      <p class="text-sm text-ink-faint">No per-directory sizes yet — run a storage scan from the <a class="text-link hover:underline" href="/storage">Storage page</a> to see the breakdown.</p>
+      <p class="text-sm text-ink-faint">No per-directory sizes yet - run a storage scan from the <a class="text-link hover:underline" href="/storage">Storage page</a> to see the breakdown.</p>
     {{/if}}
     <div class="mt-4 border-t border-line pt-3">
       <div class="mb-1 flex justify-between text-xs"><span>Quota</span><span class="text-ink-faint">{{bytes server.disk.used}} / {{bytes server.disk.quota}}</span></div>

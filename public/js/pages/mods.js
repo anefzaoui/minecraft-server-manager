@@ -5,7 +5,7 @@ import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 
 // Escape a value for safe interpolation into an HTML attribute (Modrinth icon
-// URLs are third-party mod-author data — an unescaped `"` breaks out of src="").
+// URLs are third-party mod-author data - an unescaped `"` breaks out of src="").
 const escAttr = (s) =>
   String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -26,7 +26,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     const q = (filter.value || '').toLowerCase();
     const src = source.value;
     document.querySelectorAll('[data-mod-row]').forEach((row) => {
-      // Match name/file only — full row text includes button labels and status
+      // Match name/file only - full row text includes button labels and status
       // words, so searching "disable" or "update" matched virtually every row.
       const hay = `${row.dataset.name || ''} ${row.dataset.file || ''}`.toLowerCase();
       const matches = (!q || hay.includes(q)) && (!src || row.dataset.source === src);
@@ -58,7 +58,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         toast(
           res.applied === 'instant'
             ? `${file} ${enable ? 'enabled' : 'disabled'}.`
-            : `${file} ${enable ? 're-included' : 'excluded'} — applies on next restart.`,
+            : `${file} ${enable ? 're-included' : 'excluded'} - applies on next restart.`,
           { kind: 'success' }
         );
         setTimeout(() => location.reload(), 600);
@@ -96,11 +96,11 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label">Mod URL or Modrinth slug</label>
-      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium — or any direct .jar URL" autocomplete="off">
+      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any direct .jar URL" autocomplete="off">
       <p class="help">Direct .jar URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work. The right build for this server's loader and MC version is picked automatically.</p>
       <div class="mt-3 hidden" id="mod-url-progress"><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
     const modal = openModal({
-      title: 'Add mod by URL',
+      title: 'Add Mod by URL',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -115,7 +115,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
             progress.classList.remove('hidden');
             const res = await post(`/api/servers/${serverId}/mods`, { url });
             if (!res) {
-              progress.classList.add('hidden'); // failure keeps the modal open — no zombie meter
+              progress.classList.add('hidden'); // failure keeps the modal open - no zombie meter
               return false;
             }
             toast(`Installed ${res.installed.name}${res.installed.version ? ` ${res.installed.version}` : ''}.`);
@@ -167,13 +167,13 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         data = await res.json();
       } catch {
         // a network error used to strand "Searching…" on screen forever
-        data = { ok: false, error: 'Search failed — check the connection and try again.' };
+        data = { ok: false, error: 'Search failed - check the connection and try again.' };
       }
       if (seq !== searchSeq) return;
       if (!data.ok) {
         const p = document.createElement('p');
         p.className = 'p-6 text-center text-sm text-danger';
-        p.textContent = data.error || 'Search failed'; // upstream text — never innerHTML
+        p.textContent = data.error || 'Search failed'; // upstream text - never innerHTML
         results.replaceChildren(p);
         return;
       }
@@ -196,7 +196,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         row.querySelector('.font-semibold').textContent = hit.title;
         row.querySelector('.text-xs.text-ink-faint').textContent = hit.description;
         row.querySelector('button').addEventListener('click', async (ev) => {
-          const btn = ev.currentTarget; // capture before await — currentTarget is null afterwards
+          const btn = ev.currentTarget; // capture before await - currentTarget is null afterwards
           const res2 = await withBusy(btn, 'Installing…', () =>
             post(`/api/servers/${serverId}/mods`, { url: `https://modrinth.com/mod/${hit.slug}` })
           );
@@ -234,7 +234,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     pendingBox.classList.remove('hidden');
     pendingBox.innerHTML = `
       <div class="notice notice-warn flex-wrap gap-3">
-        <span class="text-warn">${list.length} ${list.length === 1 ? 'mod' : 'mods'} in this modpack couldn't be auto-downloaded — the pack won't finish installing until each is resolved.</span>
+        <span class="text-warn">${list.length} ${list.length === 1 ? 'mod' : 'mods'} in this modpack couldn't be auto-downloaded - the pack won't finish installing until each is resolved.</span>
         <button class="btn btn-sm ml-auto" id="mods-pending-open">Resolve now</button>
       </div>`;
     pendingBox.querySelector('#mods-pending-open').addEventListener('click', () => openPendingModal(list));
@@ -249,12 +249,12 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     content.innerHTML = `
       <p class="mb-3 text-sm text-ink-soft">These mods disallow automated download (or were pulled from CurseForge), so the pack can't finish. For each one, <b>Exclude</b> it, install a replacement from <b>Modrinth</b>, or <b>upload</b> the jar you downloaded by hand. Changes apply on the next recreate.</p>
       <div class="space-y-2" id="pending-list"></div>`;
-    openModal({ title: 'Mods that need manual action', content, size: 'lg' });
+    openModal({ title: 'Mods That Need Manual Action', content, size: 'lg' });
     const listEl = content.querySelector('#pending-list');
 
     function render(mods) {
       if (!mods.length) {
-        listEl.innerHTML = '<p class="notice notice-ok text-ok">All resolved — recreate the server to apply.</p>';
+        listEl.innerHTML = '<p class="notice notice-ok text-ok">All resolved - recreate the server to apply.</p>';
         return;
       }
       listEl.innerHTML = '';
@@ -283,7 +283,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           <input type="file" accept=".jar,.zip" class="hidden" data-role="file">`;
         row.querySelector('.font-semibold').textContent = m.name || m.filename;
         row.querySelector('.font-mono').textContent = m.filename;
-        // Pack-manifest URL is third-party data — allow only http(s).
+        // Pack-manifest URL is third-party data - allow only http(s).
         const cfLink = row.querySelector('[data-act="open"]');
         if (/^https?:\/\//i.test(m.url || '')) cfLink.href = m.url;
         else cfLink.remove();

@@ -55,7 +55,7 @@ function init(serverId) {
 
   // ANSI SGR → colored spans (mc-image-helper and rcon-cli colorize output).
   // Where the brand ramps cover an ANSI hue (red/green/yellow/grays/white)
-  // the values come from them; blue/magenta/cyan keep neutral defaults — ANSI
+  // the values come from them; blue/magenta/cyan keep neutral defaults - ANSI
   // semantics beat palette purity for log readability, and the brand has no
   // blue or purple ramp to borrow from.
   const ANSI_COLORS = {
@@ -106,7 +106,7 @@ function init(serverId) {
   }
 
   function appendLine(text) {
-    // A command reply can arrive before any WS log batch (stopped server) —
+    // A command reply can arrive before any WS log batch (stopped server) -
     // the full-height placeholder would otherwise push it out of view.
     log.querySelector('[data-console-empty]')?.remove();
     const level = classify(text);
@@ -148,7 +148,7 @@ function init(serverId) {
   }
 
   // Filters hiding every line left a silent black box, indistinguishable from
-  // "no output" — say so instead.
+  // "no output" - say so instead.
   function syncNoMatch() {
     const lines = log.querySelectorAll('[data-level]');
     const anyVisible = [...lines].some((el) => !el.classList.contains('hidden'));
@@ -166,7 +166,7 @@ function init(serverId) {
     }
   }
 
-  // One visible marker while the stream is down — the log just stopping is
+  // One visible marker while the stream is down - the log just stopping is
   // indistinguishable from a quiet server.
   let disconnectNote = null;
   function connect() {
@@ -203,11 +203,11 @@ function init(serverId) {
       }
     });
     ws.addEventListener('close', () => {
-      ackAllPending(); // no ack is coming — release busy send controls
+      ackAllPending(); // no ack is coming - release busy send controls
       if (!disconnectNote) {
         disconnectNote = document.createElement('div');
         disconnectNote.className = 'text-gold-300';
-        disconnectNote.textContent = '[panel/WARN]: Log stream disconnected — reconnecting…';
+        disconnectNote.textContent = '[panel/WARN]: Log stream disconnected - reconnecting…';
         log.appendChild(disconnectNote);
         if (autoScroll) log.scrollTop = log.scrollHeight;
       }
@@ -258,7 +258,7 @@ function init(serverId) {
       const timer = setTimeout(entry, 15000);
       pendingAcks.push(entry);
     }
-    // The UI advertises slash-less input (the decorative "/" prefix box) —
+    // The UI advertises slash-less input (the decorative "/" prefix box) -
     // honor a habitual "/list" instead of sending it verbatim.
     command = command.replace(/^\//, '');
     ws.send(JSON.stringify({ kind: 'cmd', command }));

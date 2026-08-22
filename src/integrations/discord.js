@@ -1,7 +1,7 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
-// Discord webhook notifications (MP6, webhook mode only — no bot).
+// Discord webhook notifications (MP6, webhook mode only - no bot).
 // The webhook URL is a secret and lives encrypted in integrations.config_cipher;
 // per-event toggles live in plain config_json. Delivery is fire-and-forget:
 // a broken webhook must never break panel operations.
@@ -57,14 +57,14 @@ function getConfig(serverId) {
   };
 }
 
-/** Decrypted webhook URL (internal use only — never expose over HTTP). */
+/** Decrypted webhook URL (internal use only - never expose over HTTP). */
 function webhookUrl(serverId) {
   const r = row(serverId);
   if (!r || !r.config_cipher) return null;
   try {
     return JSON.parse(secrets.decrypt(r.config_cipher)).webhookUrl || null;
   } catch {
-    return null; // SESSION_SECRET changed — treat as unset
+    return null; // SESSION_SECRET changed - treat as unset
   }
 }
 
@@ -121,7 +121,7 @@ async function testWebhook(serverId) {
       description: `Webhook is wired up for **${server ? server.display_name : serverId}**. You will receive the event types you enabled.`,
     })
   );
-  if (!res.ok) throw httpError(502, `Discord answered HTTP ${res.status} — check the webhook URL`);
+  if (!res.ok) throw httpError(502, `Discord answered HTTP ${res.status} - check the webhook URL`);
   return { ok: true };
 }
 
@@ -173,7 +173,7 @@ function post(url, body) {
   });
 }
 
-// One error log line per server per hour — a dead webhook must not spam the panel log.
+// One error log line per server per hour - a dead webhook must not spam the panel log.
 const lastErrorLog = new Map();
 function logThrottled(serverId, err) {
   const last = lastErrorLog.get(serverId) || 0;

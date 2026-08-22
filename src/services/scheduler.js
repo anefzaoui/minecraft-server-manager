@@ -22,6 +22,7 @@ const TASK_TYPES = {
   'update-check': { label: 'Update check', serverScoped: false },
   'storage-scan': { label: 'Storage re-scan', serverScoped: false },
   'tmp-clean': { label: 'Purge tmp', serverScoped: false },
+  'ban-expiry-sweep': { label: 'Ban expiry sweep', serverScoped: false },
 };
 
 async function runTask(schedule) {
@@ -71,6 +72,9 @@ async function runTask(schedule) {
       require('../storage/dataRoot').cleanTmp({ olderThanMs: 24 * 60 * 60 * 1000 });
       require('./auth').pruneExpiredSessions();
       break;
+    case 'ban-expiry-sweep':
+      await require('./players').sweepExpiredBans();
+      break;
     default:
       throw new Error(`Unknown task type ${schedule.task_type}`);
   }
@@ -80,10 +84,10 @@ function schedule(job) {
   stopJob(job.id);
   if (!job.enabled) return;
   try {
-    // protect: true — a still-running invocation blocks the next firing
+    // protect: true - a still-running invocation blocks the next firing
     // instead of overlapping it (e.g. hour-long backups on a 5-min cron).
     // timezone: without it croner evaluates the expression in the SYSTEM
-    // timezone (UTC in most containers), not the operator's configured one —
+    // timezone (UTC in most containers), not the operator's configured one -
     // "0 3 * * *" would then fire at 3am UTC, not 3am in Settings.
     const cron = new Cron(job.cron, { catch: true, protect: true, timezone: getTimezone() }, async () => {
       db.run("UPDATE schedules SET last_run_at = datetime('now') WHERE id = ?", job.id);
@@ -118,7 +122,7 @@ function stopJob(id) {
   }
 }
 
-/** Re-arm every schedule against the CURRENT timezone — call after it changes
+/** Re-arm every schedule against the CURRENT timezone - call after it changes
  *  in Settings, or already-running jobs keep firing on the old one until the
  *  panel restarts. */
 function rearmAll() {
@@ -137,6 +141,7 @@ function seedGlobalDefaults() {
     { task_type: 'update-check', cron: '0 3 * * *' },
     { task_type: 'storage-scan', cron: '0 */6 * * *' },
     { task_type: 'tmp-clean', cron: '30 4 * * *' },
+    { task_type: 'ban-expiry-sweep', cron: '*/15 * * * *' },
   ];
   for (const d of defaults) {
     const exists = db.get('SELECT 1 AS x FROM schedules WHERE task_type = ? AND server_id IS NULL', d.task_type);
@@ -214,13 +219,13 @@ function listSchedules() {
     } catch {
       /* invalid cron stays null */
     }
-    // last_run_at is SQLite datetime('now') — UTC without a zone marker.
+    // last_run_at is SQLite datetime('now') - UTC without a zone marker.
     const lastRunMs = s.last_run_at ? Date.parse(s.last_run_at.replace(' ', 'T') + 'Z') : null;
     const server = s.server_id ? db.get('SELECT display_name FROM servers WHERE id = ?', s.server_id) : null;
     return {
       id: s.id,
       serverId: s.server_id,
-      server: server ? server.display_name : '— global —',
+      server: server ? server.display_name : '- global -',
       task: TASK_TYPES[s.task_type]?.label || s.task_type,
       taskType: s.task_type,
       cron: s.cron,

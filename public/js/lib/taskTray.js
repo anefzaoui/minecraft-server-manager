@@ -1,5 +1,5 @@
 // Global task tray: running tasks (pack installs, backups, upgrades…) stay
-// visible from ANY page with live progress — surviving navigation, unlike the
+// visible from ANY page with live progress - surviving navigation, unlike the
 // per-action modal. Polls /api/tasks; hidden when idle.
 import { toast } from './toast.js';
 
@@ -41,7 +41,7 @@ function init() {
     for (const t of tasks) {
       const prev = known.get(t.id);
       if (prev === 'running' && t.state !== 'running') {
-        toast(t.state === 'done' ? `${t.title} — finished.` : `${t.title} — failed${t.error ? `: ${t.error}` : ''}`, {
+        toast(t.state === 'done' ? `${t.title} - finished.` : `${t.title} - failed${t.error ? `: ${t.error}` : ''}`, {
           kind: t.state === 'done' ? 'success' : 'error',
           timeout: 7000,
         });
@@ -51,14 +51,14 @@ function init() {
 
     mount.classList.toggle('hidden', tasks.length === 0);
     badge.textContent = String(running.length || tasks.length);
-    // Swap the background explicitly — stacking bg-grass-600 onto the baked-in
+    // Swap the background explicitly - stacking bg-grass-600 onto the baked-in
     // bg-inset leaves the winner to stylesheet order, not intent.
     badge.classList.toggle('bg-grass-600', running.length > 0);
     badge.classList.toggle('text-white', running.length > 0);
     badge.classList.toggle('bg-inset', running.length === 0);
     btn.querySelector('svg')?.classList.toggle('animate-spin', running.length > 0);
 
-    // Rebuilding every poll resets the open panel's scroll mid-read — keep it.
+    // Rebuilding every poll resets the open panel's scroll mid-read - keep it.
     const scrollTop = list.scrollTop;
     list.innerHTML = '';
     for (const t of tasks) {

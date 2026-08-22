@@ -1,7 +1,7 @@
 <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if serversOnly}}hidden{{/if}}">
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Servers online</div>
-    {{! Green only when something IS online — 0/3 in success green lied. }}
+    {{! Green only when something IS online - 0/3 in success green lied. }}
     <div class="mt-1 text-2xl font-bold tabular-nums {{#if totals.running}}text-ok{{/if}}">{{totals.running}}<span class="text-base font-medium text-ink-faint"> / {{totals.total}}</span></div>
   </div>
   <div class="card p-4">
@@ -24,7 +24,7 @@
   {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
   <div>
     <span class="font-semibold text-danger">Docker isn’t reachable.</span>
-    <span id="docker-warning-reason">Start Docker, then reload — creating or starting servers needs the daemon running.</span>
+    <span id="docker-warning-reason">Start Docker, then reload - creating or starting servers needs the daemon running.</span>
   </div>
 </div>
 
@@ -50,7 +50,7 @@
 {{/unless}}
 
 {{#if noServers}}
-  {{> empty-state iconName='pickaxe' title='No servers yet' message='Create your first Minecraft server — pick a server type and version, or start from a blueprint. You will be playing in minutes.' ctaHref='/servers/new' ctaLabel='Create your first server'}}
+  {{> empty-state iconName='pickaxe' title='No Servers Yet' message='Create your first Minecraft server - pick a server type and version, or start from a blueprint. You will be playing in minutes.' ctaHref='/servers/new' ctaLabel='Create Your First Server'}}
 {{else}}
 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="server-grid">
   {{#each servers}}
@@ -76,12 +76,12 @@
       <div class="flex items-center gap-3 px-4 py-3 text-sm">
         <span class="badge shrink-0">{{type}}</span>
         <span class="min-w-0 flex-1 truncate">{{summary}}</span>
-        {{! deleted-server names are plain faint text — link-styled dead spans read as broken. }}
+        {{! deleted-server names are plain faint text - link-styled dead spans read as broken. }}
         {{#if serverId}}<a href="/servers/{{serverId}}" class="hidden shrink-0 text-xs text-link hover:underline sm:block">{{server}}</a>{{else}}<span class="hidden shrink-0 text-xs text-ink-faint sm:block">{{server}}</span>{{/if}}
         <span class="shrink-0 text-xs text-ink-faint" data-ts-ago="{{ts}}">{{ts}}</span>
       </div>
     {{else}}
-      <div class="px-4 py-8 text-center text-sm text-ink-faint">No activity yet — actions on your servers will show up here.</div>
+      <div class="px-4 py-8 text-center text-sm text-ink-faint">No activity yet - actions on your servers will show up here.</div>
     {{/each}}
   </div>
 </div>

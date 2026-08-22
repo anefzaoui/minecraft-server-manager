@@ -2,8 +2,8 @@
 
 // In-process integration harness: boots the real Express app against a
 // throwaway DB (no Docker, no background services), creates a first admin, and
-// exposes a small request helper. createApp() only wires routes/middleware — the
-// background services live in server.js — so this is safe to run headless.
+// exposes a small request helper. createApp() only wires routes/middleware - the
+// background services live in server.js - so this is safe to run headless.
 
 require('./env');
 const { migrate } = require('../../src/db/migrate');

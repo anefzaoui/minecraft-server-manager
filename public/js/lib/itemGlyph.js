@@ -6,7 +6,7 @@
 // set is built/refreshed). Bed/banner glyphs still pick up the item's actual
 // dye color from its id, which a generic box glyph can't convey.
 //
-// Paths are lucide-static (ISC), already vetted/bundled in this project — see
+// Paths are lucide-static (ISC), already vetted/bundled in this project - see
 // src/web/icons.js for the server-side equivalent of this same icon set.
 
 const DYE_COLORS = {

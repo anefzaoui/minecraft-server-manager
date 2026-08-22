@@ -1,10 +1,10 @@
-// @ts-nocheck — dynamic HTTP-JSON interop across two mod registries.
+// @ts-nocheck - dynamic HTTP-JSON interop across two mod registries.
 'use strict';
 
 // Backend for the "From mods" wizard browser. Three concerns, both platforms:
-//   search()   — find mods for a loader + MC version (Modrinth or CurseForge)
-//   versions() — a mod's builds filtered to that loader + MC, newest first
-//   resolveDependencies() — the required-dependency closure of a selection,
+//   search()   - find mods for a loader + MC version (Modrinth or CurseForge)
+//   versions() - a mod's builds filtered to that loader + MC, newest first
+//   resolveDependencies() - the required-dependency closure of a selection,
 //                           so the wizard can show "added as dependency" rows
 // A dependency stays on the same platform as its parent (Modrinth project ids
 // and CurseForge mod ids never cross), so no cross-platform mapping is needed.
@@ -166,7 +166,7 @@ async function resolveDependencies({ loader, mc, selection = [] }) {
     try {
       meta = await metaFor(node.platform, node.projectId);
     } catch {
-      continue; // unresolvable id — skip quietly
+      continue; // unresolvable id - skip quietly
     }
     let vers = [];
     try {
@@ -175,7 +175,7 @@ async function resolveDependencies({ loader, mc, selection = [] }) {
       vers = [];
     }
     if (!vers.length) {
-      warnings.push(`${meta.name} has no ${loader}${mc ? ` ${mc}` : ''} build — skipped`);
+      warnings.push(`${meta.name} has no ${loader}${mc ? ` ${mc}` : ''} build - skipped`);
       continue;
     }
     const chosen = vers[0]; // newest compatible build
