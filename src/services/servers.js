@@ -347,7 +347,12 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   } catch (err) {
     // Roll back: remove any partial container, drop the row (frees its ports),
     // and delete the freshly-made data/log dirs. Then surface the original error.
-    await containers.removeContainer(id).catch(() => {});
+    // A removal failure here isn't "expected" like the dir-cleanup misses below -
+    // it can leak a real Docker container with nothing pointing back to it, so
+    // it's worth a trace even though it doesn't block the rollback.
+    await containers.removeContainer(id).catch((cleanupErr) => {
+      console.warn(`[servers] rollback: could not remove partial container for ${id}: ${cleanupErr.message}`);
+    });
     db.run('DELETE FROM servers WHERE id = ?', id);
     try {
       fs.rmSync(dataPath('servers', id), { recursive: true, force: true });

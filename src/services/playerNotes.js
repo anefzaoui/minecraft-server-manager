@@ -34,7 +34,13 @@ function addNote(serverId, { uuid, name }, note, { actor = 'system' } = {}) {
     note,
     actor
   );
-  recordEvent({ serverId, actor, type: 'player-note-added', summary: `Note added for ${name}`, details: { name, uuid } });
+  recordEvent({
+    serverId,
+    actor,
+    type: 'player-note-added',
+    summary: `Note added for ${name}`,
+    details: { name, uuid },
+  });
   return publicNote(db.get('SELECT * FROM player_notes WHERE id = ?', id));
 }
 

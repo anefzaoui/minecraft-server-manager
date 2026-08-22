@@ -436,7 +436,12 @@ async function pardonPlayer(serverId, name, { running = false, actor = 'system' 
   return { name: who.name, uuid: who.uuid, banned: false };
 }
 
-async function banIp(serverId, ip, reason, { running = false, actor = 'system', durationMs = null, player = null } = {}) {
+async function banIp(
+  serverId,
+  ip,
+  reason,
+  { running = false, actor = 'system', durationMs = null, player = null } = {}
+) {
   assertIp(ip);
   reason = cleanText(reason, 'Banned by an operator.');
   const expires = durationMs ? banTimestamp(new Date(Date.now() + durationMs)) : 'forever';
@@ -620,7 +625,10 @@ async function getPlayerPosition(serverId, player) {
     );
     const pm = POS_RE.exec(posOut);
     if (!pm) {
-      console.warn(`[players] couldn't read position for ${player} on ${serverId}: ${posOut.slice(0, 160)}`);
+      // Unlike the sweep's warns below (best-effort, loop keeps going), this
+      // becomes a hard 502 for the caller - genuinely unexpected server output,
+      // not a routine/recoverable condition, so it belongs at error.
+      console.error(`[players] couldn't read position for ${player} on ${serverId}: ${posOut.slice(0, 160)}`);
       throw httpError(502, "Couldn't read the player's position from the server.");
     }
     // Whichever dimension reports "Killed" is where the player is - and this
