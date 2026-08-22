@@ -88,6 +88,7 @@
               {{#if banned}}
                 <div class="max-w-56 truncate text-danger" title="{{default banReason 'No reason recorded'}}">{{default banReason 'No reason recorded'}}</div>
                 {{#if banDate}}<div class="mt-0.5">{{banDate}}{{#if banSource}} · {{banSource}}{{/if}}</div>{{/if}}
+                {{#if banExpires}}<div class="mt-0.5 text-warn">expires {{banExpires}}</div>{{/if}}
               {{else}}
                 -
               {{/if}}
@@ -106,6 +107,7 @@
                 <template id="player-menu-{{@index}}">
                   <button data-act="op-level" data-name="{{name}}">{{{icon 'shield' 'size-3.5'}}} Set Op Level…</button>
                   <button data-act="ban-reason" data-name="{{name}}">{{{icon 'ban' 'size-3.5'}}} Ban with Reason…</button>
+                  <button data-act="notes" data-name="{{name}}">{{{icon 'sticky-note' 'size-3.5'}}} Moderator Notes…</button>
                   {{#if uuid}}<button data-act="copy-uuid" data-uuid="{{uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
                 </template>
               </div>
@@ -121,25 +123,38 @@
   {{/if}}
 
   <div class="card mt-6 p-4">
-    <div class="mb-3 flex flex-wrap items-center gap-2">
-      <h3 class="font-semibold">Banned IPs</h3>
-      <div class="ml-auto flex flex-wrap justify-end gap-2">
-        <input class="input w-44 max-w-full" placeholder="IP address" id="banip-ip">
-        <input class="input w-56 max-w-full" placeholder="Reason (optional)" id="banip-reason">
+    <div class="mb-3 flex flex-wrap items-end gap-2">
+      <h3 class="w-full font-semibold">Banned IPs</h3>
+      <div class="ml-auto flex flex-wrap items-end justify-end gap-2">
+        <input class="input w-40 max-w-full" placeholder="IP address" id="banip-ip">
+        <input class="input w-48 max-w-full" placeholder="Reason (optional)" id="banip-reason">
+        <input class="input w-36 max-w-full" placeholder="Linked player" id="banip-player" list="banip-player-list" autocomplete="off">
+        <datalist id="banip-player-list">
+          {{#each players}}<option value="{{name}}">{{/each}}
+        </datalist>
+        <select class="input w-auto" id="banip-duration" data-label="Ban duration">
+          <option value="">Permanent</option>
+          <option value="3600000">1 hour</option>
+          <option value="86400000">1 day</option>
+          <option value="259200000">3 days</option>
+          <option value="604800000">7 days</option>
+          <option value="2592000000">30 days</option>
+        </select>
         <button class="btn btn-sm" id="banip-add">{{{icon 'ban' 'size-3.5'}}} Ban IP</button>
       </div>
     </div>
     {{! Both branches stay in the DOM so bans/pardons can swap them in place. }}
     <div class="overflow-x-auto {{#unless bannedIps.length}}hidden{{/unless}}" id="banip-table">
       <table class="table-base">
-        <thead><tr><th>IP</th><th>Reason</th><th>Date</th><th>Source</th><th class="text-right">Actions</th></tr></thead>
+        <thead><tr><th>IP</th><th>Player</th><th>Reason</th><th>Date</th><th>Expires</th><th class="text-right">Actions</th></tr></thead>
         <tbody id="banip-rows">
           {{#each bannedIps}}
             <tr data-banip-row="{{ip}}">
               <td class="font-mono">{{ip}}</td>
+              <td class="text-xs text-ink-soft">{{default player '-'}}</td>
               <td class="text-xs text-ink-soft">{{default reason '-'}}</td>
               <td class="text-xs text-ink-faint">{{default created '-'}}</td>
-              <td class="text-xs text-ink-faint">{{default source '-'}}</td>
+              <td class="text-xs text-ink-faint">{{#if (eq expires 'forever')}}permanent{{else}}{{expires}}{{/if}}</td>
               <td class="text-right">
                 <button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban">{{{icon 'x' 'size-3.5'}}}</button>
               </td>

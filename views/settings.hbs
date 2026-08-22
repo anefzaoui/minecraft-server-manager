@@ -61,7 +61,7 @@
     <h3 class="mb-4 font-semibold">Users</h3>
     <div class="overflow-x-auto">
       <table class="table-base" id="users-table">
-        <thead><tr><th>User</th><th>Role</th><th>2FA</th><th>Created</th><th class="text-right"></th></tr></thead>
+        <thead><tr><th>User</th><th>Role</th><th>2FA</th><th>Created</th><th class="text-right">Actions</th></tr></thead>
         <tbody>
           {{#each users}}
             <tr data-user-id="{{id}}" data-username="{{username}}">
@@ -85,32 +85,30 @@
                 </select>
               </td>
               <td>
-                {{#if (eq id ../user.id)}}
-                  {{! Your own row: self-service, same modal as the topbar user menu -
-                      2FA can only ever be set up on the device you're enrolling, so
-                      there's nothing an admin can do here for someone ELSE's row. }}
-                  {{#if totpEnabled}}
-                    <span class="badge badge-ok">on</span>
-                    <button class="btn btn-ghost btn-sm" data-open-2fa data-tip="Manage your 2FA">Manage</button>
-                  {{else}}
-                    <button class="btn btn-ghost btn-sm" data-open-2fa data-tip="Set up 2FA on your account">Set Up</button>
-                  {{/if}}
-                {{else if totpEnabled}}
-                  <span class="badge badge-ok">on</span>
-                  <button class="btn btn-ghost btn-sm" data-user-totp-reset data-tip="Reset their 2FA - they will need to re-enroll">Reset</button>
+                {{#if totpEnabled}}
+                  <span class="badge badge-ok">On</span>
                 {{else}}
-                  <span class="text-xs text-ink-faint">off</span>
+                  <span class="text-xs text-ink-faint">Off</span>
                 {{/if}}
               </td>
               <td class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
               <td class="text-right">
-                <div class="inline-flex gap-1">
-                  <button class="btn btn-ghost btn-sm" data-user-password data-tip="Set a new password">{{{icon 'key' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-menu="user-menu-{{@index}}" data-tip="Actions for {{username}}" aria-label="Actions for {{username}}">{{{icon 'ellipsis' 'size-3.5'}}}</button>
+                <template id="user-menu-{{@index}}">
+                  <button data-user-password data-user-id="{{id}}" data-username="{{username}}">{{{icon 'key' 'size-3.5'}}} Set Password</button>
+                  {{! Your own row: self-service, same modal as the topbar user menu -
+                      2FA can only ever be set up on the device you're enrolling, so
+                      there's nothing an admin can do here for someone ELSE's row. }}
+                  {{#if (eq id ../user.id)}}
+                    <button data-open-2fa>{{{icon 'shield-check' 'size-3.5'}}} {{#if totpEnabled}}Manage 2FA{{else}}Set Up 2FA{{/if}}</button>
+                  {{else if totpEnabled}}
+                    <button data-user-totp-reset data-user-id="{{id}}" data-username="{{username}}">{{{icon 'shield-check' 'size-3.5'}}} Reset 2FA</button>
+                  {{/if}}
                   {{! No self-delete affordance - deleting your own account mid-session is a trap, not a feature. }}
                   {{#unless (eq id ../user.id)}}
-                    <button class="btn btn-ghost btn-sm text-danger" data-user-delete data-tip="Delete user" aria-label="Delete {{username}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+                    <button class="text-danger" data-user-delete data-user-id="{{id}}" data-username="{{username}}">{{{icon 'trash-2' 'size-3.5'}}} Delete User</button>
                   {{/unless}}
-                </div>
+                </template>
               </td>
             </tr>
           {{/each}}

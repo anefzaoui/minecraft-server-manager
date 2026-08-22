@@ -110,43 +110,54 @@ function init() {
     }
   });
 
-  document.getElementById('users-table')?.addEventListener('click', async (e) => {
-    const row = e.target.closest('[data-user-id]');
-    if (!row) return;
-    const delBtn = e.target.closest('[data-user-delete]');
+  // Row menu items (Set Password / Reset 2FA / Delete) live in the per-row
+  // overflow menu, which dropdown.js portals to <body> - so they're
+  // document-delegated and carry their own data-user-id/data-username rather
+  // than relying on closest('[data-user-id]') finding the row. The menu itself
+  // is gone (dropdown.js removes it) by the time an async action here
+  // resolves, so busy-state goes on the row's still-present kebab trigger.
+  function menuTriggerFor(userId) {
+    return document.querySelector(`[data-user-id="${CSS.escape(userId)}"] [data-menu]`);
+  }
+
+  document.addEventListener('click', async (e) => {
+    const passBtn = e.target.closest('[data-user-password]');
     const totpResetBtn = e.target.closest('[data-user-totp-reset]');
-    if (e.target.closest('[data-user-password]')) {
-      passwordModal(row.dataset.userId, row.dataset.username);
+    const delBtn = e.target.closest('[data-user-delete]');
+    if (passBtn) {
+      passwordModal(passBtn.dataset.userId, passBtn.dataset.username);
     } else if (totpResetBtn) {
+      const { userId, username } = totpResetBtn.dataset;
       const ok = await confirmDialog({
-        title: `Reset 2FA for ${row.dataset.username}?`,
+        title: `Reset 2FA for ${username}?`,
         message:
           'They will be signed out of any in-progress 2FA challenge and must set up a new authenticator next time they sign in.',
         confirmLabel: 'Reset 2FA',
         danger: true,
       });
       if (!ok) return;
-      await withBusy(totpResetBtn, async () => {
-        const res = await post(`/api/users/${row.dataset.userId}/totp/disable`, {});
+      await withBusy(menuTriggerFor(userId), async () => {
+        const res = await post(`/api/users/${userId}/totp/disable`, {});
         if (res) {
           toast('2FA reset.');
           setTimeout(() => location.reload(), 600);
         }
       });
     } else if (delBtn) {
+      const { userId, username } = delBtn.dataset;
       const ok = await confirmDialog({
-        title: `Delete User ${row.dataset.username}?`,
+        title: `Delete User ${username}?`,
         message: 'They will be signed out and lose all access.',
         confirmLabel: 'Delete user',
         danger: true,
       });
       if (!ok) return;
-      await withBusy(delBtn, async () => {
-        const res = await fetch(`/api/users/${row.dataset.userId}`, { method: 'DELETE' });
-        const data = await res.json();
+      await withBusy(menuTriggerFor(userId), async () => {
+        const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+        const data = await res.json().catch(() => ({}));
         if (data.ok) {
           toast('User deleted.');
-          row.remove();
+          document.querySelector(`[data-user-id="${CSS.escape(userId)}"]`)?.remove();
         } else {
           toast(data.error || 'Delete failed', { kind: 'error' });
         }

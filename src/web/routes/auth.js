@@ -14,6 +14,16 @@ const { checkDocker } = require('../../docker/connect');
 
 const router = express.Router();
 
+// "Remember me" checked (the default): a long-lived cookie, refreshed on
+// activity (rolling: true in the session middleware). Unchecked: a real
+// browser-session cookie (cookie.expires = false - no Max-Age/Expires sent),
+// gone the moment the browser closes.
+const REMEMBER_MAX_AGE_MS = 30 * 24 * 3600 * 1000;
+function applyRememberCookie(req, remember) {
+  if (remember) req.session.cookie.maxAge = REMEMBER_MAX_AGE_MS;
+  else req.session.cookie.expires = false;
+}
+
 /**
  * First-run environment checks for the onboarding wizard. Levels: 'pass' (green),
  * 'warn' (amber, can proceed - e.g. Docker down / weak secret), 'fail' (red,
@@ -114,17 +124,19 @@ router.get('/login', (req, res) => {
     delete req.session.pendingTotpUserId;
     delete req.session.pendingTotpUsername;
     delete req.session.pendingTotpNext;
+    delete req.session.pendingRemember;
   }
   res.render('login', { title: 'Sign In', layout: 'bare', next: safeNext(req.query.next) });
 });
 
 router.post('/login', (req, res) => {
   try {
-    const { username, password, next } = z
+    const { username, password, next, remember } = z
       .object({
         username: z.string().trim().min(1).max(64),
         password: z.string().min(1).max(200),
         next: z.string().max(300).optional(),
+        remember: z.coerce.boolean().optional(),
       })
       .parse(req.body);
     checkLoginAllowed(username, req.ip);
@@ -147,6 +159,7 @@ router.post('/login', (req, res) => {
       req.session.pendingTotpUserId = user.id;
       req.session.pendingTotpUsername = user.username;
       req.session.pendingTotpNext = safeNext(next);
+      req.session.pendingRemember = Boolean(remember);
       return res.redirect('/login/2fa');
     }
     clearLoginFailures(username, req.ip);
@@ -156,6 +169,7 @@ router.post('/login', (req, res) => {
           .status(500)
           .render('login', { title: 'Sign In', layout: 'bare', error: 'Session error - try again.' });
       req.session.userId = user.id;
+      applyRememberCookie(req, Boolean(remember));
       recordEvent({ actor: user.username, type: 'login', summary: `${user.username} signed in` });
       res.redirect(safeNext(next) || '/');
     });
@@ -185,15 +199,18 @@ router.post('/login/2fa', (req, res) => {
     }
     clearLoginFailures(pendingUsername, req.ip);
     const next = req.session.pendingTotpNext;
+    const remember = req.session.pendingRemember;
     delete req.session.pendingTotpUserId;
     delete req.session.pendingTotpUsername;
     delete req.session.pendingTotpNext;
+    delete req.session.pendingRemember;
     req.session.regenerate((err) => {
       if (err)
         return res
           .status(500)
           .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: 'Session error - try again.' });
       req.session.userId = pendingId;
+      applyRememberCookie(req, Boolean(remember));
       recordEvent({ actor: pendingUsername, type: 'login', summary: `${pendingUsername} signed in (2FA)` });
       res.redirect(safeNext(next) || '/');
     });

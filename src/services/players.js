@@ -150,6 +150,20 @@ function banTimestamp(date = new Date()) {
   );
 }
 
+const BAN_TIMESTAMP_RE = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}) \+0000$/;
+/** Inverse of banTimestamp(); null for 'forever' or anything unparseable. */
+function banTimestampToMs(expires) {
+  const m = BAN_TIMESTAMP_RE.exec(String(expires || ''));
+  if (!m) return null;
+  const [, y, mo, d, h, mi, s] = m;
+  return Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(s));
+}
+/** vanilla itself honours `expires` on connect - this just decides how the panel displays/sweeps it. */
+function isBanExpired(expires) {
+  const ms = banTimestampToMs(expires);
+  return ms !== null && ms <= Date.now();
+}
+
 /** Find {uuid, name} in the server's own files (usercache + role files). */
 function localIdentity(serverId, name) {
   const lower = name.toLowerCase();
@@ -208,6 +222,7 @@ function listPlayers(serverId, onlineNames = []) {
         banReason: null,
         banDate: null,
         banSource: null,
+        banExpires: null,
         lastSeen: null,
       };
       entries.push(entry);
@@ -234,11 +249,15 @@ function listPlayers(serverId, onlineNames = []) {
     upsert(e.name, e.uuid, { op: true, opLevel: e.level ?? 4, bypassesPlayerLimit: Boolean(e.bypassesPlayerLimit) });
   }
   for (const e of readJson(serverId, 'banned-players.json')) {
+    // An expired entry still sits in the file until the sweep sees it (or vanilla's
+    // own check on connect) - display it as pardoned rather than confusingly "banned".
+    const expired = isBanExpired(e.expires);
     upsert(e.name, e.uuid, {
-      banned: true,
-      banReason: e.reason || null,
-      banDate: e.created || null,
-      banSource: e.source || null,
+      banned: !expired,
+      banReason: expired ? null : e.reason || null,
+      banDate: expired ? null : e.created || null,
+      banSource: expired ? null : e.source || null,
+      banExpires: expired || !e.expires || e.expires === 'forever' ? null : e.expires,
     });
   }
   for (const name of onlineNames) {
@@ -251,13 +270,16 @@ function listPlayers(serverId, onlineNames = []) {
 }
 
 function listBannedIps(serverId) {
-  return readJson(serverId, 'banned-ips.json').map((e) => ({
-    ip: e.ip,
-    reason: e.reason || null,
-    created: e.created || null,
-    source: e.source || null,
-    expires: e.expires || 'forever',
-  }));
+  return readJson(serverId, 'banned-ips.json')
+    .filter((e) => !isBanExpired(e.expires))
+    .map((e) => ({
+      ip: e.ip,
+      reason: e.reason || null,
+      created: e.created || null,
+      source: e.source || null,
+      expires: e.expires || 'forever',
+      player: e.player || null,
+    }));
 }
 
 // ---------------------------------------------------------------------------
@@ -365,19 +387,21 @@ async function setOp(serverId, name, on, level = 4, { running = false, actor = '
 // ---------------------------------------------------------------------------
 // Bans
 
-async function banPlayer(serverId, name, reason, { running = false, actor = 'system' } = {}) {
+async function banPlayer(serverId, name, reason, { running = false, actor = 'system', durationMs = null } = {}) {
   const who = await resolveIdentity(serverId, name);
   reason = cleanText(reason, 'Banned by an operator.');
-  if (running) {
-    await rcon(serverId, 'ban', who.name, reason);
-  } else {
+  const expires = durationMs ? banTimestamp(new Date(Date.now() + durationMs)) : 'forever';
+  if (running) await rcon(serverId, 'ban', who.name, reason);
+  // RCON's own `ban` always writes 'forever' - and when stopped we must write the
+  // file ourselves anyway - so (re)write the entry whenever a real expiry is set.
+  if (!running || durationMs) {
     const list = readJson(serverId, 'banned-players.json').filter((e) => e.uuid !== who.uuid);
     list.push({
       uuid: who.uuid,
       name: who.name,
       created: banTimestamp(),
       source: 'Minecraft Server Manager',
-      expires: 'forever',
+      expires,
       reason,
     });
     writeJson(serverId, 'banned-players.json', list);
@@ -386,10 +410,10 @@ async function banPlayer(serverId, name, reason, { running = false, actor = 'sys
     serverId,
     actor,
     type: 'player-ban',
-    summary: `${who.name} banned: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
-    details: { name: who.name, uuid: who.uuid, reason, via: running ? 'rcon' : 'file' },
+    summary: `${who.name} banned${durationMs ? ` until ${expires}` : ''}: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
+    details: { name: who.name, uuid: who.uuid, reason, expires, via: running ? 'rcon' : 'file' },
   });
-  return { name: who.name, uuid: who.uuid, banned: true, banReason: reason };
+  return { name: who.name, uuid: who.uuid, banned: true, banReason: reason, banExpires: durationMs ? expires : null };
 }
 
 async function pardonPlayer(serverId, name, { running = false, actor = 'system' } = {}) {
@@ -412,24 +436,34 @@ async function pardonPlayer(serverId, name, { running = false, actor = 'system' 
   return { name: who.name, uuid: who.uuid, banned: false };
 }
 
-async function banIp(serverId, ip, reason, { running = false, actor = 'system' } = {}) {
+async function banIp(serverId, ip, reason, { running = false, actor = 'system', durationMs = null, player = null } = {}) {
   assertIp(ip);
   reason = cleanText(reason, 'Banned by an operator.');
-  if (running) {
-    await rcon(serverId, 'ban-ip', ip, reason);
-  } else {
+  const expires = durationMs ? banTimestamp(new Date(Date.now() + durationMs)) : 'forever';
+  const linkedPlayer = player ? assertName(player) : null;
+  if (running) await rcon(serverId, 'ban-ip', ip, reason);
+  // Same story as banPlayer: RCON always writes 'forever' and never knows about the
+  // player-linkage extension, so (re)write the entry whenever either is used.
+  if (!running || durationMs || linkedPlayer) {
     const list = readJson(serverId, 'banned-ips.json').filter((e) => e.ip !== ip);
-    list.push({ ip, created: banTimestamp(), source: 'Minecraft Server Manager', expires: 'forever', reason });
+    list.push({
+      ip,
+      created: banTimestamp(),
+      source: 'Minecraft Server Manager',
+      expires,
+      reason,
+      player: linkedPlayer,
+    });
     writeJson(serverId, 'banned-ips.json', list);
   }
   recordEvent({
     serverId,
     actor,
     type: 'player-ban-ip',
-    summary: `IP ${ip} banned: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
-    details: { ip, reason, via: running ? 'rcon' : 'file' },
+    summary: `IP ${ip} banned${durationMs ? ` until ${expires}` : ''}${linkedPlayer ? ` (linked to ${linkedPlayer})` : ''}: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
+    details: { ip, reason, expires, player: linkedPlayer, via: running ? 'rcon' : 'file' },
   });
-  return { ip, banned: true };
+  return { ip, banned: true, banExpires: durationMs ? expires : null, player: linkedPlayer };
 }
 
 async function pardonIp(serverId, ip, { running = false, actor = 'system' } = {}) {
@@ -451,6 +485,45 @@ async function pardonIp(serverId, ip, { running = false, actor = 'system' } = {}
     details: { ip, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: false };
+}
+
+const SWEEP_RUNNING_STATES = new Set(['running', 'unhealthy']); // rcon still answers while unhealthy
+
+/**
+ * Auto-pardon any player/IP ban whose `expires` has passed. Vanilla itself
+ * already ignores an expired ban on connect, but leaves the stale entry
+ * sitting in the file forever and the panel would otherwise keep reporting
+ * it as banned - this cleans up the entry (and logs the event) instead.
+ * Wired to a global schedule; see services/scheduler.js.
+ */
+async function sweepExpiredBans() {
+  const { listServers } = require('./servers');
+  const { inspectStatus } = require('../docker/containers');
+  for (const server of listServers()) {
+    let running = false;
+    try {
+      const info = await inspectStatus(server.id);
+      running = info.exists && SWEEP_RUNNING_STATES.has(info.status);
+    } catch {
+      /* docker down - fall back to file edits, same as everywhere else here */
+    }
+    const expiredPlayers = readJson(server.id, 'banned-players.json').filter((e) => isBanExpired(e.expires));
+    for (const e of expiredPlayers) {
+      try {
+        await pardonPlayer(server.id, e.name, { running, actor: 'scheduler' });
+      } catch (err) {
+        console.warn(`[players] ban-expiry sweep: could not pardon ${e.name} on ${server.id}: ${err.message}`);
+      }
+    }
+    const expiredIps = readJson(server.id, 'banned-ips.json').filter((e) => isBanExpired(e.expires));
+    for (const e of expiredIps) {
+      try {
+        await pardonIp(server.id, e.ip, { running, actor: 'scheduler' });
+      } catch (err) {
+        console.warn(`[players] ban-expiry sweep: could not pardon IP ${e.ip} on ${server.id}: ${err.message}`);
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1106,6 +1179,7 @@ module.exports = {
   pardonPlayer,
   banIp,
   pardonIp,
+  sweepExpiredBans,
   kickPlayer,
   tpToCoords,
   tpToPlayer,

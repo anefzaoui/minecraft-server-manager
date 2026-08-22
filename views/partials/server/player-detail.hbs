@@ -42,8 +42,17 @@
       </div>
     </div>
     {{#if player.banned}}
-      <div class="notice notice-danger mt-3 text-xs text-danger" data-ban-banner>Banned: {{default player.banReason 'no reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}</div>
+      <div class="notice notice-danger mt-3 text-xs text-danger" data-ban-banner>Banned: {{default player.banReason 'no reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}{{#if player.banExpires}} · expires {{player.banExpires}}{{/if}}</div>
     {{/if}}
+  </div>
+
+  <div class="card mb-4 p-4" data-notes-card>
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="font-semibold">Moderator Notes</h3>
+      <button class="btn btn-ghost btn-sm" data-notes-add>{{{icon 'plus' 'size-3.5'}}} Add Note</button>
+    </div>
+    <div class="space-y-2" data-notes-list></div>
+    <p class="text-sm text-ink-faint" data-notes-empty>No notes yet - only visible to panel users.</p>
   </div>
 
   {{! The player's inventory - reuses the inventory editor, pinned to this player

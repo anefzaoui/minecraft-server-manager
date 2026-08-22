@@ -72,13 +72,13 @@ function init(root) {
     };
     chip.dataset.tip = tips[role];
   }
-  function setBanBanner(reason) {
+  function setBanBanner(reason, expires) {
     root.querySelector('[data-ban-banner]')?.remove();
     if (reason === false) return;
     const banner = document.createElement('div');
     banner.dataset.banBanner = '';
     banner.className = 'notice notice-danger mt-3 text-xs text-danger';
-    banner.textContent = `Banned: ${reason || 'no reason recorded'}`;
+    banner.textContent = `Banned: ${reason || 'no reason recorded'}${expires ? ` · expires ${expires}` : ''}`;
     root.querySelector('.card')?.appendChild(banner);
   }
   function setOffline() {
@@ -136,9 +136,23 @@ function init(root) {
   // ---- ban (same labeled dialog as the roster page - one action, one UI) ----
   function banModal() {
     const content = document.createElement('div');
+    content.className = 'space-y-3';
     content.innerHTML = `
-      <label class="label">Ban reason (recorded in the ban list)</label>
-      <input class="input" data-f="reason" placeholder="Banned by an operator." maxlength="256">`;
+      <div>
+        <label class="label">Ban reason (recorded in the ban list)</label>
+        <input class="input" data-f="reason" placeholder="Banned by an operator." maxlength="256">
+      </div>
+      <div>
+        <label class="label">Duration</label>
+        <select class="input" data-f="duration" data-label="Ban duration">
+          <option value="">Permanent</option>
+          <option value="3600000">1 hour</option>
+          <option value="86400000">1 day</option>
+          <option value="259200000">3 days</option>
+          <option value="604800000">7 days</option>
+          <option value="2592000000">30 days</option>
+        </select>
+      </div>`;
     openModal({
       title: `Ban ${name}`,
       content,
@@ -151,11 +165,16 @@ function init(root) {
           busyLabel: 'Banning…',
           onClick: async ({ body }) => {
             const reason = body.querySelector('[data-f="reason"]').value.trim();
+            const duration = body.querySelector('[data-f="duration"]').value;
             try {
-              await api('/ban', { name, reason: reason || undefined });
+              const { result } = await api('/ban', {
+                name,
+                reason: reason || undefined,
+                durationMs: duration ? Number(duration) : undefined,
+              });
               setChip('ban', true, 'Banned');
-              setBanBanner(reason);
-              toast(`${name} banned`);
+              setBanBanner(reason, result.banExpires);
+              toast(`${name} banned${result.banExpires ? ` until ${result.banExpires}` : ''}`);
             } catch (err) {
               fail(err);
               return false;
@@ -165,6 +184,91 @@ function init(root) {
       ],
     });
   }
+
+  // ---- moderator notes ----
+  const notesList = root.querySelector('[data-notes-list]');
+  const notesEmpty = root.querySelector('[data-notes-empty]');
+  const notesAddBtn = root.querySelector('[data-notes-add]');
+
+  function renderNotes(notes) {
+    if (!notesList) return;
+    notesList.innerHTML = '';
+    if (notesEmpty) notesEmpty.classList.toggle('hidden', notes.length > 0);
+    for (const n of notes) {
+      const row = document.createElement('div');
+      row.className = 'flex items-start justify-between gap-2 rounded-md bg-inset p-2 text-sm';
+      row.dataset.noteId = n.id;
+      const text = document.createElement('div');
+      text.className = 'min-w-0';
+      const p = document.createElement('p');
+      p.className = 'whitespace-pre-wrap break-words';
+      p.textContent = n.note;
+      const meta = document.createElement('p');
+      meta.className = 'mt-1 text-xs text-ink-faint';
+      meta.textContent = `${n.author} · ${n.createdAt}`;
+      text.append(p, meta);
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-ghost btn-sm text-danger shrink-0';
+      del.setAttribute('aria-label', 'Delete note');
+      del.innerHTML =
+        '<svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+      del.addEventListener('click', async () => {
+        try {
+          await withBusy(del, async () => {
+            const res = await fetch(`${base}/notes/${n.id}`, { method: 'DELETE' });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (HTTP ${res.status})`);
+            row.remove();
+            if (notesList && !notesList.children.length && notesEmpty) notesEmpty.classList.remove('hidden');
+          });
+        } catch (err) {
+          fail(err);
+        }
+      });
+      row.append(text, del);
+      notesList.appendChild(row);
+    }
+  }
+
+  function loadNotes() {
+    fetch(`${base}/notes?name=${encodeURIComponent(name)}`)
+      .then((r) => r.json())
+      .then((d) => renderNotes(d.notes || []))
+      .catch(() => renderNotes([]));
+  }
+  if (notesList) loadNotes();
+
+  if (notesAddBtn)
+    notesAddBtn.addEventListener('click', () => {
+      const content = document.createElement('div');
+      content.innerHTML = `<label class="label">Note</label><textarea class="input" data-f="note" rows="3" maxlength="1000"></textarea>`;
+      openModal({
+        title: `Note for ${name}`,
+        content,
+        size: 'sm',
+        actions: [
+          { label: 'Cancel', kind: 'ghost' },
+          {
+            label: 'Add note',
+            kind: 'primary',
+            busyLabel: 'Adding…',
+            onClick: async ({ body }) => {
+              const note = body.querySelector('[data-f="note"]').value.trim();
+              if (!note) return false;
+              try {
+                await api('/notes', { name, note });
+                loadNotes();
+                toast('Note added');
+              } catch (err) {
+                fail(err);
+                return false;
+              }
+            },
+          },
+        ],
+      });
+    });
 
   // ---- kick ----
   function kickModal() {
