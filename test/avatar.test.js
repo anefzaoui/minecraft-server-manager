@@ -70,6 +70,22 @@ test('setting and clearing a preset avatar round-trips through the DB', async ()
   assert.equal(me2.json.users.find((u) => u.username === 'admin').avatar, null);
 });
 
+test('rate-limits repeated avatar writes so a hijacked session cannot loop them unbounded', async () => {
+  const create = await app.req('POST', '/api/users', {
+    cookie: adminCookie,
+    body: { username: 'avatarspammer', password: 'spampass123', role: 'viewer' },
+  });
+  assert.equal(create.status, 201);
+  const login = await app.req('POST', '/login', { body: { username: 'avatarspammer', password: 'spampass123' } });
+  const cookie = (login.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+
+  let last;
+  for (let i = 0; i < 31; i++) {
+    last = await app.req('POST', '/api/account/avatar/preset', { cookie, body: { key: 'torch' } });
+  }
+  assert.equal(last.status, 429);
+});
+
 test('rejects an unknown preset key', async () => {
   const r = await app.req('POST', '/api/account/avatar/preset', {
     cookie: adminCookie,
