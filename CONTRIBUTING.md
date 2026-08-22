@@ -29,7 +29,8 @@ npm run build         # CSS build
 ```
 
 `npm run format` fixes formatting. `npm test` is a real, fast unit suite (no Docker); `npm run
-test:smoke` is the separate live sweep against a running panel.
+test:smoke` is the separate live sweep against a running panel. While iterating on a change, `npm run
+test:watch` re-runs the suite on every save.
 
 Keep changes focused and match the surrounding style (Prettier enforces it). The code is **plain
 CommonJS JS - no TypeScript compile step and no client bundler**; please don't introduce one without

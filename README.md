@@ -472,6 +472,7 @@ The field catalog in `src/config/` is the single source of truth for server sett
 | `npm run format`     | Prettier over the tree                                  |
 | `npm run typecheck`  | `tsc --checkJs` over the type-clean core                |
 | `npm test`           | unit tests (`node:test`); runs on a clean clone         |
+| `npm run test:watch` | unit tests, re-run on every save                        |
 | `npm run test:smoke` | live QA sweep against a running panel (needs Docker)    |
 
 ## Status & areas that need work
