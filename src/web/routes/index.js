@@ -361,6 +361,25 @@ router.get(
       // stored §-codes become &-codes for friendly editing.
       context.settingsEnv = JSON.stringify(row.env);
       context.motd = String(row.env.MOTD || '').replace(/§([0-9a-fk-orA-FK-OR])/g, '&$1');
+
+      // Every catalog field configurable at creation, minus what's covered
+      // elsewhere on this tab: identity/flavor/resources (their own cards
+      // above — flavor/version changes go through the Updates page, which
+      // handles the migration safely), players (live via whitelist/ops
+      // files on the Players tab, no restart needed), and gameplay's
+      // DIFFICULTY/PVP (live via World Controls) + MOTD (the field above) —
+      // exposing those here too would just drift out of sync with the
+      // RCON-set values. Same catalog + same field-level filter the wizard
+      // itself uses, so nothing new is exposed beyond what's already safe there.
+      const catalog = require('../../config/field-catalog');
+      const EXCLUDED_SECTIONS = new Set(['identity', 'flavor', 'resources', 'players']);
+      const EXCLUDED_KEYS = new Set(['DIFFICULTY', 'PVP', 'MOTD']);
+      context.advancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
+        .map((s) => ({
+          ...s,
+          fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env' && !EXCLUDED_KEYS.has(f.key)),
+        }))
+        .filter((s) => s.fields.length);
     } else if (tab === 'integrations') {
       context.integrations = {
         discord: require('../../integrations/discord').getConfig(row.id),

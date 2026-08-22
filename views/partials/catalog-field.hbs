@@ -16,7 +16,7 @@
       {{#if help}}<p class="mt-1 max-w-prose text-xs leading-relaxed text-ink-faint">{{help}}</p>{{/if}}
     </div>
     <span class="msm-toggle mt-0.5 shrink-0">
-      <input type="checkbox" data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="boolean" data-catalog-default="{{default}}" {{#if default}}checked{{/if}}>
+      <input type="checkbox" data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="boolean" data-catalog-default="{{this.default}}" {{#if default}}checked{{/if}}>
       <span></span>
     </span>
   </label>
@@ -31,7 +31,7 @@
     </label>
 
     {{#if (eq type 'enum')}}
-      <select class="input max-w-sm" data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="enum" data-catalog-default="{{default}}" data-label="{{label}}">
+      <select class="input max-w-sm" data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="enum" data-catalog-default="{{this.default}}" data-label="{{label}}">
         {{#unless (isDefined default)}}<option value="">(image default)</option>{{/unless}}
         {{#each options}}
           <option value="{{value}}" {{#if (eq value ../default)}}selected{{/if}} {{#if desc}}data-desc="{{desc}}"{{/if}}>{{label}}</option>
@@ -39,17 +39,17 @@
       </select>
     {{else if (or (eq type 'number') (or (eq type 'size-mb') (eq type 'range')))}}
       <input class="input max-w-48 font-mono" type="number" inputmode="numeric"
-        data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="number" data-catalog-default="{{default}}"
+        data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="number" data-catalog-default="{{this.default}}"
         {{#if (isDefined min)}}min="{{min}}"{{/if}} {{#if (isDefined max)}}max="{{max}}"{{/if}} {{#if (isDefined step)}}step="{{step}}"{{/if}}
-        placeholder="{{#if (isDefined default)}}{{default}}{{else}}image default{{/if}}">
+        placeholder="{{#if (isDefined default)}}{{this.default}}{{else}}image default{{/if}}">
     {{else if (eq type 'list')}}
       <textarea class="input max-w-xl font-mono text-xs" rows="2"
         data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="list"
-        placeholder="{{#if (isDefined default)}}{{default}}{{else}}one entry per line{{/if}}"></textarea>
+        placeholder="{{#if (isDefined default)}}{{this.default}}{{else}}one entry per line{{/if}}"></textarea>
     {{else}}
       <input class="input max-w-xl font-mono" type="text"
-        data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="text" data-catalog-default="{{default}}"
-        placeholder="{{#if (isDefined default)}}{{default}}{{else}}image default{{/if}}">
+        data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="text" data-catalog-default="{{this.default}}"
+        placeholder="{{#if (isDefined default)}}{{this.default}}{{else}}image default{{/if}}">
     {{/if}}
 
     {{#if help}}<p class="max-w-prose text-xs leading-relaxed text-ink-faint">{{help}}</p>{{/if}}

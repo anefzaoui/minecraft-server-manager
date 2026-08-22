@@ -60,6 +60,32 @@ function init(serverId) {
     });
   }
 
+  // ---- Advanced settings (full field catalog, same controls as the wizard) ----
+  // Pre-fill every control with the server's ACTUAL current value (falling
+  // back to the catalog default) — the wizard never needs this since it
+  // starts blank, but here each field represents something really configured.
+  const advPanel = document.getElementById('st-advanced');
+  if (advPanel) {
+    const currentEnv = parseSettingsEnv();
+    advPanel.querySelectorAll('[data-catalog-key][data-catalog-scope="env"]').forEach((el) => {
+      const key = el.dataset.catalogKey;
+      const has = Object.prototype.hasOwnProperty.call(currentEnv, key);
+      if (el.dataset.catalogType === 'boolean') {
+        el.checked = has ? currentEnv[key] === 'true' : el.dataset.catalogDefault === 'true';
+      } else if (has) {
+        el.value = currentEnv[key];
+      }
+    });
+  }
+
+  function parseSettingsEnv() {
+    try {
+      return JSON.parse(root.dataset.settingsEnv || '{}');
+    } catch {
+      return {};
+    }
+  }
+
   // Icon + accent pickers — selection lives in aria-pressed; .swatch CSS
   // draws the theme-aware ring, so JS only flips the attribute.
   bindPicker('[data-pick-icon]', (btn) => {
@@ -366,19 +392,51 @@ function init(serverId) {
         body.extraBinds = nowDocker.extraBinds;
       }
     }
-    // MOTD lives in env: merge over the server's current env (from the data
-    // island) so nothing else is lost; § codes are what vanilla renders.
-    if (motdInput) {
-      let env = {};
-      try {
-        env = JSON.parse(root.dataset.settingsEnv || '{}');
-      } catch {
-        /* island absent */
+    // MOTD + every advanced-settings field live in env: merge all changes over
+    // the server's current env (from the data island) in one pass so nothing
+    // else is lost, and only send env at all if something actually changed.
+    // Clearing a field back to empty removes the override (reverts to the
+    // image default) rather than sending an empty string.
+    {
+      const current = parseSettingsEnv();
+      const merged = { ...current };
+      let envChanged = false;
+
+      if (motdInput) {
+        const newMotd = toSectionCodes(motdInput.value);
+        if ((current.MOTD || '') !== newMotd) {
+          merged.MOTD = newMotd;
+          envChanged = true;
+        }
       }
-      const newMotd = toSectionCodes(motdInput.value);
-      if ((env.MOTD || '') !== newMotd) {
-        body.env = { ...env, MOTD: newMotd };
+
+      if (advPanel) {
+        advPanel.querySelectorAll('[data-catalog-key][data-catalog-scope="env"]').forEach((el) => {
+          const key = el.dataset.catalogKey;
+          const had = Object.prototype.hasOwnProperty.call(current, key);
+          if (el.dataset.catalogType === 'boolean') {
+            const value = el.checked ? 'true' : 'false';
+            const before = had ? current[key] : el.dataset.catalogDefault === 'true' ? 'true' : 'false';
+            if (value !== before) {
+              merged[key] = value;
+              envChanged = true;
+            }
+          } else {
+            const value = el.value.trim();
+            if (!value) {
+              if (had) {
+                delete merged[key];
+                envChanged = true;
+              }
+            } else if (value !== (had ? current[key] : '')) {
+              merged[key] = value;
+              envChanged = true;
+            }
+          }
+        });
       }
+
+      if (envChanged) body.env = merged;
     }
     const restore = setBusy(saveBtn, 'Saving…');
     try {

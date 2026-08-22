@@ -186,6 +186,28 @@
       </div>
     </div>
   </div>
+
+  {{#if advancedSections.length}}
+  <div class="space-y-3 lg:col-span-2" id="st-advanced">
+    <div class="rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
+      {{{icon 'info' 'size-3.5'}}} Every environment variable this server's image supports, straight from its docs — the same catalog as the creation wizard's Advanced mode, pre-filled with what's actually set. Leave a field empty to use the image default; only values you change are sent. Requires a Recreate to apply.
+    </div>
+    {{#each advancedSections}}
+      <details class="card group">
+        <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
+          {{{icon icon 'size-4 text-ink-faint'}}} {{label}}
+          <span class="badge ml-1">{{fields.length}}</span>
+          <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
+        </summary>
+        <div class="divide-y divide-line/60 border-t border-line px-4 pb-4">
+          {{#each fields}}
+            {{> catalog-field}}
+          {{/each}}
+        </div>
+      </details>
+    {{/each}}
+  </div>
+  {{/if}}
 </div>
 
 <div class="mt-4 flex justify-end gap-2">
