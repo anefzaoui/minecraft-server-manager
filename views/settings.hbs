@@ -65,12 +65,23 @@
         <tbody>
           {{#each users}}
             <tr data-user-id="{{id}}" data-username="{{username}}">
-              <td class="font-medium">{{username}}{{#if (eq id ../user.id)}} <span class="badge">you</span>{{/if}}</td>
+              <td class="font-medium">
+                <div class="flex items-center gap-2">
+                  <span class="grid size-6 shrink-0 place-items-center overflow-hidden rounded-md bg-diamond-700 text-[10px] font-bold text-white">
+                    {{#if (avatarSrc avatar)}}
+                      <img src="{{avatarSrc avatar}}" alt="" class="size-full object-cover">
+                    {{else}}
+                      {{initial username}}
+                    {{/if}}
+                  </span>
+                  {{username}}{{#if (eq id ../user.id)}} <span class="badge">you</span>{{/if}}
+                </div>
+              </td>
               <td>
                 <select class="input w-auto" data-user-role data-prev-role="{{role}}" data-label="Role for {{username}}">
-                  <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>admin</option>
-                  <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>operator</option>
-                  <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>viewer</option>
+                  <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>Admin</option>
+                  <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>Operator</option>
+                  <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>Viewer</option>
                 </select>
               </td>
               <td>
@@ -107,7 +118,7 @@
       </table>
     </div>
     <button class="btn btn-sm mt-3" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add User</button>
-    <p class="help mt-2 max-w-prose">Roles: <b>admin</b> - everything; <b>operator</b> - manage servers but not storage, users, or update policies; <b>viewer</b> - read-only.</p>
+    <p class="help mt-2 max-w-prose">Roles: <b>Admin</b> - everything; <b>Operator</b> - manage servers but not storage, users, or update policies; <b>Viewer</b> - read-only.</p>
   </div>
 </div>
 <script type="module" src="/js/pages/settings.js"></script>

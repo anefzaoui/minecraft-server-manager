@@ -9,6 +9,9 @@ const db = require('../db');
 const { recordEvent } = require('../events');
 const totp = require('./totp');
 const secrets = require('./secrets');
+const { AVATAR_PRESETS } = require('../config/avatars');
+
+const AVATAR_PRESET_KEYS = new Set(AVATAR_PRESETS.map((p) => p.key));
 
 function firstRunNeeded() {
   return !db.get('SELECT 1 AS x FROM users LIMIT 1');
@@ -84,7 +87,41 @@ function publicUser(u) {
     role: u.role,
     createdAt: u.created_at,
     totpEnabled: Boolean(u.totp_enabled),
+    avatar: u.avatar || null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Profile picture. Self-service (any role, own account only) - see
+// web/routes/account.js for the preset/upload/clear endpoints and
+// web/routes/api.js for serving an uploaded image back. Uploaded files are
+// NOT cleaned up on user deletion, same accepted trade-off as custom server
+// icons (services/servers.js) - orphaned rather than adding delete-time
+// filesystem coupling here.
+
+/** Set a built-in preset avatar (one of config/avatars.js's AVATAR_PRESETS). */
+function setAvatarPreset(id, key, { actor = 'system' } = {}) {
+  if (!AVATAR_PRESET_KEYS.has(key)) throw httpError(400, 'Unknown avatar preset');
+  const user = db.get('SELECT username FROM users WHERE id = ?', id);
+  if (!user) throw httpError(404, 'User not found');
+  db.run('UPDATE users SET avatar = ? WHERE id = ?', `preset:${key}`, id);
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} set a preset avatar` });
+}
+
+/** Record an uploaded avatar file (the route has already validated + saved it to disk). */
+function setAvatarCustom(id, filename, { actor = 'system' } = {}) {
+  const user = db.get('SELECT username FROM users WHERE id = ?', id);
+  if (!user) throw httpError(404, 'User not found');
+  db.run('UPDATE users SET avatar = ? WHERE id = ?', `custom:${filename}`, id);
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} uploaded a custom avatar` });
+}
+
+/** Revert to the default initial-letter avatar. */
+function clearAvatar(id, { actor = 'system' } = {}) {
+  const user = db.get('SELECT username FROM users WHERE id = ?', id);
+  if (!user) throw httpError(404, 'User not found');
+  db.run('UPDATE users SET avatar = NULL WHERE id = ?', id);
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} reset their avatar` });
 }
 
 // ---------------------------------------------------------------------------
@@ -244,4 +281,7 @@ module.exports = {
   adminDisableTotp,
   regenerateBackupCodes,
   verifyTotpLogin,
+  setAvatarPreset,
+  setAvatarCustom,
+  clearAvatar,
 };

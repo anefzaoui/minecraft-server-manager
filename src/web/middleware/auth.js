@@ -63,7 +63,7 @@ function requireRole(...roles) {
 function requireWrite(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
   if (req.user && req.user.role === 'viewer') {
-    return res.status(403).json({ ok: false, error: 'Your role (viewer) is read-only.' });
+    return res.status(403).json({ ok: false, error: 'Your role (Viewer) is read-only.' });
   }
   next();
 }

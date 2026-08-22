@@ -7,6 +7,7 @@ const { engine } = require('express-handlebars');
 const config = require('../config');
 const routes = require('./routes');
 const { icon } = require('./icons');
+const { avatarSrc } = require('../config/avatars');
 const { marked } = require('marked');
 const sanitizeHtml = require('sanitize-html');
 
@@ -47,15 +48,17 @@ const STATUS_DOT = {
   stone: 'bg-stone-500',
 };
 
-// The 8 icons bundled in public/icons/servers. Icon names are free text in the
-// schemas, so anything unknown falls back to grass instead of a broken image.
+// The 8 icons bundled in public/icons/avatars (original pixel-art SVGs, shared
+// with the profile-picture presets - see config/avatars.js). Icon names are
+// free text in the schemas, so anything unknown falls back to grass instead
+// of a broken image.
 const BUNDLED_ICONS = new Set(['chest', 'creeper', 'diamond', 'grass', 'portal', 'potion', 'sword', 'tnt']);
 
 function iconSrc(name) {
   if (typeof name === 'string' && name.startsWith('custom:')) {
     return `/api/icons/custom/${encodeURIComponent(name.slice('custom:'.length))}`;
   }
-  return `/icons/servers/${BUNDLED_ICONS.has(name) ? name : 'grass'}.png`;
+  return `/icons/avatars/${BUNDLED_ICONS.has(name) ? name : 'grass'}.svg`;
 }
 
 function formatBytes(bytes) {
@@ -110,6 +113,7 @@ function createApp() {
         json: jsonForScript,
         urlq: (s) => encodeURIComponent(s ?? ''),
         iconSrc,
+        avatarSrc,
         bytes: formatBytes,
         pct: (used, total) => (total ? Math.min(100, Math.round((used / total) * 100)) : 0),
         statusLabel: (s) => (STATUS_META[s] || STATUS_META.stopped).label,

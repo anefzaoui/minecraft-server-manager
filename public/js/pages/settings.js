@@ -162,9 +162,9 @@ function init() {
       <div><label class="label">Password</label><input class="input" id="nu-pass" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p></div>
       <div><label class="label">Role</label>
         <select class="input" id="nu-role" data-label="Role">
-          <option value="viewer">viewer - read-only</option>
-          <option value="operator">operator - manage servers</option>
-          <option value="admin">admin - everything</option>
+          <option value="viewer">Viewer - read-only</option>
+          <option value="operator">Operator - manage servers</option>
+          <option value="admin">Admin - everything</option>
         </select>
       </div>`;
     openModal({

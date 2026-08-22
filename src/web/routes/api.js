@@ -1354,6 +1354,24 @@ router.get(
   })
 );
 
+// Uploaded profile pictures (web/routes/account.js handles the upload itself,
+// self-service). Not scoped to req.user - any authenticated user may view any
+// other user's avatar image, same openness as the server-icon route above.
+router.get(
+  '/avatars/custom/:file',
+  asyncHandler((req, res, next) => {
+    const file = z
+      .string()
+      .regex(/^usr_[\w-]+\.(png|svg|jpg)$/, 'Invalid avatar file')
+      .parse(req.params.file);
+    const abs = dataPath('library', 'icons', 'users', file);
+    if (!fs.existsSync(abs)) throw Object.assign(new Error('Avatar not found'), { status: 404 });
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.sendFile(abs);
+  })
+);
+
 // ---- Users (admin only) ----
 const authService = require('../../services/auth');
 const { requireRole } = require('../middleware/auth');
