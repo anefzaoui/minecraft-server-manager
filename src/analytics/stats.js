@@ -61,7 +61,7 @@ function curate(root) {
     ironMined: pick(mined, ['minecraft:iron_ore', 'minecraft:deepslate_iron_ore']),
     ancientDebrisMined: num(mined['minecraft:ancient_debris']),
     // Vanilla has no "blocks placed" stat; minecraft:used counts right-click
-    // uses per item, which is dominated by block placements — good builder proxy.
+    // uses per item, which is dominated by block placements - good builder proxy.
     blocksUsedTotal: sumAll(stats['minecraft:used']),
   };
 }
@@ -91,7 +91,7 @@ function ingestStats(serverId) {
     err.status = 404;
     throw err;
   }
-  // activeLevelName honors LEVEL env AND server.properties level-name — a
+  // activeLevelName honors LEVEL env AND server.properties level-name - a
   // renamed/activated world would otherwise silently stop producing stats.
   const level = activeLevelName(server);
   // MC 26.x moved stat files from <world>/stats to <world>/players/stats.
@@ -116,7 +116,7 @@ function ingestStats(serverId) {
     try {
       curated = curate(JSON.parse(fs.readFileSync(path.join(statsDir, file), 'utf8')));
     } catch {
-      continue; // partial write / malformed file — retry next cycle
+      continue; // partial write / malformed file - retry next cycle
     }
     players++;
     const json = JSON.stringify(curated);
@@ -207,7 +207,7 @@ function deltaBetween(latest, base) {
  * Playstyle heuristic (percentages of the four normalized scores):
  *   miner    = blocks broken
  *   builder  = minecraft:used total (right-click uses ≈ blocks placed; vanilla
- *              has no direct "placed" stat) — falls back to jumps when zero
+ *              has no direct "placed" stat) - falls back to jumps when zero
  *   fighter  = 25 * (mobKills + 4 * playerKills) + damageDealt / 10
  *   explorer = distanceCm / 1600 (16 m traveled weighted like one block mined)
  * The scale factors put a typical hour of each activity in the same order of
@@ -321,7 +321,7 @@ const median = (values) => {
 /**
  * Advisory X-ray heuristic: each player's diamond/(stone+1) and ancient-debris
  * ratios vs the server median (players with >= 64 stone mined). Flags ratios
- * over 4x median with at least 16 diamonds — evidence only, never punitive.
+ * over 4x median with at least 16 diamonds - evidence only, never punitive.
  */
 function xrayReport(serverId) {
   const uuids = db.all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId);

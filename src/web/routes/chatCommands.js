@@ -118,7 +118,7 @@ router.delete(
   })
 );
 
-// Execute NOW as a named player — same path as chat, minus cooldown/permission.
+// Execute NOW as a named player - same path as chat, minus cooldown/permission.
 router.post(
   '/:cmdId/test',
   asyncHandler(async (req, res, next) => {

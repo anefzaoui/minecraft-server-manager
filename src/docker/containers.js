@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Container lifecycle for managed Minecraft servers. All containers are
@@ -29,7 +29,7 @@ function containerName(serverId) {
  * @param {object} spec.resources        { memoryMb, swapMb, cpus }
  * @param {string} [spec.containerName]  Docker container name override; default `msm-<serverId>`
  * @param {string} [spec.networkName]    existing host Docker network to attach to; default bridge
- * @param {Array}  [spec.extraBinds]     [{hostPath, containerPath, mode: 'rw'|'ro'}] — RAW host paths, not re-rooted
+ * @param {Array}  [spec.extraBinds]     [{hostPath, containerPath, mode: 'rw'|'ro'}] - RAW host paths, not re-rooted
  */
 async function createContainer(spec) {
   const docker = getDocker();
@@ -47,7 +47,7 @@ async function createContainer(spec) {
     exposed[`${BEDROCK_PORT}/udp`] = {};
     bindings[`${BEDROCK_PORT}/udp`] = [{ HostPort: String(spec.ports.bedrock) }];
   }
-  // Feature ports (e.g. BlueMap's web server) + user-defined extras — [{container: '8100/tcp', host: 8123}]
+  // Feature ports (e.g. BlueMap's web server) + user-defined extras - [{container: '8100/tcp', host: 8123}]
   for (const extra of spec.extraPorts || []) {
     exposed[extra.container] = {};
     bindings[extra.container] = [{ HostPort: String(extra.host) }];
@@ -57,7 +57,7 @@ async function createContainer(spec) {
   const swapBytes = memoryBytes + Math.round((spec.resources.swapMb || 0) * 1024 * 1024);
 
   // Extra binds are already HOST paths (the admin types the real host
-  // location), unlike dataDir which is panel-local and must be re-rooted —
+  // location), unlike dataDir which is panel-local and must be re-rooted -
   // running them through toHostPath would reject anything outside DATA_DIR,
   // which is the entire point of this escape hatch.
   const extraBindStrings = (spec.extraBinds || []).map(
@@ -87,7 +87,7 @@ async function createContainer(spec) {
   return container.id;
 }
 
-/** Resolve the actual Docker name for a server — its custom name if one was set, else msm-<id>. */
+/** Resolve the actual Docker name for a server - its custom name if one was set, else msm-<id>. */
 function resolvedName(serverId) {
   const row = db.get('SELECT container_name FROM servers WHERE id = ?', serverId);
   return (row && row.container_name) || containerName(serverId);
@@ -147,7 +147,7 @@ async function stopContainer(serverId, { graceSeconds = 90 } = {}) {
     // Wait for the container to exit on its own after the stop command.
     await Promise.race([container.wait(), new Promise((resolve) => setTimeout(resolve, graceSeconds * 1000).unref())]);
   } catch {
-    // rcon unavailable (early boot, crashed loop) — fall through to docker stop
+    // rcon unavailable (early boot, crashed loop) - fall through to docker stop
   }
   const info = await inspectStatus(serverId);
   if (info.exists && (info.status === 'running' || info.status === 'starting' || info.status === 'unhealthy')) {
@@ -174,7 +174,7 @@ async function removeContainer(serverId) {
 /**
  * Run a command via docker exec and capture its raw output (+ exit code on
  * request). A timeout guards against a hung exec (unresponsive/deadlocked JVM)
- * leaving the hijacked stream + connection open forever — critical because
+ * leaving the hijacked stream + connection open forever - critical because
  * liveCache fires this on an interval and hung calls would otherwise stack
  * without bound.
  */
@@ -208,7 +208,7 @@ async function execRaw(serverId, cmd, { timeoutMs = 15000, wantExitCode = false 
     stream.on('error', (err) => finish(reject, err));
   });
   // The inspect is a second daemon round trip, opted into by the one caller
-  // that reads the code — everyone else skips both its cost and its failure
+  // that reads the code - everyone else skips both its cost and its failure
   // modes. It must never hang past the timeout contract above, and it must
   // never fail a command whose output was already captured: the exit code is
   // best-effort, and null means "unknown" (callers already treat non-zero and
@@ -238,7 +238,7 @@ async function execCapture(serverId, cmd, opts = {}) {
  * Like execCapture, but also resolves the command's exit code so callers can
  * tell "ran successfully but printed something unexpected" apart from "the
  * command itself failed" (e.g. rcon-cli exits non-zero and prints a connection
- * error to stderr when RCON isn't listening yet — docker exec itself still
+ * error to stderr when RCON isn't listening yet - docker exec itself still
  * succeeds since the container process is running, so execCapture alone can't
  * distinguish that from a genuine, parseable response). The code is best-effort:
  * `exitCode` is null when the daemon didn't answer the inspect in time, which
@@ -252,7 +252,7 @@ async function execCaptureChecked(serverId, cmd, opts = {}) {
  * Delete a server's data directory using a throwaway root container.
  *
  * The itzg image writes world/mod files as its own UID (default 1000). When the
- * panel process runs as a different host user it can't remove them — `rm` fails
+ * panel process runs as a different host user it can't remove them - `rm` fails
  * with EACCES. Root inside a container can delete files of any UID, so we mount
  * the PARENT directory and remove the target by name. `Cmd: []` is required so
  * the image's default CMD isn't appended as extra arguments to our entrypoint.

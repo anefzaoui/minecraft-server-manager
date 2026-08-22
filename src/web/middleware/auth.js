@@ -2,7 +2,7 @@
 
 // Auth middleware: session gate, role checks, login rate limiting, and
 // cross-site request protection (SameSite=Strict cookie + Origin check on
-// state-changing requests — appropriate for a self-hosted LAN panel).
+// state-changing requests - appropriate for a self-hosted LAN panel).
 
 const authService = require('../../services/auth');
 
@@ -90,7 +90,7 @@ function checkLoginAllowed(username, ip) {
   const entry = loginAttempts.get(attemptKey(username, ip));
   if (entry && entry.count >= MAX_ATTEMPTS && Date.now() < entry.until) {
     const mins = Math.ceil((entry.until - Date.now()) / 60000);
-    const err = new Error(`Too many failed attempts — try again in ${mins} min`);
+    const err = new Error(`Too many failed attempts - try again in ${mins} min`);
     err.status = 429;
     throw err;
   }
@@ -108,7 +108,7 @@ function recordLoginFailure(username, ip) {
   const key = attemptKey(username, ip);
   const entry = loginAttempts.get(key) || { count: 0, until: 0 };
   entry.count += 1;
-  // Do NOT extend an already-active lock — otherwise repeated attempts keep a
+  // Do NOT extend an already-active lock - otherwise repeated attempts keep a
   // valid account locked forever (targeted-lockout DoS).
   if (Date.now() >= entry.until) entry.until = Date.now() + LOCK_MS;
   loginAttempts.set(key, entry);

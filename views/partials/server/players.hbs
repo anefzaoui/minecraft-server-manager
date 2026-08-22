@@ -22,7 +22,7 @@
 
   {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
     <div class="notice notice-warn mb-4 max-w-prose text-xs">
-      Server is offline — whitelist, op and ban changes are written straight to the server files and apply on the next start.
+      Server is offline - whitelist, op and ban changes are written straight to the server files and apply on the next start.
       Kicks and teleports need a running server.
     </div>
   {{/unless}}
@@ -42,7 +42,7 @@
               data-op="{{#if op}}1{{else}}0{{/if}}"
               data-banned="{{#if banned}}1{{else}}0{{/if}}">
             <td>
-              <a href="/servers/{{../server.id}}/players/{{name}}" class="group flex items-center gap-2.5" data-tip="Open {{name}}'s page — roles, teleport &amp; inventory">
+              <a href="/servers/{{../server.id}}/players/{{name}}" class="group flex items-center gap-2.5" data-tip="Open {{name}}'s page - roles, teleport &amp; inventory">
                 <span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-xs font-bold">
                   {{#if bedrock}}{{{icon 'gamepad-2' 'size-4'}}}{{else}}{{name.[0]}}{{/if}}
                 </span>
@@ -60,10 +60,10 @@
                 <span class="flex items-center gap-1.5 text-xs font-medium text-ok"><span class="status-dot relative bg-grass-500 pulse"></span> Online</span>
               {{else}}
                 <span class="flex items-center gap-1.5 text-xs font-medium text-ink-faint"><span class="status-dot bg-stone-500"></span> Offline</span>
-                {{#if lastSeen}}<div class="mt-0.5 text-[11px] text-ink-faint" data-tip="From usercache — name cached until this date">seen ~{{lastSeen}}</div>{{/if}}
+                {{#if lastSeen}}<div class="mt-0.5 text-[11px] text-ink-faint" data-tip="From usercache - name cached until this date">seen ~{{lastSeen}}</div>{{/if}}
               {{/if}}
             </td>
-            {{! Off-state chips keep full opacity — dimming reads as disabled,
+            {{! Off-state chips keep full opacity - dimming reads as disabled,
                 and genuinely disabled composers already use opacity for that. }}
             <td>
               <div class="flex flex-wrap gap-1.5">
@@ -89,7 +89,7 @@
                 <div class="max-w-56 truncate text-danger" title="{{default banReason 'No reason recorded'}}">{{default banReason 'No reason recorded'}}</div>
                 {{#if banDate}}<div class="mt-0.5">{{banDate}}{{#if banSource}} · {{banSource}}{{/if}}</div>{{/if}}
               {{else}}
-                —
+                -
               {{/if}}
             </td>
             <td class="text-right">
@@ -117,7 +117,7 @@
     <div class="hidden p-8 text-center text-sm text-ink-faint" id="players-no-match">No players match this filter.</div>
   </div>
   {{else}}
-    {{> empty-state iconName='users' title='No players seen yet' message='Add a player by name — it is resolved to a UUID via Mojang — or players appear here automatically the first time they join.'}}
+    {{> empty-state iconName='users' title='No players seen yet' message='Add a player by name - it is resolved to a UUID via Mojang - or players appear here automatically the first time they join.'}}
   {{/if}}
 
   <div class="card mt-6 p-4">
@@ -137,9 +137,9 @@
           {{#each bannedIps}}
             <tr data-banip-row="{{ip}}">
               <td class="font-mono">{{ip}}</td>
-              <td class="text-xs text-ink-soft">{{default reason '—'}}</td>
-              <td class="text-xs text-ink-faint">{{default created '—'}}</td>
-              <td class="text-xs text-ink-faint">{{default source '—'}}</td>
+              <td class="text-xs text-ink-soft">{{default reason '-'}}</td>
+              <td class="text-xs text-ink-faint">{{default created '-'}}</td>
+              <td class="text-xs text-ink-faint">{{default source '-'}}</td>
               <td class="text-right">
                 <button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban">{{{icon 'x' 'size-3.5'}}}</button>
               </td>

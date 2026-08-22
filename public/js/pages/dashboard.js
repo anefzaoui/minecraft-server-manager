@@ -25,7 +25,7 @@ function init() {
   const applyView = (mode) => {
     grid.classList.toggle('md:grid-cols-2', mode === 'grid');
     grid.classList.toggle('xl:grid-cols-3', mode === 'grid');
-    // view-list hides the stats/disk/tags blocks (CSS) — a real compact list,
+    // view-list hides the stats/disk/tags blocks (CSS) - a real compact list,
     // not just the same cards stacked full-width.
     grid.classList.toggle('view-list', mode === 'list');
     btnGrid?.setAttribute('aria-pressed', String(mode === 'grid'));
@@ -72,7 +72,7 @@ async function hydrateDocker() {
       el.innerHTML = '<span class="status-dot relative bg-redstone-500"></span> ';
       el.append('Unreachable');
       el.title = d.error || 'Docker is not reachable. Is Docker running?';
-      // Surface the fix inline, not just in a tooltip — the reason is visible.
+      // Surface the fix inline, not just in a tooltip - the reason is visible.
       const warn = document.getElementById('docker-warning');
       if (warn) {
         warn.classList.remove('hidden');
@@ -82,10 +82,10 @@ async function hydrateDocker() {
       }
     }
   } catch {
-    // No eternal "Checking…" — say we don't know, and retry shortly.
+    // No eternal "Checking…" - say we don't know, and retry shortly.
     el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-ink-faint';
     el.innerHTML = '<span class="status-dot relative bg-stone-500"></span> ';
-    el.append('Unknown — retrying…');
+    el.append('Unknown - retrying…');
     setTimeout(hydrateDocker, 8000);
   }
 }
@@ -140,8 +140,8 @@ async function hydrate() {
 
     // A stopped/crashed server must not keep showing its last-known load.
     if (live.status && !['running', 'unhealthy'].includes(live.status)) {
-      if (cpuCell) cpuCell.textContent = '—';
-      if (memCell && !memCell.querySelector('span')) memCell.textContent = '—';
+      if (cpuCell) cpuCell.textContent = '-';
+      if (memCell && !memCell.querySelector('span')) memCell.textContent = '-';
     }
     if (live.players && playersCell) {
       setLeadingText(playersCell, String(live.players.online));

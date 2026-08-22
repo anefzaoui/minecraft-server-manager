@@ -1,6 +1,6 @@
 // Create-server wizard. TWO independent controls:
-//   SOURCE TABS  — Vanilla | From mods | From modpack | From blueprint
-//   SIMPLE/ADVANCED — whether the full itzg catalog (#wz-advanced) renders
+//   SOURCE TABS  - Vanilla | From mods | From modpack | From blueprint
+//   SIMPLE/ADVANCED - whether the full itzg catalog (#wz-advanced) renders
 // "From mods" is the modded-server hub: a loader-first browser (pick loader +
 // MC → search Modrinth/CurseForge → per-mod version pinning with required
 // dependencies auto-resolved for review) plus an optional "Auto-detect" solver.
@@ -98,7 +98,7 @@ function init() {
     modsPanel?.classList.toggle('hidden', sourceTab !== 'mods');
     packPanel?.classList.toggle('hidden', sourceTab !== 'modpack');
     bpPanel?.classList.toggle('hidden', sourceTab !== 'blueprint');
-    // Flavor & version card is the Vanilla tab's own — the mod loaders live in
+    // Flavor & version card is the Vanilla tab's own - the mod loaders live in
     // the From-mods browser, and modpack/blueprint dictate their own type.
     flavorCard?.classList.toggle('hidden', sourceTab !== 'vanilla');
     // Blueprint owns world/rules/resources (audit F2): grey them out for real.
@@ -117,7 +117,7 @@ function init() {
       browser.clear();
       solverState.pick = null;
       solverState.slugs = [];
-      if (hadSelection) toast('Left "From mods" — the queued mods were cleared.', { kind: 'info' });
+      if (hadSelection) toast('Left "From mods" - the queued mods were cleared.', { kind: 'info' });
     }
     sourceTab = tab;
     sourceTabsEl?.querySelectorAll('[data-source]').forEach((b) => setClasses(b, b.dataset.source === tab));
@@ -246,7 +246,7 @@ function init() {
     return data.yaml;
   });
 
-  /** Only meaningful under Advanced options — matches collectAdvancedEnv's own guard. */
+  /** Only meaningful under Advanced options - matches collectAdvancedEnv's own guard. */
   function collectDockerOverrides() {
     if (!advPanel || advPanel.classList.contains('hidden')) return {};
     return dockerSettings.collectOverrides();
@@ -262,7 +262,7 @@ function init() {
       return;
     }
     // Busy for the WHOLE flow: dismissing a progress modal used to leave this
-    // button clickable while the create still ran — duplicate servers.
+    // button clickable while the create still ran - duplicate servers.
     const restore = setBusy(btn, 'Creating…');
     try {
       if (sourceTab === 'blueprint') await createFromBlueprint(name);
@@ -285,7 +285,7 @@ function init() {
       title: `Creating ${name} from blueprint…`,
       size: 'sm',
       content:
-        '<div class="space-y-3 text-sm"><p>Installing the blueprint: pinned pack, overlay mods (hash-verified), and config files.</p><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div><p class="text-xs text-ink-faint">Closing this window doesn\'t cancel the import — it keeps running server-side.</p></div>',
+        '<div class="space-y-3 text-sm"><p>Installing the blueprint: pinned pack, overlay mods (hash-verified), and config files.</p><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div><p class="text-xs text-ink-faint">Closing this window doesn\'t cancel the import - it keeps running server-side.</p></div>',
     });
     try {
       const res = await fetch('/api/blueprints/import', {
@@ -318,7 +318,7 @@ function init() {
     }
   }
 
-  // ---- Create: modpack (ONE server-side task — real progress end to end) ----
+  // ---- Create: modpack (ONE server-side task - real progress end to end) ----
   async function createFromPack(name) {
     const selection = packPicker && packPicker.getSelection();
     if (!selection) {
@@ -341,7 +341,7 @@ function init() {
     };
     try {
       const result = await runTask({
-        title: `Creating ${name} — ${selection.resolved.projectName}`,
+        title: `Creating ${name} - ${selection.resolved.projectName}`,
         start: async () => {
           const res = await fetch('/api/servers/from-pack', {
             method: 'POST',
@@ -353,15 +353,15 @@ function init() {
           return data.taskId;
         },
       });
-      toast(`${name} created — ${result.pack.name} @ ${result.pack.version} pinned. Starting up.`);
+      toast(`${name} created - ${result.pack.name} @ ${result.pack.version} pinned. Starting up.`);
       location.href = `/servers/${result.serverId}`;
     } catch (err) {
-      if (err.dismissed) return; // creation continues server-side — task tray takes over
+      if (err.dismissed) return; // creation continues server-side - task tray takes over
       toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
     }
   }
 
-  // ---- Create: from mods (ONE server-side task — create → install pinned → start) ----
+  // ---- Create: from mods (ONE server-side task - create → install pinned → start) ----
   async function createFromMods(name) {
     let loader;
     let mcVersion;
@@ -416,7 +416,7 @@ function init() {
       });
       if (result.failed && result.failed.length) {
         toast(
-          `${name} created — ${result.installed}/${result.total} mods installed. Failed: ${result.failed.join(', ')}`,
+          `${name} created - ${result.installed}/${result.total} mods installed. Failed: ${result.failed.join(', ')}`,
           {
             kind: 'error',
             timeout: 14000,
@@ -424,12 +424,12 @@ function init() {
         );
       } else {
         toast(
-          `${name} created${result.total ? ` — ${result.total} mod${result.total === 1 ? '' : 's'} installed` : ''}. Starting up.`
+          `${name} created${result.total ? ` - ${result.total} mod${result.total === 1 ? '' : 's'} installed` : ''}. Starting up.`
         );
       }
       location.href = `/servers/${result.serverId}`;
     } catch (err) {
-      if (err.dismissed) return; // creation continues server-side — task tray takes over
+      if (err.dismissed) return; // creation continues server-side - task tray takes over
       toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
     }
   }
@@ -455,7 +455,7 @@ function init() {
       content: `<div class="space-y-3 text-sm">
         <p>Pulling the server image if needed (first time can take a few minutes), creating the container, and starting it.</p>
         <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
-        <p class="text-xs text-ink-faint">Closing this window doesn't cancel the creation — it keeps running server-side.</p>
+        <p class="text-xs text-ink-faint">Closing this window doesn't cancel the creation - it keeps running server-side.</p>
       </div>`,
     });
 
@@ -471,7 +471,7 @@ function init() {
         toast(data.error || 'Creation failed', { kind: 'error', timeout: 10000 });
         return;
       }
-      toast(`${name} created — starting up.`);
+      toast(`${name} created - starting up.`);
       location.href = `/servers/${data.server.id}`;
     } catch (err) {
       modal.close();
@@ -505,9 +505,9 @@ function initPortCheck() {
       const res = await fetch(`/api/ports/check?port=${port}`);
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'check failed');
-      if (Number(input.value) !== port) return; // user kept typing — stale
-      if (data.free) setHelp(`✓ Port ${port} is free — RCON gets ${port + 1000}.`, 'text-ok');
-      else setHelp(`✗ Port ${port} is already in use — pick another.`, 'text-danger');
+      if (Number(input.value) !== port) return; // user kept typing - stale
+      if (data.free) setHelp(`✓ Port ${port} is free - RCON gets ${port + 1000}.`, 'text-ok');
+      else setHelp(`✗ Port ${port} is already in use - pick another.`, 'text-danger');
     } catch {
       setHelp('Could not check the port right now.', 'text-ink-faint');
     }
@@ -538,14 +538,14 @@ function initModBrowser() {
   let platform = 'modrinth';
   const picked = new Map(); // key -> {platform, ref, projectId, name, description, iconUrl, versions, versionId}
   const deps = new Map(); // key -> {platform, ref, projectId, name, iconUrl, versions, versionId, dependency:true}
-  const suppressed = new Set(); // dep keys the user removed — don't re-add
+  const suppressed = new Set(); // dep keys the user removed - don't re-add
   let lastResults = [];
 
   const key = (p, ref) => `${p}:${ref}`;
   const mc = () => mcSel?.value || '';
 
   // Seed the MC picker from the Vanilla tab's full version list (concrete
-  // versions only — mods need a real MC), defaulting to the newest release.
+  // versions only - mods need a real MC), defaulting to the newest release.
   (function seedMcOptions() {
     const src = document.getElementById('wz-version');
     if (!src || !mcSel) return;
@@ -620,7 +620,7 @@ function initModBrowser() {
       loaderVerSel.value = data.default || '';
       loaderVerSel.dispatchEvent(new Event('change', { bubbles: true }));
     } catch {
-      /* offline — the Latest option still works */
+      /* offline - the Latest option still works */
     }
   }
 
@@ -864,7 +864,7 @@ function initModBrowser() {
 
 // ---- From-modpack tab: search → select → pin a version -----------------------
 
-/** Raise the RAM/disk sliders to a pack's minimum — never lower what's already set. */
+/** Raise the RAM/disk sliders to a pack's minimum - never lower what's already set. */
 function raiseResourceFloor(minHeapMb, minQuotaGb) {
   for (const [id, min] of [
     ['wz-ram', minHeapMb],
@@ -873,7 +873,7 @@ function raiseResourceFloor(minHeapMb, minQuotaGb) {
     const el = document.getElementById(id);
     if (!el) continue;
     // data-zero="off" sliders (the quota slider) treat 0 as "unlimited", not the
-    // smallest possible value — raising it to a floor would silently turn a
+    // smallest possible value - raising it to a floor would silently turn a
     // deliberate "no quota" choice into a 20 GB cap, tightening the one setting
     // most likely to matter for GTNH's disk footprint.
     if (el.dataset.zero === 'off' && Number(el.value) === 0) continue;
@@ -939,7 +939,7 @@ function initPackPicker() {
   async function search() {
     const term = q.value.trim();
     if (!term) return;
-    // GTNH isn't searchable — /api/packs/search only knows modrinth/curseforge. Fall
+    // GTNH isn't searchable - /api/packs/search only knows modrinth/curseforge. Fall
     // back to the picker's original default so the request (and the chips) stay truthful.
     if (platform === 'gtnh') {
       platform = 'modrinth';
@@ -954,7 +954,7 @@ function initPackPicker() {
       lastResults = data.results;
       renderResults();
     } catch (err) {
-      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' — <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
+      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' - <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
     }
   }
 
@@ -996,7 +996,7 @@ function initPackPicker() {
 
   // pf defaults to the module-level `platform`, but callers that already have a
   // trustworthy platform (the version-change handler below has selection.platform)
-  // must pass it explicitly — `platform` drifts once a GTNH pick is followed by a
+  // must pass it explicitly - `platform` drifts once a GTNH pick is followed by a
   // search (or the platform-chip handler runs), and posting the stale value 404s.
   async function resolve(ref, versionId, pf = platform) {
     const res = await fetch('/api/packs/resolve', {
@@ -1020,7 +1020,7 @@ function initPackPicker() {
       const isGtnh = pf === 'gtnh';
       betaRow?.classList.toggle('hidden', !isGtnh);
       betaRow?.classList.toggle('flex', isGtnh);
-      // GTNH has no project API behind the details modal — the summary carries
+      // GTNH has no project API behind the details modal - the summary carries
       // a changelog link instead.
       detailsBtn.classList.toggle('hidden', isGtnh);
       if (isGtnh) raiseResourceFloor(6144, 20);
@@ -1101,7 +1101,7 @@ function initPackPicker() {
       ${packIconHtml(p.iconUrl, 'size-10')}
       <div class="min-w-0 flex-1">
         <div class="truncate font-semibold">${escapeHtml(p.projectName)}</div>
-        <div class="text-xs text-ink-faint">${bits.join(' · ') || 'Loader & MC version come from the pack'} — the pack dictates flavor and version</div>
+        <div class="text-xs text-ink-faint">${bits.join(' · ') || 'Loader & MC version come from the pack'} - the pack dictates flavor and version</div>
       </div>
       <span class="shrink-0 space-x-2 text-xs">${changelog}</span>
       <span class="chip shrink-0">pinned @ ${escapeHtml(p.versionName)}</span>`;
@@ -1202,7 +1202,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       hintEl.textContent = '';
     } catch (err) {
       toast(err.message, { kind: 'error', timeout: 8000 });
-      hintEl.textContent = 'Solve failed — try again.';
+      hintEl.textContent = 'Solve failed - try again.';
     } finally {
       restore();
       runBtn.disabled = !picked.size;
@@ -1288,7 +1288,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       solveData.best && pair.loader === solveData.best.loader && pair.mcVersion === solveData.best.mcVersion;
 
     const head = document.createElement('div');
-    // Semantic notice tints — these callouts had raw palette borders while
+    // Semantic notice tints - these callouts had raw palette borders while
     // sibling callouts on the same page already used the token pairs.
     head.className = isPartial ? 'notice notice-warn block p-4' : 'notice notice-ok block p-4';
     head.innerHTML = `
@@ -1296,7 +1296,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       <p class="mt-1 text-lg font-semibold">${escapeHtml(pair.loaderLabel)} on Minecraft ${escapeHtml(pair.mcVersion)}</p>
       <p class="text-sm text-ink-faint">${
         isPartial
-          ? `Covers ${solveData.partial.coveredCount} of ${total} mods — no combo runs everything`
+          ? `Covers ${solveData.partial.coveredCount} of ${total} mods - no combo runs everything`
           : `All ${total} mod${total === 1 ? '' : 's'} compatible`
       }</p>`;
     resultEl.appendChild(head);
@@ -1326,7 +1326,7 @@ function initSolver({ onApplied = () => {} } = {}) {
         solveData.partial.dropped
           .map(
             (d) => `
-          <p class="text-ink-faint">${escapeHtml(d.title)} — ${
+          <p class="text-ink-faint">${escapeHtml(d.title)} - ${
             d.supportedVersions.length
               ? `on ${escapeHtml(solveData.partial.loaderLabel)} it only supports ${d.supportedVersions.map(escapeHtml).join(', ')}`
               : `no ${escapeHtml(solveData.partial.loaderLabel)} builds at all`
@@ -1371,7 +1371,7 @@ function initSolver({ onApplied = () => {} } = {}) {
 
   function applyChoice() {
     if (!chosenPair) return;
-    // On a partial apply only the covered mods are installed — the dropped ones
+    // On a partial apply only the covered mods are installed - the dropped ones
     // would not load anyway.
     const usePartial =
       !solveData.best &&
@@ -1400,7 +1400,7 @@ function escapeHtml(s) {
   );
 }
 
-// Tile/swatch pickers: selection lives in aria-pressed — the .tile/.swatch CSS
+// Tile/swatch pickers: selection lives in aria-pressed - the .tile/.swatch CSS
 // carries the look, so no class juggling (which used to strip the hover
 // affordance from whichever tile started selected).
 function pickGroup(containerId, dataKey, onPick) {

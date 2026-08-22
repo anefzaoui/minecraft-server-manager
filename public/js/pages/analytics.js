@@ -80,11 +80,11 @@ function init(serverId) {
     const metric = metricSel.value;
     const data = await api(`/scoreboard?metric=${metric}&window=${windowSel.value}`);
     if (!data) {
-      // Keep whatever was on screen — a toast plus a silently emptied tbody
+      // Keep whatever was on screen - a toast plus a silently emptied tbody
       // reads as broken once the toast fades.
       if (!scoreBody.querySelector('td')) {
         scoreBody.innerHTML =
-          '<tr><td colspan="3" class="p-6 text-center text-ink-faint">Could not load the scoreboard — try Refresh.</td></tr>';
+          '<tr><td colspan="3" class="p-6 text-center text-ink-faint">Could not load the scoreboard - try Refresh.</td></tr>';
       }
       return;
     }
@@ -92,13 +92,13 @@ function init(serverId) {
     if (!data.rows.length) {
       const tr = document.createElement('tr');
       tr.innerHTML =
-        '<td colspan="3" class="p-6 text-center text-ink-faint">No player stats yet — stats appear once someone plays on this server.</td>';
+        '<td colspan="3" class="p-6 text-center text-ink-faint">No player stats yet - stats appear once someone plays on this server.</td>';
       scoreBody.appendChild(tr);
       return;
     }
     for (const row of data.rows) {
       const tr = document.createElement('tr');
-      // table-base already provides the row hover — a second hover:bg here
+      // table-base already provides the row hover - a second hover:bg here
       // disagreed with every other table in the app.
       tr.className = 'cursor-pointer';
       tr.innerHTML = `
@@ -107,7 +107,7 @@ function init(serverId) {
         <td class="text-right" data-value></td>`;
       tr.querySelector('[data-name]').textContent = row.name;
       tr.querySelector('[data-value]').textContent = fmtValue(metric, row.value);
-      // Profile fetch happens before the drawer opens — spin the value cell.
+      // Profile fetch happens before the drawer opens - spin the value cell.
       tr.addEventListener('click', () => openProfile(row.uuid, row.name, tr.querySelector('[data-value]')));
       scoreBody.appendChild(tr);
     }
@@ -191,11 +191,11 @@ function init(serverId) {
     const seq = ++timelineSeq;
     const types = selectedTypes();
     if (!types.length) {
-      // Nothing checked — render the empty state locally, no request needed.
+      // Nothing checked - render the empty state locally, no request needed.
       list.innerHTML = '';
       const li = document.createElement('li');
       li.className = 'p-6 text-center text-ink-faint';
-      li.textContent = 'No event types selected — tick at least one filter above.';
+      li.textContent = 'No event types selected - tick at least one filter above.';
       list.appendChild(li);
       state.nextBefore = null;
       olderBtn.classList.add('hidden');
@@ -215,7 +215,7 @@ function init(serverId) {
       li.className = 'p-6 text-center text-ink-faint';
       li.textContent = q
         ? 'No events match this search.'
-        : 'No activity captured yet — events are recorded live while the server runs.';
+        : 'No activity captured yet - events are recorded live while the server runs.';
       list.appendChild(li);
     }
     for (const evt of data.events) list.appendChild(renderEvent(evt));
@@ -326,7 +326,7 @@ function init(serverId) {
       const empty = document.createElement('p');
       empty.className = 'text-xs text-ink-faint';
       empty.textContent =
-        'No sessions recorded yet — sessions are tracked from join/leave events while the panel runs.';
+        'No sessions recorded yet - sessions are tracked from join/leave events while the panel runs.';
       sessions.appendChild(empty);
     } else {
       const ol = document.createElement('ol');
@@ -344,7 +344,7 @@ function init(serverId) {
     content.appendChild(sessions);
 
     openModal({
-      title: `${p.name || name} — player profile`,
+      title: `${p.name || name} - player profile`,
       content,
       size: 'lg',
       actions: [{ label: 'Close', kind: 'ghost' }],

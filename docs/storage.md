@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-The **Storage** page shows where your disk is going — per-server usage and how it's trending over time.
+The **Storage** page shows where your disk is going - per-server usage and how it's trending over time.
 
 ![Storage](images/storage.png)
 
@@ -14,4 +14,4 @@ Set a server's quota in its [settings](servers.md). Modded servers and their [ba
 
 ## Cleanup
 
-The Storage view helps you find what to prune — old backups, unused worlds, or a server that's grown far beyond expectations — before you run out of space.
+The Storage view helps you find what to prune - old backups, unused worlds, or a server that's grown far beyond expectations - before you run out of space.

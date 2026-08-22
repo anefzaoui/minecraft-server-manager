@@ -113,7 +113,7 @@ router.post(
     if (input.uploadToken) {
       zipRef = dataPath('tmp', input.uploadToken);
       if (!fs.existsSync(zipRef)) {
-        return res.status(404).json({ ok: false, error: 'Uploaded blueprint expired — upload it again' });
+        return res.status(404).json({ ok: false, error: 'Uploaded blueprint expired - upload it again' });
       }
     }
     if (input.overrides) requireAdminForOverrides(req, input.overrides);

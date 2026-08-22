@@ -80,10 +80,10 @@ function schedule(job) {
   stopJob(job.id);
   if (!job.enabled) return;
   try {
-    // protect: true — a still-running invocation blocks the next firing
+    // protect: true - a still-running invocation blocks the next firing
     // instead of overlapping it (e.g. hour-long backups on a 5-min cron).
     // timezone: without it croner evaluates the expression in the SYSTEM
-    // timezone (UTC in most containers), not the operator's configured one —
+    // timezone (UTC in most containers), not the operator's configured one -
     // "0 3 * * *" would then fire at 3am UTC, not 3am in Settings.
     const cron = new Cron(job.cron, { catch: true, protect: true, timezone: getTimezone() }, async () => {
       db.run("UPDATE schedules SET last_run_at = datetime('now') WHERE id = ?", job.id);
@@ -118,7 +118,7 @@ function stopJob(id) {
   }
 }
 
-/** Re-arm every schedule against the CURRENT timezone — call after it changes
+/** Re-arm every schedule against the CURRENT timezone - call after it changes
  *  in Settings, or already-running jobs keep firing on the old one until the
  *  panel restarts. */
 function rearmAll() {
@@ -214,13 +214,13 @@ function listSchedules() {
     } catch {
       /* invalid cron stays null */
     }
-    // last_run_at is SQLite datetime('now') — UTC without a zone marker.
+    // last_run_at is SQLite datetime('now') - UTC without a zone marker.
     const lastRunMs = s.last_run_at ? Date.parse(s.last_run_at.replace(' ', 'T') + 'Z') : null;
     const server = s.server_id ? db.get('SELECT display_name FROM servers WHERE id = ?', s.server_id) : null;
     return {
       id: s.id,
       serverId: s.server_id,
-      server: server ? server.display_name : '— global —',
+      server: server ? server.display_name : '- global -',
       task: TASK_TYPES[s.task_type]?.label || s.task_type,
       taskType: s.task_type,
       cron: s.cron,

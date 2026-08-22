@@ -125,7 +125,7 @@ test('resolvePack("gtnh") offers every version, tagged for the picker', async ()
   const restore = stubIndex();
   try {
     const { allVersions } = await packs.resolvePack('gtnh', 'gtnh', {});
-    // Betas are included in the list — the wizard filters them client-side.
+    // Betas are included in the list - the wizard filters them client-side.
     assert.equal(allVersions[0].id, '2.9.0-beta-2');
     assert.equal(allVersions[0].type, 'beta');
     assert.equal(allVersions.find((v) => v.id === '2.8.4').type, 'release');
@@ -215,7 +215,7 @@ test('applying a non-GTNH pack over a GTNH pin strips GTNH_PACK_VERSION and SKIP
       id
     );
 
-    // Hand-built descriptor, the way the Task 3 tests do — no stub needed for a non-GTNH platform.
+    // Hand-built descriptor, the way the Task 3 tests do - no stub needed for a non-GTNH platform.
     await packs.applyPack(
       id,
       {
@@ -332,7 +332,7 @@ test('resolveImage uses javaTagHint only before a pin exists (first-create fast 
   const server = serversService.getServer(id);
 
   // No pin yet: the hint (what from-pack already resolved) wins over the java17
-  // fallback — avoids pulling java17 and then immediately re-pulling java25.
+  // fallback - avoids pulling java17 and then immediately re-pulling java25.
   assert.match(serversService.resolveImage(server, { javaTagHint: 'java25' }), /:java25$/);
   // No hint given: unchanged fallback behavior.
   assert.match(serversService.resolveImage(server), /:java17$/);
@@ -347,7 +347,7 @@ test('resolveImage ignores javaTagHint once a real pin exists', async () => {
       actor: 'test',
       force: true,
     });
-    // Pin caps at java21 — a stale/incorrect hint must not override the real pin.
+    // Pin caps at java21 - a stale/incorrect hint must not override the real pin.
     assert.match(serversService.resolveImage(serversService.getServer(id), { javaTagHint: 'java25' }), /:java21$/);
   } finally {
     restore();

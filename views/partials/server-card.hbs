@@ -34,11 +34,11 @@
       </div>
       <div>
         <div class="text-ink-faint">CPU</div>
-        <div class="mt-0.5 font-semibold">{{#if (eq status 'running')}}{{stats.cpuPct}}%{{else}}—{{/if}}</div>
+        <div class="mt-0.5 font-semibold">{{#if (eq status 'running')}}{{stats.cpuPct}}%{{else}}-{{/if}}</div>
       </div>
       <div>
         <div class="text-ink-faint">Memory</div>
-        <div class="mt-0.5 font-semibold">{{#if (eq status 'running')}}{{stats.memUsedMb}}<span class="font-normal text-ink-faint"> / {{resources.containerMemoryMb}} MB</span>{{else}}—{{/if}}</div>
+        <div class="mt-0.5 font-semibold">{{#if (eq status 'running')}}{{stats.memUsedMb}}<span class="font-normal text-ink-faint"> / {{resources.containerMemoryMb}} MB</span>{{else}}-{{/if}}</div>
       </div>
     </div>
 

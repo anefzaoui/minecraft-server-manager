@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Player-inventory NBT normalization. Pure functions: id/name validation,
@@ -10,7 +10,7 @@ const { PLAYER_NAME_RE } = require('../../utils/playerName');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NAME_RE = PLAYER_NAME_RE;
-// Item ids travel through RCON — restrict to registry-shaped ids so nothing
+// Item ids travel through RCON - restrict to registry-shaped ids so nothing
 // can smuggle command fragments.
 const ITEM_RE = /^([a-z0-9_.-]+:)?[a-z0-9_./-]{1,120}$/;
 
@@ -35,7 +35,7 @@ function assertItemId(item) {
 }
 
 // ---------------------------------------------------------------------------
-// Item normalization — both the pre-1.20.5 'tag' compound and the 1.20.5+
+// Item normalization - both the pre-1.20.5 'tag' compound and the 1.20.5+
 // 'components' format. Unknown structures degrade to { slot, id, count }.
 
 /** Flatten a Minecraft text component (JSON string, plain string, object, or array) to plain text. */
@@ -47,7 +47,7 @@ function textComponentToString(value) {
       try {
         return textComponentToString(JSON.parse(raw));
       } catch {
-        /* not JSON — legacy plain name */
+        /* not JSON - legacy plain name */
       }
     }
     // Legacy plain string (possibly with § color codes).
@@ -115,7 +115,7 @@ function normalizeItem(raw) {
       const t = raw.tag;
       if (t.display && t.display.Name !== undefined) displayName = textComponentToString(t.display.Name);
       enchants =
-        normalizeEnchants(t.Enchantments) || normalizeEnchants(t.StoredEnchantments) || normalizeEnchants(t.ench); // <1.13 numeric-id list — ids kept as-is
+        normalizeEnchants(t.Enchantments) || normalizeEnchants(t.StoredEnchantments) || normalizeEnchants(t.ench); // <1.13 numeric-id list - ids kept as-is
       if (typeof t.Damage === 'number') damage = t.Damage;
     }
 
@@ -123,13 +123,13 @@ function normalizeItem(raw) {
     if (enchants) item.enchants = enchants;
     if (damage !== null) item.damage = damage;
   } catch {
-    // Unknown structure — id + count only.
+    // Unknown structure - id + count only.
   }
   return item;
 }
 
 // ---------------------------------------------------------------------------
-// Nested inventories (backpacks, shulker boxes, bundles, …) — generic
+// Nested inventories (backpacks, shulker boxes, bundles, …) - generic
 // detection: any LIST of compounds inside an item's components/tag whose
 // elements look like item stacks. Two element shapes are recognized:
 //   direct:  {id, count|Count, Slot?}            (bundles, most mods)
@@ -155,7 +155,7 @@ function isItemList(arr) {
     if (!el || typeof el !== 'object' || Array.isArray(el)) return false;
     const item = nestedElementItem(el);
     if (item && item.id.includes(':') && (item.count !== undefined || item.Count !== undefined)) stacks += 1;
-    else if (Object.keys(el).length) return false; // a non-item compound — not an inventory
+    else if (Object.keys(el).length) return false; // a non-item compound - not an inventory
   }
   return stacks > 0;
 }
@@ -200,7 +200,7 @@ function detectNestedInventories(raw) {
               : { index, id: null, slot: slot !== undefined ? Number(slot) : null };
           }),
         });
-        // Descend into the stacks themselves — backpack in a backpack.
+        // Descend into the stacks themselves - backpack in a backpack.
         node.forEach((el, i) => visit(el, [...pathSegs, i], depth + 1));
         return;
       }

@@ -4,10 +4,10 @@
 // openModal({ title, content, actions, size, onClose }) -> { el, body, close }
 //   content: string (HTML) or Node
 //   actions: array of { label, kind: 'primary'|'danger'|'default'|'ghost',
-//                       onClick(ctx) — return false to keep the modal open }
+//                       onClick(ctx) - return false to keep the modal open }
 //   size: 'sm' | 'md' | 'lg' (default 'md')
 
-import { enhanceAll } from './select.js'; // circular with select.js — safe: both only call at runtime
+import { enhanceAll } from './select.js'; // circular with select.js - safe: both only call at runtime
 import { setBusy } from './loading.js';
 
 const FOCUSABLE =
@@ -56,7 +56,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
       btn.addEventListener('click', async () => {
         if (!action.onClick) return close();
         // Async work in flight: spinner on the clicked button, siblings
-        // disabled — no double-submits, no soft-freeze.
+        // disabled - no double-submits, no soft-freeze.
         if (footer.dataset.busy) return;
         footer.dataset.busy = '1';
         const others = [...footer.querySelectorAll('button')].filter((b) => b !== btn);
@@ -87,7 +87,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
     stack.splice(idx, 1);
     document.removeEventListener('keydown', onKeydown);
     // Exit beat: fade the backdrop and shrink the panel, THEN remove. All the
-    // logic (focus return, onClose, scroll unlock) still fires immediately —
+    // logic (focus return, onClose, scroll unlock) still fires immediately -
     // only the removal waits, with pointer events off so nothing is blocked.
     backdrop.style.pointerEvents = 'none';
     backdrop.style.transition = 'opacity 120ms ease';

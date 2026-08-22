@@ -21,7 +21,7 @@
     <button id="theme-toggle" class="btn btn-ghost btn-sm" aria-label="Toggle theme" data-tip="Switch theme">
       <span data-theme-icon="dark">{{{icon 'moon' 'size-4'}}}</span><span data-theme-icon="light" class="hidden">{{{icon 'sun' 'size-4'}}}</span>
     </button>
-    {{! rounded-md, not a circle — the only fully-round control would break the
+    {{! rounded-md, not a circle - the only fully-round control would break the
         blocky register. Diamond is identity color here (decorative, not meaning). }}
     <button class="grid size-8 place-items-center rounded-md bg-diamond-700 text-xs font-bold text-white" data-menu="user-menu" data-tip="{{user.username}} ({{user.role}})" data-user-totp-enabled="{{#if user.totpEnabled}}1{{/if}}">{{initial user.username}}</button>
     <template id="user-menu">

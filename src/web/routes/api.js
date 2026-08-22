@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // JSON API consumed by the panel's own frontend.
@@ -247,7 +247,7 @@ router.get(
 
 // Batched live data for client-side hydration (dashboard cards, headers).
 // Includes the DB status for EVERY server so the dashboard can move the
-// status dot when a server crashes or stops — hydration used to update only
+// status dot when a server crashes or stops - hydration used to update only
 // the numbers, leaving a crashed server pulsing green "Running" until reload.
 router.get('/servers/live', (req, res) => {
   const liveCache = require('../../services/liveCache');
@@ -301,7 +301,7 @@ router.get('/docker/status', async (req, res, next) => {
   }
 });
 
-// ---- API keys (Settings page) — admin only ----
+// ---- API keys (Settings page) - admin only ----
 const apiKeys = require('../../services/apiKeys');
 const { requireRole: requireRoleKeys } = require('../middleware/auth');
 
@@ -368,7 +368,7 @@ router.post(
     if (timezone !== undefined) {
       settingsService.setTimezone(timezone);
       // Already-armed schedules keep firing on whatever zone they were
-      // created with until re-armed — do it now, not just for new ones.
+      // created with until re-armed - do it now, not just for new ones.
       require('../../services/scheduler').rearmAll();
     }
     if (country !== undefined) settingsService.setCountry(country);
@@ -417,7 +417,7 @@ router.post('/servers/:id/pack', async (req, res, next) => {
       .parse(req.body);
     const resolved = await packs.resolvePack(platform, ref, { versionId });
     await packs.applyPack(req.params.id, resolved, { actor: req.user.username, force });
-    res.json({ ok: true, pack: resolved, note: 'Applied — recreate/restart to install' });
+    res.json({ ok: true, pack: resolved, note: 'Applied - recreate/restart to install' });
   } catch (err) {
     if (err.requiresForce) {
       return res.status(409).json({ ok: false, error: err.message, requiresForce: true, warnings: err.warnings });
@@ -433,12 +433,12 @@ const UPGRADE_STEP_LABELS = {
   applying: 'Re-pinning pack version',
   recreating: 'Recreating container',
   // No fixed minutes in the label: the window is per-platform (30 min for
-  // GTNH, 20 for CurseForge/Modrinth, 10 otherwise — see upgrade.js).
+  // GTNH, 20 for CurseForge/Modrinth, 10 otherwise - see upgrade.js).
   monitoring: 'Starting & monitoring the new version',
   overlay: 'Re-applying custom overlay mods',
 };
 
-// Long operation — returns {ok, taskId}; poll /api/tasks/:id (client: runTask).
+// Long operation - returns {ok, taskId}; poll /api/tasks/:id (client: runTask).
 // On failure with a rollback path, the task RESOLVES with
 // {ok:false, error, rollbackAvailable:true} so the client can offer rollback.
 router.post(
@@ -479,7 +479,7 @@ router.post(
   })
 );
 
-// Long operation — returns {ok, taskId}. Without an explicit backupId the most
+// Long operation - returns {ok, taskId}. Without an explicit backupId the most
 // recent pre-update backup for this server is restored alongside the re-pin.
 router.post(
   '/servers/:id/pack/rollback',
@@ -506,7 +506,7 @@ router.post(
   })
 );
 
-// ---- Pack browser — search, details, installed pack mods, one-shot create ----
+// ---- Pack browser - search, details, installed pack mods, one-shot create ----
 const curseforgeApi = require('../../services/curseforgeApi');
 const modrinthApi = require('../../services/modrinthApi');
 const sanitizeHtml = require('sanitize-html');
@@ -598,7 +598,7 @@ router.get(
 );
 
 // Pack details for the shared details modal. Accepts platform+ref OR serverId
-// (installed pack — platform/ref come from the server's pin, and the pinned
+// (installed pack - platform/ref come from the server's pin, and the pinned
 // version is echoed back so the UI can mark it).
 router.get(
   '/packs/details',
@@ -725,7 +725,7 @@ router.post(
     requireAdminForOverrides(req, input);
     const actor = req.user.username;
     const taskId = tasks.run(`Creating ${input.name} from a ${input.platform} pack`, { actor }, async (t) => {
-      t.step('Resolving pack version (pinned — never "latest")');
+      t.step('Resolving pack version (pinned - never "latest")');
       const resolved = await packs.resolvePack(input.platform, input.ref, { versionId: input.versionId });
       const type = packs.packEnv(resolved).TYPE;
       t.step('Creating server');
@@ -747,16 +747,16 @@ router.post(
           extraPorts: input.extraPorts,
           extraBinds: input.extraBinds,
         },
-        // javaTagHint (not persisted as java_tag — that column means "user override"):
+        // javaTagHint (not persisted as java_tag - that column means "user override"):
         // at create time there's no server_packs row yet, so resolveImage() would
         // otherwise fall back to java17 for GTNH, pull that image, then immediately
         // re-pull the correct one when the applyPack below flags a recreate.
         { actor, start: false, onProgress: (s) => t.step(s), javaTagHint: resolved.javaTag }
       );
       t.step(`Pinning ${resolved.projectName} @ ${resolved.versionName}`);
-      // force: fresh server — there is no world yet to version-guard.
+      // force: fresh server - there is no world yet to version-guard.
       await packs.applyPack(server.id, resolved, { actor, force: true });
-      t.step('Starting server — the pack downloads and installs on first boot');
+      t.step('Starting server - the pack downloads and installs on first boot');
       await servers.startServer(server.id, { actor });
       return {
         serverId: server.id,
@@ -768,7 +768,7 @@ router.post(
   })
 );
 
-// Long operation — returns {ok, taskId}; the task result is the findings array.
+// Long operation - returns {ok, taskId}; the task result is the findings array.
 router.post(
   '/updates/check',
   asyncHandler((req, res, next) => {
@@ -874,7 +874,7 @@ router.post(
   })
 );
 
-// One-click cleanup. dryRun:true previews (nothing deleted) — the Storage
+// One-click cleanup. dryRun:true previews (nothing deleted) - the Storage
 // page uses it to show real numbers before the confirm dialog.
 router.post(
   '/storage/cleanup',
@@ -897,7 +897,7 @@ router.post(
 );
 
 // ---- Backups ----
-// Long operation — returns {ok, taskId}; task result: {id, filename, size}.
+// Long operation - returns {ok, taskId}; task result: {id, filename, size}.
 router.post(
   '/servers/:id/backups',
   asyncHandler((req, res, next) => {
@@ -913,7 +913,7 @@ router.post(
   })
 );
 
-// Long operation — returns {ok, taskId}. Stops the server, takes a safety
+// Long operation - returns {ok, taskId}. Stops the server, takes a safety
 // backup, wipes the dir and extracts the archive.
 router.post(
   '/servers/:id/backups/:backupId/restore',
@@ -934,7 +934,7 @@ router.post(
   })
 );
 
-// Download a backup archive. Admin/operator only — the archive contains the
+// Download a backup archive. Admin/operator only - the archive contains the
 // whole server dir, including server.properties (plaintext rcon.password), so a
 // read-only viewer must never be able to pull it.
 router.get(
@@ -959,7 +959,7 @@ router.delete(
 // ---- Blueprints ----
 router.use('/blueprints', require('./blueprints'));
 
-// ---- World quick controls (Overview tab) — version-tolerant service ----
+// ---- World quick controls (Overview tab) - version-tolerant service ----
 const worldControls = require('../../services/worldControls');
 
 router.get(
@@ -1106,11 +1106,11 @@ router.post(
       ? db.get('SELECT * FROM server_content WHERE id = ? AND server_id = ?', contentId, server.id)
       : db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', server.id, file);
     if (!row)
-      throw Object.assign(new Error('This file is not panel-managed — reinstall it from a URL instead'), {
+      throw Object.assign(new Error('This file is not panel-managed - reinstall it from a URL instead'), {
         status: 404,
       });
     if (row.managed_by === 'pack') {
-      throw Object.assign(new Error('Pack-managed content updates with the pack — upgrade the modpack instead'), {
+      throw Object.assign(new Error('Pack-managed content updates with the pack - upgrade the modpack instead'), {
         status: 409,
       });
     }
@@ -1122,7 +1122,7 @@ router.post(
     }
     const check = db.get("SELECT * FROM update_checks WHERE subject_type = 'content' AND subject_id = ?", row.id);
     if (!check || !check.latest_version) {
-      throw Object.assign(new Error('No newer version is known — run an update check first'), { status: 409 });
+      throw Object.assign(new Error('No newer version is known - run an update check first'), { status: 409 });
     }
 
     let ref;
@@ -1409,7 +1409,7 @@ router.delete(
 );
 
 // Recovery path when a user loses both their authenticator and their backup
-// codes — an admin can force-clear 2FA without knowing their password (same
+// codes - an admin can force-clear 2FA without knowing their password (same
 // trust level as the admin password-reset above). The user re-enrolls fresh.
 // Deliberately refuses to target the caller's own account: that would be a
 // password-free way to strip your own 2FA that /api/account/totp/disable

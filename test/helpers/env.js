@@ -1,6 +1,6 @@
 'use strict';
 
-// Require this FIRST in every test file — before any src/ module — so config
+// Require this FIRST in every test file - before any src/ module - so config
 // resolves DATA_DIR/SESSION_SECRET to throwaway test values instead of the real
 // panel data. node:test runs each file in its own process, so this is isolated.
 

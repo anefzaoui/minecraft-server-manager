@@ -35,7 +35,7 @@
           {{#each files}}
             <tr data-file-row data-path="{{path}}" data-name="{{name}}" data-dir="{{dir}}" data-size="{{size}}">
               {{! w-full + max-w-0: inside an auto-layout table `truncate` never
-                  engages (the column grows to the content) — this cell absorbs
+                  engages (the column grows to the content) - this cell absorbs
                   the free width and long names actually ellipsize. }}
               <td class="w-full max-w-0">
                 <div class="flex items-center gap-2">
@@ -55,7 +55,7 @@
                   <button class="btn btn-ghost btn-sm" data-file-edit data-tip="Edit as text (≤ 2 MB)">{{{icon 'file-code' 'size-3.5'}}}</button>
                   <button class="btn btn-ghost btn-sm" data-file-download data-tip="Download">{{{icon 'download' 'size-3.5'}}}</button>
                 {{/unless}}
-                {{! Rename/move/copy are rare — an overflow menu keeps rows from
+                {{! Rename/move/copy are rare - an overflow menu keeps rows from
                     forcing horizontal scroll near 1024px. }}
                 <button class="btn btn-ghost btn-sm" data-menu="file-menu-{{@index}}" data-tip="Rename, move, copy…">{{{icon 'ellipsis' 'size-3.5'}}}</button>
                 <template id="file-menu-{{@index}}">
@@ -69,13 +69,13 @@
           {{else}}
             <tr data-files-empty><td colspan="4" class="py-10 text-center text-sm text-ink-faint">
               {{{icon 'folder-open' 'mx-auto size-6'}}}
-              <p class="mt-2">This folder is empty — upload files or create a folder above.</p>
+              <p class="mt-2">This folder is empty - upload files or create a folder above.</p>
             </td></tr>
           {{/each}}
         </tbody>
       </table>
     </div>
   </div>
-  <p class="help mt-2 max-w-prose">Text files (.properties, .yml, .json, .toml…) open in the editor. Everything stays inside this server's data folder — sizes shown are live.</p>
+  <p class="help mt-2 max-w-prose">Text files (.properties, .yml, .json, .toml…) open in the editor. Everything stays inside this server's data folder - sizes shown are live.</p>
 </div>
 <script type="module" src="/js/pages/files.js"></script>

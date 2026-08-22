@@ -32,7 +32,7 @@ function dbPortsInUse() {
       if (p && p.hostPort) used.add(p.hostPort);
     }
   }
-  // BlueMap's web-server port lives in `integrations`, not on the server row —
+  // BlueMap's web-server port lives in `integrations`, not on the server row -
   // it must be unioned in too, or a fresh port allocation could collide with it.
   for (const row of db.all("SELECT config_json FROM integrations WHERE kind = 'bluemap' AND enabled = 1")) {
     const hostPort = JSON.parse(row.config_json || '{}').hostPort;
@@ -43,7 +43,7 @@ function dbPortsInUse() {
 }
 
 async function isPortFree(port) {
-  // undefined/null/NaN/'25565xyz' must NOT pass as free — that silently
+  // undefined/null/NaN/'25565xyz' must NOT pass as free - that silently
   // skipped RCON collision validation for explicit game ports.
   if (!Number.isInteger(port)) return false;
   if (port < 1024 || port > 65535) return false;

@@ -12,7 +12,7 @@ if (root && window.Chart)
 function init(serverId, memLimitMb, cpuLimit) {
   const MAX_POINTS = 60;
   // Theme tokens, re-read on toggle: Chart.js paints on canvas, so it can't
-  // follow CSS variables by itself — without this the axes sat at Chart.js's
+  // follow CSS variables by itself - without this the axes sat at Chart.js's
   // default #666 in both themes.
   function themeColors() {
     const css = getComputedStyle(document.documentElement);
@@ -98,7 +98,7 @@ function init(serverId, memLimitMb, cpuLimit) {
   }
 
   // Reconnect with backoff (an intentionally-stopped server was being polled
-  // flat-out every 5s forever) and pause entirely while the tab is hidden —
+  // flat-out every 5s forever) and pause entirely while the tab is hidden -
   // otherwise the charts draw a misleading unbroken line across the gap.
   let reconnectDelay = 5000;
   let ws = null;

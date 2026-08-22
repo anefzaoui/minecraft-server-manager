@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Modpack installation & pinning. Minecraft Server Manager NEVER installs an unpinned pack:
@@ -19,11 +19,11 @@ const { pickJavaTag } = require('./javaMatrix');
 /**
  * Resolve a pack reference to install candidates.
  * platform: 'curseforge' | 'modrinth' | 'ftb' | 'gtnh'
- * ref: slug/URL/id — versionId optional (null → resolve latest now, then pin).
+ * ref: slug/URL/id - versionId optional (null → resolve latest now, then pin).
  */
 /**
  * CF bare slugs default to the MODS class in curseforge.resolveUrl, but this
- * service only ever deals in MODPACKS — spell it out as a modpacks URL so
+ * service only ever deals in MODPACKS - spell it out as a modpacks URL so
  * slugs like "all-the-mods-10" resolve. Numeric IDs and full URLs pass through.
  */
 function normalizeCurseforgeRef(ref) {
@@ -93,10 +93,10 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion, include
   if (platform === 'gtnh') {
     // GTNH is a single project with no search API: `ref` is the constant 'gtnh',
     // and a pack version is its own id. The Minecraft version is hardcoded
-    // because the index does not state one — GTNH is a 1.7.10 pack by definition.
+    // because the index does not state one - GTNH is a 1.7.10 pack by definition.
     const all = await gtnhApi.listVersions({ includeBeta: true });
     // includeBeta only matters when versionId is absent (pickLatest's default
-    // path) — an explicit versionId always resolves that exact entry regardless
+    // path) - an explicit versionId always resolves that exact entry regardless
     // of channel. Callers that already know a pin's channel (the upgrade
     // orchestrator) must pass it, or a beta-pinned server silently resolves to
     // the newest stable instead of the newest beta.
@@ -155,7 +155,7 @@ function packEnv(resolved) {
   }
   if (resolved.platform === 'gtnh') {
     // Deliberately NO SKIP_GTNH_UPDATE_CHECK here: the image's "update check"
-    // is also its INSTALLER — with the check skipped, a fresh server never
+    // is also its INSTALLER - with the check skipped, a fresh server never
     // downloads the pack at all and crash-loops on the missing files
     // (verified live: "Skipping GTNH Update/Install" → "could not open
     // `java9args.txt'"). Pinning GTNH_PACK_VERSION alone is what prevents
@@ -208,7 +208,7 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
   // GTNH's own server start scripts ship -Dfml.queryResult=confirm, and the
   // itzg launcher path loses it. Without it, the FIRST boot after any pack
   // version change over an existing world blocks forever on Forge's
-  // "/fml confirm" world-migration console prompt — which RCON can't reach
+  // "/fml confirm" world-migration console prompt - which RCON can't reach
   // (it isn't listening yet), so the upgrade monitor burns its whole window
   // and reports a timeout (verified live on a 2.7.4 → 2.8.4 world). The panel
   // always takes a pre-update backup, so confirming is the intended path.
@@ -295,7 +295,7 @@ async function latestFor(serverId) {
       changelogUrl: newest.changelogUrl,
     };
   }
-  // Scope "latest" to the server's own MC version — otherwise the checker
+  // Scope "latest" to the server's own MC version - otherwise the checker
   // offers upgrades that silently cross MC versions.
   const server = serversService.getServer(serverId);
   const mcVersion = server && !['LATEST', 'SNAPSHOT'].includes(server.mc_version) ? server.mc_version : undefined;
@@ -336,8 +336,8 @@ function worldVersionWarnings(server, resolved) {
           (pv.major === wv.major && (pv.minor < wv.minor || (pv.minor === wv.minor && pv.patch < wv.patch))));
       warnings.push(
         downgrade
-          ? `This pack runs Minecraft ${resolved.mcVersion} but the existing world was generated on ${worldVersion} — Minecraft cannot load newer worlds on older versions and the server will crash. Reset or swap the world first, or confirm to proceed anyway.`
-          : `This pack runs Minecraft ${resolved.mcVersion} but the existing world is from ${worldVersion} — starting will permanently upgrade the world (make a backup first).`
+          ? `This pack runs Minecraft ${resolved.mcVersion} but the existing world was generated on ${worldVersion} - Minecraft cannot load newer worlds on older versions and the server will crash. Reset or swap the world first, or confirm to proceed anyway.`
+          : `This pack runs Minecraft ${resolved.mcVersion} but the existing world is from ${worldVersion} - starting will permanently upgrade the world (make a backup first).`
       );
     }
   } catch {

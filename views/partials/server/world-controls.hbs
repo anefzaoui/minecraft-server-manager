@@ -8,7 +8,7 @@
     </div>
     {{{icon 'clock' 'size-5 text-ink-faint'}}}
   </div>
-  {{! Real fieldset-level disable — pointer-events-none left the buttons in the
+  {{! Real fieldset-level disable - pointer-events-none left the buttons in the
       tab order, and Enter/Space fired commands at a stopped server. }}
   <fieldset class="min-w-0 space-y-3" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
     <div>
@@ -53,7 +53,7 @@
       <div class="flex flex-wrap gap-1.5">
         <button class="chip hover:border-grass-600" data-wc-toggle="pvp" data-rule="pvp">PvP</button>
       </div>
-      <p class="mt-1 text-[11px] text-ink-faint">Sets <span class="font-mono">pvp</span> in server.properties — permanent for everyone; takes effect on the next restart.</p>
+      <p class="mt-1 text-[11px] text-ink-faint">Sets <span class="font-mono">pvp</span> in server.properties - permanent for everyone; takes effect on the next restart.</p>
     </div>
     <div>
       <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Difficulty & ops</div>

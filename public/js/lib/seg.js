@@ -52,7 +52,7 @@ export function enhanceSegs(root = document) {
 }
 
 // Enhance everything present now, and anything added later (modal tablists,
-// injected pickers) — the observer makes this a fire-and-forget import.
+// injected pickers) - the observer makes this a fire-and-forget import.
 enhanceSegs();
 new MutationObserver((muts) => {
   for (const m of muts) {

@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Modrinth public API client (no key required). Cached + rate-limit friendly.
@@ -24,7 +24,7 @@ async function mrFetch(pathname, { ttlMs = 10 * 60 * 1000, search } = {}) {
   });
   if (res.status === 429) {
     if (cached) return JSON.parse(cached.value_json);
-    throw httpError(429, 'Modrinth rate limit hit — try again in a minute');
+    throw httpError(429, 'Modrinth rate limit hit - try again in a minute');
   }
   if (res.status === 404) throw httpError(404, 'Not found on Modrinth');
   if (!res.ok) throw httpError(502, `Modrinth answered HTTP ${res.status}`);

@@ -63,7 +63,7 @@ test('validateOverrides reserves the msm- prefix (would let a name shadow anothe
 
 test('validateOverrides rejects duplicate host ports without ever probing the OS', async () => {
   // previousExtraPorts marks 20000 as already legitimately held by this
-  // server, so the free-port probe is skipped for both entries — only the
+  // server, so the free-port probe is skipped for both entries - only the
   // in-request dedup check should fire, keeping this test hermetic.
   await assert.rejects(
     () =>

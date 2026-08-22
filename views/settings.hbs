@@ -15,7 +15,7 @@
       </div>
       <div>
         <label class="label">Modrinth</label>
-        <p class="help">No key needed — Modrinth's public API is used directly.</p>
+        <p class="help">No key needed - Modrinth's public API is used directly.</p>
       </div>
     </div>
   </div>
@@ -32,7 +32,7 @@
     </div>
     <div class="mb-4">
       <span class="label">Time zone &amp; region</span>
-      {{! data-native only until tzPicker fills them — it enhances post-fill. }}
+      {{! data-native only until tzPicker fills them - it enhances post-fill. }}
       <div class="grid gap-2 sm:grid-cols-2">
         <select class="input" id="set-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
         <select class="input" id="set-country" data-native aria-label="Country" data-label="Country"></select>
@@ -47,7 +47,7 @@
       <div><dt class="text-xs text-ink-faint">Bind address</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Port</dt><dd class="font-mono font-medium">{{panel.port}}</dd></div>
     </dl>
-    <p class="help mt-3 max-w-prose">Set via <span class="font-mono">.env</span> (PANEL_HOST / PANEL_PORT) — a restart applies changes. Theme is per-browser via the topbar toggle.</p>
+    <p class="help mt-3 max-w-prose">Set via <span class="font-mono">.env</span> (PANEL_HOST / PANEL_PORT) - a restart applies changes. Theme is per-browser via the topbar toggle.</p>
     <h3 class="mt-6 mb-3 font-semibold">Defaults for new servers</h3>
     <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
       <div><dt class="text-xs text-ink-faint">Java heap</dt><dd class="font-medium">{{defaults.heapMb}} MB</dd></div>
@@ -75,7 +75,7 @@
               </td>
               <td>
                 {{#if (eq id ../user.id)}}
-                  {{! Your own row: self-service, same modal as the topbar user menu —
+                  {{! Your own row: self-service, same modal as the topbar user menu -
                       2FA can only ever be set up on the device you're enrolling, so
                       there's nothing an admin can do here for someone ELSE's row. }}
                   {{#if totpEnabled}}
@@ -86,7 +86,7 @@
                   {{/if}}
                 {{else if totpEnabled}}
                   <span class="badge badge-ok">on</span>
-                  <button class="btn btn-ghost btn-sm" data-user-totp-reset data-tip="Reset their 2FA — they will need to re-enroll">Reset</button>
+                  <button class="btn btn-ghost btn-sm" data-user-totp-reset data-tip="Reset their 2FA - they will need to re-enroll">Reset</button>
                 {{else}}
                   <span class="text-xs text-ink-faint">off</span>
                 {{/if}}
@@ -95,7 +95,7 @@
               <td class="text-right">
                 <div class="inline-flex gap-1">
                   <button class="btn btn-ghost btn-sm" data-user-password data-tip="Set a new password">{{{icon 'key' 'size-3.5'}}}</button>
-                  {{! No self-delete affordance — deleting your own account mid-session is a trap, not a feature. }}
+                  {{! No self-delete affordance - deleting your own account mid-session is a trap, not a feature. }}
                   {{#unless (eq id ../user.id)}}
                     <button class="btn btn-ghost btn-sm text-danger" data-user-delete data-tip="Delete user" aria-label="Delete {{username}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
                   {{/unless}}
@@ -107,7 +107,7 @@
       </table>
     </div>
     <button class="btn btn-sm mt-3" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add user</button>
-    <p class="help mt-2 max-w-prose">Roles: <b>admin</b> — everything; <b>operator</b> — manage servers but not storage, users, or update policies; <b>viewer</b> — read-only.</p>
+    <p class="help mt-2 max-w-prose">Roles: <b>admin</b> - everything; <b>operator</b> - manage servers but not storage, users, or update policies; <b>viewer</b> - read-only.</p>
   </div>
 </div>
 <script type="module" src="/js/pages/settings.js"></script>

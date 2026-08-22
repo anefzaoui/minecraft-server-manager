@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Server orchestration: CRUD, env assembly, container lifecycle. The single
@@ -63,14 +63,14 @@ function assembleEnv(server) {
   env.ENABLE_RCON = 'true';
   let rconPassword = secrets.tryDecrypt(server.rcon_password_cipher);
   if (!rconPassword) {
-    // SESSION_SECRET changed — self-heal: mint a fresh password and persist it.
+    // SESSION_SECRET changed - self-heal: mint a fresh password and persist it.
     rconPassword = secrets.generatePassword();
     db.run('UPDATE servers SET rcon_password_cipher = ? WHERE id = ?', secrets.encrypt(rconPassword), server.id);
     recordEvent({
       serverId: server.id,
       type: 'rcon-password-regenerated',
       summary:
-        'Stored RCON password could not be decrypted (SESSION_SECRET changed) — a new one was generated automatically',
+        'Stored RCON password could not be decrypted (SESSION_SECRET changed) - a new one was generated automatically',
     });
   }
   env.RCON_PASSWORD = rconPassword;
@@ -81,7 +81,7 @@ function assembleEnv(server) {
   // their own TZ for this server via the advanced env fields.
   env.TZ = env.TZ || settings.getTimezone();
   // CurseForge features need the API key inside the container. It lives in
-  // the panel's encrypted store — inject it whenever anything CF is in play.
+  // the panel's encrypted store - inject it whenever anything CF is in play.
   const usesCurseforge =
     server.type === 'AUTO_CURSEFORGE' ||
     env.CF_SLUG ||
@@ -100,7 +100,7 @@ function assembleEnv(server) {
   delete env.REMOVE_OLD_MODS;
   // Run the container as the panel's own host user so every file it writes under
   // ./data is owned by us. Otherwise it writes as its default uid (1000) and the
-  // panel — a different user — can't manage those files (mod installs, deletes,
+  // panel - a different user - can't manage those files (mod installs, deletes,
   // backups) and hits EACCES. This is the itzg image's intended ownership knob.
   const ids = panelUidGid();
   if (ids) {
@@ -113,7 +113,7 @@ function assembleEnv(server) {
 /**
  * javaTagHint: a non-persisted, create-time-only fallback (see createServerImpl).
  * At create time no server_packs row exists yet, so the pin lookup below always
- * misses for a brand-new GTNH server — without the hint that resolves to java17,
+ * misses for a brand-new GTNH server - without the hint that resolves to java17,
  * the image is pulled once, then re-pulled at the correct tag on the recreate
  * `applyPack` schedules moments later. It's never used once a pin exists, and
  * it never overrides an explicit `server.java_tag` (that column means "the user
@@ -136,7 +136,7 @@ function resolveImage(server, { javaTagHint } = {}) {
 /**
  * Combine BlueMap's own (integrations-table-tracked) extra port with the
  * server's user-defined extra ports into the single array `createContainer`
- * expects. Lazily requires ./map — map.js requires this module (for
+ * expects. Lazily requires ./map - map.js requires this module (for
  * getServer), so a top-level require here would be circular.
  */
 function mergeExtraPorts(server) {
@@ -150,7 +150,7 @@ function mergeExtraPorts(server) {
 
 /**
  * Best-effort preview of the container params a `createServer(input)` call
- * would produce — no persistence, no port allocation (unassigned ports show
+ * would produce - no persistence, no port allocation (unassigned ports show
  * as a placeholder since the real ones aren't claimed until creation).
  * Feeds the wizard's "Advanced Docker Settings" YAML preview.
  */
@@ -248,7 +248,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   if (wantsCurseforge && !require('./apiKeys').getKey('curseforge')) {
     throw httpError(
       412,
-      'CurseForge needs an API key — add yours in Settings → API keys first (console.curseforge.com), then create the server.'
+      'CurseForge needs an API key - add yours in Settings → API keys first (console.curseforge.com), then create the server.'
     );
   }
 
@@ -257,7 +257,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   // Ports: honor explicit choices (validated), else auto-suggest.
   let ports;
   if (input.portGame) {
-    // The RCON port is derived when not given explicitly — validate the
+    // The RCON port is derived when not given explicitly - validate the
     // DERIVED value too, or an explicit game port skips collision checks.
     const rcon = input.portRcon || input.portGame + config.ports.rconOffset;
     const toCheck = [input.portGame, rcon];
@@ -408,7 +408,7 @@ function guardOp(op, fn) {
 /**
  * Ensure a server's data dir is owned by the panel user so we can manage its
  * files. Containers now run as our uid (see assembleEnv), so this only does real
- * work once — migrating servers created before that, whose files the container
+ * work once - migrating servers created before that, whose files the container
  * wrote as uid 1000. No-op when already aligned or on platforms without uids.
  */
 async function ensureOwnership(id) {
@@ -421,7 +421,7 @@ async function ensureOwnership(id) {
   } catch {
     return; // no data dir yet
   }
-  if (st.uid === ids.uid && st.gid === ids.gid) return; // already ours — fast path
+  if (st.uid === ids.uid && st.gid === ids.gid) return; // already ours - fast path
   await containers.chownDataDir(dir, resolveImage(mustGet(id)), ids.uid, ids.gid);
 }
 
@@ -633,11 +633,11 @@ async function deleteServer(id, { actor = 'system', keepWorld = false } = {}) {
     }
   }
 
-  // Full cleanup cascade — without it schedules keep firing, backups pile up,
+  // Full cleanup cascade - without it schedules keep firing, backups pile up,
   // and server_content rows block library deletions forever.
 
   // Schedules: disarm the live cron jobs, not just the rows.
-  const scheduler = require('./scheduler'); // lazy — avoids a require cycle
+  const scheduler = require('./scheduler'); // lazy - avoids a require cycle
   for (const sched of db.all('SELECT id FROM schedules WHERE server_id = ?', id)) {
     try {
       scheduler.deleteSchedule(sched.id, { actor });
@@ -659,7 +659,7 @@ async function deleteServer(id, { actor = 'system', keepWorld = false } = {}) {
 
   // All row cleanup + the soft-delete flag run in ONE transaction so a mid-cleanup
   // error can't leave a "live" (deleted_at IS NULL) server whose content/backups
-  // are already gone — a zombie. Either everything is removed or nothing is.
+  // are already gone - a zombie. Either everything is removed or nothing is.
   const contentIds = db.all('SELECT id FROM server_content WHERE server_id = ?', id).map((r) => r.id);
   db.transaction(() => {
     db.run("DELETE FROM update_checks WHERE subject_type = 'pack' AND subject_id = ?", id);
@@ -698,7 +698,7 @@ async function refreshStatuses() {
       let status = info.exists ? info.status : 'stopped';
       // Healthcheck-less containers report 'running' from the moment the
       // process starts, long before the MC server accepts players. Keep the
-      // panel's 'starting' until the log shows 'Done (' — but only spend a
+      // panel's 'starting' until the log shows 'Done (' - but only spend a
       // log fetch on servers stuck 'starting' for over 2 minutes.
       if (server.status === 'starting' && info.exists && info.status === 'running' && info.health == null) {
         const startedMs = Date.parse(String(server.last_started_at || '').replace(' ', 'T') + 'Z');
@@ -711,7 +711,7 @@ async function refreshStatuses() {
       }
       if (status !== server.status) db.run('UPDATE servers SET status = ? WHERE id = ?', status, server.id);
     } catch {
-      /* daemon offline — leave cached */
+      /* daemon offline - leave cached */
     }
   }
 }

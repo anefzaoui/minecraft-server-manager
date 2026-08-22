@@ -1,4 +1,4 @@
-{{> page-header heading="FILE MANAGER" sub="The entire ./data directory — servers, backups, library, logs. Admin only; the panel database itself is protected."}}
+{{> page-header heading="FILE MANAGER" sub="The entire ./data directory - servers, backups, library, logs. Admin only; the panel database itself is protected."}}
 
 <div data-files-global data-files-path="{{filePath}}" class="contents">
   <div class="card">
@@ -37,7 +37,7 @@
           {{#each files}}
             <tr data-file-row data-path="{{path}}" data-name="{{name}}" data-dir="{{dir}}" data-size="{{size}}">
               {{! w-full + max-w-0: makes `truncate` actually engage in an
-                  auto-layout table — long names no longer force horizontal scroll. }}
+                  auto-layout table - long names no longer force horizontal scroll. }}
               <td class="w-full max-w-0">
                 <div class="flex items-center gap-2">
                   {{#if dir}}
@@ -75,6 +75,6 @@
       </table>
     </div>
   </div>
-  <p class="help mt-2 max-w-prose">Careful — this is the panel's whole data root. Deleting server or backup files here bypasses the usual safety rails.</p>
+  <p class="help mt-2 max-w-prose">Careful - this is the panel's whole data root. Deleting server or backup files here bypasses the usual safety rails.</p>
 </div>
 <script type="module" src="/js/pages/files-global.js"></script>

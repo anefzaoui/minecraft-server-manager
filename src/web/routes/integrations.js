@@ -103,7 +103,7 @@ router.get(
     const server = mustGet(req);
     const host = req.query.host ? z.string().trim().max(260).parse(req.query.host) : undefined;
     const pack = await invites.generateMrpack(server.id, { host });
-    // Streamed from data/tmp, then deleted — generated fresh per download so
+    // Streamed from data/tmp, then deleted - generated fresh per download so
     // it always reflects the current mod list.
     res.download(pack.absPath, pack.filename, () => {
       fs.unlink(pack.absPath, () => {});
@@ -118,7 +118,7 @@ router.post(
     const { enabled, slug } = z
       .object({
         enabled: z.boolean(),
-        // Slug required only when enabling — a page that never had one must
+        // Slug required only when enabling - a page that never had one must
         // still be switch-off-able.
         slug: z
           .string()

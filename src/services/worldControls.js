@@ -1,6 +1,6 @@
 'use strict';
 
-// World quick-controls (time/weather/gamerules/difficulty) — version-tolerant:
+// World quick-controls (time/weather/gamerules/difficulty) - version-tolerant:
 // MC 26.x renamed gamerules to snake_case (keep_inventory) and moved /time to
 // timelines ("time query day"); ≤1.21 uses camelCase + "time query daytime".
 // Every op tries the modern form first and falls back to legacy.
@@ -65,9 +65,9 @@ const QUICK_ACTIONS = {
   'phantoms-off': { rule: 'doInsomnia', value: 'false', label: 'Phantoms OFF (no insomnia)' },
   'instantrespawn-on': { rule: 'doImmediateRespawn', value: 'true', label: 'Instant respawn ON' },
   'instantrespawn-off': { rule: 'doImmediateRespawn', value: 'false', label: 'Instant respawn OFF' },
-  // PvP has no gamerule — it's the server.properties `pvp` value (see below).
-  'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled — applies on restart' },
-  'pvp-off': { prop: 'pvp', value: false, label: 'PvP disabled — applies on restart' },
+  // PvP has no gamerule - it's the server.properties `pvp` value (see below).
+  'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled - applies on restart' },
+  'pvp-off': { prop: 'pvp', value: false, label: 'PvP disabled - applies on restart' },
   'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful' },
   'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy' },
   'difficulty-normal': { cmd: ['difficulty', 'normal'], label: 'Difficulty: Normal' },
@@ -144,19 +144,19 @@ async function queryDay(serverId) {
   return m ? Math.floor(Number(m[1]) / 24000) + 1 : null;
 }
 
-// PvP isn't a gamerule — it's the server.properties `pvp` value, applied at
+// PvP isn't a gamerule - it's the server.properties `pvp` value, applied at
 // (re)start and then in force for everyone, including players who join later.
 // We edit the file directly (like the whitelist toggle); the itzg image leaves a
 // property alone when its matching env var isn't set, so the edit persists.
 // Vanilla default is on (pvp=true). There is no vanilla live+permanent global
-// switch — that needs a server mod/plugin (e.g. Essential) with engine access.
+// switch - that needs a server mod/plugin (e.g. Essential) with engine access.
 function readPvp(serverId) {
   try {
     const text = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
     const m = /^pvp=(.*)$/m.exec(text);
     return m ? m[1].trim() !== 'false' : true;
   } catch {
-    return true; // fresh server — vanilla default
+    return true; // fresh server - vanilla default
   }
 }
 
@@ -166,7 +166,7 @@ function writePvp(serverId, on) {
   try {
     text = fs.readFileSync(file, 'utf8');
   } catch {
-    /* fresh server — create the file */
+    /* fresh server - create the file */
   }
   if (/^pvp=.*$/m.test(text)) text = text.replace(/^pvp=.*$/m, `pvp=${on}`);
   else text += `${text && !text.endsWith('\n') ? '\n' : ''}pvp=${on}\n`;
@@ -193,7 +193,7 @@ async function getState(serverId) {
     const value = await queryGamerule(serverId, rule);
     if (value !== null) state[rule] = value;
   }
-  state.pvp = readPvp(serverId); // from server.properties — the pending/effective value
+  state.pvp = readPvp(serverId); // from server.properties - the pending/effective value
   return state;
 }
 
@@ -206,12 +206,12 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
   }
   let out;
   if (quick.prop === 'pvp') {
-    writePvp(serverId, quick.value); // server.properties edit — takes effect on next restart
+    writePvp(serverId, quick.value); // server.properties edit - takes effect on next restart
     out = '';
   } else if (quick.variants) out = await tryVariants(serverId, quick.variants);
   else if (quick.rule) out = await setGamerule(serverId, quick.rule, quick.value);
   else out = await rcon(serverId, quick.cmd);
-  // A server.properties edit isn't an RCON command — skip the RCON error gate.
+  // A server.properties edit isn't an RCON command - skip the RCON error gate.
   if (!quick.prop && looksLikeError(out)) {
     const err = new Error(`The server rejected the command: ${out.split('\n')[0]}`);
     err.status = 502;

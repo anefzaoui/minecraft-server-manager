@@ -15,7 +15,7 @@ function init(serverId) {
     const crash = { id: card.dataset.crashId, filename: card.dataset.crashFile };
     card.querySelectorAll('[data-crash-action]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        // Each action fetches the report text first — spin the button meanwhile.
+        // Each action fetches the report text first - spin the button meanwhile.
         const action = btn.dataset.crashAction;
         if (action === 'view') withBusy(btn, () => openViewer(serverId, crash, card));
         else if (action === 'copy') withBusy(btn, () => copyTrace(serverId, crash));
@@ -156,7 +156,7 @@ async function openViewer(serverId, crash, card) {
     return;
   }
 
-  // Server marked it viewed as a side effect of the text fetch — drop the badge.
+  // Server marked it viewed as a side effect of the text fetch - drop the badge.
   card?.querySelectorAll('.badge').forEach((b) => {
     if (b.textContent.trim() === 'new') b.remove();
   });
@@ -194,7 +194,7 @@ async function openViewer(serverId, crash, card) {
   });
 }
 
-/** Build the highlighted, section-collapsible report view (DOM only — no innerHTML of report text). */
+/** Build the highlighted, section-collapsible report view (DOM only - no innerHTML of report text). */
 function renderReport(text) {
   const isSectionStart = (l) => /^--\s.+\s--$/.test(l.trim()) || /^A detailed walkthrough/.test(l);
   const lines = text.split(/\r?\n/);

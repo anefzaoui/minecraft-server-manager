@@ -17,7 +17,7 @@
           <td class="font-mono text-xs text-ink-faint">{{cron}}</td>
           {{! nextMs + the panel-TZ hydrator: the table used to show UTC while
               the modal preview showed panel time for the SAME schedule. }}
-          <td class="whitespace-nowrap text-right tabular-nums text-ink-faint">{{#if nextMs}}<span data-ts="{{nextMs}}">{{next}}</span>{{else}}—{{/if}}</td>
+          <td class="whitespace-nowrap text-right tabular-nums text-ink-faint">{{#if nextMs}}<span data-ts="{{nextMs}}">{{next}}</span>{{else}}-{{/if}}</td>
           <td>
             <label class="msm-toggle"><input type="checkbox" data-schedule-toggle {{#if enabled}}checked{{/if}}><span></span></label>
           </td>
@@ -31,7 +31,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='calendar-clock' title='No scheduled tasks yet' message='Automate restarts, backups and console commands on a cron schedule — hit New task above to create the first one.'}}
+  {{> empty-state iconName='calendar-clock' title='No scheduled tasks yet' message='Automate restarts, backups and console commands on a cron schedule - hit New task above to create the first one.'}}
 {{/if}}
 
 <div id="msm-schedule-data" hidden data-servers="{{json serverOptions}}" data-task-types="{{json taskTypes}}"></div>

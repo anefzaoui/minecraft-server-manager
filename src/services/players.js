@@ -1,8 +1,8 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Player god-mode service: whitelist / ops / bans / kicks / teleports.
-// Every action works both while the server is running (RCON — instant) and,
+// Every action works both while the server is running (RCON - instant) and,
 // where the file format allows, while it is stopped (direct JSON edits under
 // the server's data dir, applied on next start).
 
@@ -15,10 +15,10 @@ const mojangProfiles = require('./mojangProfiles');
 const { PLAYER_NAME_RE, isBedrockName } = require('../utils/playerName');
 const { parsePlayerList } = require('../utils/rconList');
 // Aliased: this file already has its own cleanText() below (strips control
-// chars from RCON-bound messages) — this one strips ANSI/§ colour codes.
+// chars from RCON-bound messages) - this one strips ANSI/§ colour codes.
 const { cleanText: cleanAnsiText } = require('../utils/ansi');
 
-// Only these fixed filenames are ever touched — no user input reaches a path.
+// Only these fixed filenames are ever touched - no user input reaches a path.
 const FILES = new Set(['usercache.json', 'whitelist.json', 'ops.json', 'banned-players.json', 'banned-ips.json']);
 
 const IP_RE = /^[0-9a-fA-F.:]{3,45}$/;
@@ -28,7 +28,7 @@ function assertName(name) {
   if (!PLAYER_NAME_RE.test(String(name)))
     throw httpError(
       400,
-      'Invalid player name (letters, digits and _ only, max 16 chars — a leading . or * for Bedrock players is fine)'
+      'Invalid player name (letters, digits and _ only, max 16 chars - a leading . or * for Bedrock players is fine)'
     );
   return String(name);
 }
@@ -38,7 +38,7 @@ function assertIp(ip) {
   return String(ip);
 }
 
-/** Reasons/messages travel through RCON — strip control chars so they can't smuggle commands. */
+/** Reasons/messages travel through RCON - strip control chars so they can't smuggle commands. */
 function cleanText(text, fallback) {
   const t = String(text || '')
     .replace(/[\r\n\x00-\x1f\x7f]/g, ' ')
@@ -97,13 +97,13 @@ async function rcon(serverId, ...args) {
   return String(out || '').trim();
 }
 
-// Same, but strip the ANSI/§ colour codes rcon-cli injects — REQUIRED before
+// Same, but strip the ANSI/§ colour codes rcon-cli injects - REQUIRED before
 // regex-parsing any rcon output (e.g. "\x1b[0m" otherwise becomes a stray "[0m").
 async function rconClean(serverId, ...args) {
   return cleanAnsiText(await rcon(serverId, ...args));
 }
 
-// ANSI-clean rcon with an explicit timeout — /locate and spreadplayers can be slow
+// ANSI-clean rcon with an explicit timeout - /locate and spreadplayers can be slow
 // on big modpacks; the default 15s would abandon them (and the user would retry,
 // stacking searches that freeze the server). Give teleport commands more room.
 async function rconT(serverId, timeoutMs, ...args) {
@@ -124,11 +124,11 @@ function assertRunning(running, what) {
  */
 async function listOnlineNames(serverId, { throwOnError = false } = {}) {
   try {
-    // rcon-cli colorizes output — strip ANSI/§ codes before parsing, and only
+    // rcon-cli colorizes output - strip ANSI/§ codes before parsing, and only
     // accept strict Minecraft name shapes so escapes never become "players".
     const out = cleanAnsiText(await rcon(serverId, 'list'));
     const parsed = parsePlayerList(out);
-    // Unparseable is "couldn't ask", not "confirmed nobody online" — see the
+    // Unparseable is "couldn't ask", not "confirmed nobody online" - see the
     // throwOnError note above.
     if (!parsed) throw httpError(502, 'Could not parse player list from RCON output');
     return parsed.names;
@@ -141,7 +141,7 @@ async function listOnlineNames(serverId, { throwOnError = false } = {}) {
 // ---------------------------------------------------------------------------
 // Identity resolution
 
-/** 'yyyy-MM-dd HH:mm:ss +0000' — the vanilla ban-file timestamp format. */
+/** 'yyyy-MM-dd HH:mm:ss +0000' - the vanilla ban-file timestamp format. */
 function banTimestamp(date = new Date()) {
   const p = (n) => String(n).padStart(2, '0');
   return (
@@ -171,7 +171,7 @@ async function resolveIdentity(serverId, name) {
   } catch {
     throw httpError(
       502,
-      `Could not resolve "${name}" — the player has never joined this server and the Mojang API is unreachable. Try again when online.`
+      `Could not resolve "${name}" - the player has never joined this server and the Mojang API is unreachable. Try again when online.`
     );
   }
   if (!profile || !profile.uuid) throw httpError(404, `No Minecraft account named "${name}" exists`);
@@ -189,7 +189,7 @@ async function resolveIdentity(serverId, name) {
 function listPlayers(serverId, onlineNames = []) {
   const entries = [];
   const byUuid = new Map();
-  const byName = new Map(); // lowercase name — dedupes uuid-less `list` names
+  const byName = new Map(); // lowercase name - dedupes uuid-less `list` names
 
   const upsert = (name, uuid, patch) => {
     if (!name && !uuid) return;
@@ -276,7 +276,7 @@ async function setWhitelisted(serverId, name, on, { running = false, actor = 'sy
     serverId,
     actor,
     type: 'player-whitelist',
-    summary: `${who.name} ${on ? 'added to' : 'removed from'} the whitelist${running ? '' : ' (file edit — applies on start)'}`,
+    summary: `${who.name} ${on ? 'added to' : 'removed from'} the whitelist${running ? '' : ' (file edit - applies on start)'}`,
     details: { name: who.name, uuid: who.uuid, on, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, whitelisted: Boolean(on) };
@@ -292,7 +292,7 @@ async function setWhitelistEnforced(serverId, on, { running = false, actor = 'sy
     try {
       text = fs.readFileSync(file, 'utf8');
     } catch {
-      /* fresh server — create the file */
+      /* fresh server - create the file */
     }
     if (/^white-list=/m.test(text)) {
       text = text.replace(/^white-list=.*$/m, `white-list=${on}`);
@@ -308,7 +308,7 @@ async function setWhitelistEnforced(serverId, on, { running = false, actor = 'sy
     serverId,
     actor,
     type: 'player-whitelist-enforce',
-    summary: `Whitelist enforcement turned ${on ? 'on' : 'off'}${running ? '' : ' (file edit — applies on start)'}`,
+    summary: `Whitelist enforcement turned ${on ? 'on' : 'off'}${running ? '' : ' (file edit - applies on start)'}`,
     details: { on, via: running ? 'rcon' : 'file' },
   });
   return { whitelistEnforced: Boolean(on) };
@@ -342,7 +342,7 @@ async function setOp(serverId, name, on, level = 4, { running = false, actor = '
   if (running) {
     await rcon(serverId, on ? 'op' : 'deop', who.name);
     if (on && level !== 4) {
-      // RCON `op` always grants level 4 — persist the requested level for next boot.
+      // RCON `op` always grants level 4 - persist the requested level for next boot.
       patchOpsFile();
       note = `RCON op grants level 4 for this session; level ${level} is saved to ops.json and takes effect after a restart.`;
     }
@@ -355,8 +355,8 @@ async function setOp(serverId, name, on, level = 4, { running = false, actor = '
     actor,
     type: on ? 'player-op' : 'player-deop',
     summary: on
-      ? `${who.name} opped (level ${level})${running ? '' : ' (file edit — applies on start)'}`
-      : `${who.name} de-opped${running ? '' : ' (file edit — applies on start)'}`,
+      ? `${who.name} opped (level ${level})${running ? '' : ' (file edit - applies on start)'}`
+      : `${who.name} de-opped${running ? '' : ' (file edit - applies on start)'}`,
     details: { name: who.name, uuid: who.uuid, on, level: on ? level : null, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, op: Boolean(on), opLevel: on ? level : null, note };
@@ -386,7 +386,7 @@ async function banPlayer(serverId, name, reason, { running = false, actor = 'sys
     serverId,
     actor,
     type: 'player-ban',
-    summary: `${who.name} banned: ${reason}${running ? '' : ' (file edit — applies on start)'}`,
+    summary: `${who.name} banned: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
     details: { name: who.name, uuid: who.uuid, reason, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, banned: true, banReason: reason };
@@ -406,7 +406,7 @@ async function pardonPlayer(serverId, name, { running = false, actor = 'system' 
     serverId,
     actor,
     type: 'player-pardon',
-    summary: `${who.name} pardoned${running ? '' : ' (file edit — applies on start)'}`,
+    summary: `${who.name} pardoned${running ? '' : ' (file edit - applies on start)'}`,
     details: { name: who.name, uuid: who.uuid, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, banned: false };
@@ -426,7 +426,7 @@ async function banIp(serverId, ip, reason, { running = false, actor = 'system' }
     serverId,
     actor,
     type: 'player-ban-ip',
-    summary: `IP ${ip} banned: ${reason}${running ? '' : ' (file edit — applies on start)'}`,
+    summary: `IP ${ip} banned: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
     details: { ip, reason, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: true };
@@ -447,7 +447,7 @@ async function pardonIp(serverId, ip, { running = false, actor = 'system' } = {}
     serverId,
     actor,
     type: 'player-pardon-ip',
-    summary: `IP ${ip} pardoned${running ? '' : ' (file edit — applies on start)'}`,
+    summary: `IP ${ip} pardoned${running ? '' : ' (file edit - applies on start)'}`,
     details: { ip, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: false };
@@ -473,15 +473,15 @@ async function kickPlayer(serverId, name, message, { running = false, actor = 's
 }
 
 // ---------------------------------------------------------------------------
-// Teleports (RCON only — there is no safe offline equivalent)
+// Teleports (RCON only - there is no safe offline equivalent)
 
-// /locate runs on the server's main thread and can stall it for seconds —
+// /locate runs on the server's main thread and can stall it for seconds -
 // firing several concurrently freezes the tick loop long enough to TIME OUT
 // every online player. One teleport at a time per server; extras get a 429.
 const teleportBusy = new Set();
 async function withTeleportSlot(serverId, fn) {
   if (teleportBusy.has(serverId)) {
-    throw httpError(429, 'A teleport is already searching on this server — give it a second and try again.');
+    throw httpError(429, 'A teleport is already searching on this server - give it a second and try again.');
   }
   teleportBusy.add(serverId);
   try {
@@ -493,7 +493,7 @@ async function withTeleportSlot(serverId, fn) {
 
 function assertTpOutput(out, player) {
   if (/No entity was found|No player was found/i.test(out)) {
-    throw httpError(404, `${player} is not online — teleport needs a live player`);
+    throw httpError(404, `${player} is not online - teleport needs a live player`);
   }
   if (/Unknown or incomplete command|Incorrect argument/i.test(out)) {
     throw httpError(400, `Teleport command rejected by the server: ${out}`);
@@ -509,7 +509,7 @@ const POS_RE = /\[\s*(-?\d+(?:\.\d+)?)[dfb]?\s*,\s*(-?\d+(?:\.\d+)?)[dfb]?\s*,\s
 const ALL_DIMENSIONS = ['minecraft:overworld', 'minecraft:the_nether', 'minecraft:the_end'];
 
 /**
- * Player's live position + dimension. Can't use `data get entity <player>` — on
+ * Player's live position + dimension. Can't use `data get entity <player>` - on
  * modded servers a broken player-NBT writer makes it throw ("An unexpected error
  * occurred") for every player. Instead we summon an invisible marker AT the player
  * (a marker's NBT always serializes), read the marker's Pos, and detect the
@@ -550,7 +550,7 @@ async function getPlayerPosition(serverId, player) {
       console.warn(`[players] couldn't read position for ${player} on ${serverId}: ${posOut.slice(0, 160)}`);
       throw httpError(502, "Couldn't read the player's position from the server.");
     }
-    // Whichever dimension reports "Killed" is where the player is — and this
+    // Whichever dimension reports "Killed" is where the player is - and this
     // removes the marker at the same time. Run all three so nothing is left behind.
     let dimension = null;
     for (const dim of ALL_DIMENSIONS) {
@@ -582,7 +582,7 @@ async function getPlayerPosition(serverId, player) {
 
 /**
  * Player's last-SAVED position + dimension, read straight from their .dat on disk.
- * A filesystem read — ZERO load on the Minecraft server thread — so it's the safe
+ * A filesystem read - ZERO load on the Minecraft server thread - so it's the safe
  * way to seed a teleport search. (A marker / `data get` round-trip freezes heavy
  * modded servers and times players out.) Slightly stale (last autosave), which is
  * fine for a search centre. Returns null when there's no saved data.
@@ -609,7 +609,7 @@ async function runLocate(serverId, prefix, type, id) {
   if (/there is no \w+ with type|isn'?t a valid|unknown \w+ type/i.test(located)) {
     throw httpError(
       404,
-      `"${String(id).replace(/^#/, '')}" isn't available on this server — a mod may have renamed or removed it.`
+      `"${String(id).replace(/^#/, '')}" isn't available on this server - a mod may have renamed or removed it.`
     );
   }
   return located;
@@ -617,7 +617,7 @@ async function runLocate(serverId, prefix, type, id) {
 
 async function surfaceTeleport(serverId, player, x, z, dimension) {
   // An explicit dimension runs the landing THERE (cross-dimension teleports carry
-  // the player across); null runs it AT the player, i.e. their current dimension —
+  // the player across); null runs it AT the player, i.e. their current dimension -
   // no position/dimension read needed (a `data get`/marker round-trip freezes heavy
   // modded servers). spreadplayers lands on the highest solid block; widen the
   // search square 1 → 96 → 512 to skip water/void columns.
@@ -646,7 +646,7 @@ async function surfaceTeleport(serverId, player, x, z, dimension) {
   }
   const err = httpError(
     409,
-    `No safe ground within 512 blocks of ${x}, ${z}${dimension ? ` in ${prettyDimension(dimension)}` : ''} (open water or void) — try different coordinates or give an explicit Y.`
+    `No safe ground within 512 blocks of ${x}, ${z}${dimension ? ` in ${prettyDimension(dimension)}` : ''} (open water or void) - try different coordinates or give an explicit Y.`
   );
   err.output = out;
   throw err;
@@ -680,7 +680,7 @@ const VANILLA_STRUCTURES = [
   'minecraft:end_city',
 ];
 
-// Home dimension per structure — `locate` must run IN it and the teleport
+// Home dimension per structure - `locate` must run IN it and the teleport
 // carries the player across (a Village is Overworld even if you ask from the End).
 const STRUCTURE_DIMENSION = new Map([
   ['minecraft:fortress', 'minecraft:the_nether'],
@@ -706,7 +706,7 @@ const registryInflight = new Map(); // "biomes:<id>" / "structures:<id>" -> Prom
 async function getServerStructures(serverId, { running = false } = {}) {
   const cached = structureCache.get(serverId);
   if (cached && Date.now() - cached.at < BIOME_CACHE_MS) return cached.structures;
-  // Single-flight: the tag scan is dozens of RCON round-trips — concurrent
+  // Single-flight: the tag scan is dozens of RCON round-trips - concurrent
   // callers (rapid modal opens) share one scan instead of stacking storms.
   const key = `structures:${serverId}`;
   if (registryInflight.has(key)) return registryInflight.get(key);
@@ -734,7 +734,7 @@ async function scanServerStructures(serverId, running) {
         } while (page <= totalPages && page <= 20);
         if (tags.length) {
           // Registries are full of internal plumbing tags (blacklists,
-          // placement filters…) that aren't destinations — drop them, and
+          // placement filters…) that aren't destinations - drop them, and
           // list the familiar vanilla names before the modded tags.
           const useful = tags.filter(
             (t) => !/(blacklist|whitelist|filter|avoid|exclusion|cannot|_on_|has_structure)/.test(t)
@@ -753,8 +753,8 @@ async function scanServerStructures(serverId, running) {
 }
 
 /**
- * Structure teleport: locate the nearest <structure> — from the player, or
- * from a RANDOM ring point for "surprise me" exploration — then land on the
+ * Structure teleport: locate the nearest <structure> - from the player, or
+ * from a RANDOM ring point for "surprise me" exploration - then land on the
  * surface beside it.
  */
 async function tpToStructure(
@@ -768,12 +768,12 @@ async function tpToStructure(
   assertRunning(running, 'teleport a player');
   if (!/^#?[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(structureRef))) throw httpError(400, 'Invalid structure id');
 
-  // Search in the structure's HOME dimension — a Village is Overworld even if you
+  // Search in the structure's HOME dimension - a Village is Overworld even if you
   // ask from the End. Search near the player when they're already there, else from
   // that dimension's origin; the teleport then carries them across.
   const searchDim = structureDim(structureRef);
   // Seed the search from the player's last-saved spot when they're in the home
-  // dimension (disk read — no server load), else that dimension's origin.
+  // dimension (disk read - no server load), else that dimension's origin.
   const saved = await getPlayerSavedPos(serverId, player);
   const sameDim = saved && saved.dimension === searchDim;
   let fromX = sameDim ? saved.x : 0;
@@ -794,7 +794,7 @@ async function tpToStructure(
   if (/Could not find/i.test(located) || !located.trim()) {
     throw httpError(
       404,
-      `No ${structureRef.replace(/^#/, '')} found in ${prettyDimension(searchDim)}${random ? ' — try again (each try searches a new random point)' : ''}.`
+      `No ${structureRef.replace(/^#/, '')} found in ${prettyDimension(searchDim)}${random ? ' - try again (each try searches a new random point)' : ''}.`
     );
   }
   const m = /is at \[(-?\d+),\s*(~|-?\d+),\s*(-?\d+)\]/.exec(located);
@@ -814,7 +814,7 @@ async function tpToStructure(
 }
 
 /**
- * Custom RTP — no mod dependency: pick a random point in the ring
+ * Custom RTP - no mod dependency: pick a random point in the ring
  * [minDistance, maxDistance] around the player (or world origin) and land on
  * the surface via spreadplayers; ocean/void picks retry with a fresh point.
  */
@@ -829,7 +829,7 @@ async function rtpPlayer(
   minDistance = Math.max(0, Math.floor(minDistance));
   maxDistance = Math.max(minDistance + 16, Math.floor(maxDistance));
 
-  // Centre on the player's last-saved spot (disk read — no server load) or origin.
+  // Centre on the player's last-saved spot (disk read - no server load) or origin.
   const saved = center === 'origin' ? null : await getPlayerSavedPos(serverId, player);
   const cx = saved ? saved.x : 0;
   const cz = saved ? saved.z : 0;
@@ -853,19 +853,19 @@ async function rtpPlayer(
       });
       return { player, x, z, dimension: dim, distance: Math.round(dist), attempts: attempt, output: out };
     } catch (err) {
-      if (err.status === 404) throw err; // player left — stop immediately
-      lastErr = err; // no safe ground here — roll a new point
+      if (err.status === 404) throw err; // player left - stop immediately
+      lastErr = err; // no safe ground here - roll a new point
     }
   }
   throw httpError(
     409,
-    `Couldn't find safe ground in ${ATTEMPTS} tries (lots of ocean around?) — try a bigger max distance. ${lastErr ? '' : ''}`.trim()
+    `Couldn't find safe ground in ${ATTEMPTS} tries (lots of ocean around?) - try a bigger max distance. ${lastErr ? '' : ''}`.trim()
   );
 }
 
 // Server-derived biome registry (mods add biomes the bundled list can't know).
 // NeoForge/Forge expose the registry via `/neoforge tags worldgen/biome get
-// <dim tag>` — extracted per dimension and cached; falls back to the bundled
+// <dim tag>` - extracted per dimension and cached; falls back to the bundled
 // vanilla list on servers without that command.
 const biomeCache = new Map(); // serverId -> {at, biomes: [{id, dimension}], byId: Map}
 const BIOME_CACHE_MS = 60 * 60 * 1000;
@@ -927,7 +927,7 @@ async function scanServerBiomes(serverId, running) {
       dimension: BIOME_DIMENSION.get(id) || 'minecraft:overworld',
     }));
   }
-  // A biome can belong to several dimension tags — keep them all so the
+  // A biome can belong to several dimension tags - keep them all so the
   // teleport can prefer the dimension the player is already standing in.
   const byId = new Map();
   for (const b of biomes) {
@@ -949,7 +949,7 @@ function biomeDims(serverId, biomeId) {
   return single ? [single] : [];
 }
 
-// Biomes that only exist outside the Overworld — locate must run IN their
+// Biomes that only exist outside the Overworld - locate must run IN their
 // home dimension, and the teleport carries the player across.
 const BIOME_DIMENSION = new Map([
   ['minecraft:the_end', 'minecraft:the_end'],
@@ -1034,24 +1034,24 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
   assertRunning(running, 'teleport a player');
   if (!/^[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(biomeId))) throw httpError(400, 'Invalid biome id');
 
-  // Cross-dimension biomes must be located IN their home dimension — running
+  // Cross-dimension biomes must be located IN their home dimension - running
   // `locate biome minecraft:the_end` from the Overworld fails (sometimes with
   // completely empty output on modded servers). Warm the server registry
   // first: biomeDimension only READS the cache, and after a panel restart it
   // would otherwise fall back to a tiny static list and lose most home dims.
   await getServerBiomes(serverId, { running: true }).catch(() => {});
   const dims = biomeDims(serverId, String(biomeId));
-  // Player's last-saved spot (disk read — no server load, no player time-out).
+  // Player's last-saved spot (disk read - no server load, no player time-out).
   const saved = await getPlayerSavedPos(serverId, player);
   const playerDim = saved ? saved.dimension : null;
-  // Search in a dimension the biome generates in — preferring the one the player
+  // Search in a dimension the biome generates in - preferring the one the player
   // is in. "Nearest" is seeded from the player's saved spot in the same dimension,
   // otherwise from the target dimension's origin.
   const searchDim = playerDim && dims.includes(playerDim) ? playerDim : dims[0] || playerDim || 'minecraft:overworld';
   const sameDim = saved && searchDim === playerDim;
   const fromX = sameDim ? String(saved.x) : '0';
   const fromZ = sameDim ? String(saved.z) : '0';
-  // CRITICAL: never `execute as <player>` — it makes the player the command
+  // CRITICAL: never `execute as <player>` - it makes the player the command
   // sender, so the locate result goes to their chat and RCON receives NOTHING.
   const located = await runLocate(
     serverId,
@@ -1062,7 +1062,7 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
   if (/Could not find/i.test(located)) {
     throw httpError(
       404,
-      `No ${biomeId} was found in ${prettyDimension(searchDim)}${sameDim ? ` near ${player}` : ''} — try from a different spot`
+      `No ${biomeId} was found in ${prettyDimension(searchDim)}${sameDim ? ` near ${player}` : ''} - try from a different spot`
     );
   }
   // "The nearest minecraft:desert is at [123, ~, -456] (789 blocks away)"
@@ -1072,13 +1072,13 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
       502,
       located
         ? `Could not parse the locate result: ${located}`
-        : `The server returned nothing for ${biomeId} in ${searchDim} — it may not generate in this world (modded packs sometimes replace vanilla biomes).`
+        : `The server returned nothing for ${biomeId} in ${searchDim} - it may not generate in this world (modded packs sometimes replace vanilla biomes).`
     );
   }
   const x = Number(m[1]);
   const z = Number(m[3]);
 
-  // locate reports "~" for Y — never guess an altitude (a blind y=100 drop is
+  // locate reports "~" for Y - never guess an altitude (a blind y=100 drop is
   // frequently a fatal fall). spreadplayers lands on the highest solid block,
   // in the dimension the biome was found in.
   const out = await surfaceTeleport(serverId, player, x, z, searchDim);

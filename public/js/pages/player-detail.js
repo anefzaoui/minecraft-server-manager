@@ -51,7 +51,7 @@ function init(root) {
         prettyBiome(a.id).localeCompare(prettyBiome(b.id))
     );
 
-  // ---- in-place chip/banner patching (mirrors the roster page — same
+  // ---- in-place chip/banner patching (mirrors the roster page - same
   // action, same UI, no page flash and no silent success) ----
   const CHIP_ON = {
     whitelist: ['border-grass-700', 'bg-grass-500/15', 'text-ok'],
@@ -133,7 +133,7 @@ function init(root) {
     // copy-uuid is handled by the global [data-copy] handler in app.js
   });
 
-  // ---- ban (same labeled dialog as the roster page — one action, one UI) ----
+  // ---- ban (same labeled dialog as the roster page - one action, one UI) ----
   function banModal() {
     const content = document.createElement('div');
     content.innerHTML = `
@@ -294,7 +294,7 @@ function init(root) {
         const list = sortByDim(items);
         sel.innerHTML = list.length
           ? list.map((e) => `<option value="${e.id}">${dimShort(e.dimension)} · ${label(e.id)}</option>`).join('')
-          : '<option value="">None available — start the server</option>';
+          : '<option value="">None available - start the server</option>';
         sel.dataset.loaded = '1';
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       });
@@ -322,7 +322,7 @@ function init(root) {
           busyLabel: 'Searching…',
           onClick: async ({ body }) => {
             if (inflight) {
-              toast('Hold on — the previous teleport is still searching.', { kind: 'error' });
+              toast('Hold on - the previous teleport is still searching.', { kind: 'error' });
               return false;
             }
             const f = (k) => body.querySelector(`[data-f="${k}"]`).value;

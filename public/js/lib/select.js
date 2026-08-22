@@ -1,5 +1,5 @@
 // Custom select. Replaces EVERY native <select> with a styled trigger button
-// that opens a searchable modal picker — consistent across OSes and themes.
+// that opens a searchable modal picker - consistent across OSes and themes.
 //
 // The native <select> stays in the DOM (hidden) as the source of truth: forms
 // submit it, scripts can read .value, and `change` events fire normally.
@@ -149,7 +149,7 @@ function openPicker(select, btn) {
     }
   }
 
-  // onClose covers EVERY dismissal path (Esc, backdrop, X) — without it the
+  // onClose covers EVERY dismissal path (Esc, backdrop, X) - without it the
   // trigger stayed stuck announcing aria-expanded="true".
   modal = openModal({ title: label, content, size: 'sm', onClose: () => btn.setAttribute('aria-expanded', 'false') });
   btn.setAttribute('aria-expanded', 'true');

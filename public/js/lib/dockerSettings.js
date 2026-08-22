@@ -1,7 +1,7 @@
 // Advanced Docker settings UI: container name/network inputs, extra port/bind
 // repeaters, and the "Preview as YAML" modal round trip. Shared by the create
 // wizard (pre-creation, POST /api/docker/preview) and the server Settings tab
-// (post-creation, GET /api/servers/:id/docker-spec) — same fields and Apply
+// (post-creation, GET /api/servers/:id/docker-spec) - same fields and Apply
 // flow, only how the preview YAML is fetched differs.
 import { toast } from './toast.js';
 import { openModal } from './modal.js';
@@ -13,7 +13,7 @@ const REMOVE_ICON_SVG =
 /**
  * @param {object} ids - element ids: name, network, ports, binds, portAdd, bindAdd, previewBtn
  *
- * The card these ids live in is admin-only markup — for other roles every
+ * The card these ids live in is admin-only markup - for other roles every
  * element is absent (and the endpoints 403), so all DOM access and the
  * networks fetch degrade to no-ops rather than assuming the elements exist.
  */
@@ -24,7 +24,7 @@ export function initDockerSettings(ids) {
   const bindsWrap = document.getElementById(ids.binds);
 
   // seed() can run before this resolves (e.g. the Settings tab seeds from the
-  // server's current row immediately on load) — remember the desired value and
+  // server's current row immediately on load) - remember the desired value and
   // re-apply it once the matching <option> actually exists.
   let pendingNetwork = null;
   if (networkSel)
@@ -41,7 +41,7 @@ export function initDockerSettings(ids) {
         if (pendingNetwork != null) networkSel.value = pendingNetwork;
         networkSel.dispatchEvent(new Event('change', { bubbles: true })); // sync the styled trigger
       })
-      .catch(() => {}); // Docker unreachable — leave just the default option
+      .catch(() => {}); // Docker unreachable - leave just the default option
 
   function addPortRow(value = {}) {
     const row = document.createElement('div');
@@ -126,7 +126,7 @@ export function initDockerSettings(ids) {
 
   /**
    * Collect the 4 override fields as a plain object.
-   * By default omits empty ones (right for creation — nothing to clear yet).
+   * By default omits empty ones (right for creation - nothing to clear yet).
    * Pass forUpdate: true (Settings tab) to always include all 4, so an emptied
    * field is sent as '' / [] and actually clears the stored value, instead of
    * being silently dropped from the PATCH body.
@@ -144,7 +144,7 @@ export function initDockerSettings(ids) {
     return out;
   }
 
-  /** fetchYaml(): Promise<string> — how to obtain the preview text for this context. */
+  /** fetchYaml(): Promise<string> - how to obtain the preview text for this context. */
   function openPreview(fetchYaml) {
     const btn = document.getElementById(ids.previewBtn);
     btn?.addEventListener('click', async () => {
@@ -161,7 +161,7 @@ export function initDockerSettings(ids) {
       const textarea = content.querySelector('textarea');
       textarea.value = yamlText;
       openModal({
-        title: 'Advanced Docker settings — preview',
+        title: 'Advanced Docker settings - preview',
         content,
         size: 'lg',
         actions: [

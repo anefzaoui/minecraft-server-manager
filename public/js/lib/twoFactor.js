@@ -1,5 +1,5 @@
 // Self-service two-factor auth: the topbar user-menu "Two-factor
-// authentication" entry opens one of two flows — enroll (QR + confirm code +
+// authentication" entry opens one of two flows - enroll (QR + confirm code +
 // one-time backup codes) or manage (regenerate codes / disable), both gated
 // by re-entering the current password on the server side.
 
@@ -54,7 +54,7 @@ async function openEnrollModal(trigger) {
           if (!res) return false;
           if (trigger) trigger.dataset.userTotpEnabled = '1';
           toast('Two-factor authentication is now enabled.');
-          // Reload once they've saved their codes — the users table (Settings)
+          // Reload once they've saved their codes - the users table (Settings)
           // and this dataset flag are both server-rendered/read at page-load,
           // so a stale page would still show "off" until refreshed.
           showBackupCodes(res.backupCodes, 'Save your backup codes', { reloadOnClose: true });
@@ -119,7 +119,7 @@ function showBackupCodes(codes, title, { reloadOnClose = false } = {}) {
   const warn = document.createElement('p');
   warn.className = 'text-xs text-ink-faint';
   warn.textContent =
-    'Each code works once, to sign in if you lose access to your authenticator app. Save them somewhere safe — they will not be shown again.';
+    'Each code works once, to sign in if you lose access to your authenticator app. Save them somewhere safe - they will not be shown again.';
   // Relies on app.js's global [data-copy] click handler rather than duplicating
   // clipboard logic here.
   const copyBtn = document.createElement('button');

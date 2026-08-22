@@ -1,12 +1,12 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Per-server content management (mods/plugins/datapacks/resourcepacks).
 // Two classes of content, handled differently on purpose (see discovery):
-//   pack    — installed by the itzg pack installer; deleting the jar triggers
+//   pack    - installed by the itzg pack installer; deleting the jar triggers
 //             re-install, so disable goes through CF_EXCLUDE_MODS /
 //             MODRINTH_EXCLUDE_FILES (+ *_FORCE_SYNCHRONIZE) and a recreate.
-//   overlay — panel-managed via the shared library; survives pack updates;
+//   overlay - panel-managed via the shared library; survives pack updates;
 //             toggled instantly by renaming to .jar.disabled.
 
 const httpError = require('../utils/httpError');
@@ -43,7 +43,7 @@ function contentDir(server, kind) {
   return PLUGIN_TYPES.has(server.type) ? 'plugins' : 'mods';
 }
 
-// Modpack servers don't set CF_MOD_LOADER/MODRINTH_LOADER — the pack itself
+// Modpack servers don't set CF_MOD_LOADER/MODRINTH_LOADER - the pack itself
 // decides the loader. mc-image-helper writes a per-loader manifest into the data
 // dir (e.g. .neoforge-manifest.json), so detect from that; otherwise mod installs
 // have no loader to match and grab an arbitrary (e.g. Fabric) build.
@@ -116,7 +116,7 @@ async function listContent(serverId) {
       updateAvailable: updateFor(row),
     });
   }
-  // Overlay rows whose files vanished (user deleted manually) — surface them.
+  // Overlay rows whose files vanished (user deleted manually) - surface them.
   for (const row of rows) {
     const base = row.filename.replace(/\.disabled$/, '');
     if (!seen.has(base)) {
@@ -158,7 +158,7 @@ function updateFor(row) {
  * Returns { kind: 'modrinth' | 'curseforge' | 'direct' | 'invalid', ref }.
  *  - modrinth:  modrinth.com page URLs and bare project slugs
  *  - curseforge: curseforge.com page URLs
- *  - direct:    any other URL, INCLUDING cdn.modrinth.com file links —
+ *  - direct:    any other URL, INCLUDING cdn.modrinth.com file links -
  *               those are downloads, not project pages
  */
 function classifyModSource(input) {
@@ -176,7 +176,7 @@ function classifyModSource(input) {
     return { kind: 'direct', ref };
   }
   // Modrinth slug charset (their documented rule): [\w!@$()`.+,"\-'] ×3–64.
-  // \w keeps underscores valid — sodium_extra style slugs used to 500.
+  // \w keeps underscores valid - sodium_extra style slugs used to 500.
   if (/^[\w!@$()`.+,"\-']{3,64}$/.test(ref)) return { kind: 'modrinth', ref };
   return { kind: 'invalid', ref };
 }
@@ -232,7 +232,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     if (!file.downloadUrl)
       throw httpError(
         409,
-        `${resolved.name} disallows automated downloads — download it in a browser and upload the jar instead`
+        `${resolved.name} disallows automated downloads - download it in a browser and upload the jar instead`
       );
     downloadUrl = file.downloadUrl;
     Object.assign(meta, {
@@ -302,7 +302,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
   }
 
   // Pack-managed: manipulate the exclusion env var. Prefer the real CF project
-  // slug/ID from the pack manifest — a name-derived token misses renamed/unofficial
+  // slug/ID from the pack manifest - a name-derived token misses renamed/unofficial
   // mods (e.g. display name "cc tweaked" vs slug "unofficial-cc-tweaked-…"), which
   // silently fails to exclude anything.
   const env = { ...server.env };
@@ -326,7 +326,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: enabled ? 'mod-enabled' : 'mod-disabled',
-    summary: `${file} ${enabled ? 're-included' : 'excluded'} via ${varName} — applies on next restart`,
+    summary: `${file} ${enabled ? 're-included' : 'excluded'} via ${varName} - applies on next restart`,
   });
   return { applied: 'on-restart' };
 }
@@ -338,7 +338,7 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
   if (!server) throw httpError(404, 'Server not found');
   const row = db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', serverId, file);
   if (row && row.managed_by === 'pack')
-    throw httpError(409, 'Pack-managed content is excluded, not deleted — use Disable');
+    throw httpError(409, 'Pack-managed content is excluded, not deleted - use Disable');
   const dirRel = contentDir(server, row ? row.kind : 'mod');
   let freed = 0;
   for (const candidate of [file, `${file}.disabled`]) {
@@ -400,7 +400,7 @@ function prettifyJarName(file) {
 // Manual-download handling. A CurseForge pack can pin mods whose authors disallow
 // automated download (or that were pulled from CF). mc-image-helper then writes
 // MODS_NEED_DOWNLOAD.txt and the pack install FAILS until each is excluded or
-// supplied by hand — this turns that dead-end into guided actions.
+// supplied by hand - this turns that dead-end into guided actions.
 
 /** Best-effort filename -> {slug, projectId} map from the pack's CF manifest. */
 function packManifestIndex(serverId) {
@@ -476,7 +476,7 @@ function clearPendingLine(serverId, filename) {
     if (kept.some((l) => /curseforge\.com/i.test(l))) fs.writeFileSync(file, kept.join('\n'));
     else fs.rmSync(file, { force: true });
   } catch {
-    /* ownership not aligned yet — the banner clears on the next successful start */
+    /* ownership not aligned yet - the banner clears on the next successful start */
   }
 }
 
@@ -500,7 +500,7 @@ function excludePackMod(serverId, token, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'mod-excluded',
-    summary: `Excluded pack mod "${token}" via ${varName} — applies on recreate`,
+    summary: `Excluded pack mod "${token}" via ${varName} - applies on recreate`,
   });
   return { excluded: token };
 }

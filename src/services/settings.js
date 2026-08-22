@@ -2,7 +2,7 @@
 
 // Panel-wide key/value settings (non-secret) stored in the `settings` table as
 // JSON values. Secrets (API keys, RCON passwords) live in api_keys/servers,
-// encrypted — never here.
+// encrypted - never here.
 
 const db = require('../db');
 
@@ -72,8 +72,8 @@ function publicAddress(port) {
 }
 
 // ---------------------------------------------------------------------------
-// Localization: timezone + country. Both default to "auto" — detected from the
-// host OS via Intl — so timelines and dates read in the operator's local time
+// Localization: timezone + country. Both default to "auto" - detected from the
+// host OS via Intl - so timelines and dates read in the operator's local time
 // without any setup. Stored values (when set) override the detection.
 
 /** The host's IANA time zone (e.g. "America/New_York"), or UTC if undetectable. */

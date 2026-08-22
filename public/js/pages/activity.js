@@ -17,7 +17,7 @@ document.addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-event-excerpt]');
   if (!btn) return;
   const id = btn.dataset.eventId;
-  const restore = setBusy(btn); // icon-sized button — spinner only
+  const restore = setBusy(btn); // icon-sized button - spinner only
   try {
     const res = await fetch(`/api/events/${id}/excerpt`);
     if (!res.ok) {
@@ -31,7 +31,7 @@ document.addEventListener('click', async (e) => {
     pre.textContent = text;
     content.appendChild(pre);
     openModal({
-      title: `Captured log — ${btn.dataset.eventType || `event #${id}`}`,
+      title: `Captured log - ${btn.dataset.eventType || `event #${id}`}`,
       content,
       size: 'lg',
       actions: [{ label: 'Close', kind: 'ghost' }],

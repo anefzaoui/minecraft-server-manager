@@ -1,6 +1,6 @@
 // File manager tab: navigation is server-rendered (?path=), actions go through
 // /api/servers/:id/files (or /api/files when unscoped). Text edit in a modal
-// textarea for v1 — CodeMirror lands later.
+// textarea for v1 - CodeMirror lands later.
 import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
@@ -86,7 +86,7 @@ function init(rootEl) {
     const isDir = row.dataset.dir === 'true';
 
     if (e.target.closest('[data-file-edit]')) {
-      // The read fetch happens before the editor modal opens — spinner the
+      // The read fetch happens before the editor modal opens - spinner the
       // row button for that gap.
       await withBusy(e.target.closest('[data-file-edit]'), () => openEditor(path, name));
     } else if (e.target.closest('[data-file-download]')) {
@@ -109,13 +109,13 @@ function init(rootEl) {
           toast(`"${name}" deleted (${fmtBytes(data.freedBytes)} freed).`);
           const tbody = row.closest('tbody');
           row.remove();
-          // A header-only table after the last delete looks broken — restore
+          // A header-only table after the last delete looks broken - restore
           // the empty state the server renders on first load.
           if (tbody && !tbody.querySelector('[data-file-row]')) {
             const tr = document.createElement('tr');
             tr.dataset.filesEmpty = '';
             tr.innerHTML =
-              '<td colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty — upload files or create a folder above.</td>';
+              '<td colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty - upload files or create a folder above.</td>';
             tbody.appendChild(tr);
           }
         } else {
@@ -128,7 +128,7 @@ function init(rootEl) {
   });
 
   // Rename/move/copy live in the row overflow menu, which dropdown.js portals
-  // to <body> — so these are document-delegated and carry their own data-path.
+  // to <body> - so these are document-delegated and carry their own data-path.
   document.addEventListener('click', (e) => {
     const act = e.target.closest('[data-file-rename], [data-file-move], [data-file-copy]');
     if (!act || !act.dataset.path) return;
@@ -148,7 +148,7 @@ function init(rootEl) {
     const content = document.createElement('div');
     content.innerHTML = `
       <textarea class="input h-96 w-full resize-y font-mono text-xs leading-relaxed" spellcheck="false"></textarea>
-      <p class="help mt-2">${escapeHtml(path)} · ${fmtBytes(data.size)} — saved atomically.</p>`;
+      <p class="help mt-2">${escapeHtml(path)} · ${fmtBytes(data.size)} - saved atomically.</p>`;
     const textarea = content.querySelector('textarea');
     textarea.value = data.content;
     openModal({
@@ -207,7 +207,7 @@ function init(rootEl) {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label">Destination folder (relative to the root)</label>
-      <input class="input font-mono" data-dst placeholder="e.g. world/datapacks — empty for the root" autocomplete="off">
+      <input class="input font-mono" data-dst placeholder="e.g. world/datapacks - empty for the root" autocomplete="off">
       <p class="help">${verb === 'Copy' ? 'Copies' : 'Moves'} "${escapeHtml(name)}" into the folder. It must already exist.</p>`;
     const input = content.querySelector('[data-dst]');
     input.value = currentPath;

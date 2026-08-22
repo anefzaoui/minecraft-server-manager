@@ -17,7 +17,7 @@
           <td class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
           <td class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
           <td class="text-right"><div class="inline-flex gap-1">
-            {{! Restore stops the server and replaces its data — it must not scan
+            {{! Restore stops the server and replaces its data - it must not scan
                 identically to the harmless Download beside it. }}
             <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="Stops the server, restores this archive, restarts">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
             <a class="btn btn-ghost btn-sm" href="/api/backups/{{id}}/download" data-tip="Download archive" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</a>
@@ -29,7 +29,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='archive' title='No backups yet' message='Hit Back up now for the first one — scheduled and pre-update backups will also collect here automatically.'}}
+  {{> empty-state iconName='archive' title='No backups yet' message='Hit Back up now for the first one - scheduled and pre-update backups will also collect here automatically.'}}
 {{/if}}
 </div>
 <script type="module" src="/js/pages/server-backups.js"></script>

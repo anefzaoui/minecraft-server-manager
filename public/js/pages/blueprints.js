@@ -127,12 +127,12 @@ let importInFlight = false; // dismissing the progress modal must not allow a se
 
 async function createFrom(body, name) {
   if (importInFlight) {
-    toast('A server is already being created from a blueprint — hold on.', { kind: 'info' });
+    toast('A server is already being created from a blueprint - hold on.', { kind: 'info' });
     return;
   }
   importInFlight = true;
   const progress = openProgress(
-    `Creating server from "${name}" — pulling the image, installing the pack and mods. This can take a few minutes…`
+    `Creating server from "${name}" - pulling the image, installing the pack and mods. This can take a few minutes…`
   );
   let data;
   try {
@@ -207,7 +207,7 @@ function openProgress(text) {
   content.innerHTML = `
     <p></p>
     <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
-    <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import — it keeps running server-side.</p>`;
+    <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import - it keeps running server-side.</p>`;
   content.querySelector('p').textContent = text;
   return openModal({ title: 'Working…', content, actions: [] });
 }

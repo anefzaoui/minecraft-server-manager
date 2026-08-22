@@ -9,5 +9,5 @@ docker-minecraft-server
 discovery
 package-lock.json
 # Handlebars templates: Prettier's hbs formatting reflows markup in ways that hurt
-# readability here — keep them hand-formatted.
+# readability here - keep them hand-formatted.
 *.hbs

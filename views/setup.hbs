@@ -4,7 +4,7 @@
     <span class="pixel text-sm">Minecraft <span class="text-ok">Server Manager</span></span>
   </div>
 
-  {{! Progress dots — one per step, driven by setup.js }}
+  {{! Progress dots - one per step, driven by setup.js }}
   <div class="mb-4 flex items-center justify-center gap-2" id="setup-dots" aria-hidden="true">
     <span class="h-1.5 w-6 rounded-full bg-grass-500 transition-colors" data-dot></span>
     <span class="h-1.5 w-6 rounded-full bg-line transition-colors" data-dot></span>
@@ -18,7 +18,7 @@
     <section data-step="0">
       <h2 class="text-center text-lg font-semibold">Welcome to Minecraft Server Manager</h2>
       <p class="mx-auto mt-2 max-w-sm text-center text-sm text-ink-faint">
-        Your control panel for Minecraft servers on Docker — create, configure, back up, and manage
+        Your control panel for Minecraft servers on Docker - create, configure, back up, and manage
         modpacks, worlds, players, and more. Let's get a few things set up. It only takes a minute.
       </p>
       <button class="btn btn-primary mt-6 w-full" data-next>Get started {{{icon 'arrow-right' 'size-4'}}}</button>
@@ -91,7 +91,7 @@
 
       <div class="mt-5">
         <span class="label">Time zone &amp; region</span>
-        {{! data-native only until tzPicker fills them — it enhances post-fill. }}
+        {{! data-native only until tzPicker fills them - it enhances post-fill. }}
         <div class="grid gap-2 sm:grid-cols-2">
           <select class="input" id="su-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
           <select class="input" id="su-country" data-native aria-label="Country" data-label="Country"></select>

@@ -6,7 +6,7 @@
 //   - the mods content routes reject path-traversal in the `file` param
 //   - the /settings and /storage pages are admin only
 //   - advanced Docker overrides (extra binds mount arbitrary host paths) are
-//     admin only — an operator must not be able to reach host root through them
+//     admin only - an operator must not be able to reach host root through them
 
 const test = require('node:test');
 const assert = require('node:assert/strict');

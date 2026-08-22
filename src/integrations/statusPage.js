@@ -20,7 +20,7 @@ function getStatusPage(serverId) {
 }
 
 function setStatusPage(serverId, { enabled, slug }) {
-  // Disabling never needs a slug — keep the stored one so re-enabling
+  // Disabling never needs a slug - keep the stored one so re-enabling
   // restores the same address.
   if (!enabled && !slug) {
     const existing = getStatusPage(serverId);

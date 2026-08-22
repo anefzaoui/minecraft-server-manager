@@ -1,4 +1,4 @@
-{{> page-header heading="ACTIVITY" sub="Every action across every server — who did what, when, with the receipts."}}
+{{> page-header heading="ACTIVITY" sub="Every action across every server - who did what, when, with the receipts."}}
 
 {{#if (or events.length (or filters.q (or filters.server filters.type)))}}
 <form class="mb-4 flex flex-wrap items-center gap-2" method="get" action="/activity" id="activity-filters">
@@ -48,6 +48,6 @@
   {{/if}}
 </div>
 {{else}}
-  {{> empty-state iconName='history' title='No activity yet' message='Every action across every server lands here — starts and stops, backups, updates, player management, with the receipts.'}}
+  {{> empty-state iconName='history' title='No activity yet' message='Every action across every server lands here - starts and stops, backups, updates, player management, with the receipts.'}}
 {{/if}}
 <script type="module" src="/js/pages/activity.js"></script>

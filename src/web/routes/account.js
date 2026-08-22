@@ -1,6 +1,6 @@
 'use strict';
 
-// Self-service account security — two-factor auth. Mounted ahead of
+// Self-service account security - two-factor auth. Mounted ahead of
 // requireWrite (see web/app.js) so every role, including viewer, can protect
 // their OWN account; nothing here ever reads or writes another user's row.
 
@@ -15,13 +15,13 @@ const authService = require('../../services/auth');
 const router = express.Router();
 
 // /totp/setup mints a fresh secret and rasters a QR on every call, persisting
-// nothing — so throttle it per account. Without a cap, any authenticated session
+// nothing - so throttle it per account. Without a cap, any authenticated session
 // (a read-only viewer included) could loop it to pin the event loop on a small
 // self-hosted box. A handful a minute is plenty for a real enrollment.
 const setupHits = new Map(); // userId -> timestamps (ms) within the window
 const SETUP_WINDOW_MS = 60_000;
 // Generous for a human fumbling enrollment (scan, cancel, switch app, retry),
-// but any per-minute cap defeats the event-loop DoS this guards against — a
+// but any per-minute cap defeats the event-loop DoS this guards against - a
 // tight abuse loop would need orders of magnitude more than this.
 const SETUP_MAX = 20;
 function throttleSetup(userId, nowMs) {
@@ -35,7 +35,7 @@ router.post(
   '/totp/setup',
   asyncHandler(async (req, res) => {
     if (!throttleSetup(req.user.id, Date.now())) {
-      return res.status(429).json({ ok: false, error: 'Too many 2FA setup attempts — wait a minute and try again.' });
+      return res.status(429).json({ ok: false, error: 'Too many 2FA setup attempts - wait a minute and try again.' });
     }
     const { secret, otpauthUrl } = authService.beginTotpEnrollment(req.user.id);
     const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 220 });
@@ -44,7 +44,7 @@ router.post(
 );
 
 // Enabling 2FA re-checks the account password (confirmTotp), so it gets the same
-// shared login lockout as disable/regenerate below — a hijacked session can't use
+// shared login lockout as disable/regenerate below - a hijacked session can't use
 // the password-compare here as an unthrottled brute-force oracle.
 router.post(
   '/totp/confirm',
@@ -69,7 +69,7 @@ router.post(
   })
 );
 
-// Both routes below re-check the account's own password — same lockout the
+// Both routes below re-check the account's own password - same lockout the
 // login form gets, keyed on this account (not IP alone), so a hijacked
 // session can't use the password-compare here as an unthrottled oracle to
 // brute-force the real password (bcrypt's cost alone isn't a hard stop).

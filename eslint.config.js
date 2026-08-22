@@ -15,7 +15,7 @@ module.exports = [
       globals: { ...globals.node },
     },
     rules: {
-      // Errors, not warnings — problems fail the build honestly instead of being
+      // Errors, not warnings - problems fail the build honestly instead of being
       // promoted by a --max-warnings flag. `_`-prefixed and rest-sibling
       // (destructure-to-omit) vars are the standard "intentionally unused" opt-out;
       // `next` is Express's error-forwarding param that asyncHandler drives.

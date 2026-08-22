@@ -60,7 +60,7 @@ function iconSrc(name) {
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0 B';
-  if (!Number.isFinite(bytes)) return '—';
+  if (!Number.isFinite(bytes)) return '-';
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.min(Math.floor(Math.log2(Math.abs(bytes)) / 10), units.length - 1);
   const value = bytes / 2 ** (10 * i);
@@ -70,7 +70,7 @@ function formatBytes(bytes) {
 // Serialize a value for embedding inside a <script> island. JSON.stringify does
 // NOT escape <, >, & or the JS line separators U+2028/U+2029, so a string field
 // containing "</script>" would break out of the tag (stored XSS). Escape those
-// code points to \uXXXX — still valid JSON and valid JS.
+// code points to \uXXXX - still valid JSON and valid JS.
 function jsonForScript(v) {
   return (JSON.stringify(v) ?? 'null').replace(
     /[<>&\u2028\u2029]/g,
@@ -136,7 +136,7 @@ function createApp() {
         platformName: (p) =>
           ({ modrinth: 'Modrinth', curseforge: 'CurseForge', gtnh: 'GT New Horizons', ftb: 'FTB' })[p] || p,
         // Handlebars {{#if}} treats 0 as falsy, which silently drops min="0"
-        // attributes and zero defaults — this helper exists for those tests.
+        // attributes and zero defaults - this helper exists for those tests.
         isDefined: (v) => v !== undefined && v !== null && v !== '',
       },
     })
@@ -146,10 +146,10 @@ function createApp() {
 
   // express.static's default `Cache-Control: public, max-age=0` still lets a
   // browser or reverse proxy (Pangolin, NGINX, Traefik…) decide for itself
-  // whether/how long to trust a cached copy without checking back — some do,
+  // whether/how long to trust a cached copy without checking back - some do,
   // which meant a JS fix could ship and still not reach anyone until they
   // cleared their cache. `no-cache` forces a revalidation round-trip (still
-  // 304s when nothing changed — this isn't `no-store`) on every request, so a
+  // 304s when nothing changed - this isn't `no-store`) on every request, so a
   // new deploy is guaranteed visible on the very next page load.
   app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache, must-revalidate');
@@ -184,7 +184,7 @@ function createApp() {
   app.use(require('./routes/auth'));
   app.use('/status', require('./routes/status')); // public, read-only, opt-in per server
   app.use(requireAuth);
-  // Account security (2FA) is self-service for every role, including viewer —
+  // Account security (2FA) is self-service for every role, including viewer -
   // mounted ahead of the viewer-read-only gate below since protecting your own
   // account isn't a server-management action.
   app.use('/api/account', require('./routes/account'));

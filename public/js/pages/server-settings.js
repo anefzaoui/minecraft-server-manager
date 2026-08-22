@@ -62,7 +62,7 @@ function init(serverId) {
 
   // ---- Advanced settings (full field catalog, same controls as the wizard) ----
   // Pre-fill every control with the server's ACTUAL current value (falling
-  // back to the catalog default) — the wizard never needs this since it
+  // back to the catalog default) - the wizard never needs this since it
   // starts blank, but here each field represents something really configured.
   const advPanel = document.getElementById('st-advanced');
   if (advPanel) {
@@ -86,7 +86,7 @@ function init(serverId) {
     }
   }
 
-  // Icon + accent pickers — selection lives in aria-pressed; .swatch CSS
+  // Icon + accent pickers - selection lives in aria-pressed; .swatch CSS
   // draws the theme-aware ring, so JS only flips the attribute.
   bindPicker('[data-pick-icon]', (btn) => {
     icon = btn.dataset.pickIcon;
@@ -106,7 +106,7 @@ function init(serverId) {
     }
   }
 
-  // A custom accent (set via API) matches no preset — give it its own selected
+  // A custom accent (set via API) matches no preset - give it its own selected
   // swatch so the current choice is always visible.
   (() => {
     const picker = document.getElementById('st-accent-picker');
@@ -172,10 +172,10 @@ function init(serverId) {
     const base = 'rounded-md border p-2.5 text-xs ';
     if (cmem <= heap) {
       headroomBox.className = base + 'border-danger/40 bg-redstone-500/10 text-danger';
-      headroomBox.textContent = `Container limit (${cmem} MB) is at or below the heap (${heap} MB) — the JVM will be OOM-killed on start. Raise the limit or lower the heap.`;
+      headroomBox.textContent = `Container limit (${cmem} MB) is at or below the heap (${heap} MB) - the JVM will be OOM-killed on start. Raise the limit or lower the heap.`;
     } else if (cmem < heap * 1.25) {
       headroomBox.className = base + 'border-warn/40 bg-gold-500/10 text-warn';
-      headroomBox.textContent = `Tight headroom: container limit is only ${pctAbove}% above the heap. Java needs off-heap room — aim for 25% or more.`;
+      headroomBox.textContent = `Tight headroom: container limit is only ${pctAbove}% above the heap. Java needs off-heap room - aim for 25% or more.`;
     } else {
       headroomBox.className = base + 'border-ok/40 bg-grass-500/10 text-ok';
       headroomBox.textContent = `Healthy headroom: container limit is ${pctAbove}% above the heap.`;
@@ -226,8 +226,8 @@ function init(serverId) {
     content.innerHTML = `
       <p class="text-xs text-ink-faint">Exports this server's setup as a reusable blueprint in the library.</p>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include config directories</label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed overlay files in the archive <span class="text-xs text-ink-faint">— bigger file, fully portable</span></label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">— can be large</span></label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed overlay files in the archive <span class="text-xs text-ink-faint">- bigger file, fully portable</span></label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">- can be large</span></label>`;
     openModal({
       title: 'Export as blueprint',
       content,
@@ -297,7 +297,7 @@ function init(serverId) {
 
   function cloneServer(includeWorld) {
     // The clone route may respond synchronously ({server}) or with a task id
-    // ({taskId}) once the task infrastructure lands — handle both.
+    // ({taskId}) once the task infrastructure lands - handle both.
     const DIRECT = Symbol('direct');
     let direct = null;
     runTask({
@@ -317,7 +317,7 @@ function init(serverId) {
           finishClone(direct.server && direct.server.id);
           return;
         }
-        if (err.dismissed) return; // progress hidden — the task tray takes over
+        if (err.dismissed) return; // progress hidden - the task tray takes over
         toast(err.message || 'Clone failed', { kind: 'error', timeout: 9000 });
       });
   }
@@ -357,7 +357,7 @@ function init(serverId) {
   }
 
   document.getElementById('st-save')?.addEventListener('click', async (e) => {
-    const saveBtn = e.currentTarget; // capture before await — currentTarget is null afterwards
+    const saveBtn = e.currentTarget; // capture before await - currentTarget is null afterwards
     const heapMb = Number(document.getElementById('st-heap').value);
     const body = {
       name: document.getElementById('st-name').value.trim(),
@@ -376,11 +376,11 @@ function init(serverId) {
     };
     // Docker settings: only send a field that actually changed from what the
     // server rendered. Sending all 4 unconditionally would run the (Docker-
-    // socket-hitting) validateOverrides check on every unrelated save — e.g. a
+    // socket-hitting) validateOverrides check on every unrelated save - e.g. a
     // Docker hiccup would then block renaming the server, not just changing
     // its container settings. The card is admin-only markup: when absent,
     // collectOverrides would read every field as cleared and an unrelated save
-    // would wipe (well, 403 on) the server's stored overrides — skip entirely.
+    // would wipe (well, 403 on) the server's stored overrides - skip entirely.
     if (document.getElementById('st-docker-name')) {
       const nowDocker = dockerSettings.collectOverrides({ forUpdate: true });
       if (nowDocker.containerName !== initialDocker.containerName) body.containerName = nowDocker.containerName;
@@ -452,10 +452,10 @@ function init(serverId) {
       }
       toast(
         data.needsRecreate
-          ? 'Saved — resource changes apply when you Recreate (button appears in the header).'
+          ? 'Saved - resource changes apply when you Recreate (button appears in the header).'
           : 'Saved.'
       );
-      dirty = false; // saved — leaving must not warn
+      dirty = false; // saved - leaving must not warn
       setTimeout(() => location.reload(), 900);
     } catch (err) {
       toast(`Network error: ${err.message}`, { kind: 'error' });

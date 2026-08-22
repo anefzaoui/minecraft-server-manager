@@ -1,7 +1,7 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
-// Page routes. Every page renders REAL data — servers, events, crashes,
+// Page routes. Every page renders REAL data - servers, events, crashes,
 // backups, updates, schedules, storage, activity, and the global file manager.
 
 const asyncHandler = require('../middleware/asyncHandler');
@@ -37,7 +37,7 @@ const SERVER_TABS = [
 
 // Two-level information architecture: the 15 tabs are grouped into a handful of
 // domain sections (top nav), each with a sub-nav of related sections. Inventory is
-// not a top tab any more — it lives per-player on the player page. All existing
+// not a top tab any more - it lives per-player on the player page. All existing
 // routes still work; only the navigation is reorganized.
 const TAB_GROUPS = [
   { key: 'overview', label: 'Overview', icon: 'layout-dashboard', tabs: ['overview'] },
@@ -88,7 +88,7 @@ function buildNav(id, tab, server) {
   return { groups, sub };
 }
 
-// Sidebar data available to every view (lightweight — no live stats).
+// Sidebar data available to every view (lightweight - no live stats).
 router.use(
   asyncHandler(async (req, res, next) => {
     const rows = serversService.listServers();
@@ -123,7 +123,7 @@ async function renderServerList(req, res, next, { page }) {
       sort,
       noServers: servers.length === 0,
       totals: {
-        // "online" means answering — a server still booting isn't.
+        // "online" means answering - a server still booting isn't.
         running: servers.filter((s) => s.status === 'running' || s.status === 'unhealthy').length,
         total: servers.length,
         players: servers.reduce((n, s) => n + s.players.online, 0),
@@ -149,12 +149,12 @@ router.get('/servers/new', async (req, res) => {
   let latestRelease = '';
   try {
     const mojang = require('../../services/mojang');
-    // Every channel — releases, snapshots, betas and alphas — so the picker can
+    // Every channel - releases, snapshots, betas and alphas - so the picker can
     // offer the full history; the template groups them by type.
     versions = await mojang.listVersions({ includeAll: true, limit: 5000 });
     latestRelease = (await mojang.getVersionManifest()).latest.release;
   } catch {
-    /* offline — manual entry still works */
+    /* offline - manual entry still works */
   }
   // Whether the "From mods" tab can offer CurseForge search (needs the stored key).
   let curseforgeEnabled = false;
@@ -218,7 +218,7 @@ router.get(
         .find((p) => (p.name || '').toLowerCase() === name.toLowerCase());
       if (found) player = found;
     } catch {
-      /* offline / rcon down — render with the fallback */
+      /* offline / rcon down - render with the fallback */
     }
     res.render('server-player', {
       title: `${player.name} · ${server.name}`,
@@ -240,7 +240,7 @@ router.get(
     if (!SERVER_TABS.includes(tab)) return next();
 
     const server = await serverVM(row);
-    // Docker settings (container name, network, extra ports/binds — including
+    // Docker settings (container name, network, extra ports/binds - including
     // host filesystem paths) are added ONLY here, never in serverVM, since
     // that view model is shared with the public /status/:slug page.
     server.containerName = row.containerName;
@@ -281,7 +281,7 @@ router.get(
       const live = require('../../services/liveCache').get(row.id);
       context.onlinePlayers = (live && live.players && live.players.names) || [];
       // Recent sends (oldest first) so the history pane survives reloads and
-      // is shared across admins — chat.js replays them with the live preview.
+      // is shared across admins - chat.js replays them with the live preview.
       context.chatHistory = require('../../events')
         .listEvents({ serverId: row.id, type: 'chat-sent', limit: 50 })
         .map((e) => ({ ts: e.created_at, actor: e.actor, ...e.details }))
@@ -294,7 +294,7 @@ router.get(
       const worldsService = require('../../services/worlds');
       context.worlds = await worldsService.listServerWorlds(row.id).catch(() => []);
       context.libraryWorlds = worldsService.libraryWorlds();
-      // Copy-to target list, serialized in one piece by the json helper — the
+      // Copy-to target list, serialized in one piece by the json helper - the
       // view used to hand-assemble this JSON attribute field by field.
       context.serverOptions = (res.locals.servers || []).map((s) => ({
         id: s.id,
@@ -364,20 +364,25 @@ router.get(
 
       // Every catalog field configurable at creation, minus what's covered
       // elsewhere on this tab: identity/flavor/resources (their own cards
-      // above — flavor/version changes go through the Updates page, which
+      // above - flavor/version changes go through the Updates page, which
       // handles the migration safely), players (live via whitelist/ops
       // files on the Players tab, no restart needed), and gameplay's
-      // DIFFICULTY/PVP (live via World Controls) + MOTD (the field above) —
+      // DIFFICULTY/PVP (live via World Controls) + MOTD (the field above) -
       // exposing those here too would just drift out of sync with the
       // RCON-set values. Same catalog + same field-level filter the wizard
       // itself uses, so nothing new is exposed beyond what's already safe there.
       const catalog = require('../../config/field-catalog');
       const EXCLUDED_SECTIONS = new Set(['identity', 'flavor', 'resources', 'players']);
-      const EXCLUDED_KEYS = new Set(['DIFFICULTY', 'PVP', 'MOTD']);
+      // Scoped to 'gameplay' specifically (not a global key blocklist) - a
+      // future field in another section coincidentally named e.g. MOTD must
+      // never be silently swallowed by this exclusion.
+      const EXCLUDED_GAMEPLAY_KEYS = new Set(['DIFFICULTY', 'PVP', 'MOTD']);
       context.advancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
         .map((s) => ({
           ...s,
-          fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env' && !EXCLUDED_KEYS.has(f.key)),
+          fields: catalog
+            .forSection(s.id, 'advanced')
+            .filter((f) => f.scope === 'env' && !(s.id === 'gameplay' && EXCLUDED_GAMEPLAY_KEYS.has(f.key))),
         }))
         .filter((s) => s.fields.length);
     } else if (tab === 'integrations') {
@@ -443,7 +448,7 @@ router.get(
 
 router.get('/modpacks', async (req, res) => {
   const withPacks = (res.locals.servers || []).filter((s) => s.pack);
-  // NB: never pass this under the `servers` key — that shadows res.locals.servers
+  // NB: never pass this under the `servers` key - that shadows res.locals.servers
   // and silently filters the sidebar's server list.
   res.render('modpacks', { title: 'Modpacks', active: 'modpacks', packServers: withPacks });
 });
@@ -453,7 +458,7 @@ router.get('/worlds', (req, res) => {
     title: 'Worlds',
     active: 'worlds',
     worlds: require('../../services/worlds').libraryWorlds(),
-    // Install/extract target list — one json call, not hand-assembled JSON.
+    // Install/extract target list - one json call, not hand-assembled JSON.
     serverOptions: (res.locals.servers || []).map((s) => ({
       id: s.id,
       name: s.name,
@@ -476,7 +481,7 @@ router.get('/updates', (req, res) => {
   res.render('updates', {
     title: 'Updates',
     active: 'updates',
-    // Changelog URLs come from remote platform APIs — allow only http(s) so a
+    // Changelog URLs come from remote platform APIs - allow only http(s) so a
     // hostile response can never plant a javascript: link.
     updates: checker.listOutdated().map((u) => ({
       ...u,
@@ -530,10 +535,10 @@ router.get(
     const catNames = {
       servers: 'Servers',
       backups: 'Backups',
-      'library/worlds': 'Library — worlds',
-      'library/mods': 'Library — mods & content',
-      'library/modpacks': 'Library — modpacks',
-      'library/icons': 'Library — icons',
+      'library/worlds': 'Library - worlds',
+      'library/mods': 'Library - mods & content',
+      'library/modpacks': 'Library - modpacks',
+      'library/icons': 'Library - icons',
       logs: 'Logs & event captures',
       blueprints: 'Blueprints',
       tmp: 'tmp',
@@ -665,7 +670,7 @@ router.get('/activity', (req, res) => {
   });
 });
 
-// Global file manager over ./data (admin only — full panel data access).
+// Global file manager over ./data (admin only - full panel data access).
 router.get(
   '/files',
   require('../middleware/auth').requireRole('admin'),
@@ -676,7 +681,7 @@ router.get(
     try {
       listing = await filesService.list(null, rel);
     } catch {
-      return res.redirect('/files'); // stale/invalid path — back to the root
+      return res.redirect('/files'); // stale/invalid path - back to the root
     }
     const crumbs = listing.path
       ? listing.path.split('/').map((seg, i, a) => {

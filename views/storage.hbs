@@ -1,4 +1,4 @@
-{{> page-header heading="STORAGE" sub="Complete visibility over ./data — every byte accounted for, every cleanup previewed."}}
+{{> page-header heading="STORAGE" sub="Complete visibility over ./data - every byte accounted for, every cleanup previewed."}}
 
 <div class="mb-6 grid gap-4 lg:grid-cols-3">
   <div class="card p-4 lg:col-span-2">
@@ -10,12 +10,12 @@
       <span class="text-3xl font-bold tabular-nums">{{bytes storage.totalUsed}}</span>
       <span class="pb-1 text-sm text-ink-faint">panel data · {{bytes storage.diskFree}} free of {{bytes storage.diskTotal}} on drive</span>
     </div>
-    {{! meterColor: the headline bar must go gold/red as the drive fills — it
+    {{! meterColor: the headline bar must go gold/red as the drive fills - it
         stayed success-green even at 95%. }}
     <div class="meter mt-3 h-3"><div class="{{meterColor storage.totalUsed storage.diskTotal}}" style="width: {{pct storage.totalUsed storage.diskTotal}}%"></div></div>
     <div class="mt-4 flex h-6 w-full overflow-hidden rounded-md" title="Breakdown by category">
       {{#each storage.breakdown}}
-        <div class="{{cls}}" style="width: {{width}}%" title="{{label}} — {{bytes size}}"></div>
+        <div class="{{cls}}" style="width: {{width}}%" title="{{label}} - {{bytes size}}"></div>
       {{/each}}
     </div>
     <div class="mt-2 flex flex-wrap gap-3 text-xs text-ink-faint">
@@ -35,7 +35,7 @@
       </div>
       <p class="help">GB used over the last scans. Snapshots recorded on every scan.</p>
     {{else}}
-      <p class="grid h-24 place-items-center text-sm text-ink-faint">No scans recorded yet — run one to start the trend.</p>
+      <p class="grid h-24 place-items-center text-sm text-ink-faint">No scans recorded yet - run one to start the trend.</p>
     {{/if}}
   </div>
 </div>
@@ -74,7 +74,7 @@
     </div>
 
     <div class="card">
-      <div class="border-b border-line p-3 font-semibold">Quota status — all instances</div>
+      <div class="border-b border-line p-3 font-semibold">Quota status - all instances</div>
       <div class="overflow-x-auto">
         <table class="table-base">
           <tbody>
@@ -85,7 +85,7 @@
                 <td class="w-32 text-right text-xs text-ink-faint">{{bytes disk.used}} / {{bytes disk.quota}}</td>
               </tr>
             {{else}}
-              <tr><td class="p-6 text-center text-ink-faint">No servers yet — per-instance quotas appear here once you create one.</td></tr>
+              <tr><td class="p-6 text-center text-ink-faint">No servers yet - per-instance quotas appear here once you create one.</td></tr>
             {{/each}}
           </tbody>
         </table>

@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const totp = require('../src/services/totp');
 
 // RFC 6238 Appendix B test vectors (SHA1, 8-digit truncation, 30s step, T0=0),
-// ASCII secret "12345678901234567890". This panel uses 6-digit codes — the
+// ASCII secret "12345678901234567890". This panel uses 6-digit codes - the
 // last 6 digits of the published 8-digit value are the same computation,
 // just kept to fewer digits, so they translate directly.
 const RFC_SECRET = totp.base32Encode(Buffer.from('12345678901234567890', 'ascii'));
@@ -40,7 +40,7 @@ test('verify() rejects a malformed code (not exactly 6 digits)', () => {
 test('verify() allows ±1 step of clock drift by default', () => {
   const step = totp.verify(RFC_SECRET, '287082', { atMs: 59_000 }); // step 1
   assert.notEqual(step, null);
-  // One step (30s) either side of t=59 still resolves to the same step-1 code window boundary —
+  // One step (30s) either side of t=59 still resolves to the same step-1 code window boundary -
   // step for t=59 is 1; step for t=59+30=89 is 2, and t=59-30=29 is 0. Verify both neighbors independently.
   const nextStep = totp.verify(RFC_SECRET, '287082', { atMs: 89_000 }); // one step later, window=1 covers it
   assert.notEqual(nextStep, null);
@@ -49,7 +49,7 @@ test('verify() allows ±1 step of clock drift by default', () => {
 test('verify() rejects replaying a code at or before lastStep (within the drift window)', () => {
   const step = totp.verify(RFC_SECRET, '287082', { atMs: 59_000 }); // step 1
   assert.equal(step, 1);
-  // Same step already used — replay.
+  // Same step already used - replay.
   assert.equal(totp.verify(RFC_SECRET, '287082', { atMs: 59_000, lastStep: step }), null);
   // A near-future lastStep (the +1 drift step legitimately consumed) still blocks
   // reuse of any code in the current window.

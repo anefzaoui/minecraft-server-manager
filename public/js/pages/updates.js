@@ -24,7 +24,7 @@ document.getElementById('updates-check-all')?.addEventListener('click', async ()
     );
     setTimeout(() => location.reload(), 900);
   } catch (err) {
-    if (err.dismissed) return; // progress hidden — the task tray takes over
+    if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'Update check failed', { kind: 'error', timeout: 9000 });
   }
 });
@@ -63,14 +63,14 @@ async function upgradePack(row, { serverId, serverName, subject, current, latest
     toast(`Upgraded: ${result.from} → ${result.to}.`);
     setTimeout(() => location.reload(), 900);
   } catch (err) {
-    if (err.dismissed) return; // progress hidden — the task tray takes over
+    if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'Upgrade failed', { kind: 'error', timeout: 12000 });
   }
 }
 
 async function offerRollback(serverId, serverName, errorMessage) {
   const ok = await confirmDialog({
-    title: 'Upgrade failed — roll back?',
+    title: 'Upgrade failed - roll back?',
     message: errorMessage || 'The server did not come up healthy after the upgrade.',
     detail: 'Rollback restores the pre-update backup and re-pins the previous pack version.',
     confirmLabel: 'Roll back',
@@ -85,7 +85,7 @@ async function offerRollback(serverId, serverName, errorMessage) {
     toast(`Rolled back to ${result && result.version ? result.version : 'the previous version'}.`);
     setTimeout(() => location.reload(), 900);
   } catch (err) {
-    if (err.dismissed) return; // progress hidden — the task tray takes over
+    if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'Rollback failed', { kind: 'error', timeout: 12000 });
   }
 }

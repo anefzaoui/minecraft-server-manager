@@ -9,10 +9,10 @@
       <div>
         <label class="label" for="ig-dc-url">Webhook URL</label>
         <input class="input font-mono text-xs" type="password" id="ig-dc-url" autocomplete="off" placeholder="https://discord.com/api/webhooks/…">
-        {{! The stored webhook is shown as a fact, not a placeholder — a
+        {{! The stored webhook is shown as a fact, not a placeholder - a
             placeholder disappears on focus and reads as example text. }}
         {{#if integrations.discord.hasWebhook}}
-          <p class="help">Stored: <code class="rounded bg-inset px-1 font-mono">{{integrations.discord.webhookMasked}}</code> — leave blank to keep it, paste a new URL to replace it.</p>
+          <p class="help">Stored: <code class="rounded bg-inset px-1 font-mono">{{integrations.discord.webhookMasked}}</code> - leave blank to keep it, paste a new URL to replace it.</p>
         {{else}}
           <p class="help">Server Settings → Integrations → Webhooks in your Discord server. Stored encrypted.</p>
         {{/if}}
@@ -32,7 +32,7 @@
         {{#if integrations.discord.hasWebhook}}
           <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} Send test</button>
         {{else}}
-          {{! Disabled controls swallow hover — the wrapper carries the "why". }}
+          {{! Disabled controls swallow hover - the wrapper carries the "why". }}
           <span data-tip="Save a webhook URL first"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} Send test</button></span>
         {{/if}}
         <span class="hidden text-xs text-warn" data-ig-dirty="dc">Unsaved changes</span>
@@ -52,7 +52,7 @@
           <span class="font-mono text-xs text-ink-faint">/status/</span>
           <input class="input flex-1 font-mono text-xs" id="ig-sp-slug" placeholder="my-server" value="{{integrations.statusPage.slug}}">
         </div>
-        <p class="help">Anyone with the link sees name, MOTD, version, player count, and uptime — nothing else, and no way into the panel. Off by default.</p>
+        <p class="help">Anyone with the link sees name, MOTD, version, player count, and uptime - nothing else, and no way into the panel. Off by default.</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button class="btn btn-primary" id="ig-sp-save">Save</button>
@@ -76,7 +76,7 @@
               <option value="{{this}}" data-desc="Local network (LAN)">{{this}}</option>
             {{/each}}
             {{#if integrations.invite.publicAddress}}
-              <option value="{{integrations.invite.publicAddress}}" data-desc="Public IP — needs port forwarding">{{integrations.invite.publicAddress}}</option>
+              <option value="{{integrations.invite.publicAddress}}" data-desc="Public IP - needs port forwarding">{{integrations.invite.publicAddress}}</option>
             {{/if}}
             <option value="__custom" data-desc="Domain or address you set up yourself">Custom address…</option>
           </select>
@@ -97,7 +97,7 @@
         {{#if integrations.invite.modded}}
           <div class="rounded-md border border-line bg-raised p-3">
             <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
-            <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App — it installs the right Minecraft version, the mods, and pre-adds this server to their multiplayer list.</p>
+            <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App - it installs the right Minecraft version, the mods, and pre-adds this server to their multiplayer list.</p>
             {{#if integrations.invite.manualMods.length}}
               <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="rounded bg-inset px-1">mods</code> folder themselves:</p>
               <ul class="mt-1 list-inside list-disc text-xs text-ink-soft">
@@ -108,11 +108,11 @@
         {{else}}
           <div class="rounded-md border border-line bg-raised p-3">
             <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
-            <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}} — no mods required on the client.</p>
+            <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}} - no mods required on the client.</p>
           </div>
         {{/if}}
         {{#if integrations.invite.whitelistEnforced}}
-          <div class="notice notice-warn text-xs text-warn">Whitelist is enforced — add each friend on the Players tab before they join.</div>
+          <div class="notice notice-warn text-xs text-warn">Whitelist is enforced - add each friend on the Players tab before they join.</div>
         {{/if}}
         <details class="rounded-md border border-line bg-raised p-3 text-xs">
           <summary class="cursor-pointer font-medium text-sm">Playing over the internet (port forwarding)</summary>

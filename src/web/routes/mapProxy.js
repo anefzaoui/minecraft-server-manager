@@ -1,20 +1,20 @@
 'use strict';
 
 // Authenticated reverse proxy for BlueMap's web UI: the map port is never
-// exposed to the browser directly — everything flows through the panel's
+// exposed to the browser directly - everything flows through the panel's
 // session-gated /map/<serverId>/… path. Plain stdlib http, GET/HEAD only.
 //
 // BlueMap's HOST-published port (127.0.0.1 bare metal, host.docker.internal
-// when the panel is containerized — see config.mapProxyHost) is only ONE of
+// when the panel is containerized - see config.mapProxyHost) is only ONE of
 // several ways this proxy might actually reach it. A server whose Docker
-// network was set (Advanced Docker Settings — e.g. a network shared with a
+// network was set (Advanced Docker Settings - e.g. a network shared with a
 // reverse proxy like Pangolin) is reachable directly on its CONTAINER port
-// over that network, with no host-port-publish involved at all — and if the
+// over that network, with no host-port-publish involved at all - and if the
 // panel container is ALSO joined to that network, that direct path is both
 // more robust and required (the host-port path may not reach it at all in
-// that topology). So on each server we try candidate targets in order —
+// that topology). So on each server we try candidate targets in order -
 // every network IP the sibling container has, THEN the host-published-port
-// fallback — cache whichever one actually answers, and only re-probe when
+// fallback - cache whichever one actually answers, and only re-probe when
 // the cached one stops working (a fresh probe on every tile/asset request
 // would be far too slow).
 
@@ -36,7 +36,7 @@ const PROBE_TIMEOUT_MS = 1500;
 // serverId -> { target: {host, port}, expiresAt }
 const targetCache = new Map();
 
-/** Every network IP the sibling container has, on its own CONTAINER port — no
+/** Every network IP the sibling container has, on its own CONTAINER port - no
  *  host-port-publish or host-gateway routing needed if the panel can reach it. */
 async function containerNetworkTargets(server) {
   const name = server.containerName || containers.containerName(server.id);
@@ -48,11 +48,11 @@ async function containerNetworkTargets(server) {
       .filter(Boolean)
       .map((ip) => ({ host: ip, port: CONTAINER_PORT }));
   } catch {
-    return []; // container gone/uninspectable — fall through to the host-port candidate
+    return []; // container gone/uninspectable - fall through to the host-port candidate
   }
 }
 
-/** Raw TCP connect probe — cheap, and sidesteps whether BlueMap's bundled
+/** Raw TCP connect probe - cheap, and sidesteps whether BlueMap's bundled
  *  webserver implements any particular HTTP method correctly. */
 function probeConnect(target, timeoutMs = PROBE_TIMEOUT_MS) {
   return new Promise((resolve) => {
@@ -84,7 +84,7 @@ async function resolveTarget(server, cfg) {
       return target;
     }
   }
-  // Nothing answered — return the last (host-port) candidate so the error
+  // Nothing answered - return the last (host-port) candidate so the error
   // message below at least reflects the "final" attempt, uncached (so the
   // very next request re-probes everything instead of being stuck on a dead
   // target for the full TTL).
@@ -104,7 +104,7 @@ router.use('/:id', async (req, res) => {
   const target = await resolveTarget(server, cfg);
 
   // Never forward the panel session cookie (or an Authorization header) to the
-  // proxied target — it's just BlueMap's static web UI and doesn't need it,
+  // proxied target - it's just BlueMap's static web UI and doesn't need it,
   // and the target may be reachable by other containers on a shared Docker
   // network (see the module comment above), which would otherwise leak it.
   const { cookie: _cookie, authorization: _authorization, ...forwardHeaders } = req.headers;
@@ -128,13 +128,13 @@ router.use('/:id', async (req, res) => {
   );
   upstream.on('timeout', () => upstream.destroy(new Error('timeout')));
   upstream.on('error', (err) => {
-    targetCache.delete(server.id); // stale — the next request re-probes every candidate
+    targetCache.delete(server.id); // stale - the next request re-probes every candidate
     if (res.headersSent) return res.end();
     if (err.code === 'ENOTFOUND') {
       return res
         .status(502)
         .send(
-          `Cannot resolve map-proxy host "${target.host}" — if the panel runs in its own container, ` +
+          `Cannot resolve map-proxy host "${target.host}" - if the panel runs in its own container, ` +
             'add `extra_hosts: ["host.docker.internal:host-gateway"]` to its compose service ' +
             '(see docker-compose.yml), or set MAP_PROXY_HOST explicitly.'
         );
@@ -142,7 +142,7 @@ router.use('/:id', async (req, res) => {
     res
       .status(502)
       .send(
-        'The map server is not responding — is the Minecraft server running? BlueMap needs a minute after startup to come up.'
+        'The map server is not responding - is the Minecraft server running? BlueMap needs a minute after startup to come up.'
       );
   });
   req.pipe(upstream);

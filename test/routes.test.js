@@ -19,7 +19,7 @@ test.after(async () => {
 
 test('API requires authentication', async () => {
   const r = await app.req('GET', '/api/settings/localization');
-  // Unauthed API calls are rejected (401) or redirected to login (302) — never 200.
+  // Unauthed API calls are rejected (401) or redirected to login (302) - never 200.
   assert.notEqual(r.status, 200);
 });
 

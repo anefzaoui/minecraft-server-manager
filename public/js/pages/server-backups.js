@@ -33,7 +33,7 @@ function init(serverId) {
       toast('Backup created.');
       reload();
     } catch (err) {
-      if (err.dismissed) return; // progress hidden — the task tray takes over
+      if (err.dismissed) return; // progress hidden - the task tray takes over
       toast(err.message || 'Backup failed', { kind: 'error', timeout: 9000 });
     }
   });
@@ -63,7 +63,7 @@ function init(serverId) {
         toast('Backup restored.');
         reload();
       } catch (err) {
-        if (err.dismissed) return; // progress hidden — the task tray takes over
+        if (err.dismissed) return; // progress hidden - the task tray takes over
         toast(err.message || 'Restore failed', { kind: 'error', timeout: 9000 });
       }
     } else if (e.target.closest('[data-backup-delete]')) {

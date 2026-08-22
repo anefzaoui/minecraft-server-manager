@@ -44,7 +44,7 @@ const teleportSchema = z.discriminatedUnion('mode', [
     mode: z.literal('coords'),
     player: nameSchema,
     x: z.coerce.number().finite(),
-    // Y omitted/empty = land on the surface (spreadplayers) — never mid-air.
+    // Y omitted/empty = land on the surface (spreadplayers) - never mid-air.
     y: z.preprocess(
       (v) => (v === '' || v === null || v === undefined ? undefined : v),
       z.coerce.number().finite().optional()
@@ -94,7 +94,7 @@ async function loadContext(req) {
     const info = await inspectStatus(server.id);
     running = info.exists && RUNNING_STATES.has(info.status);
   } catch {
-    /* docker down — fall back to file edits */
+    /* docker down - fall back to file edits */
   }
   return { server, ctx: { running, actor: req.user.username } };
 }
@@ -221,7 +221,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const body = teleportSchema.parse(req.body);
     const { server, ctx } = await loadContext(req);
-    // One teleport at a time per server — parallel /locate searches stall the
+    // One teleport at a time per server - parallel /locate searches stall the
     // server's main thread hard enough to time out every online player.
     const result = await players.withTeleportSlot(server.id, async () => {
       if (body.mode === 'coords') {

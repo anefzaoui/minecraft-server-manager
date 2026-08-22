@@ -59,7 +59,7 @@ module.exports = [
     key: 'memorySwap',
     scope: 'docker',
     label: 'Container swap limit',
-    help: 'Extra swap space the container may use beyond its memory limit. 0 disables swap. Swapping a Minecraft server causes heavy lag — leave at 0 unless you know you need it.',
+    help: 'Extra swap space the container may use beyond its memory limit. 0 disables swap. Swapping a Minecraft server causes heavy lag - leave at 0 unless you know you need it.',
     type: 'size-mb',
     unit: 'MB',
     default: 0,

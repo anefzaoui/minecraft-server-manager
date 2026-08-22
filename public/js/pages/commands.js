@@ -19,7 +19,7 @@ function init(root) {
   try {
     commands = JSON.parse(document.getElementById('chat-commands-data').textContent) || [];
   } catch {
-    /* island missing — actions still work */
+    /* island missing - actions still work */
   }
   const rowFor = (id) => root.querySelector(`[data-cc-row][data-id="${CSS.escape(id)}"]`);
 
@@ -68,7 +68,7 @@ function init(root) {
       }
       try {
         await withBusy(prefixSave, 'Saving…', () => api('PUT', '/prefix', { prefix: value }));
-        // Patch every rendered trigger in place — a full reload for a
+        // Patch every rendered trigger in place - a full reload for a
         // one-character setting flashed the page and lost scroll position.
         prefix = value;
         root.dataset.prefix = value;
@@ -79,7 +79,7 @@ function init(root) {
         }
         const sample = root.querySelector('[data-cc-prefix-sample]');
         if (sample) sample.textContent = `${prefix}rtp2`;
-        toast(`Prefix set to "${value}" — commands now start with ${value}`);
+        toast(`Prefix set to "${value}" - commands now start with ${value}`);
       } catch (err) {
         fail(err);
       }
@@ -105,7 +105,7 @@ function init(root) {
 
   // -------------------------------------------------------- add / edit modal
   function commandModal(existing) {
-    // Seed each action panel ONLY from params saved for THAT action —
+    // Seed each action panel ONLY from params saved for THAT action -
     // maxDistance means "RTP ring" on one and "structure search radius" on the
     // other, and cross-seeding bled one into the other when switching panels.
     const p = (existing && existing.params) || {};
@@ -151,7 +151,7 @@ function init(root) {
             <option value="origin">World center (0, 0)</option>
           </select>
         </div>
-        <p class="text-xs text-ink-faint">Panel-built RTP — picks a random ring point and lands the player safely on the surface; ocean picks are re-rolled automatically.</p>
+        <p class="text-xs text-ink-faint">Panel-built RTP - picks a random ring point and lands the player safely on the surface; ocean picks are re-rolled automatically.</p>
       </div>
 
       <div data-cc-panel="structure" class="hidden space-y-3">
@@ -196,7 +196,7 @@ function init(root) {
         </div>
         <div>
           <label class="label flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-redstone-500"></span> On failure</label>
-          <input class="input" data-f="msgFailure" maxlength="200" placeholder="Couldn’t find a safe spot — try again in a moment. ({error})" value="${esc(existing ? existing.msg_failure : '')}">
+          <input class="input" data-f="msgFailure" maxlength="200" placeholder="Couldn’t find a safe spot - try again in a moment. ({error})" value="${esc(existing ? existing.msg_failure : '')}">
         </div>
         <p class="text-xs text-ink-faint" data-cc-placeholders></p>
       </div>
@@ -252,7 +252,7 @@ function init(root) {
       // items are {id, dimension}; label options "Nether · Crimson Forest", grouped by dimension.
       promise.then((items) => {
         if (!items.length) {
-          sel.innerHTML = '<option value="">No list available — start the server</option>';
+          sel.innerHTML = '<option value="">No list available - start the server</option>';
         } else {
           const list = [...items].sort(
             (a, b) =>
@@ -345,7 +345,7 @@ function init(root) {
       if (!el) return;
       const action = f('action').value;
       el.innerHTML =
-        `Placeholders — while running: <code class="font-mono">{player}</code> <code class="font-mono">{arg1}</code>–<code class="font-mono">{arg3}</code> · ` +
+        `Placeholders - while running: <code class="font-mono">{player}</code> <code class="font-mono">{arg1}</code>–<code class="font-mono">{arg3}</code> · ` +
         `on success: ${(SUCCESS_TOKENS[action] || '{player}')
           .split(' ')
           .map((t) => `<code class="font-mono">${esc(t)}</code>`)
@@ -426,7 +426,7 @@ function init(root) {
     const row = e.target.closest('[data-cc-row]');
     const cmd = commands.find((c) => c.id === row?.dataset.id);
     if (!cmd) return;
-    toggle.disabled = true; // keep the toggle visual — just lock it in flight
+    toggle.disabled = true; // keep the toggle visual - just lock it in flight
     try {
       await api('PATCH', `/${cmd.id}`, { enabled: toggle.checked });
       cmd.enabled = toggle.checked;
@@ -452,7 +452,7 @@ function init(root) {
         <label class="label">Run as player (must be online for teleports)</label>
         <input class="input" data-f="player" maxlength="16" autocomplete="off" spellcheck="false" placeholder="AverageLupo" value="${esc(localStorage.getItem('cc-test-player') || '')}">
       </div>
-      <p class="text-xs text-ink-faint">Runs <code class="font-mono">${esc(prefix + cmd.trigger)}</code> right now — permission and cooldown checks are skipped, the result is whispered to the player in game.</p>`;
+      <p class="text-xs text-ink-faint">Runs <code class="font-mono">${esc(prefix + cmd.trigger)}</code> right now - permission and cooldown checks are skipped, the result is whispered to the player in game.</p>`;
     openModal({
       title: `Test ${prefix}${cmd.trigger}`,
       content,
@@ -472,7 +472,7 @@ function init(root) {
             localStorage.setItem('cc-test-player', player);
             try {
               const { message } = await api('POST', `/${cmd.id}/test`, { player });
-              // Only the use-counter changed — bump it in place instead of
+              // Only the use-counter changed - bump it in place instead of
               // reloading out from under the success message.
               cmd.uses = (Number(cmd.uses) || 0) + 1;
               const uses = rowFor(cmd.id)?.querySelector('[data-cc-uses]');

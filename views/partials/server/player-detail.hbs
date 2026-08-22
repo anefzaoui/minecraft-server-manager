@@ -37,7 +37,7 @@
         {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
           <button class="btn btn-ghost btn-sm" data-act="teleport" data-tip="Teleport (coordinates / biome / player)">{{{icon 'compass' 'size-3.5'}}} Teleport</button>
         {{/if}}
-        {{! Labeled like its siblings — a lone glyph in a row of labeled actions reads as noise. }}
+        {{! Labeled like its siblings - a lone glyph in a row of labeled actions reads as noise. }}
         {{#if player.uuid}}<button class="btn btn-ghost btn-sm" data-act="copy-uuid" data-copy="{{player.uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
       </div>
     </div>
@@ -46,7 +46,7 @@
     {{/if}}
   </div>
 
-  {{! The player's inventory — reuses the inventory editor, pinned to this player
+  {{! The player's inventory - reuses the inventory editor, pinned to this player
       (no picker, no server-wide search). }}
   {{> server/inventory fixedPlayer=player}}
 </div>

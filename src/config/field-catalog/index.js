@@ -1,6 +1,6 @@
 'use strict';
 
-// FIELD CATALOG — the single source of truth for every configurable setting
+// FIELD CATALOG - the single source of truth for every configurable setting
 // the panel exposes: itzg env vars, Docker resource limits, server.properties
 // keys, and panel settings. Forms render from it; server-side validation is
 // derived from it; nothing anywhere shows a raw env var without its friendly

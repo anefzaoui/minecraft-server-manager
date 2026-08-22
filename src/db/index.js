@@ -19,7 +19,7 @@ function open() {
   return db;
 }
 
-/** Prepared-statement helpers. All synchronous — node:sqlite mirrors better-sqlite3. */
+/** Prepared-statement helpers. All synchronous - node:sqlite mirrors better-sqlite3. */
 function run(sql, ...params) {
   return open()
     .prepare(sql)

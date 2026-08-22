@@ -1,7 +1,7 @@
 // Inventory tab: god-mode inventory editor. Every slot (main, hotbar, armor,
 // offhand, ender chest, nested backpacks) is clickable: change count, replace,
 // move/swap, delete, or place an item into an empty slot. The backend picks
-// the mechanism automatically — live `item replace` commands while the player
+// the mechanism automatically - live `item replace` commands while the player
 // is online, direct .dat rewrites (with backups) while they are not. Plus the
 // original forensics: item search, snapshots + diff, RCON give/clear.
 import { toast } from '../lib/toast.js';
@@ -82,7 +82,7 @@ function init(root) {
   }
 
   function when(ts) {
-    return ts ? new Date(ts).toLocaleString() : '—';
+    return ts ? new Date(ts).toLocaleString() : '-';
   }
 
   // ------------------------------------------------------------------ icons
@@ -135,7 +135,7 @@ function init(root) {
       if (label)
         cell.innerHTML = `<span class="text-[8px] uppercase tracking-wide text-ink-faint/60">${esc(label)}</span>`;
       cell.dataset.tip = editable
-        ? `Empty ${label || slotName(at.container, at.slot)} — click to put an item here`
+        ? `Empty ${label || slotName(at.container, at.slot)} - click to put an item here`
         : label
           ? `Empty ${label} slot`
           : '';
@@ -163,7 +163,7 @@ function init(root) {
         ${item.count > 1 ? `<span class="absolute bottom-0 right-0.5 text-[9px] font-bold">${esc(item.count)}</span>` : ''}
         ${enchanted ? '<span class="absolute left-0.5 top-0 text-[9px]">*</span>' : ''}
         ${hasNested ? '<span class="absolute left-0.5 bottom-0.5 size-1.5 rounded-full bg-grass-400" aria-hidden="true"></span>' : ''}`;
-      // The bundled icon set only covers vanilla — modded items (and the rare
+      // The bundled icon set only covers vanilla - modded items (and the rare
       // vanilla id it's missing) just keep the text abbreviation as-is.
       if (iconBase && item.id.startsWith('minecraft:')) {
         const abbrevEl = cell.querySelector('[data-slot-abbrev]');
@@ -174,7 +174,7 @@ function init(root) {
         img.src = `${iconBase}/${item.id.slice('minecraft:'.length)}.png`;
         img.addEventListener('load', () => abbrevEl?.classList.add('hidden'));
         img.addEventListener('error', () => {
-          // No local texture (bed/banner/chest/head/… — see itemGlyph.js) —
+          // No local texture (bed/banner/chest/head/… - see itemGlyph.js) -
           // a purpose-built glyph beats the 2-3 letter text abbreviation.
           const glyph = document.createElement('span');
           glyph.className = 'pointer-events-none absolute inset-1';
@@ -221,8 +221,8 @@ function init(root) {
     if (editInfo) {
       mech.innerHTML =
         editInfo.mechanism === 'rcon'
-          ? `${icon('zap', 'size-3.5 text-warn')} <span>Player is online — edits run live via commands. Backpack contents are read-only until they leave.</span>`
-          : `${icon('file', 'size-3.5 text-link')} <span>Editing the save file directly — a backup of the previous state is kept (last 3).</span>`;
+          ? `${icon('zap', 'size-3.5 text-warn')} <span>Player is online - edits run live via commands. Backpack contents are read-only until they leave.</span>`
+          : `${icon('file', 'size-3.5 text-link')} <span>Editing the save file directly - a backup of the previous state is kept (last 3).</span>`;
     } else {
       mech.innerHTML = '';
     }
@@ -322,7 +322,7 @@ function init(root) {
           }))
         )
           return;
-        // The menu modal is already closed — spin the on-page grid cell instead.
+        // The menu modal is already closed - spin the on-page grid cell instead.
         withBusy(slotEl(at), () =>
           postEdit(
             `/player/${currentUuid}/slot`,
@@ -435,7 +435,7 @@ function init(root) {
     content.insertAdjacentHTML('beforeend', itemHeader(item, slotName(from.container, from.slot)));
     const hint =
       editInfo && editInfo.mechanism === 'rcon'
-        ? 'Pick a target slot. While the player is online, occupied targets are rejected — swaps need them offline.'
+        ? 'Pick a target slot. While the player is online, occupied targets are rejected - swaps need them offline.'
         : 'Pick a target slot. Occupied targets swap the two items.';
     content.insertAdjacentHTML('beforeend', `<p class="text-xs text-ink-faint">${hint}</p>`);
 
@@ -447,7 +447,7 @@ function init(root) {
         return;
       }
       modal.close();
-      // Picker modal is closed — spin the source cell in the on-page grid.
+      // Picker modal is closed - spin the source cell in the on-page grid.
       await withBusy(slotEl(from), () =>
         postEdit(
           `/player/${currentUuid}/move`,
@@ -515,7 +515,7 @@ function init(root) {
     if (!editable) {
       content.insertAdjacentHTML(
         'beforeend',
-        '<p class="rounded-md border border-gold-500/40 bg-gold-400/5 p-2.5 text-xs text-warn">Read-only while the player is online — stop the server or kick the player to edit backpack contents.</p>'
+        '<p class="rounded-md border border-gold-500/40 bg-gold-400/5 p-2.5 text-xs text-warn">Read-only while the player is online - stop the server or kick the player to edit backpack contents.</p>'
       );
     }
     const grid = document.createElement('div');
@@ -542,7 +542,7 @@ function init(root) {
     content.appendChild(grid);
     content.insertAdjacentHTML(
       'beforeend',
-      `<p class="text-xs text-ink-faint">${sub.items.filter((i) => i.id).length} stack(s)${editable ? ' — click one to edit it' : ''}. Deeper nested containers open from their own item menus after a reload.</p>`
+      `<p class="text-xs text-ink-faint">${sub.items.filter((i) => i.id).length} stack(s)${editable ? ' - click one to edit it' : ''}. Deeper nested containers open from their own item menus after a reload.</p>`
     );
   }
 
@@ -557,7 +557,7 @@ function init(root) {
       players = [];
     }
     el('inv-loading')?.classList.add('hidden'); // the fetch decided which state shows
-    // Player page: pinned to one player — skip the picker and load them directly.
+    // Player page: pinned to one player - skip the picker and load them directly.
     if (fixed) {
       el('inv-empty').classList.add('hidden');
       await selectPlayer(fixed);
@@ -650,7 +650,7 @@ function init(root) {
     }
     if (!snapshots.length) {
       box.innerHTML =
-        '<p class="text-sm text-ink-faint">No snapshots for this player yet — press Snapshot above, or wait for the automatic ones taken on joins and deaths.</p>';
+        '<p class="text-sm text-ink-faint">No snapshots for this player yet - press Snapshot above, or wait for the automatic ones taken on joins and deaths.</p>';
       return;
     }
     box.innerHTML = `
@@ -676,7 +676,7 @@ function init(root) {
         if (cb.checked) {
           selectedSnaps.push(file);
           if (selectedSnaps.length > 2) {
-            // Keep the two most recent picks — uncheck the oldest selection.
+            // Keep the two most recent picks - uncheck the oldest selection.
             const dropped = selectedSnaps.shift();
             const old = box.querySelector(`[data-snap-file="${CSS.escape(dropped)}"]`);
             if (old) old.checked = false;
@@ -746,7 +746,7 @@ function init(root) {
     box.innerHTML = `
       <div class="mb-2 text-xs text-ink-faint">
         Comparing <b class="text-ink-soft">${esc(when(diff.a.ts))}</b> (${esc(diff.a.reason)})
-        &rarr; <b class="text-ink-soft">${esc(when(diff.b.ts))}</b> (${esc(diff.b.reason)}) — counts pooled across inventory, armor, offhand and ender chest.
+        &rarr; <b class="text-ink-soft">${esc(when(diff.b.ts))}</b> (${esc(diff.b.reason)}) - counts pooled across inventory, armor, offhand and ender chest.
       </div>
       <div class="grid gap-3 md:grid-cols-3">
         ${section('Added', 'text-ok', diff.added, 'added')}
@@ -759,7 +759,7 @@ function init(root) {
 
   // ----------------------------------------------------------------- search
   async function runSearch() {
-    // setBusy on an already-busy control is a no-op that still runs the fn —
+    // setBusy on an already-busy control is a no-op that still runs the fn -
     // the Enter path was double-firing the request during flight.
     if (el('inv-search-go').dataset.busy) return;
     const q = el('inv-search-q').value.trim();
@@ -784,7 +784,7 @@ function init(root) {
               <tr>
                 <td class="text-sm">${esc(r.player.name || r.player.uuid)}</td>
                 <td><span class="chip">${esc(whereLabel(r.where))}</span></td>
-                <td class="font-mono text-xs">${r.slot === null ? '—' : esc(r.slot)}</td>
+                <td class="font-mono text-xs">${r.slot === null ? '-' : esc(r.slot)}</td>
                 <td class="text-sm">
                   ${r.displayName ? `<span class="text-warn">"${esc(r.displayName)}"</span> <span class="text-xs text-ink-faint">(${esc(r.id)})</span>` : `<span class="font-mono text-xs">${esc(r.id)}</span>`}
                 </td>
@@ -858,7 +858,7 @@ function init(root) {
         return postEdit(
           `/player/${currentUuid}/add`,
           { item: itemId, count: n },
-          (r) => `${r.count}x ${r.item} added to slot ${r.slot} (save file — backup kept)`
+          (r) => `${r.count}x ${r.item} added to slot ${r.slot} (save file - backup kept)`
         );
       },
     });
@@ -969,7 +969,7 @@ function init(root) {
               !(await confirmDialog({
                 title: `Clear the ENTIRE inventory of ${player}?`,
                 message:
-                  'Every item they carry will be deleted. This cannot be undone — take a snapshot first if you might need it back.',
+                  'Every item they carry will be deleted. This cannot be undone - take a snapshot first if you might need it back.',
                 confirmLabel: 'Clear everything',
                 danger: true, // the most destructive dialog on the tab must not look like a positive action
               }))

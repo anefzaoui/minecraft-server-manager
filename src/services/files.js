@@ -1,9 +1,9 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Scoped file manager. serverId scopes every operation to
 // ./data/servers/<id>; serverId = null is the global (admin) manager rooted at
-// DATA_DIR itself. Every path resolves through the path guard — nothing can
+// DATA_DIR itself. Every path resolves through the path guard - nothing can
 // escape ./data, and server-scoped calls can't escape their server dir.
 
 const httpError = require('../utils/httpError');
@@ -18,7 +18,7 @@ const indexer = require('../storage/indexer');
 
 const MAX_TEXT_BYTES = 2 * 1024 * 1024; // editor cap
 // Global scope: panel-internal files at the DATA_DIR root that must never be read,
-// written, listed, or downloaded from the UI — the database (password hashes + the
+// written, listed, or downloaded from the UI - the database (password hashes + the
 // at-rest secret cipher) and the session secret (that cipher's key + the cookie
 // signing key). Any other top-level dotfile is treated the same, defensively.
 const PROTECTED_GLOBAL = new Set(['panel.db', 'panel.db-wal', 'panel.db-shm', 'panel.db-journal', '.session-secret']);
@@ -38,7 +38,7 @@ function resolvePath(serverId, relPath = '') {
 
 function guardProtected(serverId, rel) {
   if (!serverId && isProtectedGlobal(rel)) {
-    // Applies to read/download AND write — the DB holds password hashes and the
+    // Applies to read/download AND write - the DB holds password hashes and the
     // at-rest secret cipher, and .session-secret is that cipher's key, so neither
     // must ever leave (or change) via the file manager.
     throw httpError(403, 'That panel file is not accessible from the file manager');
@@ -65,7 +65,7 @@ async function list(serverId, relPath = '') {
     try {
       if (isDir) {
         // Use the background indexer's cached size instead of a live recursive
-        // walk per folder on every listing — opening a folder with a multi-GB
+        // walk per folder on every listing - opening a folder with a multi-GB
         // world used to stat tens of thousands of files. Deep/not-yet-indexed
         // dirs read 0 until the next scan; that's the instant-lookup trade-off.
         const dataRel = path.relative(config.dataDir, childAbs).split(path.sep).join('/');
@@ -101,12 +101,12 @@ async function readText(serverId, relPath) {
   if (st.size > MAX_TEXT_BYTES) {
     throw httpError(
       413,
-      `File is too large for the editor (${humanBytes(st.size)} — limit is 2 MB). Download it instead.`
+      `File is too large for the editor (${humanBytes(st.size)} - limit is 2 MB). Download it instead.`
     );
   }
   const buf = await fsp.readFile(abs);
   if (buf.subarray(0, 8192).includes(0)) {
-    throw httpError(415, 'This looks like a binary file — download it instead of editing');
+    throw httpError(415, 'This looks like a binary file - download it instead of editing');
   }
   return { content: buf.toString('utf8'), size: st.size };
 }
@@ -343,7 +343,7 @@ function sanitizeName(name) {
 }
 
 function formatWhen(ms) {
-  if (!ms) return '—';
+  if (!ms) return '-';
   const d = new Date(ms);
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;

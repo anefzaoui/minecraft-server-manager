@@ -1,4 +1,4 @@
-# Application data (worlds, mods, backups, DB, generated secret — everything lives here)
+# Application data (worlds, mods, backups, DB, generated secret - everything lives here)
 data/
 
 node_modules/

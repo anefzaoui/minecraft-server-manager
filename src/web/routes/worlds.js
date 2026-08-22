@@ -37,7 +37,7 @@ async function worldUploadPreflight(req, res, next) {
       });
     }
     // A world archive is extracted after upload, so it needs headroom for both the
-    // upload and the (larger) extracted copy — check disk against ~3× the upload.
+    // upload and the (larger) extracted copy - check disk against ~3× the upload.
     if (declared > 0) await files.assertDiskFree(declared * 3);
     next();
   } catch (err) {
@@ -127,7 +127,7 @@ router.get(
   })
 );
 
-// Rename a library world (display name only — the archive is untouched).
+// Rename a library world (display name only - the archive is untouched).
 router.patch(
   '/:id',
   asyncHandler((req, res, next) => {

@@ -15,7 +15,7 @@ const MB = 1024 * 1024;
 /**
  * Read a numeric env var, validating it when set. An unset/blank var falls back
  * to the default; a set-but-invalid var (typo, out of range) throws a clear
- * error instead of silently becoming the default — which would mask the mistake.
+ * error instead of silently becoming the default - which would mask the mistake.
  */
 function numFromEnv(name, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
   const raw = process.env[name];
@@ -23,7 +23,7 @@ function numFromEnv(name, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } =
   const n = Number(raw);
   if (!Number.isFinite(n) || !Number.isInteger(n) || n < min || n > max) {
     throw new Error(
-      `${name} must be an integer between ${min} and ${max} — got "${raw}". Fix it in your .env (or leave it blank for the default ${fallback}).`
+      `${name} must be an integer between ${min} and ${max} - got "${raw}". Fix it in your .env (or leave it blank for the default ${fallback}).`
     );
   }
   return n;
@@ -42,7 +42,7 @@ function resolveSessionSecret() {
   if (fromEnv && fromEnv.trim().length > 0) {
     if (fromEnv.trim().length < 16) {
       throw new Error(
-        'SESSION_SECRET is set but too short — use at least 16 characters (e.g. `openssl rand -base64 48`).'
+        'SESSION_SECRET is set but too short - use at least 16 characters (e.g. `openssl rand -base64 48`).'
       );
     }
     return fromEnv.trim();
@@ -52,7 +52,7 @@ function resolveSessionSecret() {
     const existing = fs.readFileSync(secretFile, 'utf8').trim();
     if (existing.length >= 16) return existing;
   } catch {
-    /* not created yet — fall through and generate */
+    /* not created yet - fall through and generate */
   }
 
   const generated = crypto.randomBytes(48).toString('base64url');
@@ -66,7 +66,7 @@ function resolveSessionSecret() {
     );
   }
   console.log(
-    `No SESSION_SECRET set — generated one and saved it to ${secretFile} (keep it private; delete it to rotate).`
+    `No SESSION_SECRET set - generated one and saved it to ${secretFile} (keep it private; delete it to rotate).`
   );
   return generated;
 }
@@ -110,7 +110,7 @@ function resolveTrustProxy() {
   if (/^\d+$/.test(raw)) return Number(raw);
   if (raw.toLowerCase() === 'true') return true;
   if (raw.toLowerCase() === 'false') return false;
-  return raw; // 'loopback' | 'uniquelocal' | comma-list of IPs — Express parses these
+  return raw; // 'loopback' | 'uniquelocal' | comma-list of IPs - Express parses these
 }
 
 /**
@@ -131,7 +131,7 @@ function resolveCookieSecure() {
  * a container. Bind mounts handed to the Docker daemon are resolved against the
  * HOST filesystem, so a containerized panel (which sees its data at DATA_DIR,
  * e.g. /data) must describe that same directory in host terms when creating
- * server containers. Unset — the bare-metal case — it equals dataDir and the
+ * server containers. Unset - the bare-metal case - it equals dataDir and the
  * translation is a no-op.
  */
 function resolveDataDirHost() {
@@ -140,7 +140,7 @@ function resolveDataDirHost() {
   const isAbsolute = raw.startsWith('/') || /^[A-Za-z]:[\\/]/.test(raw);
   if (!isAbsolute) {
     throw new Error(
-      `DATA_DIR_HOST must be an absolute host path (e.g. /opt/msm/data or C:\\msm\\data) — got "${raw}". ` +
+      `DATA_DIR_HOST must be an absolute host path (e.g. /opt/msm/data or C:\\msm\\data) - got "${raw}". ` +
         'It is the host-side path of the directory mounted at DATA_DIR inside the panel container.'
     );
   }
@@ -150,14 +150,14 @@ function resolveDataDirHost() {
 
 /**
  * Address the panel uses to reach OTHER containers' host-published ports (e.g.
- * BlueMap's map webserver) — used by the /map proxy. Bare metal, the panel's
+ * BlueMap's map webserver) - used by the /map proxy. Bare metal, the panel's
  * own '127.0.0.1' IS the host's, so no translation is needed. Containerized
- * (same signal as resolveDataDirHost — DATA_DIR_HOST set), '127.0.0.1' is the
+ * (same signal as resolveDataDirHost - DATA_DIR_HOST set), '127.0.0.1' is the
  * PANEL container's own loopback, not the host's, so sibling containers'
  * published ports are unreachable through it; 'host.docker.internal' is
  * Docker's own mechanism for "reach the host from inside a container" (needs
- * `extra_hosts: host.docker.internal:host-gateway` on plain Linux Engine —
- * see docker-compose.yml — Docker Desktop resolves it natively, but
+ * `extra_hosts: host.docker.internal:host-gateway` on plain Linux Engine -
+ * see docker-compose.yml - Docker Desktop resolves it natively, but
  * containerized-panel deployment targets Linux).
  */
 function resolveMapProxyHost() {
@@ -170,22 +170,22 @@ const host = process.env.PANEL_HOST || '127.0.0.1';
 
 /**
  * Central panel configuration. Every value has a sane default; .env overrides.
- * DATA_DIR is resolved to an absolute path once, here — all storage code must
+ * DATA_DIR is resolved to an absolute path once, here - all storage code must
  * import it from this module and never re-derive it.
  */
 const config = {
   root,
   dataDir,
   dataDirHost: resolveDataDirHost(),
-  // Bind to localhost only by default — the panel is reachable just from this
+  // Bind to localhost only by default - the panel is reachable just from this
   // machine out of the box. Set PANEL_HOST=0.0.0.0 to expose it to your LAN,
   // and only put it on the internet behind a reverse proxy with TLS.
   host,
-  // 25564 — one below the game-port runway (PORT_GAME_START, 25565) so game
+  // 25564 - one below the game-port runway (PORT_GAME_START, 25565) so game
   // instances number cleanly upward from 25565 without the panel taking a slot
   // in the middle of the sequence.
   port: numFromEnv('PANEL_PORT', 25564, { min: 1, max: 65535 }),
-  // True when bound to a non-loopback address — used to warn about the open
+  // True when bound to a non-loopback address - used to warn about the open
   // first-run setup window on an exposed panel.
   isExposedBind: host !== '127.0.0.1' && host !== 'localhost' && host !== '::1',
   sessionSecret: resolveSessionSecret(),
@@ -211,7 +211,7 @@ const config = {
 };
 
 // resolveSessionSecret() guarantees a strong secret, so downstream code can rely
-// on config.sessionSecret being set — no hardcoded dev fallback anywhere.
+// on config.sessionSecret being set - no hardcoded dev fallback anywhere.
 if (!config.sessionSecret || config.sessionSecret.length < 16) {
   throw new Error('Failed to resolve a session secret.');
 }

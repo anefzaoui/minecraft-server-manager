@@ -86,7 +86,7 @@ function init(serverId) {
     }
   }
 
-  // Perceived-dark colors get a faint glow in the dark preview trough — black
+  // Perceived-dark colors get a faint glow in the dark preview trough - black
   // text on the near-black console otherwise reads as "didn't send".
   function isDark(hex) {
     const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
@@ -115,7 +115,7 @@ function init(serverId) {
   function appendMessage(m, { autoScroll = true, animate = true } = {}) {
     log.querySelector('[data-chat-empty]')?.remove();
     const line = document.createElement('div');
-    // Entrance only for genuinely new messages — a 50-line history replay
+    // Entrance only for genuinely new messages - a 50-line history replay
     // animating on load would be noise, not feedback.
     line.className = animate ? 'py-0.5 animate-[msg-in_.15s_ease-out]' : 'py-0.5';
     const time = document.createElement('span');
@@ -126,7 +126,7 @@ function init(serverId) {
     prefix.textContent = m.mode === 'say' ? '[Server]' : `→ ${m.target}`;
     if (m.actor) prefix.title = `Sent by ${m.actor}`;
     line.append(time, prefix, styledSpan(m));
-    // Stick to the bottom only when already reading the bottom — never yank
+    // Stick to the bottom only when already reading the bottom - never yank
     // someone who scrolled up into history.
     const nearBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - 40;
     log.appendChild(line);
@@ -139,7 +139,7 @@ function init(serverId) {
     for (const m of history) appendMessage(m, { autoScroll: false, animate: false });
     if (history.length) log.scrollTop = log.scrollHeight;
   } catch {
-    /* corrupt island — start with the empty state */
+    /* corrupt island - start with the empty state */
   }
 
   // ---- Build the formatting toolbar ----
@@ -194,7 +194,7 @@ function init(serverId) {
     modeBox.querySelectorAll('[data-mode]').forEach((el) => {
       el.setAttribute('aria-pressed', String(el === b));
     });
-    // Say is a plain broadcast — no target, no styling. Real `disabled` (the
+    // Say is a plain broadcast - no target, no styling. Real `disabled` (the
     // enhanced select trigger follows automatically), dimmed as a group.
     const plain = mode === 'say';
     stylesBox.querySelectorAll('button').forEach((el) => {

@@ -51,7 +51,7 @@ router.get(
   })
 );
 
-// Bulk delete — everything older than ?olderThanDays=N for this server.
+// Bulk delete - everything older than ?olderThanDays=N for this server.
 router.delete(
   '/',
   asyncHandler((req, res, next) => {

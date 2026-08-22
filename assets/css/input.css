@@ -4,7 +4,7 @@
    Palette: a cool-tinted "stone" neutral ramp (#0e1113 → #fafbfb) with grass green
    #3fa62b as the single accent, taken from the grass block itself; diamond, redstone
    and gold serve info/danger/warning and come from the same source material.
-   Type: IBM Plex Sans for body — an engineered grotesque that suits an infrastructure
+   Type: IBM Plex Sans for body - an engineered grotesque that suits an infrastructure
    tool and stays quiet under Press Start 2P, the pixel display face (titles only)
    that carries the product's character.
    Structural primitive: cards on the canvas inside a fixed sidebar + topbar shell;
@@ -12,7 +12,7 @@
 
 /* Dark is the default theme; light mode is opt-in via <html data-theme="light">.
    Toggling swaps the semantic tokens below, so components only ever reference
-   semantic names (surface, ink, line…) — never raw palette values. */
+   semantic names (surface, ink, line…) - never raw palette values. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
@@ -61,7 +61,7 @@
   --color-gold-800: #8b3d15;
   --color-gold-900: #723315;
 
-  /* Stone — the neutral ramp used for both themes */
+  /* Stone - the neutral ramp used for both themes */
   --color-stone-25: #fafbfb;
   --color-stone-50: #f4f5f6;
   --color-stone-100: #e8eaec;
@@ -84,12 +84,12 @@
   /* ---- Elevation: three shadow levels mapped to meaning, one light source
      (above), tinted with the stone ramp's cool hue. Dark mode separates raised
      surfaces by background lightness, so these mostly carry the light theme.
-     Never write an ad-hoc shadow — pick the level that matches the meaning. ---- */
+     Never write an ad-hoc shadow - pick the level that matches the meaning. ---- */
   --shadow-raised: 0 1px 2px rgb(14 17 19 / 0.07), 0 1px 1px rgb(14 17 19 / 0.05);
   --shadow-overlay: 0 8px 24px rgb(14 17 19 / 0.18), 0 2px 6px rgb(14 17 19 / 0.1);
   --shadow-modal: 0 16px 48px rgb(14 17 19 / 0.3), 0 4px 12px rgb(14 17 19 / 0.15);
 
-  /* ---- Semantic tokens (dark values — the default) ---- */
+  /* ---- Semantic tokens (dark values - the default) ---- */
   --color-canvas: var(--color-stone-950);
   --color-surface: var(--color-stone-925);
   --color-raised: var(--color-stone-900);
@@ -102,7 +102,7 @@
 
   /* Accent-as-text tokens. The 400 steps read well on dark surfaces (6.4–9.5:1)
      but fail hard on white (1.9–2.8:1), so text colored by meaning must go
-     through these — never through a raw palette step. Light mode swaps them. */
+     through these - never through a raw palette step. Light mode swaps them. */
   --color-link: var(--color-diamond-400);
   --color-ok: var(--color-grass-400);
   --color-warn: var(--color-gold-400);
@@ -224,7 +224,7 @@
   }
 }
 
-/* Registered so the radio dot's gradient stop can TRANSITION — unregistered
+/* Registered so the radio dot's gradient stop can TRANSITION - unregistered
    custom properties snap. Browsers without @property just snap (fine). */
 @property --msm-radio-r {
   syntax: '<percentage>';
@@ -243,7 +243,7 @@
        on browsers that support it; ignored elsewhere. */
     interpolate-size: allow-keywords;
   }
-  /* Themed scrollbars — the OS-default grey bar is the last piece of stock
+  /* Themed scrollbars - the OS-default grey bar is the last piece of stock
      chrome on an otherwise committed surface. Thin, line-colored, no track. */
   * {
     scrollbar-width: thin;
@@ -280,7 +280,7 @@
     @apply bg-grass-600/60 text-white;
   }
   /* Everything clickable gets a physical press, even outside .btn (flavor
-     tiles, icon pickers, chips) — part of the Minecraft tactility. Segmented
+     tiles, icon pickers, chips) - part of the Minecraft tactility. Segmented
      controls are exempt: a selected tab that keeps bouncing reads as broken. */
   button:not(.btn):not(.msm-toggle):not(.seg-btn):active {
     transform: translateY(1px);
@@ -294,11 +294,11 @@
 @layer components {
   /* ---- Stacking scale (the ONLY z values in the app) ----
      topbar shell 20 · sidebar backdrop 30 · sidebar 40 · modal 60 · toasts 65
-     (above modals — errors fired from modal actions must be readable) ·
+     (above modals - errors fired from modal actions must be readable) ·
      dropdown menus 68 (they can open from inside a modal) · tooltip 70.
      Anything new picks a slot here first. ---- */
 
-  /* Pixel heading — titles only, per design spec */
+  /* Pixel heading - titles only, per design spec */
   .pixel {
     font-family: var(--font-pixel);
     letter-spacing: 0;
@@ -306,7 +306,7 @@
   }
 
   /* Minecraft-style buttons: blocky, beveled (light top edge, dark bottom
-     edge), and they physically PRESS — on :active the button shifts down and
+     edge), and they physically PRESS - on :active the button shifts down and
      the bevel inverts, exactly like clicking a button in-game. */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-sm border border-line-strong
@@ -361,7 +361,7 @@
     @apply px-2.5 py-1.5 text-xs;
   }
 
-  /* Segmented control — the ONE component for every pick-one-of-N group
+  /* Segmented control - the ONE component for every pick-one-of-N group
      (source tabs, platform pickers, view toggles, sub-mode switches).
      Selection state lives in aria-selected / aria-pressed; pages toggle the
      attribute, never style classes. Sizing: 1px border + 2px padding + 32px
@@ -410,7 +410,7 @@
     @apply pointer-events-none opacity-50;
   }
 
-  /* Sub-navigation pill (server sub-tabs) — a link, not a seg-btn: segments are
+  /* Sub-navigation pill (server sub-tabs) - a link, not a seg-btn: segments are
      pick-one-of-N controls, these navigate. One shared class instead of the
      same utility string hand-rolled per template. */
   .subtab {
@@ -431,12 +431,12 @@
 
   .card {
     /* One elevation language per edge: the border carries it (plus the surface
-       lightness step in dark mode) — no shadow doubling the same edge. */
+       lightness step in dark mode) - no shadow doubling the same edge. */
     @apply rounded-lg border border-line bg-surface;
   }
 
   /* Badges: neutral by default; the four semantic variants are the ONLY badge
-     colorways — no ad-hoc bg/text pairs at call sites. */
+     colorways - no ad-hoc bg/text pairs at call sites. */
   .badge {
     @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide bg-inset text-ink-soft;
   }
@@ -454,12 +454,12 @@
   }
 
   .chip {
-    /* rounded-sm, not a pill — the whole product sits in the blocky register. */
+    /* rounded-sm, not a pill - the whole product sits in the blocky register. */
     @apply inline-flex items-center gap-1 rounded-sm border border-line bg-inset px-2 py-0.5 text-xs text-ink-soft;
   }
 
   /* Notices: the ONE inline callout. Border and tint pairs are fixed per
-     meaning — no ad-hoc border/background combinations at call sites. */
+     meaning - no ad-hoc border/background combinations at call sites. */
   .notice {
     @apply flex items-start gap-2 rounded-md border border-line bg-inset/40 px-3 py-2 text-sm text-ink-soft;
   }
@@ -477,7 +477,7 @@
   }
 
   /* Color-picker swatch (chat colors, MOTD, accent pickers). Selection is a
-     theme-aware gap ring — an ink halo separated by the surface color — so it
+     theme-aware gap ring - an ink halo separated by the surface color - so it
      stays visible on ANY swatch color in BOTH themes (a white ring on a white
      card was invisible; this is the fix). State lives in aria-pressed. */
   .swatch {
@@ -526,7 +526,7 @@
   }
 
   /* Whole-group disable (composers while the server is stopped): real
-     disabled — the old pointer-events-none trick let keyboard events straight
+     disabled - the old pointer-events-none trick let keyboard events straight
      through to "disabled" controls. */
   fieldset:disabled {
     @apply opacity-60;
@@ -612,10 +612,10 @@
     background: inherit;
   }
 
-  /* Console — always dark regardless of theme; the inset shadow gives it the
+  /* Console - always dark regardless of theme; the inset shadow gives it the
      same recessed-trough depth as the meters. NOTE: log-level colors inside a
      .console use RAW palette steps (text-gold-300, text-redstone-400) on
-     purpose — the semantic warn/danger tokens flip to 700-steps in light mode
+     purpose - the semantic warn/danger tokens flip to 700-steps in light mode
      and would vanish on this always-dark surface. Don't "fix" them. */
   .console {
     @apply rounded-md border border-line bg-stone-950 p-3 font-mono text-[13px] leading-6 text-stone-200;
@@ -623,7 +623,7 @@
   }
 
   /* Collapsible catalog sections (<details class="card">): the summary row is
-     a control — show it on hover. */
+     a control - show it on hover. */
   details.card > summary:hover {
     @apply rounded-lg bg-inset/40;
   }
@@ -710,7 +710,7 @@
       transform 200ms cubic-bezier(0.3, 0.7, 0.4, 1),
       background-color 200ms;
   }
-  /* Held down, the knob squashes toward the direction of travel — scaleX
+  /* Held down, the knob squashes toward the direction of travel - scaleX
      anchored to the trailing edge, so it can never leave the track, and the
      release (:active clears a beat before :checked flips) stays smooth because
      travel and squash live on ONE animated property. */
@@ -758,7 +758,7 @@
     @apply cursor-pointer;
   }
 
-  /* Dashboard list view: a genuinely compact row — name, status and meta only.
+  /* Dashboard list view: a genuinely compact row - name, status and meta only.
      The toggle used to change nothing but the column count. */
   .view-list [data-card-stats],
   .view-list [data-card-disk],
@@ -775,7 +775,7 @@
 }
 
 /* Reduced motion: collapse every animation and transition to a single instant
-   frame. Status stays readable through color alone — the ping echo, indeterminate
+   frame. Status stays readable through color alone - the ping echo, indeterminate
    meter pulse and entrance movements are all decorative on top of it. */
 @media (prefers-reduced-motion: reduce) {
   *,

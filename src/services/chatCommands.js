@@ -4,7 +4,7 @@
 // when a player types `!rtp2` in game chat the log ingester calls handleChat()
 // and the bound action (panel RTP / structure tp / biome tp / raw console
 // commands) runs AS that player, with per-command permissions and cooldowns.
-// Zero mods — detection is log-based, execution is RCON-based.
+// Zero mods - detection is log-based, execution is RCON-based.
 
 const httpError = require('../utils/httpError');
 const { nanoid } = require('nanoid');
@@ -16,7 +16,7 @@ const { cleanText } = require('../utils/ansi');
 const { PLAYER_NAME_RE } = require('../utils/playerName');
 
 const TRIGGER_RE = /^[a-z0-9_-]{1,24}$/i;
-// 1-2 chars from a safe set. '/' is deliberately absent — real commands never
+// 1-2 chars from a safe set. '/' is deliberately absent - real commands never
 // reach the chat log, so a '/' prefix could never fire.
 const PREFIX_RE = /^[!.#+?$%&*~^=-]{1,2}$/;
 const PLAYER_RE = PLAYER_NAME_RE;
@@ -24,9 +24,9 @@ const PLAYER_RE = PLAYER_NAME_RE;
 const ARG_RE = /^[A-Za-z0-9_:\-.]{0,32}$/;
 const ACTIONS = new Set(['rtp', 'structure', 'biome', 'console']);
 const PERMISSIONS = new Set(['everyone', 'whitelist', 'ops']);
-// Console commands that can wreck a server — ops-only triggers may use them.
+// Console commands that can wreck a server - ops-only triggers may use them.
 // Flagged when the command IS one of these (start of string) OR is an `execute`
-// chain that ends in `run <dangerous>` — `execute as @a at @s run stop` reaches
+// chain that ends in `run <dangerous>` - `execute as @a at @s run stop` reaches
 // the same effect via command nesting and must not slip past a non-ops trigger.
 // The nesting branch is gated on a leading `execute` on purpose: `run` is only a
 // command-nesting keyword inside `execute`, so a plain `say we run stop now` is
@@ -159,7 +159,7 @@ function hydrate(row) {
   try {
     params = JSON.parse(row.params || '{}');
   } catch {
-    /* corrupt row — empty params */
+    /* corrupt row - empty params */
   }
   return { ...row, params, enabled: Boolean(row.enabled) };
 }
@@ -317,7 +317,7 @@ function deleteCommand(serverId, cmdId, { actor = 'system' } = {}) {
   return { deleted: true };
 }
 
-/** "rtp 500-5000" / "structure #minecraft:village" / "console ×2" — for events + UI. */
+/** "rtp 500-5000" / "structure #minecraft:village" / "console ×2" - for events + UI. */
 function actionSummary(cmd) {
   const p = cmd.params || {};
   if (cmd.action === 'rtp')
@@ -344,7 +344,7 @@ function getRuntime(serverId) {
 }
 
 const cooldowns = new Map(); // `${serverId}:${trigger}:${playerLower}` -> last run ts
-const inflight = new Set(); // `${serverId}:${playerLower}` — one execution per player
+const inflight = new Set(); // `${serverId}:${playerLower}` - one execution per player
 const triggerThrottle = new Map(); // `${serverId}:${playerLower}` -> last-processed ts (spam guard)
 const THROTTLE_MS = 400;
 
@@ -369,7 +369,7 @@ async function whisper(serverId, player, message) {
   try {
     await execCapture(serverId, ['rcon-cli', '--', 'tell', player, text]);
   } catch {
-    /* server just stopped / rcon busy — nothing to do */
+    /* server just stopped / rcon busy - nothing to do */
   }
 }
 
@@ -479,7 +479,7 @@ function bumpUsage(serverId, cmd) {
 
 /**
  * Entry point for the log ingester. Fire-and-forget: every failure is handled
- * here (whisper + event) — nothing propagates back into log ingestion.
+ * here (whisper + event) - nothing propagates back into log ingestion.
  */
 async function handleChat(serverId, player, message) {
   const text = String(message || '').trim();
@@ -490,9 +490,9 @@ async function handleChat(serverId, player, message) {
 
   const parts = text.slice(runtime.prefix.length).trim().split(/\s+/);
   const trigger = (parts[0] || '').toLowerCase();
-  if (!TRIGGER_RE.test(trigger)) return; // "!!!" and friends — normal chat
+  if (!TRIGGER_RE.test(trigger)) return; // "!!!" and friends - normal chat
   const cmd = runtime.byTrigger.get(trigger);
-  if (!cmd || !cmd.enabled) return; // unknown trigger — players chat with ! all the time
+  if (!cmd || !cmd.enabled) return; // unknown trigger - players chat with ! all the time
   const args = parts.slice(1, 4);
   const label = `${runtime.prefix}${trigger}`;
 
@@ -512,7 +512,7 @@ async function handleChat(serverId, player, message) {
       serverId,
       actor: `chat:${player}`,
       type: 'chat-command',
-      summary: `${player} tried ${label} — denied (needs ${cmd.permission})`,
+      summary: `${player} tried ${label} - denied (needs ${cmd.permission})`,
       details: { trigger, action: cmd.action, player, success: false, reason: 'permission' },
     });
     return;
@@ -532,7 +532,7 @@ async function handleChat(serverId, player, message) {
   // One execution per player at a time (locate searches take seconds).
   const flightKey = `${serverId}:${player.toLowerCase()}`;
   if (inflight.has(flightKey)) {
-    whisper(serverId, player, 'Your previous command is still running — give it a second.');
+    whisper(serverId, player, 'Your previous command is still running - give it a second.');
     return;
   }
   inflight.add(flightKey);
@@ -549,12 +549,12 @@ async function handleChat(serverId, player, message) {
     arg2: sanitizeArg(args[1]),
     arg3: sanitizeArg(args[2]),
   };
-  // State 1 — pending: acknowledge immediately, before the (possibly slow) action.
+  // State 1 - pending: acknowledge immediately, before the (possibly slow) action.
   if (cmd.msg_pending) whisper(serverId, player, renderTemplate(cmd.msg_pending, baseVars));
   try {
     const { message: defaultMsg, result } = await executeAction(serverId, cmd, player, args, ctx);
     bumpUsage(serverId, cmd);
-    // State 2 — success: custom template (with result placeholders) or the built-in message.
+    // State 2 - success: custom template (with result placeholders) or the built-in message.
     const successMsg = cmd.msg_success
       ? renderTemplate(cmd.msg_success, { ...baseVars, ...resultVars(result) })
       : defaultMsg;
@@ -569,9 +569,9 @@ async function handleChat(serverId, player, message) {
   } catch (err) {
     const friendly =
       err.status === 429
-        ? 'The server is busy with another teleport — try again in a few seconds.'
-        : err.message || 'That command failed — tell the server owner.';
-    // State 3 — failure: custom template (with {error}) or the built-in message.
+        ? 'The server is busy with another teleport - try again in a few seconds.'
+        : err.message || 'That command failed - tell the server owner.';
+    // State 3 - failure: custom template (with {error}) or the built-in message.
     const failMsg = cmd.msg_failure
       ? renderTemplate(cmd.msg_failure, { ...baseVars, error: err.message || 'error' })
       : friendly;
@@ -580,7 +580,7 @@ async function handleChat(serverId, player, message) {
       serverId,
       actor: `chat:${player}`,
       type: 'chat-command',
-      summary: `${player} ran ${label} — failed: ${String(err.message || err).slice(0, 140)}`,
+      summary: `${player} ran ${label} - failed: ${String(err.message || err).slice(0, 140)}`,
       details: { trigger, action: cmd.action, player, args, success: false, reason: err.message },
     });
   } finally {
@@ -589,7 +589,7 @@ async function handleChat(serverId, player, message) {
 }
 
 /**
- * Panel "Test" button: run a command NOW as a named player — same execution
+ * Panel "Test" button: run a command NOW as a named player - same execution
  * path minus permission and cooldown checks. Throws on failure (the route
  * turns it into a friendly JSON error); records an event either way.
  */
@@ -599,7 +599,7 @@ async function testCommand(serverId, cmdId, player, { actor = 'system' } = {}) {
   if (!PLAYER_RE.test(String(player))) throw httpError(400, 'Invalid player name');
 
   const flightKey = `${serverId}:${String(player).toLowerCase()}`;
-  if (inflight.has(flightKey)) throw httpError(429, 'That player already has a command running — wait a moment.');
+  if (inflight.has(flightKey)) throw httpError(429, 'That player already has a command running - wait a moment.');
   inflight.add(flightKey);
   const ctx = { running: true, actor };
   const baseVars = { player, trigger: cmd.trigger, arg1: '', arg2: '', arg3: '' };
@@ -615,7 +615,7 @@ async function testCommand(serverId, cmdId, player, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'chat-command',
-      summary: `${player} ran ${getPrefix(serverId)}${cmd.trigger} (${actionSummary(cmd)}) — panel test`,
+      summary: `${player} ran ${getPrefix(serverId)}${cmd.trigger} (${actionSummary(cmd)}) - panel test`,
       details: { trigger: cmd.trigger, action: cmd.action, params: cmd.params, player, success: true, via: 'test' },
     });
     return { message, result };

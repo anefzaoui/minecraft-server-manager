@@ -17,7 +17,7 @@ function init(root) {
   try {
     players = JSON.parse(document.getElementById('players-data').textContent) || [];
   } catch {
-    /* island missing — actions still work */
+    /* island missing - actions still work */
   }
 
   async function api(path, body) {
@@ -32,7 +32,7 @@ function init(root) {
   }
 
   // Full reload only where a re-render is genuinely the refresh (new player
-  // rows) — role toggles patch their row in place instead of flashing the page.
+  // rows) - role toggles patch their row in place instead of flashing the page.
   function refresh(message) {
     toast(message);
     setTimeout(() => location.reload(), 700);
@@ -63,7 +63,7 @@ function init(root) {
   /** Patch a roster row after a role mutation; falls back to reload if the row vanished. */
   function patchRow(name, changes, message) {
     const row = rowFor(name);
-    if (!row) return refresh(message); // filtered island drift — re-render is the safe refresh
+    if (!row) return refresh(message); // filtered island drift - re-render is the safe refresh
     if ('whitelisted' in changes) {
       row.dataset.whitelisted = changes.whitelisted ? '1' : '0';
       setChip(row, 'whitelist', changes.whitelisted, {
@@ -94,7 +94,7 @@ function init(root) {
           div.title = reason;
           details.appendChild(div);
         } else {
-          details.textContent = '—';
+          details.textContent = '-';
         }
       }
     }
@@ -139,7 +139,7 @@ function init(root) {
   const enforce = document.getElementById('players-wl-enforce');
   if (enforce)
     enforce.addEventListener('change', async () => {
-      enforce.disabled = true; // keep the toggle visual — just lock it in flight
+      enforce.disabled = true; // keep the toggle visual - just lock it in flight
       try {
         await api('/whitelist-enforce', { on: enforce.checked });
         toast(`Whitelist enforcement ${enforce.checked ? 'on' : 'off'}${running ? '' : ' (applies on next start)'}`);
@@ -235,7 +235,7 @@ function init(root) {
       <div>
         <label class="label">Player name</label>
         <input class="input" data-f="name" placeholder="Notch" autocomplete="off" spellcheck="false" maxlength="16">
-        <p class="mt-1 text-xs text-ink-faint">Resolved to a UUID via the Mojang API — the player never needs to have joined.</p>
+        <p class="mt-1 text-xs text-ink-faint">Resolved to a UUID via the Mojang API - the player never needs to have joined.</p>
       </div>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> Add to whitelist</label>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> Make operator (level 4)</label>`;
@@ -341,10 +341,10 @@ function init(root) {
     content.innerHTML = `
       <label class="label">Permission level</label>
       <select class="input" data-f="level" data-label="Op permission level">
-        <option value="1">1 — bypass spawn protection</option>
-        <option value="2">2 — command blocks + most commands</option>
-        <option value="3">3 — player management (kick, ban, op)</option>
-        <option value="4" selected>4 — full access (stop, save-all)</option>
+        <option value="1">1 - bypass spawn protection</option>
+        <option value="2">2 - command blocks + most commands</option>
+        <option value="3">3 - player management (kick, ban, op)</option>
+        <option value="4" selected>4 - full access (stop, save-all)</option>
       </select>
       <p class="mt-2 text-xs text-ink-faint">Levels below 4 are stored in ops.json; a running server applies them after a restart.</p>`;
     openModal({
@@ -434,7 +434,7 @@ function init(root) {
             <option value="origin">World center (0, 0)</option>
           </select>
         </div>
-        <p class="text-xs text-ink-faint">Panel-built RTP — works on any server, version or modpack. Picks a random spot in the ring and lands on solid ground; ocean picks are retried automatically (up to 10 rolls).</p>
+        <p class="text-xs text-ink-faint">Panel-built RTP - works on any server, version or modpack. Picks a random spot in the ring and lands on solid ground; ocean picks are retried automatically (up to 10 rolls).</p>
       </div>
 
       <div data-tp-panel="structure" class="hidden space-y-3">
@@ -446,11 +446,11 @@ function init(root) {
           <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
           <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise me (random one, not nearest)</label>
         </div>
-        <p class="text-xs text-ink-faint">"Surprise me" searches from a random point in the radius — a different village every time. Lands safely on the surface next to it.</p>
+        <p class="text-xs text-ink-faint">"Surprise me" searches from a random point in the radius - a different village every time. Lands safely on the surface next to it.</p>
       </div>`;
 
     let mode = 'coords';
-    let tpInFlight = false; // locate searches take seconds — never stack them
+    let tpInFlight = false; // locate searches take seconds - never stack them
     const tabs = content.querySelectorAll('[data-tp-mode]');
     function setMode(next) {
       mode = next;
@@ -486,14 +486,14 @@ function init(root) {
           busyLabel: 'Searching…',
           onClick: async ({ body }) => {
             if (tpInFlight) {
-              toast('Hold on — the previous teleport is still searching.', { kind: 'error' });
+              toast('Hold on - the previous teleport is still searching.', { kind: 'error' });
               return false;
             }
             const f = (k) => body.querySelector(`[data-f="${k}"]`).value;
             let payload;
             if (mode === 'coords') {
               if ([f('x'), f('z')].some((v) => v.trim() === '')) {
-                toast('Enter X and Z (Y is optional — empty lands on the surface)', { kind: 'error' });
+                toast('Enter X and Z (Y is optional - empty lands on the surface)', { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, x: Number(f('x')), z: Number(f('z')) };
@@ -568,7 +568,7 @@ function init(root) {
       })
       .catch(() => toast('Could not load the biome list', { kind: 'error' }));
 
-    // Structure list too — server-derived when available, vanilla bundle otherwise.
+    // Structure list too - server-derived when available, vanilla bundle otherwise.
     fetch(`/api/servers/${serverId}/players/structures`)
       .then((r) => r.json())
       .then(({ structures }) => {
@@ -627,7 +627,7 @@ function init(root) {
     tr.dataset.banipRow = ip;
     const cells = [
       ['font-mono', ip],
-      ['text-xs text-ink-soft', reason || '—'],
+      ['text-xs text-ink-soft', reason || '-'],
       ['text-xs text-ink-faint', 'just now'],
       ['text-xs text-ink-faint', 'panel'],
     ];
@@ -670,7 +670,7 @@ function init(root) {
   }
   if (banIpBtn) {
     banIpBtn.addEventListener('click', submitBanIp);
-    // Enter anywhere in the two fields submits — there is no form to do it.
+    // Enter anywhere in the two fields submits - there is no form to do it.
     for (const el of [banIpIp, banIpReason]) {
       el?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {

@@ -11,7 +11,7 @@ if (page) init();
 function init() {
   // ---- CurseForge key ----
   document.getElementById('set-cf-save')?.addEventListener('click', async (e) => {
-    const btn = e.currentTarget; // capture before await — currentTarget is null afterwards
+    const btn = e.currentTarget; // capture before await - currentTarget is null afterwards
     const key = document.getElementById('set-cf-key').value.trim();
     if (!key) {
       toast('Paste a key first.', { kind: 'error' });
@@ -80,7 +80,7 @@ function init() {
   document.getElementById('set-cf-test')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     await withBusy(btn, 'Checking…', async () => {
-      // post() returns null (and toasts) on any failure — success is the only branch left.
+      // post() returns null (and toasts) on any failure - success is the only branch left.
       const res = await post('/api/keys/curseforge/test', {});
       if (res) toast('Stored key is valid.');
     });
@@ -98,7 +98,7 @@ function init() {
         select.dataset.prevRole = select.value;
         toast(`${row.dataset.username} is now ${select.value}.`);
       } else {
-        // Revert in place — the old reload wiped the error toast before it
+        // Revert in place - the old reload wiped the error toast before it
         // could be read. The change dispatch only resyncs the trigger label.
         select.dataset.reverting = '1';
         select.value = select.dataset.prevRole || select.value;
@@ -162,9 +162,9 @@ function init() {
       <div><label class="label">Password</label><input class="input" id="nu-pass" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p></div>
       <div><label class="label">Role</label>
         <select class="input" id="nu-role" data-label="Role">
-          <option value="viewer">viewer — read-only</option>
-          <option value="operator">operator — manage servers</option>
-          <option value="admin">admin — everything</option>
+          <option value="viewer">viewer - read-only</option>
+          <option value="operator">operator - manage servers</option>
+          <option value="admin">admin - everything</option>
         </select>
       </div>`;
     openModal({

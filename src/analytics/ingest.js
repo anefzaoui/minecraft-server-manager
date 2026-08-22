@@ -17,7 +17,7 @@ const taps = new Map(); // serverId -> { stop, buf }
 let pollTimer = null;
 
 // Docker prepends this RFC3339(Nano) receive time to each line when
-// `timestamps: true` — the authoritative event time, independent of the
+// `timestamps: true` - the authoritative event time, independent of the
 // container's TZ. (nanoseconds trimmed to ms for JS Date.)
 const DOCKER_TS_RE = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)\s([\s\S]*)$/;
 
@@ -44,7 +44,7 @@ function buildTs(hms, now = new Date()) {
 }
 
 function openSession(serverId, player, ts) {
-  // A dangling open session means we missed the leave — close it at the new join.
+  // A dangling open session means we missed the leave - close it at the new join.
   db.run(
     'UPDATE player_sessions SET ended_at = ? WHERE server_id = ? AND player = ? AND ended_at IS NULL',
     ts,
@@ -116,7 +116,7 @@ function handleLine(serverId, line) {
   } catch (err) {
     console.error(`[analytics] insert failed for ${serverId}:`, err.message);
   }
-  // Custom chat commands (!rtp2 …): fire-and-forget — a broken command handler
+  // Custom chat commands (!rtp2 …): fire-and-forget - a broken command handler
   // must never break log ingestion. Lazy require avoids any module cycle.
   if (evt.type === 'chat' && evt.player !== '[Server]') {
     try {
@@ -131,7 +131,7 @@ function handleLine(serverId, line) {
 
 async function attach(serverId) {
   // timestamps:true so each line carries Docker's authoritative UTC receive
-  // time — TZ-independent, unlike the container's bare HH:MM:SS console prefix.
+  // time - TZ-independent, unlike the container's bare HH:MM:SS console prefix.
   const { stream, stop } = await followLogs(serverId, { tail: 0, timestamps: true });
   const tap = { stop, buf: '' };
   taps.set(serverId, tap);
@@ -199,7 +199,7 @@ function stopIngest() {
 /**
  * One-shot backfill from the container's recent log buffer. Skips lines older
  * than the newest recorded event and exact raw duplicates at the same second.
- * Sessions are not touched — replayed historical joins would reopen them.
+ * Sessions are not touched - replayed historical joins would reopen them.
  */
 async function backfillFromLogs(serverId, { tail = 5000 } = {}) {
   const raw = await fetchLogs(serverId, { tail, timestamps: true });

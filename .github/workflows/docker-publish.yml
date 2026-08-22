@@ -1,6 +1,6 @@
 name: Docker
 
-# Build and publish the panel image to GHCR on every push to main — :latest plus
+# Build and publish the panel image to GHCR on every push to main - :latest plus
 # an immutable :v<package.json version> tag, multi-arch (amd64 servers, arm64
 # Pi/ARM VPS). Pushing without a version bump republishes both tags for that
 # version, which is harmless. Can also be run manually from the Actions tab.
@@ -22,7 +22,7 @@ jobs:
       - id: version
         run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
-      # GHCR/OCI tags must be lowercase — github.repository preserves the
+      # GHCR/OCI tags must be lowercase - github.repository preserves the
       # owner's actual casing (e.g. OwenWright8/...), which buildx rejects.
       - name: Lowercase image name
         run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"

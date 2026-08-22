@@ -88,8 +88,8 @@ function publicUser(u) {
 }
 
 // ---------------------------------------------------------------------------
-// TOTP two-factor auth. Self-service (any role, acts on your own account) —
-// see web/routes/account.js — plus one admin recovery path in web/routes/api.js.
+// TOTP two-factor auth. Self-service (any role, acts on your own account) -
+// see web/routes/account.js - plus one admin recovery path in web/routes/api.js.
 // The secret is only ever written once a live code from it has been verified
 // (confirmTotp), so a setup a user never finishes leaves nothing persisted.
 
@@ -106,17 +106,17 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   if (user.totp_enabled) {
-    throw httpError(409, 'Two-factor authentication is already enabled — disable it first to re-enroll.');
+    throw httpError(409, 'Two-factor authentication is already enabled - disable it first to re-enroll.');
   }
   // Re-check the account's own password before ENABLING 2FA, exactly as disable
   // and regenerate do. Without it, a hijacked-but-unlocked session (no password
   // needed) could enroll the attacker's OWN authenticator on an account with no
-  // 2FA yet — locking the real owner out on their next login until an admin
+  // 2FA yet - locking the real owner out on their next login until an admin
   // force-reset. The UI always sends the password; the API must not rely on that.
   // Checked before the code so it can't double as a code-verification oracle.
   if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'Wrong password');
   if (totp.verify(secret, code) == null) {
-    throw httpError(400, 'That code is incorrect or expired — try the next one your app shows.');
+    throw httpError(400, 'That code is incorrect or expired - try the next one your app shows.');
   }
   const backupCodes = totp.generateBackupCodes();
   const hashed = backupCodes.map((c) => bcrypt.hashSync(c, 11));
@@ -135,7 +135,7 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   return { backupCodes };
 }
 
-/** Self-service disable — re-checks the account's own current password first. */
+/** Self-service disable - re-checks the account's own current password first. */
 function disableTotp(id, password, { actor = 'system' } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
@@ -198,7 +198,7 @@ function verifyTotpLogin(id, code) {
     }
   }
 
-  // Fall back to a backup code — single use, removed once matched.
+  // Fall back to a backup code - single use, removed once matched.
   let codes = [];
   try {
     codes = JSON.parse(user.totp_backup_codes_json || '[]');

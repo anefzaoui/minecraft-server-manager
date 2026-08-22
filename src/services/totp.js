@@ -1,7 +1,7 @@
 'use strict';
 
 // TOTP (RFC 6238) two-factor codes, hand-rolled on node:crypto rather than pulling in
-// a third-party auth library — the algorithm is small and well-specified (HMAC-SHA1
+// a third-party auth library - the algorithm is small and well-specified (HMAC-SHA1
 // truncation over a 30s time step), and this is the security-critical half of 2FA, so
 // keeping it in a reviewable ~100 lines beats trusting an opaque dependency for it.
 // Secrets are base32 (RFC 4648) because that's what every authenticator app expects
@@ -57,7 +57,7 @@ function generateSecret() {
   return base32Encode(crypto.randomBytes(SECRET_BYTES));
 }
 
-/** otpauth:// URI for QR/manual enrollment — issuer + account label, standard params. */
+/** otpauth:// URI for QR/manual enrollment - issuer + account label, standard params. */
 function buildOtpauthUrl(secret, { issuer = 'Minecraft Server Manager', account }) {
   const label = encodeURIComponent(`${issuer}:${account}`);
   // Build the query with encodeURIComponent, NOT URLSearchParams: the latter
@@ -97,7 +97,7 @@ function currentStep(atMs = Date.now()) {
 /**
  * Verify a 6-digit code against `secret` (base32), allowing ±1 step (30s) of clock
  * drift. `lastStep` (if given) blocks replaying a code already accepted for that step
- * or an earlier one — without it, a code intercepted once (shoulder-surf, log leak)
+ * or an earlier one - without it, a code intercepted once (shoulder-surf, log leak)
  * stays valid for the rest of its 30s window even after legitimate use.
  * Returns the matched step on success (persist as the new lastStep), or null.
  */
@@ -123,7 +123,7 @@ function verify(secret, code, { lastStep = null, window = 1, atMs = Date.now() }
   return null;
 }
 
-/** The current 6-digit code for `secret` — exported for tests; never used at runtime. */
+/** The current 6-digit code for `secret` - exported for tests; never used at runtime. */
 function codeAt(secret, atMs = Date.now()) {
   return hotp(base32Decode(secret), currentStep(atMs));
 }

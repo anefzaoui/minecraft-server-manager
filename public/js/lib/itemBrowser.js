@@ -1,10 +1,10 @@
 // JEI-style item browser. Searches EVERY item and block on a server (vanilla +
-// mods) by display name, id or mod — the registry is built server-side from
+// mods) by display name, id or mod - the registry is built server-side from
 // the server's own jar files, so it matches exactly what /give accepts.
 //
 // openItemBrowser({ serverId, onPick, onManual }) -> modal
-//   onPick({id, name, mod, kind})  — called when a row is clicked (modal closes)
-//   onManual()                     — optional "enter id manually" fallback link
+//   onPick({id, name, mod, kind})  - called when a row is clicked (modal closes)
+//   onManual()                     - optional "enter id manually" fallback link
 
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
@@ -34,7 +34,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   content.className = 'space-y-3 text-sm';
   content.innerHTML = `
     <div class="flex flex-wrap items-center gap-2">
-      <input class="input flex-1 min-w-48" data-ib-q placeholder="Search by name or id — Iron Ingot, allthemodium, minecraft:tnt…"
+      <input class="input flex-1 min-w-48" data-ib-q placeholder="Search by name or id - Iron Ingot, allthemodium, minecraft:tnt…"
              maxlength="120" autocomplete="off" spellcheck="false">
       <div class="w-52 max-w-full">
         <select data-ib-mod data-label="Filter by mod" aria-label="Filter by mod">
@@ -87,7 +87,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       modal.close();
       if (onPick) onPick({ id: item.id, name: item.name, mod: item.mod, kind: item.kind });
     });
-    // The bundled icon set only covers vanilla — mod items keep the fallback
+    // The bundled icon set only covers vanilla - mod items keep the fallback
     // glyph rather than requesting a local file we already know isn't there.
     if (state.iconBase && item.id.startsWith('minecraft:')) {
       const iconSlot = btn.querySelector('[data-ib-icon]');
@@ -122,7 +122,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     if (!append) {
       state.offset = 0;
       listEl.innerHTML =
-        '<div class="p-6 text-center text-sm text-ink-faint">Loading items… <span class="text-xs">(first open scans every mod jar — later opens are instant)</span></div>';
+        '<div class="p-6 text-center text-sm text-ink-faint">Loading items… <span class="text-xs">(first open scans every mod jar - later opens are instant)</span></div>';
       setStatus('');
     }
     try {
@@ -179,7 +179,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     load();
   });
 
-  // .seg is the ONE pick-one-of-N component — selection lives in aria-pressed
+  // .seg is the ONE pick-one-of-N component - selection lives in aria-pressed
   // and the CSS carries the look (this was a hand-rolled joined-button group).
   content.querySelectorAll('[data-ib-kinds] [data-kind]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -210,7 +210,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       state.mod = '';
       modSel.dispatchEvent(new Event('change', { bubbles: true })); // resync enhanced trigger + reload
     } catch (err) {
-      if (err.dismissed) return; // progress hidden — the task tray takes over
+      if (err.dismissed) return; // progress hidden - the task tray takes over
       toast(err.message, { kind: 'error' });
     }
   });

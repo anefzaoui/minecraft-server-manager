@@ -50,7 +50,7 @@ export function uploadWorldModal({ onDone } = {}) {
       Choose archive…
       <input type="file" data-w-file class="hidden" accept=".zip,.mcworld,.tar,.gz,.tgz">
     </label>
-    <p class="help" data-w-filename>No file selected — the world root (level.dat) is detected automatically, Bukkit split dirs included.</p>
+    <p class="help" data-w-filename>No file selected - the world root (level.dat) is detected automatically, Bukkit split dirs included.</p>
     <div class="mt-3 hidden" data-w-progress>
       <div class="meter"><div class="bg-grass-500" style="width:0%" data-w-bar></div></div>
       <p class="help mt-1" data-w-status>Uploading…</p>
@@ -69,7 +69,7 @@ export function uploadWorldModal({ onDone } = {}) {
   openModal({
     title: 'Upload world to library',
     content,
-    // Closing the modal must actually cancel the transfer — a "cancelled"
+    // Closing the modal must actually cancel the transfer - a "cancelled"
     // upload used to keep running and reload the page when it finished.
     onClose: () => activeXhr?.abort(),
     actions: [
@@ -153,7 +153,7 @@ export function extractWorldModal({ serverId = null, onDone } = {}) {
     }
     <label class="label ${serverId ? '' : 'mt-3'}">Library entry name (optional)</label>
     <input class="input" data-x-name placeholder="Leave empty to name it after the server" autocomplete="off">
-    <p class="help">Takes a consistent snapshot — safe while the server is running (save-off → save-all → copy → save-on).</p>
+    <p class="help">Takes a consistent snapshot - safe while the server is running (save-off → save-all → copy → save-on).</p>
     <div class="mt-3 hidden" data-x-progress><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
 
   openModal({
@@ -205,8 +205,8 @@ export function installWorldModal(libId, libName, { serverId = null, onDone } = 
     }
     <label class="label ${serverId ? '' : 'mt-3'}">Install mode</label>
     <select class="input" data-i-mode data-label="Install mode">
-      <option value="replace" data-desc="Server must be stopped — current world is auto-backed-up first">Replace current world</option>
-      <option value="alongside" data-desc="Adds it as another level dir — switch with Activate later">Install alongside</option>
+      <option value="replace" data-desc="Server must be stopped - current world is auto-backed-up first">Replace current world</option>
+      <option value="alongside" data-desc="Adds it as another level dir - switch with Activate later">Install alongside</option>
     </select>
     <div class="mt-3 hidden" data-i-namewrap>
       <label class="label">New world folder name</label>
@@ -294,7 +294,7 @@ if (page) {
   });
 
   document.getElementById('world-extract')?.addEventListener('click', () => {
-    if (!serverOptions().length) return toast('No servers yet — create one first.', { kind: 'info' });
+    if (!serverOptions().length) return toast('No servers yet - create one first.', { kind: 'info' });
     extractWorldModal({ onDone: () => setTimeout(() => location.reload(), 700) });
   });
 
@@ -304,7 +304,7 @@ if (page) {
     const { id, name, size } = row.dataset;
 
     if (e.target.closest('[data-world-install]')) {
-      if (!serverOptions().length) return toast('No servers yet — create one first.', { kind: 'info' });
+      if (!serverOptions().length) return toast('No servers yet - create one first.', { kind: 'info' });
       installWorldModal(id, name, { onDone: () => setTimeout(() => location.reload(), 700) });
     } else if (e.target.closest('[data-world-delete]')) {
       const btn = e.target.closest('[data-world-delete]');

@@ -1,8 +1,8 @@
 'use strict';
 
 // WebSocket endpoints:
-//   /ws/console/<serverId>  — live log stream down, RCON commands up
-//   /ws/stats/<serverId>    — normalized stats samples every 2s
+//   /ws/console/<serverId>  - live log stream down, RCON commands up
+//   /ws/stats/<serverId>    - normalized stats samples every 2s
 // Messages are JSON: {kind: 'log'|'stats'|'cmd'|'cmd-result'|'error', ...}
 
 const { WebSocketServer } = require('ws');
@@ -136,7 +136,7 @@ async function handleConsole(ws, serverId, user) {
     follower.stream.on('end', () => send({ kind: 'log-end' }));
     follower.stream.on('error', (err) => send({ kind: 'error', message: `Log stream error: ${err.message}` }));
   } catch (err) {
-    // A missing container (404) just means the server has never been started —
+    // A missing container (404) just means the server has never been started -
     // an expected state, not an error. The console already shows a "start the
     // server" placeholder, so end the stream quietly instead of alarming the user.
     if (err.statusCode === 404) {
@@ -203,7 +203,7 @@ function redact(command) {
 /**
  * If the server has a console label configured, announce the just-run command in
  * game chat as "[label] <command>" via tellraw (JSON-escaped, so nothing the admin
- * types can break out). Fire-and-forget — never blocks the command result.
+ * types can break out). Fire-and-forget - never blocks the command result.
  */
 function announceConsoleAction(serverId, command) {
   const label = (getServer(serverId) || {}).console_label;

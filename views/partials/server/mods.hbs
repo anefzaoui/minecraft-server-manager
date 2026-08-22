@@ -18,7 +18,7 @@
   {{#if server.pack}}
     <div class="mb-4 max-w-prose rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
       <b class="text-link">Pack-managed</b> mods are installed by {{server.pack.platform}} ({{server.pack.name}} @ {{server.pack.version}}).
-      Disabling one uses the image's exclude list and applies on next restart. <b class="text-ok">Custom overlay</b> mods are yours —
+      Disabling one uses the image's exclude list and applies on next restart. <b class="text-ok">Custom overlay</b> mods are yours -
       they live in the shared library, survive pack updates, and can be toggled instantly.
     </div>
   {{/if}}
@@ -32,7 +32,7 @@
       <tbody>
         {{#each mods}}
           <tr class="{{#unless enabled}}opacity-60{{/unless}}" data-mod-row data-file="{{file}}" data-name="{{name}}" data-source="{{source}}" data-enabled="{{enabled}}">
-            {{! w-full + max-w-0 so `truncate` actually engages — long mod file
+            {{! w-full + max-w-0 so `truncate` actually engages - long mod file
                 names were widening the table into horizontal scroll. }}
             <td class="w-full max-w-0">
               <div class="flex items-center gap-2.5">
@@ -58,13 +58,13 @@
               {{/if}}
             </td>
             <td>
-              {{default version '—'}}
+              {{default version '-'}}
               {{#if updateAvailable}}<span class="badge badge-warn ml-1" data-tip="Update available">→ {{updateAvailable}}</span>{{/if}}
             </td>
             <td class="text-right text-ink-faint">{{bytes size}}</td>
             <td>
               {{#if missing}}
-                <span class="text-xs font-medium text-danger" data-tip="File missing on disk — reinstall from library">missing</span>
+                <span class="text-xs font-medium text-danger" data-tip="File missing on disk - reinstall from library">missing</span>
               {{else if enabled}}
                 <span class="text-xs font-medium text-ok">Enabled</span>
               {{else}}
@@ -90,7 +90,7 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='puzzle' title='No mods installed yet' message='Search Modrinth or add a mod by URL with the buttons above — custom mods live in the shared library and survive pack updates.'}}
+    {{> empty-state iconName='puzzle' title='No mods installed yet' message='Search Modrinth or add a mod by URL with the buttons above - custom mods live in the shared library and survive pack updates.'}}
   {{/if}}
 </div>
 <script type="module" src="/js/pages/mods.js"></script>

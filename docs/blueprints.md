@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-A **blueprint** captures a server's whole configuration — type, version, resources, environment, pack pin, and optionally its config and world — into a single portable file you can stamp new servers out of.
+A **blueprint** captures a server's whole configuration - type, version, resources, environment, pack pin, and optionally its config and world - into a single portable file you can stamp new servers out of.
 
 ![Blueprints](images/blueprints.png)
 
@@ -18,4 +18,4 @@ Import a blueprint file (or pick one from the library) to create a new server pr
 - Move a server between panels.
 - Keep a known-good template you can always fall back to.
 
-Because a blueprint records the exact [pack pin](modpacks.md), a modpack server recreated from a blueprint installs the same pinned version — no surprise upgrades.
+Because a blueprint records the exact [pack pin](modpacks.md), a modpack server recreated from a blueprint installs the same pinned version - no surprise upgrades.

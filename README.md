@@ -152,7 +152,7 @@ by host path).
 git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
 cd minecraft-server-manager
 npm install               # installs deps and builds the Tailwind CSS (postinstall)
-cp .env.example .env      # optional — all values have sane defaults
+cp .env.example .env      # optional - all values have sane defaults
 npm start                 # or: npm run dev (auto-restart + CSS watch)
 ```
 
@@ -180,7 +180,7 @@ docker compose up -d
 Open **http://your-host:25564**. In Portainer/Dockge, paste the compose file as a stack and set
 `DATA_DIR_HOST` in the stack's environment.
 
-How it works — and what to know:
+How it works - and what to know:
 
 - The panel drives the **host's Docker daemon** through the mounted `/var/run/docker.sock` and creates
   each Minecraft server as a **sibling container** (not a child). Game ports are published by those
@@ -192,14 +192,14 @@ How it works — and what to know:
 - The container binds to `0.0.0.0` **inside its own network namespace**; publish `127.0.0.1:25564:25564`
   instead of `25564:25564` if a reverse proxy on the host fronts the panel (then set `TRUST_PROXY` +
   `COOKIE_SECURE`).
-- Anything that holds the Docker socket is root-equivalent on the host — treat the panel's admin
+- Anything that holds the Docker socket is root-equivalent on the host - treat the panel's admin
   login accordingly and never expose the UI raw to the internet.
-- Docker Desktop (Windows/macOS) is not a target for this mode — run the panel natively there;
+- Docker Desktop (Windows/macOS) is not a target for this mode - run the panel natively there;
   containerized deployment is aimed at Linux hosts (Portainer, Dockge, plain compose).
-- Features that reach a **sibling** container directly — currently just the live map (BlueMap) —
+- Features that reach a **sibling** container directly - currently just the live map (BlueMap) -
   try, in order: every Docker-network IP the sibling container has (its own container port, no
   host-port involved), then the sibling's HOST-published port via `host.docker.internal` (not
-  `127.0.0.1` — that's the panel's own loopback, not the host's). Whichever answers first is
+  `127.0.0.1` - that's the panel's own loopback, not the host's). Whichever answers first is
   cached. The bundled `docker-compose.yml` maps `host.docker.internal` via `extra_hosts:
 host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path; a raw
   `docker run` or a stack tool that doesn't read `extra_hosts` from the compose file needs the
@@ -209,7 +209,7 @@ host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path;
   (Advanced Docker Settings) for the reverse proxy to reach it directly: put the **panel**
   container on that same network too (add a `networks:` block to the panel service in
   `docker-compose.yml`, referencing it as `external: true`) so the direct container-IP path above
-  actually has a route — without that, the panel falls back to the host-published-port path,
+  actually has a route - without that, the panel falls back to the host-published-port path,
   which may not be reachable at all in a network topology built around bypassing host ports.
 
 ### Configuration (`.env`, all optional)
@@ -218,12 +218,12 @@ host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path;
 | --------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DATA_DIR`                                                                  | `./data`                   | Root for **all** panel state (DB, server data, backups, library).                                                                                                                                                                                                                                        |
 | `DATA_DIR_HOST`                                                             | = `DATA_DIR`               | Only when the panel runs **in a container**: the absolute host path of the `DATA_DIR` mount, used to re-root bind mounts for the host daemon.                                                                                                                                                            |
-| `MAP_PROXY_HOST`                                                            | see note                   | Address the panel uses to reach sibling containers' host-published ports (currently just the live map). `127.0.0.1` bare metal; auto-switches to `host.docker.internal` when `DATA_DIR_HOST` is set (containerized panel — needs `extra_hosts`, see above). Override for rootless Docker/remote daemons. |
+| `MAP_PROXY_HOST`                                                            | see note                   | Address the panel uses to reach sibling containers' host-published ports (currently just the live map). `127.0.0.1` bare metal; auto-switches to `host.docker.internal` when `DATA_DIR_HOST` is set (containerized panel - needs `extra_hosts`, see above). Override for rootless Docker/remote daemons. |
 | `PANEL_HOST` / `PANEL_PORT`                                                 | `127.0.0.1` / `25564`      | Web UI bind address + port. Localhost-only by default; set `PANEL_HOST=0.0.0.0` for LAN access.                                                                                                                                                                                                          |
 | `SESSION_SECRET`                                                            | auto-generated             | Signs session cookies + derives the at-rest encryption key. Auto-created and persisted if unset.                                                                                                                                                                                                         |
-| `TRUST_PROXY` / `COOKIE_SECURE`                                             | —                          | Set when behind a TLS-terminating reverse proxy, so `req.ip` (rate-limiting) and `Secure` cookies work.                                                                                                                                                                                                  |
+| `TRUST_PROXY` / `COOKIE_SECURE`                                             | -                          | Set when behind a TLS-terminating reverse proxy, so `req.ip` (rate-limiting) and `Secure` cookies work.                                                                                                                                                                                                  |
 | `DOCKER_HOST`                                                               | auto-detected              | Docker endpoint override for rootless Docker, Podman, or a remote daemon (per-OS socket/pipe otherwise).                                                                                                                                                                                                 |
-| `CF_API_KEY`                                                                | —                          | Optional [CurseForge API key](https://console.curseforge.com/) to seed on first run (also settable in the UI). Wrap in single quotes; CF keys often contain `$`.                                                                                                                                         |
+| `CF_API_KEY`                                                                | -                          | Optional [CurseForge API key](https://console.curseforge.com/) to seed on first run (also settable in the UI). Wrap in single quotes; CF keys often contain `$`.                                                                                                                                         |
 | `MC_IMAGE_REPO`                                                             | `itzg/minecraft-server`    | Docker image repo for servers; override for a private mirror / air-gapped registry.                                                                                                                                                                                                                      |
 | `DEFAULT_HEAP_MB` / `DEFAULT_CONTAINER_MEMORY_MB` / `DEFAULT_DISK_QUOTA_GB` | host-aware                 | Starting resource defaults for new servers. Clamped to your host RAM when unset.                                                                                                                                                                                                                         |
 | `PORT_GAME_START` / `PORT_RCON_OFFSET` / `PORT_BEDROCK_START`               | `25565` / `1000` / `19132` | Port allocation scheme.                                                                                                                                                                                                                                                                                  |
@@ -254,11 +254,11 @@ it runs on. This section covers how to reach it from elsewhere and exactly which
 
 | What                     | Port(s)                                      | Protocol  | Open to the internet?                     |
 | ------------------------ | -------------------------------------------- | --------- | ----------------------------------------- |
-| **Admin panel (web UI)** | `PANEL_PORT` — default **25564**             | TCP       | Only behind TLS (reverse proxy), not raw  |
-| **Game server (Java)**   | from `PORT_GAME_START` (**25565**) upward    | TCP + UDP | **Yes** — this is how players connect     |
-| **RCON**                 | game port **+ 1000** (from **26565**)        | TCP       | **No — never.** Panel-internal management |
+| **Admin panel (web UI)** | `PANEL_PORT` - default **25564**             | TCP       | Only behind TLS (reverse proxy), not raw  |
+| **Game server (Java)**   | from `PORT_GAME_START` (**25565**) upward    | TCP + UDP | **Yes** - this is how players connect     |
+| **RCON**                 | game port **+ 1000** (from **26565**)        | TCP       | **No - never.** Panel-internal management |
 | **Bedrock / Geyser**     | from `PORT_BEDROCK_START` (**19132**) upward | UDP       | Only if you run Bedrock                   |
-| **Live map (BlueMap)**   | auto-allocated                               | TCP       | **No** — served through the panel's proxy |
+| **Live map (BlueMap)**   | auto-allocated                               | TCP       | **No** - served through the panel's proxy |
 
 The panel itself sits at **25564**, one below the game runway, so game instances count cleanly
 upward from 25565 with nothing interrupting the sequence. Game ports are then assigned **first-free**,
@@ -284,7 +284,7 @@ Restart the panel so it re-reads the environment. **Under PM2 you must pass `--u
 PM2 keeps the old value:
 
 ```bash
-pm2 restart <id> --update-env      # PM2 — --update-env is essential
+pm2 restart <id> --update-env      # PM2 - --update-env is essential
 # or restart however you launched it
 ```
 
@@ -310,7 +310,7 @@ the query protocol on the same port.
 ```bash
 sudo ufw allow 25565:25584/tcp
 sudo ufw allow 25565:25584/udp
-sudo ufw allow 19132:19141/udp     # Bedrock / Geyser — only if used
+sudo ufw allow 19132:19141/udp     # Bedrock / Geyser - only if used
 ```
 
 Do **not** add a rule for the RCON range (`26565+`).
@@ -352,7 +352,7 @@ pm2 save
 
 ---
 
-## The `./data` directory — everything lives here
+## The `./data` directory - everything lives here
 
 ```
 data/
@@ -394,7 +394,7 @@ The image does **not** pick Java for you. The panel maps MC version → image ta
 GTNH is installed from its own release index rather than CurseForge, and the panel always pins an
 exact pack version. Java is chosen per version from the index's own `maxJavaVersion`: GTNH 2.8.0 and
 later run on **Java 25** via the pack's bundled lwjgl3ify patches, older releases on Java 21 or 17.
-Budget **6 GB of heap and 20 GB of disk** to start — the wizard raises both for you. See the
+Budget **6 GB of heap and 20 GB of disk** to start - the wizard raises both for you. See the
 [modpacks guide](docs/modpacks.md) for the full pack workflow.
 
 ### Disk quotas are panel-enforced
@@ -444,7 +444,7 @@ src/
   config/      env config + the FIELD CATALOG (every itzg var with friendly help text)
   db/          node:sqlite wrapper + versioned migrations
   storage/     data-root bootstrap, path guard, size indexer + quotas
-  events/      recordEvent() — the single history entry point
+  events/      recordEvent() - the single history entry point
   docker/      dockerode: connect, containers, logs, stats, images, event watcher
   services/    domain logic (servers, ports, library, mods, packs, backups, players, …)
   updates/     update checker + safe-upgrade orchestrator (rollback)

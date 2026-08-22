@@ -2,7 +2,7 @@
   <div class="card p-4 lg:col-span-2">
     {{#if addresses.length}}
       <div class="mb-4 border-b border-line pb-4">
-        <label class="label" for="ov-address">Server address <span class="text-xs font-normal text-ink-faint">— share this with players on your network</span></label>
+        <label class="label" for="ov-address">Server address <span class="text-xs font-normal text-ink-faint">- share this with players on your network</span></label>
         <div class="flex flex-wrap items-center gap-2">
           {{#if (gt addresses.length 1)}}
             <select class="input w-auto font-mono" id="ov-address" data-label="Server address">
@@ -48,7 +48,7 @@
       <h3 class="mb-3 font-semibold">Live usage</h3>
       <div class="space-y-3 text-xs tabular-nums">
         <div>
-          {{! CPU normalized against the core limit and clamped via pct — the raw
+          {{! CPU normalized against the core limit and clamped via pct - the raw
               value exceeds 100% on multi-core servers and clipped misleadingly. }}
           <div class="mb-1 flex justify-between text-ink-faint"><span>CPU</span><span data-ov-cpu-label>{{server.stats.cpuPct}}% {{#if server.resources.cpus}}of {{server.resources.cpus}} cores{{/if}}</span></div>
           <div class="meter"><div data-ov-cpu-bar class="{{#if server.resources.cpus}}{{meterColor server.stats.cpuPct (mul server.resources.cpus 100)}}{{else}}{{meterColor server.stats.cpuPct 100}}{{/if}}" style="width: {{#if server.resources.cpus}}{{pct server.stats.cpuPct (mul server.resources.cpus 100)}}{{else}}{{pct server.stats.cpuPct 100}}{{/if}}%"></div></div>
@@ -72,7 +72,7 @@
             <li class="flex items-center gap-2">
               <span class="grid size-6 place-items-center rounded bg-inset text-[11px] font-bold">{{this.[0]}}</span>
               <span class="flex-1 truncate">{{this}}</span>
-              {{! arrow, not "⋯" — the ellipsis glyph means "menu" everywhere else, this navigates. }}
+              {{! arrow, not "⋯" - the ellipsis glyph means "menu" everywhere else, this navigates. }}
               <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="Manage on the Players tab" aria-label="Manage {{this}}">{{{icon 'arrow-right' 'size-3.5'}}}</a>
             </li>
           {{/each}}

@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Backups: consistent snapshots of a server dir into ./data/backups/<id>/,
@@ -60,7 +60,7 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
         .then(() => true)
         .catch((err) => {
           console.warn(
-            `[backup] save-off failed for ${serverId}: ${err.message} — archive may be slightly inconsistent`
+            `[backup] save-off failed for ${serverId}: ${err.message} - archive may be slightly inconsistent`
           );
           return false;
         });
@@ -93,7 +93,7 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
     serverId,
     actor,
     type: 'backup-created',
-    summary: `Backup created (${reason}, ${(size / 1024 ** 3).toFixed(2)} GB)${inconsistent ? ' — WARNING: world saves could not be paused, archive may be slightly inconsistent' : ''}`,
+    summary: `Backup created (${reason}, ${(size / 1024 ** 3).toFixed(2)} GB)${inconsistent ? ' - WARNING: world saves could not be paused, archive may be slightly inconsistent' : ''}`,
     details: { id, filename, reason, inconsistent },
   });
   await pruneRetention(serverId, { actor });
@@ -125,7 +125,7 @@ async function restoreBackup(serverId, backupId, { actor = 'system', skipSafety 
   if (info.exists && ['running', 'starting', 'unhealthy'].includes(info.status)) {
     throw httpError(
       409,
-      'The server did not stop — restore aborted to avoid corrupting the live world. Stop it manually and retry.'
+      'The server did not stop - restore aborted to avoid corrupting the live world. Stop it manually and retry.'
     );
   }
 
@@ -263,7 +263,7 @@ function extractZip(zipFile, destDir) {
                 out.destroy();
                 fail(
                   new Error(
-                    `Archive exceeds the ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB extraction limit — aborted.`
+                    `Archive exceeds the ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB extraction limit - aborted.`
                   )
                 );
               }

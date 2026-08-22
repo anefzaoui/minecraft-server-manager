@@ -10,7 +10,7 @@
       <div>
         {{{icon 'megaphone' 'mx-auto size-6 text-stone-500'}}}
         {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-          <p class="mt-2">No messages yet — everything you send appears here, styled as players see it.</p>
+          <p class="mt-2">No messages yet - everything you send appears here, styled as players see it.</p>
         {{else}}
           <p class="mt-2">Recent messages appear here. Start the server to send chat.</p>
         {{/if}}
@@ -18,7 +18,7 @@
     </div>
   </div>
 
-  {{! Real fieldset-level disable while stopped — pointer-events tricks let
+  {{! Real fieldset-level disable while stopped - pointer-events tricks let
       keyboard events straight through. }}
   <fieldset class="mt-3 min-w-0 space-y-2" id="chat-composer" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
     {{! Target + mode on one row; the help line lives OUTSIDE the flex row so
@@ -55,7 +55,7 @@
         <span class="min-w-0 break-words text-stone-200" data-chat-preview></span>
       </div>
       <div class="flex gap-2">
-        <input class="input flex-1" id="chat-input" placeholder="Message — Enter to send" autocomplete="off" maxlength="512" />
+        <input class="input flex-1" id="chat-input" placeholder="Message - Enter to send" autocomplete="off" maxlength="512" />
         <button class="btn btn-primary" id="chat-send">{{{icon 'megaphone' 'size-4'}}} Send</button>
       </div>
     </div>
