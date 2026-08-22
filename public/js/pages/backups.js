@@ -36,7 +36,7 @@ document.addEventListener('click', async (e) => {
 
   if (action === 'restore') {
     const ok = await confirmDialog({
-      title: `Restore this backup?`,
+      title: `Restore This Backup?`,
       message: `${serverName || 'The server'} is stopped first, a safety backup of the current state is taken, then the server directory is replaced with the archive.`,
       detail: `${file}\n${fmtBytes(size)} · ${reason || 'manual'}`,
       confirmLabel: 'Restore backup',
@@ -62,7 +62,7 @@ document.addEventListener('click', async (e) => {
 
   if (action === 'delete') {
     const ok = await confirmDialog({
-      title: 'Delete this backup?',
+      title: 'Delete This Backup?',
       message: 'The archive is removed permanently.',
       detail: `${file}\n${fmtBytes(size)} will be freed.`,
       confirmLabel: 'Delete',
@@ -89,7 +89,7 @@ async function createBackup(serverId, serverName) {
   if (!serverId) return;
   try {
     const result = await runTask({
-      title: `Backing up ${serverName}`,
+      title: `Backing Up ${serverName}`,
       start: async () => {
         const res = await postJSON(`/api/servers/${serverId}/backups`, {});
         return res.taskId;

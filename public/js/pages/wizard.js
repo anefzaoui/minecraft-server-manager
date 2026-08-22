@@ -282,7 +282,7 @@ function init() {
       return;
     }
     const modal = openModal({
-      title: `Creating ${name} from blueprint…`,
+      title: `Creating ${name} from Blueprint…`,
       size: 'sm',
       content:
         '<div class="space-y-3 text-sm"><p>Installing the blueprint: pinned pack, overlay mods (hash-verified), and config files.</p><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div><p class="text-xs text-ink-faint">Closing this window doesn\'t cancel the import - it keeps running server-side.</p></div>',

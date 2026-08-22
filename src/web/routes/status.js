@@ -18,7 +18,7 @@ router.get(
     const serverId = statusPage.findBySlug(req.params.slug);
     const row = serverId ? serversService.getServer(serverId) : null;
     if (!row) {
-      return res.status(404).render('status', { layout: 'bare', title: 'Not found', notFound: true });
+      return res.status(404).render('status', { layout: 'bare', title: 'Not Found', notFound: true });
     }
 
     // serverVM reads only the in-memory live cache - no Docker work per

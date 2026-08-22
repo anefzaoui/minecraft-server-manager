@@ -59,7 +59,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       </span>
     </div>`;
 
-  const modal = openModal({ title: 'Item browser', content, size: 'lg' });
+  const modal = openModal({ title: 'Item Browser', content, size: 'lg' });
   const $ = (sel) => content.querySelector(sel);
   const listEl = $('[data-ib-list]');
   const statusEl = $('[data-ib-status]');
@@ -196,7 +196,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   $('[data-ib-rebuild]').addEventListener('click', async () => {
     try {
       const result = await runTask({
-        title: 'Rebuilding item registry',
+        title: 'Rebuilding Item Registry',
         start: async () => {
           const res = await fetch(`${base}/rebuild`, { method: 'POST' });
           const data = await res.json().catch(() => ({}));

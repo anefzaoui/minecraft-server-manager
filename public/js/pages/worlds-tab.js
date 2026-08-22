@@ -89,7 +89,7 @@ function init(serverId, serverName, serverStatus) {
     } else if (e.target.closest('[data-world-delete]')) {
       const btn = e.target.closest('[data-world-delete]');
       const ok = await confirmDialog({
-        title: `Delete world "${world}"?`,
+        title: `Delete World "${world}"?`,
         message: 'Removes this world and its dimension dirs from the server. This is not the active world.',
         detail: `${fmtBytes(size)} will be freed. No automatic backup is taken for non-active worlds.`,
         confirmLabel: 'Delete world',
@@ -142,7 +142,7 @@ function init(serverId, serverName, serverStatus) {
     });
 
     openModal({
-      title: `Copy "${world}" to another server`,
+      title: `Copy "${world}" to Another Server`,
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -184,7 +184,7 @@ function init(serverId, serverName, serverStatus) {
       <input class="input" data-r-name value="${escapeHtml(world)}" autocomplete="off">
       <p class="help">The server must be stopped. Dimension dirs are renamed too; if this is the active world, level-name is updated.</p>`;
     const modal = openModal({
-      title: 'Rename world',
+      title: 'Rename World',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -244,7 +244,7 @@ function init(serverId, serverName, serverStatus) {
     const customWrap = content.querySelector('#rw-customwrap');
     seedMode.addEventListener('change', () => customWrap.classList.toggle('hidden', seedMode.value !== 'custom'));
     openModal({
-      title: `Reset world "${world}"?`,
+      title: `Reset World "${world}"?`,
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },

@@ -12,7 +12,7 @@
             {{! size attr: the field grows with the address instead of clipping long LAN hostnames. }}
             <input class="input w-auto font-mono" id="ov-address" value="{{addresses.[0]}}" size="{{addresses.[0].length}}" readonly>
           {{/if}}
-          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy address</button>
+          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy Address</button>
         </div>
         <p class="help">Playing from the internet? Set up port forwarding or grab the full invite from the Integrations tab.</p>
       </div>
@@ -45,7 +45,7 @@
     <div class="card p-4" data-ov-live="{{server.id}}"
          data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{/if}}"
          data-mem-limit="{{server.resources.containerMemoryMb}}" data-cpus="{{server.resources.cpus}}">
-      <h3 class="mb-3 font-semibold">Live usage</h3>
+      <h3 class="mb-3 font-semibold">Live Usage</h3>
       <div class="space-y-3 text-xs tabular-nums">
         <div>
           {{! CPU normalized against the core limit and clamped via pct - the raw

@@ -201,7 +201,7 @@ export function attachMotdEditor(input, { preview, getName = () => 'My Server' }
     hint.textContent =
       'Click any example to use it - {server} becomes your server name. Tweak it afterwards with the toolbar.';
     content.appendChild(hint);
-    const modal = openModal({ title: 'MOTD examples', content, size: 'md' });
+    const modal = openModal({ title: 'MOTD Examples', content, size: 'md' });
     for (const preset of MOTD_PRESETS) {
       const filled = preset.replaceAll('{server}', getName() || 'My Server');
       const row = document.createElement('button');

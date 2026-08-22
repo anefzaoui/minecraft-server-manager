@@ -13,7 +13,7 @@ import { withBusy } from '../lib/loading.js';
 document.getElementById('updates-check-all')?.addEventListener('click', async () => {
   try {
     const result = await runTask({
-      title: 'Checking for updates',
+      title: 'Checking for Updates',
       start: async () => (await postJSON('/api/updates/check', {})).taskId,
     });
     const n = result && result.findings ? result.findings.length : 0;
@@ -70,7 +70,7 @@ async function upgradePack(row, { serverId, serverName, subject, current, latest
 
 async function offerRollback(serverId, serverName, errorMessage) {
   const ok = await confirmDialog({
-    title: 'Upgrade failed - roll back?',
+    title: 'Upgrade Failed - Roll Back?',
     message: errorMessage || 'The server did not come up healthy after the upgrade.',
     detail: 'Rollback restores the pre-update backup and re-pins the previous pack version.',
     confirmLabel: 'Roll back',
@@ -79,7 +79,7 @@ async function offerRollback(serverId, serverName, errorMessage) {
   if (!ok) return;
   try {
     const result = await runTask({
-      title: `Rolling back ${serverName}`,
+      title: `Rolling Back ${serverName}`,
       start: async () => (await postJSON(`/api/servers/${serverId}/pack/rollback`, {})).taskId,
     });
     toast(`Rolled back to ${result && result.version ? result.version : 'the previous version'}.`);

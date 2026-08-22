@@ -2,7 +2,7 @@
 
   <div class="card p-4">
     <div class="mb-4 flex items-center justify-between gap-3">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-link'}}} Discord notifications</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-link'}}} Discord Notifications</h3>
       <span class="msm-toggle"><input type="checkbox" id="ig-dc-enabled" {{#if integrations.discord.enabled}}checked{{/if}}><span></span></span>
     </div>
     <div class="space-y-4">
@@ -30,10 +30,10 @@
       <div class="flex items-center gap-2">
         <button class="btn btn-primary" id="ig-dc-save">Save</button>
         {{#if integrations.discord.hasWebhook}}
-          <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} Send test</button>
+          <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} Send Test</button>
         {{else}}
           {{! Disabled controls swallow hover - the wrapper carries the "why". }}
-          <span data-tip="Save a webhook URL first"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} Send test</button></span>
+          <span data-tip="Save a webhook URL first"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} Send Test</button></span>
         {{/if}}
         <span class="hidden text-xs text-warn" data-ig-dirty="dc">Unsaved changes</span>
       </div>
@@ -42,7 +42,7 @@
 
   <div class="card p-4">
     <div class="mb-4 flex items-center justify-between gap-3">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'globe' 'size-4 text-ok'}}} Public status page</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'globe' 'size-4 text-ok'}}} Public Status Page</h3>
       <span class="msm-toggle"><input type="checkbox" id="ig-sp-enabled" {{#if integrations.statusPage.enabled}}checked{{/if}}><span></span></span>
     </div>
     <div class="space-y-4">
@@ -57,8 +57,8 @@
       <div class="flex flex-wrap items-center gap-2">
         <button class="btn btn-primary" id="ig-sp-save">Save</button>
         {{#if (and integrations.statusPage.enabled integrations.statusPage.path)}}
-          <a class="btn" href="{{integrations.statusPage.path}}" target="_blank" rel="noopener" id="ig-sp-link">{{{icon 'link' 'size-4'}}} Open page</a>
-          <button class="btn btn-ghost" id="ig-sp-copy">{{{icon 'copy' 'size-4'}}} Copy link</button>
+          <a class="btn" href="{{integrations.statusPage.path}}" target="_blank" rel="noopener" id="ig-sp-link">{{{icon 'link' 'size-4'}}} Open Page</a>
+          <button class="btn btn-ghost" id="ig-sp-copy">{{{icon 'copy' 'size-4'}}} Copy Link</button>
         {{/if}}
         <span class="hidden text-xs text-warn" data-ig-dirty="sp">Unsaved changes</span>
       </div>
@@ -66,7 +66,7 @@
   </div>
 
   <div class="card p-4 lg:col-span-2">
-    <h3 class="mb-4 flex items-center gap-2 font-semibold">{{{icon 'send' 'size-4 text-warn'}}} Invite friends</h3>
+    <h3 class="mb-4 flex items-center gap-2 font-semibold">{{{icon 'send' 'size-4 text-warn'}}} Invite Friends</h3>
     <div class="grid gap-4 lg:grid-cols-2">
       <div class="space-y-4">
         <div>
@@ -87,16 +87,16 @@
           <pre class="max-h-44 overflow-auto whitespace-pre-wrap rounded-md border border-line bg-inset p-3 font-mono text-xs text-ink-soft" id="ig-invite-text">{{integrations.invite.inviteText}}</pre>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button class="btn btn-primary" id="ig-copy-invite">{{{icon 'copy' 'size-4'}}} Copy invite text</button>
+          <button class="btn btn-primary" id="ig-copy-invite">{{{icon 'copy' 'size-4'}}} Copy Invite Text</button>
           {{#if integrations.invite.modded}}
-            <button class="btn" id="ig-mrpack">{{{icon 'download' 'size-4'}}} Download client modpack (.mrpack)</button>
+            <button class="btn" id="ig-mrpack">{{{icon 'download' 'size-4'}}} Download Client Modpack (.mrpack)</button>
           {{/if}}
         </div>
       </div>
       <div class="space-y-3 text-sm">
         {{#if integrations.invite.modded}}
           <div class="rounded-md border border-line bg-raised p-3">
-            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
+            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What Friends Need</p>
             <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App - it installs the right Minecraft version, the mods, and pre-adds this server to their multiplayer list.</p>
             {{#if integrations.invite.manualMods.length}}
               <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="rounded bg-inset px-1">mods</code> folder themselves:</p>
@@ -107,7 +107,7 @@
           </div>
         {{else}}
           <div class="rounded-md border border-line bg-raised p-3">
-            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
+            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What Friends Need</p>
             <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}} - no mods required on the client.</p>
           </div>
         {{/if}}

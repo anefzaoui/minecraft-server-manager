@@ -118,7 +118,7 @@
     </div>
 
     <div class="card p-4">
-      <h3 class="mb-3 font-semibold">Update policy</h3>
+      <h3 class="mb-3 font-semibold">Update Policy</h3>
       <div class="space-y-2 text-sm">
         <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual only <span class="text-xs text-ink-faint">- never touch my versions</span></label>
         <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify me <span class="text-xs text-ink-faint">- badge when updates exist</span></label>
@@ -130,7 +130,7 @@
         API 403s these fields for other roles. }}
     {{#if (eq user.role 'admin')}}
     <div class="card p-4">
-      <h3 class="mb-4 font-semibold">Docker settings</h3>
+      <h3 class="mb-4 font-semibold">Docker Settings</h3>
       <div class="space-y-4">
         <div class="grid gap-4 sm:grid-cols-2">
           <div>
@@ -148,7 +148,7 @@
         <div>
           <div class="mb-2 flex items-center justify-between">
             <span class="text-sm font-semibold">Extra port mappings</span>
-            <button type="button" class="btn btn-sm" id="st-docker-port-add">{{{icon 'plus' 'size-3.5'}}} Add port</button>
+            <button type="button" class="btn btn-sm" id="st-docker-port-add">{{{icon 'plus' 'size-3.5'}}} Add Port</button>
           </div>
           <div class="space-y-2" id="st-docker-ports"></div>
           <p class="help">e.g. UDP 19132 for Bedrock/Geyser, TCP 8100 for BlueMap.</p>
@@ -157,7 +157,7 @@
         <div>
           <div class="mb-2 flex items-center justify-between">
             <span class="text-sm font-semibold">Extra volume binds</span>
-            <button type="button" class="btn btn-sm" id="st-docker-bind-add">{{{icon 'plus' 'size-3.5'}}} Add bind</button>
+            <button type="button" class="btn btn-sm" id="st-docker-bind-add">{{{icon 'plus' 'size-3.5'}}} Add Bind</button>
           </div>
           <div class="space-y-2" id="st-docker-binds"></div>
           <p class="help">Free-form host paths - the panel already has Docker-socket (root-equivalent) access.</p>
@@ -172,11 +172,11 @@
     {{/if}}
 
     <div class="card p-4">
-      <h3 class="mb-3 font-semibold">Blueprint &amp; maintenance</h3>
+      <h3 class="mb-3 font-semibold">Blueprint &amp; Maintenance</h3>
       <div class="flex flex-wrap gap-2">
-        <button class="btn" id="st-export-bp">{{{icon 'drafting-compass' 'size-4'}}} Export as blueprint</button>
-        <button class="btn" id="st-clone">{{{icon 'copy' 'size-4'}}} Clone server</button>
-        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending env/resource changes">{{{icon 'wrench' 'size-4'}}} Recreate container</button>
+        <button class="btn" id="st-export-bp">{{{icon 'drafting-compass' 'size-4'}}} Export as Blueprint</button>
+        <button class="btn" id="st-clone">{{{icon 'copy' 'size-4'}}} Clone Server</button>
+        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending env/resource changes">{{{icon 'wrench' 'size-4'}}} Recreate Container</button>
       </div>
       {{! Destruction lives behind its own divider, never one accidental click
           from the safe maintenance actions above. }}
@@ -212,7 +212,7 @@
 
 <div class="mt-4 flex justify-end gap-2">
   <button class="btn" id="st-discard">Discard</button>
-  <button class="btn btn-primary" id="st-save">Save changes</button>
+  <button class="btn btn-primary" id="st-save">Save Changes</button>
 </div>
 
 <script type="module" src="/js/pages/server-settings.js"></script>

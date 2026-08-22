@@ -1,9 +1,9 @@
 <div data-worlds-server="{{server.id}}" data-worlds-server-name="{{server.name}}" data-worlds-status="{{server.status}}" class="contents">
   <div class="mb-4 flex flex-wrap items-center gap-2">
-    <h3 class="font-semibold">Worlds on this server</h3>
+    <h3 class="font-semibold">Worlds on This Server</h3>
     <div class="ml-auto flex gap-2">
-      <button class="btn btn-sm" id="worlds-extract" data-tip="Snapshot the active world into the library (works while running)">{{{icon 'camera' 'size-3.5'}}} Save to library</button>
-      <button class="btn btn-primary btn-sm" id="worlds-upload" data-tip="Upload a world archive - root auto-detected, lands in the library below">{{{icon 'upload' 'size-3.5'}}} Upload world</button>
+      <button class="btn btn-sm" id="worlds-extract" data-tip="Snapshot the active world into the library (works while running)">{{{icon 'camera' 'size-3.5'}}} Save to Library</button>
+      <button class="btn btn-primary btn-sm" id="worlds-upload" data-tip="Upload a world archive - root auto-detected, lands in the library below">{{{icon 'upload' 'size-3.5'}}} Upload World</button>
     </div>
   </div>
 
@@ -52,10 +52,10 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='earth' title='No worlds yet' message='Start the server once to generate a world, or install one from the library below.'}}
+    {{> empty-state iconName='earth' title='No Worlds Yet' message='Start the server once to generate a world, or install one from the library below.'}}
   {{/if}}
 
-  <h3 class="mt-6 mb-3 font-semibold">World library</h3>
+  <h3 class="mt-6 mb-3 font-semibold">World Library</h3>
   {{#if libraryWorlds.length}}
     <div class="card divide-y divide-line">
       {{#each libraryWorlds}}
@@ -66,7 +66,7 @@
             <div class="text-xs text-ink-faint">{{source}}{{#if flavor}} · {{flavor}}{{/if}}{{#if mcVersion}} {{mcVersion}}{{/if}} · <span data-ts="{{created}}">{{created}}</span></div>
           </div>
           <span class="text-xs text-ink-faint">{{bytes size}}</span>
-          <button class="btn btn-sm" data-lib-install data-tip="Install into this server - replace or alongside">{{{icon 'import' 'size-3.5'}}} Install here</button>
+          <button class="btn btn-sm" data-lib-install data-tip="Install into this server - replace or alongside">{{{icon 'import' 'size-3.5'}}} Install Here</button>
           <a href="/worlds" class="btn btn-ghost btn-sm">Open in Worlds {{{icon 'arrow-right' 'size-3.5'}}}</a>
         </div>
       {{/each}}

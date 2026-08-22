@@ -20,7 +20,7 @@ function init() {
       createFrom({ blueprintId: id }, name);
     } else if (delBtn) {
       const ok = await confirmDialog({
-        title: `Delete blueprint "${name}"?`,
+        title: `Delete Blueprint "${name}"?`,
         message: 'Removes the .mcserver.zip from the library. Servers already created from it are not affected.',
         confirmLabel: 'Delete',
         danger: true,
@@ -186,7 +186,7 @@ function showReport(server, report) {
     </ul>
     ${report.some((r) => r.status !== 'ok') ? '<p class="text-xs text-ink-faint">Failed items can be added later from the server’s Mods tab.</p>' : ''}`;
   openModal({
-    title: 'Blueprint import finished',
+    title: 'Blueprint Import Finished',
     content,
     actions: [
       { label: 'Stay here', kind: 'ghost' },

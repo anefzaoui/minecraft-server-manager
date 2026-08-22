@@ -64,7 +64,7 @@ document.addEventListener('click', async (e) => {
     }
   } else {
     const ok = await confirmDialog({
-      title: 'Disable the live map?',
+      title: 'Disable the Live Map?',
       message: 'Removes BlueMap from this server. Rendered map tiles stay on disk until you delete them from Files.',
       confirmLabel: 'Disable',
       danger: true,

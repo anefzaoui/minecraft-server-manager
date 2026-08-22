@@ -135,7 +135,7 @@ function init() {
       });
     } else if (delBtn) {
       const ok = await confirmDialog({
-        title: `Delete user ${row.dataset.username}?`,
+        title: `Delete User ${row.dataset.username}?`,
         message: 'They will be signed out and lose all access.',
         confirmLabel: 'Delete user',
         danger: true,
@@ -168,7 +168,7 @@ function init() {
         </select>
       </div>`;
     openModal({
-      title: 'Add user',
+      title: 'Add User',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -204,7 +204,7 @@ function init() {
       '<input class="input" id="pw-new" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p>'
     );
     openModal({
-      title: 'Set password',
+      title: 'Set Password',
       size: 'sm',
       content,
       actions: [

@@ -78,7 +78,7 @@ function init(serverId) {
             'console max-h-[65vh] overflow-auto whitespace-pre-wrap break-words p-3 text-xs leading-relaxed';
           pre.textContent = text || '(empty excerpt)';
           openModal({
-            title: 'Captured log excerpt',
+            title: 'Captured Log Excerpt',
             size: 'lg',
             content: pre,
             actions: [

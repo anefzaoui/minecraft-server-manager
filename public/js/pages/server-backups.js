@@ -27,7 +27,7 @@ function init(serverId) {
   document.getElementById('bk-now')?.addEventListener('click', async () => {
     try {
       await runTask({
-        title: 'Creating backup…',
+        title: 'Creating Backup…',
         start: () => postJson(`/api/servers/${serverId}/backups`),
       });
       toast('Backup created.');

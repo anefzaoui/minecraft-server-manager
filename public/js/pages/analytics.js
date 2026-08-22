@@ -344,7 +344,7 @@ function init(serverId) {
     content.appendChild(sessions);
 
     openModal({
-      title: `${p.name || name} - player profile`,
+      title: `${p.name || name} - Player Profile`,
       content,
       size: 'lg',
       actions: [{ label: 'Close', kind: 'ghost' }],

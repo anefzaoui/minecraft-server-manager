@@ -1,7 +1,7 @@
 <div data-backups-server="{{server.id}}" class="contents">
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <p class="text-sm text-ink-faint">Retention: keep 10 scheduled + all pre-update backups</p>
-  <button class="btn btn-primary btn-sm ml-auto" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back up now</button>
+  <button class="btn btn-primary btn-sm ml-auto" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back Up Now</button>
 </div>
 {{#if backups.length}}
 <div class="card overflow-x-auto">
@@ -29,7 +29,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='archive' title='No backups yet' message='Hit Back up now for the first one - scheduled and pre-update backups will also collect here automatically.'}}
+  {{> empty-state iconName='archive' title='No Backups Yet' message='Hit Back up now for the first one - scheduled and pre-update backups will also collect here automatically.'}}
 {{/if}}
 </div>
 <script type="module" src="/js/pages/server-backups.js"></script>

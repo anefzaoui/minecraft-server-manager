@@ -33,7 +33,7 @@ function init() {
     const delBtn = e.target.closest('[data-schedule-delete]');
     if (delBtn) {
       const ok = await confirmDialog({
-        title: 'Delete this schedule?',
+        title: 'Delete This Schedule?',
         message: `${row.dataset.task} (${row.dataset.cron}) stops firing immediately.`,
         confirmLabel: 'Delete',
         danger: true,

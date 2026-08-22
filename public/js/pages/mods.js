@@ -100,7 +100,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       <p class="help">Direct .jar URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work. The right build for this server's loader and MC version is picked automatically.</p>
       <div class="mt-3 hidden" id="mod-url-progress"><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
     const modal = openModal({
-      title: 'Add mod by URL',
+      title: 'Add Mod by URL',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -249,7 +249,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     content.innerHTML = `
       <p class="mb-3 text-sm text-ink-soft">These mods disallow automated download (or were pulled from CurseForge), so the pack can't finish. For each one, <b>Exclude</b> it, install a replacement from <b>Modrinth</b>, or <b>upload</b> the jar you downloaded by hand. Changes apply on the next recreate.</p>
       <div class="space-y-2" id="pending-list"></div>`;
-    openModal({ title: 'Mods that need manual action', content, size: 'lg' });
+    openModal({ title: 'Mods That Need Manual Action', content, size: 'lg' });
     const listEl = content.querySelector('#pending-list');
 
     function render(mods) {

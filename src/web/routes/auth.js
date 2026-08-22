@@ -115,7 +115,7 @@ router.get('/login', (req, res) => {
     delete req.session.pendingTotpUsername;
     delete req.session.pendingTotpNext;
   }
-  res.render('login', { title: 'Sign in', layout: 'bare', next: safeNext(req.query.next) });
+  res.render('login', { title: 'Sign In', layout: 'bare', next: safeNext(req.query.next) });
 });
 
 router.post('/login', (req, res) => {
@@ -132,7 +132,7 @@ router.post('/login', (req, res) => {
     if (!user) {
       recordLoginFailure(username, req.ip);
       return res.status(401).render('login', {
-        title: 'Sign in',
+        title: 'Sign In',
         layout: 'bare',
         error: 'Wrong username or password.',
         next: safeNext(next),
@@ -154,19 +154,19 @@ router.post('/login', (req, res) => {
       if (err)
         return res
           .status(500)
-          .render('login', { title: 'Sign in', layout: 'bare', error: 'Session error - try again.' });
+          .render('login', { title: 'Sign In', layout: 'bare', error: 'Session error - try again.' });
       req.session.userId = user.id;
       recordEvent({ actor: user.username, type: 'login', summary: `${user.username} signed in` });
       res.redirect(safeNext(next) || '/');
     });
   } catch (err) {
-    res.status(err.status || 400).render('login', { title: 'Sign in', layout: 'bare', error: firstIssue(err) });
+    res.status(err.status || 400).render('login', { title: 'Sign In', layout: 'bare', error: firstIssue(err) });
   }
 });
 
 router.get('/login/2fa', (req, res) => {
   if (!req.session || !req.session.pendingTotpUserId) return res.redirect('/login');
-  res.render('login-2fa', { title: 'Verify it’s you', layout: 'bare' });
+  res.render('login-2fa', { title: 'Verify It’s You', layout: 'bare' });
 });
 
 router.post('/login/2fa', (req, res) => {
@@ -181,7 +181,7 @@ router.post('/login/2fa', (req, res) => {
       recordLoginFailure(pendingUsername, req.ip);
       return res
         .status(401)
-        .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: 'Incorrect code.' });
+        .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: 'Incorrect code.' });
     }
     clearLoginFailures(pendingUsername, req.ip);
     const next = req.session.pendingTotpNext;
@@ -192,7 +192,7 @@ router.post('/login/2fa', (req, res) => {
       if (err)
         return res
           .status(500)
-          .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: 'Session error - try again.' });
+          .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: 'Session error - try again.' });
       req.session.userId = pendingId;
       recordEvent({ actor: pendingUsername, type: 'login', summary: `${pendingUsername} signed in (2FA)` });
       res.redirect(safeNext(next) || '/');
@@ -200,7 +200,7 @@ router.post('/login/2fa', (req, res) => {
   } catch (err) {
     res
       .status(err.status || 400)
-      .render('login-2fa', { title: 'Verify it’s you', layout: 'bare', error: firstIssue(err) });
+      .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: firstIssue(err) });
   }
 });
 

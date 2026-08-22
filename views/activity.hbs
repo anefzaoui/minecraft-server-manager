@@ -11,7 +11,7 @@
     <option value="">All types</option>
     {{#each types}}<option value="{{this}}" {{#if (eq this ../filters.type)}}selected{{/if}}>{{this}}</option>{{/each}}
   </select>
-  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply filters</button>
+  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply Filters</button>
   <div class="ml-auto flex gap-1">
     <a class="btn btn-sm" href="/api/events/export?format=csv{{exportQs}}" data-tip="Export the filtered events as CSV">{{{icon 'download' 'size-3.5'}}} CSV</a>
     <a class="btn btn-sm" href="/api/events/export?format=json{{exportQs}}" data-tip="Export the filtered events as JSON">{{{icon 'download' 'size-3.5'}}} JSON</a>
@@ -48,6 +48,6 @@
   {{/if}}
 </div>
 {{else}}
-  {{> empty-state iconName='history' title='No activity yet' message='Every action across every server lands here - starts and stops, backups, updates, player management, with the receipts.'}}
+  {{> empty-state iconName='history' title='No Activity Yet' message='Every action across every server lands here - starts and stops, backups, updates, player management, with the receipts.'}}
 {{/if}}
 <script type="module" src="/js/pages/activity.js"></script>

@@ -39,7 +39,7 @@ async function openEnrollModal(trigger) {
     </div>`;
 
   openModal({
-    title: 'Enable two-factor authentication',
+    title: 'Enable Two-Factor Authentication',
     content,
     actions: [
       { label: 'Cancel', kind: 'ghost' },
@@ -75,7 +75,7 @@ function openManageModal(trigger) {
     </div>`;
 
   openModal({
-    title: 'Two-factor authentication',
+    title: 'Two-Factor Authentication',
     content,
     actions: [
       { label: 'Close', kind: 'ghost' },

@@ -26,7 +26,7 @@
 
     {{! ---- Choose-loader browser (default) ---- }}
     <div class="card p-5" id="wz-mods-browse">
-      <h3 class="mb-1 font-semibold">Build a modded server</h3>
+      <h3 class="mb-1 font-semibold">Build a Modded Server</h3>
       <p class="help mb-4">Pick a loader and version, then search {{#if curseforgeEnabled}}Modrinth &amp; CurseForge{{else}}Modrinth{{/if}} for mods - required dependencies are added automatically for you to review.</p>
 
       <label class="label">Mod loader</label>
@@ -77,7 +77,7 @@
 
     {{! ---- Auto-detect (the compatibility solver) ---- }}
     <div class="card p-5 hidden" id="wz-solver">
-      <h3 class="mb-1 font-semibold">Auto-detect loader &amp; version</h3>
+      <h3 class="mb-1 font-semibold">Auto-Detect Loader &amp; Version</h3>
       <p class="help mb-4">Search Modrinth, add the mods you want, and Minecraft Server Manager finds the newest loader + Minecraft version that every one of them supports.</p>
       <div>
         <label class="label" for="wz-solver-q">Search Modrinth</label>
@@ -86,7 +86,7 @@
       <div class="mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-line" id="wz-solver-results"></div>
       <div class="mt-3 hidden flex-wrap gap-1.5" id="wz-solver-chips"></div>
       <div class="mt-4 flex items-center gap-3">
-        <button class="btn btn-primary" id="wz-solver-run" type="button" disabled>{{{icon 'wand-sparkles' 'size-4'}}} Solve compatibility</button>
+        <button class="btn btn-primary" id="wz-solver-run" type="button" disabled>{{{icon 'wand-sparkles' 'size-4'}}} Solve Compatibility</button>
         <span class="text-xs text-ink-faint" id="wz-solver-hint">Add at least one mod to solve.</span>
       </div>
       <div class="mt-4 hidden" id="wz-solver-result"></div>
@@ -96,7 +96,7 @@
 
   {{! U1/U2: "From modpack" source tab - search, pin a version, real one-task install }}
   <div class="card mb-4 hidden p-5" id="wz-modpack">
-    <h3 class="mb-1 font-semibold">Pick a modpack</h3>
+    <h3 class="mb-1 font-semibold">Pick a Modpack</h3>
     <p class="help mb-4">Search Modrinth or CurseForge. The pack decides the loader and Minecraft version, and the install is always pinned to the exact pack version you choose - restarts never silently upgrade.</p>
     {{! GTNH ships outside Modrinth/CurseForge - a fixed card, not a search result }}
     <div class="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-line p-3" id="wz-gtnh-card">
@@ -105,7 +105,7 @@
         <div class="text-xs text-ink-faint">Minecraft 1.7.10 expert pack - needs 6 GB+ RAM and 20 GB+ disk. Runs on modern
           Java.</div>
       </div>
-      <button type="button" class="btn shrink-0" id="wz-gtnh-pick">Set up</button>
+      <button type="button" class="btn shrink-0" id="wz-gtnh-pick">Set Up</button>
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <input class="input min-w-48 flex-1" id="wz-pack-q" placeholder="e.g. Simply Optimized, All the Mods…" autocomplete="off">
@@ -127,14 +127,14 @@
             include beta releases
           </label>
         </div>
-        <button type="button" class="btn mb-0.5" id="wz-pack-details-btn">{{{icon 'book-open' 'size-4'}}} View details</button>
+        <button type="button" class="btn mb-0.5" id="wz-pack-details-btn">{{{icon 'book-open' 'size-4'}}} View Details</button>
       </div>
     </div>
   </div>
 
   {{! "From blueprint" source tab - identity stays editable, the blueprint owns the rest }}
   <div class="card mb-4 hidden p-5" id="wz-blueprint-panel">
-    <h3 class="mb-1 font-semibold">Start from a blueprint</h3>
+    <h3 class="mb-1 font-semibold">Start from a Blueprint</h3>
     <p class="help mb-4">A blueprint sets the server type, Minecraft version, modpack, mods, config and resources - you choose the name, icon and color below. The sections a blueprint owns are greyed out.</p>
     <label class="label" for="wz-blueprint">Blueprint</label>
     <select class="input" id="wz-blueprint" data-label="Blueprint">
@@ -192,7 +192,7 @@
   </div>
 
   <div class="card mt-4 p-5" id="wz-card-flavor">
-    <h3 class="mb-4 font-semibold">Server type &amp; version</h3>
+    <h3 class="mb-4 font-semibold">Server Type &amp; Version</h3>
     <p class="help mb-3">Vanilla and plugin servers. Want mods? Use the <b>From mods</b> tab - that's where the mod loaders (Fabric, Forge, NeoForge, Quilt) live.</p>
     <div class="mb-4 grid grid-cols-3 gap-2" id="wz-flavors">
       <button type="button" data-type="VANILLA" class="tile p-3" aria-pressed="true">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
@@ -217,7 +217,7 @@
   </div>
 
   <div class="card mt-4 p-5" id="wz-card-world">
-    <h3 class="mb-4 font-semibold">World &amp; rules</h3>
+    <h3 class="mb-4 font-semibold">World &amp; Rules</h3>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <label class="label" for="wz-seed">World seed <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
@@ -294,7 +294,7 @@
     {{/each}}
     <details class="card group">
       <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
-        {{{icon 'terminal' 'size-4 text-ink-faint'}}} Extra environment variables
+        {{{icon 'terminal' 'size-4 text-ink-faint'}}} Extra Environment Variables
         <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
       </summary>
       <div class="border-t border-line p-4">
@@ -308,7 +308,7 @@
     {{#if (eq user.role 'admin')}}
     <details class="card group">
       <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
-        {{{icon 'container' 'size-4 text-ink-faint'}}} Advanced Docker settings
+        {{{icon 'container' 'size-4 text-ink-faint'}}} Advanced Docker Settings
         <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
       </summary>
       <div class="space-y-4 border-t border-line p-4">
@@ -330,7 +330,7 @@
         <div>
           <div class="mb-2 flex items-center justify-between">
             <span class="text-sm font-semibold">Extra port mappings</span>
-            <button type="button" class="btn btn-sm" id="wz-docker-port-add">{{{icon 'plus' 'size-3.5'}}} Add port</button>
+            <button type="button" class="btn btn-sm" id="wz-docker-port-add">{{{icon 'plus' 'size-3.5'}}} Add Port</button>
           </div>
           <div class="space-y-2" id="wz-docker-ports"></div>
           <p class="help">e.g. UDP 19132 for Bedrock/Geyser, TCP 8100 for BlueMap.</p>
@@ -339,7 +339,7 @@
         <div>
           <div class="mb-2 flex items-center justify-between">
             <span class="text-sm font-semibold">Extra volume binds</span>
-            <button type="button" class="btn btn-sm" id="wz-docker-bind-add">{{{icon 'plus' 'size-3.5'}}} Add bind</button>
+            <button type="button" class="btn btn-sm" id="wz-docker-bind-add">{{{icon 'plus' 'size-3.5'}}} Add Bind</button>
           </div>
           <div class="space-y-2" id="wz-docker-binds"></div>
           <p class="help">Free-form host paths - the panel already has Docker-socket (root-equivalent) access, so double-check these before creating.</p>
@@ -355,7 +355,7 @@
 
   <div class="mt-6 flex items-center justify-between">
     <a href="/" class="btn btn-ghost">Cancel</a>
-    <button class="btn btn-primary" id="wz-create" type="button">{{{icon 'pickaxe' 'size-4'}}} Create &amp; start</button>
+    <button class="btn btn-primary" id="wz-create" type="button">{{{icon 'pickaxe' 'size-4'}}} Create &amp; Start</button>
   </div>
 </div>
 <script type="module" src="/js/pages/wizard.js"></script>

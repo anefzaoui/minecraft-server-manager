@@ -162,7 +162,7 @@ document.addEventListener('click', async (e) => {
   };
   if (action === 'kill') {
     const ok = await confirmDialog({
-      title: `Force kill ${name}?`,
+      title: `Force Kill ${name}?`,
       message: 'Kill skips the graceful stop - unsaved world data may be lost. Use Stop unless the server is frozen.',
       confirmLabel: 'Kill it',
       danger: true,
@@ -254,7 +254,7 @@ async function copyText(value) {
   help.className = 'text-xs text-ink-faint';
   help.textContent = 'Automatic copy is unavailable here - press Ctrl/Cmd+C to copy the selected value.';
   wrap.append(input, help);
-  openModal({ title: 'Copy manually', content: wrap, size: 'sm' });
+  openModal({ title: 'Copy Manually', content: wrap, size: 'sm' });
   input.select();
   return false;
 }

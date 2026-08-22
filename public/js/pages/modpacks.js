@@ -42,7 +42,7 @@ export async function showPackDetails({ platform, ref, installedServerId } = {})
     ? `serverId=${encodeURIComponent(installedServerId)}`
     : `platform=${encodeURIComponent(platform)}&ref=${encodeURIComponent(ref)}`;
   const loading = openModal({
-    title: 'Loading pack details…',
+    title: 'Loading Pack Details…',
     size: 'sm',
     content: '<p class="text-sm text-ink-faint">Fetching from the platform…</p>',
   });
@@ -303,7 +303,7 @@ function initPage() {
     if (e.target.closest('[data-pack-check]')) {
       try {
         const result = await runTask({
-          title: `Checking ${packName} for updates`,
+          title: `Checking ${packName} for Updates`,
           start: async () => (await postJSON(`/api/servers/${serverId}/updates/check`, {})).taskId,
         });
         const n = result && result.findings ? result.findings.length : 0;

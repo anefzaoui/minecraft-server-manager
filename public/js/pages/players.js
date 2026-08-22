@@ -240,7 +240,7 @@ function init(root) {
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> Add to whitelist</label>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> Make operator (level 4)</label>`;
       openModal({
-        title: 'Add player',
+        title: 'Add Player',
         content,
         actions: [
           { label: 'Cancel', kind: 'ghost' },
@@ -348,7 +348,7 @@ function init(root) {
       </select>
       <p class="mt-2 text-xs text-ink-faint">Levels below 4 are stored in ops.json; a running server applies them after a restart.</p>`;
     openModal({
-      title: `Op level for ${name}`,
+      title: `Op Level for ${name}`,
       content,
       size: 'sm',
       actions: [

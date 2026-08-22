@@ -4,7 +4,7 @@
   <div class="card mb-4 p-4">
     <div class="flex flex-wrap items-start gap-4">
       <div class="min-w-0 flex-1">
-        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-link'}}} Custom chat commands</h3>
+        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-link'}}} Custom Chat Commands</h3>
         <p class="mt-1 max-w-prose text-sm text-ink-faint">
           Players type a trigger in game chat - like <code class="rounded bg-inset px-1 font-mono text-ink-soft" data-cc-prefix-sample>{{chatPrefix}}rtp2</code> -
           and the panel runs the bound action <b class="text-ink-soft">as that player</b>: random teleport, structure or biome
@@ -32,7 +32,7 @@
   <div class="mb-4 flex flex-wrap items-center gap-2">
     <h3 class="font-semibold">Commands</h3>
     <div class="ml-auto">
-      <button class="btn btn-primary btn-sm" id="cc-add">{{{icon 'plus' 'size-3.5'}}} Add command</button>
+      <button class="btn btn-primary btn-sm" id="cc-add">{{{icon 'plus' 'size-3.5'}}} Add Command</button>
     </div>
   </div>
 
@@ -83,13 +83,13 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='terminal' title='No chat commands yet'
+    {{> empty-state iconName='terminal' title='No Chat Commands Yet'
         message=(concat 'Create your first one - a custom ' chatPrefix 'rtp that randomly teleports whoever types it takes about 20 seconds to set up.')
         ctaId='cc-add-empty' ctaLabel='Add command'}}
   {{/if}}
 
   <div class="card mt-6 p-4">
-    <h3 class="mb-3 font-semibold">Recent uses</h3>
+    <h3 class="mb-3 font-semibold">Recent Uses</h3>
     {{#if chatCommandEvents.length}}
       <div class="divide-y divide-line text-sm">
         {{#each chatCommandEvents}}

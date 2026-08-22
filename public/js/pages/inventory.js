@@ -369,7 +369,7 @@ function init(root) {
 
   function openCountModal(at, item, nested = null) {
     countDialog({
-      title: 'Change count',
+      title: 'Change Count',
       header: itemHeader(item, slotName(at.container, at.slot)),
       value: item.count,
       confirmLabel: 'Set count',
@@ -439,7 +439,7 @@ function init(root) {
         : 'Pick a target slot. Occupied targets swap the two items.';
     content.insertAdjacentHTML('beforeend', `<p class="text-xs text-ink-faint">${hint}</p>`);
 
-    const modal = openModal({ title: 'Move to…', content, size: 'lg' });
+    const modal = openModal({ title: 'Move To…', content, size: 'lg' });
 
     const doMove = async (to) => {
       if (to.container === from.container && to.slot === from.slot) {
@@ -948,7 +948,7 @@ function init(root) {
         <input class="input font-mono" data-f="item" placeholder="minecraft:tnt" maxlength="130" autocomplete="off" spellcheck="false">
       </div>`;
     openModal({
-      title: 'Clear items',
+      title: 'Clear Items',
       content,
       size: 'sm',
       actions: [
@@ -967,7 +967,7 @@ function init(root) {
             if (
               !item &&
               !(await confirmDialog({
-                title: `Clear the ENTIRE inventory of ${player}?`,
+                title: `Clear the ENTIRE Inventory of ${player}?`,
                 message:
                   'Every item they carry will be deleted. This cannot be undone - take a snapshot first if you might need it back.',
                 confirmLabel: 'Clear everything',

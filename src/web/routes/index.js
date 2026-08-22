@@ -54,7 +54,7 @@ const SUB_LABELS = {
   players: 'Roster',
   inventory: 'Inventory',
   analytics: 'Stats',
-  commands: 'Chat commands',
+  commands: 'Chat Commands',
   worlds: 'Worlds',
   mods: 'Mods',
   map: 'Map',
@@ -175,7 +175,7 @@ router.get('/servers/new', async (req, res) => {
     .map((s) => ({ ...s, fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env') }))
     .filter((s) => s.fields.length);
   res.render('wizard', {
-    title: 'Create server',
+    title: 'Create Server',
     active: 'servers',
     blueprints: require('../../blueprints').listBlueprints(),
     versions,
@@ -690,7 +690,7 @@ router.get(
         })
       : [];
     res.render('files-global', {
-      title: 'File manager',
+      title: 'File Manager',
       active: 'storage',
       files: listing.entries.map((e) => ({ ...e, enc: encodeURIComponent(e.path) })),
       filePath: listing.path,
@@ -715,7 +715,7 @@ router.get('/settings', requireRole('admin'), (req, res) => {
 });
 
 router.get('/login', (req, res) => {
-  res.render('login', { title: 'Sign in', layout: 'bare' });
+  res.render('login', { title: 'Sign In', layout: 'bare' });
 });
 
 module.exports = router;

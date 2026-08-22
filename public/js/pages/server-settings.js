@@ -229,7 +229,7 @@ function init(serverId) {
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed overlay files in the archive <span class="text-xs text-ink-faint">- bigger file, fully portable</span></label>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">- can be large</span></label>`;
     openModal({
-      title: 'Export as blueprint',
+      title: 'Export as Blueprint',
       content,
       size: 'sm',
       actions: [
@@ -268,7 +268,7 @@ function init(serverId) {
       <p class="text-xs text-ink-faint">Also available any time on the <a class="text-link hover:underline" href="/blueprints">Blueprints page</a>.</p>`;
     content.querySelector('[data-bp-name]').textContent = bp.name || 'exported';
     content.querySelector('[data-bp-dl]').href = `/api/blueprints/${encodeURIComponent(bp.id)}/download`;
-    openModal({ title: 'Blueprint exported', content, size: 'sm', actions: [{ label: 'Done', kind: 'ghost' }] });
+    openModal({ title: 'Blueprint Exported', content, size: 'sm', actions: [{ label: 'Done', kind: 'ghost' }] });
   }
 
   // ------------------------------------------------------------------ clone
@@ -279,7 +279,7 @@ function init(serverId) {
       <p class="text-xs text-ink-faint">Creates a copy of this server with fresh ports (blueprint export + import).</p>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Also copy the active world</label>`;
     openModal({
-      title: 'Clone server',
+      title: 'Clone Server',
       content,
       size: 'sm',
       actions: [
@@ -301,7 +301,7 @@ function init(serverId) {
     const DIRECT = Symbol('direct');
     let direct = null;
     runTask({
-      title: 'Cloning server…',
+      title: 'Cloning Server…',
       start: async () => {
         const data = await postJson('/api/blueprints/clone', { serverId, includeWorld });
         if (data.taskId) return data.taskId;
@@ -334,7 +334,7 @@ function init(serverId) {
     if (dirty) {
       const { confirmDialog } = await import('../lib/confirm.js');
       const ok = await confirmDialog({
-        title: 'Discard changes?',
+        title: 'Discard Changes?',
         message: 'Everything edited on this tab since the last save is thrown away.',
         confirmLabel: 'Discard',
         danger: true,

@@ -9,20 +9,20 @@
     </div>
     <div class="ml-auto flex gap-2">
       {{! Honest label + weight: this button focuses the search field, it doesn't install anything. }}
-      <button class="btn" id="packs-install-btn">{{{icon 'search' 'size-4'}}} Search packs</button>
-      <a href="/settings" class="btn">{{{icon 'key' 'size-4'}}} API keys</a>
+      <button class="btn" id="packs-install-btn">{{{icon 'search' 'size-4'}}} Search Packs</button>
+      <a href="/settings" class="btn">{{{icon 'key' 'size-4'}}} API Keys</a>
     </div>
   </div>
 
   <div class="hidden" id="packs-results-wrap">
-    <h3 class="mb-3 mt-6 text-xs font-semibold uppercase tracking-wider text-ink-faint">Search results</h3>
+    <h3 class="mb-3 mt-6 text-xs font-semibold uppercase tracking-wider text-ink-faint">Search Results</h3>
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="packs-results"></div>
   </div>
 
   <h3 class="mb-3 mt-6 text-xs font-semibold uppercase tracking-wider text-ink-faint">Installed</h3>
 
   {{#unless packServers.length}}
-    {{> empty-state iconName='package' title='No modpacks installed' message='No server is running a managed modpack yet. Search above and hit "Create server", or start from the wizard - installs are always version-pinned so restarts never surprise you.' ctaHref='/servers/new' ctaLabel='Create a server'}}
+    {{> empty-state iconName='package' title='No Modpacks Installed' message='No server is running a managed modpack yet. Search above and hit "Create server", or start from the wizard - installs are always version-pinned so restarts never surprise you.' ctaHref='/servers/new' ctaLabel='Create a Server'}}
   {{/unless}}
 
   {{! Same column count as search results - the same card width jumped between
@@ -47,8 +47,8 @@
             <span class="badge badge-warn min-w-0"><span class="truncate" title="{{pack.latest}} available">{{pack.latest}} available</span></span>
             <button class="btn btn-sm ml-auto shrink-0" data-pack-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
           {{else}}
-            <span class="text-xs text-ok">{{{icon 'check' 'size-3.5'}}} Up to date</span>
-            <button class="btn btn-ghost btn-sm ml-auto" data-pack-check>{{{icon 'rotate-cw' 'size-3.5'}}} Check now</button>
+            <span class="text-xs text-ok">{{{icon 'check' 'size-3.5'}}} Up to Date</span>
+            <button class="btn btn-ghost btn-sm ml-auto" data-pack-check>{{{icon 'rotate-cw' 'size-3.5'}}} Check Now</button>
           {{/if}}
         </div>
       </div>

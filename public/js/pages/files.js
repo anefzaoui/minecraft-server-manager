@@ -57,7 +57,7 @@ function init(rootEl) {
       <label class="label">Folder name</label>
       <input class="input" data-mk-name placeholder="new-folder" autocomplete="off">`;
     openModal({
-      title: 'New folder',
+      title: 'New Folder',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -94,7 +94,7 @@ function init(rootEl) {
     } else if (e.target.closest('[data-file-delete]')) {
       const btn = e.target.closest('[data-file-delete]');
       const ok = await confirmDialog({
-        title: `Delete ${isDir ? 'folder' : 'file'} "${name}"?`,
+        title: `Delete ${isDir ? 'Folder' : 'File'} "${name}"?`,
         message: isDir ? 'Deletes the folder and everything inside it.' : 'Deletes this file permanently.',
         detail: `${fmtBytes(size)} will be freed.`,
         confirmLabel: 'Delete',

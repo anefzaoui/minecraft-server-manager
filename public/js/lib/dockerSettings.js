@@ -161,7 +161,7 @@ export function initDockerSettings(ids) {
       const textarea = content.querySelector('textarea');
       textarea.value = yamlText;
       openModal({
-        title: 'Advanced Docker settings - preview',
+        title: 'Advanced Docker Settings - Preview',
         content,
         size: 'lg',
         actions: [

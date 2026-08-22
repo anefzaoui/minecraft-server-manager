@@ -31,7 +31,7 @@ document.addEventListener('click', async (e) => {
     pre.textContent = text;
     content.appendChild(pre);
     openModal({
-      title: `Captured log - ${btn.dataset.eventType || `event #${id}`}`,
+      title: `Captured Log - ${btn.dataset.eventType || `event #${id}`}`,
       content,
       size: 'lg',
       actions: [{ label: 'Close', kind: 'ghost' }],

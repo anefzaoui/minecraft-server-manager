@@ -16,7 +16,7 @@
       Whitelist enforced
     </label>
     <div class="ml-auto flex gap-2">
-      <button class="btn btn-primary btn-sm" id="players-add">{{{icon 'user-plus' 'size-3.5'}}} Add player</button>
+      <button class="btn btn-primary btn-sm" id="players-add">{{{icon 'user-plus' 'size-3.5'}}} Add Player</button>
     </div>
   </div>
 
@@ -104,8 +104,8 @@
                 {{/if}}
                 <button class="btn btn-ghost btn-sm" data-menu="player-menu-{{@index}}" data-tip="More actions">{{{icon 'ellipsis' 'size-3.5'}}}</button>
                 <template id="player-menu-{{@index}}">
-                  <button data-act="op-level" data-name="{{name}}">{{{icon 'shield' 'size-3.5'}}} Set op level…</button>
-                  <button data-act="ban-reason" data-name="{{name}}">{{{icon 'ban' 'size-3.5'}}} Ban with reason…</button>
+                  <button data-act="op-level" data-name="{{name}}">{{{icon 'shield' 'size-3.5'}}} Set Op Level…</button>
+                  <button data-act="ban-reason" data-name="{{name}}">{{{icon 'ban' 'size-3.5'}}} Ban with Reason…</button>
                   {{#if uuid}}<button data-act="copy-uuid" data-uuid="{{uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
                 </template>
               </div>
@@ -117,7 +117,7 @@
     <div class="hidden p-8 text-center text-sm text-ink-faint" id="players-no-match">No players match this filter.</div>
   </div>
   {{else}}
-    {{> empty-state iconName='users' title='No players seen yet' message='Add a player by name - it is resolved to a UUID via Mojang - or players appear here automatically the first time they join.'}}
+    {{> empty-state iconName='users' title='No Players Seen Yet' message='Add a player by name - it is resolved to a UUID via Mojang - or players appear here automatically the first time they join.'}}
   {{/if}}
 
   <div class="card mt-6 p-4">

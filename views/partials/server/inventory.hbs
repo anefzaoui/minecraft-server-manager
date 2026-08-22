@@ -13,11 +13,11 @@
     <button class="btn btn-sm" id="inv-snapshot" data-tip="Save this inventory as a snapshot for later comparison">{{{icon 'camera' 'size-3.5'}}} Snapshot</button>
     <div class="ml-auto flex gap-2">
       {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server (vanilla + mods) and give it via /give">{{{icon 'gift' 'size-3.5'}}} Give item</button>
-        <button class="btn btn-sm" id="inv-clear" data-tip="Remove items from an online player via /clear">{{{icon 'eraser' 'size-3.5'}}} Clear items</button>
+        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server (vanilla + mods) and give it via /give">{{{icon 'gift' 'size-3.5'}}} Give Item</button>
+        <button class="btn btn-sm" id="inv-clear" data-tip="Remove items from an online player via /clear">{{{icon 'eraser' 'size-3.5'}}} Clear Items</button>
       {{else}}
-        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server and add it straight into the selected player's save file">{{{icon 'gift' 'size-3.5'}}} Give item</button>
-        <span data-tip="Start the server to clear items in bulk - or delete slots one by one below"><button class="btn btn-sm" id="inv-clear" disabled>{{{icon 'eraser' 'size-3.5'}}} Clear items</button></span>
+        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server and add it straight into the selected player's save file">{{{icon 'gift' 'size-3.5'}}} Give Item</button>
+        <span data-tip="Start the server to clear items in bulk - or delete slots one by one below"><button class="btn btn-sm" id="inv-clear" disabled>{{{icon 'eraser' 'size-3.5'}}} Clear Items</button></span>
       {{/if}}
     </div>
   </div>
@@ -55,7 +55,7 @@
       </div>
 
       <div class="card h-max p-4">
-        <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'box' 'size-4'}}} Ender chest</h3>
+        <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'box' 'size-4'}}} Ender Chest</h3>
         <div class="grid w-max grid-cols-9 gap-1" id="inv-grid-ender"></div>
       </div>
     </div>
@@ -64,7 +64,7 @@
   {{#unless fixedPlayer}}
   <div class="card mt-6 p-4">
     <div class="mb-3 flex flex-wrap items-center gap-2">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'search' 'size-4'}}} Item search</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'search' 'size-4'}}} Item Search</h3>
       <span class="text-xs text-ink-faint">across every player's inventory, armor and ender chest on this server</span>
       <div class="ml-auto flex flex-wrap justify-end gap-2">
         <input class="input w-64 max-w-full" id="inv-search-q" placeholder="diamond, netherite_sword, Excalibur…" maxlength="100">
@@ -80,7 +80,7 @@
     <div class="mb-3 flex flex-wrap items-center gap-2">
       <h3 class="flex items-center gap-2 font-semibold">{{{icon 'history' 'size-4'}}} Snapshots</h3>
       <span class="text-xs text-ink-faint">pick two to compare</span>
-      <span class="ml-auto" data-tip="Select exactly two snapshots to diff them"><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} Compare selected</button></span>
+      <span class="ml-auto" data-tip="Select exactly two snapshots to diff them"><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} Compare Selected</button></span>
     </div>
     <div id="inv-snapshots"></div>
     <div id="inv-diff" class="mt-4 hidden"></div>
