@@ -96,12 +96,19 @@ test('GET /api/avatars/custom/:file rejects a path-traversal-shaped filename', a
   assert.equal(r.status, 400);
 });
 
-test('server-icon picker reuses the same original SVG set, not the removed game-texture PNGs', () => {
+test('server icons are original SVGs in their own directory, distinct artwork from the avatar presets', () => {
   for (const name of ['grass', 'creeper', 'diamond', 'portal', 'chest', 'sword', 'potion', 'tnt']) {
-    const abs = path.join(__dirname, '..', 'public', 'icons', 'avatars', `${name}.svg`);
+    const abs = path.join(__dirname, '..', 'public', 'icons', 'servers', `${name}.svg`);
     assert.ok(fs.existsSync(abs), `${name}.svg should exist for the server-icon picker`);
   }
-  assert.equal(fs.existsSync(path.join(__dirname, '..', 'public', 'icons', 'servers')), false);
+  // The 5 overlapping concepts (diamond/chest/sword/potion/tnt) must be genuinely
+  // different files between the two pickers, not the same asset referenced twice.
+  for (const name of ['diamond', 'chest', 'sword', 'potion', 'tnt']) {
+    const serverSvg = fs.readFileSync(path.join(__dirname, '..', 'public', 'icons', 'servers', `${name}.svg`), 'utf8');
+    const avatarSvg = fs.readFileSync(path.join(__dirname, '..', 'public', 'icons', 'avatars', `${name}.svg`), 'utf8');
+    assert.notEqual(serverSvg, avatarSvg, `${name}: server and avatar icons should be visually distinct artwork`);
+  }
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'public', 'icons', 'servers', 'grass.png')), false);
 });
 
 test('role names render capitalized in the UI, but the stored/submitted value stays lowercase', async () => {

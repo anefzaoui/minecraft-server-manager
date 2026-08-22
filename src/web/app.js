@@ -48,17 +48,19 @@ const STATUS_DOT = {
   stone: 'bg-stone-500',
 };
 
-// The 8 icons bundled in public/icons/avatars (original pixel-art SVGs, shared
-// with the profile-picture presets - see config/avatars.js). Icon names are
-// free text in the schemas, so anything unknown falls back to grass instead
-// of a broken image.
+// The 8 icons bundled in public/icons/servers - original pixel-art SVGs drawn
+// specifically for server identity (block/world motifs), deliberately distinct
+// artwork from the profile-picture presets (config/avatars.js) even where the
+// concept overlaps (diamond, chest, sword, potion, TNT). Icon names are free
+// text in the schemas, so anything unknown falls back to grass instead of a
+// broken image.
 const BUNDLED_ICONS = new Set(['chest', 'creeper', 'diamond', 'grass', 'portal', 'potion', 'sword', 'tnt']);
 
 function iconSrc(name) {
   if (typeof name === 'string' && name.startsWith('custom:')) {
     return `/api/icons/custom/${encodeURIComponent(name.slice('custom:'.length))}`;
   }
-  return `/icons/avatars/${BUNDLED_ICONS.has(name) ? name : 'grass'}.svg`;
+  return `/icons/servers/${BUNDLED_ICONS.has(name) ? name : 'grass'}.svg`;
 }
 
 function formatBytes(bytes) {
