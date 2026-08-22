@@ -93,7 +93,17 @@ function init(serverId) {
   });
   bindPicker('[data-pick-accent]', (btn) => {
     accent = btn.dataset.pickAccent;
+    applyIconAccent();
   });
+
+  // Icon swatches sit on a plate colored to match the chosen accent - keep
+  // every swatch (not just the selected one) in sync so switching accents
+  // previews live, matching how the icon actually renders once picked.
+  function applyIconAccent() {
+    root.querySelectorAll('[data-pick-icon]').forEach((btn) => {
+      btn.style.background = accent;
+    });
+  }
 
   function bindPicker(selector, onPick) {
     const buttons = [...root.querySelectorAll(selector)];

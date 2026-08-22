@@ -28,7 +28,17 @@ function init() {
   });
   pickGroup('wz-colors', 'accent', (v) => {
     accent = v;
+    applyIconAccent();
   });
+
+  // Icon tiles sit on a plate colored to match the chosen accent - keep every
+  // tile (not just the selected one) in sync so switching accents previews
+  // live, matching how the icon actually renders once picked.
+  function applyIconAccent() {
+    document.querySelectorAll('#wz-icons [data-icon]').forEach((btn) => {
+      btn.style.background = accent;
+    });
+  }
   pickGroup('wz-flavors', 'type', (v) => {
     type = v;
   });
