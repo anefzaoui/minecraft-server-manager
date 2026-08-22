@@ -193,6 +193,15 @@ export function enhanceAll(root = document) {
   root.querySelectorAll('select').forEach(enhanceSelect);
 }
 
+// Refresh a select's styled trigger after its .value was set programmatically
+// (setting .value doesn't fire 'change'). Unlike dispatching a synthetic
+// bubbling 'change' event, this can't be mistaken by a page's own delegated
+// change listeners (e.g. unsaved-changes dirty tracking) for a real user edit.
+export function syncSelectTrigger(select) {
+  const btn = select.nextElementSibling;
+  if (btn && btn.classList.contains('msm-select')) syncTrigger(select, btn);
+}
+
 function escapeHtml(s) {
   return String(s).replace(
     /[&<>"']/g,

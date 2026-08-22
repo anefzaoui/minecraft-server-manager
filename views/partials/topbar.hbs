@@ -26,7 +26,7 @@
         used only as the fallback initial-letter background. }}
     <button class="grid size-8 place-items-center overflow-hidden rounded-md bg-diamond-700 text-xs font-bold text-white" data-menu="user-menu" data-tip="{{user.username}} ({{capitalize user.role}})" data-user-totp-enabled="{{#if user.totpEnabled}}1{{/if}}" data-user-avatar="{{user.avatar}}">
       {{#if (avatarSrc user.avatar)}}
-        <img src="{{avatarSrc user.avatar}}" alt="" class="size-full object-cover">
+        <img src="{{avatarSrc user.avatar}}" alt="" class="size-full object-contain">
       {{else}}
         {{initial user.username}}
       {{/if}}

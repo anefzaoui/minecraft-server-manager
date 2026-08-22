@@ -5,7 +5,7 @@
 // flow, only how the preview YAML is fetched differs.
 import { toast } from './toast.js';
 import { openModal } from './modal.js';
-import { enhanceSelect } from './select.js';
+import { enhanceSelect, syncSelectTrigger } from './select.js';
 
 const REMOVE_ICON_SVG =
   '<svg class="icon size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
@@ -39,7 +39,7 @@ export function initDockerSettings(ids) {
           networkSel.appendChild(opt);
         }
         if (pendingNetwork != null) networkSel.value = pendingNetwork;
-        networkSel.dispatchEvent(new Event('change', { bubbles: true })); // sync the styled trigger
+        syncSelectTrigger(networkSel); // sync the styled trigger - not a real edit, don't mark the page dirty
       })
       .catch(() => {}); // Docker unreachable - leave just the default option
 
@@ -112,7 +112,7 @@ export function initDockerSettings(ids) {
     pendingNetwork = networkName || '';
     if (networkSel) {
       networkSel.value = pendingNetwork;
-      networkSel.dispatchEvent(new Event('change', { bubbles: true }));
+      syncSelectTrigger(networkSel);
     }
     if (portsWrap) {
       portsWrap.innerHTML = '';
