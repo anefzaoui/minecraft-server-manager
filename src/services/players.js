@@ -505,6 +505,14 @@ async function sweepExpiredBans() {
   const { listServers } = require('./servers');
   const { inspectStatus } = require('../docker/containers');
   for (const server of listServers()) {
+    // Cheap file reads first - most servers have no bans at all most of the
+    // time, and this runs every 15 minutes for every server. Only pay for a
+    // Docker inspect call (a real API round-trip) when there's actually
+    // something expired to pardon.
+    const expiredPlayers = readJson(server.id, 'banned-players.json').filter((e) => isBanExpired(e.expires));
+    const expiredIps = readJson(server.id, 'banned-ips.json').filter((e) => isBanExpired(e.expires));
+    if (!expiredPlayers.length && !expiredIps.length) continue;
+
     let running = false;
     try {
       const info = await inspectStatus(server.id);
@@ -512,7 +520,6 @@ async function sweepExpiredBans() {
     } catch {
       /* docker down - fall back to file edits, same as everywhere else here */
     }
-    const expiredPlayers = readJson(server.id, 'banned-players.json').filter((e) => isBanExpired(e.expires));
     for (const e of expiredPlayers) {
       try {
         await pardonPlayer(server.id, e.name, { running, actor: 'scheduler' });
@@ -520,7 +527,6 @@ async function sweepExpiredBans() {
         console.warn(`[players] ban-expiry sweep: could not pardon ${e.name} on ${server.id}: ${err.message}`);
       }
     }
-    const expiredIps = readJson(server.id, 'banned-ips.json').filter((e) => isBanExpired(e.expires));
     for (const e of expiredIps) {
       try {
         await pardonIp(server.id, e.ip, { running, actor: 'scheduler' });
