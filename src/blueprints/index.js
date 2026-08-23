@@ -158,7 +158,8 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
   const configFiles = includeConfig ? collectConfigFiles(serverDir) : [];
   const worldDirs = includeWorld ? worldDirsOf(server, serverDir) : [];
   if (includeWorld && worldDirs.length) {
-    const needed = worldDirs.reduce((n, d) => n + servers.dirSize(d.abs), 0);
+    let needed = 0;
+    for (const d of worldDirs) needed += await servers.dirSize(d.abs);
     const { free } = await indexer.diskFree();
     if (free < needed * 1.1) {
       throw httpError(507, `Not enough disk space to embed the world (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);

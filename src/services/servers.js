@@ -6,6 +6,7 @@
 
 const httpError = require('../utils/httpError');
 const fs = require('node:fs');
+const fsp = require('node:fs/promises');
 const path = require('node:path');
 const { nanoid } = require('nanoid');
 const db = require('../db');
@@ -622,16 +623,21 @@ async function deleteServer(id, { actor = 'system', keepWorld = false } = {}) {
   let freedBytes = 0;
   const dir = dataPath('servers', id);
   if (!keepWorld && fs.existsSync(dir)) {
-    freedBytes = dirSize(dir);
+    // Async, not dirSize()/rmSync() - a modded server's world+logs can be tens
+    // of GB across tens of thousands of files, and the sync versions block the
+    // event loop (every other request, every WebSocket console/stats stream)
+    // for the whole walk. fs.promises still runs on the main thread but yields
+    // between operations instead of monopolizing it in one long sync call.
+    freedBytes = await dirSize(dir);
     try {
-      fs.rmSync(dir, { recursive: true, force: true });
+      await fsp.rm(dir, { recursive: true, force: true });
     } catch (err) {
       // The itzg container writes files as its own UID (default 1000). When the
       // panel runs as a different host user it can't delete them (EACCES/EPERM);
       // fall back to a root container that removes the directory for us.
       if (err.code === 'EACCES' || err.code === 'EPERM') {
         await containers.removeDataDir(dir, resolveImage(server));
-        fs.rmSync(dir, { recursive: true, force: true }); // no-op if the container cleared it
+        await fsp.rm(dir, { recursive: true, force: true }); // no-op if the container cleared it
       } else {
         throw err;
       }
@@ -655,12 +661,11 @@ async function deleteServer(id, { actor = 'system', keepWorld = false } = {}) {
   const backupRows = db.all('SELECT size_bytes FROM backups WHERE server_id = ?', id);
   freedBytes += backupRows.reduce((n, b) => n + (b.size_bytes || 0), 0);
   db.run('DELETE FROM backups WHERE server_id = ?', id);
-  const backupsDir = dataPath('backups', id);
-  if (fs.existsSync(backupsDir)) fs.rmSync(backupsDir, { recursive: true, force: true });
+  // force: true already no-ops on a missing path - no need for an existsSync guard.
+  await fsp.rm(dataPath('backups', id), { recursive: true, force: true });
 
   // Archived logs / event excerpts.
-  const logsDir = dataPath('logs', id);
-  if (fs.existsSync(logsDir)) fs.rmSync(logsDir, { recursive: true, force: true });
+  await fsp.rm(dataPath('logs', id), { recursive: true, force: true });
 
   // All row cleanup + the soft-delete flag run in ONE transaction so a mid-cleanup
   // error can't leave a "live" (deleted_at IS NULL) server whose content/backups
@@ -721,13 +726,13 @@ async function refreshStatuses() {
   }
 }
 
-function dirSize(dir) {
+async function dirSize(dir) {
   let total = 0;
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+  for (const entry of await fsp.readdir(dir, { withFileTypes: true })) {
     const p = path.join(dir, entry.name);
     try {
-      if (entry.isDirectory()) total += dirSize(p);
-      else if (entry.isFile()) total += fs.statSync(p).size;
+      if (entry.isDirectory()) total += await dirSize(p);
+      else if (entry.isFile()) total += (await fsp.stat(p)).size;
     } catch {
       /* transient file */
     }
