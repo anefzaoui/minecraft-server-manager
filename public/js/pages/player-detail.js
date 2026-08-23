@@ -152,6 +152,7 @@ function init(root) {
           <option value="604800000">7 days</option>
           <option value="2592000000">30 days</option>
         </select>
+        <p class="mt-2 text-xs text-ink-faint">A temporary ban lifts itself automatically once it expires - no need to remember to pardon them.</p>
       </div>`;
     openModal({
       title: `Ban ${name}`,

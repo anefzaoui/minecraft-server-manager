@@ -331,6 +331,7 @@ function init(root) {
       <div>
         <label class="label">Duration</label>
         <select class="input" data-f="duration" data-label="Ban duration">${DURATION_OPTIONS}</select>
+        <p class="mt-2 text-xs text-ink-faint">A temporary ban lifts itself automatically once it expires - no need to remember to pardon them.</p>
       </div>`;
     openModal({
       title: `Ban ${name}`,
@@ -750,7 +751,7 @@ function init(root) {
       ['text-xs text-ink-soft', player || '-'],
       ['text-xs text-ink-soft', reason || '-'],
       ['text-xs text-ink-faint', 'just now'],
-      ['text-xs text-ink-faint', expires && expires !== 'forever' ? expires : 'permanent'],
+      ['text-xs text-ink-faint', expires && expires !== 'forever' ? expires : 'Permanent'],
     ];
     for (const [cls, text] of cells) {
       const td = document.createElement('td');

@@ -128,7 +128,7 @@
       <div class="ml-auto flex flex-wrap items-end justify-end gap-2">
         <input class="input w-40 max-w-full" placeholder="IP address" id="banip-ip">
         <input class="input w-48 max-w-full" placeholder="Reason (optional)" id="banip-reason">
-        <input class="input w-36 max-w-full" placeholder="Linked player" id="banip-player" list="banip-player-list" autocomplete="off">
+        <input class="input w-36 max-w-full" placeholder="Linked player" id="banip-player" list="banip-player-list" autocomplete="off" data-tip="Optional - tags this ban with the player it belongs to, shown in the Player column below">
         <datalist id="banip-player-list">
           {{#each players}}<option value="{{name}}">{{/each}}
         </datalist>
@@ -154,7 +154,7 @@
               <td class="text-xs text-ink-soft">{{default player '-'}}</td>
               <td class="text-xs text-ink-soft">{{default reason '-'}}</td>
               <td class="text-xs text-ink-faint">{{default created '-'}}</td>
-              <td class="text-xs text-ink-faint">{{#if (eq expires 'forever')}}permanent{{else}}{{expires}}{{/if}}</td>
+              <td class="text-xs text-ink-faint">{{#if (eq expires 'forever')}}Permanent{{else}}{{expires}}{{/if}}</td>
               <td class="text-right">
                 <button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban">{{{icon 'x' 'size-3.5'}}}</button>
               </td>
