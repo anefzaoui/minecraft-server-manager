@@ -32,7 +32,8 @@
     "test": "node --test \"test/**/*.test.js\"",
     "test:unit": "node --test \"test/**/*.test.js\"",
     "test:watch": "node --test --watch \"test/**/*.test.js\"",
-    "test:smoke": "node scripts/qa-sweep.js"
+    "test:smoke": "node scripts/qa-sweep.js",
+    "seed:servers": "node scripts/seed-fake-servers.js"
   },
   "dependencies": {
     "archiver": "^7.0.1",
