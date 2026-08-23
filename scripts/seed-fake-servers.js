@@ -7,7 +7,8 @@
 // backups UI, etc.) renders normally since it's real DB data.
 //
 // Safe to run repeatedly - each run only ADDS servers, it never touches
-// existing ones.
+// existing ones. Pair with `npm run seed:players` to give one of them a
+// fake roster too.
 //
 // Usage:
 //   node scripts/seed-fake-servers.js [count]
@@ -141,7 +142,8 @@ async function main() {
   console.log(
     '\nThese are DB rows only, with no matching Docker container - Start/Console/RCON will fail against ' +
       'them, but everything else (dashboard, search/filter/sort, settings, players, backups UI, …) works ' +
-      'normally. Delete them from the panel like any other server when done.'
+      'normally. Delete them from the panel like any other server when done.\n' +
+      'Run `npm run seed:players` to add a fake roster to one of them.'
   );
 }
 

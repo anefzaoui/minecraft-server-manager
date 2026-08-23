@@ -26,6 +26,7 @@
     "watch:css": "tailwindcss -i assets/css/input.css -o public/css/app.css --watch",
     "postinstall": "node scripts/postinstall.js",
     "lint": "eslint src scripts public/js test eslint.config.js",
+    "lint:fix": "eslint src scripts public/js test eslint.config.js --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc",
@@ -33,7 +34,9 @@
     "test:unit": "node --test \"test/**/*.test.js\"",
     "test:watch": "node --test --watch \"test/**/*.test.js\"",
     "test:smoke": "node scripts/qa-sweep.js",
-    "seed:servers": "node scripts/seed-fake-servers.js"
+    "db:migrate": "node scripts/migrate.js",
+    "seed:servers": "node scripts/seed-fake-servers.js",
+    "seed:players": "node scripts/seed-players.js"
   },
   "dependencies": {
     "archiver": "^7.0.1",
