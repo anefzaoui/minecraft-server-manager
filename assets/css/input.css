@@ -360,6 +360,20 @@
   .btn-sm {
     @apply px-2.5 py-1.5 text-xs;
   }
+  /* Touch-only floor: an icon-only .btn-sm/.chip (the row actions used all
+     over - players, files, backups, schedules, users…) visually measures
+     well under the ~44px touch target guideline. Real min-height/min-width,
+     not an invisible expanded hit-area - flexbox gaps keep adjacent buttons
+     from overlapping as they grow, it just reflows/wraps a bit more, which is
+     the right trade on a phone. Guarded to (pointer: coarse) only, so mouse
+     users on desktop see zero change. */
+  @media (pointer: coarse) {
+    .btn-sm,
+    button.chip {
+      min-height: 2.75rem;
+      min-width: 2.75rem;
+    }
+  }
 
   /* Segmented control - the ONE component for every pick-one-of-N group
      (source tabs, platform pickers, view toggles, sub-mode switches).
@@ -369,8 +383,13 @@
      on the same row. The active segment is the raised key of the group (lit
      top edge + green text); inactive hover moves TEXT only, so a hovered
      segment can never be mistaken for the selected one. */
+  /* max-w-full + overflow-x-auto: a seg with many/long text segments (the
+     wizard's source-type tabs) is wider than a narrow phone screen - scroll
+     it horizontally instead of pushing the whole page wider. No-op for the
+     common short/icon segs, and safe with seg.js's pill (it positions off
+     offsetLeft/offsetTop, unaffected by scroll position). */
   .seg {
-    @apply relative inline-flex items-center gap-1 rounded-md border border-line bg-inset/40 p-0.5;
+    @apply relative inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-md border border-line bg-inset/40 p-0.5;
   }
   /* Sliding pill (injected by lib/seg.js): the raised key GLIDES between
      segments instead of teleporting. It carries the exact selected-state

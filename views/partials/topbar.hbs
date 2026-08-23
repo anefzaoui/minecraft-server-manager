@@ -17,7 +17,10 @@
         <div data-task-list class="max-h-96 overflow-y-auto"></div>
       </div>
     </div>
-    <a href="/servers/new" class="btn btn-primary btn-sm">{{{icon 'plus' 'size-3.5'}}} New Server</a>
+    {{! Label hides below sm: (icon-only) - the topbar is already tight on a
+        phone (hamburger + title + this + theme + avatar); aria-label keeps it
+        announced to screen readers regardless of which span is visible. }}
+    <a href="/servers/new" class="btn btn-primary btn-sm" aria-label="New Server" data-tip="New Server">{{{icon 'plus' 'size-3.5'}}} <span class="hidden sm:inline">New Server</span></a>
     <button id="theme-toggle" class="btn btn-ghost btn-sm" aria-label="Toggle theme" data-tip="Switch theme">
       <span data-theme-icon="dark">{{{icon 'moon' 'size-4'}}}</span><span data-theme-icon="light" class="hidden">{{{icon 'sun' 'size-4'}}}</span>
     </button>

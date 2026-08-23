@@ -1,13 +1,22 @@
 {{> page-header heading="SETTINGS" sub="Panel configuration, API keys, and users."}}
 
-<div class="grid gap-4 lg:grid-cols-2" id="settings-page">
+{{! [&>*]:min-w-0 - grid items default to min-width:auto, so without it a card
+    containing a wrapping flex row (the API-key/domain inputs) is sized off that
+    row's UNWRAPPED max-content width and drags the whole grid (and page) wider
+    than the viewport on mobile, even though the row itself wraps correctly. }}
+<div class="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0" id="settings-page">
   <div class="card p-4">
     <h3 class="mb-4 font-semibold">API Keys</h3>
     <div class="space-y-4">
       <div>
         <label class="label" for="set-cf-key">CurseForge API key</label>
-        <div class="flex gap-2">
-          <input class="input flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} (stored){{else}}paste your key from console.curseforge.com{{/if}}" autocomplete="off">
+        {{! min-w-0 is required here: a flex item's default min-width is its
+            content's intrinsic width, so this monospace placeholder would
+            otherwise refuse to shrink and push the whole page wider than the
+            viewport on narrow screens. flex-wrap lets the buttons drop to
+            their own row instead of forcing a fourth squeeze. }}
+        <div class="flex flex-wrap gap-2">
+          <input class="input min-w-0 flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} (stored){{else}}paste your key from console.curseforge.com{{/if}}" autocomplete="off">
           <button class="btn" id="set-cf-save">Save Key</button>
           <button class="btn btn-ghost" id="set-cf-test" data-tip="Tests the stored key against the CurseForge API">Test Key</button>
         </div>
@@ -24,8 +33,8 @@
     <h3 class="mb-4 font-semibold">Panel</h3>
     <div class="mb-4">
       <label class="label" for="set-domain">Public domain</label>
-      <div class="flex gap-2">
-        <input class="input flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
+      <div class="flex flex-wrap gap-2">
+        <input class="input min-w-0 flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
         <button class="btn" id="set-domain-save">Save Domain</button>
       </div>
       <p class="help">Shown to players instead of your IP in connect addresses (e.g. <span class="font-mono">mc.example.com:25565</span>). Leave blank to use the server's IP. No scheme or port.</p>

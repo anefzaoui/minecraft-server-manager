@@ -55,7 +55,10 @@
         <span class="min-w-0 break-words text-stone-200" data-chat-preview></span>
       </div>
       <div class="flex gap-2">
-        <input class="input flex-1" id="chat-input" placeholder="Message - Enter to send" autocomplete="off" maxlength="512" />
+        {{! min-w-0: an <input>'s flexbox min-width defaults to its content size,
+            which refuses to shrink below ~190px and pushes the whole page wider
+            than the viewport on narrow screens - see settings.hbs for the same fix. }}
+        <input class="input min-w-0 flex-1" id="chat-input" placeholder="Message - Enter to send" autocomplete="off" maxlength="512" />
         <button class="btn btn-primary" id="chat-send">{{{icon 'megaphone' 'size-4'}}} Send</button>
       </div>
     </div>

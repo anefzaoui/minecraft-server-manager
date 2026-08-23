@@ -49,8 +49,10 @@
       <div>
         <label class="label" for="ig-sp-slug">Page address</label>
         <div class="flex items-center gap-2">
-          <span class="font-mono text-xs text-ink-faint">/status/</span>
-          <input class="input flex-1 font-mono text-xs" id="ig-sp-slug" placeholder="my-server" value="{{integrations.statusPage.slug}}">
+          <span class="shrink-0 font-mono text-xs text-ink-faint">/status/</span>
+          {{! min-w-0: see settings.hbs - an unconstrained flex-1 input refuses to
+              shrink below its intrinsic width and pushes the page wider on mobile. }}
+          <input class="input min-w-0 flex-1 font-mono text-xs" id="ig-sp-slug" placeholder="my-server" value="{{integrations.statusPage.slug}}">
         </div>
         <p class="help">Anyone with the link sees name, MOTD, version, player count, and uptime - nothing else, and no way into the panel. Off by default.</p>
       </div>
