@@ -1,28 +1,40 @@
 <div class="card mb-6 overflow-hidden" style="border-top: 3px solid {{server.accent}}">
-  <div class="texture-top flex flex-wrap items-center gap-4 p-4 sm:p-5">
-    <img src="{{iconSrc server.icon}}" alt="" class="size-14 shrink-0 rounded-lg" style="background: {{server.accent}}" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'">
+  {{! icon+name grouped into ONE flex item, separate from the actions column,
+      using flex-auto (basis: auto) rather than flex-1 (basis: 0%). That's
+      the actual fix, not just the grouping: flex-wrap decides whether to
+      wrap BEFORE grow/shrink is resolved, based on each item's hypothetical
+      (flex-basis) size - flex-1's 0% basis tells the browser this item
+      contributes NOTHING to that decision, so on a running server (Restart +
+      Stop + kill button eating most of a narrow row) it never wraps and
+      instead squeezes the name down to 0 post-hoc, wrapping a single-word
+      name like "Skyblock" one letter per line. flex-auto's real content-based
+      basis makes the wrap trigger correctly once both genuinely don't fit. }}
+  <div class="texture-top flex flex-wrap items-start justify-between gap-4 p-4 sm:p-5">
+    <div class="flex min-w-0 flex-auto items-center gap-4">
+      <img src="{{iconSrc server.icon}}" alt="" class="size-14 shrink-0 rounded-lg" style="background: {{server.accent}}" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'">
 
-    <div class="min-w-0 flex-1">
-      <div class="flex flex-wrap items-center gap-2">
-        <h2 class="min-w-0 max-w-full break-words text-xl font-bold">{{server.name}}</h2>
-        <span class="flex items-center gap-1.5 text-xs font-medium {{statusText server.status}}">
-          <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
-          {{statusLabel server.status}}
-        </span>
-        <span class="badge badge-warn {{#unless server.statusDetail}}hidden{{/unless}}" data-status-detail="{{server.id}}">{{server.statusDetail}}</span>
-        {{#if server.updateAvailable}}<span class="badge badge-warn">update available</span>{{/if}}
-        {{#if server.crashesUnread}}<span class="badge badge-danger">{{server.crashesUnread}} new {{plural server.crashesUnread 'crash' 'crashes'}}</span>{{/if}}
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="min-w-0 max-w-full break-words text-xl font-bold">{{server.name}}</h2>
+          <span class="flex items-center gap-1.5 text-xs font-medium {{statusText server.status}}">
+            <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
+            {{statusLabel server.status}}
+          </span>
+          <span class="badge badge-warn {{#unless server.statusDetail}}hidden{{/unless}}" data-status-detail="{{server.id}}">{{server.statusDetail}}</span>
+          {{#if server.updateAvailable}}<span class="badge badge-warn">update available</span>{{/if}}
+          {{#if server.crashesUnread}}<span class="badge badge-danger">{{server.crashesUnread}} new {{plural server.crashesUnread 'crash' 'crashes'}}</span>{{/if}}
+        </div>
+        <p class="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-faint">
+          <span><b class="font-semibold text-ink-soft">{{server.flavor}}</b> {{server.mcVersion}}</span>
+          <span>Java: {{server.javaTag}}</span>
+          <span>Port {{server.ports.game}}</span>
+          {{#if server.pack}}<span>{{platformName server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
+          {{#if server.stats.uptime}}<span>Up {{server.stats.uptime}}</span>{{/if}}
+        </p>
+        {{#if server.tags.length}}
+          <div class="mt-2 flex flex-wrap gap-1.5">{{#each server.tags}}<span class="chip">{{this}}</span>{{/each}}</div>
+        {{/if}}
       </div>
-      <p class="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-faint">
-        <span><b class="font-semibold text-ink-soft">{{server.flavor}}</b> {{server.mcVersion}}</span>
-        <span>Java: {{server.javaTag}}</span>
-        <span>Port {{server.ports.game}}</span>
-        {{#if server.pack}}<span>{{platformName server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
-        {{#if server.stats.uptime}}<span>Up {{server.stats.uptime}}</span>{{/if}}
-      </p>
-      {{#if server.tags.length}}
-        <div class="mt-2 flex flex-wrap gap-1.5">{{#each server.tags}}<span class="chip">{{this}}</span>{{/each}}</div>
-      {{/if}}
     </div>
     <div class="flex flex-wrap gap-2">
       {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy'))}}
