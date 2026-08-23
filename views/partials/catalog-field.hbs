@@ -1,7 +1,7 @@
-{{! One field-catalog entry → labeled control. Context: a catalog field object.
+{{!-- One field-catalog entry → labeled control. Context: a catalog field object.
     NB: every default/min/max test goes through isDefined - Handlebars {{#if}}
     treats 0 as falsy, which silently dropped min="0" constraints and showed
-    "image default" placeholders for real zero defaults. }}
+    "image default" placeholders for real zero defaults. --}}
 {{#if (eq type 'boolean')}}
   {{! Booleans: single row - text block left, toggle right (like Settings).
       The whole row is the <label>, so clicking the text flips the toggle. }}
