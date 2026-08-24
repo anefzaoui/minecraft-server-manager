@@ -13,9 +13,13 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const serversService = require('./servers');
 const modsService = require('./mods');
+const config = require('../config');
 
 const BLUEMAP_CONTAINER_PORT = '8100/tcp';
-const HOST_PORT_START = 8123;
+// One below the panel's own port, so it numbers cleanly next to it instead of
+// landing on BlueMap's traditional default (8123) - which is also Home
+// Assistant's default port and collides with it on a lot of home setups.
+const HOST_PORT_START = Math.max(1, config.port - 1);
 
 // Server types BlueMap ships builds for (fabric/forge/neoforge mods + paper/spigot plugins).
 const SUPPORTED = new Set([
