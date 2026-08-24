@@ -95,9 +95,9 @@ function init(serverId, serverType, mcVersion, serverLoader) {
   document.getElementById('mods-add-url')?.addEventListener('click', () => {
     const content = document.createElement('div');
     content.innerHTML = `
-      <label class="label">Mod URL or Modrinth slug</label>
-      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any direct .jar URL" autocomplete="off">
-      <p class="help">Direct .jar URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work. The right build for this server's loader and MC version is picked automatically.</p>
+      <label class="label">Mod/plugin/datapack URL or Modrinth slug</label>
+      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any direct .jar/.zip URL" autocomplete="off">
+      <p class="help">Direct .jar/.zip URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work - datapacks included, the panel detects the content type automatically. The right build for this server's loader and MC version is picked automatically.</p>
       ${
         mc
           ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
@@ -141,10 +141,23 @@ function init(serverId, serverType, mcVersion, serverLoader) {
   });
 
   // ---- Modrinth search (reused by the manual-download resolver) ----
-  function openModrinthSearch({ prefill = '', onInstalled = null } = {}) {
+  // allowDatapacks: shows a Mods/Datapacks toggle. Off for the manual-download
+  // resolver's "Find on Modrinth" - that's specifically hunting a mod
+  // replacement for a pack entry, never a datapack.
+  function openModrinthSearch({ prefill = '', onInstalled = null, allowDatapacks = false } = {}) {
+    const isPlugin = ['PAPER', 'PURPUR', 'SPIGOT', 'BUKKIT', 'FOLIA', 'LEAF', 'PUFFERFISH'].includes(serverType);
+    const contentLabel = isPlugin ? 'Plugins' : 'Mods';
     const content = document.createElement('div');
     content.innerHTML = `
       <input class="input" id="mr-q" placeholder="Search Modrinth…" autocomplete="off">
+      ${
+        allowDatapacks
+          ? `<div class="seg mt-2" id="mr-kind-seg" role="tablist" aria-label="Content type">
+               <button class="seg-btn" type="button" role="tab" aria-selected="true" data-search-kind="content">${contentLabel}</button>
+               <button class="seg-btn" type="button" role="tab" aria-selected="false" data-search-kind="datapack">Datapacks</button>
+             </div>`
+          : ''
+      }
       ${
         mc
           ? `<label class="mt-2 flex cursor-pointer items-start gap-2 text-sm">
@@ -158,12 +171,19 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       </div>`;
     const modal = openModal({ title: 'Search Modrinth', content, size: 'lg' });
     const q = content.querySelector('#mr-q');
+    const kindSeg = content.querySelector('#mr-kind-seg');
     const anyVersion = content.querySelector('#mr-any-version');
     const results = content.querySelector('#mr-results');
     let timer;
     q.addEventListener('input', () => {
       clearTimeout(timer);
       timer = setTimeout(runSearch, 350);
+    });
+    kindSeg?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-search-kind]');
+      if (!btn || btn.getAttribute('aria-selected') === 'true') return;
+      kindSeg.querySelectorAll('[data-search-kind]').forEach((b) => b.setAttribute('aria-selected', String(b === btn)));
+      runSearch();
     });
     anyVersion?.addEventListener('change', runSearch);
     q.value = prefill;
@@ -176,11 +196,14 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       if (!query) return;
       const seq = ++searchSeq;
       results.innerHTML = '<p class="p-6 text-center text-sm text-ink-faint">Searching…</p>';
-      const loader =
-        serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
-      const kind = ['PAPER', 'PURPUR', 'SPIGOT', 'BUKKIT', 'FOLIA', 'LEAF', 'PUFFERFISH'].includes(serverType)
-        ? 'plugin'
-        : 'mod';
+      const searchingDatapacks =
+        kindSeg?.querySelector('[data-search-kind="datapack"]')?.getAttribute('aria-selected') === 'true';
+      // Datapacks aren't loader-specific - Modrinth's loader facet would just
+      // filter every datapack result out (none carry a fabric/forge category).
+      const loader = searchingDatapacks
+        ? ''
+        : serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
+      const kind = searchingDatapacks ? 'datapack' : isPlugin ? 'plugin' : 'mod';
       const ignoreVersion = Boolean(anyVersion?.checked);
       const params = new URLSearchParams({ q: query, kind });
       if (loader) params.set('loader', loader);
@@ -204,7 +227,9 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         return;
       }
       if (!data.results.length) {
-        results.innerHTML = '<p class="p-6 text-center text-sm text-ink-faint">No matches for this loader/version.</p>';
+        results.innerHTML = searchingDatapacks
+          ? '<p class="p-6 text-center text-sm text-ink-faint">No matches for this version.</p>'
+          : '<p class="p-6 text-center text-sm text-ink-faint">No matches for this loader/version.</p>';
         return;
       }
       results.innerHTML = '';
@@ -227,8 +252,13 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         row.querySelector('.text-xs.text-ink-faint').textContent = hit.description;
         row.querySelector('button').addEventListener('click', async (ev) => {
           const btn = ev.currentTarget; // capture before await - currentTarget is null afterwards
+          const urlKind = searchingDatapacks ? 'datapack' : 'mod';
           const res2 = await withBusy(btn, 'Installing…', () =>
-            post(`/api/servers/${serverId}/mods`, { url: `https://modrinth.com/mod/${hit.slug}`, ignoreVersion })
+            post(`/api/servers/${serverId}/mods`, {
+              url: `https://modrinth.com/${urlKind}/${hit.slug}`,
+              kind: searchingDatapacks ? 'datapack' : undefined,
+              ignoreVersion,
+            })
           );
           if (res2) {
             toast(
@@ -245,7 +275,9 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       }
     }
   }
-  document.getElementById('mods-search-modrinth')?.addEventListener('click', () => openModrinthSearch());
+  document
+    .getElementById('mods-search-modrinth')
+    ?.addEventListener('click', () => openModrinthSearch({ allowDatapacks: true }));
 
   // ---- Manual-download resolver: MODS_NEED_DOWNLOAD.txt → guided actions ----
   const pendingBox = document.getElementById('mods-pending');

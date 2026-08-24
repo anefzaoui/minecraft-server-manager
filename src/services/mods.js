@@ -91,46 +91,50 @@ function loaderOf(server) {
 async function listContent(serverId) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const kind = PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
-  const dirRel = contentDir(server, kind);
-  const dirAbs = dataPath('servers', serverId, dirRel);
+  const primaryKind = PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
 
   const rows = db.all('SELECT * FROM server_content WHERE server_id = ?', serverId);
   const byFile = new Map(rows.map((r) => [r.filename.replace(/\.disabled$/, ''), r]));
   const seen = new Set();
   const items = [];
 
-  let entries = [];
-  try {
-    entries = await fsp.readdir(dirAbs, { withFileTypes: true });
-  } catch {
-    /* dir doesn't exist yet */
-  }
+  // Datapacks work on every server type (vanilla included), unlike mods/plugins
+  // which are loader/platform-specific - always scan both dirs, not just the
+  // one matching this server's type.
+  for (const kind of [primaryKind, 'datapack']) {
+    const dirAbs = dataPath('servers', serverId, contentDir(server, kind));
+    let entries = [];
+    try {
+      entries = await fsp.readdir(dirAbs, { withFileTypes: true });
+    } catch {
+      continue; // dir doesn't exist yet
+    }
 
-  for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    const isDisabled = entry.name.endsWith('.disabled');
-    const baseName = entry.name.replace(/\.disabled$/, '');
-    if (!baseName.endsWith('.jar') && !baseName.endsWith('.zip')) continue;
-    seen.add(baseName);
-    const row = byFile.get(baseName);
-    const stat = await fsp.stat(path.join(dirAbs, entry.name)).catch(() => null);
-    const lib = row && row.library_id ? db.get('SELECT * FROM library_files WHERE id = ?', row.library_id) : null;
-    items.push({
-      id: row ? row.id : null,
-      name: row ? row.name : prettifyJarName(baseName),
-      file: baseName,
-      kind,
-      source: row ? row.managed_by : server.pack || isPackServer(server) ? 'pack' : 'unknown',
-      version: row ? row.version : null,
-      size: stat ? stat.size : 0,
-      enabled: !isDisabled,
-      disabledVia: row && row.managed_by === 'pack' && !isDisabled ? null : undefined,
-      sharedWith: lib ? library.usageCount(lib.id) : null,
-      iconUrl:
-        lib && lib.icon_rel_path ? `/${lib.icon_rel_path}` : (lib && lib.icon_url) || (row && row.icon_url) || null,
-      updateAvailable: updateFor(row),
-    });
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      const isDisabled = entry.name.endsWith('.disabled');
+      const baseName = entry.name.replace(/\.disabled$/, '');
+      if (!baseName.endsWith('.jar') && !baseName.endsWith('.zip')) continue;
+      seen.add(baseName);
+      const row = byFile.get(baseName);
+      const stat = await fsp.stat(path.join(dirAbs, entry.name)).catch(() => null);
+      const lib = row && row.library_id ? db.get('SELECT * FROM library_files WHERE id = ?', row.library_id) : null;
+      items.push({
+        id: row ? row.id : null,
+        name: row ? row.name : prettifyJarName(baseName),
+        file: baseName,
+        kind: row ? row.kind : kind,
+        source: row ? row.managed_by : server.pack || isPackServer(server) ? 'pack' : 'unknown',
+        version: row ? row.version : null,
+        size: stat ? stat.size : 0,
+        enabled: !isDisabled,
+        disabledVia: row && row.managed_by === 'pack' && !isDisabled ? null : undefined,
+        sharedWith: lib ? library.usageCount(lib.id) : null,
+        iconUrl:
+          lib && lib.icon_rel_path ? `/${lib.icon_rel_path}` : (lib && lib.icon_url) || (row && row.icon_url) || null,
+        updateAvailable: updateFor(row),
+      });
+    }
   }
   // Overlay rows whose files vanished (user deleted manually) - surface them.
   for (const row of rows) {
@@ -205,7 +209,7 @@ function classifyModSource(input) {
 async function installFromUrl(serverId, input, { actor = 'system', kind, onProgress, ignoreVersion = false } = {}) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const targetKind = kind || (PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod');
+  let targetKind = kind || (PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod');
   // ignoreVersion: the user explicitly asked to install a build that isn't
   // listed as compatible with this server's exact MC version (e.g. the
   // newest Fabric build only lists 1.21.1 and the server runs 1.21.2) -
@@ -224,11 +228,19 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
 
   if (source.kind === 'modrinth') {
     const resolved = await modrinth.resolveUrl(source.ref);
+    // Datapacks aren't loader-specific, and search already sends kind:'datapack'
+    // explicitly - this only fires for "Add by URL"/slug installs where the
+    // caller couldn't have known the project type in advance.
+    if (!kind && resolved.projectType === 'datapack') targetKind = 'datapack';
+    const versionLoader = targetKind === 'datapack' ? undefined : loader;
     const versions = resolved.versionId
       ? [await modrinth.getVersion(resolved.versionId)]
-      : await modrinth.getVersions(resolved.projectId, { loader, mcVersion });
+      : await modrinth.getVersions(resolved.projectId, { loader: versionLoader, mcVersion });
     if (!versions.length)
-      throw httpError(404, `No ${resolved.title} build matches ${loader || 'this loader'} ${mcVersion || ''}`.trim());
+      throw httpError(
+        404,
+        `No ${resolved.title} build matches ${versionLoader || 'this loader'} ${mcVersion || ''}`.trim()
+      );
     const version = versions[0];
     const file = modrinth.primaryFile(version);
     downloadUrl = file.url;
@@ -268,6 +280,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     });
   }
   // source.kind === 'direct' → plain download of the URL as-is.
+  meta.category = targetKind; // may have changed above (Modrinth datapack auto-detect)
 
   const lib = await library.downloadToLibrary(downloadUrl, meta, { onProgress, actor });
   indexer.assertUnderQuota(server, lib.size_bytes);

@@ -56,6 +56,7 @@
               {{else}}
                 <span class="badge">file</span>
               {{/if}}
+              {{#if (eq kind 'datapack')}}<div class="mt-1"><span class="badge">datapack</span></div>{{/if}}
             </td>
             <td>
               {{default version '-'}}
@@ -90,7 +91,7 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='puzzle' title='No Mods Installed Yet' message='Search Modrinth or add a mod by URL with the buttons above - custom mods live in the shared library and survive pack updates.'}}
+    {{> empty-state iconName='puzzle' title='No Mods Installed Yet' message='Search Modrinth or add a mod, plugin, or datapack by URL with the buttons above - custom content lives in the shared library and survives pack updates.'}}
   {{/if}}
 </div>
 <script type="module" src="/js/pages/mods.js"></script>
