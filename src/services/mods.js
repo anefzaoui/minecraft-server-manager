@@ -202,11 +202,18 @@ function classifyModSource(input) {
  * or CurseForge URL. Downloads into the library, links into the server dir,
  * and records an overlay row. onProgress passes through to the download.
  */
-async function installFromUrl(serverId, input, { actor = 'system', kind, onProgress } = {}) {
+async function installFromUrl(serverId, input, { actor = 'system', kind, onProgress, ignoreVersion = false } = {}) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   const targetKind = kind || (PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod');
-  const mcVersion = server.mc_version === 'LATEST' || server.mc_version === 'SNAPSHOT' ? undefined : server.mc_version;
+  // ignoreVersion: the user explicitly asked to install a build that isn't
+  // listed as compatible with this server's exact MC version (e.g. the
+  // newest Fabric build only lists 1.21.1 and the server runs 1.21.2) -
+  // still filtered by loader, just not by exact MC version.
+  const mcVersion =
+    ignoreVersion || server.mc_version === 'LATEST' || server.mc_version === 'SNAPSHOT'
+      ? undefined
+      : server.mc_version;
   const loader = loaderOf(server);
 
   const source = classifyModSource(input);
@@ -282,15 +289,24 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     lib.version,
     lib.icon_url
   );
+  // meta.mcVersions is only set for modrinth/curseforge sources - a direct-URL
+  // install has nothing to compare against, so it's never flagged as overridden.
+  const versionOverridden =
+    ignoreVersion &&
+    server.mc_version &&
+    Array.isArray(meta.mcVersions) &&
+    !meta.mcVersions.includes(server.mc_version);
   recordEvent({
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Custom ${targetKind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''} (overlay)`,
-    details: { libraryId: lib.id, filename },
+    summary:
+      `Custom ${targetKind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''} (overlay)` +
+      (versionOverridden ? ` - not listed for ${server.mc_version}, installed anyway (version check overridden)` : ''),
+    details: { libraryId: lib.id, filename, versionOverridden },
   });
   indexer.scan().catch(() => {});
-  return { library: lib, filename };
+  return { library: lib, filename, versionOverridden };
 }
 
 /** Toggle content. Overlay: rename instantly. Pack: exclusion env + recreate flag. */

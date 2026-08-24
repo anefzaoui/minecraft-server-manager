@@ -98,6 +98,14 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       <label class="label">Mod URL or Modrinth slug</label>
       <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any direct .jar URL" autocomplete="off">
       <p class="help">Direct .jar URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work. The right build for this server's loader and MC version is picked automatically.</p>
+      ${
+        mc
+          ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
+               <input type="checkbox" class="msm-check mt-0.5" id="mod-url-ignore-version">
+               <span>Install even if this build isn't listed as compatible with ${escAttr(mc)}. It may not work correctly - you accept the risk.</span>
+             </label>`
+          : ''
+      }
       <div class="mt-3 hidden" id="mod-url-progress"><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
     const modal = openModal({
       title: 'Add Mod by URL',
@@ -111,14 +119,19 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           onClick: async () => {
             const url = content.querySelector('#mod-url').value.trim();
             if (!url) return false;
+            const ignoreVersion = Boolean(content.querySelector('#mod-url-ignore-version')?.checked);
             const progress = content.querySelector('#mod-url-progress');
             progress.classList.remove('hidden');
-            const res = await post(`/api/servers/${serverId}/mods`, { url });
+            const res = await post(`/api/servers/${serverId}/mods`, { url, ignoreVersion });
             if (!res) {
               progress.classList.add('hidden'); // failure keeps the modal open - no zombie meter
               return false;
             }
-            toast(`Installed ${res.installed.name}${res.installed.version ? ` ${res.installed.version}` : ''}.`);
+            toast(
+              `Installed ${res.installed.name}${res.installed.version ? ` ${res.installed.version}` : ''}.` +
+                (res.installed.versionOverridden ? ` Not listed as compatible with ${mc} - installed anyway.` : ''),
+              res.installed.versionOverridden ? { kind: 'warn', timeout: 9000 } : undefined
+            );
             setTimeout(() => location.reload(), 700);
           },
         },
@@ -132,17 +145,27 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     const content = document.createElement('div');
     content.innerHTML = `
       <input class="input" id="mr-q" placeholder="Search Modrinth…" autocomplete="off">
+      ${
+        mc
+          ? `<label class="mt-2 flex cursor-pointer items-start gap-2 text-sm">
+               <input type="checkbox" class="msm-check mt-0.5" id="mr-any-version">
+               <span>Also show builds not listed as compatible with ${escAttr(mc)} - you accept the risk of installing one.</span>
+             </label>`
+          : ''
+      }
       <div class="mt-3 max-h-96 space-y-2 overflow-y-auto" id="mr-results">
         <p class="p-6 text-center text-sm text-ink-faint">Type to search.</p>
       </div>`;
     const modal = openModal({ title: 'Search Modrinth', content, size: 'lg' });
     const q = content.querySelector('#mr-q');
+    const anyVersion = content.querySelector('#mr-any-version');
     const results = content.querySelector('#mr-results');
     let timer;
     q.addEventListener('input', () => {
       clearTimeout(timer);
       timer = setTimeout(runSearch, 350);
     });
+    anyVersion?.addEventListener('change', runSearch);
     q.value = prefill;
     q.focus();
     if (prefill) runSearch();
@@ -158,9 +181,12 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       const kind = ['PAPER', 'PURPUR', 'SPIGOT', 'BUKKIT', 'FOLIA', 'LEAF', 'PUFFERFISH'].includes(serverType)
         ? 'plugin'
         : 'mod';
+      const ignoreVersion = Boolean(anyVersion?.checked);
       const params = new URLSearchParams({ q: query, kind });
       if (loader) params.set('loader', loader);
-      if (mc && !mc.startsWith('LATEST')) params.set('mc', mc);
+      // Skip the mc facet entirely when overriding, so Modrinth's own filter
+      // doesn't hide the very builds the checkbox exists to surface.
+      if (mc && !mc.startsWith('LATEST') && !ignoreVersion) params.set('mc', mc);
       let data;
       try {
         const res = await fetch(`/api/modrinth/search?${params}`);
@@ -183,12 +209,16 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       }
       results.innerHTML = '';
       for (const hit of data.results) {
+        const notListed = ignoreVersion && mc && !(hit.gameVersions || []).includes(mc);
         const row = document.createElement('div');
         row.className = 'flex items-center gap-3 rounded-md border border-line bg-raised p-2.5';
         row.innerHTML = `
           ${hit.iconUrl ? `<img src="${escAttr(hit.iconUrl)}" alt="" class="size-10 shrink-0 rounded bg-inset object-cover">` : '<span class="grid size-10 shrink-0 place-items-center rounded bg-inset text-ink-faint">?</span>'}
           <div class="min-w-0 flex-1">
-            <div class="truncate text-sm font-semibold"></div>
+            <div class="flex items-center gap-1.5">
+              <div class="truncate text-sm font-semibold"></div>
+              ${notListed ? `<span class="shrink-0 badge badge-warn" data-tip="Not listed as compatible with ${escAttr(mc)} - may not work correctly">not verified</span>` : ''}
+            </div>
             <div class="truncate text-xs text-ink-faint"></div>
           </div>
           <span class="shrink-0 text-xs text-ink-faint">${Number(hit.downloads).toLocaleString()} DLs</span>
@@ -198,10 +228,14 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         row.querySelector('button').addEventListener('click', async (ev) => {
           const btn = ev.currentTarget; // capture before await - currentTarget is null afterwards
           const res2 = await withBusy(btn, 'Installing…', () =>
-            post(`/api/servers/${serverId}/mods`, { url: `https://modrinth.com/mod/${hit.slug}` })
+            post(`/api/servers/${serverId}/mods`, { url: `https://modrinth.com/mod/${hit.slug}`, ignoreVersion })
           );
           if (res2) {
-            toast(`Installed ${res2.installed.name}.`);
+            toast(
+              `Installed ${res2.installed.name}.` +
+                (res2.installed.versionOverridden ? ` Not listed as compatible with ${mc} - installed anyway.` : ''),
+              res2.installed.versionOverridden ? { kind: 'warn', timeout: 9000 } : undefined
+            );
             modal.close();
             if (onInstalled) onInstalled(res2);
             else setTimeout(() => location.reload(), 700);

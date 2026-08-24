@@ -62,6 +62,9 @@ async function search({ query = '', kind = 'mod', loader, mcVersion, limit = 20,
     downloads: h.downloads,
     categories: h.categories,
     latestVersion: h.latest_version,
+    // Every MC version this project has ever shipped a build for - lets the
+    // UI flag "not listed for your server's version" without a second call.
+    gameVersions: h.versions || [],
   }));
 }
 

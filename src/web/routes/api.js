@@ -1091,16 +1091,28 @@ router.get(
 router.post(
   '/servers/:id/mods',
   asyncHandler(async (req, res, next) => {
-    const { url, kind } = z
+    const { url, kind, ignoreVersion } = z
       .object({
         url: z.string().trim().min(3).max(500),
         kind: z.enum(['mod', 'plugin', 'datapack', 'resourcepack']).optional(),
+        // User explicitly accepted the risk of installing a build not listed
+        // as compatible with this server's exact MC version.
+        ignoreVersion: z.boolean().optional(),
       })
       .parse(req.body);
-    const result = await mods.installFromUrl(req.params.id, url, { actor: req.user.username, kind });
+    const result = await mods.installFromUrl(req.params.id, url, {
+      actor: req.user.username,
+      kind,
+      ignoreVersion,
+    });
     res.status(201).json({
       ok: true,
-      installed: { name: result.library.name, filename: result.filename, version: result.library.version },
+      installed: {
+        name: result.library.name,
+        filename: result.filename,
+        version: result.library.version,
+        versionOverridden: result.versionOverridden,
+      },
     });
   })
 );
