@@ -18,8 +18,16 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
   const previouslyFocused = document.activeElement;
 
   const backdrop = document.createElement('div');
+  // grid-cols-1 (not just place-items-center) matters: place-items:center alone
+  // makes the column an auto/content-sized track, so a panel's `w-full` can't
+  // resolve a percentage against it and the browser falls back to sizing the
+  // track off the panel's max-content width - on mobile that let a search
+  // result row's unbreakable bits (icon/downloads/Install button) blow the
+  // whole modal out past the viewport instead of shrinking to fit. The
+  // minmax(0,1fr) track from grid-cols-1 gives w-full a definite size to
+  // resolve against, so max-w-* caps it and content shrinks/wraps as normal.
   backdrop.className =
-    'fixed inset-0 z-[60] grid place-items-center bg-black/60 p-4 backdrop-blur-[2px] animate-[fade-in_.15s_ease-out]';
+    'fixed inset-0 z-[60] grid grid-cols-1 place-items-center bg-black/60 p-4 backdrop-blur-[2px] animate-[fade-in_.15s_ease-out]';
 
   const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' };
   const panel = document.createElement('div');
