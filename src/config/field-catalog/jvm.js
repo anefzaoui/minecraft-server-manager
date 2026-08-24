@@ -13,6 +13,7 @@ module.exports = [
     mode: 'simple',
     section: 'jvm',
     note: 'Recommended for modded servers',
+    conflictsWith: 'USE_MEOWICE_FLAGS',
     requiresRestart: true,
   },
   {
@@ -24,6 +25,8 @@ module.exports = [
     default: false,
     mode: 'advanced',
     section: 'jvm',
+    note: 'Incompatible with Aikar’s flags',
+    conflictsWith: 'USE_AIKAR_FLAGS',
     requiresRestart: true,
   },
   {

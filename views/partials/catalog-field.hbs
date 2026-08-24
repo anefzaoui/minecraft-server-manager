@@ -16,7 +16,7 @@
       {{#if help}}<p class="mt-1 max-w-prose text-xs leading-relaxed text-ink-faint">{{help}}</p>{{/if}}
     </div>
     <span class="msm-toggle mt-0.5 shrink-0">
-      <input type="checkbox" data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="boolean" data-catalog-default="{{this.default}}" {{#if default}}checked{{/if}}>
+      <input type="checkbox" data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="boolean" data-catalog-default="{{this.default}}" data-label="{{label}}" {{#if conflictsWith}}data-catalog-conflicts="{{conflictsWith}}"{{/if}} {{#if default}}checked{{/if}}>
       <span></span>
     </span>
   </label>

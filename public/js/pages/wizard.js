@@ -14,6 +14,7 @@ import { enhanceSelect } from '../lib/select.js';
 import { showPackDetails, packIconHtml, formatDownloads } from './modpacks.js';
 import { attachMotdEditor, toSectionCodes } from '../lib/motd.js';
 import { initDockerSettings } from '../lib/dockerSettings.js';
+import { wireCatalogConflicts } from '../lib/catalogConflicts.js';
 
 const root = document.getElementById('wizard');
 if (root) init();
@@ -62,6 +63,7 @@ function init() {
   const worldCard = document.getElementById('wz-card-world');
   const resourcesCard = document.getElementById('wz-card-resources');
   const advPanel = document.getElementById('wz-advanced');
+  if (advPanel) wireCatalogConflicts(advPanel, { toast });
 
   let sourceTab = 'vanilla';
   let detail = 'simple';

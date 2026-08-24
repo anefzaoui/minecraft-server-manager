@@ -6,6 +6,7 @@ import { runTask } from '../lib/progress.js';
 import { attachMotdEditor, toSectionCodes } from '../lib/motd.js';
 import { setBusy } from '../lib/loading.js';
 import { initDockerSettings } from '../lib/dockerSettings.js';
+import { wireCatalogConflicts } from '../lib/catalogConflicts.js';
 
 const root = document.querySelector('[data-settings-server]');
 if (root) init(root.dataset.settingsServer);
@@ -76,6 +77,7 @@ function init(serverId) {
         el.value = currentEnv[key];
       }
     });
+    wireCatalogConflicts(advPanel, { toast });
   }
 
   function parseSettingsEnv() {

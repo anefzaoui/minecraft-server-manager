@@ -14,6 +14,7 @@ module.exports = [
     mode: 'advanced',
     section: 'autopause',
     note: 'Incompatible with auto-stop',
+    conflictsWith: 'ENABLE_AUTOSTOP',
     requiresRestart: true,
   },
   {
@@ -135,6 +136,7 @@ module.exports = [
     mode: 'advanced',
     section: 'autopause',
     note: 'Incompatible with auto-pause',
+    conflictsWith: 'ENABLE_AUTOPAUSE',
     requiresRestart: true,
   },
   {
@@ -194,9 +196,10 @@ module.exports = [
     help: 'Minecraft’s built-in pause: the game loop stops after the server has been empty this many seconds. On modern versions this is the recommended, simpler alternative to the container-level auto-pause above.',
     type: 'number',
     unit: 'seconds',
+    min: 0,
     mode: 'advanced',
     section: 'autopause',
-    note: 'Preferred over auto-pause on MC 1.21.2+',
+    note: 'Preferred over auto-pause (MC 1.21.2+)',
     requiresRestart: true,
   },
 ];

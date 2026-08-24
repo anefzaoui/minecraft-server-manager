@@ -23,6 +23,10 @@
 //   requiresRestart: true when a running container must be recreated to apply
 //   hidden:   true → never rendered (footguns the panel manages itself)
 //   note:     short 'recommended' hint or warning shown as a badge (optional)
+//   conflictsWith: key of another boolean field that must not be on at the
+//             same time (optional) - the form auto-unchecks it, so this needs
+//             a note explaining the conflict in plain English too; the badge
+//             alone is easy to miss and doesn't stop anyone from checking both.
 // }
 
 const SECTIONS = [
