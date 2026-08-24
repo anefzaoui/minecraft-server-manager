@@ -211,9 +211,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
   // newest Fabric build only lists 1.21.1 and the server runs 1.21.2) -
   // still filtered by loader, just not by exact MC version.
   const mcVersion =
-    ignoreVersion || server.mc_version === 'LATEST' || server.mc_version === 'SNAPSHOT'
-      ? undefined
-      : server.mc_version;
+    ignoreVersion || server.mc_version === 'LATEST' || server.mc_version === 'SNAPSHOT' ? undefined : server.mc_version;
   const loader = loaderOf(server);
 
   const source = classifyModSource(input);
