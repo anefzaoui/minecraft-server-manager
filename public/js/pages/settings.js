@@ -34,6 +34,13 @@ function init() {
       if (res) {
         document.getElementById('set-domain').value = res.publicHost || '';
         toast(res.publicHost ? `Public domain set to ${res.publicHost}.` : 'Public domain cleared.');
+        if (res.cookieSecureWarning) {
+          toast(
+            'This panel is reachable over plain HTTP (COOKIE_SECURE is not set) - the session cookie is sniffable ' +
+              'in transit. Set COOKIE_SECURE=true behind HTTPS, or COOKIE_SECURE=auto, in the environment.',
+            { kind: 'error', timeout: 12000 }
+          );
+        }
       }
     });
   });

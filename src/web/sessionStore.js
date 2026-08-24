@@ -37,12 +37,17 @@ class SqliteSessionStore extends Store {
         session.cookie && session.cookie.expires
           ? new Date(session.cookie.expires).toISOString()
           : new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+      // Persisted alongside data_json (which also carries userId) so a
+      // credential/2FA change can revoke every OTHER session for that user
+      // without deserializing every row in the table - see auth.js
+      // revokeOtherSessions().
       db.run(
-        `INSERT INTO sessions (sid, data_json, expires_at) VALUES (?, ?, ?)
-         ON CONFLICT(sid) DO UPDATE SET data_json = excluded.data_json, expires_at = excluded.expires_at`,
+        `INSERT INTO sessions (sid, data_json, expires_at, user_id) VALUES (?, ?, ?, ?)
+         ON CONFLICT(sid) DO UPDATE SET data_json = excluded.data_json, expires_at = excluded.expires_at, user_id = excluded.user_id`,
         sid,
         JSON.stringify(session),
-        expires
+        expires,
+        session.userId || null
       );
       cb(null);
     } catch (err) {

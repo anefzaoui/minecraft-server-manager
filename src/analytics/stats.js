@@ -4,7 +4,7 @@
 // snapshots (player_stat_snapshots), and derives profiles, scoreboards, and
 // the advisory X-ray report from them.
 
-const fs = require('node:fs');
+const fsp = require('node:fs/promises');
 const path = require('node:path');
 const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
@@ -66,11 +66,11 @@ function curate(root) {
   };
 }
 
-function readUsercache(serverId) {
+async function readUsercache(serverId) {
   const names = new Map();
   try {
-    const rows = JSON.parse(fs.readFileSync(dataPath('servers', serverId, 'usercache.json'), 'utf8'));
-    for (const row of rows) {
+    const raw = await fsp.readFile(dataPath('servers', serverId, 'usercache.json'), 'utf8');
+    for (const row of JSON.parse(raw)) {
       const uuid = uuidToDashed(row.uuid);
       if (uuid && row.name) names.set(uuid, row.name);
     }
@@ -80,11 +80,26 @@ function readUsercache(serverId) {
   return names;
 }
 
+async function pathExists(p) {
+  try {
+    await fsp.access(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Read <server>/<level>/stats/*.json and snapshot each player whose curated
  * stats changed since the last snapshot. Returns { players, snapshots }.
+ *
+ * Uses fs/promises throughout (not the sync API) and awaits each player file
+ * individually: this runs for every tracked player of every RUNNING server on
+ * a 5-minute timer (see startStatsIngest below), and the sync version used to
+ * block the whole event loop - every other request, every WS console/stats
+ * stream - for the full sweep with zero yield points in between.
  */
-function ingestStats(serverId) {
+async function ingestStats(serverId) {
   const server = serversService.getServer(serverId);
   if (!server) {
     const err = new Error('Server not found');
@@ -99,22 +114,23 @@ function ingestStats(serverId) {
   try {
     const modern = dataPath('servers', serverId, level, 'players', 'stats');
     const legacy = dataPath('servers', serverId, level, 'stats');
-    statsDir = fs.existsSync(modern) ? modern : legacy;
+    statsDir = (await pathExists(modern)) ? modern : legacy;
   } catch {
     return { players: 0, snapshots: 0 };
   }
-  if (!fs.existsSync(statsDir)) return { players: 0, snapshots: 0 };
+  if (!(await pathExists(statsDir))) return { players: 0, snapshots: 0 };
 
-  const names = readUsercache(serverId);
+  const names = await readUsercache(serverId);
   let players = 0;
   let snapshots = 0;
-  for (const file of fs.readdirSync(statsDir)) {
+  const files = await fsp.readdir(statsDir);
+  for (const file of files) {
     if (!file.endsWith('.json')) continue;
     const uuid = uuidToDashed(path.basename(file, '.json'));
     if (!uuid) continue;
     let curated;
     try {
-      curated = curate(JSON.parse(fs.readFileSync(path.join(statsDir, file), 'utf8')));
+      curated = curate(JSON.parse(await fsp.readFile(path.join(statsDir, file), 'utf8')));
     } catch {
       continue; // partial write / malformed file - retry next cycle
     }
@@ -142,11 +158,11 @@ function ingestStats(serverId) {
 
 /** Periodic stat ingestion for all running servers. Returns a stop function. */
 function startStatsIngest({ intervalMs = 5 * 60 * 1000 } = {}) {
-  const tick = () => {
+  const tick = async () => {
     for (const server of serversService.listServers()) {
       if (!RUNNING.has(server.status)) continue;
       try {
-        ingestStats(server.id);
+        await ingestStats(server.id);
       } catch (err) {
         console.error(`[analytics] stats ingest ${server.id} failed:`, err.message);
       }

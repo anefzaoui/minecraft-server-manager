@@ -87,14 +87,50 @@ async function createContainer(spec) {
   return container.id;
 }
 
-/** Resolve the actual Docker name for a server - its custom name if one was set, else msm-<id>. */
-function resolvedName(serverId) {
-  const row = db.get('SELECT container_name FROM servers WHERE id = ?', serverId);
+/**
+ * Resolve the Docker reference for a server: its stored container_id when one
+ * exists, else the configured/derived name. container_id is only written once
+ * a container has actually been created (createServer/recreateServerImpl) and
+ * only changes when a NEW container is created - unlike container_name, which
+ * a config-save (PATCH /api/servers/:id) can update immediately while the real
+ * container still exists, unrenamed, under the old name until the pending
+ * recreate actually runs. Resolving by ID keeps every lookup pointed at the
+ * real container through that window instead of 404ing against a name that
+ * isn't real yet.
+ */
+function containerRef(serverId) {
+  const row = db.get('SELECT container_id, container_name FROM servers WHERE id = ?', serverId);
+  if (row && row.container_id) return row.container_id;
   return (row && row.container_name) || containerName(serverId);
 }
 
 function getContainer(serverId) {
-  return getDocker().getContainer(resolvedName(serverId));
+  return getDocker().getContainer(containerRef(serverId));
+}
+
+/**
+ * Remove a container by NAME if - and only if - it carries our msm.id label
+ * for this exact serverId. Used to self-heal a 409 name conflict on create:
+ * if the panel process crashes between a recreate's createContainer
+ * succeeding and its DB write landing, the DB is left pointing at the
+ * removed old container_id while Docker still holds the just-created
+ * container under the target name - the next recreate attempt would
+ * otherwise hit a permanent 409 on that name with no automatic recovery.
+ * Verifying the label first means this can never remove an unrelated
+ * container that happens to occupy the same name.
+ */
+async function removeStaleNameConflict(name, serverId) {
+  const docker = getDocker();
+  try {
+    const info = await docker.getContainer(name).inspect();
+    const labels = (info.Config && info.Config.Labels) || {};
+    if (labels[LABEL] !== serverId) return false;
+    await docker.getContainer(name).remove({ force: true });
+    return true;
+  } catch (err) {
+    if (err.statusCode === 404) return false;
+    throw err;
+  }
 }
 
 /** Inspect → panel status. Returns { status, health, exitCode, startedAt, pid }. */
@@ -312,8 +348,10 @@ async function chownDataDir(dir, image, uid, gid) {
 module.exports = {
   LABEL,
   containerName,
+  containerRef,
   createContainer,
   getContainer,
+  removeStaleNameConflict,
   inspectStatus,
   startContainer,
   stopContainer,

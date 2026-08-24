@@ -93,7 +93,7 @@ router.use(
   asyncHandler(async (req, res, next) => {
     const rows = serversService.listServers();
     res.locals.servers = await Promise.all(rows.map((s) => serverVM(s, { withLive: false })));
-    res.locals.updatesCount = require('../../updates/checker').listOutdated().length;
+    res.locals.updatesCount = require('../../updates/checker').countOutdated();
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
     next();
@@ -703,11 +703,13 @@ router.get(
 router.get('/settings', requireRole('admin'), (req, res) => {
   const apiKeys = require('../../services/apiKeys');
   const config = require('../../config');
+  const publicHost = require('../../services/settings').getPublicHost();
   res.render('settings', {
     title: 'Settings',
     active: 'settings',
     cfKeyMasked: apiKeys.maskedKey('curseforge'),
-    publicHost: require('../../services/settings').getPublicHost(),
+    publicHost,
+    cookieSecureWarning: Boolean(publicHost) && config.cookieSecure === false,
     users: require('../../services/auth').listUsers(),
     panel: { host: config.host, port: config.port },
     defaults: config.defaults,

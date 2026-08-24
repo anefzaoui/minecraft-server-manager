@@ -147,29 +147,68 @@ async function handleConsole(ws, serverId, user) {
   }
 }
 
+// One upstream `docker stats --stream` per server, fanned out to every
+// connected /ws/stats client, instead of one per connection: several admins
+// (or one admin with several tabs) watching the same server's dashboard used
+// to each open an independent Docker stats stream and demux pipeline - real,
+// avoidable load on the Docker daemon and the panel process that scales with
+// concurrent VIEWERS rather than with server count.
+const statsBrokers = new Map(); // serverId -> { subscribers, errorSubscribers, stop }
+
+function subscribeStats(serverId, onSample, onError) {
+  let broker = statsBrokers.get(serverId);
+  if (!broker) {
+    broker = { subscribers: new Set(), errorSubscribers: new Set(), stop: null };
+    statsBrokers.set(serverId, broker);
+    statsStream(serverId, (sample) => {
+      for (const fn of broker.subscribers) fn(sample);
+    })
+      .then((stopFn) => {
+        if (statsBrokers.get(serverId) === broker) broker.stop = stopFn;
+        else stopFn(); // every subscriber left before the stream finished connecting
+      })
+      .catch((err) => {
+        if (statsBrokers.get(serverId) === broker) statsBrokers.delete(serverId);
+        for (const fn of broker.errorSubscribers) fn(err);
+      });
+  }
+  broker.subscribers.add(onSample);
+  broker.errorSubscribers.add(onError);
+  return () => {
+    broker.subscribers.delete(onSample);
+    broker.errorSubscribers.delete(onError);
+    if (broker.subscribers.size === 0 && statsBrokers.get(serverId) === broker) {
+      statsBrokers.delete(serverId);
+      if (broker.stop) broker.stop(); // else the .then() above stops it once connected
+    }
+  };
+}
+
 async function handleStats(ws, serverId) {
-  let stop = null;
+  let unsubscribe = null;
   let closed = false;
   const cleanup = () => {
     if (closed) return;
     closed = true;
-    if (stop) stop();
+    if (unsubscribe) unsubscribe();
   };
   // Synchronous 'error'/'close' listeners: no unhandled 'error' crash, and a
-  // disconnect during the statsStream() await still tears the stream down.
+  // disconnect right after subscribing still unsubscribes.
   ws.on('error', (err) => {
     console.warn('[ws] stats socket error:', err.message);
     cleanup();
   });
   ws.on('close', cleanup);
-  try {
-    stop = await statsStream(serverId, (sample) => {
+  unsubscribe = subscribeStats(
+    serverId,
+    (sample) => {
       if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ kind: 'stats', ...sample }));
-    });
-    if (closed && stop) stop(); // client left during the await
-  } catch (err) {
-    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ kind: 'error', message: err.message }));
-  }
+    },
+    (err) => {
+      if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ kind: 'error', message: err.message }));
+    }
+  );
+  if (closed) unsubscribe(); // client left synchronously before subscribing even returned
 }
 
 /** Authenticate a WS upgrade from the express-session cookie → {id, username, role} | null. */

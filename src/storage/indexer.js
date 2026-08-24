@@ -105,9 +105,32 @@ function lastScan() {
   return row ? row.t : null;
 }
 
+// In-flight disk-growing operations (backup, restore, world install/
+// duplicate...) reserve the bytes they expect to need so diskFree() reflects
+// what's ACTUALLY available once every concurrent operation's own preflight
+// claim is accounted for - without this, two such operations starting close
+// together (e.g. two servers' scheduled backups landing on the same cron
+// tick) can each independently see enough real free space, both pass their
+// own preflight check, and jointly overrun the disk. This is advisory
+// bookkeeping in this process only, not a hard OS-level reservation.
+let reservedBytes = 0;
+
+/** Reserve `bytes` against diskFree() until the returned release() is called
+ *  (call it in a finally so a thrown/rejected operation still releases it). */
+function reserveDiskSpace(bytes) {
+  reservedBytes += bytes;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    reservedBytes -= bytes;
+  };
+}
+
 async function diskFree() {
   const st = await fs.statfs(config.dataDir);
-  return { free: st.bavail * st.bsize, total: st.blocks * st.bsize };
+  const free = st.bavail * st.bsize;
+  return { free: Math.max(0, free - reservedBytes), total: st.blocks * st.bsize };
 }
 
 /** Quota check used before disk-growing operations. Throws a friendly 409. */
@@ -143,4 +166,13 @@ async function enforceStrictQuotas() {
   }
 }
 
-module.exports = { scan, startIndexer, sizeOf, lastScan, diskFree, assertUnderQuota, enforceStrictQuotas };
+module.exports = {
+  scan,
+  startIndexer,
+  sizeOf,
+  lastScan,
+  diskFree,
+  reserveDiskSpace,
+  assertUnderQuota,
+  enforceStrictQuotas,
+};

@@ -39,9 +39,9 @@ const targetCache = new Map();
 /** Every network IP the sibling container has, on its own CONTAINER port - no
  *  host-port-publish or host-gateway routing needed if the panel can reach it. */
 async function containerNetworkTargets(server) {
-  const name = server.containerName || containers.containerName(server.id);
+  const ref = containers.containerRef(server.id);
   try {
-    const info = await getDocker().getContainer(name).inspect();
+    const info = await getDocker().getContainer(ref).inspect();
     const nets = (info.NetworkSettings && info.NetworkSettings.Networks) || {};
     return Object.values(nets)
       .map((n) => n.IPAddress)

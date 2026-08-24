@@ -54,6 +54,31 @@ async function runCleanup(action, { olderThanDays, dryRun = false, actor = 'syst
       removed += 1;
       if (!dryRun) await library.deleteLibraryFile(row.id, { actor, force: true }).catch(() => {});
     }
+    // Stray backup .zip files with no matching `backups` row: a hard crash
+    // (OOM kill, host reboot) mid-archive skips zipDirectory's own on-error
+    // cleanup (which only runs for a graceful stream/archiver failure), since
+    // the DB row is only inserted after the zip finishes writing. Age-gated
+    // like the 'tmp' action so an archive still being written right now is
+    // never touched.
+    const backupsRoot = dataPath('backups');
+    const serverDirs = await fsp.readdir(backupsRoot, { withFileTypes: true }).catch(() => []);
+    for (const dir of serverDirs) {
+      if (!dir.isDirectory()) continue;
+      const serverId = dir.name;
+      const files = await fsp.readdir(path.join(backupsRoot, serverId), { withFileTypes: true }).catch(() => []);
+      for (const f of files) {
+        if (!f.isFile() || !f.name.endsWith('.zip')) continue;
+        const relPath = `backups/${serverId}/${f.name}`;
+        const known = db.get('SELECT 1 FROM backups WHERE rel_path = ?', relPath);
+        if (known) continue;
+        const abs = path.join(backupsRoot, serverId, f.name);
+        const st = await fsp.stat(abs).catch(() => null);
+        if (!st || Date.now() - st.mtimeMs < TMP_MIN_AGE_MS) continue;
+        freedBytes += st.size;
+        removed += 1;
+        if (!dryRun) await fsp.rm(abs, { force: true }).catch(() => {});
+      }
+    }
   } else if (action === 'old-logs') {
     const cutoffMs = Date.now() - days * 24 * 60 * 60 * 1000;
     const logsRoot = dataPath('logs');

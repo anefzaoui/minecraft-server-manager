@@ -184,9 +184,35 @@ function listOutdated() {
   return rows;
 }
 
+/**
+ * Just the count from listOutdated()'s same filter logic, as one aggregate
+ * query instead of N+1 row-by-row lookups - used for the sidebar badge that's
+ * computed on every single page render (see web/routes/index.js), where the
+ * full per-row join-and-materialize listOutdated() does is pure waste when
+ * only a number is needed.
+ */
+function countOutdated() {
+  const row = db.get(`
+    SELECT
+      (SELECT COUNT(*) FROM update_checks c
+         JOIN server_packs p ON p.server_id = c.subject_id
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL
+         WHERE c.subject_type = 'pack' AND c.latest_version IS NOT NULL
+           AND p.pinned_version_id != c.latest_version)
+      +
+      (SELECT COUNT(*) FROM update_checks c
+         JOIN server_content sc ON sc.id = c.subject_id
+         JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL
+         WHERE c.subject_type = 'content' AND c.latest_version IS NOT NULL
+           AND c.latest_name IS NOT NULL AND c.latest_name != sc.version)
+      AS total
+  `);
+  return row ? row.total : 0;
+}
+
 function lastCheckedAt() {
   const row = db.get("SELECT fetched_at FROM api_cache WHERE key = 'last-update-check'");
   return row ? row.fetched_at : null;
 }
 
-module.exports = { checkAll, listOutdated, lastCheckedAt };
+module.exports = { checkAll, listOutdated, countOutdated, lastCheckedAt };

@@ -47,17 +47,33 @@ function contentDir(server, kind) {
 // decides the loader. mc-image-helper writes a per-loader manifest into the data
 // dir (e.g. .neoforge-manifest.json), so detect from that; otherwise mod installs
 // have no loader to match and grab an arbitrary (e.g. Fabric) build.
+// loaderOf() is called from serverVM() for every server on essentially every
+// page render (sidebar + dashboard/servers list) - cache the directory-listing
+// result briefly instead of re-running a sync readdirSync per server per
+// request. The manifest file this detects only changes across a pack
+// recreate/upgrade (an occasional, deliberate action), so a short TTL bounds
+// the sync-call frequency with a practically unnoticeable staleness window.
+const loaderCache = new Map(); // serverId -> { loader, expiresAt }
+const LOADER_CACHE_TTL_MS = 60 * 1000;
+
 function detectPackLoader(serverId) {
+  const cached = loaderCache.get(serverId);
+  if (cached && cached.expiresAt > Date.now()) return cached.loader;
   let names = [];
   try {
     names = fs.readdirSync(dataPath('servers', serverId));
   } catch {
     return null;
   }
-  for (const loader of ['neoforge', 'forge', 'fabric', 'quilt']) {
-    if (names.includes(`.${loader}-manifest.json`)) return loader;
+  let loader = null;
+  for (const candidate of ['neoforge', 'forge', 'fabric', 'quilt']) {
+    if (names.includes(`.${candidate}-manifest.json`)) {
+      loader = candidate;
+      break;
+    }
   }
-  return null;
+  loaderCache.set(serverId, { loader, expiresAt: Date.now() + LOADER_CACHE_TTL_MS });
+  return loader;
 }
 
 function loaderOf(server) {

@@ -18,6 +18,7 @@ const { recordEvent } = require('../events');
 const { execCapture, inspectStatus } = require('../docker/containers');
 const indexer = require('../storage/indexer');
 const { withSaveLock } = require('./serverLocks');
+const { guardOp } = require('./opLock');
 
 const KEEP_SCHEDULED = 10; // retention: newest N scheduled backups per server
 
@@ -51,30 +52,39 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
   };
 
   let inconsistent = false;
-  if (running) {
-    // Serialize the pause-saves/copy/resume-saves section per server so a
-    // concurrent backup or world export can't re-enable writes mid-copy.
-    await withSaveLock(serverId, async () => {
-      if (task) task.step('Pausing world saves');
-      const paused = await execCapture(serverId, ['rcon-cli', 'save-off'])
-        .then(() => true)
-        .catch((err) => {
-          console.warn(
-            `[backup] save-off failed for ${serverId}: ${err.message} - archive may be slightly inconsistent`
-          );
-          return false;
-        });
-      inconsistent = !paused;
-      await execCapture(serverId, ['rcon-cli', 'save-all', 'flush']).catch(() => {});
-      await sleep(2000); // let region writes settle
-      try {
-        await archive();
-      } finally {
-        await execCapture(serverId, ['rcon-cli', 'save-on']).catch(() => {});
-      }
-    });
-  } else {
-    await archive();
+  // Reserve the space this archive is expected to need for the duration of
+  // the write, so a second backup/restore/install starting around the same
+  // time sees it subtracted from diskFree() instead of independently passing
+  // its own preflight check against the same real free bytes.
+  const releaseReservation = indexer.reserveDiskSpace(needed);
+  try {
+    if (running) {
+      // Serialize the pause-saves/copy/resume-saves section per server so a
+      // concurrent backup or world export can't re-enable writes mid-copy.
+      await withSaveLock(serverId, async () => {
+        if (task) task.step('Pausing world saves');
+        const paused = await execCapture(serverId, ['rcon-cli', 'save-off'])
+          .then(() => true)
+          .catch((err) => {
+            console.warn(
+              `[backup] save-off failed for ${serverId}: ${err.message} - archive may be slightly inconsistent`
+            );
+            return false;
+          });
+        inconsistent = !paused;
+        await execCapture(serverId, ['rcon-cli', 'save-all', 'flush']).catch(() => {});
+        await sleep(2000); // let region writes settle
+        try {
+          await archive();
+        } finally {
+          await execCapture(serverId, ['rcon-cli', 'save-on']).catch(() => {});
+        }
+      });
+    } else {
+      await archive();
+    }
+  } finally {
+    releaseReservation();
   }
 
   const size = (await fsp.stat(absPath)).size;
@@ -96,30 +106,56 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
     summary: `Backup created (${reason}, ${(size / 1024 ** 3).toFixed(2)} GB)${inconsistent ? ' - WARNING: world saves could not be paused, archive may be slightly inconsistent' : ''}`,
     details: { id, filename, reason, inconsistent },
   });
-  await pruneRetention(serverId, { actor });
+  // The backup above already succeeded and is already recorded - a retention
+  // problem must never surface as this call failing.
+  await pruneRetention(serverId, { actor }).catch((err) => {
+    console.error(`[backup] retention query failed for ${serverId}: ${err.message}`);
+  });
   indexer.scan().catch(() => {});
   return db.get('SELECT * FROM backups WHERE id = ?', id);
 }
 
-/** Restore = stop server, wipe dir, extract archive. Safety backup first unless told not to. */
-async function restoreBackup(serverId, backupId, { actor = 'system', skipSafety = false, task = null } = {}) {
+/**
+ * Restore = stop server, extract archive into a staging dir, then swap it
+ * into place. Safety backup first unless told not to.
+ *
+ * The whole operation runs under the shared per-server op lock (see
+ * module.exports below) so a concurrent start/stop/recreate/delete/another
+ * restore/world-install can never interleave with it - without that, a
+ * request landing right after this function's own stop-and-verify step would
+ * see a "stopped" server, start a fresh container, and race the live
+ * Minecraft process against this function's directory swap.
+ *
+ * Extraction is staged into a tmp directory and only swapped into place with
+ * two fast renames once it fully succeeds, instead of wiping the live world
+ * dir first: if extraction fails or the process crashes mid-extraction, the
+ * original world is untouched, and the only at-risk window is the two rename
+ * syscalls themselves (near-instant, not proportional to world size).
+ */
+async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSafety = false, task = null } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ? AND server_id = ?', backupId, serverId);
   if (!backup) throw httpError(404, 'Backup not found');
 
-  // Disk preflight: safety backup + extracted content ≈ zip size ×2.
-  const zipStat = await fsp.stat(dataPath(backup.rel_path)).catch(() => null);
+  // Disk preflight: safety backup (~current world size) + extracted content
+  // (its real uncompressed size, not a guess from the compressed zip size -
+  // Minecraft region files can compress well past 2x, which would otherwise
+  // let this check pass right before the extraction fills the disk).
+  const zipPath = dataPath(backup.rel_path);
+  const zipStat = await fsp.stat(zipPath).catch(() => null);
   if (!zipStat) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}`);
+  const uncompressedBytes = await zipUncompressedSize(zipPath).catch(() => zipStat.size * 4);
+  const safetyBytes = skipSafety ? 0 : indexer.sizeOf(`servers/${serverId}`) || 0;
+  const needed = uncompressedBytes + safetyBytes;
   const { free } = await indexer.diskFree();
-  if (free < zipStat.size * 2) {
-    throw httpError(
-      507,
-      `Not enough disk space to restore (~${((zipStat.size * 2) / 1024 ** 3).toFixed(1)} GB needed)`
-    );
+  if (free < needed * 1.1) {
+    throw httpError(507, `Not enough disk space to restore (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
   }
 
   if (task) task.step('Stopping server');
-  const { stopServer } = require('./servers');
-  await stopServer(serverId, { actor }).catch(() => {});
+  // Guarded stopServer would deadlock here (this function already holds the
+  // shared op lock under 'restore' - see module.exports) - use the raw impl.
+  const { stopServerUnguarded } = require('./servers');
+  await stopServerUnguarded(serverId, { actor }).catch(() => {});
   // NEVER rm -rf under a live container: verify the container really stopped.
   const info = await inspectStatus(serverId).catch(() => ({ exists: false }));
   if (info.exists && ['running', 'starting', 'unhealthy'].includes(info.status)) {
@@ -131,6 +167,8 @@ async function restoreBackup(serverId, backupId, { actor = 'system', skipSafety 
 
   if (!skipSafety) {
     if (task) task.step('Creating safety backup');
+    // createBackup makes its own reservation for safetyBytes - not duplicated
+    // here, which only reserves the extraction's own uncompressedBytes below.
     await createBackup(serverId, {
       reason: 'manual',
       actor,
@@ -141,14 +179,44 @@ async function restoreBackup(serverId, backupId, { actor = 'system', skipSafety 
 
   if (task) task.step('Extracting backup');
   const serverDir = dataPath('servers', serverId);
-  await fsp.rm(serverDir, { recursive: true, force: true });
-  await fsp.mkdir(serverDir, { recursive: true });
-  await extractZip(dataPath(backup.rel_path), serverDir);
+  const stagingDir = dataPath('tmp', `restore-${serverId}-${nanoid(6)}`);
+  await fsp.mkdir(stagingDir, { recursive: true });
+  const releaseReservation = indexer.reserveDiskSpace(uncompressedBytes);
+  try {
+    try {
+      await extractZip(zipPath, stagingDir);
+    } catch (err) {
+      await fsp.rm(stagingDir, { recursive: true, force: true }).catch(() => {});
+      throw err; // original serverDir was never touched
+    }
+
+    const oldDir = dataPath('tmp', `restore-old-${serverId}-${nanoid(6)}`);
+    let hadOldDir = false;
+    try {
+      await renameDir(serverDir, oldDir);
+      hadOldDir = true;
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err; // anything but "no dir yet" is a real failure
+    }
+    try {
+      await renameDir(stagingDir, serverDir);
+    } catch (err) {
+      // Extraction succeeded but the swap itself failed - put the original back
+      // rather than leaving the server dir missing.
+      if (hadOldDir) await renameDir(oldDir, serverDir).catch(() => {});
+      throw err;
+    }
+    if (hadOldDir) await fsp.rm(oldDir, { recursive: true, force: true }).catch(() => {});
+  } finally {
+    releaseReservation();
+  }
 
   recordEvent({ serverId, actor, type: 'backup-restored', summary: `Restored backup ${backup.filename}` });
   indexer.scan().catch(() => {});
   return { ok: true };
 }
+
+const restoreBackup = guardOp('restore', restoreBackupImpl);
 
 async function deleteBackup(backupId, { actor = 'system' } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
@@ -165,6 +233,16 @@ async function deleteBackup(backupId, { actor = 'system' } = {}) {
 }
 
 /** Keep newest N scheduled; manual + pre-update are never auto-pruned. */
+/**
+ * Delete backups past the retention limit. Each deletion is isolated (one
+ * failure - a transient DB busy error, an EACCES on the file - must not stop
+ * the rest from being pruned) and the whole function never throws: it's
+ * always called right after a backup has already been successfully created
+ * and recorded, so a pruning failure here must not surface as "backup
+ * failed" (misleading the operator) or silently abort retention entirely
+ * (letting old backups accumulate and eventually cause a REAL failure via
+ * the free-space preflight).
+ */
 async function pruneRetention(serverId, { actor = 'system' } = {}) {
   const stale = db.all(
     `SELECT * FROM backups WHERE server_id = ? AND reason = 'scheduled'
@@ -172,8 +250,16 @@ async function pruneRetention(serverId, { actor = 'system' } = {}) {
     serverId,
     KEEP_SCHEDULED
   );
-  for (const b of stale) await deleteBackup(b.id, { actor });
-  return stale.length;
+  let deleted = 0;
+  for (const b of stale) {
+    try {
+      await deleteBackup(b.id, { actor });
+      deleted++;
+    } catch (err) {
+      console.error(`[backup] retention: could not delete ${b.id} for ${serverId}: ${err.message}`);
+    }
+  }
+  return deleted;
 }
 
 function zipDirectory(sourceDir, outFile, { onProgress = null } = {}) {
@@ -279,6 +365,36 @@ function extractZip(zipFile, destDir) {
       zip.readEntry();
     });
   });
+}
+
+/** Sum of uncompressedSize across every entry in a zip - cheap (reads the
+ *  central directory only, no decompression) - used for an accurate restore
+ *  disk-space preflight instead of guessing from the compressed archive size. */
+function zipUncompressedSize(zipFile) {
+  return new Promise((resolve, reject) => {
+    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
+      if (err) return reject(err);
+      let total = 0;
+      zip.on('error', reject);
+      zip.on('end', () => resolve(total));
+      zip.on('entry', (entry) => {
+        total += entry.uncompressedSize || 0;
+        zip.readEntry();
+      });
+      zip.readEntry();
+    });
+  });
+}
+
+/** Rename a directory, falling back to copy+remove across devices (EXDEV). */
+async function renameDir(from, to) {
+  try {
+    await fsp.rename(from, to);
+  } catch (err) {
+    if (err.code !== 'EXDEV') throw err;
+    await fsp.cp(from, to, { recursive: true });
+    await fsp.rm(from, { recursive: true, force: true });
+  }
 }
 
 function sleep(ms) {

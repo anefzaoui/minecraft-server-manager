@@ -38,6 +38,15 @@
         <button class="btn" id="set-domain-save">Save Domain</button>
       </div>
       <p class="help">Shown to players instead of your IP in connect addresses (e.g. <span class="font-mono">mc.example.com:25565</span>). Leave blank to use the server's IP. No scheme or port.</p>
+      {{#if cookieSecureWarning}}
+      <div class="notice notice-danger mt-2">
+        {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
+        <div>
+          <span class="font-semibold text-danger">Session cookie is not marked Secure.</span>
+          <span>A public domain is set, but <span class="font-mono">COOKIE_SECURE</span> isn't - if this panel is reachable over plain HTTP, the login cookie can be sniffed in transit. Set <span class="font-mono">COOKIE_SECURE=true</span> (behind HTTPS) or <span class="font-mono">COOKIE_SECURE=auto</span> in the environment.</span>
+        </div>
+      </div>
+      {{/if}}
     </div>
     <div class="mb-4">
       <span class="label">Time zone &amp; region</span>

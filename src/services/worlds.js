@@ -27,6 +27,7 @@ const { execCapture, inspectStatus } = require('../docker/containers');
 const indexer = require('../storage/indexer');
 const library = require('./library');
 const { withSaveLock } = require('./serverLocks');
+const { guardOp } = require('./opLock');
 
 // Run the save-off/flush → copy → save-on dance under the shared per-server save
 // lock when the server is running, so it can't overlap a concurrent backup or
@@ -401,7 +402,7 @@ function compatWarnings(world, server) {
  * mode 'alongside': extracts under `newName` next to existing worlds - switch
  *                   with activateWorld later. Safe while running.
  */
-async function installToServer(libraryId, serverId, { mode = 'replace', newName = '', actor = 'system' } = {}) {
+async function installToServerImpl(libraryId, serverId, { mode = 'replace', newName = '', actor = 'system' } = {}) {
   const lib = mustLibWorld(libraryId);
   const server = mustServer(serverId);
   const warnings = compatWarnings({ flavor: lib.world_flavor, version: lib.version }, server);
@@ -438,6 +439,10 @@ async function installToServer(libraryId, serverId, { mode = 'replace', newName 
   const tmpDir = dataPath('tmp', `world-install-${nanoid(6)}`);
   await fsp.mkdir(tmpDir, { recursive: true });
   let replacedBytes = 0;
+  // Reserved for the same reason as backups.js's createBackup/restoreBackup:
+  // stop a second concurrent disk-growing op from passing its own preflight
+  // against the same real free bytes this extraction is about to consume.
+  const releaseReservation = indexer.reserveDiskSpace(lib.size_bytes * 2);
   try {
     await extractZip(dataPath(lib.rel_path), tmpDir);
 
@@ -462,6 +467,7 @@ async function installToServer(libraryId, serverId, { mode = 'replace', newName 
       await moveEntry(path.join(tmpDir, e.name), dataPath('servers', serverId, targetLevel + suffix));
     }
   } finally {
+    releaseReservation();
     await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
 
@@ -476,6 +482,13 @@ async function installToServer(libraryId, serverId, { mode = 'replace', newName 
   indexer.scan().catch(() => {});
   return { installedAs: targetLevel, mode, warnings, sizeBytes };
 }
+
+// Guarded under the shared per-server op lock (keyed on serverId, the 2nd
+// arg here) so it can't interleave with a concurrent start/stop/recreate/
+// delete/restore/another world op - the 'replace' mode's isRunning() check
+// above and its destructive directory work must be atomic with respect to
+// those, or a start landing in between corrupts the live world.
+const installToServer = guardOp('install', installToServerImpl, (_libraryId, serverId) => serverId);
 
 /** Warnings for a server→server copy (source world flavor/version vs target). */
 function copyWarnings(sourceServerId, targetServerId) {
@@ -538,12 +551,17 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
 
   const active = worldName === activeLevelName(server);
   const running = active && (await isRunning(serverId));
-  await withPausedSaves(serverId, running, async () => {
-    for (const dim of dims) {
-      const suffix = path.basename(dim).slice(worldName.length);
-      await fsp.cp(dim, dataPath('servers', serverId, copyName + suffix), { recursive: true });
-    }
-  });
+  const releaseReservation = indexer.reserveDiskSpace(sizeBytes);
+  try {
+    await withPausedSaves(serverId, running, async () => {
+      for (const dim of dims) {
+        const suffix = path.basename(dim).slice(worldName.length);
+        await fsp.cp(dim, dataPath('servers', serverId, copyName + suffix), { recursive: true });
+      }
+    });
+  } finally {
+    releaseReservation();
+  }
 
   recordEvent({
     serverId,
@@ -557,7 +575,7 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
 }
 
 /** Rename a world (server must be stopped); updates level-name/LEVEL when active. */
-async function renameWorld(serverId, worldName, newName, { actor = 'system' } = {}) {
+async function renameWorldImpl(serverId, worldName, newName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
   const clean = sanitizeWorldName(newName);
@@ -586,8 +604,10 @@ async function renameWorld(serverId, worldName, newName, { actor = 'system' } = 
   return { name: clean, wasActive };
 }
 
+const renameWorld = guardOp('rename', renameWorldImpl);
+
 /** Make a world the active one (sets level-name / LEVEL). Server must be stopped. */
-async function activateWorld(serverId, worldName, { actor = 'system' } = {}) {
+async function activateWorldImpl(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before switching worlds');
@@ -607,6 +627,8 @@ async function activateWorld(serverId, worldName, { actor = 'system' } = {}) {
   return { active: worldName, changed: true };
 }
 
+const activateWorld = guardOp('activate', activateWorldImpl);
+
 const LEVEL_TYPES = new Set(['DEFAULT', 'FLAT', 'LARGEBIOMES', 'AMPLIFIED']);
 
 /**
@@ -619,7 +641,7 @@ const LEVEL_TYPES = new Set(['DEFAULT', 'FLAT', 'LARGEBIOMES', 'AMPLIFIED']);
  *   backup:   take a safety backup first (default true)
  * Server must be stopped.
  */
-async function resetWorld(
+async function resetWorldImpl(
   serverId,
   { seedMode = 'random', seed = '', levelType = '', backup = true, actor = 'system' } = {}
 ) {
@@ -693,6 +715,8 @@ async function resetWorld(
     freedBytes,
   };
 }
+
+const resetWorld = guardOp('reset', resetWorldImpl);
 
 /** Delete a non-active world from a server. Returns freed bytes. */
 async function deleteServerWorld(serverId, worldName, { actor = 'system' } = {}) {
@@ -952,23 +976,35 @@ async function extractArchive(file, destDir, originalName = '') {
 
   if (isZip) return extractZip(file, destDir);
   if (isGzip || isTar || /\.tar$/i.test(originalName)) {
-    // node-tar sanitizes absolute paths and skips `..` entries by default; the
-    // filter also enforces an uncompressed-size ceiling (decompression-bomb guard).
+    // Size-check BEFORE extracting, as a separate header-only pass (tar.t
+    // reads entry headers, not file content - cheap): a `filter` callback
+    // that throws is NOT propagated as a rejection by node-tar (verified -
+    // it escapes as an uncaught exception instead), which used to leave
+    // extraction hung forever with a leaked tmp dir on an oversized archive.
     let tarTotal = 0;
+    let tarEntries = 0;
+    await tar.t({
+      file,
+      onentry: (entry) => {
+        tarEntries++;
+        tarTotal += entry.size || 0;
+      },
+    });
+    if (tarEntries > MAX_EXTRACT_ENTRIES) {
+      throw httpError(413, `Archive has too many entries (> ${MAX_EXTRACT_ENTRIES}).`);
+    }
+    if (tarTotal > MAX_EXTRACT_BYTES) {
+      throw httpError(
+        413,
+        `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
+      );
+    }
+    // node-tar sanitizes absolute paths and skips `..` entries by default;
+    // this filter is defense in depth and only returns a boolean, never throws.
     return tar.x({
       file,
       cwd: destDir,
-      filter: (p, stat) => {
-        if (p.split(/[\\/]/).includes('..')) return false;
-        tarTotal += (stat && stat.size) || 0;
-        if (tarTotal > MAX_EXTRACT_BYTES) {
-          throw httpError(
-            413,
-            `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
-          );
-        }
-        return true;
-      },
+      filter: (p) => !p.split(/[\\/]/).includes('..'),
     });
   }
   throw httpError(400, `That doesn't look like a zip or tar archive${originalName ? ` (${originalName})` : ''}`);

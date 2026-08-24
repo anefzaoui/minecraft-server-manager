@@ -36,7 +36,7 @@ async function upgradePack(
     task = null,
   } = {}
 ) {
-  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade is already running for this server');
+  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server');
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   const pack = packsService.getPack(serverId);
@@ -163,26 +163,37 @@ async function upgradePack(
 
 /** Roll back: restore the pre-update backup + re-pin the previous version. */
 async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
+  // Same activeUpgrades guard as upgradePack - without it, a rollback fired
+  // while an upgrade is still mid-flight for the same server (e.g. the user
+  // gets impatient during the 'monitoring' wait) can interleave applyPack's
+  // pinned/previous-version bookkeeping and the recreate/start sequence,
+  // leaving it unclear which pack version actually ended up installed.
+  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server');
   const pack = packsService.getPack(serverId);
   if (!pack || !pack.previous_version_id) throw httpError(400, 'No previous pack version recorded');
 
-  await serversService.stopServer(serverId, { actor }).catch(() => {});
-  if (backupId) await backupsService.restoreBackup(serverId, backupId, { actor, skipSafety: true });
+  activeUpgrades.set(serverId, { step: 'rolling-back', startedAt: Date.now() });
+  try {
+    await serversService.stopServer(serverId, { actor }).catch(() => {});
+    if (backupId) await backupsService.restoreBackup(serverId, backupId, { actor, skipSafety: true });
 
-  const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
-    versionId: pack.previous_version_id,
-  });
-  await packsService.applyPack(serverId, resolved, { actor, force: true }); // backup restore precedes this
-  await serversService.recreateServer(serverId, { actor, quiet: true });
-  await serversService.startServer(serverId, { actor });
+    const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
+      versionId: pack.previous_version_id,
+    });
+    await packsService.applyPack(serverId, resolved, { actor, force: true }); // backup restore precedes this
+    await serversService.recreateServer(serverId, { actor, quiet: true });
+    await serversService.startServer(serverId, { actor });
 
-  recordEvent({
-    serverId,
-    actor,
-    type: 'update-rolled-back',
-    summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}`,
-  });
-  return { ok: true, version: pack.previous_version_name };
+    recordEvent({
+      serverId,
+      actor,
+      type: 'update-rolled-back',
+      summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}`,
+    });
+    return { ok: true, version: pack.previous_version_name };
+  } finally {
+    activeUpgrades.delete(serverId);
+  }
 }
 
 /**

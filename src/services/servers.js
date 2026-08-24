@@ -21,6 +21,7 @@ const images = require('../docker/images');
 const { fetchLogs } = require('../docker/logs');
 const dockerSpec = require('./dockerSpec');
 const settings = require('./settings');
+const { withSaveLock } = require('./serverLocks');
 
 function rowToServer(row) {
   if (!row) return null;
@@ -99,6 +100,15 @@ function assembleEnv(server) {
   delete env.LOAD_ENV_FROM_GENERIC_PACK;
   delete env.LOAD_ENV_FROM_ARCHIVE;
   delete env.REMOVE_OLD_MODS;
+  // Docker's port bindings (docker/containers.js GAME_PORT/RCON_PORT) hardcode
+  // the CONTAINER-side ports that host ports 25565/25575 forward to. Letting
+  // these itzg env vars move the Minecraft process's actual listening port
+  // would silently desync from that binding: the panel's own checks (docker
+  // exec, healthcheck) never go through the mapped host port, so the server
+  // would still show healthy/running while players get connection-refused.
+  delete env.SERVER_PORT;
+  delete env.RCON_PORT;
+  delete env.QUERY_PORT;
   // Run the container as the panel's own host user so every file it writes under
   // ./data is owned by us. Otherwise it writes as its default uid (1000) and the
   // panel - a different user - can't manage those files (mod installs, deletes,
@@ -388,28 +398,12 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 
 // ---------------------------------------------------------------------------
 // Per-server lifecycle mutex: concurrent start calls share one promise; any
-// other overlapping lifecycle op is rejected with 409 instead of racing into
-// container-name collisions and half-recreated states.
+// other overlapping lifecycle OR destructive world op (backup restore,
+// world install/rename/activate/reset - see opLock.js) is rejected with 409
+// instead of racing into container-name collisions and half-recreated/
+// half-restored states.
 
-const inFlightOps = new Map(); // serverId -> { op, promise }
-
-function guardOp(op, fn) {
-  return async function guarded(id, opts = {}) {
-    const existing = inFlightOps.get(id);
-    if (existing) {
-      if (existing.op === op && op === 'start') return existing.promise; // piggyback on the same start
-      throw httpError(409, `Cannot ${op}: a ${existing.op} operation is already in progress for this server`);
-    }
-    const promise = fn(id, opts);
-    const entry = { op, promise };
-    inFlightOps.set(id, entry);
-    try {
-      return await promise;
-    } finally {
-      if (inFlightOps.get(id) === entry) inFlightOps.delete(id);
-    }
-  };
-}
+const { guardOp } = require('./opLock');
 
 /**
  * Ensure a server's data dir is owned by the panel user so we can manage its
@@ -446,7 +440,12 @@ async function startServerImpl(id, { actor = 'system' } = {}) {
 async function stopServerImpl(id, { actor = 'system' } = {}) {
   mustGet(id);
   recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Graceful stop requested' });
-  await containers.stopContainer(id);
+  // A graceful stop triggers the game's own shutdown-time world save (rcon
+  // `stop`, or docker's SIGTERM if that doesn't finish in time). Sharing the
+  // backup/world-export save lock means a stop that lands mid-backup waits
+  // for the backup's save-off/copy/save-on section to finish instead of
+  // racing its own save against the archiver's mid-read of the same files.
+  await withSaveLock(id, () => containers.stopContainer(id));
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
   const excerpt = await fetchLogs(id, { tail: 100 }).catch(() => '');
   recordEvent({
@@ -469,13 +468,15 @@ const startServer = guardOp('start', startServerImpl);
 const stopServer = guardOp('stop', stopServerImpl);
 const restartServer = guardOp('restart', restartServerImpl);
 
-async function killServer(id, { actor = 'system' } = {}) {
+async function killServerImpl(id, { actor = 'system' } = {}) {
   mustGet(id);
   recordEvent({ serverId: id, actor, type: 'kill-requested', summary: 'Force kill requested' });
   await containers.killContainer(id);
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
   recordEvent({ serverId: id, actor, type: 'killed', summary: 'Server force-killed (world may not have saved)' });
 }
+
+const killServer = guardOp('kill', killServerImpl);
 
 /** Recreate: remove + create with current env/resources. Applies pending changes. */
 async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) {
@@ -488,27 +489,64 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
 
   const image = resolveImage(server);
   await images.ensureImage(image);
+  const containerSpec = {
+    serverId: id,
+    image,
+    env: assembleEnv(server),
+    dataDir: dataPath('servers', id),
+    ports: { game: server.port_game, rcon: server.port_rcon, bedrock: server.port_bedrock },
+    extraPorts: mergeExtraPorts(server),
+    resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
+    containerName: server.containerName,
+    networkName: server.networkName,
+    extraBinds: server.extraBinds,
+  };
   let containerId;
   try {
-    containerId = await containers.createContainer({
-      serverId: id,
-      image,
-      env: assembleEnv(server),
-      dataDir: dataPath('servers', id),
-      ports: { game: server.port_game, rcon: server.port_rcon, bedrock: server.port_bedrock },
-      extraPorts: mergeExtraPorts(server),
-      resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
-      containerName: server.containerName,
-      networkName: server.networkName,
-      extraBinds: server.extraBinds,
-    });
+    containerId = await containers.createContainer(containerSpec);
   } catch (err) {
-    if (err.statusCode === 409 && server.containerName) {
-      throw httpError(409, `Container name "${server.containerName}" is already in use by another Docker container`);
+    if (err.statusCode !== 409) throw err;
+    // Most likely our OWN orphan: a prior recreate attempt crashed after Docker
+    // created this container but before the DB write below landed, so this
+    // process still thinks it needs to (re)create it. Verify via the msm.id
+    // label before removing anything, then retry once - without this, that
+    // crash window permanently strands the server on a 409 requiring a manual
+    // `docker rm`.
+    const targetName = server.containerName || containers.containerName(id);
+    const removedOrphan = await containers.removeStaleNameConflict(targetName, id).catch(() => false);
+    if (!removedOrphan) {
+      if (server.containerName) {
+        throw httpError(409, `Container name "${server.containerName}" is already in use by another Docker container`);
+      }
+      throw err;
     }
-    throw err;
+    containerId = await containers.createContainer(containerSpec);
   }
-  db.run('UPDATE servers SET container_id = ?, pending_recreate = 0 WHERE id = ?', containerId, id);
+  db.run('UPDATE servers SET container_id = ? WHERE id = ?', containerId, id);
+  // Only clear pending_recreate if none of the recreate-relevant columns changed
+  // since we read `server` above - a concurrent config PATCH (updateServer) can
+  // legally commit mid-recreate (it isn't covered by the op lock, since it's a
+  // synchronous, Docker-independent DB write); if it flagged a NEW pending
+  // change, this recreate's completion must not silently clear that flag, or
+  // the new change would never actually get applied to the container.
+  db.run(
+    `UPDATE servers SET pending_recreate = 0 WHERE id = ?
+       AND container_name IS ? AND network_name IS ?
+       AND mc_version IS ? AND java_tag IS ?
+       AND heap_mb IS ? AND container_memory_mb IS ? AND cpus IS ?
+       AND extra_ports_json IS ? AND extra_binds_json IS ? AND env_json IS ?`,
+    id,
+    server.container_name,
+    server.network_name,
+    server.mc_version,
+    server.java_tag,
+    server.heap_mb,
+    server.container_memory_mb,
+    server.cpus,
+    server.extra_ports_json,
+    server.extra_binds_json,
+    server.env_json
+  );
   if (!quiet)
     recordEvent({ serverId: id, actor, type: 'recreated', summary: 'Container recreated with current configuration' });
   if (wasRunning) await startServerImpl(id, { actor });
@@ -616,7 +654,7 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
 }
 
 /** Delete server: container, DB rows, and (optionally) its data directory. */
-async function deleteServer(id, { actor = 'system', keepWorld = false } = {}) {
+async function deleteServerImpl(id, { actor = 'system', keepWorld = false } = {}) {
   const server = mustGet(id);
   await containers.stopContainer(id).catch(() => {});
   await containers.removeContainer(id);
@@ -700,6 +738,8 @@ async function deleteServer(id, { actor = 'system', keepWorld = false } = {}) {
   return { freedBytes };
 }
 
+const deleteServer = guardOp('delete', deleteServerImpl);
+
 /** Refresh cached status for all servers from Docker (called on boot + 60s poll). */
 async function refreshStatuses() {
   for (const server of listServers()) {
@@ -771,6 +811,11 @@ module.exports = {
   restartServer,
   killServer,
   recreateServer,
+  // Unguarded stop, for callers that have ALREADY taken the shared per-server
+  // op lock themselves (e.g. backups.restoreBackup, guarded under 'restore')
+  // and would otherwise deadlock calling the guarded `stopServer` reentrantly.
+  // Do not call this from anywhere that hasn't already acquired that lock.
+  stopServerUnguarded: stopServerImpl,
   refreshStatuses,
   assembleEnv,
   resolveImage,

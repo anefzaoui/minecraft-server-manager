@@ -52,10 +52,27 @@ function listUsers() {
   return db.all('SELECT * FROM users ORDER BY created_at').map(publicUser);
 }
 
-function setPassword(id, password, { actor = 'system' } = {}) {
+/**
+ * Delete every session row for `userId` except `exceptSid` (the session
+ * performing the change, if any - so an admin resetting their own password,
+ * or a user rotating their own 2FA, isn't logged out by their own request).
+ * Called after any credential/2FA mutation so a stolen-but-still-valid
+ * session on another device can't survive the user actually fixing things.
+ */
+function revokeOtherSessions(userId, exceptSid = null) {
+  if (!userId) return;
+  if (exceptSid) {
+    db.run('DELETE FROM sessions WHERE user_id = ? AND sid != ?', userId, exceptSid);
+  } else {
+    db.run('DELETE FROM sessions WHERE user_id = ?', userId);
+  }
+}
+
+function setPassword(id, password, { actor = 'system', exceptSid = null } = {}) {
   if (typeof password !== 'string' || password.length < 8)
     throw httpError(400, 'Password must be at least 8 characters');
   db.run('UPDATE users SET password_hash = ? WHERE id = ?', bcrypt.hashSync(password, 11), id);
+  revokeOtherSessions(id, exceptSid);
   recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(id)?.username}` });
 }
 
@@ -173,7 +190,7 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
 }
 
 /** Self-service disable - re-checks the account's own current password first. */
-function disableTotp(id, password, { actor = 'system' } = {}) {
+function disableTotp(id, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'Wrong password');
@@ -181,6 +198,7 @@ function disableTotp(id, password, { actor = 'system' } = {}) {
     'UPDATE users SET totp_secret = NULL, totp_enabled = 0, totp_backup_codes_json = NULL, totp_last_step = NULL WHERE id = ?',
     id
   );
+  revokeOtherSessions(id, exceptSid);
   recordEvent({
     actor,
     type: 'user-2fa-disabled',
@@ -197,6 +215,7 @@ function adminDisableTotp(id, { actor = 'system' } = {}) {
     'UPDATE users SET totp_secret = NULL, totp_enabled = 0, totp_backup_codes_json = NULL, totp_last_step = NULL WHERE id = ?',
     id
   );
+  revokeOtherSessions(id);
   recordEvent({
     actor,
     type: 'user-2fa-disabled',
@@ -205,7 +224,7 @@ function adminDisableTotp(id, { actor = 'system' } = {}) {
 }
 
 /** Re-check the password, then reissue backup codes (old ones stop working). */
-function regenerateBackupCodes(id, password, { actor = 'system' } = {}) {
+function regenerateBackupCodes(id, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   if (!user.totp_enabled) throw httpError(400, 'Two-factor authentication is not enabled');
@@ -213,6 +232,7 @@ function regenerateBackupCodes(id, password, { actor = 'system' } = {}) {
   const backupCodes = totp.generateBackupCodes();
   const hashed = backupCodes.map((c) => bcrypt.hashSync(c, 11));
   db.run('UPDATE users SET totp_backup_codes_json = ? WHERE id = ?', JSON.stringify(hashed), id);
+  revokeOtherSessions(id, exceptSid);
   recordEvent({ actor, type: 'user-2fa-backup-codes', summary: `Backup codes regenerated for ${user.username}` });
   return { backupCodes };
 }

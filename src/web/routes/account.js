@@ -88,7 +88,7 @@ router.post(
     const { password } = z.object({ password: z.string().min(1).max(200) }).parse(req.body);
     checkLoginAllowed(req.user.username, req.ip);
     try {
-      authService.disableTotp(req.user.id, password, { actor: req.user.username });
+      authService.disableTotp(req.user.id, password, { actor: req.user.username, exceptSid: req.sessionID });
     } catch (err) {
       if (err.status === 401) recordLoginFailure(req.user.username, req.ip);
       throw err;
@@ -105,7 +105,10 @@ router.post(
     checkLoginAllowed(req.user.username, req.ip);
     let result;
     try {
-      result = authService.regenerateBackupCodes(req.user.id, password, { actor: req.user.username });
+      result = authService.regenerateBackupCodes(req.user.id, password, {
+        actor: req.user.username,
+        exceptSid: req.sessionID,
+      });
     } catch (err) {
       if (err.status === 401) recordLoginFailure(req.user.username, req.ip);
       throw err;

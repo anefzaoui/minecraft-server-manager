@@ -331,11 +331,23 @@ router.post(
 
 // ---- Panel settings (public domain, shown instead of the LAN IP) ----
 const settingsService = require('../../services/settings');
+const panelConfig = require('../../config');
+
+// COOKIE_SECURE defaults to false so a plain-HTTP LAN/localhost session still
+// works (see config/index.js resolveCookieSecure) - reasonable for a LAN-only
+// deployment, but a public host being configured here means this panel is
+// expected to be reachable over the internet (e.g. via the invite/port-forward
+// feature), where a non-Secure session cookie is sniffable in transit.
+function cookieSecureWarning(publicHost) {
+  return Boolean(publicHost) && panelConfig.cookieSecure === false;
+}
 
 router.get('/settings', (req, res) => {
+  const publicHost = settingsService.getPublicHost();
   res.json({
     ok: true,
-    publicHost: settingsService.getPublicHost(),
+    publicHost,
+    cookieSecureWarning: cookieSecureWarning(publicHost),
     curseforge: { masked: apiKeys.maskedKey('curseforge') },
   });
 });
@@ -346,7 +358,15 @@ router.post(
   asyncHandler((req, res, next) => {
     const { publicHost } = z.object({ publicHost: z.string().max(255).optional() }).parse(req.body);
     const saved = settingsService.setPublicHost(publicHost || '');
-    res.json({ ok: true, publicHost: saved });
+    const warn = cookieSecureWarning(saved);
+    if (warn) {
+      console.warn(
+        `[settings] Public host "${saved}" configured but COOKIE_SECURE is unset - ` +
+          'the session cookie is sent over plain HTTP if this panel is reached that way. ' +
+          'Set COOKIE_SECURE=true (behind HTTPS) or COOKIE_SECURE=auto in the environment.'
+      );
+    }
+    res.json({ ok: true, publicHost: saved, cookieSecureWarning: warn });
   })
 );
 
@@ -1412,7 +1432,7 @@ router.post(
   requireRole('admin'),
   asyncHandler((req, res, next) => {
     const { password } = z.object({ password: z.string().min(8).max(200) }).parse(req.body);
-    authService.setPassword(req.params.id, password, { actor: req.user.username });
+    authService.setPassword(req.params.id, password, { actor: req.user.username, exceptSid: req.sessionID });
     res.json({ ok: true });
   })
 );

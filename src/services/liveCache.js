@@ -105,7 +105,7 @@ function statusDetail(live) {
   return null;
 }
 
-async function attach(serverId) {
+async function attach(serverId, containerId = null) {
   if (entries.has(serverId)) return;
   const entry = {
     stats: null,
@@ -114,6 +114,7 @@ async function attach(serverId) {
     upConfirmed: false,
     stopStats: null,
     playerTimer: null,
+    containerId,
   };
   entries.set(serverId, entry);
 
@@ -237,11 +238,24 @@ async function sync() {
   if (syncing) return;
   syncing = true;
   try {
-    const rows = db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL');
+    const rows = db.all('SELECT id, status, container_id FROM servers WHERE deleted_at IS NULL');
+    const byId = new Map(rows.map((r) => [r.id, r]));
     const running = new Set(
       rows.filter((r) => ['running', 'starting', 'unhealthy'].includes(r.status)).map((r) => r.id)
     );
-    for (const id of running) if (!entries.has(id)) await attach(id);
+    for (const id of running) {
+      const row = byId.get(id);
+      const existing = entries.get(id);
+      // A recreate (settings change, upgrade, manual "Recreate") never leaves
+      // the running/starting/unhealthy family, so status alone can't detect
+      // it - without this check the entry never detaches/reattaches, and its
+      // stats stream stays bound to the OLD (now-removed) container forever,
+      // freezing the dashboard's CPU/mem/network graph at its last sample.
+      if (existing && existing.containerId && row.container_id && existing.containerId !== row.container_id) {
+        detach(id);
+      }
+      if (!entries.has(id)) await attach(id, row.container_id || null);
+    }
     for (const id of [...entries.keys()]) if (!running.has(id)) detach(id);
   } catch (err) {
     console.error('[liveCache]', err.message);

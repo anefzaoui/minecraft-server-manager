@@ -209,7 +209,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     mustServer(req);
     const backfill = await backfillFromLogs(req.params.id).catch(() => ({ inserted: 0 }));
-    const statResult = stats.ingestStats(req.params.id);
+    const statResult = await stats.ingestStats(req.params.id);
     res.json({ ok: true, events: backfill.inserted, ...statResult });
   })
 );
