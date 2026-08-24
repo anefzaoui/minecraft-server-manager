@@ -14,7 +14,18 @@ class SqliteSessionStore extends Store {
         db.run('DELETE FROM sessions WHERE sid = ?', sid);
         return cb(null, null);
       }
-      cb(null, JSON.parse(row.data_json));
+      const session = JSON.parse(row.data_json);
+      // JSON has no Date type, so cookie.expires comes back as a plain ISO
+      // string - but express-session's Cookie class requires a real Date
+      // instance (its maxAge getter, and the underlying `cookie` package's
+      // serialize(), both check `instanceof Date`; serialize() throws
+      // "option expires is invalid" otherwise). With rolling:true, that throw
+      // happens on the very next request after every reload from this store,
+      // breaking the cookie refresh that "remember me" depends on. Revive it.
+      if (session.cookie && typeof session.cookie.expires === 'string') {
+        session.cookie.expires = new Date(session.cookie.expires);
+      }
+      cb(null, session);
     } catch (err) {
       cb(err);
     }
