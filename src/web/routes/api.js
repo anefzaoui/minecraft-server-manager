@@ -526,6 +526,86 @@ router.post(
   })
 );
 
+// ---- Server type change (e.g. Paper -> Fabric): preview -> backup -> stop ->
+// apply -> recreate -> start -> monitor -> rollback. Mirrors the pack-upgrade
+// flow just above, for the same reason: this is just as capable of leaving a
+// server broken as a pack version change is, so it gets the same safety net. ----
+const typeChange = require('../../services/typeChange');
+
+const TYPE_CHANGE_STEP_LABELS = {
+  'backing-up': 'Creating pre-change backup',
+  stopping: 'Stopping server',
+  applying: 'Applying new server type',
+  recreating: 'Recreating container',
+  monitoring: 'Waiting for the server to come up',
+};
+
+// Warnings are computed and returned as a plain 409 (not inside a task) so the
+// client can show them in a real confirm dialog BEFORE anything happens -
+// force:true (after that confirmation) is what actually starts the task.
+router.post(
+  '/servers/:id/type',
+  asyncHandler((req, res, next) => {
+    const { type, force } = z
+      .object({
+        type: z.string().trim().max(40),
+        force: z.coerce.boolean().optional(),
+      })
+      .parse(req.body);
+    const server = requireServer(req.params.id);
+    const actor = req.user.username;
+    const { warnings } = typeChange.previewTypeChange(server.id, type);
+    if (warnings.length && !force) {
+      return res.status(409).json({ ok: false, error: warnings.join(' '), requiresForce: true, warnings });
+    }
+    const taskId = tasks.run(
+      `Switching ${server.display_name} to ${typeChange.typeLabel(type)}`,
+      { serverId: server.id, actor },
+      async (t) => {
+        try {
+          return await typeChange.changeType(server.id, type, {
+            actor,
+            onStep: (s) => t.step(TYPE_CHANGE_STEP_LABELS[s] || s),
+          });
+        } catch (err) {
+          if (err.rollbackAvailable) {
+            return { ok: false, error: err.message, rollbackAvailable: true };
+          }
+          throw err;
+        }
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// Long operation - returns {ok, taskId}. Without an explicit backupId the most
+// recent pre-change backup for this server is restored alongside the revert.
+router.post(
+  '/servers/:id/type/rollback',
+  asyncHandler((req, res, next) => {
+    const body = z.object({ backupId: z.string().trim().max(40).optional() }).parse(req.body);
+    const server = requireServer(req.params.id);
+    const actor = req.user.username;
+    const backupId =
+      body.backupId ||
+      db.get(
+        "SELECT id FROM backups WHERE server_id = ? AND reason = 'pre-update' ORDER BY created_at DESC LIMIT 1",
+        server.id
+      )?.id ||
+      null;
+    const taskId = tasks.run(
+      `Rolling back server type on ${server.display_name}`,
+      { serverId: server.id, actor },
+      async (t) => {
+        t.step(backupId ? 'Restoring pre-change backup & reverting type' : 'Reverting type');
+        return typeChange.rollbackTypeChange(server.id, { backupId: backupId || undefined, actor });
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
 // ---- Pack browser - search, details, installed pack mods, one-shot create ----
 const curseforgeApi = require('../../services/curseforgeApi');
 const modrinthApi = require('../../services/modrinthApi');

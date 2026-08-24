@@ -364,14 +364,20 @@ router.get(
 
       // Every catalog field configurable at creation, minus what's covered
       // elsewhere on this tab: identity/flavor/resources (their own cards
-      // above - flavor/version changes go through the Updates page, which
-      // handles the migration safely), players (live via whitelist/ops
+      // above - modpack version changes go through the Updates page, which
+      // handles that migration safely, and switching TYPE itself has its own
+      // dedicated card below since it needs warnings/backup/recreate that a
+      // plain env-field edit doesn't), players (live via whitelist/ops
       // files on the Players tab, no restart needed), and gameplay's
       // DIFFICULTY/PVP (live via World Controls) + MOTD (the field above) -
       // exposing those here too would just drift out of sync with the
       // RCON-set values. Same catalog + same field-level filter the wizard
       // itself uses, so nothing new is exposed beyond what's already safe there.
       const catalog = require('../../config/field-catalog');
+      const typeChange = require('../../services/typeChange');
+      context.currentType = row.type;
+      context.currentTypeLabel = typeChange.typeLabel(row.type);
+      context.typeChangeOptions = typeChange.allowedTargetTypes().filter((o) => o.value !== row.type);
       const EXCLUDED_SECTIONS = new Set(['identity', 'flavor', 'resources', 'players']);
       // Scoped to 'gameplay' specifically (not a global key blocklist) - a
       // future field in another section coincidentally named e.g. MOTD must

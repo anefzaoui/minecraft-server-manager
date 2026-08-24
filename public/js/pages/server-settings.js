@@ -364,8 +364,86 @@ function init(serverId) {
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+    if (!res.ok || data.ok === false) {
+      const err = new Error(data.error || `Request failed (${res.status})`);
+      if (data.requiresForce) err.requiresForce = true;
+      if (data.warnings) err.warnings = data.warnings;
+      throw err;
+    }
     return data;
+  }
+
+  // ------------------------------------------------------------ server type
+  // Safe flow, same shape as the pack-upgrade one: preview warnings (a plain
+  // 409, not a task, so they can be confirmed BEFORE anything happens) ->
+  // confirm -> backup -> stop -> apply -> recreate -> start -> monitor ->
+  // offer rollback on failure.
+  document.getElementById('st-type-change')?.addEventListener('click', async () => {
+    const select = document.getElementById('st-type-select');
+    const newType = select?.value;
+    if (!newType) return;
+    const label = select.selectedOptions[0]?.textContent || newType;
+
+    let taskId;
+    try {
+      taskId = (await postJson(`/api/servers/${serverId}/type`, { type: newType })).taskId;
+    } catch (err) {
+      if (!err.requiresForce) {
+        toast(err.message || 'Could not start type change', { kind: 'error', timeout: 9000 });
+        return;
+      }
+      const { confirmDialog } = await import('../lib/confirm.js');
+      const ok = await confirmDialog({
+        title: `Switch to ${label}?`,
+        message: (err.warnings || []).join(' ') || err.message,
+        detail: 'A backup is taken first, and the server is briefly offline during the swap.',
+        confirmLabel: 'Change type anyway',
+        danger: true,
+      });
+      if (!ok) return;
+      try {
+        taskId = (await postJson(`/api/servers/${serverId}/type`, { type: newType, force: true })).taskId;
+      } catch (err2) {
+        toast(err2.message || 'Could not start type change', { kind: 'error', timeout: 9000 });
+        return;
+      }
+    }
+
+    try {
+      const result = await runTask({ title: `Switching to ${label}`, start: async () => taskId });
+      if (result && result.ok === false) {
+        await offerTypeRollback(result.error);
+        return;
+      }
+      toast(`Server type changed: ${result.from} → ${result.to}.`);
+      setTimeout(() => location.reload(), 900);
+    } catch (err) {
+      if (err.dismissed) return; // progress hidden - the task tray takes over
+      toast(err.message || 'Type change failed', { kind: 'error', timeout: 12000 });
+    }
+  });
+
+  async function offerTypeRollback(errorMessage) {
+    const { confirmDialog } = await import('../lib/confirm.js');
+    const ok = await confirmDialog({
+      title: 'Type Change Failed - Roll Back?',
+      message: errorMessage || 'The server did not come up healthy after switching types.',
+      detail: 'Rollback restores the pre-change backup and reverts to the previous server type.',
+      confirmLabel: 'Roll back',
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      const result = await runTask({
+        title: 'Rolling Back Server Type',
+        start: async () => (await postJson(`/api/servers/${serverId}/type/rollback`, {})).taskId,
+      });
+      toast(`Rolled back to ${result && result.type ? result.type : 'the previous type'}.`);
+      setTimeout(() => location.reload(), 900);
+    } catch (err) {
+      if (err.dismissed) return; // progress hidden - the task tray takes over
+      toast(err.message || 'Rollback failed', { kind: 'error', timeout: 12000 });
+    }
   }
 
   document.getElementById('st-save')?.addEventListener('click', async (e) => {
