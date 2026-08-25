@@ -12,7 +12,9 @@ const serversService = require('../services/servers');
 const { activeLevelName } = require('../services/worlds');
 const { uuidToDashed } = require('../services/mojangProfiles');
 
-const RUNNING = new Set(['running', 'starting', 'unhealthy']);
+// 'stalled' is still a live container (see liveCache.js's sync()) - keep
+// snapshotting its stats instead of leaving a gap for the stall's duration.
+const RUNNING = new Set(['running', 'starting', 'unhealthy', 'stalled']);
 const STONE_BLOCKS = ['minecraft:stone', 'minecraft:cobblestone', 'minecraft:deepslate', 'minecraft:cobbled_deepslate'];
 const METRICS = new Set([
   'playtimeTicks',

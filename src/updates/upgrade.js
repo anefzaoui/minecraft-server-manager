@@ -105,7 +105,10 @@ async function upgradePack(
     }
 
     step('stopping');
-    const wasRunning = ['running', 'starting', 'unhealthy'].includes(server.status);
+    // 'stalled' is still a genuinely running container - it must be gracefully
+    // stopped too, or applyPack() below rewrites mod/pack files on disk while
+    // the still-live JVM may be concurrently reading/writing the same directory.
+    const wasRunning = ['running', 'starting', 'unhealthy', 'stalled'].includes(server.status);
     if (wasRunning) await serversService.stopServer(serverId, { actor });
 
     step('applying');

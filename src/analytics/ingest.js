@@ -10,7 +10,10 @@ const serversService = require('../services/servers');
 const { followLogs, fetchLogs } = require('../docker/logs');
 const { classify } = require('./logClassifier');
 
-const RUNNING = new Set(['running', 'starting', 'unhealthy']);
+// 'stalled' (starting far longer than expected, no 'Done (' yet) is still a
+// live container - keep its log tap attached so join/leave events don't go
+// unrecorded for the duration of the stall (see liveCache.js's sync()).
+const RUNNING = new Set(['running', 'starting', 'unhealthy', 'stalled']);
 const DEDUPE_WINDOW_MS = 5000; // paired lines (logged-in/joined, lost-connection/left)
 
 const taps = new Map(); // serverId -> { stop, buf }

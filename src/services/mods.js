@@ -444,7 +444,7 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
   // deleted from disk with nothing recorded to keep it excluded, and came
   // back the moment the pack next recreated. Mirror listContent()'s own
   // "pack" classification (row-less + pack server ⇒ pack-managed) instead.
-  const managedByPack = row ? row.managed_by === 'pack' : Boolean(server.pack) || isPackServer(server);
+  const managedByPack = row ? row.managed_by === 'pack' : isPackServer(server);
   if (managedByPack) throw httpError(409, 'Pack-managed content is excluded, not deleted - use Disable');
   const dirRel = locateContentDir(server, row, file);
   let freed = 0;

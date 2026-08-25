@@ -153,7 +153,7 @@ async function enforceStrictQuotas() {
   );
   for (const s of servers) {
     const used = sizeOf(`servers/${s.id}`);
-    if (used > s.disk_quota_bytes * 1.1 && ['running', 'starting', 'unhealthy'].includes(s.status)) {
+    if (used > s.disk_quota_bytes * 1.1 && ['running', 'starting', 'unhealthy', 'stalled'].includes(s.status)) {
       const { stopServer } = require('../services/servers');
       const { recordEvent } = require('../events');
       recordEvent({
