@@ -42,7 +42,7 @@
     "archiver": "^7.0.1",
     "bcryptjs": "^3.0.2",
     "croner": "^10.0.1",
-    "dockerode": "^4.0.5",
+    "dockerode": "^5.0.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-handlebars": "^9.0.1",
