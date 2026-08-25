@@ -24,7 +24,7 @@ const realBaseCache = new Map();
 function realBaseOf(base) {
   const cached = realBaseCache.get(base);
   if (cached !== undefined) return cached;
-  let real = null;
+  let real;
   try {
     real = fs.realpathSync.native(base);
   } catch {

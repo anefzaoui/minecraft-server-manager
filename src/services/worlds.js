@@ -329,7 +329,7 @@ async function listServerWorlds(serverId) {
   const level = activeLevelName(server);
   const props = readProps(serverId);
 
-  let entries = [];
+  let entries;
   try {
     entries = await fsp.readdir(base, { withFileTypes: true });
   } catch {

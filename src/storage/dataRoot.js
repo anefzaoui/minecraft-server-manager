@@ -29,7 +29,8 @@ function ensureDataRoot() {
     // stack trace at boot (e.g. DATA_DIR on a missing drive or a read-only path).
     throw new Error(
       `Could not create the data directory at ${config.dataDir}: ${err.message}. ` +
-        `Check that DATA_DIR points somewhere this user can write, then start the panel again.`
+        `Check that DATA_DIR points somewhere this user can write, then start the panel again.`,
+      { cause: err }
     );
   }
   cleanTmp();

@@ -168,7 +168,7 @@ async function resolveDependencies({ loader, mc, selection = [] }) {
     } catch {
       continue; // unresolvable id - skip quietly
     }
-    let vers = [];
+    let vers;
     try {
       vers = await versions({ platform: node.platform, ref: meta.ref, loader, mc });
     } catch {

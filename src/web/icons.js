@@ -15,7 +15,7 @@ const FALLBACK = 'circle-help';
 function load(name) {
   if (cache.has(name)) return cache.get(name);
   const file = path.join(ICON_DIR, `${name}.svg`);
-  let svg = null;
+  let svg;
   try {
     svg = fs.readFileSync(file, 'utf8');
   } catch {

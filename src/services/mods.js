@@ -75,7 +75,7 @@ const LOADER_CACHE_TTL_MS = 60 * 1000;
 function detectPackLoader(serverId) {
   const cached = loaderCache.get(serverId);
   if (cached && cached.expiresAt > Date.now()) return cached.loader;
-  let names = [];
+  let names;
   try {
     names = fs.readdirSync(dataPath('servers', serverId));
   } catch {
@@ -157,7 +157,7 @@ async function listContent(serverId) {
   // three dirs, not just the one matching this server's type.
   for (const kind of [primaryKind, 'datapack', 'resourcepack']) {
     const dirAbs = dataPath('servers', serverId, contentDir(server, kind));
-    let entries = [];
+    let entries;
     try {
       entries = await fsp.readdir(dirAbs, { withFileTypes: true });
     } catch {

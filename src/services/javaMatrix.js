@@ -22,7 +22,7 @@ const GTNH_JAVA_LADDER = [
 /**
  * @param {string} mcVersion 'LATEST' | 'SNAPSHOT' | '1.20.4' | '26w02a'…
  * @param {string} type      itzg TYPE (FORGE needs java8 below 1.18)
- * @param {object} options   { maxJavaVersion } - GTNH-specific cap
+ * @param {{maxJavaVersion?: number|null}} [options]  { maxJavaVersion } - GTNH-specific cap
  */
 function pickJavaTag(mcVersion, type = 'VANILLA', { maxJavaVersion = null } = {}) {
   // GTNH: the pinned pack version decides, not the 1.7.10 → java8 rule below.

@@ -237,7 +237,7 @@ async function vanillaJarCandidates(serverId) {
   const libDir = path.join(base, 'libraries', 'net', 'minecraft', 'server');
   const walk = async (dir, depth) => {
     if (depth > 3) return;
-    let entries = [];
+    let entries;
     try {
       entries = await fsp.readdir(dir, { withFileTypes: true });
     } catch {

@@ -285,5 +285,5 @@ for (const r of [router, serverWorlds]) {
   r.use(makeJsonErrorHandler('worlds', { fileTooLarge: 'That archive is too large (20 GB limit)' }));
 }
 
+router.serverWorlds = serverWorlds;
 module.exports = router;
-module.exports.serverWorlds = serverWorlds;

@@ -62,7 +62,8 @@ function resolveSessionSecret() {
   } catch (err) {
     throw new Error(
       `Could not write the panel secret to ${secretFile}: ${err.message}. ` +
-        `Check that DATA_DIR (${dataDir}) exists and is writable, or set SESSION_SECRET in your .env.`
+        `Check that DATA_DIR (${dataDir}) exists and is writable, or set SESSION_SECRET in your .env.`,
+      { cause: err }
     );
   }
   console.log(

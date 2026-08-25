@@ -181,7 +181,7 @@ function normalizeDimension(dim) {
 /** Every player with a playerdata file: [{uuid, name, lastModified}], newest first. */
 async function listPlayersWithData(serverId) {
   const dir = playerdataDir(serverId);
-  let entries = [];
+  let entries;
   try {
     entries = await fsp.readdir(dir, { withFileTypes: true });
   } catch {
@@ -256,7 +256,7 @@ async function searchAllServers(query, { limit = 500 } = {}) {
   const results = [];
   for (const server of require('./servers').listServers()) {
     if (results.length >= limit) break;
-    let hits = [];
+    let hits;
     try {
       hits = await searchItems(server.id, query, { limit: limit - results.length });
     } catch {
@@ -307,7 +307,7 @@ async function snapshot(serverId, uuid, reason = 'manual') {
 async function listSnapshots(serverId, uuid) {
   uuid = assertUuid(uuid);
   const dir = snapshotDir(serverId, uuid);
-  let entries = [];
+  let entries;
   try {
     entries = await fsp.readdir(dir, { withFileTypes: true });
   } catch {
@@ -395,7 +395,7 @@ function diffSnapshots(aFile, bFile) {
 /** Keep only the newest `keepPerPlayer` snapshots for every player of a server. */
 async function pruneSnapshots(serverId, keepPerPlayer = 50) {
   const base = dataPath('logs', serverId, 'inventories');
-  let uuids = [];
+  let uuids;
   try {
     uuids = (await fsp.readdir(base, { withFileTypes: true }))
       .filter((e) => e.isDirectory() && UUID_RE.test(e.name))
@@ -972,7 +972,7 @@ async function backupDat(file) {
   await fsp.copyFile(file, bak);
   const dir = path.dirname(file);
   const prefix = path.basename(file) + BAK_SUFFIX;
-  let names = [];
+  let names;
   try {
     names = await fsp.readdir(dir);
   } catch {

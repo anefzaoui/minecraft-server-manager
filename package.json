@@ -61,13 +61,13 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/cli": "^4.1.4",
-    "@types/node": "^22.10.0",
-    "eslint": "^9.39.5",
+    "@types/node": "^26.3.0",
+    "eslint": "^10.9.1",
     "globals": "^17.7.0",
     "prettier": "^3.4.2",
     "tailwindcss": "^4.1.4",
-    "typescript": "^5.7.2"
+    "typescript": "^7.0.2"
   }
 }

@@ -885,7 +885,7 @@ function collectConfigFiles(serverDir) {
   const rels = [];
   if (fs.existsSync(path.join(serverDir, 'server.properties'))) rels.push('server.properties');
   const walk = (abs, rel) => {
-    let entries = [];
+    let entries;
     try {
       entries = fs.readdirSync(abs, { withFileTypes: true });
     } catch {

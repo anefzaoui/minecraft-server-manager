@@ -256,7 +256,7 @@ function verifyTotpLogin(id, code) {
   }
 
   // Fall back to a backup code - single use, removed once matched.
-  let codes = [];
+  let codes;
   try {
     codes = JSON.parse(user.totp_backup_codes_json || '[]');
   } catch {

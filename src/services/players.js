@@ -179,7 +179,7 @@ async function resolveIdentity(serverId, name) {
   assertName(name);
   const local = localIdentity(serverId, name);
   if (local) return local;
-  let profile = null;
+  let profile;
   try {
     profile = await mojangProfiles.resolveProfile(name);
   } catch {
@@ -965,7 +965,7 @@ const DIM_TAGS = [
 async function fetchTagElements(serverId, prefix, tag) {
   const ids = [];
   let page = 1;
-  let totalPages = 1;
+  let totalPages;
   do {
     const out = cleanAnsiText(
       await execCapture(serverId, ['rcon-cli', prefix, 'tags', 'worldgen/biome', 'get', tag, String(page)])

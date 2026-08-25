@@ -378,7 +378,7 @@ function init() {
     let loader;
     let mcVersion;
     let loaderVersion = '';
-    let mods = [];
+    let mods;
     if (modsMode === 'auto') {
       if (!solverState.pick) {
         toast('Solve compatibility and press "Apply" first.', { kind: 'error' });

@@ -35,7 +35,7 @@ async function buildSetupChecks() {
   const maj = Number(process.versions.node.split('.')[0]);
   const nodeOk = maj >= 24;
 
-  let dataWritable = false;
+  let dataWritable;
   try {
     const probe = path.join(config.dataDir, `.wtest-${process.pid}`);
     fs.writeFileSync(probe, 'ok');

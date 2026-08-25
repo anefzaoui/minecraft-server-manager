@@ -205,7 +205,9 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       const loader =
         searchingDatapacks || ignoreVersion
           ? ''
-          : serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
+          : serverLoader ||
+            { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] ||
+            '';
       const kind = searchingDatapacks ? 'datapack' : isPlugin ? 'plugin' : 'mod';
       const params = new URLSearchParams({ q: query, kind });
       if (loader) params.set('loader', loader);

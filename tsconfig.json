@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "moduleResolution": "node",
     "lib": ["ES2023"],
     "allowJs": true,
     "checkJs": true,
