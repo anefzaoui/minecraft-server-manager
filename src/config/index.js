@@ -1,6 +1,8 @@
 'use strict';
 
-require('dotenv').config();
+// quiet: true - dotenv 17 prints an "injected env / tip: ..." banner to
+// stdout by default; this is a server process, not a CLI, so suppress it.
+require('dotenv').config({ quiet: true });
 
 const path = require('node:path');
 const fs = require('node:fs');
