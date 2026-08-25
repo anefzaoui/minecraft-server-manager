@@ -21,7 +21,7 @@ if (root) init(root.dataset.worldsServer, root.dataset.worldsServerName, root.da
 function init(serverId, serverName, serverStatus) {
   const base = `/api/servers/${serverId}/worlds`;
   const reload = () => setTimeout(() => location.reload(), 700);
-  const isRunning = ['running', 'starting', 'unhealthy'].includes(serverStatus);
+  const isRunning = ['running', 'starting', 'unhealthy', 'stalled'].includes(serverStatus);
 
   // ---- Header actions ----
   document.getElementById('worlds-extract')?.addEventListener('click', () => {

@@ -740,6 +740,17 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = false } = {}
 
 const deleteServer = guardOp('delete', deleteServerImpl);
 
+// A container that never prints 'Done (' has no other signal to fall back on
+// (no healthcheck, and a hang - as opposed to a crash - never fires Docker's
+// die/oom events either) - without a ceiling, the loop below just kept
+// re-writing 'starting' every poll forever, with nothing telling the user
+// anything was wrong. Past this many ms since last_started_at, flag it once
+// as 'stalled' instead. Generous on purpose: a big modpack's mod download +
+// world generation can legitimately run long, and the boot-phase detail chip
+// (liveCache's statusDetail) already shows real progress underneath this -
+// the ceiling only exists for the "no progress being shown at all" case.
+const STARTUP_STALL_MS = 10 * 60_000;
+
 /** Refresh cached status for all servers from Docker (called on boot + 60s poll). */
 async function refreshStatuses() {
   for (const server of listServers()) {
@@ -749,12 +760,33 @@ async function refreshStatuses() {
       // Healthcheck-less containers report 'running' from the moment the
       // process starts, long before the MC server accepts players. Keep the
       // panel's 'starting' until the log shows 'Done (' - but only spend a
-      // log fetch on servers stuck 'starting' for over 2 minutes.
-      if (server.status === 'starting' && info.exists && info.status === 'running' && info.health == null) {
+      // log fetch on servers stuck 'starting' for over 2 minutes. Re-check a
+      // server already flagged 'stalled' too, so it can still recover to
+      // 'running' once 'Done (' finally shows up.
+      if (
+        (server.status === 'starting' || server.status === 'stalled') &&
+        info.exists &&
+        info.status === 'running' &&
+        info.health == null
+      ) {
         const startedMs = Date.parse(String(server.last_started_at || '').replace(' ', 'T') + 'Z');
-        if (!Number.isFinite(startedMs) || Date.now() - startedMs > 2 * 60_000) {
+        const elapsedMs = Number.isFinite(startedMs) ? Date.now() - startedMs : Infinity;
+        if (elapsedMs > 2 * 60_000) {
           const tail = await fetchLogs(server.id, { tail: 50 }).catch(() => '');
-          status = /Done \(/.test(tail) ? 'running' : 'starting';
+          if (/Done \(/.test(tail)) {
+            status = 'running';
+          } else if (elapsedMs > STARTUP_STALL_MS) {
+            status = 'stalled';
+            if (server.status !== 'stalled') {
+              recordEvent({
+                serverId: server.id,
+                type: 'startup-stalled',
+                summary: `Still starting after ${Math.round(elapsedMs / 60_000)} minutes with no "Done" in the logs - check the console for what's blocking it`,
+              });
+            }
+          } else {
+            status = 'starting';
+          }
         } else {
           status = 'starting';
         }

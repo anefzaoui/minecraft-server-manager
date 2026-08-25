@@ -100,7 +100,16 @@ router.use(
   })
 );
 
-const STATUS_RANK = { running: 0, unhealthy: 1, starting: 2, updating: 3, crashed: 4, 'over-quota': 5, stopped: 6 };
+const STATUS_RANK = {
+  running: 0,
+  unhealthy: 1,
+  starting: 2,
+  stalled: 3,
+  updating: 4,
+  crashed: 5,
+  'over-quota': 6,
+  stopped: 7,
+};
 const DASH_SORTS = {
   status: (a, b) => (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9) || a.name.localeCompare(b.name),
   name: (a, b) => a.name.localeCompare(b.name),

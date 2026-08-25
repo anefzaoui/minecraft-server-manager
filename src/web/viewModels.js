@@ -54,7 +54,10 @@ async function serverVM(s, { withLive = true } = {}) {
     consoleLabel: s.console_label || '',
   };
 
-  if (withLive && (s.status === 'running' || s.status === 'starting' || s.status === 'unhealthy')) {
+  if (
+    withLive &&
+    (s.status === 'running' || s.status === 'starting' || s.status === 'unhealthy' || s.status === 'stalled')
+  ) {
     // Never block a page render on Docker: everything comes from the in-memory
     // live cache (fed by streaming stats + periodic rcon list).
     const liveCache = require('../services/liveCache');

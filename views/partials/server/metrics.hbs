@@ -4,7 +4,7 @@
   {{! Without this, starting/updating shows three blank grids with no explanation. }}
   <div class="notice mb-4">Server is {{server.status}} - charts begin streaming as soon as it is up.</div>
 {{/if}}
-<div class="grid gap-4 lg:grid-cols-2" data-metrics-server="{{server.id}}" data-metrics-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{else}}0{{/if}}" data-metrics-mem-limit="{{server.resources.containerMemoryMb}}" data-metrics-cpu-limit="{{server.resources.cpus}}">
+<div class="grid gap-4 lg:grid-cols-2" data-metrics-server="{{server.id}}" data-metrics-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy') (eq server.status 'stalled'))}}1{{else}}0{{/if}}" data-metrics-mem-limit="{{server.resources.containerMemoryMb}}" data-metrics-cpu-limit="{{server.resources.cpus}}">
   <div class="card p-4">
     <h3 class="mb-2 font-semibold">CPU <span class="text-xs font-normal text-ink-faint">vs limit</span></h3>
     <canvas data-chart="cpu" height="140"></canvas>

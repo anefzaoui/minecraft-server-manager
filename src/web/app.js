@@ -23,6 +23,7 @@ function markdown(text) {
 const STATUS_META = {
   running: { label: 'Running', color: 'grass', pulse: true },
   starting: { label: 'Starting', color: 'gold', pulse: true },
+  stalled: { label: 'Stalled', color: 'redstone', pulse: false },
   unhealthy: { label: 'Unhealthy', color: 'gold', pulse: true },
   updating: { label: 'Updating', color: 'diamond', pulse: true },
   stopped: { label: 'Stopped', color: 'stone', pulse: false },

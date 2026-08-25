@@ -37,7 +37,7 @@
       </div>
     </div>
     <div class="flex flex-wrap gap-2">
-      {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy'))}}
+      {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}}
         <button class="btn" data-server-action="restart" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'rotate-cw' 'size-4'}}} Restart</button>
         <button class="btn btn-danger" data-server-action="stop" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'square' 'size-4'}}} Stop</button>
         <button class="btn btn-ghost" data-server-action="kill" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Force kill - skips world save">{{{icon 'zap' 'size-4'}}}</button>

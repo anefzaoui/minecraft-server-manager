@@ -241,7 +241,11 @@ async function sync() {
     const rows = db.all('SELECT id, status, container_id FROM servers WHERE deleted_at IS NULL');
     const byId = new Map(rows.map((r) => [r.id, r]));
     const running = new Set(
-      rows.filter((r) => ['running', 'starting', 'unhealthy'].includes(r.status)).map((r) => r.id)
+      // 'stalled' (starting far longer than expected, no 'Done (' yet) is still
+      // a live container - keep its stats/players/phase taps attached so the
+      // status detail chip that's meant to help diagnose the stall doesn't
+      // itself go blank the moment it's flagged.
+      rows.filter((r) => ['running', 'starting', 'unhealthy', 'stalled'].includes(r.status)).map((r) => r.id)
     );
     for (const id of running) {
       const row = byId.get(id);
