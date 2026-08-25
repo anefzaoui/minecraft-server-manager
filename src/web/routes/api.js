@@ -1404,6 +1404,24 @@ router.get(
   })
 );
 
+// Mod/plugin/datapack platform icons, cached locally by library.cacheIcon()
+// under data/library/icons/mods/<libraryId>.<ext> so the UI never hotlinks
+// Modrinth/CurseForge CDNs. mods.js builds the <img src> from icon_rel_path.
+router.get(
+  '/icons/library/:file',
+  asyncHandler((req, res, next) => {
+    const file = z
+      .string()
+      .regex(/^lib_[\w-]+\.(png|svg|jpg|jpeg|webp|gif)$/, 'Invalid icon file')
+      .parse(req.params.file);
+    const abs = dataPath('library', 'icons', 'mods', file);
+    if (!fs.existsSync(abs)) throw Object.assign(new Error('Icon not found'), { status: 404 });
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.sendFile(abs);
+  })
+);
+
 // ---- Users (admin only) ----
 const authService = require('../../services/auth');
 const { requireRole } = require('../middleware/auth');

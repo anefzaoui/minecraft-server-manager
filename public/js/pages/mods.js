@@ -102,7 +102,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         mc
           ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
                <input type="checkbox" class="msm-check mt-0.5" id="mod-url-ignore-version">
-               <span>Install even if this build isn't listed as compatible with ${escAttr(mc)}. It may not work correctly - you accept the risk.</span>
+               <span>Install even if this build isn't listed as compatible with ${escAttr(mc)} or this server's loader. It may not work correctly - you accept the risk.</span>
              </label>`
           : ''
       }
@@ -162,7 +162,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         mc
           ? `<label class="mt-2 flex cursor-pointer items-start gap-2 text-sm">
                <input type="checkbox" class="msm-check mt-0.5" id="mr-any-version">
-               <span>Also show builds not listed as compatible with ${escAttr(mc)} - you accept the risk of installing one.</span>
+               <span>Also show builds not listed as compatible with ${escAttr(mc)} or this server's loader - you accept the risk of installing one.</span>
              </label>`
           : ''
       }
@@ -198,13 +198,15 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       results.innerHTML = '<p class="p-6 text-center text-sm text-ink-faint">Searching…</p>';
       const searchingDatapacks =
         kindSeg?.querySelector('[data-search-kind="datapack"]')?.getAttribute('aria-selected') === 'true';
+      const ignoreVersion = Boolean(anyVersion?.checked);
       // Datapacks aren't loader-specific - Modrinth's loader facet would just
       // filter every datapack result out (none carry a fabric/forge category).
-      const loader = searchingDatapacks
-        ? ''
-        : serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
+      // The override checkbox waives the loader match too, same as install does.
+      const loader =
+        searchingDatapacks || ignoreVersion
+          ? ''
+          : serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
       const kind = searchingDatapacks ? 'datapack' : isPlugin ? 'plugin' : 'mod';
-      const ignoreVersion = Boolean(anyVersion?.checked);
       const params = new URLSearchParams({ q: query, kind });
       if (loader) params.set('loader', loader);
       // Skip the mc facet entirely when overriding, so Modrinth's own filter
