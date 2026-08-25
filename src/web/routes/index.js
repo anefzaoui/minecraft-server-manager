@@ -241,7 +241,7 @@ router.get(
 );
 
 router.get(
-  '/servers/:id/:tab?',
+  '/servers/:id{/:tab}',
   asyncHandler(async (req, res, next) => {
     const row = serversService.getServer(req.params.id);
     if (!row) return next();
