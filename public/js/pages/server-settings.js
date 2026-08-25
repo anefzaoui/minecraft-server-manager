@@ -238,7 +238,7 @@ function init(serverId) {
     content.innerHTML = `
       <p class="text-xs text-ink-faint">Exports this server's setup as a reusable blueprint in the library.</p>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include config directories</label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed overlay files in the archive <span class="text-xs text-ink-faint">- bigger file, fully portable</span></label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed custom mod files in the archive <span class="text-xs text-ink-faint">- bigger file, fully portable</span></label>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">- can be large</span></label>`;
     openModal({
       title: 'Export as Blueprint',

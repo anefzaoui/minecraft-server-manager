@@ -320,7 +320,7 @@ function initPage() {
       const ok = await confirmDialog({
         title: `Upgrade ${packName}?`,
         message: `${serverName}: ${current} → ${latest}. Safe flow: pre-update backup → stop → re-pin → recreate → start → monitor, with one-click rollback if it fails.`,
-        detail: 'Custom overlay mods are preserved. The server is briefly offline during the swap.',
+        detail: 'Your custom mods are preserved. The server is briefly offline during the swap.',
         confirmLabel: 'Upgrade now',
       });
       if (!ok) return;

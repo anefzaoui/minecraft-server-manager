@@ -89,7 +89,7 @@ function showPreview(preview, importBody) {
       m.overlay.length
         ? `
       <div>
-        <div class="mb-1 text-xs font-medium text-ink-faint">Custom overlay (${m.overlay.length})</div>
+        <div class="mb-1 text-xs font-medium text-ink-faint">Custom mods (${m.overlay.length})</div>
         <ul class="max-h-48 space-y-1 overflow-y-auto rounded-md border border-line bg-raised p-2.5 text-xs">${overlayRows}</ul>
       </div>`
         : ''

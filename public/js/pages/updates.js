@@ -47,7 +47,7 @@ async function upgradePack(row, { serverId, serverName, subject, current, latest
   const ok = await confirmDialog({
     title: `Upgrade ${subject}?`,
     message: `${serverName}: ${current} → ${latest}. Safe flow: pre-update backup → stop → re-pin → recreate → start → monitor. If the server does not come up healthy you get one-click rollback.`,
-    detail: 'Custom overlay mods are preserved. The server is briefly offline during the swap.',
+    detail: 'Your custom mods are preserved. The server is briefly offline during the swap.',
     confirmLabel: 'Upgrade now',
   });
   if (!ok) return;

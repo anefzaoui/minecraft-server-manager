@@ -3,7 +3,7 @@
     {{#if mods.length}}
     <input class="input max-w-xs" placeholder="Search installed mods…" id="mods-filter">
     <select class="input w-auto" data-label="Filter by source" id="mods-source">
-      <option value="">All sources</option><option value="pack">Pack-managed</option><option value="overlay">Custom overlay</option>
+      <option value="">All sources</option><option value="pack">Pack-managed</option><option value="overlay">Custom</option>
     </select>
     {{/if}}
     <div class="ml-auto flex flex-wrap gap-2">
@@ -18,7 +18,7 @@
   {{#if server.pack}}
     <div class="mb-4 max-w-prose rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
       <b class="text-link">Pack-managed</b> mods are installed by {{server.pack.platform}} ({{server.pack.name}} @ {{server.pack.version}}).
-      Disabling one uses the image's exclude list and applies on next restart. <b class="text-ok">Custom overlay</b> mods are yours -
+      Disabling one uses the image's exclude list and applies on next restart. <b class="text-ok">Custom</b> mods are ones you added yourself -
       they live in the shared library, survive pack updates, and can be toggled instantly.
     </div>
   {{/if}}
@@ -51,7 +51,7 @@
               {{#if (eq source 'pack')}}
                 <span class="badge badge-info">pack</span>
               {{else if (eq source 'overlay')}}
-                <span class="badge badge-ok">overlay</span>
+                <span class="badge badge-ok">custom</span>
                 {{#if sharedWith}}<div class="mt-1 text-[11px] text-ink-faint">on {{sharedWith}} server{{#if (gt sharedWith 1)}}s{{/if}}</div>{{/if}}
               {{else}}
                 <span class="badge">file</span>
