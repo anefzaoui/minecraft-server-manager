@@ -4,11 +4,11 @@ import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
+import { escapeHtml } from '../lib/format.js';
 import {
   serverOptions,
   fmtBytes,
   postJSON,
-  escapeHtml,
   uploadWorldModal,
   extractWorldModal,
   installWorldModal,

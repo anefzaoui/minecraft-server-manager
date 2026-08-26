@@ -11,6 +11,7 @@ import { toast } from './toast.js';
 import { runTask } from './progress.js';
 import { withBusy } from './loading.js';
 import { glyphFor } from './itemGlyph.js';
+import { escapeHtml as esc } from './format.js';
 
 const PAGE = 100;
 const KINDS = [
@@ -18,13 +19,6 @@ const KINDS = [
   { value: 'item', label: 'Items' },
   { value: 'block', label: 'Blocks' },
 ];
-
-function esc(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}
 
 export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   const base = `/api/servers/${serverId}/items`;

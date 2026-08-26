@@ -20,6 +20,21 @@ window.CD = { toast, openModal, confirmDialog, setBusy, withBusy };
 // ---- Custom selects everywhere ----
 enhanceAll();
 
+// ---- Icon fallback: replaces per-image inline onerror="" attributes (which
+// script-src's CSP nonce doesn't cover) with one delegated listener. `error`
+// doesn't bubble, so this has to listen on the capture phase. ----
+document.addEventListener(
+  'error',
+  (e) => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement)) return;
+    const fallback = img.dataset.fallbackIcon;
+    if (!fallback || img.src === new URL(fallback, location.href).href) return;
+    img.src = fallback;
+  },
+  true
+);
+
 // ---- Timestamps: raw UTC DB strings → the panel's timezone + locale ----
 // Views render <span data-ts="…">raw</span> (absolute) or data-ts-ago
 // (relative); the raw value stays as the no-JS fallback and the hover title.
@@ -274,6 +289,9 @@ document.addEventListener('click', async (e) => {
 });
 
 // ---- Boot-phase hydration: keep status-detail chips live on any page ----
+// Also broadcasts each fetch as `msm:servers-live` so other page scripts
+// (e.g. the dashboard's card stats) can piggyback on this poll instead of
+// running their own redundant interval against the same endpoint.
 (() => {
   const els = () => document.querySelectorAll('[data-status-detail]');
   if (!els().length) return;
@@ -289,6 +307,7 @@ document.addEventListener('click', async (e) => {
           el.title = phase || ''; // truncated chips stay readable on hover
           el.classList.toggle('hidden', !phase);
         }
+        document.dispatchEvent(new CustomEvent('msm:servers-live', { detail: data }));
       }
     } catch {
       /* transient */

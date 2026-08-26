@@ -6,6 +6,7 @@
 // button (used for destructive actions like server deletion).
 
 import { openModal } from './modal.js';
+import { escapeHtml } from './format.js';
 
 export function confirmDialog({
   title = 'Are you sure?',
@@ -105,6 +106,3 @@ export function confirmDialog({
   });
 }
 
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-}

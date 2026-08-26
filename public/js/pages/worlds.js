@@ -5,7 +5,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { enhanceAll } from '../lib/select.js';
 import { setBusy } from '../lib/loading.js';
-import { fmtBytes } from '../lib/format.js';
+import { fmtBytes, escapeHtml } from '../lib/format.js';
 
 // ---------------------------------------------------------------------------
 // Shared helpers (imported by worlds-tab.js)
@@ -277,12 +277,6 @@ export async function installWithConfirm(url, body) {
   return res;
 }
 
-export function escapeHtml(s) {
-  return String(s ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Page wiring (global library page only)

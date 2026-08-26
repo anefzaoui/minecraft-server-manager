@@ -19,14 +19,17 @@ async function openEnrollModal(trigger) {
 
   const content = document.createElement('div');
   content.className = 'space-y-4';
+  // qrDataUrl/secret are server-generated (not attacker-controlled today), but
+  // they're set as DOM properties rather than interpolated into innerHTML so
+  // that stays true even if this endpoint's response shape ever changes.
   content.innerHTML = `
     <p class="text-sm text-ink-soft">Scan this with your authenticator app (Google Authenticator, Authy, 1Password, …), or enter the code manually.</p>
-    <div class="flex justify-center"><img src="${setup.qrDataUrl}" alt="2FA QR code" class="rounded-md border border-line" width="220" height="220"></div>
+    <div class="flex justify-center"><img alt="2FA QR code" class="rounded-md border border-line" width="220" height="220"></div>
     <div>
       <label class="label">Manual entry code</label>
       <div class="flex gap-2">
-        <input class="input flex-1 font-mono text-xs" id="tf-secret" value="${setup.secret}" readonly>
-        <button type="button" class="btn" data-copy="${setup.secret}">Copy</button>
+        <input class="input flex-1 font-mono text-xs" id="tf-secret" readonly>
+        <button type="button" class="btn" id="tf-secret-copy">Copy</button>
       </div>
     </div>
     <div>
@@ -37,6 +40,9 @@ async function openEnrollModal(trigger) {
       <label class="label" for="tf-confirm-password">Confirm your password</label>
       <input class="input" id="tf-confirm-password" type="password" autocomplete="current-password" placeholder="Your account password">
     </div>`;
+  content.querySelector('img').src = setup.qrDataUrl;
+  content.querySelector('#tf-secret').value = setup.secret;
+  content.querySelector('#tf-secret-copy').dataset.copy = setup.secret;
 
   openModal({
     title: 'Enable Two-Factor Authentication',

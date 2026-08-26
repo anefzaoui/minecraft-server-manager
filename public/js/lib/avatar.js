@@ -5,6 +5,7 @@
 
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
+import { escapeHtml } from './format.js';
 
 document.addEventListener('click', (e) => {
   if (!e.target.closest('[data-open-avatar-picker]')) return;
@@ -101,12 +102,6 @@ function finish() {
   setTimeout(() => location.reload(), 600);
 }
 
-function escapeHtml(s) {
-  return String(s ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}
 
 async function get(url) {
   try {

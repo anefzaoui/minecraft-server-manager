@@ -7,6 +7,7 @@ import { confirmDialog } from '../lib/confirm.js';
 import { enhanceAll } from '../lib/select.js';
 import { withBusy } from '../lib/loading.js';
 import { formatDateTime } from '../lib/datetime.js';
+import { escapeHtml } from '../lib/format.js';
 
 const table = document.getElementById('schedules-table'); // absent when the list is empty
 const dataEl = document.getElementById('msm-schedule-data');
@@ -242,9 +243,3 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   enhanceAll(content);
 }
 
-function escapeHtml(s) {
-  return String(s ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}

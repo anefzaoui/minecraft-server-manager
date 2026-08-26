@@ -7,6 +7,7 @@ import { attachMotdEditor, toSectionCodes } from '../lib/motd.js';
 import { setBusy } from '../lib/loading.js';
 import { initDockerSettings } from '../lib/dockerSettings.js';
 import { wireCatalogConflicts } from '../lib/catalogConflicts.js';
+import { escapeHtml } from '../lib/format.js';
 
 const root = document.querySelector('[data-settings-server]');
 if (root) init(root.dataset.settingsServer);
@@ -475,11 +476,4 @@ function init(serverId) {
       restore();
     }
   });
-}
-
-function escapeHtml(s) {
-  return String(s ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
 }

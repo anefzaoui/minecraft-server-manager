@@ -6,6 +6,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
+import { escapeHtml as esc } from '../lib/format.js';
 
 const root = document.querySelector('[data-commands-root]');
 if (root) init(root);
@@ -41,13 +42,6 @@ function init(root) {
 
   function fail(err) {
     toast(err.message || 'Something went wrong', { kind: 'error' });
-  }
-
-  function esc(s) {
-    return String(s ?? '').replace(
-      /[&<>"']/g,
-      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-    );
   }
 
   // "minecraft:snowy_plains" / "#minecraft:village" → "Snowy plains"

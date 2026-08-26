@@ -16,6 +16,7 @@ const { checkLoginAllowed, recordLoginFailure, clearLoginFailures } = require('.
 const { dataPath } = require('../../storage/pathGuard');
 const { AVATAR_PRESETS } = require('../../config/avatars');
 const authService = require('../../services/auth');
+const { matchesImageType } = require('../../utils/sniffImage');
 
 const router = express.Router();
 
@@ -165,6 +166,9 @@ router.post(
       const ext = AVATAR_EXTS[req.file.mimetype];
       if (!ext) {
         throw Object.assign(new Error('Avatars must be PNG, SVG or JPEG (max 512 KB)'), { status: 400 });
+      }
+      if (!(await matchesImageType(req.file.path, req.file.mimetype))) {
+        throw Object.assign(new Error("File contents don't match the declared image type"), { status: 400 });
       }
       const filename = `${req.user.id}${ext}`;
       const destDir = dataPath('library', 'icons', 'users');

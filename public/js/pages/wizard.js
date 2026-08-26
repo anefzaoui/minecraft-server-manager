@@ -15,6 +15,7 @@ import { showPackDetails, packIconHtml, formatDownloads } from './modpacks.js';
 import { attachMotdEditor, toSectionCodes } from '../lib/motd.js';
 import { initDockerSettings } from '../lib/dockerSettings.js';
 import { wireCatalogConflicts } from '../lib/catalogConflicts.js';
+import { escapeHtml } from '../lib/format.js';
 
 const root = document.getElementById('wizard');
 if (root) init();
@@ -636,19 +637,23 @@ function initModBrowser() {
     }
   }
 
+  let searchSeq = 0; // a slow earlier response must not overwrite a newer one
   async function search() {
     const term = q.value.trim();
     if (!term) return;
+    const seq = ++searchSeq;
     resultsEl.classList.remove('hidden');
     resultsEl.innerHTML = '<div class="p-3 text-center text-sm text-ink-faint">Searching…</div>';
     try {
       const url = `/api/mods/search?q=${encodeURIComponent(term)}&platform=${platform}&loader=${encodeURIComponent(loader)}&mc=${encodeURIComponent(mc())}`;
       const res = await fetch(url);
       const data = await res.json();
+      if (seq !== searchSeq) return;
       if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
       lastResults = data.results;
       renderResults();
     } catch (err) {
+      if (seq !== searchSeq) return;
       resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-danger">${escapeHtml(err.message)}</div>`;
     }
   }
@@ -948,6 +953,7 @@ function initPackPicker() {
     timer = setTimeout(search, 350);
   });
 
+  let searchSeq = 0; // a slow earlier response must not overwrite a newer one
   async function search() {
     const term = q.value.trim();
     if (!term) return;
@@ -957,15 +963,18 @@ function initPackPicker() {
       platform = 'modrinth';
       syncChips();
     }
+    const seq = ++searchSeq;
     resultsEl.classList.remove('hidden');
     resultsEl.innerHTML = '<div class="p-3 text-center text-sm text-ink-faint">Searching…</div>';
     try {
       const res = await fetch(`/api/packs/search?q=${encodeURIComponent(term)}&platform=${platform}`);
       const data = await res.json();
+      if (seq !== searchSeq) return;
       if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
       lastResults = data.results;
       renderResults();
     } catch (err) {
+      if (seq !== searchSeq) return;
       resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' - <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
     }
   }
@@ -1405,12 +1414,6 @@ function capitalize(s) {
   return typeof s === 'string' && s ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}
 
 // Tile/swatch pickers: selection lives in aria-pressed - the .tile/.swatch CSS
 // carries the look, so no class juggling (which used to strip the hover

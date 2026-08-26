@@ -24,6 +24,7 @@ const { statsOnce } = require('../../docker/stats');
 const dockerNetworks = require('../../docker/networks');
 const dockerSpec = require('../../services/dockerSpec');
 const { dockerOverridesSchema, requireAdminForOverrides } = require('./dockerOverridesSchema');
+const { matchesImageType } = require('../../utils/sniffImage');
 
 const router = express.Router();
 
@@ -971,6 +972,7 @@ router.get(
 
 router.delete(
   '/backups/:backupId',
+  requireRoleKeys('admin', 'operator'),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await backups.deleteBackup(req.params.backupId, { actor: req.user.username })) });
   })
@@ -1193,6 +1195,7 @@ router.post(
 
 router.delete(
   '/servers/:id/mods/:file',
+  requireRoleKeys('admin', 'operator'),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await mods.removeContent(req.params.id, req.params.file, { actor: req.user.username })) });
   })
@@ -1342,6 +1345,9 @@ router.post('/servers/:id/icon', iconUpload.single('icon'), async (req, res, nex
     const ext = ICON_EXTS[req.file.mimetype];
     if (!ext) {
       throw Object.assign(new Error('Icons must be PNG, SVG or JPEG (max 512 KB)'), { status: 400 });
+    }
+    if (!(await matchesImageType(req.file.path, req.file.mimetype))) {
+      throw Object.assign(new Error("File contents don't match the declared image type"), { status: 400 });
     }
     const filename = `${server.id}${ext}`;
     const destDir = dataPath('library', 'icons', 'custom');

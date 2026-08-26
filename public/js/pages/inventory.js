@@ -11,6 +11,7 @@ import { openItemBrowser } from '../lib/itemBrowser.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
 import { glyphFor } from '../lib/itemGlyph.js';
+import { escapeHtml as esc } from '../lib/format.js';
 
 const root = document.querySelector('[data-inventory-root]');
 if (root) init(root);
@@ -39,13 +40,6 @@ function init(root) {
 
   function fail(err) {
     toast(err.message || 'Something went wrong', { kind: 'error' });
-  }
-
-  function esc(s) {
-    return String(s).replace(
-      /[&<>"']/g,
-      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-    );
   }
 
   // ------------------------------------------------------------- formatting

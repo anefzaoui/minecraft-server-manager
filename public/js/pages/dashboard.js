@@ -51,9 +51,12 @@ function init() {
     }
   });
 
-  // ---- Live stats hydration every 10 s ----
+  // ---- Live stats hydration ----
+  // First paint fetches directly; after that we piggyback on app.js's shared
+  // /api/servers/live poll (msm:servers-live) instead of running our own
+  // interval, which used to double the request rate on this page.
   hydrate();
-  setInterval(hydrate, 10000);
+  document.addEventListener('msm:servers-live', (e) => applyLiveData(e.detail));
 }
 
 async function hydrateDocker() {
@@ -129,6 +132,10 @@ async function hydrate() {
   } catch {
     return;
   }
+  applyLiveData(data);
+}
+
+function applyLiveData(data) {
   if (!data || !data.ok) return;
   for (const [id, live] of Object.entries(data.servers || {})) {
     const card = grid.querySelector(`a[href="/servers/${id}"]`);

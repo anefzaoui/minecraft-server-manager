@@ -34,7 +34,7 @@
            data-pack-name="{{pack.name}}" data-current="{{pack.version}}" data-latest="{{pack.latest}}"
            {{#if pack.latestVersionId}}data-version-id="{{pack.latestVersionId}}"{{/if}}>
         <div class="flex items-center gap-3">
-          <img src="{{iconSrc this.icon}}" alt="" class="size-10 shrink-0 rounded-md" style="background: {{accent}}" onerror="this.src='/icons/servers/grass.svg'">
+          <img src="{{iconSrc this.icon}}" alt="" class="size-10 shrink-0 rounded-md" style="background: {{accent}}" data-fallback-icon="/icons/servers/grass.svg">
           <div class="min-w-0 flex-1">
             <div class="truncate font-semibold" title="{{pack.name}}">{{pack.name}}</div>
             <div class="text-xs text-ink-faint">{{platformName pack.platform}} · on <a href="/servers/{{id}}" class="text-link hover:underline">{{name}}</a></div>

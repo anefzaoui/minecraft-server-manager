@@ -11,7 +11,7 @@
       basis makes the wrap trigger correctly once both genuinely don't fit. }}
   <div class="texture-top flex flex-wrap items-start justify-between gap-4 p-4 sm:p-5">
     <div class="flex min-w-0 flex-auto items-center gap-4">
-      <img src="{{iconSrc server.icon}}" alt="" class="size-14 shrink-0 rounded-lg" style="background: {{server.accent}}" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'">
+      <img src="{{iconSrc server.icon}}" alt="" class="size-14 shrink-0 rounded-lg" style="background: {{server.accent}}" data-fallback-icon="/icons/servers/grass.svg">
 
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2">

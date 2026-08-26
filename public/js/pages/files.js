@@ -5,7 +5,7 @@ import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
-import { fmtBytes } from '../lib/format.js';
+import { fmtBytes, escapeHtml } from '../lib/format.js';
 
 const root = document.querySelector('[data-files-server], [data-files-global]');
 if (root) init(root);
@@ -250,11 +250,4 @@ function init(rootEl) {
       return null;
     }
   }
-}
-
-function escapeHtml(s) {
-  return String(s ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
 }

@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MSM">
   <link rel="stylesheet" href="/css/app.css">
-  <script>
+  <script nonce="{{cspNonce}}">
     try {
       var t = localStorage.getItem('msm-theme');
       if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';

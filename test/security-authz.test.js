@@ -67,6 +67,24 @@ test('mods delete rejects an encoded traversal in the :file param', async () => 
   assert.equal(r.status, 400);
 });
 
+test('viewer cannot delete backups (403); admin passes the gate', async () => {
+  const asViewer = await app.req('DELETE', '/api/backups/bk_anything', { cookie: viewerCookie });
+  assert.equal(asViewer.status, 403);
+
+  // deleteBackup() is idempotent for a missing id (200, freedBytes: 0) rather
+  // than 404 - this only needs to confirm the role gate was passed.
+  const asAdmin = await app.req('DELETE', '/api/backups/bk_anything', { cookie: adminCookie });
+  assert.equal(asAdmin.status, 200);
+});
+
+test('viewer cannot delete mods (403); admin passes the gate', async () => {
+  const asViewer = await app.req('DELETE', '/api/servers/srv_sec01/mods/some.jar', { cookie: viewerCookie });
+  assert.equal(asViewer.status, 403);
+
+  const asAdmin = await app.req('DELETE', '/api/servers/srv_sec01/mods/some.jar', { cookie: adminCookie });
+  assert.notEqual(asAdmin.status, 403); // gate passed (200 or a benign 404, but never forbidden)
+});
+
 test('advanced Docker overrides are admin-only; plain operator updates still work', async () => {
   const operatorCookie = await login('operator1', 'operatorpass123', 'operator');
   app.seedServer('srv_sec02');

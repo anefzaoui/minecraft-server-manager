@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
+import { escapeHtml as esc } from '../lib/format.js';
 
 const grid = document.querySelector('[data-blueprints-page]');
 if (grid) init();
@@ -224,9 +225,3 @@ function sourceLabel(entry) {
   return entry.filename ? 'embedded' : 'no source';
 }
 
-function esc(s) {
-  return String(s ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}

@@ -13,3 +13,12 @@ export function fmtBytes(bytes) {
   const value = n / 2 ** (10 * i);
   return `${value >= 100 || i === 0 ? Math.round(value) : value.toFixed(1)} ${units[i]}`;
 }
+
+// One HTML-escaper for the whole panel - a dozen-plus pages had drifted
+// copies, some missing the `?? ''` coercion (throws on null/undefined).
+export function escapeHtml(s) {
+  return String(s ?? '').replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+  );
+}

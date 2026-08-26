@@ -8,6 +8,7 @@
 // Options can carry data-desc="secondary line" and data-icon="/path.svg".
 
 import { openModal } from './modal.js';
+import { escapeHtml } from './format.js';
 
 const SEARCH_THRESHOLD = 6; // show the search box for lists this long or more
 
@@ -202,9 +203,3 @@ export function syncSelectTrigger(select) {
   if (btn && btn.classList.contains('msm-select')) syncTrigger(select, btn);
 }
 
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}

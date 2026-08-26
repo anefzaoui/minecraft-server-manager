@@ -27,7 +27,7 @@
           <span class="label">Icon</span>
           <div class="flex flex-wrap gap-1.5" id="st-icon-picker">
             {{#if (startsWith server.icon 'custom:')}}
-              <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="{{server.icon}}" data-tip="Current custom icon" aria-pressed="true"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" onerror="this.onerror=null;this.src='/icons/servers/grass.svg'"></button>
+              <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="{{server.icon}}" data-tip="Current custom icon" aria-pressed="true"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" data-fallback-icon="/icons/servers/grass.svg"></button>
             {{/if}}
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="grass" aria-pressed="{{eq server.icon 'grass'}}"><img src="/icons/servers/grass.svg" alt="Grass block" class="size-full rounded-sm"></button>
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="creeper" aria-pressed="{{eq server.icon 'creeper'}}"><img src="/icons/servers/creeper.svg" alt="Creeper" class="size-full rounded-sm"></button>
