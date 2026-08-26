@@ -127,10 +127,10 @@ function init(serverId, serverType, mcVersion, serverLoader) {
               progress.classList.add('hidden'); // failure keeps the modal open - no zombie meter
               return false;
             }
+            const note = overrideNote(res.installed);
             toast(
-              `Installed ${res.installed.name}${res.installed.version ? ` ${res.installed.version}` : ''}.` +
-                (res.installed.versionOverridden ? ` Not listed as compatible with ${mc} - installed anyway.` : ''),
-              res.installed.versionOverridden ? { kind: 'warn', timeout: 9000 } : undefined
+              `Installed ${res.installed.name}${res.installed.version ? ` ${res.installed.version}` : ''}.${note ? ` ${note}` : ''}`,
+              note ? { kind: 'warn', timeout: 9000 } : undefined
             );
             setTimeout(() => location.reload(), 700);
           },
@@ -139,6 +139,15 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     });
     modal.body.querySelector('#mod-url').focus();
   });
+
+  // Shared "installed despite a compatibility check being overridden" toast
+  // text - both Add by URL and the search results' Install button hit this.
+  function overrideNote(installed) {
+    const bits = [];
+    if (installed.versionOverridden) bits.push(`isn't listed as compatible with ${mc}`);
+    if (installed.loaderOverridden) bits.push("isn't built for this server's loader");
+    return bits.length ? `This build ${bits.join(' and ')} - installed anyway.` : '';
+  }
 
   // ---- Modrinth search (reused by the manual-download resolver) ----
   // allowDatapacks: shows a Mods/Datapacks toggle. Off for the manual-download
@@ -199,15 +208,12 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       const searchingDatapacks =
         kindSeg?.querySelector('[data-search-kind="datapack"]')?.getAttribute('aria-selected') === 'true';
       const ignoreVersion = Boolean(anyVersion?.checked);
+      const effectiveLoader =
+        serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
       // Datapacks aren't loader-specific - Modrinth's loader facet would just
       // filter every datapack result out (none carry a fabric/forge category).
       // The override checkbox waives the loader match too, same as install does.
-      const loader =
-        searchingDatapacks || ignoreVersion
-          ? ''
-          : serverLoader ||
-            { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] ||
-            '';
+      const loader = searchingDatapacks || ignoreVersion ? '' : effectiveLoader;
       const kind = searchingDatapacks ? 'datapack' : isPlugin ? 'plugin' : 'mod';
       const params = new URLSearchParams({ q: query, kind });
       if (loader) params.set('loader', loader);
@@ -236,9 +242,20 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           : '<p class="p-6 text-center text-sm text-ink-faint">No matches for this loader/version.</p>';
         return;
       }
+      // Loader-mismatch checking only makes sense for plain mod search - plugin
+      // search never filters by loader in the first place (Paper/Spigot/Purpur
+      // aren't cleanly separable by Modrinth category), and datapacks have no
+      // loader concept at all.
+      const checkingLoaderMismatch = ignoreVersion && !searchingDatapacks && !isPlugin && effectiveLoader;
       results.innerHTML = '';
       for (const hit of data.results) {
-        const notListed = ignoreVersion && mc && !(hit.gameVersions || []).includes(mc);
+        const versionMismatch = ignoreVersion && mc && !(hit.gameVersions || []).includes(mc);
+        const loaderMismatch = checkingLoaderMismatch && !(hit.categories || []).includes(effectiveLoader);
+        const notListed = versionMismatch || loaderMismatch;
+        const tipBits = [
+          versionMismatch ? `compatible with ${mc}` : null,
+          loaderMismatch ? "built for this server's loader" : null,
+        ].filter(Boolean);
         const row = document.createElement('div');
         row.className = 'flex items-center gap-3 rounded-md border border-line bg-raised p-2.5';
         row.innerHTML = `
@@ -246,7 +263,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1.5">
               <div class="truncate text-sm font-semibold"></div>
-              ${notListed ? `<span class="shrink-0 badge badge-warn" data-tip="Not listed as compatible with ${escAttr(mc)} - may not work correctly">not verified</span>` : ''}
+              ${notListed ? `<span class="shrink-0 badge badge-warn" data-tip="Not listed as ${escAttr(tipBits.join(' or '))} - may not work correctly">not verified</span>` : ''}
             </div>
             <div class="truncate text-xs text-ink-faint"></div>
           </div>
@@ -265,10 +282,10 @@ function init(serverId, serverType, mcVersion, serverLoader) {
             })
           );
           if (res2) {
+            const note = overrideNote(res2.installed);
             toast(
-              `Installed ${res2.installed.name}.` +
-                (res2.installed.versionOverridden ? ` Not listed as compatible with ${mc} - installed anyway.` : ''),
-              res2.installed.versionOverridden ? { kind: 'warn', timeout: 9000 } : undefined
+              `Installed ${res2.installed.name}.${note ? ` ${note}` : ''}`,
+              note ? { kind: 'warn', timeout: 9000 } : undefined
             );
             modal.close();
             if (onInstalled) onInstalled(res2);

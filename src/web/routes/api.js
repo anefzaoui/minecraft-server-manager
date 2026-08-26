@@ -1096,7 +1096,7 @@ router.post(
         url: z.string().trim().min(3).max(500),
         kind: z.enum(['mod', 'plugin', 'datapack', 'resourcepack']).optional(),
         // User explicitly accepted the risk of installing a build not listed
-        // as compatible with this server's exact MC version.
+        // as compatible with this server's exact MC version and/or loader.
         ignoreVersion: z.boolean().optional(),
       })
       .parse(req.body);
@@ -1112,6 +1112,7 @@ router.post(
         filename: result.filename,
         version: result.library.version,
         versionOverridden: result.versionOverridden,
+        loaderOverridden: result.loaderOverridden,
       },
     });
   })

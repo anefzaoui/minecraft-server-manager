@@ -358,24 +358,34 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     lib.version,
     lib.icon_url
   );
-  // meta.mcVersions is only set for modrinth/curseforge sources - a direct-URL
-  // install has nothing to compare against, so it's never flagged as overridden.
+  // meta.mcVersions/meta.loaders are only set for modrinth sources (curseforge
+  // has no meta.loaders at all) - a direct-URL install has nothing to compare
+  // against either way, so neither flag ever fires for one.
   const versionOverridden =
     ignoreVersion &&
     server.mc_version &&
     Array.isArray(meta.mcVersions) &&
     !meta.mcVersions.includes(server.mc_version);
+  // Only meaningful for plain mods: plugin loader categories are already
+  // known-unreliable (effectiveLoader is unconditionally undefined for
+  // plugins above), and datapacks/resourcepacks have no loader concept.
+  const loaderOverridden =
+    ignoreVersion && targetKind === 'mod' && loader && Array.isArray(meta.loaders) && !meta.loaders.includes(loader);
+  const overrideBits = [
+    versionOverridden ? `not listed for ${server.mc_version}` : null,
+    loaderOverridden ? `not built for ${loader}` : null,
+  ].filter(Boolean);
   recordEvent({
     serverId,
     actor,
     type: 'mod-installed',
     summary:
       `Custom ${targetKind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''}` +
-      (versionOverridden ? ` - not listed for ${server.mc_version}, installed anyway (version check overridden)` : ''),
-    details: { libraryId: lib.id, filename, versionOverridden },
+      (overrideBits.length ? ` - ${overrideBits.join(', ')}, installed anyway (compatibility check overridden)` : ''),
+    details: { libraryId: lib.id, filename, versionOverridden, loaderOverridden },
   });
   indexer.scan().catch(() => {});
-  return { library: lib, filename, versionOverridden };
+  return { library: lib, filename, versionOverridden, loaderOverridden };
 }
 
 /** Toggle content. Overlay: rename instantly. Pack: exclusion env + recreate flag. */
