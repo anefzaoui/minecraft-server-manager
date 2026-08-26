@@ -6,8 +6,8 @@ Node.js app with no build step beyond CSS, so the barrier to hacking on it is lo
 ## Getting set up
 
 ```bash
-npm install
-npm run dev        # starts the app with auto-restart + Tailwind CSS watch
+pnpm install
+pnpm run dev        # starts the app with auto-restart + Tailwind CSS watch
 ```
 
 Open http://localhost:25564. You need **Node.js 24+** (for the flagless built-in `node:sqlite`) and
@@ -21,15 +21,15 @@ that directory - it's rebuilt on boot.
 These are the exact gates CI runs - each works on a clean clone with no Docker or running app:
 
 ```bash
-npm run lint          # ESLint (errors, no warnings)
-npm run format:check  # Prettier
-npm run typecheck     # tsc --checkJs over the type-clean core
-npm test              # unit tests (node:test)
-npm run build         # CSS build
+pnpm run lint          # ESLint (errors, no warnings)
+pnpm run format:check  # Prettier
+pnpm run typecheck     # tsc --checkJs over the type-clean core
+pnpm test              # unit tests (node:test)
+pnpm run build         # CSS build
 ```
 
-`npm run format` fixes formatting. `npm test` is a real, fast unit suite (no Docker); `npm run
-test:smoke` is the separate live sweep against a running panel. While iterating on a change, `npm run
+`pnpm run format` fixes formatting. `pnpm test` is a real, fast unit suite (no Docker); `pnpm run
+test:smoke` is the separate live sweep against a running panel. While iterating on a change, `pnpm run
 test:watch` re-runs the suite on every save.
 
 Keep changes focused and match the surrounding style (Prettier enforces it). The code is **plain
@@ -38,7 +38,7 @@ discussion. Type safety comes from JSDoc + a `tsc --checkJs` gate: `types/global
 augmentations, and dynamic interop files (Docker/NBT/HTTP-JSON) carry a `// @ts-nocheck` header while
 type coverage is grown incrementally - new modules are checked by default, so keep them clean.
 
-`public/vendor/chart.umd.js` is a **vendored** copy of Chart.js (not an npm dependency) - update it by
+`public/vendor/chart.umd.js` is a **vendored** copy of Chart.js (not a package dependency) - update it by
 hand and note the version in the PR.
 
 ## How the code is organized

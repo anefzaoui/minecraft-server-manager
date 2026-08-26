@@ -1,7 +1,7 @@
 'use strict';
 
 // Apply pending DB migrations without booting the whole panel. Normally
-// migrations just run as a side effect of `npm start` - this is for ops
+// migrations just run as a side effect of `pnpm start` - this is for ops
 // scripts, container init, or inspecting/preparing a data dir standalone.
 //
 // Usage:

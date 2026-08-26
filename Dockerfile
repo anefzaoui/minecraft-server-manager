@@ -3,17 +3,19 @@
 # DATA_DIR_HOST set to the host path of the /data mount (see docker-compose.yml).
 
 # Build stage: full install (Tailwind lives in devDependencies), then compile
-# the CSS bundle. scripts/ must exist before npm ci - the postinstall hook runs
-# node scripts/postinstall.js, and MSM_SKIP_POSTINSTALL is honored inside that
-# file. The bundle is built explicitly after the full source copy.
+# the CSS bundle. scripts/ must exist before pnpm install - the postinstall hook
+# runs node scripts/postinstall.js, and MSM_SKIP_POSTINSTALL is honored inside
+# that file. The bundle is built explicitly after the full source copy.
 FROM node:24-alpine AS build
 WORKDIR /app
 ENV MSM_SKIP_POSTINSTALL=1
-COPY package.json package-lock.json ./
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY scripts ./scripts
-RUN npm ci
+RUN corepack install
+RUN pnpm install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # Runtime stage: production deps + the app, with the built CSS overlaid.
 FROM node:24-alpine
@@ -23,9 +25,11 @@ ENV NODE_ENV=production \
     DATA_DIR=/data \
     PANEL_HOST=0.0.0.0 \
     PANEL_PORT=25564
-COPY package.json package-lock.json ./
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY scripts ./scripts
-RUN npm ci --omit=dev
+RUN corepack install
+RUN pnpm install --frozen-lockfile --prod
 COPY src ./src
 COPY views ./views
 COPY --from=build /app/public ./public

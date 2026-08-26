@@ -11,7 +11,7 @@
 //   node scripts/seed-players.js --all [count]
 //
 // serverId defaults to the most recently created server (typically the one
-// you just made with `npm run seed:servers`). --all seeds every server that
+// you just made with `pnpm run seed:servers`). --all seeds every server that
 // doesn't already have a roster instead - servers that already have players
 // (real or previously seeded) are left untouched and reported, not
 // overwritten, since usercache.json is a full replace, not a merge. count
@@ -56,7 +56,7 @@ function reportRoster(target, roster) {
 async function seedAll(count) {
   const all = listServers();
   if (!all.length) {
-    console.error('No servers exist yet - run `npm run seed:servers` first.');
+    console.error('No servers exist yet - run `pnpm run seed:servers` first.');
     process.exit(1);
   }
   let seeded = 0;
@@ -94,7 +94,7 @@ async function main() {
       console.error(
         allServers.length
           ? `Available servers:\n${allServers.map((s) => `  ${s.id}  ${s.display_name}`).join('\n')}`
-          : 'No servers exist yet - run `npm run seed:servers` first.'
+          : 'No servers exist yet - run `pnpm run seed:servers` first.'
       );
       process.exit(1);
     }
@@ -102,7 +102,7 @@ async function main() {
     target = listServers()[0];
     if (!target) {
       console.error(
-        'No servers exist yet. Run `npm run seed:servers` first, or pass a server id:\n' +
+        'No servers exist yet. Run `pnpm run seed:servers` first, or pass a server id:\n' +
           '  node scripts/seed-players.js <serverId> [count]'
       );
       process.exit(1);

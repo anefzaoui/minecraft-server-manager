@@ -151,9 +151,9 @@ by host path).
 ```bash
 git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
 cd minecraft-server-manager
-npm install               # installs deps and builds the Tailwind CSS (postinstall)
+pnpm install               # installs deps and builds the Tailwind CSS (postinstall)
 cp .env.example .env      # optional - all values have sane defaults
-npm start                 # or: npm run dev (auto-restart + CSS watch)
+pnpm start                 # or: pnpm run dev (auto-restart + CSS watch)
 ```
 
 Open **http://localhost:25564**. By default the panel binds to **localhost only** (`127.0.0.1`), so it's
@@ -463,17 +463,17 @@ The field catalog in `src/config/` is the single source of truth for server sett
 
 ## Scripts
 
-| command              | what it does                                            |
-| -------------------- | ------------------------------------------------------- |
-| `npm run dev`        | app with auto-restart + Tailwind watch                  |
-| `npm start`          | production start                                        |
-| `npm run build`      | minified CSS build (also runs automatically on install) |
-| `npm run lint`       | ESLint over `src/`, `scripts/`, `public/js/`, `test/`   |
-| `npm run format`     | Prettier over the tree                                  |
-| `npm run typecheck`  | `tsc --checkJs` over the type-clean core                |
-| `npm test`           | unit tests (`node:test`); runs on a clean clone         |
-| `npm run test:watch` | unit tests, re-run on every save                        |
-| `npm run test:smoke` | live QA sweep against a running panel (needs Docker)    |
+| command               | what it does                                            |
+| --------------------- | ------------------------------------------------------- |
+| `pnpm run dev`        | app with auto-restart + Tailwind watch                  |
+| `pnpm start`          | production start                                        |
+| `pnpm run build`      | minified CSS build (also runs automatically on install) |
+| `pnpm run lint`       | ESLint over `src/`, `scripts/`, `public/js/`, `test/`   |
+| `pnpm run format`     | Prettier over the tree                                  |
+| `pnpm run typecheck`  | `tsc --checkJs` over the type-clean core                |
+| `pnpm test`           | unit tests (`node:test`); runs on a clean clone         |
+| `pnpm run test:watch` | unit tests, re-run on every save                        |
+| `pnpm run test:smoke` | live QA sweep against a running panel (needs Docker)    |
 
 ## Status & areas that need work
 
@@ -520,7 +520,7 @@ want to help, start here.
 - **General**: much of the god-mode surface is **online/RCON-first** with thinner offline paths;
   several version-specific assumptions (1.20.5 item components, 1.21.5 `equipment` layout) are
   confirmed only against a handful of versions and may drift; and there's no automated end-to-end
-  coverage of these live-server flows yet beyond the manual `npm run test:smoke` sweep.
+  coverage of these live-server flows yet beyond the manual `pnpm run test:smoke` sweep.
 
 ## Contributing
 

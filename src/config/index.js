@@ -36,7 +36,7 @@ function numFromEnv(name, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } =
  *   1. SESSION_SECRET from the environment (must be >= 16 chars).
  *   2. A previously generated secret at $DATA_DIR/.session-secret.
  *   3. A freshly generated strong secret, persisted for next boot.
- * This makes a fresh `npm start` secure with zero configuration, while still
+ * This makes a fresh `pnpm start` secure with zero configuration, while still
  * letting operators pin the value via .env (e.g. to share across replicas).
  */
 function resolveSessionSecret() {
