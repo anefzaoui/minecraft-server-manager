@@ -82,9 +82,40 @@ async function createContainer(spec) {
     ExposedPorts: exposed,
     Tty: false,
     OpenStdin: false,
+    Healthcheck: healthcheckSpec(),
     HostConfig: hostConfig,
   });
   return container.id;
+}
+
+/**
+ * Explicit container healthcheck. Without one, `docker inspect` reports a
+ * container as running the instant its process starts - long before the
+ * Minecraft server accepts players - which is why the panel otherwise has to
+ * scrape "Done (" out of the logs to tell those two states apart.
+ *
+ * `mc-health` is bundled in the itzg image and is the same probe its own
+ * Dockerfile uses: it knows the real game/RCON port and is auto-pause aware
+ * (reports healthy while the process is intentionally frozen), so it never
+ * wakes a paused server or false-flags one.
+ *
+ * StartPeriod is deliberately long (2h): a large modpack's first boot
+ * (server-pack download + world generation) can legitimately run 30-60 min,
+ * and while the start period is active a failing probe keeps health at
+ * `starting`, never `unhealthy`. The panel's own STARTUP_STALL_MS ceiling
+ * (services/servers.js) is what surfaces a boot that has genuinely wedged.
+ * Once the server is up, a probe that then starts failing for Retries in a row
+ * flips it to `unhealthy` - a "running process, dead server" signal the panel
+ * previously had no way to detect.
+ */
+function healthcheckSpec() {
+  return {
+    Test: ['CMD-SHELL', 'mc-health'],
+    Interval: 30 * 1e9,
+    Timeout: 10 * 1e9,
+    Retries: 3,
+    StartPeriod: 2 * 3600 * 1e9,
+  };
 }
 
 /**
