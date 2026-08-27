@@ -30,6 +30,7 @@ test('config exposes validated defaults', () => {
   assert.equal(config.mcImageRepo, 'itzg/minecraft-server');
   assert.equal(config.trustProxy, false);
   assert.equal(config.cookieSecure, false);
+  assert.equal(config.cookieSameSite, 'lax');
   assert.ok(config.defaults.heapMb >= 1024 && config.defaults.heapMb <= 8192);
   assert.ok(config.defaults.containerMemoryMb >= config.defaults.heapMb);
   assert.equal(config.defaults.diskQuotaGb, 25);
@@ -82,6 +83,36 @@ test('mapProxyHost switches to host.docker.internal once DATA_DIR_HOST is set (c
 test('MAP_PROXY_HOST always wins, containerized or not', () => {
   assert.equal(loadMapProxyHost({ MAP_PROXY_HOST: '10.0.0.5' }), '10.0.0.5');
   assert.equal(loadMapProxyHost({ DATA_DIR_HOST: '/opt/msm/data', MAP_PROXY_HOST: '10.0.0.5' }), '10.0.0.5');
+});
+
+test('COOKIE_SAMESITE resolves lax/strict/none, defaulting to lax', () => {
+  const read = (extraEnv) => {
+    const res = spawnSync(process.execPath, ['-e', "process.stdout.write(require('./src/config').cookieSameSite)"], {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        DATA_DIR: process.env.DATA_DIR,
+        SESSION_SECRET: 'valid-session-secret-abcdef123456',
+        PANEL_PORT: '',
+        COOKIE_SECURE: '',
+        COOKIE_SAMESITE: '',
+        ...extraEnv,
+      },
+      encoding: 'utf8',
+    });
+    assert.equal(res.status, 0, res.stderr);
+    return res.stdout;
+  };
+  assert.equal(read({}), 'lax');
+  assert.equal(read({ COOKIE_SAMESITE: 'Strict' }), 'strict');
+  assert.equal(read({ COOKIE_SAMESITE: 'bogus' }), 'lax');
+  assert.equal(read({ COOKIE_SAMESITE: 'none', COOKIE_SECURE: 'true' }), 'none');
+});
+
+test('COOKIE_SAMESITE=none without a secure cookie fails fast', () => {
+  const res = loadConfig({ COOKIE_SAMESITE: 'none', COOKIE_SECURE: '' });
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /COOKIE_SAMESITE=none/);
 });
 
 test('TRUST_PROXY / COOKIE_SECURE resolve to usable values', () => {

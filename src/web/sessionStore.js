@@ -5,6 +5,13 @@
 const { Store } = require('express-session');
 const db = require('../db');
 
+// Server-side TTL for a row whose cookie carries no expiry of its own - i.e. the
+// "don't remember me" case, a pure browser-session cookie. rolling:true rewrites
+// this on every authenticated request, so an active tab is never pruned
+// mid-session; the row is only reclaimed after ~a day of inactivity (vs. the
+// week it used to linger).
+const SESSION_FALLBACK_MS = 24 * 3600 * 1000;
+
 class SqliteSessionStore extends Store {
   get(sid, cb) {
     try {
@@ -36,7 +43,7 @@ class SqliteSessionStore extends Store {
       const expires =
         session.cookie && session.cookie.expires
           ? new Date(session.cookie.expires).toISOString()
-          : new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+          : new Date(Date.now() + SESSION_FALLBACK_MS).toISOString();
       // Persisted alongside data_json (which also carries userId) so a
       // credential/2FA change can revoke every OTHER session for that user
       // without deserializing every row in the table - see auth.js

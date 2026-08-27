@@ -74,7 +74,7 @@ function originGuard(req, res, next) {
   let originHost;
   try {
     const rawOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : null);
-    if (!rawOrigin) return next(); // same-origin fetches may omit both; SameSite covers browsers
+    if (!rawOrigin) return next(); // non-browser clients (API-key scripts, curl) omit both; SameSite covers browsers
     originHost = new URL(rawOrigin).host;
   } catch {
     // A malformed Origin/Referer on a state-changing request is not trustworthy.

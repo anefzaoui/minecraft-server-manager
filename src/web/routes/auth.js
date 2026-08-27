@@ -20,8 +20,17 @@ const router = express.Router();
 // gone the moment the browser closes.
 const REMEMBER_MAX_AGE_MS = 30 * 24 * 3600 * 1000;
 function applyRememberCookie(req, remember) {
-  if (remember) req.session.cookie.maxAge = REMEMBER_MAX_AGE_MS;
-  else req.session.cookie.expires = false;
+  if (remember) {
+    req.session.cookie.maxAge = REMEMBER_MAX_AGE_MS;
+    // rolling:true calls resetMaxAge() on every request, which copies
+    // originalMaxAge back onto maxAge. Set it explicitly so the 30-day window is
+    // preserved rather than silently reset to the 7-day session-middleware
+    // default on the next request.
+    req.session.cookie.originalMaxAge = REMEMBER_MAX_AGE_MS;
+  } else {
+    req.session.cookie.expires = false;
+    req.session.cookie.originalMaxAge = null; // pure browser-session cookie, no rolling extension
+  }
 }
 
 /**
@@ -222,8 +231,17 @@ router.post('/login/2fa', (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  const name = req.user ? req.user.username : 'unknown';
+  // This route is mounted before requireAuth, so req.user is never populated
+  // here - resolve the name from the session's own userId instead.
+  const uid = req.session && req.session.userId;
+  const name = (uid && authService.getUser(uid)?.username) || 'unknown';
   req.session.destroy(() => {
+    res.clearCookie('msm.sid', {
+      path: '/',
+      httpOnly: true,
+      sameSite: config.cookieSameSite,
+      secure: config.cookieSecure === true,
+    });
     recordEvent({ actor: name, type: 'logout', summary: `${name} signed out` });
     res.redirect('/login');
   });

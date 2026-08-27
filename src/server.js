@@ -45,6 +45,13 @@ try {
           `first-run setup now, and only put it on the internet behind a reverse proxy with TLS.`
       );
     }
+    if (config.cookieSecure === false && (config.trustProxy !== false || config.isExposedBind)) {
+      console.warn(
+        `[security] The session cookie (including the 30-day "remember me" cookie) is being sent ` +
+          `without the Secure flag while the panel looks proxied/exposed. If you serve it over HTTPS, ` +
+          `set COOKIE_SECURE=auto with TRUST_PROXY (or COOKIE_SECURE=true).`
+      );
+    }
     installRuntimeGuards();
     startBackgroundServices(httpServer);
   });

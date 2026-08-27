@@ -13,6 +13,13 @@ const { AVATAR_PRESETS } = require('../config/avatars');
 
 const AVATAR_PRESET_KEYS = new Set(AVATAR_PRESETS.map((p) => p.key));
 
+// A real cost-11 bcrypt hash (of a throwaway string), compared against when the
+// username doesn't exist so the no-such-user path spends the same KDF time as a
+// wrong-password path - otherwise response timing leaks which usernames are
+// valid. Must stay a structurally valid hash; a malformed one makes
+// bcrypt.compareSync return immediately and defeats the purpose.
+const DUMMY_HASH = '$2b$11$wucCrrgG3m74Za/Ru1bUfOdSSuFU5RxA6GUOo9dGbc17Ym7vBt/lO';
+
 function firstRunNeeded() {
   return !db.get('SELECT 1 AS x FROM users LIMIT 1');
 }
@@ -37,7 +44,7 @@ function createUser({ username, password, role = 'admin' }, { actor = 'system' }
 function verifyCredentials(username, password) {
   const user = db.get('SELECT * FROM users WHERE username = ?', username);
   if (!user) {
-    bcrypt.compareSync(password, '$2a$11$invalidsaltinvalidsaltinvalidsaltuFakeHash1234567890ab'); // constant-time-ish
+    bcrypt.compareSync(password, DUMMY_HASH); // equalize timing with the real-user path
     return null;
   }
   return bcrypt.compareSync(password, user.password_hash) ? publicUser(user) : null;

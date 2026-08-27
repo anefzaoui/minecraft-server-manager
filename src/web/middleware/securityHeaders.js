@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const config = require('../../config');
 
 // A small set of security response headers - the defense-in-depth a public,
 // self-hosted panel should ship by default. Kept as a hand-rolled middleware
@@ -43,6 +44,11 @@ function securityHeaders(req, res, next) {
   res.setHeader('Referrer-Policy', 'same-origin');
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
   res.setHeader('Content-Security-Policy', csp);
+  // Only assert HSTS when the panel is genuinely served over HTTPS - sending it
+  // on plain HTTP would make browsers refuse a later HTTP-only deployment.
+  if (config.cookieSecure === true || (config.cookieSecure === 'auto' && req.secure)) {
+    res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+  }
   next();
 }
 

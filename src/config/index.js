@@ -130,6 +130,22 @@ function resolveCookieSecure() {
 }
 
 /**
+ * SameSite attribute for the session cookie. Default 'lax' - the conventional
+ * choice for a session cookie: it still withholds the cookie from cross-site
+ * POST/PATCH/DELETE (every state-changing route here), so CSRF stays covered,
+ * but unlike 'strict' it IS sent on top-level navigations that originate from
+ * another site (a link from chat/email, a bookmark via a redirector, an
+ * SSO/reverse-proxy round-trip). 'strict' drops the cookie on those, so the
+ * user lands on /login every time and it looks like "remember me" is broken.
+ * 'none' is only for embedding the panel cross-site and requires Secure.
+ */
+function resolveCookieSameSite() {
+  const raw = (process.env.COOKIE_SAMESITE || '').trim().toLowerCase();
+  if (raw === 'strict' || raw === 'none') return raw;
+  return 'lax';
+}
+
+/**
  * Host-side location of the data directory, for when the panel itself runs in
  * a container. Bind mounts handed to the Docker daemon are resolved against the
  * HOST filesystem, so a containerized panel (which sees its data at DATA_DIR,
@@ -195,6 +211,7 @@ const config = {
   cfApiKeySeed: process.env.CF_API_KEY || '',
   trustProxy: resolveTrustProxy(),
   cookieSecure: resolveCookieSecure(),
+  cookieSameSite: resolveCookieSameSite(),
   mapProxyHost: resolveMapProxyHost(),
 
   // Docker image repository for Minecraft servers. Override for a private mirror
@@ -217,6 +234,14 @@ const config = {
 // on config.sessionSecret being set - no hardcoded dev fallback anywhere.
 if (!config.sessionSecret || config.sessionSecret.length < 16) {
   throw new Error('Failed to resolve a session secret.');
+}
+
+// Browsers silently reject `SameSite=None` unless the cookie is also `Secure`,
+// which would leave the panel with no working session cookie at all.
+if (config.cookieSameSite === 'none' && config.cookieSecure === false) {
+  throw new Error(
+    'COOKIE_SAMESITE=none requires a secure cookie - also set COOKIE_SECURE=true (or COOKIE_SECURE=auto with TRUST_PROXY).'
+  );
 }
 
 module.exports = config;

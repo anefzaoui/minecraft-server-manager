@@ -178,7 +178,10 @@ function createApp() {
     rolling: true,
     cookie: {
       httpOnly: true,
-      sameSite: 'strict',
+      // 'lax' by default (see config.resolveCookieSameSite) - 'strict' withholds
+      // the cookie on cross-site top-level navigations, which reads as "remember
+      // me is broken". Override with COOKIE_SAMESITE.
+      sameSite: config.cookieSameSite,
       maxAge: 7 * 24 * 3600 * 1000,
       // Default false (plain-HTTP localhost/LAN). Set COOKIE_SECURE=true (or 'auto'
       // with TRUST_PROXY set) when serving over HTTPS behind a TLS proxy.
