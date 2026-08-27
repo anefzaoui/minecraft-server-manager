@@ -119,7 +119,7 @@ function init(root) {
     // (delete, move) can spin the on-page cell while the request runs.
     if (at) cell.dataset.slotKey = `${at.container}:${at.slot}`;
     cell.className =
-      'relative grid size-10 place-items-center rounded border text-[10px] font-semibold select-none ' +
+      'relative grid size-9 sm:size-10 place-items-center rounded border text-[10px] font-semibold select-none ' +
       (editable
         ? 'cursor-pointer transition hover:ring-2 hover:ring-diamond-400/60 focus-visible:ring-2 focus-visible:ring-diamond-400 '
         : '');
@@ -454,6 +454,10 @@ function init(root) {
     const section = (label, container, count, itemsBySlot, offset = 0, labels = null) => {
       const box = document.createElement('div');
       box.innerHTML = `<div class="mb-1 text-[11px] uppercase tracking-wider text-ink-faint">${esc(label)}</div>`;
+      // Scroll the 9-wide grid inside the modal rather than blowing it past a
+      // phone's viewport width.
+      const scroller = document.createElement('div');
+      scroller.className = 'overflow-x-auto';
       const grid = document.createElement('div');
       grid.className = 'grid w-max grid-cols-9 gap-1';
       for (let i = 0; i < count; i++) {
@@ -468,7 +472,8 @@ function init(root) {
         if (isSource) cell.classList.add('ring-2', 'ring-gold-500');
         grid.appendChild(cell);
       }
-      box.appendChild(grid);
+      scroller.appendChild(grid);
+      box.appendChild(scroller);
       return box;
     };
 
@@ -533,7 +538,12 @@ function init(root) {
       );
       grid.appendChild(cell);
     }
-    content.appendChild(grid);
+    // The modal body only scrolls vertically - give the 9-wide grid its own
+    // horizontal scroller so it can't widen the modal past a phone screen.
+    const scroller = document.createElement('div');
+    scroller.className = 'overflow-x-auto';
+    scroller.appendChild(grid);
+    content.appendChild(scroller);
     content.insertAdjacentHTML(
       'beforeend',
       `<p class="text-xs text-ink-faint">${sub.items.filter((i) => i.id).length} stack(s)${editable ? ' - click one to edit it' : ''}. Deeper nested containers open from their own item menus after a reload.</p>`

@@ -48,7 +48,7 @@
         <tbody>
           {{#each storage.categories}}
             <tr>
-              <td><div class="font-medium">{{name}}</div><div class="font-mono text-xs text-ink-faint">{{path}}</div></td>
+              <td><div class="font-medium">{{name}}</div><div class="break-all font-mono text-xs text-ink-faint">{{path}}</div></td>
               <td class="w-40"><div class="meter"><div class="bg-diamond-400" style="width: {{pct size ../storage.totalUsed}}%"></div></div></td>
               <td class="w-24 text-right text-ink-faint">{{bytes size}}</td>
               <td class="w-10 text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open in the global file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
@@ -102,7 +102,7 @@
       <tbody>
         {{#each storage.largestFiles}}
           <tr>
-            <td class="font-mono text-xs">{{path}}</td>
+            <td class="break-all font-mono text-xs">{{path}}</td>
             <td class="w-24 text-right text-ink-faint">{{bytes size}}</td>
             <td class="w-10 text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open containing folder in the file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
           </tr>

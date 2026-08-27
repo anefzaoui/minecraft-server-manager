@@ -43,20 +43,25 @@
     <div class="mb-2 flex flex-wrap gap-1.5 text-xs" id="inv-meta"></div>
     <div class="mb-4 flex items-center gap-1.5 text-xs text-ink-faint" id="inv-mech"></div>
 
-    <div class="grid gap-6 lg:grid-cols-[auto_1fr]">
+    {{! minmax(0,auto): a bare `auto` track is sized off the w-max grid's
+        content and can push the whole grid past the viewport at lg. }}
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,auto)_1fr]">
       <div class="card p-4">
         <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'backpack' 'size-4'}}} Inventory</h3>
+        {{! The 9-wide slot grids are ~392px min - wider than a phone. Scroll
+            them inside the card instead of widening the page (same pattern as
+            every data table). }}
         <div class="mb-1 text-[11px] uppercase tracking-wider text-ink-faint">Main</div>
-        <div class="grid w-max grid-cols-9 gap-1" id="inv-grid-main"></div>
+        <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-main"></div></div>
         <div class="mb-1 mt-3 text-[11px] uppercase tracking-wider text-ink-faint">Hotbar</div>
-        <div class="grid w-max grid-cols-9 gap-1" id="inv-grid-hotbar"></div>
+        <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-hotbar"></div></div>
         <div class="mb-1 mt-3 text-[11px] uppercase tracking-wider text-ink-faint">Armor &amp; offhand</div>
-        <div class="grid w-max grid-cols-5 gap-1" id="inv-grid-armor"></div>
+        <div class="overflow-x-auto"><div class="grid w-max grid-cols-5 gap-1" id="inv-grid-armor"></div></div>
       </div>
 
       <div class="card h-max p-4">
         <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'box' 'size-4'}}} Ender Chest</h3>
-        <div class="grid w-max grid-cols-9 gap-1" id="inv-grid-ender"></div>
+        <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-ender"></div></div>
       </div>
     </div>
   </div>
