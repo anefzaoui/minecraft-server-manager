@@ -823,6 +823,94 @@ router.post(
   })
 );
 
+// Docker image update: the check already pulled the newer image under the
+// server's current tag, so this is just a normal recreate (stop → remove →
+// ensureImage [no-op, already local] → create → restart-if-was-running).
+// No pre-update backup: the bind-mounted data dir is untouched by an image swap.
+router.post(
+  '/servers/:id/image/upgrade',
+  asyncHandler((req, res, next) => {
+    const server = requireServer(req.params.id);
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Updating container image on ${server.display_name}`,
+      { serverId: server.id, actor },
+      async (t) => {
+        t.step('Recreating container with the newer image');
+        await servers.recreateServer(server.id, { actor });
+        return { ok: true };
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// Standalone (non-modpack) Minecraft version / loader-build update. envKey
+// comes from the Updates page row (computed server-side by the checker, which
+// already knows this server's loader) rather than re-derived here, so this
+// route only needs to validate it's one of the itzg build-pin vars it knows
+// how to write.
+const LOADER_BUILD_ENV_KEYS = [
+  'PAPER_BUILD',
+  'FORGE_VERSION',
+  'NEOFORGE_VERSION',
+  'FABRIC_LOADER_VERSION',
+  'QUILT_LOADER_VERSION',
+];
+
+router.post(
+  '/servers/:id/mcversion/upgrade',
+  asyncHandler((req, res, next) => {
+    const { targetVersion, targetLoaderBuild, envKey } = z
+      .object({
+        targetVersion: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,32}$/)
+          .optional(),
+        targetLoaderBuild: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,64}$/)
+          .optional(),
+        envKey: z.enum(LOADER_BUILD_ENV_KEYS).optional(),
+      })
+      .refine((v) => Boolean(v.targetVersion) || Boolean(v.targetLoaderBuild && v.envKey), {
+        message: 'Provide targetVersion, or targetLoaderBuild with envKey',
+      })
+      .parse(req.body);
+    const server = requireServer(req.params.id);
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Updating Minecraft version on ${server.display_name}`,
+      { serverId: server.id, actor },
+      async (t) => {
+        const versionChanging = targetVersion && targetVersion !== server.mc_version;
+        let backupId = null;
+        if (versionChanging) {
+          t.step('Creating pre-update backup');
+          const backup = await backups.createBackup(server.id, {
+            reason: 'pre-update',
+            actor,
+            note: `Before Minecraft ${server.mc_version} → ${targetVersion}`,
+            task: t,
+          });
+          backupId = backup.id;
+        }
+        t.step('Applying new version');
+        const changes = {};
+        if (versionChanging) changes.mcVersion = targetVersion;
+        if (targetLoaderBuild && envKey) changes.env = { ...server.env, [envKey]: targetLoaderBuild };
+        servers.updateServer(server.id, changes, { actor });
+        t.step('Recreating container');
+        await servers.recreateServer(server.id, { actor });
+        return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
 // ---- Schedules ----
 const scheduler = require('../../services/scheduler');
 

@@ -21,6 +21,7 @@ const ENV_KEY = {
   quilt: 'QUILT_LOADER_VERSION',
   neoforge: 'NEOFORGE_VERSION',
   forge: 'FORGE_VERSION',
+  paper: 'PAPER_BUILD',
 };
 
 /** itzg env var that pins this loader's build (null for loaders without one). */
@@ -102,12 +103,23 @@ async function forgeBuilds(mc) {
   return builds;
 }
 
+// Paper's build list is scoped to a single MC version, unlike the other
+// loaders' one-global-fetch-then-filter shape - cache key includes `mc`.
+async function paperBuilds(mc, { channel = 'default' } = {}) {
+  const data = await cachedJson(`loader:paper:${mc}`, `https://api.papermc.io/v2/projects/paper/versions/${mc}/builds`);
+  const builds = (data.builds || []).filter((b) => (b.channel || 'default') === channel).reverse(); // newest first
+  return builds.slice(0, MAX_BUILDS).map((b) => ({
+    version: String(b.build),
+    label: channel === 'default' ? String(b.build) : `${b.build} (${channel})`,
+  }));
+}
+
 /**
  * Build list for a loader (+ MC where the loader is MC-specific). Always starts
  * with the "Latest" no-pin option, then specific builds newest-first when the
  * registry is reachable. Never throws - a failed fetch yields the Latest option.
  */
-async function getBuilds(loader, mc) {
+async function getBuilds(loader, mc, { channel } = {}) {
   const key = String(loader).toLowerCase();
   let builds = [];
   try {
@@ -115,6 +127,7 @@ async function getBuilds(loader, mc) {
     else if (key === 'quilt') builds = await quiltBuilds();
     else if (key === 'neoforge') builds = await neoforgeBuilds(mc);
     else if (key === 'forge') builds = await forgeBuilds(mc);
+    else if (key === 'paper') builds = await paperBuilds(mc, { channel });
   } catch {
     builds = []; // best-effort - fall through to Latest-only
   }

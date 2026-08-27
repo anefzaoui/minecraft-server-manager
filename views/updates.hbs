@@ -13,7 +13,10 @@
       {{#each updates}}
         <tr data-update-row data-server-id="{{serverId}}" data-server-name="{{server}}"
             data-kind="{{kind}}" data-subject="{{subject}}" data-current="{{current}}" data-latest="{{latest}}"
-            {{#if versionId}}data-version-id="{{versionId}}"{{/if}} {{#if contentId}}data-content-id="{{contentId}}"{{/if}}>
+            {{#if versionId}}data-version-id="{{versionId}}"{{/if}} {{#if contentId}}data-content-id="{{contentId}}"{{/if}}
+            {{#if imageUpgrade}}data-image-upgrade="1"{{/if}}
+            {{#if targetVersion}}data-target-version="{{targetVersion}}"{{/if}}
+            {{#if targetLoaderBuild}}data-target-build="{{targetLoaderBuild}}" data-env-key="{{envKey}}"{{/if}}>
           <td class="whitespace-nowrap">{{#if serverId}}<a class="text-link hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
           <td><span class="badge">{{kind}}</span></td>
           {{! w-full + max-w-0 so long pack/mod names truncate instead of widening the table. }}

@@ -12,9 +12,35 @@ const packsService = require('../services/packs');
 const modrinth = require('../services/modrinthApi');
 const curseforge = require('../services/curseforgeApi');
 const modsService = require('../services/mods');
+const containers = require('../docker/containers');
+const images = require('../docker/images');
+const mojang = require('../services/mojang');
+const loaderVersions = require('../services/loaderVersions');
+
+const CONTENT_KIND_LABEL = {
+  mod: 'Mod (overlay)',
+  datapack: 'Datapack (overlay)',
+  resourcepack: 'Resourcepack (overlay)',
+  plugin: 'Plugin (overlay)',
+};
+
+// itzg env var that pins a build for a server NOT tracking latest - only these
+// are the panel's business (empty/unset means the image resolves latest itself
+// on every recreate, same as an unpinned modpack "latest" would - see checker.js
+// module comment).
+const LOADER_BUILD_ENV_KEY = {
+  fabric: 'FABRIC_LOADER_VERSION',
+  quilt: 'QUILT_LOADER_VERSION',
+  forge: 'FORGE_VERSION',
+  neoforge: 'NEOFORGE_VERSION',
+  paper: 'PAPER_BUILD',
+};
 
 async function checkAll({ actor = 'scheduler' } = {}) {
   const findings = [];
+  // Many servers often resolve to the same image ref (e.g. all java21) - pull
+  // and resolve each DISTINCT ref once per run rather than once per server.
+  const imageIdCache = new Map();
   for (const server of serversService.listServers()) {
     // Pack updates
     try {
@@ -91,6 +117,42 @@ async function checkAll({ actor = 'scheduler' } = {}) {
         /* skip this mod */
       }
     }
+
+    // Docker image updates - any server with a container, pack or standalone.
+    try {
+      const status = await containers.inspectStatus(server.id);
+      if (status.exists && status.imageId) {
+        const ref = serversService.resolveImage(server);
+        if (!imageIdCache.has(ref)) {
+          await images.pullImage(ref).catch(() => {});
+          imageIdCache.set(ref, await images.imageId(ref));
+        }
+        const latestId = imageIdCache.get(ref);
+        const isNew = Boolean(latestId) && latestId !== status.imageId;
+        upsertCheck('image', server.id, status.imageId, { isNew, latestId, latestName: ref, changelogUrl: null });
+        if (isNew)
+          findings.push({
+            server: server.display_name,
+            kind: 'image',
+            subject: ref,
+            current: shortId(status.imageId),
+            latest: shortId(latestId),
+          });
+      }
+    } catch {
+      /* docker unreachable - keep old cache */
+    }
+
+    // Standalone (non-pack) Minecraft version / loader build updates - only
+    // for an EXPLICIT pin (LATEST/SNAPSHOT and an empty loader-build env var
+    // already resolve to newest on every recreate; nothing to check there).
+    if (!packsService.getPack(server.id)) {
+      try {
+        await checkStandaloneVersion(server, findings);
+      } catch {
+        /* registry unreachable - keep old cache */
+      }
+    }
   }
 
   db.run(
@@ -107,6 +169,65 @@ async function checkAll({ actor = 'scheduler' } = {}) {
     details: { findings },
   });
   return findings;
+}
+
+function shortId(id) {
+  return id ? id.replace(/^sha256:/, '').slice(0, 12) : '?';
+}
+
+/** MC version + loader/Paper build checks for a server with no managed modpack. */
+async function checkStandaloneVersion(server, findings) {
+  if (server.mc_version && server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT') {
+    const manifest = await mojang.getVersionManifest();
+    const latestRelease = manifest.latest && manifest.latest.release;
+    if (latestRelease && latestRelease !== server.mc_version) {
+      const ids = manifest.versions.map((v) => v.id);
+      const curIdx = ids.indexOf(server.mc_version);
+      const latestIdx = ids.indexOf(latestRelease);
+      // Manifest is newest-first - only offer a version strictly newer than the
+      // pin. An unrecognized pin (curIdx === -1) can't be verified as older, so
+      // it's treated as "offer it" rather than silently never surfacing.
+      const isNew = curIdx === -1 || (latestIdx !== -1 && latestIdx < curIdx);
+      upsertCheck('mc_version', server.id, server.mc_version, {
+        isNew,
+        latestId: latestRelease,
+        latestName: latestRelease,
+        changelogUrl: null,
+      });
+      if (isNew)
+        findings.push({
+          server: server.display_name,
+          kind: 'mc_version',
+          subject: 'Minecraft version',
+          current: server.mc_version,
+          latest: latestRelease,
+        });
+    }
+  }
+
+  const loader = modsService.loaderOf(server);
+  const envKey = loader && LOADER_BUILD_ENV_KEY[loader];
+  const pinned = envKey && server.env[envKey];
+  if (pinned) {
+    const channel = loader === 'paper' ? server.env.PAPER_CHANNEL || 'default' : undefined;
+    const { builds } = await loaderVersions.getBuilds(loader, server.mc_version, { channel });
+    const newest = builds.find((b) => b.version); // skip the "Latest (recommended)" no-pin sentinel
+    const isNew = Boolean(newest) && newest.version !== pinned;
+    upsertCheck('loader_build', server.id, pinned, {
+      isNew,
+      latestId: newest ? newest.version : null,
+      latestName: newest ? newest.label : null,
+      changelogUrl: null,
+    });
+    if (isNew)
+      findings.push({
+        server: server.display_name,
+        kind: 'loader_build',
+        subject: `${loader} build`,
+        current: pinned,
+        latest: newest.version,
+      });
+  }
 }
 
 /**
@@ -171,13 +292,64 @@ function listOutdated() {
         rows.push({
           serverId: row.sid,
           server: row.display_name,
-          kind: 'Mod (overlay)',
+          kind: CONTENT_KIND_LABEL[row.kind] || 'Mod (overlay)',
           subject: row.name,
           current: c.current_version,
           latest: c.latest_name,
           contentId: row.id,
           changelogUrl: c.changelog_url || null,
         });
+      }
+    } else if (c.subject_type === 'image') {
+      const server = serversService.getServer(c.subject_id);
+      // No durable local field records "the image this container was built
+      // from" - a stale row simply self-corrects on the next checkAll() run
+      // (re-pull + re-compare), same eventual-consistency window as everything
+      // else here. Still-existing container is the only cheap guard available.
+      if (server && server.container_id) {
+        rows.push({
+          serverId: server.id,
+          server: server.display_name,
+          kind: 'Docker image',
+          subject: c.latest_name,
+          current: shortId(c.current_version),
+          latest: shortId(c.latest_version),
+          imageUpgrade: true,
+          changelogUrl: null,
+        });
+      }
+    } else if (c.subject_type === 'mc_version') {
+      const server = serversService.getServer(c.subject_id);
+      if (server && server.mc_version === c.current_version) {
+        rows.push({
+          serverId: server.id,
+          server: server.display_name,
+          kind: 'Minecraft version',
+          subject: 'Minecraft version',
+          current: c.current_version,
+          latest: c.latest_name,
+          targetVersion: c.latest_version,
+          changelogUrl: c.changelog_url || null,
+        });
+      }
+    } else if (c.subject_type === 'loader_build') {
+      const server = serversService.getServer(c.subject_id);
+      if (server) {
+        const loader = modsService.loaderOf(server);
+        const envKey = loader && LOADER_BUILD_ENV_KEY[loader];
+        if (envKey && server.env[envKey] === c.current_version) {
+          rows.push({
+            serverId: server.id,
+            server: server.display_name,
+            kind: 'Loader build',
+            subject: `${loader} build`,
+            current: c.current_version,
+            latest: c.latest_name || c.latest_version,
+            targetLoaderBuild: c.latest_version,
+            envKey,
+            changelogUrl: null,
+          });
+        }
       }
     }
   }
@@ -205,6 +377,18 @@ function countOutdated() {
          JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL
          WHERE c.subject_type = 'content' AND c.latest_version IS NOT NULL
            AND c.latest_name IS NOT NULL AND c.latest_name != sc.version)
+      +
+      (SELECT COUNT(*) FROM update_checks c
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL
+         WHERE c.subject_type = 'image' AND c.latest_version IS NOT NULL AND s.container_id IS NOT NULL)
+      +
+      (SELECT COUNT(*) FROM update_checks c
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL
+         WHERE c.subject_type = 'mc_version' AND c.latest_version IS NOT NULL AND s.mc_version = c.current_version)
+      +
+      (SELECT COUNT(*) FROM update_checks c
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL
+         WHERE c.subject_type = 'loader_build' AND c.latest_version IS NOT NULL)
       AS total
   `);
   return row ? row.total : 0;

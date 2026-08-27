@@ -189,6 +189,7 @@ async function inspectStatus(serverId) {
       finishedAt: s.FinishedAt,
       oomKilled: Boolean(s.OOMKilled),
       containerId: info.Id,
+      imageId: info.Image,
     };
   } catch (err) {
     if (err.statusCode === 404) return { exists: false, status: 'stopped' };
