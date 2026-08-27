@@ -389,6 +389,25 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     details: { type: server.type, mcVersion: server.mc_version, ports },
   });
 
+  // Every server gets a daily backup schedule out of the box - otherwise the
+  // only backups that ever happen automatically are the pre-update ones, and a
+  // server that never updates is never backed up. Staggered by a random hour
+  // (02:00-05:59) + minute so many servers created together don't all archive
+  // on the same cron tick and jointly hammer the disk. Best-effort: a schedule
+  // failure must never fail the create. The user can retime or delete it.
+  if (input.autoBackup !== false) {
+    try {
+      const h = 2 + Math.floor(Math.random() * 4);
+      const m = Math.floor(Math.random() * 60);
+      require('./scheduler').createSchedule(
+        { serverId: id, taskType: 'backup', cron: `${m} ${h} * * *`, enabled: true },
+        { actor }
+      );
+    } catch (err) {
+      console.warn(`[servers] could not seed default backup schedule for ${id}: ${err.message}`);
+    }
+  }
+
   if (start) {
     onProgress('Starting server…');
     await startServer(id, { actor });
@@ -445,7 +464,19 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
   // backup/world-export save lock means a stop that lands mid-backup waits
   // for the backup's save-off/copy/save-on section to finish instead of
   // racing its own save against the archiver's mid-read of the same files.
-  await withSaveLock(id, () => containers.stopContainer(id));
+  try {
+    await withSaveLock(id, () => containers.stopContainer(id));
+  } catch (err) {
+    // stopContainer only throws when the container is verifiably STILL running -
+    // never claim a graceful stop that didn't happen.
+    recordEvent({
+      serverId: id,
+      actor,
+      type: 'stop-failed',
+      summary: `Graceful stop did not take effect: ${err.message} - the container is still running. Try Force kill.`,
+    });
+    throw httpError(502, 'The server did not stop. Try Force kill, or check the Docker daemon.');
+  }
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
   const excerpt = await fetchLogs(id, { tail: 100 }).catch(() => '');
   recordEvent({
@@ -484,7 +515,13 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   await ensureOwnership(id);
   const info = await containers.inspectStatus(id);
   const wasRunning = info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
-  if (wasRunning) await containers.stopContainer(id);
+  // A stop failure here isn't fatal to a recreate - removeContainer({force}) below
+  // tears it down regardless - but log it so a chronically wedged daemon is visible.
+  if (wasRunning) {
+    await containers.stopContainer(id).catch((err) => {
+      console.warn(`[servers] recreate ${id}: graceful stop failed (${err.message}); forcing removal`);
+    });
+  }
   await containers.removeContainer(id);
 
   const image = resolveImage(server);
@@ -740,48 +777,76 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = false } = {}
 
 const deleteServer = guardOp('delete', deleteServerImpl);
 
-// A container that never prints 'Done (' has no other signal to fall back on
-// (no healthcheck, and a hang - as opposed to a crash - never fires Docker's
-// die/oom events either) - without a ceiling, the loop below just kept
-// re-writing 'starting' every poll forever, with nothing telling the user
-// anything was wrong. Past this many ms since last_started_at, flag it once
-// as 'stalled' instead. Generous on purpose: a big modpack's mod download +
+// A container's healthcheck stays in `starting` for the whole StartPeriod
+// (see docker/containers.js healthcheckSpec - 2h), and a hang - as opposed to
+// a crash - never fires Docker's die/oom events either. Without a ceiling the
+// loop below just kept re-writing 'starting' every poll, with nothing telling
+// the user anything was wrong. Past this many ms since last_started_at, flag it
+// once as 'stalled' instead. Generous on purpose: a big modpack's mod download +
 // world generation can legitimately run long, and the boot-phase detail chip
 // (liveCache's statusDetail) already shows real progress underneath this -
 // the ceiling only exists for the "no progress being shown at all" case.
 const STARTUP_STALL_MS = 10 * 60_000;
 
-/** Refresh cached status for all servers from Docker (called on boot + 60s poll). */
-async function refreshStatuses() {
+let refreshing = false;
+
+/**
+ * Refresh cached status for all servers from Docker.
+ * @param {object} [opts]
+ * @param {boolean} [opts.boot] first run after a panel (re)start - emits a
+ *        one-time event for any server that was running before but isn't now
+ *        and won't be auto-started, so a host reboot doesn't silently leave
+ *        servers down.
+ */
+async function refreshStatuses({ boot = false } = {}) {
+  // The 60s poll and an on-demand call can otherwise overlap and stack their
+  // per-server inspect + log-fetch round trips when the daemon is slow.
+  if (refreshing) return;
+  refreshing = true;
+  try {
+    await refreshStatusesInner({ boot });
+  } finally {
+    refreshing = false;
+  }
+}
+
+async function refreshStatusesInner({ boot }) {
   for (const server of listServers()) {
     try {
       const info = await containers.inspectStatus(server.id);
       let status = info.exists ? info.status : 'stopped';
-      // Healthcheck-less containers report 'running' from the moment the
-      // process starts, long before the MC server accepts players. Keep the
-      // panel's 'starting' until the log shows 'Done (' - but only spend a
-      // log fetch on servers stuck 'starting' for over 2 minutes. Re-check a
-      // server already flagged 'stalled' too, so it can still recover to
-      // 'running' once 'Done (' finally shows up.
-      if (
-        (server.status === 'starting' || server.status === 'stalled') &&
+      // Docker reports a container healthy only once `mc-health` passes, but it
+      // sits in `starting` for the whole (long) StartPeriod before then and a
+      // missing/lagging probe would leave it there. When the panel still thinks
+      // this server is starting, cross-check the log for 'Done (' and apply the
+      // stall ceiling. Also re-check a server already flagged 'stalled' so it
+      // can recover to 'running' once 'Done (' finally shows up.
+      const stillBooting =
         info.exists &&
-        info.status === 'running' &&
-        info.health == null
-      ) {
+        (info.status === 'starting' || (info.status === 'running' && info.health == null));
+      if ((server.status === 'starting' || server.status === 'stalled') && stillBooting) {
         const startedMs = Date.parse(String(server.last_started_at || '').replace(' ', 'T') + 'Z');
         const elapsedMs = Number.isFinite(startedMs) ? Date.now() - startedMs : Infinity;
         if (elapsedMs > 2 * 60_000) {
-          const tail = await fetchLogs(server.id, { tail: 50 }).catch(() => '');
+          const tail = await fetchLogs(server.id, { tail: 300 }).catch(() => '');
           if (/Done \(/.test(tail)) {
             status = 'running';
           } else if (elapsedMs > STARTUP_STALL_MS) {
             status = 'stalled';
             if (server.status !== 'stalled') {
+              // Run the same fatal-error matcher the crash path uses - a hung
+              // boot is often a config error (EULA, wrong Java, port clash)
+              // that will never resolve itself, and the diagnosis says what to fix.
+              const { diagnoseFatal } = require('../docker/watcher');
+              const diag = diagnoseFatal(tail);
               recordEvent({
                 serverId: server.id,
                 type: 'startup-stalled',
-                summary: `Still starting after ${Math.round(elapsedMs / 60_000)} minutes with no "Done" in the logs - check the console for what's blocking it`,
+                summary: diag
+                  ? `Startup stalled after ${Math.round(elapsedMs / 60_000)} min: ${diag.summary}`
+                  : `Still starting after ${Math.round(elapsedMs / 60_000)} minutes with no "Done" in the logs - check the console for what's blocking it`,
+                details: { elapsedMs, diagnosis: diag ? diag.key : null },
+                logExcerpt: tail || null,
               });
             }
           } else {
@@ -791,6 +856,25 @@ async function refreshStatuses() {
           status = 'starting';
         }
       }
+
+      // Host reboot / crash while the panel was down: the DB still says this
+      // server was up, but its container isn't running now and nothing will
+      // bring it back (auto_start is handled by the boot sequence, auto_restart
+      // by the crash reconcile there). Say so once instead of silently flipping
+      // the row to 'stopped'.
+      if (
+        boot &&
+        !server.auto_start &&
+        ['running', 'starting', 'unhealthy', 'stalled'].includes(server.status) &&
+        ['stopped', 'crashed'].includes(status)
+      ) {
+        recordEvent({
+          serverId: server.id,
+          type: 'offline-after-restart',
+          summary: `Server was ${server.status} before the panel restarted and is now ${status} - it was not auto-started. Start it from the panel when ready.`,
+        });
+      }
+
       if (status !== server.status) db.run('UPDATE servers SET status = ? WHERE id = ?', status, server.id);
     } catch {
       /* daemon offline - leave cached */

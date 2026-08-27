@@ -61,6 +61,7 @@ const discordSchema = z.object({
       backups: z.boolean().optional(),
       updates: z.boolean().optional(),
       players: z.boolean().optional(),
+      alerts: z.boolean().optional(),
     })
     .optional(),
 });

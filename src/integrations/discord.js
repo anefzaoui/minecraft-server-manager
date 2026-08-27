@@ -12,7 +12,14 @@ const secrets = require('../services/secrets');
 
 const KIND = 'discord-webhook';
 
-const DEFAULT_EVENTS = { lifecycle: true, crashes: true, backups: true, updates: true, players: true };
+const DEFAULT_EVENTS = {
+  lifecycle: true,
+  crashes: true,
+  backups: true,
+  updates: true,
+  players: true,
+  alerts: true, // OOM, stalled boot, failed scheduled task, quota stop, unhealthy
+};
 
 const WEBHOOK_RE = /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//;
 
@@ -24,6 +31,7 @@ const COLORS = {
   backup: 0x3b82f6, // blue
   update: 0xe99417, // gold
   player: 0x21a7ab, // teal
+  alert: 0xe5484d, // red - something needs a human
 };
 
 // History event type → [notification kind, toggle category]
@@ -39,6 +47,15 @@ const EVENT_MAP = {
   'update-failed': ['update', 'updates'],
   'player-ban': ['player', 'players'],
   'player-kick': ['player', 'players'],
+  // Things that silently left a server broken before nothing forwarded them.
+  oom: ['alert', 'alerts'],
+  unhealthy: ['alert', 'alerts'],
+  'startup-stalled': ['alert', 'alerts'],
+  'stop-failed': ['alert', 'alerts'],
+  'schedule-failed': ['alert', 'alerts'],
+  'quota-exceeded': ['alert', 'alerts'],
+  'offline-after-restart': ['alert', 'alerts'],
+  'crash-report': ['crash', 'crashes'],
 };
 
 function row(serverId) {
@@ -242,6 +259,14 @@ function titleFor(type) {
     'update-failed': 'Update failed',
     'player-ban': 'Player banned',
     'player-kick': 'Player kicked',
+    oom: 'Out of memory',
+    unhealthy: 'Server unhealthy',
+    'startup-stalled': 'Startup stalled',
+    'stop-failed': 'Stop failed',
+    'schedule-failed': 'Scheduled task failed',
+    'quota-exceeded': 'Disk quota exceeded',
+    'offline-after-restart': 'Offline after panel restart',
+    'crash-report': 'New crash report',
   };
   return map[type] || type;
 }

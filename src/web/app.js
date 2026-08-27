@@ -166,6 +166,18 @@ function createApp() {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
+  // Unauthenticated liveness/readiness probe for uptime monitors and
+  // orchestrators. Exposes nothing sensitive - just whether the process is up
+  // and the database is answering.
+  app.get('/healthz', (req, res) => {
+    try {
+      require('../db').get('SELECT 1');
+      res.json({ ok: true, version: app.locals.appVersion });
+    } catch {
+      res.status(503).json({ ok: false, error: 'database unavailable' });
+    }
+  });
+
   const session = require('express-session');
   const { SqliteSessionStore } = require('./sessionStore');
   const { requireAuth, originGuard, requireWrite } = require('./middleware/auth');

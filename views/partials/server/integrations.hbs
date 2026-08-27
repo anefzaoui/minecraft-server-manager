@@ -25,6 +25,7 @@
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="backups" {{#if integrations.discord.events.backups}}checked{{/if}}> Backups</label>
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="updates" {{#if integrations.discord.events.updates}}checked{{/if}}> Updates</label>
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="players" {{#if integrations.discord.events.players}}checked{{/if}}> Kicks / bans</label>
+          <label class="flex items-center gap-2" title="Out of memory, stalled boot, failed scheduled task, quota stop, health-check failure"><input type="checkbox" class="msm-check" data-dc-event="alerts" {{#if integrations.discord.events.alerts}}checked{{/if}}> Alerts</label>
         </div>
       </div>
       <div class="flex items-center gap-2">

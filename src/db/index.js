@@ -60,4 +60,20 @@ function close() {
   }
 }
 
-module.exports = { open, run, get, all, exec, transaction, close };
+/**
+ * Hot snapshot of the whole database to `destPath`. Checkpoints the WAL first so
+ * the copy is fully self-contained, then `VACUUM INTO` writes a consistent,
+ * defragmented single-file copy without blocking readers. Safe to call while the
+ * panel is serving traffic.
+ */
+function backupTo(destPath) {
+  const d = open();
+  try {
+    d.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+  } catch {
+    /* checkpoint is best-effort; VACUUM INTO still produces a valid copy */
+  }
+  d.exec(`VACUUM INTO '${String(destPath).replace(/'/g, "''")}'`);
+}
+
+module.exports = { open, run, get, all, exec, transaction, close, backupTo };

@@ -20,7 +20,13 @@ const indexer = require('../storage/indexer');
 const { withSaveLock } = require('./serverLocks');
 const { guardOp } = require('./opLock');
 
-const KEEP_SCHEDULED = 10; // retention: newest N scheduled backups per server
+// Retention caps, per server, per reason. Every bucket is bounded now - the
+// old rule ("manual + pre-update are never auto-pruned") let a long-lived
+// server accumulate backups until the free-space preflight started failing
+// every new backup. 'manual' also holds restore safety backups.
+const KEEP_SCHEDULED = 10;
+const KEEP_PRE_UPDATE = 10;
+const KEEP_MANUAL = 20;
 
 async function createBackup(serverId, { reason = 'manual', actor = 'system', note = '', task = null } = {}) {
   const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
@@ -88,6 +94,21 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
   }
 
   const size = (await fsp.stat(absPath)).size;
+
+  // Post-write integrity check. A torn archive (disk filled mid-write despite
+  // the preflight, an archiver fault, a filesystem hiccup) has to be caught
+  // HERE - not months later when a restore is the only thing between the
+  // operator and data loss. Reading the central directory is cheap (no
+  // decompression) and proves the zip is at least structurally sound.
+  let entryCount;
+  try {
+    entryCount = await zipEntryCount(absPath);
+  } catch (err) {
+    await fsp.rm(absPath, { force: true }).catch(() => {});
+    throw httpError(500, `Backup archive failed its integrity check and was discarded: ${err.message}`);
+  }
+  const empty = entryCount === 0; // e.g. a server that has never started - nothing on disk yet
+
   const id = `bk_${nanoid(8)}`;
   db.run(
     'INSERT INTO backups (id, server_id, filename, rel_path, size_bytes, reason, note) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -99,12 +120,18 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
     reason,
     note
   );
+  const warnings = [
+    inconsistent ? 'world saves could not be paused, archive may be slightly inconsistent' : null,
+    empty ? 'archive contains no files - the server has nothing on disk yet' : null,
+  ].filter(Boolean);
   recordEvent({
     serverId,
     actor,
     type: 'backup-created',
-    summary: `Backup created (${reason}, ${(size / 1024 ** 3).toFixed(2)} GB)${inconsistent ? ' - WARNING: world saves could not be paused, archive may be slightly inconsistent' : ''}`,
-    details: { id, filename, reason, inconsistent },
+    summary:
+      `Backup created (${reason}, ${(size / 1024 ** 3).toFixed(2)} GB)` +
+      (warnings.length ? ` - WARNING: ${warnings.join('; ')}` : ''),
+    details: { id, filename, reason, inconsistent, empty, entryCount },
   });
   // The backup above already succeeded and is already recorded - a retention
   // problem must never surface as this call failing.
@@ -232,8 +259,11 @@ async function deleteBackup(backupId, { actor = 'system' } = {}) {
   return { freedBytes: backup.size_bytes };
 }
 
-/** Keep newest N scheduled; manual + pre-update are never auto-pruned. */
 /**
+ * Keep the newest KEEP_* per reason (see the constants at the top); older ones
+ * in each bucket are pruned. 'manual' is bounded too now - it also holds the
+ * restore safety backups, which otherwise pile up one-per-restore forever.
+ *
  * Delete backups past the retention limit. Each deletion is isolated (one
  * failure - a transient DB busy error, an EACCES on the file - must not stop
  * the rest from being pruned) and the whole function never throws: it's
@@ -244,19 +274,27 @@ async function deleteBackup(backupId, { actor = 'system' } = {}) {
  * the free-space preflight).
  */
 async function pruneRetention(serverId, { actor = 'system' } = {}) {
-  const stale = db.all(
-    `SELECT * FROM backups WHERE server_id = ? AND reason = 'scheduled'
-     ORDER BY created_at DESC LIMIT -1 OFFSET ?`,
-    serverId,
-    KEEP_SCHEDULED
-  );
+  const buckets = [
+    ['scheduled', KEEP_SCHEDULED],
+    ['pre-update', KEEP_PRE_UPDATE],
+    ['manual', KEEP_MANUAL], // includes restore safety backups
+  ];
   let deleted = 0;
-  for (const b of stale) {
-    try {
-      await deleteBackup(b.id, { actor });
-      deleted++;
-    } catch (err) {
-      console.error(`[backup] retention: could not delete ${b.id} for ${serverId}: ${err.message}`);
+  for (const [reason, keep] of buckets) {
+    const stale = db.all(
+      `SELECT id FROM backups WHERE server_id = ? AND reason = ?
+       ORDER BY created_at DESC LIMIT -1 OFFSET ?`,
+      serverId,
+      reason,
+      keep
+    );
+    for (const b of stale) {
+      try {
+        await deleteBackup(b.id, { actor });
+        deleted++;
+      } catch (err) {
+        console.error(`[backup] retention: could not delete ${b.id} for ${serverId}: ${err.message}`);
+      }
     }
   }
   return deleted;
@@ -379,6 +417,25 @@ function zipUncompressedSize(zipFile) {
       zip.on('end', () => resolve(total));
       zip.on('entry', (entry) => {
         total += entry.uncompressedSize || 0;
+        zip.readEntry();
+      });
+      zip.readEntry();
+    });
+  });
+}
+
+/** Open a finished archive and count its entries. Cheap (reads the central
+ *  directory only, no decompression); rejects if the zip won't open at all.
+ *  Used as a post-write integrity check in createBackup. */
+function zipEntryCount(zipFile) {
+  return new Promise((resolve, reject) => {
+    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
+      if (err) return reject(err);
+      let n = 0;
+      zip.on('error', reject);
+      zip.on('end', () => resolve(n));
+      zip.on('entry', () => {
+        n += 1;
         zip.readEntry();
       });
       zip.readEntry();

@@ -225,6 +225,14 @@ async function waitForHealthy(serverId, { timeoutMs = 10 * 60 * 1000 } = {}) {
       }
     } else {
       stableChecks = 0;
+      // Healthcheck still inside its (long) StartPeriod: the container reports
+      // 'starting', not 'running', even after the server is genuinely up. Accept
+      // once the MC server itself says it's done, so a slow pack boot with a
+      // lagging mc-health probe isn't falsely called a failed upgrade.
+      if (info.status === 'starting') {
+        const tail = await fetchLogs(serverId, { tail: 100 }).catch(() => '');
+        if (/Done \(/.test(tail)) return true;
+      }
     }
   }
   return false;

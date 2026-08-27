@@ -26,6 +26,23 @@ try {
   // Boot order matters: data root first (the DB lives inside it), then schema.
   ensureDataRoot();
   migrate();
+
+  // Fast, read-only sanity check on the one file that holds all panel state.
+  // A corrupt DB won't fix itself; say so loudly so the operator reaches for a
+  // panel-DB snapshot (data/backups/_panel/) before more writes pile on.
+  try {
+    const row = require('./db').get('PRAGMA integrity_check');
+    const verdict = row ? row.integrity_check || Object.values(row)[0] : 'unknown';
+    if (verdict !== 'ok') {
+      console.error(
+        `\n[boot] SQLite integrity_check did not pass: ${verdict}\n` +
+          `  Restore the newest good copy from data/backups/_panel/ and restart.\n`
+      );
+    }
+  } catch (err) {
+    console.error('[boot] SQLite integrity_check could not run:', err.message);
+  }
+
   require('./services/apiKeys').importFromEnvOnce();
   require('./blueprints')
     .seedStarters()
@@ -89,6 +106,7 @@ function startBackgroundServices(httpServer) {
   // DB doesn't grow without bound over months of uptime. Runs shortly after boot,
   // then every 24h.
   const ANALYTICS_RETENTION_DAYS = 90;
+  const PANEL_DB_BACKUPS_KEEP = 14;
   function runMaintenance() {
     try {
       const r = require('./analytics/ingest').pruneOlderThan(ANALYTICS_RETENTION_DAYS);
@@ -99,6 +117,27 @@ function startBackgroundServices(httpServer) {
       }
     } catch (err) {
       console.error('[maintenance] analytics prune failed:', err.message);
+    }
+    // Snapshot the panel DB itself - the server backups only cover per-server
+    // world dirs, so without this the users/schedules/pins/history/2FA store has
+    // no backup at all. VACUUM INTO is a safe hot copy; keep the newest N.
+    try {
+      const fs = require('node:fs');
+      const nodePath = require('node:path');
+      const { dataPath } = require('./storage/pathGuard');
+      const dir = dataPath('backups', '_panel');
+      fs.mkdirSync(dir, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+      require('./db').backupTo(nodePath.join(dir, `panel-${stamp}.db`));
+      const snaps = fs
+        .readdirSync(dir)
+        .filter((f) => /^panel-.*\.db$/.test(f))
+        .sort();
+      for (const f of snaps.slice(0, Math.max(0, snaps.length - PANEL_DB_BACKUPS_KEEP))) {
+        fs.rmSync(nodePath.join(dir, f), { force: true });
+      }
+    } catch (err) {
+      console.error('[maintenance] panel DB backup failed:', err.message);
     }
   }
   setTimeout(runMaintenance, 60_000).unref();
@@ -117,7 +156,7 @@ function startBackgroundServices(httpServer) {
     const { startWatcher } = require('./docker/watcher');
     const serversService = require('./services/servers');
     await startWatcher().catch((err) => console.error('[watcher] failed to start:', err.message));
-    await serversService.refreshStatuses();
+    await serversService.refreshStatuses({ boot: true });
     // Periodic reconcile: without it, cached statuses drift after any missed
     // docker event and healthcheck-less servers stay 'starting' forever.
     const statusTimer = setInterval(
@@ -130,13 +169,18 @@ function startBackgroundServices(httpServer) {
       .catch((err) => console.error('[boot] analytics ingest failed:', err));
     require('./analytics/stats').startStatsIngest({});
     require('./services/liveCache').startLiveCache({});
-    // Honor "start on panel boot"
+    // Honor "start on panel boot", and recover servers that crashed while the
+    // panel was down: the live docker-events watcher never saw that 'die', so
+    // nothing scheduled the auto-restart for them. guardOp de-dupes a server
+    // that matches both conditions.
     for (const s of serversService.listServers()) {
-      if (s.auto_start && s.status !== 'running' && s.status !== 'starting') {
-        serversService
-          .startServer(s.id, { actor: 'system' })
-          .catch((err) => console.error(`[boot] auto-start ${s.id} failed:`, err.message));
-      }
+      const wantStart =
+        (s.auto_start && !['running', 'starting'].includes(s.status)) ||
+        (s.auto_restart && s.status === 'crashed');
+      if (!wantStart) continue;
+      serversService
+        .startServer(s.id, { actor: 'system' })
+        .catch((err) => console.error(`[boot] auto-start ${s.id} failed:`, err.message));
     }
   })().catch((err) => console.error('[boot] docker background init failed:', err));
 }

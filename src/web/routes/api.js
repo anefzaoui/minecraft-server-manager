@@ -271,6 +271,66 @@ router.get('/servers/live', (req, res) => {
   res.json({ ok: true, servers: out });
 });
 
+// One place to answer "is anything wrong right now?" - for the operator and for
+// an external monitor to poll. Read-only, cheap (cached status + one events
+// query + one statfs), never touches Docker.
+router.get(
+  '/status/summary',
+  asyncHandler(async (req, res, next) => {
+    const db = require('../../db');
+    const PROBLEM_STATUSES = new Set(['crashed', 'stalled', 'unhealthy', 'over-quota']);
+    const ALERT_TYPES = [
+      'oom',
+      'unhealthy',
+      'startup-stalled',
+      'stop-failed',
+      'schedule-failed',
+      'quota-exceeded',
+      'crash-loop',
+      'offline-after-restart',
+      'update-failed',
+    ];
+
+    const serverRows = db.all('SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at');
+    const problems = serverRows
+      .filter((s) => PROBLEM_STATUSES.has(s.status))
+      .map((s) => ({ serverId: s.id, server: s.display_name, kind: s.status }));
+
+    const ph = ALERT_TYPES.map(() => '?').join(',');
+    const recentAlerts = db
+      .all(
+        `SELECT e.type, e.summary, e.server_id, e.created_at, s.display_name AS server
+           FROM events e LEFT JOIN servers s ON s.id = e.server_id
+          WHERE e.type IN (${ph}) AND e.created_at > datetime('now', '-1 day')
+          ORDER BY e.id DESC LIMIT 50`,
+        ...ALERT_TYPES
+      )
+      .map((r) => ({ type: r.type, summary: r.summary, serverId: r.server_id, server: r.server, at: r.created_at }));
+
+    const disk = await require('../../storage/indexer')
+      .diskFree()
+      .then(({ free, total }) => ({
+        freeBytes: free,
+        totalBytes: total,
+        freePct: total ? Math.round((free / total) * 100) : null,
+      }))
+      .catch(() => ({ freeBytes: null, totalBytes: null, freePct: null }));
+    if (disk.freePct != null && disk.freePct < 5) {
+      problems.push({ serverId: null, server: null, kind: 'disk-low', detail: `Only ${disk.freePct}% disk free` });
+    }
+
+    res.json({
+      ok: true,
+      healthy: problems.length === 0,
+      generatedAt: new Date().toISOString(),
+      servers: serverRows.map((s) => ({ serverId: s.id, server: s.display_name, status: s.status })),
+      problems,
+      recentAlerts,
+      disk,
+    });
+  })
+);
+
 router.get(
   '/ports/check',
   asyncHandler(async (req, res, next) => {

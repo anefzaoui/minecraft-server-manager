@@ -10,10 +10,8 @@ const { fetchLogs } = require('./logs');
 const { recordEvent } = require('../events');
 const db = require('../db');
 
-// serverId → recent crash timestamps (for backoff)
-const crashWindows = new Map();
 const MAX_RAPID_CRASHES = 3;
-const CRASH_WINDOW_MS = 10 * 60 * 1000;
+const CRASH_WINDOW_MINUTES = 10;
 
 let stream = null;
 let retryTimer = null;
@@ -77,6 +75,32 @@ async function handleEvent(evt) {
     db.run("UPDATE servers SET status = 'running' WHERE id = ?", serverId);
     return;
   }
+  if (evt.status === 'health_status: unhealthy') {
+    // The process is alive but the server stopped answering `mc-health` -
+    // a "running but dead" state the die/oom events never cover. Only act on
+    // it for a server the panel currently thinks is up (not one mid-stop).
+    if (['running', 'starting', 'stalled'].includes(server.status)) {
+      db.run("UPDATE servers SET status = 'unhealthy' WHERE id = ?", serverId);
+      const already = db.get(
+        "SELECT 1 AS x FROM events WHERE server_id = ? AND type = 'unhealthy' AND created_at > datetime('now', '-15 minutes')",
+        serverId
+      );
+      if (!already) {
+        const excerpt = await fetchLogs(serverId, { tail: 200 }).catch(() => '');
+        const diag = diagnoseFatal(excerpt);
+        recordEvent({
+          serverId,
+          type: 'unhealthy',
+          summary: diag
+            ? `Server stopped responding: ${diag.summary}`
+            : 'Server stopped responding to health checks (process still running). Check the console; a restart may be needed.',
+          details: { diagnosis: diag ? diag.key : null },
+          logExcerpt: excerpt || null,
+        });
+      }
+    }
+    return;
+  }
   if (evt.status === 'oom') {
     recordEvent({
       serverId,
@@ -134,19 +158,34 @@ async function handleEvent(evt) {
   // event - recorded above, but don't fight it with an auto-restart loop.
   if (killedBySignal) return;
   if (!server.auto_restart) return;
-  const now = Date.now();
-  const window = (crashWindows.get(serverId) || []).filter((t) => now - t < CRASH_WINDOW_MS);
-  window.push(now);
-  crashWindows.set(serverId, window);
-  if (window.length > MAX_RAPID_CRASHES) {
-    recordEvent({
+  // Count recent crashes from the events table (this crash is already recorded
+  // above), not an in-memory map - so a panel restart in the middle of a crash
+  // loop doesn't wipe the backoff and let it hammer restarts all over again.
+  const recentCrashes =
+    db.get(
+      `SELECT COUNT(*) AS n FROM events
+         WHERE server_id = ? AND type = 'crashed'
+           AND created_at > datetime('now', ?)`,
       serverId,
-      type: 'crash-loop',
-      summary: `Auto-restart suspended: ${window.length} crashes within 10 minutes`,
-    });
+      `-${CRASH_WINDOW_MINUTES} minutes`
+    )?.n || 1;
+  if (recentCrashes > MAX_RAPID_CRASHES) {
+    const suspended = db.get(
+      `SELECT 1 AS x FROM events WHERE server_id = ? AND type = 'crash-loop'
+         AND created_at > datetime('now', ?)`,
+      serverId,
+      `-${CRASH_WINDOW_MINUTES} minutes`
+    );
+    if (!suspended) {
+      recordEvent({
+        serverId,
+        type: 'crash-loop',
+        summary: `Auto-restart suspended: ${recentCrashes} crashes within ${CRASH_WINDOW_MINUTES} minutes`,
+      });
+    }
     return;
   }
-  const delayMs = 5000 * 2 ** (window.length - 1); // 5s, 10s, 20s
+  const delayMs = 5000 * 2 ** (recentCrashes - 1); // 5s, 10s, 20s
   setTimeout(async () => {
     try {
       const info = await inspectStatus(serverId);
@@ -158,7 +197,7 @@ async function handleEvent(evt) {
         recordEvent({
           serverId,
           type: 'auto-restarted',
-          summary: `Auto-restart attempt ${window.length}/${MAX_RAPID_CRASHES} after crash`,
+          summary: `Auto-restart attempt ${recentCrashes}/${MAX_RAPID_CRASHES} after crash`,
         });
       }
     } catch (err) {
@@ -209,4 +248,4 @@ function diagnoseFatal(logText) {
   return null;
 }
 
-module.exports = { startWatcher };
+module.exports = { startWatcher, diagnoseFatal };

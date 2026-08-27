@@ -219,7 +219,19 @@ async function stopContainer(serverId, { graceSeconds = 90 } = {}) {
   }
   const info = await inspectStatus(serverId);
   if (info.exists && (info.status === 'running' || info.status === 'starting' || info.status === 'unhealthy')) {
-    await container.stop({ t: graceSeconds });
+    try {
+      await container.stop({ t: graceSeconds });
+    } catch (err) {
+      // 304 = already stopped between the inspect above and here; 404 = gone.
+      if (err.statusCode !== 304 && err.statusCode !== 404) throw err;
+    }
+  }
+  // Never report a stop as done without confirming it: a wedged daemon can let
+  // `stop` return/throw without the container actually exiting, and callers
+  // (stopServerImpl) would then record "stopped gracefully" over a live world.
+  const final = await inspectStatus(serverId).catch(() => ({ exists: false }));
+  if (final.exists && ['running', 'starting', 'unhealthy'].includes(final.status)) {
+    throw new Error(`container for ${serverId} did not stop (still ${final.status})`);
   }
 }
 
