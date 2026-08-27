@@ -6,6 +6,7 @@
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
 import { escapeHtml } from './format.js';
+import { openCropModal } from './imageCrop.js';
 
 document.addEventListener('click', (e) => {
   if (!e.target.closest('[data-open-avatar-picker]')) return;
@@ -56,7 +57,7 @@ async function openPickerModal() {
 
   const help = document.createElement('p');
   help.className = 'text-xs text-ink-faint';
-  help.textContent = 'PNG, SVG or JPEG, up to 512 KB.';
+  help.textContent = 'PNG, SVG or JPEG. Your picture is cropped to a square, up to 512×512.';
   content.appendChild(help);
 
   uploadBtn.addEventListener('click', () => {
@@ -66,12 +67,21 @@ async function openPickerModal() {
     input.addEventListener('change', async () => {
       const file = input.files && input.files[0];
       if (!file) return;
-      if (file.size > 512 * 1024) {
-        toast('Image must be 512 KB or smaller.', { kind: 'error' });
+
+      const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name);
+      const maxRaw = isSvg ? 2 * 1024 * 1024 : 15 * 1024 * 1024;
+      if (file.size > maxRaw) {
+        toast(isSvg ? 'SVG must be 2 MB or smaller.' : 'Image must be 15 MB or smaller.', { kind: 'error' });
         return;
       }
+
+      // Every custom upload is squared client-side; the server only ever sees
+      // the cropped PNG/JPEG, already under its 512 KB limit.
+      const cropped = await openCropModal(file);
+      if (!cropped) return; // cancelled, or the image couldn't be decoded
+
       const form = new FormData();
-      form.append('avatar', file);
+      form.append('avatar', cropped.blob, cropped.filename);
       try {
         const uploadRes = await fetch('/api/account/avatar/upload', { method: 'POST', body: form });
         const data = await uploadRes.json().catch(() => ({}));
@@ -101,7 +111,6 @@ async function openPickerModal() {
 function finish() {
   setTimeout(() => location.reload(), 600);
 }
-
 
 async function get(url) {
   try {

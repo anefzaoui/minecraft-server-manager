@@ -11,6 +11,24 @@ const path = require('node:path');
 const app = require('./helpers/app');
 const { AVATAR_PRESETS, avatarSrc } = require('../src/config/avatars');
 
+// Tiny real images for the multipart upload path. The client-side cropper
+// always squares an image before upload, but the server never inspected
+// dimensions - a non-square PNG is the honest fixture for "any raster uploads".
+const PNG_2x1 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAAC0lEQVR4nGOoBwMACnIC+4y7/acAAAAASUVORK5CYII=',
+  'base64'
+);
+const JPEG_1x1 = Buffer.from(
+  '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAT8AH//Z',
+  'base64'
+);
+
+function avatarForm(bytes, type, filename) {
+  const form = new FormData();
+  form.append('avatar', new Blob([bytes], { type }), filename);
+  return form;
+}
+
 let adminCookie;
 
 test.before(async () => {
@@ -109,6 +127,56 @@ test('a viewer (read-only role) can still set their own avatar - self-service, n
 
 test('GET /api/avatars/custom/:file rejects a path-traversal-shaped filename', async () => {
   const r = await app.req('GET', '/api/avatars/custom/..%2F..%2Fpanel.db', { cookie: adminCookie });
+  assert.equal(r.status, 400);
+});
+
+test('a non-square PNG upload is stored as a custom avatar and served back', async () => {
+  const up = await app.req('POST', '/api/account/avatar/upload', {
+    cookie: adminCookie,
+    form: avatarForm(PNG_2x1, 'image/png', 'avatar.png'),
+  });
+  assert.equal(up.status, 200);
+  assert.match(up.json.avatar, /^custom:usr_[\w-]+\.png$/);
+
+  const served = await app.req('GET', up.json.url, { cookie: adminCookie });
+  assert.equal(served.status, 200);
+
+  const me = await app.req('GET', '/api/users', { cookie: adminCookie });
+  assert.equal(me.json.users.find((u) => u.username === 'admin').avatar, up.json.avatar);
+
+  await app.req('DELETE', '/api/account/avatar', { cookie: adminCookie });
+});
+
+test('a JPEG upload is stored with a .jpg extension and replaces a prior preset marker', async () => {
+  const preset = await app.req('POST', '/api/account/avatar/preset', { cookie: adminCookie, body: { key: 'anvil' } });
+  assert.equal(preset.json.avatar, 'preset:anvil');
+
+  const up = await app.req('POST', '/api/account/avatar/upload', {
+    cookie: adminCookie,
+    form: avatarForm(JPEG_1x1, 'image/jpeg', 'avatar.jpg'),
+  });
+  assert.equal(up.status, 200);
+  assert.match(up.json.avatar, /^custom:usr_[\w-]+\.jpg$/);
+
+  const served = await app.req('GET', up.json.url, { cookie: adminCookie });
+  assert.equal(served.status, 200);
+
+  await app.req('DELETE', '/api/account/avatar', { cookie: adminCookie });
+});
+
+test('rejects an upload whose bytes do not match the declared image type', async () => {
+  const r = await app.req('POST', '/api/account/avatar/upload', {
+    cookie: adminCookie,
+    form: avatarForm(PNG_2x1, 'image/jpeg', 'avatar.jpg'), // PNG bytes, claimed as JPEG
+  });
+  assert.equal(r.status, 400);
+});
+
+test('rejects a non-image upload', async () => {
+  const r = await app.req('POST', '/api/account/avatar/upload', {
+    cookie: adminCookie,
+    form: avatarForm(Buffer.from('definitely not an image'), 'image/png', 'avatar.png'),
+  });
   assert.equal(r.status, 400);
 });
 

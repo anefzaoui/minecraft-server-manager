@@ -28,16 +28,18 @@ async function stop() {
   server = null;
 }
 
-async function req(method, path, { body, cookie, headers } = {}) {
+async function req(method, path, { body, form, cookie, headers } = {}) {
   const res = await fetch(base + path, {
     method,
     headers: {
       Accept: 'application/json',
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      // A FormData body sets its own multipart Content-Type (with boundary),
+      // so only add the JSON header when we're actually sending JSON.
+      ...(body !== undefined && form === undefined ? { 'Content-Type': 'application/json' } : {}),
       ...(cookie ? { Cookie: cookie } : {}),
       ...headers,
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: form !== undefined ? form : body !== undefined ? JSON.stringify(body) : undefined,
     redirect: 'manual',
   });
   const text = await res.text();
