@@ -88,7 +88,7 @@ async function hydrateDocker() {
     // No eternal "Checking…" - say we don't know, and retry shortly.
     el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-ink-faint';
     el.innerHTML = '<span class="status-dot relative bg-stone-500"></span> ';
-    el.append('Unknown - retrying…');
+    el.append('Unknown, retrying…');
     setTimeout(hydrateDocker, 8000);
   }
 }

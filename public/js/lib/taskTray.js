@@ -41,7 +41,7 @@ function init() {
     for (const t of tasks) {
       const prev = known.get(t.id);
       if (prev === 'running' && t.state !== 'running') {
-        toast(t.state === 'done' ? `${t.title} - finished.` : `${t.title} - failed${t.error ? `: ${t.error}` : ''}`, {
+        toast(t.state === 'done' ? `${t.title}: finished.` : `${t.title}: failed.${t.error ? ` ${t.error}` : ''}`, {
           kind: t.state === 'done' ? 'success' : 'error',
           timeout: 7000,
         });

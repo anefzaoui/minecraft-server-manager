@@ -1,5 +1,6 @@
 // Mods tab: add-by-URL, Modrinth search modal, toggle, delete.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
@@ -58,7 +59,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         toast(
           res.applied === 'instant'
             ? `${file} ${enable ? 'enabled' : 'disabled'}.`
-            : `${file} ${enable ? 're-included' : 'excluded'} - applies on next restart.`,
+            : `${file} ${enable ? 're-included' : 'excluded'}. Applies on the next restart.`,
           { kind: 'success' }
         );
         setTimeout(() => location.reload(), 600);
@@ -83,7 +84,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           // Last row gone → re-render for the proper empty state.
           if (tbody && !tbody.querySelector('[data-mod-row]')) setTimeout(() => location.reload(), 600);
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: 'remove that file' }), { kind: 'error' });
         }
       } finally {
         restore();
@@ -96,13 +97,13 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label">Mod/plugin/datapack URL or Modrinth slug</label>
-      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any direct .jar/.zip URL" autocomplete="off">
-      <p class="help">Direct .jar/.zip URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work - datapacks included, the panel detects the content type automatically. The right build for this server's loader and MC version is picked automatically.</p>
+      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium, or any direct .jar or .zip URL" autocomplete="off">
+      <p class="help">Direct .jar and .zip URLs, Modrinth project or version URLs and slugs, and CurseForge mod or file URLs all work, datapacks included. The panel detects the content type and picks the right build for this server's loader and Minecraft version for you.</p>
       ${
         mc
           ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
                <input type="checkbox" class="msm-check mt-0.5" id="mod-url-ignore-version">
-               <span>Install even if this build isn't listed as compatible with ${escAttr(mc)} or this server's loader. It may not work correctly - you accept the risk.</span>
+               <span>Install even if this build isn't listed as compatible with ${escAttr(mc)} or this server's loader. It may not work correctly, and you accept that risk.</span>
              </label>`
           : ''
       }
@@ -146,7 +147,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     const bits = [];
     if (installed.versionOverridden) bits.push(`isn't listed as compatible with ${mc}`);
     if (installed.loaderOverridden) bits.push("isn't built for this server's loader");
-    return bits.length ? `This build ${bits.join(' and ')} - installed anyway.` : '';
+    return bits.length ? `This build ${bits.join(' and ')}, but was installed anyway.` : '';
   }
 
   // ---- Modrinth search (reused by the manual-download resolver) ----
@@ -171,7 +172,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         mc
           ? `<label class="mt-2 flex cursor-pointer items-start gap-2 text-sm">
                <input type="checkbox" class="msm-check mt-0.5" id="mr-any-version">
-               <span>Also show builds not listed as compatible with ${escAttr(mc)} or this server's loader - you accept the risk of installing one.</span>
+               <span>Also show builds not listed as compatible with ${escAttr(mc)} or this server's loader. You accept the risk of installing one.</span>
              </label>`
           : ''
       }
@@ -226,13 +227,13 @@ function init(serverId, serverType, mcVersion, serverLoader) {
         data = await res.json();
       } catch {
         // a network error used to strand "Searching…" on screen forever
-        data = { ok: false, error: 'Search failed - check the connection and try again.' };
+        data = { ok: false, error: 'The search could not be completed. Check your connection and try again.' };
       }
       if (seq !== searchSeq) return;
       if (!data.ok) {
         const p = document.createElement('p');
         p.className = 'p-6 text-center text-sm text-danger';
-        p.textContent = data.error || 'Search failed'; // upstream text - never innerHTML
+        p.textContent = data.error || 'The search could not be completed. Please try again.'; // upstream text - never innerHTML
         results.replaceChildren(p);
         return;
       }
@@ -263,11 +264,11 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1.5">
               <div class="truncate text-sm font-semibold"></div>
-              ${notListed ? `<span class="shrink-0 badge badge-warn" data-tip="Not listed as ${escAttr(tipBits.join(' or '))} - may not work correctly">not verified</span>` : ''}
+              ${notListed ? `<span class="shrink-0 badge badge-warn" data-tip="Not listed as ${escAttr(tipBits.join(' or '))}. May not work correctly.">not verified</span>` : ''}
             </div>
             <div class="truncate text-xs text-ink-faint"></div>
           </div>
-          <span class="shrink-0 text-xs text-ink-faint">${Number(hit.downloads).toLocaleString()} DLs</span>
+          <span class="shrink-0 text-xs text-ink-faint">${Number(hit.downloads).toLocaleString()} downloads</span>
           <button class="btn btn-primary btn-sm shrink-0">Install</button>`;
         row.querySelector('.font-semibold').textContent = hit.title;
         row.querySelector('.text-xs.text-ink-faint').textContent = hit.description;
@@ -321,7 +322,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
     pendingBox.classList.remove('hidden');
     pendingBox.innerHTML = `
       <div class="notice notice-warn flex-wrap gap-3">
-        <span class="text-warn">${list.length} ${list.length === 1 ? 'mod' : 'mods'} in this modpack couldn't be auto-downloaded - the pack won't finish installing until each is resolved.</span>
+        <span class="text-warn">${list.length} ${list.length === 1 ? 'mod' : 'mods'} in this modpack couldn't be downloaded automatically. The pack won't finish installing until each one is resolved.</span>
         <button class="btn btn-sm ml-auto" id="mods-pending-open">Resolve now</button>
       </div>`;
     pendingBox.querySelector('#mods-pending-open').addEventListener('click', () => openPendingModal(list));
@@ -334,14 +335,15 @@ function init(serverId, serverType, mcVersion, serverLoader) {
   function openPendingModal(list) {
     const content = document.createElement('div');
     content.innerHTML = `
-      <p class="mb-3 text-sm text-ink-soft">These mods disallow automated download (or were pulled from CurseForge), so the pack can't finish. For each one, <b>Exclude</b> it, install a replacement from <b>Modrinth</b>, or <b>upload</b> the jar you downloaded by hand. Changes apply on the next recreate.</p>
+      <p class="mb-3 text-sm text-ink-soft">These mods don't allow automatic download, or they came from CurseForge, so the pack can't finish on its own. For each one, <b>Exclude</b> it, install a replacement from <b>Modrinth</b>, or <b>upload</b> the file you downloaded by hand. Changes take effect the next time the container is rebuilt.</p>
       <div class="space-y-2" id="pending-list"></div>`;
     openModal({ title: 'Mods That Need Manual Action', content, size: 'lg' });
     const listEl = content.querySelector('#pending-list');
 
     function render(mods) {
       if (!mods.length) {
-        listEl.innerHTML = '<p class="notice notice-ok text-ok">All resolved - recreate the server to apply.</p>';
+        listEl.innerHTML =
+          '<p class="notice notice-ok text-ok">All resolved. Rebuild the server to apply the changes.</p>';
         return;
       }
       listEl.innerHTML = '';
@@ -364,8 +366,8 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           <div class="flex flex-wrap gap-2">
             <button class="btn btn-sm" data-act="exclude">Exclude from pack</button>
             <button class="btn btn-sm" data-act="modrinth">Find on Modrinth</button>
-            <button class="btn btn-sm" data-act="upload">Upload jar</button>
-            <a class="btn btn-sm" target="_blank" rel="noopener" data-act="open">Open CF page</a>
+            <button class="btn btn-sm" data-act="upload">Upload file</button>
+            <a class="btn btn-sm" target="_blank" rel="noopener" data-act="open">Open CurseForge page</a>
           </div>
           <input type="file" accept=".jar,.zip" class="hidden" data-role="file">`;
         row.querySelector('.font-semibold').textContent = m.name || m.filename;
@@ -411,7 +413,7 @@ function init(serverId, serverType, mcVersion, serverLoader) {
           try {
             const res = await fetch(`/api/servers/${serverId}/mods/upload`, { method: 'POST', body: fd });
             const data = await res.json().catch(() => ({}));
-            if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed');
+            if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'upload that file' }));
             toast(`Uploaded ${fileInput.files[0].name}.`);
             render(data.mods || []);
             refreshPending();
@@ -439,12 +441,12 @@ function init(serverId, serverType, mcVersion, serverLoader) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 9000 });
+        toast(data.error || friendlyError(res, { action: 'complete that action' }), { kind: 'error', timeout: 9000 });
         return null;
       }
       return data;
-    } catch (err) {
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+    } catch {
+      toast(friendlyError(null, { action: 'complete that action' }), { kind: 'error' });
       return null;
     }
   }

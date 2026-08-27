@@ -2,6 +2,7 @@
 // with working Check/Upgrade, and the shared pack-details modal. The details
 // modal (showPackDetails) is also imported by the wizard's From-modpack tab.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { runTask } from '../lib/progress.js';
 import { openModal } from '../lib/modal.js';
@@ -24,7 +25,6 @@ export function formatDownloads(n) {
   return String(n);
 }
 
-
 // ---- Shared pack-details modal ---------------------------------------------
 
 /**
@@ -45,7 +45,7 @@ export async function showPackDetails({ platform, ref, installedServerId } = {})
   try {
     const res = await fetch(`/api/packs/details?${qs}`);
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to load pack details');
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'load the pack details' }));
     pack = data.pack;
   } catch (err) {
     loading.close();
@@ -75,14 +75,14 @@ function renderPackDetails(pack) {
           <span class="badge">${pack.platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}</span>
           ${meta.length ? `<span class="ml-1">${meta.join(' · ')}</span>` : ''}
         </div>
-        ${pack.installed ? `<div class="mt-1 text-xs text-ok">Installed on ${escapeHtml(pack.installed.serverName)} - pinned @ ${escapeHtml(pack.installed.versionName)}</div>` : ''}
+        ${pack.installed ? `<div class="mt-1 text-xs text-ok">Installed on ${escapeHtml(pack.installed.serverName)}, pinned to ${escapeHtml(pack.installed.versionName)}</div>` : ''}
       </div>
     </div>
     <div data-desc class="max-h-72 overflow-y-auto rounded-md border border-line bg-inset p-4 text-sm leading-relaxed"></div>
     <div>
       <label class="label" for="pd-version">Version to pin</label>
       <select class="input" id="pd-version" data-label="Pack version"></select>
-      <p class="help">Installs are always pinned to this exact version - a restart can never silently upgrade.</p>
+      <p class="help">Installs are always pinned to this exact version, so a restart can never silently upgrade the pack.</p>
     </div>
     <div data-mods class="hidden">
       <div class="label" data-mods-title>Pack contents</div>
@@ -153,10 +153,10 @@ async function loadInstalledMods(content, serverId) {
   try {
     const res = await fetch(`/api/servers/${serverId}/pack/mods`);
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to list pack content');
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'list the pack contents' }));
     if (!data.mods.length) {
       list.innerHTML =
-        '<div class="p-3 text-center text-xs text-ink-faint">No pack-managed files on disk yet - they appear after the first start finishes installing the pack.</div>';
+        '<div class="p-3 text-center text-xs text-ink-faint">No pack-managed files on disk yet. They appear after the first start finishes installing the pack.</div>';
       return;
     }
     title.textContent = `Pack contents (${data.mods.length} pack-managed file${data.mods.length === 1 ? '' : 's'})`;
@@ -236,24 +236,24 @@ function initPage() {
       const res = await fetch(`/api/packs/search?q=${encodeURIComponent(term)}&platform=${platform}`);
       const data = await res.json();
       if (seq !== searchSeq) return;
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
+      if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'search for modpacks' }));
       lastResults = data.results;
       renderResults();
     } catch (err) {
       if (seq !== searchSeq) return;
-      resultsEl.innerHTML = `<div class="card p-4 text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' - <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
+      resultsEl.innerHTML = `<div class="card p-4 text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' <a href="/settings" class="text-link hover:underline">Check your API keys.</a>' : ''}</div>`;
     }
   }
 
   function renderResults() {
     if (!lastResults.length) {
       resultsEl.innerHTML =
-        '<div class="card p-4 text-sm text-ink-faint">No modpacks found - try another search term.</div>';
+        '<div class="card p-4 text-sm text-ink-faint">No modpacks found. Try another search term.</div>';
       return;
     }
     // Both platforms return a capped page - say what's shown, never imply "all".
     const heading = resultsWrap.querySelector('h3');
-    if (heading) heading.textContent = `Search results - top ${lastResults.length} matches`;
+    if (heading) heading.textContent = `Search results: top ${lastResults.length} matches`;
     resultsEl.innerHTML = lastResults
       .map(
         (p, i) => `
@@ -298,7 +298,7 @@ function initPage() {
     if (e.target.closest('[data-pack-check]')) {
       try {
         const result = await runTask({
-          title: `Checking ${packName} for Updates`,
+          title: `Checking ${packName} for updates…`,
           start: async () => (await postJSON(`/api/servers/${serverId}/updates/check`, {})).taskId,
         });
         const n = result && result.findings ? result.findings.length : 0;
@@ -306,7 +306,10 @@ function initPage() {
         if (n) setTimeout(() => location.reload(), 900);
       } catch (err) {
         if (err.dismissed) return; // progress hidden - the task tray takes over
-        toast(err.message || 'Update check failed', { kind: 'error', timeout: 9000 });
+        toast(err.message || 'The update check could not be completed. Please try again.', {
+          kind: 'error',
+          timeout: 9000,
+        });
       }
       return;
     }
@@ -314,14 +317,15 @@ function initPage() {
     if (e.target.closest('[data-pack-upgrade]')) {
       const ok = await confirmDialog({
         title: `Upgrade ${packName}?`,
-        message: `${serverName}: ${current} → ${latest}. Safe flow: pre-update backup → stop → re-pin → recreate → start → monitor, with one-click rollback if it fails.`,
-        detail: 'Your custom mods are preserved. The server is briefly offline during the swap.',
+        message: `${serverName} moves from ${current} to ${latest}. The panel takes an automatic backup first, applies the new version, and starts the server back up, watching that it comes back healthy.`,
+        detail:
+          'Your custom mods are preserved, and you can roll back with one click from the Updates page if it does not come up. The server is briefly offline during the swap.',
         confirmLabel: 'Upgrade now',
       });
       if (!ok) return;
       try {
         const result = await runTask({
-          title: `Upgrading ${packName} on ${serverName}`,
+          title: `Upgrading ${packName} on ${serverName}…`,
           // Post the exact version the card showed as "latest" (belt and braces -
           // the server independently re-resolves and honours the pin's channel;
           // this just makes the request name what the user actually confirmed).
@@ -330,7 +334,7 @@ function initPage() {
         });
         if (result && result.ok === false) {
           toast(
-            `Upgrade failed: ${result.error || 'server did not come up healthy'} - roll back from the Updates page.`,
+            `The upgrade failed: ${result.error || 'the server did not come back healthy'}. You can roll back from the Updates page.`,
             { kind: 'error', timeout: 12000 }
           );
           return;
@@ -339,7 +343,10 @@ function initPage() {
         setTimeout(() => location.reload(), 900);
       } catch (err) {
         if (err.dismissed) return; // progress hidden - the task tray takes over
-        toast(err.message || 'Upgrade failed', { kind: 'error', timeout: 12000 });
+        toast(err.message || 'The upgrade could not be completed. Please try again.', {
+          kind: 'error',
+          timeout: 12000,
+        });
       }
       return;
     }
@@ -357,6 +364,6 @@ async function postJSON(url, body) {
     body: JSON.stringify(body || {}),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+  if (!res.ok || data.ok === false) throw new Error(data.error || friendlyError(res, { action: 'start that task' }));
   return data;
 }

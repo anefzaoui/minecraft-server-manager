@@ -1,5 +1,6 @@
 // Live console: WebSocket log stream + RCON command bar with history.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 
 const log = document.getElementById('console-log');
@@ -30,7 +31,7 @@ function init(serverId) {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) {
-          toast(data.error || 'Could not save the label', { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: 'save that label' }), { kind: 'error' });
           return;
         }
         toast(
@@ -38,8 +39,8 @@ function init(serverId) {
             ? `Console commands now announce as "[${data.label}]" in chat.`
             : 'Console announcements turned off.'
         );
-      } catch (err) {
-        toast(`Network error: ${err.message}`, { kind: 'error' });
+      } catch {
+        toast(friendlyError(null, { action: 'save that label' }), { kind: 'error' });
       }
     })
   );
@@ -207,7 +208,7 @@ function init(serverId) {
       if (!disconnectNote) {
         disconnectNote = document.createElement('div');
         disconnectNote.className = 'text-gold-300';
-        disconnectNote.textContent = '[panel/WARN]: Log stream disconnected - reconnecting…';
+        disconnectNote.textContent = '[panel/WARN]: Log stream disconnected. Reconnecting…';
         log.appendChild(disconnectNote);
         if (autoScroll) log.scrollTop = log.scrollHeight;
       }

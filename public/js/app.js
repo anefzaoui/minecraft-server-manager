@@ -2,6 +2,7 @@
 // the same modals, tooltips, toasts, dropdowns, and custom selects.
 
 import { toast } from './lib/toast.js';
+import { friendlyError } from './lib/errors.js';
 import { openModal } from './lib/modal.js';
 import { confirmDialog } from './lib/confirm.js';
 import { enhanceAll } from './lib/select.js';
@@ -110,7 +111,7 @@ for (const el of document.querySelectorAll('[data-ts], [data-ts-ago]')) {
         empty.className = 'col-span-full py-6 text-center text-sm text-ink-faint';
         grid.appendChild(empty);
       }
-      empty.textContent = `No servers match “${input.value.trim()}”.`;
+      empty.textContent = `No servers match "${input.value.trim()}".`;
     } else if (empty) {
       empty.remove();
     }
@@ -173,14 +174,15 @@ document.addEventListener('click', async (e) => {
     start: 'Starting…',
     stop: 'Stopping…',
     restart: 'Restarting…',
-    kill: 'Killing…',
-    recreate: 'Recreating…',
+    kill: 'Force stopping…',
+    recreate: 'Rebuilding…',
   };
   if (action === 'kill') {
     const ok = await confirmDialog({
-      title: `Force Kill ${name}?`,
-      message: 'Kill skips the graceful stop - unsaved world data may be lost. Use Stop unless the server is frozen.',
-      confirmLabel: 'Kill it',
+      title: `Force stop ${name}?`,
+      message:
+        'A force stop skips the normal shutdown, so any unsaved world changes can be lost. Use Stop instead unless the server is frozen.',
+      confirmLabel: 'Force stop',
       danger: true,
     });
     if (!ok) return;
@@ -194,10 +196,17 @@ document.addEventListener('click', async (e) => {
   siblings.forEach((b) => {
     b.disabled = true;
   });
-  if (action === 'stop') toast('Stopping - the world saves first…', { kind: 'info' });
+  if (action === 'stop') toast('Stopping. The world saves first…', { kind: 'info' });
   const res = await api(`/api/servers/${id}/${action}`, 'POST');
   if (res.ok) {
-    toast(`${name}: ${action} complete.`);
+    const done = {
+      start: 'started',
+      stop: 'stopped',
+      restart: 'restarted',
+      kill: 'force stopped',
+      recreate: 'rebuilt',
+    };
+    toast(`${name} ${done[action] || 'updated'}.`);
     setTimeout(() => location.reload(), 800); // spinner stays until the reload lands
   } else {
     restore();
@@ -216,12 +225,12 @@ async function api(url, method = 'GET', body) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false) {
-      toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+      toast(data.error || friendlyError(res), { kind: 'error', timeout: 8000 });
       return { ok: false, data };
     }
     return { ok: true, data };
-  } catch (err) {
-    toast(`Network error: ${err.message}`, { kind: 'error' });
+  } catch {
+    toast(friendlyError(), { kind: 'error' });
     return { ok: false };
   }
 }
@@ -268,7 +277,7 @@ async function copyText(value) {
   wrap.className = 'space-y-2';
   const help = document.createElement('p');
   help.className = 'text-xs text-ink-faint';
-  help.textContent = 'Automatic copy is unavailable here - press Ctrl/Cmd+C to copy the selected value.';
+  help.textContent = 'Automatic copy is not available here. Press Ctrl/Cmd+C to copy the selected value.';
   wrap.append(input, help);
   openModal({ title: 'Copy Manually', content: wrap, size: 'sm' });
   input.select();

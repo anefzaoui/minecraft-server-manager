@@ -1,5 +1,6 @@
 // Settings page: API key save/test + localization + users CRUD.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
@@ -36,8 +37,8 @@ function init() {
         toast(res.publicHost ? `Public domain set to ${res.publicHost}.` : 'Public domain cleared.');
         if (res.cookieSecureWarning) {
           toast(
-            'This panel is reachable over plain HTTP (COOKIE_SECURE is not set) - the session cookie is sniffable ' +
-              'in transit. Set COOKIE_SECURE=true behind HTTPS, or COOKIE_SECURE=auto, in the environment.',
+            'This panel is reachable over plain HTTP, so the login cookie can be read in transit. Put it behind HTTPS ' +
+              'and set the secure-cookie option, as described in the README.',
             { kind: 'error', timeout: 12000 }
           );
         }
@@ -136,24 +137,24 @@ function init() {
     } else if (totpResetBtn) {
       const { userId, username } = totpResetBtn.dataset;
       const ok = await confirmDialog({
-        title: `Reset 2FA for ${username}?`,
+        title: `Reset two-factor auth for ${username}?`,
         message:
-          'They will be signed out of any in-progress 2FA challenge and must set up a new authenticator next time they sign in.',
-        confirmLabel: 'Reset 2FA',
+          'Any in-progress sign-in is cancelled, and they must set up a new authenticator app the next time they sign in.',
+        confirmLabel: 'Reset',
         danger: true,
       });
       if (!ok) return;
       await withBusy(menuTriggerFor(userId), async () => {
         const res = await post(`/api/users/${userId}/totp/disable`, {});
         if (res) {
-          toast('2FA reset.');
+          toast('Two-factor authentication reset.');
           setTimeout(() => location.reload(), 600);
         }
       });
     } else if (delBtn) {
       const { userId, username } = delBtn.dataset;
       const ok = await confirmDialog({
-        title: `Delete User ${username}?`,
+        title: `Delete user ${username}?`,
         message: 'They will be signed out and lose all access.',
         confirmLabel: 'Delete user',
         danger: true,
@@ -166,7 +167,7 @@ function init() {
           toast('User deleted.');
           document.querySelector(`[data-user-id="${CSS.escape(userId)}"]`)?.remove();
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: 'delete that user' }), { kind: 'error' });
         }
       });
     }
@@ -180,9 +181,9 @@ function init() {
       <div><label class="label">Password</label><input class="input" id="nu-pass" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p></div>
       <div><label class="label">Role</label>
         <select class="input" id="nu-role" data-label="Role">
-          <option value="viewer">Viewer - read-only</option>
-          <option value="operator">Operator - manage servers</option>
-          <option value="admin">Admin - everything</option>
+          <option value="viewer">Viewer (read-only)</option>
+          <option value="operator">Operator (manage servers)</option>
+          <option value="admin">Admin (full access)</option>
         </select>
       </div>`;
     openModal({
@@ -252,12 +253,12 @@ function init() {
       });
       const data = await res.json();
       if (!res.ok || data.ok === false) {
-        toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+        toast(data.error || friendlyError(res, { action: 'save that change' }), { kind: 'error', timeout: 8000 });
         return null;
       }
       return data;
-    } catch (err) {
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+    } catch {
+      toast(friendlyError(null, { action: 'save that change' }), { kind: 'error' });
       return null;
     }
   }

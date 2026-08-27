@@ -4,6 +4,7 @@
 
 import { openModal } from '../lib/modal.js';
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
 
 const root = document.querySelector('[data-history-server]');
@@ -71,7 +72,7 @@ function init(serverId) {
       withBusy(btn, async () => {
         try {
           const res = await fetch(`/api/events/${btn.dataset.eventId}/excerpt`);
-          if (!res.ok) throw new Error(`Could not load the captured log (${res.status})`);
+          if (!res.ok) throw new Error(friendlyError(res, { action: 'load the captured log' }));
           const text = await res.text();
           const pre = document.createElement('pre');
           pre.className =
@@ -103,7 +104,7 @@ function init(serverId) {
 
 async function fetchText(serverId, crash) {
   const res = await fetch(`/api/servers/${serverId}/crashes/${crash.id}/text`);
-  if (!res.ok) throw new Error(`Could not load report (${res.status})`);
+  if (!res.ok) throw new Error(friendlyError(res, { action: 'load that crash report' }));
   return res.text();
 }
 
@@ -175,7 +176,7 @@ async function openViewer(serverId, crash, card) {
         },
       },
       {
-        label: 'Copy stacktrace',
+        label: 'Copy stack trace',
         kind: 'ghost',
         onClick: () => {
           copyToClipboard(extractTrace(text), 'Stack trace copied to clipboard.');

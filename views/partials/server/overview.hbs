@@ -2,7 +2,7 @@
   <div class="card p-4 lg:col-span-2">
     {{#if addresses.length}}
       <div class="mb-4 border-b border-line pb-4">
-        <label class="label" for="ov-address">Server address <span class="text-xs font-normal text-ink-faint">- share this with players on your network</span></label>
+        <label class="label" for="ov-address">Server address <span class="text-xs font-normal text-ink-faint">(share this with players on your network)</span></label>
         <div class="flex flex-wrap items-center gap-2">
           {{#if (gt addresses.length 1)}}
             <select class="input w-auto font-mono" id="ov-address" data-label="Server address">
@@ -12,7 +12,7 @@
             {{! size attr: the field grows with the address instead of clipping long LAN hostnames. }}
             <input class="input w-auto font-mono" id="ov-address" value="{{addresses.[0]}}" size="{{addresses.[0].length}}" readonly>
           {{/if}}
-          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy Address</button>
+          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy address</button>
         </div>
         <p class="help">Playing from the internet? Set up port forwarding or grab the full invite from the Integrations tab.</p>
       </div>

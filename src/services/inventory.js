@@ -109,8 +109,8 @@ async function readPlayerData(serverId, uuid) {
     const buf = await fsp.readFile(file);
     const { parsed } = await nbt.parse(buf); // handles gzip + endianness detection
     data = nbt.simplify(parsed);
-  } catch (err) {
-    throw httpError(422, `Could not parse the player data file: ${err.message}`);
+  } catch {
+    throw httpError(422, "That player's saved data could not be read. It may be from an incompatible version.");
   }
 
   const inventory = [];
@@ -473,7 +473,7 @@ async function assertRunning(serverId, what) {
   try {
     info = await inspectStatus(serverId);
   } catch {
-    throw httpError(503, `Docker is not reachable - cannot ${what}`);
+    throw httpError(503, `Docker is not reachable, so the panel can't ${what}. Check that Docker is running.`);
   }
   if (!info.exists || !RUNNING_STATES.has(info.status)) {
     throw httpError(
@@ -1018,8 +1018,8 @@ async function withDatFile(serverId, ctx, mutate) {
     let parsed;
     try {
       ({ parsed } = await nbt.parse(buf));
-    } catch (err) {
-      throw httpError(422, `Could not parse the player data file: ${err.message}`);
+    } catch {
+      throw httpError(422, "That player's saved data could not be read. It may be from an incompatible version.");
     }
     const result = mutate(parsed.value);
     await backupDat(file);

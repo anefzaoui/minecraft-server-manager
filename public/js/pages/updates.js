@@ -10,6 +10,7 @@
 //   data-target-build): POST /api/servers/:id/mcversion/upgrade.
 
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { runTask } from '../lib/progress.js';
 import { withBusy } from '../lib/loading.js';
@@ -17,7 +18,7 @@ import { withBusy } from '../lib/loading.js';
 document.getElementById('updates-check-all')?.addEventListener('click', async () => {
   try {
     const result = await runTask({
-      title: 'Checking for Updates',
+      title: 'Checking for updates…',
       start: async () => (await postJSON('/api/updates/check', {})).taskId,
     });
     const n = result && result.findings ? result.findings.length : 0;
@@ -29,7 +30,10 @@ document.getElementById('updates-check-all')?.addEventListener('click', async ()
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'Update check failed', { kind: 'error', timeout: 9000 });
+    toast(err.message || 'The update check could not be completed. Please try again.', {
+      kind: 'error',
+      timeout: 9000,
+    });
   }
 });
 
@@ -66,14 +70,15 @@ document.getElementById('updates-table')?.addEventListener('click', async (e) =>
 async function upgradePack(row, { serverId, serverName, subject, current, latest, versionId }) {
   const ok = await confirmDialog({
     title: `Upgrade ${subject}?`,
-    message: `${serverName}: ${current} → ${latest}. Safe flow: pre-update backup → stop → re-pin → recreate → start → monitor. If the server does not come up healthy you get one-click rollback.`,
-    detail: 'Your custom mods are preserved. The server is briefly offline during the swap.',
+    message: `${serverName} moves from ${current} to ${latest}. The panel takes an automatic backup first, applies the new version, and starts the server back up, watching that it comes back healthy.`,
+    detail:
+      'Your custom mods are preserved, and you can roll back with one click if it does not come up. The server is briefly offline during the swap.',
     confirmLabel: 'Upgrade now',
   });
   if (!ok) return;
   try {
     const result = await runTask({
-      title: `Upgrading ${subject} on ${serverName}`,
+      title: `Upgrading ${subject} on ${serverName}…`,
       start: async () => (await postJSON(`/api/servers/${serverId}/pack/upgrade`, { versionId })).taskId,
     });
     if (result && result.ok === false) {
@@ -84,36 +89,36 @@ async function upgradePack(row, { serverId, serverName, subject, current, latest
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'Upgrade failed', { kind: 'error', timeout: 12000 });
+    toast(err.message || 'The upgrade could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
   }
 }
 
 async function offerRollback(serverId, serverName, errorMessage) {
   const ok = await confirmDialog({
-    title: 'Upgrade Failed - Roll Back?',
-    message: errorMessage || 'The server did not come up healthy after the upgrade.',
-    detail: 'Rollback restores the pre-update backup and re-pins the previous pack version.',
+    title: 'Upgrade failed. Roll back?',
+    message: errorMessage || 'The server did not come back healthy after the upgrade.',
+    detail: 'Rolling back restores the automatic pre-update backup and pins the previous pack version.',
     confirmLabel: 'Roll back',
     danger: true,
   });
   if (!ok) return;
   try {
     const result = await runTask({
-      title: `Rolling Back ${serverName}`,
+      title: `Rolling back ${serverName}…`,
       start: async () => (await postJSON(`/api/servers/${serverId}/pack/rollback`, {})).taskId,
     });
     toast(`Rolled back to ${result && result.version ? result.version : 'the previous version'}.`);
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'Rollback failed', { kind: 'error', timeout: 12000 });
+    toast(err.message || 'The rollback could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
   }
 }
 
 async function upgradeMod(row, btn, { serverId, subject, current, latest, contentId }) {
   const ok = await confirmDialog({
     title: `Update ${subject}?`,
-    message: `${current} → ${latest}. The old file is replaced; enabled/disabled state is preserved.`,
+    message: `${current} → ${latest}. The old file is replaced, and the enabled or disabled state is kept.`,
     confirmLabel: 'Update mod',
   });
   if (!ok) return;
@@ -128,49 +133,55 @@ async function upgradeMod(row, btn, { serverId, subject, current, latest, conten
       if (tbody && !tbody.querySelector('[data-update-row]')) setTimeout(() => location.reload(), 900);
     });
   } catch (err) {
-    toast(err.message || 'Mod update failed', { kind: 'error', timeout: 9000 });
+    toast(err.message || 'That mod could not be updated. Please try again.', { kind: 'error', timeout: 9000 });
   }
 }
 
 async function upgradeImage(row, { serverId, serverName, current, latest }) {
   const ok = await confirmDialog({
-    title: 'Update Container Image?',
-    message: `${serverName}: ${current} → ${latest}. Recreates the container with the newer image.`,
-    detail: 'Your world and files are untouched - only the container is swapped. The server is briefly offline.',
+    title: 'Update the server image?',
+    message: `${serverName} moves from ${current} to ${latest}. The panel rebuilds the container on the newer image.`,
+    detail: 'Your world and files are untouched; only the container is replaced. The server is briefly offline.',
     confirmLabel: 'Update now',
   });
   if (!ok) return;
   try {
     const result = await runTask({
-      title: `Updating Container Image on ${serverName}`,
+      title: `Updating the server image on ${serverName}…`,
       start: async () => (await postJSON(`/api/servers/${serverId}/image/upgrade`, {})).taskId,
     });
     if (result && result.ok === false) {
-      toast(result.error || 'Image update failed', { kind: 'error', timeout: 12000 });
+      toast(result.error || 'The image update could not be completed. Please try again.', {
+        kind: 'error',
+        timeout: 12000,
+      });
       return;
     }
-    toast('Container image updated.');
+    toast('Server image updated.');
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'Image update failed', { kind: 'error', timeout: 12000 });
+    toast(err.message || 'The image update could not be completed. Please try again.', {
+      kind: 'error',
+      timeout: 12000,
+    });
   }
 }
 
 async function upgradeMcVersion(row, { serverId, serverName, current, latest, targetVersion, targetBuild, envKey }) {
   const message = targetVersion
-    ? `${serverName}: Minecraft ${current} → ${latest}. A backup is taken first - the world upgrade is permanent.`
-    : `${serverName}: ${current} → ${latest}. Recreates the container with the new build.`;
+    ? `${serverName} moves from Minecraft ${current} to ${latest}. A backup is taken first, but upgrading the world is permanent.`
+    : `${serverName} moves from ${current} to ${latest}. The panel rebuilds the container with the new build.`;
   const ok = await confirmDialog({
-    title: targetVersion ? 'Update Minecraft Version?' : 'Update Loader Build?',
+    title: targetVersion ? 'Update the Minecraft version?' : 'Update the loader build?',
     message,
-    detail: 'The server is briefly offline while it recreates.',
+    detail: 'The server is briefly offline while the container is rebuilt.',
     confirmLabel: 'Update now',
   });
   if (!ok) return;
   try {
     const result = await runTask({
-      title: `Updating ${serverName}`,
+      title: `Updating ${serverName}…`,
       start: async () =>
         (
           await postJSON(`/api/servers/${serverId}/mcversion/upgrade`, {
@@ -184,7 +195,7 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'Update failed', { kind: 'error', timeout: 12000 });
+    toast(err.message || 'The update could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
   }
 }
 
@@ -195,6 +206,6 @@ async function postJSON(url, body) {
     body: JSON.stringify(body || {}),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+  if (!res.ok || data.ok === false) throw new Error(data.error || friendlyError(res, { action: 'start that update' }));
   return data;
 }

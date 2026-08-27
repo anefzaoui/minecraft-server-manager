@@ -53,8 +53,8 @@ try {
 
   const httpServer = app.listen(config.port, config.host, () => {
     const shownHost = config.host === '0.0.0.0' || config.host === '::' ? 'localhost' : config.host;
-    console.log(`Minecraft Server Manager listening on http://${shownHost}:${config.port}`);
-    console.log(`Data root: ${config.dataDir}`);
+    console.log(`[boot] Minecraft Server Manager is listening on http://${shownHost}:${config.port}`);
+    console.log(`[boot] Data folder: ${config.dataDir}`);
     if (config.isExposedBind) {
       console.warn(
         `[security] PANEL_HOST=${config.host} exposes the panel beyond this machine. ` +
@@ -80,7 +80,7 @@ try {
       );
     } else if (err.code === 'EACCES') {
       console.error(
-        `\n[boot] Not allowed to bind ${config.host}:${config.port}. Ports below 1024 need elevated privileges - pick a higher PANEL_PORT.\n`
+        `\n[boot] Not allowed to bind ${config.host}:${config.port}. Ports below 1024 need elevated privileges, so pick a higher PANEL_PORT.\n`
       );
     } else {
       console.error('\n[boot] HTTP server error:', err.message, '\n');
@@ -149,7 +149,9 @@ function startBackgroundServices(httpServer) {
     const { checkDocker } = require('./docker/connect');
     const status = await checkDocker();
     if (!status.available) {
-      console.warn(`[docker] daemon unavailable (${status.error}) - lifecycle features disabled until it comes up`);
+      console.warn(
+        `[docker] Docker is not reachable (${status.error}). Server start, stop, and create stay disabled until it comes up.`
+      );
       return;
     }
     console.log(`[docker] connected: ${status.os} (Docker ${status.version})`);
@@ -175,8 +177,7 @@ function startBackgroundServices(httpServer) {
     // that matches both conditions.
     for (const s of serversService.listServers()) {
       const wantStart =
-        (s.auto_start && !['running', 'starting'].includes(s.status)) ||
-        (s.auto_restart && s.status === 'crashed');
+        (s.auto_start && !['running', 'starting'].includes(s.status)) || (s.auto_restart && s.status === 'crashed');
       if (!wantStart) continue;
       serversService
         .startServer(s.id, { actor: 'system' })

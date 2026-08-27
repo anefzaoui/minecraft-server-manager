@@ -85,17 +85,33 @@ async function fetchIndex() {
       headers: { 'User-Agent': UA, Accept: 'application/json' },
       signal: AbortSignal.timeout(15000),
     });
-  } catch (err) {
-    return stale() || Promise.reject(httpError(502, `Could not reach the GTNH download server (${err.message})`));
+  } catch {
+    return (
+      stale() ||
+      Promise.reject(
+        httpError(502, 'Could not reach the GT New Horizons download server. Check your connection and try again.')
+      )
+    );
   }
   if (!res.ok) {
-    return stale() || Promise.reject(httpError(502, `GTNH download server answered HTTP ${res.status}`));
+    return (
+      stale() ||
+      Promise.reject(
+        httpError(
+          502,
+          'The GT New Horizons download server is not responding correctly right now. Please try again shortly.'
+        )
+      )
+    );
   }
   let raw;
   try {
     raw = await res.json();
-  } catch (err) {
-    return stale() || Promise.reject(httpError(502, `GTNH index is malformed JSON (${err.message})`));
+  } catch {
+    return (
+      stale() ||
+      Promise.reject(httpError(502, 'The GT New Horizons version list could not be read. Please try again shortly.'))
+    );
   }
   db.run(
     `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))

@@ -2,6 +2,7 @@
 // enable/disable toggle, delete, and edit (= delete + recreate, labeled).
 
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { enhanceAll } from '../lib/select.js';
@@ -34,8 +35,8 @@ function init() {
     const delBtn = e.target.closest('[data-schedule-delete]');
     if (delBtn) {
       const ok = await confirmDialog({
-        title: 'Delete This Schedule?',
-        message: `${row.dataset.task} (${row.dataset.cron}) stops firing immediately.`,
+        title: 'Delete this schedule?',
+        message: `${row.dataset.task} (${row.dataset.cron}) stops running immediately.`,
         confirmLabel: 'Delete',
         danger: true,
       });
@@ -49,7 +50,7 @@ function init() {
           row.remove();
           if (tbody && !tbody.querySelector('[data-schedule-row]')) setTimeout(() => location.reload(), 600);
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: 'delete that schedule' }), { kind: 'error' });
         }
       });
     } else if (e.target.closest('[data-schedule-edit]')) {
@@ -85,7 +86,8 @@ function init() {
         body: JSON.stringify({ enabled }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok === false) throw new Error(data.error || `Toggle failed (${res.status})`);
+      if (!res.ok || data.ok === false)
+        throw new Error(data.error || friendlyError(res, { action: 'update that schedule' }));
       toast(`Schedule ${enabled ? 'enabled' : 'disabled'}.`);
     } catch (err) {
       input.checked = !enabled;
@@ -101,7 +103,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   content.innerHTML = `
     <label class="label">Runs on</label>
     <select class="input" data-sc-server data-label="Runs on">
-      <option value="">- global (the panel itself) -</option>
+      <option value="">Global (the panel itself)</option>
       ${servers.map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`).join('')}
     </select>
     <label class="label mt-3">Task</label>
@@ -118,7 +120,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
     <div class="mt-2 rounded-md border border-line bg-raised p-2.5 text-xs" data-sc-preview>
       <span class="text-ink-faint">Type a cron expression to preview the next runs.</span>
     </div>
-    ${edit ? '<p class="help mt-3">Saving replaces the schedule (create, then remove the old one) - timing continues seamlessly.</p>' : ''}`;
+    ${edit ? '<p class="help mt-3">Saving creates the updated schedule and then removes the old one. The timing carries over without a gap.</p>' : ''}`;
 
   const serverSel = content.querySelector('[data-sc-server]');
   const typeSel = content.querySelector('[data-sc-type]');
@@ -157,7 +159,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
       const res = await fetch(`/api/schedules/preview?cron=${encodeURIComponent(expr)}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.ok === false) {
-        preview.innerHTML = `<span class="text-danger">${escapeHtml(data.error || 'Invalid cron expression')}</span>`;
+        preview.innerHTML = `<span class="text-danger">${escapeHtml(data.error || "That cron expression isn't valid.")}</span>`;
         return;
       }
       preview.innerHTML = `<span class="text-ink-faint">Next runs:</span> ${data.runs
@@ -174,7 +176,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   if (edit) renderPreview();
 
   openModal({
-    title: edit ? `Edit schedule - ${edit.taskType}` : 'New scheduled task',
+    title: edit ? `Edit Schedule: ${edit.taskType}` : 'New Scheduled Task',
     content,
     actions: [
       { label: 'Cancel', kind: 'ghost' },
@@ -191,7 +193,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
           const meta = typeMeta();
           const serverId = serverSel.value || null;
           if (meta.serverScoped && !serverId) {
-            toast(`"${meta.label}" runs on a server - pick one.`, { kind: 'error' });
+            toast(`"${meta.label}" runs on a server. Pick one first.`, { kind: 'error' });
             return false;
           }
           const payload = {};
@@ -218,13 +220,14 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
               body: JSON.stringify(body),
             });
             const data = await res.json().catch(() => ({}));
-            if (!res.ok || data.ok === false) throw new Error(data.error || `Save failed (${res.status})`);
+            if (!res.ok || data.ok === false)
+              throw new Error(data.error || friendlyError(res, { action: 'save that schedule' }));
             if (edit) {
               const del = await fetch(`/api/schedules/${edit.id}`, { method: 'DELETE' });
               const delData = await del.json().catch(() => ({}));
               if (!del.ok || delData.ok === false) {
                 // Worst case is a duplicate, never a loss - say so plainly.
-                toast('Saved as a new schedule, but the old one could not be removed - delete it manually.', {
+                toast('Saved as a new schedule, but the old one could not be removed. Delete it manually.', {
                   kind: 'warn',
                   timeout: 10000,
                 });
@@ -242,4 +245,3 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   });
   enhanceAll(content);
 }
-

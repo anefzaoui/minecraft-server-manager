@@ -1,6 +1,7 @@
 // Map tab: enable/disable BlueMap, plus a probe so the embed never shows the
 // proxy's raw error page while the map isn't serving yet.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy } from '../lib/loading.js';
 
@@ -54,17 +55,17 @@ document.addEventListener('click', async (e) => {
       const res = await fetch(`/api/servers/${id}/map/enable`, { method: 'POST' });
       const data = await res.json();
       if (data.ok) {
-        toast('Live map enabled - restart the server to bring it up.');
+        toast('Live map enabled. Restart the server to bring it up.');
         setTimeout(() => location.reload(), 900);
       } else {
-        toast(data.error || 'Could not enable the map', { kind: 'error', timeout: 9000 });
+        toast(data.error || friendlyError(res, { action: 'enable the live map' }), { kind: 'error', timeout: 9000 });
       }
     } finally {
       restore();
     }
   } else {
     const ok = await confirmDialog({
-      title: 'Disable the Live Map?',
+      title: 'Disable the live map?',
       message: 'Removes BlueMap from this server. Rendered map tiles stay on disk until you delete them from Files.',
       confirmLabel: 'Disable',
       danger: true,
@@ -75,10 +76,10 @@ document.addEventListener('click', async (e) => {
       const res = await fetch(`/api/servers/${id}/map/disable`, { method: 'POST' });
       const data = await res.json();
       if (data.ok) {
-        toast('Map disabled - applies on next restart.');
+        toast('Live map disabled. Applies on the next restart.');
         setTimeout(() => location.reload(), 900);
       } else {
-        toast(data.error || 'Failed', { kind: 'error' });
+        toast(data.error || friendlyError(res, { action: 'disable the live map' }), { kind: 'error' });
       }
     } finally {
       restore();

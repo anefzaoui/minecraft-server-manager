@@ -47,7 +47,7 @@ export function countries() {
 
 export function fillTimezoneSelect(select, current, systemTz) {
   select.innerHTML = '';
-  const auto = new Option(`Auto - system time zone${systemTz ? ` (${systemTz})` : ''}`, 'auto');
+  const auto = new Option(`Auto (use the system time zone${systemTz ? `: ${systemTz}` : ''})`, 'auto');
   select.add(auto);
   for (const tz of timezones()) select.add(new Option(tz, tz));
   select.value = current && current !== 'auto' ? current : 'auto';
@@ -56,7 +56,7 @@ export function fillTimezoneSelect(select, current, systemTz) {
 
 export function fillCountrySelect(select, current, systemCc) {
   select.innerHTML = '';
-  const auto = new Option(`Auto - system country${systemCc ? ` (${systemCc})` : ''}`, 'auto');
+  const auto = new Option(`Auto (use the system country${systemCc ? `: ${systemCc}` : ''})`, 'auto');
   select.add(auto);
   for (const { code, name } of countries()) select.add(new Option(`${name} (${code})`, code));
   select.value = current && current !== 'auto' ? current : 'auto';

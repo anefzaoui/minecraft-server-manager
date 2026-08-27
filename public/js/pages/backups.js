@@ -9,6 +9,7 @@
 // progress modal (runTask) polls it.
 
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { fmtBytes } from '../lib/format.js';
 import { runTask } from '../lib/progress.js';
@@ -36,8 +37,8 @@ document.addEventListener('click', async (e) => {
 
   if (action === 'restore') {
     const ok = await confirmDialog({
-      title: `Restore This Backup?`,
-      message: `${serverName || 'The server'} is stopped first, a safety backup of the current state is taken, then the server directory is replaced with the archive.`,
+      title: `Restore this backup?`,
+      message: `${serverName || 'The server'} is stopped first, a safety backup of the current state is taken, then the server's files are replaced with this archive.`,
       detail: `${file}\n${fmtBytes(size)} · ${reason || 'manual'}`,
       confirmLabel: 'Restore backup',
       danger: true,
@@ -45,7 +46,7 @@ document.addEventListener('click', async (e) => {
     if (!ok) return;
     try {
       await runTask({
-        title: `Restoring ${file}`,
+        title: `Restoring ${file}…`,
         start: async () => {
           const res = await postJSON(`/api/servers/${serverId}/backups/${backupId}/restore`, {});
           return res.taskId;
@@ -55,14 +56,14 @@ document.addEventListener('click', async (e) => {
       setTimeout(() => location.reload(), 800);
     } catch (err) {
       if (err.dismissed) return; // progress hidden - the task tray takes over
-      toast(err.message || 'Restore failed', { kind: 'error', timeout: 9000 });
+      toast(err.message || 'That backup could not be restored. Please try again.', { kind: 'error', timeout: 9000 });
     }
     return;
   }
 
   if (action === 'delete') {
     const ok = await confirmDialog({
-      title: 'Delete This Backup?',
+      title: 'Delete this backup?',
       message: 'The archive is removed permanently.',
       detail: `${file}\n${fmtBytes(size)} will be freed.`,
       confirmLabel: 'Delete',
@@ -73,7 +74,8 @@ document.addEventListener('click', async (e) => {
     try {
       const res = await fetch(`/api/backups/${backupId}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok === false) throw new Error(data.error || `Delete failed (${res.status})`);
+      if (!res.ok || data.ok === false)
+        throw new Error(data.error || friendlyError(res, { action: 'delete that backup' }));
       toast(`Backup deleted (${fmtBytes(data.freedBytes)} freed).`);
       row.remove();
       refreshTotal();
@@ -89,7 +91,7 @@ async function createBackup(serverId, serverName) {
   if (!serverId) return;
   try {
     const result = await runTask({
-      title: `Backing Up ${serverName}`,
+      title: `Backing up ${serverName}…`,
       start: async () => {
         const res = await postJSON(`/api/servers/${serverId}/backups`, {});
         return res.taskId;
@@ -101,7 +103,7 @@ async function createBackup(serverId, serverName) {
     setTimeout(() => location.reload(), 800);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'Backup failed', { kind: 'error', timeout: 9000 });
+    toast(err.message || 'That backup could not be created. Please try again.', { kind: 'error', timeout: 9000 });
   }
 }
 
@@ -142,6 +144,7 @@ async function postJSON(url, body) {
     body: JSON.stringify(body || {}),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+  if (!res.ok || data.ok === false)
+    throw new Error(data.error || friendlyError(res, { action: 'start that backup task' }));
   return data;
 }

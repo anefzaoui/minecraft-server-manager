@@ -2,6 +2,7 @@
 // IP bans, and the three-mode teleport modal. Mutations POST to the players
 // API and reload the page section.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
@@ -27,7 +28,7 @@ function init(root) {
       body: JSON.stringify(body || {}),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (HTTP ${res.status})`);
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'complete that action' }));
     return data;
   }
 
@@ -39,7 +40,7 @@ function init(root) {
   }
 
   function fail(err) {
-    toast(err.message || 'Something went wrong', { kind: 'error' });
+    toast(err.message || 'Something went wrong. Please try again.', { kind: 'error' });
   }
 
   // ------------------------------------------------- in-place row patching
@@ -148,7 +149,9 @@ function init(root) {
       enforce.disabled = true; // keep the toggle visual - just lock it in flight
       try {
         await api('/whitelist-enforce', { on: enforce.checked });
-        toast(`Whitelist enforcement ${enforce.checked ? 'on' : 'off'}${running ? '' : ' (applies on next start)'}`);
+        toast(
+          `Whitelist enforcement turned ${enforce.checked ? 'on' : 'off'}.${running ? '' : ' Applies on the next start.'}`
+        );
       } catch (err) {
         enforce.checked = !enforce.checked;
         fail(err);
@@ -169,13 +172,21 @@ function init(root) {
         if (role === 'whitelist') {
           await withBusy(toggle, async () => {
             await api('/whitelist', { name, on });
-            patchRow(name, { whitelisted: on }, `${name} ${on ? 'whitelisted' : 'removed from whitelist'}`);
+            patchRow(
+              name,
+              { whitelisted: on },
+              `${name} ${on ? 'added to the whitelist' : 'removed from the whitelist'}.`
+            );
           });
         } else if (role === 'op') {
           await withBusy(toggle, async () => {
             const { result } = await api('/op', { name, on });
             if (result.note) toast(result.note, { kind: 'info', timeout: 8000 });
-            patchRow(name, { op: on, opLevel: result.opLevel }, `${name} ${on ? 'is now an operator' : 'de-opped'}`);
+            patchRow(
+              name,
+              { op: on, opLevel: result.opLevel },
+              `${name} ${on ? 'is now an operator' : 'is no longer an operator'}.`
+            );
           });
         } else if (role === 'ban') {
           if (on) banModal(name);
@@ -188,7 +199,7 @@ function init(root) {
           ) {
             await withBusy(toggle, async () => {
               await api('/pardon', { name });
-              patchRow(name, { banned: false }, `${name} pardoned`);
+              patchRow(name, { banned: false }, `${name} pardoned.`);
             });
           }
         }
@@ -209,11 +220,15 @@ function init(root) {
     else if (act.dataset.act === 'notes') notesModal(name);
     else if (act.dataset.act === 'copy-uuid') {
       window.CD.copyText(act.dataset.uuid).then((ok) => {
-        if (ok) toast('UUID copied');
+        if (ok) toast('UUID copied.');
       });
     } else if (act.dataset.act === 'pardon-ip') {
       const ip = act.dataset.ip;
-      confirmDialog({ title: `Unban ${ip}?`, confirmLabel: 'Unban' }).then(async (ok) => {
+      confirmDialog({
+        title: `Unban ${ip}?`,
+        message: 'This IP address will be able to connect to the server again.',
+        confirmLabel: 'Unban',
+      }).then(async (ok) => {
         if (!ok) return;
         try {
           await withBusy(act, async () => {
@@ -223,7 +238,7 @@ function init(root) {
               document.getElementById('banip-table')?.classList.add('hidden');
               document.getElementById('banip-empty')?.classList.remove('hidden');
             }
-            toast(`IP ${ip} unbanned`);
+            toast(`IP ${ip} unbanned.`);
           });
         } catch (err) {
           fail(err);
@@ -242,7 +257,7 @@ function init(root) {
       <div>
         <label class="label">Player name</label>
         <input class="input" data-f="name" placeholder="Notch" autocomplete="off" spellcheck="false" maxlength="16">
-        <p class="mt-1 text-xs text-ink-faint">Resolved to a UUID via the Mojang API - the player never needs to have joined.</p>
+        <p class="mt-1 text-xs text-ink-faint">The name is looked up with Mojang, so the player never needs to have joined before.</p>
       </div>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> Add to whitelist</label>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> Make operator (level 4)</label>`;
@@ -260,17 +275,17 @@ function init(root) {
               const wl = body.querySelector('[data-f="whitelist"]').checked;
               const op = body.querySelector('[data-f="op"]').checked;
               if (!PLAYER_NAME_RE.test(name)) {
-                toast('Enter a valid player name', { kind: 'error' });
+                toast('Enter a valid player name.', { kind: 'error' });
                 return false;
               }
               if (!wl && !op) {
-                toast('Pick at least one role to grant', { kind: 'error' });
+                toast('Pick at least one role to grant.', { kind: 'error' });
                 return false;
               }
               try {
                 if (wl) await api('/whitelist', { name, on: true });
                 if (op) await api('/op', { name, on: true });
-                refresh(`${name} added`);
+                refresh(`${name} added.`);
               } catch (err) {
                 fail(err);
                 return false;
@@ -286,7 +301,7 @@ function init(root) {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label">Kick message (shown to the player)</label>
-      <input class="input" data-f="message" placeholder="Kicked by an operator." maxlength="256">`;
+      <input class="input" data-f="message" placeholder="Kicked by an operator" maxlength="256">`;
     openModal({
       title: `Kick ${name}`,
       content,
@@ -300,7 +315,7 @@ function init(root) {
           onClick: async ({ body }) => {
             try {
               await api('/kick', { name, message: body.querySelector('[data-f="message"]').value.trim() || undefined });
-              patchRow(name, { online: false }, `${name} kicked`);
+              patchRow(name, { online: false }, `${name} kicked.`);
             } catch (err) {
               fail(err);
               return false;
@@ -326,12 +341,12 @@ function init(root) {
     content.innerHTML = `
       <div>
         <label class="label">Ban reason (recorded in the ban list)</label>
-        <input class="input" data-f="reason" placeholder="Banned by an operator." maxlength="256">
+        <input class="input" data-f="reason" placeholder="Banned by an operator" maxlength="256">
       </div>
       <div>
         <label class="label">Duration</label>
         <select class="input" data-f="duration" data-label="Ban duration">${DURATION_OPTIONS}</select>
-        <p class="mt-2 text-xs text-ink-faint">A temporary ban lifts itself automatically once it expires - no need to remember to pardon them.</p>
+        <p class="mt-2 text-xs text-ink-faint">A temporary ban lifts automatically when it expires, so there's no need to remember to pardon them.</p>
       </div>`;
     openModal({
       title: `Ban ${name}`,
@@ -355,7 +370,7 @@ function init(root) {
               patchRow(
                 name,
                 { banned: true, banReason: reason, banExpires: result.banExpires },
-                `${name} banned${result.banExpires ? ` until ${result.banExpires}` : ''}`
+                `${name} banned${result.banExpires ? ` until ${result.banExpires}` : ''}.`
               );
             } catch (err) {
               fail(err);
@@ -408,7 +423,8 @@ function init(root) {
             await withBusy(del, async () => {
               const res = await fetch(`/api/servers/${serverId}/players/notes/${n.id}`, { method: 'DELETE' });
               const data = await res.json().catch(() => ({}));
-              if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (HTTP ${res.status})`);
+              if (!res.ok || !data.ok)
+                throw new Error(data.error || friendlyError(res, { action: 'delete that note' }));
               row.remove();
               if (!list.children.length) empty.classList.remove('hidden');
             });
@@ -460,14 +476,14 @@ function init(root) {
     content.innerHTML = `
       <label class="label">Permission level</label>
       <select class="input" data-f="level" data-label="Op permission level">
-        <option value="1">1 - bypass spawn protection</option>
-        <option value="2">2 - command blocks + most commands</option>
-        <option value="3">3 - player management (kick, ban, op)</option>
-        <option value="4" selected>4 - full access (stop, save-all)</option>
+        <option value="1">1 (bypass spawn protection)</option>
+        <option value="2">2 (command blocks and most commands)</option>
+        <option value="3">3 (player management: kick, ban, op)</option>
+        <option value="4" selected>4 (full access, including stop and save-all)</option>
       </select>
-      <p class="mt-2 text-xs text-ink-faint">Levels below 4 are stored in ops.json; a running server applies them after a restart.</p>`;
+      <p class="mt-2 text-xs text-ink-faint">Levels below 4 take effect after the next restart of a running server.</p>`;
     openModal({
-      title: `Op Level for ${name}`,
+      title: `Operator level for ${name}`,
       content,
       size: 'sm',
       actions: [
@@ -484,7 +500,11 @@ function init(root) {
                 level: Number(body.querySelector('[data-f="level"]').value),
               });
               if (result.note) toast(result.note, { kind: 'info', timeout: 8000 });
-              patchRow(name, { op: true, opLevel: result.opLevel }, `${name} opped at level ${result.opLevel}`);
+              patchRow(
+                name,
+                { op: true, opLevel: result.opLevel },
+                `${name} is now an operator at level ${result.opLevel}.`
+              );
             } catch (err) {
               fail(err);
               return false;
@@ -502,7 +522,7 @@ function init(root) {
     content.innerHTML = `
       <div class="seg w-full" role="tablist">
         <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="biome">Nearest biome</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
         <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
         <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
         <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
@@ -514,7 +534,7 @@ function init(root) {
           <div><label class="label">Y</label><input class="input" type="number" data-f="y" placeholder="surface"></div>
           <div><label class="label">Z</label><input class="input" type="number" data-f="z" placeholder="0"></div>
         </div>
-        <p class="text-xs text-ink-faint">Leave Y empty to land safely on the highest ground. With an explicit Y the player gets 15s of Slow Falling as insurance.</p>
+        <p class="text-xs text-ink-faint">Leave Y empty to land safely on the highest solid ground. If you set Y yourself, the player gets 15 seconds of Slow Falling as a safeguard.</p>
         <div>
           <label class="label">Dimension</label>
           <select class="input" data-f="dimension" data-label="Dimension">
@@ -530,7 +550,7 @@ function init(root) {
         <div>
           <label class="label">Biome</label>
           <select class="input" data-f="biome" data-label="Biome"><option value="">Loading biomes…</option></select>
-          <p class="mt-1 text-xs text-ink-faint">Searches from the player's current position via /locate biome.</p>
+          <p class="mt-1 text-xs text-ink-faint">Searches out from the player's current position for the nearest matching biome.</p>
         </div>
       </div>
 
@@ -553,7 +573,7 @@ function init(root) {
             <option value="origin">World center (0, 0)</option>
           </select>
         </div>
-        <p class="text-xs text-ink-faint">Panel-built RTP - works on any server, version or modpack. Picks a random spot in the ring and lands on solid ground; ocean picks are retried automatically (up to 10 rolls).</p>
+        <p class="text-xs text-ink-faint">Built-in random teleport that works on any server, version, or modpack. Picks a random spot in the ring and lands on solid ground; ocean picks are retried automatically, up to 10 times.</p>
       </div>
 
       <div data-tp-panel="structure" class="hidden space-y-3">
@@ -565,7 +585,7 @@ function init(root) {
           <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
           <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise me (random one, not nearest)</label>
         </div>
-        <p class="text-xs text-ink-faint">"Surprise me" searches from a random point in the radius - a different village every time. Lands safely on the surface next to it.</p>
+        <p class="text-xs text-ink-faint">"Surprise me" searches from a random point in the radius, so you get a different result every time. It lands safely on the surface next to the structure.</p>
       </div>`;
 
     let mode = 'coords';
@@ -605,14 +625,14 @@ function init(root) {
           busyLabel: 'Searching…',
           onClick: async ({ body }) => {
             if (tpInFlight) {
-              toast('Hold on - the previous teleport is still searching.', { kind: 'error' });
+              toast('The previous teleport is still searching. Please wait for it to finish.', { kind: 'error' });
               return false;
             }
             const f = (k) => body.querySelector(`[data-f="${k}"]`).value;
             let payload;
             if (mode === 'coords') {
               if ([f('x'), f('z')].some((v) => v.trim() === '')) {
-                toast('Enter X and Z (Y is optional - empty lands on the surface)', { kind: 'error' });
+                toast('Enter X and Z. Y is optional; leave it empty to land on the surface.', { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, x: Number(f('x')), z: Number(f('z')) };
@@ -620,7 +640,7 @@ function init(root) {
               if (f('dimension')) payload.dimension = f('dimension');
             } else if (mode === 'biome') {
               if (!f('biome')) {
-                toast('Pick a biome', { kind: 'error' });
+                toast('Pick a biome.', { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, biome: f('biome') };
@@ -634,7 +654,7 @@ function init(root) {
               };
             } else if (mode === 'structure') {
               if (!f('structure')) {
-                toast('Pick a structure', { kind: 'error' });
+                toast('Pick a structure.', { kind: 'error' });
                 return false;
               }
               payload = {
@@ -646,7 +666,7 @@ function init(root) {
               };
             } else {
               if (!f('target')) {
-                toast('No target player available', { kind: 'error' });
+                toast('No target player available.', { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, target: f('target') };
@@ -657,12 +677,12 @@ function init(root) {
               const at = (r) => `${r.x}, ${r.z}${r.dimension ? ` in ${dimLong(r.dimension)}` : ''}`;
               toast(
                 mode === 'biome'
-                  ? `${name} sent to ${prettyBiome(result.biome)} at ${at(result)} (surface)`
+                  ? `${name} sent to ${prettyBiome(result.biome)} at ${at(result)} (surface).`
                   : mode === 'rtp'
-                    ? `${name} randomly teleported ${result.distance} blocks out to ${at(result)}`
+                    ? `${name} randomly teleported ${result.distance} blocks out to ${at(result)}.`
                     : mode === 'structure'
-                      ? `${name} sent to a ${prettyBiome(result.structure)} at ${at(result)} (surface)`
-                      : `${name} teleported`
+                      ? `${name} sent to a ${prettyBiome(result.structure)} at ${at(result)} (surface).`
+                      : `${name} teleported.`
               );
             } catch (err) {
               fail(err);
@@ -685,7 +705,7 @@ function init(root) {
         sel.innerHTML = dimOptions(biomes || []);
         sel.dispatchEvent(new Event('change', { bubbles: true })); // resync the enhanced trigger
       })
-      .catch(() => toast('Could not load the biome list', { kind: 'error' }));
+      .catch(() => toast('The biome list could not be loaded.', { kind: 'error' }));
 
     // Structure list too - server-derived when available, vanilla bundle otherwise.
     fetch(`/api/servers/${serverId}/players/structures`)
@@ -693,7 +713,7 @@ function init(root) {
       .then(({ structures }) => {
         const sel = modal.body.querySelector('[data-f="structure"]');
         if (!structures || !structures.length) {
-          sel.innerHTML = '<option value="">No structure list available</option>';
+          sel.innerHTML = '<option value="">No structure list available.</option>';
         } else {
           sel.innerHTML = dimOptions(structures);
           const village = structures.find((s) => /village/.test(s.id));
@@ -701,7 +721,7 @@ function init(root) {
         }
         sel.dispatchEvent(new Event('change', { bubbles: true })); // resync the enhanced trigger
       })
-      .catch(() => toast('Could not load the structure list', { kind: 'error' }));
+      .catch(() => toast('The structure list could not be loaded.', { kind: 'error' }));
   }
 
   // "minecraft:snowy_plains" / "#minecraft:village" → "Snowy plains" / "Village"
@@ -776,7 +796,7 @@ function init(root) {
     const player = banIpPlayer.value.trim();
     const duration = banIpDuration.value;
     if (!ip) {
-      toast('Enter an IP address', { kind: 'error' });
+      toast('Enter an IP address.', { kind: 'error' });
       banIpIp.focus();
       return;
     }
@@ -793,7 +813,7 @@ function init(root) {
         banIpReason.value = '';
         banIpPlayer.value = '';
         banIpDuration.value = '';
-        toast(`IP ${ip} banned`);
+        toast(`IP ${ip} banned.`);
       });
     } catch (err) {
       fail(err);

@@ -188,7 +188,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
   if (info.exists && ['running', 'starting', 'unhealthy'].includes(info.status)) {
     throw httpError(
       409,
-      'The server did not stop - restore aborted to avoid corrupting the live world. Stop it manually and retry.'
+      'The server did not stop, so the restore was cancelled to avoid corrupting the live world. Stop it manually and try again.'
     );
   }
 

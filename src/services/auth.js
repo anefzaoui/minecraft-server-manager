@@ -25,10 +25,12 @@ function firstRunNeeded() {
 }
 
 function createUser({ username, password, role = 'admin' }, { actor = 'system' } = {}) {
-  if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) throw httpError(400, 'Username: 2–32 letters, numbers, _ . -');
+  if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username))
+    throw httpError(400, 'A username must be 2 to 32 characters: letters, numbers, and _ . - only.');
   if (typeof password !== 'string' || password.length < 8)
-    throw httpError(400, 'Password must be at least 8 characters');
-  if (db.get('SELECT 1 AS x FROM users WHERE username = ?', username)) throw httpError(409, 'Username already exists');
+    throw httpError(400, 'A password must be at least 8 characters.');
+  if (db.get('SELECT 1 AS x FROM users WHERE username = ?', username))
+    throw httpError(409, 'That username is already taken.');
   const id = `usr_${nanoid(8)}`;
   db.run(
     'INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)',
@@ -77,18 +79,18 @@ function revokeOtherSessions(userId, exceptSid = null) {
 
 function setPassword(id, password, { actor = 'system', exceptSid = null } = {}) {
   if (typeof password !== 'string' || password.length < 8)
-    throw httpError(400, 'Password must be at least 8 characters');
+    throw httpError(400, 'A password must be at least 8 characters.');
   db.run('UPDATE users SET password_hash = ? WHERE id = ?', bcrypt.hashSync(password, 11), id);
   revokeOtherSessions(id, exceptSid);
   recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(id)?.username}` });
 }
 
 function setRole(id, role, { actor = 'system' } = {}) {
-  if (!['admin', 'operator', 'viewer'].includes(role)) throw httpError(400, 'Invalid role');
+  if (!['admin', 'operator', 'viewer'].includes(role)) throw httpError(400, 'Pick a role: admin, operator, or viewer.');
   const admins = db.get("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'").n;
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (user && user.role === 'admin' && role !== 'admin' && admins <= 1) {
-    throw httpError(409, 'Cannot demote the last admin');
+    throw httpError(409, "You can't change the last admin's role.");
   }
   db.run('UPDATE users SET role = ? WHERE id = ?', role, id);
   recordEvent({ actor, type: 'user-role-changed', summary: `${user?.username} role → ${role}` });
@@ -98,7 +100,7 @@ function deleteUser(id, { actor = 'system' } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) return;
   if (user.role === 'admin' && db.get("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'").n <= 1) {
-    throw httpError(409, 'Cannot delete the last admin');
+    throw httpError(409, "You can't delete the last admin account.");
   }
   db.run('DELETE FROM users WHERE id = ?', id);
   recordEvent({ actor, type: 'user-deleted', summary: `User deleted: ${user.username}` });
@@ -125,7 +127,7 @@ function publicUser(u) {
 
 /** Set a built-in preset avatar (one of config/avatars.js's AVATAR_PRESETS). */
 function setAvatarPreset(id, key, { actor = 'system' } = {}) {
-  if (!AVATAR_PRESET_KEYS.has(key)) throw httpError(400, 'Unknown avatar preset');
+  if (!AVATAR_PRESET_KEYS.has(key)) throw httpError(400, "That profile picture option isn't recognized.");
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   db.run('UPDATE users SET avatar = ? WHERE id = ?', `preset:${key}`, id);
@@ -167,7 +169,7 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   if (user.totp_enabled) {
-    throw httpError(409, 'Two-factor authentication is already enabled - disable it first to re-enroll.');
+    throw httpError(409, 'Two-factor authentication is already on. Turn it off first to set it up again.');
   }
   // Re-check the account's own password before ENABLING 2FA, exactly as disable
   // and regenerate do. Without it, a hijacked-but-unlocked session (no password
@@ -175,9 +177,9 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   // 2FA yet - locking the real owner out on their next login until an admin
   // force-reset. The UI always sends the password; the API must not rely on that.
   // Checked before the code so it can't double as a code-verification oracle.
-  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'Wrong password');
+  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'That password is incorrect.');
   if (totp.verify(secret, code) == null) {
-    throw httpError(400, 'That code is incorrect or expired - try the next one your app shows.');
+    throw httpError(400, 'That code is incorrect or has expired. Try the next one your app shows.');
   }
   const backupCodes = totp.generateBackupCodes();
   const hashed = backupCodes.map((c) => bcrypt.hashSync(c, 11));
@@ -200,7 +202,7 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
 function disableTotp(id, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
-  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'Wrong password');
+  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'That password is incorrect.');
   db.run(
     'UPDATE users SET totp_secret = NULL, totp_enabled = 0, totp_backup_codes_json = NULL, totp_last_step = NULL WHERE id = ?',
     id
@@ -234,8 +236,8 @@ function adminDisableTotp(id, { actor = 'system' } = {}) {
 function regenerateBackupCodes(id, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
-  if (!user.totp_enabled) throw httpError(400, 'Two-factor authentication is not enabled');
-  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'Wrong password');
+  if (!user.totp_enabled) throw httpError(400, 'Two-factor authentication is not turned on for this account.');
+  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'That password is incorrect.');
   const backupCodes = totp.generateBackupCodes();
   const hashed = backupCodes.map((c) => bcrypt.hashSync(c, 11));
   db.run('UPDATE users SET totp_backup_codes_json = ? WHERE id = ?', JSON.stringify(hashed), id);

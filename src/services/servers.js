@@ -475,7 +475,7 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
       type: 'stop-failed',
       summary: `Graceful stop did not take effect: ${err.message} - the container is still running. Try Force kill.`,
     });
-    throw httpError(502, 'The server did not stop. Try Force kill, or check the Docker daemon.');
+    throw httpError(502, 'The server did not stop. Try Force stop, or check that Docker is running.');
   }
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
   const excerpt = await fetchLogs(id, { tail: 100 }).catch(() => '');
@@ -822,8 +822,7 @@ async function refreshStatusesInner({ boot }) {
       // stall ceiling. Also re-check a server already flagged 'stalled' so it
       // can recover to 'running' once 'Done (' finally shows up.
       const stillBooting =
-        info.exists &&
-        (info.status === 'starting' || (info.status === 'running' && info.health == null));
+        info.exists && (info.status === 'starting' || (info.status === 'running' && info.health == null));
       if ((server.status === 'starting' || server.status === 'stalled') && stillBooting) {
         const startedMs = Date.parse(String(server.last_started_at || '').replace(' ', 'T') + 'Z');
         const elapsedMs = Number.isFinite(startedMs) ? Date.now() - startedMs : Infinity;

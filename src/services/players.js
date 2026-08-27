@@ -74,7 +74,7 @@ function readJson(serverId, file) {
     return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
     if (err.code === 'ENOENT') return [];
-    throw httpError(500, `Could not read ${file}: ${err.message}`);
+    throw httpError(500, 'Could not read that player file on the server.');
   }
 }
 
@@ -130,7 +130,7 @@ async function listOnlineNames(serverId, { throwOnError = false } = {}) {
     const parsed = parsePlayerList(out);
     // Unparseable is "couldn't ask", not "confirmed nobody online" - see the
     // throwOnError note above.
-    if (!parsed) throw httpError(502, 'Could not parse player list from RCON output');
+    if (!parsed) throw httpError(502, "Could not read the player list from the server's response.");
     return parsed.names;
   } catch (err) {
     if (throwOnError) throw err;
@@ -885,7 +885,7 @@ async function tpToStructure(
     );
   }
   const m = /is at \[(-?\d+),\s*(~|-?\d+),\s*(-?\d+)\]/.exec(located);
-  if (!m) throw httpError(502, `Could not parse the locate result: ${located}`);
+  if (!m) throw httpError(502, 'Could not read the search result from the server. Try again in a moment.');
   const x = Number(m[1]);
   const z = Number(m[3]);
 
@@ -1158,7 +1158,7 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
     throw httpError(
       502,
       located
-        ? `Could not parse the locate result: ${located}`
+        ? 'Could not read the search result from the server. Try again in a moment.'
         : `The server returned nothing for ${biomeId} in ${searchDim} - it may not generate in this world (modded packs sometimes replace vanilla biomes).`
     );
   }

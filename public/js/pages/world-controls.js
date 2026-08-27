@@ -49,7 +49,7 @@ function init(serverId, running) {
       const res = await fetch(`/api/servers/${serverId}/world/state`);
       const data = await res.json();
       if (!data.ok || !data.running) {
-        stateLine.textContent = 'World state unavailable - is the server still starting?';
+        stateLine.textContent = 'The world state is not available yet. The server may still be starting.';
         return;
       }
       const s = data.state;
@@ -68,7 +68,7 @@ function init(serverId, running) {
       } else {
         // Say what is actually known - "loaded" while the clock stays hidden
         // asserted a success the user can't see.
-        stateLine.textContent = 'Connected - this server version does not report the world clock.';
+        stateLine.textContent = 'Connected. This server version does not report the world clock.';
       }
       // Reflect gamerule states on the toggle chips: aria-pressed carries the
       // state (the CSS chip[aria-pressed] rule styles it), data-tip explains it.
@@ -76,11 +76,11 @@ function init(serverId, running) {
         const value = s[chip.dataset.rule];
         chip.dataset.on = value ? '1' : '0';
         chip.setAttribute('aria-pressed', String(value === true));
-        if (value !== undefined) chip.dataset.tip = value ? 'ON - click to turn off' : 'OFF - click to turn on';
+        if (value !== undefined) chip.dataset.tip = value ? 'On. Click to turn off.' : 'Off. Click to turn on.';
       });
     } catch {
       stateLine.classList.remove('hidden');
-      stateLine.textContent = 'World state unavailable.';
+      stateLine.textContent = 'The world state is not available right now.';
     }
   }
 
@@ -93,7 +93,7 @@ function init(serverId, running) {
         body: JSON.stringify({ action }),
       });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'Command failed');
+      if (!data.ok) throw new Error(data.error || 'That command could not be run. Please try again.');
       toast(data.label);
       // Interventions change the clock/pause state - resync right away and
       // reset freeze inference so the next sync doesn't misread a /time set.

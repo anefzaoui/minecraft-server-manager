@@ -9,6 +9,7 @@
     <div class="ml-auto flex flex-wrap gap-2">
       <button class="btn btn-sm" id="mods-search-modrinth">{{{icon 'search' 'size-3.5'}}} Search Modrinth</button>
       <button class="btn btn-primary btn-sm" id="mods-add-url">{{{icon 'plus' 'size-3.5'}}} Add by URL</button>
+      {{! button labels kept in sync with the modal titles in mods.js }}
     </div>
   </div>
 
@@ -17,9 +18,9 @@
 
   {{#if server.pack}}
     <div class="mb-4 max-w-prose rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
-      <b class="text-link">Pack-managed</b> mods are installed by {{server.pack.platform}} ({{server.pack.name}} @ {{server.pack.version}}).
-      Disabling one uses the image's exclude list and applies on next restart. <b class="text-ok">Custom</b> mods are ones you added yourself -
-      they live in the shared library, survive pack updates, and can be toggled instantly.
+      <b class="text-link">Pack-managed</b> mods are installed by {{platformName server.pack.platform}} ({{server.pack.name}} {{server.pack.version}}).
+      Disabling one takes effect on the next restart. <b class="text-ok">Custom</b> mods are ones you added yourself.
+      They live in the shared library, survive pack updates, and can be turned on or off instantly.
     </div>
   {{/if}}
 
@@ -65,7 +66,7 @@
             <td class="text-right text-ink-faint">{{bytes size}}</td>
             <td>
               {{#if missing}}
-                <span class="text-xs font-medium text-danger" data-tip="File missing on disk - reinstall from library">missing</span>
+                <span class="text-xs font-medium text-danger" data-tip="File missing on disk. Reinstall it from the library.">Missing</span>
               {{else if enabled}}
                 <span class="text-xs font-medium text-ok">Enabled</span>
               {{else}}
@@ -78,7 +79,7 @@
                   <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="Update to {{updateAvailable}}">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
                 {{/if}}
                 {{#unless missing}}
-                  <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}Pack mods apply on restart{{else}}Applies instantly{{/if}}">{{#if enabled}}Disable{{else}}Enable{{/if}}</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}Pack mods take effect on the next restart.{{else}}Takes effect instantly.{{/if}}">{{#if enabled}}Disable{{else}}Enable{{/if}}</button>
                 {{/unless}}
                 {{#if (ne source 'pack')}}
                   <button class="btn btn-ghost btn-sm text-danger" data-mod-delete aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
@@ -91,7 +92,7 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='puzzle' title='No Mods Installed Yet' message='Search Modrinth or add a mod, plugin, or datapack by URL with the buttons above - custom content lives in the shared library and survives pack updates.'}}
+    {{> empty-state iconName='puzzle' title='No Mods Installed Yet' message='Search Modrinth or add a mod, plugin, or datapack by URL with the buttons above. Custom content lives in the shared library and survives pack updates.'}}
   {{/if}}
 </div>
 <script type="module" src="/js/pages/mods.js"></script>

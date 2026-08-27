@@ -244,7 +244,7 @@ function init(serverId) {
         body: JSON.stringify({ mode, target: targetSel.value, text, color, ...currentFormats() }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Message failed to send');
+      if (!res.ok || !data.ok) throw new Error(data.error || 'That message could not be sent. Please try again.');
       appendMessage(data);
       input.value = '';
       updatePreview();

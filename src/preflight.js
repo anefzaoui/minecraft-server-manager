@@ -28,9 +28,9 @@ try {
   if (err && err.code === 'ERR_UNKNOWN_BUILTIN_MODULE') {
     fail(
       `Minecraft Server Manager needs Node.js ${MIN_MAJOR} or newer.\n` +
-        `  You are running Node ${nodeVersion}, where the built-in \`node:sqlite\` module\n` +
-        `  is not available (on the Node 22.x line it exists only behind\n` +
-        `  --experimental-sqlite). Install Node ${MIN_MAJOR} LTS from https://nodejs.org/\n` +
+        `  You are running Node.js ${nodeVersion}, where the built-in \`node:sqlite\` module\n` +
+        `  is not available (on the Node.js 22.x line it exists only behind\n` +
+        `  --experimental-sqlite). Install Node.js ${MIN_MAJOR} LTS from https://nodejs.org/\n` +
         `  and run the panel again.`
     );
   }
@@ -41,8 +41,8 @@ if (major < MIN_MAJOR) {
   // node:sqlite loaded (e.g. a 22.x/23.x build with the flag) but we're below the
   // supported floor - warn, don't block: the operator clearly opted in.
   console.warn(
-    `[preflight] Node ${nodeVersion} is below the supported floor (Node ${MIN_MAJOR}+). ` +
-      `node:sqlite is experimental here; upgrade to Node ${MIN_MAJOR} LTS if you hit problems.`
+    `[preflight] Node.js ${nodeVersion} is below the supported version (Node.js ${MIN_MAJOR}+). ` +
+      `node:sqlite is experimental here; upgrade to Node.js ${MIN_MAJOR} LTS if you hit problems.`
   );
 }
 

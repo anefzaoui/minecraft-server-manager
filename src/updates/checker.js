@@ -20,7 +20,7 @@ const loaderVersions = require('../services/loaderVersions');
 const CONTENT_KIND_LABEL = {
   mod: 'Mod (overlay)',
   datapack: 'Datapack (overlay)',
-  resourcepack: 'Resourcepack (overlay)',
+  resourcepack: 'Resource pack (overlay)',
   plugin: 'Plugin (overlay)',
 };
 

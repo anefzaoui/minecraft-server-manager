@@ -1,5 +1,6 @@
 // Integrations tab: Discord webhook config, invite helper, public status page.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 
 const root = document.getElementById('ig-root');
@@ -51,7 +52,7 @@ function init() {
     const btn = e.currentTarget; // capture before await - currentTarget is null afterwards
     await withBusy(btn, 'Sending…', async () => {
       const res = await api(`/api/servers/${serverId}/integrations/discord/test`, 'POST');
-      if (res.ok) toast('Test message sent - check your Discord channel.');
+      if (res.ok) toast('Test message sent. Check your Discord channel.');
     });
   });
 
@@ -83,14 +84,14 @@ function init() {
       toast('Enter the custom address first.', { kind: 'error' });
       return;
     }
-    copy(textEl.textContent, 'Invite text copied - paste it to your friends.');
+    copy(textEl.textContent, 'Invite text copied. Paste it to your friends.');
   });
 
   document.getElementById('ig-mrpack')?.addEventListener('click', (e) => {
     const btn = e.currentTarget;
     const host = chosenHost();
     if (!host) {
-      toast('Pick or enter an address first - it gets baked into the pack.', { kind: 'error' });
+      toast('Pick or enter an address first. It gets built into the pack.', { kind: 'error' });
       return;
     }
     toast('Building the client modpack…', { kind: 'info' });
@@ -117,7 +118,7 @@ function init() {
     await withBusy(btn, 'Saving…', async () => {
       const res = await api(`/api/servers/${serverId}/integrations/status-page`, 'POST', body);
       if (res.ok) {
-        toast(res.data.statusPage.enabled ? `Status page live at /status/${slug}` : 'Status page turned off.');
+        toast(res.data.statusPage.enabled ? `Status page live at /status/${slug}.` : 'Status page turned off.');
         cleanSp();
         setTimeout(() => location.reload(), 900);
       }
@@ -145,12 +146,12 @@ async function api(url, method, body) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false) {
-      toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+      toast(data.error || friendlyError(res, { action: 'save that integration' }), { kind: 'error', timeout: 8000 });
       return { ok: false, data };
     }
     return { ok: true, data };
-  } catch (err) {
-    toast(`Network error: ${err.message}`, { kind: 'error' });
+  } catch {
+    toast(friendlyError(null, { action: 'save that integration' }), { kind: 'error' });
     return { ok: false };
   }
 }

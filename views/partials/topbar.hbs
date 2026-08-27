@@ -20,7 +20,7 @@
     {{! Label hides below sm: (icon-only) - the topbar is already tight on a
         phone (hamburger + title + this + theme + avatar); aria-label keeps it
         announced to screen readers regardless of which span is visible. }}
-    <a href="/servers/new" class="btn btn-primary btn-sm" aria-label="New Server" data-tip="New Server">{{{icon 'plus' 'size-3.5'}}} <span class="hidden sm:inline">New Server</span></a>
+    <a href="/servers/new" class="btn btn-primary btn-sm" aria-label="New server" data-tip="New server">{{{icon 'plus' 'size-3.5'}}} <span class="hidden sm:inline">New server</span></a>
     <button id="theme-toggle" class="btn btn-ghost btn-sm" aria-label="Toggle theme" data-tip="Switch theme">
       <span data-theme-icon="dark">{{{icon 'moon' 'size-4'}}}</span><span data-theme-icon="light" class="hidden">{{{icon 'sun' 'size-4'}}}</span>
     </button>
@@ -36,8 +36,8 @@
     </button>
     <template id="user-menu">
       <div class="px-3 py-2 text-xs text-ink-faint">{{user.username}} · {{capitalize user.role}}</div>
-      <button type="button" class="w-full text-left" data-open-avatar-picker>Profile Picture</button>
-      <button type="button" class="w-full text-left" data-open-2fa>{{#if user.totpEnabled}}Manage 2FA{{else}}Set Up 2FA{{/if}}</button>
+      <button type="button" class="w-full text-left" data-open-avatar-picker>Profile picture</button>
+      <button type="button" class="w-full text-left" data-open-2fa>{{#if user.totpEnabled}}Manage 2FA{{else}}Set up 2FA{{/if}}</button>
       <form method="post" action="/logout"><button type="submit" class="w-full text-left">Sign out</button></form>
     </template>
   </div>

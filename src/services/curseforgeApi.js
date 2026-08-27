@@ -34,11 +34,11 @@ async function cfFetch(pathname, { search, ttlMs = 10 * 60 * 1000, method = 'GET
     // Rate-limited: a stale cached answer beats a hard failure (same policy
     // as the Modrinth client).
     if (cached) return JSON.parse(cached.value_json);
-    throw httpError(429, 'CurseForge rate limit hit - try again in a minute');
+    throw httpError(429, 'CurseForge is rate-limiting us. Please try again in a minute.');
   }
   if (res.status === 403) throw httpError(403, 'CurseForge rejected the API key - re-check it in Settings');
-  if (res.status === 404) throw httpError(404, 'Not found on CurseForge');
-  if (!res.ok) throw httpError(502, `CurseForge answered HTTP ${res.status}`);
+  if (res.status === 404) throw httpError(404, "That wasn't found on CurseForge.");
+  if (!res.ok) throw httpError(502, 'CurseForge is not responding correctly right now. Please try again shortly.');
   const data = await res.json();
   if (method === 'GET') {
     db.run(

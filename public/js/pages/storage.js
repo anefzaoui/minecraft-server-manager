@@ -3,6 +3,7 @@
 // numbers → real POST → reload.
 
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 import { fmtBytes } from '../lib/format.js';
@@ -10,11 +11,11 @@ import { fmtBytes } from '../lib/format.js';
 document.getElementById('storage-rescan')?.addEventListener('click', async (e) => {
   const btn = e.currentTarget;
   const restore = setBusy(btn, 'Scanning…');
-  toast('Re-scanning ./data…', { kind: 'info' });
+  toast('Re-scanning the data folder…', { kind: 'info' });
   try {
     const res = await fetch('/api/storage/scan', { method: 'POST' });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.ok === false) throw new Error(data.error || `Scan failed (${res.status})`);
+    if (!res.ok || data.ok === false) throw new Error(data.error || friendlyError(res, { action: 'start the scan' }));
     toast(
       data.skipped
         ? 'A scan is already running.'
@@ -53,7 +54,7 @@ document.addEventListener('click', async (e) => {
     detail: days
       ? `Only items older than ${days} days are touched.`
       : action === 'tmp'
-        ? 'Only tmp entries older than 1 hour are touched - in-flight transfers are safe.'
+        ? 'Only temporary files older than 1 hour are removed, so downloads in progress are safe.'
         : '',
     confirmLabel: `Free ${fmtBytes(preview.freedBytes)}`,
     danger: true,
@@ -79,6 +80,6 @@ async function postJSON(url, body) {
     body: JSON.stringify(body || {}),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+  if (!res.ok || data.ok === false) throw new Error(data.error || friendlyError(res, { action: 'run that cleanup' }));
   return data;
 }

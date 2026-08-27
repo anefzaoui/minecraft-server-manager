@@ -1,16 +1,16 @@
-{{> page-header heading="MODPACKS" sub="Browse CurseForge & Modrinth packs and manage installed ones - always version-pinned so restarts never surprise you."}}
+{{> page-header heading="MODPACKS" sub="Browse CurseForge and Modrinth packs and manage installed ones. Every install is version-pinned, so restarts never surprise you."}}
 
 <div id="modpacks-page">
   <div class="mb-4 flex flex-wrap items-center gap-2">
-    <input class="input min-w-0 max-w-md flex-1" id="packs-q" placeholder="Search modpacks - e.g. Simply Optimized, All the Mods…" autocomplete="off">
+    <input class="input min-w-0 max-w-md flex-1" id="packs-q" placeholder="Search modpacks, e.g. Simply Optimized, All the Mods…" autocomplete="off">
     <div class="seg" id="packs-platforms" role="group" aria-label="Search platform">
       <button type="button" class="seg-btn" aria-pressed="true" data-platform="modrinth">Modrinth</button>
       <button type="button" class="seg-btn" aria-pressed="false" data-platform="curseforge">CurseForge</button>
     </div>
     <div class="ml-auto flex gap-2">
       {{! Honest label + weight: this button focuses the search field, it doesn't install anything. }}
-      <button class="btn" id="packs-install-btn">{{{icon 'search' 'size-4'}}} Search Packs</button>
-      <a href="/settings" class="btn">{{{icon 'key' 'size-4'}}} API Keys</a>
+      <button class="btn" id="packs-install-btn">{{{icon 'search' 'size-4'}}} Search packs</button>
+      <a href="/settings" class="btn">{{{icon 'key' 'size-4'}}} API keys</a>
     </div>
   </div>
 
@@ -22,7 +22,7 @@
   <h3 class="mb-3 mt-6 text-xs font-semibold uppercase tracking-wider text-ink-faint">Installed</h3>
 
   {{#unless packServers.length}}
-    {{> empty-state iconName='package' title='No Modpacks Installed' message='No server is running a managed modpack yet. Search above and hit "Create server", or start from the wizard - installs are always version-pinned so restarts never surprise you.' ctaHref='/servers/new' ctaLabel='Create a Server'}}
+    {{> empty-state iconName='package' title='No Modpacks Installed' message='No server is running a managed modpack yet. Search above, then use the create wizard. Every install is version-pinned, so restarts never surprise you.' ctaHref='/servers/new' ctaLabel='Create a server'}}
   {{/unless}}
 
   {{! Same column count as search results - the same card width jumped between
@@ -47,8 +47,8 @@
             <span class="badge badge-warn min-w-0"><span class="truncate" title="{{pack.latest}} available">{{pack.latest}} available</span></span>
             <button class="btn btn-sm ml-auto shrink-0" data-pack-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
           {{else}}
-            <span class="text-xs text-ok">{{{icon 'check' 'size-3.5'}}} Up to Date</span>
-            <button class="btn btn-ghost btn-sm ml-auto" data-pack-check>{{{icon 'rotate-cw' 'size-3.5'}}} Check Now</button>
+            <span class="text-xs text-ok">{{{icon 'check' 'size-3.5'}}} Up to date</span>
+            <button class="btn btn-ghost btn-sm ml-auto" data-pack-check>{{{icon 'rotate-cw' 'size-3.5'}}} Check now</button>
           {{/if}}
         </div>
       </div>

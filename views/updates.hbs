@@ -1,8 +1,8 @@
-{{> page-header heading="UPDATES" sub="Everything outdated across all instances. Nothing updates itself - every upgrade is deliberate, backed up, and reversible."}}
+{{> page-header heading="UPDATES" sub="Everything out of date across your servers. Nothing updates itself: every upgrade is deliberate, backed up, and reversible."}}
 
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <span class="text-sm text-ink-faint">Last checked: {{#if lastChecked}}<span data-ts="{{lastChecked}}">{{lastChecked}}</span>{{else}}never{{/if}}</span>
-  <button class="btn btn-sm ml-auto" id="updates-check-all">{{{icon 'rotate-cw' 'size-3.5'}}} Check All Now</button>
+  <button class="btn btn-sm ml-auto" id="updates-check-all">{{{icon 'rotate-cw' 'size-3.5'}}} Check all now</button>
 </div>
 
 {{#if updates.length}}
@@ -34,9 +34,9 @@
 </div>
 
 <div class="mt-4 max-w-prose rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">
-  {{{icon 'info' 'size-4'}}} Your custom mods are always preserved across pack updates. If a pack update changes MC or loader version, each one is compat-checked - with one-click "update this mod too" when a matching build exists.
+  {{{icon 'info' 'size-4'}}} Your custom mods are always kept across pack updates. If a pack update changes the Minecraft or loader version, each custom mod is checked for compatibility, with a one-click "update this mod too" when a matching build exists.
 </div>
 {{else}}
-  {{> empty-state iconName='circle-check' title='Everything Is Up to Date' message='No pending updates across your servers. Run a check to query CurseForge, Modrinth and the version registry for anything new.'}}
+  {{> empty-state iconName='circle-check' title='Everything Is Up to Date' message='No pending updates across your servers. Run a check to ask CurseForge, Modrinth, and the version registry for anything new.'}}
 {{/if}}
 <script type="module" src="/js/pages/updates.js"></script>

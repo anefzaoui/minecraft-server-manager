@@ -8,6 +8,7 @@
 
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
+import { friendlyError } from './errors.js';
 import { runTask } from './progress.js';
 import { withBusy } from './loading.js';
 import { glyphFor } from './itemGlyph.js';
@@ -28,7 +29,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   content.className = 'space-y-3 text-sm';
   content.innerHTML = `
     <div class="flex flex-wrap items-center gap-2">
-      <input class="input flex-1 min-w-48" data-ib-q placeholder="Search by name or id - Iron Ingot, allthemodium, minecraft:tnt…"
+      <input class="input flex-1 min-w-48" data-ib-q placeholder="Search by name or ID, e.g. Iron Ingot, allthemodium, minecraft:tnt"
              maxlength="120" autocomplete="off" spellcheck="false">
       <div class="w-52 max-w-full">
         <select data-ib-mod data-label="Filter by mod" aria-label="Filter by mod">
@@ -49,7 +50,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       <button class="btn btn-sm hidden" data-ib-more>Load more</button>
       <span class="ml-auto flex items-center gap-3">
         ${onManual ? '<a href="#" class="text-xs text-link hover:underline" data-ib-manual>Enter ID manually</a>' : ''}
-        <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="Re-scan the mod jars and server jar (use after adding or removing mods)">Rebuild registry</button>
+        <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="Re-scan the mod and server files. Use this after adding or removing mods.">Rebuild registry</button>
       </span>
     </div>`;
 
@@ -105,7 +106,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     if (state.kind) params.set('kind', state.kind);
     const res = await fetch(`${base}?${params}`);
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (HTTP ${res.status})`);
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'load the item list' }));
     return data;
   }
 
@@ -116,7 +117,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     if (!append) {
       state.offset = 0;
       listEl.innerHTML =
-        '<div class="p-6 text-center text-sm text-ink-faint">Loading items… <span class="text-xs">(first open scans every mod jar - later opens are instant)</span></div>';
+        '<div class="p-6 text-center text-sm text-ink-faint">Loading items… <span class="text-xs">The first open scans every mod file; later opens are instant.</span></div>';
       setStatus('');
     }
     try {
@@ -135,7 +136,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       }
       if (!append) listEl.innerHTML = '';
       if (!data.items.length && !append) {
-        listEl.innerHTML = `<div class="p-6 text-center text-sm text-ink-faint">No items match${state.q ? ` "${esc(state.q)}"` : ''}. Try a different search, mod or kind filter.</div>`;
+        listEl.innerHTML = `<div class="p-6 text-center text-sm text-ink-faint">No items match${state.q ? ` "${esc(state.q)}"` : ''}. Try a different search, mod, or kind filter.</div>`;
       }
       for (const item of data.items) listEl.appendChild(row(item));
       const shown = state.offset + data.items.length;
@@ -194,11 +195,11 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
         start: async () => {
           const res = await fetch(`${base}/rebuild`, { method: 'POST' });
           const data = await res.json().catch(() => ({}));
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Could not start the rebuild');
+          if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'start the rebuild' }));
           return data.taskId;
         },
       });
-      toast(`Registry rebuilt: ${result.items.toLocaleString()} items from ${result.mods} mods`);
+      toast(`Registry rebuilt: ${result.items.toLocaleString()} items from ${result.mods} mods.`);
       state.modsLoaded = false;
       modSel.innerHTML = '<option value="">All mods</option>';
       state.mod = '';

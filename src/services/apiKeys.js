@@ -71,9 +71,11 @@ async function testCurseForgeKey(key = getKey('curseforge')) {
       "UPDATE api_keys SET last_tested_at = datetime('now'), last_test_ok = ? WHERE provider = 'curseforge'",
       ok ? 1 : 0
     );
-    return ok ? { ok: true } : { ok: false, error: `CurseForge answered HTTP ${res.status} - check the key` };
-  } catch (err) {
-    return { ok: false, error: `Could not reach CurseForge: ${err.message}` };
+    return ok
+      ? { ok: true }
+      : { ok: false, error: 'CurseForge rejected that key. Check that you copied it correctly.' };
+  } catch {
+    return { ok: false, error: 'Could not reach CurseForge. Check your connection and try again.' };
   }
 }
 

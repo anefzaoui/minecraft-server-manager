@@ -152,7 +152,7 @@ export function initDockerSettings(ids) {
       try {
         yamlText = await fetchYaml();
       } catch (err) {
-        toast(err.message || 'Could not build preview', { kind: 'error' });
+        toast(err.message || 'The panel could not build the preview. Please try again.', { kind: 'error' });
         return;
       }
       const content = document.createElement('div');
@@ -161,7 +161,7 @@ export function initDockerSettings(ids) {
       const textarea = content.querySelector('textarea');
       textarea.value = yamlText;
       openModal({
-        title: 'Advanced Docker Settings - Preview',
+        title: 'Advanced Docker Settings Preview',
         content,
         size: 'lg',
         actions: [
@@ -177,7 +177,10 @@ export function initDockerSettings(ids) {
               });
               const data = await res.json();
               if (!res.ok || !data.ok) {
-                toast(data.error || 'Invalid YAML', { kind: 'error', timeout: 9000 });
+                toast(data.error || "That YAML couldn't be read. Check the syntax and try again.", {
+                  kind: 'error',
+                  timeout: 9000,
+                });
                 return false;
               }
               seed(data.spec);

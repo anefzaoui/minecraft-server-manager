@@ -48,7 +48,7 @@ export function openCropModal(file) {
           actions: [
             { label: 'Cancel', kind: 'ghost' },
             {
-              label: 'Use Photo',
+              label: 'Use photo',
               kind: 'primary',
               busyLabel: 'Processing…',
               onClick: async () => {
@@ -291,7 +291,7 @@ async function exportSquare(img, box, scale, sourceType) {
   }
 
   if (blob.size > SERVER_MAX_BYTES) {
-    throw new Error('Cropped image is still too large - try a smaller area.');
+    throw new Error('The cropped image is still too large. Try selecting a smaller area.');
   }
   return { blob, filename };
 }

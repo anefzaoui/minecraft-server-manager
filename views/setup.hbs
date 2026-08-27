@@ -18,10 +18,10 @@
     <section data-step="0">
       <h2 class="text-center text-lg font-semibold">Welcome to Minecraft Server Manager</h2>
       <p class="mx-auto mt-2 max-w-sm text-center text-sm text-ink-faint">
-        Your control panel for Minecraft servers on Docker - create, configure, back up, and manage
+        Your control panel for Minecraft servers on Docker. Create, configure, back up, and manage
         modpacks, worlds, players, and more. Let's get a few things set up. It only takes a minute.
       </p>
-      <button class="btn btn-primary mt-6 w-full" data-next>Get Started {{{icon 'arrow-right' 'size-4'}}}</button>
+      <button class="btn btn-primary mt-6 w-full" data-next>Get started {{{icon 'arrow-right' 'size-4'}}}</button>
     </section>
 
     {{! ---- Step 1: System checks ---- }}
@@ -53,11 +53,11 @@
         <div>
           <label class="label" for="su-pass">Password</label>
           <input class="input" id="su-pass" name="password" type="password" autocomplete="new-password" required minlength="8">
-          <p class="help">At least 8 characters. If you ever get locked out, reset it from the server with <code>node scripts/reset-password.js &lt;username&gt;</code> (see the README).</p>
+          <p class="help">At least 8 characters. If you get locked out later, you can reset this password from the server; the README explains how.</p>
         </div>
         <div class="flex items-center gap-2">
           <button class="btn btn-ghost" type="button" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
-          <button class="btn btn-primary ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} Create Admin</button>
+          <button class="btn btn-primary ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} Create admin</button>
         </div>
       </form>
     </section>
@@ -74,16 +74,16 @@
         <label class="label" for="su-domain">Public domain <span class="text-ink-faint">(optional)</span></label>
         <div class="flex gap-2">
           <input class="input" id="su-domain" placeholder="mc.example.com" autocomplete="off" spellcheck="false">
-          <button class="btn shrink-0" type="button" id="su-domain-save">Save Domain</button>
+          <button class="btn shrink-0" type="button" id="su-domain-save">Save domain</button>
         </div>
-        <p class="help">Shown to players instead of your IP in connect addresses, e.g. <code>mc.example.com:25565</code>. No scheme or port.</p>
+        <p class="help">Shown to players instead of your IP address in connect addresses, for example <code>mc.example.com:25565</code>. Enter the domain only, with no scheme or port.</p>
       </div>
 
       <div class="mt-5">
         <label class="label" for="su-cf">CurseForge API key <span class="text-ink-faint">(optional)</span></label>
         <div class="flex gap-2">
           <input class="input" id="su-cf" type="password" placeholder="$2a$10$…" autocomplete="off" spellcheck="false">
-          <button class="btn shrink-0" type="button" id="su-cf-save">Test &amp; Save</button>
+          <button class="btn shrink-0" type="button" id="su-cf-save">Test &amp; save</button>
         </div>
         <p class="help">Needed only for automated CurseForge modpacks. Get one at
           <a class="text-link underline hover:text-link" href="https://console.curseforge.com/" target="_blank" rel="noopener">console.curseforge.com</a>.</p>
@@ -96,8 +96,8 @@
           <select class="input" id="su-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
           <select class="input" id="su-country" data-native aria-label="Country" data-label="Country"></select>
         </div>
-        <p class="help">Detected from your system. Sets how dates and player activity times display across the panel.</p>
-        <button class="btn mt-2" type="button" id="su-loc-save">Save Time Zone &amp; Region</button>
+        <p class="help">Detected from your system. Sets how dates and player-activity times are shown across the panel.</p>
+        <button class="btn mt-2" type="button" id="su-loc-save">Save time zone</button>
       </div>
 
       <div class="mt-6 flex items-center">
@@ -113,8 +113,8 @@
         <p class="mt-1 max-w-sm text-sm text-ink-faint">Minecraft Server Manager is ready. Spin up your first Minecraft server whenever you like.</p>
       </div>
       <div class="mt-4 flex flex-col gap-2">
-        <a class="btn btn-primary w-full" href="/servers/new">{{{icon 'plus' 'size-4'}}} Create Your First Server</a>
-        <a class="btn btn-ghost w-full" href="/">Go to the Dashboard</a>
+        <a class="btn btn-primary w-full" href="/servers/new">{{{icon 'plus' 'size-4'}}} Create a server</a>
+        <a class="btn btn-ghost w-full" href="/">Go to the dashboard</a>
       </div>
     </section>
   </div>

@@ -5,6 +5,7 @@
 
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
+import { friendlyError } from './errors.js';
 import { escapeHtml } from './format.js';
 import { openCropModal } from './imageCrop.js';
 
@@ -47,7 +48,7 @@ async function openPickerModal() {
   const uploadBtn = document.createElement('button');
   uploadBtn.type = 'button';
   uploadBtn.className = 'btn';
-  uploadBtn.textContent = 'Upload Image';
+  uploadBtn.textContent = 'Upload image';
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className = 'btn btn-ghost';
@@ -57,7 +58,7 @@ async function openPickerModal() {
 
   const help = document.createElement('p');
   help.className = 'text-xs text-ink-faint';
-  help.textContent = 'PNG, SVG or JPEG. Your picture is cropped to a square, up to 512×512.';
+  help.textContent = 'PNG, SVG, or JPEG. Your picture is cropped to a square, up to 512×512.';
   content.appendChild(help);
 
   uploadBtn.addEventListener('click', () => {
@@ -86,13 +87,16 @@ async function openPickerModal() {
         const uploadRes = await fetch('/api/account/avatar/upload', { method: 'POST', body: form });
         const data = await uploadRes.json().catch(() => ({}));
         if (!uploadRes.ok || data.ok === false) {
-          toast(data.error || 'Upload failed', { kind: 'error', timeout: 8000 });
+          toast(data.error || friendlyError(uploadRes, { action: 'upload that picture' }), {
+            kind: 'error',
+            timeout: 8000,
+          });
           return;
         }
         toast('Profile picture updated.');
         finish();
-      } catch (err) {
-        toast(`Network error: ${err.message}`, { kind: 'error' });
+      } catch {
+        toast(friendlyError(null, { action: 'upload that picture' }), { kind: 'error' });
       }
     });
     input.click();
@@ -117,12 +121,15 @@ async function get(url) {
     const res = await fetch(url);
     const data = await res.json();
     if (!res.ok || data.ok === false) {
-      toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+      toast(data.error || friendlyError(res, { action: 'load your profile picture options' }), {
+        kind: 'error',
+        timeout: 8000,
+      });
       return null;
     }
     return data;
-  } catch (err) {
-    toast(`Network error: ${err.message}`, { kind: 'error' });
+  } catch {
+    toast(friendlyError(null, { action: 'load your profile picture options' }), { kind: 'error' });
     return null;
   }
 }
@@ -136,12 +143,15 @@ async function post(url, body) {
     });
     const data = await res.json();
     if (!res.ok || data.ok === false) {
-      toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+      toast(data.error || friendlyError(res, { action: 'change your profile picture' }), {
+        kind: 'error',
+        timeout: 8000,
+      });
       return false;
     }
     return true;
-  } catch (err) {
-    toast(`Network error: ${err.message}`, { kind: 'error' });
+  } catch {
+    toast(friendlyError(null, { action: 'change your profile picture' }), { kind: 'error' });
     return false;
   }
 }
@@ -151,12 +161,15 @@ async function del(url) {
     const res = await fetch(url, { method: 'DELETE' });
     const data = await res.json();
     if (!res.ok || data.ok === false) {
-      toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+      toast(data.error || friendlyError(res, { action: 'reset your profile picture' }), {
+        kind: 'error',
+        timeout: 8000,
+      });
       return false;
     }
     return true;
-  } catch (err) {
-    toast(`Network error: ${err.message}`, { kind: 'error' });
+  } catch {
+    toast(friendlyError(null, { action: 'reset your profile picture' }), { kind: 'error' });
     return false;
   }
 }

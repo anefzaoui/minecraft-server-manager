@@ -7,6 +7,7 @@
 // Vanilla/modpack/mods creation each run as ONE server-side task with real
 // progress; blueprint imports via its own endpoint.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { runTask } from '../lib/progress.js';
 import { setBusy, withBusy } from '../lib/loading.js';
@@ -130,7 +131,7 @@ function init() {
       browser.clear();
       solverState.pick = null;
       solverState.slugs = [];
-      if (hadSelection) toast('Left "From mods" - the queued mods were cleared.', { kind: 'info' });
+      if (hadSelection) toast('Left the "From mods" tab, so the queued mods were cleared.', { kind: 'info' });
     }
     sourceTab = tab;
     sourceTabsEl?.querySelectorAll('[data-source]').forEach((b) => setClasses(b, b.dataset.source === tab));
@@ -255,7 +256,7 @@ function init() {
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || 'Preview failed');
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'build the preview' }));
     return data.yaml;
   });
 
@@ -295,10 +296,10 @@ function init() {
       return;
     }
     const modal = openModal({
-      title: `Creating ${name} from Blueprint…`,
+      title: `Creating ${name} from a blueprint…`,
       size: 'sm',
       content:
-        '<div class="space-y-3 text-sm"><p>Installing the blueprint: pinned pack, custom mods (hash-verified), and config files.</p><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div><p class="text-xs text-ink-faint">Closing this window doesn\'t cancel the import - it keeps running server-side.</p></div>',
+        '<div class="space-y-3 text-sm"><p>Installing the blueprint: the pinned pack, custom mods (each hash-verified), and config files.</p><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div><p class="text-xs text-ink-faint">Closing this window doesn\'t cancel the import. It keeps running in the background.</p></div>',
     });
     try {
       const res = await fetch('/api/blueprints/import', {
@@ -320,14 +321,14 @@ function init() {
       const data = await res.json();
       modal.close();
       if (!res.ok || !data.ok) {
-        toast(data.error || 'Blueprint import failed', { kind: 'error', timeout: 10000 });
+        toast(data.error || friendlyError(res, { action: 'import that blueprint' }), { kind: 'error', timeout: 10000 });
         return;
       }
       toast(`${name} created from blueprint.`);
       location.href = `/servers/${data.server.id}`;
-    } catch (err) {
+    } catch {
       modal.close();
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+      toast(friendlyError(null, { action: 'import that blueprint' }), { kind: 'error' });
     }
   }
 
@@ -354,7 +355,7 @@ function init() {
     };
     try {
       const result = await runTask({
-        title: `Creating ${name} - ${selection.resolved.projectName}`,
+        title: `Creating ${name}: ${selection.resolved.projectName}…`,
         start: async () => {
           const res = await fetch('/api/servers/from-pack', {
             method: 'POST',
@@ -362,15 +363,15 @@ function init() {
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Creation failed');
+          if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'create the server' }));
           return data.taskId;
         },
       });
-      toast(`${name} created - ${result.pack.name} @ ${result.pack.version} pinned. Starting up.`);
+      toast(`${name} created. ${result.pack.name} ${result.pack.version} is pinned. Starting up now.`);
       location.href = `/servers/${result.serverId}`;
     } catch (err) {
       if (err.dismissed) return; // creation continues server-side - task tray takes over
-      toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
+      toast(err.message || 'That server could not be created. Please try again.', { kind: 'error', timeout: 12000 });
     }
   }
 
@@ -415,7 +416,7 @@ function init() {
     };
     try {
       const result = await runTask({
-        title: `Creating ${name} (${loader})`,
+        title: `Creating ${name} (${capitalize(loader)})…`,
         start: async () => {
           const res = await fetch('/api/servers/from-mods', {
             method: 'POST',
@@ -423,13 +424,13 @@ function init() {
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Creation failed');
+          if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'create the server' }));
           return data.taskId;
         },
       });
       if (result.failed && result.failed.length) {
         toast(
-          `${name} created - ${result.installed}/${result.total} mods installed. Failed: ${result.failed.join(', ')}`,
+          `${name} created. ${result.installed} of ${result.total} mods installed. These failed: ${result.failed.join(', ')}.`,
           {
             kind: 'error',
             timeout: 14000,
@@ -437,13 +438,13 @@ function init() {
         );
       } else {
         toast(
-          `${name} created${result.total ? ` - ${result.total} mod${result.total === 1 ? '' : 's'} installed` : ''}. Starting up.`
+          `${name} created${result.total ? `. ${result.total} mod${result.total === 1 ? '' : 's'} installed` : ''}. Starting up now.`
         );
       }
       location.href = `/servers/${result.serverId}`;
     } catch (err) {
       if (err.dismissed) return; // creation continues server-side - task tray takes over
-      toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
+      toast(err.message || 'That server could not be created. Please try again.', { kind: 'error', timeout: 12000 });
     }
   }
 
@@ -466,9 +467,9 @@ function init() {
       title: `Creating ${name}…`,
       size: 'sm',
       content: `<div class="space-y-3 text-sm">
-        <p>Pulling the server image if needed (first time can take a few minutes), creating the container, and starting it.</p>
+        <p>Downloading the server image if needed (the first time can take a few minutes), creating the container, and starting it.</p>
         <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
-        <p class="text-xs text-ink-faint">Closing this window doesn't cancel the creation - it keeps running server-side.</p>
+        <p class="text-xs text-ink-faint">Closing this window doesn't cancel the creation. It keeps running in the background.</p>
       </div>`,
     });
 
@@ -481,14 +482,14 @@ function init() {
       const data = await res.json();
       modal.close();
       if (!res.ok || !data.ok) {
-        toast(data.error || 'Creation failed', { kind: 'error', timeout: 10000 });
+        toast(data.error || friendlyError(res, { action: 'create the server' }), { kind: 'error', timeout: 10000 });
         return;
       }
-      toast(`${name} created - starting up.`);
+      toast(`${name} created. Starting up now.`);
       location.href = `/servers/${data.server.id}`;
-    } catch (err) {
+    } catch {
       modal.close();
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+      toast(friendlyError(null, { action: 'create the server' }), { kind: 'error' });
     }
   }
 }
@@ -517,10 +518,10 @@ function initPortCheck() {
     try {
       const res = await fetch(`/api/ports/check?port=${port}`);
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'check failed');
+      if (!res.ok || !data.ok) throw new Error(data.error || 'The port check could not be completed.');
       if (Number(input.value) !== port) return; // user kept typing - stale
-      if (data.free) setHelp(`✓ Port ${port} is free - RCON gets ${port + 1000}.`, 'text-ok');
-      else setHelp(`✗ Port ${port} is already in use - pick another.`, 'text-danger');
+      if (data.free) setHelp(`Port ${port} is free. RCON will use ${port + 1000}.`, 'text-ok');
+      else setHelp(`Port ${port} is already in use. Pick another.`, 'text-danger');
     } catch {
       setHelp('Could not check the port right now.', 'text-ink-faint');
     }
@@ -649,7 +650,7 @@ function initModBrowser() {
       const res = await fetch(url);
       const data = await res.json();
       if (seq !== searchSeq) return;
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
+      if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'search for mods' }));
       lastResults = data.results;
       renderResults();
     } catch (err) {
@@ -660,7 +661,7 @@ function initModBrowser() {
 
   function renderResults() {
     if (!lastResults.length) {
-      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-ink-faint">No ${escapeHtml(loader)} mods found for ${escapeHtml(mc())}.</div>`;
+      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-ink-faint">No ${escapeHtml(capitalize(loader))} mods found for ${escapeHtml(mc())}.</div>`;
       return;
     }
     resultsEl.innerHTML = lastResults
@@ -691,7 +692,7 @@ function initModBrowser() {
     const url = `/api/mods/versions?platform=${p}&ref=${encodeURIComponent(ref)}&loader=${encodeURIComponent(loader)}&mc=${encodeURIComponent(mc())}`;
     const res = await fetch(url);
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || 'Could not load versions');
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'load the version list' }));
     return data.versions || [];
   }
 
@@ -701,7 +702,7 @@ function initModBrowser() {
     try {
       const versions = await fetchVersions(hit.platform, hit.ref);
       if (!versions.length) {
-        toast(`${hit.name} has no ${loader} build for ${mc()}.`, { kind: 'error' });
+        toast(`${hit.name} has no ${capitalize(loader)} build for ${mc()}.`, { kind: 'error' });
         return;
       }
       picked.set(k, {
@@ -756,7 +757,7 @@ function initModBrowser() {
         body: JSON.stringify({ loader, mc: mc(), selection }),
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Dependency resolve failed');
+      if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'resolve dependencies' }));
       // Rebuild the dependency set from the fresh closure so removing a mod also
       // removes its now-orphaned deps; keep a user's version pick where the dep
       // persists, and never re-add a dep the user explicitly removed.
@@ -781,7 +782,7 @@ function initModBrowser() {
     } catch (err) {
       if (depHintEl) {
         depHintEl.classList.add('text-danger'); // a failure in faint gray read as a status note
-        depHintEl.textContent = `Dependency check failed: ${err.message}`;
+        depHintEl.textContent = err.message || 'The dependency check could not be completed.';
       }
     }
   }
@@ -970,12 +971,12 @@ function initPackPicker() {
       const res = await fetch(`/api/packs/search?q=${encodeURIComponent(term)}&platform=${platform}`);
       const data = await res.json();
       if (seq !== searchSeq) return;
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
+      if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'search for modpacks' }));
       lastResults = data.results;
       renderResults();
     } catch (err) {
       if (seq !== searchSeq) return;
-      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' - <a href="/settings" class="text-link hover:underline">API keys</a>' : ''}</div>`;
+      resultsEl.innerHTML = `<div class="p-3 text-center text-sm text-danger">${escapeHtml(err.message)}${platform === 'curseforge' ? ' <a href="/settings" class="text-link hover:underline">Check your API keys.</a>' : ''}</div>`;
     }
   }
 
@@ -1026,7 +1027,7 @@ function initPackPicker() {
       body: JSON.stringify({ platform: pf, ref, ...(versionId ? { versionId } : {}) }),
     });
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || 'Could not resolve the pack');
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'load that pack' }));
     return data.pack;
   }
 
@@ -1112,7 +1113,7 @@ function initPackPicker() {
     const bits = [];
     if (p.mcVersion) bits.push(`Minecraft ${escapeHtml(p.mcVersion)}`);
     const loader = (p.loaders || []).find((l) => ['fabric', 'forge', 'neoforge', 'quilt'].includes(l));
-    if (loader) bits.push(escapeHtml(loader));
+    if (loader) bits.push(escapeHtml(capitalize(loader)));
     // Server-resolved so the browser never re-implements the java matrix.
     if (p.javaTag) bits.push(`Java ${escapeHtml(p.javaTag.replace('java', ''))}`);
     const changelog = p.changelogUrl
@@ -1122,7 +1123,7 @@ function initPackPicker() {
       ${packIconHtml(p.iconUrl, 'size-10')}
       <div class="min-w-0 flex-1">
         <div class="truncate font-semibold">${escapeHtml(p.projectName)}</div>
-        <div class="text-xs text-ink-faint">${bits.join(' · ') || 'Loader & MC version come from the pack'} - the pack dictates flavor and version</div>
+        <div class="text-xs text-ink-faint">${bits.join(' · ') || 'The loader and Minecraft version come from the pack'}. The pack sets the server type and version.</div>
       </div>
       <span class="shrink-0 space-x-2 text-xs">${changelog}</span>
       <span class="chip shrink-0">pinned @ ${escapeHtml(p.versionName)}</span>`;
@@ -1172,11 +1173,11 @@ function initSolver({ onApplied = () => {} } = {}) {
       try {
         const res = await fetch(`/api/solver/search?q=${encodeURIComponent(term)}`);
         const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
+        if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'search Modrinth' }));
         lastResults = data.results;
         renderResults();
       } catch (err) {
-        toast(`Modrinth search failed: ${err.message}`, { kind: 'error' });
+        toast(err.message || 'The Modrinth search could not be completed. Please try again.', { kind: 'error' });
       }
     }, 300);
   });
@@ -1187,7 +1188,7 @@ function initSolver({ onApplied = () => {} } = {}) {
     const hit = lastResults.find((r) => r.slug === btn.dataset.add);
     if (!hit || picked.has(hit.slug)) return;
     if (picked.size >= 25) {
-      toast('25 mods max per solve.', { kind: 'error' });
+      toast('You can solve up to 25 mods at a time.', { kind: 'error' });
       return;
     }
     picked.set(hit.slug, { slug: hit.slug, title: hit.title, iconUrl: hit.iconUrl });
@@ -1208,7 +1209,7 @@ function initSolver({ onApplied = () => {} } = {}) {
   runBtn.addEventListener('click', async () => {
     if (!picked.size) return;
     const restore = setBusy(runBtn, 'Solving…');
-    hintEl.textContent = 'Checking every mod’s loaders and versions on Modrinth…';
+    hintEl.textContent = "Checking every mod's loaders and versions on Modrinth…";
     try {
       const res = await fetch('/api/solver/solve', {
         method: 'POST',
@@ -1216,14 +1217,17 @@ function initSolver({ onApplied = () => {} } = {}) {
         body: JSON.stringify({ projects: [...picked.keys()] }),
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || 'Solve failed');
+      if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'solve compatibility' }));
       solveData = data;
       chosenPair = data.best || data.partial || null;
       renderSolveResult();
       hintEl.textContent = '';
     } catch (err) {
-      toast(err.message, { kind: 'error', timeout: 8000 });
-      hintEl.textContent = 'Solve failed - try again.';
+      toast(err.message || 'The compatibility check could not be completed. Please try again.', {
+        kind: 'error',
+        timeout: 8000,
+      });
+      hintEl.textContent = 'The compatibility check could not be completed. Try again.';
     } finally {
       restore();
       runBtn.disabled = !picked.size;
@@ -1317,8 +1321,8 @@ function initSolver({ onApplied = () => {} } = {}) {
       <p class="mt-1 text-lg font-semibold">${escapeHtml(pair.loaderLabel)} on Minecraft ${escapeHtml(pair.mcVersion)}</p>
       <p class="text-sm text-ink-faint">${
         isPartial
-          ? `Covers ${solveData.partial.coveredCount} of ${total} mods - no combo runs everything`
-          : `All ${total} mod${total === 1 ? '' : 's'} compatible`
+          ? `Covers ${solveData.partial.coveredCount} of ${total} mods. No single combination runs all of them.`
+          : `All ${total} mod${total === 1 ? '' : 's'} are compatible.`
       }</p>`;
     resultEl.appendChild(head);
 
@@ -1347,7 +1351,7 @@ function initSolver({ onApplied = () => {} } = {}) {
         solveData.partial.dropped
           .map(
             (d) => `
-          <p class="text-ink-faint">${escapeHtml(d.title)} - ${
+          <p class="text-ink-faint">${escapeHtml(d.title)}: ${
             d.supportedVersions.length
               ? `on ${escapeHtml(solveData.partial.loaderLabel)} it only supports ${d.supportedVersions.map(escapeHtml).join(', ')}`
               : `no ${escapeHtml(solveData.partial.loaderLabel)} builds at all`
@@ -1413,7 +1417,6 @@ function initSolver({ onApplied = () => {} } = {}) {
 function capitalize(s) {
   return typeof s === 'string' && s ? s[0].toUpperCase() + s.slice(1) : s;
 }
-
 
 // Tile/swatch pickers: selection lives in aria-pressed - the .tile/.swatch CSS
 // carries the look, so no class juggling (which used to strip the hover

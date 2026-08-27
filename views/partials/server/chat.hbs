@@ -10,7 +10,7 @@
       <div>
         {{{icon 'megaphone' 'mx-auto size-6 text-stone-500'}}}
         {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-          <p class="mt-2">No messages yet - everything you send appears here, styled as players see it.</p>
+          <p class="mt-2">No messages yet. Everything you send appears here, styled as players see it.</p>
         {{else}}
           <p class="mt-2">Recent messages appear here. Start the server to send chat.</p>
         {{/if}}
@@ -34,12 +34,12 @@
       <div>
         <span class="label">Mode</span>
         <div class="seg" id="chat-mode" role="group" aria-label="Message mode">
-          <button type="button" class="seg-btn" aria-pressed="true" data-mode="tellraw">Tellraw</button>
-          <button type="button" class="seg-btn" aria-pressed="false" data-mode="say">Say</button>
+          <button type="button" class="seg-btn" aria-pressed="true" data-mode="tellraw">Styled</button>
+          <button type="button" class="seg-btn" aria-pressed="false" data-mode="say">Plain</button>
         </div>
       </div>
     </div>
-    <p class="help">Tellraw = styled, per recipient. Say = plain <span class="font-mono">[Server]</span> broadcast.</p>
+    <p class="help"><b>Styled</b> sends colored, formatted text and can target one player. <b>Plain</b> sends a simple <span class="font-mono">[Server]</span> broadcast to everyone.</p>
 
     {{! The composer group: formatting toolbar and live preview attached
         directly to the message input, not floating bands. Controls are
@@ -58,7 +58,7 @@
         {{! min-w-0: an <input>'s flexbox min-width defaults to its content size,
             which refuses to shrink below ~190px and pushes the whole page wider
             than the viewport on narrow screens - see settings.hbs for the same fix. }}
-        <input class="input min-w-0 flex-1" id="chat-input" placeholder="Message - Enter to send" autocomplete="off" maxlength="512" />
+        <input class="input min-w-0 flex-1" id="chat-input" placeholder="Message (press Enter to send)" autocomplete="off" maxlength="512" />
         <button class="btn btn-primary" id="chat-send">{{{icon 'megaphone' 'size-4'}}} Send</button>
       </div>
     </div>

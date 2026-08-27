@@ -22,11 +22,11 @@ module.exports = [
         label: 'Folia',
         desc: 'Paper with regionized multithreading; many plugins are not compatible.',
       },
-      { value: 'SPIGOT', label: 'Spigot', desc: 'Automated downloads no longer work - use Paper instead. (legacy)' },
+      { value: 'SPIGOT', label: 'Spigot', desc: 'Legacy. Automated downloads no longer work; use Paper instead.' },
       {
         value: 'BUKKIT',
         label: 'CraftBukkit',
-        desc: 'Automated downloads no longer work - use Paper instead. (legacy)',
+        desc: 'Legacy. Automated downloads no longer work; use Paper instead.',
       },
       {
         value: 'CANYON',
@@ -47,7 +47,7 @@ module.exports = [
         desc: 'Sponge plugin API on the vanilla server; uses its own plugin system.',
       },
       { value: 'CRUCIBLE', label: 'Crucible', desc: 'Forge + Bukkit hybrid for Minecraft 1.7.10 only.' },
-      { value: 'MAGMA', label: 'Magma', desc: 'Forge + Paper hybrid; project terminated. (legacy)' },
+      { value: 'MAGMA', label: 'Magma', desc: 'Legacy. A Forge and Paper hybrid; the project has ended.' },
       {
         value: 'MAGMA_MAINTAINED',
         label: 'Magma Maintained',
@@ -73,7 +73,7 @@ module.exports = [
       {
         value: 'CURSEFORGE',
         label: 'CurseForge server pack (manual)',
-        desc: 'Deprecated manual server-pack runner - use the automated CurseForge type. (legacy)',
+        desc: 'Legacy. A manual server-pack runner; use the automated CurseForge type instead.',
       },
       {
         value: 'FTBA',
@@ -203,7 +203,7 @@ module.exports = [
     key: 'CUSTOM_SERVER',
     scope: 'env',
     label: 'Custom server JAR',
-    help: 'URL or container path of the server jar when the type is Custom. A URL is only downloaded once - to fetch a new copy, delete the jar from the server folder and restart.',
+    help: 'URL or container path of the server jar when the type is Custom. A URL is only downloaded once. To fetch a new copy, delete the jar from the server folder and restart.',
     type: 'text',
     mode: 'advanced',
     section: 'flavor',
@@ -213,7 +213,7 @@ module.exports = [
     key: 'javaTag',
     scope: 'panel',
     label: 'Java version (image tag)',
-    help: 'Which Java runtime image the server runs on. Auto picks the right one for your Minecraft version - and for GT New Horizons, the newest Java the pinned pack version supports. Override only for special cases like old Forge (needs Java 8) or mods that break on newer Java. Forcing a GTNH server to Java 8 makes the image install GTNH’s legacy Java 8 server pack instead of the faster lwjgl3ify one.',
+    help: 'Which Java runtime image the server runs on. Auto picks the right one for your Minecraft version, and for GT New Horizons, the newest Java the pinned pack version supports. Override only for special cases like old Forge (needs Java 8) or mods that break on newer Java. Forcing a GTNH server to Java 8 makes the image install GTNH’s legacy Java 8 server pack instead of the faster lwjgl3ify one.',
     type: 'enum',
     default: '',
     options: [
@@ -239,8 +239,8 @@ module.exports = [
   {
     key: 'TZ',
     scope: 'env',
-    label: 'Timezone',
-    help: 'IANA timezone name (e.g. Europe/London) so log timestamps and scheduled tasks match your local time. Defaults to UTC.',
+    label: 'Time zone',
+    help: 'IANA time zone name (for example, Europe/London) so log timestamps and scheduled tasks match your local time. Defaults to UTC.',
     type: 'text',
     default: 'UTC',
     mode: 'advanced',

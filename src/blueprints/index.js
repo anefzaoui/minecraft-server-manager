@@ -289,7 +289,7 @@ async function importPreview(zipPath) {
       .slice(0, 3)
       .map((i) => `${i.path.join('.')}: ${i.message}`)
       .join('; ');
-    throw httpError(400, `Blueprint manifest failed validation - ${detail}`);
+    throw httpError(400, `The blueprint manifest is not valid: ${detail}`);
   }
   const manifest = parsed.data;
   for (const rel of manifest.configFiles) {

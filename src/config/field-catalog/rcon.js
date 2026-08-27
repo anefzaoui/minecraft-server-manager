@@ -31,7 +31,7 @@ module.exports = [
     key: 'RCON_PORT',
     scope: 'env',
     label: 'In-container RCON port',
-    help: 'Port the server listens on for RCON inside the container. The docs warn that changing it breaks the image’s graceful-stop and health integrations - the panel keeps it at 25575.',
+    help: 'Port the server listens on for RCON inside the container. The docs warn that changing it breaks the image’s graceful-stop and health checks, so the panel keeps it at 25575.',
     type: 'number',
     default: 25575,
     mode: 'advanced',

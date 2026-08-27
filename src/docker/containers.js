@@ -231,7 +231,7 @@ async function stopContainer(serverId, { graceSeconds = 90 } = {}) {
   // (stopServerImpl) would then record "stopped gracefully" over a live world.
   const final = await inspectStatus(serverId).catch(() => ({ exists: false }));
   if (final.exists && ['running', 'starting', 'unhealthy'].includes(final.status)) {
-    throw new Error(`container for ${serverId} did not stop (still ${final.status})`);
+    throw new Error('The server did not stop in time. Try Force stop, or check that Docker is running.');
   }
 }
 

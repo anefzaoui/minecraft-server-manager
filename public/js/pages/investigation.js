@@ -14,11 +14,11 @@ function init(serverId) {
     try {
       const res = await fetch(`/api/servers/${serverId}/analytics/xray`);
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'Analysis failed');
+      if (!data.ok) throw new Error(data.error || 'The analysis could not be completed. Please try again.');
       render(data);
     } catch (err) {
       toast(err.message, { kind: 'error' });
-      results.textContent = 'Analysis failed - see the toast for details.';
+      results.textContent = 'The analysis could not be completed. Please try again.';
     } finally {
       restore();
     }
@@ -27,7 +27,7 @@ function init(serverId) {
   function render(data) {
     const players = data.players || data.report || [];
     if (!players.length) {
-      results.textContent = 'No player mining data yet - stats appear once players join and mine.';
+      results.textContent = 'No player mining data yet. Stats appear once players join and mine.';
       return;
     }
     results.innerHTML = '';

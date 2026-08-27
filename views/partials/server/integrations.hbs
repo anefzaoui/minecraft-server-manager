@@ -12,9 +12,9 @@
         {{! The stored webhook is shown as a fact, not a placeholder - a
             placeholder disappears on focus and reads as example text. }}
         {{#if integrations.discord.hasWebhook}}
-          <p class="help">Stored: <code class="rounded bg-inset px-1 font-mono">{{integrations.discord.webhookMasked}}</code> - leave blank to keep it, paste a new URL to replace it.</p>
+          <p class="help">Stored: <code class="rounded bg-inset px-1 font-mono">{{integrations.discord.webhookMasked}}</code>. Leave blank to keep it, or paste a new URL to replace it.</p>
         {{else}}
-          <p class="help">Server Settings → Integrations → Webhooks in your Discord server. Stored encrypted.</p>
+          <p class="help">Create a webhook in your Discord server under Server Settings → Integrations → Webhooks, then paste its URL here. It is stored encrypted.</p>
         {{/if}}
       </div>
       <div>
@@ -31,10 +31,10 @@
       <div class="flex items-center gap-2">
         <button class="btn btn-primary" id="ig-dc-save">Save</button>
         {{#if integrations.discord.hasWebhook}}
-          <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} Send Test</button>
+          <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} Send test</button>
         {{else}}
           {{! Disabled controls swallow hover - the wrapper carries the "why". }}
-          <span data-tip="Save a webhook URL first"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} Send Test</button></span>
+          <span data-tip="Save a webhook URL first"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} Send test</button></span>
         {{/if}}
         <span class="hidden text-xs text-warn" data-ig-dirty="dc">Unsaved changes</span>
       </div>
@@ -55,13 +55,13 @@
               shrink below its intrinsic width and pushes the page wider on mobile. }}
           <input class="input min-w-0 flex-1 font-mono text-xs" id="ig-sp-slug" placeholder="my-server" value="{{integrations.statusPage.slug}}">
         </div>
-        <p class="help">Anyone with the link sees name, MOTD, version, player count, and uptime - nothing else, and no way into the panel. Off by default.</p>
+        <p class="help">Anyone with the link sees the name, MOTD, version, player count, and uptime, and nothing else. There is no way into the panel from it. Off by default.</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button class="btn btn-primary" id="ig-sp-save">Save</button>
         {{#if (and integrations.statusPage.enabled integrations.statusPage.path)}}
-          <a class="btn" href="{{integrations.statusPage.path}}" target="_blank" rel="noopener" id="ig-sp-link">{{{icon 'link' 'size-4'}}} Open Page</a>
-          <button class="btn btn-ghost" id="ig-sp-copy">{{{icon 'copy' 'size-4'}}} Copy Link</button>
+          <a class="btn" href="{{integrations.statusPage.path}}" target="_blank" rel="noopener" id="ig-sp-link">{{{icon 'link' 'size-4'}}} Open page</a>
+          <button class="btn btn-ghost" id="ig-sp-copy">{{{icon 'copy' 'size-4'}}} Copy link</button>
         {{/if}}
         <span class="hidden text-xs text-warn" data-ig-dirty="sp">Unsaved changes</span>
       </div>
@@ -79,7 +79,7 @@
               <option value="{{this}}" data-desc="Local network (LAN)">{{this}}</option>
             {{/each}}
             {{#if integrations.invite.publicAddress}}
-              <option value="{{integrations.invite.publicAddress}}" data-desc="Public IP - needs port forwarding">{{integrations.invite.publicAddress}}</option>
+              <option value="{{integrations.invite.publicAddress}}" data-desc="Public IP address (needs port forwarding)">{{integrations.invite.publicAddress}}</option>
             {{/if}}
             <option value="__custom" data-desc="Domain or address you set up yourself">Custom address…</option>
           </select>
@@ -90,17 +90,17 @@
           <pre class="max-h-44 overflow-auto whitespace-pre-wrap rounded-md border border-line bg-inset p-3 font-mono text-xs text-ink-soft" id="ig-invite-text">{{integrations.invite.inviteText}}</pre>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button class="btn btn-primary" id="ig-copy-invite">{{{icon 'copy' 'size-4'}}} Copy Invite Text</button>
+          <button class="btn btn-primary" id="ig-copy-invite">{{{icon 'copy' 'size-4'}}} Copy invite text</button>
           {{#if integrations.invite.modded}}
-            <button class="btn" id="ig-mrpack">{{{icon 'download' 'size-4'}}} Download Client Modpack (.mrpack)</button>
+            <button class="btn" id="ig-mrpack">{{{icon 'download' 'size-4'}}} Download client modpack (.mrpack)</button>
           {{/if}}
         </div>
       </div>
       <div class="space-y-3 text-sm">
         {{#if integrations.invite.modded}}
           <div class="rounded-md border border-line bg-raised p-3">
-            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What Friends Need</p>
-            <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App - it installs the right Minecraft version, the mods, and pre-adds this server to their multiplayer list.</p>
+            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
+            <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App. It installs the right Minecraft version and the mods, and adds this server to their multiplayer list.</p>
             {{#if integrations.invite.manualMods.length}}
               <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="rounded bg-inset px-1">mods</code> folder themselves:</p>
               <ul class="mt-1 list-inside list-disc text-xs text-ink-soft">
@@ -110,12 +110,12 @@
           </div>
         {{else}}
           <div class="rounded-md border border-line bg-raised p-3">
-            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What Friends Need</p>
-            <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}} - no mods required on the client.</p>
+            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
+            <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}}. No mods are needed on the client.</p>
           </div>
         {{/if}}
         {{#if integrations.invite.whitelistEnforced}}
-          <div class="notice notice-warn text-xs text-warn">Whitelist is enforced - add each friend on the Players tab before they join.</div>
+          <div class="notice notice-warn text-xs text-warn">The whitelist is enforced. Add each friend on the Players tab before they join.</div>
         {{/if}}
         <details class="rounded-md border border-line bg-raised p-3 text-xs">
           <summary class="cursor-pointer font-medium text-sm">Playing over the internet (port forwarding)</summary>
@@ -123,7 +123,7 @@
           {{#if integrations.invite.publicIp}}
             <p class="mt-2">Detected public IP: <code class="rounded bg-inset px-1 font-mono">{{integrations.invite.publicIp}}</code></p>
           {{else}}
-            <p class="mt-2 text-ink-faint">Public IP could not be detected right now (offline?).</p>
+            <p class="mt-2 text-ink-faint">Your public IP address could not be detected right now. The panel may be offline.</p>
           {{/if}}
         </details>
       </div>

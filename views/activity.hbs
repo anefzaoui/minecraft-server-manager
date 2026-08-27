@@ -1,4 +1,4 @@
-{{> page-header heading="ACTIVITY" sub="Every action across every server - who did what, when, with the receipts."}}
+{{> page-header heading="ACTIVITY" sub="Every action across every server: who did what, when, with the details on record."}}
 
 {{#if (or events.length (or filters.q (or filters.server filters.type)))}}
 <form class="mb-4 flex flex-wrap items-center gap-2" method="get" action="/activity" id="activity-filters">
@@ -11,7 +11,7 @@
     <option value="">All types</option>
     {{#each types}}<option value="{{this}}" {{#if (eq this ../filters.type)}}selected{{/if}}>{{this}}</option>{{/each}}
   </select>
-  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply Filters</button>
+  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply filters</button>
   <div class="ml-auto flex gap-1">
     <a class="btn btn-sm" href="/api/events/export?format=csv{{exportQs}}" data-tip="Export the filtered events as CSV">{{{icon 'download' 'size-3.5'}}} CSV</a>
     <a class="btn btn-sm" href="/api/events/export?format=json{{exportQs}}" data-tip="Export the filtered events as JSON">{{{icon 'download' 'size-3.5'}}} JSON</a>
@@ -30,10 +30,11 @@
           <span class="shrink-0 text-xs text-ink-faint">{{server}}</span>
         {{/if}}
         <span class="shrink-0 text-xs text-ink-faint">{{actor}} · <span data-ts="{{ts}}">{{ts}}</span></span>
-        {{#if hasLog}}<button class="btn btn-ghost btn-sm shrink-0" data-event-excerpt data-event-id="{{id}}" data-event-type="{{type}}" data-tip="View captured log excerpt">{{{icon 'file-text' 'size-3.5'}}}</button>{{/if}}
+        {{#if hasLog}}<button class="btn btn-ghost btn-sm shrink-0" data-event-excerpt data-event-id="{{id}}" data-event-type="{{type}}" data-tip="View the captured log">{{{icon 'file-text' 'size-3.5'}}}</button>{{/if}}
       </li>
     {{else}}
       <li class="p-10 text-center text-sm text-ink-faint">No events match these filters.</li>
+      {{! wording kept in sync with the History tab's empty state }}
     {{/each}}
   </ol>
   {{#if events.length}}
@@ -48,6 +49,6 @@
   {{/if}}
 </div>
 {{else}}
-  {{> empty-state iconName='history' title='No Activity Yet' message='Every action across every server lands here - starts and stops, backups, updates, player management, with the receipts.'}}
+  {{> empty-state iconName='history' title='No Activity Yet' message='Every action across every server lands here: starts and stops, backups, updates, and player management.'}}
 {{/if}}
 <script type="module" src="/js/pages/activity.js"></script>

@@ -1,6 +1,7 @@
 // Server Settings tab: collect fields, PATCH the server, surface recreate flag,
 // live heap/container headroom feedback, blueprint export/clone, icon upload.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { runTask } from '../lib/progress.js';
 import { attachMotdEditor, toSectionCodes } from '../lib/motd.js';
@@ -37,7 +38,7 @@ function init(serverId) {
   dockerSettings.openPreview(async () => {
     const res = await fetch(`/api/servers/${serverId}/docker-spec`);
     const data = await res.json();
-    if (!res.ok || !data.ok) throw new Error(data.error || 'Preview failed');
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'build the preview' }));
     return data.yaml;
   });
 
@@ -185,13 +186,13 @@ function init(serverId) {
     const base = 'rounded-md border p-2.5 text-xs ';
     if (cmem <= heap) {
       headroomBox.className = base + 'border-danger/40 bg-redstone-500/10 text-danger';
-      headroomBox.textContent = `Container limit (${cmem} MB) is at or below the heap (${heap} MB) - the JVM will be OOM-killed on start. Raise the limit or lower the heap.`;
+      headroomBox.textContent = `The container limit (${cmem} MB) is at or below the Java heap (${heap} MB). The server will be killed for running out of memory on start. Raise the limit or lower the heap.`;
     } else if (cmem < heap * 1.25) {
       headroomBox.className = base + 'border-warn/40 bg-gold-500/10 text-warn';
-      headroomBox.textContent = `Tight headroom: container limit is only ${pctAbove}% above the heap. Java needs off-heap room - aim for 25% or more.`;
+      headroomBox.textContent = `Tight headroom: the container limit is only ${pctAbove}% above the Java heap. Java needs extra room beyond the heap, so aim for 25% or more.`;
     } else {
       headroomBox.className = base + 'border-ok/40 bg-grass-500/10 text-ok';
-      headroomBox.textContent = `Healthy headroom: container limit is ${pctAbove}% above the heap.`;
+      headroomBox.textContent = `Healthy headroom: the container limit is ${pctAbove}% above the Java heap.`;
     }
   }
   heapEl?.addEventListener('input', updateHeadroom);
@@ -218,13 +219,13 @@ function init(serverId) {
         const res = await fetch(`/api/servers/${serverId}/icon`, { method: 'POST', body: form });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false) {
-          toast(data.error || 'Icon upload failed', { kind: 'error', timeout: 8000 });
+          toast(data.error || friendlyError(res, { action: 'upload that icon' }), { kind: 'error', timeout: 8000 });
           return;
         }
         toast('Custom icon uploaded.');
         setTimeout(() => location.reload(), 700);
-      } catch (err) {
-        toast(`Network error: ${err.message}`, { kind: 'error' });
+      } catch {
+        toast(friendlyError(null, { action: 'upload that icon' }), { kind: 'error' });
       } finally {
         restore();
       }
@@ -237,10 +238,10 @@ function init(serverId) {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
-      <p class="text-xs text-ink-faint">Exports this server's setup as a reusable blueprint in the library.</p>
+      <p class="text-xs text-ink-faint">Saves this server's setup as a reusable blueprint in the library.</p>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include config directories</label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed custom mod files in the archive <span class="text-xs text-ink-faint">- bigger file, fully portable</span></label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">- can be large</span></label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed custom mod files in the archive <span class="text-xs text-ink-faint">(bigger file, fully portable)</span></label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">(can be large)</span></label>`;
     openModal({
       title: 'Export as Blueprint',
       content,
@@ -289,7 +290,7 @@ function init(serverId) {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
-      <p class="text-xs text-ink-faint">Creates a copy of this server with fresh ports (blueprint export + import).</p>
+      <p class="text-xs text-ink-faint">Creates a copy of this server with its own ports. It exports a blueprint and imports it as a new server.</p>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Also copy the active world</label>`;
     openModal({
       title: 'Clone Server',
@@ -314,7 +315,7 @@ function init(serverId) {
     const DIRECT = Symbol('direct');
     let direct = null;
     runTask({
-      title: 'Cloning Server…',
+      title: 'Cloning server…',
       start: async () => {
         const data = await postJson('/api/blueprints/clone', { serverId, includeWorld });
         if (data.taskId) return data.taskId;
@@ -331,7 +332,7 @@ function init(serverId) {
           return;
         }
         if (err.dismissed) return; // progress hidden - the task tray takes over
-        toast(err.message || 'Clone failed', { kind: 'error', timeout: 9000 });
+        toast(err.message || 'That server could not be cloned. Please try again.', { kind: 'error', timeout: 9000 });
       });
   }
 
@@ -347,8 +348,8 @@ function init(serverId) {
     if (dirty) {
       const { confirmDialog } = await import('../lib/confirm.js');
       const ok = await confirmDialog({
-        title: 'Discard Changes?',
-        message: 'Everything edited on this tab since the last save is thrown away.',
+        title: 'Discard changes?',
+        message: 'Everything you have edited on this tab since the last save will be lost.',
         confirmLabel: 'Discard',
         danger: true,
       });
@@ -365,7 +366,8 @@ function init(serverId) {
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+    if (!res.ok || data.ok === false)
+      throw new Error(data.error || friendlyError(res, { action: 'complete that action' }));
     return data;
   }
 
@@ -460,18 +462,18 @@ function init(serverId) {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        toast(data.error || 'Save failed', { kind: 'error', timeout: 8000 });
+        toast(data.error || friendlyError(res, { action: 'save your settings' }), { kind: 'error', timeout: 8000 });
         return;
       }
       toast(
         data.needsRecreate
-          ? 'Saved - resource changes apply when you Recreate (button appears in the header).'
+          ? 'Saved. Resource changes take effect after you rebuild the container (the button appears in the header).'
           : 'Saved.'
       );
       dirty = false; // saved - leaving must not warn
       setTimeout(() => location.reload(), 900);
-    } catch (err) {
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+    } catch {
+      toast(friendlyError(null, { action: 'save your settings' }), { kind: 'error' });
     } finally {
       restore();
     }

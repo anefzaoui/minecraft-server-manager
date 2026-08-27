@@ -5,6 +5,7 @@
 
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
+import { friendlyError } from './errors.js';
 
 document.addEventListener('click', (e) => {
   if (!e.target.closest('[data-open-2fa]')) return;
@@ -63,7 +64,7 @@ async function openEnrollModal(trigger) {
           // Reload once they've saved their codes - the users table (Settings)
           // and this dataset flag are both server-rendered/read at page-load,
           // so a stale page would still show "off" until refreshed.
-          showBackupCodes(res.backupCodes, 'Save your backup codes', { reloadOnClose: true });
+          showBackupCodes(res.backupCodes, 'Save Your Backup Codes', { reloadOnClose: true });
         },
       },
     ],
@@ -92,7 +93,7 @@ function openManageModal(trigger) {
           const password = content.querySelector('#tf-mgmt-password').value;
           const res = await post('/api/account/totp/backup-codes/regenerate', { password });
           if (!res) return false;
-          showBackupCodes(res.backupCodes, 'New backup codes');
+          showBackupCodes(res.backupCodes, 'New Backup Codes');
         },
       },
       {
@@ -125,7 +126,7 @@ function showBackupCodes(codes, title, { reloadOnClose = false } = {}) {
   const warn = document.createElement('p');
   warn.className = 'text-xs text-ink-faint';
   warn.textContent =
-    'Each code works once, to sign in if you lose access to your authenticator app. Save them somewhere safe - they will not be shown again.';
+    'Each code works once. Use one to sign in if you lose access to your authenticator app. Save them somewhere safe: they will not be shown again.';
   // Relies on app.js's global [data-copy] click handler rather than duplicating
   // clipboard logic here.
   const copyBtn = document.createElement('button');
@@ -152,12 +153,15 @@ async function post(url, body) {
     });
     const data = await res.json();
     if (!res.ok || data.ok === false) {
-      toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+      toast(data.error || friendlyError(res, { action: 'update two-factor authentication' }), {
+        kind: 'error',
+        timeout: 8000,
+      });
       return null;
     }
     return data;
-  } catch (err) {
-    toast(`Network error: ${err.message}`, { kind: 'error' });
+  } catch {
+    toast(friendlyError(null, { action: 'update two-factor authentication' }), { kind: 'error' });
     return null;
   }
 }

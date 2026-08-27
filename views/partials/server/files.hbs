@@ -18,7 +18,7 @@
       </nav>
       <div class="ml-auto flex gap-2">
         <button class="btn btn-sm" id="files-upload">{{{icon 'upload' 'size-3.5'}}} Upload</button>
-        <button class="btn btn-sm" id="files-mkdir">{{{icon 'folder-plus' 'size-3.5'}}} Folder</button>
+        <button class="btn btn-sm" id="files-mkdir">{{{icon 'folder-plus' 'size-3.5'}}} New folder</button>
       </div>
     </div>
     <div class="overflow-x-auto">
@@ -60,8 +60,8 @@
                 <button class="btn btn-ghost btn-sm" data-menu="file-menu-{{@index}}" data-tip="Rename, move, copy…">{{{icon 'ellipsis' 'size-3.5'}}}</button>
                 <template id="file-menu-{{@index}}">
                   <button data-file-rename data-path="{{path}}" data-name="{{name}}">{{{icon 'pencil' 'size-3.5'}}} Rename</button>
-                  <button data-file-move data-path="{{path}}" data-name="{{name}}">{{{icon 'move' 'size-3.5'}}} Move To…</button>
-                  <button data-file-copy data-path="{{path}}" data-name="{{name}}">{{{icon 'copy' 'size-3.5'}}} Copy To…</button>
+                  <button data-file-move data-path="{{path}}" data-name="{{name}}">{{{icon 'move' 'size-3.5'}}} Move to…</button>
+                  <button data-file-copy data-path="{{path}}" data-name="{{name}}">{{{icon 'copy' 'size-3.5'}}} Copy to…</button>
                 </template>
                 <button class="btn btn-ghost btn-sm text-danger" data-file-delete data-tip="Delete ({{bytes size}})" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               </div></td>
@@ -69,13 +69,13 @@
           {{else}}
             <tr data-files-empty><td colspan="4" class="py-10 text-center text-sm text-ink-faint">
               {{{icon 'folder-open' 'mx-auto size-6'}}}
-              <p class="mt-2">This folder is empty - upload files or create a folder above.</p>
+              <p class="mt-2">This folder is empty. Upload files or create a folder above.</p>
             </td></tr>
           {{/each}}
         </tbody>
       </table>
     </div>
   </div>
-  <p class="help mt-2 max-w-prose">Text files (.properties, .yml, .json, .toml…) open in the editor. Everything stays inside this server's data folder - sizes shown are live.</p>
+  <p class="help mt-2 max-w-prose">Text files (.properties, .yml, .json, .toml, and so on) open in the editor. Everything stays inside this server's data folder, and the sizes shown are live.</p>
 </div>
 <script type="module" src="/js/pages/files.js"></script>

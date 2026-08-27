@@ -29,7 +29,9 @@ export function runTask({ title, start, pollMs = 700 }) {
         closed = true;
         if (!settled) {
           settled = true;
-          toast('Still running in the background - follow it from the tasks tray in the top bar.', { kind: 'info' });
+          toast('This keeps running in the background. Follow it from the tasks tray in the top bar.', {
+            kind: 'info',
+          });
           reject(Object.assign(new Error('Progress dismissed'), { dismissed: true }));
         }
       },
@@ -46,7 +48,7 @@ export function runTask({ title, start, pollMs = 700 }) {
       try {
         const started = await start();
         taskId = typeof started === 'string' ? started : started.taskId;
-        if (!taskId) throw new Error('No task id returned');
+        if (!taskId) throw new Error('The panel did not start that task. Please try again in a moment.');
       } catch (err) {
         settled = true;
         modal.close();
@@ -67,7 +69,7 @@ export function runTask({ title, start, pollMs = 700 }) {
         if (!data.ok) {
           settled = true;
           modal.close();
-          reject(new Error(data.error || 'Task lost'));
+          reject(new Error(data.error || 'The panel lost track of that task. Check the tasks tray, then try again.'));
           return;
         }
         const t = data.task;
@@ -100,7 +102,7 @@ export function runTask({ title, start, pollMs = 700 }) {
         if (t.state === 'failed') {
           settled = true;
           modal.close();
-          const err = new Error(t.error || 'Task failed');
+          const err = new Error(t.error || 'That task did not finish. Please try again.');
           if (t.requiresForce) err.requiresForce = true;
           if (t.requiresVersionConfirm) {
             err.requiresVersionConfirm = true;

@@ -1,11 +1,11 @@
 <div class="card p-4" data-console-server="{{server.id}}">
   <div class="mb-3 flex flex-wrap items-center gap-2">
-    <input class="input max-w-xs" placeholder="Filter log lines… (/regex/ supported)" id="console-filter" aria-label="Filter log lines">
+    <input class="input max-w-xs" placeholder="Filter log lines… (wrap in / / for a regex)" id="console-filter" aria-label="Filter log lines">
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="INFO" checked> INFO</label>
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="WARN" checked> WARN</label>
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="ERROR" checked> ERROR</label>
     <div class="ml-auto flex flex-wrap items-center gap-2">
-      <div class="flex items-center gap-1.5" data-tip="Announce your console commands in game chat under this name (e.g. Server Admin). Leave blank to stay silent. The vanilla '[Rcon]' line is separate.">
+      <div class="flex items-center gap-1.5" data-tip="Announce your console commands in the game chat under this name, for example Server Admin. Leave blank to stay silent. This is separate from the game's own [Rcon] line.">
         {{{icon 'megaphone' 'size-3.5 text-ink-faint'}}}
         <input class="input w-36" id="console-label" placeholder="Announce as…" aria-label="Announce console commands as" value="{{server.consoleLabel}}" maxlength="48" autocomplete="off" spellcheck="false">
         <button class="btn btn-sm" id="console-label-save">Save</button>
@@ -25,7 +25,7 @@
       <div class="grid h-full place-items-center px-4 text-center text-sm text-stone-400" data-console-empty>
         <div>
           {{{icon 'terminal' 'mx-auto size-6 text-stone-500'}}}
-          <p class="mt-2">No console output yet - start the server to see live logs.</p>
+          <p class="mt-2">No console output yet. Start the server to see live logs.</p>
         </div>
       </div>
     {{/if}}
@@ -35,7 +35,7 @@
     <span class="grid place-items-center rounded-md border border-line-strong bg-inset px-3 font-mono text-sm text-ok">/</span>
     {{! min-w-0: see settings.hbs - without it this input won't shrink below its
         placeholder's intrinsic width and pushes the page wider on narrow screens. }}
-    <input class="input min-w-0 flex-1 font-mono" placeholder="Type a command - Enter to send, ↑ for history" id="console-input" aria-label="Server command" autocomplete="off">
+    <input class="input min-w-0 flex-1 font-mono" placeholder="Type a command (Enter to send, ↑ for history)" id="console-input" aria-label="Server command" autocomplete="off">
     <button class="btn btn-primary" id="console-send">{{{icon 'terminal' 'size-4'}}} Send</button>
   </div>
   <div class="mt-2 flex flex-wrap gap-1.5">

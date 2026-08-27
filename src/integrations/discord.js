@@ -138,7 +138,7 @@ async function testWebhook(serverId) {
       description: `Webhook is wired up for **${server ? server.display_name : serverId}**. You will receive the event types you enabled.`,
     })
   );
-  if (!res.ok) throw httpError(502, `Discord answered HTTP ${res.status} - check the webhook URL`);
+  if (!res.ok) throw httpError(502, 'Discord rejected the request. Check that the webhook URL is correct.');
   return { ok: true };
 }
 

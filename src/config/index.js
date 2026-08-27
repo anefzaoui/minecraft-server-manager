@@ -69,7 +69,7 @@ function resolveSessionSecret() {
     );
   }
   console.log(
-    `No SESSION_SECRET set - generated one and saved it to ${secretFile} (keep it private; delete it to rotate).`
+    `[boot] No SESSION_SECRET was set, so the panel generated one and saved it to ${secretFile}. Keep it private; delete it to rotate.`
   );
   return generated;
 }

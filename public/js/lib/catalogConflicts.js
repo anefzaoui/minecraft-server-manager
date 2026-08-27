@@ -14,7 +14,7 @@ export function wireCatalogConflicts(root, { toast, reconcileSilently = false } 
     if (announce) {
       const otherLabel = other.dataset.label || other.dataset.catalogKey;
       const thisLabel = el.dataset.label || el.dataset.catalogKey;
-      toast?.(`Turned off "${otherLabel}" - it can't be on at the same time as "${thisLabel}".`);
+      toast?.(`Turned off "${otherLabel}". It can't be on at the same time as "${thisLabel}".`);
     }
   }
 

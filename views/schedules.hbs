@@ -1,13 +1,13 @@
-{{> page-header heading="SCHEDULES" sub="Cron-driven automation per server plus the panel's own maintenance tasks."}}
+{{> page-header heading="SCHEDULES" sub="Automatic tasks that run on a schedule, for a single server or for the panel itself."}}
 
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <button class="btn btn-primary" id="schedule-new">{{{icon 'plus' 'size-4'}}} New Task</button>
+  <button class="btn btn-primary" id="schedule-new">{{{icon 'plus' 'size-4'}}} New task</button>
 </div>
 
 {{#if schedules.length}}
 <div class="card overflow-x-auto">
   <table class="table-base" id="schedules-table">
-    <thead><tr><th>Server</th><th>Task</th><th>Cron</th><th class="text-right">Next run</th><th>Enabled</th><th class="text-right"></th></tr></thead>
+    <thead><tr><th>Server</th><th>Task</th><th>Cron</th><th class="text-right">Next Run</th><th>Enabled</th><th class="text-right"></th></tr></thead>
     <tbody>
       {{#each schedules}}
         <tr data-schedule-row data-schedule-id="{{id}}" data-server-id="{{serverId}}" data-task-type="{{taskType}}" data-task="{{task}}" data-cron="{{cron}}" data-payload="{{json payload}}">
@@ -31,7 +31,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='calendar-clock' title='No Scheduled Tasks Yet' message='Automate restarts, backups and console commands on a cron schedule - hit New task above to create the first one.'}}
+  {{> empty-state iconName='calendar-clock' title='No Scheduled Tasks Yet' message='Automate restarts, backups, and console commands on a schedule. Use New task above to create the first one.'}}
 {{/if}}
 
 <div id="msm-schedule-data" hidden data-servers="{{json serverOptions}}" data-task-types="{{json taskTypes}}"></div>

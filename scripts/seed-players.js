@@ -56,7 +56,7 @@ function reportRoster(target, roster) {
 async function seedAll(count) {
   const all = listServers();
   if (!all.length) {
-    console.error('No servers exist yet - run `pnpm run seed:servers` first.');
+    console.error('No servers exist yet. Run `pnpm run seed:servers` first.');
     process.exit(1);
   }
   let seeded = 0;
@@ -94,7 +94,7 @@ async function main() {
       console.error(
         allServers.length
           ? `Available servers:\n${allServers.map((s) => `  ${s.id}  ${s.display_name}`).join('\n')}`
-          : 'No servers exist yet - run `pnpm run seed:servers` first.'
+          : 'No servers exist yet. Run `pnpm run seed:servers` first.'
       );
       process.exit(1);
     }

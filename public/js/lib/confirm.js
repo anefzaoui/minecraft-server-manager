@@ -53,7 +53,7 @@ export function confirmDialog({
       input.spellcheck = false;
       mismatch = document.createElement('p');
       mismatch.className = 'mt-1 hidden text-xs text-danger';
-      mismatch.textContent = "The name doesn't match.";
+      mismatch.textContent = "That name doesn't match.";
       wrap.append(label, input, mismatch);
       content.appendChild(wrap);
     }
@@ -105,4 +105,3 @@ export function confirmDialog({
     }
   });
 }
-

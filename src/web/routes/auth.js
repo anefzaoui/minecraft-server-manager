@@ -82,11 +82,12 @@ router.get('/setup', (req, res) => {
 
 // First-run only, so it can't be used to fingerprint the host after setup.
 router.get('/setup/checks', async (req, res) => {
-  if (!authService.firstRunNeeded()) return res.status(403).json({ ok: false, error: 'Setup already complete' });
+  if (!authService.firstRunNeeded())
+    return res.status(403).json({ ok: false, error: 'First-run setup is already complete.' });
   try {
     res.json({ ok: true, checks: await buildSetupChecks() });
   } catch {
-    res.status(500).json({ ok: false, error: 'Could not run environment checks' });
+    res.status(500).json({ ok: false, error: 'The environment checks could not be run.' });
   }
 });
 
@@ -94,12 +95,21 @@ router.post('/setup', (req, res) => {
   const wantsJson = req.xhr || String(req.headers.accept || '').includes('application/json');
   try {
     if (!authService.firstRunNeeded()) {
-      return wantsJson ? res.status(409).json({ ok: false, error: 'Setup already complete' }) : res.redirect('/login');
+      return wantsJson
+        ? res.status(409).json({ ok: false, error: 'First-run setup is already complete.' })
+        : res.redirect('/login');
     }
     const { username, password } = z
       .object({
-        username: z.string().trim().min(2).max(32),
-        password: z.string().min(8).max(200),
+        username: z
+          .string()
+          .trim()
+          .min(2, 'Choose a username with at least 2 characters.')
+          .max(32, 'That username is too long (32 characters max).'),
+        password: z
+          .string()
+          .min(8, 'Choose a password with at least 8 characters.')
+          .max(200, 'That password is too long (200 characters max).'),
       })
       .parse(req.body);
     const user = authService.createUser({ username, password, role: 'admin' }, { actor: 'setup' });
@@ -107,8 +117,12 @@ router.post('/setup', (req, res) => {
     req.session.regenerate((err) => {
       if (err) {
         return wantsJson
-          ? res.status(500).json({ ok: false, error: 'Session error - try again.' })
-          : res.status(500).render('setup', { title: 'Welcome', layout: 'bare', error: 'Session error - try again.' });
+          ? res.status(500).json({ ok: false, error: 'Something went wrong starting your session. Please try again.' })
+          : res.status(500).render('setup', {
+              title: 'Welcome',
+              layout: 'bare',
+              error: 'Something went wrong starting your session. Please try again.',
+            });
       }
       req.session.userId = user.id;
       recordEvent({
@@ -142,8 +156,8 @@ router.post('/login', (req, res) => {
   try {
     const { username, password, next, remember } = z
       .object({
-        username: z.string().trim().min(1).max(64),
-        password: z.string().min(1).max(200),
+        username: z.string().trim().min(1, 'Enter your username.').max(64, 'Enter your username.'),
+        password: z.string().min(1, 'Enter your password.').max(200, 'Enter your password.'),
         next: z.string().max(300).optional(),
         remember: z.coerce.boolean().optional(),
       })
@@ -174,9 +188,11 @@ router.post('/login', (req, res) => {
     clearLoginFailures(username, req.ip);
     req.session.regenerate((err) => {
       if (err)
-        return res
-          .status(500)
-          .render('login', { title: 'Sign In', layout: 'bare', error: 'Session error - try again.' });
+        return res.status(500).render('login', {
+          title: 'Sign In',
+          layout: 'bare',
+          error: 'Something went wrong starting your session. Please try again.',
+        });
       req.session.userId = user.id;
       applyRememberCookie(req, Boolean(remember));
       recordEvent({ actor: user.username, type: 'login', summary: `${user.username} signed in` });
@@ -189,7 +205,7 @@ router.post('/login', (req, res) => {
 
 router.get('/login/2fa', (req, res) => {
   if (!req.session || !req.session.pendingTotpUserId) return res.redirect('/login');
-  res.render('login-2fa', { title: 'Verify It’s You', layout: 'bare' });
+  res.render('login-2fa', { title: "Verify It's You", layout: 'bare' });
 });
 
 router.post('/login/2fa', (req, res) => {
@@ -204,7 +220,7 @@ router.post('/login/2fa', (req, res) => {
       recordLoginFailure(pendingUsername, req.ip);
       return res
         .status(401)
-        .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: 'Incorrect code.' });
+        .render('login-2fa', { title: "Verify It's You", layout: 'bare', error: 'Incorrect code.' });
     }
     clearLoginFailures(pendingUsername, req.ip);
     const next = req.session.pendingTotpNext;
@@ -215,9 +231,11 @@ router.post('/login/2fa', (req, res) => {
     delete req.session.pendingRemember;
     req.session.regenerate((err) => {
       if (err)
-        return res
-          .status(500)
-          .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: 'Session error - try again.' });
+        return res.status(500).render('login-2fa', {
+          title: "Verify It's You",
+          layout: 'bare',
+          error: 'Something went wrong starting your session. Please try again.',
+        });
       req.session.userId = pendingId;
       applyRememberCookie(req, Boolean(remember));
       recordEvent({ actor: pendingUsername, type: 'login', summary: `${pendingUsername} signed in (2FA)` });
@@ -226,7 +244,7 @@ router.post('/login/2fa', (req, res) => {
   } catch (err) {
     res
       .status(err.status || 400)
-      .render('login-2fa', { title: 'Verify It’s You', layout: 'bare', error: firstIssue(err) });
+      .render('login-2fa', { title: "Verify It's You", layout: 'bare', error: firstIssue(err) });
   }
 });
 
@@ -256,8 +274,13 @@ function safeNext(next) {
 }
 
 function firstIssue(err) {
-  if (err && err.issues) return err.issues[0].message;
-  return err.message || 'Something went wrong';
+  if (err && err.issues && err.issues[0]) {
+    const m = err.issues[0].message;
+    // Zod's built-in messages ("String must contain at least 8 character(s)")
+    // are developer text - fall back to a plain sentence rather than show them.
+    if (m && !/^(String|Number|Required|Invalid input|Expected)/.test(m)) return m;
+  }
+  return 'Please check what you entered and try again.';
 }
 
 module.exports = router;

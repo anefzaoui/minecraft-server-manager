@@ -291,7 +291,9 @@ router.get(
       'update-failed',
     ];
 
-    const serverRows = db.all('SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at');
+    const serverRows = db.all(
+      'SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at'
+    );
     const problems = serverRows
       .filter((s) => PROBLEM_STATUSES.has(s.status))
       .map((s) => ({ serverId: s.id, server: s.display_name, kind: s.status }));
@@ -1642,7 +1644,7 @@ router.post(
   requireRole('admin'),
   asyncHandler((req, res, next) => {
     if (req.params.id === req.user.id) {
-      return res.status(400).json({ ok: false, error: 'Use your own account’s 2FA settings to disable it.' });
+      return res.status(400).json({ ok: false, error: "Use your own account's two-factor settings to turn it off." });
     }
     authService.adminDisableTotp(req.params.id, { actor: req.user.username });
     res.json({ ok: true });

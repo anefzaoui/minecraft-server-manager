@@ -2,6 +2,7 @@
 // /api/servers/:id/files (or /api/files when unscoped). Text edit in a modal
 // textarea for v1 - CodeMirror lands later.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
@@ -40,10 +41,13 @@ function init(rootEl) {
             toast(`Uploaded ${n} file${n === 1 ? '' : 's'}.`);
             reload();
           } else {
-            toast(data.error || 'Upload failed', { kind: 'error', timeout: 9000 });
+            toast(data.error || friendlyError(res, { action: 'upload those files' }), {
+              kind: 'error',
+              timeout: 9000,
+            });
           }
-        } catch (err) {
-          toast(`Network error: ${err.message}`, { kind: 'error' });
+        } catch {
+          toast(friendlyError(null, { action: 'upload those files' }), { kind: 'error' });
         }
       });
     });
@@ -94,7 +98,7 @@ function init(rootEl) {
     } else if (e.target.closest('[data-file-delete]')) {
       const btn = e.target.closest('[data-file-delete]');
       const ok = await confirmDialog({
-        title: `Delete ${isDir ? 'Folder' : 'File'} "${name}"?`,
+        title: `Delete ${isDir ? 'folder' : 'file'} "${name}"?`,
         message: isDir ? 'Deletes the folder and everything inside it.' : 'Deletes this file permanently.',
         detail: `${fmtBytes(size)} will be freed.`,
         confirmLabel: 'Delete',
@@ -115,11 +119,11 @@ function init(rootEl) {
             const tr = document.createElement('tr');
             tr.dataset.filesEmpty = '';
             tr.innerHTML =
-              '<td colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty - upload files or create a folder above.</td>';
+              '<td colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty. Upload files or create a folder above.</td>';
             tbody.appendChild(tr);
           }
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: 'delete that item' }), { kind: 'error' });
         }
       } finally {
         restore();
@@ -143,12 +147,12 @@ function init(rootEl) {
     const res = await fetch(`${base}/read?path=${encodeURIComponent(path)}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false) {
-      return toast(data.error || 'Cannot open this file', { kind: 'error', timeout: 8000 });
+      return toast(data.error || friendlyError(res, { action: 'open this file' }), { kind: 'error', timeout: 8000 });
     }
     const content = document.createElement('div');
     content.innerHTML = `
       <textarea class="input h-96 w-full resize-y font-mono text-xs leading-relaxed" spellcheck="false"></textarea>
-      <p class="help mt-2">${escapeHtml(path)} · ${fmtBytes(data.size)} - saved atomically.</p>`;
+      <p class="help mt-2">${escapeHtml(path)} · ${fmtBytes(data.size)}. Saves are written safely in one step.</p>`;
     const textarea = content.querySelector('textarea');
     textarea.value = data.content;
     openModal({
@@ -207,7 +211,7 @@ function init(rootEl) {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label">Destination folder (relative to the root)</label>
-      <input class="input font-mono" data-dst placeholder="e.g. world/datapacks - empty for the root" autocomplete="off">
+      <input class="input font-mono" data-dst placeholder="e.g. world/datapacks (leave empty for the root)" autocomplete="off">
       <p class="help">${verb === 'Copy' ? 'Copies' : 'Moves'} "${escapeHtml(name)}" into the folder. It must already exist.</p>`;
     const input = content.querySelector('[data-dst]');
     input.value = currentPath;
@@ -241,12 +245,15 @@ function init(rootEl) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.ok === false) {
-        toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 9000 });
+        toast(data.error || friendlyError(res, { action: 'complete that file action' }), {
+          kind: 'error',
+          timeout: 9000,
+        });
         return null;
       }
       return data;
-    } catch (err) {
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+    } catch {
+      toast(friendlyError(null, { action: 'complete that file action' }), { kind: 'error' });
       return null;
     }
   }

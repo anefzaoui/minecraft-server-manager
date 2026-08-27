@@ -29,8 +29,8 @@
               <span class="badge badge-warn" title="Suspected from stack trace">suspect: {{this}}</span>
             {{/each}}
             {{! One treatment (icon + label) for all three sibling actions. }}
-            <button class="btn btn-ghost btn-sm" data-crash-action="view">{{{icon 'file-search' 'size-3.5'}}} Open Viewer</button>
-            <button class="btn btn-ghost btn-sm" data-crash-action="copy">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy Trace</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="view">{{{icon 'file-search' 'size-3.5'}}} Open viewer</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="copy">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy stack trace</button>
             <button class="btn btn-ghost btn-sm" data-crash-action="download">{{{icon 'download' 'size-3.5'}}} Download</button>
           </div>
         </div>
@@ -56,15 +56,15 @@
           </div>
         {{/if}}
         {{#if hasLog}}
-          <button class="btn btn-ghost btn-sm mt-1.5" data-event-log data-event-id="{{id}}">{{{icon 'file-text' 'size-3.5'}}} View Captured Log</button>
+          <button class="btn btn-ghost btn-sm mt-1.5" data-event-log data-event-id="{{id}}">{{{icon 'file-text' 'size-3.5'}}} View captured log</button>
         {{/if}}
       </li>
     {{/each}}
   </ol>
-  <div class="hidden p-8 text-center text-sm text-ink-faint" id="hist-no-match">No events match this filter.</div>
+  <div class="hidden p-8 text-center text-sm text-ink-faint" id="hist-no-match">No events match these filters.</div>
 </div>
 {{else}}
-  {{> empty-state iconName='history' title='No Events Recorded Yet' message='Everything that happens to this server - starts, stops, setting changes, backups, crashes - is logged here with who did it and when.'}}
+  {{> empty-state iconName='history' title='No Events Recorded Yet' message='Everything that happens to this server (starts, stops, setting changes, backups, and crashes) is logged here, with who did it and when.'}}
 {{/if}}
 </div>
 <script type="module" src="/js/pages/history.js"></script>

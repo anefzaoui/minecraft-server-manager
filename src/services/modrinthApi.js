@@ -24,10 +24,10 @@ async function mrFetch(pathname, { ttlMs = 10 * 60 * 1000, search } = {}) {
   });
   if (res.status === 429) {
     if (cached) return JSON.parse(cached.value_json);
-    throw httpError(429, 'Modrinth rate limit hit - try again in a minute');
+    throw httpError(429, 'Modrinth is rate-limiting us. Please try again in a minute.');
   }
-  if (res.status === 404) throw httpError(404, 'Not found on Modrinth');
-  if (!res.ok) throw httpError(502, `Modrinth answered HTTP ${res.status}`);
+  if (res.status === 404) throw httpError(404, "That wasn't found on Modrinth.");
+  if (!res.ok) throw httpError(502, 'Modrinth is not responding correctly right now. Please try again shortly.');
   const data = await res.json();
   db.run(
     `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))

@@ -1,5 +1,7 @@
 'use strict';
 
+const httpError = require('../utils/httpError');
+
 // Host-port allocation. Scheme (user-approved): game ports first-free from
 // 25565, RCON = game + 1000, Bedrock UDP first-free from 19132. A port is
 // "taken" if any DB server claims it OR the OS reports it in use.
@@ -59,14 +61,19 @@ async function suggestPorts({ withBedrock = false } = {}) {
     const rcon = game + config.ports.rconOffset;
     if (!used.has(game) && !used.has(rcon) && (await probe(game)) && (await probe(rcon))) break;
     game += 1;
-    if (game > 65000) throw new Error('No free game ports available');
+    if (game > 65000)
+      throw httpError(409, 'No free game ports are available. Delete a server or widen the port range in your .env.');
   }
   const result = { game, rcon: game + config.ports.rconOffset, bedrock: null };
   if (withBedrock) {
     let b = config.ports.bedrockStart;
     while (used.has(b) || !(await probe(b))) {
       b += 1;
-      if (b > 65000) throw new Error('No free Bedrock ports available');
+      if (b > 65000)
+        throw httpError(
+          409,
+          'No free Bedrock ports are available. Delete a server or widen the port range in your .env.'
+        );
     }
     result.bedrock = b;
   }
