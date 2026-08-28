@@ -5,6 +5,53 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [Unreleased]
+
+The zip digester (#10, requested by @gleep52 — who installed 87 mods one search at a time; never
+again): mod zips import in bulk, CurseForge search reaches everywhere Modrinth already was, and
+blocked downloads stop being dead ends.
+
+### Added
+
+- **Import zip on the Mods tab** — one button, two zip shapes, auto-detected. A **CurseForge
+  modpack export** (`manifest.json`) is resolved through the CurseForge **bulk** endpoints (two
+  POSTs instead of ~170 GETs for an 87-mod pack), previewed with per-mod warnings, and installed
+  as overlay mods with real task progress. A **hand-assembled zip of jars** gets each jar
+  identified — Modrinth sha1 reverse lookup → CurseForge fingerprint (murmur2) → the jar's own
+  metadata (`fabric.mod.json`, `mods.toml`, `neoforge.mods.toml`, `quilt.mod.json`,
+  `plugin.yml`) — and judged against the server: fits / wrong loader / wrong MC version /
+  already installed / unidentified, with checkboxes to install exactly what belongs.
+- **Pack overrides, opt-in and reversible** — a modpack export's `overrides/` tree (configs,
+  scripts) can be applied to the server; every file that would be overwritten is backed up first
+  to `.import-backups/<timestamp>/` inside the server folder. Zip-slip-guarded, size-capped, and
+  the backup tree itself is protected from being overwritten by a malicious zip.
+- **Create a server from a zip** — the wizard's From-modpack tab takes a custom zip: the
+  manifest (or a majority vote across identified jars) prefills the loader and Minecraft
+  version, then create → bulk install → optional overrides → start runs as one task. Zips of
+  plugins create Paper servers.
+- **CurseForge search on the existing-server Mods tab** — platform chips (Modrinth default,
+  CurseForge once the API key is stored), with **Installed** badges on results that are already
+  on the server. The README promised this tab searched CurseForge; now it does.
+- **Blocked downloads handled up front** — CurseForge authors can forbid API downloads. The
+  search modal now pre-checks the chosen build and swaps Install for **Open CurseForge** +
+  **Upload jar** instead of failing with a raw error; zip imports partition those mods into a
+  report with per-mod browser links and upload slots. The pending-downloads resolver's
+  "Find on Modrinth" became a platform-aware "Find replacement".
+- **Uploads keep their identity** — manually-uploaded jars are identified the same three-layer
+  way, so they keep their real name, version, and icon, and (when hash-matched to a registry)
+  join the update checker like any searched-and-installed mod.
+- **Solver goes cross-platform** — the wizard's Auto-detect compatibility solver accepts
+  CurseForge mods alongside Modrinth ones, mapping each CF project's full file history into the
+  same loader × MC-version intersection.
+
+### Fixed
+
+- Plugin servers' mod search no longer over-filters: plugin lookups stop being narrowed by a
+  mod-loader facet (a spigot-only plugin used to resolve to zero builds on a Paper server), and
+  datapack/resourcepack version lookups are no longer filtered by the server's loader either.
+- `/api/mods/search` and `/api/mods/versions` accept plugin servers (`loader=paper`, plugin
+  kind) instead of rejecting them at validation.
+
 ## [0.9.8] - 2026-08-21
 
 Account security lands: opt-in two-factor authentication for every account, plus a round of

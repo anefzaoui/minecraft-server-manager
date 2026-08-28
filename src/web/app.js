@@ -184,6 +184,12 @@ function createApp() {
   app.use(require('./routes/auth'));
   app.use('/status', require('./routes/status')); // public, read-only, opt-in per server
   app.use(requireAuth);
+  // Locally cached mod icons (library.cacheIcon writes them so the UI never
+  // hotlinks registry CDNs). listContent has always emitted /library/icons/…
+  // URLs — this static mount is what actually serves them. Read-only,
+  // authenticated, and scoped to the icons subtree only (never the whole
+  // library, which holds the jar pool).
+  app.use('/library/icons', express.static(path.join(config.dataDir, 'library', 'icons'), { index: false }));
   // Account security (2FA) is self-service for every role, including viewer —
   // mounted ahead of the viewer-read-only gate below since protecting your own
   // account isn't a server-management action.
