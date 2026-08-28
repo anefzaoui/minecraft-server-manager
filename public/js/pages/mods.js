@@ -361,12 +361,13 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       clearTimeout(timer);
       timer = setTimeout(runSearch, 350);
     });
+    // Declared before the prefill search below — runSearch reads it synchronously.
+    const loader =
+      serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
+
     q.value = prefill;
     q.focus();
     if (prefill) runSearch();
-
-    const loader =
-      serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
 
     let searchSeq = 0; // a slow earlier response must not overwrite a newer one
     async function runSearch() {
