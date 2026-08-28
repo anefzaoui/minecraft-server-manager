@@ -1212,6 +1212,75 @@ router.post(
   })
 );
 
+// ---- Mod-zip importer ----
+// One upload, two shapes, auto-detected: a CurseForge modpack export
+// (manifest.json of pinned {projectID, fileID} pairs + overrides/) or a
+// hand-assembled zip of jars. Two-phase like blueprints: preview (non-mutating,
+// returns an uploadToken) → import (runs as a task with per-mod progress).
+const contentZip = require('../../services/contentZip');
+const { nanoid: zipNanoid } = require('nanoid');
+const zipImportUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, dataPath('tmp')),
+    filename: (req, file, cb) => cb(null, `modzip-${zipNanoid(10)}.zip`),
+  }),
+  limits: { fileSize: 8 * 1024 ** 3, files: 1 },
+});
+const zipTokenSchema = z.string().regex(/^modzip-[A-Za-z0-9_-]{10}\.zip$/, 'Invalid upload token');
+const zipImportBodySchema = z.object({
+  uploadToken: zipTokenSchema,
+  // pack zips select by fileId (number), jar zips by entry name (string)
+  selections: z.array(z.union([z.coerce.number(), z.string().max(300)])).max(1500).optional(),
+  applyOverrides: z.coerce.boolean().optional(),
+});
+
+router.post(
+  '/servers/:id/mods/import-zip/preview',
+  zipImportUpload.single('file'),
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    if (!req.file) throw Object.assign(new Error('No file uploaded'), { status: 400 });
+    let preview;
+    try {
+      preview = await contentZip.previewForServer(req.params.id, req.file.path);
+    } catch (err) {
+      await fsp.rm(req.file.path, { force: true }).catch(() => {});
+      throw err;
+    }
+    res.json({ ok: true, preview, uploadToken: req.file.filename });
+  })
+);
+
+router.post(
+  '/servers/:id/mods/import-zip',
+  asyncHandler(async (req, res, next) => {
+    const server = requireServer(req.params.id);
+    const input = zipImportBodySchema.parse(req.body);
+    const zipPath = dataPath('tmp', input.uploadToken);
+    if (!fs.existsSync(zipPath)) {
+      return res.status(404).json({ ok: false, error: 'Uploaded zip expired — upload it again' });
+    }
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Importing mod zip into ${server.display_name}`,
+      { actor, serverId: server.id },
+      async (t) => {
+        try {
+          return await contentZip.importForServer(server.id, zipPath, {
+            selections: input.selections || null,
+            applyOverrides: Boolean(input.applyOverrides),
+            actor,
+            onStep: (s) => t.step(s),
+          });
+        } finally {
+          await fsp.rm(zipPath, { force: true }).catch(() => {});
+        }
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
 // ---- Events: export, excerpts, retention ----
 
 function sendEventExport(req, res, serverId) {
