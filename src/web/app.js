@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
 const { engine } = require('express-handlebars');
@@ -151,28 +152,83 @@ function createApp() {
   app.set('view engine', 'hbs');
   app.set('views', path.join(config.root, 'views'));
 
-  // express.static's default `Cache-Control: public, max-age=0` still lets a
-  // browser or reverse proxy (Pangolin, NGINX, Traefik…) decide for itself
-  // whether/how long to trust a cached copy without checking back - some do,
-  // which meant a JS fix could ship and still not reach anyone until they
-  // cleared their cache. `no-cache` forces a revalidation round-trip (still
-  // 304s when nothing changed - this isn't `no-store`) on every request, so a
-  // new deploy is guaranteed visible on the very next page load.
+  // Default: force a revalidation round-trip (still 304s when nothing changed -
+  // this isn't `no-store`) so a new deploy of an HTML page or an API change is
+  // visible on the very next request, no matter what a browser or reverse proxy
+  // (Pangolin, NGINX, Traefik…) would otherwise decide on its own. express.static
+  // below overrides this for the asset classes it serves.
   app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache, must-revalidate');
     next();
   });
-  app.use(express.static(path.join(config.root, 'public')));
-  app.use(express.urlencoded({ extended: true }));
-  app.use(express.json());
+  // Static assets opt out of the blanket revalidation:
+  //  - fonts + the pixel-art icon sets (icons/mc-items alone is ~1500 PNGs /
+  //    9.5 MB) are content-stable - their bytes never change without a new
+  //    filename - so cache them hard and skip the conditional-GET storm those
+  //    directories otherwise trigger on every page load.
+  //  - app-owned css/js still only gets a 1-hour max-age (not `immutable`), so a
+  //    deploy is picked up within the hour even before the hashed-bundle step.
+  const ONE_YEAR = 31536000;
+
+  // Serve the minified esbuild bundles from public/dist/js in place of the raw
+  // /js/**.js source when a build exists (see scripts/build-js.js). No build
+  // (fresh `pnpm start`, or `pnpm dev`) -> this falls straight through to the
+  // raw source below, so nothing breaks without a build step.
+  const DIST_JS_DIR = path.join(config.root, 'public', 'dist', 'js');
+  const hasJsBundle = fs.existsSync(DIST_JS_DIR);
+  if (hasJsBundle) {
+    app.use('/js', (req, res, next) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+      const rel = decodeURIComponent(req.path.replace(/^\/+/, ''));
+      if (!rel.endsWith('.js') || rel.includes('..') || rel.includes('\0')) return next();
+      const built = path.join(DIST_JS_DIR, rel);
+      if (!built.startsWith(DIST_JS_DIR + path.sep)) return next();
+      fs.access(built, fs.constants.R_OK, (err) => {
+        if (err) return next();
+        res.type('application/javascript');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.sendFile(built);
+      });
+    });
+  }
+
+  // Static assets opt out of the blanket revalidation:
+  //  - fonts + the pixel-art icon sets (icons/mc-items alone is ~1500 PNGs /
+  //    9.5 MB) are content-stable - their bytes never change without a new
+  //    filename - so cache them hard and skip the conditional-GET storm those
+  //    directories otherwise trigger on every page load.
+  //  - app-owned css/js still only gets a 1-hour max-age (not `immutable`), so a
+  //    deploy is picked up within the hour even before the hashed-bundle step.
+  app.use(
+    express.static(path.join(config.root, 'public'), {
+      maxAge: '1h',
+      setHeaders(res, filePath) {
+        if (/[\\/](fonts|icons)[\\/]/.test(filePath)) {
+          res.setHeader('Cache-Control', `public, max-age=${ONE_YEAR}, immutable`);
+        }
+      },
+    })
+  );
+  // Explicit body-size cap. 256 kb comfortably covers every JSON/form payload
+  // the panel sends; upload paths use multer, not these. The one exception is
+  // the 2 MB text-file editor - skip the global JSON parser for it so its own
+  // 3 MB parser (routes/files.js) reads the body instead of this one rejecting
+  // it first.
+  app.use(express.urlencoded({ extended: true, limit: '256kb' }));
+  const jsonParser = express.json({ limit: '256kb' });
+  app.use((req, res, next) => {
+    if (req.method === 'POST' && /\/files\/write$/.test(req.path)) return next();
+    jsonParser(req, res, next);
+  });
 
   // Unauthenticated liveness/readiness probe for uptime monitors and
-  // orchestrators. Exposes nothing sensitive - just whether the process is up
-  // and the database is answering.
+  // orchestrators. Exposes nothing - just whether the process is up and the
+  // database is answering (the version string is deliberately not published
+  // here; it's available to any signed-in user in the footer).
   app.get('/healthz', (req, res) => {
     try {
       require('../db').get('SELECT 1');
-      res.json({ ok: true, version: app.locals.appVersion });
+      res.json({ ok: true });
     } catch {
       res.status(503).json({ ok: false, error: 'database unavailable' });
     }
@@ -203,8 +259,13 @@ function createApp() {
   app.use(sessionMiddleware);
   app.set('sessionMiddleware', sessionMiddleware);
   app.use(originGuard);
+
+  const { apiLimiter, authLimiter } = require('./middleware/rateLimit');
+  app.use(['/login', '/login/2fa', '/setup'], authLimiter);
   app.use(require('./routes/auth'));
   app.use('/status', require('./routes/status')); // public, read-only, opt-in per server
+  // Cap /api request volume before any auth/DB work runs on a flood.
+  app.use('/api', apiLimiter);
   app.use(requireAuth);
   // Account security (2FA) is self-service for every role, including viewer -
   // mounted ahead of the viewer-read-only gate below since protecting your own
@@ -226,11 +287,21 @@ function createApp() {
   );
 
   app.use((err, req, res, next) => {
-    console.error(err);
-    res.status(500).render('error', {
-      title: 'Something broke',
-      code: 500,
-      message: 'The panel hit an unexpected error. Check the panel logs for details.',
+    // Honor a well-formed HTTP status when the error carries one (e.g.
+    // body-parser's 413 PayloadTooLargeError, a 400 from a malformed JSON body) -
+    // those are client errors, not a panel fault, and shouldn't read as a 500.
+    const code = Number(err.status || err.statusCode) || 500;
+    if (code >= 500) console.error(err);
+    if (req.path.startsWith('/api/') || req.xhr) {
+      return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large' : 'Request failed' });
+    }
+    res.status(code).render('error', {
+      title: code >= 500 ? 'Something broke' : 'Request rejected',
+      code,
+      message:
+        code >= 500
+          ? 'The panel hit an unexpected error. Check the panel logs for details.'
+          : 'That request was rejected. Check what you sent and try again.',
     });
   });
 

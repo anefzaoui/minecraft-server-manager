@@ -14,6 +14,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const archiver = require('archiver');
 const yauzl = require('yauzl');
+const { extractZip, safeEntryName } = require('../utils/safeExtract');
 const { nanoid } = require('nanoid');
 const { z } = require('zod');
 const db = require('../db');
@@ -392,7 +393,8 @@ async function importBlueprint(zipRef, overrides = {}, { actor = 'system', onPro
   try {
     if (hasPayload) {
       onProgress('Extracting blueprint payload…');
-      await extractZipSafe(zipPath, tmpDir);
+      await fsp.mkdir(tmpDir, { recursive: true });
+      await extractZip(zipPath, tmpDir);
     }
 
     // Pinned modpack
@@ -796,13 +798,8 @@ async function writeManifestOnlyBlueprint(manifest, { builtin = false } = {}) {
   return db.get('SELECT * FROM blueprints WHERE id = ?', id);
 }
 
-// ---- Zip helpers (all zip-slip-guarded) ----
-
-function safeEntryName(name) {
-  if (!name || name.includes('\0') || name.includes('\\')) return false;
-  if (path.isAbsolute(name) || /^[a-zA-Z]:/.test(name)) return false;
-  return !name.split('/').includes('..');
-}
+// ---- Zip helpers (all zip-slip-guarded; extraction goes through
+// src/utils/safeExtract.js, which also enforces the decompression-bomb ceilings) ----
 
 /** List entries and stream out manifest.json without extracting anything. */
 function readZipIndex(zipPath) {
@@ -832,42 +829,6 @@ function readZipIndex(zipPath) {
           });
         } else {
           zip.readEntry();
-        }
-      });
-      zip.readEntry();
-    });
-  });
-}
-
-/** Extract a whole zip under destDir; every entry path is containment-checked. */
-function extractZipSafe(zipFile, destDir) {
-  return new Promise((resolve, reject) => {
-    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(err);
-      zip.on('error', reject);
-      zip.on('end', resolve);
-      zip.on('entry', (entry) => {
-        if (!safeEntryName(entry.fileName)) {
-          zip.close();
-          return reject(new Error(`Archive entry escapes destination: ${entry.fileName}`));
-        }
-        const target = path.resolve(destDir, entry.fileName);
-        if (target !== path.resolve(destDir) && !target.startsWith(path.resolve(destDir) + path.sep)) {
-          zip.close();
-          return reject(new Error(`Archive entry escapes destination: ${entry.fileName}`));
-        }
-        if (/\/$/.test(entry.fileName)) {
-          fs.mkdirSync(target, { recursive: true });
-          zip.readEntry();
-        } else {
-          fs.mkdirSync(path.dirname(target), { recursive: true });
-          zip.openReadStream(entry, (streamErr, readStream) => {
-            if (streamErr) return reject(streamErr);
-            const out = fs.createWriteStream(target);
-            out.on('close', () => zip.readEntry());
-            out.on('error', reject);
-            readStream.pipe(out);
-          });
         }
       });
       zip.readEntry();

@@ -17,7 +17,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const archiver = require('archiver');
-const yauzl = require('yauzl');
+const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/safeExtract');
 const tar = require('tar');
 const { nanoid } = require('nanoid');
 const db = require('../db');
@@ -247,7 +247,7 @@ async function addZipToLibrary(zipAbs, { name, actor, worldSource, worldFlavor, 
     summary: `World added to library: ${name} (${humanBytes(size)})`,
     details: { id, sha256, sizeBytes: size, split: Boolean(split), mcVersion: mcVersion || null, source: worldSource },
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return db.get('SELECT * FROM library_files WHERE id = ?', id);
 }
 
@@ -479,7 +479,7 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
     summary: `World "${lib.name}" installed as "${targetLevel}" (${mode}, ${humanBytes(sizeBytes)})`,
     details: { libraryId, mode, installedAs: targetLevel, sizeBytes, replacedBytes, warnings },
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return { installedAs: targetLevel, mode, warnings, sizeBytes };
 }
 
@@ -570,7 +570,7 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
     summary: `World "${worldName}" duplicated as "${copyName}" (${humanBytes(sizeBytes)})`,
     details: { worldName, copyName, sizeBytes },
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return { name: copyName, sizeBytes };
 }
 
@@ -705,7 +705,7 @@ async function resetWorldImpl(
       freedBytes,
     },
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return {
     level,
     seedMode,
@@ -736,7 +736,7 @@ async function deleteServerWorld(serverId, worldName, { actor = 'system' } = {})
     summary: `World "${worldName}" deleted (${humanBytes(freedBytes)} freed)`,
     details: { worldName, freedBytes },
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return { freedBytes };
 }
 
@@ -1008,90 +1008,6 @@ async function extractArchive(file, destDir, originalName = '') {
     });
   }
   throw httpError(400, `That doesn't look like a zip or tar archive${originalName ? ` (${originalName})` : ''}`);
-}
-
-// Hard ceiling on total uncompressed extraction size / entry count. Guards against
-// a small archive that inflates to hundreds of GB and fills the disk (DoS).
-const MAX_EXTRACT_BYTES = 50 * 1024 ** 3;
-const MAX_EXTRACT_ENTRIES = 200000;
-
-/** Zip-slip-safe extraction (yauzl) with a decompression-bomb ceiling. */
-function extractZip(zipFile, destDir) {
-  return new Promise((resolve, reject) => {
-    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(err);
-      let settled = false;
-      let entryCount = 0;
-      let writtenBytes = 0;
-      let declaredBytes = 0;
-      const fail = (e) => {
-        if (settled) return;
-        settled = true;
-        try {
-          zip.destroy();
-        } catch {
-          /* */
-        }
-        reject(e);
-      };
-      const done = () => {
-        if (settled) return;
-        settled = true;
-        resolve();
-      };
-      zip.on('error', fail);
-      zip.on('end', done);
-      zip.on('entry', (entry) => {
-        if (++entryCount > MAX_EXTRACT_ENTRIES) {
-          return fail(httpError(413, `Archive has too many entries (> ${MAX_EXTRACT_ENTRIES}) - refusing to extract.`));
-        }
-        // Fast reject using the declared (central-directory) sizes.
-        declaredBytes += entry.uncompressedSize || 0;
-        if (declaredBytes > MAX_EXTRACT_BYTES) {
-          return fail(
-            httpError(
-              413,
-              `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
-            )
-          );
-        }
-        const target = path.resolve(destDir, entry.fileName);
-        if (!target.startsWith(path.resolve(destDir) + path.sep) && target !== path.resolve(destDir)) {
-          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
-        }
-        if (/\/$/.test(entry.fileName)) {
-          fs.mkdirSync(target, { recursive: true });
-          zip.readEntry();
-        } else {
-          fs.mkdirSync(path.dirname(target), { recursive: true });
-          zip.openReadStream(entry, (streamErr, readStream) => {
-            if (streamErr) return fail(streamErr);
-            const out = fs.createWriteStream(target);
-            // Also count ACTUAL bytes so a lying header can't slip a bomb past the check.
-            readStream.on('data', (chunk) => {
-              writtenBytes += chunk.length;
-              if (writtenBytes > MAX_EXTRACT_BYTES) {
-                readStream.destroy();
-                out.destroy();
-                fail(
-                  httpError(
-                    413,
-                    `Archive exceeds the ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB extraction limit - aborted (possible decompression bomb).`
-                  )
-                );
-              }
-            });
-            out.on('close', () => {
-              if (!settled) zip.readEntry();
-            });
-            out.on('error', fail);
-            readStream.pipe(out);
-          });
-        }
-      });
-      zip.readEntry();
-    });
-  });
 }
 
 // ---------------------------------------------------------------------------

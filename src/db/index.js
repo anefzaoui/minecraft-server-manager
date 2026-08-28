@@ -10,6 +10,12 @@ const config = require('../config');
 
 let db = null;
 
+// Prepared statements are reusable across calls in node:sqlite, so cache them
+// keyed on the SQL text instead of re-parsing on every run/get/all. The set of
+// distinct SQL strings in the panel is small and static, so this stays bounded
+// without eviction; it's cleared alongside the connection in close().
+const stmtCache = new Map();
+
 function open() {
   if (db) return db;
   db = new DatabaseSync(path.join(config.dataDir, 'panel.db'));
@@ -19,21 +25,24 @@ function open() {
   return db;
 }
 
+function prepare(sql) {
+  let stmt = stmtCache.get(sql);
+  if (!stmt) {
+    stmt = open().prepare(sql);
+    stmtCache.set(sql, stmt);
+  }
+  return stmt;
+}
+
 /** Prepared-statement helpers. All synchronous - node:sqlite mirrors better-sqlite3. */
 function run(sql, ...params) {
-  return open()
-    .prepare(sql)
-    .run(...params);
+  return prepare(sql).run(...params);
 }
 function get(sql, ...params) {
-  return open()
-    .prepare(sql)
-    .get(...params);
+  return prepare(sql).get(...params);
 }
 function all(sql, ...params) {
-  return open()
-    .prepare(sql)
-    .all(...params);
+  return prepare(sql).all(...params);
 }
 function exec(sql) {
   return open().exec(sql);
@@ -55,6 +64,7 @@ function transaction(fn) {
 
 function close() {
   if (db) {
+    stmtCache.clear();
     db.close();
     db = null;
   }

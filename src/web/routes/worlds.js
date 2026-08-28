@@ -12,6 +12,7 @@ const multer = require('multer');
 const { z } = require('zod');
 const worlds = require('../../services/worlds');
 const { dataPath } = require('../../storage/pathGuard');
+const { requireRole } = require('../middleware/auth');
 const db = require('../../db');
 
 // requireAuth guarantees req.user on every /api request.
@@ -234,8 +235,11 @@ serverWorlds.post(
   })
 );
 
+// Staging a consistent world snapshot (save-off / copy / save-on, then a zip in
+// data/tmp) is real work - keep it off the viewer role even though it's a GET.
 serverWorlds.get(
   '/:world/download',
+  requireRole('admin', 'operator'),
   asyncHandler(async (req, res, next) => {
     const world = worldNameSchema.parse(req.params.world);
     const staged = await worlds.prepareWorldDownload(req.params.id, world, { actor: actorOf(req) });

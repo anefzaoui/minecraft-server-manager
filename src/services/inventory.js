@@ -444,7 +444,18 @@ function startSnapshotWatcher({ intervalMs = 20000 } = {}) {
   watcherTimer.unref();
 }
 
+let polling = false;
 async function pollPlayerEvents() {
+  if (polling) return; // a slow sweep (many snapshots) must not overlap the next tick
+  polling = true;
+  try {
+    await pollPlayerEventsInner();
+  } finally {
+    polling = false;
+  }
+}
+
+async function pollPlayerEventsInner() {
   const rows = db.all(
     "SELECT id, server_id, type, player FROM player_events WHERE id > ? AND type IN ('join', 'death') ORDER BY id LIMIT 200",
     lastEventId

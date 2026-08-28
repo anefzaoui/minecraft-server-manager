@@ -103,11 +103,28 @@ router.use('/:id', async (req, res) => {
 
   const target = await resolveTarget(server, cfg);
 
-  // Never forward the panel session cookie (or an Authorization header) to the
-  // proxied target - it's just BlueMap's static web UI and doesn't need it,
-  // and the target may be reachable by other containers on a shared Docker
-  // network (see the module comment above), which would otherwise leak it.
-  const { cookie: _cookie, authorization: _authorization, ...forwardHeaders } = req.headers;
+  // BlueMap's bundled webserver only serves static tiles/assets, so forward a
+  // small allowlist of request headers rather than the client's whole set -
+  // nothing else (cookies, auth, x-forwarded-*, custom headers) has any business
+  // reaching a target that may sit on a shared Docker network.
+  const FORWARD_REQ = ['accept', 'accept-encoding', 'accept-language', 'range', 'if-none-match', 'if-modified-since'];
+  const fwd = { host: `${target.host}:${target.port}` };
+  for (const h of FORWARD_REQ) if (req.headers[h] != null) fwd[h] = req.headers[h];
+
+  // Symmetrically, copy back only headers a static asset legitimately needs -
+  // never a Set-Cookie / CSP / auth header BlueMap might emit.
+  const COPY_RES = new Set([
+    'content-type',
+    'content-length',
+    'content-encoding',
+    'content-range',
+    'accept-ranges',
+    'cache-control',
+    'last-modified',
+    'etag',
+    'expires',
+    'vary',
+  ]);
 
   const upstream = http.request(
     {
@@ -115,13 +132,13 @@ router.use('/:id', async (req, res) => {
       port: target.port,
       path: req.url === '/' ? '/' : req.url,
       method: req.method,
-      headers: { ...forwardHeaders, host: `${target.host}:${target.port}` },
+      headers: fwd,
       timeout: 20000,
     },
     (up) => {
       res.status(up.statusCode || 502);
       for (const [k, v] of Object.entries(up.headers)) {
-        if (!['transfer-encoding', 'connection'].includes(k.toLowerCase())) res.setHeader(k, v);
+        if (COPY_RES.has(k.toLowerCase())) res.setHeader(k, v);
       }
       up.pipe(res);
     }

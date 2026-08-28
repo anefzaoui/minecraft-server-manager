@@ -8,7 +8,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const express = require('express');
 const serversService = require('../../services/servers');
 const eventsService = require('../../events');
-const { serverVM, eventVM, crashVM, safeJsonParse } = require('../viewModels');
+const { serverVM, sidebarServerVMs, eventVM, crashVM, safeJsonParse } = require('../viewModels');
 const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
@@ -88,11 +88,11 @@ function buildNav(id, tab, server) {
   return { groups, sub };
 }
 
-// Sidebar data available to every view (lightweight - no live stats).
+// Sidebar data available to every view (lightweight - no live stats, no
+// per-server pack/update/crash/loader fan-out; see viewModels.sidebarServerVMs).
 router.use(
   asyncHandler(async (req, res, next) => {
-    const rows = serversService.listServers();
-    res.locals.servers = await Promise.all(rows.map((s) => serverVM(s, { withLive: false })));
+    res.locals.servers = sidebarServerVMs();
     res.locals.updatesCount = require('../../updates/checker').countOutdated();
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
@@ -666,7 +666,7 @@ router.get('/activity', (req, res) => {
     title: 'Activity',
     active: 'activity',
     events,
-    types: db.all('SELECT DISTINCT type FROM events ORDER BY type').map((r) => r.type),
+    types: eventsService.knownTypes(),
     filters: { q, server, type },
     exportQs: filterQs ? `&${filterQs}` : '',
     total,

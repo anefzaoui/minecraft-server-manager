@@ -6,10 +6,9 @@
 // retention pruning, and restore.
 
 const httpError = require('../utils/httpError');
-const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
-const archiver = require('archiver');
+const { Worker } = require('node:worker_threads');
 const yauzl = require('yauzl');
 const { nanoid } = require('nanoid');
 const db = require('../db');
@@ -138,7 +137,7 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
   await pruneRetention(serverId, { actor }).catch((err) => {
     console.error(`[backup] retention query failed for ${serverId}: ${err.message}`);
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return db.get('SELECT * FROM backups WHERE id = ?', id);
 }
 
@@ -239,7 +238,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
   }
 
   recordEvent({ serverId, actor, type: 'backup-restored', summary: `Restored backup ${backup.filename}` });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return { ok: true };
 }
 
@@ -300,110 +299,43 @@ async function pruneRetention(serverId, { actor = 'system' } = {}) {
   return deleted;
 }
 
+// Compression runs in a worker thread (src/services/backupZipWorker.js) so the
+// deflate CPU + archiver framing for a multi-GB world don't stall every other
+// request. The worker deletes its own half-written .zip on failure.
 function zipDirectory(sourceDir, outFile, { onProgress = null } = {}) {
-  return new Promise((resolve, reject) => {
-    const output = fs.createWriteStream(outFile);
-    const archive = archiver('zip', { zlib: { level: 6 } });
+  /** @type {Promise<void>} */
+  const p = new Promise((resolve, reject) => {
+    const worker = new Worker(path.join(__dirname, 'backupZipWorker.js'), {
+      workerData: { sourceDir, outFile },
+    });
     let settled = false;
-    const fail = (err) => {
+    const done = (fn, arg) => {
       if (settled) return;
       settled = true;
-      // Destroy the write stream and remove the half-written .zip so a repeatedly
-      // failing scheduled backup can't leak fds + orphan partial files.
-      try {
-        output.destroy();
-      } catch {
-        /* */
-      }
-      fs.rm(outFile, { force: true }, () => reject(err));
+      worker.terminate().finally(() => fn(arg));
     };
-    output.on('close', () => {
-      if (!settled) {
-        settled = true;
-        resolve();
+    worker.on('message', (msg) => {
+      if (msg.type === 'progress') {
+        if (onProgress) onProgress(msg.processedBytes);
+      } else if (msg.type === 'done') {
+        done(resolve);
+      } else if (msg.type === 'error') {
+        done(reject, new Error(msg.message));
       }
     });
-    output.on('error', fail);
-    archive.on('error', fail);
-    if (onProgress) archive.on('progress', (d) => onProgress(d.fs.processedBytes));
-    archive.pipe(output);
-    archive.directory(sourceDir, false);
-    archive.finalize();
-  });
-}
-
-// Ceiling on total uncompressed restore size (decompression-bomb guard).
-const MAX_EXTRACT_BYTES = 50 * 1024 ** 3;
-const MAX_EXTRACT_ENTRIES = 200000;
-
-/** Zip-slip-safe extraction with a decompression-bomb ceiling. */
-function extractZip(zipFile, destDir) {
-  return new Promise((resolve, reject) => {
-    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(err);
-      let settled = false;
-      let entryCount = 0;
-      let writtenBytes = 0;
-      let declaredBytes = 0;
-      const fail = (e) => {
-        if (settled) return;
-        settled = true;
-        try {
-          zip.destroy();
-        } catch {
-          /* */
-        }
-        reject(e);
-      };
-      const done = () => {
-        if (settled) return;
-        settled = true;
-        resolve();
-      };
-      zip.on('error', fail);
-      zip.on('end', done);
-      zip.on('entry', (entry) => {
-        if (++entryCount > MAX_EXTRACT_ENTRIES)
-          return fail(new Error(`Archive has too many entries (> ${MAX_EXTRACT_ENTRIES}).`));
-        declaredBytes += entry.uncompressedSize || 0;
-        if (declaredBytes > MAX_EXTRACT_BYTES)
-          return fail(new Error(`Archive too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB).`));
-        const target = path.resolve(destDir, entry.fileName);
-        if (!target.startsWith(path.resolve(destDir) + path.sep) && target !== path.resolve(destDir)) {
-          return fail(new Error(`Archive entry escapes destination: ${entry.fileName}`));
-        }
-        if (/\/$/.test(entry.fileName)) {
-          fs.mkdirSync(target, { recursive: true });
-          zip.readEntry();
-        } else {
-          fs.mkdirSync(path.dirname(target), { recursive: true });
-          zip.openReadStream(entry, (streamErr, readStream) => {
-            if (streamErr) return fail(streamErr);
-            const out = fs.createWriteStream(target);
-            readStream.on('data', (chunk) => {
-              writtenBytes += chunk.length;
-              if (writtenBytes > MAX_EXTRACT_BYTES) {
-                readStream.destroy();
-                out.destroy();
-                fail(
-                  new Error(
-                    `Archive exceeds the ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB extraction limit - aborted.`
-                  )
-                );
-              }
-            });
-            out.on('close', () => {
-              if (!settled) zip.readEntry();
-            });
-            out.on('error', fail);
-            readStream.pipe(out);
-          });
-        }
-      });
-      zip.readEntry();
+    worker.on('error', (err) => done(reject, err));
+    worker.on('exit', (code) => {
+      if (!settled)
+        done(code === 0 ? resolve : reject, code === 0 ? undefined : new Error(`backup zip worker exited ${code}`));
     });
   });
+  return p;
 }
+
+// Zip-slip-safe extraction + decompression-bomb ceiling: the one shared
+// implementation (src/utils/safeExtract.js), re-exported here because the
+// restore path and its tests have always reached for `backups.extractZip`.
+const { extractZip } = require('../utils/safeExtract');
 
 /** Sum of uncompressedSize across every entry in a zip - cheap (reads the
  *  central directory only, no decompression) - used for an accurate restore
@@ -458,4 +390,4 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms).unref());
 }
 
-module.exports = { createBackup, restoreBackup, deleteBackup, pruneRetention, extractZip };
+module.exports = { createBackup, restoreBackup, deleteBackup, pruneRetention, extractZip, zipDirectory };

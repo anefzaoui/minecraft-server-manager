@@ -27,6 +27,16 @@ function attachWebSockets(httpServer) {
       socket.destroy();
       return;
     }
+    // Cross-site WebSocket hijacking guard (the HTTP side has originGuard; the
+    // upgrade path bypasses all Express middleware). A browser always sends
+    // Origin on a WS handshake, so a mismatch is a cross-site attempt - reject
+    // it. A missing Origin is a non-browser client (scripts, tests), which the
+    // signed session cookie still gates below.
+    if (!originAllowed(req)) {
+      socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+      socket.destroy();
+      return;
+    }
     const user = sessionUser(req);
     if (!user) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
@@ -51,17 +61,17 @@ async function handleConsole(ws, serverId, user) {
   const send = (obj) => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
   };
-  let follower = null;
+  let unsubscribe = null;
   let closed = false;
   const cleanup = () => {
     if (closed) return;
     closed = true;
-    if (follower) follower.stop();
+    if (unsubscribe) unsubscribe();
   };
   // Attach lifecycle listeners SYNCHRONOUSLY, before the await below. This does two
   // critical things: (1) an 'error' listener means a socket protocol error can never
   // become an unhandled 'error' event that crashes the whole process; (2) a client
-  // that disconnects during followLogs() still triggers cleanup once the stream exists.
+  // that disconnects during the subscribe still triggers cleanup once it exists.
   ws.on('error', (err) => {
     console.warn('[ws] console socket error:', err.message);
     cleanup();
@@ -107,44 +117,106 @@ async function handleConsole(ws, serverId, user) {
     }
   });
 
-  try {
-    follower = await followLogs(serverId, { tail: 300 });
-    if (closed) {
-      follower.stop();
-      return;
-    } // client already disconnected during the await
-    follower.stream.on('data', (chunk) => {
-      send({ kind: 'log', text: chunk.toString('utf8') });
-      // Backpressure: if a chatty server outpaces a slow/backgrounded client, pause
-      // the docker log stream until the socket's send buffer drains, so RSS can't grow
-      // without bound.
-      if (ws.bufferedAmount > 1_000_000 && !follower.stream.isPaused()) {
-        follower.stream.pause();
-        const tick = setInterval(() => {
-          if (closed || ws.readyState !== ws.OPEN) {
-            clearInterval(tick);
-            return;
-          }
-          if (ws.bufferedAmount < 200_000) {
-            clearInterval(tick);
-            follower.stream.resume();
-          }
-        }, 100);
-        tick.unref?.();
-      }
-    });
-    follower.stream.on('end', () => send({ kind: 'log-end' }));
-    follower.stream.on('error', (err) => send({ kind: 'error', message: `Log stream error: ${err.message}` }));
-  } catch (err) {
-    // A missing container (404) just means the server has never been started -
-    // an expected state, not an error. The console already shows a "start the
-    // server" placeholder, so end the stream quietly instead of alarming the user.
-    if (err.statusCode === 404) {
-      send({ kind: 'log-end' });
-    } else {
-      send({ kind: 'error', message: `Log stream unavailable: ${err.message}` });
-    }
+  unsubscribe = subscribeConsole(serverId, {
+    ws,
+    onLog: (text) => send({ kind: 'log', text }),
+    onEnd: () => send({ kind: 'log-end' }),
+    onError: (message) => send({ kind: 'error', message }),
+  });
+  if (closed) unsubscribe(); // client left before subscribe returned
+}
+
+// One upstream `docker logs --follow` + demux pipeline per server, fanned out to
+// every connected /ws/console client (same reasoning as the stats broker below):
+// N admins/tabs on one server's console used to open N independent follow
+// streams. A small rolling buffer replays what's been seen this session to a
+// late-joining tab so it isn't blank.
+const consoleBrokers = new Map(); // serverId -> { subs, follower, buffer, bufferBytes, stopped }
+const CONSOLE_REPLAY_BYTES = 256 * 1024;
+
+function consoleMaxBuffered(broker) {
+  let max = 0;
+  for (const s of broker.subs) {
+    if (s.ws && s.ws.readyState === s.ws.OPEN) max = Math.max(max, s.ws.bufferedAmount);
   }
+  return max;
+}
+
+// Backpressure across the shared stream: pause the upstream docker log stream
+// while ANY subscriber's socket buffer is backed up, resume once they all drain.
+// One slow client can add latency for the others, but never unbounded RSS.
+function applyConsoleBackpressure(broker) {
+  const stream = broker.follower && broker.follower.stream;
+  if (!stream || stream.destroyed) return;
+  if (consoleMaxBuffered(broker) > 1_000_000 && !stream.isPaused()) {
+    stream.pause();
+    const tick = setInterval(() => {
+      if (broker.stopped || stream.destroyed) {
+        clearInterval(tick);
+        return;
+      }
+      if (consoleMaxBuffered(broker) < 200_000) {
+        clearInterval(tick);
+        if (!stream.isPaused()) return;
+        stream.resume();
+      }
+    }, 100);
+    tick.unref?.();
+  }
+}
+
+function subscribeConsole(serverId, sub) {
+  let broker = consoleBrokers.get(serverId);
+  if (!broker) {
+    broker = { subs: new Set(), follower: null, buffer: [], bufferBytes: 0, stopped: false };
+    consoleBrokers.set(serverId, broker);
+    followLogs(serverId, { tail: 300 })
+      .then((follower) => {
+        if (consoleBrokers.get(serverId) !== broker) {
+          follower.stop(); // every subscriber left before the stream connected
+          return;
+        }
+        broker.follower = follower;
+        follower.stream.on('data', (chunk) => {
+          const text = chunk.toString('utf8');
+          broker.buffer.push(text);
+          broker.bufferBytes += Buffer.byteLength(text);
+          while (broker.bufferBytes > CONSOLE_REPLAY_BYTES && broker.buffer.length > 1) {
+            broker.bufferBytes -= Buffer.byteLength(broker.buffer.shift());
+          }
+          for (const s of broker.subs) s.onLog(text);
+          applyConsoleBackpressure(broker);
+        });
+        follower.stream.on('end', () => {
+          for (const s of broker.subs) s.onEnd();
+        });
+        follower.stream.on('error', (err) => {
+          for (const s of broker.subs) s.onError(`Log stream error: ${err.message}`);
+        });
+      })
+      .catch((err) => {
+        if (consoleBrokers.get(serverId) === broker) consoleBrokers.delete(serverId);
+        // A missing container (404) just means the server has never been started -
+        // end quietly; the console already shows a "start the server" placeholder.
+        if (err.statusCode === 404) {
+          for (const s of broker.subs) s.onEnd();
+        } else {
+          for (const s of broker.subs) s.onError(`Log stream unavailable: ${err.message}`);
+        }
+      });
+  }
+
+  broker.subs.add(sub);
+  for (const chunk of broker.buffer) sub.onLog(chunk); // catch a late tab up
+
+  return () => {
+    broker.subs.delete(sub);
+    if (broker.subs.size === 0 && consoleBrokers.get(serverId) === broker) {
+      consoleBrokers.delete(serverId);
+      broker.stopped = true;
+      if (broker.follower) broker.follower.stop();
+    }
+  };
 }
 
 // One upstream `docker stats --stream` per server, fanned out to every
@@ -211,6 +283,18 @@ async function handleStats(ws, serverId) {
   if (closed) unsubscribe(); // client left synchronously before subscribing even returned
 }
 
+/** Same same-origin rule as web/middleware/auth.js#originGuard: reject only when
+ *  an Origin (or Referer) is present AND its host differs from the Host header. */
+function originAllowed(req) {
+  const raw = req.headers.origin || (req.headers.referer ? req.headers.referer : null);
+  if (!raw) return true;
+  try {
+    return new URL(raw).host === req.headers.host;
+  } catch {
+    return false; // a malformed Origin/Referer on an upgrade is not trustworthy
+  }
+}
+
 /** Authenticate a WS upgrade from the express-session cookie → {id, username, role} | null. */
 function sessionUser(req) {
   try {
@@ -257,4 +341,4 @@ function announceConsoleAction(serverId, command) {
   execCapture(serverId, ['rcon-cli', '--', 'tellraw', '@a', JSON.stringify(payload)]).catch(() => {});
 }
 
-module.exports = { attachWebSockets };
+module.exports = { attachWebSockets, originAllowed };

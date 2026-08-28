@@ -53,6 +53,16 @@ test('event export (extracted to the events service) returns CSV and JSON', asyn
   assert.ok(json.json.some((e) => e.summary === 'hello export world'));
 });
 
+test('CSV export defuses spreadsheet formula injection in influenced cells', () => {
+  eventsService.recordEvent({ actor: '=cmd|calc', type: 'test-formula', summary: '+SUM(A1:A9)' });
+  const { body } = eventsService.exportEvents(null, { format: 'csv' });
+  const row = body.split('\r\n').find((l) => l.includes('test-formula'));
+  assert.ok(row, 'the formula row is present');
+  // The leading = / + is neutralized with a single quote, still inside the quoted cell.
+  assert.match(row, /"'=cmd\|calc"/);
+  assert.match(row, /"'\+SUM\(A1:A9\)"/);
+});
+
 test('event prune (extracted) returns a numeric removed count', async () => {
   const r = await app.req('POST', '/api/events/prune', { cookie, body: { days: 1 } });
   assert.equal(r.status, 200);

@@ -20,7 +20,19 @@ const { dataPath } = require('../storage/pathGuard');
  * @param {string} [e.logExcerpt]     raw text to persist alongside the event
  * @returns {number} event id
  */
+// The Activity page renders a type filter built from `SELECT DISTINCT type` on
+// every load. The set of distinct types is tiny and only grows, so cache it and
+// only invalidate when recordEvent() writes a genuinely new one.
+let distinctTypes = null;
+function knownTypes() {
+  if (!distinctTypes) {
+    distinctTypes = db.all('SELECT DISTINCT type FROM events ORDER BY type').map((r) => r.type);
+  }
+  return distinctTypes;
+}
+
 function recordEvent({ serverId = null, actor = 'system', type, summary, details = {}, logExcerpt = null }) {
+  if (distinctTypes && type && !distinctTypes.includes(type)) distinctTypes = null; // a new type - rebuild on next read
   let excerptRel = null;
   if (logExcerpt) {
     // nanoid suffix: two events of the same type in the same millisecond must
@@ -124,7 +136,16 @@ function exportEvents(serverId, { format = 'json', q = '', type = '' } = {}) {
     );
     return { filename, contentType: 'application/json', body };
   }
-  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  // Quote for CSV, and defuse spreadsheet formula injection: a cell an
+  // authenticated actor can influence (actor names may start with '-' or '.',
+  // server names flow into `summary`) must not be interpreted as a formula when
+  // the export is opened in Excel/Sheets. Prefix a leading = + - @ tab or CR
+  // with a single quote.
+  const esc = (v) => {
+    let s = String(v ?? '');
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return `"${s.replace(/"/g, '""')}"`;
+  };
   const body = ['id,created_at,server_id,actor,type,summary']
     .concat(rows.map((r) => [r.id, r.created_at, r.server_id || '', r.actor, r.type, r.summary].map(esc).join(',')))
     .join('\r\n');
@@ -153,4 +174,4 @@ function pruneEvents(days, { actor = 'system' } = {}) {
   return { removed: rows.length };
 }
 
-module.exports = { recordEvent, listEvents, getEvent, readExcerpt, exportEvents, pruneEvents };
+module.exports = { recordEvent, listEvents, getEvent, readExcerpt, exportEvents, pruneEvents, knownTypes };

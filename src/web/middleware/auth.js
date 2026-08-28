@@ -5,6 +5,7 @@
 // state-changing requests - appropriate for a self-hosted LAN panel).
 
 const authService = require('../../services/auth');
+const config = require('../../config');
 
 const PUBLIC_PREFIXES = ['/css/', '/js/', '/fonts/', '/icons/', '/vendor/'];
 const PUBLIC_PATHS = new Set(['/login', '/setup', '/favicon.ico']);
@@ -17,8 +18,23 @@ const MAX_ATTEMPTS = 8;
 const LOCK_MS = 10 * 60 * 1000;
 const MAX_TRACKED = 5000;
 
+// Second, account-global counter keyed on the username alone, to blunt a
+// DISTRIBUTED brute-force (many IPs, each staying under the per-IP budget above).
+// Deliberately soft: a high threshold that a real user never reaches, a short
+// cooldown, and (like the per-IP lock) no extension of an active lock - so the
+// worst an attacker can inflict by spraying a known username is a rolling 5-min
+// pause that clears the moment they stop. Real protection is still bcrypt cost +
+// the per-IP lock; this just caps the aggregate guess rate.
+const globalAttempts = new Map(); // "username" -> {count, until}
+const GLOBAL_MAX_ATTEMPTS = 100;
+const GLOBAL_LOCK_MS = 5 * 60 * 1000;
+
 function attemptKey(username, ip) {
   return `${(username || '').toLowerCase()}|${ip || ''}`;
+}
+
+function globalKey(username) {
+  return (username || '').toLowerCase();
 }
 
 function requireAuth(req, res, next) {
@@ -68,13 +84,23 @@ function requireWrite(req, res, next) {
   next();
 }
 
-/** Reject cross-origin state changes (defense in depth next to SameSite=Strict). */
+/** Reject cross-origin state changes (defense in depth next to the SameSite cookie). */
 function originGuard(req, res, next) {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
   let originHost;
   try {
     const rawOrigin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : null);
-    if (!rawOrigin) return next(); // non-browser clients (API-key scripts, curl) omit both; SameSite covers browsers
+    if (!rawOrigin) {
+      // Neither header present. With the default SameSite=lax/strict cookie the
+      // browser already withholds the session on a cross-site write, so this is
+      // a non-browser client (curl / a script) and is allowed. But SameSite=none
+      // gives no such protection, so there this MUST be rejected - a browser
+      // fetch/XHR always sends Origin on a POST anyway.
+      if (config.cookieSameSite === 'none') {
+        return res.status(403).json({ ok: false, error: 'Cross-origin request rejected (Origin header required)' });
+      }
+      return next();
+    }
     originHost = new URL(rawOrigin).host;
   } catch {
     // A malformed Origin/Referer on a state-changing request is not trustworthy.
@@ -86,14 +112,32 @@ function originGuard(req, res, next) {
   next();
 }
 
+function locked(entry, max) {
+  return Boolean(entry && entry.count >= max && Date.now() < entry.until);
+}
+
 function checkLoginAllowed(username, ip) {
   const entry = loginAttempts.get(attemptKey(username, ip));
-  if (entry && entry.count >= MAX_ATTEMPTS && Date.now() < entry.until) {
-    const mins = Math.ceil((entry.until - Date.now()) / 60000);
+  const global = globalAttempts.get(globalKey(username));
+  const until = Math.max(
+    locked(entry, MAX_ATTEMPTS) ? entry.until : 0,
+    locked(global, GLOBAL_MAX_ATTEMPTS) ? global.until : 0
+  );
+  if (until > Date.now()) {
+    const mins = Math.ceil((until - Date.now()) / 60000);
     const err = new Error(`Too many failed attempts - try again in ${mins} min`);
     err.status = 429;
     throw err;
   }
+}
+
+function bump(map, key, lockMs) {
+  const entry = map.get(key) || { count: 0, until: 0 };
+  entry.count += 1;
+  // Do NOT extend an already-active lock - otherwise repeated attempts keep a
+  // valid account locked forever (targeted-lockout DoS).
+  if (Date.now() >= entry.until) entry.until = Date.now() + lockMs;
+  map.set(key, entry);
 }
 
 function recordLoginFailure(username, ip) {
@@ -105,17 +149,20 @@ function recordLoginFailure(username, ip) {
       if (--toEvict <= 0) break;
     }
   }
-  const key = attemptKey(username, ip);
-  const entry = loginAttempts.get(key) || { count: 0, until: 0 };
-  entry.count += 1;
-  // Do NOT extend an already-active lock - otherwise repeated attempts keep a
-  // valid account locked forever (targeted-lockout DoS).
-  if (Date.now() >= entry.until) entry.until = Date.now() + LOCK_MS;
-  loginAttempts.set(key, entry);
+  if (globalAttempts.size >= MAX_TRACKED) {
+    let toEvict = Math.floor(MAX_TRACKED / 4);
+    for (const k of globalAttempts.keys()) {
+      globalAttempts.delete(k);
+      if (--toEvict <= 0) break;
+    }
+  }
+  bump(loginAttempts, attemptKey(username, ip), LOCK_MS);
+  bump(globalAttempts, globalKey(username), GLOBAL_LOCK_MS);
 }
 
 function clearLoginFailures(username, ip) {
   loginAttempts.delete(attemptKey(username, ip));
+  globalAttempts.delete(globalKey(username));
 }
 
 module.exports = {

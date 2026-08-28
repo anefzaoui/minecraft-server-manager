@@ -80,7 +80,11 @@ const DIM_CONFIGS = [
 function writeMapConfigs(serverId) {
   const server = serversService.getServer(serverId);
   if (!server) return;
-  const level = require('./worlds').activeLevelName(server);
+  // The level name lands inside a quoted HOCON string (`world: "<name>"`). It
+  // comes from the free-form LEVEL env / server.properties, so strip the two
+  // characters (") and (newline) that could break out of that string and inject
+  // config lines. A real Minecraft level-name never contains them anyway.
+  const level = String(require('./worlds').activeLevelName(server)).replace(/["\r\n]/g, '');
   const mapsDir = path.join(mapConfDir(serverId, server), 'maps');
   fs.mkdirSync(mapsDir, { recursive: true });
 

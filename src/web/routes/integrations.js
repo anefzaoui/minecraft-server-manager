@@ -12,6 +12,7 @@ const discord = require('../../integrations/discord');
 const invites = require('../../integrations/invites');
 const statusPage = require('../../integrations/statusPage');
 const serversService = require('../../services/servers');
+const { requireRole } = require('../middleware/auth');
 const { recordEvent } = require('../../events');
 
 const router = express.Router({ mergeParams: true });
@@ -98,8 +99,11 @@ router.get(
   })
 );
 
+// Regenerates the .mrpack (mod-list walk + zip in data/tmp) on every hit - keep
+// it off the viewer role even though it's a GET.
 router.get(
   '/invite/modpack.mrpack',
+  requireRole('admin', 'operator'),
   asyncHandler(async (req, res, next) => {
     const server = mustGet(req);
     const host = req.query.host ? z.string().trim().max(260).parse(req.query.host) : undefined;

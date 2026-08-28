@@ -3,6 +3,7 @@ data/
 
 node_modules/
 public/css/app.css
+public/dist/
 .env
 
 

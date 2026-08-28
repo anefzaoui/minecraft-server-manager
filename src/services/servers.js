@@ -95,6 +95,16 @@ function assembleEnv(server) {
     const cfKey = require('./apiKeys').getKey('curseforge');
     if (cfKey) env.CF_API_KEY = cfKey;
   }
+  // Trust boundary: the wizard's "extra env" field is a DENYLIST, not an
+  // allowlist. An operator can already set JVM_OPTS / EXTRA_ARGS / startup RCON
+  // etc., which is arbitrary code execution *inside the container sandbox* - an
+  // accepted operator capability (creating servers is inherently privileged; the
+  // host-escaping knobs - binds, network - are separately admin-gated in
+  // dockerOverridesSchema.js). What this denylist protects is the PANEL's own
+  // invariants: anything an itzg var could use to move the listening port, mount
+  // paths, or wrest restart control away from the panel. Keep it current as itzg
+  // adds such vars.
+  //
   // The panel is the sole restart authority; never let packs override env.
   delete env.LOAD_ENV_FROM_FILE;
   delete env.LOAD_ENV_FROM_GENERIC_PACK;

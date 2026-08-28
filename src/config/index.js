@@ -228,6 +228,16 @@ const config = {
 
   // Default per-instance resources (host-aware unless overridden via env).
   defaults: resolveDefaults(),
+
+  // Coarse request-rate ceilings (per client IP, per process - see the note on
+  // TRUST_PROXY). These sit on top of the per-account login lockout; they cap
+  // raw request volume so a hammering script can't tie the panel up. Set
+  // RATE_LIMIT_API_PER_MIN=0 to turn the API limiter off (e.g. when a reverse
+  // proxy already does this).
+  rateLimit: {
+    apiPerMin: numFromEnv('RATE_LIMIT_API_PER_MIN', 1200, { min: 0, max: 1_000_000 }),
+    authPer15Min: numFromEnv('RATE_LIMIT_AUTH_PER_15MIN', 100, { min: 0, max: 1_000_000 }),
+  },
 };
 
 // resolveSessionSecret() guarantees a strong secret, so downstream code can rely

@@ -224,8 +224,11 @@ router.delete(
 router.get(
   '/servers/:id/logs',
   asyncHandler(async (req, res, next) => {
-    const tail = Math.max(1, Math.min(Number(req.query.tail) || 500, 5000));
-    res.type('text/plain').send(await fetchLogs(req.params.id, { tail }));
+    // fetchLogs buffers the whole tail (Buffer + demuxed string) in memory, so
+    // cap it at 2000 lines here - the live WS console covers anything ongoing,
+    // and this endpoint is just the "recent output" snapshot.
+    const tail = Math.max(1, Math.min(Number(req.query.tail) || 500, 2000));
+    res.type('text/plain; charset=utf-8').send(await fetchLogs(req.params.id, { tail }));
   })
 );
 
@@ -1410,8 +1413,12 @@ function sendEventExport(req, res, serverId) {
   res.type(contentType).send(body);
 }
 
+// Export builds the whole body in memory and (server-scoped) is a heavier read
+// than a plain list - gate it to write-capable roles rather than leaving it open
+// to viewers via the method-based requireWrite.
 router.get(
   '/events/export',
+  requireRoleKeys('admin', 'operator'),
   asyncHandler((req, res, next) => {
     sendEventExport(req, res, String(req.query.server || '') || null);
   })
@@ -1419,6 +1426,7 @@ router.get(
 
 router.get(
   '/servers/:id/events/export',
+  requireRoleKeys('admin', 'operator'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     sendEventExport(req, res, req.params.id);
@@ -1590,7 +1598,7 @@ router.get('/users', requireRole('admin'), (req, res) => {
 router.post(
   '/users',
   requireRole('admin'),
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const { username, password, role } = z
       .object({
         username: z.string().trim().min(2).max(32),
@@ -1598,9 +1606,10 @@ router.post(
         role: z.enum(['admin', 'operator', 'viewer']),
       })
       .parse(req.body);
-    res
-      .status(201)
-      .json({ ok: true, user: authService.createUser({ username, password, role }, { actor: req.user.username }) });
+    res.status(201).json({
+      ok: true,
+      user: await authService.createUser({ username, password, role }, { actor: req.user.username }),
+    });
   })
 );
 
@@ -1617,9 +1626,9 @@ router.post(
 router.post(
   '/users/:id/password',
   requireRole('admin'),
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const { password } = z.object({ password: z.string().min(8).max(200) }).parse(req.body);
-    authService.setPassword(req.params.id, password, { actor: req.user.username, exceptSid: req.sessionID });
+    await authService.setPassword(req.params.id, password, { actor: req.user.username, exceptSid: req.sessionID });
     res.json({ ok: true });
   })
 );

@@ -10,12 +10,31 @@ function installRuntimeGuards() {
   // a stray uncaught error or rejected promise from taking the whole panel down.
   // Installed only AFTER a successful boot, so startup errors stay fatal and
   // visible instead of being silently swallowed.
-  process.on('uncaughtException', (err) => {
-    console.error('[fatal] uncaughtException (kept alive):', err);
-  });
-  process.on('unhandledRejection', (reason) => {
-    console.error('[fatal] unhandledRejection (kept alive):', reason);
-  });
+  //
+  // Operators running under a supervisor (systemd, Docker restart:) that WANT a
+  // hard restart on an unexpected fault can set MSM_EXIT_ON_FATAL=1.
+  const exitOnFatal = /^(1|true|yes)$/i.test(process.env.MSM_EXIT_ON_FATAL || '');
+
+  const report = (kind, err) => {
+    // Structured line for log aggregators, plus a panel event so it surfaces in
+    // Activity (and Discord Alerts, if wired) rather than only in stdout.
+    const detail = err instanceof Error ? { message: err.message, stack: err.stack } : { value: String(err) };
+    console.error(JSON.stringify({ level: 'fatal', kind, ...detail, at: new Date().toISOString() }));
+    try {
+      require('./events').recordEvent({
+        type: 'panel-error',
+        actor: 'system',
+        summary: `Uncaught ${kind}: ${detail.message || detail.value}`.slice(0, 300),
+        details: detail,
+      });
+    } catch {
+      /* the DB may be exactly what broke - never let reporting throw */
+    }
+    if (exitOnFatal) process.exit(1);
+  };
+
+  process.on('uncaughtException', (err) => report('exception', err));
+  process.on('unhandledRejection', (reason) => report('rejection', reason));
 }
 
 try {
@@ -58,9 +77,16 @@ try {
     if (config.isExposedBind) {
       console.warn(
         `[security] PANEL_HOST=${config.host} exposes the panel beyond this machine. ` +
-          `Until the admin account exists, anyone who can reach it can claim it - finish ` +
-          `first-run setup now, and only put it on the internet behind a reverse proxy with TLS.`
+          `Only put it on the internet behind a reverse proxy with TLS.`
       );
+      const pin = require('./services/setupGate').ensurePin();
+      if (pin) {
+        console.warn(
+          `\n[security] First-run setup on an exposed panel is PIN-gated.\n` +
+            `  Enter this PIN on the /setup page to create the admin account:\n\n      ${pin}\n\n` +
+            `  (shown only here; it disappears once the admin account exists.)\n`
+        );
+      }
     }
     if (config.cookieSecure === false && (config.trustProxy !== false || config.isExposedBind)) {
       console.warn(

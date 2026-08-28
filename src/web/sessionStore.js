@@ -12,6 +12,15 @@ const db = require('../db');
 // week it used to linger).
 const SESSION_FALLBACK_MS = 24 * 3600 * 1000;
 
+// rolling:true asks the store to touch() the row on every authenticated request
+// so the expiry keeps sliding forward. Writing the full row every time is one
+// SQLite write per request per active user; instead only rewrite when the new
+// expiry advances the stored one by more than this. The cookie the browser
+// holds is refreshed by express-session regardless - this just coarsens the
+// server-side bookkeeping, and an active session still touches well inside its
+// TTL.
+const TOUCH_MIN_ADVANCE_MS = 60 * 60 * 1000;
+
 class SqliteSessionStore extends Store {
   get(sid, cb) {
     try {
@@ -72,7 +81,22 @@ class SqliteSessionStore extends Store {
   }
 
   touch(sid, session, cb) {
-    this.set(sid, session, cb);
+    try {
+      const nextExpiry =
+        session.cookie && session.cookie.expires
+          ? new Date(session.cookie.expires).getTime()
+          : Date.now() + SESSION_FALLBACK_MS;
+      const row = db.get('SELECT expires_at FROM sessions WHERE sid = ?', sid);
+      if (row) {
+        const stored = Date.parse(row.expires_at);
+        if (Number.isFinite(stored) && Number.isFinite(nextExpiry) && nextExpiry - stored < TOUCH_MIN_ADVANCE_MS) {
+          return cb(null); // expiry hasn't moved enough to be worth a write
+        }
+      }
+      this.set(sid, session, cb);
+    } catch (err) {
+      cb(err);
+    }
   }
 }
 

@@ -305,6 +305,24 @@ function profile(serverId, uuid) {
   };
 }
 
+// scoreboard()/xrayReport() fan out to a per-uuid query + JSON.parse of every
+// snapshot and then sort/median in JS - all of it repeated on every metrics-tab
+// load. Memoize the finished report and only recompute when the server's
+// snapshot set actually changes (newest ts + row count catch both an ingest and
+// a retention prune). Windowed leaderboards also key on a coarse time bucket so
+// a moving "last 7d" boundary doesn't serve a stale delta indefinitely.
+const reportCache = new Map();
+function memoizeBySnapshots(serverId, key, compute) {
+  const s = db.get('SELECT MAX(ts) AS t, COUNT(*) AS n FROM player_stat_snapshots WHERE server_id = ?', serverId);
+  const stamp = `${(s && s.t) || ''}:${(s && s.n) || 0}`;
+  const cacheKey = `${serverId}::${key}`;
+  const hit = reportCache.get(cacheKey);
+  if (hit && hit.stamp === stamp) return hit.value;
+  const value = compute();
+  reportCache.set(cacheKey, { stamp, value });
+  return value;
+}
+
 /** Rank every tracked player by one metric, absolute or windowed delta. */
 function scoreboard(serverId, { metric = 'playtimeTicks', window = 'all' } = {}) {
   if (!METRICS.has(metric)) {
@@ -312,6 +330,13 @@ function scoreboard(serverId, { metric = 'playtimeTicks', window = 'all' } = {})
     err.status = 400;
     throw err;
   }
+  const timeBucket = window === 'all' ? '' : Math.floor(Date.now() / 300_000);
+  return memoizeBySnapshots(serverId, `sb:${metric}:${window}:${timeBucket}`, () =>
+    computeScoreboard(serverId, metric, window)
+  );
+}
+
+function computeScoreboard(serverId, metric, window) {
   const cutoff = windowCutoff(window);
   const uuids = db.all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId);
   const rows = [];
@@ -342,6 +367,10 @@ const median = (values) => {
  * over 4x median with at least 16 diamonds - evidence only, never punitive.
  */
 function xrayReport(serverId) {
+  return memoizeBySnapshots(serverId, 'xray', () => computeXrayReport(serverId));
+}
+
+function computeXrayReport(serverId) {
   const uuids = db.all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId);
   const players = uuids.map(({ uuid }) => {
     const latest = latestSnapshot(serverId, uuid);

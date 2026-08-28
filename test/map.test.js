@@ -139,3 +139,18 @@ test('switching the active world does NOT touch BlueMap configs when the map is 
 
   assert.equal(fs.existsSync(mapsDirFor(id)), false);
 });
+
+test('writeMapConfigs strips quotes and newlines from the level name (no HOCON string break-out via LEVEL)', () => {
+  const id = app.seedServer('srv_bmInj');
+  db.run("UPDATE servers SET type = 'PAPER' WHERE id = ?", id);
+  // A hostile LEVEL env value with the two chars that could break out of the
+  // quoted `world: "<name>"` string and inject a config line.
+  db.run('UPDATE servers SET env_json = ? WHERE id = ?', JSON.stringify({ LEVEL: 'my"\nevil world' }), id);
+  fs.mkdirSync(dataPath('servers', id, 'myevil world'), { recursive: true });
+
+  map.writeMapConfigs(id);
+
+  const conf = fs.readFileSync(`${mapsDirFor(id)}/world.conf`, 'utf8');
+  assert.match(conf, /^world: "myevil world"$/m, 'the " and newline are gone; the rest is kept verbatim');
+  assert.equal(conf.split('\n').filter((l) => l.startsWith('world:')).length, 1, 'exactly one world: line');
+});

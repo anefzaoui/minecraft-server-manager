@@ -77,7 +77,7 @@ async function buildSetupChecks() {
 
 router.get('/setup', (req, res) => {
   if (!authService.firstRunNeeded()) return res.redirect('/login');
-  res.render('setup', { title: 'Welcome', layout: 'bare' });
+  res.render('setup', { title: 'Welcome', layout: 'bare', needsPin: require('../../services/setupGate').required() });
 });
 
 // First-run only, so it can't be used to fingerprint the host after setup.
@@ -91,7 +91,7 @@ router.get('/setup/checks', async (req, res) => {
   }
 });
 
-router.post('/setup', (req, res) => {
+router.post('/setup', async (req, res) => {
   const wantsJson = req.xhr || String(req.headers.accept || '').includes('application/json');
   try {
     if (!authService.firstRunNeeded()) {
@@ -99,7 +99,7 @@ router.post('/setup', (req, res) => {
         ? res.status(409).json({ ok: false, error: 'First-run setup is already complete.' })
         : res.redirect('/login');
     }
-    const { username, password } = z
+    const { username, password, pin } = z
       .object({
         username: z
           .string()
@@ -110,9 +110,17 @@ router.post('/setup', (req, res) => {
           .string()
           .min(8, 'Choose a password with at least 8 characters.')
           .max(200, 'That password is too long (200 characters max).'),
+        pin: z.string().max(12).optional(),
       })
       .parse(req.body);
-    const user = authService.createUser({ username, password, role: 'admin' }, { actor: 'setup' });
+    // On an exposed bind, the admin claim needs the PIN printed to the console.
+    if (!require('../../services/setupGate').check(pin)) {
+      const msg = 'That setup PIN is wrong. Check the panel’s console output for the 6-digit PIN.';
+      return wantsJson
+        ? res.status(403).json({ ok: false, error: msg })
+        : res.status(403).render('setup', { title: 'Welcome', layout: 'bare', needsPin: true, error: msg });
+    }
+    const user = await authService.createUser({ username, password, role: 'admin' }, { actor: 'setup' });
     // Rotate the session id on privilege establishment (anti-fixation), matching login.
     req.session.regenerate((err) => {
       if (err) {
@@ -125,6 +133,9 @@ router.post('/setup', (req, res) => {
             });
       }
       req.session.userId = user.id;
+      // The operator just set the panel up - keep them signed in (30-day
+      // rolling), same as ticking "remember me" on the login form.
+      applyRememberCookie(req, true);
       recordEvent({
         actor: username,
         type: 'login',
@@ -134,7 +145,12 @@ router.post('/setup', (req, res) => {
     });
   } catch (err) {
     if (wantsJson) return res.status(err.status || 400).json({ ok: false, error: firstIssue(err) });
-    res.status(err.status || 400).render('setup', { title: 'Welcome', layout: 'bare', error: firstIssue(err) });
+    res.status(err.status || 400).render('setup', {
+      title: 'Welcome',
+      layout: 'bare',
+      needsPin: require('../../services/setupGate').required(),
+      error: firstIssue(err),
+    });
   }
 });
 
@@ -152,7 +168,7 @@ router.get('/login', (req, res) => {
   res.render('login', { title: 'Sign In', layout: 'bare', next: safeNext(req.query.next) });
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { username, password, next, remember } = z
       .object({
@@ -163,7 +179,7 @@ router.post('/login', (req, res) => {
       })
       .parse(req.body);
     checkLoginAllowed(username, req.ip);
-    const user = authService.verifyCredentials(username, password);
+    const user = await authService.verifyCredentials(username, password);
     if (!user) {
       recordLoginFailure(username, req.ip);
       return res.status(401).render('login', {
@@ -208,14 +224,14 @@ router.get('/login/2fa', (req, res) => {
   res.render('login-2fa', { title: "Verify It's You", layout: 'bare' });
 });
 
-router.post('/login/2fa', (req, res) => {
+router.post('/login/2fa', async (req, res) => {
   const pendingId = req.session && req.session.pendingTotpUserId;
   const pendingUsername = req.session && req.session.pendingTotpUsername;
   if (!pendingId) return res.redirect('/login');
   try {
     const { code } = z.object({ code: z.string().trim().min(1).max(64) }).parse(req.body);
     checkLoginAllowed(pendingUsername, req.ip);
-    const ok = authService.verifyTotpLogin(pendingId, code);
+    const ok = await authService.verifyTotpLogin(pendingId, code);
     if (!ok) {
       recordLoginFailure(pendingUsername, req.ip);
       return res

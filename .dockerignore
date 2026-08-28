@@ -5,6 +5,7 @@
 node_modules
 data
 docs
+public/dist
 test
 types
 .env

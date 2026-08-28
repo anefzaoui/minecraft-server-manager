@@ -216,14 +216,21 @@ async function scanServer(serverId) {
 }
 
 /** Scan every (non-deleted) server; per-server errors are swallowed. */
+let scanning = false;
 async function scanAll() {
-  const { listServers } = require('../services/servers'); // lazy: avoid require cycles
-  for (const server of listServers()) {
-    try {
-      await scanServer(server.id);
-    } catch (err) {
-      console.error(`[crashes] scan failed for ${server.id}:`, err.message);
+  if (scanning) return; // a slow scan must not overlap the next interval tick
+  scanning = true;
+  try {
+    const { listServers } = require('../services/servers'); // lazy: avoid require cycles
+    for (const server of listServers()) {
+      try {
+        await scanServer(server.id);
+      } catch (err) {
+        console.error(`[crashes] scan failed for ${server.id}:`, err.message);
+      }
     }
+  } finally {
+    scanning = false;
   }
 }
 

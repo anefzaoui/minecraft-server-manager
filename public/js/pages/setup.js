@@ -149,6 +149,8 @@ function init() {
           body: JSON.stringify({
             username: document.getElementById('su-user').value.trim(),
             password: document.getElementById('su-pass').value,
+            // Present only on an exposed-bind first run (see setup.hbs).
+            pin: document.getElementById('su-pin') ? document.getElementById('su-pin').value.trim() : undefined,
           }),
         });
         data = await res.json();

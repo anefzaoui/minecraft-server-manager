@@ -22,6 +22,34 @@ async function displayVersion(mcVersion) {
   }
 }
 
+/**
+ * Lean per-server view models for the layout chrome that renders on EVERY
+ * authenticated page: the sidebar server list, the server-picker <select>s on
+ * Backups / Activity, and the Storage quota table. Those templates only read
+ * id / name / icon / accent / status / disk, so this deliberately skips the full
+ * serverVM() fan-out (per-server pack lookup, update-check lookup, crash-count,
+ * loader detection, version-manifest resolve) that used to run once per server
+ * on every page load. Two queries total.
+ */
+function sidebarServerVMs() {
+  const rows = db.all(
+    'SELECT id, display_name, icon, accent, status, disk_quota_bytes FROM servers WHERE deleted_at IS NULL ORDER BY created_at'
+  );
+  const sizes = new Map(
+    db
+      .all("SELECT rel_path, size_bytes FROM storage_index WHERE rel_path LIKE 'servers/%'")
+      .map((r) => [r.rel_path, r.size_bytes])
+  );
+  return rows.map((s) => ({
+    id: s.id,
+    name: s.display_name,
+    icon: s.icon,
+    accent: s.accent,
+    status: s.status,
+    disk: { used: sizes.get(`servers/${s.id}`) || 0, quota: s.disk_quota_bytes || 25 * GB },
+  }));
+}
+
 async function serverVM(s, { withLive = true } = {}) {
   const vm = {
     id: s.id,
@@ -179,4 +207,4 @@ function crashVM(c) {
   };
 }
 
-module.exports = { serverVM, flavorLabel, displayVersion, eventVM, crashVM, safeJsonParse };
+module.exports = { serverVM, sidebarServerVMs, flavorLabel, displayVersion, eventVM, crashVM, safeJsonParse };

@@ -92,8 +92,11 @@ function makeRouter(scope) {
     })
   );
 
+  // The text editor allows up to 2 MB of content; the app-wide body parser skips
+  // this path so this larger parser is the one that reads it (see web/app.js).
   router.post(
     '/write',
+    express.json({ limit: '3mb' }),
     asyncHandler(async (req, res, next) => {
       const { path: rel, content } = z
         .object({

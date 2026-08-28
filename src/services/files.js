@@ -230,7 +230,7 @@ async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
     summary: `Copied: ${rel} → ${toRel} (${humanBytes(bytes)})`,
     details: { from: rel, to: toRel, sizeBytes: bytes },
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return { path: toRel, sizeBytes: bytes };
 }
 
@@ -250,7 +250,7 @@ async function remove(serverId, relPath, { actor = 'system' } = {}) {
     summary: `Deleted: ${rel} (${humanBytes(freedBytes)} freed)`,
     details: { path: rel, freedBytes },
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return { freedBytes };
 }
 
@@ -273,7 +273,7 @@ async function acceptUpload(serverId, destRel, tmpAbs, originalName, { actor = '
     summary: `Uploaded: ${rel} (${humanBytes(size)})`,
     details: { path: rel, sizeBytes: size },
   });
-  indexer.scan().catch(() => {});
+  indexer.scheduleScan();
   return { path: rel, name: filename, size };
 }
 

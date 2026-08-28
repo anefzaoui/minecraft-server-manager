@@ -55,6 +55,13 @@
           <input class="input" id="su-pass" name="password" type="password" autocomplete="new-password" required minlength="8">
           <p class="help">At least 8 characters. If you get locked out later, you can reset this password from the server; the README explains how.</p>
         </div>
+        {{#if needsPin}}
+        <div>
+          <label class="label" for="su-pin">Setup PIN</label>
+          <input class="input" id="su-pin" name="pin" inputmode="numeric" autocomplete="off" required maxlength="12" placeholder="6-digit PIN from the console">
+          <p class="help">This panel is reachable beyond this machine, so first-run setup is PIN-gated. The 6-digit PIN was printed to the panel’s console/log on startup.</p>
+        </div>
+        {{/if}}
         <div class="flex items-center gap-2">
           <button class="btn btn-ghost" type="button" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
           <button class="btn btn-primary ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} Create admin</button>

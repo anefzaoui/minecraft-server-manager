@@ -7,6 +7,10 @@
 allowBuilds:
   '@parcel/watcher': false
   cpu-features: false
+  # esbuild backs `pnpm run build:js` (client bundling). Its install script just
+  # links the prebuilt platform binary; allow it so a fresh install is ready to
+  # build without a manual `pnpm approve-builds`.
+  esbuild: true
   protobufjs: false
   ssh2: false
 minimumReleaseAgeExclude:

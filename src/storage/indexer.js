@@ -94,6 +94,21 @@ function startIndexer({ intervalMs = 15 * 60 * 1000 } = {}) {
   timer.unref();
 }
 
+// Coalesce the "rescan after a filesystem mutation" calls that fire from every
+// upload / delete / copy / backup / restore. A burst of ops (e.g. deleting a
+// dozen files, or a restore that also writes a safety backup) used to kick off a
+// full recursive stat-walk of data/ per op; this collapses them into one walk a
+// short while after the last mutation.
+let debounceTimer = null;
+function scheduleScan({ delayMs = 45_000 } = {}) {
+  if (debounceTimer) return;
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    scan().catch((err) => console.error('[indexer]', err.message));
+  }, delayMs);
+  debounceTimer.unref();
+}
+
 /** Instant size lookup from cache; 0 when not yet scanned. */
 function sizeOf(relPath) {
   const row = db.get('SELECT size_bytes FROM storage_index WHERE rel_path = ?', relPath);
@@ -168,6 +183,7 @@ async function enforceStrictQuotas() {
 
 module.exports = {
   scan,
+  scheduleScan,
   startIndexer,
   sizeOf,
   lastScan,

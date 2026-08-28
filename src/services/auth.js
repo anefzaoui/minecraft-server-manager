@@ -24,7 +24,12 @@ function firstRunNeeded() {
   return !db.get('SELECT 1 AS x FROM users LIMIT 1');
 }
 
-function createUser({ username, password, role = 'admin' }, { actor = 'system' } = {}) {
+// bcrypt work goes through the async API so a cost-11 hash (~100 ms of pure JS
+// in bcryptjs) yields the event loop in chunks instead of freezing every other
+// request - a login flood otherwise stalls the whole panel.
+const BCRYPT_COST = 11;
+
+async function createUser({ username, password, role = 'admin' }, { actor = 'system' } = {}) {
   if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username))
     throw httpError(400, 'A username must be 2 to 32 characters: letters, numbers, and _ . - only.');
   if (typeof password !== 'string' || password.length < 8)
@@ -36,20 +41,20 @@ function createUser({ username, password, role = 'admin' }, { actor = 'system' }
     'INSERT INTO users (id, username, password_hash, role) VALUES (?, ?, ?, ?)',
     id,
     username,
-    bcrypt.hashSync(password, 11),
+    await bcrypt.hash(password, BCRYPT_COST),
     role
   );
   recordEvent({ actor, type: 'user-created', summary: `User created: ${username} (${role})` });
   return getUser(id);
 }
 
-function verifyCredentials(username, password) {
+async function verifyCredentials(username, password) {
   const user = db.get('SELECT * FROM users WHERE username = ?', username);
   if (!user) {
-    bcrypt.compareSync(password, DUMMY_HASH); // equalize timing with the real-user path
+    await bcrypt.compare(password, DUMMY_HASH); // equalize timing with the real-user path
     return null;
   }
-  return bcrypt.compareSync(password, user.password_hash) ? publicUser(user) : null;
+  return (await bcrypt.compare(password, user.password_hash)) ? publicUser(user) : null;
 }
 
 function getUser(id) {
@@ -77,10 +82,10 @@ function revokeOtherSessions(userId, exceptSid = null) {
   }
 }
 
-function setPassword(id, password, { actor = 'system', exceptSid = null } = {}) {
+async function setPassword(id, password, { actor = 'system', exceptSid = null } = {}) {
   if (typeof password !== 'string' || password.length < 8)
     throw httpError(400, 'A password must be at least 8 characters.');
-  db.run('UPDATE users SET password_hash = ? WHERE id = ?', bcrypt.hashSync(password, 11), id);
+  db.run('UPDATE users SET password_hash = ? WHERE id = ?', await bcrypt.hash(password, BCRYPT_COST), id);
   revokeOtherSessions(id, exceptSid);
   recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(id)?.username}` });
 }
@@ -165,7 +170,7 @@ function beginTotpEnrollment(id) {
 }
 
 /** Verify the account password + the first live code, then persist the secret + backup codes. */
-function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
+async function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   if (user.totp_enabled) {
@@ -177,12 +182,12 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
   // 2FA yet - locking the real owner out on their next login until an admin
   // force-reset. The UI always sends the password; the API must not rely on that.
   // Checked before the code so it can't double as a code-verification oracle.
-  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'That password is incorrect.');
+  if (!(await bcrypt.compare(password, user.password_hash))) throw httpError(401, 'That password is incorrect.');
   if (totp.verify(secret, code) == null) {
     throw httpError(400, 'That code is incorrect or has expired. Try the next one your app shows.');
   }
   const backupCodes = totp.generateBackupCodes();
-  const hashed = backupCodes.map((c) => bcrypt.hashSync(c, 11));
+  const hashed = await Promise.all(backupCodes.map((c) => bcrypt.hash(c, BCRYPT_COST)));
   // totp_last_step deliberately stays NULL here rather than recording this
   // confirmation code's step: replay protection exists to stop a *login* code
   // being reused, not to block the very first login from landing in the same
@@ -199,10 +204,10 @@ function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
 }
 
 /** Self-service disable - re-checks the account's own current password first. */
-function disableTotp(id, password, { actor = 'system', exceptSid = null } = {}) {
+async function disableTotp(id, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
-  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'That password is incorrect.');
+  if (!(await bcrypt.compare(password, user.password_hash))) throw httpError(401, 'That password is incorrect.');
   db.run(
     'UPDATE users SET totp_secret = NULL, totp_enabled = 0, totp_backup_codes_json = NULL, totp_last_step = NULL WHERE id = ?',
     id
@@ -233,13 +238,13 @@ function adminDisableTotp(id, { actor = 'system' } = {}) {
 }
 
 /** Re-check the password, then reissue backup codes (old ones stop working). */
-function regenerateBackupCodes(id, password, { actor = 'system', exceptSid = null } = {}) {
+async function regenerateBackupCodes(id, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   if (!user.totp_enabled) throw httpError(400, 'Two-factor authentication is not turned on for this account.');
-  if (!bcrypt.compareSync(password, user.password_hash)) throw httpError(401, 'That password is incorrect.');
+  if (!(await bcrypt.compare(password, user.password_hash))) throw httpError(401, 'That password is incorrect.');
   const backupCodes = totp.generateBackupCodes();
-  const hashed = backupCodes.map((c) => bcrypt.hashSync(c, 11));
+  const hashed = await Promise.all(backupCodes.map((c) => bcrypt.hash(c, BCRYPT_COST)));
   db.run('UPDATE users SET totp_backup_codes_json = ? WHERE id = ?', JSON.stringify(hashed), id);
   revokeOtherSessions(id, exceptSid);
   recordEvent({ actor, type: 'user-2fa-backup-codes', summary: `Backup codes regenerated for ${user.username}` });
@@ -251,7 +256,7 @@ function regenerateBackupCodes(id, password, { actor = 'system', exceptSid = nul
  * the first login step). Returns true/false; never throws on a bad code (the
  * route layer handles lockout/messaging same as a wrong password).
  */
-function verifyTotpLogin(id, code) {
+async function verifyTotpLogin(id, code) {
   const user = db.get('SELECT * FROM users WHERE id = ? AND totp_enabled = 1', id);
   if (!user || !user.totp_secret) return false;
 
@@ -272,7 +277,8 @@ function verifyTotpLogin(id, code) {
     codes = [];
   }
   const cleanCode = String(code || '').trim();
-  const idx = codes.findIndex((hash) => bcrypt.compareSync(cleanCode, hash));
+  const matches = await Promise.all(codes.map((hash) => bcrypt.compare(cleanCode, hash)));
+  const idx = matches.findIndex(Boolean);
   if (idx === -1) return false;
   codes.splice(idx, 1);
   db.run('UPDATE users SET totp_backup_codes_json = ? WHERE id = ?', JSON.stringify(codes), id);

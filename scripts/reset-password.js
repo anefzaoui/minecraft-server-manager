@@ -37,12 +37,14 @@ if (!user) {
 const generated = !password;
 if (generated) password = crypto.randomBytes(9).toString('base64url'); // 12 chars
 
-try {
-  auth.setPassword(user.id, password, { actor: 'cli:reset-password' });
-} catch (err) {
-  console.error('Failed:', err.message);
-  process.exit(1);
-}
+(async () => {
+  try {
+    await auth.setPassword(user.id, password, { actor: 'cli:reset-password' });
+  } catch (err) {
+    console.error('Failed:', err.message);
+    process.exit(1);
+  }
 
-console.log(`Password updated for "${username}".`);
-if (generated) console.log(`New password: ${password}`);
+  console.log(`Password updated for "${username}".`);
+  if (generated) console.log(`New password: ${password}`);
+})();

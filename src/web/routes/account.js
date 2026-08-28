@@ -57,7 +57,7 @@ router.post(
 // the password-compare here as an unthrottled brute-force oracle.
 router.post(
   '/totp/confirm',
-  asyncHandler((req, res) => {
+  asyncHandler(async (req, res) => {
     const { secret, code, password } = z
       .object({
         secret: z.string().min(16).max(64),
@@ -68,7 +68,7 @@ router.post(
     checkLoginAllowed(req.user.username, req.ip);
     let result;
     try {
-      result = authService.confirmTotp(req.user.id, secret, code, password, { actor: req.user.username });
+      result = await authService.confirmTotp(req.user.id, secret, code, password, { actor: req.user.username });
     } catch (err) {
       if (err.status === 401) recordLoginFailure(req.user.username, req.ip);
       throw err;
@@ -85,11 +85,11 @@ router.post(
 
 router.post(
   '/totp/disable',
-  asyncHandler((req, res) => {
+  asyncHandler(async (req, res) => {
     const { password } = z.object({ password: z.string().min(1).max(200) }).parse(req.body);
     checkLoginAllowed(req.user.username, req.ip);
     try {
-      authService.disableTotp(req.user.id, password, { actor: req.user.username, exceptSid: req.sessionID });
+      await authService.disableTotp(req.user.id, password, { actor: req.user.username, exceptSid: req.sessionID });
     } catch (err) {
       if (err.status === 401) recordLoginFailure(req.user.username, req.ip);
       throw err;
@@ -101,12 +101,12 @@ router.post(
 
 router.post(
   '/totp/backup-codes/regenerate',
-  asyncHandler((req, res) => {
+  asyncHandler(async (req, res) => {
     const { password } = z.object({ password: z.string().min(1).max(200) }).parse(req.body);
     checkLoginAllowed(req.user.username, req.ip);
     let result;
     try {
-      result = authService.regenerateBackupCodes(req.user.id, password, {
+      result = await authService.regenerateBackupCodes(req.user.id, password, {
         actor: req.user.username,
         exceptSid: req.sessionID,
       });
