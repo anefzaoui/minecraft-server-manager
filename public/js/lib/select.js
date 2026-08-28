@@ -202,4 +202,3 @@ export function syncSelectTrigger(select) {
   const btn = select.nextElementSibling;
   if (btn && btn.classList.contains('msm-select')) syncTrigger(select, btn);
 }
-
