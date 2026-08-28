@@ -215,11 +215,24 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
 
   if (source.kind === 'modrinth') {
     const resolved = await modrinth.resolveUrl(source.ref);
-    const versions = resolved.versionId
+    let versions = resolved.versionId
       ? [await modrinth.getVersion(resolved.versionId)]
       : await modrinth.getVersions(resolved.projectId, { loader, mcVersion });
+    // The unfiltered plugin query returns every build of hybrid projects
+    // (WorldEdit-style plugin+mod releases) — newest-first could hand a Paper
+    // server a Fabric jar. Keep only builds tagged with a plugin loader,
+    // unless the user pinned an exact version themselves.
+    if (targetKind === 'plugin' && !resolved.versionId) {
+      const { PLUGIN_LOADERS } = require('./modIdentify');
+      versions = versions.filter((v) => (v.loaders || []).some((l) => PLUGIN_LOADERS.has(String(l).toLowerCase())));
+    }
     if (!versions.length)
-      throw httpError(404, `No ${resolved.title} build matches ${loader || 'this loader'} ${mcVersion || ''}`.trim());
+      throw httpError(
+        404,
+        targetKind === 'plugin'
+          ? `No ${resolved.title} plugin build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`
+          : `No ${resolved.title} build matches ${loader || 'this loader'} ${mcVersion || ''}`.trim()
+      );
     const version = versions[0];
     const file = modrinth.primaryFile(version);
     downloadUrl = file.url;

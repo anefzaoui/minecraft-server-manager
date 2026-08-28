@@ -303,4 +303,4 @@ function verdictFor(identity, { kind, loader, mc }) {
   return { status: 'ok', loaderOk, mcOk };
 }
 
-module.exports = { identifyJars, verdictFor, parseJarMeta, splitCfGameVersions };
+module.exports = { identifyJars, verdictFor, parseJarMeta, splitCfGameVersions, PLUGIN_LOADERS };
