@@ -5,12 +5,18 @@
 // Docker (a one-shot `docker stats` costs ~2s; `docker exec rcon-cli list`
 // ~0.5s). Everything reads from here; nothing user-facing calls Docker inline.
 
+const path = require('node:path');
 const db = require('../db');
 const { statsStream, statsOnce } = require('../docker/stats');
 const { execCaptureChecked, inspectStatus } = require('../docker/containers');
 const { fetchLogs } = require('../docker/logs');
 const { parsePlayerList } = require('../utils/rconList');
 const { cleanText } = require('../utils/ansi');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const syncThrottle = makeFailureThrottle();
 
 // Boot-phase detection: a modded first boot passes through many meaningful
 // states - surface them instead of a flat "starting/unhealthy". Ordered by
@@ -261,14 +267,18 @@ async function sync() {
       if (!entries.has(id)) await attach(id, row.container_id || null);
     }
     for (const id of [...entries.keys()]) if (!running.has(id)) detach(id);
+    syncThrottle.ok(logger.info, 'The live-cache reconcile recovered.');
   } catch (err) {
-    console.error('[liveCache]', err.message);
+    syncThrottle.fail(logger.warn, 'A live-cache reconcile failed.', {
+      err: serializeError(err, { includeStack: false }),
+    });
   } finally {
     syncing = false;
   }
 }
 
 function startLiveCache({ intervalMs = 10000 } = {}) {
+  logger.debug('Started the live-data cache.', { intervalMs });
   sync();
   syncTimer = setInterval(sync, intervalMs);
   syncTimer.unref();

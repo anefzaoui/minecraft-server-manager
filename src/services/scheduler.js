@@ -4,12 +4,15 @@
 // and global maintenance (update check, storage rescan, tmp cleanup, backup
 // pruning). Every firing is a history event; next-run times come from croner.
 
+const path = require('node:path');
 const httpError = require('../utils/httpError');
 const { Cron } = require('croner');
 const { nanoid } = require('nanoid');
 const db = require('../db');
 const { recordEvent } = require('../events');
 const { getTimezone } = require('./settings');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 const jobs = new Map(); // schedule id -> Cron
 
@@ -97,6 +100,11 @@ function schedule(job) {
         type: 'schedule-fired',
         summary: `Scheduled task fired: ${TASK_TYPES[job.task_type]?.label || job.task_type}`,
       });
+      logger.info('A scheduled task fired.', {
+        scheduleId: job.id,
+        taskType: job.task_type,
+        serverId: job.server_id || undefined,
+      });
       try {
         await runTask(job);
       } catch (err) {
@@ -106,11 +114,21 @@ function schedule(job) {
           type: 'schedule-failed',
           summary: `Scheduled ${job.task_type} failed: ${err.message}`,
         });
+        logger.error('A scheduled task failed.', {
+          scheduleId: job.id,
+          taskType: job.task_type,
+          serverId: job.server_id || undefined,
+          err: serializeError(err),
+        });
       }
     });
     jobs.set(job.id, cron);
   } catch (err) {
-    console.error(`[scheduler] invalid cron "${job.cron}" for ${job.id}: ${err.message}`);
+    logger.error('A schedule has an invalid cron expression and was not armed.', {
+      scheduleId: job.id,
+      cron: job.cron,
+      err: serializeError(err, { includeStack: false }),
+    });
   }
 }
 
@@ -132,7 +150,7 @@ function rearmAll() {
 function startScheduler() {
   seedGlobalDefaults();
   for (const job of db.all('SELECT * FROM schedules')) schedule(job);
-  console.log(`[scheduler] ${jobs.size} job(s) armed`);
+  logger.info('Armed the scheduler.', { jobs: jobs.size });
 }
 
 /** Global maintenance tasks exist from first boot; user can disable/edit. */

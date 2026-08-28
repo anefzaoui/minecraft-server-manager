@@ -11,6 +11,8 @@ const { checkLoginAllowed, recordLoginFailure, clearLoginFailures } = require('.
 const { recordEvent } = require('../../events');
 const config = require('../../config');
 const { checkDocker } = require('../../docker/connect');
+const logger = require('../../logger')('auth');
+const { serializeError } = require('../../utils/logSanitize');
 
 const router = express.Router();
 
@@ -86,7 +88,8 @@ router.get('/setup/checks', async (req, res) => {
     return res.status(403).json({ ok: false, error: 'First-run setup is already complete.' });
   try {
     res.json({ ok: true, checks: await buildSetupChecks() });
-  } catch {
+  } catch (err) {
+    logger.error('The first-run environment checks could not be run.', { err: serializeError(err) });
     res.status(500).json({ ok: false, error: 'The environment checks could not be run.' });
   }
 });
@@ -124,6 +127,7 @@ router.post('/setup', async (req, res) => {
     // Rotate the session id on privilege establishment (anti-fixation), matching login.
     req.session.regenerate((err) => {
       if (err) {
+        logger.error('Session regeneration failed during first-run setup.', { err: serializeError(err) });
         return wantsJson
           ? res.status(500).json({ ok: false, error: 'Something went wrong starting your session. Please try again.' })
           : res.status(500).render('setup', {
@@ -141,9 +145,14 @@ router.post('/setup', async (req, res) => {
         type: 'login',
         summary: `First admin account created and signed in: ${username}`,
       });
+      logger.info('Created the first administrator account.', { userId: user.id, username });
       return wantsJson ? res.json({ ok: true, user: { username: user.username } }) : res.redirect('/');
     });
   } catch (err) {
+    logger.warn('A first-run setup request was rejected.', {
+      status: err.status || 400,
+      err: serializeError(err, { includeStack: !err.status }),
+    });
     if (wantsJson) return res.status(err.status || 400).json({ ok: false, error: firstIssue(err) });
     res.status(err.status || 400).render('setup', {
       title: 'Welcome',
@@ -182,6 +191,7 @@ router.post('/login', async (req, res) => {
     const user = await authService.verifyCredentials(username, password);
     if (!user) {
       recordLoginFailure(username, req.ip);
+      logger.warn('Rejected a login with a bad username or password.', { username, ip: req.ip });
       return res.status(401).render('login', {
         title: 'Sign In',
         layout: 'bare',
@@ -199,22 +209,27 @@ router.post('/login', async (req, res) => {
       req.session.pendingTotpUsername = user.username;
       req.session.pendingTotpNext = safeNext(next);
       req.session.pendingRemember = Boolean(remember);
+      logger.debug('A login password was accepted; awaiting a two-factor code.', { userId: user.id, ip: req.ip });
       return res.redirect('/login/2fa');
     }
     clearLoginFailures(username, req.ip);
     req.session.regenerate((err) => {
-      if (err)
+      if (err) {
+        logger.error('Session regeneration failed during login.', { username, err: serializeError(err) });
         return res.status(500).render('login', {
           title: 'Sign In',
           layout: 'bare',
           error: 'Something went wrong starting your session. Please try again.',
         });
+      }
       req.session.userId = user.id;
       applyRememberCookie(req, Boolean(remember));
       recordEvent({ actor: user.username, type: 'login', summary: `${user.username} signed in` });
+      logger.info('Signed a user in.', { userId: user.id, username: user.username, ip: req.ip, via: 'password' });
       res.redirect(safeNext(next) || '/');
     });
   } catch (err) {
+    logger.warn('A login request was rejected.', { status: err.status || 400, ip: req.ip });
     res.status(err.status || 400).render('login', { title: 'Sign In', layout: 'bare', error: firstIssue(err) });
   }
 });
@@ -234,6 +249,7 @@ router.post('/login/2fa', async (req, res) => {
     const ok = await authService.verifyTotpLogin(pendingId, code);
     if (!ok) {
       recordLoginFailure(pendingUsername, req.ip);
+      logger.warn('Rejected a login with a bad two-factor code.', { username: pendingUsername, ip: req.ip });
       return res
         .status(401)
         .render('login-2fa', { title: "Verify It's You", layout: 'bare', error: 'Incorrect code.' });
@@ -246,18 +262,34 @@ router.post('/login/2fa', async (req, res) => {
     delete req.session.pendingTotpNext;
     delete req.session.pendingRemember;
     req.session.regenerate((err) => {
-      if (err)
+      if (err) {
+        logger.error('Session regeneration failed during two-factor login.', {
+          username: pendingUsername,
+          err: serializeError(err),
+        });
         return res.status(500).render('login-2fa', {
           title: "Verify It's You",
           layout: 'bare',
           error: 'Something went wrong starting your session. Please try again.',
         });
+      }
       req.session.userId = pendingId;
       applyRememberCookie(req, Boolean(remember));
       recordEvent({ actor: pendingUsername, type: 'login', summary: `${pendingUsername} signed in (2FA)` });
+      logger.info('Signed a user in.', {
+        userId: pendingId,
+        username: pendingUsername,
+        ip: req.ip,
+        via: 'password+2fa',
+      });
       res.redirect(safeNext(next) || '/');
     });
   } catch (err) {
+    logger.warn('A two-factor login request was rejected.', {
+      username: pendingUsername,
+      status: err.status || 400,
+      ip: req.ip,
+    });
     res
       .status(err.status || 400)
       .render('login-2fa', { title: "Verify It's You", layout: 'bare', error: firstIssue(err) });
@@ -277,6 +309,7 @@ router.post('/logout', (req, res) => {
       secure: config.cookieSecure === true,
     });
     recordEvent({ actor: name, type: 'logout', summary: `${name} signed out` });
+    logger.info('Signed a user out.', { userId: uid });
     res.redirect('/login');
   });
 });

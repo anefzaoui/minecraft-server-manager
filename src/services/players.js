@@ -14,6 +14,9 @@ const { execCapture } = require('../docker/containers');
 const mojangProfiles = require('./mojangProfiles');
 const { PLAYER_NAME_RE, isBedrockName } = require('../utils/playerName');
 const { parsePlayerList } = require('../utils/rconList');
+const nodePath = require('node:path');
+const logger = require('../logger')(nodePath.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 // Aliased: this file already has its own cleanText() below (strips control
 // chars from RCON-bound messages) - this one strips ANSI/§ colour codes.
 const { cleanText: cleanAnsiText } = require('../utils/ansi');
@@ -524,14 +527,22 @@ async function sweepExpiredBans() {
       try {
         await pardonPlayer(server.id, e.name, { running, actor: 'scheduler' });
       } catch (err) {
-        console.warn(`[players] ban-expiry sweep: could not pardon ${e.name} on ${server.id}: ${err.message}`);
+        logger.warn('The ban-expiry sweep could not pardon a player.', {
+          serverId: server.id,
+          player: e.name,
+          err: serializeError(err, { includeStack: false }),
+        });
       }
     }
     for (const e of expiredIps) {
       try {
         await pardonIp(server.id, e.ip, { running, actor: 'scheduler' });
       } catch (err) {
-        console.warn(`[players] ban-expiry sweep: could not pardon IP ${e.ip} on ${server.id}: ${err.message}`);
+        logger.warn('The ban-expiry sweep could not pardon an IP.', {
+          serverId: server.id,
+          ip: e.ip,
+          err: serializeError(err, { includeStack: false }),
+        });
       }
     }
   }
@@ -634,7 +645,11 @@ async function getPlayerPosition(serverId, player) {
       // Unlike the sweep's warns below (best-effort, loop keeps going), this
       // becomes a hard 502 for the caller - genuinely unexpected server output,
       // not a routine/recoverable condition, so it belongs at error.
-      console.error(`[players] couldn't read position for ${player} on ${serverId}: ${posOut.slice(0, 160)}`);
+      logger.error('Could not read a player position from the server.', {
+        serverId,
+        player,
+        output: posOut.slice(0, 160),
+      });
       throw httpError(502, "Couldn't read the player's position from the server.");
     }
     // Whichever dimension reports "Killed" is where the player is - and this

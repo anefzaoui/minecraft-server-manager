@@ -28,6 +28,7 @@ const indexer = require('../storage/indexer');
 const library = require('./library');
 const { withSaveLock } = require('./serverLocks');
 const { guardOp } = require('./opLock');
+const logger = require('../logger')(path.basename(__filename));
 
 // Run the save-off/flush → copy → save-on dance under the shared per-server save
 // lock when the server is running, so it can't overlap a concurrent backup or
@@ -479,6 +480,7 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
     summary: `World "${lib.name}" installed as "${targetLevel}" (${mode}, ${humanBytes(sizeBytes)})`,
     details: { libraryId, mode, installedAs: targetLevel, sizeBytes, replacedBytes, warnings },
   });
+  logger.info('Installed a world onto a server.', { serverId, actor, installedAs: targetLevel, mode, sizeBytes });
   indexer.scheduleScan();
   return { installedAs: targetLevel, mode, warnings, sizeBytes };
 }
@@ -705,6 +707,7 @@ async function resetWorldImpl(
       freedBytes,
     },
   });
+  logger.info('Reset a world.', { serverId, actor, level, seedMode, freedBytes });
   indexer.scheduleScan();
   return {
     level,
@@ -736,6 +739,7 @@ async function deleteServerWorld(serverId, worldName, { actor = 'system' } = {})
     summary: `World "${worldName}" deleted (${humanBytes(freedBytes)} freed)`,
     details: { worldName, freedBytes },
   });
+  logger.info('Deleted a world from a server.', { serverId, actor, worldName, freedBytes });
   indexer.scheduleScan();
   return { freedBytes };
 }

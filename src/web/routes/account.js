@@ -17,6 +17,8 @@ const { dataPath } = require('../../storage/pathGuard');
 const { AVATAR_PRESETS } = require('../../config/avatars');
 const authService = require('../../services/auth');
 const { matchesImageType } = require('../../utils/sniffImage');
+const logger = require('../../logger')('account');
+const { serializeError } = require('../../utils/logSanitize');
 
 const router = express.Router();
 
@@ -44,6 +46,7 @@ router.post(
   '/totp/setup',
   asyncHandler(async (req, res) => {
     if (!throttle('totp-setup', req.user.id, SETUP_MAX, SETUP_WINDOW_MS)) {
+      logger.warn('Throttled a two-factor setup request.', { userId: req.user.id });
       return res.status(429).json({ ok: false, error: 'Too many 2FA setup attempts - wait a minute and try again.' });
     }
     const { secret, otpauthUrl } = authService.beginTotpEnrollment(req.user.id);
@@ -70,10 +73,14 @@ router.post(
     try {
       result = await authService.confirmTotp(req.user.id, secret, code, password, { actor: req.user.username });
     } catch (err) {
-      if (err.status === 401) recordLoginFailure(req.user.username, req.ip);
+      if (err.status === 401) {
+        recordLoginFailure(req.user.username, req.ip);
+        logger.warn('Rejected a two-factor confirmation with a bad password.', { userId: req.user.id, ip: req.ip });
+      }
       throw err;
     }
     clearLoginFailures(req.user.username, req.ip);
+    logger.info('Enabled two-factor authentication.', { userId: req.user.id });
     res.json({ ok: true, backupCodes: result.backupCodes });
   })
 );
@@ -91,10 +98,14 @@ router.post(
     try {
       await authService.disableTotp(req.user.id, password, { actor: req.user.username, exceptSid: req.sessionID });
     } catch (err) {
-      if (err.status === 401) recordLoginFailure(req.user.username, req.ip);
+      if (err.status === 401) {
+        recordLoginFailure(req.user.username, req.ip);
+        logger.warn('Rejected a two-factor disable with a bad password.', { userId: req.user.id, ip: req.ip });
+      }
       throw err;
     }
     clearLoginFailures(req.user.username, req.ip);
+    logger.info('Disabled two-factor authentication.', { userId: req.user.id });
     res.json({ ok: true });
   })
 );
@@ -111,10 +122,14 @@ router.post(
         exceptSid: req.sessionID,
       });
     } catch (err) {
-      if (err.status === 401) recordLoginFailure(req.user.username, req.ip);
+      if (err.status === 401) {
+        recordLoginFailure(req.user.username, req.ip);
+        logger.warn('Rejected a backup-code regeneration with a bad password.', { userId: req.user.id, ip: req.ip });
+      }
       throw err;
     }
     clearLoginFailures(req.user.username, req.ip);
+    logger.info('Regenerated two-factor backup codes.', { userId: req.user.id });
     res.json({ ok: true, backupCodes: result.backupCodes });
   })
 );
@@ -140,10 +155,12 @@ router.post(
   '/avatar/preset',
   asyncHandler((req, res) => {
     if (!throttle('avatar-write', req.user.id, AVATAR_MAX, AVATAR_WINDOW_MS)) {
+      logger.warn('Throttled a profile picture change.', { userId: req.user.id });
       return res.status(429).json({ ok: false, error: 'Too many avatar changes - wait a minute and try again.' });
     }
     const { key } = z.object({ key: z.string().min(1).max(32) }).parse(req.body);
     authService.setAvatarPreset(req.user.id, key, { actor: req.user.username });
+    logger.info('Set a profile picture preset.', { userId: req.user.id, preset: key });
     res.json({ ok: true, avatar: `preset:${key}` });
   })
 );
@@ -160,6 +177,7 @@ router.post(
   asyncHandler(async (req, res, next) => {
     try {
       if (!throttle('avatar-write', req.user.id, AVATAR_MAX, AVATAR_WINDOW_MS)) {
+        logger.warn('Throttled a profile picture upload.', { userId: req.user.id });
         throw Object.assign(new Error('Too many avatar changes - wait a minute and try again.'), { status: 429 });
       }
       if (!req.file) throw Object.assign(new Error('Attach an image (field "avatar")'), { status: 400 });
@@ -168,6 +186,10 @@ router.post(
         throw Object.assign(new Error('Avatars must be PNG, SVG or JPEG (max 512 KB)'), { status: 400 });
       }
       if (!(await matchesImageType(req.file.path, req.file.mimetype))) {
+        logger.warn('Rejected a profile picture upload whose bytes do not match its declared type.', {
+          userId: req.user.id,
+          declared: req.file.mimetype,
+        });
         throw Object.assign(new Error("File contents don't match the declared image type"), { status: 400 });
       }
       const filename = `${req.user.id}${ext}`;
@@ -175,17 +197,34 @@ router.post(
       await fsp.mkdir(destDir, { recursive: true });
       // Drop stale variants with a different extension, same as server icons.
       for (const other of Object.values(AVATAR_EXTS)) {
-        if (other !== ext) await fsp.rm(path.join(destDir, `${req.user.id}${other}`), { force: true }).catch(() => {});
+        if (other !== ext) {
+          await fsp.rm(path.join(destDir, `${req.user.id}${other}`), { force: true }).catch((e) => {
+            logger.debug('Could not remove a stale profile picture variant.', {
+              err: serializeError(e, { includeStack: false }),
+            });
+          });
+        }
       }
-      await fsp.rm(path.join(destDir, filename), { force: true }).catch(() => {});
+      await fsp.rm(path.join(destDir, filename), { force: true }).catch((e) => {
+        logger.debug('Could not remove the previous profile picture.', {
+          err: serializeError(e, { includeStack: false }),
+        });
+      });
       await fsp.rename(req.file.path, path.join(destDir, filename)).catch(async () => {
         await fsp.copyFile(req.file.path, path.join(destDir, filename));
         await fsp.rm(req.file.path, { force: true });
       });
       authService.setAvatarCustom(req.user.id, filename, { actor: req.user.username });
+      logger.info('Uploaded a custom profile picture.', { userId: req.user.id });
       res.json({ ok: true, avatar: `custom:${filename}`, url: `/api/avatars/custom/${filename}` });
     } catch (err) {
-      if (req.file) await fsp.rm(req.file.path, { force: true }).catch(() => {});
+      if (req.file) {
+        await fsp.rm(req.file.path, { force: true }).catch((e) => {
+          logger.debug('Could not remove a temporary upload file.', {
+            err: serializeError(e, { includeStack: false }),
+          });
+        });
+      }
       next(err);
     }
   })
@@ -195,6 +234,7 @@ router.delete(
   '/avatar',
   asyncHandler((req, res) => {
     authService.clearAvatar(req.user.id, { actor: req.user.username });
+    logger.info('Cleared a profile picture.', { userId: req.user.id });
     res.json({ ok: true });
   })
 );

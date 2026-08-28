@@ -11,6 +11,11 @@ const { nanoid } = require('nanoid');
 const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
+const logger = require('../logger')('crashes');
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const scanAllThrottle = makeFailureThrottle();
 
 // Package roots that never identify a mod (JDK, Minecraft, common libraries).
 const BORING_ROOTS = [
@@ -210,6 +215,12 @@ async function scanServer(serverId) {
       details: { crashId: id },
     });
     db.run('UPDATE crash_reports SET event_id = ? WHERE id = ?', eventId, id);
+    logger.warn('Indexed a new crash report.', {
+      serverId,
+      crashId: id,
+      filename,
+      exception: parsed.exception || undefined,
+    });
     inserted.push(id);
   }
   return inserted;
@@ -226,9 +237,13 @@ async function scanAll() {
       try {
         await scanServer(server.id);
       } catch (err) {
-        console.error(`[crashes] scan failed for ${server.id}:`, err.message);
+        logger.warn('Scanning a server for crash reports failed.', {
+          serverId: server.id,
+          err: serializeError(err, { includeStack: false }),
+        });
       }
     }
+    scanAllThrottle.ok(logger.info, 'The crash-report scan recovered.');
   } finally {
     scanning = false;
   }
@@ -239,9 +254,13 @@ let watcherTimer = null;
 /** Start the background watcher (immediate scan + interval). Returns stop(). */
 function startCrashWatcher({ intervalMs = 30000 } = {}) {
   stopCrashWatcher();
-  scanAll().catch((err) => console.error('[crashes] initial scan failed:', err.message));
+  const onScanAllFailed = (err) =>
+    scanAllThrottle.fail(logger.warn, 'A crash-report scan pass failed.', {
+      err: serializeError(err, { includeStack: false }),
+    });
+  scanAll().catch(onScanAllFailed);
   watcherTimer = setInterval(() => {
-    scanAll().catch((err) => console.error('[crashes] scan failed:', err.message));
+    scanAll().catch(onScanAllFailed);
   }, intervalMs);
   watcherTimer.unref();
   return stopCrashWatcher;

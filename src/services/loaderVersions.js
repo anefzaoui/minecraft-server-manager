@@ -10,7 +10,10 @@
 //   neoforge → NEOFORGE_VERSION      forge → FORGE_VERSION
 // An empty version means "don't pin" - let the image resolve the latest itself.
 
+const path = require('node:path');
 const db = require('../db');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 const TTL_MS = 6 * 60 * 60 * 1000;
 const MAX_BUILDS = 40; // keep the dropdown sane; power users have the advanced env field
@@ -128,7 +131,12 @@ async function getBuilds(loader, mc, { channel } = {}) {
     else if (key === 'neoforge') builds = await neoforgeBuilds(mc);
     else if (key === 'forge') builds = await forgeBuilds(mc);
     else if (key === 'paper') builds = await paperBuilds(mc, { channel });
-  } catch {
+  } catch (err) {
+    logger.debug('Fetching loader builds failed; offering the "Latest" option only.', {
+      loader: key,
+      mc,
+      err: serializeError(err, { includeStack: false }),
+    });
     builds = []; // best-effort - fall through to Latest-only
   }
   return { loader: key, envKey: envKeyFor(key), builds: [LATEST, ...builds], default: '' };

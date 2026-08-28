@@ -18,6 +18,8 @@ const { execCapture, inspectStatus } = require('../docker/containers');
 const indexer = require('../storage/indexer');
 const { withSaveLock } = require('./serverLocks');
 const { guardOp } = require('./opLock');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 // Retention caps, per server, per reason. Every bucket is bounded now - the
 // old rule ("manual + pre-update are never auto-pruned") let a long-lived
@@ -71,9 +73,10 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
         const paused = await execCapture(serverId, ['rcon-cli', 'save-off'])
           .then(() => true)
           .catch((err) => {
-            console.warn(
-              `[backup] save-off failed for ${serverId}: ${err.message} - archive may be slightly inconsistent`
-            );
+            logger.warn('Pausing world saves before a backup failed; the archive may be slightly inconsistent.', {
+              serverId,
+              err: serializeError(err, { includeStack: false }),
+            });
             return false;
           });
         inconsistent = !paused;
@@ -132,10 +135,14 @@ async function createBackup(serverId, { reason = 'manual', actor = 'system', not
       (warnings.length ? ` - WARNING: ${warnings.join('; ')}` : ''),
     details: { id, filename, reason, inconsistent, empty, entryCount },
   });
+  logger.info('Created a backup.', { serverId, backupId: id, reason, sizeBytes: size, inconsistent, empty });
   // The backup above already succeeded and is already recorded - a retention
   // problem must never surface as this call failing.
   await pruneRetention(serverId, { actor }).catch((err) => {
-    console.error(`[backup] retention query failed for ${serverId}: ${err.message}`);
+    logger.error('Pruning old backups after a new backup failed.', {
+      serverId,
+      err: serializeError(err),
+    });
   });
   indexer.scheduleScan();
   return db.get('SELECT * FROM backups WHERE id = ?', id);
@@ -292,7 +299,11 @@ async function pruneRetention(serverId, { actor = 'system' } = {}) {
         await deleteBackup(b.id, { actor });
         deleted++;
       } catch (err) {
-        console.error(`[backup] retention: could not delete ${b.id} for ${serverId}: ${err.message}`);
+        logger.error('Retention could not delete an old backup.', {
+          serverId,
+          backupId: b.id,
+          err: serializeError(err),
+        });
       }
     }
   }

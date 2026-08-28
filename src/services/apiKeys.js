@@ -3,10 +3,12 @@
 // Third-party API key storage (encrypted at rest) + validity testing.
 // The CurseForge key from .env is imported once on boot if none is stored.
 
+const nodePath = require('node:path');
 const db = require('../db');
 const config = require('../config');
 const secrets = require('./secrets');
 const { recordEvent } = require('../events');
+const logger = require('../logger')(nodePath.basename(__filename));
 
 function getKey(provider) {
   const row = db.get('SELECT key_cipher FROM api_keys WHERE provider = ?', provider);
@@ -15,9 +17,7 @@ function getKey(provider) {
   if (key === null) {
     // SESSION_SECRET changed - treat as "no key" so features degrade to their
     // friendly "add your key in Settings" paths instead of crashing.
-    console.warn(
-      `[keys] stored ${provider} key cannot be decrypted (SESSION_SECRET changed) - re-enter it in Settings`
-    );
+    logger.warn('A stored API key cannot be decrypted; re-enter it in Settings.', { provider });
   }
   return key;
 }
@@ -83,7 +83,7 @@ async function testCurseForgeKey(key = getKey('curseforge')) {
 function importFromEnvOnce() {
   if (config.cfApiKeySeed && !db.get("SELECT 1 AS x FROM api_keys WHERE provider = 'curseforge'")) {
     setKey('curseforge', config.cfApiKeySeed.replace(/^'|'$/g, ''), { actor: 'system' });
-    console.log('[keys] imported CurseForge API key from .env into encrypted store');
+    logger.info('Imported the CurseForge API key from the environment into the encrypted store.');
   }
 }
 

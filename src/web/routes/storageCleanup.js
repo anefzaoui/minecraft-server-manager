@@ -10,6 +10,14 @@ const path = require('node:path');
 const db = require('../../db');
 const { dataPath } = require('../../storage/pathGuard');
 const { recordEvent } = require('../../events');
+const logger = require('../../logger')(path.basename(__filename));
+const { serializeError } = require('../../utils/logSanitize');
+
+/** Log a cleanup deletion that failed - the freed-bytes total would otherwise overstate reality. */
+function onDeleteFailed(abs) {
+  return (err) =>
+    logger.warn('A storage cleanup deletion failed.', { path: abs, err: serializeError(err, { includeStack: false }) });
+}
 
 const TMP_MIN_AGE_MS = 60 * 60 * 1000; // never touch in-flight transfers
 const DEFAULT_DAYS = 30;
@@ -45,14 +53,17 @@ async function runCleanup(action, { olderThanDays, dryRun = false, actor = 'syst
       if (!st || Date.now() - st.mtimeMs < TMP_MIN_AGE_MS) continue;
       freedBytes += st.isDirectory() ? await entrySize(abs) : st.size;
       removed += 1;
-      if (!dryRun) await fsp.rm(abs, { recursive: true, force: true }).catch(() => {});
+      if (!dryRun) await fsp.rm(abs, { recursive: true, force: true }).catch(onDeleteFailed(abs));
     }
   } else if (action === 'orphans') {
     const library = require('../../services/library');
     for (const row of library.orphans()) {
       freedBytes += row.size_bytes || 0;
       removed += 1;
-      if (!dryRun) await library.deleteLibraryFile(row.id, { actor, force: true }).catch(() => {});
+      if (!dryRun)
+        await library
+          .deleteLibraryFile(row.id, { actor, force: true })
+          .catch(onDeleteFailed(row.rel_path || String(row.id)));
     }
     // Stray backup .zip files with no matching `backups` row: a hard crash
     // (OOM kill, host reboot) mid-archive skips zipDirectory's own on-error
@@ -76,7 +87,7 @@ async function runCleanup(action, { olderThanDays, dryRun = false, actor = 'syst
         if (!st || Date.now() - st.mtimeMs < TMP_MIN_AGE_MS) continue;
         freedBytes += st.size;
         removed += 1;
-        if (!dryRun) await fsp.rm(abs, { force: true }).catch(() => {});
+        if (!dryRun) await fsp.rm(abs, { force: true }).catch(onDeleteFailed(abs));
       }
     }
   } else if (action === 'old-logs') {
@@ -95,7 +106,7 @@ async function runCleanup(action, { olderThanDays, dryRun = false, actor = 'syst
           if (!st || st.mtimeMs >= cutoffMs) continue;
           freedBytes += st.size;
           removed += 1;
-          if (!dryRun) await fsp.rm(abs, { force: true }).catch(() => {});
+          if (!dryRun) await fsp.rm(abs, { force: true }).catch(onDeleteFailed(abs));
         }
       }
     }
@@ -130,9 +141,14 @@ async function runCleanup(action, { olderThanDays, dryRun = false, actor = 'syst
       summary: `Storage cleanup (${action}): ${removed} item(s) removed, ${(freedBytes / 1024 ** 2).toFixed(1)} MB freed`,
       details: { action, removed, freedBytes, olderThanDays: days },
     });
+    logger.info('Ran a storage cleanup.', { action, removed, freedBytes, olderThanDays: days, actor });
     require('../../storage/indexer')
       .scan()
-      .catch(() => {});
+      .catch((err) =>
+        logger.debug('A background library rescan after cleanup failed to start.', {
+          err: serializeError(err, { includeStack: false }),
+        })
+      );
   }
   return { freedBytes, removed };
 }

@@ -12,6 +12,11 @@ const multer = require('multer');
 const { z } = require('zod');
 const worlds = require('../../services/worlds');
 const { dataPath } = require('../../storage/pathGuard');
+const logger = require('../../logger')('worlds');
+const { serializeError } = require('../../utils/logSanitize');
+
+const onTempCleanupFailed = (err) =>
+  logger.debug('Could not remove a temporary file.', { err: serializeError(err, { includeStack: false }) });
 const { requireRole } = require('../middleware/auth');
 const db = require('../../db');
 
@@ -78,7 +83,7 @@ router.post('/upload', worldUploadPreflight, upload.single('file'), async (req, 
     });
     res.status(201).json({ ok: true, world: libVM(row) });
   } catch (err) {
-    if (req.file) await fsp.rm(req.file.path, { force: true }).catch(() => {});
+    if (req.file) await fsp.rm(req.file.path, { force: true }).catch(onTempCleanupFailed);
     next(err);
   }
 });
@@ -244,7 +249,7 @@ serverWorlds.get(
     const world = worldNameSchema.parse(req.params.world);
     const staged = await worlds.prepareWorldDownload(req.params.id, world, { actor: actorOf(req) });
     res.download(staged.absPath, staged.filename, () => {
-      fsp.rm(staged.absPath, { force: true }).catch(() => {});
+      fsp.rm(staged.absPath, { force: true }).catch(onTempCleanupFailed);
     });
   })
 );

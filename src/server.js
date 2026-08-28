@@ -1,8 +1,21 @@
 'use strict';
 
-// Preflight FIRST - fail clearly on an unsupported Node runtime before anything
-// else (config, DB, the runtime error net) can turn it into a cryptic crash.
+// Error-reporting seam FIRST - before anything else loads - so a future Sentry
+// wiring in instrument.js patches the runtime ahead of the rest of the app.
+require('./instrument');
+
+// Preflight SECOND - fail clearly on an unsupported Node runtime before config,
+// the DB, or the runtime error net can turn it into a cryptic crash.
 require('./preflight');
+
+const logger = require('./logger')('boot');
+const { captureError, closeSentry } = require('./instrument');
+const { serializeError } = require('./utils/logSanitize');
+const { makeFailureThrottle } = require('./logger');
+
+function bailOut(code = 1) {
+  closeSentry().finally(() => process.exit(code));
+}
 
 function installRuntimeGuards() {
   // Last-resort safety net: a control panel must stay up. The specific fixes (e.g.
@@ -16,16 +29,17 @@ function installRuntimeGuards() {
   const exitOnFatal = /^(1|true|yes)$/i.test(process.env.MSM_EXIT_ON_FATAL || '');
 
   const report = (kind, err) => {
+    const info = serializeError(err);
     // Structured line for log aggregators, plus a panel event so it surfaces in
     // Activity (and Discord Alerts, if wired) rather than only in stdout.
-    const detail = err instanceof Error ? { message: err.message, stack: err.stack } : { value: String(err) };
-    console.error(JSON.stringify({ level: 'fatal', kind, ...detail, at: new Date().toISOString() }));
+    logger.error('Caught a fatal runtime fault and kept the panel alive.', { kind, err: info });
+    captureError(err, { scope: 'runtime-guard', kind });
     try {
       require('./events').recordEvent({
         type: 'panel-error',
         actor: 'system',
-        summary: `Uncaught ${kind}: ${detail.message || detail.value}`.slice(0, 300),
-        details: detail,
+        summary: `Uncaught ${kind}: ${info.errorMessage}`.slice(0, 300),
+        details: info,
       });
     } catch {
       /* the DB may be exactly what broke - never let reporting throw */
@@ -53,46 +67,47 @@ try {
     const row = require('./db').get('PRAGMA integrity_check');
     const verdict = row ? row.integrity_check || Object.values(row)[0] : 'unknown';
     if (verdict !== 'ok') {
-      console.error(
-        `\n[boot] SQLite integrity_check did not pass: ${verdict}\n` +
-          `  Restore the newest good copy from data/backups/_panel/ and restart.\n`
-      );
+      logger.error('The SQLite integrity check did not pass.', { verdict });
+      logger.error('Restore the newest good copy from data/backups/_panel and restart.');
     }
   } catch (err) {
-    console.error('[boot] SQLite integrity_check could not run:', err.message);
+    logger.error('The SQLite integrity check could not run.', { err: serializeError(err) });
   }
 
   require('./services/apiKeys').importFromEnvOnce();
   require('./blueprints')
     .seedStarters()
-    .catch((err) => console.error('[boot] starter blueprints seed failed:', err));
+    .catch((err) => logger.error('Seeding starter blueprints failed.', { err: serializeError(err) }));
 
   const { createApp } = require('./web/app');
   const app = createApp();
 
   const httpServer = app.listen(config.port, config.host, () => {
     const shownHost = config.host === '0.0.0.0' || config.host === '::' ? 'localhost' : config.host;
-    console.log(`[boot] Minecraft Server Manager is listening on http://${shownHost}:${config.port}`);
-    console.log(`[boot] Data folder: ${config.dataDir}`);
+    logger.info('The panel is listening.', {
+      url: `http://${shownHost}:${config.port}`,
+      dataDir: config.dataDir,
+    });
     if (config.isExposedBind) {
-      console.warn(
-        `[security] PANEL_HOST=${config.host} exposes the panel beyond this machine. ` +
-          `Only put it on the internet behind a reverse proxy with TLS.`
+      logger.warn(
+        'The panel is bound to an address reachable beyond this machine. Only expose it behind a reverse proxy with TLS.',
+        {
+          host: config.host,
+        }
       );
       const pin = require('./services/setupGate').ensurePin();
       if (pin) {
-        console.warn(
-          `\n[security] First-run setup on an exposed panel is PIN-gated.\n` +
-            `  Enter this PIN on the /setup page to create the admin account:\n\n      ${pin}\n\n` +
-            `  (shown only here; it disappears once the admin account exists.)\n`
+        logger.warn(
+          'First-run setup on this exposed panel is PIN-gated. Enter this PIN on the /setup page to create the admin account. It is shown only here and disappears once the admin account exists.',
+          {
+            pin,
+          }
         );
       }
     }
     if (config.cookieSecure === false && (config.trustProxy !== false || config.isExposedBind)) {
-      console.warn(
-        `[security] The session cookie (including the 30-day "remember me" cookie) is being sent ` +
-          `without the Secure flag while the panel looks proxied/exposed. If you serve it over HTTPS, ` +
-          `set COOKIE_SECURE=auto with TRUST_PROXY (or COOKIE_SECURE=true).`
+      logger.warn(
+        'The session cookie (including the 30-day "remember me" cookie) is being sent without the Secure flag while the panel looks proxied or exposed. If you serve it over HTTPS, set COOKIE_SECURE=auto with TRUST_PROXY, or COOKIE_SECURE=true.'
       );
     }
     installRuntimeGuards();
@@ -101,21 +116,31 @@ try {
 
   httpServer.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      console.error(
-        `\n[boot] Port ${config.port} is already in use. Stop whatever is using it, or set PANEL_PORT in your .env to a free port.\n`
+      logger.fatal(
+        'The configured port is already in use. Stop whatever is using it, or set PANEL_PORT in your .env to a free port.',
+        {
+          host: config.host,
+          port: config.port,
+        }
       );
     } else if (err.code === 'EACCES') {
-      console.error(
-        `\n[boot] Not allowed to bind ${config.host}:${config.port}. Ports below 1024 need elevated privileges, so pick a higher PANEL_PORT.\n`
+      logger.fatal(
+        'The panel is not allowed to bind that address. Ports below 1024 need elevated privileges, so pick a higher PANEL_PORT.',
+        {
+          host: config.host,
+          port: config.port,
+        }
       );
     } else {
-      console.error('\n[boot] HTTP server error:', err.message, '\n');
+      logger.fatal('The HTTP server hit an error.', { err: serializeError(err) });
     }
-    process.exit(1);
+    captureError(err, { scope: 'boot' });
+    bailOut(1);
   });
 } catch (err) {
-  console.error('\n[boot] Startup failed:\n  ' + (err && err.message ? err.message : err) + '\n');
-  process.exit(1);
+  logger.fatal('Startup failed.', { err: serializeError(err) });
+  captureError(err, { scope: 'boot' });
+  bailOut(1);
 }
 
 // Everything that runs once the panel is listening. Split out so a throw here is
@@ -137,12 +162,14 @@ function startBackgroundServices(httpServer) {
     try {
       const r = require('./analytics/ingest').pruneOlderThan(ANALYTICS_RETENTION_DAYS);
       if (r.events || r.sessions) {
-        console.log(
-          `[maintenance] pruned ${r.events} timeline rows, ${r.sessions} sessions older than ${ANALYTICS_RETENTION_DAYS}d`
-        );
+        logger.info('Pruned old analytics rows.', {
+          events: r.events,
+          sessions: r.sessions,
+          olderThanDays: ANALYTICS_RETENTION_DAYS,
+        });
       }
     } catch (err) {
-      console.error('[maintenance] analytics prune failed:', err.message);
+      logger.error('Pruning old analytics rows failed.', { err: serializeError(err) });
     }
     // Snapshot the panel DB itself - the server backups only cover per-server
     // world dirs, so without this the users/schedules/pins/history/2FA store has
@@ -163,7 +190,7 @@ function startBackgroundServices(httpServer) {
         fs.rmSync(nodePath.join(dir, f), { force: true });
       }
     } catch (err) {
-      console.error('[maintenance] panel DB backup failed:', err.message);
+      logger.error('The panel database backup failed.', { err: serializeError(err) });
     }
   }
   setTimeout(runMaintenance, 60_000).unref();
@@ -175,26 +202,33 @@ function startBackgroundServices(httpServer) {
     const { checkDocker } = require('./docker/connect');
     const status = await checkDocker();
     if (!status.available) {
-      console.warn(
-        `[docker] Docker is not reachable (${status.error}). Server start, stop, and create stay disabled until it comes up.`
-      );
+      logger.warn('Docker is not reachable. Server start, stop, and create stay disabled until it comes up.', {
+        reason: status.error,
+      });
       return;
     }
-    console.log(`[docker] connected: ${status.os} (Docker ${status.version})`);
+    logger.info('Connected to Docker.', { os: status.os, version: status.version });
     const { startWatcher } = require('./docker/watcher');
     const serversService = require('./services/servers');
-    await startWatcher().catch((err) => console.error('[watcher] failed to start:', err.message));
+    await startWatcher().catch((err) =>
+      logger.error('The Docker events watcher failed to start.', { err: serializeError(err) })
+    );
     await serversService.refreshStatuses({ boot: true });
     // Periodic reconcile: without it, cached statuses drift after any missed
     // docker event and healthcheck-less servers stay 'starting' forever.
-    const statusTimer = setInterval(
-      () => serversService.refreshStatuses().catch((err) => console.error('[status] refresh failed:', err.message)),
-      60_000
-    );
+    const statusThrottle = makeFailureThrottle();
+    const statusTimer = setInterval(() => {
+      serversService
+        .refreshStatuses()
+        .then(() => statusThrottle.ok(logger.info, 'The server status reconcile recovered.'))
+        .catch((err) =>
+          statusThrottle.fail(logger.warn, 'Reconciling server statuses failed.', { err: serializeError(err) })
+        );
+    }, 60_000);
     statusTimer.unref();
     require('./analytics/ingest')
       .startIngest()
-      .catch((err) => console.error('[boot] analytics ingest failed:', err));
+      .catch((err) => logger.error('Starting analytics ingest failed.', { err: serializeError(err) }));
     require('./analytics/stats').startStatsIngest({});
     require('./services/liveCache').startLiveCache({});
     // Honor "start on panel boot", and recover servers that crashed while the
@@ -207,7 +241,9 @@ function startBackgroundServices(httpServer) {
       if (!wantStart) continue;
       serversService
         .startServer(s.id, { actor: 'system' })
-        .catch((err) => console.error(`[boot] auto-start ${s.id} failed:`, err.message));
+        .catch((err) =>
+          logger.error('Auto-starting a server on boot failed.', { serverId: s.id, err: serializeError(err) })
+        );
     }
-  })().catch((err) => console.error('[boot] docker background init failed:', err));
+  })().catch((err) => logger.error('Background Docker initialisation failed.', { err: serializeError(err) }));
 }

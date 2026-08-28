@@ -25,6 +25,11 @@ const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { execCapture, inspectStatus } = require('../docker/containers');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const watcherThrottle = makeFailureThrottle();
 const {
   assertUuid,
   assertName,
@@ -435,11 +440,19 @@ function startSnapshotWatcher({ intervalMs = 20000 } = {}) {
     const row = db.get('SELECT MAX(id) AS maxId FROM player_events');
     lastEventId = Number(row && row.maxId) || 0;
   } catch (err) {
-    console.error('[inventory] snapshot watcher init failed:', err.message);
+    logger.error('The inventory snapshot watcher could not read its starting point.', {
+      err: serializeError(err, { includeStack: false }),
+    });
     lastEventId = 0;
   }
   watcherTimer = setInterval(() => {
-    pollPlayerEvents().catch((err) => console.error('[inventory] snapshot watcher:', err.message));
+    pollPlayerEvents()
+      .then(() => watcherThrottle.ok(logger.info, 'The inventory snapshot watcher recovered.'))
+      .catch((err) =>
+        watcherThrottle.fail(logger.warn, 'An inventory snapshot watcher poll failed.', {
+          err: serializeError(err, { includeStack: false }),
+        })
+      );
   }, intervalMs);
   watcherTimer.unref();
 }

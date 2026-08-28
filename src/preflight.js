@@ -39,10 +39,11 @@ try {
 
 if (major < MIN_MAJOR) {
   // node:sqlite loaded (e.g. a 22.x/23.x build with the flag) but we're below the
-  // supported floor - warn, don't block: the operator clearly opted in.
-  console.warn(
+  // supported floor - warn, don't block: the operator clearly opted in. Written
+  // straight to stderr because this runs before the logger exists.
+  process.stderr.write(
     `[preflight] Node.js ${nodeVersion} is below the supported version (Node.js ${MIN_MAJOR}+). ` +
-      `node:sqlite is experimental here; upgrade to Node.js ${MIN_MAJOR} LTS if you hit problems.`
+      `node:sqlite is experimental here; upgrade to Node.js ${MIN_MAJOR} LTS if you hit problems.\n`
   );
 }
 

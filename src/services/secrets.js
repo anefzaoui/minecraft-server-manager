@@ -15,6 +15,8 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const config = require('../config');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 /** Load the dedicated data key, creating+persisting it on first run. */
 function loadOrCreateDataKey() {
@@ -29,15 +31,15 @@ function loadOrCreateDataKey() {
   try {
     fs.mkdirSync(config.dataDir, { recursive: true });
     fs.writeFileSync(keyFile, key.toString('hex') + '\n', { mode: 0o600 });
-    console.log(
-      `[secrets] generated a dedicated at-rest encryption key at ${keyFile}. Keep it with your backups; ` +
-        `losing it means re-entering stored API keys / RCON passwords.`
+    logger.info(
+      'Generated a dedicated at-rest encryption key. Keep it with your backups; losing it means re-entering stored API keys and RCON passwords.',
+      { keyFile }
     );
     return key;
   } catch (err) {
-    console.warn(
-      `[secrets] could not persist ${keyFile} (${err.message}) - falling back to the legacy ` +
-        `SESSION_SECRET-derived key for this run.`
+    logger.warn(
+      'Could not persist the at-rest encryption key; falling back to the legacy SESSION_SECRET-derived key for this run.',
+      { keyFile, err: serializeError(err, { includeStack: false }) }
     );
     return null;
   }
@@ -51,8 +53,8 @@ const LEGACY_KEY = config.sessionSecret ? crypto.scryptSync(config.sessionSecret
 
 const ENCRYPT_KEY = DATA_KEY || LEGACY_KEY;
 if (!ENCRYPT_KEY) {
-  console.warn(
-    '[secrets] no encryption key available - set SESSION_SECRET or make DATA_DIR writable before storing credentials'
+  logger.warn(
+    'No at-rest encryption key is available. Set SESSION_SECRET or make DATA_DIR writable before storing credentials.'
   );
 }
 

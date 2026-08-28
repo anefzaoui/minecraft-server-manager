@@ -20,11 +20,14 @@ RUN pnpm run build
 # Runtime stage: production deps + the app, with the built CSS overlaid.
 FROM node:24-alpine
 WORKDIR /app
+# LOG_PRETTY=false: logs are newline-delimited JSON on stdout for the container
+# runtime to collect; the pretty transport is a dev-only convenience.
 ENV NODE_ENV=production \
     MSM_SKIP_POSTINSTALL=1 \
     DATA_DIR=/data \
     PANEL_HOST=0.0.0.0 \
-    PANEL_PORT=25564
+    PANEL_PORT=25564 \
+    LOG_PRETTY=false
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY scripts ./scripts

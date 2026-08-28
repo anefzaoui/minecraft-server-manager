@@ -4,7 +4,10 @@
 // downloads, backups, world ops, blueprint import) runs as a registered task
 // the UI polls for real progress - no more fake pulse bars.
 
+const path = require('node:path');
 const { nanoid } = require('nanoid');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 const tasks = new Map(); // id -> task
 const TTL_MS = 10 * 60 * 1000; // finished tasks linger for late polls
@@ -78,11 +81,21 @@ function createTask(title, { serverId = null, actor = 'system' } = {}) {
 /** Fire-and-track: returns the task id immediately; fn runs in background. */
 function run(title, opts, fn) {
   const t = createTask(title, opts);
+  const startedAt = Date.now();
+  logger.info('Started a background task.', {
+    taskId: t.id,
+    title,
+    serverId: opts && opts.serverId,
+    actor: opts && opts.actor,
+  });
   Promise.resolve()
     .then(() => fn(t))
-    .then((result) => t.done(result))
+    .then((result) => {
+      logger.info('A background task finished.', { taskId: t.id, title, durationMs: Date.now() - startedAt });
+      t.done(result);
+    })
     .catch((err) => {
-      console.error(`[task] ${title}:`, err.message);
+      logger.error('A background task failed.', { taskId: t.id, title, err: serializeError(err) });
       t.fail(err);
     });
   return t.id;

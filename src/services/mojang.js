@@ -4,7 +4,10 @@
 // Mojang version manifest, cached in SQLite for 6 hours so the wizard's
 // version picker is instant and works briefly offline.
 
+const path = require('node:path');
 const db = require('../db');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 const MANIFEST_URL = 'https://launchermeta.mojang.com/mc/game/version_manifest_v2.json';
 const CACHE_KEY = 'mojang-version-manifest';
@@ -33,6 +36,10 @@ async function getVersionManifest() {
     );
     return slim;
   } catch (err) {
+    logger.debug('Fetching the Mojang version manifest failed.', {
+      err: serializeError(err, { includeStack: false }),
+      servedStale: Boolean(cached),
+    });
     if (cached) return JSON.parse(cached.value_json); // stale beats nothing
     throw err;
   }

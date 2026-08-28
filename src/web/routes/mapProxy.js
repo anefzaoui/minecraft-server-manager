@@ -20,8 +20,10 @@
 
 const http = require('node:http');
 const net = require('node:net');
+const path = require('node:path');
 const express = require('express');
 const config = require('../../config');
+const logger = require('../../logger')(path.basename(__filename));
 const { getDocker } = require('../../docker/connect');
 const containers = require('../../docker/containers');
 const { getMapConfig, BLUEMAP_CONTAINER_PORT } = require('../../services/map');
@@ -48,7 +50,9 @@ async function containerNetworkTargets(server) {
       .filter(Boolean)
       .map((ip) => ({ host: ip, port: CONTAINER_PORT }));
   } catch {
-    return []; // container gone/uninspectable - fall through to the host-port candidate
+    // container gone/uninspectable - fall through to the host-port candidate
+    logger.debug('Could not inspect a container while resolving map proxy targets.', { serverId: server.id });
+    return [];
   }
 }
 
@@ -93,11 +97,13 @@ async function resolveTarget(server, cfg) {
 
 router.use('/:id', async (req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
+    logger.debug('Rejected a non-GET request to the map proxy.', { serverId: req.params.id, method: req.method });
     return res.status(405).send('Method not allowed');
   }
   const server = getServer(req.params.id);
   const cfg = server ? getMapConfig(server.id) : { enabled: false };
   if (!server || !cfg.enabled || !cfg.hostPort) {
+    logger.debug('Rejected a map proxy request for a server without a live map.', { serverId: req.params.id });
     return res.status(404).send('Live map is not enabled for this server');
   }
 
@@ -146,6 +152,11 @@ router.use('/:id', async (req, res) => {
   upstream.on('timeout', () => upstream.destroy(new Error('timeout')));
   upstream.on('error', (err) => {
     targetCache.delete(server.id); // stale - the next request re-probes every candidate
+    logger.warn('A live-map proxy request failed.', {
+      serverId: server.id,
+      target: `${target.host}:${target.port}`,
+      code: err.code || 'timeout',
+    });
     if (res.headersSent) return res.end();
     if (err.code === 'ENOTFOUND') {
       return res

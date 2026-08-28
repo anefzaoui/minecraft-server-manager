@@ -14,6 +14,16 @@ if (!process.env.SESSION_SECRET) {
   process.env.SESSION_SECRET = 'test-session-secret-0123456789abcdef';
 }
 
+// Silence the structured logger for the whole suite. node:test runs each file in
+// its own process, so this is isolated. Tests that assert on logging build their
+// own logger against a sink (see test/logger.test.js).
+if (!process.env.LOG_LEVEL) {
+  process.env.LOG_LEVEL = 'silent';
+}
+process.env.LOG_PRETTY = 'false';
+// Never let a developer's real SENTRY_DSN forward telemetry from a test run.
+delete process.env.SENTRY_DSN;
+
 // Best-effort cleanup when the test process exits.
 process.on('exit', () => {
   try {

@@ -6,6 +6,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const config = require('../config');
+const logger = require('../logger')(path.basename(__filename));
 
 const LAYOUT = [
   'servers',
@@ -43,6 +44,7 @@ function ensureDataRoot() {
 function cleanTmp({ olderThanMs = 0 } = {}) {
   const tmp = path.join(config.dataDir, 'tmp');
   const cutoff = Date.now() - olderThanMs;
+  let removed = 0;
   for (const entry of fs.readdirSync(tmp)) {
     const abs = path.join(tmp, entry);
     if (olderThanMs > 0) {
@@ -50,12 +52,14 @@ function cleanTmp({ olderThanMs = 0 } = {}) {
       try {
         stat = fs.statSync(abs);
       } catch {
-        continue; // vanished mid-scan
+        continue; // intentional: entry vanished between readdir and stat
       }
       if (stat.mtimeMs > cutoff) continue; // too fresh - may be in flight
     }
     fs.rmSync(abs, { recursive: true, force: true });
+    removed += 1;
   }
+  if (removed) logger.debug('Cleared temporary working files.', { removed, olderThanMs });
 }
 
 module.exports = { ensureDataRoot, cleanTmp, LAYOUT };

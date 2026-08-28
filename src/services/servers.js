@@ -22,6 +22,8 @@ const { fetchLogs } = require('../docker/logs');
 const dockerSpec = require('./dockerSpec');
 const settings = require('./settings');
 const { withSaveLock } = require('./serverLocks');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 function rowToServer(row) {
   if (!row) return null;
@@ -372,7 +374,10 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     // it can leak a real Docker container with nothing pointing back to it, so
     // it's worth a trace even though it doesn't block the rollback.
     await containers.removeContainer(id).catch((cleanupErr) => {
-      console.warn(`[servers] rollback: could not remove partial container for ${id}: ${cleanupErr.message}`);
+      logger.warn('Could not remove a partial container while rolling back a failed create.', {
+        serverId: id,
+        err: serializeError(cleanupErr, { includeStack: false }),
+      });
     });
     db.run('DELETE FROM servers WHERE id = ?', id);
     try {
@@ -398,6 +403,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     summary: `Server created: ${input.name} (${server.type} ${server.mc_version}, port ${ports.game})`,
     details: { type: server.type, mcVersion: server.mc_version, ports },
   });
+  logger.info('Created a server.', { serverId: id, actor, type: server.type, mcVersion: server.mc_version });
 
   // Every server gets a daily backup schedule out of the box - otherwise the
   // only backups that ever happen automatically are the pre-update ones, and a
@@ -414,7 +420,10 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
         { actor }
       );
     } catch (err) {
-      console.warn(`[servers] could not seed default backup schedule for ${id}: ${err.message}`);
+      logger.warn('Could not seed the default backup schedule for a new server.', {
+        serverId: id,
+        err: serializeError(err, { includeStack: false }),
+      });
     }
   }
 
@@ -464,6 +473,7 @@ async function startServerImpl(id, { actor = 'system' } = {}) {
   await containers.startContainer(id);
   db.run("UPDATE servers SET status = 'starting', last_started_at = datetime('now') WHERE id = ?", id);
   recordEvent({ serverId: id, actor, type: 'started', summary: 'Server start requested' });
+  logger.info('Started a server.', { serverId: id, actor });
 }
 
 async function stopServerImpl(id, { actor = 'system' } = {}) {
@@ -496,6 +506,7 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
     summary: 'Server stopped gracefully',
     logExcerpt: excerpt || null,
   });
+  logger.info('Stopped a server.', { serverId: id, actor });
 }
 
 async function restartServerImpl(id, { actor = 'system' } = {}) {
@@ -529,7 +540,10 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   // tears it down regardless - but log it so a chronically wedged daemon is visible.
   if (wasRunning) {
     await containers.stopContainer(id).catch((err) => {
-      console.warn(`[servers] recreate ${id}: graceful stop failed (${err.message}); forcing removal`);
+      logger.warn('A graceful stop failed while recreating a server; forcing removal.', {
+        serverId: id,
+        err: serializeError(err, { includeStack: false }),
+      });
     });
   }
   await containers.removeContainer(id);
@@ -738,7 +752,11 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = false } = {}
     try {
       scheduler.deleteSchedule(sched.id, { actor });
     } catch (err) {
-      console.error(`[delete] schedule ${sched.id}:`, err.message);
+      logger.error('Could not delete a schedule while deleting its server.', {
+        serverId: id,
+        scheduleId: sched.id,
+        err: serializeError(err),
+      });
     }
   }
 
@@ -782,6 +800,7 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = false } = {}
     summary: `Server deleted: ${server.display_name}${keepWorld ? ' (world kept on disk)' : ''}`,
     details: { keepWorld, freedBytes },
   });
+  logger.info('Deleted a server.', { serverId: id, actor, keepWorld, freedBytes });
   return { freedBytes };
 }
 
@@ -821,7 +840,9 @@ async function refreshStatuses({ boot = false } = {}) {
 }
 
 async function refreshStatusesInner({ boot }) {
-  for (const server of listServers()) {
+  let failed = 0;
+  const all = listServers();
+  for (const server of all) {
     try {
       const info = await containers.inspectStatus(server.id);
       let status = info.exists ? info.status : 'stopped';
@@ -885,9 +906,19 @@ async function refreshStatusesInner({ boot }) {
       }
 
       if (status !== server.status) db.run('UPDATE servers SET status = ? WHERE id = ?', status, server.id);
-    } catch {
-      /* daemon offline - leave cached */
+    } catch (err) {
+      failed += 1;
+      logger.debug('Skipped a server while refreshing status.', {
+        serverId: server.id,
+        err: serializeError(err, { includeStack: false }),
+      });
     }
+  }
+  if (failed > 0) {
+    logger.warn('Some servers could not be refreshed; the Docker daemon may be offline.', {
+      failed,
+      total: all.length,
+    });
   }
 }
 

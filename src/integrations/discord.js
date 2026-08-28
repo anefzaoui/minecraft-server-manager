@@ -6,9 +6,15 @@
 // per-event toggles live in plain config_json. Delivery is fire-and-forget:
 // a broken webhook must never break panel operations.
 
+const path = require('node:path');
 const httpError = require('../utils/httpError');
 const db = require('../db');
 const secrets = require('../services/secrets');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const bridgeThrottle = makeFailureThrottle();
 
 const KIND = 'discord-webhook';
 
@@ -196,7 +202,10 @@ function logThrottled(serverId, err) {
   const last = lastErrorLog.get(serverId) || 0;
   if (Date.now() - last < 60 * 60 * 1000) return;
   lastErrorLog.set(serverId, Date.now());
-  console.warn(`[discord] webhook delivery failed for ${serverId} (muted for 1h): ${err.message}`);
+  logger.warn('Discord webhook delivery failed; muting this server for an hour.', {
+    serverId,
+    err: serializeError(err, { includeStack: false }),
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -212,9 +221,16 @@ function startEventBridge({ intervalMs = 15000 } = {}) {
   // Start at the current high-water mark: never replay pre-boot history.
   lastSeenId = db.get('SELECT COALESCE(MAX(id), 0) AS id FROM events')?.id || 0;
   pollTimer = setInterval(() => {
-    pollOnce().catch((err) => console.warn('[discord] event bridge poll failed:', err.message));
+    pollOnce()
+      .then(() => bridgeThrottle.ok(logger.info, 'The Discord event bridge recovered.'))
+      .catch((err) =>
+        bridgeThrottle.fail(logger.warn, 'A Discord event bridge poll failed.', {
+          err: serializeError(err, { includeStack: false }),
+        })
+      );
   }, intervalMs);
   if (pollTimer.unref) pollTimer.unref();
+  logger.debug('Started the Discord event bridge.', { intervalMs });
 }
 
 function stopEventBridge() {

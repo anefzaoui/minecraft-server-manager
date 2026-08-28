@@ -5,9 +5,12 @@
 // against the latest available, caching results in update_checks. Scheduled
 // daily + on-demand; API-friendly (all lookups go through cached clients).
 
+const path = require('node:path');
 const db = require('../db');
 const { recordEvent } = require('../events');
 const serversService = require('../services/servers');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 const packsService = require('../services/packs');
 const modrinth = require('../services/modrinthApi');
 const curseforge = require('../services/curseforgeApi');
@@ -37,6 +40,8 @@ const LOADER_BUILD_ENV_KEY = {
 };
 
 async function checkAll({ actor = 'scheduler' } = {}) {
+  const startedAt = Date.now();
+  logger.info('Started an update check.', { actor });
   const findings = [];
   // Many servers often resolve to the same image ref (e.g. all java21) - pull
   // and resolve each DISTINCT ref once per run rather than once per server.
@@ -67,8 +72,11 @@ async function checkAll({ actor = 'scheduler' } = {}) {
             latest: result.latest.name,
           });
       }
-    } catch {
-      /* pack platform unreachable - keep old cache */
+    } catch (err) {
+      logger.debug('A pack update lookup failed; keeping the cached result.', {
+        serverId: server.id,
+        err: serializeError(err, { includeStack: false }),
+      });
     }
 
     // Overlay mod updates
@@ -113,8 +121,13 @@ async function checkAll({ actor = 'scheduler' } = {}) {
               latest: latest.name,
             });
         }
-      } catch {
-        /* skip this mod */
+      } catch (err) {
+        logger.debug('An overlay mod update lookup failed; skipping this mod.', {
+          serverId: server.id,
+          mod: row.name,
+          platform: row.platform,
+          err: serializeError(err, { includeStack: false }),
+        });
       }
     }
 
@@ -124,7 +137,12 @@ async function checkAll({ actor = 'scheduler' } = {}) {
       if (status.exists && status.imageId) {
         const ref = serversService.resolveImage(server);
         if (!imageIdCache.has(ref)) {
-          await images.pullImage(ref).catch(() => {});
+          await images.pullImage(ref).catch((err) =>
+            logger.debug('Pulling an image during the update check failed.', {
+              ref,
+              err: serializeError(err, { includeStack: false }),
+            })
+          );
           imageIdCache.set(ref, await images.imageId(ref));
         }
         const latestId = imageIdCache.get(ref);
@@ -139,8 +157,11 @@ async function checkAll({ actor = 'scheduler' } = {}) {
             latest: shortId(latestId),
           });
       }
-    } catch {
-      /* docker unreachable - keep old cache */
+    } catch (err) {
+      logger.debug('An image update check failed; keeping the cached result.', {
+        serverId: server.id,
+        err: serializeError(err, { includeStack: false }),
+      });
     }
 
     // Standalone (non-pack) Minecraft version / loader build updates - only
@@ -149,8 +170,11 @@ async function checkAll({ actor = 'scheduler' } = {}) {
     if (!packsService.getPack(server.id)) {
       try {
         await checkStandaloneVersion(server, findings);
-      } catch {
-        /* registry unreachable - keep old cache */
+      } catch (err) {
+        logger.debug('A standalone version update check failed; keeping the cached result.', {
+          serverId: server.id,
+          err: serializeError(err, { includeStack: false }),
+        });
       }
     }
   }
@@ -167,6 +191,11 @@ async function checkAll({ actor = 'scheduler' } = {}) {
       ? `Update check: ${findings.length} update(s) available`
       : 'Update check: everything up to date',
     details: { findings },
+  });
+  logger.info('Finished an update check.', {
+    actor,
+    updatesAvailable: findings.length,
+    durationMs: Date.now() - startedAt,
   });
   return findings;
 }

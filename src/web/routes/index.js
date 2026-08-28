@@ -13,6 +13,18 @@ const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
+const logger = require('../../logger')('pages');
+const { serializeError } = require('../../utils/logSanitize');
+
+// Page renders degrade gracefully when optional/remote data is unavailable
+// (Docker down, no network, no API key). Record it at debug so "why is this
+// list empty" is answerable without adding noise at the default level.
+function pageDegraded(what, err) {
+  logger.debug('Rendered a page with degraded data.', {
+    what,
+    err: err ? serializeError(err, { includeStack: false }) : undefined,
+  });
+}
 
 const router = express.Router();
 
@@ -162,21 +174,21 @@ router.get('/servers/new', async (req, res) => {
     // offer the full history; the template groups them by type.
     versions = await mojang.listVersions({ includeAll: true, limit: 5000 });
     latestRelease = (await mojang.getVersionManifest()).latest.release;
-  } catch {
-    /* offline - manual entry still works */
+  } catch (err) {
+    pageDegraded('wizard-mojang-versions', err); // offline - manual entry still works
   }
   // Whether the "From mods" tab can offer CurseForge search (needs the stored key).
   let curseforgeEnabled = false;
   try {
     curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
-  } catch {
-    /* no key store yet */
+  } catch (err) {
+    pageDegraded('wizard-curseforge-key', err); // no key store yet
   }
   let suggestedPort = 25565;
   try {
     suggestedPort = (await require('../../services/ports').suggestPorts()).game;
-  } catch {
-    /* daemon down */
+  } catch (err) {
+    pageDegraded('wizard-suggested-port', err); // daemon down
   }
   const catalog = require('../../config/field-catalog');
   const SIMPLE_SECTIONS = new Set(['identity', 'flavor', 'resources']); // covered by the Simple UI
@@ -226,8 +238,8 @@ router.get(
         .listPlayers(row.id, onlineNames)
         .find((p) => (p.name || '').toLowerCase() === name.toLowerCase());
       if (found) player = found;
-    } catch {
-      /* offline / rcon down - render with the fallback */
+    } catch (err) {
+      pageDegraded('player-page-roster', err); // offline / RCON down - render with the fallback
     }
     res.render('server-player', {
       title: `${player.name} · ${server.name}`,
@@ -322,7 +334,8 @@ router.get(
           ? listing.path.split('/').map((seg, i, a) => ({ name: seg, path: a.slice(0, i + 1).join('/') }))
           : [];
         context.parentPath = context.crumbs.length > 1 ? context.crumbs[context.crumbs.length - 2].path : '';
-      } catch {
+      } catch (err) {
+        pageDegraded('server-files-tab', err);
         context.files = [];
         context.filePath = '';
         context.crumbs = [];
@@ -412,7 +425,8 @@ router.get(
         context.players = playersService.listPlayers(row.id, online);
         context.bannedIps = playersService.listBannedIps(row.id);
         context.whitelistEnforced = playersService.getWhitelistEnforced(row.id);
-      } catch {
+      } catch (err) {
+        pageDegraded('server-players-tab', err);
         context.players = [];
         context.bannedIps = [];
         context.whitelistEnforced = false;
@@ -689,7 +703,8 @@ router.get(
     let listing;
     try {
       listing = await filesService.list(null, rel);
-    } catch {
+    } catch (err) {
+      pageDegraded('global-files-bad-path', err);
       return res.redirect('/files'); // stale/invalid path - back to the root
     }
     const crumbs = listing.path

@@ -54,6 +54,24 @@ test('a too-short SESSION_SECRET fails fast', () => {
   assert.match(res.stderr, /SESSION_SECRET/);
 });
 
+test('a bogus LOG_LEVEL fails fast with a clear message', () => {
+  const res = loadConfig({ LOG_LEVEL: 'verbose' });
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /LOG_LEVEL/);
+});
+
+test('LOG_LEVEL=silent is accepted', () => {
+  const res = loadConfig({ LOG_LEVEL: 'silent' });
+  assert.equal(res.status, 0, res.stderr);
+});
+
+test('config exposes a normalized logLevel and an inert sentry block', () => {
+  const config = require('../src/config');
+  assert.ok(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'].includes(config.logLevel));
+  assert.equal(typeof config.sentry.enabled, 'boolean');
+  assert.equal(config.sentry.enabled, false);
+});
+
 function loadMapProxyHost(extraEnv) {
   const res = spawnSync(process.execPath, ['-e', "process.stdout.write(require('./src/config').mapProxyHost)"], {
     cwd: ROOT,

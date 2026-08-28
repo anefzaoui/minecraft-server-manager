@@ -13,6 +13,8 @@ const playerNotes = require('../../services/playerNotes');
 const { inspectStatus } = require('../../docker/containers');
 const biomes = require('../../config/biomes');
 const { PLAYER_NAME_RE } = require('../../utils/playerName');
+const logger = require('../../logger')('players-api');
+const { serializeError } = require('../../utils/logSanitize');
 
 const router = express.Router({ mergeParams: true });
 
@@ -108,7 +110,7 @@ async function loadContext(req) {
     const info = await inspectStatus(server.id);
     running = info.exists && RUNNING_STATES.has(info.status);
   } catch {
-    /* docker down - fall back to file edits */
+    // intentional: Docker down - fall back to file edits, `running` stays false
   }
   return { server, ctx: { running, actor: req.user.username } };
 }
@@ -132,7 +134,11 @@ router.get('/structures', async (req, res) => {
   try {
     const { ctx } = await loadContext(req);
     res.json({ ok: true, structures: await players.getServerStructures(req.params.id, { running: ctx.running }) });
-  } catch {
+  } catch (err) {
+    logger.debug('Could not build the structure list; returning an empty list.', {
+      serverId: req.params.id,
+      err: serializeError(err, { includeStack: false }),
+    });
     res.json({ ok: true, structures: [] });
   }
 });
@@ -153,7 +159,11 @@ router.get('/biomes', async (req, res, next) => {
     }
     const list = [...seen.values()];
     res.json({ ok: true, biomes: list, source: list.length > 70 ? 'server' : 'bundled' });
-  } catch {
+  } catch (err) {
+    logger.debug('Could not build the server biome registry; returning the bundled list.', {
+      serverId: req.params.id,
+      err: serializeError(err, { includeStack: false }),
+    });
     res.json({ ok: true, biomes: biomes.map((id) => ({ id, dimension: 'minecraft:overworld' })), source: 'bundled' });
   }
 });

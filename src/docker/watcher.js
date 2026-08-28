@@ -4,11 +4,14 @@
 // containers into history events, updates cached status, and drives crash
 // detection with auto-restart backoff.
 
+const path = require('node:path');
 const { getDocker } = require('./connect');
 const { LABEL, inspectStatus } = require('./containers');
 const { fetchLogs } = require('./logs');
 const { recordEvent } = require('../events');
 const db = require('../db');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 const MAX_RAPID_CRASHES = 3;
 const CRASH_WINDOW_MINUTES = 10;
@@ -32,9 +35,11 @@ async function startWatcher() {
       buffer = buffer.slice(idx + 1);
       if (!line) continue;
       try {
-        handleEvent(JSON.parse(line)).catch((err) => console.error('[watcher]', err.message));
+        handleEvent(JSON.parse(line)).catch((err) =>
+          logger.error('Handling a Docker event failed.', { err: serializeError(err) })
+        );
       } catch {
-        /* partial frame */
+        // intentional: partial JSON frame - wait for the rest of the line
       }
     }
   });
@@ -45,7 +50,7 @@ async function startWatcher() {
   };
   s.on('error', onDrop);
   s.on('end', onDrop);
-  console.log('[watcher] docker events stream connected');
+  logger.info('Connected to the Docker events stream.');
 }
 
 /** Schedule a reconnect. Keeps retrying forever; never dies after one failure. */
@@ -54,7 +59,9 @@ function retryLater() {
   retryTimer = setTimeout(() => {
     retryTimer = null;
     startWatcher().catch((err) => {
-      console.error('[watcher] reconnect failed, retrying in 5s:', err.message);
+      logger.warn('Reconnecting to the Docker events stream failed; retrying in 5 seconds.', {
+        err: serializeError(err, { includeStack: false }),
+      });
       retryLater();
     });
   }, 5000);
@@ -201,7 +208,10 @@ async function handleEvent(evt) {
         });
       }
     } catch (err) {
-      console.error('[watcher] auto-restart failed:', err.message);
+      logger.error('An automatic restart after a crash failed.', {
+        serverId,
+        err: serializeError(err),
+      });
     }
   }, delayMs).unref();
 }

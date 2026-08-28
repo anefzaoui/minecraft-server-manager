@@ -11,6 +11,9 @@ const { icon } = require('./icons');
 const { avatarSrc } = require('../config/avatars');
 const { marked } = require('marked');
 const sanitizeHtml = require('sanitize-html');
+const logger = require('../logger')('web');
+const { captureError } = require('../instrument');
+const { serializeError } = require('../utils/logSanitize');
 
 function markdown(text) {
   if (!text) return '';
@@ -221,6 +224,11 @@ function createApp() {
     jsonParser(req, res, next);
   });
 
+  // Access log: one line per request on `res` finish (static assets + /healthz
+  // skipped). Placed after trust-proxy so req.ip is right, and it reads req.user
+  // set later by requireAuth by the time 'finish' fires.
+  app.use(require('./middleware/requestLog'));
+
   // Unauthenticated liveness/readiness probe for uptime monitors and
   // orchestrators. Exposes nothing - just whether the process is up and the
   // database is answering (the version string is deliberately not published
@@ -229,7 +237,10 @@ function createApp() {
     try {
       require('../db').get('SELECT 1');
       res.json({ ok: true });
-    } catch {
+    } catch (err) {
+      logger.warn('The health check could not reach the database.', {
+        err: serializeError(err, { includeStack: false }),
+      });
       res.status(503).json({ ok: false, error: 'database unavailable' });
     }
   });
@@ -291,7 +302,17 @@ function createApp() {
     // body-parser's 413 PayloadTooLargeError, a 400 from a malformed JSON body) -
     // those are client errors, not a panel fault, and shouldn't read as a 500.
     const code = Number(err.status || err.statusCode) || 500;
-    if (code >= 500) console.error(err);
+    if (code >= 500) {
+      logger.error('Unhandled error in the web layer.', {
+        method: req.method,
+        path: req.originalUrl.split('?')[0],
+        status: code,
+        userId: req.user ? req.user.id : undefined,
+        requestId: req.requestId,
+        err: serializeError(err),
+      });
+      captureError(err, { scope: 'web-html', path: req.path });
+    }
     if (req.path.startsWith('/api/') || req.xhr) {
       return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large' : 'Request failed' });
     }

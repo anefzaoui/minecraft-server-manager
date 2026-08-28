@@ -7,6 +7,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const db = require('./index');
+const logger = require('../logger')(path.basename(__filename));
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
@@ -32,7 +33,7 @@ function migrate() {
       db.run('INSERT INTO schema_migrations (version) VALUES (?)', version);
     });
     count += 1;
-    console.log(`[db] applied migration ${version}`);
+    logger.info('Applied a database migration.', { version });
   }
   return count;
 }

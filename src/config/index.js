@@ -9,6 +9,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const crypto = require('node:crypto');
 
+const { normalizeLogLevel } = require('./logLevel');
+
 const root = path.resolve(__dirname, '..', '..');
 const dataDir = path.resolve(root, process.env.DATA_DIR || './data');
 
@@ -29,6 +31,49 @@ function numFromEnv(name, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } =
     );
   }
   return n;
+}
+
+/**
+ * Like numFromEnv but accepts non-integers (e.g. a 0..1 sample rate). Same
+ * fail-fast contract: set-but-out-of-range throws rather than silently defaulting.
+ */
+function numFloatFromEnv(name, fallback, { min = 0, max = Number.MAX_VALUE } = {}) {
+  const raw = process.env[name];
+  if (raw === undefined || String(raw).trim() === '') return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < min || n > max) {
+    throw new Error(
+      `${name} must be a number between ${min} and ${max} - got "${raw}". Fix it in your .env (or leave it blank for the default ${fallback}).`
+    );
+  }
+  return n;
+}
+
+/**
+ * Pino log level. Allowlisted (fatal|error|warn|info|debug|trace|silent); a
+ * set-but-bogus value fails fast at boot. Default 'info'.
+ */
+function resolveLogLevel() {
+  return normalizeLogLevel(process.env.LOG_LEVEL, { strict: true }) || 'info';
+}
+
+/**
+ * Error/trace reporting settings. Inert unless SENTRY_DSN is set - the panel
+ * ships with Pino logging only, and this block is a forward-looking mirror of
+ * what src/instrument.js would consume.
+ */
+function resolveSentry() {
+  const dsn = (process.env.SENTRY_DSN || '').trim();
+  return {
+    dsn,
+    enabled: dsn !== '',
+    environment: (process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development').trim(),
+    tracesSampleRate: numFloatFromEnv('SENTRY_TRACES_SAMPLE_RATE', 0, { min: 0, max: 1 }),
+    enableLogs:
+      String(process.env.SENTRY_ENABLE_LOGS || '')
+        .trim()
+        .toLowerCase() === 'true',
+  };
 }
 
 /**
@@ -212,6 +257,8 @@ const config = {
   trustProxy: resolveTrustProxy(),
   cookieSecure: resolveCookieSecure(),
   cookieSameSite: resolveCookieSameSite(),
+  logLevel: resolveLogLevel(),
+  sentry: resolveSentry(),
   mapProxyHost: resolveMapProxyHost(),
 
   // Docker image repository for Minecraft servers. Override for a private mirror

@@ -11,6 +11,8 @@ const { dataPath } = require('../storage/pathGuard');
 const serversService = require('../services/servers');
 const { activeLevelName } = require('../services/worlds');
 const { uuidToDashed } = require('../services/mojangProfiles');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 // 'stalled' is still a live container (see liveCache.js's sync()) - keep
 // snapshotting its stats instead of leaving a gap for the stall's duration.
@@ -166,7 +168,10 @@ function startStatsIngest({ intervalMs = 5 * 60 * 1000 } = {}) {
       try {
         await ingestStats(server.id);
       } catch (err) {
-        console.error(`[analytics] stats ingest ${server.id} failed:`, err.message);
+        logger.warn('Stat ingestion for a server failed.', {
+          serverId: server.id,
+          err: serializeError(err, { includeStack: false }),
+        });
       }
     }
   };

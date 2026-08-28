@@ -83,6 +83,31 @@ Prefer the shared helpers over re-implementing patterns:
 - `src/web/middleware/asyncHandler.js` - wraps async route handlers so rejections reach the error
   handler. Prefer it over hand-written `try/catch → next(err)`.
 
+## Logging
+
+Server code logs through `src/logger.js`, never `console.*` (ESLint enforces this under `src/`; only
+`preflight.js`, `instrument.js`, and `config/index.js` run before the logger exists and are exempt).
+At the top of a module:
+
+```js
+const logger = require('../logger')(require('node:path').basename(__filename));
+```
+
+- **Message string:** one plain sentence, sentence case, ending in `.`, `!`, or `?`, with **no
+  colon**. Every variable goes in the structured second argument, not interpolated into the text -
+  `logger.info('Started a server.', { serverId, actor })`, not ``logger.info(`Started server ${id}`)``.
+- **Levels:** `info` = start/finish of a state-changing operation; `debug` = rejected input, early
+  returns, intermediate steps, high-frequency read paths; `warn` = recoverable failure; `error` =
+  a failure carrying a stack (pair it with `captureError(err, …)` from `src/instrument.js`); `fatal`
+  = the process is going down.
+- **One owner per error.** A `catch` that rethrows or calls `next(err)` does not log - the error
+  handler owns it. A `catch` that swallows and handles locally logs exactly once.
+- **Secrets:** `src/utils/logSanitize.js` redacts secret-shaped keys and strips URL query strings,
+  but don't hand the logger request bodies, passwords, tokens, or full entity lists - pass ids and
+  counts. In hot loop bodies pass primitives only.
+- High-frequency background loops use `makeFailureThrottle()` from `src/logger.js` so a persistent
+  failure logs once, not every tick.
+
 ## Reporting bugs / requesting features
 
 Open an issue with clear reproduction steps (and your OS + Docker flavor for anything

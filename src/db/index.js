@@ -7,6 +7,7 @@
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const config = require('../config');
+const logger = require('../logger')('db');
 
 let db = null;
 
@@ -22,6 +23,7 @@ function open() {
   db.exec('PRAGMA journal_mode = WAL');
   db.exec('PRAGMA foreign_keys = ON');
   db.exec('PRAGMA busy_timeout = 5000');
+  logger.debug('Opened the panel database.');
   return db;
 }
 
@@ -81,7 +83,7 @@ function backupTo(destPath) {
   try {
     d.exec('PRAGMA wal_checkpoint(TRUNCATE)');
   } catch {
-    /* checkpoint is best-effort; VACUUM INTO still produces a valid copy */
+    // intentional: checkpoint is best-effort; VACUUM INTO still produces a valid copy
   }
   d.exec(`VACUUM INTO '${String(destPath).replace(/'/g, "''")}'`);
 }

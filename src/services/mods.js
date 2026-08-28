@@ -22,6 +22,11 @@ const modrinth = require('./modrinthApi');
 const curseforge = require('./curseforgeApi');
 const serversService = require('./servers');
 const indexer = require('../storage/indexer');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+
+const onRescanFailed = (err) =>
+  logger.debug('A background library rescan failed to start.', { err: serializeError(err, { includeStack: false }) });
 
 const PLUGIN_TYPES = new Set(['PAPER', 'PURPUR', 'PUFFERFISH', 'LEAF', 'FOLIA', 'SPIGOT', 'BUKKIT', 'CANYON']);
 
@@ -384,7 +389,8 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
       (overrideBits.length ? ` - ${overrideBits.join(', ')}, installed anyway (compatibility check overridden)` : ''),
     details: { libraryId: lib.id, filename, versionOverridden, loaderOverridden },
   });
-  indexer.scan().catch(() => {});
+  logger.info('Installed custom content on a server.', { serverId, actor, kind: targetKind, filename });
+  indexer.scan().catch(onRescanFailed);
   return { library: lib, filename, versionOverridden, loaderOverridden };
 }
 
@@ -472,6 +478,7 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
     type: 'mod-removed',
     summary: `Removed ${file} (${(freed / 1024 / 1024).toFixed(1)} MB freed)`,
   });
+  logger.info('Removed content from a server.', { serverId, actor, file, freedBytes: freed });
   return { freedBytes: freed };
 }
 
@@ -657,7 +664,7 @@ async function importUploadedMod(serverId, tmpPath, origName, { excludeToken, ac
     summary: `Uploaded ${targetKind} installed: ${lib.name}`,
     details: { filename: installed },
   });
-  indexer.scan().catch(() => {});
+  indexer.scan().catch(onRescanFailed);
   return { filename: installed, excluded: excludeToken || null };
 }
 

@@ -14,12 +14,14 @@ const { statsStream } = require('../docker/stats');
 const { execCapture, inspectStatus } = require('../docker/containers');
 const { getServer } = require('../services/servers');
 const { recordEvent } = require('../events');
+const logger = require('../logger')('ws');
+const { serializeError } = require('../utils/logSanitize');
 
 function attachWebSockets(httpServer) {
   // maxPayload caps inbound frame size so a client can't buffer huge frames in
   // memory before our handlers run (commands are trimmed to 500 chars anyway).
   const wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
-  wss.on('error', (err) => console.warn('[ws] server error:', err.message));
+  wss.on('error', (err) => logger.warn('The WebSocket server hit an error.', { err: serializeError(err) }));
 
   httpServer.on('upgrade', (req, socket, head) => {
     const match = /^\/ws\/(console|stats)\/([a-zA-Z0-9_-]+)$/.exec(req.url.split('?')[0]);
@@ -33,12 +35,14 @@ function attachWebSockets(httpServer) {
     // it. A missing Origin is a non-browser client (scripts, tests), which the
     // signed session cookie still gates below.
     if (!originAllowed(req)) {
+      logger.warn('Rejected a cross-origin WebSocket upgrade.', { path: req.url.split('?')[0] });
       socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
       socket.destroy();
       return;
     }
     const user = sessionUser(req);
     if (!user) {
+      logger.warn('Rejected a WebSocket upgrade with no valid session.', { path: req.url.split('?')[0] });
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       socket.destroy();
       return;
@@ -54,6 +58,7 @@ function attachWebSockets(httpServer) {
     });
   });
 
+  logger.info('Attached the WebSocket server.');
   return wss;
 }
 
@@ -73,7 +78,7 @@ async function handleConsole(ws, serverId, user) {
   // become an unhandled 'error' event that crashes the whole process; (2) a client
   // that disconnects during the subscribe still triggers cleanup once it exists.
   ws.on('error', (err) => {
-    console.warn('[ws] console socket error:', err.message);
+    logger.debug('A console WebSocket errored.', { err: serializeError(err, { includeStack: false }) });
     cleanup();
   });
   ws.on('close', cleanup);
@@ -83,7 +88,7 @@ async function handleConsole(ws, serverId, user) {
     try {
       msg = JSON.parse(raw.toString('utf8'));
     } catch {
-      return;
+      return; // intentional: ignore a malformed inbound frame
     }
     if (msg.kind !== 'cmd' || typeof msg.command !== 'string') return;
     // Viewers may watch logs but never execute commands.
@@ -113,6 +118,10 @@ async function handleConsole(ws, serverId, user) {
         details: { output: output.trim().slice(0, 2000) },
       });
     } catch (err) {
+      logger.debug('An RCON command from the console socket failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
       send({ kind: 'cmd-result', command, output: '', error: err.message });
     }
   });
@@ -191,6 +200,10 @@ function subscribeConsole(serverId, sub) {
           for (const s of broker.subs) s.onEnd();
         });
         follower.stream.on('error', (err) => {
+          logger.debug('A console log stream errored.', {
+            serverId,
+            err: serializeError(err, { includeStack: false }),
+          });
           for (const s of broker.subs) s.onError(`Log stream error: ${err.message}`);
         });
       })
@@ -201,6 +214,10 @@ function subscribeConsole(serverId, sub) {
         if (err.statusCode === 404) {
           for (const s of broker.subs) s.onEnd();
         } else {
+          logger.debug('A console log stream could not be opened.', {
+            serverId,
+            err: serializeError(err, { includeStack: false }),
+          });
           for (const s of broker.subs) s.onError(`Log stream unavailable: ${err.message}`);
         }
       });
@@ -267,7 +284,7 @@ async function handleStats(ws, serverId) {
   // Synchronous 'error'/'close' listeners: no unhandled 'error' crash, and a
   // disconnect right after subscribing still unsubscribes.
   ws.on('error', (err) => {
-    console.warn('[ws] stats socket error:', err.message);
+    logger.debug('A stats WebSocket errored.', { err: serializeError(err, { includeStack: false }) });
     cleanup();
   });
   ws.on('close', cleanup);
@@ -338,7 +355,12 @@ function announceConsoleAction(serverId, command) {
       { text: command, color: 'gray' },
     ],
   };
-  execCapture(serverId, ['rcon-cli', '--', 'tellraw', '@a', JSON.stringify(payload)]).catch(() => {});
+  execCapture(serverId, ['rcon-cli', '--', 'tellraw', '@a', JSON.stringify(payload)]).catch((err) => {
+    logger.debug('Announcing a console action in-game did not send.', {
+      serverId,
+      err: serializeError(err, { includeStack: false }),
+    });
+  });
 }
 
 module.exports = { attachWebSockets, originAllowed };

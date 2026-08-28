@@ -8,9 +8,15 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const config = require('../config');
 const db = require('../db');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
 
 let scanning = false;
 let timer = null;
+const scanThrottle = makeFailureThrottle();
+const onScanFailed = (err) =>
+  scanThrottle.fail(logger.warn, 'A storage index scan failed.', { err: serializeError(err, { includeStack: false }) });
 
 /** Directories whose sizes we track individually (top-level categories + per-server/per-library-kind). */
 async function scan() {
@@ -28,7 +34,7 @@ async function scan() {
       try {
         entries = await fs.readdir(abs, { withFileTypes: true });
       } catch {
-        return { size: 0, files: 0 };
+        return { size: 0, files: 0 }; // intentional: directory not present or unreadable
       }
       for (const entry of entries) {
         const childAbs = path.join(abs, entry.name);
@@ -43,7 +49,7 @@ async function scan() {
             size += st.size;
             files += 1;
           } catch {
-            /* transient */
+            // intentional: file vanished between readdir and stat
           }
         }
       }
@@ -82,6 +88,7 @@ async function scan() {
       'DELETE FROM storage_snapshots WHERE id NOT IN (SELECT id FROM storage_snapshots ORDER BY id DESC LIMIT 500)'
     );
 
+    scanThrottle.ok(logger.info, 'The storage index scan recovered.');
     return { totalBytes: total.size, dirs: results.size, ms: Date.now() - started };
   } finally {
     scanning = false;
@@ -89,8 +96,8 @@ async function scan() {
 }
 
 function startIndexer({ intervalMs = 15 * 60 * 1000 } = {}) {
-  scan().catch((err) => console.error('[indexer]', err.message));
-  timer = setInterval(() => scan().catch((err) => console.error('[indexer]', err.message)), intervalMs);
+  scan().catch(onScanFailed);
+  timer = setInterval(() => scan().catch(onScanFailed), intervalMs);
   timer.unref();
 }
 
@@ -104,7 +111,7 @@ function scheduleScan({ delayMs = 45_000 } = {}) {
   if (debounceTimer) return;
   debounceTimer = setTimeout(() => {
     debounceTimer = null;
-    scan().catch((err) => console.error('[indexer]', err.message));
+    scan().catch(onScanFailed);
   }, delayMs);
   debounceTimer.unref();
 }
@@ -176,7 +183,17 @@ async function enforceStrictQuotas() {
         type: 'quota-exceeded',
         summary: `Strict quota: usage ${(used / 1024 ** 3).toFixed(1)} GB exceeds quota by >10% - stopping server`,
       });
-      await stopServer(s.id, { actor: 'system' }).catch(() => {});
+      logger.warn('Stopping a server that is more than 10 percent over its strict disk quota.', {
+        serverId: s.id,
+        usedBytes: used,
+        quotaBytes: s.disk_quota_bytes,
+      });
+      await stopServer(s.id, { actor: 'system' }).catch((err) => {
+        logger.error('Could not stop a server that exceeded its strict disk quota.', {
+          serverId: s.id,
+          err: serializeError(err),
+        });
+      });
     }
   }
 }

@@ -25,6 +25,8 @@ const dockerNetworks = require('../../docker/networks');
 const dockerSpec = require('../../services/dockerSpec');
 const { dockerOverridesSchema, requireAdminForOverrides } = require('./dockerOverridesSchema');
 const { matchesImageType } = require('../../utils/sniffImage');
+const logger = require('../../logger')('api');
+const { serializeError } = require('../../utils/logSanitize');
 
 const router = express.Router();
 
@@ -426,10 +428,9 @@ router.post(
     const saved = settingsService.setPublicHost(publicHost || '');
     const warn = cookieSecureWarning(saved);
     if (warn) {
-      console.warn(
-        `[settings] Public host "${saved}" configured but COOKIE_SECURE is unset - ` +
-          'the session cookie is sent over plain HTTP if this panel is reached that way. ' +
-          'Set COOKIE_SECURE=true (behind HTTPS) or COOKIE_SECURE=auto in the environment.'
+      logger.warn(
+        'A public host is configured but COOKIE_SECURE is unset, so the session cookie is sent over plain HTTP if the panel is reached that way. Set COOKIE_SECURE=true behind HTTPS, or COOKIE_SECURE=auto in the environment.',
+        { publicHost: saved }
       );
     }
     res.json({ ok: true, publicHost: saved, cookieSecureWarning: warn });
@@ -988,6 +989,7 @@ router.get('/schedules/preview', (req, res) => {
     const runs = new Cron(expr, { timezone: settingsService.getTimezone() }).nextRuns(3).map((d) => d.toISOString());
     res.json({ ok: true, cron: expr, runs });
   } catch (err) {
+    logger.debug('Rejected an invalid cron expression.', { cron: expr, reason: err.message });
     res.status(400).json({ ok: false, error: `Invalid cron expression: ${err.message}` });
   }
 });
@@ -1143,7 +1145,11 @@ router.get(
     requireServer(req.params.id);
     try {
       res.json({ ok: true, running: true, state: await worldControls.getState(req.params.id) });
-    } catch {
+    } catch (err) {
+      logger.debug('Could not read world state; reporting the server as not running.', {
+        serverId: req.params.id,
+        err: serializeError(err, { includeStack: false }),
+      });
       res.json({ ok: true, running: false, state: {} });
     }
   })
@@ -1396,7 +1402,11 @@ router.post(
       if (excludeFilename) mods.clearPendingLine(req.params.id, excludeFilename);
       res.status(201).json({ ok: true, ...result, mods: mods.pendingDownloads(req.params.id) });
     } finally {
-      fs.promises.rm(req.file.path, { force: true }).catch(() => {});
+      fs.promises.rm(req.file.path, { force: true }).catch((e) => {
+        logger.debug('Could not remove a temporary upload file.', {
+          err: serializeError(e, { includeStack: false }),
+        });
+      });
     }
   })
 );
@@ -1512,9 +1522,21 @@ router.post('/servers/:id/icon', iconUpload.single('icon'), async (req, res, nex
     await fsp.mkdir(destDir, { recursive: true });
     // Drop stale variants with a different extension.
     for (const other of Object.values(ICON_EXTS)) {
-      if (other !== ext) await fsp.rm(path.join(destDir, `${server.id}${other}`), { force: true }).catch(() => {});
+      if (other !== ext) {
+        await fsp.rm(path.join(destDir, `${server.id}${other}`), { force: true }).catch((e) => {
+          logger.debug('Could not remove a stale server icon variant.', {
+            serverId: server.id,
+            err: serializeError(e, { includeStack: false }),
+          });
+        });
+      }
     }
-    await fsp.rm(path.join(destDir, filename), { force: true }).catch(() => {});
+    await fsp.rm(path.join(destDir, filename), { force: true }).catch((e) => {
+      logger.debug('Could not remove the previous server icon.', {
+        serverId: server.id,
+        err: serializeError(e, { includeStack: false }),
+      });
+    });
     await fsp.rename(req.file.path, path.join(destDir, filename)).catch(async () => {
       await fsp.copyFile(req.file.path, path.join(destDir, filename));
       await fsp.rm(req.file.path, { force: true });
@@ -1526,9 +1548,16 @@ router.post('/servers/:id/icon', iconUpload.single('icon'), async (req, res, nex
       type: 'config-changed',
       summary: 'Custom server icon uploaded',
     });
+    logger.info('Uploaded a custom server icon.', { serverId: server.id, actor: req.user.username });
     res.json({ ok: true, icon: `custom:${filename}`, url: `/api/icons/custom/${filename}` });
   } catch (err) {
-    if (req.file) await fsp.rm(req.file.path, { force: true }).catch(() => {});
+    if (req.file) {
+      await fsp.rm(req.file.path, { force: true }).catch((e) => {
+        logger.debug('Could not remove a temporary upload file.', {
+          err: serializeError(e, { includeStack: false }),
+        });
+      });
+    }
     next(err);
   }
 });
@@ -1848,6 +1877,12 @@ router.post(
           await mods.installFromUrl(server.id, url, { actor });
         } catch (err) {
           failed.push(`${m.ref} (${err.message})`);
+          logger.warn('A mod failed to install during create-from-mods.', {
+            serverId: server.id,
+            mod: m.ref,
+            platform: m.platform,
+            err: serializeError(err, { includeStack: false }),
+          });
         }
       }
       t.step('Starting server');

@@ -6,6 +6,7 @@
 
 const authService = require('../../services/auth');
 const config = require('../../config');
+const logger = require('../../logger')('auth');
 
 const PUBLIC_PREFIXES = ['/css/', '/js/', '/fonts/', '/icons/', '/vendor/'];
 const PUBLIC_PATHS = new Set(['/login', '/setup', '/favicon.ico']);
@@ -42,7 +43,10 @@ function requireAuth(req, res, next) {
   if (PUBLIC_PATHS.has(path) || PUBLIC_PREFIXES.some((p) => path.startsWith(p))) return next();
 
   if (authService.firstRunNeeded()) {
-    if (path.startsWith('/api/')) return res.status(401).json({ ok: false, error: 'Panel setup incomplete' });
+    if (path.startsWith('/api/')) {
+      logger.debug('Rejected an API request while first-run setup is incomplete.', { path });
+      return res.status(401).json({ ok: false, error: 'Panel setup incomplete' });
+    }
     return res.redirect('/setup');
   }
   if (req.session && req.session.userId) {
@@ -52,16 +56,25 @@ function requireAuth(req, res, next) {
       res.locals.user = user;
       return next();
     }
+    logger.warn('Ignored a session whose user no longer exists.', { userId: req.session.userId });
   }
   if (path.startsWith('/api/') || path.startsWith('/ws/')) {
+    logger.debug('Rejected an unauthenticated API request.', { path, ip: req.ip });
     return res.status(401).json({ ok: false, error: 'Not signed in' });
   }
+  logger.debug('Redirected an unauthenticated visitor to the login page.', { path });
   return res.redirect(`/login${path !== '/' ? `?next=${encodeURIComponent(req.originalUrl)}` : ''}`);
 }
 
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
+      logger.warn('Blocked an action the role does not allow.', {
+        userId: req.user ? req.user.id : undefined,
+        role: req.user ? req.user.role : undefined,
+        path: req.path,
+        method: req.method,
+      });
       if (req.path.startsWith('/api/')) return res.status(403).json({ ok: false, error: 'Insufficient permissions' });
       return res
         .status(403)
@@ -79,6 +92,11 @@ function requireRole(...roles) {
 function requireWrite(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
   if (req.user && req.user.role === 'viewer') {
+    logger.warn('Blocked a write from a read-only viewer.', {
+      userId: req.user.id,
+      path: req.path,
+      method: req.method,
+    });
     return res.status(403).json({ ok: false, error: 'Your role (Viewer) is read-only.' });
   }
   next();
@@ -97,6 +115,11 @@ function originGuard(req, res, next) {
       // gives no such protection, so there this MUST be rejected - a browser
       // fetch/XHR always sends Origin on a POST anyway.
       if (config.cookieSameSite === 'none') {
+        logger.warn('Rejected a state-changing request with no Origin header while SameSite is none.', {
+          host: req.headers.host,
+          path: req.path,
+          method: req.method,
+        });
         return res.status(403).json({ ok: false, error: 'Cross-origin request rejected (Origin header required)' });
       }
       return next();
@@ -104,9 +127,19 @@ function originGuard(req, res, next) {
     originHost = new URL(rawOrigin).host;
   } catch {
     // A malformed Origin/Referer on a state-changing request is not trustworthy.
+    logger.warn('Rejected a state-changing request with a malformed Origin or Referer.', {
+      host: req.headers.host,
+      path: req.path,
+      method: req.method,
+    });
     return res.status(403).json({ ok: false, error: 'Cross-origin request rejected' });
   }
   if (originHost !== req.headers.host) {
+    logger.warn('Rejected a cross-origin state-changing request.', {
+      host: req.headers.host,
+      path: req.path,
+      method: req.method,
+    });
     return res.status(403).json({ ok: false, error: 'Cross-origin request rejected' });
   }
   next();

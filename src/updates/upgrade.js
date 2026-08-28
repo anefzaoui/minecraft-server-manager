@@ -5,9 +5,12 @@
 // → re-pin → recreate → start → monitor → one-click rollback on failure.
 // Never automatic unless the server's update_policy is 'auto'.
 
+const path = require('node:path');
 const httpError = require('../utils/httpError');
 const { recordEvent } = require('../events');
 const serversService = require('../services/servers');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 const packsService = require('../services/packs');
 const backupsService = require('../services/backups');
 const { fetchLogs } = require('../docker/logs');
@@ -54,9 +57,11 @@ async function upgradePack(
   const step = (s) => {
     activeUpgrades.set(serverId, { step: s, startedAt: activeUpgrades.get(serverId)?.startedAt || Date.now() });
     if (task) task.step(STEP_LABELS[s] || s);
+    logger.debug('A pack upgrade advanced.', { serverId, step: s });
     onStep(s);
   };
 
+  logger.info('Started a pack upgrade.', { serverId, actor, pack: pack.project_name });
   try {
     step('resolving');
     // Thread the pin's own channel through: without this, an explicit versionId-less
@@ -139,6 +144,11 @@ async function upgradePack(
         details: { backupId, previousVersion: previous ? previous.pinned_version_id : null },
         logExcerpt: excerpt || null,
       });
+      logger.warn('A pack upgrade did not come up healthy; rollback is available.', {
+        serverId,
+        toVersion: resolved.versionName,
+        backupId,
+      });
       const err = httpError(
         502,
         `The server did not come up healthy after the upgrade. Use rollback to restore ${pack.pinned_version_name}.`
@@ -158,6 +168,13 @@ async function upgradePack(
       details: { backupId, from: pack.pinned_version_id, to: resolved.versionId },
       logExcerpt: excerpt || null,
     });
+    logger.info('Finished a pack upgrade.', {
+      serverId,
+      actor,
+      from: pack.pinned_version_name,
+      to: resolved.versionName,
+      backupId,
+    });
     return { ok: true, from: pack.pinned_version_name, to: resolved.versionName, backupId };
   } finally {
     activeUpgrades.delete(serverId);
@@ -176,8 +193,14 @@ async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
   if (!pack || !pack.previous_version_id) throw httpError(400, 'No previous pack version recorded');
 
   activeUpgrades.set(serverId, { step: 'rolling-back', startedAt: Date.now() });
+  logger.info('Started a pack rollback.', { serverId, actor, toVersion: pack.previous_version_name, backupId });
   try {
-    await serversService.stopServer(serverId, { actor }).catch(() => {});
+    await serversService.stopServer(serverId, { actor }).catch((err) => {
+      logger.debug('A stop before rollback failed; continuing.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    });
     if (backupId) await backupsService.restoreBackup(serverId, backupId, { actor, skipSafety: true });
 
     const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
@@ -193,6 +216,7 @@ async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
       type: 'update-rolled-back',
       summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}`,
     });
+    logger.info('Finished a pack rollback.', { serverId, actor, toVersion: pack.previous_version_name, backupId });
     return { ok: true, version: pack.previous_version_name };
   } finally {
     activeUpgrades.delete(serverId);

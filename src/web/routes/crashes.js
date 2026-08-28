@@ -12,6 +12,8 @@ const archiver = require('archiver');
 const { z } = require('zod');
 const crashes = require('../../crashes');
 const { dataPath } = require('../../storage/pathGuard');
+const logger = require('../../logger')('crashes');
+const { serializeError } = require('../../utils/logSanitize');
 
 const router = express.Router({ mergeParams: true });
 
@@ -23,7 +25,12 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const serverId = serverIdSchema.parse(req.params.id);
     // Opportunistic rescan so a fresh crash shows up without waiting for the watcher.
-    await crashes.scanServer(serverId).catch(() => {});
+    await crashes.scanServer(serverId).catch((err) => {
+      logger.debug('An opportunistic crash rescan failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    });
     res.json({ ok: true, crashes: crashes.listCrashes(serverId) });
   })
 );

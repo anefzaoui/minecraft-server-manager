@@ -6,10 +6,12 @@
 // restarts can never silently upgrade a server (discovery: unpinned
 // AUTO_CURSEFORGE/MODRINTH auto-upgrade on every start).
 
+const path = require('node:path');
 const httpError = require('../utils/httpError');
 const db = require('../db');
 const { recordEvent } = require('../events');
 const serversService = require('./servers');
+const logger = require('../logger')(path.basename(__filename));
 const modrinth = require('./modrinthApi');
 const curseforge = require('./curseforgeApi');
 const modsService = require('./mods');
@@ -265,6 +267,13 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
       versionId: resolved.versionId,
       previous: previous ? previous.pinned_version_id : null,
     },
+  });
+  logger.info('Applied a modpack to a server.', {
+    serverId,
+    actor,
+    pack: resolved.projectName,
+    version: resolved.versionName,
+    replaced: previous ? previous.pinned_version_name : null,
   });
   return { previous: previous || null };
 }

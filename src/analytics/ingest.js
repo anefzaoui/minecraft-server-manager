@@ -5,10 +5,16 @@
 // line becomes a player_events row; join/leave events also maintain
 // player_sessions.
 
+const path = require('node:path');
 const db = require('../db');
 const serversService = require('../services/servers');
 const { followLogs, fetchLogs } = require('../docker/logs');
 const { classify } = require('./logClassifier');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const syncThrottle = makeFailureThrottle();
 
 // 'stalled' (starting far longer than expected, no 'Done (' yet) is still a
 // live container - keep its log tap attached so join/leave events don't go
@@ -117,17 +123,20 @@ function handleLine(serverId, line) {
   try {
     insertEvent(serverId, evt, dockerTs || buildTs(evt.time), raw);
   } catch (err) {
-    console.error(`[analytics] insert failed for ${serverId}:`, err.message);
+    logger.error('Inserting a player event failed.', { serverId, err: serializeError(err, { includeStack: false }) });
   }
   // Custom chat commands (!rtp2 …): fire-and-forget - a broken command handler
   // must never break log ingestion. Lazy require avoids any module cycle.
   if (evt.type === 'chat' && evt.player !== '[Server]') {
+    const onChatCmdError = (err) =>
+      logger.warn('A custom chat command handler failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
     try {
-      require('../services/chatCommands')
-        .handleChat(serverId, evt.player, evt.message)
-        .catch((err) => console.error(`[chat-commands] ${serverId}:`, err.message));
+      require('../services/chatCommands').handleChat(serverId, evt.player, evt.message).catch(onChatCmdError);
     } catch (err) {
-      console.error(`[chat-commands] ${serverId}:`, err.message);
+      onChatCmdError(err);
     }
   }
 }
@@ -178,9 +187,15 @@ async function syncTaps() {
     }
     for (const id of running) {
       if (!taps.has(id)) {
-        await attach(id).catch((err) => console.error(`[analytics] tap ${id} failed:`, err.message));
+        await attach(id).catch((err) =>
+          logger.warn('Attaching a log tap failed.', {
+            serverId: id,
+            err: serializeError(err, { includeStack: false }),
+          })
+        );
       }
     }
+    syncThrottle.ok(logger.info, 'The analytics tap sync recovered.');
   } finally {
     syncing = false;
   }
@@ -188,8 +203,12 @@ async function syncTaps() {
 
 /** Start live ingestion; re-syncs taps every 60 s as servers start/stop. */
 async function startIngest() {
-  await syncTaps().catch((err) => console.error('[analytics] initial tap sync failed:', err.message));
-  pollTimer = setInterval(() => syncTaps().catch(() => {}), 60_000);
+  const onSyncFailed = (err) =>
+    syncThrottle.fail(logger.warn, 'An analytics tap sync failed.', {
+      err: serializeError(err, { includeStack: false }),
+    });
+  await syncTaps().catch(onSyncFailed);
+  pollTimer = setInterval(() => syncTaps().catch(onSyncFailed), 60_000);
   if (pollTimer.unref) pollTimer.unref();
 }
 

@@ -13,6 +13,8 @@ const { z } = require('zod');
 const files = require('../../services/files');
 const servers = require('../../services/servers');
 const { dataPath } = require('../../storage/pathGuard');
+const logger = require('../../logger')('files');
+const { serializeError } = require('../../utils/logSanitize');
 
 // requireAuth guarantees req.user on every /api request.
 const actorOf = (req) => req.user.username;
@@ -159,7 +161,13 @@ function makeRouter(scope) {
       res.status(201).json({ ok: true, uploaded });
     } catch (err) {
       if (req.files) {
-        for (const f of req.files) await fsp.rm(f.path, { force: true }).catch(() => {});
+        for (const f of req.files) {
+          await fsp.rm(f.path, { force: true }).catch((e) => {
+            logger.debug('Could not remove a temporary upload file.', {
+              err: serializeError(e, { includeStack: false }),
+            });
+          });
+        }
       }
       next(err);
     }

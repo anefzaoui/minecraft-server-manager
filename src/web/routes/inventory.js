@@ -98,7 +98,7 @@ async function loadContext(req) {
     const info = await inspectStatus(server.id);
     running = info.exists && RUNNING_STATES.has(info.status);
   } catch {
-    /* docker down - offline reads still work */
+    // intentional: Docker down - offline reads still work, `running` stays false
   }
   return { server, running };
 }

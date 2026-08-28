@@ -31,6 +31,24 @@ module.exports = [
     },
   },
   {
+    // Shipped server code must go through src/logger.js - no stray console.* in
+    // request/boot/background paths where it would bypass structured logging.
+    files: ['src/**/*.js'],
+    rules: {
+      'no-console': 'error',
+    },
+  },
+  {
+    // These three run before the logger is usable: preflight runs before
+    // anything (writes straight to stderr), instrument loads before config, and
+    // config/index.js prints its first-run secret notice before the logger
+    // exists. They are allowed console/stdout/stderr.
+    files: ['src/preflight.js', 'src/instrument.js', 'src/config/index.js'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     // Browser client code (ES modules).
     files: ['public/js/**/*.js'],
     languageOptions: {
