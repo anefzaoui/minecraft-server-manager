@@ -364,10 +364,11 @@ async function importForServer(
     const entries = await resolveManifestEntries(info.manifest.files);
     const wanted = selections ? new Set(selections.map(Number)) : null;
     const queue = [];
+    // Missing/blocked status outranks deselection: the UI force-unchecks those
+    // rows, so 'deselected' would hide a pack's real gaps from the report and
+    // the event log.
     for (const e of entries) {
-      if (wanted && !wanted.has(e.fileId)) {
-        report.skipped.push({ name: e.name, reason: 'deselected' });
-      } else if (!e.resolved) {
+      if (!e.resolved) {
         report.failed.push({ name: e.name, reason: 'file no longer exists on CurseForge' });
       } else if (!e.downloadable) {
         report.blocked.push({
@@ -377,6 +378,8 @@ async function importForServer(
           projectId: e.projectId,
           fileId: e.fileId,
         });
+      } else if (wanted && !wanted.has(e.fileId)) {
+        report.skipped.push({ name: e.name, reason: 'deselected' });
       } else {
         queue.push(e);
       }

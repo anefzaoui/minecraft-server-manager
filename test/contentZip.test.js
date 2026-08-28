@@ -224,10 +224,15 @@ test('importForServer installs downloadable entries, reports blocked/missing, ho
     assert.ok(row);
     assert.equal(row.project_id, '100');
 
-    // Selections: deselect everything → nothing installs
+    // Selections: deselect everything → nothing installs, but missing/blocked
+    // status still outranks 'deselected' so the report shows the pack's gaps.
     const r2 = await contentZip.importForServer(sid, zip, { selections: [9999], actor: 'tester' });
     assert.equal(r2.installed.length, 0);
-    assert.equal(r2.skipped.length, 3);
+    assert.deepEqual(r2.skipped, [{ name: 'Alpha', reason: 'deselected' }]);
+    assert.equal(r2.blocked.length, 1);
+    assert.equal(r2.blocked[0].name, 'Bravo');
+    assert.equal(r2.failed.length, 1);
+    assert.match(r2.failed[0].reason, /no longer exists/);
   } finally {
     library.downloadToLibrary = realDownload;
     unstub();
