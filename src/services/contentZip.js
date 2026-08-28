@@ -355,7 +355,11 @@ async function importForServer(
   zipPath,
   { selections = null, applyOverrides = false, actor = 'system', onStep = () => {} } = {}
 ) {
-  serverTarget(serverId);
+  const server = serverTarget(serverId);
+  // Server-type-derived, like every other install path — a hardcoded 'mod'
+  // would file pack jars under mods/ on a Paper-family server, where the Mods
+  // tab never lists them (so they couldn't even be removed from the panel).
+  const targetKind = modsService.contentKindOf(server);
   const info = await inspect(zipPath);
   const report = { installed: [], failed: [], blocked: [], skipped: [], overrides: null };
 
@@ -392,9 +396,9 @@ async function importForServer(
           serverId,
           {
             downloadUrl: e.downloadUrl,
-            kind: 'mod',
+            kind: targetKind,
             meta: {
-              category: 'mod',
+              category: targetKind,
               platform: 'curseforge',
               projectId: String(e.projectId),
               fileId: String(e.fileId),
@@ -427,10 +431,9 @@ async function importForServer(
     // Documented default (no selections): install every jar whose verdict isn't
     // wrong-* — unidentified jars stay in, but a jar known to be the wrong
     // loader/kind/MC for this server never installs implicitly.
-    const server = serversService.getServer(serverId);
     const judge = (entry) =>
       modIdentify.verdictFor(identityByEntry.get(entry) || null, {
-        kind: modsService.contentKindOf(server),
+        kind: targetKind,
         loader: modsService.loaderOf(server),
         mc: server.mc_version,
       });
