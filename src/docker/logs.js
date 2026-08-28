@@ -11,16 +11,22 @@ const { getContainer } = require('./containers');
 /**
  * Fetch the last `tail` lines as a string. Pass `timestamps: true` to prefix
  * each line with Docker's RFC3339 receive time (used by analytics ingest to
- * timestamp events independently of the container's TZ).
+ * timestamp events independently of the container's TZ). Pass `since` (Unix
+ * seconds) to only return lines emitted at/after that time - e.g. to read just
+ * the current boot's output from a reused container.
+ * @param {string} serverId
+ * @param {{ tail?: number, timestamps?: boolean, since?: number }} [opts]
  */
-async function fetchLogs(serverId, { tail = 500, timestamps = false } = {}) {
+async function fetchLogs(serverId, { tail = 500, timestamps = false, since } = {}) {
   try {
-    const buf = await getContainer(serverId).logs({
+    const opts = {
       stdout: true,
       stderr: true,
       tail,
       timestamps,
-    });
+      ...(Number.isFinite(since) && since > 0 ? { since: Math.floor(since) } : {}),
+    };
+    const buf = await getContainer(serverId).logs(opts);
     return demuxBuffer(buf);
   } catch (err) {
     if (err.statusCode === 404) return '';

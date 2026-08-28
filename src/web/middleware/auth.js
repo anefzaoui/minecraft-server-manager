@@ -158,18 +158,28 @@ function checkLoginAllowed(username, ip) {
   );
   if (until > Date.now()) {
     const mins = Math.ceil((until - Date.now()) / 60000);
-    const err = new Error(`Too many failed attempts - try again in ${mins} min`);
+    const err = new Error(`Too many failed attempts. Try again in ${mins} min.`);
     err.status = 429;
     throw err;
   }
 }
 
 function bump(map, key, lockMs) {
-  const entry = map.get(key) || { count: 0, until: 0 };
+  const now = Date.now();
+  const entry = map.get(key) || { count: 0, until: 0, windowStart: now };
+  // Rolling window: once a lock has elapsed AND a full lock-period has passed
+  // since counting began, forget the old failures. Without this `count` only
+  // ever climbs, so after one burst reaches the threshold every later failure
+  // re-arms the lock indefinitely - a permanent targeted lockout by a sprayer
+  // doing one attempt per cooldown.
+  if (now >= entry.until && now - entry.windowStart >= lockMs) {
+    entry.count = 0;
+    entry.windowStart = now;
+  }
   entry.count += 1;
   // Do NOT extend an already-active lock - otherwise repeated attempts keep a
   // valid account locked forever (targeted-lockout DoS).
-  if (Date.now() >= entry.until) entry.until = Date.now() + lockMs;
+  if (now >= entry.until) entry.until = now + lockMs;
   map.set(key, entry);
 }
 

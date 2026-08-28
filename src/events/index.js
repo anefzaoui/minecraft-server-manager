@@ -166,6 +166,9 @@ function pruneEvents(days, { actor = 'system' } = {}) {
     }
   }
   db.run('DELETE FROM events WHERE created_at < ?', cutoff);
+  // A prune can remove the last event of a type, so the cached filter list may
+  // now offer a type that matches nothing. Drop it; knownTypes() rebuilds lazily.
+  distinctTypes = null;
   recordEvent({
     actor,
     type: 'events-pruned',

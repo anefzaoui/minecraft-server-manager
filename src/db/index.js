@@ -75,10 +75,13 @@ function close() {
 /**
  * Hot snapshot of the whole database to `destPath`. Checkpoints the WAL first so
  * the copy is fully self-contained, then `VACUUM INTO` writes a consistent,
- * defragmented single-file copy without blocking readers. Safe to call while the
- * panel is serving traffic.
+ * defragmented single-file copy. node:sqlite is synchronous, so this blocks the
+ * event loop for the duration of the rewrite - it runs on the daily maintenance
+ * timer for that reason. Returns the elapsed milliseconds so the caller can log
+ * the pause.
  */
 function backupTo(destPath) {
+  const started = Date.now();
   const d = open();
   try {
     d.exec('PRAGMA wal_checkpoint(TRUNCATE)');
@@ -86,6 +89,7 @@ function backupTo(destPath) {
     // intentional: checkpoint is best-effort; VACUUM INTO still produces a valid copy
   }
   d.exec(`VACUUM INTO '${String(destPath).replace(/'/g, "''")}'`);
+  return Date.now() - started;
 }
 
 module.exports = { open, run, get, all, exec, transaction, close, backupTo };

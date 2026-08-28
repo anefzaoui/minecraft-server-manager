@@ -1,7 +1,8 @@
 # Contributing
 
 Thanks for your interest in improving Minecraft Server Manager. This project is a server-rendered
-Node.js app with no build step beyond CSS, so the barrier to hacking on it is low.
+Node.js app with a minimal build step (Tailwind CSS plus an esbuild client-JS bundle), so the
+barrier to hacking on it is low.
 
 ## Getting set up
 
@@ -9,6 +10,10 @@ Node.js app with no build step beyond CSS, so the barrier to hacking on it is lo
 pnpm install
 pnpm run dev        # starts the app with auto-restart + Tailwind CSS watch
 ```
+
+`pnpm run dev` serves the browser JS straight from `public/js/`. `pnpm run build:js` produces the
+minified esbuild bundle in `public/dist/` (a gitignored artifact); the app serves it when present
+and falls back to raw source otherwise, so you only need it to test the production bundle.
 
 Open http://localhost:25564. You need **Node.js 24+** (for the flagless built-in `node:sqlite`) and
 Docker running to exercise anything that touches containers. First run creates the admin account.
@@ -25,18 +30,20 @@ pnpm run lint          # ESLint (errors, no warnings)
 pnpm run format:check  # Prettier
 pnpm run typecheck     # tsc --checkJs over the type-clean core
 pnpm test              # unit tests (node:test)
-pnpm run build         # CSS build
+pnpm run build         # Tailwind CSS + esbuild client-JS bundle
 ```
 
 `pnpm run format` fixes formatting. `pnpm test` is a real, fast unit suite (no Docker); `pnpm run
 test:smoke` is the separate live sweep against a running panel. While iterating on a change, `pnpm run
 test:watch` re-runs the suite on every save.
 
-Keep changes focused and match the surrounding style (Prettier enforces it). The code is **plain
-CommonJS JS - no TypeScript compile step and no client bundler**; please don't introduce one without
-discussion. Type safety comes from JSDoc + a `tsc --checkJs` gate: `types/globals.d.ts` holds ambient
-augmentations, and dynamic interop files (Docker/NBT/HTTP-JSON) carry a `// @ts-nocheck` header while
-type coverage is grown incrementally - new modules are checked by default, so keep them clean.
+Keep changes focused and match the surrounding style (Prettier enforces it). Server code is **plain
+CommonJS JS - no TypeScript compile step**. The browser code in `public/js/` is ESM, bundled and
+minified by **esbuild** into `public/dist/js/` for production; it is not a framework and not a build
+prerequisite for development, so keep it hand-written progressive enhancement. Type safety comes
+from JSDoc + a `tsc --checkJs` gate: `types/globals.d.ts` holds ambient augmentations, and dynamic
+interop files (Docker/NBT/HTTP-JSON) carry a `// @ts-nocheck` header while type coverage is grown
+incrementally - new modules are checked by default, so keep them clean.
 
 `public/vendor/chart.umd.js` is a **vendored** copy of Chart.js (not a package dependency) - update it by
 hand and note the version in the PR.

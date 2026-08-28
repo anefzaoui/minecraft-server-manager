@@ -74,6 +74,14 @@ try {
     logger.error('The SQLite integrity check could not run.', { err: serializeError(err) });
   }
 
+  // Rewrite any credential still encrypted under the legacy SESSION_SECRET-derived
+  // key so a later SESSION_SECRET rotation can't strand it. No-op once done.
+  try {
+    require('./services/secretsMigration').migrateLegacySecrets();
+  } catch (err) {
+    logger.error('Migrating legacy-encrypted secrets failed.', { err: serializeError(err) });
+  }
+
   require('./services/apiKeys').importFromEnvOnce();
   require('./blueprints')
     .seedStarters()
@@ -181,7 +189,10 @@ function startBackgroundServices(httpServer) {
       const dir = dataPath('backups', '_panel');
       fs.mkdirSync(dir, { recursive: true });
       const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
-      require('./db').backupTo(nodePath.join(dir, `panel-${stamp}.db`));
+      // VACUUM INTO is synchronous and blocks the event loop while it runs - log
+      // the pause so a long one is visible rather than mysterious.
+      const blockedMs = require('./db').backupTo(nodePath.join(dir, `panel-${stamp}.db`));
+      logger.info('Snapshotted the panel database.', { blockedMs, dir: 'data/backups/_panel' });
       const snaps = fs
         .readdirSync(dir)
         .filter((f) => /^panel-.*\.db$/.test(f))
@@ -235,10 +246,18 @@ function startBackgroundServices(httpServer) {
     // panel was down: the live docker-events watcher never saw that 'die', so
     // nothing scheduled the auto-restart for them. guardOp de-dupes a server
     // that matches both conditions.
+    const { inCrashLoopBackoff } = require('./docker/watcher');
     for (const s of serversService.listServers()) {
-      const wantStart =
-        (s.auto_start && !['running', 'starting'].includes(s.status)) || (s.auto_restart && s.status === 'crashed');
-      if (!wantStart) continue;
+      const autoStart = s.auto_start && !['running', 'starting'].includes(s.status);
+      const crashRecover = s.auto_restart && s.status === 'crashed';
+      if (!autoStart && !crashRecover) continue;
+      // Crash recovery must respect the same crash-loop backoff the live watcher
+      // enforces - otherwise every panel restart gives a crash-looping server
+      // one more free attempt.
+      if (crashRecover && !autoStart && inCrashLoopBackoff(s.id)) {
+        logger.warn('Did not auto-restart a server on boot: it is in crash-loop backoff.', { serverId: s.id });
+        continue;
+      }
       serversService
         .startServer(s.id, { actor: 'system' })
         .catch((err) =>

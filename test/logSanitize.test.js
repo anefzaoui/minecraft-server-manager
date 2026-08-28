@@ -95,6 +95,55 @@ test('key classifiers', () => {
   assert.ok(!isUrlKey('name'));
 });
 
+test('secret-key matching is on word-parts, not raw substrings', () => {
+  // Redacted: the word-part really is a credential.
+  assert.ok(isSecretKey('sessionSecret'));
+  assert.ok(isSecretKey('accessToken'));
+  assert.ok(isSecretKey('cfApiKey'));
+  assert.ok(isSecretKey('client_secret'));
+  assert.ok(isSecretKey('totpSecret'));
+  // NOT redacted: substring collisions that used to be caught.
+  assert.ok(!isSecretKey('sessionId'));
+  assert.ok(!isSecretKey('sessionCount'));
+  assert.ok(!isSecretKey('passedChecks'));
+  assert.ok(!isSecretKey('bypassLogin'));
+  assert.ok(!isSecretKey('compassBearing'));
+  assert.ok(!isSecretKey('tokensUsed')); // 'tokens' !== 'token'
+
+  const out = sanitizeLogMeta({ sessionId: 'abc123', sessionSecret: 's', tokensUsed: 5 });
+  assert.equal(out.sessionId, 'abc123');
+  assert.equal(out.sessionSecret, '[REDACTED]');
+  assert.equal(out.tokensUsed, 5);
+});
+
+test('redacts the path of webhook URLs (secret is in the path, not the query)', () => {
+  const discord = stripUrlQuery('https://discord.com/api/webhooks/123456789/S3cr3tTok3nValue');
+  assert.equal(discord, 'https://discord.com/[REDACTED]');
+  const slack = stripUrlQuery('https://hooks.slack.com/services/T00/B00/XXXXtokenXXXX');
+  assert.equal(slack, 'https://hooks.slack.com/[REDACTED]');
+  // A generic URL with a ".../webhooks/..." path is caught by shape too.
+  assert.equal(stripUrlQuery('https://example.test/api/webhooks/abc/def'), 'https://example.test/[REDACTED]');
+  // Ordinary URLs keep their path.
+  assert.equal(stripUrlQuery('https://example.test/a/b?x=1'), 'https://example.test/a/b');
+});
+
+test('one throwing getter costs only its own field, not the whole meta object', () => {
+  const meta = { ok: 1 };
+  Object.defineProperty(meta, 'boom', {
+    enumerable: true,
+    get() {
+      throw new Error('nope');
+    },
+  });
+  let out;
+  assert.doesNotThrow(() => {
+    out = sanitizeLogMeta(meta);
+  });
+  assert.equal(out.ok, 1);
+  assert.equal(out.boom, '[Unreadable]');
+  assert.notEqual(out.sanitizeError, true);
+});
+
 test('passes primitives and nullish through untouched', () => {
   assert.equal(sanitizeLogMeta(null), null);
   assert.equal(sanitizeLogMeta(undefined), undefined);

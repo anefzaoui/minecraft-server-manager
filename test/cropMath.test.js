@@ -2,10 +2,12 @@
 
 // Geometry + export-format helpers behind the profile-picture cropper
 // (public/js/lib/imageCrop.js). The browser copy at public/js/lib/cropMath.js
-// mirrors this module byte-for-byte; only this CommonJS one is run here.
+// must stay logically identical - the last test in this file enforces that.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { MIN_CROP_PX, clampBox, resizeBox, pickExport } = require('../src/utils/cropMath');
 
 test('clampBox leaves an already in-bounds box alone', () => {
@@ -79,4 +81,55 @@ test('pickExport always uses JPEG for a JPEG (or rasterized-SVG) source', () => 
 
 test('pickExport defaults to JPEG when the PNG size is unknown', () => {
   assert.equal(pickExport('image/png', null).type, 'image/jpeg');
+});
+
+test('clampBox handles a display area smaller than MIN_CROP_PX without going off-image', () => {
+  // A 30x500 rendered image: the box must fit, not sit at negative x with size 40.
+  const out = clampBox({ x: 10, y: 200, size: 100 }, 30, 500);
+  assert.equal(out.size, 30);
+  assert.ok(out.x >= 0 && out.x + out.size <= 30, `x=${out.x} size=${out.size}`);
+  assert.ok(out.y >= 0 && out.y + out.size <= 500);
+});
+
+test('resizeBox stays in-bounds when the image is smaller than MIN_CROP_PX', () => {
+  const out = resizeBox({ x: 0, y: 0, size: 20 }, { hx: 0, hy: 0 }, { x: -50, y: -50 }, 25, 25);
+  assert.ok(out.x >= 0 && out.y >= 0, `x=${out.x} y=${out.y}`);
+  assert.ok(out.x + out.size <= 25 && out.y + out.size <= 25);
+});
+
+test('the browser ESM copy of cropMath produces identical results to the CJS one', async () => {
+  // The file is .js under a CommonJS package, so force ESM parsing via a data: URL.
+  const src = fs.readFileSync(path.join(__dirname, '../public/js/lib/cropMath.js'), 'utf8');
+  const esm = await import(`data:text/javascript,${encodeURIComponent(src)}`);
+  assert.equal(esm.MIN_CROP_PX, MIN_CROP_PX);
+
+  const boxes = [
+    [{ x: 10, y: 20, size: 50 }, 200, 200],
+    [{ x: 180, y: 190, size: 50 }, 200, 200],
+    [{ x: -20, y: -5, size: 500 }, 200, 300],
+    [{ x: 5, y: 5, size: 10 }, 200, 200],
+    [{ x: 10, y: 200, size: 100 }, 30, 500],
+  ];
+  for (const args of boxes) {
+    assert.deepEqual(esm.clampBox(...args), clampBox(...args), `clampBox ${JSON.stringify(args)}`);
+  }
+
+  const resizes = [
+    [{ x: 100, y: 100, size: 100 }, { hx: 1, hy: 1 }, { x: 250, y: 240 }, 400, 400],
+    [{ x: 100, y: 100, size: 100 }, { hx: 0, hy: 0 }, { x: 60, y: 80 }, 400, 400],
+    [{ x: 100, y: 100, size: 100 }, { hx: 1, hy: 1 }, { x: 500, y: 500 }, 200, 200],
+    [{ x: 0, y: 0, size: 20 }, { hx: 0, hy: 0 }, { x: -50, y: -50 }, 25, 25],
+  ];
+  for (const args of resizes) {
+    assert.deepEqual(esm.resizeBox(...args), resizeBox(...args), `resizeBox ${JSON.stringify(args)}`);
+  }
+
+  for (const args of [
+    ['image/png', 100 * 1024],
+    ['image/png', 600 * 1024],
+    ['image/jpeg', null],
+    ['image/png', null],
+  ]) {
+    assert.deepEqual(esm.pickExport(...args), pickExport(...args), `pickExport ${JSON.stringify(args)}`);
+  }
 });

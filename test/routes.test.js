@@ -102,3 +102,17 @@ test('an unknown pack platform is still rejected', async () => {
   });
   assert.equal(res.status, 400);
 });
+
+test('/modpacks lists pack-backed servers (sidebar VMs no longer carry pack info)', async () => {
+  const id = app.seedServer('srv_pack01');
+  db.run(
+    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
+     VALUES (?, 'modrinth', 'cobblemon', 'Cobblemon Pack', 'v1', '1.0.0')`,
+    id
+  );
+
+  const r = await app.req('GET', '/modpacks', { cookie, headers: { Accept: 'text/html' } });
+  assert.equal(r.status, 200);
+  assert.match(r.text, /Cobblemon Pack/);
+  assert.doesNotMatch(r.text, /No Modpacks Installed/);
+});

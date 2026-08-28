@@ -22,8 +22,9 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 - **[Blueprints](blueprints.md)** - capture a server's whole configuration and stamp out new ones from it.
 - **[Schedules](schedules.md)** - cron-driven restarts, backups, and commands.
 - **[Storage](storage.md)** - per-server disk usage and panel-enforced quotas.
-- **[Updates](updates.md)** - track new server, pack, and mod versions.
+- **[Updates](updates.md)** - track new server, pack, image, and mod versions.
 - **[Activity log](activity.md)** - an audit trail of everything that happened.
+- **[Integrations](integrations.md)** - Discord webhook notifications and the Alerts category.
 
 ## Accounts & security
 

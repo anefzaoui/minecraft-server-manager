@@ -24,10 +24,13 @@ const { serializeError } = require('../utils/logSanitize');
 // Retention caps, per server, per reason. Every bucket is bounded now - the
 // old rule ("manual + pre-update are never auto-pruned") let a long-lived
 // server accumulate backups until the free-space preflight started failing
-// every new backup. 'manual' also holds restore safety backups.
+// every new backup. Restore/world-reset safety snapshots get their OWN bucket
+// ('pre-restore') so they can't silently evict backups a user deliberately
+// created and kept (reason 'manual').
 const KEEP_SCHEDULED = 10;
 const KEEP_PRE_UPDATE = 10;
 const KEEP_MANUAL = 20;
+const KEEP_PRE_RESTORE = 5;
 
 async function createBackup(serverId, { reason = 'manual', actor = 'system', note = '', task = null } = {}) {
   const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
@@ -202,12 +205,29 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
     if (task) task.step('Creating safety backup');
     // createBackup makes its own reservation for safetyBytes - not duplicated
     // here, which only reserves the extraction's own uncompressedBytes below.
-    await createBackup(serverId, {
-      reason: 'manual',
-      actor,
-      note: `Safety backup before restoring ${backup.filename}`,
-      task: null,
-    });
+    // The safety backup is best-effort insurance: if it can't be made (e.g. its
+    // own integrity check trips on a transient fault) that must NOT cancel the
+    // restore the user explicitly asked for - warn loudly and carry on.
+    try {
+      await createBackup(serverId, {
+        reason: 'pre-restore',
+        actor,
+        note: `Safety backup before restoring ${backup.filename}`,
+        task: null,
+      });
+    } catch (err) {
+      logger.warn('The pre-restore safety backup could not be created; continuing with the restore.', {
+        serverId,
+        backupId,
+        err: serializeError(err),
+      });
+      recordEvent({
+        serverId,
+        actor,
+        type: 'backup-warning',
+        summary: `Restore proceeded without a safety backup: ${err.message}`,
+      });
+    }
   }
 
   if (task) task.step('Extracting backup');
@@ -267,8 +287,9 @@ async function deleteBackup(backupId, { actor = 'system' } = {}) {
 
 /**
  * Keep the newest KEEP_* per reason (see the constants at the top); older ones
- * in each bucket are pruned. 'manual' is bounded too now - it also holds the
- * restore safety backups, which otherwise pile up one-per-restore forever.
+ * in each bucket are pruned. 'pre-restore' (restore/world-reset safety
+ * snapshots) has its own small bucket so it can't evict user-created 'manual'
+ * backups, which otherwise pile up one-per-restore forever.
  *
  * Delete backups past the retention limit. Each deletion is isolated (one
  * failure - a transient DB busy error, an EACCES on the file - must not stop
@@ -283,13 +304,17 @@ async function pruneRetention(serverId, { actor = 'system' } = {}) {
   const buckets = [
     ['scheduled', KEEP_SCHEDULED],
     ['pre-update', KEEP_PRE_UPDATE],
-    ['manual', KEEP_MANUAL], // includes restore safety backups
+    ['manual', KEEP_MANUAL],
+    ['pre-restore', KEEP_PRE_RESTORE], // restore / world-reset safety snapshots
   ];
   let deleted = 0;
   for (const [reason, keep] of buckets) {
     const stale = db.all(
+      // id DESC as a tiebreaker: created_at has 1-second resolution and a safety
+      // backup often lands in the same second as another, so "the Nth oldest"
+      // must not be left to insertion-order luck.
       `SELECT id FROM backups WHERE server_id = ? AND reason = ?
-       ORDER BY created_at DESC LIMIT -1 OFFSET ?`,
+       ORDER BY created_at DESC, id DESC LIMIT -1 OFFSET ?`,
       serverId,
       reason,
       keep

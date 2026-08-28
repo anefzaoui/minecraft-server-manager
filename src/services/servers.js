@@ -493,7 +493,7 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
       serverId: id,
       actor,
       type: 'stop-failed',
-      summary: `Graceful stop did not take effect: ${err.message} - the container is still running. Try Force kill.`,
+      summary: `Graceful stop did not take effect: ${err.message}. The container is still running. Try Force kill.`,
     });
     throw httpError(502, 'The server did not stop. Try Force stop, or check that Docker is running.');
   }
@@ -818,6 +818,13 @@ const deleteServer = guardOp('delete', deleteServerImpl);
 const STARTUP_STALL_MS = 10 * 60_000;
 
 let refreshing = false;
+// Hard ceiling on one refresh pass. dockerode has no request timeout (a global
+// one would kill the console follow stream), so a hung - not failed - Docker API
+// call inside the loop would otherwise leave `refreshing` true forever and wedge
+// every future poll. The race clears the guard; a leaked pending promise from
+// the truly-hung daemon is harmless and settles when it recovers. 90s > the 60s
+// poll interval so a big-but-healthy fleet never trips it.
+const REFRESH_MAX_MS = 90_000;
 
 /**
  * Refresh cached status for all servers from Docker.
@@ -832,9 +839,21 @@ async function refreshStatuses({ boot = false } = {}) {
   // per-server inspect + log-fetch round trips when the daemon is slow.
   if (refreshing) return;
   refreshing = true;
+  let timer;
   try {
-    await refreshStatusesInner({ boot });
+    await Promise.race([
+      refreshStatusesInner({ boot }),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(new Error(`Status refresh exceeded ${REFRESH_MAX_MS} ms - the Docker daemon may be unresponsive.`)),
+          REFRESH_MAX_MS
+        );
+        timer.unref();
+      }),
+    ]);
   } finally {
+    clearTimeout(timer);
     refreshing = false;
   }
 }
@@ -858,7 +877,14 @@ async function refreshStatusesInner({ boot }) {
         const startedMs = Date.parse(String(server.last_started_at || '').replace(' ', 'T') + 'Z');
         const elapsedMs = Number.isFinite(startedMs) ? Date.now() - startedMs : Infinity;
         if (elapsedMs > 2 * 60_000) {
-          const tail = await fetchLogs(server.id, { tail: 300 }).catch(() => '');
+          // Scope the log read to THIS boot: a normal stop->start reuses the
+          // container, so `docker logs` still holds the previous run's "Done ("
+          // line, which would otherwise flip a still-booting server straight to
+          // 'running' and suppress stall detection.
+          const tail = await fetchLogs(server.id, {
+            tail: 120,
+            since: Number.isFinite(startedMs) ? Math.floor(startedMs / 1000) - 5 : undefined,
+          }).catch(() => '');
           if (/Done \(/.test(tail)) {
             status = 'running';
           } else if (elapsedMs > STARTUP_STALL_MS) {
@@ -889,19 +915,21 @@ async function refreshStatusesInner({ boot }) {
 
       // Host reboot / crash while the panel was down: the DB still says this
       // server was up, but its container isn't running now and nothing will
-      // bring it back (auto_start is handled by the boot sequence, auto_restart
-      // by the crash reconcile there). Say so once instead of silently flipping
-      // the row to 'stopped'.
+      // bring it back. Say so once instead of silently flipping the row to
+      // 'stopped'. Suppress it when the boot sequence WILL bring it back -
+      // either auto_start, or auto_restart on a crashed server - so the alert
+      // never contradicts what the panel is about to do.
+      const bootWillStart = server.auto_start || (server.auto_restart && status === 'crashed');
       if (
         boot &&
-        !server.auto_start &&
+        !bootWillStart &&
         ['running', 'starting', 'unhealthy', 'stalled'].includes(server.status) &&
         ['stopped', 'crashed'].includes(status)
       ) {
         recordEvent({
           serverId: server.id,
           type: 'offline-after-restart',
-          summary: `Server was ${server.status} before the panel restarted and is now ${status} - it was not auto-started. Start it from the panel when ready.`,
+          summary: `Server was ${server.status} before the panel restarted and is now ${status}. It was not auto-started; start it from the panel when ready.`,
         });
       }
 

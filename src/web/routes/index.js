@@ -8,7 +8,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const express = require('express');
 const serversService = require('../../services/servers');
 const eventsService = require('../../events');
-const { serverVM, sidebarServerVMs, eventVM, crashVM, safeJsonParse } = require('../viewModels');
+const { serverVM, sidebarServerVMs, packServerVMs, eventVM, crashVM, safeJsonParse } = require('../viewModels');
 const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
@@ -470,10 +470,10 @@ router.get(
 );
 
 router.get('/modpacks', async (req, res) => {
-  const withPacks = (res.locals.servers || []).filter((s) => s.pack);
-  // NB: never pass this under the `servers` key - that shadows res.locals.servers
-  // and silently filters the sidebar's server list.
-  res.render('modpacks', { title: 'Modpacks', active: 'modpacks', packServers: withPacks });
+  // Own query, not res.locals.servers: the sidebar VMs are deliberately lean and
+  // carry no pack info. NB: never pass this list under the `servers` key - that
+  // shadows res.locals.servers and silently filters the sidebar's server list.
+  res.render('modpacks', { title: 'Modpacks', active: 'modpacks', packServers: packServerVMs() });
 });
 
 router.get('/worlds', (req, res) => {

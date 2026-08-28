@@ -105,10 +105,12 @@ function startIndexer({ intervalMs = 15 * 60 * 1000 } = {}) {
 // upload / delete / copy / backup / restore. A burst of ops (e.g. deleting a
 // dozen files, or a restore that also writes a safety backup) used to kick off a
 // full recursive stat-walk of data/ per op; this collapses them into one walk a
-// short while after the last mutation.
+// short while after the LAST mutation. Trailing debounce: every call pushes the
+// timer out, so a walk never runs mid-restore. The 15-minute interval scan is
+// the backstop if mutations never stop long enough for the timer to fire.
 let debounceTimer = null;
 function scheduleScan({ delayMs = 45_000 } = {}) {
-  if (debounceTimer) return;
+  if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     debounceTimer = null;
     scan().catch(onScanFailed);

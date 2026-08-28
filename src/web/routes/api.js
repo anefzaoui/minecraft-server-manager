@@ -283,7 +283,10 @@ router.get(
   '/status/summary',
   asyncHandler(async (req, res, next) => {
     const db = require('../../db');
-    const PROBLEM_STATUSES = new Set(['crashed', 'stalled', 'unhealthy', 'over-quota']);
+    // Real status values only: a quota stop is surfaced via the 'quota-exceeded'
+    // alert below, and nothing ever writes 'over-quota' to servers.status.
+    const PROBLEM_STATUSES = new Set(['crashed', 'stalled', 'unhealthy']);
+    // Keep in sync with the alert event types forwarded in integrations/discord.js.
     const ALERT_TYPES = [
       'oom',
       'unhealthy',
@@ -292,6 +295,7 @@ router.get(
       'schedule-failed',
       'quota-exceeded',
       'crash-loop',
+      'crash-report',
       'offline-after-restart',
       'update-failed',
     ];

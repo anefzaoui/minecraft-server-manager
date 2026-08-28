@@ -215,6 +215,13 @@ function logThrottled(serverId, err) {
 
 let pollTimer = null;
 let lastSeenId = 0;
+// When a deliverable row fails to send, we hold the high-water mark at the row
+// before it and retry on later polls - a transient network blip must not
+// silently drop an OOM / unhealthy / stop-failed alert. Bounded so a
+// permanently-dead webhook can't wedge the queue for every server forever.
+let retryId = 0;
+let retryCount = 0;
+const MAX_DELIVERY_RETRIES = 4;
 
 function startEventBridge({ intervalMs = 15000 } = {}) {
   if (pollTimer) return;
@@ -241,24 +248,39 @@ function stopEventBridge() {
 async function pollOnce() {
   const rows = db.all('SELECT * FROM events WHERE id > ? ORDER BY id LIMIT 100', lastSeenId);
   if (!rows.length) return;
-  lastSeenId = rows[rows.length - 1].id;
 
   for (const evt of rows) {
     const mapped = EVENT_MAP[evt.type];
-    if (!mapped || !evt.server_id) continue;
-    const [kind, category] = mapped;
-    const cfg = getConfig(evt.server_id);
-    if (!cfg.enabled || !cfg.hasWebhook || !cfg.events[category]) continue;
+    const cfg = mapped && evt.server_id ? getConfig(evt.server_id) : null;
+    const deliverable = Boolean(cfg && cfg.enabled && cfg.hasWebhook && cfg.events[mapped[1]]);
 
-    const server = db.get('SELECT display_name FROM servers WHERE id = ?', evt.server_id);
-    await notify(evt.server_id, kind, {
-      title: titleFor(evt.type),
-      description: evt.summary,
-      fields: [
-        { name: 'Server', value: server ? server.display_name : evt.server_id },
-        { name: 'By', value: evt.actor || 'system' },
-      ],
-    });
+    if (deliverable) {
+      const [kind] = mapped;
+      const server = db.get('SELECT display_name FROM servers WHERE id = ?', evt.server_id);
+      const ok = await notify(evt.server_id, kind, {
+        title: titleFor(evt.type),
+        description: evt.summary,
+        fields: [
+          { name: 'Server', value: server ? server.display_name : evt.server_id },
+          { name: 'By', value: evt.actor || 'system' },
+        ],
+      });
+      if (!ok) {
+        retryCount = retryId === evt.id ? retryCount + 1 : 1;
+        retryId = evt.id;
+        if (retryCount < MAX_DELIVERY_RETRIES) return; // hold the mark here; retry next poll
+        logger.warn('Gave up forwarding an event to Discord after repeated delivery failures.', {
+          eventId: evt.id,
+          attempts: retryCount,
+        });
+      }
+    }
+
+    lastSeenId = evt.id;
+    if (retryId) {
+      retryId = 0;
+      retryCount = 0;
+    }
   }
 }
 
@@ -287,4 +309,14 @@ function titleFor(type) {
   return map[type] || type;
 }
 
-module.exports = { getConfig, setConfig, testWebhook, notify, startEventBridge, stopEventBridge, WEBHOOK_RE };
+module.exports = {
+  getConfig,
+  setConfig,
+  testWebhook,
+  notify,
+  startEventBridge,
+  stopEventBridge,
+  WEBHOOK_RE,
+  // Exported for tests: drive one poll cycle deterministically.
+  _pollOnce: pollOnce,
+};

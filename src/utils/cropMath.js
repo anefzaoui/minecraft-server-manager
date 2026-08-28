@@ -2,8 +2,9 @@
 
 // Geometry + export-format helpers for the client-side profile-picture cropper
 // (public/js/lib/imageCrop.js). Kept here, framework-free and pure, so the same
-// logic runs under node:test - the browser copy in public/js/lib/cropMath.js is
-// a byte-for-byte mirror (see the header there). All coordinates are in
+// logic runs under node:test. The browser copy in public/js/lib/cropMath.js has
+// an identical function body (only the module syntax differs); test/cropMath
+// runs the same cases through both and fails on drift. All coordinates are in
 // image-display pixels (the on-screen <img> size), never natural pixels.
 
 const MIN_CROP_PX = 40; // smallest selectable square, in image-display px
@@ -15,9 +16,12 @@ const PNG_KEEP_MAX = 500 * 1024; // a PNG export above this falls back to JPEG
  * where possible (shrinking only when the box is larger than the area itself).
  */
 function clampBox(box, w, h) {
-  const size = Math.max(MIN_CROP_PX, Math.min(box.size, w, h));
-  const x = Math.min(Math.max(box.x, 0), w - size);
-  const y = Math.min(Math.max(box.y, 0), h - size);
+  // Never larger than the area; MIN_CROP_PX is a floor only while the area has
+  // room for it - a sub-40px display area gets a sub-40px box, not a 40px box
+  // hanging off the edge with negative x/y.
+  const size = Math.min(Math.max(box.size, MIN_CROP_PX), w, h);
+  const x = Math.max(0, Math.min(box.x, w - size));
+  const y = Math.max(0, Math.min(box.y, h - size));
   return { x, y, size };
 }
 
@@ -42,7 +46,9 @@ function resizeBox(box, handle, pointer, w, h) {
   let side = Math.max(Math.abs(px - anchorX), Math.abs(py - anchorY)); // follow the farther axis
   const maxX = sx > 0 ? w - anchorX : anchorX; // room before hitting an edge
   const maxY = sy > 0 ? h - anchorY : anchorY;
-  side = Math.max(MIN_CROP_PX, Math.min(side, maxX, maxY));
+  // MIN_CROP_PX is a floor, but the room-to-the-edge clamp always wins so x/y
+  // below can't go negative when the image is smaller than MIN_CROP_PX.
+  side = Math.max(0, Math.min(Math.max(side, MIN_CROP_PX), maxX, maxY));
   const x = sx > 0 ? anchorX : anchorX - side;
   const y = sy > 0 ? anchorY : anchorY - side;
   return { x, y, size: side };

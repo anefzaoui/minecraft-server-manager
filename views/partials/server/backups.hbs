@@ -1,6 +1,6 @@
 <div data-backups-server="{{server.id}}" class="contents">
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <p class="text-sm text-ink-faint">Retention: the 10 most recent scheduled backups, plus every pre-update backup, are kept.</p>
+  <p class="text-sm text-ink-faint">Retention, per server: 10 scheduled, 10 pre-update, 20 manual, 5 pre-restore. The newest in each group are kept; older ones are pruned automatically.</p>
   <button class="btn btn-primary btn-sm ml-auto" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back up now</button>
 </div>
 {{#if backups.length}}

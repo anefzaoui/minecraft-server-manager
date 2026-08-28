@@ -142,40 +142,49 @@ async function handleConsole(ws, serverId, user) {
 // late-joining tab so it isn't blank.
 const consoleBrokers = new Map(); // serverId -> { subs, follower, buffer, bufferBytes, stopped }
 const CONSOLE_REPLAY_BYTES = 256 * 1024;
+// A subscriber whose socket buffer stays above this for longer than the grace
+// window is dropped. The shared upstream is NEVER paused for one slow client -
+// that would freeze the console for every other admin watching the same server.
+const CONSOLE_SLOW_SOCKET_BYTES = 4 * 1024 * 1024;
+const CONSOLE_SLOW_GRACE_MS = 5_000;
 
-function consoleMaxBuffered(broker) {
-  let max = 0;
+function dropSlowConsoleSubs(broker) {
+  const now = Date.now();
   for (const s of broker.subs) {
-    if (s.ws && s.ws.readyState === s.ws.OPEN) max = Math.max(max, s.ws.bufferedAmount);
+    const backed = s.ws && s.ws.readyState === s.ws.OPEN && s.ws.bufferedAmount > CONSOLE_SLOW_SOCKET_BYTES;
+    if (!backed) {
+      s.slowSince = 0;
+      continue;
+    }
+    if (!s.slowSince) {
+      s.slowSince = now;
+    } else if (now - s.slowSince > CONSOLE_SLOW_GRACE_MS) {
+      s.dropped = true;
+      broker.subs.delete(s);
+      try {
+        s.onError('The console fell behind and was disconnected. Reload to resume the live log.');
+        s.ws.close(1013, 'console consumer too slow');
+      } catch {
+        /* socket already going away */
+      }
+    }
   }
-  return max;
 }
 
-// Backpressure across the shared stream: pause the upstream docker log stream
-// while ANY subscriber's socket buffer is backed up, resume once they all drain.
-// One slow client can add latency for the others, but never unbounded RSS.
-function applyConsoleBackpressure(broker) {
-  const stream = broker.follower && broker.follower.stream;
-  if (!stream || stream.destroyed) return;
-  if (consoleMaxBuffered(broker) > 1_000_000 && !stream.isPaused()) {
-    stream.pause();
-    const tick = setInterval(() => {
-      if (broker.stopped || stream.destroyed) {
-        clearInterval(tick);
-        return;
-      }
-      if (consoleMaxBuffered(broker) < 200_000) {
-        clearInterval(tick);
-        if (!stream.isPaused()) return;
-        stream.resume();
-      }
-    }, 100);
-    tick.unref?.();
+/** Tear the broker down when its upstream stream is finished for good. */
+function stopConsoleBroker(serverId, broker) {
+  broker.stopped = true;
+  try {
+    if (broker.follower) broker.follower.stop();
+  } catch {
+    /* already stopped */
   }
+  if (consoleBrokers.get(serverId) === broker) consoleBrokers.delete(serverId);
 }
 
 function subscribeConsole(serverId, sub) {
   let broker = consoleBrokers.get(serverId);
+  if (broker && broker.stopped) broker = null; // dead follow - start a fresh one
   if (!broker) {
     broker = { subs: new Set(), follower: null, buffer: [], bufferBytes: 0, stopped: false };
     consoleBrokers.set(serverId, broker);
@@ -193,11 +202,15 @@ function subscribeConsole(serverId, sub) {
           while (broker.bufferBytes > CONSOLE_REPLAY_BYTES && broker.buffer.length > 1) {
             broker.bufferBytes -= Buffer.byteLength(broker.buffer.shift());
           }
-          for (const s of broker.subs) s.onLog(text);
-          applyConsoleBackpressure(broker);
+          for (const s of broker.subs) if (!s.dropped) s.onLog(text);
+          dropSlowConsoleSubs(broker);
         });
         follower.stream.on('end', () => {
           for (const s of broker.subs) s.onEnd();
+          // The follow is over (container stopped / docker restarted it). Drop
+          // the broker so a tab that connects later starts a fresh follow rather
+          // than attaching to this dead one and getting only the stale replay.
+          stopConsoleBroker(serverId, broker);
         });
         follower.stream.on('error', (err) => {
           logger.debug('A console log stream errored.', {
@@ -205,9 +218,11 @@ function subscribeConsole(serverId, sub) {
             err: serializeError(err, { includeStack: false }),
           });
           for (const s of broker.subs) s.onError(`Log stream error: ${err.message}`);
+          stopConsoleBroker(serverId, broker);
         });
       })
       .catch((err) => {
+        broker.stopped = true;
         if (consoleBrokers.get(serverId) === broker) consoleBrokers.delete(serverId);
         // A missing container (404) just means the server has never been started -
         // end quietly; the console already shows a "start the server" placeholder.

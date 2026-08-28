@@ -316,15 +316,25 @@ function profile(serverId, uuid) {
 // snapshot set actually changes (newest ts + row count catch both an ingest and
 // a retention prune). Windowed leaderboards also key on a coarse time bucket so
 // a moving "last 7d" boundary doesn't serve a stale delta indefinitely.
+// Bounded LRU: windowed leaderboards mix a 5-minute time bucket into their key,
+// so every (server, metric, window) combo mints a fresh, permanently-dead entry
+// every 5 minutes. Cap the map and evict the least-recently-used so the cache
+// can't grow with uptime.
 const reportCache = new Map();
+const REPORT_CACHE_MAX = 500;
 function memoizeBySnapshots(serverId, key, compute) {
   const s = db.get('SELECT MAX(ts) AS t, COUNT(*) AS n FROM player_stat_snapshots WHERE server_id = ?', serverId);
   const stamp = `${(s && s.t) || ''}:${(s && s.n) || 0}`;
   const cacheKey = `${serverId}::${key}`;
   const hit = reportCache.get(cacheKey);
-  if (hit && hit.stamp === stamp) return hit.value;
+  if (hit && hit.stamp === stamp) {
+    reportCache.delete(cacheKey);
+    reportCache.set(cacheKey, hit); // move to most-recently-used
+    return hit.value;
+  }
   const value = compute();
   reportCache.set(cacheKey, { stamp, value });
+  if (reportCache.size > REPORT_CACHE_MAX) reportCache.delete(reportCache.keys().next().value);
   return value;
 }
 

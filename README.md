@@ -30,7 +30,8 @@ copy to migrate.**
 - **Modpacks are always pinned**: "latest" is resolved to a concrete version id at install time and
   pinned, so the image never silently upgrades a pack on restart. Upgrades are explicit: preview →
   automatic pre-update backup → graceful stop → re-pin → recreate → health monitoring → **one-click
-  rollback** if it doesn't come up.
+  rollback** if it doesn't come up. The Updates page also checks Docker-image staleness and, for
+  servers with no managed pack, explicit Minecraft-version / loader-build pins.
 - **Custom-mod overlay**: mods you add yourself are downloaded into a shared, sha256-deduplicated
   library and hard-linked into the server; they survive pack updates. Disabling is class-aware
   (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism).
@@ -40,8 +41,10 @@ copy to migrate.**
 - **Player moderation**: whitelist, ops (levels 1–4), bans, IP bans; via RCON while running and via
   direct JSON edits while stopped ("applies on start"). Teleport by coordinates, to a player, or to
   the nearest biome.
-- **Backups & schedules**: save-safe archive/restore with retention classes and free-space
-  preflight; per-server and global cron tasks (restart / backup / RCON) with next-run previews.
+- **Backups & schedules**: save-safe archive/restore with per-reason retention caps and free-space
+  preflight; every new server is seeded a daily backup automatically, each archive is
+  integrity-checked before it's recorded, and the panel's own database is snapshotted on a daily
+  timer. Per-server and global cron tasks (restart / backup / RCON) with next-run previews.
 - **Blueprints (`.mcserver.zip`)**: a portable recipe of an instance. Full config (secrets
   stripped), resource limits, the pinned pack reference, the custom-mod overlay manifest (source
   URLs + hashes), chosen config files, and optionally an embedded world. Import reproduces the same
@@ -71,7 +74,9 @@ copy to migrate.**
 - **Investigation**: advisory x-ray suspicion scoring from ore-discovery ratios vs the server
   median; evidence laid out, never auto-punishing.
 - **Discord**: webhook notifications (lifecycle, crashes, backups, updates, player actions) with
-  per-event toggles; URLs stored encrypted.
+  per-event toggles, plus an **Alerts** category (OOM, unhealthy, stalled boot, stop-failed,
+  failed schedule, quota stop, offline-after-restart, crash loop) that's on by default. URLs
+  stored encrypted. See the [integrations guide](docs/integrations.md).
 - **Invites & client modpacks**: a paste-ready invite block plus a generated client `.mrpack` with
   the server pre-added to the in-game server list.
 - **Pick-mods-first solver**: choose the mods you want; the solver intersects Modrinth metadata to
@@ -152,6 +157,7 @@ by host path).
 git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
 cd minecraft-server-manager
 pnpm install               # installs deps and builds the Tailwind CSS (postinstall)
+pnpm run build             # optional: also build the esbuild client-JS bundle (raw source is served otherwise)
 cp .env.example .env      # optional - all values have sane defaults
 pnpm start                 # or: pnpm run dev (auto-restart + CSS watch)
 ```
@@ -161,9 +167,14 @@ reachable just from this machine; set `PANEL_HOST=0.0.0.0` to reach it across yo
 walks you through a system check, choosing your time zone, and creating the admin account. If Docker
 isn't running you still get the full UI, and the lifecycle features light up when the daemon comes up.
 
+> If you start with a non-loopback `PANEL_HOST`, first-run `/setup` is PIN-gated: a 6-digit PIN is
+> printed to the server console and must be entered before the admin account can be created.
+
 You do **not** need to set anything in `.env` to start: on first run the panel generates a strong
-random secret and persists it under your data directory (`data/.session-secret`). Set `SESSION_SECRET`
-yourself only if you want to control it (e.g. to share one across replicas).
+random cookie secret (`data/.session-secret`) and a separate at-rest encryption key
+(`data/.secret-key`). Set `SESSION_SECRET` yourself only if you want to control it (e.g. to share one
+across replicas); the at-rest key is always machine-local, so keep `data/.secret-key` with your
+backups.
 
 ### Run the panel itself in Docker
 
@@ -220,8 +231,10 @@ host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path;
 | `DATA_DIR_HOST`                                                             | = `DATA_DIR`               | Only when the panel runs **in a container**: the absolute host path of the `DATA_DIR` mount, used to re-root bind mounts for the host daemon.                                                                                                                                                            |
 | `MAP_PROXY_HOST`                                                            | see note                   | Address the panel uses to reach sibling containers' host-published ports (currently just the live map). `127.0.0.1` bare metal; auto-switches to `host.docker.internal` when `DATA_DIR_HOST` is set (containerized panel - needs `extra_hosts`, see above). Override for rootless Docker/remote daemons. |
 | `PANEL_HOST` / `PANEL_PORT`                                                 | `127.0.0.1` / `25564`      | Web UI bind address + port. Localhost-only by default; set `PANEL_HOST=0.0.0.0` for LAN access.                                                                                                                                                                                                          |
-| `SESSION_SECRET`                                                            | auto-generated             | Signs session cookies + derives the at-rest encryption key. Auto-created and persisted if unset.                                                                                                                                                                                                         |
-| `TRUST_PROXY` / `COOKIE_SECURE`                                             | -                          | Set when behind a TLS-terminating reverse proxy, so `req.ip` (rate-limiting) and `Secure` cookies work.                                                                                                                                                                                                  |
+| `SESSION_SECRET`                                                            | auto-generated             | Signs session cookies. Auto-created and persisted at `$DATA_DIR/.session-secret` if unset. At-rest encryption uses a **separate** auto-generated `$DATA_DIR/.secret-key`, so rotating this no longer invalidates stored secrets.                                                                         |
+| `TRUST_PROXY` / `COOKIE_SECURE` / `COOKIE_SAMESITE`                         | - / - / `lax`              | Set when behind a TLS-terminating reverse proxy. `TRUST_PROXY` (hops, `loopback`, or IP list) is required for `req.ip` to see the real client, which the rate limiters key on. `COOKIE_SAMESITE` is `lax`/`strict`/`none`; `none` requires `COOKIE_SECURE`.                                              |
+| `RATE_LIMIT_API_PER_MIN` / `RATE_LIMIT_AUTH_PER_15MIN`                      | `1200` / `100`             | Per-client-IP request ceilings: all of `/api`, and login / 2FA / setup POSTs. `0` disables that limiter. A volume backstop on top of the per-account login lockout.                                                                                                                                      |
+| `MSM_EXIT_ON_FATAL`                                                         | -                          | `1`/`true`/`yes` makes the post-boot runtime guard hard-exit on an uncaught exception/rejection instead of logging and staying up - for supervised deployments (`systemd`, Docker `restart:`).                                                                                                           |
 | `DOCKER_HOST`                                                               | auto-detected              | Docker endpoint override for rootless Docker, Podman, or a remote daemon (per-OS socket/pipe otherwise).                                                                                                                                                                                                 |
 | `CF_API_KEY`                                                                | -                          | Optional [CurseForge API key](https://console.curseforge.com/) to seed on first run (also settable in the UI). Wrap in single quotes; CF keys often contain `$`.                                                                                                                                         |
 | `MC_IMAGE_REPO`                                                             | `itzg/minecraft-server`    | Docker image repo for servers; override for a private mirror / air-gapped registry.                                                                                                                                                                                                                      |
@@ -229,6 +242,7 @@ host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path;
 | `PORT_GAME_START` / `PORT_RCON_OFFSET` / `PORT_BEDROCK_START`               | `25565` / `1000` / `19132` | Port allocation scheme.                                                                                                                                                                                                                                                                                  |
 | `LOG_LEVEL`                                                                 | `info`                     | Log verbosity: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`. Structured JSON to stdout.                                                                                                                                                                                                  |
 | `LOG_PRETTY`                                                                | auto (TTY in dev)          | `false` forces JSON output; ignored in production.                                                                                                                                                                                                                                                       |
+| `SENTRY_DSN` (+ `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`)          | -                          | Optional error-reporting seam. Inert unless a DSN is set; the wiring in `src/instrument.js` is a no-op stub for now.                                                                                                                                                                                     |
 
 > **Exposure:** the panel binds to localhost by default. Set `PANEL_HOST=0.0.0.0` for LAN access, and only
 > put it on the internet behind a reverse proxy with TLS (set `TRUST_PROXY` + `COOKIE_SECURE`). Auth is
@@ -358,10 +372,13 @@ pm2 save
 
 ```
 data/
-  .session-secret        auto-generated panel secret (keep private; delete = rotate)
+  .session-secret        auto-generated cookie-signing secret (keep private; delete = rotate)
+  .secret-key            auto-generated at-rest encryption key (keep with backups; delete = lose
+                         stored API keys / RCON passwords / TOTP secrets)
   panel.db               SQLite database (node:sqlite, WAL)
   servers/<id>/          bind-mounted as /data into each container (world, mods, configs…)
   backups/<id>/          backup archives
+  backups/_panel/        panel-DB snapshots (VACUUM INTO, newest 14 kept)
   blueprints/            .mcserver.zip exports
   library/mods/          shared mod/plugin jars, deduplicated by sha256
   library/modpacks/      pack archives
@@ -407,7 +424,12 @@ quota. Optional strict mode gracefully stops a runaway server past its quota.
 
 ### Secrets at rest
 
-API keys and RCON passwords are encrypted with AES-256-GCM, using a key derived from `SESSION_SECRET`.
+API keys, RCON passwords, TOTP secrets, and the Discord webhook URL are encrypted with AES-256-GCM
+using a **dedicated** random key at `$DATA_DIR/.secret-key` (auto-generated on first run, mode
+`0600`). It's independent of `SESSION_SECRET`, so rotating the cookie secret no longer invalidates
+stored credentials. Values written before this key existed used a `SESSION_SECRET`-derived key,
+kept as a decrypt-only fallback and re-encrypted under the dedicated key automatically on boot.
+**Back up `.secret-key` with your data** - losing it means re-entering every stored credential.
 Blueprints never contain secrets. The panel refuses to set footgun env vars (`REMOVE_OLD_MODS`,
 `LOAD_ENV_FROM_*`).
 
@@ -425,19 +447,33 @@ node scripts/reset-password.js <username>
 ## Security
 
 - **Localhost-only by default**: binds `127.0.0.1` out of the box; LAN/internet exposure is an explicit opt-in.
-- Session auth (SQLite-backed), bcrypt password hashes, login rate-limiting, first-run admin setup.
+- Session auth (SQLite-backed), async bcrypt password hashes, first-run admin setup. On an exposed
+  (non-loopback) bind, first-run `/setup` is additionally gated by a 6-digit PIN printed to the
+  server console.
+- **Rate limiting**: a per-account login lockout (per-IP and account-global), plus per-client-IP
+  `express-rate-limit` on all of `/api` (`RATE_LIMIT_API_PER_MIN`, default 1200) and on login /
+  2FA / setup POSTs (`RATE_LIMIT_AUTH_PER_15MIN`, default 100). Behind a proxy, set `TRUST_PROXY`.
 - **Two-factor authentication (TOTP)**: opt-in per account (any role), with one-time backup codes and an
   admin reset path; the login rate-limit is shared across the password and code steps so a correct
   password can't reset the counter before code-guessing.
-- Roles: **admin / operator / viewer**, enforced on every mutating request (user management in Settings).
-- `SameSite=Strict` cookies + Origin checks on all state-changing requests; WebSockets authenticate
-  the session cookie on upgrade. Security headers (CSP, `X-Frame-Options`, `nosniff`) on every response.
-- Secrets encrypted at rest (AES-256-GCM), and never readable through the file manager. Blueprints strip
-  secrets on export.
+- Roles: **admin / operator / viewer**, enforced on every mutating request - including side-effecting
+  GETs (event export, world download, `.mrpack`), which are gated to admin/operator (user management
+  in Settings).
+- `SameSite=Lax` cookies by default (`COOKIE_SAMESITE` to change) + Origin checks on all
+  state-changing requests; with `COOKIE_SAMESITE=none`, writes with no `Origin`/`Referer` are also
+  rejected. WebSocket upgrades check `Origin` and authenticate the session cookie. Per-request CSP
+  nonces (no `unsafe-inline` in `script-src`), `X-Frame-Options`, `nosniff` on every response.
+- Secrets encrypted at rest (AES-256-GCM, dedicated key - see above), never readable through the file
+  manager. Blueprints strip secrets on export. Uploaded images are verified by magic bytes, not the
+  declared content type.
 - Every file path is validated against escape from `./data` (including symlinks that resolve outside it);
-  archive extraction is zip-slip-guarded and size-capped. Server-side downloads (mods, icons) are
-  SSRF-guarded against private/internal addresses. The BlueMap proxy never forwards your session cookie
-  to the map container.
+  archive extraction is zip-slip-guarded, size-capped, and decompression-bomb-ceilinged, and backup
+  zipping runs in a `worker_threads` worker. Server-side downloads (mods, icons) are SSRF-guarded
+  against private/internal addresses. The BlueMap proxy never forwards your session cookie to the map
+  container.
+- **Health & monitoring endpoints**: `GET /healthz` (unauthenticated liveness - checks the DB,
+  returns `503` on failure, deliberately no version) and `GET /api/status/summary` (authenticated:
+  current problems, recent alerts, disk free) for operators and external monitors.
 
 ## Architecture
 
@@ -452,11 +488,13 @@ src/
   updates/     update checker + safe-upgrade orchestrator (rollback)
   crashes/     crash watcher + parser
   blueprints/  export / import / clone + starter blueprints
-  ws/          live console + stats WebSockets
+  ws/          live console (brokered) + stats WebSockets
   web/         express app, routes (pages + /api), view models, middleware
-  utils/       shared helpers (httpError, ansi, …)
+  logger.js    per-module Pino factory; instrument.js is the (dormant) Sentry seam
+  utils/       shared helpers (httpError, ansi, logSanitize, safeExtract, cropMath, …)
 views/         handlebars layouts / partials / pages (server-rendered)
-public/        built CSS, icon system, shared js/lib/* UI components
+public/        built CSS, icon system, shared js/lib/* UI components; dist/js is the
+               esbuild bundle (served when present, raw source otherwise)
 ```
 
 The layering rule: **routes (HTTP) → services (domain logic) → docker/db/storage (infrastructure).**
@@ -465,17 +503,17 @@ The field catalog in `src/config/` is the single source of truth for server sett
 
 ## Scripts
 
-| command               | what it does                                            |
-| --------------------- | ------------------------------------------------------- |
-| `pnpm run dev`        | app with auto-restart + Tailwind watch                  |
-| `pnpm start`          | production start                                        |
-| `pnpm run build`      | minified CSS build (also runs automatically on install) |
-| `pnpm run lint`       | ESLint over `src/`, `scripts/`, `public/js/`, `test/`   |
-| `pnpm run format`     | Prettier over the tree                                  |
-| `pnpm run typecheck`  | `tsc --checkJs` over the type-clean core                |
-| `pnpm test`           | unit tests (`node:test`); runs on a clean clone         |
-| `pnpm run test:watch` | unit tests, re-run on every save                        |
-| `pnpm run test:smoke` | live QA sweep against a running panel (needs Docker)    |
+| command               | what it does                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `pnpm run dev`        | app with auto-restart + Tailwind watch                                               |
+| `pnpm start`          | production start                                                                     |
+| `pnpm run build`      | minified CSS + esbuild client-JS bundle (only the CSS runs automatically on install) |
+| `pnpm run lint`       | ESLint over `src/`, `scripts/`, `public/js/`, `test/`                                |
+| `pnpm run format`     | Prettier over the tree                                                               |
+| `pnpm run typecheck`  | `tsc --checkJs` over the type-clean core                                             |
+| `pnpm test`           | unit tests (`node:test`); runs on a clean clone                                      |
+| `pnpm run test:watch` | unit tests, re-run on every save                                                     |
+| `pnpm run test:smoke` | live QA sweep against a running panel (needs Docker)                                 |
 
 ## Status & areas that need work
 

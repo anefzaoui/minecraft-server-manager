@@ -30,6 +30,21 @@ test('account-global lockout: many failures spread across IPs still trips on the
   allows(() => checkLoginAllowed(u, '203.0.113.9'));
 });
 
+test('the account-global counter decays: a slow sprayer cannot hold an account locked forever', (t) => {
+  t.mock.timers.enable({ apis: ['Date'] });
+  const u = `u_${Math.random().toString(36).slice(2)}`;
+  for (let i = 0; i < 100; i++) recordLoginFailure(u, `172.16.${Math.floor(i / 256)}.${i % 256}`);
+  rejects429(() => checkLoginAllowed(u, '198.51.100.1'));
+
+  // Past the 5-min global cooldown with no fresh failures in between.
+  t.mock.timers.tick(6 * 60 * 1000);
+  // A single lone failure after the cooldown must NOT instantly re-lock the
+  // account (old behaviour: count was still 100, so bump -> 101 -> re-locked).
+  recordLoginFailure(u, '198.51.100.2');
+  allows(() => checkLoginAllowed(u, '198.51.100.3'));
+  clearLoginFailures(u, '198.51.100.1');
+});
+
 test('a successful login (clearLoginFailures) frees both the per-IP and the global counter', () => {
   const u = `u_${Math.random().toString(36).slice(2)}`;
   for (let i = 0; i < 100; i++) recordLoginFailure(u, `10.1.${Math.floor(i / 256)}.${i % 256}`);

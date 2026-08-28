@@ -328,7 +328,12 @@ function firstIssue(err) {
     // Zod's built-in messages ("String must contain at least 8 character(s)")
     // are developer text - fall back to a plain sentence rather than show them.
     if (m && !/^(String|Number|Required|Invalid input|Expected)/.test(m)) return m;
+    return 'Please check what you entered and try again.';
   }
+  // A deliberate, already-friendly error from the auth service or the rate
+  // limiter (the 429 lockout notice, "That username is already taken.") carries
+  // a .status - show its message rather than burying it under the generic line.
+  if (err && err.status && typeof err.message === 'string' && err.message) return err.message;
   return 'Please check what you entered and try again.';
 }
 

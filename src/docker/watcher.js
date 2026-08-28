@@ -147,35 +147,32 @@ async function handleEvent(evt) {
   // Config errors never fix themselves - diagnose them so the crash event
   // says WHAT to do, and skip auto-restarts that would just burn cycles.
   const diagnosis = diagnoseFatal(excerpt);
+  // Only crashes that actually reach the auto-restart path count toward the
+  // crash-loop backoff. A config-error crash, a stop-window crash, or a SIGKILL
+  // is still recorded as 'crashed' but never armed a restart, so it must not
+  // inflate `recentCrashes` (or the exponential backoff) for a later real one.
+  const armedRestart = !diagnosis && !stopRequested && !killedBySignal && Boolean(server.auto_restart);
   recordEvent({
     serverId,
     type: 'crashed',
     summary: diagnosis
       ? `Server crashed: ${diagnosis.summary}`
       : `Server crashed (exit code ${exitCode})${stopRequested ? ' while a stop/restart was in progress' : ''}`,
-    details: { exitCode, duringStopWindow: Boolean(stopRequested), diagnosis: diagnosis ? diagnosis.key : null },
+    details: {
+      exitCode,
+      duringStopWindow: Boolean(stopRequested),
+      diagnosis: diagnosis ? diagnosis.key : null,
+      armedRestart,
+    },
     logExcerpt: excerpt || null,
   });
-  if (diagnosis) return; // auto-restart cannot help a config error
+  if (!armedRestart) return; // config error / stop-window / SIGKILL / no auto_restart
 
-  // A crash during a requested stop/restart must not fight the panel's own
-  // lifecycle handling with an auto-restart.
-  if (stopRequested) return;
-  // SIGKILL with no stop request is typically an external kill / OOM-adjacent
-  // event - recorded above, but don't fight it with an auto-restart loop.
-  if (killedBySignal) return;
-  if (!server.auto_restart) return;
-  // Count recent crashes from the events table (this crash is already recorded
-  // above), not an in-memory map - so a panel restart in the middle of a crash
-  // loop doesn't wipe the backoff and let it hammer restarts all over again.
-  const recentCrashes =
-    db.get(
-      `SELECT COUNT(*) AS n FROM events
-         WHERE server_id = ? AND type = 'crashed'
-           AND created_at > datetime('now', ?)`,
-      serverId,
-      `-${CRASH_WINDOW_MINUTES} minutes`
-    )?.n || 1;
+  // Count recent restart-arming crashes from the events table (this crash is
+  // already recorded above), not an in-memory map - so a panel restart in the
+  // middle of a crash loop doesn't wipe the backoff and let it hammer restarts
+  // all over again.
+  const recentCrashes = countArmedCrashes(serverId) || 1;
   if (recentCrashes > MAX_RAPID_CRASHES) {
     const suspended = db.get(
       `SELECT 1 AS x FROM events WHERE server_id = ? AND type = 'crash-loop'
@@ -214,6 +211,37 @@ async function handleEvent(evt) {
       });
     }
   }, delayMs).unref();
+}
+
+/** Count restart-arming crashes for `serverId` inside the crash-loop window. */
+function countArmedCrashes(serverId) {
+  return (
+    db.get(
+      `SELECT COUNT(*) AS n FROM events
+         WHERE server_id = ? AND type = 'crashed'
+           AND created_at > datetime('now', ?)
+           AND json_extract(details_json, '$.armedRestart') = 1`,
+      serverId,
+      `-${CRASH_WINDOW_MINUTES} minutes`
+    )?.n || 0
+  );
+}
+
+/**
+ * True when a server is currently held back by crash-loop protection - either an
+ * explicit 'crash-loop' suspension event, or enough recent restart-arming
+ * crashes to have tripped MAX_RAPID_CRASHES. The boot-time crash recovery checks
+ * this so a panel restart mid-loop doesn't start the server one more time.
+ */
+function inCrashLoopBackoff(serverId) {
+  const suspended = db.get(
+    `SELECT 1 AS x FROM events WHERE server_id = ? AND type = 'crash-loop'
+       AND created_at > datetime('now', ?)`,
+    serverId,
+    `-${CRASH_WINDOW_MINUTES} minutes`
+  );
+  if (suspended) return true;
+  return countArmedCrashes(serverId) > MAX_RAPID_CRASHES;
 }
 
 /** Match known unrecoverable startup errors → actionable message. */
@@ -258,4 +286,4 @@ function diagnoseFatal(logText) {
   return null;
 }
 
-module.exports = { startWatcher, diagnoseFatal };
+module.exports = { startWatcher, diagnoseFatal, inCrashLoopBackoff };

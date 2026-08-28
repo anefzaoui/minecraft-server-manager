@@ -14,7 +14,7 @@ import { openModal } from './modal.js';
 import { toast } from './toast.js';
 import { clampBox, resizeBox, pickExport, MIN_CROP_PX, OUTPUT_MAX_PX } from './cropMath.js';
 
-const RASTER_MAX = 1024; // px cap when rasterizing an SVG before cropping
+const RASTER_MAX = 1024; // long-edge px cap for the crop source (SVG raster + oversized photos)
 const SERVER_MAX_BYTES = 512 * 1024; // must match the multer limit in routes/account.js
 
 export function openCropModal(file) {
@@ -76,49 +76,72 @@ export function openCropModal(file) {
 
 // --- source loading -------------------------------------------------------
 
-// Resolve to a decoded raster <img> plus the source type that drives the
-// export format. SVG is drawn to a canvas and handed back on as a PNG.
+// Resolve to a decoded raster <img> plus the source type that drives the export
+// format. SVG is drawn to a canvas and handed back as a PNG. An oversized photo
+// is downscaled the same way BEFORE it becomes a DOM <img> for the crop UI - a
+// ~10k x 10k image decoded at natural size can crash a phone browser, and the
+// <= 512px export never needs more than RASTER_MAX of source anyway.
 async function normalizeSource(file) {
   const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name || '');
+  const sourceType = !isSvg && file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+
   if (!isSvg) {
-    const url = URL.createObjectURL(file);
-    let img;
+    const rawUrl = URL.createObjectURL(file);
+    let raw;
     try {
-      img = await decodeImage(url);
+      raw = await decodeImage(rawUrl);
     } catch (err) {
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(rawUrl);
       throw err;
     }
-    return { img, url, sourceType: file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png' };
+    if (Math.max(raw.naturalWidth, raw.naturalHeight) <= RASTER_MAX) {
+      return { img: raw, url: rawUrl, sourceType };
+    }
+    const shrunk = await rasterizeDownscaled(raw, sourceType);
+    URL.revokeObjectURL(rawUrl);
+    return decodeToResult(shrunk, sourceType);
   }
 
   // Rasterize the SVG, then continue exactly as if a PNG had been picked.
   const svgUrl = URL.createObjectURL(file);
   let pngBlob;
   try {
-    const svgImg = await decodeImage(svgUrl);
-    let w = svgImg.naturalWidth || 512; // sizeless SVGs report 0 (or 300x150)
-    let h = svgImg.naturalHeight || 512;
-    const fit = Math.min(1, RASTER_MAX / Math.max(w, h));
-    w = Math.max(1, Math.round(w * fit));
-    h = Math.max(1, Math.round(h * fit));
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    canvas.getContext('2d').drawImage(svgImg, 0, 0, w, h);
-    pngBlob = await canvasToBlob(canvas, 'image/png');
+    pngBlob = await rasterizeDownscaled(await decodeImage(svgUrl), 'image/png', { fallbackSize: 512 });
   } finally {
     URL.revokeObjectURL(svgUrl);
   }
-  const url = URL.createObjectURL(pngBlob);
-  let img;
+  return decodeToResult(pngBlob, 'image/png');
+}
+
+// Draw `srcImg` into a canvas no larger than RASTER_MAX on its long edge and
+// return it as a Blob of `type`. `fallbackSize` covers sizeless SVGs (0x0).
+async function rasterizeDownscaled(srcImg, type, { fallbackSize = 0 } = {}) {
+  let w = srcImg.naturalWidth || fallbackSize || RASTER_MAX;
+  let h = srcImg.naturalHeight || fallbackSize || RASTER_MAX;
+  const fit = Math.min(1, RASTER_MAX / Math.max(w, h));
+  w = Math.max(1, Math.round(w * fit));
+  h = Math.max(1, Math.round(h * fit));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  if (type === 'image/jpeg') {
+    ctx.fillStyle = '#fff'; // JPEG has no alpha
+    ctx.fillRect(0, 0, w, h);
+  }
+  ctx.drawImage(srcImg, 0, 0, w, h);
+  return canvasToBlob(canvas, type, type === 'image/jpeg' ? 0.92 : undefined);
+}
+
+async function decodeToResult(blob, sourceType) {
+  const url = URL.createObjectURL(blob);
   try {
-    img = await decodeImage(url);
+    return { img: await decodeImage(url), url, sourceType };
   } catch (err) {
     URL.revokeObjectURL(url);
     throw err;
   }
-  return { img, url, sourceType: 'image/png' };
 }
 
 function decodeImage(url) {

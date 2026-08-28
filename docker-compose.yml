@@ -5,8 +5,10 @@
 # directly, so only the panel port appears below.
 #
 # One variable is required: DATA_DIR_HOST - the ABSOLUTE host path where all
-# panel data (worlds, mods, backups, DB) should live. Set it in a `.env` file
-# next to this compose file (or in your Portainer/Dockge stack environment):
+# panel data lives: worlds, mods, backups, the DB, plus `.secret-key` (the
+# at-rest encryption key) and `backups/_panel/` (panel-DB snapshots). Back up
+# this whole tree. Set it in a `.env` file next to this compose file (or in your
+# Portainer/Dockge stack environment):
 #
 #   DATA_DIR_HOST=/opt/msm/data
 #
@@ -31,11 +33,18 @@ services:
       - 'host.docker.internal:host-gateway'
     environment:
       DATA_DIR_HOST: ${DATA_DIR_HOST:?Set DATA_DIR_HOST to the absolute host path for panel data, e.g. /opt/msm/data}
-      # Behind a TLS-terminating reverse proxy? See the README env table:
+      # Behind a TLS-terminating reverse proxy? See the README env table.
+      # TRUST_PROXY is also what lets the rate limiters key on the real client IP.
       # TRUST_PROXY: '1'
       # COOKIE_SECURE: auto
-      # Pin the session/crypto secret instead of the auto-generated one:
+      # COOKIE_SAMESITE: lax
+      # Pin the cookie-signing secret instead of the auto-generated one (the
+      # at-rest encryption key, .secret-key, is always separate and machine-local):
       # SESSION_SECRET: change-me-to-a-long-random-string
+      # LOG_LEVEL: info
+      # RATE_LIMIT_API_PER_MIN: '1200'
+      # Hard-exit on an uncaught fault so this container restarts:
+      # MSM_EXIT_ON_FATAL: '1'
     volumes:
       - ${DATA_DIR_HOST}:/data
       # The panel manages servers through the host daemon (create/start/exec).

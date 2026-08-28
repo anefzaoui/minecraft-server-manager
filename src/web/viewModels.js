@@ -25,15 +25,17 @@ async function displayVersion(mcVersion) {
 /**
  * Lean per-server view models for the layout chrome that renders on EVERY
  * authenticated page: the sidebar server list, the server-picker <select>s on
- * Backups / Activity, and the Storage quota table. Those templates only read
- * id / name / icon / accent / status / disk, so this deliberately skips the full
- * serverVM() fan-out (per-server pack lookup, update-check lookup, crash-count,
- * loader detection, version-manifest resolve) that used to run once per server
- * on every page load. Two queries total.
+ * Backups / Activity / Worlds, and the Storage quota table. Those templates read
+ * id / name / icon / accent / status / disk / flavor, so this deliberately skips
+ * the full serverVM() fan-out (per-server pack lookup, update-check lookup,
+ * crash-count, loader detection, version-manifest resolve) that used to run once
+ * per server on every page load. `flavor` is a pure map off `type` - free - so
+ * it stays; the pack/update lookups do not (see packServerVMs() for the
+ * Modpacks page, which does need them).
  */
 function sidebarServerVMs() {
   const rows = db.all(
-    'SELECT id, display_name, icon, accent, status, disk_quota_bytes FROM servers WHERE deleted_at IS NULL ORDER BY created_at'
+    'SELECT id, display_name, icon, accent, status, type, disk_quota_bytes FROM servers WHERE deleted_at IS NULL ORDER BY created_at'
   );
   const sizes = new Map(
     db
@@ -46,7 +48,32 @@ function sidebarServerVMs() {
     icon: s.icon,
     accent: s.accent,
     status: s.status,
+    flavor: flavorLabel(s.type),
     disk: { used: sizes.get(`servers/${s.id}`) || 0, quota: s.disk_quota_bytes || 25 * GB },
+  }));
+}
+
+/**
+ * Pack-backed servers for the Modpacks page. Unlike sidebarServerVMs() this is
+ * NOT on the every-page hot path (one route), so it can afford the per-server
+ * pack + update-check lookups. Shape matches what views/modpacks.hbs reads:
+ * id / name / icon / accent / pack / updateAvailable.
+ */
+function packServerVMs() {
+  const rows = db.all(
+    `SELECT s.id, s.display_name, s.icon, s.accent
+       FROM servers s
+       JOIN server_packs p ON p.server_id = s.id
+      WHERE s.deleted_at IS NULL
+      ORDER BY s.created_at`
+  );
+  return rows.map((s) => ({
+    id: s.id,
+    name: s.display_name,
+    icon: s.icon,
+    accent: s.accent,
+    pack: packVM(s.id),
+    updateAvailable: hasPackUpdate(s.id),
   }));
 }
 
@@ -207,4 +234,13 @@ function crashVM(c) {
   };
 }
 
-module.exports = { serverVM, sidebarServerVMs, flavorLabel, displayVersion, eventVM, crashVM, safeJsonParse };
+module.exports = {
+  serverVM,
+  sidebarServerVMs,
+  packServerVMs,
+  flavorLabel,
+  displayVersion,
+  eventVM,
+  crashVM,
+  safeJsonParse,
+};

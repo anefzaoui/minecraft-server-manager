@@ -664,7 +664,11 @@ async function resetWorldImpl(
 
   if (backup) {
     const { createBackup } = require('./backups');
-    await createBackup(serverId, { reason: 'manual', actor, note: `Safety backup before resetting world "${level}"` });
+    await createBackup(serverId, {
+      reason: 'pre-restore',
+      actor,
+      note: `Safety backup before resetting world "${level}"`,
+    });
   }
 
   const freedBytes = await dirsSize(dims);

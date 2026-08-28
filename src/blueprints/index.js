@@ -394,7 +394,10 @@ async function importBlueprint(zipRef, overrides = {}, { actor = 'system', onPro
     if (hasPayload) {
       onProgress('Extracting blueprint payload…');
       await fsp.mkdir(tmpDir, { recursive: true });
-      await extractZip(zipPath, tmpDir);
+      // A blueprint payload is config files plus at most one embedded world -
+      // orders of magnitude below the world/backup-restore ceiling. Cap it
+      // tight so a crafted blueprint can't lean on the 50 GB default.
+      await extractZip(zipPath, tmpDir, { maxBytes: 8 * 1024 ** 3 });
     }
 
     // Pinned modpack

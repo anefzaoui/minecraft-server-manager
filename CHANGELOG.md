@@ -5,6 +5,107 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.10.0] - 2026-08-28
+
+A large operability release: structured logging, rate limiting, a dedicated at-rest encryption key,
+reliability work across the backup and lifecycle paths, a client-side avatar cropper, and a
+project-wide copy pass. It also folds in the npm→pnpm migration and a round of dependency major
+bumps. Two behaviour changes below need a note before you upgrade.
+
+### Upgrade notes
+
+- **At-rest encryption moved to a dedicated key.** Stored credentials (API keys, RCON passwords,
+  TOTP secrets, the Discord webhook URL) are now encrypted with a random key at
+  `$DATA_DIR/.secret-key`, generated automatically on first boot, **independent of
+  `SESSION_SECRET`**. Values written under the old `SESSION_SECRET`-derived key still open (it's
+  kept as a decrypt-only fallback) and are re-encrypted under the dedicated key automatically on the
+  next boot. **Back up `.secret-key` with the rest of `data/`** - losing it means re-entering every
+  stored credential. A `.secret-key` file that exists but doesn't parse is now a hard boot error
+  rather than being silently regenerated.
+- **Session cookie `SameSite` default is now `lax`** (was `strict`), configurable via
+  `COOKIE_SAMESITE`. This fixes "remember me" appearing to log users out after following a link
+  from another site. State-changing requests are still `Origin`-checked; with `COOKIE_SAMESITE=none`
+  the panel additionally rejects writes that carry no `Origin`/`Referer`.
+
+### Added
+
+- **Structured logging (Pino).** Every module logs through `src/logger.js`; one JSON line per
+  request; a secret-redacting sanitizer; `makeFailureThrottle()` for background loops; a dormant
+  Sentry seam (`src/instrument.js`). New env: `LOG_LEVEL`, `LOG_PRETTY`, `MSM_EXIT_ON_FATAL`
+  (hard-exit on an uncaught fault, for supervised deployments), and an inert `SENTRY_DSN` block.
+- **Rate limiting.** `express-rate-limit` on all of `/api` (`RATE_LIMIT_API_PER_MIN`, default 1200)
+  and on login / 2FA / setup POSTs (`RATE_LIMIT_AUTH_PER_15MIN`, default 100); `0` disables a
+  limiter. Plus an account-global soft login counter alongside the existing per-IP one.
+- **Health & monitoring endpoints.** `GET /healthz` (unauthenticated liveness; checks the DB;
+  deliberately returns no version) and `GET /api/status/summary` (authenticated: current problems,
+  recent alerts, disk free) for operators and external monitors. The container `HEALTHCHECK` now
+  hits `/healthz`.
+- **Discord "Alerts" category.** OOM, unhealthy, stalled boot, stop-failed, failed schedule, quota
+  stop, offline-after-restart, crash loop, crash report, and update-failed are forwarded under a new
+  toggleable category (on by default). See the new [integrations guide](docs/integrations.md).
+- **Automatic daily backups + panel-DB snapshots.** Every new server is seeded a daily backup
+  schedule on create (staggered 02:00–05:59). The panel's own database is snapshotted via
+  `VACUUM INTO` to `data/backups/_panel/` on a daily timer (newest 14 kept), and an
+  `integrity_check` pragma runs on boot.
+- **Avatar cropper.** Custom profile-picture uploads now pass through a client-side square-crop
+  step (drag / corner-resize) before upload; oversized rasters are downscaled before the crop UI so
+  a large photo can't OOM a mobile browser.
+- **Explicit container healthcheck (`mc-health`)** so `docker inspect` "healthy" means the server
+  accepts players, not just that the process started.
+- **Update checking extended** to Docker-image staleness and, for servers with no managed pack,
+  explicit Minecraft-version / loader-build pins (Paper/Forge/etc.).
+- **esbuild client bundle.** `pnpm run build` now also produces `public/dist/js/`; the app serves it
+  when present and raw source otherwise.
+- **New docs**: `docs/integrations.md`; refreshed backups / architecture / updates / getting-started
+  / users-and-roles / 2FA guides and the README env table.
+
+### Changed
+
+- **Package manager: npm → pnpm** throughout (scripts, CI, Dockerfile, docs).
+- **Dependency majors**: express 5, zod 4, multer 2, dockerode 5 (closes a uuid buffer-bounds
+  advisory), plus croner / dotenv / js-yaml / express-handlebars / marked and the dev toolchain
+  (eslint 10, typescript 7, @types/node 26). Node ≥ 24 is now required.
+- **Backup retention is capped per reason** (scheduled 10, pre-update 10, manual 20) and restore /
+  world-reset safety snapshots get their own `pre-restore` bucket (keep 5) so they can never evict a
+  `manual` backup you deliberately kept. Each new archive is integrity-checked before it's recorded.
+- **Project-wide copy pass**: one house style for casing, punctuation, and error messages; a shared
+  `friendlyError()` replaces raw "Request failed (500)" / Zod jargon / leaked container ids.
+- **Performance**: prepared-statement cache in the DB layer; the per-page sidebar view models no
+  longer fan out per-server pack/update/crash lookups; the WebSocket console stream is brokered (one
+  `docker logs --follow` per server, not per tab); static-asset caching; backup zipping moved to a
+  `worker_threads` worker; async bcrypt on the login path; memoized analytics reports.
+- **First-run `/setup` on a non-loopback bind is PIN-gated** (PIN printed to the console).
+- Side-effecting GETs (event export, world download, `.mrpack`) are gated to admin/operator.
+- Windows-authored zips whose entry names use backslash separators are now rejected on
+  import/restore (a containment tightening in the consolidated extractor).
+
+### Fixed / Security
+
+- **Logging/secrets**: `pino-pretty` moved to runtime dependencies (a pruned prod install could
+  crash at boot); the log sanitizer now redacts webhook tokens that live in a URL path and no longer
+  over-redacts keys like `sessionId`; one throwing getter no longer discards a whole log line; the
+  access log records aborted requests and never 500s on a crafted `X-Request-Id`.
+- **Console broker**: a broker is now torn down when its upstream stream ends, so a tab that
+  connects afterwards starts a fresh follow instead of getting a stuck, stale stream; one slow
+  client is dropped rather than freezing the console for every other viewer.
+- **Backups/lifecycle**: the status-refresh overlap guard can no longer wedge permanently on a hung
+  Docker call; boot crash-recovery respects crash-loop backoff and no longer emits a false
+  "not auto-started" alert for a server it then auto-starts; the "server up" check reads only the
+  current boot's logs, not a reused container's previous run; the crash-loop counter only counts
+  crashes that actually armed a restart.
+- **Discord bridge**: a transient webhook failure retries the event instead of dropping it (bounded,
+  so a dead webhook can't wedge the queue).
+- **Login lockout**: the account-global counter now decays, so a slow sprayer can't hold a valid
+  account locked out indefinitely; the 429 lockout message and "username already taken" now reach
+  the user instead of a generic "check what you entered".
+- **Analytics / storage / events**: the memoized-report cache is bounded (LRU); the rescan debounce
+  is trailing, not leading, so it can't run mid-restore; the Activity type-filter list is
+  invalidated after a prune.
+- Pre-branch: "remember me" logout on cross-site navigation; a full-project audit pass (per-request
+  CSP nonces - no `unsafe-inline` in `script-src`; magic-byte upload sniffing; wizard search
+  request-ordering; a shared crash-safe `escapeHtml`); symlink-escape, chat-command-nesting, and
+  SSRF/proxy-leak fixes.
+
 ## [0.9.8] - 2026-08-21
 
 Account security lands: opt-in two-factor authentication for every account, plus a round of

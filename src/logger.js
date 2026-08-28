@@ -35,6 +35,19 @@ function usePretty() {
   );
 }
 
+// pino-pretty is a real dependency, but a `--prod`/pruned install can still be
+// missing it. Pino resolves the transport target in a worker and would throw at
+// construction time, and the logger is required before anything can catch that -
+// so probe first and fall back to plain JSON rather than failing to boot.
+function prettyAvailable() {
+  try {
+    require.resolve('pino-pretty');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Trim a message and give it terminal punctuation if it lacks any.
  * @param {unknown} message
@@ -85,7 +98,7 @@ function createLogger({ level = resolveLevel(), destination } = {}) {
     },
     timestamp: pino.stdTimeFunctions.isoTime,
   };
-  if (!destination && usePretty()) {
+  if (!destination && usePretty() && prettyAvailable()) {
     options.transport = {
       target: 'pino-pretty',
       options: { translateTime: 'SYS:standard', ignore: 'pid,hostname' },

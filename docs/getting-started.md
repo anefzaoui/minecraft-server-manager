@@ -8,6 +8,8 @@ The first time you open the panel, it asks you to create an administrator accoun
 
 Pick a username and a password of at least 8 characters. That's it - you're signed in and taken straight to the dashboard.
 
+> **Exposed installs are PIN-gated.** If you start the panel bound to a non-loopback address (`PANEL_HOST` other than `127.0.0.1`), the setup page also asks for a **6-digit PIN**. The panel prints it to its console on startup - enter it along with your username and password. This stops a stranger who reaches the port first from claiming the admin account. The PIN disappears once the admin account exists.
+
 ## Signing in
 
 After setup, the panel is protected by a login screen. Enter your username and password to continue.
