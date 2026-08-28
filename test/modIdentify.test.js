@@ -77,7 +77,9 @@ test('parseJarMeta prefers neoforge.mods.toml over mods.toml', async () => {
 test('parseJarMeta reads quilt.mod.json and plugin.yml', async () => {
   const quilt = await identify.parseJarMeta(
     await jarBuffer({
-      'quilt.mod.json': JSON.stringify({ quilt_loader: { id: 'ok-zoomer', version: '1.2', metadata: { name: 'Ok Zoomer' } } }),
+      'quilt.mod.json': JSON.stringify({
+        quilt_loader: { id: 'ok-zoomer', version: '1.2', metadata: { name: 'Ok Zoomer' } },
+      }),
     })
   );
   assert.equal(quilt.loader, 'quilt');
@@ -104,7 +106,14 @@ test('parseJarMeta tolerates a non-zip buffer', async () => {
 // ---- splitCfGameVersions ----
 
 test('splitCfGameVersions separates MC versions from loader tags', () => {
-  const { mcVersions, loaders } = identify.splitCfGameVersions(['1.20.1', 'Forge', 'NeoForge', '1.21', 'Client', 'Server']);
+  const { mcVersions, loaders } = identify.splitCfGameVersions([
+    '1.20.1',
+    'Forge',
+    'NeoForge',
+    '1.21',
+    'Client',
+    'Server',
+  ]);
   assert.deepEqual(mcVersions, ['1.20.1', '1.21']);
   assert.deepEqual(loaders, ['forge', 'neoforge']);
 });
@@ -141,8 +150,12 @@ const realFetch = globalThis.fetch;
 
 test('identifyJars: Modrinth sha1 hit wins; metadata is the fallback; buffers are dropped', async () => {
   apiKeys.deleteKey('curseforge');
-  const known = await jarBuffer({ 'fabric.mod.json': JSON.stringify({ id: 'sodium', name: 'Sodium', version: '0.5.8' }) });
-  const unknown = await jarBuffer({ 'fabric.mod.json': JSON.stringify({ id: 'mystery', name: 'Mystery Mod', version: '9' }) });
+  const known = await jarBuffer({
+    'fabric.mod.json': JSON.stringify({ id: 'sodium', name: 'Sodium', version: '0.5.8' }),
+  });
+  const unknown = await jarBuffer({
+    'fabric.mod.json': JSON.stringify({ id: 'mystery', name: 'Mystery Mod', version: '9' }),
+  });
   const sha1 = crypto.createHash('sha1').update(known).digest('hex');
 
   globalThis.fetch = (input) => {
@@ -223,7 +236,9 @@ test('identifyJars: CurseForge fingerprint layer catches Modrinth misses when a 
       });
     }
     if (url.includes('api.curseforge.com/v1/mods')) {
-      return json({ data: [{ id: 777, slug: 'cf-only-mod', name: 'CF Only Mod', classId: 6, downloadCount: 1, latestFiles: [] }] });
+      return json({
+        data: [{ id: 777, slug: 'cf-only-mod', name: 'CF Only Mod', classId: 6, downloadCount: 1, latestFiles: [] }],
+      });
     }
     return Promise.reject(new Error(`unexpected fetch ${url}`));
   };

@@ -1388,7 +1388,12 @@ function initSolver({ onApplied = () => {} } = {}) {
       toast('25 mods max per solve.', { kind: 'error' });
       return;
     }
-    picked.set(keyOf(hit), { platform: hit.platform || 'modrinth', slug: hit.slug, title: hit.title, iconUrl: hit.iconUrl });
+    picked.set(keyOf(hit), {
+      platform: hit.platform || 'modrinth',
+      slug: hit.slug,
+      title: hit.title,
+      iconUrl: hit.iconUrl,
+    });
     invalidateResult();
     renderChips();
     renderResults();

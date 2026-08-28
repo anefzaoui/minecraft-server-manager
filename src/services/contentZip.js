@@ -89,7 +89,9 @@ async function inspect(zipPath) {
       /* a manifest.json that isn't a CF pack manifest → fall through to jar detection */
     }
     if (manifest) {
-      const overridesEntries = entries.filter((e) => e.name.startsWith(manifest.overridesPrefix) && !e.name.endsWith('/'));
+      const overridesEntries = entries.filter(
+        (e) => e.name.startsWith(manifest.overridesPrefix) && !e.name.endsWith('/')
+      );
       return { type: 'curseforge-pack', manifest, jarEntries: [], overridesEntries };
     }
   }
@@ -176,12 +178,19 @@ async function previewForServer(serverId, zipPath) {
     const items = (await resolveManifestEntries(info.manifest.files)).map((e) => ({
       ...e,
       downloadUrl: undefined, // CDN URL is server-side detail; the client gets the CF page url
-      verdict: e.resolved ? judge({ source: 'curseforge', loaders: e.loaders, mcVersions: e.mcVersions, kind: 'mod' }) : { status: 'unknown', loaderOk: null, mcOk: null },
+      verdict: e.resolved
+        ? judge({ source: 'curseforge', loaders: e.loaders, mcVersions: e.mcVersions, kind: 'mod' })
+        : { status: 'unknown', loaderOk: null, mcOk: null },
       installed:
         installed.keys.has(`curseforge:${e.projectId}`) || (e.fileName ? installed.filenames.has(e.fileName) : false),
     }));
     const warnings = [];
-    if (info.manifest.mcVersion && serverMc && !/^(LATEST|SNAPSHOT)/.test(serverMc) && info.manifest.mcVersion !== serverMc) {
+    if (
+      info.manifest.mcVersion &&
+      serverMc &&
+      !/^(LATEST|SNAPSHOT)/.test(serverMc) &&
+      info.manifest.mcVersion !== serverMc
+    ) {
       warnings.push(`Pack targets Minecraft ${info.manifest.mcVersion}, this server runs ${serverMc}`);
     }
     if (info.manifest.loader && serverLoader && info.manifest.loader !== serverLoader) {
@@ -205,9 +214,7 @@ async function previewForServer(serverId, zipPath) {
 
   // jars
   const buffers = await readEntryBuffers(zipPath, isJarEntry);
-  const identified = await modIdentify.identifyJars(
-    [...buffers.entries()].map(([name, buffer]) => ({ name, buffer }))
-  );
+  const identified = await modIdentify.identifyJars([...buffers.entries()].map(([name, buffer]) => ({ name, buffer })));
   const items = identified.map((j) => ({
     entry: j.filename,
     filename: path.basename(j.filename),
@@ -216,9 +223,7 @@ async function previewForServer(serverId, zipPath) {
     identity: j.identity,
     verdict: judge(j.identity),
     installed:
-      (j.identity &&
-        j.identity.platform &&
-        installed.keys.has(`${j.identity.platform}:${j.identity.projectId}`)) ||
+      (j.identity && j.identity.platform && installed.keys.has(`${j.identity.platform}:${j.identity.projectId}`)) ||
       installed.filenames.has(path.basename(j.filename)),
   }));
   return { type: 'jars', items, overrides: { count: 0 }, warnings: [] };
@@ -263,7 +268,9 @@ async function previewStandalone(zipPath) {
     for (const v of values) counts.set(v, (counts.get(v) || 0) + 1);
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   };
-  const loaderVotes = tally(items.flatMap((i) => ((i.identity && i.identity.loaders) || []).map((l) => l.toLowerCase())));
+  const loaderVotes = tally(
+    items.flatMap((i) => ((i.identity && i.identity.loaders) || []).map((l) => l.toLowerCase()))
+  );
   const kindVotes = tally(items.map((i) => (i.identity && i.identity.kind) || 'mod'));
   const kind = (kindVotes[0] && kindVotes[0][0]) || 'mod';
   const modLoaderVotes = loaderVotes.filter(([l]) => ['fabric', 'forge', 'neoforge', 'quilt'].includes(l));
@@ -345,7 +352,11 @@ async function applyOverridesTo(serverId, zipPath, overridesPrefix, { actor = 's
  * whose verdict isn't wrong-*). applyOverrides only applies to pack zips.
  * @returns {installed, failed, blocked, skipped, overrides}
  */
-async function importForServer(serverId, zipPath, { selections = null, applyOverrides = false, actor = 'system', onStep = () => {} } = {}) {
+async function importForServer(
+  serverId,
+  zipPath,
+  { selections = null, applyOverrides = false, actor = 'system', onStep = () => {} } = {}
+) {
   serverTarget(serverId);
   const info = await inspect(zipPath);
   const report = { installed: [], failed: [], blocked: [], skipped: [], overrides: null };
@@ -361,7 +372,13 @@ async function importForServer(serverId, zipPath, { selections = null, applyOver
       } else if (!e.resolved) {
         report.failed.push({ name: e.name, reason: 'file no longer exists on CurseForge' });
       } else if (!e.downloadable) {
-        report.blocked.push({ name: e.name, fileName: e.fileName, url: e.url, projectId: e.projectId, fileId: e.fileId });
+        report.blocked.push({
+          name: e.name,
+          fileName: e.fileName,
+          url: e.url,
+          projectId: e.projectId,
+          fileId: e.fileId,
+        });
       } else {
         queue.push(e);
       }

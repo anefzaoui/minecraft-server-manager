@@ -1230,7 +1230,10 @@ const zipTokenSchema = z.string().regex(/^modzip-[A-Za-z0-9_-]{10}\.zip$/, 'Inva
 const zipImportBodySchema = z.object({
   uploadToken: zipTokenSchema,
   // pack zips select by fileId (number), jar zips by entry name (string)
-  selections: z.array(z.union([z.coerce.number(), z.string().max(300)])).max(1500).optional(),
+  selections: z
+    .array(z.union([z.coerce.number(), z.string().max(300)]))
+    .max(1500)
+    .optional(),
   applyOverrides: z.coerce.boolean().optional(),
 });
 
@@ -1723,7 +1726,10 @@ const fromZipSchema = z
     mcVersion: z.string().trim().min(1).max(32),
     loaderVersion: z.string().trim().max(40).optional(),
     uploadToken: zipTokenSchema,
-    selections: z.array(z.union([z.coerce.number(), z.string().max(300)])).max(1500).optional(),
+    selections: z
+      .array(z.union([z.coerce.number(), z.string().max(300)]))
+      .max(1500)
+      .optional(),
     applyOverrides: z.coerce.boolean().optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),

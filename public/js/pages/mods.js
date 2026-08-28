@@ -17,11 +17,19 @@ const escAttr = (s) =>
 
 const root = document.querySelector('[data-mods-server]');
 if (root)
-  init(root.dataset.modsServer, root.dataset.modsType, root.dataset.modsMc, root.dataset.modsLoader, root.dataset.modsCf === 'true');
+  init(
+    root.dataset.modsServer,
+    root.dataset.modsType,
+    root.dataset.modsMc,
+    root.dataset.modsLoader,
+    root.dataset.modsCf === 'true'
+  );
 
 function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
   const mc = (mcVersion || '').replace(/^(LATEST|SNAPSHOT) \((.+)\)$/, '$2');
-  const contentKind = ['PAPER', 'PURPUR', 'SPIGOT', 'BUKKIT', 'FOLIA', 'LEAF', 'PUFFERFISH', 'CANYON'].includes(serverType)
+  const contentKind = ['PAPER', 'PURPUR', 'SPIGOT', 'BUKKIT', 'FOLIA', 'LEAF', 'PUFFERFISH', 'CANYON'].includes(
+    serverType
+  )
     ? 'plugin'
     : 'mod';
   // CF page section differs for plugins; also used for "open in browser" fallbacks.
@@ -182,7 +190,8 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       head.className = 'mb-3 text-sm';
       head.innerHTML = `<div class="font-semibold" data-role="packname"></div>
         <div class="text-xs text-ink-faint" data-role="packmeta"></div>`;
-      head.querySelector('[data-role="packname"]').textContent = `${preview.pack.name}${preview.pack.version ? ` ${preview.pack.version}` : ''}`;
+      head.querySelector('[data-role="packname"]').textContent =
+        `${preview.pack.name}${preview.pack.version ? ` ${preview.pack.version}` : ''}`;
       head.querySelector('[data-role="packmeta"]').textContent =
         `CurseForge modpack export — Minecraft ${preview.pack.mcVersion || '?'}, ${preview.pack.loader || 'unknown loader'}`;
     } else {
@@ -220,7 +229,8 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         </span>
         <span class="flex shrink-0 items-center gap-1.5" data-role="badges"></span>`;
       const idn = isPack ? item : item.identity || {};
-      row.querySelector('[data-role="name"]').textContent = idn.name || item.filename || item.entry || `Project ${item.projectId}`;
+      row.querySelector('[data-role="name"]').textContent =
+        idn.name || item.filename || item.entry || `Project ${item.projectId}`;
       row.querySelector('[data-role="sub"]').textContent = isPack
         ? item.fileName || (missing ? 'file no longer exists on CurseForge' : '')
         : `${item.filename}${idn.version ? ` — ${idn.version}` : ''}${idn.source ? ` · via ${idn.source}` : ''}`;
@@ -314,7 +324,11 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       <div class="mt-3 max-h-96 space-y-2 overflow-y-auto" id="mr-results">
         <p class="p-6 text-center text-sm text-ink-faint">Type to search.</p>
       </div>`;
-    const modal = openModal({ title: contentKind === 'plugin' ? 'Search plugins' : 'Search mods', content, size: 'lg' });
+    const modal = openModal({
+      title: contentKind === 'plugin' ? 'Search plugins' : 'Search mods',
+      content,
+      size: 'lg',
+    });
     const q = content.querySelector('#mr-q');
     const results = content.querySelector('#mr-results');
     let platform = 'modrinth';

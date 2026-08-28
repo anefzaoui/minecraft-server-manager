@@ -70,7 +70,12 @@ test('setup: boot app', async () => {
 test('modBrowser.search passes plugin kind to Modrinth and drops the loader facet', async () => {
   stubUpstream({ 'api.modrinth.com': () => ({ hits: [MODRINTH_HIT] }) });
   try {
-    const results = await modBrowser.search({ query: 'worldedit', platform: 'modrinth', kind: 'plugin', loader: 'paper' });
+    const results = await modBrowser.search({
+      query: 'worldedit',
+      platform: 'modrinth',
+      kind: 'plugin',
+      loader: 'paper',
+    });
     assert.equal(results.length, 1);
     assert.equal(results[0].platform, 'modrinth');
     assert.equal(results[0].ref, 'worldedit');
@@ -112,14 +117,26 @@ test('modBrowser.versions marks CF files without a downloadUrl as not downloadab
         return {
           data: [
             { id: 1, displayName: 'v2', fileName: 'we-2.jar', downloadUrl: null, gameVersions: [], releaseType: 1 },
-            { id: 2, displayName: 'v1', fileName: 'we-1.jar', downloadUrl: 'https://cdn/x.jar', gameVersions: [], releaseType: 1 },
+            {
+              id: 2,
+              displayName: 'v1',
+              fileName: 'we-1.jar',
+              downloadUrl: 'https://cdn/x.jar',
+              gameVersions: [],
+              releaseType: 1,
+            },
           ],
         };
       return { data: [CF_MOD] }; // slug search from metaFor
     },
   });
   try {
-    const versions = await modBrowser.versions({ platform: 'curseforge', ref: 'worldedit', kind: 'plugin', loader: 'paper' });
+    const versions = await modBrowser.versions({
+      platform: 'curseforge',
+      ref: 'worldedit',
+      kind: 'plugin',
+      loader: 'paper',
+    });
     assert.equal(versions.length, 2);
     assert.equal(versions[0].downloadable, false);
     assert.equal(versions[1].downloadable, true);
@@ -131,7 +148,9 @@ test('modBrowser.versions marks CF files without a downloadUrl as not downloadab
 test('GET /api/mods/search accepts kind=plugin with loader=paper (route no longer 400s)', async () => {
   stubUpstream({ 'api.modrinth.com': () => ({ hits: [MODRINTH_HIT] }) });
   try {
-    const r = await app.req('GET', '/api/mods/search?q=worldedit&kind=plugin&loader=paper&platform=modrinth', { cookie });
+    const r = await app.req('GET', '/api/mods/search?q=worldedit&kind=plugin&loader=paper&platform=modrinth', {
+      cookie,
+    });
     assert.equal(r.status, 200);
     assert.equal(r.json.ok, true);
     assert.equal(r.json.results[0].name, 'WorldEdit');

@@ -74,14 +74,30 @@ test('solve mixes Modrinth and CurseForge projects into one compatibility answer
     if (url.includes('api.curseforge.com') && /\/mods\/\d+\/files/.test(url)) {
       return json({
         data: [
-          { id: 1, displayName: 'a', fileName: 'a.jar', downloadUrl: 'x', releaseType: 1, gameVersions: ['1.20.1', 'Fabric'] },
-          { id: 2, displayName: 'b', fileName: 'b.jar', downloadUrl: 'x', releaseType: 1, gameVersions: ['1.20.4', 'Fabric'] },
+          {
+            id: 1,
+            displayName: 'a',
+            fileName: 'a.jar',
+            downloadUrl: 'x',
+            releaseType: 1,
+            gameVersions: ['1.20.1', 'Fabric'],
+          },
+          {
+            id: 2,
+            displayName: 'b',
+            fileName: 'b.jar',
+            downloadUrl: 'x',
+            releaseType: 1,
+            gameVersions: ['1.20.4', 'Fabric'],
+          },
         ],
         pagination: { totalCount: 2 },
       });
     }
     if (url.includes('api.curseforge.com') && url.includes('/mods/search')) {
-      return json({ data: [{ id: 55, slug: 'cf-thing', name: 'CF Thing', classId: 6, downloadCount: 1, latestFiles: [] }] });
+      return json({
+        data: [{ id: 55, slug: 'cf-thing', name: 'CF Thing', classId: 6, downloadCount: 1, latestFiles: [] }],
+      });
     }
     return Promise.reject(new Error(`unexpected fetch ${url}`));
   };

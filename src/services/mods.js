@@ -550,7 +550,12 @@ async function importUploadedMod(serverId, tmpPath, origName, { excludeToken, ac
  * Bulk importers (mod-zip digester) identify in one batch and call this per
  * jar; the single-upload path identifies one jar then lands here.
  */
-async function installLocalContent(serverId, tmpPath, filename, { identity = null, excludeToken, actor = 'system' } = {}) {
+async function installLocalContent(
+  serverId,
+  tmpPath,
+  filename,
+  { identity = null, excludeToken, actor = 'system' } = {}
+) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   if (!/\.(jar|zip)$/i.test(filename)) throw httpError(400, 'Only .jar or .zip files can be uploaded');

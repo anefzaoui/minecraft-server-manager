@@ -52,13 +52,22 @@ const CF_HANDLERS = {
   'api.curseforge.com/v1/mods/files': () => ({
     data: [
       {
-        id: 1000, modId: 100, displayName: 'Alpha 1.2', fileName: 'alpha-1.2.jar',
+        id: 1000,
+        modId: 100,
+        displayName: 'Alpha 1.2',
+        fileName: 'alpha-1.2.jar',
         downloadUrl: 'https://edge.forgecdn.net/files/alpha-1.2.jar',
-        gameVersions: ['1.20.1', 'Forge'], releaseType: 1,
+        gameVersions: ['1.20.1', 'Forge'],
+        releaseType: 1,
       },
       {
-        id: 2000, modId: 200, displayName: 'Bravo 3.4', fileName: 'bravo-3.4.jar',
-        downloadUrl: null, gameVersions: ['1.20.1', 'Forge'], releaseType: 1,
+        id: 2000,
+        modId: 200,
+        displayName: 'Bravo 3.4',
+        fileName: 'bravo-3.4.jar',
+        downloadUrl: null,
+        gameVersions: ['1.20.1', 'Forge'],
+        releaseType: 1,
       },
     ],
   }),
@@ -184,7 +193,14 @@ test('importForServer installs downloadable entries, reports blocked/missing, ho
     db.run(
       `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, platform, project_id, file_id, version)
        VALUES (?, 'mod', ?, ?, ?, ?, 3, 'curseforge', ?, ?, ?)`,
-      id, meta.name, meta.filename, rel, `sha-${id}`, meta.projectId, meta.fileId, meta.version
+      id,
+      meta.name,
+      meta.filename,
+      rel,
+      `sha-${id}`,
+      meta.projectId,
+      meta.fileId,
+      meta.version
     );
     return db.get('SELECT * FROM library_files WHERE id = ?', id);
   };
@@ -201,7 +217,10 @@ test('importForServer installs downloadable entries, reports blocked/missing, ho
     assert.equal(downloads.length, 1);
     assert.ok(steps.some((s) => /Installing mod 1\/1/.test(s)));
     // server_content row landed with provenance
-    const row = db.get("SELECT sc.*, lf.project_id FROM server_content sc JOIN library_files lf ON lf.id = sc.library_id WHERE sc.server_id = ? AND sc.filename = 'alpha-1.2.jar'", sid);
+    const row = db.get(
+      "SELECT sc.*, lf.project_id FROM server_content sc JOIN library_files lf ON lf.id = sc.library_id WHERE sc.server_id = ? AND sc.filename = 'alpha-1.2.jar'",
+      sid
+    );
     assert.ok(row);
     assert.equal(row.project_id, '100');
 
@@ -222,7 +241,9 @@ test('importForServer installs a jar zip with metadata identities (registries do
   db.run("UPDATE servers SET type = 'FABRIC', mc_version = '1.20.1' WHERE id = ?", sid);
   apiKeys.deleteKey('curseforge');
   const { jarBuffer } = require('./helpers/zipfix');
-  const jarA = await jarBuffer({ 'fabric.mod.json': JSON.stringify({ id: 'alpha', name: 'Alpha Mod', version: '1.0' }) });
+  const jarA = await jarBuffer({
+    'fabric.mod.json': JSON.stringify({ id: 'alpha', name: 'Alpha Mod', version: '1.0' }),
+  });
   const jarB = await jarBuffer({ 'fabric.mod.json': JSON.stringify({ id: 'beta', name: 'Beta Mod', version: '2.0' }) });
   const zip = await tempZip('jars.zip', { 'mods/alpha.jar': jarA, 'beta.jar': jarB });
 
@@ -297,7 +318,11 @@ test('POST /api/mods/zip-preview answers standalone previews over HTTP', async (
     const base = await app.start();
     const fd = new FormData();
     fd.append('file', new Blob([fs.readFileSync(zip)]), 'plugzip.zip');
-    const res = await realFetch(`${base}/api/mods/zip-preview`, { method: 'POST', headers: { Cookie: cookie }, body: fd });
+    const res = await realFetch(`${base}/api/mods/zip-preview`, {
+      method: 'POST',
+      headers: { Cookie: cookie },
+      body: fd,
+    });
     const data = await res.json();
     assert.equal(res.status, 200, JSON.stringify(data));
     assert.equal(data.preview.inferred.kind, 'plugin');
@@ -390,7 +415,10 @@ test('applyOverridesTo refuses zip-slip entries inside overrides/', async () => 
   fs.writeFileSync(zipPath, makeRawZip([{ name: 'overrides/../../escape.txt', data: 'evil' }]));
   // yauzl itself rejects `..` entry names ("invalid relative path") before our
   // own containment guard ("escapes") — either refusal is the right outcome.
-  await assert.rejects(() => contentZip.applyOverridesTo(sid, zipPath, 'overrides/', { actor: 't' }), /escapes|invalid relative path/);
+  await assert.rejects(
+    () => contentZip.applyOverridesTo(sid, zipPath, 'overrides/', { actor: 't' }),
+    /escapes|invalid relative path/
+  );
   assert.equal(fs.existsSync(dataPath('servers', 'escape.txt')), false);
   assert.equal(fs.existsSync(dataPath('escape.txt')), false);
 });
@@ -413,7 +441,9 @@ test('POST import-zip/preview + import run end-to-end over HTTP (jar zip)', asyn
   db.run("UPDATE servers SET type = 'FABRIC', mc_version = '1.20.1' WHERE id = ?", sid);
   apiKeys.deleteKey('curseforge');
   const { jarBuffer } = require('./helpers/zipfix');
-  const jar = await jarBuffer({ 'fabric.mod.json': JSON.stringify({ id: 'httpmod', name: 'Http Mod', version: '1.0' }) });
+  const jar = await jarBuffer({
+    'fabric.mod.json': JSON.stringify({ id: 'httpmod', name: 'Http Mod', version: '1.0' }),
+  });
   const zip = await tempZip('upload.zip', { 'httpmod.jar': jar });
 
   globalThis.fetch = (input, init) => {

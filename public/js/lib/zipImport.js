@@ -17,7 +17,8 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
   const parts = [`${installedCount} installed`];
   if (failed.length) parts.push(`${failed.length} failed`);
   if (blocked.length) parts.push(`${blocked.length} need manual download`);
-  if (report && report.overrides && report.overrides.applied) parts.push(`${report.overrides.applied} override files applied`);
+  if (report && report.overrides && report.overrides.applied)
+    parts.push(`${report.overrides.applied} override files applied`);
 
   if (!blocked.length && !failed.length) {
     toast(`Zip import done: ${parts.join(', ')}.`, { kind: 'success' });

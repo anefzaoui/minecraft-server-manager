@@ -61,7 +61,7 @@ function readJarMetaEntries(buffer) {
 /** Minimal mods.toml field extraction — full TOML parsing is overkill for 3 fields. */
 function tomlField(text, field) {
   const m = new RegExp(`^\\s*${field}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, 'm').exec(text);
-  return m ? m[1] ?? m[2] : null;
+  return m ? (m[1] ?? m[2]) : null;
 }
 
 function manifestVersion(manifestText) {

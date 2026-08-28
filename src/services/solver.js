@@ -117,6 +117,7 @@ async function solve(projectRefs) {
         entry = {
           platform,
           ref,
+          key: '',
           slug: mod.slug,
           title: mod.name,
           iconUrl: mod.iconUrl || null,
@@ -128,6 +129,7 @@ async function solve(projectRefs) {
         entry = {
           platform,
           ref,
+          key: '',
           slug: meta.slug,
           title: meta.title,
           iconUrl: meta.icon_url || null,
