@@ -290,6 +290,12 @@ router.get(
       context.mods = await require('../../services/mods')
         .listContent(row.id)
         .catch(() => []);
+      // Same gate as the wizard: CurseForge search/import needs the stored key.
+      try {
+        context.curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
+      } catch {
+        context.curseforgeEnabled = false;
+      }
     } else if (tab === 'worlds') {
       const worldsService = require('../../services/worlds');
       context.worlds = await worldsService.listServerWorlds(row.id).catch(() => []);

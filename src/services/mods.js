@@ -114,6 +114,9 @@ async function listContent(serverId) {
       iconUrl:
         lib && lib.icon_rel_path ? `/${lib.icon_rel_path}` : (lib && lib.icon_url) || (row && row.icon_url) || null,
       updateAvailable: updateFor(row),
+      // Provenance, when known — lets search UIs badge already-installed hits.
+      platform: (lib && lib.platform) || null,
+      projectId: (lib && lib.project_id) || null,
     });
   }
   // Overlay rows whose files vanished (user deleted manually) — surface them.
@@ -191,7 +194,11 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
   if (!server) throw httpError(404, 'Server not found');
   const targetKind = kind || (PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod');
   const mcVersion = server.mc_version === 'LATEST' || server.mc_version === 'SNAPSHOT' ? undefined : server.mc_version;
-  const loader = loaderOf(server);
+  // Loader is only a meaningful version filter for mods: Modrinth tags plugin
+  // builds paper/spigot/bukkit (strict facet — would hide spigot-only plugins)
+  // and datapack builds "datapack", so filtering those by the server's loader
+  // over-filters to zero results.
+  const loader = targetKind === 'mod' ? loaderOf(server) : undefined;
 
   const source = classifyModSource(input);
   if (source.kind === 'invalid') {

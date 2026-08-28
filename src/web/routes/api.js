@@ -1426,27 +1426,15 @@ router.post(
   })
 );
 
-// ---- Modrinth search (mods manager) ----
-const modrinth = require('../../services/modrinthApi');
-
-router.get(
-  '/modrinth/search',
-  asyncHandler(async (req, res, next) => {
-    const results = await modrinth.search({
-      query: String(req.query.q || ''),
-      kind: String(req.query.kind || 'mod'),
-      loader: req.query.loader ? String(req.query.loader) : undefined,
-      mcVersion: req.query.mc ? String(req.query.mc) : undefined,
-    });
-    res.json({ ok: true, results });
-  })
-);
-
-// ---- "From mods" wizard browser (loader-first) ----
+// ---- Unified mod browser (wizard "From mods" + per-server mods tab) ----
 const modBrowser = require('../../services/modBrowser');
 const loaderVersions = require('../../services/loaderVersions');
 
 const MOD_LOADERS = ['fabric', 'forge', 'neoforge', 'quilt'];
+// Plugin servers report 'paper' as their loader; the browser strips it for
+// plugin searches server-side, but the schema must let it through.
+const BROWSER_LOADERS = [...MOD_LOADERS, 'paper'];
+const CONTENT_KINDS = ['mod', 'plugin'];
 
 // Loader build versions to pin (fabric/quilt are MC-independent; neoforge/forge need mc).
 router.get(
@@ -1459,24 +1447,26 @@ router.get(
   })
 );
 
-// Unified mod search across Modrinth / CurseForge, filtered to loader + MC.
+// Unified mod/plugin search across Modrinth / CurseForge, filtered to loader + MC.
 router.get(
   '/mods/search',
   asyncHandler(async (req, res, next) => {
-    const { q, platform, loader, mc } = z
+    const { q, platform, kind, loader, mc } = z
       .object({
         q: z.string().trim().max(120).default(''),
         platform: z.enum(['modrinth', 'curseforge']).default('modrinth'),
-        loader: z.enum(MOD_LOADERS).optional(),
+        kind: z.enum(CONTENT_KINDS).default('mod'),
+        loader: z.enum(BROWSER_LOADERS).optional(),
         mc: z.string().trim().max(32).optional(),
       })
       .parse({
         q: req.query.q || '',
         platform: req.query.platform || undefined,
+        kind: req.query.kind || undefined,
         loader: req.query.loader || undefined,
         mc: req.query.mc || undefined,
       });
-    res.json({ ok: true, results: await modBrowser.search({ query: q, platform, loader, mc }) });
+    res.json({ ok: true, results: await modBrowser.search({ query: q, platform, kind, loader, mc }) });
   })
 );
 
@@ -1484,20 +1474,22 @@ router.get(
 router.get(
   '/mods/versions',
   asyncHandler(async (req, res, next) => {
-    const { platform, ref, loader, mc } = z
+    const { platform, ref, kind, loader, mc } = z
       .object({
         platform: z.enum(['modrinth', 'curseforge']),
         ref: z.string().trim().min(1).max(200),
-        loader: z.enum(MOD_LOADERS).optional(),
+        kind: z.enum(CONTENT_KINDS).default('mod'),
+        loader: z.enum(BROWSER_LOADERS).optional(),
         mc: z.string().trim().max(32).optional(),
       })
       .parse({
         platform: req.query.platform,
         ref: req.query.ref,
+        kind: req.query.kind || undefined,
         loader: req.query.loader || undefined,
         mc: req.query.mc || undefined,
       });
-    res.json({ ok: true, versions: await modBrowser.versions({ platform, ref, loader, mc }) });
+    res.json({ ok: true, versions: await modBrowser.versions({ platform, ref, kind, loader, mc }) });
   })
 );
 
