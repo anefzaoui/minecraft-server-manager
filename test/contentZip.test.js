@@ -245,6 +245,72 @@ test('importForServer installs a jar zip with metadata identities (registries do
   }
 });
 
+// ---- previewStandalone (wizard create-from-zip) ----
+
+test('previewStandalone: pack zip carries manifest-derived loader/mc inference', async () => {
+  const zip = await tempZip('pack.zip', { 'manifest.json': JSON.stringify(MANIFEST), 'overrides/a.cfg': 'x' });
+  stubRegistries(CF_HANDLERS);
+  try {
+    const p = await contentZip.previewStandalone(zip);
+    assert.equal(p.type, 'curseforge-pack');
+    assert.deepEqual(p.inferred, { loader: 'forge', mcVersion: '1.20.1', kind: 'mod' });
+    assert.equal(p.overrides.count, 1);
+  } finally {
+    unstub();
+  }
+});
+
+test('previewStandalone: jar zip infers loader and MC by majority vote', async () => {
+  apiKeys.deleteKey('curseforge');
+  const { jarBuffer } = require('./helpers/zipfix');
+  const a = await jarBuffer({ 'fabric.mod.json': JSON.stringify({ id: 'a', name: 'A', version: '1' }) });
+  const b = await jarBuffer({ 'fabric.mod.json': JSON.stringify({ id: 'b', name: 'B', version: '1' }) });
+  const c = await jarBuffer({ 'META-INF/mods.toml': `[[mods]]\nmodId="c"\nversion="1"\n` });
+  const zip = await tempZip('mix.zip', { 'a.jar': a, 'b.jar': b, 'c.jar': c });
+  globalThis.fetch = (input) => {
+    const url = String(typeof input === 'string' ? input : input.url || input);
+    if (url.includes('api.modrinth.com')) return Promise.reject(new Error('down'));
+    return realFetch(input);
+  };
+  try {
+    const p = await contentZip.previewStandalone(zip);
+    assert.equal(p.type, 'jars');
+    assert.equal(p.inferred.loader, 'fabric'); // 2 fabric vs 1 forge
+    assert.equal(p.inferred.kind, 'mod');
+  } finally {
+    unstub();
+    apiKeys.setKey('curseforge', 'test-key');
+  }
+});
+
+test('POST /api/mods/zip-preview answers standalone previews over HTTP', async () => {
+  apiKeys.deleteKey('curseforge');
+  const { jarBuffer } = require('./helpers/zipfix');
+  const jar = await jarBuffer({ 'plugin.yml': 'name: Essentials\nversion: 2.20\n' });
+  const zip = await tempZip('plugzip.zip', { 'essentials.jar': jar });
+  globalThis.fetch = (input, init) => {
+    const url = String(typeof input === 'string' ? input : input.url || input);
+    if (url.includes('api.modrinth.com')) return Promise.reject(new Error('down'));
+    return realFetch(input, init);
+  };
+  try {
+    const base = await app.start();
+    const fd = new FormData();
+    fd.append('file', new Blob([fs.readFileSync(zip)]), 'plugzip.zip');
+    const res = await realFetch(`${base}/api/mods/zip-preview`, { method: 'POST', headers: { Cookie: cookie }, body: fd });
+    const data = await res.json();
+    assert.equal(res.status, 200, JSON.stringify(data));
+    assert.equal(data.preview.inferred.kind, 'plugin');
+    assert.equal(data.preview.inferred.loader, 'paper');
+    assert.match(data.uploadToken, /^modzip-/);
+    // Clean the parked upload.
+    fs.rmSync(dataPath('tmp', data.uploadToken), { force: true });
+  } finally {
+    unstub();
+    apiKeys.setKey('curseforge', 'test-key');
+  }
+});
+
 // ---- Overrides apply ----
 
 test('applyOverridesTo extracts only overrides/, backs up overwritten files, skips escapes', async () => {

@@ -14,6 +14,7 @@ import { enhanceSelect } from '../lib/select.js';
 import { showPackDetails, packIconHtml, formatDownloads } from './modpacks.js';
 import { attachMotdEditor, toSectionCodes } from '../lib/motd.js';
 import { initDockerSettings } from '../lib/dockerSettings.js';
+import { showZipImportReport } from '../lib/zipImport.js';
 
 const root = document.getElementById('wizard');
 if (root) init();
@@ -151,6 +152,7 @@ function init() {
 
   const browser = initModBrowser();
   const packPicker = initPackPicker();
+  const zipPicker = initZipUpload();
   initPortCheck();
   refreshPanels();
 
@@ -320,9 +322,12 @@ function init() {
 
   // ---- Create: modpack (ONE server-side task — real progress end to end) ----
   async function createFromPack(name) {
+    // An uploaded custom zip supersedes any picked catalog pack.
+    const zipState = zipPicker && zipPicker.getState();
+    if (zipState) return createFromZip(name, zipState);
     const selection = packPicker && packPicker.getSelection();
     if (!selection) {
-      toast('Search and select a modpack first.', { kind: 'error' });
+      toast('Search and select a modpack first, or upload a custom zip.', { kind: 'error' });
       document.getElementById('wz-pack-q')?.focus();
       return;
     }
@@ -355,6 +360,68 @@ function init() {
       });
       toast(`${name} created — ${result.pack.name} @ ${result.pack.version} pinned. Starting up.`);
       location.href = `/servers/${result.serverId}`;
+    } catch (err) {
+      if (err.dismissed) return; // creation continues server-side — task tray takes over
+      toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
+    }
+  }
+
+  // ---- Create: custom zip (CF export or jar zip → create → bulk install → start) ----
+  async function createFromZip(name, zipState) {
+    const loader = zipState.loader;
+    const mcVersion = zipState.mcVersion;
+    if (!loader || !mcVersion) {
+      toast('Pick the loader and Minecraft version for this zip first.', { kind: 'error' });
+      return;
+    }
+    // Jar zips: preselect only jars that can run on the chosen loader (a jar
+    // with no readable loader info stays in — the server may still want it).
+    let selections;
+    if (zipState.preview.type === 'jars' && loader !== 'paper') {
+      selections = zipState.preview.items
+        .filter((i) => {
+          const loaders = (i.identity && i.identity.loaders) || [];
+          return !loaders.length || loaders.map((l) => l.toLowerCase()).includes(loader);
+        })
+        .map((i) => i.entry);
+    }
+    const body = {
+      name,
+      description: document.getElementById('wz-desc').value.trim(),
+      icon,
+      accent,
+      loader,
+      mcVersion,
+      ...(zipState.loaderVersion ? { loaderVersion: zipState.loaderVersion } : {}),
+      uploadToken: zipState.uploadToken,
+      ...(selections ? { selections } : {}),
+      applyOverrides: Boolean(zipState.applyOverrides),
+      ...resources(),
+      env: collectSimpleEnv(),
+      ...collectDockerOverrides(),
+    };
+    try {
+      const result = await runTask({
+        title: `Creating ${name} from zip`,
+        start: async () => {
+          const res = await fetch('/api/servers/from-zip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Creation failed');
+          return data.taskId;
+        },
+      });
+      zipPicker.clear();
+      showZipImportReport({
+        serverId: result.serverId,
+        report: result.report,
+        onDone: () => {
+          location.href = `/servers/${result.serverId}`;
+        },
+      });
     } catch (err) {
       if (err.dismissed) return; // creation continues server-side — task tray takes over
       toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
@@ -882,6 +949,145 @@ function raiseResourceFloor(minHeapMb, minQuotaGb) {
       el.dispatchEvent(new Event('input', { bubbles: true })); // refresh the readout
     }
   }
+}
+
+// ---- From-modpack "Custom zip": CF export or hand-assembled jar zip ---------
+
+function initZipUpload() {
+  const card = document.getElementById('wz-zip-card');
+  if (!card) return null;
+  const pickBtn = document.getElementById('wz-zip-pick');
+  const selectedEl = document.getElementById('wz-zip-selected');
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.zip';
+  input.className = 'hidden';
+  document.body.appendChild(input);
+  let state = null; // { uploadToken, preview, loader, mcVersion, loaderVersion, applyOverrides }
+
+  pickBtn.addEventListener('click', () => input.click());
+
+  // Picking a catalog pack (search result or GTNH) supersedes the zip.
+  document.getElementById('wz-pack-results')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-pick]')) clear();
+  });
+  document.getElementById('wz-gtnh-pick')?.addEventListener('click', clear);
+
+  input.addEventListener('change', async () => {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    input.value = '';
+    const restore = setBusy(pickBtn, 'Reading zip…');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/mods/zip-preview', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || `Could not read the zip (${res.status})`);
+      state = {
+        uploadToken: data.uploadToken,
+        preview: data.preview,
+        loader: data.preview.inferred.loader,
+        mcVersion: data.preview.inferred.mcVersion,
+        loaderVersion: data.preview.type === 'curseforge-pack' ? data.preview.pack.loaderVersion || '' : '',
+        applyOverrides: false,
+      };
+      document.getElementById('wz-pack-selected')?.classList.add('hidden'); // zip replaces any picked pack
+      render(file.name);
+    } catch (err) {
+      toast(err.message, { kind: 'error', timeout: 9000 });
+    } finally {
+      restore();
+    }
+  });
+
+  function clear() {
+    state = null;
+    selectedEl.classList.add('hidden');
+    selectedEl.innerHTML = '';
+  }
+
+  function render(filename) {
+    const p = state.preview;
+    const isPack = p.type === 'curseforge-pack';
+    const blocked = isPack ? p.items.filter((i) => i.resolved && !i.downloadable).length : 0;
+    const unresolved = isPack ? p.items.filter((i) => !i.resolved).length : 0;
+    const unidentified = isPack ? 0 : p.items.filter((i) => !i.identity).length;
+    const bits = [`${p.items.length} ${isPack ? 'pinned mods' : 'jars'}`];
+    if (blocked) bits.push(`${blocked} need manual download`);
+    if (unresolved) bits.push(`${unresolved} no longer on CurseForge`);
+    if (unidentified) bits.push(`${unidentified} unidentified`);
+
+    selectedEl.classList.remove('hidden');
+    selectedEl.innerHTML = `
+      <div class="rounded-md border border-grass-700 bg-grass-600/10 p-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="truncate font-semibold" data-role="title"></div>
+            <div class="text-xs text-ink-faint" data-role="meta"></div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm shrink-0" data-role="remove">Remove</button>
+        </div>
+        <div class="mt-3 hidden gap-4 sm:grid-cols-2" data-role="pickers"></div>
+        <label class="mt-3 hidden cursor-pointer items-start gap-2 text-xs text-ink-soft" data-role="overrides-row">
+          <input type="checkbox" class="msm-check mt-0.5 shrink-0" data-role="overrides">
+          <span>Also apply the pack's <b data-role="ovr-count"></b> override files (configs/scripts) after install — overwritten files are backed up inside the server folder.</span>
+        </label>
+      </div>`;
+    selectedEl.querySelector('[data-role="title"]').textContent = isPack
+      ? `${p.pack.name}${p.pack.version ? ` ${p.pack.version}` : ''}`
+      : filename;
+    selectedEl.querySelector('[data-role="meta"]').textContent = isPack
+      ? `CurseForge export — Minecraft ${p.pack.mcVersion || '?'}, ${p.pack.loader || 'unknown loader'} · ${bits.join(' · ')}`
+      : `Custom jar zip · ${bits.join(' · ')}`;
+    selectedEl.querySelector('[data-role="remove"]').addEventListener('click', clear);
+
+    if (isPack && p.overrides && p.overrides.count > 0) {
+      const row = selectedEl.querySelector('[data-role="overrides-row"]');
+      row.classList.remove('hidden');
+      row.classList.add('flex');
+      selectedEl.querySelector('[data-role="ovr-count"]').textContent = String(p.overrides.count);
+      row.querySelector('[data-role="overrides"]').addEventListener('change', (e) => {
+        state.applyOverrides = e.target.checked;
+      });
+    }
+
+    // Jar zips (and malformed manifests) need the loader/MC confirmed by hand —
+    // prefilled from the majority vote across identified jars.
+    if (!isPack || !state.loader || !state.mcVersion) {
+      const pickers = selectedEl.querySelector('[data-role="pickers"]');
+      pickers.classList.remove('hidden');
+      pickers.classList.add('grid');
+      const loaders = ['fabric', 'forge', 'neoforge', 'quilt', 'paper'];
+      const mcOptions = (p.inferred && p.inferred.mcVersionOptions) || [];
+      pickers.innerHTML = `
+        <div>
+          <label class="label">Mod loader ${state.loader ? '<span class="text-xs font-normal text-ink-faint">(auto-detected)</span>' : ''}</label>
+          <select class="input" data-role="loader">
+            ${loaders.map((l) => `<option value="${l}" ${l === state.loader ? 'selected' : ''}>${l === 'paper' ? 'Paper (plugins)' : l}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="label">Minecraft version ${state.mcVersion ? '<span class="text-xs font-normal text-ink-faint">(auto-detected)</span>' : ''}</label>
+          ${
+            mcOptions.length
+              ? `<select class="input" data-role="mc">${mcOptions.map((v) => `<option value="${escapeHtml(v)}" ${v === state.mcVersion ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}</select>`
+              : '<input class="input" data-role="mc" placeholder="e.g. 1.20.1" autocomplete="off">'
+          }
+        </div>`;
+      if (!state.loader) state.loader = loaders[0];
+      pickers.querySelector('[data-role="loader"]').addEventListener('change', (e) => {
+        state.loader = e.target.value;
+      });
+      const mcEl = pickers.querySelector('[data-role="mc"]');
+      mcEl.addEventListener(mcEl.tagName === 'SELECT' ? 'change' : 'input', (e) => {
+        state.mcVersion = e.target.value.trim();
+      });
+      if (mcEl.tagName === 'INPUT' && state.mcVersion) mcEl.value = state.mcVersion;
+    }
+  }
+
+  return { getState: () => state, clear };
 }
 
 function initPackPicker() {

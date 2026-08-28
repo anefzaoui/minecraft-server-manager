@@ -224,6 +224,63 @@ async function previewForServer(serverId, zipPath) {
   return { type: 'jars', items, overrides: { count: 0 }, warnings: [] };
 }
 
+/**
+ * Server-less preview for the wizard's "create from zip" flow: what's inside,
+ * plus (for jar zips) the loader / MC version / content kind inferred from the
+ * identified jars, so the wizard can prefill server creation.
+ */
+async function previewStandalone(zipPath) {
+  const info = await inspect(zipPath);
+  if (info.type === 'curseforge-pack') {
+    const items = (await resolveManifestEntries(info.manifest.files)).map((e) => ({ ...e, downloadUrl: undefined }));
+    return {
+      type: 'curseforge-pack',
+      pack: {
+        name: info.manifest.name,
+        version: info.manifest.version,
+        author: info.manifest.author,
+        mcVersion: info.manifest.mcVersion,
+        loader: info.manifest.loader,
+        loaderVersion: info.manifest.loaderVersion,
+      },
+      items,
+      overrides: { count: info.overridesEntries.length },
+      inferred: { loader: info.manifest.loader, mcVersion: info.manifest.mcVersion, kind: 'mod' },
+    };
+  }
+  const buffers = await readEntryBuffers(zipPath, isJarEntry);
+  const identified = await modIdentify.identifyJars([...buffers.entries()].map(([name, buffer]) => ({ name, buffer })));
+  const items = identified.map((j) => ({
+    entry: j.filename,
+    filename: path.basename(j.filename),
+    size: j.size,
+    identity: j.identity,
+  }));
+  // Majority vote across identified jars. mcVersions lists every version a
+  // build supports, so count each; loaders likewise.
+  const tally = (values) => {
+    const counts = new Map();
+    for (const v of values) counts.set(v, (counts.get(v) || 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  };
+  const loaderVotes = tally(items.flatMap((i) => ((i.identity && i.identity.loaders) || []).map((l) => l.toLowerCase())));
+  const kindVotes = tally(items.map((i) => (i.identity && i.identity.kind) || 'mod'));
+  const kind = (kindVotes[0] && kindVotes[0][0]) || 'mod';
+  const modLoaderVotes = loaderVotes.filter(([l]) => ['fabric', 'forge', 'neoforge', 'quilt'].includes(l));
+  const mcVotes = tally(items.flatMap((i) => (i.identity && i.identity.mcVersions) || []));
+  return {
+    type: 'jars',
+    items,
+    overrides: { count: 0 },
+    inferred: {
+      kind,
+      loader: kind === 'plugin' ? 'paper' : (modLoaderVotes[0] && modLoaderVotes[0][0]) || null,
+      mcVersion: (mcVotes[0] && mcVotes[0][0]) || null,
+      mcVersionOptions: mcVotes.map(([v]) => v).slice(0, 20),
+    },
+  };
+}
+
 // ---- Overrides apply --------------------------------------------------------
 
 /**
@@ -395,6 +452,7 @@ module.exports = {
   inspect,
   parsePackManifest,
   previewForServer,
+  previewStandalone,
   importForServer,
   applyOverridesTo,
   resolveManifestEntries,
