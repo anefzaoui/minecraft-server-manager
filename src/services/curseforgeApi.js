@@ -94,6 +94,24 @@ async function getFile(modId, fileId) {
   return normalizeFile(data.data);
 }
 
+/**
+ * A project's full file history (paginated) — the solver needs every build to
+ * map loader → supported MC versions, not just the newest page.
+ */
+async function getAllFiles(modId, { maxPages = 10 } = {}) {
+  const files = [];
+  for (let page = 0; page < maxPages; page += 1) {
+    const data = await cfFetch(`/mods/${modId}/files`, {
+      search: { pageSize: 50, index: page * 50 },
+      ttlMs: 30 * 60 * 1000,
+    });
+    for (const f of data.data || []) files.push(normalizeFile(f));
+    const total = (data.pagination && data.pagination.totalCount) || 0;
+    if ((page + 1) * 50 >= total || !(data.data || []).length) break;
+  }
+  return files;
+}
+
 // Bulk endpoints — a modpack manifest pins hundreds of {projectID, fileID}
 // pairs; resolving them one GET at a time would hammer the rate limit.
 // Requests are chunked so one oversized POST can't be rejected wholesale.
@@ -216,6 +234,7 @@ module.exports = {
   getModBySlug,
   getFiles,
   getFile,
+  getAllFiles,
   getModsBulk,
   getFilesBulk,
   getFingerprintMatches,

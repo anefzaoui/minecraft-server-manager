@@ -58,7 +58,7 @@ function init() {
   let detail = 'simple';
   // From-mods sub-mode + the loader/version chosen by the Auto-detect solver.
   let modsMode = 'browse';
-  const solverState = { pick: null, slugs: [] };
+  const solverState = { pick: null, mods: [] };
 
   // Segmented controls carry selection in aria-selected (tabs) / aria-pressed
   // (toggles); the .seg-btn CSS styles off the attribute.
@@ -117,7 +117,7 @@ function init() {
       const hadSelection = browser.count() > 0 || solverState.pick;
       browser.clear();
       solverState.pick = null;
-      solverState.slugs = [];
+      solverState.mods = [];
       if (hadSelection) toast('Left "From mods" — the queued mods were cleared.', { kind: 'info' });
     }
     sourceTab = tab;
@@ -144,9 +144,9 @@ function init() {
   });
 
   initSolver({
-    onApplied: (pair, slugs) => {
+    onApplied: (pair, mods) => {
       solverState.pick = pair;
-      solverState.slugs = slugs;
+      solverState.mods = mods;
     },
   });
 
@@ -442,7 +442,7 @@ function init() {
       }
       loader = solverState.pick.loader;
       mcVersion = solverState.pick.mcVersion;
-      mods = solverState.slugs.map((slug) => ({ platform: 'modrinth', ref: slug })); // latest matching build
+      mods = solverState.mods; // [{platform, ref}] — latest matching build of each
     } else {
       const state = browser.getState();
       loader = state.loader;
@@ -1338,12 +1338,25 @@ function initSolver({ onApplied = () => {} } = {}) {
   const resultEl = document.getElementById('wz-solver-result');
   const hiddenInput = document.getElementById('wz-solver-mods');
 
-  const picked = new Map(); // slug -> { slug, title, iconUrl }
+  const picked = new Map(); // "platform:slug" -> { platform, slug, title, iconUrl }
+  const keyOf = (m) => `${m.platform || 'modrinth'}:${m.slug}`;
+  let platform = 'modrinth';
   let lastResults = [];
   let solveData = null; // last solve response
   let chosenPair = null; // pair the Apply button will use
 
-  // Debounced Modrinth search
+  const platformsEl = document.getElementById('wz-solver-platforms'); // absent when no CF key
+  platformsEl?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-platform]');
+    if (!btn || btn.dataset.platform === platform) return;
+    platform = btn.dataset.platform;
+    platformsEl.querySelectorAll('[data-platform]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.platform === platform));
+    });
+    if (searchInput.value.trim()) searchInput.dispatchEvent(new Event('input'));
+  });
+
+  // Debounced search (Modrinth or CurseForge)
   let timer;
   searchInput.addEventListener('input', () => {
     clearTimeout(timer);
@@ -1355,13 +1368,13 @@ function initSolver({ onApplied = () => {} } = {}) {
     }
     timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/solver/search?q=${encodeURIComponent(term)}`);
+        const res = await fetch(`/api/solver/search?q=${encodeURIComponent(term)}&platform=${platform}`);
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
         lastResults = data.results;
         renderResults();
       } catch (err) {
-        toast(`Modrinth search failed: ${err.message}`, { kind: 'error' });
+        toast(`Mod search failed: ${err.message}`, { kind: 'error' });
       }
     }, 300);
   });
@@ -1369,13 +1382,13 @@ function initSolver({ onApplied = () => {} } = {}) {
   resultsEl.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-add]');
     if (!btn) return;
-    const hit = lastResults.find((r) => r.slug === btn.dataset.add);
-    if (!hit || picked.has(hit.slug)) return;
+    const hit = lastResults[Number(btn.dataset.add)];
+    if (!hit || picked.has(keyOf(hit))) return;
     if (picked.size >= 25) {
       toast('25 mods max per solve.', { kind: 'error' });
       return;
     }
-    picked.set(hit.slug, { slug: hit.slug, title: hit.title, iconUrl: hit.iconUrl });
+    picked.set(keyOf(hit), { platform: hit.platform || 'modrinth', slug: hit.slug, title: hit.title, iconUrl: hit.iconUrl });
     invalidateResult();
     renderChips();
     renderResults();
@@ -1398,7 +1411,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       const res = await fetch('/api/solver/solve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projects: [...picked.keys()] }),
+        body: JSON.stringify({ projects: [...picked.values()].map((m) => ({ platform: m.platform, ref: m.slug })) }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'Solve failed');
@@ -1447,7 +1460,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       chip.innerHTML = `
         ${mod.iconUrl ? `<img src="${escapeHtml(mod.iconUrl)}" alt="" class="size-4 rounded-sm">` : ''}
         <span class="max-w-40 truncate">${escapeHtml(mod.title)}</span>
-        <button type="button" data-remove="${escapeHtml(mod.slug)}" class="grid size-5 place-items-center rounded-sm text-ink-faint transition hover:bg-line hover:text-ink" aria-label="Remove ${escapeHtml(mod.title)}">${X_SVG}</button>`;
+        <button type="button" data-remove="${escapeHtml(keyOf(mod))}" class="grid size-5 place-items-center rounded-sm text-ink-faint transition hover:bg-line hover:text-ink" aria-label="Remove ${escapeHtml(mod.title)}">${X_SVG}</button>`;
       chipsEl.appendChild(chip);
     }
   }
@@ -1459,10 +1472,10 @@ function initSolver({ onApplied = () => {} } = {}) {
       resultsEl.classList.remove('hidden');
       return;
     }
-    for (const hit of lastResults) {
+    lastResults.forEach((hit, i) => {
       const row = document.createElement('div');
       row.className = 'flex items-center gap-2.5 border-b border-line px-2.5 py-2 text-sm last:border-b-0';
-      const added = picked.has(hit.slug);
+      const added = picked.has(keyOf(hit));
       row.innerHTML = `
         ${hit.iconUrl ? `<img src="${escapeHtml(hit.iconUrl)}" alt="" class="size-8 shrink-0 rounded">` : '<span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-ink-faint">?</span>'}
         <span class="min-w-0 flex-1">
@@ -1470,9 +1483,9 @@ function initSolver({ onApplied = () => {} } = {}) {
           <span class="block truncate text-xs text-ink-faint">${escapeHtml(hit.description || '')}</span>
         </span>
         <span class="shrink-0 font-mono text-xs text-ink-faint">${formatDownloads(hit.downloads)}</span>
-        <button type="button" data-add="${escapeHtml(hit.slug)}" class="btn btn-sm shrink-0" ${added ? 'disabled' : ''}>${added ? 'Added' : 'Add'}</button>`;
+        <button type="button" data-add="${i}" class="btn btn-sm shrink-0" ${added ? 'disabled' : ''}>${added ? 'Added' : 'Add'}</button>`;
       resultsEl.appendChild(row);
-    }
+    });
     resultsEl.classList.remove('hidden');
   }
 
@@ -1584,14 +1597,18 @@ function initSolver({ onApplied = () => {} } = {}) {
       solveData.partial &&
       chosenPair.loader === solveData.partial.loader &&
       chosenPair.mcVersion === solveData.partial.mcVersion;
-    const slugs = usePartial ? solveData.partial.coveredSlugs : [...picked.keys()];
-    hiddenInput.value = JSON.stringify(slugs);
+    const keys = usePartial ? solveData.partial.coveredKeys : [...picked.keys()];
+    const mods = keys.map((k) => {
+      const idx = k.indexOf(':');
+      return { platform: k.slice(0, idx), ref: k.slice(idx + 1) };
+    });
+    hiddenInput.value = JSON.stringify(mods);
 
-    const skipped = picked.size - slugs.length;
+    const skipped = picked.size - mods.length;
     toast(
-      `Applied: ${chosenPair.loaderLabel} on ${chosenPair.mcVersion}. ${slugs.length} mod${slugs.length === 1 ? '' : 's'} will install after creation${skipped > 0 ? ` (${skipped} incompatible skipped)` : ''}. Press "Create & start".`
+      `Applied: ${chosenPair.loaderLabel} on ${chosenPair.mcVersion}. ${mods.length} mod${mods.length === 1 ? '' : 's'} will install after creation${skipped > 0 ? ` (${skipped} incompatible skipped)` : ''}. Press "Create & start".`
     );
-    onApplied(chosenPair, slugs);
+    onApplied(chosenPair, mods);
   }
 }
 
