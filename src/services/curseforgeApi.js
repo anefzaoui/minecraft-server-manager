@@ -94,6 +94,57 @@ async function getFile(modId, fileId) {
   return normalizeFile(data.data);
 }
 
+// Bulk endpoints — a modpack manifest pins hundreds of {projectID, fileID}
+// pairs; resolving them one GET at a time would hammer the rate limit.
+// Requests are chunked so one oversized POST can't be rejected wholesale.
+const BULK_CHUNK = 200;
+
+function chunked(ids) {
+  const out = [];
+  for (let i = 0; i < ids.length; i += BULK_CHUNK) out.push(ids.slice(i, i + BULK_CHUNK));
+  return out;
+}
+
+/** Bulk mod lookup (POST /v1/mods). Order not guaranteed — key by modId. */
+async function getModsBulk(modIds) {
+  const ids = [...new Set(modIds.map(Number).filter(Number.isFinite))];
+  const mods = [];
+  for (const chunk of chunked(ids)) {
+    const data = await cfFetch('/mods', { method: 'POST', body: { modIds: chunk } });
+    for (const m of data.data || []) mods.push(normalizeMod(m));
+  }
+  return mods;
+}
+
+/** Bulk file lookup (POST /v1/mods/files). Order not guaranteed — key by fileId. */
+async function getFilesBulk(fileIds) {
+  const ids = [...new Set(fileIds.map(Number).filter(Number.isFinite))];
+  const files = [];
+  for (const chunk of chunked(ids)) {
+    const data = await cfFetch('/mods/files', { method: 'POST', body: { fileIds: chunk } });
+    for (const f of data.data || []) files.push(normalizeFile(f));
+  }
+  return files;
+}
+
+/**
+ * Reverse lookup by file fingerprint (POST /v1/fingerprints/{gameId}) — the
+ * murmur2 whitespace-stripped hash from utils/murmur2. Exact matches only.
+ * @returns {Promise<{matches: {modId, file}[], unmatched: number[]}>}
+ */
+async function getFingerprintMatches(fingerprints) {
+  const prints = [...new Set(fingerprints.map(Number).filter(Number.isFinite))];
+  const matches = [];
+  const unmatched = [];
+  for (const chunk of chunked(prints)) {
+    const data = await cfFetch(`/fingerprints/${GAME_MINECRAFT}`, { method: 'POST', body: { fingerprints: chunk } });
+    const d = data.data || {};
+    for (const m of d.exactMatches || []) matches.push({ modId: m.id, file: normalizeFile(m.file) });
+    for (const fp of d.unmatchedFingerprints || []) unmatched.push(fp);
+  }
+  return { matches, unmatched };
+}
+
 /**
  * Project description as an HTML string (GET /v1/mods/{id}/description).
  * CurseForge serves raw author HTML — callers MUST sanitize before rendering.
@@ -140,9 +191,11 @@ function normalizeMod(m) {
 function normalizeFile(f) {
   return {
     fileId: f.id,
+    modId: f.modId,
     name: f.displayName,
     fileName: f.fileName,
     downloadUrl: f.downloadUrl || null, // null when author disallows API download
+    fingerprint: f.fileFingerprint || null,
     gameVersions: f.gameVersions || [],
     releaseType: { 1: 'release', 2: 'beta', 3: 'alpha' }[f.releaseType] || 'release',
     fileDate: f.fileDate,
@@ -157,4 +210,16 @@ function loaderTypeId(loader) {
   return { forge: 1, fabric: 4, quilt: 5, neoforge: 6 }[String(loader).toLowerCase()] || 0;
 }
 
-module.exports = { search, getMod, getModBySlug, getFiles, getFile, getDescription, resolveUrl, GAME_MINECRAFT };
+module.exports = {
+  search,
+  getMod,
+  getModBySlug,
+  getFiles,
+  getFile,
+  getModsBulk,
+  getFilesBulk,
+  getFingerprintMatches,
+  getDescription,
+  resolveUrl,
+  GAME_MINECRAFT,
+};
