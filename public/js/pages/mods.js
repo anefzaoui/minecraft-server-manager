@@ -3,6 +3,7 @@ import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
+import { runTask } from '../lib/progress.js';
 
 // Escape a value for safe interpolation into an HTML attribute (Modrinth icon
 // URLs are third-party mod-author data — an unescaped `"` breaks out of src="").
@@ -132,6 +133,248 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     });
     modal.body.querySelector('#mod-url').focus();
   });
+
+  // ---- Import zip: CurseForge modpack export OR hand-assembled jar zip ----
+  const zipInput = document.createElement('input');
+  zipInput.type = 'file';
+  zipInput.accept = '.zip';
+  zipInput.className = 'hidden';
+  document.body.appendChild(zipInput);
+  document.getElementById('mods-import-zip')?.addEventListener('click', () => zipInput.click());
+  zipInput.addEventListener('change', async () => {
+    if (!zipInput.files.length) return;
+    const file = zipInput.files[0];
+    zipInput.value = '';
+    const btn = document.getElementById('mods-import-zip');
+    const restore = setBusy(btn, 'Reading zip…');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(`/api/servers/${serverId}/mods/import-zip/preview`, { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || `Preview failed (${res.status})`);
+      openZipPreview(data.preview, data.uploadToken);
+    } catch (err) {
+      toast(err.message, { kind: 'error', timeout: 9000 });
+    } finally {
+      restore();
+    }
+  });
+
+  const verdictBadge = (v) => {
+    if (!v) return '';
+    if (v.status === 'ok')
+      return v.mcOk === null
+        ? '<span class="badge" data-tip="Loader matches; MC version could not be verified">fits (MC unverified)</span>'
+        : '<span class="badge badge-ok">fits this server</span>';
+    if (v.status === 'wrong-loader') return '<span class="badge badge-warn">wrong loader</span>';
+    if (v.status === 'wrong-mc') return '<span class="badge badge-warn">wrong MC version</span>';
+    if (v.status === 'wrong-kind') return '<span class="badge badge-warn">wrong content type</span>';
+    return '<span class="badge" data-tip="Not found on Modrinth/CurseForge and no readable metadata">unidentified</span>';
+  };
+
+  function openZipPreview(preview, uploadToken) {
+    const isPack = preview.type === 'curseforge-pack';
+    const content = document.createElement('div');
+    const head = document.createElement('div');
+    if (isPack) {
+      head.className = 'mb-3 text-sm';
+      head.innerHTML = `<div class="font-semibold" data-role="packname"></div>
+        <div class="text-xs text-ink-faint" data-role="packmeta"></div>`;
+      head.querySelector('[data-role="packname"]').textContent = `${preview.pack.name}${preview.pack.version ? ` ${preview.pack.version}` : ''}`;
+      head.querySelector('[data-role="packmeta"]').textContent =
+        `CurseForge modpack export — Minecraft ${preview.pack.mcVersion || '?'}, ${preview.pack.loader || 'unknown loader'}`;
+    } else {
+      head.className = 'mb-3 text-sm text-ink-soft';
+      head.textContent = `${preview.items.length} jar${preview.items.length === 1 ? '' : 's'} found — each was identified via Modrinth, CurseForge, or its own metadata and checked against this server.`;
+    }
+    content.appendChild(head);
+
+    for (const w of preview.warnings || []) {
+      const n = document.createElement('div');
+      n.className = 'notice notice-warn mb-2 text-xs text-warn';
+      n.textContent = w;
+      content.appendChild(n);
+    }
+
+    const list = document.createElement('div');
+    list.className = 'max-h-80 space-y-1.5 overflow-y-auto';
+    content.appendChild(list);
+
+    const blocked = isPack ? preview.items.filter((i) => i.resolved && !i.downloadable) : [];
+    const rows = [];
+    for (const item of preview.items) {
+      const isBlocked = isPack && item.resolved && !item.downloadable;
+      const missing = isPack && !item.resolved;
+      const row = document.createElement('label');
+      row.className = 'flex items-center gap-2.5 rounded-md border border-line bg-raised p-2 text-sm';
+      const checked = isPack
+        ? item.resolved && item.downloadable && !item.installed
+        : item.verdict && item.verdict.status === 'ok' && !item.installed;
+      row.innerHTML = `
+        <input type="checkbox" class="msm-check shrink-0" ${checked ? 'checked' : ''} ${isBlocked || missing ? 'disabled' : ''}>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate font-medium" data-role="name"></span>
+          <span class="block truncate text-xs text-ink-faint" data-role="sub"></span>
+        </span>
+        <span class="flex shrink-0 items-center gap-1.5" data-role="badges"></span>`;
+      const idn = isPack ? item : item.identity || {};
+      row.querySelector('[data-role="name"]').textContent = idn.name || item.filename || item.entry || `Project ${item.projectId}`;
+      row.querySelector('[data-role="sub"]').textContent = isPack
+        ? item.fileName || (missing ? 'file no longer exists on CurseForge' : '')
+        : `${item.filename}${idn.version ? ` — ${idn.version}` : ''}${idn.source ? ` · via ${idn.source}` : ''}`;
+      const badges = row.querySelector('[data-role="badges"]');
+      if (item.installed) badges.insertAdjacentHTML('beforeend', '<span class="badge badge-ok">Installed</span>');
+      if (missing) badges.insertAdjacentHTML('beforeend', '<span class="badge badge-danger">missing</span>');
+      else if (isBlocked)
+        badges.insertAdjacentHTML(
+          'beforeend',
+          '<span class="badge badge-warn" data-tip="The author disallows automated downloads — resolve after import">manual download</span>'
+        );
+      else if (!isPack) badges.insertAdjacentHTML('beforeend', verdictBadge(item.verdict));
+      rows.push({ item, row, isBlocked, missing });
+      list.appendChild(row);
+    }
+
+    let overridesToggle = null;
+    if (isPack && preview.overrides && preview.overrides.count > 0) {
+      const box = document.createElement('label');
+      box.className = 'mt-3 flex items-start gap-2 rounded-md border border-line bg-raised p-2.5 text-xs';
+      box.innerHTML = `
+        <input type="checkbox" class="msm-check mt-0.5 shrink-0">
+        <span class="text-ink-soft">Also apply the pack's <b>${Number(preview.overrides.count)} override file${preview.overrides.count === 1 ? '' : 's'}</b> (configs/scripts) to this server. Files that would be overwritten are backed up first inside the server folder.</span>`;
+      overridesToggle = box.querySelector('input');
+      content.appendChild(box);
+    }
+
+    const modal = openModal({
+      title: isPack ? 'Import CurseForge modpack' : 'Import mods from zip',
+      content,
+      size: 'lg',
+      actions: [
+        { label: 'Cancel', kind: 'ghost' },
+        {
+          label: 'Install selected',
+          kind: 'primary',
+          onClick: async () => {
+            const selections = rows
+              .filter((r) => !r.isBlocked && !r.missing && r.row.querySelector('input').checked)
+              .map((r) => (isPack ? r.item.fileId : r.item.entry));
+            if (!selections.length && !(overridesToggle && overridesToggle.checked)) {
+              toast('Nothing selected.', { kind: 'info' });
+              return false;
+            }
+            modal.close();
+            let report;
+            try {
+              report = await runTask({
+                title: 'Importing mod zip',
+                start: async () => {
+                  const res = await post(`/api/servers/${serverId}/mods/import-zip`, {
+                    uploadToken,
+                    selections,
+                    applyOverrides: Boolean(overridesToggle && overridesToggle.checked),
+                  });
+                  if (!res) throw Object.assign(new Error('Import failed to start'), { dismissed: true });
+                  return res.taskId;
+                },
+              });
+            } catch (err) {
+              if (!err.dismissed) toast(err.message, { kind: 'error', timeout: 9000 });
+              return;
+            }
+            showImportReport(report, blocked);
+          },
+        },
+      ],
+    });
+  }
+
+  function showImportReport(report, blockedPreview) {
+    const blocked = (report && report.blocked && report.blocked.length ? report.blocked : blockedPreview) || [];
+    const failed = (report && report.failed) || [];
+    const installedCount = (report && report.installed && report.installed.length) || 0;
+    const parts = [`${installedCount} installed`];
+    if (failed.length) parts.push(`${failed.length} failed`);
+    if (blocked.length) parts.push(`${blocked.length} need manual download`);
+    if (report && report.overrides && report.overrides.applied) parts.push(`${report.overrides.applied} override files applied`);
+
+    if (!blocked.length && !failed.length) {
+      toast(`Zip import done: ${parts.join(', ')}.`, { kind: 'success' });
+      setTimeout(() => location.reload(), 800);
+      return;
+    }
+    const content = document.createElement('div');
+    const summary = document.createElement('p');
+    summary.className = 'mb-3 text-sm text-ink-soft';
+    summary.textContent = `Import finished: ${parts.join(', ')}.`;
+    content.appendChild(summary);
+
+    if (failed.length) {
+      const box = document.createElement('div');
+      box.className = 'mb-3 space-y-1';
+      for (const f of failed) {
+        const p = document.createElement('p');
+        p.className = 'text-xs text-danger';
+        p.textContent = `${f.name}: ${f.reason}`;
+        box.appendChild(p);
+      }
+      content.appendChild(box);
+    }
+    if (blocked.length) {
+      const intro = document.createElement('p');
+      intro.className = 'mb-2 text-xs text-ink-soft';
+      intro.textContent =
+        'These mods disallow automated downloads. Open each CurseForge page, download the exact file in your browser, then upload it here.';
+      content.appendChild(intro);
+      const box = document.createElement('div');
+      box.className = 'space-y-2';
+      for (const b of blocked) {
+        const row = document.createElement('div');
+        row.className = 'flex flex-wrap items-center gap-2 rounded-md border border-line bg-raised p-2 text-sm';
+        row.innerHTML = `
+          <span class="min-w-0 flex-1">
+            <span class="block truncate font-medium" data-role="name"></span>
+            <span class="block truncate font-mono text-xs text-ink-faint" data-role="file"></span>
+          </span>
+          <a class="btn btn-sm" target="_blank" rel="noopener" data-role="open">Open CF page</a>
+          <button class="btn btn-sm" data-role="upload">Upload jar</button>
+          <input type="file" accept=".jar,.zip" class="hidden" data-role="filepick">`;
+        row.querySelector('[data-role="name"]').textContent = b.name;
+        row.querySelector('[data-role="file"]').textContent = b.fileName || '';
+        const link = row.querySelector('[data-role="open"]');
+        if (/^https?:\/\//i.test(b.url || '')) link.href = b.url;
+        else link.remove();
+        const pick = row.querySelector('[data-role="filepick"]');
+        row.querySelector('[data-role="upload"]').addEventListener('click', () => pick.click());
+        pick.addEventListener('change', async () => {
+          if (!pick.files.length) return;
+          const fd = new FormData();
+          fd.append('file', pick.files[0]);
+          const restoreUp = setBusy(row.querySelector('[data-role="upload"]'));
+          try {
+            const res = await fetch(`/api/servers/${serverId}/mods/upload`, { method: 'POST', body: fd });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed');
+            toast(`Uploaded ${pick.files[0].name}.`);
+            row.remove();
+          } catch (err) {
+            toast(err.message, { kind: 'error' });
+          } finally {
+            restoreUp();
+          }
+        });
+        box.appendChild(row);
+      }
+      content.appendChild(box);
+    }
+    openModal({
+      title: 'Zip import report',
+      content,
+      size: 'lg',
+      actions: [{ label: 'Done', kind: 'primary', onClick: () => setTimeout(() => location.reload(), 300) }],
+    });
+  }
 
   // ---- Mod search: Modrinth + CurseForge (reused by the manual-download resolver) ----
   function openModSearch({ prefill = '', onInstalled = null } = {}) {
