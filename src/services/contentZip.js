@@ -165,9 +165,7 @@ async function resolveManifestEntries(manifestFiles) {
  */
 async function previewForServer(serverId, zipPath) {
   const server = serverTarget(serverId);
-  const kind = ['PAPER', 'PURPUR', 'PUFFERFISH', 'LEAF', 'FOLIA', 'SPIGOT', 'BUKKIT', 'CANYON'].includes(server.type)
-    ? 'plugin'
-    : 'mod';
+  const kind = modsService.contentKindOf(server);
   const serverMc = server.mc_version;
   const serverLoader = modsService.loaderOf(server);
   const info = await inspect(zipPath);
@@ -423,10 +421,27 @@ async function importForServer(
       [...buffers.entries()].map(([name, buffer]) => ({ name, buffer }))
     );
     const identityByEntry = new Map(identified.map((j) => [j.filename, j.identity]));
+    // Documented default (no selections): install every jar whose verdict isn't
+    // wrong-* — unidentified jars stay in, but a jar known to be the wrong
+    // loader/kind/MC for this server never installs implicitly.
+    const server = serversService.getServer(serverId);
+    const judge = (entry) =>
+      modIdentify.verdictFor(identityByEntry.get(entry) || null, {
+        kind: modsService.contentKindOf(server),
+        loader: modsService.loaderOf(server),
+        mc: server.mc_version,
+      });
     const wanted = selections ? new Set(selections) : null;
-    const names = [...buffers.keys()].filter((n) => !wanted || wanted.has(n));
-    for (const n of [...buffers.keys()].filter((x) => wanted && !wanted.has(x))) {
-      report.skipped.push({ name: path.basename(n), reason: 'deselected' });
+    const names = [];
+    for (const entry of buffers.keys()) {
+      const verdict = wanted ? null : judge(entry);
+      if (wanted && !wanted.has(entry)) {
+        report.skipped.push({ name: path.basename(entry), reason: 'deselected' });
+      } else if (verdict && verdict.status.startsWith('wrong-')) {
+        report.skipped.push({ name: path.basename(entry), reason: verdict.status });
+      } else {
+        names.push(entry);
+      }
     }
     const tmpDir = dataPath('tmp');
     await fsp.mkdir(tmpDir, { recursive: true });

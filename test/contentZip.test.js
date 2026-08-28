@@ -266,6 +266,39 @@ test('importForServer installs a jar zip with metadata identities (registries do
   }
 });
 
+test('importForServer default (no selections) skips wrong-fit jars per the documented contract', async () => {
+  const sid = app.seedServer('srv_zipdefault');
+  db.run("UPDATE servers SET type = 'PAPER', mc_version = '1.20.1' WHERE id = ?", sid);
+  apiKeys.deleteKey('curseforge');
+  const { jarBuffer } = require('./helpers/zipfix');
+  const fabricJar = await jarBuffer({
+    'fabric.mod.json': JSON.stringify({ id: 'fabmod', name: 'Fabric Mod', version: '1.0' }),
+  });
+  const pluginJar = await jarBuffer({ 'plugin.yml': 'name: GoodPlugin\nversion: "2.0"\nmain: a.b.C\n' });
+  const zip = await tempZip('mixed.zip', { 'fabmod.jar': fabricJar, 'goodplugin.jar': pluginJar });
+
+  globalThis.fetch = (input) => {
+    const url = String(typeof input === 'string' ? input : input.url || input);
+    if (url.includes('api.modrinth.com')) return Promise.reject(new Error('registry down'));
+    return realFetch(input);
+  };
+  try {
+    const report = await contentZip.importForServer(sid, zip, { actor: 'tester' });
+    assert.equal(report.installed.length, 1);
+    assert.equal(report.installed[0].name, 'GoodPlugin');
+    assert.deepEqual(report.skipped, [{ name: 'fabmod.jar', reason: 'wrong-kind' }]);
+    assert.ok(fs.existsSync(dataPath('servers', sid, 'plugins', 'goodplugin.jar')));
+    assert.ok(!fs.existsSync(dataPath('servers', sid, 'plugins', 'fabmod.jar')), 'fabric mod never installs');
+    // Explicit selections still override the default judgement.
+    const forced = await contentZip.importForServer(sid, zip, { selections: ['fabmod.jar'], actor: 'tester' });
+    assert.equal(forced.installed.length, 1);
+    assert.deepEqual(forced.skipped, [{ name: 'goodplugin.jar', reason: 'deselected' }]);
+  } finally {
+    unstub();
+    apiKeys.setKey('curseforge', 'test-key');
+  }
+});
+
 // ---- previewStandalone (wizard create-from-zip) ----
 
 test('previewStandalone: pack zip carries manifest-derived loader/mc inference', async () => {

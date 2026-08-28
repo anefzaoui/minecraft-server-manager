@@ -43,6 +43,11 @@ function contentDir(server, kind) {
   return PLUGIN_TYPES.has(server.type) ? 'plugins' : 'mods';
 }
 
+/** The primary content kind a server runs — the single source for plugin-vs-mod. */
+function contentKindOf(server) {
+  return PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
+}
+
 // Modpack servers don't set CF_MOD_LOADER/MODRINTH_LOADER — the pack itself
 // decides the loader. mc-image-helper writes a per-loader manifest into the data
 // dir (e.g. .neoforge-manifest.json), so detect from that; otherwise mod installs
@@ -614,6 +619,7 @@ module.exports = {
   removeContent,
   reapplyOverlay,
   contentDir,
+  contentKindOf,
   loaderOf,
   isPackServer,
   parseModsNeedDownload,
