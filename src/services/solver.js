@@ -1,14 +1,15 @@
 'use strict';
 
 // Compatibility Solver — "pick mods first".
-// Given a list of Modrinth project slugs/ids, fetch every project's version
-// list (cached client, sequential — never hammers the API), build a
-// loader → supported-MC-versions map per project, and find the newest
-// (loader, MC version) pair that EVERY project supports. When no pair covers
-// all projects, return the best partial pair plus which projects drop.
+// Given a list of projects (Modrinth slugs/ids or CurseForge slugs), fetch
+// every project's version list (cached clients, sequential — never hammers
+// the APIs), build a loader → supported-MC-versions map per project, and find
+// the newest (loader, MC version) pair that EVERY project supports. When no
+// pair covers all projects, return the best partial pair plus which drop.
 
 const httpError = require('../utils/httpError');
 const modrinth = require('./modrinthApi');
+const curseforge = require('./curseforgeApi');
 const { parseVersion } = require('./javaMatrix');
 
 const MAX_PROJECTS = 25;
@@ -63,35 +64,86 @@ function comparePairs(a, b) {
   return compareMcDesc(a.mcVersion, b.mcVersion) || LOADER_RANK.get(a.loader) - LOADER_RANK.get(b.loader);
 }
 
+/** loader id → Set of MC versions, from a CurseForge project's file list. */
+function buildLoaderMapCf(files, classId) {
+  const map = new Map(LOADERS.map((l) => [l.id, new Set()]));
+  const isPlugin = classId === 5; // bukkit-plugins: files carry no loader tags
+  for (const f of files) {
+    if (f.releaseType === 'alpha') continue; // match the Modrinth policy: skip alphas
+    const mcVersions = [];
+    const loaders = [];
+    for (const gv of f.gameVersions || []) {
+      const sv = String(gv);
+      if (/^\d+\.\d+(\.\d+)?$/.test(sv) && parseVersion(sv)) mcVersions.push(sv);
+      else loaders.push(sv.toLowerCase());
+    }
+    const buckets = isPlugin
+      ? ['paper']
+      : LOADERS.filter((l) => l.id !== 'paper' && loaders.includes(l.id)).map((l) => l.id);
+    for (const b of buckets) for (const gv of mcVersions) map.get(b).add(gv);
+  }
+  return map;
+}
+
 /**
- * Solve compatibility for a set of Modrinth projects.
- * @param {string[]} projectRefs slugs or project ids (1..25)
+ * Solve compatibility for a set of projects.
+ * @param {(string | {platform?: 'modrinth'|'curseforge', ref: string})[]} projectRefs
+ *   plain strings mean Modrinth (the original contract)
  * @returns {Promise<{best, alternatives, perProject, partial}>}
  */
 async function solve(projectRefs) {
-  const refs = [...new Set((projectRefs || []).map((r) => String(r).trim()).filter(Boolean))];
+  const seen = new Set();
+  const refs = [];
+  for (const r of projectRefs || []) {
+    const platform = (typeof r === 'object' && r && r.platform) === 'curseforge' ? 'curseforge' : 'modrinth';
+    const ref = String((typeof r === 'object' && r ? r.ref : r) || '').trim();
+    if (!ref) continue;
+    const key = `${platform}:${ref}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    refs.push({ platform, ref });
+  }
   if (!refs.length) throw httpError(400, 'Pick at least one mod to solve for');
   if (refs.length > MAX_PROJECTS) throw httpError(400, `At most ${MAX_PROJECTS} mods per solve`);
 
-  // Sequential fetches through the cached Modrinth client (2 calls/project max).
+  // Sequential fetches through the cached clients (2 calls/project max).
   const projects = [];
-  for (const ref of refs) {
-    let meta;
-    let versions;
+  for (const { platform, ref } of refs) {
+    let entry;
     try {
-      meta = await modrinth.getProject(ref);
-      versions = await modrinth.getVersions(ref); // ALL versions, unfiltered
+      if (platform === 'curseforge') {
+        const mod = await curseforge.resolveUrl(ref);
+        const files = await curseforge.getAllFiles(mod.modId);
+        entry = {
+          platform,
+          ref,
+          key: '',
+          slug: mod.slug,
+          title: mod.name,
+          iconUrl: mod.iconUrl || null,
+          loaderMap: buildLoaderMapCf(files, mod.classId),
+        };
+      } else {
+        const meta = await modrinth.getProject(ref);
+        const versions = await modrinth.getVersions(ref); // ALL versions, unfiltered
+        entry = {
+          platform,
+          ref,
+          key: '',
+          slug: meta.slug,
+          title: meta.title,
+          iconUrl: meta.icon_url || null,
+          loaderMap: buildLoaderMap(versions),
+        };
+      }
     } catch (err) {
-      if (err.status === 404) throw httpError(404, `"${ref}" was not found on Modrinth`);
+      if (err.status === 404) {
+        throw httpError(404, `"${ref}" was not found on ${platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}`);
+      }
       throw err;
     }
-    projects.push({
-      ref,
-      slug: meta.slug,
-      title: meta.title,
-      iconUrl: meta.icon_url || null,
-      loaderMap: buildLoaderMap(versions),
-    });
+    entry.key = `${platform}:${entry.slug}`;
+    projects.push(entry);
   }
 
   // Full-coverage candidates: for each loader, intersect every project's
@@ -130,7 +182,7 @@ async function solve(projectRefs) {
       }
     }
     if (bestPartial) {
-      const coveredSet = new Set(bestPartial.covered.map((p) => p.slug));
+      const coveredSet = new Set(bestPartial.covered.map((p) => p.key));
       partial = {
         loader: bestPartial.loader,
         loaderLabel: bestPartial.loaderLabel,
@@ -138,10 +190,12 @@ async function solve(projectRefs) {
         mcVersion: bestPartial.mcVersion,
         coveredCount: bestPartial.covered.length,
         total: projects.length,
-        coveredSlugs: [...coveredSet],
+        // "platform:slug" keys — matches perProject[].key
+        coveredKeys: [...coveredSet],
         dropped: projects
-          .filter((p) => !coveredSet.has(p.slug))
+          .filter((p) => !coveredSet.has(p.key))
           .map((p) => ({
+            platform: p.platform,
             ref: p.ref,
             slug: p.slug,
             title: p.title,
@@ -157,6 +211,8 @@ async function solve(projectRefs) {
   // best pair (or the partial pair when nothing covers everything).
   const judged = best || partial;
   const perProject = projects.map((p) => ({
+    platform: p.platform,
+    key: p.key,
     ref: p.ref,
     slug: p.slug,
     title: p.title,

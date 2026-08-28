@@ -12,6 +12,7 @@ The **Modpacks** page (and the **From modpack** tab in the [creation wizard](ser
 - **Modrinth** — search by name.
 - **FTB** — Feed The Beast packs.
 - **GT New Horizons** — the 1.7.10 expert pack, installed from GTNH's own release index. GTNH picks its Java runtime per pack version (2.8.0+ runs on **Java 25** via bundled lwjgl3ify patches, older releases on Java 21 or 17), and the wizard raises the server's RAM and disk to sensible minimums for it.
+- **Custom zip** — not a published pack at all: upload a **CurseForge modpack export** (the zip with `manifest.json` that CurseForge's app produces for a hand-picked mod set) or **any zip of mod jars**. The panel resolves the manifest in bulk via the CurseForge API (or identifies each jar by hash/fingerprint/metadata), previews what fits, and installs everything in one task — including the pack's `overrides/` configs if you opt in. Mods whose authors disallow automated downloads are listed with a browser link and a manual-upload slot instead of failing the install.
 
 ## How pinning works
 

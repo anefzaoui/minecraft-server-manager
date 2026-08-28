@@ -95,6 +95,75 @@ async function getFile(modId, fileId) {
 }
 
 /**
+ * A project's full file history (paginated) — the solver needs every build to
+ * map loader → supported MC versions, not just the newest page.
+ */
+async function getAllFiles(modId, { maxPages = 10 } = {}) {
+  const files = [];
+  for (let page = 0; page < maxPages; page += 1) {
+    const data = await cfFetch(`/mods/${modId}/files`, {
+      search: { pageSize: 50, index: page * 50 },
+      ttlMs: 30 * 60 * 1000,
+    });
+    for (const f of data.data || []) files.push(normalizeFile(f));
+    const total = (data.pagination && data.pagination.totalCount) || 0;
+    if ((page + 1) * 50 >= total || !(data.data || []).length) break;
+  }
+  return files;
+}
+
+// Bulk endpoints — a modpack manifest pins hundreds of {projectID, fileID}
+// pairs; resolving them one GET at a time would hammer the rate limit.
+// Requests are chunked so one oversized POST can't be rejected wholesale.
+const BULK_CHUNK = 200;
+
+function chunked(ids) {
+  const out = [];
+  for (let i = 0; i < ids.length; i += BULK_CHUNK) out.push(ids.slice(i, i + BULK_CHUNK));
+  return out;
+}
+
+/** Bulk mod lookup (POST /v1/mods). Order not guaranteed — key by modId. */
+async function getModsBulk(modIds) {
+  const ids = [...new Set(modIds.map(Number).filter(Number.isFinite))];
+  const mods = [];
+  for (const chunk of chunked(ids)) {
+    const data = await cfFetch('/mods', { method: 'POST', body: { modIds: chunk } });
+    for (const m of data.data || []) mods.push(normalizeMod(m));
+  }
+  return mods;
+}
+
+/** Bulk file lookup (POST /v1/mods/files). Order not guaranteed — key by fileId. */
+async function getFilesBulk(fileIds) {
+  const ids = [...new Set(fileIds.map(Number).filter(Number.isFinite))];
+  const files = [];
+  for (const chunk of chunked(ids)) {
+    const data = await cfFetch('/mods/files', { method: 'POST', body: { fileIds: chunk } });
+    for (const f of data.data || []) files.push(normalizeFile(f));
+  }
+  return files;
+}
+
+/**
+ * Reverse lookup by file fingerprint (POST /v1/fingerprints/{gameId}) — the
+ * murmur2 whitespace-stripped hash from utils/murmur2. Exact matches only.
+ * @returns {Promise<{matches: {modId, file}[], unmatched: number[]}>}
+ */
+async function getFingerprintMatches(fingerprints) {
+  const prints = [...new Set(fingerprints.map(Number).filter(Number.isFinite))];
+  const matches = [];
+  const unmatched = [];
+  for (const chunk of chunked(prints)) {
+    const data = await cfFetch(`/fingerprints/${GAME_MINECRAFT}`, { method: 'POST', body: { fingerprints: chunk } });
+    const d = data.data || {};
+    for (const m of d.exactMatches || []) matches.push({ modId: m.id, file: normalizeFile(m.file) });
+    for (const fp of d.unmatchedFingerprints || []) unmatched.push(fp);
+  }
+  return { matches, unmatched };
+}
+
+/**
  * Project description as an HTML string (GET /v1/mods/{id}/description).
  * CurseForge serves raw author HTML — callers MUST sanitize before rendering.
  */
@@ -106,20 +175,25 @@ async function getDescription(modId) {
 /**
  * Resolve a CurseForge URL/slug to {modId, slug, name, iconUrl, fileId?}.
  * Handles …/minecraft/(mc-mods|modpacks|bukkit-plugins)/<slug>[/files/<fileId>].
+ * A slug only resolves within one class, so bare slugs need the caller's kind
+ * hint — plugin slugs live under bukkit-plugins, not mc-mods. The other class
+ * is tried as a fallback either way (a Paper server can still resolve a mod
+ * slug someone pasted, and vice versa).
  */
-async function resolveUrl(input) {
+async function resolveUrl(input, { kind } = {}) {
   const m = /curseforge\.com\/minecraft\/(mc-mods|modpacks|bukkit-plugins)\/([^/]+)(?:\/files\/(\d+))?/.exec(input);
   let slug = input.trim();
   let fileId = null;
-  let classId = CLASS_MODS;
+  let classId = kind === 'plugin' ? CLASS_PLUGINS : CLASS_MODS;
   if (m) {
     classId = m[1] === 'modpacks' ? CLASS_MODPACKS : m[1] === 'bukkit-plugins' ? CLASS_PLUGINS : CLASS_MODS;
     slug = m[2];
     fileId = m[3] ? Number(m[3]) : null;
   }
+  const fallbackClassId = classId === CLASS_MODS ? CLASS_PLUGINS : CLASS_MODS;
   const mod = /^\d+$/.test(slug)
     ? await getMod(Number(slug))
-    : (await getModBySlug(slug, { classId })) || (await getModBySlug(slug, { classId: CLASS_MODS }));
+    : (await getModBySlug(slug, { classId })) || (await getModBySlug(slug, { classId: fallbackClassId }));
   if (!mod) throw httpError(404, `CurseForge project "${slug}" not found`);
   return { ...mod, fileId };
 }
@@ -140,9 +214,11 @@ function normalizeMod(m) {
 function normalizeFile(f) {
   return {
     fileId: f.id,
+    modId: f.modId,
     name: f.displayName,
     fileName: f.fileName,
     downloadUrl: f.downloadUrl || null, // null when author disallows API download
+    fingerprint: f.fileFingerprint || null,
     gameVersions: f.gameVersions || [],
     releaseType: { 1: 'release', 2: 'beta', 3: 'alpha' }[f.releaseType] || 'release',
     fileDate: f.fileDate,
@@ -157,4 +233,17 @@ function loaderTypeId(loader) {
   return { forge: 1, fabric: 4, quilt: 5, neoforge: 6 }[String(loader).toLowerCase()] || 0;
 }
 
-module.exports = { search, getMod, getModBySlug, getFiles, getFile, getDescription, resolveUrl, GAME_MINECRAFT };
+module.exports = {
+  search,
+  getMod,
+  getModBySlug,
+  getFiles,
+  getFile,
+  getAllFiles,
+  getModsBulk,
+  getFilesBulk,
+  getFingerprintMatches,
+  getDescription,
+  resolveUrl,
+  GAME_MINECRAFT,
+};

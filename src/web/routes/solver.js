@@ -8,23 +8,30 @@ const { makeJsonErrorHandler } = require('../middleware/jsonErrorHandler');
 const express = require('express');
 const { z } = require('zod');
 const solver = require('../../services/solver');
-const modrinth = require('../../services/modrinthApi');
+const modBrowser = require('../../services/modBrowser');
 
 const router = express.Router();
 
 // Mod search for the "Start from mods" wizard panel. Deliberately unfiltered
 // by loader/MC version — the solver decides those from the final selection.
+// Both platforms; CurseForge needs the stored API key (412 without it).
 router.get(
   '/search',
   asyncHandler(async (req, res, next) => {
-    const q = String(req.query.q || '').trim();
+    const { q, platform } = z
+      .object({
+        q: z.string().trim().max(120).default(''),
+        platform: z.enum(['modrinth', 'curseforge']).default('modrinth'),
+      })
+      .parse({ q: req.query.q || '', platform: req.query.platform || undefined });
     if (!q) return res.json({ ok: true, results: [] });
-    const results = await modrinth.search({ query: q, kind: 'mod' });
+    const results = await modBrowser.search({ query: q, platform, kind: 'mod' });
     res.json({
       ok: true,
       results: results.map((r) => ({
-        slug: r.slug,
-        title: r.title,
+        platform: r.platform,
+        slug: r.ref,
+        title: r.name,
         iconUrl: r.iconUrl,
         description: r.description,
         downloads: r.downloads,
@@ -38,7 +45,19 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const { projects } = z
       .object({
-        projects: z.array(z.string().trim().min(1).max(100)).min(1).max(solver.MAX_PROJECTS),
+        projects: z
+          .array(
+            z.union([
+              // Original contract: a bare string is a Modrinth slug/id.
+              z.string().trim().min(1).max(100),
+              z.object({
+                platform: z.enum(['modrinth', 'curseforge']).default('modrinth'),
+                ref: z.string().trim().min(1).max(100),
+              }),
+            ])
+          )
+          .min(1)
+          .max(solver.MAX_PROJECTS),
       })
       .parse(req.body);
     res.json({ ok: true, ...(await solver.solve(projects)) });

@@ -15,7 +15,7 @@ You choose:
 - A **Minecraft version** — `LATEST`, a snapshot, or a specific version.
 - **Resources** — RAM (heap), container memory limit, CPU, and a disk quota.
 
-Prefer a modpack? The **From modpack** tab installs a CurseForge, Modrinth, FTB, or GT New Horizons pack instead — see [Modpacks](modpacks.md). You can also start from a saved [Blueprint](blueprints.md).
+Prefer a modpack? The **From modpack** tab installs a CurseForge, Modrinth, FTB, or GT New Horizons pack instead — see [Modpacks](modpacks.md) — or takes a **custom zip you upload**: a CurseForge modpack export (`manifest.json`) or any zip of mod jars. The manifest (or a majority vote across the identified jars) fills in the loader and Minecraft version, and every mod installs in one task. You can also start from a saved [Blueprint](blueprints.md).
 
 The panel picks a sensible Java runtime for your version automatically, pulls the image, creates the container, and (optionally) starts it — all from the one form.
 

@@ -78,10 +78,18 @@
     {{! ---- Auto-detect (the compatibility solver) ---- }}
     <div class="card p-5 hidden" id="wz-solver">
       <h3 class="mb-1 font-semibold">Auto-detect loader &amp; version</h3>
-      <p class="help mb-4">Search Modrinth, add the mods you want, and Minecraft Server Manager finds the newest loader + Minecraft version that every one of them supports.</p>
+      <p class="help mb-4">Search {{#if curseforgeEnabled}}Modrinth or CurseForge{{else}}Modrinth{{/if}}, add the mods you want, and Minecraft Server Manager finds the newest loader + Minecraft version that every one of them supports.</p>
       <div>
-        <label class="label" for="wz-solver-q">Search Modrinth</label>
-        <input class="input" id="wz-solver-q" placeholder="e.g. sodium, create, jei…" autocomplete="off">
+        <label class="label" for="wz-solver-q">Search mods</label>
+        <div class="flex flex-wrap items-center gap-2">
+          <input class="input min-w-48 flex-1" id="wz-solver-q" placeholder="e.g. sodium, create, jei…" autocomplete="off">
+          {{#if curseforgeEnabled}}
+            <div class="seg" id="wz-solver-platforms" role="group" aria-label="Search platform">
+              <button type="button" class="seg-btn" aria-pressed="true" data-platform="modrinth">Modrinth</button>
+              <button type="button" class="seg-btn" aria-pressed="false" data-platform="curseforge">CurseForge</button>
+            </div>
+          {{/if}}
+        </div>
       </div>
       <div class="mt-2 hidden max-h-72 overflow-y-auto rounded-md border border-line" id="wz-solver-results"></div>
       <div class="mt-3 hidden flex-wrap gap-1.5" id="wz-solver-chips"></div>
@@ -107,6 +115,15 @@
       </div>
       <button type="button" class="btn shrink-0" id="wz-gtnh-pick">Set up</button>
     </div>
+    {{! Custom zip — CurseForge modpack export or a hand-assembled zip of jars }}
+    <div class="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-line p-3" id="wz-zip-card">
+      <div class="min-w-0 flex-1">
+        <div class="font-semibold">Custom zip</div>
+        <div class="text-xs text-ink-faint">A CurseForge modpack export (with manifest.json{{#unless curseforgeEnabled}} — needs the API key in Settings{{/unless}}) or any zip of mod jars you collected yourself. Every jar is identified and installed with provenance.</div>
+      </div>
+      <button type="button" class="btn shrink-0" id="wz-zip-pick">Upload zip</button>
+    </div>
+    <div class="mb-4 hidden" id="wz-zip-selected"></div>
     <div class="flex flex-wrap items-center gap-2">
       <input class="input min-w-48 flex-1" id="wz-pack-q" placeholder="e.g. Simply Optimized, All the Mods…" autocomplete="off">
       <div class="seg" id="wz-pack-platforms" role="group" aria-label="Search platform">

@@ -1,4 +1,4 @@
-<div data-mods-server="{{server.id}}" data-mods-type="{{server.type}}" data-mods-loader="{{server.loader}}" data-mods-mc="{{server.mcVersion}}">
+<div data-mods-server="{{server.id}}" data-mods-type="{{server.type}}" data-mods-loader="{{server.loader}}" data-mods-mc="{{server.mcVersion}}" data-mods-cf="{{#if curseforgeEnabled}}true{{else}}false{{/if}}">
   <div class="mb-4 flex flex-wrap items-center gap-2">
     {{#if mods.length}}
     <input class="input max-w-xs" placeholder="Search installed mods…" id="mods-filter">
@@ -7,7 +7,8 @@
     </select>
     {{/if}}
     <div class="ml-auto flex flex-wrap gap-2">
-      <button class="btn btn-sm" id="mods-search-modrinth">{{{icon 'search' 'size-3.5'}}} Search Modrinth</button>
+      <button class="btn btn-sm" id="mods-search">{{{icon 'search' 'size-3.5'}}} Search mods</button>
+      <button class="btn btn-sm" id="mods-import-zip" data-tip="CurseForge modpack export or any zip of mod jars">{{{icon 'archive' 'size-3.5'}}} Import zip</button>
       <button class="btn btn-primary btn-sm" id="mods-add-url">{{{icon 'plus' 'size-3.5'}}} Add by URL</button>
     </div>
   </div>
@@ -90,7 +91,7 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='puzzle' title='No mods installed yet' message='Search Modrinth or add a mod by URL with the buttons above — custom mods live in the shared library and survive pack updates.'}}
+    {{> empty-state iconName='puzzle' title='No mods installed yet' message='Search Modrinth or CurseForge, add a mod by URL, or import a zip with the buttons above — custom mods live in the shared library and survive pack updates.'}}
   {{/if}}
 </div>
 <script type="module" src="/js/pages/mods.js"></script>

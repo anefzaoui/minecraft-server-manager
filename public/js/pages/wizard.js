@@ -14,6 +14,7 @@ import { enhanceSelect } from '../lib/select.js';
 import { showPackDetails, packIconHtml, formatDownloads } from './modpacks.js';
 import { attachMotdEditor, toSectionCodes } from '../lib/motd.js';
 import { initDockerSettings } from '../lib/dockerSettings.js';
+import { showZipImportReport } from '../lib/zipImport.js';
 
 const root = document.getElementById('wizard');
 if (root) init();
@@ -57,7 +58,7 @@ function init() {
   let detail = 'simple';
   // From-mods sub-mode + the loader/version chosen by the Auto-detect solver.
   let modsMode = 'browse';
-  const solverState = { pick: null, slugs: [] };
+  const solverState = { pick: null, mods: [] };
 
   // Segmented controls carry selection in aria-selected (tabs) / aria-pressed
   // (toggles); the .seg-btn CSS styles off the attribute.
@@ -116,7 +117,7 @@ function init() {
       const hadSelection = browser.count() > 0 || solverState.pick;
       browser.clear();
       solverState.pick = null;
-      solverState.slugs = [];
+      solverState.mods = [];
       if (hadSelection) toast('Left "From mods" — the queued mods were cleared.', { kind: 'info' });
     }
     sourceTab = tab;
@@ -143,14 +144,15 @@ function init() {
   });
 
   initSolver({
-    onApplied: (pair, slugs) => {
+    onApplied: (pair, mods) => {
       solverState.pick = pair;
-      solverState.slugs = slugs;
+      solverState.mods = mods;
     },
   });
 
   const browser = initModBrowser();
   const packPicker = initPackPicker();
+  const zipPicker = initZipUpload();
   initPortCheck();
   refreshPanels();
 
@@ -320,9 +322,12 @@ function init() {
 
   // ---- Create: modpack (ONE server-side task — real progress end to end) ----
   async function createFromPack(name) {
+    // An uploaded custom zip supersedes any picked catalog pack.
+    const zipState = zipPicker && zipPicker.getState();
+    if (zipState) return createFromZip(name, zipState);
     const selection = packPicker && packPicker.getSelection();
     if (!selection) {
-      toast('Search and select a modpack first.', { kind: 'error' });
+      toast('Search and select a modpack first, or upload a custom zip.', { kind: 'error' });
       document.getElementById('wz-pack-q')?.focus();
       return;
     }
@@ -361,6 +366,68 @@ function init() {
     }
   }
 
+  // ---- Create: custom zip (CF export or jar zip → create → bulk install → start) ----
+  async function createFromZip(name, zipState) {
+    const loader = zipState.loader;
+    const mcVersion = zipState.mcVersion;
+    if (!loader || !mcVersion) {
+      toast('Pick the loader and Minecraft version for this zip first.', { kind: 'error' });
+      return;
+    }
+    // Jar zips: preselect only jars that can run on the chosen loader (a jar
+    // with no readable loader info stays in — the server may still want it).
+    let selections;
+    if (zipState.preview.type === 'jars' && loader !== 'paper') {
+      selections = zipState.preview.items
+        .filter((i) => {
+          const loaders = (i.identity && i.identity.loaders) || [];
+          return !loaders.length || loaders.map((l) => l.toLowerCase()).includes(loader);
+        })
+        .map((i) => i.entry);
+    }
+    const body = {
+      name,
+      description: document.getElementById('wz-desc').value.trim(),
+      icon,
+      accent,
+      loader,
+      mcVersion,
+      ...(zipState.loaderVersion ? { loaderVersion: zipState.loaderVersion } : {}),
+      uploadToken: zipState.uploadToken,
+      ...(selections ? { selections } : {}),
+      applyOverrides: Boolean(zipState.applyOverrides),
+      ...resources(),
+      env: collectSimpleEnv(),
+      ...collectDockerOverrides(),
+    };
+    try {
+      const result = await runTask({
+        title: `Creating ${name} from zip`,
+        start: async () => {
+          const res = await fetch('/api/servers/from-zip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Creation failed');
+          return data.taskId;
+        },
+      });
+      zipPicker.clear();
+      showZipImportReport({
+        serverId: result.serverId,
+        report: result.report,
+        onDone: () => {
+          location.href = `/servers/${result.serverId}`;
+        },
+      });
+    } catch (err) {
+      if (err.dismissed) return; // creation continues server-side — task tray takes over
+      toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
+    }
+  }
+
   // ---- Create: from mods (ONE server-side task — create → install pinned → start) ----
   async function createFromMods(name) {
     let loader;
@@ -375,7 +442,7 @@ function init() {
       }
       loader = solverState.pick.loader;
       mcVersion = solverState.pick.mcVersion;
-      mods = solverState.slugs.map((slug) => ({ platform: 'modrinth', ref: slug })); // latest matching build
+      mods = solverState.mods; // [{platform, ref}] — latest matching build of each
     } else {
       const state = browser.getState();
       loader = state.loader;
@@ -884,6 +951,145 @@ function raiseResourceFloor(minHeapMb, minQuotaGb) {
   }
 }
 
+// ---- From-modpack "Custom zip": CF export or hand-assembled jar zip ---------
+
+function initZipUpload() {
+  const card = document.getElementById('wz-zip-card');
+  if (!card) return null;
+  const pickBtn = document.getElementById('wz-zip-pick');
+  const selectedEl = document.getElementById('wz-zip-selected');
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.zip';
+  input.className = 'hidden';
+  document.body.appendChild(input);
+  let state = null; // { uploadToken, preview, loader, mcVersion, loaderVersion, applyOverrides }
+
+  pickBtn.addEventListener('click', () => input.click());
+
+  // Picking a catalog pack (search result or GTNH) supersedes the zip.
+  document.getElementById('wz-pack-results')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-pick]')) clear();
+  });
+  document.getElementById('wz-gtnh-pick')?.addEventListener('click', clear);
+
+  input.addEventListener('change', async () => {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    input.value = '';
+    const restore = setBusy(pickBtn, 'Reading zip…');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/mods/zip-preview', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || `Could not read the zip (${res.status})`);
+      state = {
+        uploadToken: data.uploadToken,
+        preview: data.preview,
+        loader: data.preview.inferred.loader,
+        mcVersion: data.preview.inferred.mcVersion,
+        loaderVersion: data.preview.type === 'curseforge-pack' ? data.preview.pack.loaderVersion || '' : '',
+        applyOverrides: false,
+      };
+      document.getElementById('wz-pack-selected')?.classList.add('hidden'); // zip replaces any picked pack
+      render(file.name);
+    } catch (err) {
+      toast(err.message, { kind: 'error', timeout: 9000 });
+    } finally {
+      restore();
+    }
+  });
+
+  function clear() {
+    state = null;
+    selectedEl.classList.add('hidden');
+    selectedEl.innerHTML = '';
+  }
+
+  function render(filename) {
+    const p = state.preview;
+    const isPack = p.type === 'curseforge-pack';
+    const blocked = isPack ? p.items.filter((i) => i.resolved && !i.downloadable).length : 0;
+    const unresolved = isPack ? p.items.filter((i) => !i.resolved).length : 0;
+    const unidentified = isPack ? 0 : p.items.filter((i) => !i.identity).length;
+    const bits = [`${p.items.length} ${isPack ? 'pinned mods' : 'jars'}`];
+    if (blocked) bits.push(`${blocked} need manual download`);
+    if (unresolved) bits.push(`${unresolved} no longer on CurseForge`);
+    if (unidentified) bits.push(`${unidentified} unidentified`);
+
+    selectedEl.classList.remove('hidden');
+    selectedEl.innerHTML = `
+      <div class="rounded-md border border-grass-700 bg-grass-600/10 p-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="truncate font-semibold" data-role="title"></div>
+            <div class="text-xs text-ink-faint" data-role="meta"></div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm shrink-0" data-role="remove">Remove</button>
+        </div>
+        <div class="mt-3 hidden gap-4 sm:grid-cols-2" data-role="pickers"></div>
+        <label class="mt-3 hidden cursor-pointer items-start gap-2 text-xs text-ink-soft" data-role="overrides-row">
+          <input type="checkbox" class="msm-check mt-0.5 shrink-0" data-role="overrides">
+          <span>Also apply the pack's <b data-role="ovr-count"></b> override files (configs/scripts) after install — overwritten files are backed up inside the server folder.</span>
+        </label>
+      </div>`;
+    selectedEl.querySelector('[data-role="title"]').textContent = isPack
+      ? `${p.pack.name}${p.pack.version ? ` ${p.pack.version}` : ''}`
+      : filename;
+    selectedEl.querySelector('[data-role="meta"]').textContent = isPack
+      ? `CurseForge export — Minecraft ${p.pack.mcVersion || '?'}, ${p.pack.loader || 'unknown loader'} · ${bits.join(' · ')}`
+      : `Custom jar zip · ${bits.join(' · ')}`;
+    selectedEl.querySelector('[data-role="remove"]').addEventListener('click', clear);
+
+    if (isPack && p.overrides && p.overrides.count > 0) {
+      const row = selectedEl.querySelector('[data-role="overrides-row"]');
+      row.classList.remove('hidden');
+      row.classList.add('flex');
+      selectedEl.querySelector('[data-role="ovr-count"]').textContent = String(p.overrides.count);
+      row.querySelector('[data-role="overrides"]').addEventListener('change', (e) => {
+        state.applyOverrides = e.target.checked;
+      });
+    }
+
+    // Jar zips (and malformed manifests) need the loader/MC confirmed by hand —
+    // prefilled from the majority vote across identified jars.
+    if (!isPack || !state.loader || !state.mcVersion) {
+      const pickers = selectedEl.querySelector('[data-role="pickers"]');
+      pickers.classList.remove('hidden');
+      pickers.classList.add('grid');
+      const loaders = ['fabric', 'forge', 'neoforge', 'quilt', 'paper'];
+      const mcOptions = (p.inferred && p.inferred.mcVersionOptions) || [];
+      pickers.innerHTML = `
+        <div>
+          <label class="label">Mod loader ${state.loader ? '<span class="text-xs font-normal text-ink-faint">(auto-detected)</span>' : ''}</label>
+          <select class="input" data-role="loader">
+            ${loaders.map((l) => `<option value="${l}" ${l === state.loader ? 'selected' : ''}>${l === 'paper' ? 'Paper (plugins)' : l}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="label">Minecraft version ${state.mcVersion ? '<span class="text-xs font-normal text-ink-faint">(auto-detected)</span>' : ''}</label>
+          ${
+            mcOptions.length
+              ? `<select class="input" data-role="mc">${mcOptions.map((v) => `<option value="${escapeHtml(v)}" ${v === state.mcVersion ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}</select>`
+              : '<input class="input" data-role="mc" placeholder="e.g. 1.20.1" autocomplete="off">'
+          }
+        </div>`;
+      if (!state.loader) state.loader = loaders[0];
+      pickers.querySelector('[data-role="loader"]').addEventListener('change', (e) => {
+        state.loader = e.target.value;
+      });
+      const mcEl = pickers.querySelector('[data-role="mc"]');
+      mcEl.addEventListener(mcEl.tagName === 'SELECT' ? 'change' : 'input', (e) => {
+        state.mcVersion = e.target.value.trim();
+      });
+      if (mcEl.tagName === 'INPUT' && state.mcVersion) mcEl.value = state.mcVersion;
+    }
+  }
+
+  return { getState: () => state, clear };
+}
+
 function initPackPicker() {
   const panel = document.getElementById('wz-modpack');
   if (!panel) return null;
@@ -1132,12 +1338,25 @@ function initSolver({ onApplied = () => {} } = {}) {
   const resultEl = document.getElementById('wz-solver-result');
   const hiddenInput = document.getElementById('wz-solver-mods');
 
-  const picked = new Map(); // slug -> { slug, title, iconUrl }
+  const picked = new Map(); // "platform:slug" -> { platform, slug, title, iconUrl }
+  const keyOf = (m) => `${m.platform || 'modrinth'}:${m.slug}`;
+  let platform = 'modrinth';
   let lastResults = [];
   let solveData = null; // last solve response
   let chosenPair = null; // pair the Apply button will use
 
-  // Debounced Modrinth search
+  const platformsEl = document.getElementById('wz-solver-platforms'); // absent when no CF key
+  platformsEl?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-platform]');
+    if (!btn || btn.dataset.platform === platform) return;
+    platform = btn.dataset.platform;
+    platformsEl.querySelectorAll('[data-platform]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.platform === platform));
+    });
+    if (searchInput.value.trim()) searchInput.dispatchEvent(new Event('input'));
+  });
+
+  // Debounced search (Modrinth or CurseForge)
   let timer;
   searchInput.addEventListener('input', () => {
     clearTimeout(timer);
@@ -1149,13 +1368,13 @@ function initSolver({ onApplied = () => {} } = {}) {
     }
     timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/solver/search?q=${encodeURIComponent(term)}`);
+        const res = await fetch(`/api/solver/search?q=${encodeURIComponent(term)}&platform=${platform}`);
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error || 'Search failed');
         lastResults = data.results;
         renderResults();
       } catch (err) {
-        toast(`Modrinth search failed: ${err.message}`, { kind: 'error' });
+        toast(`Mod search failed: ${err.message}`, { kind: 'error' });
       }
     }, 300);
   });
@@ -1163,13 +1382,18 @@ function initSolver({ onApplied = () => {} } = {}) {
   resultsEl.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-add]');
     if (!btn) return;
-    const hit = lastResults.find((r) => r.slug === btn.dataset.add);
-    if (!hit || picked.has(hit.slug)) return;
+    const hit = lastResults[Number(btn.dataset.add)];
+    if (!hit || picked.has(keyOf(hit))) return;
     if (picked.size >= 25) {
       toast('25 mods max per solve.', { kind: 'error' });
       return;
     }
-    picked.set(hit.slug, { slug: hit.slug, title: hit.title, iconUrl: hit.iconUrl });
+    picked.set(keyOf(hit), {
+      platform: hit.platform || 'modrinth',
+      slug: hit.slug,
+      title: hit.title,
+      iconUrl: hit.iconUrl,
+    });
     invalidateResult();
     renderChips();
     renderResults();
@@ -1192,7 +1416,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       const res = await fetch('/api/solver/solve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projects: [...picked.keys()] }),
+        body: JSON.stringify({ projects: [...picked.values()].map((m) => ({ platform: m.platform, ref: m.slug })) }),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'Solve failed');
@@ -1241,7 +1465,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       chip.innerHTML = `
         ${mod.iconUrl ? `<img src="${escapeHtml(mod.iconUrl)}" alt="" class="size-4 rounded-sm">` : ''}
         <span class="max-w-40 truncate">${escapeHtml(mod.title)}</span>
-        <button type="button" data-remove="${escapeHtml(mod.slug)}" class="grid size-5 place-items-center rounded-sm text-ink-faint transition hover:bg-line hover:text-ink" aria-label="Remove ${escapeHtml(mod.title)}">${X_SVG}</button>`;
+        <button type="button" data-remove="${escapeHtml(keyOf(mod))}" class="grid size-5 place-items-center rounded-sm text-ink-faint transition hover:bg-line hover:text-ink" aria-label="Remove ${escapeHtml(mod.title)}">${X_SVG}</button>`;
       chipsEl.appendChild(chip);
     }
   }
@@ -1253,10 +1477,10 @@ function initSolver({ onApplied = () => {} } = {}) {
       resultsEl.classList.remove('hidden');
       return;
     }
-    for (const hit of lastResults) {
+    lastResults.forEach((hit, i) => {
       const row = document.createElement('div');
       row.className = 'flex items-center gap-2.5 border-b border-line px-2.5 py-2 text-sm last:border-b-0';
-      const added = picked.has(hit.slug);
+      const added = picked.has(keyOf(hit));
       row.innerHTML = `
         ${hit.iconUrl ? `<img src="${escapeHtml(hit.iconUrl)}" alt="" class="size-8 shrink-0 rounded">` : '<span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-ink-faint">?</span>'}
         <span class="min-w-0 flex-1">
@@ -1264,9 +1488,9 @@ function initSolver({ onApplied = () => {} } = {}) {
           <span class="block truncate text-xs text-ink-faint">${escapeHtml(hit.description || '')}</span>
         </span>
         <span class="shrink-0 font-mono text-xs text-ink-faint">${formatDownloads(hit.downloads)}</span>
-        <button type="button" data-add="${escapeHtml(hit.slug)}" class="btn btn-sm shrink-0" ${added ? 'disabled' : ''}>${added ? 'Added' : 'Add'}</button>`;
+        <button type="button" data-add="${i}" class="btn btn-sm shrink-0" ${added ? 'disabled' : ''}>${added ? 'Added' : 'Add'}</button>`;
       resultsEl.appendChild(row);
-    }
+    });
     resultsEl.classList.remove('hidden');
   }
 
@@ -1378,14 +1602,18 @@ function initSolver({ onApplied = () => {} } = {}) {
       solveData.partial &&
       chosenPair.loader === solveData.partial.loader &&
       chosenPair.mcVersion === solveData.partial.mcVersion;
-    const slugs = usePartial ? solveData.partial.coveredSlugs : [...picked.keys()];
-    hiddenInput.value = JSON.stringify(slugs);
+    const keys = usePartial ? solveData.partial.coveredKeys : [...picked.keys()];
+    const mods = keys.map((k) => {
+      const idx = k.indexOf(':');
+      return { platform: k.slice(0, idx), ref: k.slice(idx + 1) };
+    });
+    hiddenInput.value = JSON.stringify(mods);
 
-    const skipped = picked.size - slugs.length;
+    const skipped = picked.size - mods.length;
     toast(
-      `Applied: ${chosenPair.loaderLabel} on ${chosenPair.mcVersion}. ${slugs.length} mod${slugs.length === 1 ? '' : 's'} will install after creation${skipped > 0 ? ` (${skipped} incompatible skipped)` : ''}. Press "Create & start".`
+      `Applied: ${chosenPair.loaderLabel} on ${chosenPair.mcVersion}. ${mods.length} mod${mods.length === 1 ? '' : 's'} will install after creation${skipped > 0 ? ` (${skipped} incompatible skipped)` : ''}. Press "Create & start".`
     );
-    onApplied(chosenPair, slugs);
+    onApplied(chosenPair, mods);
   }
 }
 

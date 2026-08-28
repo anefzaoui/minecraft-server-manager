@@ -1,8 +1,9 @@
 // @ts-nocheck — dynamic HTTP-JSON interop across two mod registries.
 'use strict';
 
-// Backend for the "From mods" wizard browser. Three concerns, both platforms:
-//   search()   — find mods for a loader + MC version (Modrinth or CurseForge)
+// Backend for the wizard's "From mods" browser AND the per-server mods tab.
+// Three concerns, both platforms:
+//   search()   — find mods/plugins for a loader + MC version (Modrinth or CurseForge)
 //   versions() — a mod's builds filtered to that loader + MC, newest first
 //   resolveDependencies() — the required-dependency closure of a selection,
 //                           so the wizard can show "added as dependency" rows
@@ -22,13 +23,22 @@ function normMc(mc) {
 
 // ---- Search -----------------------------------------------------------------
 
-/** Unified mod search. Returns [{platform, ref, projectId, name, description, iconUrl, downloads}]. */
-async function search({ query, platform, loader, mc, limit = 20 }) {
+// Plugin loaders aren't real loader filters on either platform: Modrinth uses
+// category facets for plugins, CurseForge's bukkit-plugins class has no
+// modLoaderType. Strip the loader for plugin searches so it can't 400 or
+// over-filter.
+function effectiveLoader(kind, loader) {
+  return kind === 'plugin' ? undefined : loader;
+}
+
+/** Unified mod/plugin search. Returns [{platform, ref, projectId, name, description, iconUrl, downloads}]. */
+async function search({ query, platform, kind = 'mod', loader, mc, limit = 20 }) {
   const q = String(query || '').trim();
   if (!q) return [];
   const mcVersion = normMc(mc);
+  loader = effectiveLoader(kind, loader);
   if (platform === 'curseforge') {
-    const hits = await curseforge.search({ query: q, kind: 'mod', loader, mcVersion, limit });
+    const hits = await curseforge.search({ query: q, kind, loader, mcVersion, limit });
     return hits.map((m) => ({
       platform: 'curseforge',
       ref: m.slug,
@@ -39,7 +49,7 @@ async function search({ query, platform, loader, mc, limit = 20 }) {
       downloads: m.downloads || 0,
     }));
   }
-  const hits = await modrinth.search({ query: q, kind: 'mod', loader, mcVersion, limit });
+  const hits = await modrinth.search({ query: q, kind, loader, mcVersion, limit });
   return hits.map((h) => ({
     platform: 'modrinth',
     ref: h.slug,
@@ -54,11 +64,11 @@ async function search({ query, platform, loader, mc, limit = 20 }) {
 // ---- Project metadata + versions -------------------------------------------
 
 /** {ref, projectId, name, iconUrl} for a mod given a slug or platform id. */
-async function metaFor(platform, refOrId) {
+async function metaFor(platform, refOrId, { kind = 'mod' } = {}) {
   if (platform === 'curseforge') {
     const mod = /^\d+$/.test(String(refOrId))
       ? await curseforge.getMod(Number(refOrId))
-      : await curseforge.resolveUrl(String(refOrId));
+      : await curseforge.resolveUrl(String(refOrId), { kind });
     return { ref: mod.slug, projectId: String(mod.modId), name: mod.name, iconUrl: mod.iconUrl || null };
   }
   const p = await modrinth.getProject(refOrId);
@@ -98,10 +108,11 @@ function normCurseforgeFile(f) {
  * A mod's builds for a loader + MC version, newest first.
  * @returns [{versionId, name, versionNumber, datePublished, versionType, gameVersions, requiredDeps}]
  */
-async function versions({ platform, ref, loader, mc, limit = 30 }) {
+async function versions({ platform, ref, kind = 'mod', loader, mc, limit = 30 }) {
   const mcVersion = normMc(mc);
+  loader = effectiveLoader(kind, loader);
   if (platform === 'curseforge') {
-    const meta = await metaFor('curseforge', ref);
+    const meta = await metaFor('curseforge', ref, { kind });
     const files = await curseforge.getFiles(meta.projectId, { mcVersion, loader });
     return files.slice(0, limit).map(normCurseforgeFile);
   }

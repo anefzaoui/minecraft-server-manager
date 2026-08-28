@@ -13,7 +13,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const archiver = require('archiver');
-const yauzl = require('yauzl');
+const { readZipIndex, extractZipSafe } = require('../utils/zip');
 const { nanoid } = require('nanoid');
 const { z } = require('zod');
 const db = require('../db');
@@ -273,7 +273,8 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
  * Rejects zip-slip entry names and schema violations before anything is created.
  */
 async function importPreview(zipPath) {
-  const { entries, manifestText } = await readZipIndex(zipPath);
+  const { entries, texts } = await readZipIndex(zipPath, { textEntry: (n) => n === 'manifest.json' });
+  const manifestText = texts.get('manifest.json') || null;
   if (!manifestText) throw httpError(400, 'Not a Minecraft Server Manager blueprint: manifest.json is missing');
 
   let raw;
@@ -793,85 +794,6 @@ async function writeManifestOnlyBlueprint(manifest, { builtin = false } = {}) {
     JSON.stringify(manifest)
   );
   return db.get('SELECT * FROM blueprints WHERE id = ?', id);
-}
-
-// ---- Zip helpers (all zip-slip-guarded) ----
-
-function safeEntryName(name) {
-  if (!name || name.includes('\0') || name.includes('\\')) return false;
-  if (path.isAbsolute(name) || /^[a-zA-Z]:/.test(name)) return false;
-  return !name.split('/').includes('..');
-}
-
-/** List entries and stream out manifest.json without extracting anything. */
-function readZipIndex(zipPath) {
-  return new Promise((resolve, reject) => {
-    yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(httpError(400, 'Not a valid zip archive'));
-      const entries = [];
-      let manifestText = null;
-      zip.on('error', reject);
-      zip.on('end', () => resolve({ entries, manifestText }));
-      zip.on('entry', (entry) => {
-        if (!safeEntryName(entry.fileName)) {
-          zip.close();
-          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}`));
-        }
-        entries.push({ name: entry.fileName, size: entry.uncompressedSize });
-        if (entry.fileName === 'manifest.json') {
-          zip.openReadStream(entry, (streamErr, readStream) => {
-            if (streamErr) return reject(streamErr);
-            const chunks = [];
-            readStream.on('data', (c) => chunks.push(c));
-            readStream.on('error', reject);
-            readStream.on('end', () => {
-              manifestText = Buffer.concat(chunks).toString('utf8');
-              zip.readEntry();
-            });
-          });
-        } else {
-          zip.readEntry();
-        }
-      });
-      zip.readEntry();
-    });
-  });
-}
-
-/** Extract a whole zip under destDir; every entry path is containment-checked. */
-function extractZipSafe(zipFile, destDir) {
-  return new Promise((resolve, reject) => {
-    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(err);
-      zip.on('error', reject);
-      zip.on('end', resolve);
-      zip.on('entry', (entry) => {
-        if (!safeEntryName(entry.fileName)) {
-          zip.close();
-          return reject(new Error(`Archive entry escapes destination: ${entry.fileName}`));
-        }
-        const target = path.resolve(destDir, entry.fileName);
-        if (target !== path.resolve(destDir) && !target.startsWith(path.resolve(destDir) + path.sep)) {
-          zip.close();
-          return reject(new Error(`Archive entry escapes destination: ${entry.fileName}`));
-        }
-        if (/\/$/.test(entry.fileName)) {
-          fs.mkdirSync(target, { recursive: true });
-          zip.readEntry();
-        } else {
-          fs.mkdirSync(path.dirname(target), { recursive: true });
-          zip.openReadStream(entry, (streamErr, readStream) => {
-            if (streamErr) return reject(streamErr);
-            const out = fs.createWriteStream(target);
-            out.on('close', () => zip.readEntry());
-            out.on('error', reject);
-            readStream.pipe(out);
-          });
-        }
-      });
-      zip.readEntry();
-    });
-  });
 }
 
 // ---- Small helpers ----

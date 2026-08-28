@@ -10,16 +10,23 @@ const db = require('../db');
 const BASE = 'https://api.modrinth.com/v2';
 const UA = 'MinecraftServerManager/0.1 (self-hosted panel; contact via repo)';
 
-async function mrFetch(pathname, { ttlMs = 10 * 60 * 1000, search } = {}) {
+async function mrFetch(pathname, { ttlMs = 10 * 60 * 1000, search, method = 'GET', body } = {}) {
   const url = new URL(BASE + pathname);
   if (search) for (const [k, v] of Object.entries(search)) url.searchParams.set(k, v);
   const cacheKey = `modrinth:${url.pathname}${url.search}`;
-  const cached = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', cacheKey);
+  const cached =
+    method === 'GET' ? db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', cacheKey) : null;
   if (cached && Date.now() - Date.parse(cached.fetched_at + 'Z') < ttlMs) {
     return JSON.parse(cached.value_json);
   }
   const res = await fetch(url, {
-    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    method,
+    headers: {
+      'User-Agent': UA,
+      Accept: 'application/json',
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(15000),
   });
   if (res.status === 429) {
@@ -29,12 +36,14 @@ async function mrFetch(pathname, { ttlMs = 10 * 60 * 1000, search } = {}) {
   if (res.status === 404) throw httpError(404, 'Not found on Modrinth');
   if (!res.ok) throw httpError(502, `Modrinth answered HTTP ${res.status}`);
   const data = await res.json();
-  db.run(
-    `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))
-     ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, fetched_at = excluded.fetched_at`,
-    cacheKey,
-    JSON.stringify(data)
-  );
+  if (method === 'GET') {
+    db.run(
+      `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))
+       ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, fetched_at = excluded.fetched_at`,
+      cacheKey,
+      JSON.stringify(data)
+    );
+  }
   return data;
 }
 
@@ -115,4 +124,48 @@ function primaryFile(version) {
   return version.files.find((f) => f.primary) || version.files[0];
 }
 
-module.exports = { search, getProject, getVersions, getVersion, resolveUrl, primaryFile };
+// Chunk bulk lookups — one oversized request shouldn't fail wholesale.
+const BULK_CHUNK = 200;
+
+/**
+ * Reverse lookup versions by file hash (POST /v2/version_files).
+ * Unknown hashes are simply absent from the result map.
+ * @returns {Promise<Record<string, object>>} hash → version object
+ */
+async function getVersionsByHashes(hashes, algorithm = 'sha1') {
+  const uniq = [...new Set(hashes.filter(Boolean))];
+  const out = {};
+  for (let i = 0; i < uniq.length; i += BULK_CHUNK) {
+    const data = await mrFetch('/version_files', {
+      method: 'POST',
+      body: { hashes: uniq.slice(i, i + BULK_CHUNK), algorithm },
+    });
+    Object.assign(out, data || {});
+  }
+  return out;
+}
+
+/** Bulk project metadata (GET /v2/projects?ids=[…]), keyed by project id. */
+async function getProjectsBulk(ids) {
+  const uniq = [...new Set(ids.filter(Boolean))];
+  const out = {};
+  for (let i = 0; i < uniq.length; i += BULK_CHUNK) {
+    const data = await mrFetch('/projects', {
+      search: { ids: JSON.stringify(uniq.slice(i, i + BULK_CHUNK)) },
+      ttlMs: 30 * 60 * 1000,
+    });
+    for (const p of data || []) out[p.id] = p;
+  }
+  return out;
+}
+
+module.exports = {
+  search,
+  getProject,
+  getVersions,
+  getVersion,
+  resolveUrl,
+  primaryFile,
+  getVersionsByHashes,
+  getProjectsBulk,
+};

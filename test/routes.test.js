@@ -92,3 +92,25 @@ test('an unknown pack platform is still rejected', async () => {
   });
   assert.equal(res.status, 400);
 });
+
+test('cached library icons are served authed-only (the /library/icons static mount)', async () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { dataPath } = require('../src/storage/pathGuard');
+  const iconDir = dataPath('library', 'icons', 'mods');
+  fs.mkdirSync(iconDir, { recursive: true });
+  fs.writeFileSync(path.join(iconDir, 'lib_test1.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+
+  const authed = await app.req('GET', '/library/icons/mods/lib_test1.png', { cookie });
+  assert.equal(authed.status, 200);
+
+  const unauthed = await app.req('GET', '/library/icons/mods/lib_test1.png');
+  assert.notEqual(unauthed.status, 200); // login redirect, never the file
+
+  // The mount must not expose the rest of the library (jar pool).
+  const jarDir = dataPath('library', 'mods');
+  fs.mkdirSync(jarDir, { recursive: true });
+  fs.writeFileSync(path.join(jarDir, 'secret.jar'), 'jar');
+  const escape = await app.req('GET', '/library/icons/../mods/secret.jar', { cookie });
+  assert.notEqual(escape.status, 200);
+});

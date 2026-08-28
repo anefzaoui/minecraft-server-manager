@@ -1212,6 +1212,78 @@ router.post(
   })
 );
 
+// ---- Mod-zip importer ----
+// One upload, two shapes, auto-detected: a CurseForge modpack export
+// (manifest.json of pinned {projectID, fileID} pairs + overrides/) or a
+// hand-assembled zip of jars. Two-phase like blueprints: preview (non-mutating,
+// returns an uploadToken) → import (runs as a task with per-mod progress).
+const contentZip = require('../../services/contentZip');
+const { nanoid: zipNanoid } = require('nanoid');
+const zipImportUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, dataPath('tmp')),
+    filename: (req, file, cb) => cb(null, `modzip-${zipNanoid(10)}.zip`),
+  }),
+  limits: { fileSize: 8 * 1024 ** 3, files: 1 },
+});
+const zipTokenSchema = z.string().regex(/^modzip-[A-Za-z0-9_-]{10}\.zip$/, 'Invalid upload token');
+const zipImportBodySchema = z.object({
+  uploadToken: zipTokenSchema,
+  // pack zips select by fileId (number), jar zips by entry name (string)
+  selections: z
+    .array(z.union([z.coerce.number(), z.string().max(300)]))
+    .max(1500)
+    .optional(),
+  applyOverrides: z.coerce.boolean().optional(),
+});
+
+router.post(
+  '/servers/:id/mods/import-zip/preview',
+  zipImportUpload.single('file'),
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    if (!req.file) throw Object.assign(new Error('No file uploaded'), { status: 400 });
+    let preview;
+    try {
+      preview = await contentZip.previewForServer(req.params.id, req.file.path);
+    } catch (err) {
+      await fsp.rm(req.file.path, { force: true }).catch(() => {});
+      throw err;
+    }
+    res.json({ ok: true, preview, uploadToken: req.file.filename });
+  })
+);
+
+router.post(
+  '/servers/:id/mods/import-zip',
+  asyncHandler(async (req, res, next) => {
+    const server = requireServer(req.params.id);
+    const input = zipImportBodySchema.parse(req.body);
+    const zipPath = dataPath('tmp', input.uploadToken);
+    if (!fs.existsSync(zipPath)) {
+      return res.status(404).json({ ok: false, error: 'Uploaded zip expired — upload it again' });
+    }
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Importing mod zip into ${server.display_name}`,
+      { actor, serverId: server.id },
+      async (t) => {
+        try {
+          return await contentZip.importForServer(server.id, zipPath, {
+            selections: input.selections || null,
+            applyOverrides: Boolean(input.applyOverrides),
+            actor,
+            onStep: (s) => t.step(s),
+          });
+        } finally {
+          await fsp.rm(zipPath, { force: true }).catch(() => {});
+        }
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
 // ---- Events: export, excerpts, retention ----
 
 function sendEventExport(req, res, serverId) {
@@ -1426,27 +1498,15 @@ router.post(
   })
 );
 
-// ---- Modrinth search (mods manager) ----
-const modrinth = require('../../services/modrinthApi');
-
-router.get(
-  '/modrinth/search',
-  asyncHandler(async (req, res, next) => {
-    const results = await modrinth.search({
-      query: String(req.query.q || ''),
-      kind: String(req.query.kind || 'mod'),
-      loader: req.query.loader ? String(req.query.loader) : undefined,
-      mcVersion: req.query.mc ? String(req.query.mc) : undefined,
-    });
-    res.json({ ok: true, results });
-  })
-);
-
-// ---- "From mods" wizard browser (loader-first) ----
+// ---- Unified mod browser (wizard "From mods" + per-server mods tab) ----
 const modBrowser = require('../../services/modBrowser');
 const loaderVersions = require('../../services/loaderVersions');
 
 const MOD_LOADERS = ['fabric', 'forge', 'neoforge', 'quilt'];
+// Plugin servers report 'paper' as their loader; the browser strips it for
+// plugin searches server-side, but the schema must let it through.
+const BROWSER_LOADERS = [...MOD_LOADERS, 'paper'];
+const CONTENT_KINDS = ['mod', 'plugin'];
 
 // Loader build versions to pin (fabric/quilt are MC-independent; neoforge/forge need mc).
 router.get(
@@ -1459,24 +1519,26 @@ router.get(
   })
 );
 
-// Unified mod search across Modrinth / CurseForge, filtered to loader + MC.
+// Unified mod/plugin search across Modrinth / CurseForge, filtered to loader + MC.
 router.get(
   '/mods/search',
   asyncHandler(async (req, res, next) => {
-    const { q, platform, loader, mc } = z
+    const { q, platform, kind, loader, mc } = z
       .object({
         q: z.string().trim().max(120).default(''),
         platform: z.enum(['modrinth', 'curseforge']).default('modrinth'),
-        loader: z.enum(MOD_LOADERS).optional(),
+        kind: z.enum(CONTENT_KINDS).default('mod'),
+        loader: z.enum(BROWSER_LOADERS).optional(),
         mc: z.string().trim().max(32).optional(),
       })
       .parse({
         q: req.query.q || '',
         platform: req.query.platform || undefined,
+        kind: req.query.kind || undefined,
         loader: req.query.loader || undefined,
         mc: req.query.mc || undefined,
       });
-    res.json({ ok: true, results: await modBrowser.search({ query: q, platform, loader, mc }) });
+    res.json({ ok: true, results: await modBrowser.search({ query: q, platform, kind, loader, mc }) });
   })
 );
 
@@ -1484,20 +1546,22 @@ router.get(
 router.get(
   '/mods/versions',
   asyncHandler(async (req, res, next) => {
-    const { platform, ref, loader, mc } = z
+    const { platform, ref, kind, loader, mc } = z
       .object({
         platform: z.enum(['modrinth', 'curseforge']),
         ref: z.string().trim().min(1).max(200),
-        loader: z.enum(MOD_LOADERS).optional(),
+        kind: z.enum(CONTENT_KINDS).default('mod'),
+        loader: z.enum(BROWSER_LOADERS).optional(),
         mc: z.string().trim().max(32).optional(),
       })
       .parse({
         platform: req.query.platform,
         ref: req.query.ref,
+        kind: req.query.kind || undefined,
         loader: req.query.loader || undefined,
         mc: req.query.mc || undefined,
       });
-    res.json({ ok: true, versions: await modBrowser.versions({ platform, ref, loader, mc }) });
+    res.json({ ok: true, versions: await modBrowser.versions({ platform, ref, kind, loader, mc }) });
   })
 );
 
@@ -1625,6 +1689,113 @@ router.post(
         total: input.mods.length,
         failed,
       };
+    });
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// Server-less zip preview for the wizard's "create from zip" flow — same
+// two-phase token contract as the per-server preview.
+router.post(
+  '/mods/zip-preview',
+  zipImportUpload.single('file'),
+  asyncHandler(async (req, res, next) => {
+    if (!req.file) throw Object.assign(new Error('No file uploaded'), { status: 400 });
+    let preview;
+    try {
+      preview = await contentZip.previewStandalone(req.file.path);
+    } catch (err) {
+      await fsp.rm(req.file.path, { force: true }).catch(() => {});
+      throw err;
+    }
+    res.json({ ok: true, preview, uploadToken: req.file.filename });
+  })
+);
+
+const fromZipSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    description: z.string().max(4000).optional(),
+    icon: z.string().max(64).optional(),
+    accent: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
+    // 'paper' covers zips of plugins — the digester infers the kind.
+    loader: z.enum([...MOD_LOADERS, 'paper']),
+    mcVersion: z.string().trim().min(1).max(32),
+    loaderVersion: z.string().trim().max(40).optional(),
+    uploadToken: zipTokenSchema,
+    selections: z
+      .array(z.union([z.coerce.number(), z.string().max(300)]))
+      .max(1500)
+      .optional(),
+    applyOverrides: z.coerce.boolean().optional(),
+    heapMb: z.coerce.number().int().min(512).max(262144).optional(),
+    containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
+    diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
+    portGame: z.coerce.number().int().min(1024).max(65535).optional(),
+    env: z.record(z.string(), z.string()).optional(),
+    ...dockerOverridesSchema,
+  })
+  .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
+    message: 'Container memory limit must be higher than the Java heap (or the JVM will be OOM-killed)',
+  });
+
+// One-shot "create server from an uploaded zip": create (no start) → bulk
+// install the zip's mods → optional overrides → start, all inside ONE task.
+// Same tolerance contract as from-mods: per-mod failures are reported, the
+// server still comes up.
+router.post(
+  '/servers/from-zip',
+  asyncHandler(async (req, res, next) => {
+    const input = fromZipSchema.parse(req.body);
+    requireAdminForOverrides(req, input);
+    const zipPath = dataPath('tmp', input.uploadToken);
+    if (!fs.existsSync(zipPath)) {
+      return res.status(404).json({ ok: false, error: 'Uploaded zip expired — upload it again' });
+    }
+    const actor = req.user.username;
+    const type = input.loader.toUpperCase();
+    const taskId = tasks.run(`Creating ${input.name} from zip`, { actor }, async (t) => {
+      try {
+        const env = { ...(input.env || {}) };
+        const envKey = input.loader !== 'paper' ? loaderVersions.envKeyFor(input.loader) : null;
+        if (input.loaderVersion && envKey) env[envKey] = input.loaderVersion;
+        t.step('Creating server');
+        const server = await servers.createServer(
+          {
+            name: input.name,
+            description: input.description,
+            icon: input.icon,
+            accent: input.accent,
+            type,
+            mcVersion: input.mcVersion,
+            env,
+            heapMb: input.heapMb,
+            containerMemoryMb: input.containerMemoryMb,
+            diskQuotaGb: input.diskQuotaGb,
+            portGame: input.portGame,
+            containerName: input.containerName,
+            networkName: input.networkName,
+            extraPorts: input.extraPorts,
+            extraBinds: input.extraBinds,
+          },
+          { actor, start: false, onProgress: (s) => t.step(s) }
+        );
+        // Install BEFORE first boot so the loader server starts with mods present.
+        const report = await contentZip.importForServer(server.id, zipPath, {
+          selections: input.selections || null,
+          applyOverrides: Boolean(input.applyOverrides),
+          actor,
+          onStep: (s) => t.step(s),
+        });
+        t.step('Starting server');
+        await servers.startServer(server.id, { actor });
+        return { serverId: server.id, name: server.display_name, report };
+      } finally {
+        await fsp.rm(zipPath, { force: true }).catch(() => {});
+      }
     });
     res.status(202).json({ ok: true, taskId });
   })

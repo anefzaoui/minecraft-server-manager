@@ -47,3 +47,71 @@ test('pairMeta returns the loader label and itzg TYPE', () => {
     assert.equal(pairMeta(l.id, '1.20.1').type, l.type);
   }
 });
+
+// ---- Cross-platform solve (CurseForge projects join the intersection) ----
+
+test('solve mixes Modrinth and CurseForge projects into one compatibility answer', async () => {
+  const { migrate } = require('../src/db/migrate');
+  migrate();
+  const db = require('../src/db');
+  const apiKeys = require('../src/services/apiKeys');
+  const { solve } = require('../src/services/solver');
+  apiKeys.setKey('curseforge', 'test-key');
+
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (input) => {
+    const url = String(typeof input === 'string' ? input : input.url || input);
+    const json = (body) => Promise.resolve({ ok: true, status: 200, json: async () => body });
+    if (url.includes('api.modrinth.com') && url.includes('/project/sodium/version')) {
+      return json([
+        { version_type: 'release', loaders: ['fabric'], game_versions: ['1.20.1', '1.21.1'] },
+        { version_type: 'release', loaders: ['forge'], game_versions: ['1.20.1'] },
+      ]);
+    }
+    if (url.includes('api.modrinth.com') && url.includes('/project/sodium')) {
+      return json({ slug: 'sodium', title: 'Sodium', icon_url: null });
+    }
+    if (url.includes('api.curseforge.com') && /\/mods\/\d+\/files/.test(url)) {
+      return json({
+        data: [
+          {
+            id: 1,
+            displayName: 'a',
+            fileName: 'a.jar',
+            downloadUrl: 'x',
+            releaseType: 1,
+            gameVersions: ['1.20.1', 'Fabric'],
+          },
+          {
+            id: 2,
+            displayName: 'b',
+            fileName: 'b.jar',
+            downloadUrl: 'x',
+            releaseType: 1,
+            gameVersions: ['1.20.4', 'Fabric'],
+          },
+        ],
+        pagination: { totalCount: 2 },
+      });
+    }
+    if (url.includes('api.curseforge.com') && url.includes('/mods/search')) {
+      return json({
+        data: [{ id: 55, slug: 'cf-thing', name: 'CF Thing', classId: 6, downloadCount: 1, latestFiles: [] }],
+      });
+    }
+    return Promise.reject(new Error(`unexpected fetch ${url}`));
+  };
+  try {
+    const out = await solve(['sodium', { platform: 'curseforge', ref: 'cf-thing' }]);
+    assert.ok(out.best, 'a full-coverage pair exists');
+    assert.equal(out.best.loader, 'fabric');
+    assert.equal(out.best.mcVersion, '1.20.1'); // the only version both support on fabric
+    assert.equal(out.perProject.length, 2);
+    const cf = out.perProject.find((p) => p.platform === 'curseforge');
+    assert.equal(cf.key, 'curseforge:cf-thing');
+    assert.equal(cf.supported, true);
+  } finally {
+    globalThis.fetch = realFetch;
+    db.run("DELETE FROM api_cache WHERE key LIKE 'curseforge:%' OR key LIKE 'modrinth:%'");
+  }
+});
