@@ -154,7 +154,14 @@ test('modBrowser.versions resolves a bare CF plugin slug under the bukkit-plugin
       if (url.pathname.endsWith('/files'))
         return {
           data: [
-            { id: 9, displayName: 'v1', fileName: 'wg-1.jar', downloadUrl: 'https://cdn/wg.jar', gameVersions: [], releaseType: 1 },
+            {
+              id: 9,
+              displayName: 'v1',
+              fileName: 'wg-1.jar',
+              downloadUrl: 'https://cdn/wg.jar',
+              gameVersions: [],
+              releaseType: 1,
+            },
           ],
         };
       return url.searchParams.get('classId') === '5' ? { data: [CF_MOD] } : { data: [] };
@@ -170,7 +177,11 @@ test('modBrowser.versions resolves a bare CF plugin slug under the bukkit-plugin
     assert.equal(versions.length, 1);
     const slugSearches = upstreamCalls.filter((u) => u.includes('/mods/search'));
     assert.ok(slugSearches.length >= 1);
-    assert.equal(new URL(slugSearches[0]).searchParams.get('classId'), '5', 'plugin slug resolved in bukkit-plugins first');
+    assert.equal(
+      new URL(slugSearches[0]).searchParams.get('classId'),
+      '5',
+      'plugin slug resolved in bukkit-plugins first'
+    );
   } finally {
     restoreFetch();
   }

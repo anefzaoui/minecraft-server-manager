@@ -50,7 +50,7 @@ test('setup', async () => {
   await app.adminCookie();
 });
 
-test('installFromUrl on a plugin server skips a hybrid project\'s mod builds', async () => {
+test("installFromUrl on a plugin server skips a hybrid project's mod builds", async () => {
   const sid = app.seedServer('srv_hybrid');
   db.run("UPDATE servers SET type = 'PAPER', mc_version = '1.20.1' WHERE id = ?", sid);
 
