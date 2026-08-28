@@ -145,6 +145,37 @@ test('modBrowser.versions marks CF files without a downloadUrl as not downloadab
   }
 });
 
+test('modBrowser.versions resolves a bare CF plugin slug under the bukkit-plugins class', async () => {
+  apiKeys.setKey('curseforge', 'test-key-abc');
+  // The slug exists ONLY in classId 5 — resolving it under mc-mods (classId 6,
+  // the pre-fix behavior for bare slugs) returns nothing and 404s the install.
+  stubUpstream({
+    'api.curseforge.com': (url) => {
+      if (url.pathname.endsWith('/files'))
+        return {
+          data: [
+            { id: 9, displayName: 'v1', fileName: 'wg-1.jar', downloadUrl: 'https://cdn/wg.jar', gameVersions: [], releaseType: 1 },
+          ],
+        };
+      return url.searchParams.get('classId') === '5' ? { data: [CF_MOD] } : { data: [] };
+    },
+  });
+  try {
+    const versions = await modBrowser.versions({
+      platform: 'curseforge',
+      ref: 'worldedit',
+      kind: 'plugin',
+      loader: 'paper',
+    });
+    assert.equal(versions.length, 1);
+    const slugSearches = upstreamCalls.filter((u) => u.includes('/mods/search'));
+    assert.ok(slugSearches.length >= 1);
+    assert.equal(new URL(slugSearches[0]).searchParams.get('classId'), '5', 'plugin slug resolved in bukkit-plugins first');
+  } finally {
+    restoreFetch();
+  }
+});
+
 test('GET /api/mods/search accepts kind=plugin with loader=paper (route no longer 400s)', async () => {
   stubUpstream({ 'api.modrinth.com': () => ({ hits: [MODRINTH_HIT] }) });
   try {

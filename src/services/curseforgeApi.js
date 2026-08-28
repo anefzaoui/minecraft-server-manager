@@ -175,20 +175,25 @@ async function getDescription(modId) {
 /**
  * Resolve a CurseForge URL/slug to {modId, slug, name, iconUrl, fileId?}.
  * Handles …/minecraft/(mc-mods|modpacks|bukkit-plugins)/<slug>[/files/<fileId>].
+ * A slug only resolves within one class, so bare slugs need the caller's kind
+ * hint — plugin slugs live under bukkit-plugins, not mc-mods. The other class
+ * is tried as a fallback either way (a Paper server can still resolve a mod
+ * slug someone pasted, and vice versa).
  */
-async function resolveUrl(input) {
+async function resolveUrl(input, { kind } = {}) {
   const m = /curseforge\.com\/minecraft\/(mc-mods|modpacks|bukkit-plugins)\/([^/]+)(?:\/files\/(\d+))?/.exec(input);
   let slug = input.trim();
   let fileId = null;
-  let classId = CLASS_MODS;
+  let classId = kind === 'plugin' ? CLASS_PLUGINS : CLASS_MODS;
   if (m) {
     classId = m[1] === 'modpacks' ? CLASS_MODPACKS : m[1] === 'bukkit-plugins' ? CLASS_PLUGINS : CLASS_MODS;
     slug = m[2];
     fileId = m[3] ? Number(m[3]) : null;
   }
+  const fallbackClassId = classId === CLASS_MODS ? CLASS_PLUGINS : CLASS_MODS;
   const mod = /^\d+$/.test(slug)
     ? await getMod(Number(slug))
-    : (await getModBySlug(slug, { classId })) || (await getModBySlug(slug, { classId: CLASS_MODS }));
+    : (await getModBySlug(slug, { classId })) || (await getModBySlug(slug, { classId: fallbackClassId }));
   if (!mod) throw httpError(404, `CurseForge project "${slug}" not found`);
   return { ...mod, fileId };
 }

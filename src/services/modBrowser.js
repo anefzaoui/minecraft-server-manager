@@ -64,11 +64,11 @@ async function search({ query, platform, kind = 'mod', loader, mc, limit = 20 })
 // ---- Project metadata + versions -------------------------------------------
 
 /** {ref, projectId, name, iconUrl} for a mod given a slug or platform id. */
-async function metaFor(platform, refOrId) {
+async function metaFor(platform, refOrId, { kind = 'mod' } = {}) {
   if (platform === 'curseforge') {
     const mod = /^\d+$/.test(String(refOrId))
       ? await curseforge.getMod(Number(refOrId))
-      : await curseforge.resolveUrl(String(refOrId));
+      : await curseforge.resolveUrl(String(refOrId), { kind });
     return { ref: mod.slug, projectId: String(mod.modId), name: mod.name, iconUrl: mod.iconUrl || null };
   }
   const p = await modrinth.getProject(refOrId);
@@ -112,7 +112,7 @@ async function versions({ platform, ref, kind = 'mod', loader, mc, limit = 30 })
   const mcVersion = normMc(mc);
   loader = effectiveLoader(kind, loader);
   if (platform === 'curseforge') {
-    const meta = await metaFor('curseforge', ref);
+    const meta = await metaFor('curseforge', ref, { kind });
     const files = await curseforge.getFiles(meta.projectId, { mcVersion, loader });
     return files.slice(0, limit).map(normCurseforgeFile);
   }
