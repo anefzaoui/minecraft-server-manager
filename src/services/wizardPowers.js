@@ -470,6 +470,15 @@ async function execute(serverId, player, request, cfg) {
   }
 }
 
+// Drop cooldown entries that can no longer gate anything. The largest cooldown
+// an admin can configure is 3600s, so a timestamp older than that is dead
+// weight. Called on a timer so the map cannot grow forever on a busy server.
+function sweepCooldowns(now = Date.now()) {
+  for (const [key, ts] of cooldowns) {
+    if (now - ts > 3_600_000) cooldowns.delete(key);
+  }
+}
+
 function listAudit(serverId, limit = 100) {
   return listEvents({ serverId, type: 'wizard-power', limit: Math.max(1, Math.min(500, Number(limit) || 100)) });
 }
@@ -494,4 +503,5 @@ module.exports = {
   recordRejection,
   execute,
   listAudit,
+  sweepCooldowns,
 };

@@ -2,8 +2,8 @@
 'use strict';
 
 const net = require('node:net');
-const dns = require('node:dns').promises;
 const db = require('../db');
+const urlGuard = require('../utils/urlGuard');
 const secrets = require('./secrets');
 const chat = require('./chat');
 const servers = require('./servers');
@@ -27,6 +27,10 @@ const INVOCATION_NAME_RE = /^[A-Za-z][A-Za-z0-9_-]{0,31}$/;
 const MAX_REPLY = 350;
 const HISTORY_MESSAGES = 20;
 const REQUEST_TIMEOUT_MS = 30_000;
+// Cap the response body we buffer from the (admin-configured) LLM endpoint. A
+// well-behaved chat completion is a few KB; anything past this is a broken or
+// hostile endpoint, and reading it unbounded would risk the panel's memory.
+const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const inflight = new Set();
 const cooldowns = new Map();
 const conversationWindows = new Map();
@@ -117,17 +121,13 @@ function normalizeBaseUrl(raw) {
   if (!['http:', 'https:'].includes(u.protocol)) throw httpError(400, 'The LLM URL must use http or https');
   if (u.username || u.password) throw httpError(400, 'Put credentials in the API key field, not in the URL');
   if (u.search || u.hash) throw httpError(400, 'The LLM base URL cannot contain a query string or fragment');
+  // Block the never-valid literal IPs at save time (link-local/metadata,
+  // multicast, unspecified) while still allowing LAN and loopback for a
+  // self-hosted LLM. Hostnames are re-checked against their resolved address
+  // at fetch time by assertAllowedEndpoint. Shares the panel's SSRF guard.
   const host = u.hostname.replace(/^\[|\]$/g, '');
-  if (net.isIPv4(host)) {
-    const [a, b] = host.split('.').map(Number);
-    if (a === 0 || (a === 169 && b === 254) || a >= 224) {
-      throw httpError(400, 'Link-local, unspecified, multicast, and reserved LLM addresses are not allowed');
-    }
-  } else if (net.isIPv6(host)) {
-    const h = host.toLowerCase();
-    if (h === '::' || h.startsWith('fe80') || h.startsWith('ff')) {
-      throw httpError(400, 'Link-local, unspecified, and multicast LLM addresses are not allowed');
-    }
+  if (net.isIP(host) && urlGuard.isBlockedIp(host, { allowPrivate: true })) {
+    throw httpError(400, 'Link-local, unspecified, multicast, and reserved LLM addresses are not allowed');
   }
   u.pathname = u.pathname.replace(/\/+$/, '');
   return u.toString().replace(/\/$/, '');
@@ -220,31 +220,41 @@ function authHeaders(cfg) {
   return cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {};
 }
 
-function blockedAddress(address) {
-  if (net.isIPv4(address)) {
-    const [a, b] = address.split('.').map(Number);
-    return a === 0 || (a === 169 && b === 254) || a >= 224;
-  }
-  if (net.isIPv6(address)) {
-    const h = address.toLowerCase();
-    return h === '::' || h.startsWith('fe80') || h.startsWith('ff');
-  }
-  return true;
+// Fetch-time SSRF guard. Resolves the host and blocks link-local (incl. cloud
+// metadata), multicast, and unspecified addresses while allowing the LAN and
+// loopback targets a self-hosted LLM needs. Delegates to the panel's shared
+// urlGuard so there is one SSRF implementation, not two that can drift apart.
+async function assertAllowedEndpoint(rawUrl) {
+  await urlGuard.assertPublicUrl(rawUrl, { allowPrivate: true });
 }
 
-async function assertAllowedEndpoint(rawUrl) {
-  const u = new URL(rawUrl);
-  const host = u.hostname.replace(/^\[|\]$/g, '');
-  let addresses = [host];
-  if (!net.isIP(host)) {
-    try {
-      addresses = (await dns.lookup(host, { all: true })).map((r) => r.address);
-    } catch {
-      throw httpError(502, `Could not resolve LLM host ${host}`);
+// Read a JSON body but stop once it passes MAX_RESPONSE_BYTES, so a broken or
+// hostile endpoint cannot make the panel buffer an unbounded response. Returns
+// null on any read/parse problem, which callers already treat as "no body".
+async function readJsonCapped(res) {
+  if (!res.body) return res.json().catch(() => null);
+  const reader = res.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > MAX_RESPONSE_BYTES) {
+        await reader.cancel().catch(() => {});
+        throw httpError(502, 'The LLM server returned an unreasonably large response');
+      }
+      chunks.push(value);
     }
+  } catch (err) {
+    if (err.status) throw err;
+    return null;
   }
-  if (!addresses.length || addresses.some(blockedAddress)) {
-    throw httpError(400, 'The LLM host resolves to a link-local, unspecified, multicast, or reserved address');
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  } catch {
+    return null;
   }
 }
 
@@ -256,7 +266,7 @@ async function fetchJson(url, options = {}) {
   } catch (err) {
     throw httpError(502, `Could not reach the LLM server: ${err.message}`);
   }
-  const body = await res.json().catch(() => null);
+  const body = await readJsonCapped(res);
   if (!res.ok) {
     const detail = body?.error?.message || body?.error || body?.message || `HTTP ${res.status}`;
     throw httpError(502, `LLM server rejected the request: ${String(detail).slice(0, 300)}`);
@@ -570,6 +580,20 @@ async function processCheckins({ now = new Date(), send = sendWizardText } = {})
   return sent;
 }
 
+// Clear expired entries from the in-memory maps so they cannot grow without
+// bound over a long uptime. Every entry here is a short-lived timestamp, so a
+// stale one is safe to drop: conversation windows past their expiry, and chat
+// cooldowns older than five minutes (the actual gate is three seconds).
+function sweepEphemeralState(now = Date.now()) {
+  for (const [key, expiresAt] of conversationWindows) {
+    if (expiresAt <= now) conversationWindows.delete(key);
+  }
+  for (const [key, ts] of cooldowns) {
+    if (now - ts > 300_000) cooldowns.delete(key);
+  }
+  wizardPowers.sweepCooldowns(now);
+}
+
 function startOutreachWatcher({ intervalMs = 30_000 } = {}) {
   if (outreachTimer) return;
   const run = async () => {
@@ -577,6 +601,7 @@ function startOutreachWatcher({ intervalMs = 30_000 } = {}) {
     outreachRunning = true;
     try {
       await processCheckins();
+      sweepEphemeralState();
     } catch (err) {
       console.error('[wizard] outreach watcher:', err.message);
     } finally {
@@ -755,6 +780,7 @@ module.exports = {
   processCheckins,
   startOutreachWatcher,
   stopOutreachWatcher,
+  sweepEphemeralState,
   conversationActive,
   openConversation,
   closeConversation,

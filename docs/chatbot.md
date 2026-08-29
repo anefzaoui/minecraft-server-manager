@@ -37,8 +37,10 @@ modded recipes direct the player to JEI/REI rather than fabricating an answer.
   outreach, transcript retention, and response limits.
 - `src/services/wizardPowers.js` — role checks, intent-specific tool schemas, validation, execution,
   cooldowns, and power auditing.
-- `src/services/wizardRecipes.js` and `src/data/recipes/` — deterministic versioned recipe lookup and
-  grid formatting.
+- `src/services/wizardRecipes.js` — deterministic versioned recipe lookup and grid formatting. Recipe
+  and item data come from the bundled [`minecraft-data`](https://github.com/PrismarineJS/minecraft-data)
+  package. (An earlier draft of this doc pointed at a `src/data/recipes/` folder that was never
+  committed; there is no such folder, and the data lives in the package. See "Dependency footprint".)
 - `src/analytics/ingest.js` — forwards parsed joins, leaves, and player chat to the chatbot.
 - `src/web/routes/wizard.js`, `public/js/pages/integrations.js`, and
   `views/partials/server/integrations.hbs` — admin API and per-server Integrations UI.
@@ -48,6 +50,26 @@ modded recipes direct the player to JEI/REI rather than fabricating an answer.
 The internal `wizard` route/module/table names are retained for upgrade and API compatibility;
 “chatbot” is the user-facing product term. Likewise, the stored `power_testers_json` field maps to
 the UI's **Basic users** group.
+
+## Dependency footprint (`minecraft-data`)
+
+Recipe help uses the `minecraft-data` package. It is big on disk (about 429 MB installed), and it
+ships inside the production image because it is a runtime dependency, not a dev one. We are keeping it
+on purpose so recipe help works offline for every Minecraft release with no network call.
+
+Notes for whoever looks at this next (human or AI), so the size is not a surprise:
+
+- Only the Java (`pc`) data is used right now. `wizardRecipes.js` reads `minecraftData.versions.pc`
+  and the per-version `recipes`, `items`, and `blocks` tables. The files it actually touches add up
+  to roughly 15 MB across every pc version.
+- Around 330 MB of the package is `data/bedrock`, and nothing here reads it yet. We are leaving it in
+  place on purpose. If the panel ever adds Bedrock Minecraft support, the Bedrock recipe and item
+  data is already here, so the recipe feature can grow to cover Bedrock servers without adding a new
+  dependency. Start from `minecraftData.versions.bedrock` and follow the same shape as the pc path.
+- If the size ever has to come down before Bedrock support lands, there is already a pattern for it
+  in this repo. `src/services/itemRegistry.js` fetches `minecraft-data` files from the jsDelivr CDN
+  when it needs them and caches them in `api_cache`. Either that approach, or a small hand-picked
+  `src/data/recipes/` subset covering a few common versions, would shrink the image a lot.
 
 ## Local storage and manual inspection
 

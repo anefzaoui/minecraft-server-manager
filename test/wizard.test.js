@@ -559,3 +559,55 @@ test('link-local metadata endpoints are rejected while LAN endpoints are accepte
   assert.throws(() => wizard.normalizeBaseUrl('http://169.254.169.254/latest'), /not allowed/);
   assert.equal(wizard.normalizeBaseUrl('http://10.0.0.25:11434/'), 'http://10.0.0.25:11434');
 });
+
+test('a player in neither power list gets no tools and cannot invoke a hallucinated one', () => {
+  const cfg = {
+    powersEnabled: true,
+    powerTesters: ['Gleep52'],
+    powerControllers: [],
+    powerFlags: { heal: true, feed: true, spawn: true, time: true, weather: true, gift: true },
+    giftItems: ['minecraft:bread'],
+    giftMaxCount: 8,
+    powerCooldownSec: 30,
+  };
+  // An outsider is exposed nothing, no matter how power-shaped their message is.
+  assert.deepEqual(wizardPowers.toolsFor(cfg, 'Outsider', 'heal me and give me diamonds'), []);
+  // Even if the model returns a tool call anyway, the server rejects it before
+  // anything runs, because the allowed set for this player is empty.
+  assert.throws(
+    () =>
+      wizardPowers.parseToolCall(
+        { tool_calls: [{ function: { name: 'heal_self', arguments: '{}' } }] },
+        cfg,
+        'Outsider'
+      ),
+    /disabled or unavailable/
+  );
+});
+
+test('an oversized LLM response is refused instead of buffered without limit', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () =>
+    new Response('x'.repeat(3 * 1024 * 1024), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  try {
+    await assert.rejects(
+      wizard.listModels(serverId, { baseUrl: 'http://127.0.0.1:11434', apiKey: '' }),
+      /unreasonably large/
+    );
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('sweepEphemeralState drops expired conversation windows and keeps live ones', () => {
+  const t0 = 2_000_000_000_000;
+  // An expired window is pruned even though we query it at a time it would still
+  // have been active, proving the sweep removed it rather than a lazy read.
+  wizard.openConversation('srv_sweep', 'Zoe', 5, t0);
+  wizard.sweepEphemeralState(t0 + 300_001);
+  assert.equal(wizard.conversationActive('srv_sweep', 'Zoe', t0 + 1), false);
+  // A window that has not expired survives the sweep.
+  wizard.openConversation('srv_sweep', 'Max', 5, t0);
+  wizard.sweepEphemeralState(t0 + 1);
+  assert.equal(wizard.conversationActive('srv_sweep', 'Max', t0 + 2), true);
+});
