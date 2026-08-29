@@ -130,6 +130,9 @@ function createApp() {
         initial: (s) => (typeof s === 'string' && s ? s[0].toUpperCase() : '?'),
         default: (v, fallback) => (v === undefined || v === null || v === '' ? fallback : v),
         concat: (...args) => args.slice(0, -1).join(''),
+        // Character references avoid Handlebars adding the partial's indentation
+        // after every literal newline inside a <textarea> value.
+        joinLines: (values) => (Array.isArray(values) ? values.join('&#10;') : ''),
         inc: (v) => Number(v) + 1,
         mul: (a, b) => Number(a) * Number(b),
         plural: (n, one, many) => (Number(n) === 1 ? one : many),

@@ -37,3 +37,13 @@ test('normalizeTarget accepts Bedrock (Geyser/Floodgate) names with a leading . 
   assert.equal(chat.normalizeTarget('.Steve'), '.Steve');
   assert.equal(chat.normalizeTarget('*Alex'), '*Alex');
 });
+
+test('normalizeMessageText preserves deliberate recipe rows only when requested', () => {
+  assert.equal(chat.normalizeMessageText('one\ntwo'), 'one two');
+  assert.equal(chat.normalizeMessageText('one\r\n\r\n\r\ntwo', true), 'one\n\ntwo');
+});
+
+test('deliveryLines turns recipe rows into separate tellraw payloads only when requested', () => {
+  assert.deepEqual(chat.deliveryLines('title\n[1][ ][1]\n[1][ ][1]', true), ['title', '[1][ ][1]', '[1][ ][1]']);
+  assert.deepEqual(chat.deliveryLines('ordinary\nmessage'), ['ordinary\nmessage']);
+});
