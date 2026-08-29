@@ -1,5 +1,152 @@
 <div class="grid gap-4 lg:grid-cols-2" id="ig-root" data-server-id="{{server.id}}" data-invite="{{json integrations.invite}}">
 
+  {{#if integrations.wizard}}
+  <div class="card p-4 lg:col-span-2" id="ig-wizard">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'sparkles' 'size-4 text-link'}}} Chatbot settings</h3>
+        <p class="mt-1 text-xs text-ink-faint">Players invoke this chatbot with <code class="rounded bg-inset px-1">@{{integrations.wizard.invocationName}}</code>. Configuration and transcripts are visible only to admins.</p>
+      </div>
+      <span class="msm-toggle"><input type="checkbox" id="ig-wz-enabled" {{#if integrations.wizard.enabled}}checked{{/if}}><span></span></span>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-2">
+      <div class="space-y-4">
+        <div>
+          <label class="label" for="ig-wz-name">Invocation name</label>
+          <div class="flex items-center gap-1">
+            <span class="font-mono text-sm text-ink-faint">@</span>
+            <input class="input font-mono text-xs" id="ig-wz-name" maxlength="32" pattern="[A-Za-z][A-Za-z0-9_-]{0,31}" value="{{integrations.wizard.invocationName}}" placeholder="wizard">
+          </div>
+          <p class="help">Players call the chatbot with this name, for example <code class="rounded bg-inset px-1">@bubba</code>. It also becomes the chatbot's chat and transcript label.</p>
+        </div>
+        <div>
+          <label class="label" for="ig-wz-url">OpenAI-compatible base URL</label>
+          <input class="input font-mono text-xs" id="ig-wz-url" value="{{integrations.wizard.baseUrl}}" placeholder="http://192.168.1.50:11434">
+          <p class="help">Ollama works with its host and port; <code class="rounded bg-inset px-1">/v1</code> is added automatically. LAN/private addresses are supported.</p>
+        </div>
+        <div>
+          <label class="label" for="ig-wz-model">Model</label>
+          <div class="flex gap-2">
+            <input class="input min-w-0 flex-1 font-mono text-xs" id="ig-wz-model" list="ig-wz-models" value="{{integrations.wizard.model}}" placeholder="llama3.2:latest">
+            <datalist id="ig-wz-models"></datalist>
+            <button class="btn shrink-0" id="ig-wz-models-load">Discover</button>
+          </div>
+          <p class="help">Discovery fills suggestions; free text always remains available.</p>
+        </div>
+        <div>
+          <label class="label" for="ig-wz-key">API key <span class="font-normal text-ink-faint">(optional)</span></label>
+          <input class="input font-mono text-xs" type="password" id="ig-wz-key" autocomplete="new-password" placeholder="{{#if integrations.wizard.hasApiKey}}Stored securely — leave blank to keep{{else}}Not required by default Ollama installs{{/if}}">
+          {{#if integrations.wizard.hasApiKey}}
+            <label class="mt-2 flex items-center gap-2 text-xs"><input type="checkbox" class="msm-check" id="ig-wz-key-clear"> Remove stored key on save</label>
+          {{/if}}
+        </div>
+        <div>
+          <label class="label" for="ig-wz-retention">Transcript retention</label>
+          <div class="flex items-center gap-2">
+            <input class="input w-28" type="number" id="ig-wz-retention" min="0" max="3650" value="{{integrations.wizard.retentionDays}}">
+            <span class="text-sm text-ink-soft">days</span>
+          </div>
+          <p class="help">Default 7. Set 0 to store no transcripts. Existing transcripts remain associated with deleted servers until this period expires.</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="label" for="ig-wz-prompt">Chatbot persona and system prompt</label>
+        <textarea class="input min-h-72 font-mono text-xs leading-5" id="ig-wz-prompt" maxlength="12000">{{integrations.wizard.systemPrompt}}</textarea>
+        <p class="help">This is sent as the system message for this server. Powers are exposed as fixed, validated tools—never raw console commands.</p>
+      </div>
+    </div>
+
+    <div class="mt-5 rounded-md border border-line bg-inset p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h4 class="font-semibold">Player outreach</h4>
+          <p class="help">Deterministic per-session greetings and check-ins. No LLM call is needed to send them.</p>
+        </div>
+        <label class="flex items-center gap-2 text-sm"><span>Greet players on join</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-welcome-enabled" {{#if integrations.wizard.welcomeEnabled}}checked{{/if}}><span></span></span></label>
+      </div>
+      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        <div>
+          <label class="label" for="ig-wz-welcome-message">Join greeting</label>
+          <textarea class="input min-h-24 text-xs" id="ig-wz-welcome-message" maxlength="400">{{integrations.wizard.welcomeMessage}}</textarea>
+          <p class="help">Broadcast once when a player joins. Variables: <code>{player}</code>, <code>{chatbot}</code>, and <code>{mention}</code>. The older <code>{wizard}</code> variable remains supported.</p>
+        </div>
+        <div>
+          <label class="label" for="ig-wz-checkin-message">Playtime check-in</label>
+          <textarea class="input min-h-24 text-xs" id="ig-wz-checkin-message" maxlength="400">{{integrations.wizard.checkinMessage}}</textarea>
+          <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+            <span>Send privately after</span>
+            <input class="input w-24" type="number" id="ig-wz-checkin-minutes" min="0" max="1440" value="{{integrations.wizard.checkinMinutes}}">
+            <span class="text-ink-soft">minutes online</span>
+          </div>
+          <p class="help">Sent once per play session. Set 0 to disable. The message may also use <code>{minutes}</code>.</p>
+        </div>
+      </div>
+      <div class="mt-4">
+        <label class="label" for="ig-wz-conversation-minutes">Opt-in conversation mode</label>
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <span>Keep listening for</span>
+          <input class="input w-24" type="number" id="ig-wz-conversation-minutes" min="0" max="60" value="{{integrations.wizard.conversationMinutes}}">
+          <span class="text-ink-soft">minutes after a player says <code>@{{integrations.wizard.invocationName}} chat</code></span>
+        </div>
+        <p class="help">During this explicitly opened window, that player can reply without repeating the mention. <code>@{{integrations.wizard.invocationName}} bye</code>, leaving the server, or the timeout closes it. Messages beginning with <code>!</code>, <code>/</code>, or another <code>@</code> are ignored. Set 0 to disable.</p>
+      </div>
+    </div>
+
+    <div class="mt-5 rounded-md border border-line bg-inset p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h4 class="font-semibold">Chatbot powers <span class="text-xs font-normal text-warn">Experimental</span></h4>
+          <p class="help">Basic users receive self/world powers. Controllers receive separately validated powers that may affect another online player. Everyone else remains conversation-only.</p>
+        </div>
+        <label class="flex items-center gap-2 text-sm"><span>Enable powers</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-powers-enabled" {{#if integrations.wizard.powersEnabled}}checked{{/if}}><span></span></span></label>
+      </div>
+      <div class="mt-4 grid gap-4 lg:grid-cols-4">
+        <div>
+          <label class="label" for="ig-wz-testers">Basic users</label>
+          <textarea class="input min-h-28 font-mono text-xs" id="ig-wz-testers" placeholder="Gleep52&#10;PlayerA">{{{joinLines integrations.wizard.powerTesters}}}</textarea>
+          <p class="help">One exact player name per line. Maximum 50.</p>
+        </div>
+        <div>
+          <label class="label" for="ig-wz-controllers">Power controllers</label>
+          <textarea class="input min-h-28 font-mono text-xs" id="ig-wz-controllers" placeholder="Gleep52">{{{joinLines integrations.wizard.powerControllers}}}</textarea>
+          <p class="help">Only these exact players may affect another online player. Their gifts may use any valid item ID, but still obey the quantity limit. Add them to Basic users too if they should retain self/world powers.</p>
+        </div>
+        <div>
+          <label class="label" for="ig-wz-gifts">Allowed gifts</label>
+          <textarea class="input min-h-28 font-mono text-xs" id="ig-wz-gifts">{{{joinLines integrations.wizard.giftItems}}}</textarea>
+          <p class="help">One namespaced item ID per line. Restricts gifts that Basic users give themselves; power controllers may give other players any valid vanilla or modded item.</p>
+        </div>
+        <div class="space-y-3">
+          <label class="flex items-center gap-2 text-sm"><input class="msm-check" type="checkbox" id="ig-wz-dry-run" {{#if integrations.wizard.powersDryRun}}checked{{/if}}> Dry run (audit only; change nothing)</label>
+          <div><label class="label" for="ig-wz-gift-max">Maximum gift quantity</label><input class="input w-28" type="number" id="ig-wz-gift-max" min="1" max="16" value="{{integrations.wizard.giftMaxCount}}"></div>
+          <div><label class="label" for="ig-wz-power-cooldown">Per-player cooldown</label><div class="flex items-center gap-2"><input class="input w-28" type="number" id="ig-wz-power-cooldown" min="3" max="3600" value="{{integrations.wizard.powerCooldownSec}}"><span class="text-sm text-ink-soft">seconds</span></div></div>
+        </div>
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3 lg:grid-cols-6">
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="heal" {{#if integrations.wizard.powerFlags.heal}}checked{{/if}}> Healing</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="feed" {{#if integrations.wizard.powerFlags.feed}}checked{{/if}}> Feeding</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="spawn" {{#if integrations.wizard.powerFlags.spawn}}checked{{/if}}> Teleports</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="time" {{#if integrations.wizard.powerFlags.time}}checked{{/if}}> Time</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="weather" {{#if integrations.wizard.powerFlags.weather}}checked{{/if}}> Weather</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="gift" {{#if integrations.wizard.powerFlags.gift}}checked{{/if}}> Gifts</label>
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <button class="btn btn-primary" id="ig-wz-save">Save chatbot</button>
+      <button class="btn" id="ig-wz-test">Test connection</button>
+      <button class="btn" id="ig-wz-transcripts">Refresh this server's transcripts</button>
+      <button class="btn" id="ig-wz-power-audit">Refresh power audit</button>
+      <a class="btn btn-ghost" href="/wizard-transcripts">All transcript archives</a>
+      <span class="hidden text-xs text-warn" data-ig-dirty="wz">Unsaved changes</span>
+    </div>
+    <div class="mt-4 hidden max-h-80 overflow-auto rounded-md border border-line bg-inset p-3 text-xs" id="ig-wz-transcript-list"></div>
+    <div class="mt-4 hidden max-h-80 overflow-auto rounded-md border border-line bg-inset p-3 text-xs" id="ig-wz-power-audit-list"></div>
+  </div>
+  {{/if}}
+
   <div class="card p-4">
     <div class="mb-4 flex items-center justify-between gap-3">
       <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-link'}}} Discord notifications</h3>

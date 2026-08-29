@@ -55,11 +55,18 @@ async function assertRunning(serverId) {
   }
 }
 
+function normalizeMessageText(value, preserveNewlines = false) {
+  const text = String(value || '').replace(/\r\n?/g, '\n');
+  return (preserveNewlines ? text.replace(/\n{3,}/g, '\n\n') : text.replace(/\n+/g, ' ')).trim();
+}
+
+function deliveryLines(text, separateLines = false) {
+  return separateLines ? String(text).split('\n') : [String(text)];
+}
+
 /** Send an admin chat message. Returns the sent message (for the panel's chat log). */
 async function sendChat(serverId, opts = {}) {
-  const text = String(opts.text || '')
-    .replace(/[\r\n]+/g, ' ')
-    .trim();
+  const text = normalizeMessageText(opts.text, opts.preserveNewlines === true);
   if (!text) throw httpError(400, 'Message text is required');
   if (text.length > 512) throw httpError(400, 'Message is too long (512 chars max)');
   const mode = opts.mode === 'say' ? 'say' : 'tellraw';
@@ -75,9 +82,19 @@ async function sendChat(serverId, opts = {}) {
     cmd = ['tellraw', target, JSON.stringify(buildComponent({ ...opts, text }))];
   }
 
-  const out = cleanText(await execCapture(serverId, ['rcon-cli', ...cmd]));
-  if (out.trim() && /Unknown or incomplete|Incorrect argument|Expected|No player was found|<--\[HERE\]/i.test(out)) {
-    throw httpError(502, `The server rejected the message: ${out.split('\n')[0]}`);
+  const commands =
+    mode === 'tellraw' && opts.separateLines === true
+      ? deliveryLines(text, true).map((line) => [
+          'tellraw',
+          target,
+          JSON.stringify(buildComponent({ ...opts, text: line })),
+        ])
+      : [cmd];
+  for (const command of commands) {
+    const out = cleanText(await execCapture(serverId, ['rcon-cli', ...command]));
+    if (out.trim() && /Unknown or incomplete|Incorrect argument|Expected|No player was found|<--\[HERE\]/i.test(out)) {
+      throw httpError(502, `The server rejected the message: ${out.split('\n')[0]}`);
+    }
   }
 
   const message = {
@@ -103,4 +120,4 @@ async function sendChat(serverId, opts = {}) {
   return { ...message, actor, ts: new Date().toISOString() };
 }
 
-module.exports = { sendChat, buildComponent, normalizeTarget, COLORS, FORMATS };
+module.exports = { sendChat, buildComponent, normalizeTarget, normalizeMessageText, deliveryLines, COLORS, FORMATS };

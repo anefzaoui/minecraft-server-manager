@@ -375,6 +375,11 @@ router.get(
           .inviteInfo(row.id)
           .catch(() => null),
       };
+      // Chatbot endpoint/model/prompt and transcript controls are admin-only.
+      // Do not even hydrate them into a non-admin render context.
+      if (req.user.role === 'admin') {
+        context.integrations.wizard = require('../../services/wizard').getConfig(row.id);
+      }
     } else if (tab === 'players') {
       const playersService = require('../../services/players');
       let online = [];
@@ -427,6 +432,15 @@ router.get(
     res.render('server-detail', context);
   })
 );
+
+router.get('/wizard-transcripts', requireRole('admin'), (req, res) => {
+  const wizard = require('../../services/wizard');
+  res.render('wizard-transcripts', {
+    title: 'Chatbot transcripts',
+    active: 'activity',
+    transcripts: wizard.listTranscripts({ limit: 1000 }),
+  });
+});
 
 router.get('/modpacks', async (req, res) => {
   const withPacks = (res.locals.servers || []).filter((s) => s.pack);
