@@ -5,7 +5,7 @@
       <div>
         <label class="label" for="st-name">Display name</label>
         <input class="input" id="st-name" value="{{server.name}}">
-        <p class="help">Rename freely — folders, container names and history stay keyed to the internal ID.</p>
+        <p class="help">Rename it freely. Folders, container names, and history all stay keyed to the internal ID.</p>
       </div>
       <div>
         <label class="label" for="st-desc">Description</label>
@@ -13,7 +13,7 @@
         <p class="help">Markdown supported; shown on the Overview tab.</p>
       </div>
       <div>
-        <label class="label" for="st-motd">MOTD <span class="text-xs font-normal text-ink-faint">— shown in every player's server list</span></label>
+        <label class="label" for="st-motd">MOTD <span class="text-xs font-normal text-ink-faint">(shown in every player's server list)</span></label>
         <input class="input font-mono" id="st-motd" value="{{motd}}" autocomplete="off">
         <div class="console mt-2 py-2 text-sm" id="st-motd-preview"></div>
         <p class="help">Applies on the next restart.</p>
@@ -21,28 +21,28 @@
       {{! Both pickers use ONE selection language: aria-pressed + the theme-aware
           .swatch ring (the old white ring was invisible on the light theme, and
           the icon picker used a different green-border treatment one row over).
-          The current stock icon is marked in place — no duplicate "current" tile. }}
+          The current stock icon is marked in place - no duplicate "current" tile. }}
       <div class="grid grid-cols-2 gap-3">
         <div>
           <span class="label">Icon</span>
           <div class="flex flex-wrap gap-1.5" id="st-icon-picker">
             {{#if (startsWith server.icon 'custom:')}}
-              <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="{{server.icon}}" data-tip="Current custom icon" aria-pressed="true"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" onerror="this.onerror=null;this.src='/icons/servers/grass.png'"></button>
+              <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="{{server.icon}}" data-tip="Current custom icon" aria-pressed="true"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" data-fallback-icon="/icons/servers/grass.svg"></button>
             {{/if}}
-            <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="grass" aria-pressed="{{eq server.icon 'grass'}}"><img src="/icons/servers/grass.png" alt="Grass block" class="size-full rounded-sm"></button>
-            <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="creeper" aria-pressed="{{eq server.icon 'creeper'}}"><img src="/icons/servers/creeper.png" alt="Creeper" class="size-full rounded-sm"></button>
-            <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="diamond" aria-pressed="{{eq server.icon 'diamond'}}"><img src="/icons/servers/diamond.png" alt="Diamond" class="size-full rounded-sm"></button>
-            <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="portal" aria-pressed="{{eq server.icon 'portal'}}"><img src="/icons/servers/portal.png" alt="Nether portal" class="size-full rounded-sm"></button>
-            <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="chest" aria-pressed="{{eq server.icon 'chest'}}"><img src="/icons/servers/chest.png" alt="Chest" class="size-full rounded-sm"></button>
-            <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="sword" aria-pressed="{{eq server.icon 'sword'}}"><img src="/icons/servers/sword.png" alt="Sword" class="size-full rounded-sm"></button>
-            <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="potion" aria-pressed="{{eq server.icon 'potion'}}"><img src="/icons/servers/potion.png" alt="Potion" class="size-full rounded-sm"></button>
-            <button class="swatch grid size-9 place-items-center bg-inset p-1" data-pick-icon="tnt" aria-pressed="{{eq server.icon 'tnt'}}"><img src="/icons/servers/tnt.png" alt="TNT" class="size-full rounded-sm"></button>
+            <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="grass" aria-pressed="{{eq server.icon 'grass'}}"><img src="/icons/servers/grass.svg" alt="Grass block" class="size-full rounded-sm"></button>
+            <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="creeper" aria-pressed="{{eq server.icon 'creeper'}}"><img src="/icons/servers/creeper.svg" alt="Creeper" class="size-full rounded-sm"></button>
+            <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="diamond" aria-pressed="{{eq server.icon 'diamond'}}"><img src="/icons/servers/diamond.svg" alt="Diamond" class="size-full rounded-sm"></button>
+            <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="portal" aria-pressed="{{eq server.icon 'portal'}}"><img src="/icons/servers/portal.svg" alt="Nether portal" class="size-full rounded-sm"></button>
+            <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="chest" aria-pressed="{{eq server.icon 'chest'}}"><img src="/icons/servers/chest.svg" alt="Chest" class="size-full rounded-sm"></button>
+            <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="sword" aria-pressed="{{eq server.icon 'sword'}}"><img src="/icons/servers/sword.svg" alt="Sword" class="size-full rounded-sm"></button>
+            <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="potion" aria-pressed="{{eq server.icon 'potion'}}"><img src="/icons/servers/potion.svg" alt="Potion" class="size-full rounded-sm"></button>
+            <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="tnt" aria-pressed="{{eq server.icon 'tnt'}}"><img src="/icons/servers/tnt.svg" alt="TNT" class="size-full rounded-sm"></button>
             <button class="grid size-9 place-items-center rounded-sm border border-dashed border-line-strong text-ink-faint transition hover:border-stone-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400" id="st-icon-upload" data-tip="Upload a custom icon (PNG/SVG)">{{{icon 'upload' 'size-4'}}}</button>
           </div>
         </div>
         <div>
           <span class="label">Accent color</span>
-          {{! Amethyst is a deliberate off-ramp from the four semantic ramps —
+          {{! Amethyst is a deliberate off-ramp from the four semantic ramps -
               it's identity decoration from Minecraft source material, not meaning. }}
           <div class="flex flex-wrap items-center gap-1.5" id="st-accent-picker">
             <button class="swatch size-9" style="background: #3fa62b" data-pick-accent="#3fa62b" data-tip="Grass" aria-pressed="false"></button>
@@ -55,14 +55,14 @@
       </div>
       <div>
         <label class="label" for="st-tag-input">Tags</label>
-        {{! Chips are rendered by server-settings.js from data-settings-tags — no server copy, or they double up. }}
+        {{! Chips are rendered by server-settings.js from data-settings-tags - no server copy, or they double up. }}
         <div class="flex flex-wrap items-center gap-1.5" id="st-tags">
           <input class="input w-28" id="st-tag-input" placeholder="add tag…">
         </div>
       </div>
       <div>
         <label class="label" for="st-notes">Private notes <span class="badge ml-1">admin only</span></label>
-        <textarea class="input font-mono text-xs" id="st-notes" rows="2" placeholder="Scratchpad — never shown to viewers">{{server.notes}}</textarea>
+        <textarea class="input font-mono text-xs" id="st-notes" rows="2" placeholder="Scratchpad, never shown to viewers">{{server.notes}}</textarea>
       </div>
       <div class="space-y-2.5 border-t border-line pt-3">
         <label class="flex items-center justify-between gap-3 text-sm">
@@ -70,7 +70,7 @@
           <span class="msm-toggle"><input type="checkbox" id="st-autostart" {{#if server.autoStart}}checked{{/if}}><span></span></span>
         </label>
         <label class="flex items-center justify-between gap-3 text-sm">
-          <span>Auto-restart on crash <span class="block text-xs text-ink-faint">with backoff; gives up after 3 rapid crashes</span></span>
+          <span>Auto-restart on crash <span class="block text-xs text-ink-faint">Waits longer between each try, and gives up after 3 rapid crashes.</span></span>
           <span class="msm-toggle"><input type="checkbox" id="st-autorestart" {{#if server.autoRestart}}checked{{/if}}><span></span></span>
         </label>
       </div>
@@ -82,20 +82,20 @@
       <h3 class="mb-4 font-semibold">Resources</h3>
       <div class="space-y-4">
         <div>
-          <label class="label" for="st-heap">Java heap <span class="ml-1 font-mono text-[11px] text-ink-faint">MEMORY</span></label>
+          <label class="label" for="st-heap">Java heap</label>
           <div class="flex items-center gap-3">
             <input type="range" min="1024" max="16384" step="512" value="{{server.resources.heapMb}}" id="st-heap" class="msm-range flex-1" data-out="out-heap" data-unit=" MB">
             <span class="w-20 text-right font-mono text-sm" id="out-heap">{{server.resources.heapMb}} MB</span>
           </div>
-          <p class="help">RAM the Minecraft/Java process may use. The image passes this to the JVM as both initial and max heap.</p>
+          <p class="help">The amount of RAM Minecraft itself may use.</p>
         </div>
         <div>
-          <label class="label" for="st-cmem">Container memory limit <span class="ml-1 font-mono text-[11px] text-ink-faint">HostConfig.Memory</span></label>
+          <label class="label" for="st-cmem">Container memory limit</label>
           <div class="flex items-center gap-3">
             <input type="range" min="1024" max="20480" step="512" value="{{server.resources.containerMemoryMb}}" id="st-cmem" class="msm-range msm-range-alt flex-1" data-out="out-cmem" data-unit=" MB">
             <span class="w-20 text-right font-mono text-sm" id="out-cmem">{{server.resources.containerMemoryMb}} MB</span>
           </div>
-          <p class="help">Hard cap enforced by Docker. Keep it 25–50% above the heap — Java needs off-heap room, and hitting this cap kills the container (OOM).</p>
+          <p class="help">The hard limit Docker enforces. Keep it 25–50% above the Java heap: Java needs extra room beyond the heap, and if the server reaches this limit it is stopped for running out of memory.</p>
         </div>
         <div class="rounded-md border p-2.5 text-xs" id="st-headroom" aria-live="polite"></div>
         <div>
@@ -104,7 +104,7 @@
             <input type="range" min="0" max="16" step="0.5" value="{{server.resources.cpus}}" id="st-cpu" class="msm-range msm-range-alt flex-1" data-out="out-cpu" data-unit=" cores" data-zero="∞">
             <span class="w-20 text-right font-mono text-sm" id="out-cpu">{{#if server.resources.cpus}}{{server.resources.cpus}} cores{{else}}∞{{/if}}</span>
           </div>
-          <p class="help">0 = unlimited. When capped, the server slows down instead of being killed.</p>
+          <p class="help">0 means unlimited. When capped, the server slows down instead of being stopped.</p>
         </div>
         <div>
           <label class="label" for="st-quota">Disk quota <span class="badge ml-1">panel-enforced</span></label>
@@ -112,25 +112,25 @@
             <input type="range" min="0" max="200" step="5" value="{{quotaGb}}" id="st-quota" class="msm-range flex-1" data-out="out-quota" data-unit=" GB" data-zero="off">
             <span class="w-20 text-right font-mono text-sm" id="out-quota">{{quotaGb}} GB</span>
           </div>
-          <p class="help">Soft quota checked by the storage indexer — Docker can't cap bind-mount size. Over quota, disk-growing actions are blocked; optional strict mode stops the server.</p>
+          <p class="help">The panel enforces this quota itself, since Docker can't limit disk use for this kind of storage. Over quota, actions that would grow the disk are blocked, and an optional strict mode stops the server.</p>
         </div>
       </div>
     </div>
 
     <div class="card p-4">
-      <h3 class="mb-3 font-semibold">Update policy</h3>
+      <h3 class="mb-3 font-semibold">Update Policy</h3>
       <div class="space-y-2 text-sm">
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual only <span class="text-xs text-ink-faint">— never touch my versions</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify me <span class="text-xs text-ink-faint">— badge when updates exist</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-update <span class="text-xs text-ink-faint">— with automatic pre-update backup</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual only <span class="text-xs text-ink-faint">(never change my versions)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify me <span class="text-xs text-ink-faint">(show a badge when updates exist)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-update <span class="text-xs text-ink-faint">(with an automatic pre-update backup)</span></label>
       </div>
     </div>
 
-    {{! Admin-only: same gate as the wizard's Advanced Docker settings — the
+    {{! Admin-only: same gate as the wizard's Advanced Docker settings - the
         API 403s these fields for other roles. }}
     {{#if (eq user.role 'admin')}}
     <div class="card p-4">
-      <h3 class="mb-4 font-semibold">Docker settings</h3>
+      <h3 class="mb-4 font-semibold">Advanced Docker Settings</h3>
       <div class="space-y-4">
         <div class="grid gap-4 sm:grid-cols-2">
           <div>
@@ -151,7 +151,7 @@
             <button type="button" class="btn btn-sm" id="st-docker-port-add">{{{icon 'plus' 'size-3.5'}}} Add port</button>
           </div>
           <div class="space-y-2" id="st-docker-ports"></div>
-          <p class="help">e.g. UDP 19132 for Bedrock/Geyser, TCP 8100 for BlueMap.</p>
+          <p class="help">For example, UDP 19132 for Bedrock or Geyser, or TCP 8100 for BlueMap.</p>
         </div>
 
         <div>
@@ -160,11 +160,11 @@
             <button type="button" class="btn btn-sm" id="st-docker-bind-add">{{{icon 'plus' 'size-3.5'}}} Add bind</button>
           </div>
           <div class="space-y-2" id="st-docker-binds"></div>
-          <p class="help">Free-form host paths — the panel already has Docker-socket (root-equivalent) access.</p>
+          <p class="help">Free-form host paths. The panel already has root-equivalent access through the Docker socket, so double-check these.</p>
         </div>
 
         <div class="flex items-center justify-between gap-3">
-          <p class="help mt-0">Requires a Recreate to apply.</p>
+          <p class="help mt-0">Takes effect after the container is rebuilt.</p>
           <button type="button" class="btn shrink-0" id="st-docker-preview">{{{icon 'file-code' 'size-4'}}} Preview as YAML</button>
         </div>
       </div>
@@ -172,20 +172,42 @@
     {{/if}}
 
     <div class="card p-4">
-      <h3 class="mb-3 font-semibold">Blueprint &amp; maintenance</h3>
+      <h3 class="mb-3 font-semibold">Blueprint &amp; Maintenance</h3>
       <div class="flex flex-wrap gap-2">
         <button class="btn" id="st-export-bp">{{{icon 'drafting-compass' 'size-4'}}} Export as blueprint</button>
         <button class="btn" id="st-clone">{{{icon 'copy' 'size-4'}}} Clone server</button>
-        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending env/resource changes">{{{icon 'wrench' 'size-4'}}} Recreate container</button>
+        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending settings and resource changes">{{{icon 'wrench' 'size-4'}}} Rebuild container</button>
       </div>
       {{! Destruction lives behind its own divider, never one accidental click
           from the safe maintenance actions above. }}
       <div class="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
-        <p class="text-xs text-ink-faint">Deletes the container, world, mods and config. Backups are kept.</p>
+        <p class="text-xs text-ink-faint">Deletes the container, world, mods, and config. Backups are kept.</p>
         <button class="btn btn-danger shrink-0" data-server-action="delete" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'trash-2' 'size-4'}}} Delete server</button>
       </div>
     </div>
   </div>
+
+  {{#if advancedSections.length}}
+  <div class="space-y-3 lg:col-span-2" id="st-advanced">
+    <div class="rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
+      {{{icon 'info' 'size-3.5'}}} Every environment variable this server's image supports, taken straight from its documentation. It's the same list as the create wizard's Advanced mode, pre-filled with what's currently set. Leave a field empty to use that variable's default; only values you change are sent. Takes effect after the container is rebuilt.
+    </div>
+    {{#each advancedSections}}
+      <details class="card group">
+        <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
+          {{{icon icon 'size-4 text-ink-faint'}}} {{label}}
+          <span class="badge ml-1">{{fields.length}}</span>
+          <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
+        </summary>
+        <div class="divide-y divide-line/60 border-t border-line px-4 pb-4">
+          {{#each fields}}
+            {{> catalog-field}}
+          {{/each}}
+        </div>
+      </details>
+    {{/each}}
+  </div>
+  {{/if}}
 </div>
 
 <div class="mt-4 flex justify-end gap-2">

@@ -2,10 +2,12 @@
 // per-action panels, per-command test runs, prefix setting. Mutations hit
 // /api/servers/:id/chat-commands and reload the tab.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
+import { escapeHtml as esc } from '../lib/format.js';
 
 const root = document.querySelector('[data-commands-root]');
 if (root) init(root);
@@ -19,7 +21,7 @@ function init(root) {
   try {
     commands = JSON.parse(document.getElementById('chat-commands-data').textContent) || [];
   } catch {
-    /* island missing — actions still work */
+    /* island missing - actions still work */
   }
   const rowFor = (id) => root.querySelector(`[data-cc-row][data-id="${CSS.escape(id)}"]`);
 
@@ -30,7 +32,7 @@ function init(root) {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (HTTP ${res.status})`);
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'save that command' }));
     return data;
   }
 
@@ -40,14 +42,7 @@ function init(root) {
   }
 
   function fail(err) {
-    toast(err.message || 'Something went wrong', { kind: 'error' });
-  }
-
-  function esc(s) {
-    return String(s ?? '').replace(
-      /[&<>"']/g,
-      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-    );
+    toast(err.message || 'Something went wrong. Please try again.', { kind: 'error' });
   }
 
   // "minecraft:snowy_plains" / "#minecraft:village" → "Snowy plains"
@@ -63,12 +58,14 @@ function init(root) {
     prefixSave.addEventListener('click', async () => {
       const value = prefixInput.value.trim();
       if (!/^[!.#+?$%&*~^=-]{1,2}$/.test(value)) {
-        toast('Prefix must be 1-2 characters from ! . # + ? $ % & * ~ ^ = - (never /)', { kind: 'error' });
+        toast('The prefix must be one or two characters from ! . # + ? $ % & * ~ ^ = - and cannot be /.', {
+          kind: 'error',
+        });
         return;
       }
       try {
         await withBusy(prefixSave, 'Saving…', () => api('PUT', '/prefix', { prefix: value }));
-        // Patch every rendered trigger in place — a full reload for a
+        // Patch every rendered trigger in place - a full reload for a
         // one-character setting flashed the page and lost scroll position.
         prefix = value;
         root.dataset.prefix = value;
@@ -79,7 +76,7 @@ function init(root) {
         }
         const sample = root.querySelector('[data-cc-prefix-sample]');
         if (sample) sample.textContent = `${prefix}rtp2`;
-        toast(`Prefix set to "${value}" — commands now start with ${value}`);
+        toast(`Prefix set to "${value}". Commands now start with ${value}.`);
       } catch (err) {
         fail(err);
       }
@@ -105,7 +102,7 @@ function init(root) {
 
   // -------------------------------------------------------- add / edit modal
   function commandModal(existing) {
-    // Seed each action panel ONLY from params saved for THAT action —
+    // Seed each action panel ONLY from params saved for THAT action -
     // maxDistance means "RTP ring" on one and "structure search radius" on the
     // other, and cross-seeding bled one into the other when switching panels.
     const p = (existing && existing.params) || {};
@@ -132,7 +129,7 @@ function init(root) {
       <div>
         <label class="label">Action</label>
         <select class="input" data-f="action" data-label="Action">
-          <option value="rtp">Random teleport (panel RTP)</option>
+          <option value="rtp">Random teleport (built-in)</option>
           <option value="structure">Teleport to a structure</option>
           <option value="biome">Teleport to a biome</option>
           <option value="console">Run console commands</option>
@@ -151,7 +148,7 @@ function init(root) {
             <option value="origin">World center (0, 0)</option>
           </select>
         </div>
-        <p class="text-xs text-ink-faint">Panel-built RTP — picks a random ring point and lands the player safely on the surface; ocean picks are re-rolled automatically.</p>
+        <p class="text-xs text-ink-faint">Built-in random teleport. Picks a random point in the ring and lands the player safely on the surface; ocean picks are re-rolled automatically.</p>
       </div>
 
       <div data-cc-panel="structure" class="hidden space-y-3">
@@ -169,7 +166,7 @@ function init(root) {
         <div>
           <label class="label">Biome</label>
           <select class="input" data-f="biome" data-label="Biome"><option value="">Loading biomes…</option></select>
-          <p class="mt-1 text-xs text-ink-faint">Searches from the player's position via /locate biome and lands them on the surface.</p>
+          <p class="mt-1 text-xs text-ink-faint">Searches out from the player's position and lands them on the surface of the nearest matching biome.</p>
         </div>
       </div>
 
@@ -196,7 +193,7 @@ function init(root) {
         </div>
         <div>
           <label class="label flex items-center gap-1.5"><span class="size-1.5 rounded-full bg-redstone-500"></span> On failure</label>
-          <input class="input" data-f="msgFailure" maxlength="200" placeholder="Couldn’t find a safe spot — try again in a moment. ({error})" value="${esc(existing ? existing.msg_failure : '')}">
+          <input class="input" data-f="msgFailure" maxlength="200" placeholder="Couldn't find a safe spot. Try again in a moment. ({error})" value="${esc(existing ? existing.msg_failure : '')}">
         </div>
         <p class="text-xs text-ink-faint" data-cc-placeholders></p>
       </div>
@@ -252,7 +249,7 @@ function init(root) {
       // items are {id, dimension}; label options "Nether · Crimson Forest", grouped by dimension.
       promise.then((items) => {
         if (!items.length) {
-          sel.innerHTML = '<option value="">No list available — start the server</option>';
+          sel.innerHTML = '<option value="">No list available. Start the server to load it.</option>';
         } else {
           const list = [...items].sort(
             (a, b) =>
@@ -275,7 +272,7 @@ function init(root) {
     function collect() {
       const trigger = f('trigger').value.trim().toLowerCase();
       if (!/^[a-z0-9_-]{1,24}$/.test(trigger)) {
-        toast('Triggers are 1-24 letters, digits, - or _', { kind: 'error' });
+        toast('Triggers are 1 to 24 characters: letters, digits, hyphens, or underscores.', { kind: 'error' });
         return null;
       }
       const action = f('action').value;
@@ -288,12 +285,12 @@ function init(root) {
           center: f('center').value || 'player',
         };
         if (params.maxDistance <= params.minDistance) {
-          toast('Max distance must be greater than min distance', { kind: 'error' });
+          toast('Max distance must be greater than min distance.', { kind: 'error' });
           return null;
         }
       } else if (action === 'structure') {
         if (!f('structure').value) {
-          toast('Pick a structure', { kind: 'error' });
+          toast('Pick a structure.', { kind: 'error' });
           return null;
         }
         params = {
@@ -303,7 +300,7 @@ function init(root) {
         };
       } else if (action === 'biome') {
         if (!f('biome').value) {
-          toast('Pick a biome', { kind: 'error' });
+          toast('Pick a biome.', { kind: 'error' });
           return null;
         }
         params = { biome: f('biome').value };
@@ -313,7 +310,7 @@ function init(root) {
           .map((l) => l.trim())
           .filter(Boolean);
         if (!lines.length) {
-          toast('Add at least one console command', { kind: 'error' });
+          toast('Add at least one console command.', { kind: 'error' });
           return null;
         }
         params = { commands: lines };
@@ -345,16 +342,16 @@ function init(root) {
       if (!el) return;
       const action = f('action').value;
       el.innerHTML =
-        `Placeholders — while running: <code class="font-mono">{player}</code> <code class="font-mono">{arg1}</code>–<code class="font-mono">{arg3}</code> · ` +
-        `on success: ${(SUCCESS_TOKENS[action] || '{player}')
+        `Placeholders. While running: <code class="font-mono">{player}</code> <code class="font-mono">{arg1}</code>–<code class="font-mono">{arg3}</code> · ` +
+        `On success: ${(SUCCESS_TOKENS[action] || '{player}')
           .split(' ')
           .map((t) => `<code class="font-mono">${esc(t)}</code>`)
           .join(' ')} · ` +
-        `on failure: <code class="font-mono">{error}</code>`;
+        `On failure: <code class="font-mono">{error}</code>`;
     }
 
     openModal({
-      title: existing ? `Edit ${prefix}${existing.trigger}` : 'Add chat command',
+      title: existing ? `Edit ${prefix}${existing.trigger}` : 'Add Chat Command',
       content,
       size: 'lg',
       actions: [
@@ -369,7 +366,7 @@ function init(root) {
             try {
               if (existing) await api('PATCH', `/${existing.id}`, body);
               else await api('POST', '/', body);
-              refresh(`${prefix}${body.trigger} ${existing ? 'saved' : 'created'}`);
+              refresh(`${prefix}${body.trigger} ${existing ? 'saved' : 'created'}.`);
             } catch (err) {
               fail(err);
               return false;
@@ -407,9 +404,9 @@ function init(root) {
         await withBusy(e.target.closest('[data-cc-delete]'), async () => {
           await api('DELETE', `/${cmd.id}`);
           commands = commands.filter((c) => c.id !== cmd.id);
-          if (!commands.length) return refresh(`${prefix}${cmd.trigger} deleted`); // re-render shows the empty state
+          if (!commands.length) return refresh(`${prefix}${cmd.trigger} deleted.`); // re-render shows the empty state
           row.remove();
-          toast(`${prefix}${cmd.trigger} deleted`);
+          toast(`${prefix}${cmd.trigger} deleted.`);
         });
       } catch (err) {
         fail(err);
@@ -426,11 +423,11 @@ function init(root) {
     const row = e.target.closest('[data-cc-row]');
     const cmd = commands.find((c) => c.id === row?.dataset.id);
     if (!cmd) return;
-    toggle.disabled = true; // keep the toggle visual — just lock it in flight
+    toggle.disabled = true; // keep the toggle visual - just lock it in flight
     try {
       await api('PATCH', `/${cmd.id}`, { enabled: toggle.checked });
       cmd.enabled = toggle.checked;
-      toast(`${prefix}${cmd.trigger} ${toggle.checked ? 'enabled' : 'disabled'}`);
+      toast(`${prefix}${cmd.trigger} ${toggle.checked ? 'enabled' : 'disabled'}.`);
     } catch (err) {
       toggle.checked = !toggle.checked;
       fail(err);
@@ -442,7 +439,7 @@ function init(root) {
   // -------------------------------------------------------------------- test
   function testModal(cmd) {
     if (!running) {
-      toast('Start the server to test commands', { kind: 'error' });
+      toast('Start the server to test commands.', { kind: 'error' });
       return;
     }
     const content = document.createElement('div');
@@ -452,7 +449,7 @@ function init(root) {
         <label class="label">Run as player (must be online for teleports)</label>
         <input class="input" data-f="player" maxlength="16" autocomplete="off" spellcheck="false" placeholder="AverageLupo" value="${esc(localStorage.getItem('cc-test-player') || '')}">
       </div>
-      <p class="text-xs text-ink-faint">Runs <code class="font-mono">${esc(prefix + cmd.trigger)}</code> right now — permission and cooldown checks are skipped, the result is whispered to the player in game.</p>`;
+      <p class="text-xs text-ink-faint">Runs <code class="font-mono">${esc(prefix + cmd.trigger)}</code> right now. Permission and cooldown checks are skipped, and the result is whispered to the player in-game.</p>`;
     openModal({
       title: `Test ${prefix}${cmd.trigger}`,
       content,
@@ -466,18 +463,18 @@ function init(root) {
           onClick: async ({ body }) => {
             const player = body.querySelector('[data-f="player"]').value.trim();
             if (!PLAYER_NAME_RE.test(player)) {
-              toast('Enter a valid player name', { kind: 'error' });
+              toast('Enter a valid player name.', { kind: 'error' });
               return false;
             }
             localStorage.setItem('cc-test-player', player);
             try {
               const { message } = await api('POST', `/${cmd.id}/test`, { player });
-              // Only the use-counter changed — bump it in place instead of
+              // Only the use-counter changed - bump it in place instead of
               // reloading out from under the success message.
               cmd.uses = (Number(cmd.uses) || 0) + 1;
               const uses = rowFor(cmd.id)?.querySelector('[data-cc-uses]');
               if (uses) uses.textContent = String(cmd.uses);
-              toast(message || `${prefix}${cmd.trigger} ran for ${player}`);
+              toast(message || `${prefix}${cmd.trigger} ran for ${player}.`);
             } catch (err) {
               fail(err);
               return false;

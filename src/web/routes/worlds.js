@@ -12,6 +12,12 @@ const multer = require('multer');
 const { z } = require('zod');
 const worlds = require('../../services/worlds');
 const { dataPath } = require('../../storage/pathGuard');
+const logger = require('../../logger')('worlds');
+const { serializeError } = require('../../utils/logSanitize');
+
+const onTempCleanupFailed = (err) =>
+  logger.debug('Could not remove a temporary file.', { err: serializeError(err, { includeStack: false }) });
+const { requireRole, rejectCrossSiteGet } = require('../middleware/auth');
 const db = require('../../db');
 
 // requireAuth guarantees req.user on every /api request.
@@ -37,7 +43,7 @@ async function worldUploadPreflight(req, res, next) {
       });
     }
     // A world archive is extracted after upload, so it needs headroom for both the
-    // upload and the (larger) extracted copy — check disk against ~3× the upload.
+    // upload and the (larger) extracted copy - check disk against ~3× the upload.
     if (declared > 0) await files.assertDiskFree(declared * 3);
     next();
   } catch (err) {
@@ -77,7 +83,7 @@ router.post('/upload', worldUploadPreflight, upload.single('file'), async (req, 
     });
     res.status(201).json({ ok: true, world: libVM(row) });
   } catch (err) {
-    if (req.file) await fsp.rm(req.file.path, { force: true }).catch(() => {});
+    if (req.file) await fsp.rm(req.file.path, { force: true }).catch(onTempCleanupFailed);
     next(err);
   }
 });
@@ -127,7 +133,7 @@ router.get(
   })
 );
 
-// Rename a library world (display name only — the archive is untouched).
+// Rename a library world (display name only - the archive is untouched).
 router.patch(
   '/:id',
   asyncHandler((req, res, next) => {
@@ -234,13 +240,17 @@ serverWorlds.post(
   })
 );
 
+// Staging a consistent world snapshot (save-off / copy / save-on, then a zip in
+// data/tmp) is real work - keep it off the viewer role even though it's a GET.
 serverWorlds.get(
   '/:world/download',
+  requireRole('admin', 'operator'),
+  rejectCrossSiteGet,
   asyncHandler(async (req, res, next) => {
     const world = worldNameSchema.parse(req.params.world);
     const staged = await worlds.prepareWorldDownload(req.params.id, world, { actor: actorOf(req) });
     res.download(staged.absPath, staged.filename, () => {
-      fsp.rm(staged.absPath, { force: true }).catch(() => {});
+      fsp.rm(staged.absPath, { force: true }).catch(onTempCleanupFailed);
     });
   })
 );
@@ -285,5 +295,5 @@ for (const r of [router, serverWorlds]) {
   r.use(makeJsonErrorHandler('worlds', { fileTooLarge: 'That archive is too large (20 GB limit)' }));
 }
 
+router.serverWorlds = serverWorlds;
 module.exports = router;
-module.exports.serverWorlds = serverWorlds;

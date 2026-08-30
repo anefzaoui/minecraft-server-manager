@@ -4,15 +4,19 @@
 // snapshots (player_stat_snapshots), and derives profiles, scoreboards, and
 // the advisory X-ray report from them.
 
-const fs = require('node:fs');
+const fsp = require('node:fs/promises');
 const path = require('node:path');
 const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const serversService = require('../services/servers');
 const { activeLevelName } = require('../services/worlds');
 const { uuidToDashed } = require('../services/mojangProfiles');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
-const RUNNING = new Set(['running', 'starting', 'unhealthy']);
+// 'stalled' is still a live container (see liveCache.js's sync()) - keep
+// snapshotting its stats instead of leaving a gap for the stall's duration.
+const RUNNING = new Set(['running', 'starting', 'unhealthy', 'stalled']);
 const STONE_BLOCKS = ['minecraft:stone', 'minecraft:cobblestone', 'minecraft:deepslate', 'minecraft:cobbled_deepslate'];
 const METRICS = new Set([
   'playtimeTicks',
@@ -61,16 +65,16 @@ function curate(root) {
     ironMined: pick(mined, ['minecraft:iron_ore', 'minecraft:deepslate_iron_ore']),
     ancientDebrisMined: num(mined['minecraft:ancient_debris']),
     // Vanilla has no "blocks placed" stat; minecraft:used counts right-click
-    // uses per item, which is dominated by block placements — good builder proxy.
+    // uses per item, which is dominated by block placements - good builder proxy.
     blocksUsedTotal: sumAll(stats['minecraft:used']),
   };
 }
 
-function readUsercache(serverId) {
+async function readUsercache(serverId) {
   const names = new Map();
   try {
-    const rows = JSON.parse(fs.readFileSync(dataPath('servers', serverId, 'usercache.json'), 'utf8'));
-    for (const row of rows) {
+    const raw = await fsp.readFile(dataPath('servers', serverId, 'usercache.json'), 'utf8');
+    for (const row of JSON.parse(raw)) {
       const uuid = uuidToDashed(row.uuid);
       if (uuid && row.name) names.set(uuid, row.name);
     }
@@ -80,18 +84,33 @@ function readUsercache(serverId) {
   return names;
 }
 
+async function pathExists(p) {
+  try {
+    await fsp.access(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Read <server>/<level>/stats/*.json and snapshot each player whose curated
  * stats changed since the last snapshot. Returns { players, snapshots }.
+ *
+ * Uses fs/promises throughout (not the sync API) and awaits each player file
+ * individually: this runs for every tracked player of every RUNNING server on
+ * a 5-minute timer (see startStatsIngest below), and the sync version used to
+ * block the whole event loop - every other request, every WS console/stats
+ * stream - for the full sweep with zero yield points in between.
  */
-function ingestStats(serverId) {
+async function ingestStats(serverId) {
   const server = serversService.getServer(serverId);
   if (!server) {
     const err = new Error('Server not found');
     err.status = 404;
     throw err;
   }
-  // activeLevelName honors LEVEL env AND server.properties level-name — a
+  // activeLevelName honors LEVEL env AND server.properties level-name - a
   // renamed/activated world would otherwise silently stop producing stats.
   const level = activeLevelName(server);
   // MC 26.x moved stat files from <world>/stats to <world>/players/stats.
@@ -99,24 +118,25 @@ function ingestStats(serverId) {
   try {
     const modern = dataPath('servers', serverId, level, 'players', 'stats');
     const legacy = dataPath('servers', serverId, level, 'stats');
-    statsDir = fs.existsSync(modern) ? modern : legacy;
+    statsDir = (await pathExists(modern)) ? modern : legacy;
   } catch {
     return { players: 0, snapshots: 0 };
   }
-  if (!fs.existsSync(statsDir)) return { players: 0, snapshots: 0 };
+  if (!(await pathExists(statsDir))) return { players: 0, snapshots: 0 };
 
-  const names = readUsercache(serverId);
+  const names = await readUsercache(serverId);
   let players = 0;
   let snapshots = 0;
-  for (const file of fs.readdirSync(statsDir)) {
+  const files = await fsp.readdir(statsDir);
+  for (const file of files) {
     if (!file.endsWith('.json')) continue;
     const uuid = uuidToDashed(path.basename(file, '.json'));
     if (!uuid) continue;
     let curated;
     try {
-      curated = curate(JSON.parse(fs.readFileSync(path.join(statsDir, file), 'utf8')));
+      curated = curate(JSON.parse(await fsp.readFile(path.join(statsDir, file), 'utf8')));
     } catch {
-      continue; // partial write / malformed file — retry next cycle
+      continue; // partial write / malformed file - retry next cycle
     }
     players++;
     const json = JSON.stringify(curated);
@@ -142,13 +162,16 @@ function ingestStats(serverId) {
 
 /** Periodic stat ingestion for all running servers. Returns a stop function. */
 function startStatsIngest({ intervalMs = 5 * 60 * 1000 } = {}) {
-  const tick = () => {
+  const tick = async () => {
     for (const server of serversService.listServers()) {
       if (!RUNNING.has(server.status)) continue;
       try {
-        ingestStats(server.id);
+        await ingestStats(server.id);
       } catch (err) {
-        console.error(`[analytics] stats ingest ${server.id} failed:`, err.message);
+        logger.warn('Stat ingestion for a server failed.', {
+          serverId: server.id,
+          err: serializeError(err, { includeStack: false }),
+        });
       }
     }
   };
@@ -207,7 +230,7 @@ function deltaBetween(latest, base) {
  * Playstyle heuristic (percentages of the four normalized scores):
  *   miner    = blocks broken
  *   builder  = minecraft:used total (right-click uses ≈ blocks placed; vanilla
- *              has no direct "placed" stat) — falls back to jumps when zero
+ *              has no direct "placed" stat) - falls back to jumps when zero
  *   fighter  = 25 * (mobKills + 4 * playerKills) + damageDealt / 10
  *   explorer = distanceCm / 1600 (16 m traveled weighted like one block mined)
  * The scale factors put a typical hour of each activity in the same order of
@@ -287,6 +310,34 @@ function profile(serverId, uuid) {
   };
 }
 
+// scoreboard()/xrayReport() fan out to a per-uuid query + JSON.parse of every
+// snapshot and then sort/median in JS - all of it repeated on every metrics-tab
+// load. Memoize the finished report and only recompute when the server's
+// snapshot set actually changes (newest ts + row count catch both an ingest and
+// a retention prune). Windowed leaderboards also key on a coarse time bucket so
+// a moving "last 7d" boundary doesn't serve a stale delta indefinitely.
+// Bounded LRU: windowed leaderboards mix a 5-minute time bucket into their key,
+// so every (server, metric, window) combo mints a fresh, permanently-dead entry
+// every 5 minutes. Cap the map and evict the least-recently-used so the cache
+// can't grow with uptime.
+const reportCache = new Map();
+const REPORT_CACHE_MAX = 500;
+function memoizeBySnapshots(serverId, key, compute) {
+  const s = db.get('SELECT MAX(ts) AS t, COUNT(*) AS n FROM player_stat_snapshots WHERE server_id = ?', serverId);
+  const stamp = `${(s && s.t) || ''}:${(s && s.n) || 0}`;
+  const cacheKey = `${serverId}::${key}`;
+  const hit = reportCache.get(cacheKey);
+  if (hit && hit.stamp === stamp) {
+    reportCache.delete(cacheKey);
+    reportCache.set(cacheKey, hit); // move to most-recently-used
+    return hit.value;
+  }
+  const value = compute();
+  reportCache.set(cacheKey, { stamp, value });
+  if (reportCache.size > REPORT_CACHE_MAX) reportCache.delete(reportCache.keys().next().value);
+  return value;
+}
+
 /** Rank every tracked player by one metric, absolute or windowed delta. */
 function scoreboard(serverId, { metric = 'playtimeTicks', window = 'all' } = {}) {
   if (!METRICS.has(metric)) {
@@ -294,6 +345,13 @@ function scoreboard(serverId, { metric = 'playtimeTicks', window = 'all' } = {})
     err.status = 400;
     throw err;
   }
+  const timeBucket = window === 'all' ? '' : Math.floor(Date.now() / 300_000);
+  return memoizeBySnapshots(serverId, `sb:${metric}:${window}:${timeBucket}`, () =>
+    computeScoreboard(serverId, metric, window)
+  );
+}
+
+function computeScoreboard(serverId, metric, window) {
   const cutoff = windowCutoff(window);
   const uuids = db.all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId);
   const rows = [];
@@ -321,9 +379,13 @@ const median = (values) => {
 /**
  * Advisory X-ray heuristic: each player's diamond/(stone+1) and ancient-debris
  * ratios vs the server median (players with >= 64 stone mined). Flags ratios
- * over 4x median with at least 16 diamonds — evidence only, never punitive.
+ * over 4x median with at least 16 diamonds - evidence only, never punitive.
  */
 function xrayReport(serverId) {
+  return memoizeBySnapshots(serverId, 'xray', () => computeXrayReport(serverId));
+}
+
+function computeXrayReport(serverId) {
   const uuids = db.all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId);
   const players = uuids.map(({ uuid }) => {
     const latest = latestSnapshot(serverId, uuid);

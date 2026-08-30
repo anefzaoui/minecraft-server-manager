@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // JSON API consumed by the panel's own frontend.
@@ -24,6 +24,9 @@ const { statsOnce } = require('../../docker/stats');
 const dockerNetworks = require('../../docker/networks');
 const dockerSpec = require('../../services/dockerSpec');
 const { dockerOverridesSchema, requireAdminForOverrides } = require('./dockerOverridesSchema');
+const { matchesImageType } = require('../../utils/sniffImage');
+const logger = require('../../logger')('api');
+const { serializeError } = require('../../utils/logSanitize');
 
 const router = express.Router();
 
@@ -223,8 +226,11 @@ router.delete(
 router.get(
   '/servers/:id/logs',
   asyncHandler(async (req, res, next) => {
-    const tail = Math.max(1, Math.min(Number(req.query.tail) || 500, 5000));
-    res.type('text/plain').send(await fetchLogs(req.params.id, { tail }));
+    // fetchLogs buffers the whole tail (Buffer + demuxed string) in memory, so
+    // cap it at 2000 lines here - the live WS console covers anything ongoing,
+    // and this endpoint is just the "recent output" snapshot.
+    const tail = Math.max(1, Math.min(Number(req.query.tail) || 500, 2000));
+    res.type('text/plain; charset=utf-8').send(await fetchLogs(req.params.id, { tail }));
   })
 );
 
@@ -247,7 +253,7 @@ router.get(
 
 // Batched live data for client-side hydration (dashboard cards, headers).
 // Includes the DB status for EVERY server so the dashboard can move the
-// status dot when a server crashes or stops — hydration used to update only
+// status dot when a server crashes or stops - hydration used to update only
 // the numbers, leaving a crashed server pulsing green "Running" until reload.
 router.get('/servers/live', (req, res) => {
   const liveCache = require('../../services/liveCache');
@@ -269,6 +275,72 @@ router.get('/servers/live', (req, res) => {
   }
   res.json({ ok: true, servers: out });
 });
+
+// One place to answer "is anything wrong right now?" - for the operator and for
+// an external monitor to poll. Read-only, cheap (cached status + one events
+// query + one statfs), never touches Docker.
+router.get(
+  '/status/summary',
+  asyncHandler(async (req, res, next) => {
+    const db = require('../../db');
+    // Real status values only: a quota stop is surfaced via the 'quota-exceeded'
+    // alert below, and nothing ever writes 'over-quota' to servers.status.
+    const PROBLEM_STATUSES = new Set(['crashed', 'stalled', 'unhealthy']);
+    // Keep in sync with the alert event types forwarded in integrations/discord.js.
+    const ALERT_TYPES = [
+      'oom',
+      'unhealthy',
+      'startup-stalled',
+      'stop-failed',
+      'schedule-failed',
+      'quota-exceeded',
+      'crash-loop',
+      'crash-report',
+      'offline-after-restart',
+      'update-failed',
+    ];
+
+    const serverRows = db.all(
+      'SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at'
+    );
+    const problems = serverRows
+      .filter((s) => PROBLEM_STATUSES.has(s.status))
+      .map((s) => ({ serverId: s.id, server: s.display_name, kind: s.status }));
+
+    const ph = ALERT_TYPES.map(() => '?').join(',');
+    const recentAlerts = db
+      .all(
+        `SELECT e.type, e.summary, e.server_id, e.created_at, s.display_name AS server
+           FROM events e LEFT JOIN servers s ON s.id = e.server_id
+          WHERE e.type IN (${ph}) AND e.created_at > datetime('now', '-1 day')
+          ORDER BY e.id DESC LIMIT 50`,
+        ...ALERT_TYPES
+      )
+      .map((r) => ({ type: r.type, summary: r.summary, serverId: r.server_id, server: r.server, at: r.created_at }));
+
+    const disk = await require('../../storage/indexer')
+      .diskFree()
+      .then(({ free, total }) => ({
+        freeBytes: free,
+        totalBytes: total,
+        freePct: total ? Math.round((free / total) * 100) : null,
+      }))
+      .catch(() => ({ freeBytes: null, totalBytes: null, freePct: null }));
+    if (disk.freePct != null && disk.freePct < 5) {
+      problems.push({ serverId: null, server: null, kind: 'disk-low', detail: `Only ${disk.freePct}% disk free` });
+    }
+
+    res.json({
+      ok: true,
+      healthy: problems.length === 0,
+      generatedAt: new Date().toISOString(),
+      servers: serverRows.map((s) => ({ serverId: s.id, server: s.display_name, status: s.status })),
+      problems,
+      recentAlerts,
+      disk,
+    });
+  })
+);
 
 router.get(
   '/ports/check',
@@ -301,7 +373,7 @@ router.get('/docker/status', async (req, res, next) => {
   }
 });
 
-// ---- API keys (Settings page) — admin only ----
+// ---- API keys (Settings page) - admin only ----
 const apiKeys = require('../../services/apiKeys');
 const { requireRole: requireRoleKeys } = require('../middleware/auth');
 
@@ -331,11 +403,23 @@ router.post(
 
 // ---- Panel settings (public domain, shown instead of the LAN IP) ----
 const settingsService = require('../../services/settings');
+const panelConfig = require('../../config');
+
+// COOKIE_SECURE defaults to false so a plain-HTTP LAN/localhost session still
+// works (see config/index.js resolveCookieSecure) - reasonable for a LAN-only
+// deployment, but a public host being configured here means this panel is
+// expected to be reachable over the internet (e.g. via the invite/port-forward
+// feature), where a non-Secure session cookie is sniffable in transit.
+function cookieSecureWarning(publicHost) {
+  return Boolean(publicHost) && panelConfig.cookieSecure === false;
+}
 
 router.get('/settings', (req, res) => {
+  const publicHost = settingsService.getPublicHost();
   res.json({
     ok: true,
-    publicHost: settingsService.getPublicHost(),
+    publicHost,
+    cookieSecureWarning: cookieSecureWarning(publicHost),
     curseforge: { masked: apiKeys.maskedKey('curseforge') },
   });
 });
@@ -346,7 +430,14 @@ router.post(
   asyncHandler((req, res, next) => {
     const { publicHost } = z.object({ publicHost: z.string().max(255).optional() }).parse(req.body);
     const saved = settingsService.setPublicHost(publicHost || '');
-    res.json({ ok: true, publicHost: saved });
+    const warn = cookieSecureWarning(saved);
+    if (warn) {
+      logger.warn(
+        'A public host is configured but COOKIE_SECURE is unset, so the session cookie is sent over plain HTTP if the panel is reached that way. Set COOKIE_SECURE=true behind HTTPS, or COOKIE_SECURE=auto in the environment.',
+        { publicHost: saved }
+      );
+    }
+    res.json({ ok: true, publicHost: saved, cookieSecureWarning: warn });
   })
 );
 
@@ -368,7 +459,7 @@ router.post(
     if (timezone !== undefined) {
       settingsService.setTimezone(timezone);
       // Already-armed schedules keep firing on whatever zone they were
-      // created with until re-armed — do it now, not just for new ones.
+      // created with until re-armed - do it now, not just for new ones.
       require('../../services/scheduler').rearmAll();
     }
     if (country !== undefined) settingsService.setCountry(country);
@@ -417,7 +508,7 @@ router.post('/servers/:id/pack', async (req, res, next) => {
       .parse(req.body);
     const resolved = await packs.resolvePack(platform, ref, { versionId });
     await packs.applyPack(req.params.id, resolved, { actor: req.user.username, force });
-    res.json({ ok: true, pack: resolved, note: 'Applied — recreate/restart to install' });
+    res.json({ ok: true, pack: resolved, note: 'Applied - recreate/restart to install' });
   } catch (err) {
     if (err.requiresForce) {
       return res.status(409).json({ ok: false, error: err.message, requiresForce: true, warnings: err.warnings });
@@ -433,12 +524,12 @@ const UPGRADE_STEP_LABELS = {
   applying: 'Re-pinning pack version',
   recreating: 'Recreating container',
   // No fixed minutes in the label: the window is per-platform (30 min for
-  // GTNH, 20 for CurseForge/Modrinth, 10 otherwise — see upgrade.js).
+  // GTNH, 20 for CurseForge/Modrinth, 10 otherwise - see upgrade.js).
   monitoring: 'Starting & monitoring the new version',
   overlay: 'Re-applying custom overlay mods',
 };
 
-// Long operation — returns {ok, taskId}; poll /api/tasks/:id (client: runTask).
+// Long operation - returns {ok, taskId}; poll /api/tasks/:id (client: runTask).
 // On failure with a rollback path, the task RESOLVES with
 // {ok:false, error, rollbackAvailable:true} so the client can offer rollback.
 router.post(
@@ -479,7 +570,7 @@ router.post(
   })
 );
 
-// Long operation — returns {ok, taskId}. Without an explicit backupId the most
+// Long operation - returns {ok, taskId}. Without an explicit backupId the most
 // recent pre-update backup for this server is restored alongside the re-pin.
 router.post(
   '/servers/:id/pack/rollback',
@@ -506,7 +597,7 @@ router.post(
   })
 );
 
-// ---- Pack browser — search, details, installed pack mods, one-shot create ----
+// ---- Pack browser - search, details, installed pack mods, one-shot create ----
 const curseforgeApi = require('../../services/curseforgeApi');
 const modrinthApi = require('../../services/modrinthApi');
 const sanitizeHtml = require('sanitize-html');
@@ -598,7 +689,7 @@ router.get(
 );
 
 // Pack details for the shared details modal. Accepts platform+ref OR serverId
-// (installed pack — platform/ref come from the server's pin, and the pinned
+// (installed pack - platform/ref come from the server's pin, and the pinned
 // version is echoed back so the UI can mark it).
 router.get(
   '/packs/details',
@@ -639,8 +730,8 @@ router.get(
     }
 
     const resolved = await packs.resolvePack(platform, ref, {});
-    let description = '';
-    let downloads = null;
+    let description;
+    let downloads;
     let author = null;
     if (platform === 'modrinth') {
       const project = await modrinthApi.getProject(resolved.projectRef);
@@ -725,7 +816,7 @@ router.post(
     requireAdminForOverrides(req, input);
     const actor = req.user.username;
     const taskId = tasks.run(`Creating ${input.name} from a ${input.platform} pack`, { actor }, async (t) => {
-      t.step('Resolving pack version (pinned — never "latest")');
+      t.step('Resolving pack version (pinned - never "latest")');
       const resolved = await packs.resolvePack(input.platform, input.ref, { versionId: input.versionId });
       const type = packs.packEnv(resolved).TYPE;
       t.step('Creating server');
@@ -747,16 +838,16 @@ router.post(
           extraPorts: input.extraPorts,
           extraBinds: input.extraBinds,
         },
-        // javaTagHint (not persisted as java_tag — that column means "user override"):
+        // javaTagHint (not persisted as java_tag - that column means "user override"):
         // at create time there's no server_packs row yet, so resolveImage() would
         // otherwise fall back to java17 for GTNH, pull that image, then immediately
         // re-pull the correct one when the applyPack below flags a recreate.
         { actor, start: false, onProgress: (s) => t.step(s), javaTagHint: resolved.javaTag }
       );
       t.step(`Pinning ${resolved.projectName} @ ${resolved.versionName}`);
-      // force: fresh server — there is no world yet to version-guard.
+      // force: fresh server - there is no world yet to version-guard.
       await packs.applyPack(server.id, resolved, { actor, force: true });
-      t.step('Starting server — the pack downloads and installs on first boot');
+      t.step('Starting server - the pack downloads and installs on first boot');
       await servers.startServer(server.id, { actor });
       return {
         serverId: server.id,
@@ -768,7 +859,7 @@ router.post(
   })
 );
 
-// Long operation — returns {ok, taskId}; the task result is the findings array.
+// Long operation - returns {ok, taskId}; the task result is the findings array.
 router.post(
   '/updates/check',
   asyncHandler((req, res, next) => {
@@ -802,6 +893,94 @@ router.post(
   })
 );
 
+// Docker image update: the check already pulled the newer image under the
+// server's current tag, so this is just a normal recreate (stop → remove →
+// ensureImage [no-op, already local] → create → restart-if-was-running).
+// No pre-update backup: the bind-mounted data dir is untouched by an image swap.
+router.post(
+  '/servers/:id/image/upgrade',
+  asyncHandler((req, res, next) => {
+    const server = requireServer(req.params.id);
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Updating container image on ${server.display_name}`,
+      { serverId: server.id, actor },
+      async (t) => {
+        t.step('Recreating container with the newer image');
+        await servers.recreateServer(server.id, { actor });
+        return { ok: true };
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// Standalone (non-modpack) Minecraft version / loader-build update. envKey
+// comes from the Updates page row (computed server-side by the checker, which
+// already knows this server's loader) rather than re-derived here, so this
+// route only needs to validate it's one of the itzg build-pin vars it knows
+// how to write.
+const LOADER_BUILD_ENV_KEYS = [
+  'PAPER_BUILD',
+  'FORGE_VERSION',
+  'NEOFORGE_VERSION',
+  'FABRIC_LOADER_VERSION',
+  'QUILT_LOADER_VERSION',
+];
+
+router.post(
+  '/servers/:id/mcversion/upgrade',
+  asyncHandler((req, res, next) => {
+    const { targetVersion, targetLoaderBuild, envKey } = z
+      .object({
+        targetVersion: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,32}$/)
+          .optional(),
+        targetLoaderBuild: z
+          .string()
+          .trim()
+          .regex(/^[\w.-]{1,64}$/)
+          .optional(),
+        envKey: z.enum(LOADER_BUILD_ENV_KEYS).optional(),
+      })
+      .refine((v) => Boolean(v.targetVersion) || Boolean(v.targetLoaderBuild && v.envKey), {
+        message: 'Provide targetVersion, or targetLoaderBuild with envKey',
+      })
+      .parse(req.body);
+    const server = requireServer(req.params.id);
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Updating Minecraft version on ${server.display_name}`,
+      { serverId: server.id, actor },
+      async (t) => {
+        const versionChanging = targetVersion && targetVersion !== server.mc_version;
+        let backupId = null;
+        if (versionChanging) {
+          t.step('Creating pre-update backup');
+          const backup = await backups.createBackup(server.id, {
+            reason: 'pre-update',
+            actor,
+            note: `Before Minecraft ${server.mc_version} → ${targetVersion}`,
+            task: t,
+          });
+          backupId = backup.id;
+        }
+        t.step('Applying new version');
+        const changes = {};
+        if (versionChanging) changes.mcVersion = targetVersion;
+        if (targetLoaderBuild && envKey) changes.env = { ...server.env, [envKey]: targetLoaderBuild };
+        servers.updateServer(server.id, changes, { actor });
+        t.step('Recreating container');
+        await servers.recreateServer(server.id, { actor });
+        return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
 // ---- Schedules ----
 const scheduler = require('../../services/scheduler');
 
@@ -814,6 +993,7 @@ router.get('/schedules/preview', (req, res) => {
     const runs = new Cron(expr, { timezone: settingsService.getTimezone() }).nextRuns(3).map((d) => d.toISOString());
     res.json({ ok: true, cron: expr, runs });
   } catch (err) {
+    logger.debug('Rejected an invalid cron expression.', { cron: expr, reason: err.message });
     res.status(400).json({ ok: false, error: `Invalid cron expression: ${err.message}` });
   }
 });
@@ -874,7 +1054,7 @@ router.post(
   })
 );
 
-// One-click cleanup. dryRun:true previews (nothing deleted) — the Storage
+// One-click cleanup. dryRun:true previews (nothing deleted) - the Storage
 // page uses it to show real numbers before the confirm dialog.
 router.post(
   '/storage/cleanup',
@@ -897,7 +1077,7 @@ router.post(
 );
 
 // ---- Backups ----
-// Long operation — returns {ok, taskId}; task result: {id, filename, size}.
+// Long operation - returns {ok, taskId}; task result: {id, filename, size}.
 router.post(
   '/servers/:id/backups',
   asyncHandler((req, res, next) => {
@@ -913,7 +1093,7 @@ router.post(
   })
 );
 
-// Long operation — returns {ok, taskId}. Stops the server, takes a safety
+// Long operation - returns {ok, taskId}. Stops the server, takes a safety
 // backup, wipes the dir and extracts the archive.
 router.post(
   '/servers/:id/backups/:backupId/restore',
@@ -934,7 +1114,7 @@ router.post(
   })
 );
 
-// Download a backup archive. Admin/operator only — the archive contains the
+// Download a backup archive. Admin/operator only - the archive contains the
 // whole server dir, including server.properties (plaintext rcon.password), so a
 // read-only viewer must never be able to pull it.
 router.get(
@@ -951,6 +1131,7 @@ router.get(
 
 router.delete(
   '/backups/:backupId',
+  requireRoleKeys('admin', 'operator'),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await backups.deleteBackup(req.params.backupId, { actor: req.user.username })) });
   })
@@ -959,7 +1140,7 @@ router.delete(
 // ---- Blueprints ----
 router.use('/blueprints', require('./blueprints'));
 
-// ---- World quick controls (Overview tab) — version-tolerant service ----
+// ---- World quick controls (Overview tab) - version-tolerant service ----
 const worldControls = require('../../services/worldControls');
 
 router.get(
@@ -968,7 +1149,11 @@ router.get(
     requireServer(req.params.id);
     try {
       res.json({ ok: true, running: true, state: await worldControls.getState(req.params.id) });
-    } catch {
+    } catch (err) {
+      logger.debug('Could not read world state; reporting the server as not running.', {
+        serverId: req.params.id,
+        err: serializeError(err, { includeStack: false }),
+      });
       res.json({ ok: true, running: false, state: {} });
     }
   })
@@ -1074,16 +1259,29 @@ router.get(
 router.post(
   '/servers/:id/mods',
   asyncHandler(async (req, res, next) => {
-    const { url, kind } = z
+    const { url, kind, ignoreVersion } = z
       .object({
         url: z.string().trim().min(3).max(500),
         kind: z.enum(['mod', 'plugin', 'datapack', 'resourcepack']).optional(),
+        // User explicitly accepted the risk of installing a build not listed
+        // as compatible with this server's exact MC version and/or loader.
+        ignoreVersion: z.boolean().optional(),
       })
       .parse(req.body);
-    const result = await mods.installFromUrl(req.params.id, url, { actor: req.user.username, kind });
+    const result = await mods.installFromUrl(req.params.id, url, {
+      actor: req.user.username,
+      kind,
+      ignoreVersion,
+    });
     res.status(201).json({
       ok: true,
-      installed: { name: result.library.name, filename: result.filename, version: result.library.version },
+      installed: {
+        name: result.library.name,
+        filename: result.filename,
+        version: result.library.version,
+        versionOverridden: result.versionOverridden,
+        loaderOverridden: result.loaderOverridden,
+      },
     });
   })
 );
@@ -1109,11 +1307,11 @@ router.post(
       ? db.get('SELECT * FROM server_content WHERE id = ? AND server_id = ?', contentId, server.id)
       : db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', server.id, file);
     if (!row)
-      throw Object.assign(new Error('This file is not panel-managed — reinstall it from a URL instead'), {
+      throw Object.assign(new Error('This file is not panel-managed - reinstall it from a URL instead'), {
         status: 404,
       });
     if (row.managed_by === 'pack') {
-      throw Object.assign(new Error('Pack-managed content updates with the pack — upgrade the modpack instead'), {
+      throw Object.assign(new Error('Pack-managed content updates with the pack - upgrade the modpack instead'), {
         status: 409,
       });
     }
@@ -1125,7 +1323,7 @@ router.post(
     }
     const check = db.get("SELECT * FROM update_checks WHERE subject_type = 'content' AND subject_id = ?", row.id);
     if (!check || !check.latest_version) {
-      throw Object.assign(new Error('No newer version is known — run an update check first'), { status: 409 });
+      throw Object.assign(new Error('No newer version is known - run an update check first'), { status: 409 });
     }
 
     let ref;
@@ -1163,6 +1361,7 @@ router.post(
 
 router.delete(
   '/servers/:id/mods/:file',
+  requireRoleKeys('admin', 'operator'),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await mods.removeContent(req.params.id, req.params.file, { actor: req.user.username })) });
   })
@@ -1210,7 +1409,11 @@ router.post(
       if (excludeFilename) mods.clearPendingLine(req.params.id, excludeFilename);
       res.status(201).json({ ok: true, ...result, mods: mods.pendingDownloads(req.params.id) });
     } finally {
-      fs.promises.rm(req.file.path, { force: true }).catch(() => {});
+      fs.promises.rm(req.file.path, { force: true }).catch((e) => {
+        logger.debug('Could not remove a temporary upload file.', {
+          err: serializeError(e, { includeStack: false }),
+        });
+      });
     }
   })
 );
@@ -1299,8 +1502,13 @@ function sendEventExport(req, res, serverId) {
   res.type(contentType).send(body);
 }
 
+// Export builds the whole body in memory and (server-scoped) is a heavier read
+// than a plain list - gate it to write-capable roles rather than leaving it open
+// to viewers via the method-based requireWrite.
 router.get(
   '/events/export',
+  requireRoleKeys('admin', 'operator'),
+  require('../middleware/auth').rejectCrossSiteGet,
   asyncHandler((req, res, next) => {
     sendEventExport(req, res, String(req.query.server || '') || null);
   })
@@ -1308,6 +1516,8 @@ router.get(
 
 router.get(
   '/servers/:id/events/export',
+  requireRoleKeys('admin', 'operator'),
+  require('../middleware/auth').rejectCrossSiteGet,
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     sendEventExport(req, res, req.params.id);
@@ -1385,14 +1595,29 @@ router.post('/servers/:id/icon', iconUpload.single('icon'), async (req, res, nex
     if (!ext) {
       throw Object.assign(new Error('Icons must be PNG, SVG or JPEG (max 512 KB)'), { status: 400 });
     }
+    if (!(await matchesImageType(req.file.path, req.file.mimetype))) {
+      throw Object.assign(new Error("File contents don't match the declared image type"), { status: 400 });
+    }
     const filename = `${server.id}${ext}`;
     const destDir = dataPath('library', 'icons', 'custom');
     await fsp.mkdir(destDir, { recursive: true });
     // Drop stale variants with a different extension.
     for (const other of Object.values(ICON_EXTS)) {
-      if (other !== ext) await fsp.rm(path.join(destDir, `${server.id}${other}`), { force: true }).catch(() => {});
+      if (other !== ext) {
+        await fsp.rm(path.join(destDir, `${server.id}${other}`), { force: true }).catch((e) => {
+          logger.debug('Could not remove a stale server icon variant.', {
+            serverId: server.id,
+            err: serializeError(e, { includeStack: false }),
+          });
+        });
+      }
     }
-    await fsp.rm(path.join(destDir, filename), { force: true }).catch(() => {});
+    await fsp.rm(path.join(destDir, filename), { force: true }).catch((e) => {
+      logger.debug('Could not remove the previous server icon.', {
+        serverId: server.id,
+        err: serializeError(e, { includeStack: false }),
+      });
+    });
     await fsp.rename(req.file.path, path.join(destDir, filename)).catch(async () => {
       await fsp.copyFile(req.file.path, path.join(destDir, filename));
       await fsp.rm(req.file.path, { force: true });
@@ -1404,9 +1629,16 @@ router.post('/servers/:id/icon', iconUpload.single('icon'), async (req, res, nex
       type: 'config-changed',
       summary: 'Custom server icon uploaded',
     });
+    logger.info('Uploaded a custom server icon.', { serverId: server.id, actor: req.user.username });
     res.json({ ok: true, icon: `custom:${filename}`, url: `/api/icons/custom/${filename}` });
   } catch (err) {
-    if (req.file) await fsp.rm(req.file.path, { force: true }).catch(() => {});
+    if (req.file) {
+      await fsp.rm(req.file.path, { force: true }).catch((e) => {
+        logger.debug('Could not remove a temporary upload file.', {
+          err: serializeError(e, { includeStack: false }),
+        });
+      });
+    }
     next(err);
   }
 });
@@ -1429,6 +1661,30 @@ router.get(
   })
 );
 
+// Uploaded profile pictures (web/routes/account.js handles the upload itself,
+// self-service). Not scoped to req.user - any authenticated user may view any
+// other user's avatar image, same openness as the server-icon route above.
+router.get(
+  '/avatars/custom/:file',
+  asyncHandler((req, res, next) => {
+    const file = z
+      .string()
+      .regex(/^usr_[\w-]+\.(png|svg|jpg)$/, 'Invalid avatar file')
+      .parse(req.params.file);
+    const abs = dataPath('library', 'icons', 'users', file);
+    if (!fs.existsSync(abs)) throw Object.assign(new Error('Avatar not found'), { status: 404 });
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.sendFile(abs);
+  })
+);
+
+// Mod/plugin/datapack platform icons are cached locally by library.cacheIcon()
+// under data/library/icons/ and served by the authenticated /library/icons
+// static mount in app.js (with the same sandbox CSP this route used to set,
+// so a registry-supplied .svg still cannot run script). listContent emits the
+// icon URL from icon_rel_path.
+
 // ---- Users (admin only) ----
 const authService = require('../../services/auth');
 const { requireRole } = require('../middleware/auth');
@@ -1440,7 +1696,7 @@ router.get('/users', requireRole('admin'), (req, res) => {
 router.post(
   '/users',
   requireRole('admin'),
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const { username, password, role } = z
       .object({
         username: z.string().trim().min(2).max(32),
@@ -1448,9 +1704,10 @@ router.post(
         role: z.enum(['admin', 'operator', 'viewer']),
       })
       .parse(req.body);
-    res
-      .status(201)
-      .json({ ok: true, user: authService.createUser({ username, password, role }, { actor: req.user.username }) });
+    res.status(201).json({
+      ok: true,
+      user: await authService.createUser({ username, password, role }, { actor: req.user.username }),
+    });
   })
 );
 
@@ -1467,9 +1724,9 @@ router.post(
 router.post(
   '/users/:id/password',
   requireRole('admin'),
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const { password } = z.object({ password: z.string().min(8).max(200) }).parse(req.body);
-    authService.setPassword(req.params.id, password, { actor: req.user.username });
+    await authService.setPassword(req.params.id, password, { actor: req.user.username, exceptSid: req.sessionID });
     res.json({ ok: true });
   })
 );
@@ -1484,7 +1741,7 @@ router.delete(
 );
 
 // Recovery path when a user loses both their authenticator and their backup
-// codes — an admin can force-clear 2FA without knowing their password (same
+// codes - an admin can force-clear 2FA without knowing their password (same
 // trust level as the admin password-reset above). The user re-enrolls fresh.
 // Deliberately refuses to target the caller's own account: that would be a
 // password-free way to strip your own 2FA that /api/account/totp/disable
@@ -1494,7 +1751,7 @@ router.post(
   requireRole('admin'),
   asyncHandler((req, res, next) => {
     if (req.params.id === req.user.id) {
-      return res.status(400).json({ ok: false, error: 'Use your own account’s 2FA settings to disable it.' });
+      return res.status(400).json({ ok: false, error: "Use your own account's two-factor settings to turn it off." });
     }
     authService.adminDisableTotp(req.params.id, { actor: req.user.username });
     res.json({ ok: true });
@@ -1681,6 +1938,12 @@ router.post(
           await mods.installFromUrl(server.id, url, { actor });
         } catch (err) {
           failed.push(`${m.ref} (${err.message})`);
+          logger.warn('A mod failed to install during create-from-mods.', {
+            serverId: server.id,
+            mod: m.ref,
+            platform: m.platform,
+            err: serializeError(err, { includeStack: false }),
+          });
         }
       }
       t.step('Starting server');

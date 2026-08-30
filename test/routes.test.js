@@ -19,7 +19,7 @@ test.after(async () => {
 
 test('API requires authentication', async () => {
   const r = await app.req('GET', '/api/settings/localization');
-  // Unauthed API calls are rejected (401) or redirected to login (302) — never 200.
+  // Unauthed API calls are rejected (401) or redirected to login (302) - never 200.
   assert.notEqual(r.status, 200);
 });
 
@@ -51,6 +51,16 @@ test('event export (extracted to the events service) returns CSV and JSON', asyn
   assert.equal(json.status, 200);
   assert.ok(Array.isArray(json.json));
   assert.ok(json.json.some((e) => e.summary === 'hello export world'));
+});
+
+test('CSV export defuses spreadsheet formula injection in influenced cells', () => {
+  eventsService.recordEvent({ actor: '=cmd|calc', type: 'test-formula', summary: '+SUM(A1:A9)' });
+  const { body } = eventsService.exportEvents(null, { format: 'csv' });
+  const row = body.split('\r\n').find((l) => l.includes('test-formula'));
+  assert.ok(row, 'the formula row is present');
+  // The leading = / + is neutralized with a single quote, still inside the quoted cell.
+  assert.match(row, /"'=cmd\|calc"/);
+  assert.match(row, /"'\+SUM\(A1:A9\)"/);
 });
 
 test('event prune (extracted) returns a numeric removed count', async () => {
@@ -93,6 +103,20 @@ test('an unknown pack platform is still rejected', async () => {
   assert.equal(res.status, 400);
 });
 
+test('/modpacks lists pack-backed servers (sidebar VMs no longer carry pack info)', async () => {
+  const id = app.seedServer('srv_pack01');
+  db.run(
+    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
+     VALUES (?, 'modrinth', 'cobblemon', 'Cobblemon Pack', 'v1', '1.0.0')`,
+    id
+  );
+
+  const r = await app.req('GET', '/modpacks', { cookie, headers: { Accept: 'text/html' } });
+  assert.equal(r.status, 200);
+  assert.match(r.text, /Cobblemon Pack/);
+  assert.doesNotMatch(r.text, /No Modpacks Installed/);
+});
+
 test('cached library icons are served authed-only (the /library/icons static mount)', async () => {
   const fs = require('node:fs');
   const path = require('node:path');
@@ -103,6 +127,9 @@ test('cached library icons are served authed-only (the /library/icons static mou
 
   const authed = await app.req('GET', '/library/icons/mods/lib_test1.png', { cookie });
   assert.equal(authed.status, 200);
+  // Registry icon URLs can end in .svg - the sandbox CSP is what keeps a
+  // malicious mod author's SVG from running script in the panel origin.
+  assert.match(String(authed.headers.get('content-security-policy')), /sandbox/);
 
   const unauthed = await app.req('GET', '/library/icons/mods/lib_test1.png');
   assert.notEqual(unauthed.status, 200); // login redirect, never the file

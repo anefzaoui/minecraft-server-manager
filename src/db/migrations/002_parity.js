@@ -6,7 +6,7 @@
 function up(db) {
   db.exec(`
     -- Structured events parsed from server logs (chat, join, leave, death,
-    -- advancement, pvp). Search uses indexed LIKE scans — node:sqlite (Node 23)
+    -- advancement, pvp). Search uses indexed LIKE scans - node:sqlite (Node 23)
     -- ships without the FTS5 module.
     CREATE TABLE player_events (
       id        INTEGER PRIMARY KEY AUTOINCREMENT,

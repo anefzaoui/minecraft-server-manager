@@ -11,6 +11,11 @@ const { nanoid } = require('nanoid');
 const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
+const logger = require('../logger')('crashes');
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const scanAllThrottle = makeFailureThrottle();
 
 // Package roots that never identify a mod (JDK, Minecraft, common libraries).
 const BORING_ROOTS = [
@@ -71,7 +76,7 @@ function parseCrashReport(text) {
       break;
     }
   } else {
-    // No Description header — fall back to the first line that looks like a throwable.
+    // No Description header - fall back to the first line that looks like a throwable.
     const m = lines.find((l) => /^[a-zA-Z_$][\w.$]*(Exception|Error)(:|$)/.test(l));
     if (m) exception = m.trim();
   }
@@ -93,7 +98,7 @@ function parseCrashReport(text) {
         if (/^--\s.+\s--$/.test(l.trim())) break; // next section
         if (!l.trim()) continue;
         if (/^\s*(Details:\s*$|Mod File:|Stacktrace:|Failure message:|Version:)/i.test(l)) continue;
-        // "Mod: NameOfMod (modid), Version: x" — drop the label before parsing.
+        // "Mod: NameOfMod (modid), Version: x" - drop the label before parsing.
         collectSuspectNames(l.replace(/^\s*Mods?:\s*/i, ''), suspects);
       }
     }
@@ -112,12 +117,12 @@ function parseCrashReport(text) {
     if (parts.length >= 3) suspects.add(parts[1]);
   }
 
-  const summary = exception ? exception + (description ? ` — ${description}` : '') : description || 'Crash report';
+  const summary = exception ? exception + (description ? ` - ${description}` : '') : description || 'Crash report';
   return { description, exception, summary, suspects: [...suspects] };
 }
 
 function collectSuspectNames(line, suspects) {
-  // "NameOfMod (modid), Version: x" — prefer the modid in parentheses.
+  // "NameOfMod (modid), Version: x" - prefer the modid in parentheses.
   const paren = /\(([\w-]+)\)/.exec(line);
   if (paren) {
     suspects.add(paren[1]);
@@ -147,7 +152,7 @@ function parseHsErr(text) {
   return {
     description: '',
     exception: 'JVM fatal error',
-    summary: 'JVM fatal error' + (problem ? ` — ${problem}` : ''),
+    summary: 'JVM fatal error' + (problem ? ` - ${problem}` : ''),
     suspects: [],
   };
 }
@@ -206,24 +211,41 @@ async function scanServer(serverId) {
       serverId,
       type: 'crash-report',
       actor: 'system',
-      summary: `New crash report: ${filename} — ${parsed.exception || parsed.summary}`,
+      summary: `New crash report: ${filename} - ${parsed.exception || parsed.summary}`,
       details: { crashId: id },
     });
     db.run('UPDATE crash_reports SET event_id = ? WHERE id = ?', eventId, id);
+    logger.warn('Indexed a new crash report.', {
+      serverId,
+      crashId: id,
+      filename,
+      exception: parsed.exception || undefined,
+    });
     inserted.push(id);
   }
   return inserted;
 }
 
 /** Scan every (non-deleted) server; per-server errors are swallowed. */
+let scanning = false;
 async function scanAll() {
-  const { listServers } = require('../services/servers'); // lazy: avoid require cycles
-  for (const server of listServers()) {
-    try {
-      await scanServer(server.id);
-    } catch (err) {
-      console.error(`[crashes] scan failed for ${server.id}:`, err.message);
+  if (scanning) return; // a slow scan must not overlap the next interval tick
+  scanning = true;
+  try {
+    const { listServers } = require('../services/servers'); // lazy: avoid require cycles
+    for (const server of listServers()) {
+      try {
+        await scanServer(server.id);
+      } catch (err) {
+        logger.warn('Scanning a server for crash reports failed.', {
+          serverId: server.id,
+          err: serializeError(err, { includeStack: false }),
+        });
+      }
     }
+    scanAllThrottle.ok(logger.info, 'The crash-report scan recovered.');
+  } finally {
+    scanning = false;
   }
 }
 
@@ -232,9 +254,13 @@ let watcherTimer = null;
 /** Start the background watcher (immediate scan + interval). Returns stop(). */
 function startCrashWatcher({ intervalMs = 30000 } = {}) {
   stopCrashWatcher();
-  scanAll().catch((err) => console.error('[crashes] initial scan failed:', err.message));
+  const onScanAllFailed = (err) =>
+    scanAllThrottle.fail(logger.warn, 'A crash-report scan pass failed.', {
+      err: serializeError(err, { includeStack: false }),
+    });
+  scanAll().catch(onScanAllFailed);
   watcherTimer = setInterval(() => {
-    scanAll().catch((err) => console.error('[crashes] scan failed:', err.message));
+    scanAll().catch(onScanAllFailed);
   }, intervalMs);
   watcherTimer.unref();
   return stopCrashWatcher;
@@ -284,7 +310,7 @@ function deleteCrash(crashId, { actor = 'system' } = {}) {
   try {
     fs.unlinkSync(absPathFor(row.server_id, row.filename));
   } catch {
-    /* file already gone — still drop the row */
+    /* file already gone - still drop the row */
   }
   db.run('DELETE FROM crash_reports WHERE id = ?', crashId);
   recordEvent({

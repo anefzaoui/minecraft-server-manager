@@ -1,6 +1,7 @@
 // First-run onboarding wizard: welcome → system checks → create admin →
 // optional config (public domain + CurseForge key) → done.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
 import { fillTimezoneSelect, fillCountrySelect } from '../lib/tzPicker.js';
 
@@ -27,10 +28,10 @@ function init() {
 
   wizard.addEventListener('click', (e) => {
     if (e.target.closest('[data-next]')) {
-      // Step 3 fields save individually — Continue must not silently discard
+      // Step 3 fields save individually - Continue must not silently discard
       // something typed but never saved.
       if (step === 3 && unsavedStep3()) {
-        toast('You have unsaved values above — press their Save buttons, or clear the fields to skip.', {
+        toast('You have unsaved values above. Press their Save buttons, or clear the fields to skip.', {
           kind: 'warn',
           timeout: 8000,
         });
@@ -73,7 +74,7 @@ function init() {
   }
 
   async function loadChecks() {
-    // Continue waits for the first check round — "checks passed" and "checks
+    // Continue waits for the first check round - "checks passed" and "checks
     // never ran" must not look identical.
     const continueBtn = sections[1].querySelector('[data-next]');
     if (continueBtn) continueBtn.disabled = true;
@@ -83,14 +84,15 @@ function init() {
     try {
       const res = await fetch('/setup/checks', { headers: { Accept: 'application/json' } });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'checks failed');
+      if (!data.ok) throw new Error(data.error || 'The system checks could not be run.');
       checks = data.checks;
       checksLoaded = true;
-    } catch (err) {
-      list.innerHTML = `<div class="notice notice-danger text-danger">Could not run checks: ${esc(err.message)} — re-check to try again.</div>`;
+    } catch {
+      list.innerHTML =
+        '<div class="notice notice-danger text-danger">The system checks could not be run. Use Re-check to try again.</div>';
       return;
     } finally {
-      // Docker being down must not trap setup (the panel works without it) —
+      // Docker being down must not trap setup (the panel works without it) -
       // Continue unlocks once a round finished, pass or fail.
       if (continueBtn && checksLoaded) continueBtn.disabled = false;
     }
@@ -101,13 +103,13 @@ function init() {
     const d = checks.docker;
     const dDetail = d.available
       ? `${esc(d.version)} · ${esc(d.os || 'Docker')} · ${d.ncpu ?? '?'} CPUs${gb(d.memTotal) ? ` · ${gb(d.memTotal)} RAM` : ''}`
-      : `Not reachable — server create/start/stop stay disabled until Docker is running. The panel works fine meanwhile.${d.installed === false ? ' Docker doesn’t appear to be installed.' : ' Start Docker Desktop, then re-check.'}`;
+      : `Not reachable. Creating, starting, and stopping servers stay disabled until Docker is running, but the panel works fine in the meantime.${d.installed === false ? " Docker doesn't appear to be installed." : ' Start Docker Desktop, then re-check.'}`;
     list.appendChild(row(d.level, 'Docker', dDetail));
 
     // Node
     const n = checks.node;
     list.appendChild(
-      row(n.level, 'Node.js', `${esc(n.version)}${n.level === 'fail' ? ` — need ${esc(n.required)} or newer` : ''}`)
+      row(n.level, 'Node.js', `${esc(n.version)}${n.level === 'fail' ? `. Needs ${esc(n.required)} or newer.` : ''}`)
     );
 
     // Data dir
@@ -116,7 +118,9 @@ function init() {
       row(
         dd.level,
         'Data directory',
-        dd.level === 'pass' ? `${esc(dd.path)} — writable` : `${esc(dd.path)} — NOT writable. Fix folder permissions.`
+        dd.level === 'pass'
+          ? `${esc(dd.path)} is writable.`
+          : `${esc(dd.path)} is not writable. Fix the folder permissions.`
       )
     );
 
@@ -124,8 +128,8 @@ function init() {
     const s = checks.sessionSecret;
     const sDetail =
       s.level === 'pass'
-        ? 'A strong secret is set (auto-generated and saved to your data dir if you didn’t set SESSION_SECRET). It signs sessions and encrypts stored keys.'
-        : 'Weak SESSION_SECRET — use at least 16 random characters, or leave it blank to let the panel generate one. Rotating it later invalidates stored server passwords.';
+        ? "A strong secret is set. If you didn't provide one, the panel generated it and saved it to your data folder. It signs sessions and encrypts stored keys."
+        : 'The panel secret is weak. Use at least 16 random characters, or leave it blank to let the panel generate one. Changing it later invalidates stored server passwords.';
     list.appendChild(row(s.level, 'Session secret', sDetail));
   }
 
@@ -145,11 +149,13 @@ function init() {
           body: JSON.stringify({
             username: document.getElementById('su-user').value.trim(),
             password: document.getElementById('su-pass').value,
+            // Present only on an exposed-bind first run (see setup.hbs).
+            pin: document.getElementById('su-pin') ? document.getElementById('su-pin').value.trim() : undefined,
           }),
         });
         data = await res.json();
-      } catch (err) {
-        adminError.textContent = `Network error: ${err.message}`;
+      } catch {
+        adminError.textContent = friendlyError(null, { action: 'create the account' });
         adminError.classList.remove('hidden');
         return;
       }
@@ -158,7 +164,7 @@ function init() {
         adminError.classList.remove('hidden');
         return;
       }
-      // Admin created and signed in — advance (no going back past this point).
+      // Admin created and signed in - advance (no going back past this point).
       goTo(3);
     });
   });
@@ -180,7 +186,7 @@ function init() {
     const btn = e.currentTarget;
     const key = document.getElementById('su-cf').value.trim();
     if (!key) {
-      toast('Paste a CurseForge key first, or skip this.', { kind: 'error' });
+      toast('Paste a CurseForge API key first, or skip this step.', { kind: 'error' });
       return;
     }
     await withBusy(btn, 'Checking…', async () => {
@@ -189,9 +195,9 @@ function init() {
         toast('Key verified with CurseForge and saved (encrypted).');
         const cf = document.getElementById('su-cf');
         cf.value = '';
-        // Reflect the stored state — an emptied field with an example
+        // Reflect the stored state - an emptied field with an example
         // placeholder read as "nothing saved".
-        cf.placeholder = 'Stored ✓ — paste a new key to replace it';
+        cf.placeholder = 'Stored. Paste a new key to replace it.';
       }
     });
   });
@@ -240,12 +246,12 @@ function init() {
       });
       const data = await res.json();
       if (!res.ok || data.ok === false) {
-        toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+        toast(data.error || friendlyError(res, { action: 'save that setting' }), { kind: 'error', timeout: 8000 });
         return null;
       }
       return data;
-    } catch (err) {
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+    } catch {
+      toast(friendlyError(null, { action: 'save that setting' }), { kind: 'error' });
       return null;
     }
   }

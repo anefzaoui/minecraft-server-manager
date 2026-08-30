@@ -1,0 +1,17 @@
+# Native/install-script builds are off by default (pnpm's security posture).
+# None of these are needed: @parcel/watcher only backs Tailwind's --watch mode
+# (falls back to polling); cpu-features/ssh2 only serve dockerode's SSH
+# transport, which this app doesn't use (Docker socket only, see Dockerfile);
+# protobufjs backs dockerode's gRPC/buildkit paths, not the container APIs
+# this app calls. Flip to true only if a feature starts depending on one.
+allowBuilds:
+  '@parcel/watcher': false
+  cpu-features: false
+  # esbuild backs `pnpm run build:js` (client bundling). Its install script just
+  # links the prebuilt platform binary; allow it so a fresh install is ready to
+  # build without a manual `pnpm approve-builds`.
+  esbuild: true
+  protobufjs: false
+  ssh2: false
+minimumReleaseAgeExclude:
+  - js-yaml@5.4.0

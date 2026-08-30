@@ -1,5 +1,6 @@
 // Settings page: API key save/test + localization + users CRUD.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
@@ -11,7 +12,7 @@ if (page) init();
 function init() {
   // ---- CurseForge key ----
   document.getElementById('set-cf-save')?.addEventListener('click', async (e) => {
-    const btn = e.currentTarget; // capture before await — currentTarget is null afterwards
+    const btn = e.currentTarget; // capture before await - currentTarget is null afterwards
     const key = document.getElementById('set-cf-key').value.trim();
     if (!key) {
       toast('Paste a key first.', { kind: 'error' });
@@ -34,6 +35,13 @@ function init() {
       if (res) {
         document.getElementById('set-domain').value = res.publicHost || '';
         toast(res.publicHost ? `Public domain set to ${res.publicHost}.` : 'Public domain cleared.');
+        if (res.cookieSecureWarning) {
+          toast(
+            'This panel is reachable over plain HTTP, so the login cookie can be read in transit. Put it behind HTTPS ' +
+              'and set the secure-cookie option, as described in the README.',
+            { kind: 'error', timeout: 12000 }
+          );
+        }
       }
     });
   });
@@ -80,7 +88,7 @@ function init() {
   document.getElementById('set-cf-test')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     await withBusy(btn, 'Checking…', async () => {
-      // post() returns null (and toasts) on any failure — success is the only branch left.
+      // post() returns null (and toasts) on any failure - success is the only branch left.
       const res = await post('/api/keys/curseforge/test', {});
       if (res) toast('Stored key is valid.');
     });
@@ -98,7 +106,7 @@ function init() {
         select.dataset.prevRole = select.value;
         toast(`${row.dataset.username} is now ${select.value}.`);
       } else {
-        // Revert in place — the old reload wiped the error toast before it
+        // Revert in place - the old reload wiped the error toast before it
         // could be read. The change dispatch only resyncs the trigger label.
         select.dataset.reverting = '1';
         select.value = select.dataset.prevRole || select.value;
@@ -110,45 +118,56 @@ function init() {
     }
   });
 
-  document.getElementById('users-table')?.addEventListener('click', async (e) => {
-    const row = e.target.closest('[data-user-id]');
-    if (!row) return;
-    const delBtn = e.target.closest('[data-user-delete]');
+  // Row menu items (Set Password / Reset 2FA / Delete) live in the per-row
+  // overflow menu, which dropdown.js portals to <body> - so they're
+  // document-delegated and carry their own data-user-id/data-username rather
+  // than relying on closest('[data-user-id]') finding the row. The menu itself
+  // is gone (dropdown.js removes it) by the time an async action here
+  // resolves, so busy-state goes on the row's still-present kebab trigger.
+  function menuTriggerFor(userId) {
+    return document.querySelector(`[data-user-id="${CSS.escape(userId)}"] [data-menu]`);
+  }
+
+  document.addEventListener('click', async (e) => {
+    const passBtn = e.target.closest('[data-user-password]');
     const totpResetBtn = e.target.closest('[data-user-totp-reset]');
-    if (e.target.closest('[data-user-password]')) {
-      passwordModal(row.dataset.userId, row.dataset.username);
+    const delBtn = e.target.closest('[data-user-delete]');
+    if (passBtn) {
+      passwordModal(passBtn.dataset.userId, passBtn.dataset.username);
     } else if (totpResetBtn) {
+      const { userId, username } = totpResetBtn.dataset;
       const ok = await confirmDialog({
-        title: `Reset 2FA for ${row.dataset.username}?`,
+        title: `Reset two-factor auth for ${username}?`,
         message:
-          'They will be signed out of any in-progress 2FA challenge and must set up a new authenticator next time they sign in.',
-        confirmLabel: 'Reset 2FA',
+          'Any in-progress sign-in is cancelled, and they must set up a new authenticator app the next time they sign in.',
+        confirmLabel: 'Reset',
         danger: true,
       });
       if (!ok) return;
-      await withBusy(totpResetBtn, async () => {
-        const res = await post(`/api/users/${row.dataset.userId}/totp/disable`, {});
+      await withBusy(menuTriggerFor(userId), async () => {
+        const res = await post(`/api/users/${userId}/totp/disable`, {});
         if (res) {
-          toast('2FA reset.');
+          toast('Two-factor authentication reset.');
           setTimeout(() => location.reload(), 600);
         }
       });
     } else if (delBtn) {
+      const { userId, username } = delBtn.dataset;
       const ok = await confirmDialog({
-        title: `Delete user ${row.dataset.username}?`,
+        title: `Delete user ${username}?`,
         message: 'They will be signed out and lose all access.',
         confirmLabel: 'Delete user',
         danger: true,
       });
       if (!ok) return;
-      await withBusy(delBtn, async () => {
-        const res = await fetch(`/api/users/${row.dataset.userId}`, { method: 'DELETE' });
-        const data = await res.json();
+      await withBusy(menuTriggerFor(userId), async () => {
+        const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+        const data = await res.json().catch(() => ({}));
         if (data.ok) {
           toast('User deleted.');
-          row.remove();
+          document.querySelector(`[data-user-id="${CSS.escape(userId)}"]`)?.remove();
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: 'delete that user' }), { kind: 'error' });
         }
       });
     }
@@ -162,13 +181,13 @@ function init() {
       <div><label class="label">Password</label><input class="input" id="nu-pass" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p></div>
       <div><label class="label">Role</label>
         <select class="input" id="nu-role" data-label="Role">
-          <option value="viewer">viewer — read-only</option>
-          <option value="operator">operator — manage servers</option>
-          <option value="admin">admin — everything</option>
+          <option value="viewer">Viewer (read-only)</option>
+          <option value="operator">Operator (manage servers)</option>
+          <option value="admin">Admin (full access)</option>
         </select>
       </div>`;
     openModal({
-      title: 'Add user',
+      title: 'Add User',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -204,7 +223,7 @@ function init() {
       '<input class="input" id="pw-new" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p>'
     );
     openModal({
-      title: 'Set password',
+      title: 'Set Password',
       size: 'sm',
       content,
       actions: [
@@ -234,12 +253,12 @@ function init() {
       });
       const data = await res.json();
       if (!res.ok || data.ok === false) {
-        toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+        toast(data.error || friendlyError(res, { action: 'save that change' }), { kind: 'error', timeout: 8000 });
         return null;
       }
       return data;
-    } catch (err) {
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+    } catch {
+      toast(friendlyError(null, { action: 'save that change' }), { kind: 'error' });
       return null;
     }
   }

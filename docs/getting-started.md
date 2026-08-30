@@ -6,7 +6,9 @@
 
 The first time you open the panel, it asks you to create an administrator account. This is the only account that exists until you add more, and it has full control.
 
-Pick a username and a password of at least 8 characters. That's it — you're signed in and taken straight to the dashboard.
+Pick a username and a password of at least 8 characters. That's it - you're signed in and taken straight to the dashboard.
+
+> **Exposed installs are PIN-gated.** If you start the panel bound to a non-loopback address (`PANEL_HOST` other than `127.0.0.1`), the setup page also asks for a **6-digit PIN**. The panel prints it to its console on startup - enter it along with your username and password. This stops a stranger who reaches the port first from claiming the admin account. The PIN disappears once the admin account exists.
 
 ## Signing in
 
@@ -20,16 +22,16 @@ If [two-factor authentication](two-factor-authentication.md) is enabled on your 
 
 Everything hangs off the left sidebar:
 
-- **Dashboard** — every server at a glance ([details](dashboard.md)).
-- **Servers**, **Modpacks**, **Worlds**, **Blueprints** — create and manage servers and their content.
-- **Updates**, **Backups**, **Schedules**, **Storage**, **Activity** — the operational side: what's out of date, your snapshots, automation, disk usage, and the audit log.
-- **Settings** (bottom) — users, API keys, and panel configuration.
+- **Dashboard** - every server at a glance ([details](dashboard.md)).
+- **Servers**, **Modpacks**, **Worlds**, **Blueprints** - create and manage servers and their content.
+- **Updates**, **Backups**, **Schedules**, **Storage**, **Activity** - the operational side: what's out of date, your snapshots, automation, disk usage, and the audit log.
+- **Settings** (bottom) - users, API keys, and panel configuration.
 
 The top bar has the **New server** button, a **theme toggle** (dark/light), and your **account menu**, where you can manage [two-factor authentication](two-factor-authentication.md) or sign out.
 
 ## What you need
 
-The panel talks to Docker to run servers, so it needs access to a Docker daemon (Docker Desktop or a Docker Engine socket). When Docker is reachable, the dashboard's Docker tile shows **Connected** and its version. If it's not, the panel still runs — you just can't start servers until the daemon is up.
+The panel talks to Docker to run servers, so it needs access to a Docker daemon (Docker Desktop or a Docker Engine socket). When Docker is reachable, the dashboard's Docker tile shows **Connected** and its version. If it's not, the panel still runs - you just can't start servers until the daemon is up.
 
 ## Next steps
 

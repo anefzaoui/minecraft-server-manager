@@ -4,7 +4,7 @@
 // feature. IDs match what `/locate biome` accepts.
 
 module.exports = [
-  // Overworld — temperate & lush
+  // Overworld - temperate & lush
   'minecraft:plains',
   'minecraft:sunflower_plains',
   'minecraft:forest',
@@ -20,7 +20,7 @@ module.exports = [
   'minecraft:sparse_jungle',
   'minecraft:bamboo_jungle',
   'minecraft:mushroom_fields',
-  // Overworld — dry
+  // Overworld - dry
   'minecraft:desert',
   'minecraft:savanna',
   'minecraft:savanna_plateau',
@@ -28,7 +28,7 @@ module.exports = [
   'minecraft:badlands',
   'minecraft:eroded_badlands',
   'minecraft:wooded_badlands',
-  // Overworld — cold & snowy
+  // Overworld - cold & snowy
   'minecraft:taiga',
   'minecraft:old_growth_pine_taiga',
   'minecraft:old_growth_spruce_taiga',
@@ -37,7 +37,7 @@ module.exports = [
   'minecraft:ice_spikes',
   'minecraft:snowy_beach',
   'minecraft:frozen_river',
-  // Overworld — mountains
+  // Overworld - mountains
   'minecraft:meadow',
   'minecraft:grove',
   'minecraft:snowy_slopes',
@@ -48,7 +48,7 @@ module.exports = [
   'minecraft:windswept_gravelly_hills',
   'minecraft:windswept_forest',
   'minecraft:stony_shore',
-  // Overworld — rivers, beaches & oceans
+  // Overworld - rivers, beaches & oceans
   'minecraft:river',
   'minecraft:beach',
   'minecraft:ocean',
@@ -60,7 +60,7 @@ module.exports = [
   'minecraft:deep_cold_ocean',
   'minecraft:frozen_ocean',
   'minecraft:deep_frozen_ocean',
-  // Overworld — underground
+  // Overworld - underground
   'minecraft:lush_caves',
   'minecraft:dripstone_caves',
   'minecraft:deep_dark',

@@ -9,30 +9,30 @@
         <option value="">Loading players…</option>
       </select>
     </div>
-    <button class="btn btn-sm" id="inv-refresh" data-tip="Re-read the player's saved data file">{{{icon 'refresh-cw' 'size-3.5'}}} Reload</button>
+    <button class="btn btn-sm" id="inv-refresh" data-tip="Re-read the player's saved data file">{{{icon 'refresh-cw' 'size-3.5'}}} Refresh</button>
     <button class="btn btn-sm" id="inv-snapshot" data-tip="Save this inventory as a snapshot for later comparison">{{{icon 'camera' 'size-3.5'}}} Snapshot</button>
     <div class="ml-auto flex gap-2">
       {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server (vanilla + mods) and give it via /give">{{{icon 'gift' 'size-3.5'}}} Give item</button>
-        <button class="btn btn-sm" id="inv-clear" data-tip="Remove items from an online player via /clear">{{{icon 'eraser' 'size-3.5'}}} Clear items</button>
+        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server (vanilla and modded) and give one to an online player">{{{icon 'gift' 'size-3.5'}}} Give item</button>
+        <button class="btn btn-sm" id="inv-clear" data-tip="Remove items from an online player">{{{icon 'eraser' 'size-3.5'}}} Clear items</button>
       {{else}}
-        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server and add it straight into the selected player's save file">{{{icon 'gift' 'size-3.5'}}} Give item</button>
-        <span data-tip="Start the server to clear items in bulk — or delete slots one by one below"><button class="btn btn-sm" id="inv-clear" disabled>{{{icon 'eraser' 'size-3.5'}}} Clear items</button></span>
+        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server and add one straight into the selected player's save file">{{{icon 'gift' 'size-3.5'}}} Give item</button>
+        <span data-tip="Start the server to clear items in bulk, or delete slots one by one below"><button class="btn btn-sm" id="inv-clear" disabled>{{{icon 'eraser' 'size-3.5'}}} Clear items</button></span>
       {{/if}}
     </div>
   </div>
 
   <div class="mb-4 max-w-prose rounded-md border border-line bg-inset/50 p-3 text-xs text-ink-faint">
-    Inventories are read from each player's saved <span class="font-mono">playerdata/*.dat</span> file — for online players
-    this shows the state as of the last world save. Click any slot to edit it: change counts, replace, move or delete items.
+    Inventories are read from each player's saved data. For online players, this shows the state as of the last world save.
+    Click any slot to edit it: change counts, replace, move, or delete items.
     Snapshots are taken automatically on joins and deaths.
   </div>
 
   <div class="hidden card p-10 text-center text-sm text-ink-faint" id="inv-empty">
-    No player data yet — inventories appear after the first player joins this server.
+    No player data yet. Inventories appear after the first player joins this server.
   </div>
 
-  {{! Visible until inventory.js swaps in the real grids or the empty state —
+  {{! Visible until inventory.js swaps in the real grids or the empty state -
       the tab used to show only the toolbar while the fetches ran. }}
   <div class="card p-10 text-center text-sm text-ink-faint" id="inv-loading" aria-busy="true">
     <svg class="icon mx-auto size-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
@@ -43,20 +43,25 @@
     <div class="mb-2 flex flex-wrap gap-1.5 text-xs" id="inv-meta"></div>
     <div class="mb-4 flex items-center gap-1.5 text-xs text-ink-faint" id="inv-mech"></div>
 
-    <div class="grid gap-6 lg:grid-cols-[auto_1fr]">
+    {{! minmax(0,auto): a bare `auto` track is sized off the w-max grid's
+        content and can push the whole grid past the viewport at lg. }}
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,auto)_1fr]">
       <div class="card p-4">
         <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'backpack' 'size-4'}}} Inventory</h3>
+        {{! The 9-wide slot grids are ~392px min - wider than a phone. Scroll
+            them inside the card instead of widening the page (same pattern as
+            every data table). }}
         <div class="mb-1 text-[11px] uppercase tracking-wider text-ink-faint">Main</div>
-        <div class="grid w-max grid-cols-9 gap-1" id="inv-grid-main"></div>
+        <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-main"></div></div>
         <div class="mb-1 mt-3 text-[11px] uppercase tracking-wider text-ink-faint">Hotbar</div>
-        <div class="grid w-max grid-cols-9 gap-1" id="inv-grid-hotbar"></div>
+        <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-hotbar"></div></div>
         <div class="mb-1 mt-3 text-[11px] uppercase tracking-wider text-ink-faint">Armor &amp; offhand</div>
-        <div class="grid w-max grid-cols-5 gap-1" id="inv-grid-armor"></div>
+        <div class="overflow-x-auto"><div class="grid w-max grid-cols-5 gap-1" id="inv-grid-armor"></div></div>
       </div>
 
       <div class="card h-max p-4">
-        <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'box' 'size-4'}}} Ender chest</h3>
-        <div class="grid w-max grid-cols-9 gap-1" id="inv-grid-ender"></div>
+        <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'box' 'size-4'}}} Ender Chest</h3>
+        <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-ender"></div></div>
       </div>
     </div>
   </div>
@@ -64,28 +69,28 @@
   {{#unless fixedPlayer}}
   <div class="card mt-6 p-4">
     <div class="mb-3 flex flex-wrap items-center gap-2">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'search' 'size-4'}}} Item search</h3>
-      <span class="text-xs text-ink-faint">across every player's inventory, armor and ender chest on this server</span>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'search' 'size-4'}}} Item Search</h3>
+      <span class="text-xs text-ink-faint">Searches every player's inventory, armor, and ender chest on this server.</span>
       <div class="ml-auto flex flex-wrap justify-end gap-2">
         <input class="input w-64 max-w-full" id="inv-search-q" placeholder="diamond, netherite_sword, Excalibur…" maxlength="100">
         <button class="btn btn-sm" id="inv-search-go">{{{icon 'search' 'size-3.5'}}} Search</button>
       </div>
     </div>
     <div id="inv-search-results" class="hidden overflow-x-auto"></div>
-    <p class="text-sm text-ink-faint" id="inv-search-hint">Matches item ids and custom display names (renamed items), case-insensitive.</p>
+    <p class="text-sm text-ink-faint" id="inv-search-hint">Matches item IDs and custom display names (renamed items), and is not case-sensitive.</p>
   </div>
   {{/unless}}
 
   <div class="card mt-6 p-4">
     <div class="mb-3 flex flex-wrap items-center gap-2">
       <h3 class="flex items-center gap-2 font-semibold">{{{icon 'history' 'size-4'}}} Snapshots</h3>
-      <span class="text-xs text-ink-faint">pick two to compare</span>
-      <span class="ml-auto" data-tip="Select exactly two snapshots to diff them"><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} Compare selected</button></span>
+      <span class="text-xs text-ink-faint">Pick two to compare.</span>
+      <span class="ml-auto" data-tip="Select exactly two snapshots to compare them"><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} Compare selected</button></span>
     </div>
     <div id="inv-snapshots"></div>
     <div id="inv-diff" class="mt-4 hidden"></div>
   </div>
 </div>
 
-{{! inventory.js reads the data-* attributes on the root — a JSON island here was dead markup. }}
+{{! inventory.js reads the data-* attributes on the root - a JSON island here was dead markup. }}
 <script type="module" src="/js/pages/inventory.js"></script>

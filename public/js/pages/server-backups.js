@@ -1,6 +1,7 @@
 // Server Backups tab: create (with real task progress), restore, download
 // (plain link in the partial), delete.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { runTask } from '../lib/progress.js';
 import { setBusy } from '../lib/loading.js';
@@ -19,7 +20,8 @@ function init(serverId) {
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+    if (!res.ok || data.ok === false)
+      throw new Error(data.error || friendlyError(res, { action: 'run that backup action' }));
     return data;
   }
 
@@ -33,8 +35,8 @@ function init(serverId) {
       toast('Backup created.');
       reload();
     } catch (err) {
-      if (err.dismissed) return; // progress hidden — the task tray takes over
-      toast(err.message || 'Backup failed', { kind: 'error', timeout: 9000 });
+      if (err.dismissed) return; // progress hidden - the task tray takes over
+      toast(err.message || 'That backup could not be created. Please try again.', { kind: 'error', timeout: 9000 });
     }
   });
 
@@ -50,7 +52,7 @@ function init(serverId) {
       const ok = await confirmDialog({
         title: `Restore ${file}?`,
         message: 'The server is stopped, its current data replaced with this archive, then started again.',
-        detail: 'A running server goes down during the restore. This cannot be undone unless you back up first.',
+        detail: 'A running server goes offline during the restore. This cannot be undone unless you back up first.',
         confirmLabel: 'Restore',
         danger: true,
       });
@@ -63,8 +65,11 @@ function init(serverId) {
         toast('Backup restored.');
         reload();
       } catch (err) {
-        if (err.dismissed) return; // progress hidden — the task tray takes over
-        toast(err.message || 'Restore failed', { kind: 'error', timeout: 9000 });
+        if (err.dismissed) return; // progress hidden - the task tray takes over
+        toast(err.message || 'That backup could not be restored. Please try again.', {
+          kind: 'error',
+          timeout: 9000,
+        });
       }
     } else if (e.target.closest('[data-backup-delete]')) {
       const btn = e.target.closest('[data-backup-delete]');
@@ -80,7 +85,8 @@ function init(serverId) {
       try {
         const res = await fetch(`/api/backups/${encodeURIComponent(backupId)}`, { method: 'DELETE' });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+        if (!res.ok || data.ok === false)
+          throw new Error(data.error || friendlyError(res, { action: 'delete that backup' }));
         toast(`${file} deleted (${fmtBytes(size)} freed).`);
         const tbody = row.closest('tbody');
         row.remove();
@@ -88,7 +94,7 @@ function init(serverId) {
         // header-only table.
         if (tbody && !tbody.querySelector('[data-backup-row]')) reload();
       } catch (err) {
-        toast(err.message || 'Delete failed', { kind: 'error' });
+        toast(err.message || 'That backup could not be deleted. Please try again.', { kind: 'error' });
       } finally {
         restore();
       }

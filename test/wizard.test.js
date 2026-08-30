@@ -15,7 +15,9 @@ let viewerCookie;
 const serverId = 'srv_wizard01';
 
 async function login(username, password, role) {
-  auth.createUser({ username, password, role }, { actor: 'test' });
+  // createUser went async in the pnpm-era auth rework (async bcrypt) - without
+  // the await, the login below races user creation and fails with 401.
+  await auth.createUser({ username, password, role }, { actor: 'test' });
   const r = await app.req('POST', '/login', { body: { username, password } });
   return (r.setCookie || []).map((c) => c.split(';')[0]).join('; ');
 }

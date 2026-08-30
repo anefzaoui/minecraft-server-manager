@@ -1,16 +1,18 @@
 // Inventory tab: god-mode inventory editor. Every slot (main, hotbar, armor,
 // offhand, ender chest, nested backpacks) is clickable: change count, replace,
 // move/swap, delete, or place an item into an empty slot. The backend picks
-// the mechanism automatically — live `item replace` commands while the player
+// the mechanism automatically - live `item replace` commands while the player
 // is online, direct .dat rewrites (with backups) while they are not. Plus the
 // original forensics: item search, snapshots + diff, RCON give/clear.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { openItemBrowser } from '../lib/itemBrowser.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
 import { glyphFor } from '../lib/itemGlyph.js';
+import { escapeHtml as esc } from '../lib/format.js';
 
 const root = document.querySelector('[data-inventory-root]');
 if (root) init(root);
@@ -33,19 +35,12 @@ function init(root) {
   async function api(path, opts) {
     const res = await fetch(base + path, opts);
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (HTTP ${res.status})`);
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'complete that action' }));
     return data;
   }
 
   function fail(err) {
-    toast(err.message || 'Something went wrong', { kind: 'error' });
-  }
-
-  function esc(s) {
-    return String(s).replace(
-      /[&<>"']/g,
-      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-    );
+    toast(err.message || 'Something went wrong. Please try again.', { kind: 'error' });
   }
 
   // ------------------------------------------------------------- formatting
@@ -74,7 +69,7 @@ function init(root) {
   function itemTip(item, extra = '') {
     const bits = [];
     bits.push(item.displayName ? `"${item.displayName}" (${prettyId(item.id)})` : prettyId(item.id));
-    if (item.count > 1) bits.push(`x${item.count}`);
+    if (item.count > 1) bits.push(`×${item.count}`);
     if (item.enchants && item.enchants.length) bits.push(item.enchants.map(prettyEnchant).join(', '));
     if (item.damage) bits.push(`Damage ${item.damage}`);
     if (extra) bits.push(extra);
@@ -82,7 +77,7 @@ function init(root) {
   }
 
   function when(ts) {
-    return ts ? new Date(ts).toLocaleString() : '—';
+    return ts ? new Date(ts).toLocaleString() : '-';
   }
 
   // ------------------------------------------------------------------ icons
@@ -125,7 +120,7 @@ function init(root) {
     // (delete, move) can spin the on-page cell while the request runs.
     if (at) cell.dataset.slotKey = `${at.container}:${at.slot}`;
     cell.className =
-      'relative grid size-10 place-items-center rounded border text-[10px] font-semibold select-none ' +
+      'relative grid size-9 sm:size-10 place-items-center rounded border text-[10px] font-semibold select-none ' +
       (editable
         ? 'cursor-pointer transition hover:ring-2 hover:ring-diamond-400/60 focus-visible:ring-2 focus-visible:ring-diamond-400 '
         : '');
@@ -135,7 +130,7 @@ function init(root) {
       if (label)
         cell.innerHTML = `<span class="text-[8px] uppercase tracking-wide text-ink-faint/60">${esc(label)}</span>`;
       cell.dataset.tip = editable
-        ? `Empty ${label || slotName(at.container, at.slot)} — click to put an item here`
+        ? `Empty ${label || slotName(at.container, at.slot)} - click to put an item here`
         : label
           ? `Empty ${label} slot`
           : '';
@@ -163,7 +158,7 @@ function init(root) {
         ${item.count > 1 ? `<span class="absolute bottom-0 right-0.5 text-[9px] font-bold">${esc(item.count)}</span>` : ''}
         ${enchanted ? '<span class="absolute left-0.5 top-0 text-[9px]">*</span>' : ''}
         ${hasNested ? '<span class="absolute left-0.5 bottom-0.5 size-1.5 rounded-full bg-grass-400" aria-hidden="true"></span>' : ''}`;
-      // The bundled icon set only covers vanilla — modded items (and the rare
+      // The bundled icon set only covers vanilla - modded items (and the rare
       // vanilla id it's missing) just keep the text abbreviation as-is.
       if (iconBase && item.id.startsWith('minecraft:')) {
         const abbrevEl = cell.querySelector('[data-slot-abbrev]');
@@ -174,7 +169,7 @@ function init(root) {
         img.src = `${iconBase}/${item.id.slice('minecraft:'.length)}.png`;
         img.addEventListener('load', () => abbrevEl?.classList.add('hidden'));
         img.addEventListener('error', () => {
-          // No local texture (bed/banner/chest/head/… — see itemGlyph.js) —
+          // No local texture (bed/banner/chest/head/… - see itemGlyph.js) -
           // a purpose-built glyph beats the 2-3 letter text abbreviation.
           const glyph = document.createElement('span');
           glyph.className = 'pointer-events-none absolute inset-1';
@@ -221,8 +216,8 @@ function init(root) {
     if (editInfo) {
       mech.innerHTML =
         editInfo.mechanism === 'rcon'
-          ? `${icon('zap', 'size-3.5 text-warn')} <span>Player is online — edits run live via commands. Backpack contents are read-only until they leave.</span>`
-          : `${icon('file', 'size-3.5 text-link')} <span>Editing the save file directly — a backup of the previous state is kept (last 3).</span>`;
+          ? `${icon('zap', 'size-3.5 text-warn')} <span>The player is online, so edits run live. Backpack contents are read-only until they leave.</span>`
+          : `${icon('file', 'size-3.5 text-link')} <span>Editing the save file directly. A backup of the previous state is kept (the last 3).</span>`;
     } else {
       mech.innerHTML = '';
     }
@@ -275,7 +270,7 @@ function init(root) {
     return `
       <div class="rounded-md border border-line bg-inset/50 p-3">
         <div class="font-semibold ${item.displayName ? 'text-warn' : ''}">${esc(item.displayName || prettyId(item.id))}</div>
-        <div class="font-mono text-xs text-ink-faint">${esc(item.id)} · x${esc(item.count)} · ${esc(where)}</div>
+        <div class="font-mono text-xs text-ink-faint">${esc(item.id)} · ×${esc(item.count)} · ${esc(where)}</div>
         ${item.enchants && item.enchants.length ? `<div class="mt-1 text-xs text-link">${esc(item.enchants.map(prettyEnchant).join(', '))}</div>` : ''}
       </div>`;
   }
@@ -290,7 +285,7 @@ function init(root) {
     list.className = 'space-y-1.5';
     content.appendChild(list);
 
-    const modal = openModal({ title: nested ? 'Edit backpack item' : 'Edit slot', content, size: 'sm' });
+    const modal = openModal({ title: nested ? 'Edit Backpack Item' : 'Edit Slot', content, size: 'sm' });
     const add = (label, iconName, handler, danger = false) => {
       const btn = menuButton(label, iconName, danger);
       btn.addEventListener('click', () => {
@@ -316,18 +311,18 @@ function init(root) {
         if (
           !(await confirmDialog({
             title: `Delete ${item.displayName || prettyId(item.id)}?`,
-            message: `Removes ${item.count} × ${item.id} from ${where}. Take a snapshot first if you might want it back.`,
+            message: `Removes ${item.count}× ${item.id} from ${where}. Take a snapshot first if you might want it back.`,
             confirmLabel: 'Delete item',
             danger: true, // without this the destructive confirm rendered as a green primary
           }))
         )
           return;
-        // The menu modal is already closed — spin the on-page grid cell instead.
+        // The menu modal is already closed - spin the on-page grid cell instead.
         withBusy(slotEl(at), () =>
           postEdit(
             `/player/${currentUuid}/slot`,
             { container: at.container, slot: at.slot, op: 'delete', ...(nested ? { nested } : {}) },
-            (r) => `Deleted ${r.item} from ${r.slot}`
+            (r) => `Deleted ${r.item} from ${r.slot}.`
           )
         );
       },
@@ -342,7 +337,7 @@ function init(root) {
     content.innerHTML = `
       ${header}
       <div>
-        <label class="label">Count (1-99)</label>
+        <label class="label">Count (1 to 99)</label>
         <input class="input" data-f="count" type="number" min="1" max="99" value="${esc(value)}">
       </div>`;
     openModal({
@@ -357,7 +352,7 @@ function init(root) {
           onClick: async ({ body }) => {
             const n = Math.trunc(Number(body.querySelector('[data-f="count"]').value));
             if (!Number.isInteger(n) || n < 1 || n > 99) {
-              toast('Enter a count between 1 and 99', { kind: 'error' });
+              toast('Enter a count between 1 and 99.', { kind: 'error' });
               return false;
             }
             return (await onSubmit(n, body)) ? undefined : false;
@@ -369,7 +364,7 @@ function init(root) {
 
   function openCountModal(at, item, nested = null) {
     countDialog({
-      title: 'Change count',
+      title: 'Change Count',
       header: itemHeader(item, slotName(at.container, at.slot)),
       value: item.count,
       confirmLabel: 'Set count',
@@ -377,7 +372,7 @@ function init(root) {
         postEdit(
           `/player/${currentUuid}/slot`,
           { container: at.container, slot: at.slot, op: 'count', count: n, ...(nested ? { nested } : {}) },
-          (r) => `${r.item} in ${r.slot} set to ${r.count}`
+          (r) => `${r.item} in ${r.slot} set to ${r.count}.`
         ),
     });
   }
@@ -406,7 +401,7 @@ function init(root) {
             const input = body.querySelector('[data-f="item"]');
             itemId = input ? input.value.trim() : '';
             if (!itemId) {
-              toast('Enter an item id', { kind: 'error' });
+              toast('Enter an item ID.', { kind: 'error' });
               return false;
             }
           }
@@ -420,7 +415,7 @@ function init(root) {
               count: n,
               ...(nested ? { nested } : {}),
             },
-            (r) => `${r.count}x ${r.item} placed in ${r.slot}`
+            (r) => `${r.count}× ${r.item} placed in ${r.slot}.`
           );
         },
       });
@@ -435,24 +430,24 @@ function init(root) {
     content.insertAdjacentHTML('beforeend', itemHeader(item, slotName(from.container, from.slot)));
     const hint =
       editInfo && editInfo.mechanism === 'rcon'
-        ? 'Pick a target slot. While the player is online, occupied targets are rejected — swaps need them offline.'
+        ? 'Pick a target slot. While the player is online, occupied targets are rejected; swaps need the player offline.'
         : 'Pick a target slot. Occupied targets swap the two items.';
     content.insertAdjacentHTML('beforeend', `<p class="text-xs text-ink-faint">${hint}</p>`);
 
-    const modal = openModal({ title: 'Move to…', content, size: 'lg' });
+    const modal = openModal({ title: 'Move To…', content, size: 'lg' });
 
     const doMove = async (to) => {
       if (to.container === from.container && to.slot === from.slot) {
-        toast('That is the same slot', { kind: 'error' });
+        toast("That's the same slot.", { kind: 'error' });
         return;
       }
       modal.close();
-      // Picker modal is closed — spin the source cell in the on-page grid.
+      // Picker modal is closed - spin the source cell in the on-page grid.
       await withBusy(slotEl(from), () =>
         postEdit(
           `/player/${currentUuid}/move`,
           { from: { container: from.container, slot: from.slot }, to },
-          (r) => `${r.item} ${r.swapped ? 'swapped with' : 'moved to'} ${r.to}`
+          (r) => `${r.item} ${r.swapped ? 'swapped with' : 'moved to'} ${r.to}.`
         )
       );
     };
@@ -460,6 +455,10 @@ function init(root) {
     const section = (label, container, count, itemsBySlot, offset = 0, labels = null) => {
       const box = document.createElement('div');
       box.innerHTML = `<div class="mb-1 text-[11px] uppercase tracking-wider text-ink-faint">${esc(label)}</div>`;
+      // Scroll the 9-wide grid inside the modal rather than blowing it past a
+      // phone's viewport width.
+      const scroller = document.createElement('div');
+      scroller.className = 'overflow-x-auto';
       const grid = document.createElement('div');
       grid.className = 'grid w-max grid-cols-9 gap-1';
       for (let i = 0; i < count; i++) {
@@ -468,13 +467,14 @@ function init(root) {
         const cell = slotCell(occupant, {
           label: labels ? labels[i] : '',
           onPick: isSource
-            ? () => toast('That is the source slot', { kind: 'error' })
+            ? () => toast("That's the source slot.", { kind: 'error' })
             : () => doMove({ container, slot: i }),
         });
         if (isSource) cell.classList.add('ring-2', 'ring-gold-500');
         grid.appendChild(cell);
       }
-      box.appendChild(grid);
+      scroller.appendChild(grid);
+      box.appendChild(scroller);
       return box;
     };
 
@@ -497,7 +497,7 @@ function init(root) {
       label: 'offhand',
       onPick:
         from.container === 'offhand' && from.slot === 0
-          ? () => toast('That is the source slot', { kind: 'error' })
+          ? () => toast("That's the source slot.", { kind: 'error' })
           : () => doMove({ container: 'offhand', slot: 0 }),
     });
     if (from.container === 'offhand') offCell.classList.add('ring-2', 'ring-gold-500');
@@ -515,7 +515,7 @@ function init(root) {
     if (!editable) {
       content.insertAdjacentHTML(
         'beforeend',
-        '<p class="rounded-md border border-gold-500/40 bg-gold-400/5 p-2.5 text-xs text-warn">Read-only while the player is online — stop the server or kick the player to edit backpack contents.</p>'
+        '<p class="rounded-md border border-gold-500/40 bg-gold-400/5 p-2.5 text-xs text-warn">Read-only while the player is online. Stop the server or kick the player to edit backpack contents.</p>'
       );
     }
     const grid = document.createElement('div');
@@ -539,10 +539,18 @@ function init(root) {
       );
       grid.appendChild(cell);
     }
-    content.appendChild(grid);
+    // The modal body only scrolls vertically - give the 9-wide grid its own
+    // horizontal scroller so it can't widen the modal past a phone screen.
+    const scroller = document.createElement('div');
+    scroller.className = 'overflow-x-auto';
+    scroller.appendChild(grid);
+    content.appendChild(scroller);
     content.insertAdjacentHTML(
       'beforeend',
-      `<p class="text-xs text-ink-faint">${sub.items.filter((i) => i.id).length} stack(s)${editable ? ' — click one to edit it' : ''}. Deeper nested containers open from their own item menus after a reload.</p>`
+      `<p class="text-xs text-ink-faint">${(() => {
+        const n = sub.items.filter((i) => i.id).length;
+        return `${n} ${n === 1 ? 'stack' : 'stacks'}`;
+      })()}${editable ? '. Click one to edit it' : ''}. Deeper nested containers open from their own item menus after a reload.</p>`
     );
   }
 
@@ -557,7 +565,7 @@ function init(root) {
       players = [];
     }
     el('inv-loading')?.classList.add('hidden'); // the fetch decided which state shows
-    // Player page: pinned to one player — skip the picker and load them directly.
+    // Player page: pinned to one player - skip the picker and load them directly.
     if (fixed) {
       el('inv-empty').classList.add('hidden');
       await selectPlayer(fixed);
@@ -628,7 +636,7 @@ function init(root) {
   el('inv-refresh').addEventListener('click', (e) =>
     withBusy(e.currentTarget, async () => {
       await loadInventory(true); // flush online players to disk first
-      toast('Inventory reloaded');
+      toast('Inventory refreshed.');
     })
   );
 
@@ -650,7 +658,7 @@ function init(root) {
     }
     if (!snapshots.length) {
       box.innerHTML =
-        '<p class="text-sm text-ink-faint">No snapshots for this player yet — press Snapshot above, or wait for the automatic ones taken on joins and deaths.</p>';
+        '<p class="text-sm text-ink-faint">No snapshots for this player yet. Press Snapshot above, or wait for the automatic ones taken on joins and deaths.</p>';
       return;
     }
     box.innerHTML = `
@@ -676,7 +684,7 @@ function init(root) {
         if (cb.checked) {
           selectedSnaps.push(file);
           if (selectedSnaps.length > 2) {
-            // Keep the two most recent picks — uncheck the oldest selection.
+            // Keep the two most recent picks - uncheck the oldest selection.
             const dropped = selectedSnaps.shift();
             const old = box.querySelector(`[data-snap-file="${CSS.escape(dropped)}"]`);
             if (old) old.checked = false;
@@ -694,11 +702,11 @@ function init(root) {
   }
 
   el('inv-snapshot').addEventListener('click', async (e) => {
-    if (!currentUuid) return toast('Pick a player first', { kind: 'error' });
+    if (!currentUuid) return toast('Pick a player first.', { kind: 'error' });
     await withBusy(e.currentTarget, 'Snapshotting…', async () => {
       try {
         await api(`/player/${currentUuid}/snapshot`, { method: 'POST' });
-        toast('Snapshot saved');
+        toast('Snapshot saved.');
         await loadSnapshots();
       } catch (err) {
         fail(err);
@@ -746,7 +754,7 @@ function init(root) {
     box.innerHTML = `
       <div class="mb-2 text-xs text-ink-faint">
         Comparing <b class="text-ink-soft">${esc(when(diff.a.ts))}</b> (${esc(diff.a.reason)})
-        &rarr; <b class="text-ink-soft">${esc(when(diff.b.ts))}</b> (${esc(diff.b.reason)}) — counts pooled across inventory, armor, offhand and ender chest.
+        &rarr; <b class="text-ink-soft">${esc(when(diff.b.ts))}</b> (${esc(diff.b.reason)}). Counts are pooled across inventory, armor, offhand, and ender chest.
       </div>
       <div class="grid gap-3 md:grid-cols-3">
         ${section('Added', 'text-ok', diff.added, 'added')}
@@ -759,11 +767,11 @@ function init(root) {
 
   // ----------------------------------------------------------------- search
   async function runSearch() {
-    // setBusy on an already-busy control is a no-op that still runs the fn —
+    // setBusy on an already-busy control is a no-op that still runs the fn -
     // the Enter path was double-firing the request during flight.
     if (el('inv-search-go').dataset.busy) return;
     const q = el('inv-search-q').value.trim();
-    if (!q) return toast('Enter something to search for', { kind: 'error' });
+    if (!q) return toast('Enter something to search for.', { kind: 'error' });
     const box = el('inv-search-results');
     try {
       // Busy the Search button for both entry points (button click and Enter).
@@ -784,7 +792,7 @@ function init(root) {
               <tr>
                 <td class="text-sm">${esc(r.player.name || r.player.uuid)}</td>
                 <td><span class="chip">${esc(whereLabel(r.where))}</span></td>
-                <td class="font-mono text-xs">${r.slot === null ? '—' : esc(r.slot)}</td>
+                <td class="font-mono text-xs">${r.slot === null ? '-' : esc(r.slot)}</td>
                 <td class="text-sm">
                   ${r.displayName ? `<span class="text-warn">"${esc(r.displayName)}"</span> <span class="text-xs text-ink-faint">(${esc(r.id)})</span>` : `<span class="font-mono text-xs">${esc(r.id)}</span>`}
                 </td>
@@ -821,7 +829,7 @@ function init(root) {
   // Server stopped -> the pick lands in the selected player's SAVE FILE
   // instead (first free slot), so god mode works either way.
   el('inv-give').addEventListener('click', () => {
-    if (!running && !currentUuid) return toast('Pick a player with saved data first', { kind: 'error' });
+    if (!running && !currentUuid) return toast('Pick a player with saved data first.', { kind: 'error' });
     openItemBrowser({
       serverId,
       onPick: (item) => (running ? openGiveModal(item) : openAddModal(item)),
@@ -841,7 +849,7 @@ function init(root) {
            <input class="input font-mono" data-f="item" placeholder="minecraft:diamond" maxlength="130" autocomplete="off" spellcheck="false">
          </div>`;
     countDialog({
-      title: item ? `Add ${item.name}` : 'Add item',
+      title: item ? `Add ${item.name}` : 'Add Item',
       header,
       value: 1,
       confirmLabel: 'Add to save file',
@@ -851,14 +859,14 @@ function init(root) {
           const input = body.querySelector('[data-f="item"]');
           itemId = input ? input.value.trim() : '';
           if (!itemId) {
-            toast('Enter an item id', { kind: 'error' });
+            toast('Enter an item ID.', { kind: 'error' });
             return false;
           }
         }
         return postEdit(
           `/player/${currentUuid}/add`,
           { item: itemId, count: n },
-          (r) => `${r.count}x ${r.item} added to slot ${r.slot} (save file — backup kept)`
+          (r) => `${r.count}× ${r.item} added to slot ${r.slot}. A backup of the save file is kept.`
         );
       },
     });
@@ -895,7 +903,7 @@ function init(root) {
         <input class="input" data-f="count" type="number" min="1" max="6400" value="1">
       </div>`;
     openModal({
-      title: item ? `Give ${item.name}` : 'Give item',
+      title: item ? `Give ${item.name}` : 'Give Item',
       content,
       size: 'sm',
       actions: [
@@ -910,11 +918,11 @@ function init(root) {
             };
             const itemId = item ? item.id : f('item');
             if (!PLAYER_NAME_RE.test(f('player'))) {
-              toast('Enter a valid player name', { kind: 'error' });
+              toast('Enter a valid player name.', { kind: 'error' });
               return false;
             }
             if (!itemId) {
-              toast('Enter an item id', { kind: 'error' });
+              toast('Enter an item ID.', { kind: 'error' });
               return false;
             }
             try {
@@ -923,7 +931,7 @@ function init(root) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ player: f('player'), item: itemId, count: Number(f('count')) || 1 }),
               });
-              toast(`Gave ${result.player} ${result.count} x ${item ? item.name : result.item}`);
+              toast(`Gave ${result.player} ${result.count}× ${item ? item.name : result.item}.`);
             } catch (err) {
               fail(err);
               return false;
@@ -948,7 +956,7 @@ function init(root) {
         <input class="input font-mono" data-f="item" placeholder="minecraft:tnt" maxlength="130" autocomplete="off" spellcheck="false">
       </div>`;
     openModal({
-      title: 'Clear items',
+      title: 'Clear Items',
       content,
       size: 'sm',
       actions: [
@@ -961,15 +969,15 @@ function init(root) {
             const player = f('player');
             const item = f('item');
             if (!PLAYER_NAME_RE.test(player)) {
-              toast('Enter a valid player name', { kind: 'error' });
+              toast('Enter a valid player name.', { kind: 'error' });
               return false;
             }
             if (
               !item &&
               !(await confirmDialog({
-                title: `Clear the ENTIRE inventory of ${player}?`,
+                title: `Clear the entire inventory of ${player}?`,
                 message:
-                  'Every item they carry will be deleted. This cannot be undone — take a snapshot first if you might need it back.',
+                  'Every item they carry will be deleted. This cannot be undone, so take a snapshot first if you might need it back.',
                 confirmLabel: 'Clear everything',
                 danger: true, // the most destructive dialog on the tab must not look like a positive action
               }))
@@ -983,8 +991,8 @@ function init(root) {
               });
               toast(
                 result.nothingRemoved
-                  ? `Nothing to remove from ${result.player}`
-                  : `Cleared ${result.item || 'all items'} from ${result.player}`
+                  ? `Nothing to remove from ${result.player}.`
+                  : `Cleared ${result.item || 'all items'} from ${result.player}.`
               );
             } catch (err) {
               fail(err);

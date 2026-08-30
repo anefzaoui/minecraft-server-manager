@@ -1,4 +1,4 @@
-{{> page-header heading="UPDATES" sub="Everything outdated across all instances. Nothing updates itself — every upgrade is deliberate, backed up, and reversible."}}
+{{> page-header heading="UPDATES" sub="Everything out of date across your servers. Nothing updates itself: every upgrade is deliberate, backed up, and reversible."}}
 
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <span class="text-sm text-ink-faint">Last checked: {{#if lastChecked}}<span data-ts="{{lastChecked}}">{{lastChecked}}</span>{{else}}never{{/if}}</span>
@@ -13,7 +13,10 @@
       {{#each updates}}
         <tr data-update-row data-server-id="{{serverId}}" data-server-name="{{server}}"
             data-kind="{{kind}}" data-subject="{{subject}}" data-current="{{current}}" data-latest="{{latest}}"
-            {{#if versionId}}data-version-id="{{versionId}}"{{/if}} {{#if contentId}}data-content-id="{{contentId}}"{{/if}}>
+            {{#if versionId}}data-version-id="{{versionId}}"{{/if}} {{#if contentId}}data-content-id="{{contentId}}"{{/if}}
+            {{#if imageUpgrade}}data-image-upgrade="1"{{/if}}
+            {{#if targetVersion}}data-target-version="{{targetVersion}}"{{/if}}
+            {{#if targetLoaderBuild}}data-target-build="{{targetLoaderBuild}}" data-env-key="{{envKey}}"{{/if}}>
           <td class="whitespace-nowrap">{{#if serverId}}<a class="text-link hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
           <td><span class="badge">{{kind}}</span></td>
           {{! w-full + max-w-0 so long pack/mod names truncate instead of widening the table. }}
@@ -31,9 +34,9 @@
 </div>
 
 <div class="mt-4 max-w-prose rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">
-  {{{icon 'info' 'size-4'}}} Custom overlay mods are always preserved across pack updates. If a pack update changes MC or loader version, each overlay mod is compat-checked — with one-click "update this mod too" when a matching build exists.
+  {{{icon 'info' 'size-4'}}} Your custom mods are always kept across pack updates. If a pack update changes the Minecraft or loader version, each custom mod is checked for compatibility, with a one-click "update this mod too" when a matching build exists.
 </div>
 {{else}}
-  {{> empty-state iconName='circle-check' title='Everything is up to date' message='No pending updates across your servers. Run a check to query CurseForge, Modrinth and the version registry for anything new.'}}
+  {{> empty-state iconName='circle-check' title='Everything Is Up to Date' message='No pending updates across your servers. Run a check to ask CurseForge, Modrinth, and the version registry for anything new.'}}
 {{/if}}
 <script type="module" src="/js/pages/updates.js"></script>

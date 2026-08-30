@@ -15,7 +15,7 @@ const { NAME_PATTERN } = require('../utils/playerName');
 // `[12:34:56] [Server thread/INFO] [minecraft/MinecraftServer]: `.
 const PREFIX_RE = /^\[(\d{2}:\d{2}:\d{2})\] \[[^\]]+\](?: \[[^\]]+\])*:\s?/;
 
-// Includes Bedrock/Geyser-Floodgate's leading "." (or "*") prefix — without
+// Includes Bedrock/Geyser-Floodgate's leading "." (or "*") prefix - without
 // it, every join/leave/chat/advancement/death line from a Bedrock player
 // silently failed to match and just vanished from the activity feed.
 const NAME = NAME_PATTERN;

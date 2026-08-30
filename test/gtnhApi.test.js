@@ -235,7 +235,7 @@ test('malformed JSON response serves stale cache or throws 502', async () => {
   try {
     await assert.rejects(
       () => gtnh.listVersions(),
-      (err) => err.status === 502 && /malformed JSON/.test(err.message)
+      (err) => err.status === 502 && /could not be read/.test(err.message)
     );
     assert.equal(fetchCalls, 1);
   } finally {

@@ -6,6 +6,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const logger = require('../logger')(path.basename(__filename));
 
 const ICON_DIR = path.join(__dirname, '..', '..', 'node_modules', 'lucide-static', 'icons');
 const cache = new Map();
@@ -15,14 +16,15 @@ const FALLBACK = 'circle-help';
 function load(name) {
   if (cache.has(name)) return cache.get(name);
   const file = path.join(ICON_DIR, `${name}.svg`);
-  let svg = null;
+  let svg;
   try {
     svg = fs.readFileSync(file, 'utf8');
   } catch {
     if (name !== FALLBACK) {
-      console.warn(`[icons] unknown icon "${name}" — using fallback`);
+      logger.warn('Rendered a fallback for an unknown icon.', { name });
       svg = load(FALLBACK);
     } else {
+      logger.error('The fallback icon is missing from lucide-static.', { fallback: FALLBACK });
       svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>';
     }
   }

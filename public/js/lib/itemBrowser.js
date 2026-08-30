@@ -1,16 +1,18 @@
 // JEI-style item browser. Searches EVERY item and block on a server (vanilla +
-// mods) by display name, id or mod — the registry is built server-side from
+// mods) by display name, id or mod - the registry is built server-side from
 // the server's own jar files, so it matches exactly what /give accepts.
 //
 // openItemBrowser({ serverId, onPick, onManual }) -> modal
-//   onPick({id, name, mod, kind})  — called when a row is clicked (modal closes)
-//   onManual()                     — optional "enter id manually" fallback link
+//   onPick({id, name, mod, kind})  - called when a row is clicked (modal closes)
+//   onManual()                     - optional "enter id manually" fallback link
 
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
+import { friendlyError } from './errors.js';
 import { runTask } from './progress.js';
 import { withBusy } from './loading.js';
 import { glyphFor } from './itemGlyph.js';
+import { escapeHtml as esc } from './format.js';
 
 const PAGE = 100;
 const KINDS = [
@@ -18,13 +20,6 @@ const KINDS = [
   { value: 'item', label: 'Items' },
   { value: 'block', label: 'Blocks' },
 ];
-
-function esc(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
-}
 
 export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   const base = `/api/servers/${serverId}/items`;
@@ -34,7 +29,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   content.className = 'space-y-3 text-sm';
   content.innerHTML = `
     <div class="flex flex-wrap items-center gap-2">
-      <input class="input flex-1 min-w-48" data-ib-q placeholder="Search by name or id — Iron Ingot, allthemodium, minecraft:tnt…"
+      <input class="input flex-1 min-w-48" data-ib-q placeholder="Search by name or ID, e.g. Iron Ingot, allthemodium, minecraft:tnt"
              maxlength="120" autocomplete="off" spellcheck="false">
       <div class="w-52 max-w-full">
         <select data-ib-mod data-label="Filter by mod" aria-label="Filter by mod">
@@ -55,11 +50,11 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       <button class="btn btn-sm hidden" data-ib-more>Load more</button>
       <span class="ml-auto flex items-center gap-3">
         ${onManual ? '<a href="#" class="text-xs text-link hover:underline" data-ib-manual>Enter ID manually</a>' : ''}
-        <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="Re-scan the mod jars and server jar (use after adding or removing mods)">Rebuild registry</button>
+        <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="Re-scan the mod and server files. Use this after adding or removing mods.">Rebuild registry</button>
       </span>
     </div>`;
 
-  const modal = openModal({ title: 'Item browser', content, size: 'lg' });
+  const modal = openModal({ title: 'Item Browser', content, size: 'lg' });
   const $ = (sel) => content.querySelector(sel);
   const listEl = $('[data-ib-list]');
   const statusEl = $('[data-ib-status]');
@@ -87,7 +82,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       modal.close();
       if (onPick) onPick({ id: item.id, name: item.name, mod: item.mod, kind: item.kind });
     });
-    // The bundled icon set only covers vanilla — mod items keep the fallback
+    // The bundled icon set only covers vanilla - mod items keep the fallback
     // glyph rather than requesting a local file we already know isn't there.
     if (state.iconBase && item.id.startsWith('minecraft:')) {
       const iconSlot = btn.querySelector('[data-ib-icon]');
@@ -111,7 +106,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     if (state.kind) params.set('kind', state.kind);
     const res = await fetch(`${base}?${params}`);
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (HTTP ${res.status})`);
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'load the item list' }));
     return data;
   }
 
@@ -122,7 +117,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     if (!append) {
       state.offset = 0;
       listEl.innerHTML =
-        '<div class="p-6 text-center text-sm text-ink-faint">Loading items… <span class="text-xs">(first open scans every mod jar — later opens are instant)</span></div>';
+        '<div class="p-6 text-center text-sm text-ink-faint">Loading items… <span class="text-xs">The first open scans every mod file; later opens are instant.</span></div>';
       setStatus('');
     }
     try {
@@ -141,7 +136,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       }
       if (!append) listEl.innerHTML = '';
       if (!data.items.length && !append) {
-        listEl.innerHTML = `<div class="p-6 text-center text-sm text-ink-faint">No items match${state.q ? ` "${esc(state.q)}"` : ''}. Try a different search, mod or kind filter.</div>`;
+        listEl.innerHTML = `<div class="p-6 text-center text-sm text-ink-faint">No items match${state.q ? ` "${esc(state.q)}"` : ''}. Try a different search, mod, or kind filter.</div>`;
       }
       for (const item of data.items) listEl.appendChild(row(item));
       const shown = state.offset + data.items.length;
@@ -179,7 +174,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     load();
   });
 
-  // .seg is the ONE pick-one-of-N component — selection lives in aria-pressed
+  // .seg is the ONE pick-one-of-N component - selection lives in aria-pressed
   // and the CSS carries the look (this was a hand-rolled joined-button group).
   content.querySelectorAll('[data-ib-kinds] [data-kind]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -196,21 +191,21 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   $('[data-ib-rebuild]').addEventListener('click', async () => {
     try {
       const result = await runTask({
-        title: 'Rebuilding item registry',
+        title: 'Rebuilding Item Registry',
         start: async () => {
           const res = await fetch(`${base}/rebuild`, { method: 'POST' });
           const data = await res.json().catch(() => ({}));
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Could not start the rebuild');
+          if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'start the rebuild' }));
           return data.taskId;
         },
       });
-      toast(`Registry rebuilt: ${result.items.toLocaleString()} items from ${result.mods} mods`);
+      toast(`Registry rebuilt: ${result.items.toLocaleString()} items from ${result.mods} mods.`);
       state.modsLoaded = false;
       modSel.innerHTML = '<option value="">All mods</option>';
       state.mod = '';
       modSel.dispatchEvent(new Event('change', { bubbles: true })); // resync enhanced trigger + reload
     } catch (err) {
-      if (err.dismissed) return; // progress hidden — the task tray takes over
+      if (err.dismissed) return; // progress hidden - the task tray takes over
       toast(err.message, { kind: 'error' });
     }
   });

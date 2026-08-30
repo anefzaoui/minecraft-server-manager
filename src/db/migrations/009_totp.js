@@ -2,7 +2,7 @@
 
 // Per-user TOTP two-factor auth. totp_secret is encrypted at rest (services/secrets.js,
 // same as RCON passwords and API keys) and only ever set once a confirmation code has
-// been verified — see services/totp.js. totp_backup_codes_json holds bcrypt hashes of
+// been verified - see services/totp.js. totp_backup_codes_json holds bcrypt hashes of
 // one-time recovery codes, never plaintext. totp_last_step guards against replaying a
 // captured code within its own 30s window.
 

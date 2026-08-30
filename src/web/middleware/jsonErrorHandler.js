@@ -2,6 +2,9 @@
 
 const { z } = require('zod');
 const multer = require('multer');
+const getLogger = require('../../logger');
+const { serializeError } = require('../../utils/logSanitize');
+const { captureError } = require('../../instrument');
 
 /**
  * Map known infrastructure errors to a user-safe message, or null if the error
@@ -10,7 +13,7 @@ const multer = require('multer');
 function friendlyError(err) {
   const msg = err.message || 'Unexpected error';
   // Docker daemon connection failures are socket/pipe *connect* errors, or name
-  // the docker socket directly. Do NOT match a bare "docker" substring — it also
+  // the docker socket directly. Do NOT match a bare "docker" substring - it also
   // appears in data-dir paths like /home/docker/…, which would mislabel an
   // ordinary filesystem EACCES (e.g. deleting container-owned files) as this.
   if (/connect (ECONNREFUSED|ENOENT|EACCES|ETIMEDOUT)\b/i.test(msg) || /docker\.sock|docker_engine/i.test(msg)) {
@@ -18,31 +21,57 @@ function friendlyError(err) {
   }
   if (/port is already allocated/i.test(msg)) return 'That port is already taken by another container.';
   if (/No such image/i.test(msg))
-    return 'The server image is missing — it will be pulled automatically on the next start.';
+    return 'The server image is missing - it will be pulled automatically on the next start.';
   return null;
 }
 
 /**
  * Build a JSON error handler for an API router. Handles zod validation errors,
  * multer upload-limit errors (message via opts.fileTooLarge), maps known
- * infrastructure errors to friendly text, and — crucially — never leaks raw
+ * infrastructure errors to friendly text, and - crucially - never leaks raw
  * internal error text (SQLite messages, absolute paths) on an unexpected 5xx.
  */
 function makeJsonErrorHandler(tag, { fileTooLarge = 'File too large' } = {}) {
+  const log = getLogger(tag);
   // Express recognizes an error handler by its 4-arg signature (next unused).
   return function jsonErrorHandler(err, req, res, next) {
+    const reqMeta = () => ({ method: req.method, path: req.originalUrl.split('?')[0] });
     if (err instanceof z.ZodError) {
+      log.debug('Rejected a request with invalid input.', {
+        ...reqMeta(),
+        issues: err.issues.map((i) => i.message),
+      });
       return res.status(400).json({ ok: false, error: err.issues.map((i) => i.message).join('; ') });
     }
     if (err instanceof multer.MulterError) {
+      log.debug('Rejected an upload.', { ...reqMeta(), code: err.code });
       return res.status(400).json({ ok: false, error: err.code === 'LIMIT_FILE_SIZE' ? fileTooLarge : err.message });
     }
     const status = err.status || err.statusCode || 500;
-    if (status >= 500) console.error(`[${tag}]`, err);
+    if (status >= 500) {
+      log.error('An API request handler failed.', {
+        ...reqMeta(),
+        status,
+        userId: req.user ? req.user.id : undefined,
+        requestId: req.requestId,
+        err: serializeError(err),
+      });
+      captureError(err, { tag, path: req.path });
+    } else {
+      log.debug('An API request failed with a client error.', {
+        ...reqMeta(),
+        status,
+        userId: req.user ? req.user.id : undefined,
+        reason: err.message,
+      });
+    }
+    // If a streaming route already sent headers, we can't send an error body;
+    // hand off to Express's finalizer rather than throw ERR_HTTP_HEADERS_SENT.
+    if (res.headersSent) return next(err);
     const friendly = friendlyError(err);
     if (friendly) return res.status(status).json({ ok: false, error: friendly });
     if (status >= 500)
-      return res.status(status).json({ ok: false, error: 'Unexpected server error — check the panel logs.' });
+      return res.status(status).json({ ok: false, error: 'Unexpected server error - check the panel logs.' });
     return res.status(status).json({ ok: false, error: err.message || 'Unexpected error' });
   };
 }

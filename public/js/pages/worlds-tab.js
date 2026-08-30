@@ -1,14 +1,15 @@
 // Per-server Worlds tab: snapshot/upload, install from library, and per-world
 // actions (activate, download, duplicate, copy-to, rename, reset, delete).
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
+import { escapeHtml } from '../lib/format.js';
 import {
   serverOptions,
   fmtBytes,
   postJSON,
-  escapeHtml,
   uploadWorldModal,
   extractWorldModal,
   installWorldModal,
@@ -21,7 +22,7 @@ if (root) init(root.dataset.worldsServer, root.dataset.worldsServerName, root.da
 function init(serverId, serverName, serverStatus) {
   const base = `/api/servers/${serverId}/worlds`;
   const reload = () => setTimeout(() => location.reload(), 700);
-  const isRunning = ['running', 'starting', 'unhealthy'].includes(serverStatus);
+  const isRunning = ['running', 'starting', 'unhealthy', 'stalled'].includes(serverStatus);
 
   // ---- Header actions ----
   document.getElementById('worlds-extract')?.addEventListener('click', () => {
@@ -49,20 +50,20 @@ function init(serverId, serverName, serverStatus) {
       const btn = e.target.closest('[data-world-activate]');
       const ok = await confirmDialog({
         title: `Activate "${world}"?`,
-        message: `Sets level-name to "${world}" — the server loads it on next start.${isRunning ? ' The server must be stopped first.' : ''}`,
+        message: `The server will load "${world}" on its next start.${isRunning ? ' The server must be stopped first.' : ''}`,
         confirmLabel: 'Activate',
       });
       if (!ok) return;
       const res = await withBusy(btn, () => postJSON(`${base}/activate`, { world }));
       if (res) {
-        toast(`"${world}" is now the active world — applies on next start.`);
+        toast(`"${world}" is now the active world. It loads on the next start.`);
         reload();
       }
     } else if (e.target.closest('[data-world-download]')) {
-      // Navigation download — no completion event exists, so busy the button
+      // Navigation download - no completion event exists, so busy the button
       // for the snapshot-prep window instead of leaving a dead-looking click.
       const dlBtn = e.target.closest('[data-world-download]');
-      toast('Preparing a consistent snapshot — the download starts when it is ready…', { kind: 'info', timeout: 8000 });
+      toast('Preparing a consistent snapshot. The download starts when it is ready…', { kind: 'info', timeout: 8000 });
       const restore = setBusy(dlBtn, 'Preparing…');
       setTimeout(restore, 8000);
       location.href = `${base}/${encodeURIComponent(world)}/download`;
@@ -70,7 +71,7 @@ function init(serverId, serverName, serverStatus) {
       const btn = e.target.closest('[data-world-duplicate]');
       const ok = await confirmDialog({
         title: `Duplicate "${world}"?`,
-        message: 'Forks a full copy of this world (all dimension dirs) on this server.',
+        message: 'Makes a full copy of this world, including every dimension, on this server.',
         detail: `Needs ~${fmtBytes(size)} of additional disk space.`,
         confirmLabel: 'Duplicate',
       });
@@ -90,8 +91,8 @@ function init(serverId, serverName, serverStatus) {
       const btn = e.target.closest('[data-world-delete]');
       const ok = await confirmDialog({
         title: `Delete world "${world}"?`,
-        message: 'Removes this world and its dimension dirs from the server. This is not the active world.',
-        detail: `${fmtBytes(size)} will be freed. No automatic backup is taken for non-active worlds.`,
+        message: 'Removes this world and all of its dimensions from the server. It is not the active world.',
+        detail: `${fmtBytes(size)} will be freed. No automatic backup is taken for worlds that aren't active.`,
         confirmLabel: 'Delete world',
         danger: true,
         requireText: world,
@@ -105,7 +106,7 @@ function init(serverId, serverName, serverStatus) {
           toast(`World "${world}" deleted (${fmtBytes(data.freedBytes)} freed).`);
           reload();
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: 'delete that world' }), { kind: 'error' });
         }
       } finally {
         restore();
@@ -113,7 +114,7 @@ function init(serverId, serverName, serverStatus) {
     }
   });
 
-  // ---- Copy to another instance ----
+  // ---- Copy to another server ----
   function copyToModal(world) {
     const targets = serverOptions().filter((s) => s.id !== serverId);
     if (!targets.length) return toast('No other servers to copy to.', { kind: 'info' });
@@ -126,14 +127,14 @@ function init(serverId, serverName, serverStatus) {
       </select>
       <label class="label mt-3">Install mode on the target</label>
       <select class="input" data-c-mode data-label="Install mode">
-        <option value="replace" data-desc="Target must be stopped — its current world is auto-backed-up first">Replace target's world</option>
-        <option value="alongside" data-desc="Adds it next to the target's worlds — activate it later">Install alongside</option>
+        <option value="replace" data-desc="Target must be stopped. Its current world is backed up first.">Replace target's world</option>
+        <option value="alongside" data-desc="Adds it next to the target's worlds. Activate it later.">Install alongside</option>
       </select>
       <div class="mt-3 hidden" data-c-namewrap>
         <label class="label">World folder name on the target</label>
         <input class="input" data-c-name value="${escapeHtml(world)}" autocomplete="off">
       </div>
-      <p class="help">Works while this server is running — the panel snapshots with the save-off/save-all dance, then installs via the library.</p>
+      <p class="help">Works while this server is running. The panel takes a consistent snapshot, then installs it on the target through the library.</p>
       <div class="mt-3 hidden" data-c-progress><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
 
     const mode = content.querySelector('[data-c-mode]');
@@ -142,7 +143,7 @@ function init(serverId, serverName, serverStatus) {
     });
 
     openModal({
-      title: `Copy "${world}" to another server`,
+      title: `Copy "${world}" to Another Server`,
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -168,7 +169,7 @@ function init(serverId, serverName, serverStatus) {
               content.querySelector('[data-c-progress]').classList.add('hidden');
               return false;
             }
-            toast(`World copied — installed as "${done.installedAs}" (${fmtBytes(done.sizeBytes)}).`);
+            toast(`World copied and installed as "${done.installedAs}" (${fmtBytes(done.sizeBytes)}).`);
             reload();
           },
         },
@@ -182,9 +183,9 @@ function init(serverId, serverName, serverStatus) {
     content.innerHTML = `
       <label class="label">New name for "${escapeHtml(world)}"</label>
       <input class="input" data-r-name value="${escapeHtml(world)}" autocomplete="off">
-      <p class="help">The server must be stopped. Dimension dirs are renamed too; if this is the active world, level-name is updated.</p>`;
+      <p class="help">The server must be stopped. Every dimension folder is renamed too, and if this is the active world, the server is pointed at the new name.</p>`;
     const modal = openModal({
-      title: 'Rename world',
+      title: 'Rename World',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
@@ -210,7 +211,7 @@ function init(serverId, serverName, serverStatus) {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
-      <p>Deletes the world "${escapeHtml(world)}" and all its dimension dirs, then the server generates a fresh one on next start. The server must be stopped.</p>
+      <p>Deletes the world "${escapeHtml(world)}" and all of its dimensions, then the server generates a fresh one on its next start. The server must be stopped.</p>
       <div class="rounded-md border border-line bg-raised p-2.5 text-xs text-ink-soft">${fmtBytes(size)} will be cleared.</div>
       <div>
         <label class="label" for="rw-seedmode">Seed</label>
@@ -223,7 +224,7 @@ function init(serverId, serverName, serverStatus) {
       <div class="hidden" id="rw-customwrap">
         <label class="label" for="rw-seed">Custom seed</label>
         <input class="input font-mono" id="rw-seed" placeholder="e.g. 12345 or any text" autocomplete="off">
-        <p class="help">Numbers or text both work — Minecraft hashes non-numeric seeds.</p>
+        <p class="help">Numbers and text both work. Minecraft converts text seeds to a number.</p>
       </div>
       <div>
         <label class="label" for="rw-leveltype">World type</label>
@@ -234,7 +235,7 @@ function init(serverId, serverName, serverStatus) {
           <option value="LARGEBIOMES">Large biomes</option>
           <option value="AMPLIFIED">Amplified</option>
         </select>
-        <p class="help">More generation knobs (generator settings, structures, nether…) live in Settings → World.</p>
+        <p class="help">More world-generation options (generator settings, structures, the Nether, and so on) live in Settings → World.</p>
       </div>
       <label class="flex cursor-pointer items-center gap-2">
         <span class="msm-toggle"><input type="checkbox" id="rw-backup" checked><span></span></span>

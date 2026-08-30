@@ -1,7 +1,7 @@
-// @ts-nocheck — dynamic tellraw JSON component building (incremental typing).
+// @ts-nocheck - dynamic tellraw JSON component building (incremental typing).
 'use strict';
 
-// Admin chat: send styled messages to players over RCON — `tellraw` (per-target,
+// Admin chat: send styled messages to players over RCON - `tellraw` (per-target,
 // full styling) or `say` (plain broadcast). The component builder and target
 // validation are pure + exported for tests.
 
@@ -32,7 +32,7 @@ const COLORS = {
 };
 const FORMATS = ['bold', 'italic', 'underlined', 'strikethrough', 'obfuscated'];
 
-/** Build a tellraw JSON text component from text + style — pure, only sets chosen props. */
+/** Build a tellraw JSON text component from text + style - pure, only sets chosen props. */
 function buildComponent(opts = {}) {
   const c = { text: String(opts.text ?? '') };
   if (opts.color && Object.prototype.hasOwnProperty.call(COLORS, opts.color)) c.color = opts.color;
@@ -45,7 +45,7 @@ function normalizeTarget(target) {
   const t = String(target || '@a').trim();
   if (['@a', '@p', '@r', '@s'].includes(t)) return t;
   if (PLAYER_NAME_RE.test(t)) return t;
-  throw httpError(400, 'Invalid recipient — pick Everyone or a valid player name');
+  throw httpError(400, 'Invalid recipient - pick Everyone or a valid player name');
 }
 
 async function assertRunning(serverId) {

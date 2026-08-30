@@ -5,15 +5,21 @@
 // Docker (a one-shot `docker stats` costs ~2s; `docker exec rcon-cli list`
 // ~0.5s). Everything reads from here; nothing user-facing calls Docker inline.
 
+const path = require('node:path');
 const db = require('../db');
 const { statsStream, statsOnce } = require('../docker/stats');
 const { execCaptureChecked, inspectStatus } = require('../docker/containers');
 const { fetchLogs } = require('../docker/logs');
 const { parsePlayerList } = require('../utils/rconList');
 const { cleanText } = require('../utils/ansi');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const syncThrottle = makeFailureThrottle();
 
 // Boot-phase detection: a modded first boot passes through many meaningful
-// states — surface them instead of a flat "starting/unhealthy". Ordered by
+// states - surface them instead of a flat "starting/unhealthy". Ordered by
 // precedence (later pipeline stages win when several match the tail).
 const PHASES = [
   {
@@ -105,7 +111,7 @@ function statusDetail(live) {
   return null;
 }
 
-async function attach(serverId) {
+async function attach(serverId, containerId = null) {
   if (entries.has(serverId)) return;
   const entry = {
     stats: null,
@@ -114,6 +120,7 @@ async function attach(serverId) {
     upConfirmed: false,
     stopStats: null,
     playerTimer: null,
+    containerId,
   };
   entries.set(serverId, entry);
 
@@ -129,7 +136,7 @@ async function attach(serverId) {
       entry.stats = { ...sample, at: Date.now() };
     });
   } catch {
-    /* stats unavailable — cache stays null */
+    /* stats unavailable - cache stays null */
   }
 
   let playersInFlight = false;
@@ -145,7 +152,7 @@ async function attach(serverId) {
       // sync() only detaches when the DB status leaves running/starting, and a
       // restart's die→start usually completes inside one 10s sync interval, so
       // the entry never detaches; a missed 'start' Docker event (the events
-      // stream reconnects after drops — see watcher.js's retryLater()) has the
+      // stream reconnects after drops - see watcher.js's retryLater()) has the
       // same effect. Compare Docker's own StartedAt whenever ANY latched state
       // exists, throttled to once a minute to keep the extra inspect off the
       // 20s hot path.
@@ -159,12 +166,12 @@ async function attach(serverId) {
             entry.upConfirmed = false;
             entry.phase = null; // let refreshPhase classify the new boot
           } else if (info.startedAt && !entry.startedAt) {
-            // attach() ran before the container was Running (startedAt null) —
+            // attach() ran before the container was Running (startedAt null) -
             // record the real boot time WITHOUT treating it as a restart.
             entry.startedAt = info.startedAt;
           }
         } catch {
-          /* inspect failed — leave the latch as-is, retry next time */
+          /* inspect failed - leave the latch as-is, retry next time */
         }
       }
 
@@ -175,9 +182,9 @@ async function attach(serverId) {
         entry.players = { ...parsed, at: Date.now() };
         entry.phase = null; // rcon answering = fully up, no boot phase
       } else if (exitCode === 0 && out) {
-        // rcon-cli exited successfully — RCON is genuinely answering — but the
+        // rcon-cli exited successfully - RCON is genuinely answering - but the
         // "/list" phrasing didn't match any known pattern. We can't parse player
-        // counts, but a clean exit means the server is fully up — stop deriving
+        // counts, but a clean exit means the server is fully up - stop deriving
         // the boot-phase label from logs so the UI doesn't get stuck showing
         // e.g. "Finishing startup" forever. A non-zero exit (e.g. rcon-cli's own
         // "connection refused" while RCON isn't listening yet, which docker exec
@@ -187,7 +194,7 @@ async function attach(serverId) {
         entry.phase = null;
       }
     } catch {
-      /* rcon not up yet — keep last value */
+      /* rcon not up yet - keep last value */
     } finally {
       playersInFlight = false;
     }
@@ -203,7 +210,7 @@ async function attach(serverId) {
       const tail = await fetchLogs(serverId, { tail: 40 });
       entry.phase = classifyPhase(tail) || entry.phase || { key: 'boot', label: 'Starting up' };
     } catch {
-      /* container gone — sync() will detach */
+      /* container gone - sync() will detach */
     } finally {
       phaseInFlight = false;
     }
@@ -237,20 +244,41 @@ async function sync() {
   if (syncing) return;
   syncing = true;
   try {
-    const rows = db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL');
+    const rows = db.all('SELECT id, status, container_id FROM servers WHERE deleted_at IS NULL');
+    const byId = new Map(rows.map((r) => [r.id, r]));
     const running = new Set(
-      rows.filter((r) => ['running', 'starting', 'unhealthy'].includes(r.status)).map((r) => r.id)
+      // 'stalled' (starting far longer than expected, no 'Done (' yet) is still
+      // a live container - keep its stats/players/phase taps attached so the
+      // status detail chip that's meant to help diagnose the stall doesn't
+      // itself go blank the moment it's flagged.
+      rows.filter((r) => ['running', 'starting', 'unhealthy', 'stalled'].includes(r.status)).map((r) => r.id)
     );
-    for (const id of running) if (!entries.has(id)) await attach(id);
+    for (const id of running) {
+      const row = byId.get(id);
+      const existing = entries.get(id);
+      // A recreate (settings change, upgrade, manual "Recreate") never leaves
+      // the running/starting/unhealthy family, so status alone can't detect
+      // it - without this check the entry never detaches/reattaches, and its
+      // stats stream stays bound to the OLD (now-removed) container forever,
+      // freezing the dashboard's CPU/mem/network graph at its last sample.
+      if (existing && existing.containerId && row.container_id && existing.containerId !== row.container_id) {
+        detach(id);
+      }
+      if (!entries.has(id)) await attach(id, row.container_id || null);
+    }
     for (const id of [...entries.keys()]) if (!running.has(id)) detach(id);
+    syncThrottle.ok(logger.info, 'The live-cache reconcile recovered.');
   } catch (err) {
-    console.error('[liveCache]', err.message);
+    syncThrottle.fail(logger.warn, 'A live-cache reconcile failed.', {
+      err: serializeError(err, { includeStack: false }),
+    });
   } finally {
     syncing = false;
   }
 }
 
 function startLiveCache({ intervalMs = 10000 } = {}) {
+  logger.debug('Started the live-data cache.', { intervalMs });
   sync();
   syncTimer = setInterval(sync, intervalMs);
   syncTimer.unref();

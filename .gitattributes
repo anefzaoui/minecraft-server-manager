@@ -2,7 +2,7 @@
 # end-of-line check stay consistent across Windows/macOS/Linux contributors.
 * text=auto eol=lf
 
-# Binary assets — never touch.
+# Binary assets - never touch.
 *.ttf binary
 *.png binary
 *.jpg binary

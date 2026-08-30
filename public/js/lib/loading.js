@@ -1,6 +1,6 @@
 // Button loading states. Every click that kicks off an async request must
-// show pending feedback ON the control itself — a spinner (plus optional
-// label swap) and a disabled state — so the UI never soft-freezes.
+// show pending feedback ON the control itself - a spinner (plus optional
+// label swap) and a disabled state - so the UI never soft-freezes.
 //
 //   const restore = setBusy(btn, 'Starting…');  // manual control
 //   ...await work...
@@ -9,12 +9,14 @@
 //   await withBusy(btn, () => api(...));         // scoped, always restores
 //   await withBusy(btn, 'Saving…', () => api(...));
 
+import { escapeHtml } from './format.js';
+
 const SPINNER =
   '<svg class="icon size-4 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
 
 /**
  * Put a button (or chip/link) into a busy state. Returns a restore function.
- * Safe to call on an already-busy control — returns a no-op restorer so the
+ * Safe to call on an already-busy control - returns a no-op restorer so the
  * first caller keeps ownership.
  */
 export function setBusy(el, label) {
@@ -49,11 +51,4 @@ export async function withBusy(el, labelOrFn, maybeFn) {
   } finally {
     restore();
   }
-}
-
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
 }

@@ -1,11 +1,15 @@
 'use strict';
 
-require('dotenv').config();
+// quiet: true - dotenv 17 prints an "injected env / tip: ..." banner to
+// stdout by default; this is a server process, not a CLI, so suppress it.
+require('dotenv').config({ quiet: true });
 
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 const crypto = require('node:crypto');
+
+const { normalizeLogLevel } = require('./logLevel');
 
 const root = path.resolve(__dirname, '..', '..');
 const dataDir = path.resolve(root, process.env.DATA_DIR || './data');
@@ -15,7 +19,7 @@ const MB = 1024 * 1024;
 /**
  * Read a numeric env var, validating it when set. An unset/blank var falls back
  * to the default; a set-but-invalid var (typo, out of range) throws a clear
- * error instead of silently becoming the default — which would mask the mistake.
+ * error instead of silently becoming the default - which would mask the mistake.
  */
 function numFromEnv(name, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
   const raw = process.env[name];
@@ -23,10 +27,53 @@ function numFromEnv(name, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } =
   const n = Number(raw);
   if (!Number.isFinite(n) || !Number.isInteger(n) || n < min || n > max) {
     throw new Error(
-      `${name} must be an integer between ${min} and ${max} — got "${raw}". Fix it in your .env (or leave it blank for the default ${fallback}).`
+      `${name} must be an integer between ${min} and ${max} - got "${raw}". Fix it in your .env (or leave it blank for the default ${fallback}).`
     );
   }
   return n;
+}
+
+/**
+ * Like numFromEnv but accepts non-integers (e.g. a 0..1 sample rate). Same
+ * fail-fast contract: set-but-out-of-range throws rather than silently defaulting.
+ */
+function numFloatFromEnv(name, fallback, { min = 0, max = Number.MAX_VALUE } = {}) {
+  const raw = process.env[name];
+  if (raw === undefined || String(raw).trim() === '') return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < min || n > max) {
+    throw new Error(
+      `${name} must be a number between ${min} and ${max} - got "${raw}". Fix it in your .env (or leave it blank for the default ${fallback}).`
+    );
+  }
+  return n;
+}
+
+/**
+ * Pino log level. Allowlisted (fatal|error|warn|info|debug|trace|silent); a
+ * set-but-bogus value fails fast at boot. Default 'info'.
+ */
+function resolveLogLevel() {
+  return normalizeLogLevel(process.env.LOG_LEVEL, { strict: true }) || 'info';
+}
+
+/**
+ * Error/trace reporting settings. Inert unless SENTRY_DSN is set - the panel
+ * ships with Pino logging only, and this block is a forward-looking mirror of
+ * what src/instrument.js would consume.
+ */
+function resolveSentry() {
+  const dsn = (process.env.SENTRY_DSN || '').trim();
+  return {
+    dsn,
+    enabled: dsn !== '',
+    environment: (process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development').trim(),
+    tracesSampleRate: numFloatFromEnv('SENTRY_TRACES_SAMPLE_RATE', 0, { min: 0, max: 1 }),
+    enableLogs:
+      String(process.env.SENTRY_ENABLE_LOGS || '')
+        .trim()
+        .toLowerCase() === 'true',
+  };
 }
 
 /**
@@ -34,7 +81,7 @@ function numFromEnv(name, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } =
  *   1. SESSION_SECRET from the environment (must be >= 16 chars).
  *   2. A previously generated secret at $DATA_DIR/.session-secret.
  *   3. A freshly generated strong secret, persisted for next boot.
- * This makes a fresh `npm start` secure with zero configuration, while still
+ * This makes a fresh `pnpm start` secure with zero configuration, while still
  * letting operators pin the value via .env (e.g. to share across replicas).
  */
 function resolveSessionSecret() {
@@ -42,7 +89,7 @@ function resolveSessionSecret() {
   if (fromEnv && fromEnv.trim().length > 0) {
     if (fromEnv.trim().length < 16) {
       throw new Error(
-        'SESSION_SECRET is set but too short — use at least 16 characters (e.g. `openssl rand -base64 48`).'
+        'SESSION_SECRET is set but too short - use at least 16 characters (e.g. `openssl rand -base64 48`).'
       );
     }
     return fromEnv.trim();
@@ -52,7 +99,7 @@ function resolveSessionSecret() {
     const existing = fs.readFileSync(secretFile, 'utf8').trim();
     if (existing.length >= 16) return existing;
   } catch {
-    /* not created yet — fall through and generate */
+    /* not created yet - fall through and generate */
   }
 
   const generated = crypto.randomBytes(48).toString('base64url');
@@ -62,11 +109,12 @@ function resolveSessionSecret() {
   } catch (err) {
     throw new Error(
       `Could not write the panel secret to ${secretFile}: ${err.message}. ` +
-        `Check that DATA_DIR (${dataDir}) exists and is writable, or set SESSION_SECRET in your .env.`
+        `Check that DATA_DIR (${dataDir}) exists and is writable, or set SESSION_SECRET in your .env.`,
+      { cause: err }
     );
   }
   console.log(
-    `No SESSION_SECRET set — generated one and saved it to ${secretFile} (keep it private; delete it to rotate).`
+    `[boot] No SESSION_SECRET was set, so the panel generated one and saved it to ${secretFile}. Keep it private; delete it to rotate.`
   );
   return generated;
 }
@@ -110,7 +158,7 @@ function resolveTrustProxy() {
   if (/^\d+$/.test(raw)) return Number(raw);
   if (raw.toLowerCase() === 'true') return true;
   if (raw.toLowerCase() === 'false') return false;
-  return raw; // 'loopback' | 'uniquelocal' | comma-list of IPs — Express parses these
+  return raw; // 'loopback' | 'uniquelocal' | comma-list of IPs - Express parses these
 }
 
 /**
@@ -127,11 +175,27 @@ function resolveCookieSecure() {
 }
 
 /**
+ * SameSite attribute for the session cookie. Default 'lax' - the conventional
+ * choice for a session cookie: it still withholds the cookie from cross-site
+ * POST/PATCH/DELETE (every state-changing route here), so CSRF stays covered,
+ * but unlike 'strict' it IS sent on top-level navigations that originate from
+ * another site (a link from chat/email, a bookmark via a redirector, an
+ * SSO/reverse-proxy round-trip). 'strict' drops the cookie on those, so the
+ * user lands on /login every time and it looks like "remember me" is broken.
+ * 'none' is only for embedding the panel cross-site and requires Secure.
+ */
+function resolveCookieSameSite() {
+  const raw = (process.env.COOKIE_SAMESITE || '').trim().toLowerCase();
+  if (raw === 'strict' || raw === 'none') return raw;
+  return 'lax';
+}
+
+/**
  * Host-side location of the data directory, for when the panel itself runs in
  * a container. Bind mounts handed to the Docker daemon are resolved against the
  * HOST filesystem, so a containerized panel (which sees its data at DATA_DIR,
  * e.g. /data) must describe that same directory in host terms when creating
- * server containers. Unset — the bare-metal case — it equals dataDir and the
+ * server containers. Unset - the bare-metal case - it equals dataDir and the
  * translation is a no-op.
  */
 function resolveDataDirHost() {
@@ -140,7 +204,7 @@ function resolveDataDirHost() {
   const isAbsolute = raw.startsWith('/') || /^[A-Za-z]:[\\/]/.test(raw);
   if (!isAbsolute) {
     throw new Error(
-      `DATA_DIR_HOST must be an absolute host path (e.g. /opt/msm/data or C:\\msm\\data) — got "${raw}". ` +
+      `DATA_DIR_HOST must be an absolute host path (e.g. /opt/msm/data or C:\\msm\\data) - got "${raw}". ` +
         'It is the host-side path of the directory mounted at DATA_DIR inside the panel container.'
     );
   }
@@ -150,14 +214,14 @@ function resolveDataDirHost() {
 
 /**
  * Address the panel uses to reach OTHER containers' host-published ports (e.g.
- * BlueMap's map webserver) — used by the /map proxy. Bare metal, the panel's
+ * BlueMap's map webserver) - used by the /map proxy. Bare metal, the panel's
  * own '127.0.0.1' IS the host's, so no translation is needed. Containerized
- * (same signal as resolveDataDirHost — DATA_DIR_HOST set), '127.0.0.1' is the
+ * (same signal as resolveDataDirHost - DATA_DIR_HOST set), '127.0.0.1' is the
  * PANEL container's own loopback, not the host's, so sibling containers'
  * published ports are unreachable through it; 'host.docker.internal' is
  * Docker's own mechanism for "reach the host from inside a container" (needs
- * `extra_hosts: host.docker.internal:host-gateway` on plain Linux Engine —
- * see docker-compose.yml — Docker Desktop resolves it natively, but
+ * `extra_hosts: host.docker.internal:host-gateway` on plain Linux Engine -
+ * see docker-compose.yml - Docker Desktop resolves it natively, but
  * containerized-panel deployment targets Linux).
  */
 function resolveMapProxyHost() {
@@ -170,28 +234,31 @@ const host = process.env.PANEL_HOST || '127.0.0.1';
 
 /**
  * Central panel configuration. Every value has a sane default; .env overrides.
- * DATA_DIR is resolved to an absolute path once, here — all storage code must
+ * DATA_DIR is resolved to an absolute path once, here - all storage code must
  * import it from this module and never re-derive it.
  */
 const config = {
   root,
   dataDir,
   dataDirHost: resolveDataDirHost(),
-  // Bind to localhost only by default — the panel is reachable just from this
+  // Bind to localhost only by default - the panel is reachable just from this
   // machine out of the box. Set PANEL_HOST=0.0.0.0 to expose it to your LAN,
   // and only put it on the internet behind a reverse proxy with TLS.
   host,
-  // 25564 — one below the game-port runway (PORT_GAME_START, 25565) so game
+  // 25564 - one below the game-port runway (PORT_GAME_START, 25565) so game
   // instances number cleanly upward from 25565 without the panel taking a slot
   // in the middle of the sequence.
   port: numFromEnv('PANEL_PORT', 25564, { min: 1, max: 65535 }),
-  // True when bound to a non-loopback address — used to warn about the open
+  // True when bound to a non-loopback address - used to warn about the open
   // first-run setup window on an exposed panel.
   isExposedBind: host !== '127.0.0.1' && host !== 'localhost' && host !== '::1',
   sessionSecret: resolveSessionSecret(),
   cfApiKeySeed: process.env.CF_API_KEY || '',
   trustProxy: resolveTrustProxy(),
   cookieSecure: resolveCookieSecure(),
+  cookieSameSite: resolveCookieSameSite(),
+  logLevel: resolveLogLevel(),
+  sentry: resolveSentry(),
   mapProxyHost: resolveMapProxyHost(),
 
   // Docker image repository for Minecraft servers. Override for a private mirror
@@ -208,12 +275,30 @@ const config = {
 
   // Default per-instance resources (host-aware unless overridden via env).
   defaults: resolveDefaults(),
+
+  // Coarse request-rate ceilings (per client IP, per process - see the note on
+  // TRUST_PROXY). These sit on top of the per-account login lockout; they cap
+  // raw request volume so a hammering script can't tie the panel up. Set
+  // RATE_LIMIT_API_PER_MIN=0 to turn the API limiter off (e.g. when a reverse
+  // proxy already does this).
+  rateLimit: {
+    apiPerMin: numFromEnv('RATE_LIMIT_API_PER_MIN', 1200, { min: 0, max: 1_000_000 }),
+    authPer15Min: numFromEnv('RATE_LIMIT_AUTH_PER_15MIN', 100, { min: 0, max: 1_000_000 }),
+  },
 };
 
 // resolveSessionSecret() guarantees a strong secret, so downstream code can rely
-// on config.sessionSecret being set — no hardcoded dev fallback anywhere.
+// on config.sessionSecret being set - no hardcoded dev fallback anywhere.
 if (!config.sessionSecret || config.sessionSecret.length < 16) {
   throw new Error('Failed to resolve a session secret.');
+}
+
+// Browsers silently reject `SameSite=None` unless the cookie is also `Secure`,
+// which would leave the panel with no working session cookie at all.
+if (config.cookieSameSite === 'none' && config.cookieSecure === false) {
+  throw new Error(
+    'COOKIE_SAMESITE=none requires a secure cookie - also set COOKIE_SECURE=true (or COOKIE_SECURE=auto with TRUST_PROXY).'
+  );
 }
 
 module.exports = config;

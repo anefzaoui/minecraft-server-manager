@@ -1,5 +1,5 @@
 <div class="card p-4" data-world-controls="{{server.id}}" data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{/if}}">
-  <h3 class="mb-1 font-semibold">World controls</h3>
+  <h3 class="mb-1 font-semibold">World Controls</h3>
   <p class="mb-3 text-xs text-ink-faint" data-wc-state>{{#if (eq server.status 'running')}}Loading world state…{{else}}Available while the server runs.{{/if}}</p>
   <div class="mb-3 hidden items-center justify-between rounded-md border border-line bg-inset px-3 py-2" data-wc-clock-box>
     <div>
@@ -8,7 +8,7 @@
     </div>
     {{{icon 'clock' 'size-5 text-ink-faint'}}}
   </div>
-  {{! Real fieldset-level disable — pointer-events-none left the buttons in the
+  {{! Real fieldset-level disable - pointer-events-none left the buttons in the
       tab order, and Enter/Space fired commands at a stopped server. }}
   <fieldset class="min-w-0 space-y-3" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
     <div>
@@ -53,10 +53,10 @@
       <div class="flex flex-wrap gap-1.5">
         <button class="chip hover:border-grass-600" data-wc-toggle="pvp" data-rule="pvp">PvP</button>
       </div>
-      <p class="mt-1 text-[11px] text-ink-faint">Sets <span class="font-mono">pvp</span> in server.properties — permanent for everyone; takes effect on the next restart.</p>
+      <p class="mt-1 text-[11px] text-ink-faint">Changes the PvP setting for the whole server. It takes effect on the next restart.</p>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Difficulty & ops</div>
+      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Difficulty &amp; saving</div>
       <div class="flex flex-wrap gap-1.5">
         <button class="chip hover:border-grass-600" data-wc="difficulty-peaceful">Peaceful</button>
         <button class="chip hover:border-grass-600" data-wc="difficulty-easy">Easy</button>

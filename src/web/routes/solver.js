@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Compatibility solver API. Mounted at /api/solver.
@@ -13,7 +13,7 @@ const modBrowser = require('../../services/modBrowser');
 const router = express.Router();
 
 // Mod search for the "Start from mods" wizard panel. Deliberately unfiltered
-// by loader/MC version — the solver decides those from the final selection.
+// by loader/MC version - the solver decides those from the final selection.
 // Both platforms; CurseForge needs the stored API key (412 without it).
 router.get(
   '/search',

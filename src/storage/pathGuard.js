@@ -1,7 +1,7 @@
 'use strict';
 
 // Path containment guard. EVERY filesystem operation on user-influenced paths
-// must resolve through one of these helpers — nothing may escape DATA_DIR.
+// must resolve through one of these helpers - nothing may escape DATA_DIR.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -17,18 +17,18 @@ class PathEscapeError extends Error {
 }
 
 // realpath(base) is stable at runtime (the data roots don't move), and safeJoin
-// is on the hot path for nearly every filesystem op — so resolve each base once
+// is on the hot path for nearly every filesystem op - so resolve each base once
 // and reuse it, instead of a realpath syscall per call. A base that doesn't yet
 // exist caches nothing and is retried next time.
 const realBaseCache = new Map();
 function realBaseOf(base) {
   const cached = realBaseCache.get(base);
   if (cached !== undefined) return cached;
-  let real = null;
+  let real;
   try {
     real = fs.realpathSync.native(base);
   } catch {
-    return null; // base doesn't exist yet — don't cache, retry later
+    return null; // base doesn't exist yet - don't cache, retry later
   }
   realBaseCache.set(base, real);
   return real;
@@ -39,16 +39,16 @@ function realBaseOf(base) {
  * component of `resolved` that exists on disk, resolve it through any symlinks,
  * and confirm it's still inside `base`. A symlink planted under `base` (e.g. by
  * a mod/plugin running inside the Minecraft container) pointing at an absolute
- * host path would otherwise let a read — or, via a dangling link, a write —
+ * host path would otherwise let a read - or, via a dangling link, a write -
  * follow it straight out.
  */
 function assertRealContainment(base, resolved, attempted) {
   const realBase = realBaseOf(base);
-  if (realBase === null) return; // base doesn't exist yet — nothing to escape
+  if (realBase === null) return; // base doesn't exist yet - nothing to escape
 
   // Walk up to the deepest component that exists AS A FILESYSTEM ENTRY, using
   // lstat (which does NOT follow symlinks). existsSync follows links, so it
-  // returns false for a BROKEN symlink and would skip right past it — letting a
+  // returns false for a BROKEN symlink and would skip right past it - letting a
   // write through `base/link` (link -> /outside/newfile, not yet created)
   // escape base. lstat sees the link itself, so the dangling tail is caught.
   let dir = resolved;
@@ -65,7 +65,7 @@ function assertRealContainment(base, resolved, attempted) {
 
   // Resolve that entry to its true location. realpath follows the whole symlink
   // chain, catching an existing link out of base. If the deepest entry is a
-  // BROKEN symlink, realpath throws — resolve its target textually against the
+  // BROKEN symlink, realpath throws - resolve its target textually against the
   // (real) parent instead, so an escape through a dangling link is still caught.
   let realDir;
   try {
@@ -75,7 +75,7 @@ function assertRealContainment(base, resolved, attempted) {
       const parentReal = fs.realpathSync.native(path.dirname(dir));
       realDir = path.resolve(parentReal, fs.readlinkSync(dir));
     } catch {
-      return; // vanished between checks — the caller's own op will fail
+      return; // vanished between checks - the caller's own op will fail
     }
   }
   const rel = path.relative(realBase, realDir);

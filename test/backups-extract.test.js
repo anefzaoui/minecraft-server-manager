@@ -11,7 +11,7 @@ const zlib = require('node:zlib');
 const { extractZip } = require('../src/services/backups');
 
 // Build a raw STORE-method zip with exact control over entry names. `archiver`
-// sanitizes `../` out of names, so it can't produce a zip-slip fixture — we
+// sanitizes `../` out of names, so it can't produce a zip-slip fixture - we
 // construct the bytes directly (yauzl enumerates entries from the central dir).
 function crc32(buf) {
   return typeof zlib.crc32 === 'function' ? zlib.crc32(buf) >>> 0 : 0;
@@ -82,7 +82,7 @@ test('extractZip rejects a zip-slip entry that escapes the destination', async (
   ]);
   // Two layers stop this: yauzl's own filename validation ("invalid relative
   // path") and extractZip's explicit containment check ("escapes destination").
-  // Either one rejecting is a pass — what matters is nothing escapes.
+  // Either one rejecting is a pass - what matters is nothing escapes.
   await assert.rejects(() => extractZip(zip, dest), /escapes destination|invalid relative path/i);
   assert.equal(fs.existsSync(path.join(dir, 'evil.txt')), false, 'traversal target not written');
   await fsp.rm(dir, { recursive: true, force: true });

@@ -2,7 +2,7 @@
 
 // SSRF guard for server-side fetches of user-influenced URLs (direct mod
 // downloads, remote mod icons). Blocks non-HTTP(S) schemes and any URL that
-// resolves to a private, loopback, link-local, or otherwise-reserved address —
+// resolves to a private, loopback, link-local, or otherwise-reserved address -
 // the ranges an attacker would target to reach cloud metadata
 // (169.254.169.254) or services bound to the panel host.
 //
@@ -42,7 +42,7 @@ function isBlockedIpv4(ip, { allowPrivate = false } = {}) {
 /** Expand a (possibly `::`-compressed) IPv6 address to 8 explicit hex groups. */
 function expandIpv6(ip) {
   let s = ip.toLowerCase();
-  // A trailing dotted-quad ("…:ffff:127.0.0.1") is two groups' worth of bits —
+  // A trailing dotted-quad ("…:ffff:127.0.0.1") is two groups' worth of bits -
   // fold it into two hex groups first, or the ':'-split below yields 7 parts
   // and the mapped-v4 check silently gives up (an SSRF bypass).
   const dq = s.match(/^(.*:)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
@@ -83,7 +83,7 @@ function isBlockedIpv6(ip, { allowPrivate = false } = {}) {
   if (s.startsWith('fe80')) return true; // link-local (always blocked)
   if (s.startsWith('ff')) return true; // multicast (always blocked)
   // Catches every IPv4-mapped spelling, not just the textual "::ffff:a.b.c.d"
-  // shorthand — e.g. the fully-expanded "0:0:0:0:0:ffff:7f00:1" (=127.0.0.1).
+  // shorthand - e.g. the fully-expanded "0:0:0:0:0:ffff:7f00:1" (=127.0.0.1).
   // The mapped v4 inherits the same allowPrivate policy.
   const mapped = ipv6MappedIpv4(expandIpv6(s));
   if (mapped) return isBlockedIpv4(mapped, { allowPrivate });
@@ -94,16 +94,16 @@ function isBlockedIpv6(ip, { allowPrivate = false } = {}) {
 }
 
 // Alternate IPv4 encodings (decimal, octal, hex, short-dotted) that net.isIP()
-// doesn't recognize as a literal IP but that some resolvers still parse —
+// doesn't recognize as a literal IP but that some resolvers still parse -
 // e.g. 127.0.0.1 written as 2130706433, 0x7f000001, or 127.1. Whether a given
 // libc's getaddrinfo actually accepts these is resolver-dependent, so refuse
 // outright rather than gamble on it.
 //
 // A host is "ambiguously numeric" only when EVERY dot-separated label is itself
-// a bare number (decimal, C-octal, or 0x-hex) — that's what makes it parseable
+// a bare number (decimal, C-octal, or 0x-hex) - that's what makes it parseable
 // as a packed IPv4. A real domain always has at least one non-numeric label
-// (its TLD or a name), so hosts like "cafe.de" or "feed.ac" — all-hex-LETTERS
-// but not numbers — are left alone. The earlier /^[0-9a-fx.]+$/ over-matched
+// (its TLD or a name), so hosts like "cafe.de" or "feed.ac" - all-hex-LETTERS
+// but not numbers - are left alone. The earlier /^[0-9a-fx.]+$/ over-matched
 // those and 400'd legitimate mod/icon fetches.
 const NUMERIC_LABEL_RE = /^(?:0x[0-9a-f]+|\d+)$/i;
 function isAmbiguousNumericHost(host) {
@@ -116,7 +116,7 @@ function isBlockedIp(ip, { allowPrivate = false } = {}) {
   const v4 = ip.toLowerCase().startsWith('::ffff:') ? ip.slice(ip.lastIndexOf(':') + 1) : ip;
   if (net.isIPv4(v4)) return isBlockedIpv4(v4, { allowPrivate });
   if (net.isIPv6(ip)) return isBlockedIpv6(ip, { allowPrivate });
-  return true; // unknown format — block
+  return true; // unknown format - block
 }
 
 /**

@@ -35,7 +35,7 @@ test('pickJavaTag treats the 25.x/26.x era as latest', () => {
 test('pickJavaTag picks the newest Java a GTNH pack version allows', () => {
   assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 25 }), 'java25');
   assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 21 }), 'java21');
-  // No java24/java20 image is published — ladder down to the next tag that exists.
+  // No java24/java20 image is published - ladder down to the next tag that exists.
   assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 24 }), 'java21');
   assert.equal(pickJavaTag('1.7.10', 'GTNH', { maxJavaVersion: 20 }), 'java17');
   // Ancient caps fall back to the legacy pack.

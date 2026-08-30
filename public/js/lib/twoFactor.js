@@ -1,10 +1,11 @@
 // Self-service two-factor auth: the topbar user-menu "Two-factor
-// authentication" entry opens one of two flows — enroll (QR + confirm code +
+// authentication" entry opens one of two flows - enroll (QR + confirm code +
 // one-time backup codes) or manage (regenerate codes / disable), both gated
 // by re-entering the current password on the server side.
 
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
+import { friendlyError } from './errors.js';
 
 document.addEventListener('click', (e) => {
   if (!e.target.closest('[data-open-2fa]')) return;
@@ -19,14 +20,17 @@ async function openEnrollModal(trigger) {
 
   const content = document.createElement('div');
   content.className = 'space-y-4';
+  // qrDataUrl/secret are server-generated (not attacker-controlled today), but
+  // they're set as DOM properties rather than interpolated into innerHTML so
+  // that stays true even if this endpoint's response shape ever changes.
   content.innerHTML = `
     <p class="text-sm text-ink-soft">Scan this with your authenticator app (Google Authenticator, Authy, 1Password, …), or enter the code manually.</p>
-    <div class="flex justify-center"><img src="${setup.qrDataUrl}" alt="2FA QR code" class="rounded-md border border-line" width="220" height="220"></div>
+    <div class="flex justify-center"><img alt="2FA QR code" class="rounded-md border border-line" width="220" height="220"></div>
     <div>
       <label class="label">Manual entry code</label>
       <div class="flex gap-2">
-        <input class="input flex-1 font-mono text-xs" id="tf-secret" value="${setup.secret}" readonly>
-        <button type="button" class="btn" data-copy="${setup.secret}">Copy</button>
+        <input class="input flex-1 font-mono text-xs" id="tf-secret" readonly>
+        <button type="button" class="btn" id="tf-secret-copy">Copy</button>
       </div>
     </div>
     <div>
@@ -37,9 +41,12 @@ async function openEnrollModal(trigger) {
       <label class="label" for="tf-confirm-password">Confirm your password</label>
       <input class="input" id="tf-confirm-password" type="password" autocomplete="current-password" placeholder="Your account password">
     </div>`;
+  content.querySelector('img').src = setup.qrDataUrl;
+  content.querySelector('#tf-secret').value = setup.secret;
+  content.querySelector('#tf-secret-copy').dataset.copy = setup.secret;
 
   openModal({
-    title: 'Enable two-factor authentication',
+    title: 'Enable Two-Factor Authentication',
     content,
     actions: [
       { label: 'Cancel', kind: 'ghost' },
@@ -54,10 +61,10 @@ async function openEnrollModal(trigger) {
           if (!res) return false;
           if (trigger) trigger.dataset.userTotpEnabled = '1';
           toast('Two-factor authentication is now enabled.');
-          // Reload once they've saved their codes — the users table (Settings)
+          // Reload once they've saved their codes - the users table (Settings)
           // and this dataset flag are both server-rendered/read at page-load,
           // so a stale page would still show "off" until refreshed.
-          showBackupCodes(res.backupCodes, 'Save your backup codes', { reloadOnClose: true });
+          showBackupCodes(res.backupCodes, 'Save Your Backup Codes', { reloadOnClose: true });
         },
       },
     ],
@@ -75,7 +82,7 @@ function openManageModal(trigger) {
     </div>`;
 
   openModal({
-    title: 'Two-factor authentication',
+    title: 'Two-Factor Authentication',
     content,
     actions: [
       { label: 'Close', kind: 'ghost' },
@@ -86,7 +93,7 @@ function openManageModal(trigger) {
           const password = content.querySelector('#tf-mgmt-password').value;
           const res = await post('/api/account/totp/backup-codes/regenerate', { password });
           if (!res) return false;
-          showBackupCodes(res.backupCodes, 'New backup codes');
+          showBackupCodes(res.backupCodes, 'New Backup Codes');
         },
       },
       {
@@ -119,7 +126,7 @@ function showBackupCodes(codes, title, { reloadOnClose = false } = {}) {
   const warn = document.createElement('p');
   warn.className = 'text-xs text-ink-faint';
   warn.textContent =
-    'Each code works once, to sign in if you lose access to your authenticator app. Save them somewhere safe — they will not be shown again.';
+    'Each code works once. Use one to sign in if you lose access to your authenticator app. Save them somewhere safe: they will not be shown again.';
   // Relies on app.js's global [data-copy] click handler rather than duplicating
   // clipboard logic here.
   const copyBtn = document.createElement('button');
@@ -146,12 +153,15 @@ async function post(url, body) {
     });
     const data = await res.json();
     if (!res.ok || data.ok === false) {
-      toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 8000 });
+      toast(data.error || friendlyError(res, { action: 'update two-factor authentication' }), {
+        kind: 'error',
+        timeout: 8000,
+      });
       return null;
     }
     return data;
-  } catch (err) {
-    toast(`Network error: ${err.message}`, { kind: 'error' });
+  } catch {
+    toast(friendlyError(null, { action: 'update two-factor authentication' }), { kind: 'error' });
     return null;
   }
 }

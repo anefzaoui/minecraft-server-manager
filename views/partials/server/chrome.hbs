@@ -1,49 +1,63 @@
 <div class="card mb-6 overflow-hidden" style="border-top: 3px solid {{server.accent}}">
-  <div class="texture-top flex flex-wrap items-center gap-4 p-4 sm:p-5">
-    <img src="{{iconSrc server.icon}}" alt="" class="size-14 shrink-0 rounded-lg" onerror="this.onerror=null;this.src='/icons/servers/grass.png'">
+  {{! icon+name grouped into ONE flex item, separate from the actions column,
+      using flex-auto (basis: auto) rather than flex-1 (basis: 0%). That's
+      the actual fix, not just the grouping: flex-wrap decides whether to
+      wrap BEFORE grow/shrink is resolved, based on each item's hypothetical
+      (flex-basis) size - flex-1's 0% basis tells the browser this item
+      contributes NOTHING to that decision, so on a running server (Restart +
+      Stop + kill button eating most of a narrow row) it never wraps and
+      instead squeezes the name down to 0 post-hoc, wrapping a single-word
+      name like "Skyblock" one letter per line. flex-auto's real content-based
+      basis makes the wrap trigger correctly once both genuinely don't fit. }}
+  <div class="texture-top flex flex-wrap items-start justify-between gap-4 p-4 sm:p-5">
+    <div class="flex min-w-0 flex-auto items-center gap-4">
+      <img src="{{iconSrc server.icon}}" alt="" class="size-14 shrink-0 rounded-lg" style="background: {{server.accent}}" data-fallback-icon="/icons/servers/grass.svg">
 
-    <div class="min-w-0 flex-1">
-      <div class="flex flex-wrap items-center gap-2">
-        <h2 class="min-w-0 max-w-full break-words text-xl font-bold">{{server.name}}</h2>
-        <span class="flex items-center gap-1.5 text-xs font-medium {{statusText server.status}}">
-          <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
-          {{statusLabel server.status}}
-        </span>
-        <span class="badge badge-warn {{#unless server.statusDetail}}hidden{{/unless}}" data-status-detail="{{server.id}}">{{server.statusDetail}}</span>
-        {{#if server.updateAvailable}}<span class="badge badge-warn">update available</span>{{/if}}
-        {{#if server.crashesUnread}}<span class="badge badge-danger">{{server.crashesUnread}} new {{plural server.crashesUnread 'crash' 'crashes'}}</span>{{/if}}
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="min-w-0 max-w-full break-words text-xl font-bold">{{server.name}}</h2>
+          <span class="flex items-center gap-1.5 text-xs font-medium {{statusText server.status}}">
+            <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
+            {{statusLabel server.status}}
+          </span>
+          <span class="badge badge-warn {{#unless server.statusDetail}}hidden{{/unless}}" data-status-detail="{{server.id}}">{{server.statusDetail}}</span>
+          {{#if server.updateAvailable}}<span class="badge badge-warn">update available</span>{{/if}}
+          {{#if server.crashesUnread}}<span class="badge badge-danger">{{server.crashesUnread}} new {{plural server.crashesUnread 'crash' 'crashes'}}</span>{{/if}}
+        </div>
+        <p class="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-faint">
+          <span><b class="font-semibold text-ink-soft">{{server.flavor}}</b> {{server.mcVersion}}</span>
+          <span>Java: {{server.javaTag}}</span>
+          <span>Port {{server.ports.game}}</span>
+          {{#if server.pack}}<span>{{platformName server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
+          {{#if server.stats.uptime}}<span>Up {{server.stats.uptime}}</span>{{/if}}
+        </p>
+        {{#if server.tags.length}}
+          <div class="mt-2 flex flex-wrap gap-1.5">{{#each server.tags}}<span class="chip">{{this}}</span>{{/each}}</div>
+        {{/if}}
       </div>
-      <p class="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-faint">
-        <span><b class="font-semibold text-ink-soft">{{server.flavor}}</b> {{server.mcVersion}}</span>
-        <span>Java: {{server.javaTag}}</span>
-        <span>Port {{server.ports.game}}</span>
-        {{#if server.pack}}<span>{{platformName server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
-        {{#if server.stats.uptime}}<span>Up {{server.stats.uptime}}</span>{{/if}}
-      </p>
-      {{#if server.tags.length}}
-        <div class="mt-2 flex flex-wrap gap-1.5">{{#each server.tags}}<span class="chip">{{this}}</span>{{/each}}</div>
-      {{/if}}
     </div>
     <div class="flex flex-wrap gap-2">
-      {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy'))}}
+      {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}}
         <button class="btn" data-server-action="restart" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'rotate-cw' 'size-4'}}} Restart</button>
         <button class="btn btn-danger" data-server-action="stop" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'square' 'size-4'}}} Stop</button>
-        <button class="btn btn-ghost" data-server-action="kill" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Force kill — skips world save">{{{icon 'zap' 'size-4'}}}</button>
+        <button class="btn btn-ghost" data-server-action="kill" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Force stop. Skips the world save; use only if the server is frozen.">{{{icon 'zap' 'size-4'}}}</button>
       {{else}}
         <button class="btn btn-primary" data-server-action="start" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'play' 'size-4'}}} Start</button>
         {{#if (eq server.status 'crashed')}}<a class="btn" href="/servers/{{server.id}}/history">{{{icon 'flame' 'size-4'}}} Latest crash</a>{{/if}}
       {{/if}}
       {{#if server.pendingRecreate}}
-        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Config changed — recreate to apply">{{{icon 'wrench' 'size-4'}}} Apply changes</button>
+        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Settings changed. Rebuild the container to apply them.">{{{icon 'wrench' 'size-4'}}} Apply changes</button>
       {{/if}}
     </div>
   </div>
 
-  {{! Top-level domain sections. }}
-  <nav class="flex flex-wrap items-center gap-0.5 border-t border-line px-2">
+  {{! Top-level domain sections. flex-nowrap + overflow-x-auto: on a narrow
+      screen this scrolls as one row instead of wrapping into a multi-line
+      button grid, which reads as unstructured noise instead of a tab bar. }}
+  <nav class="flex flex-nowrap items-center gap-0.5 overflow-x-auto border-t border-line px-2">
     {{#each nav.groups}}
       <a href="{{href}}"
-         class="inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition
+         class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition
            {{#if active}}border-grass-500 text-ink{{else}}border-transparent text-ink-faint hover:text-ink{{/if}}">
         {{{icon icon 'size-4'}}} {{label}}
         {{#if badge}}<span class="badge badge-danger">{{badge}}</span>{{/if}}
@@ -52,9 +66,9 @@
   </nav>
   {{! Sub-nav for the active section (only when it has more than one). }}
   {{#if nav.sub}}
-    <div class="flex flex-wrap items-center gap-1 border-t border-line bg-inset/40 px-3 py-1.5">
+    <div class="flex flex-nowrap items-center gap-1 overflow-x-auto border-t border-line bg-inset/40 px-3 py-1.5">
       {{#each nav.sub}}
-        <a href="{{href}}" class="subtab {{#if active}}active{{/if}}">
+        <a href="{{href}}" class="subtab shrink-0 {{#if active}}active{{/if}}">
           {{label}}{{#if badge}} <span class="badge badge-danger">{{badge}}</span>{{/if}}
         </a>
       {{/each}}

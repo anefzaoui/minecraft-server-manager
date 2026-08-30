@@ -2,6 +2,7 @@
 // Pagination and exports are plain links rendered server-side.
 
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { setBusy } from '../lib/loading.js';
 
@@ -17,12 +18,12 @@ document.addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-event-excerpt]');
   if (!btn) return;
   const id = btn.dataset.eventId;
-  const restore = setBusy(btn); // icon-sized button — spinner only
+  const restore = setBusy(btn); // icon-sized button - spinner only
   try {
     const res = await fetch(`/api/events/${id}/excerpt`);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || `No captured log (${res.status})`);
+      throw new Error(data.error || friendlyError(res, { action: 'open the captured log' }));
     }
     const text = await res.text();
     const content = document.createElement('div');
@@ -31,7 +32,7 @@ document.addEventListener('click', async (e) => {
     pre.textContent = text;
     content.appendChild(pre);
     openModal({
-      title: `Captured log — ${btn.dataset.eventType || `event #${id}`}`,
+      title: `Captured Log: ${btn.dataset.eventType || `Event #${id}`}`,
       content,
       size: 'lg',
       actions: [{ label: 'Close', kind: 'ghost' }],

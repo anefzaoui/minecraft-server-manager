@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Inventory forensics + god-mode editing. Offline NBT inspection of playerdata
@@ -25,6 +25,11 @@ const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { execCapture, inspectStatus } = require('../docker/containers');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const watcherThrottle = makeFailureThrottle();
 const {
   assertUuid,
   assertName,
@@ -48,7 +53,7 @@ const ARMOR_SLOTS = { 100: 'feet', 101: 'legs', 102: 'chest', 103: 'head' };
 const OFFHAND_SLOT = -106;
 
 // ---------------------------------------------------------------------------
-// Playerdata read — resolve the active world's playerdata directory, parse the
+// Playerdata read - resolve the active world's playerdata directory, parse the
 // .dat NBT, and shape it into the panel's inventory view.
 
 function playerdataDir(serverId) {
@@ -101,7 +106,7 @@ async function readPlayerData(serverId, uuid) {
   try {
     stat = await fsp.stat(file);
   } catch {
-    throw httpError(404, 'No saved data for this player yet — they need to have joined the server at least once');
+    throw httpError(404, 'No saved data for this player yet - they need to have joined the server at least once');
   }
 
   let data;
@@ -109,8 +114,8 @@ async function readPlayerData(serverId, uuid) {
     const buf = await fsp.readFile(file);
     const { parsed } = await nbt.parse(buf); // handles gzip + endianness detection
     data = nbt.simplify(parsed);
-  } catch (err) {
-    throw httpError(422, `Could not parse the player data file: ${err.message}`);
+  } catch {
+    throw httpError(422, "That player's saved data could not be read. It may be from an incompatible version.");
   }
 
   const inventory = [];
@@ -128,7 +133,7 @@ async function readPlayerData(serverId, uuid) {
     }
   }
   // MC 1.21.5+ (26.x) keeps worn gear in an `equipment` compound instead of
-  // Inventory slots 100-103 / -106 — merge both layouts.
+  // Inventory slots 100-103 / -106 - merge both layouts.
   const eq = data.equipment && typeof data.equipment === 'object' ? data.equipment : {};
   for (const piece of ['head', 'chest', 'legs', 'feet']) {
     if (eq[piece] && eq[piece].id !== undefined && !armor.some((a) => a.piece === piece)) {
@@ -181,11 +186,11 @@ function normalizeDimension(dim) {
 /** Every player with a playerdata file: [{uuid, name, lastModified}], newest first. */
 async function listPlayersWithData(serverId) {
   const dir = playerdataDir(serverId);
-  let entries = [];
+  let entries;
   try {
     entries = await fsp.readdir(dir, { withFileTypes: true });
   } catch {
-    return []; // world not generated yet — nobody has joined
+    return []; // world not generated yet - nobody has joined
   }
   const { byUuid } = usercacheMaps(serverId);
   const players = [];
@@ -231,7 +236,7 @@ async function searchItems(serverId, query, { limit = 500 } = {}) {
     try {
       data = await readPlayerData(serverId, player.uuid);
     } catch {
-      continue; // corrupt or in-flight write — skip this player
+      continue; // corrupt or in-flight write - skip this player
     }
     for (const [where, item] of iterateItems(data)) {
       const matches =
@@ -256,7 +261,7 @@ async function searchAllServers(query, { limit = 500 } = {}) {
   const results = [];
   for (const server of require('./servers').listServers()) {
     if (results.length >= limit) break;
-    let hits = [];
+    let hits;
     try {
       hits = await searchItems(server.id, query, { limit: limit - results.length });
     } catch {
@@ -307,7 +312,7 @@ async function snapshot(serverId, uuid, reason = 'manual') {
 async function listSnapshots(serverId, uuid) {
   uuid = assertUuid(uuid);
   const dir = snapshotDir(serverId, uuid);
-  let entries = [];
+  let entries;
   try {
     entries = await fsp.readdir(dir, { withFileTypes: true });
   } catch {
@@ -342,7 +347,7 @@ function getSnapshot(relFile) {
   try {
     raw = fs.readFileSync(dataPath(relFile), 'utf8'); // dataPath re-guards containment
   } catch {
-    throw httpError(404, 'Snapshot not found — it may have been pruned');
+    throw httpError(404, 'Snapshot not found - it may have been pruned');
   }
   try {
     const parsed = JSON.parse(raw);
@@ -395,7 +400,7 @@ function diffSnapshots(aFile, bFile) {
 /** Keep only the newest `keepPerPlayer` snapshots for every player of a server. */
 async function pruneSnapshots(serverId, keepPerPlayer = 50) {
   const base = dataPath('logs', serverId, 'inventories');
-  let uuids = [];
+  let uuids;
   try {
     uuids = (await fsp.readdir(base, { withFileTypes: true }))
       .filter((e) => e.isDirectory() && UUID_RE.test(e.name))
@@ -427,7 +432,7 @@ let lastEventId = 0;
 /**
  * Poll player_events every `intervalMs` for new join/death rows and snapshot
  * that player's inventory. Starts from MAX(id) so old history is never
- * replayed. All errors are contained — the watcher can never crash the panel.
+ * replayed. All errors are contained - the watcher can never crash the panel.
  */
 function startSnapshotWatcher({ intervalMs = 20000 } = {}) {
   if (watcherTimer) return;
@@ -435,16 +440,35 @@ function startSnapshotWatcher({ intervalMs = 20000 } = {}) {
     const row = db.get('SELECT MAX(id) AS maxId FROM player_events');
     lastEventId = Number(row && row.maxId) || 0;
   } catch (err) {
-    console.error('[inventory] snapshot watcher init failed:', err.message);
+    logger.error('The inventory snapshot watcher could not read its starting point.', {
+      err: serializeError(err, { includeStack: false }),
+    });
     lastEventId = 0;
   }
   watcherTimer = setInterval(() => {
-    pollPlayerEvents().catch((err) => console.error('[inventory] snapshot watcher:', err.message));
+    pollPlayerEvents()
+      .then(() => watcherThrottle.ok(logger.info, 'The inventory snapshot watcher recovered.'))
+      .catch((err) =>
+        watcherThrottle.fail(logger.warn, 'An inventory snapshot watcher poll failed.', {
+          err: serializeError(err, { includeStack: false }),
+        })
+      );
   }, intervalMs);
   watcherTimer.unref();
 }
 
+let polling = false;
 async function pollPlayerEvents() {
+  if (polling) return; // a slow sweep (many snapshots) must not overlap the next tick
+  polling = true;
+  try {
+    await pollPlayerEventsInner();
+  } finally {
+    polling = false;
+  }
+}
+
+async function pollPlayerEventsInner() {
   const rows = db.all(
     "SELECT id, server_id, type, player FROM player_events WHERE id > ? AND type IN ('join', 'death') ORDER BY id LIMIT 200",
     lastEventId
@@ -473,12 +497,12 @@ async function assertRunning(serverId, what) {
   try {
     info = await inspectStatus(serverId);
   } catch {
-    throw httpError(503, `Docker is not reachable — cannot ${what}`);
+    throw httpError(503, `Docker is not reachable, so the panel can't ${what}. Check that Docker is running.`);
   }
   if (!info.exists || !RUNNING_STATES.has(info.status)) {
     throw httpError(
       409,
-      `The server must be running to ${what} — item edits on stopped servers are out of scope (offline data is read-only)`
+      `The server must be running to ${what} - item edits on stopped servers are out of scope (offline data is read-only)`
     );
   }
 }
@@ -558,7 +582,7 @@ async function clearItem(serverId, playerName, itemId = null, { actor = 'system'
 const ARMOR_PIECES = ['head', 'chest', 'legs', 'feet'];
 // 1.21.5 (DataVersion 4325) moved armor/offhand into the `equipment` compound.
 const EQUIPMENT_DATAVERSION = 4325;
-const MAX_STACK = 99; // `item replace` count argument limit — mirrored offline
+const MAX_STACK = 99; // `item replace` count argument limit - mirrored offline
 
 const SLOT_CONTAINERS = {
   hotbar: { size: 9, kind: 'list', list: 'Inventory', base: 0, rcon: (n) => `hotbar.${n}` },
@@ -607,7 +631,7 @@ async function editContext(serverId, uuid) {
     const info = await inspectStatus(serverId);
     running = info.exists && RUNNING_STATES.has(info.status);
   } catch {
-    /* docker down — file edits still possible */
+    /* docker down - file edits still possible */
   }
   let online = false;
   let onlineKnown = true;
@@ -627,7 +651,7 @@ async function editContext(serverId, uuid) {
 // --------------------------------------------------------------- online path
 
 /**
- * `save-all flush` — forces the server to rewrite every online player's .dat
+ * `save-all flush` - forces the server to rewrite every online player's .dat
  * with their LIVE state. Best-effort; the short wait lets the write land.
  */
 async function flushPlayerData(serverId) {
@@ -658,7 +682,7 @@ async function readDatSlot(serverId, uuid, spec) {
  * Read one live slot. Primary: `data get entity` (console sender → RCON sees
  * the output). Fallback: NeoForge 26.x can fail ANY `data get entity <player>`
  * with "An unexpected error occurred" while the player is online (verified
- * live on 26.1.2) — in that case flush the live state to disk with
+ * live on 26.1.2) - in that case flush the live state to disk with
  * `save-all flush` and read the freshly written .dat instead.
  */
 async function readSlotOnline(serverId, ctx, spec) {
@@ -667,7 +691,7 @@ async function readSlotOnline(serverId, ctx, spec) {
   if (/No entity was found|No player was found/i.test(out)) {
     throw httpError(
       409,
-      `${ctx.name} just went offline — reload and try again (the edit will use the save file instead)`
+      `${ctx.name} just went offline - reload and try again (the edit will use the save file instead)`
     );
   }
   if (/unexpected error/i.test(out)) {
@@ -677,7 +701,7 @@ async function readSlotOnline(serverId, ctx, spec) {
     } catch {
       throw httpError(
         502,
-        'Could not read the live inventory (this server rejects data queries and its save file is unreadable) — try again'
+        'Could not read the live inventory (this server rejects data queries and its save file is unreadable) - try again'
       );
     }
   }
@@ -707,17 +731,17 @@ async function editSlotOnline(serverId, ctx, spec, { op, item, count }) {
     assertRconOk(out, name);
     return { item, count, note: null };
   }
-  // op === 'count' — re-issue the same id with the new count. `item replace`
+  // op === 'count' - re-issue the same id with the new count. `item replace`
   // always creates a fresh stack, so custom components are lost; flag it.
   const cur = await readSlotOnline(serverId, ctx, spec);
-  if (!cur.exists) throw httpError(404, `${spec.rconSlot} is empty — nothing to re-count`);
+  if (!cur.exists) throw httpError(404, `${spec.rconSlot} is empty - nothing to re-count`);
   const out = await rcon(serverId, 'item', 'replace', 'entity', name, spec.rconSlot, 'with', cur.id, count);
   assertRconOk(out, name);
   return {
     item: cur.id,
     count,
     note: cur.hasComponents
-      ? 'This item carried custom data (enchantments, contents, …) which a live count change resets — change counts while the player is offline to keep it.'
+      ? 'This item carried custom data (enchantments, contents, …) which a live count change resets - change counts while the player is offline to keep it.'
       : null,
   };
 }
@@ -725,12 +749,12 @@ async function editSlotOnline(serverId, ctx, spec, { op, item, count }) {
 async function moveSlotOnline(serverId, ctx, fromSpec, toSpec) {
   const name = ctx.name;
   const src = await readSlotOnline(serverId, ctx, fromSpec);
-  if (!src.exists) throw httpError(404, `${fromSpec.rconSlot} is empty — nothing to move`);
+  if (!src.exists) throw httpError(404, `${fromSpec.rconSlot} is empty - nothing to move`);
   const dst = await readSlotOnline(serverId, ctx, toSpec);
   if (dst.exists) {
     throw httpError(
       409,
-      `${toSpec.rconSlot} is occupied — live moves need an empty target. Swaps work while the player is offline (kick them first).`
+      `${toSpec.rconSlot} is occupied - live moves need an empty target. Swaps work while the player is offline (kick them first).`
     );
   }
   // `from entity` copies the stack WITH its components, then the source is aired.
@@ -754,7 +778,7 @@ async function moveSlotOnline(serverId, ctx, fromSpec, toSpec) {
 
 // -------------------------------------------------------------- offline path
 // All mutation happens on the RAW prismarine-nbt tree ({type, value} tags), so
-// every unknown field — modded components included — survives untouched.
+// every unknown field - modded components included - survives untouched.
 
 const tag = {
   byte: (v) => ({ type: 'byte', value: v }),
@@ -786,7 +810,7 @@ function rawItemList(root, name, { create = false } = {}) {
     list = root[name] = { type: 'list', value: { type: 'compound', value: [] } };
   }
   if (list.type !== 'list') throw httpError(422, `${name} in the player file is not a list`);
-  // Empty NBT lists carry element type 'end' — retype on first insert.
+  // Empty NBT lists carry element type 'end' - retype on first insert.
   if (list.value.type === 'end' || !Array.isArray(list.value.value)) {
     list.value = { type: 'compound', value: [] };
   } else if (list.value.type !== 'compound') {
@@ -828,7 +852,7 @@ function offlineSlotRef(root, spec) {
       },
     };
   }
-  // List-backed (Inventory / EnderItems) — armor/offhand fall through here on
+  // List-backed (Inventory / EnderItems) - armor/offhand fall through here on
   // pre-1.21.5 saves via their legacy slot numbers.
   const listName = spec.kind === 'equipment' ? 'Inventory' : spec.list;
   const find = (entries) => entries.findIndex((e) => e && e.Slot && Number(e.Slot.value) === spec.nbtSlot);
@@ -863,13 +887,13 @@ function applyOfflineSlotEdit(root, spec, { op, item, count }) {
     return { item, count };
   }
   const cur = ref.get();
-  if (!cur) throw httpError(404, `${spec.rconSlot} is empty — nothing to ${op === 'delete' ? 'delete' : 're-count'}`);
+  if (!cur) throw httpError(404, `${spec.rconSlot} is empty - nothing to ${op === 'delete' ? 'delete' : 're-count'}`);
   if (op === 'delete') {
     const meta = { item: rawId(cur), count: Number((cur.count || cur.Count || {}).value || 1) };
     ref.remove();
     return meta;
   }
-  setRawCount(cur, count); // op === 'count' — components untouched
+  setRawCount(cur, count); // op === 'count' - components untouched
   return { item: rawId(cur), count };
 }
 
@@ -878,7 +902,7 @@ function applyOfflineMove(root, fromSpec, toSpec) {
   const fromRef = offlineSlotRef(root, fromSpec);
   const toRef = offlineSlotRef(root, toSpec);
   const src = fromRef.get();
-  if (!src) throw httpError(404, `${fromSpec.rconSlot} is empty — nothing to move`);
+  if (!src) throw httpError(404, `${fromSpec.rconSlot} is empty - nothing to move`);
   const dst = toRef.get();
   fromRef.remove();
   if (dst) toRef.remove();
@@ -887,7 +911,7 @@ function applyOfflineMove(root, fromSpec, toSpec) {
   return { item: rawId(src), count: Number((src.count || src.Count || {}).value || 1), swapped: Boolean(dst) };
 }
 
-// Nested (backpack) editing — offline only. Walk the RAW tree along the same
+// Nested (backpack) editing - offline only. Walk the RAW tree along the same
 // path detectNestedInventories reported on the simplified view (the shapes
 // map 1:1: compound key <-> string segment, list index <-> number segment).
 
@@ -909,15 +933,15 @@ function walkRaw(startTag, pathSegs) {
   for (const seg of pathSegs) {
     if (cur.type === 'compound') {
       if (typeof seg !== 'string' || !cur.value[seg])
-        throw httpError(404, 'That nested inventory no longer exists — reload');
+        throw httpError(404, 'That nested inventory no longer exists - reload');
       cur = cur.value[seg];
     } else if (cur.type === 'list') {
       if (!Number.isInteger(seg) || !Array.isArray(cur.value.value) || seg >= cur.value.value.length) {
-        throw httpError(404, 'That nested inventory no longer exists — reload');
+        throw httpError(404, 'That nested inventory no longer exists - reload');
       }
       cur = { type: cur.value.type, value: cur.value.value[seg] };
     } else {
-      throw httpError(404, 'That nested inventory no longer exists — reload');
+      throw httpError(404, 'That nested inventory no longer exists - reload');
     }
   }
   return cur;
@@ -927,14 +951,14 @@ function walkRaw(startTag, pathSegs) {
 function applyOfflineNestedEdit(root, spec, { path: pathSegs, index, op, item, count }) {
   assertNestedPath(pathSegs);
   const holder = offlineSlotRef(root, spec).get();
-  if (!holder) throw httpError(404, `${spec.rconSlot} is empty — the backpack is gone. Reload.`);
+  if (!holder) throw httpError(404, `${spec.rconSlot} is empty - the backpack is gone. Reload.`);
   const listTag = walkRaw({ type: 'compound', value: holder }, pathSegs);
   if (listTag.type !== 'list' || listTag.value.type !== 'compound' || !Array.isArray(listTag.value.value)) {
     throw httpError(400, 'That path does not point at an item list');
   }
   const entries = listTag.value.value;
   if (!Number.isInteger(index) || index < 0 || index >= entries.length) {
-    throw httpError(404, 'That nested slot no longer exists — reload');
+    throw httpError(404, 'That nested slot no longer exists - reload');
   }
   const el = entries[index];
   // Wrapped shape {slot, item:{...}} vs direct {id, count, Slot?}.
@@ -951,7 +975,7 @@ function applyOfflineNestedEdit(root, spec, { path: pathSegs, index, op, item, c
     setRawCount(inner, count);
     return { item: rawId(inner), count };
   }
-  // op === 'set' — replace with a fresh stack, keeping the element's slot marker.
+  // op === 'set' - replace with a fresh stack, keeping the element's slot marker.
   const fresh = makeRawItem(item, count);
   if (wrapped) {
     el.item = { type: 'compound', value: fresh };
@@ -972,7 +996,7 @@ async function backupDat(file) {
   await fsp.copyFile(file, bak);
   const dir = path.dirname(file);
   const prefix = path.basename(file) + BAK_SUFFIX;
-  let names = [];
+  let names;
   try {
     names = await fsp.readdir(dir);
   } catch {
@@ -996,13 +1020,13 @@ async function withDatFile(serverId, ctx, mutate) {
   if (ctx.running && ctx.onlineKnown === false) {
     throw httpError(
       409,
-      `Couldn't confirm ${ctx.name || ctx.uuid} is offline (the server didn't answer) — not risking a file edit while it's running. Retry in a moment.`
+      `Couldn't confirm ${ctx.name || ctx.uuid} is offline (the server didn't answer) - not risking a file edit while it's running. Retry in a moment.`
     );
   }
   if (ctx.running && ctx.online) {
     throw httpError(
       409,
-      `${ctx.name || ctx.uuid} is online — the server would overwrite file edits. This edit should have gone over RCON; reload and retry.`
+      `${ctx.name || ctx.uuid} is online - the server would overwrite file edits. This edit should have gone over RCON; reload and retry.`
     );
   }
   const file = path.join(playerdataDir(serverId), `${ctx.uuid}.dat`);
@@ -1013,13 +1037,13 @@ async function withDatFile(serverId, ctx, mutate) {
     try {
       buf = await fsp.readFile(file);
     } catch {
-      throw httpError(404, 'No saved data for this player yet — they need to have joined the server at least once');
+      throw httpError(404, 'No saved data for this player yet - they need to have joined the server at least once');
     }
     let parsed;
     try {
       ({ parsed } = await nbt.parse(buf));
-    } catch (err) {
-      throw httpError(422, `Could not parse the player data file: ${err.message}`);
+    } catch {
+      throw httpError(422, "That player's saved data could not be read. It may be from an incompatible version.");
     }
     const result = mutate(parsed.value);
     await backupDat(file);
@@ -1070,7 +1094,7 @@ async function editSlot(
     if (ctx.mechanism === 'rcon') {
       throw httpError(
         409,
-        'Backpack contents can only be edited in the save file — stop the server or kick the player, then try again.'
+        'Backpack contents can only be edited in the save file - stop the server or kick the player, then try again.'
       );
     }
     result = await withDatFile(serverId, ctx, (root) =>
@@ -1150,7 +1174,7 @@ async function moveItem(serverId, uuid, from, to, { actor = 'system' } = {}) {
   return { ...result, player: playerLabel, mechanism: ctx.mechanism, from: fromSpec.rconSlot, to: toSpec.rconSlot };
 }
 
-/** Add an item to the first free hotbar/main slot — works online and offline. */
+/** Add an item to the first free hotbar/main slot - works online and offline. */
 async function addItem(serverId, uuid, itemId, count = 1, { actor = 'system' } = {}) {
   const item = assertItemId(itemId);
   count = clampCount(count);
@@ -1169,7 +1193,7 @@ async function addItem(serverId, uuid, itemId, count = 1, { actor = 'system' } =
         break;
       }
     }
-    if (free === -1) throw httpError(409, 'Their inventory is full — no free slot to add into');
+    if (free === -1) throw httpError(409, 'Their inventory is full - no free slot to add into');
     entries.push({ ...makeRawItem(item, count), Slot: tag.byte(free) });
     return free;
   });

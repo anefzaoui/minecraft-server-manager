@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
+import { escapeHtml as esc } from '../lib/format.js';
 
 const grid = document.querySelector('[data-blueprints-page]');
 if (grid) init();
@@ -21,7 +22,8 @@ function init() {
     } else if (delBtn) {
       const ok = await confirmDialog({
         title: `Delete blueprint "${name}"?`,
-        message: 'Removes the .mcserver.zip from the library. Servers already created from it are not affected.',
+        message:
+          'This removes the .mcserver.zip file from the library. Servers already created from it are not affected.',
         confirmLabel: 'Delete',
         danger: true,
       });
@@ -33,7 +35,7 @@ function init() {
           toast(`Blueprint "${name}" deleted.`);
           card.remove();
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || 'That blueprint could not be deleted. Please try again.', { kind: 'error' });
         }
       });
     }
@@ -53,12 +55,12 @@ function init() {
     try {
       const res = await fetch('/api/blueprints/import-preview', { method: 'POST', body: form });
       data = await res.json();
-    } catch (err) {
+    } catch {
       progress.close();
-      return toast(`Upload failed: ${err.message}`, { kind: 'error' });
+      return toast('The blueprint could not be uploaded. Check your connection and try again.', { kind: 'error' });
     }
     progress.close();
-    if (!data.ok) return toast(data.error || 'Not a valid blueprint', { kind: 'error', timeout: 9000 });
+    if (!data.ok) return toast(data.error || "That file isn't a valid blueprint.", { kind: 'error', timeout: 9000 });
     showPreview(data.preview, { uploadToken: data.uploadToken });
   });
 }
@@ -89,7 +91,7 @@ function showPreview(preview, importBody) {
       m.overlay.length
         ? `
       <div>
-        <div class="mb-1 text-xs font-medium text-ink-faint">Custom overlay (${m.overlay.length})</div>
+        <div class="mb-1 text-xs font-medium text-ink-faint">Custom mods (${m.overlay.length})</div>
         <ul class="max-h-48 space-y-1 overflow-y-auto rounded-md border border-line bg-raised p-2.5 text-xs">${overlayRows}</ul>
       </div>`
         : ''
@@ -127,12 +129,12 @@ let importInFlight = false; // dismissing the progress modal must not allow a se
 
 async function createFrom(body, name) {
   if (importInFlight) {
-    toast('A server is already being created from a blueprint — hold on.', { kind: 'info' });
+    toast('A server is already being created from a blueprint. Please wait for it to finish.', { kind: 'info' });
     return;
   }
   importInFlight = true;
   const progress = openProgress(
-    `Creating server from "${name}" — pulling the image, installing the pack and mods. This can take a few minutes…`
+    `Creating a server from "${name}". This downloads the server image and installs the pack and mods, so it can take a few minutes…`
   );
   let data;
   try {
@@ -142,14 +144,18 @@ async function createFrom(body, name) {
       body: JSON.stringify(body),
     });
     data = await res.json();
-  } catch (err) {
+  } catch {
     progress.close();
-    return toast(`Import failed: ${err.message}`, { kind: 'error' });
+    return toast('The import could not be completed. Check your connection and try again.', { kind: 'error' });
   } finally {
     importInFlight = false;
   }
   progress.close();
-  if (!data.ok) return toast(data.error || 'Import failed', { kind: 'error', timeout: 9000 });
+  if (!data.ok)
+    return toast(data.error || 'The blueprint could not be imported. Please try again.', {
+      kind: 'error',
+      timeout: 9000,
+    });
   if (!data.report || !data.report.length) {
     toast(`Server "${data.server.name}" created.`);
     setTimeout(() => {
@@ -184,9 +190,9 @@ function showReport(server, report) {
         )
         .join('')}
     </ul>
-    ${report.some((r) => r.status !== 'ok') ? '<p class="text-xs text-ink-faint">Failed items can be added later from the server’s Mods tab.</p>' : ''}`;
+    ${report.some((r) => r.status !== 'ok') ? '<p class="text-xs text-ink-faint">Failed items can be added later from the server\'s Mods tab.</p>' : ''}`;
   openModal({
-    title: 'Blueprint import finished',
+    title: 'Blueprint Import Finished',
     content,
     actions: [
       { label: 'Stay here', kind: 'ghost' },
@@ -207,9 +213,9 @@ function openProgress(text) {
   content.innerHTML = `
     <p></p>
     <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
-    <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import — it keeps running server-side.</p>`;
+    <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import. It keeps running in the background.</p>`;
   content.querySelector('p').textContent = text;
-  return openModal({ title: 'Working…', content, actions: [] });
+  return openModal({ title: 'Please Wait…', content, actions: [] });
 }
 
 function sourceLabel(entry) {
@@ -222,11 +228,4 @@ function sourceLabel(entry) {
     }
   }
   return entry.filename ? 'embedded' : 'no source';
-}
-
-function esc(s) {
-  return String(s ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
 }

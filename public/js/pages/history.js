@@ -4,6 +4,7 @@
 
 import { openModal } from '../lib/modal.js';
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
 
 const root = document.querySelector('[data-history-server]');
@@ -15,7 +16,7 @@ function init(serverId) {
     const crash = { id: card.dataset.crashId, filename: card.dataset.crashFile };
     card.querySelectorAll('[data-crash-action]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        // Each action fetches the report text first — spin the button meanwhile.
+        // Each action fetches the report text first - spin the button meanwhile.
         const action = btn.dataset.crashAction;
         if (action === 'view') withBusy(btn, () => openViewer(serverId, crash, card));
         else if (action === 'copy') withBusy(btn, () => copyTrace(serverId, crash));
@@ -71,14 +72,14 @@ function init(serverId) {
       withBusy(btn, async () => {
         try {
           const res = await fetch(`/api/events/${btn.dataset.eventId}/excerpt`);
-          if (!res.ok) throw new Error(`Could not load the captured log (${res.status})`);
+          if (!res.ok) throw new Error(friendlyError(res, { action: 'load the captured log' }));
           const text = await res.text();
           const pre = document.createElement('pre');
           pre.className =
             'console max-h-[65vh] overflow-auto whitespace-pre-wrap break-words p-3 text-xs leading-relaxed';
           pre.textContent = text || '(empty excerpt)';
           openModal({
-            title: 'Captured log excerpt',
+            title: 'Captured Log Excerpt',
             size: 'lg',
             content: pre,
             actions: [
@@ -103,7 +104,7 @@ function init(serverId) {
 
 async function fetchText(serverId, crash) {
   const res = await fetch(`/api/servers/${serverId}/crashes/${crash.id}/text`);
-  if (!res.ok) throw new Error(`Could not load report (${res.status})`);
+  if (!res.ok) throw new Error(friendlyError(res, { action: 'load that crash report' }));
   return res.text();
 }
 
@@ -156,7 +157,7 @@ async function openViewer(serverId, crash, card) {
     return;
   }
 
-  // Server marked it viewed as a side effect of the text fetch — drop the badge.
+  // Server marked it viewed as a side effect of the text fetch - drop the badge.
   card?.querySelectorAll('.badge').forEach((b) => {
     if (b.textContent.trim() === 'new') b.remove();
   });
@@ -175,7 +176,7 @@ async function openViewer(serverId, crash, card) {
         },
       },
       {
-        label: 'Copy stacktrace',
+        label: 'Copy stack trace',
         kind: 'ghost',
         onClick: () => {
           copyToClipboard(extractTrace(text), 'Stack trace copied to clipboard.');
@@ -194,7 +195,7 @@ async function openViewer(serverId, crash, card) {
   });
 }
 
-/** Build the highlighted, section-collapsible report view (DOM only — no innerHTML of report text). */
+/** Build the highlighted, section-collapsible report view (DOM only - no innerHTML of report text). */
 function renderReport(text) {
   const isSectionStart = (l) => /^--\s.+\s--$/.test(l.trim()) || /^A detailed walkthrough/.test(l);
   const lines = text.split(/\r?\n/);

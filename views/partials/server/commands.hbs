@@ -4,18 +4,18 @@
   <div class="card mb-4 p-4">
     <div class="flex flex-wrap items-start gap-4">
       <div class="min-w-0 flex-1">
-        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-link'}}} Custom chat commands</h3>
+        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-link'}}} Custom Chat Commands</h3>
         <p class="mt-1 max-w-prose text-sm text-ink-faint">
-          Players type a trigger in game chat — like <code class="rounded bg-inset px-1 font-mono text-ink-soft" data-cc-prefix-sample>{{chatPrefix}}rtp2</code> —
-          and the panel runs the bound action <b class="text-ink-soft">as that player</b>: random teleport, structure or biome
-          teleport, or your own console commands. Works on any server, version or modpack — no mods needed.
+          Players type a trigger in the game chat, such as <code class="rounded bg-inset px-1 font-mono text-ink-soft" data-cc-prefix-sample>{{chatPrefix}}rtp2</code>,
+          and the panel runs the action you chose <b class="text-ink-soft">as that player</b>: a random teleport, a structure or biome
+          teleport, or your own console commands. It works on any server, version, or modpack, with no mods needed.
           Each command has its own permission level and per-player cooldown.
         </p>
       </div>
       <div class="flex items-end gap-2">
         <div>
           <label class="label" for="cc-prefix">Prefix</label>
-          <input class="input w-16 text-center font-mono" id="cc-prefix" value="{{chatPrefix}}" maxlength="2" autocomplete="off" spellcheck="false" data-tip="1-2 characters, e.g. ! or . — never /">
+          <input class="input w-16 text-center font-mono" id="cc-prefix" value="{{chatPrefix}}" maxlength="2" autocomplete="off" spellcheck="false" data-tip="One or two characters, such as ! or . It cannot be /, which Minecraft uses for its own commands.">
         </div>
         <button class="btn btn-sm" id="cc-prefix-save">{{{icon 'check' 'size-3.5'}}} Save</button>
       </div>
@@ -24,7 +24,7 @@
 
   {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
     <div class="notice notice-warn mb-4 max-w-prose text-xs">
-      Server is offline — commands are saved and start working the moment the server is running again.
+      The server is offline. Commands are saved and start working the moment the server is running again.
       The Test button needs a running server.
     </div>
   {{/unless}}
@@ -72,7 +72,7 @@
             </td>
             <td class="text-right">
               <div class="inline-flex gap-1">
-                <button class="btn btn-ghost btn-sm" data-cc-test data-tip="Run now as a named player (skips permission &amp; cooldown)">{{{icon 'play' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-cc-test data-tip="Run now as a named player (permission and cooldown checks are skipped)">{{{icon 'play' 'size-3.5'}}}</button>
                 <button class="btn btn-ghost btn-sm" data-cc-edit data-tip="Edit command">{{{icon 'pencil' 'size-3.5'}}}</button>
                 <button class="btn btn-ghost btn-sm text-danger" data-cc-delete data-tip="Delete command" aria-label="Delete {{trigger}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               </div>
@@ -83,13 +83,13 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='terminal' title='No chat commands yet'
-        message=(concat 'Create your first one — a custom ' chatPrefix 'rtp that randomly teleports whoever types it takes about 20 seconds to set up.')
+    {{> empty-state iconName='terminal' title='No Chat Commands Yet'
+        message=(concat 'Create your first one. A custom ' chatPrefix 'rtp that randomly teleports whoever types it takes about 20 seconds to set up.')
         ctaId='cc-add-empty' ctaLabel='Add command'}}
   {{/if}}
 
   <div class="card mt-6 p-4">
-    <h3 class="mb-3 font-semibold">Recent uses</h3>
+    <h3 class="mb-3 font-semibold">Recent Uses</h3>
     {{#if chatCommandEvents.length}}
       <div class="divide-y divide-line text-sm">
         {{#each chatCommandEvents}}
@@ -101,7 +101,7 @@
         {{/each}}
       </div>
     {{else}}
-      <p class="text-sm text-ink-faint">Nothing yet — every use (from chat or the Test button) shows up here and in the History tab.</p>
+      <p class="text-sm text-ink-faint">Nothing yet. Every use, from chat or the Test button, shows up here and in the History tab.</p>
     {{/if}}
   </div>
 </div>

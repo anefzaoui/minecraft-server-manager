@@ -8,7 +8,7 @@ const db = require('../db');
 const GB = 1024 ** 3;
 
 /**
- * UX rule (user-mandated): LATEST/SNAPSHOT are never shown bare — always
+ * UX rule (user-mandated): LATEST/SNAPSHOT are never shown bare - always
  * resolve to "LATEST (26.2)" style using the cached Mojang manifest.
  */
 async function displayVersion(mcVersion) {
@@ -20,6 +20,61 @@ async function displayVersion(mcVersion) {
   } catch {
     return mcVersion;
   }
+}
+
+/**
+ * Lean per-server view models for the layout chrome that renders on EVERY
+ * authenticated page: the sidebar server list, the server-picker <select>s on
+ * Backups / Activity / Worlds, and the Storage quota table. Those templates read
+ * id / name / icon / accent / status / disk / flavor, so this deliberately skips
+ * the full serverVM() fan-out (per-server pack lookup, update-check lookup,
+ * crash-count, loader detection, version-manifest resolve) that used to run once
+ * per server on every page load. `flavor` is a pure map off `type` - free - so
+ * it stays; the pack/update lookups do not (see packServerVMs() for the
+ * Modpacks page, which does need them).
+ */
+function sidebarServerVMs() {
+  const rows = db.all(
+    'SELECT id, display_name, icon, accent, status, type, disk_quota_bytes FROM servers WHERE deleted_at IS NULL ORDER BY created_at'
+  );
+  const sizes = new Map(
+    db
+      .all("SELECT rel_path, size_bytes FROM storage_index WHERE rel_path LIKE 'servers/%'")
+      .map((r) => [r.rel_path, r.size_bytes])
+  );
+  return rows.map((s) => ({
+    id: s.id,
+    name: s.display_name,
+    icon: s.icon,
+    accent: s.accent,
+    status: s.status,
+    flavor: flavorLabel(s.type),
+    disk: { used: sizes.get(`servers/${s.id}`) || 0, quota: s.disk_quota_bytes || 25 * GB },
+  }));
+}
+
+/**
+ * Pack-backed servers for the Modpacks page. Unlike sidebarServerVMs() this is
+ * NOT on the every-page hot path (one route), so it can afford the per-server
+ * pack + update-check lookups. Shape matches what views/modpacks.hbs reads:
+ * id / name / icon / accent / pack / updateAvailable.
+ */
+function packServerVMs() {
+  const rows = db.all(
+    `SELECT s.id, s.display_name, s.icon, s.accent
+       FROM servers s
+       JOIN server_packs p ON p.server_id = s.id
+      WHERE s.deleted_at IS NULL
+      ORDER BY s.created_at`
+  );
+  return rows.map((s) => ({
+    id: s.id,
+    name: s.display_name,
+    icon: s.icon,
+    accent: s.accent,
+    pack: packVM(s.id),
+    updateAvailable: hasPackUpdate(s.id),
+  }));
 }
 
 async function serverVM(s, { withLive = true } = {}) {
@@ -49,12 +104,15 @@ async function serverVM(s, { withLive = true } = {}) {
     notes: s.notes,
     updatePolicy: s.update_policy,
     pendingRecreate: Boolean(s.pending_recreate),
-    lastStarted: s.last_started_at || '—',
+    lastStarted: s.last_started_at || '-',
     created: s.created_at,
     consoleLabel: s.console_label || '',
   };
 
-  if (withLive && (s.status === 'running' || s.status === 'starting' || s.status === 'unhealthy')) {
+  if (
+    withLive &&
+    (s.status === 'running' || s.status === 'starting' || s.status === 'unhealthy' || s.status === 'stalled')
+  ) {
     // Never block a page render on Docker: everything comes from the in-memory
     // live cache (fed by streaming stats + periodic rcon list).
     const liveCache = require('../services/liveCache');
@@ -66,7 +124,7 @@ async function serverVM(s, { withLive = true } = {}) {
     if (live.startedAt) vm.stats.uptime = formatUptime(Date.now() - Date.parse(live.startedAt));
     if (live.players) vm.players = { ...vm.players, ...live.players };
     // Boot-phase detail ("Downloading mods…", "Generating world") or the
-    // latched "Player count unavailable" state — one shared derivation with
+    // latched "Player count unavailable" state - one shared derivation with
     // the live-poll route, so the SSR chip and the hydrated one can't drift.
     const detail = liveCache.statusDetail(live);
     if (detail) vm.statusDetail = detail;
@@ -87,7 +145,7 @@ function packVM(serverId) {
     version: pack.pinned_version_name,
     versionId: pack.pinned_version_id,
     latest: check && check.latest_name ? check.latest_name : pack.pinned_version_name,
-    // The real platform id behind `latest` (a display NAME — differs from the id
+    // The real platform id behind `latest` (a display NAME - differs from the id
     // for CurseForge/Modrinth). Modpacks-page "Upgrade" posts this so the request
     // names the exact version the card showed, rather than trusting the server to
     // re-derive "latest" itself. Same pattern as updates.hbs's data-version-id.
@@ -154,7 +212,7 @@ function eventVM(e) {
     id: e.id,
     // Deleted servers keep their name in history but must not be linked (404).
     serverId: server && !server.deleted_at ? e.server_id : null,
-    server: server ? server.display_name + (server.deleted_at ? ' (deleted)' : '') : '— panel —',
+    server: server ? server.display_name + (server.deleted_at ? ' (deleted)' : '') : '- panel -',
     type: e.type,
     actor: e.actor,
     ts: e.created_at,
@@ -176,4 +234,13 @@ function crashVM(c) {
   };
 }
 
-module.exports = { serverVM, flavorLabel, displayVersion, eventVM, crashVM, safeJsonParse };
+module.exports = {
+  serverVM,
+  sidebarServerVMs,
+  packServerVMs,
+  flavorLabel,
+  displayVersion,
+  eventVM,
+  crashVM,
+  safeJsonParse,
+};

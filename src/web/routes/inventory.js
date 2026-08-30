@@ -1,9 +1,9 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Inventory forensics API. Mounted at /api/servers/:id/inventory (mergeParams
-// carries :id down from the mount point). A second router — exported as
-// `module.exports.globalSearch` — serves GET /api/inventory/search across all
+// carries :id down from the mount point). A second router - exported as
+// `module.exports.globalSearch` - serves GET /api/inventory/search across all
 // servers.
 
 const asyncHandler = require('../middleware/asyncHandler');
@@ -98,7 +98,7 @@ async function loadContext(req) {
     const info = await inspectStatus(server.id);
     running = info.exists && RUNNING_STATES.has(info.status);
   } catch {
-    /* docker down — offline reads still work */
+    // intentional: Docker down - offline reads still work, `running` stays false
   }
   return { server, running };
 }
@@ -136,7 +136,7 @@ router.get(
   })
 );
 
-// One-slot god-mode edit: set / delete / count — optionally inside a nested
+// One-slot god-mode edit: set / delete / count - optionally inside a nested
 // sub-inventory (backpack) via `nested: {path, index}` (offline mechanism only).
 router.post(
   '/player/:uuid/slot',
@@ -159,7 +159,7 @@ router.post(
   })
 );
 
-// Add to the first free slot — /give when online, .dat insert when offline.
+// Add to the first free slot - /give when online, .dat insert when offline.
 router.post(
   '/player/:uuid/add',
   asyncHandler(async (req, res, next) => {
@@ -241,7 +241,7 @@ router.post(
 );
 
 // ---------------------------------------------------------------------------
-// Global search across every server — mount at /api/inventory
+// Global search across every server - mount at /api/inventory
 
 const globalSearch = express.Router();
 

@@ -1,8 +1,8 @@
 // Populates a timezone <select> (from Intl.supportedValuesOf) and a country
 // <select> (ISO-3166 alpha-2 + Intl.DisplayNames for names), each with an
-// "Auto — system …" option at the top. Shared by the setup wizard and Settings.
+// "Auto - system …" option at the top. Shared by the setup wizard and Settings.
 // The selects start data-native (they're empty at page load) and are enhanced
-// HERE, after filling — the styled searchable picker beats a native list of
+// HERE, after filling - the styled searchable picker beats a native list of
 // 400 timezones, and these were the last two native selects in the app.
 import { enhanceSelect } from './select.js';
 
@@ -38,7 +38,7 @@ export function countries() {
   try {
     names = new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' });
   } catch {
-    /* names unavailable — fall back to the raw code */
+    /* names unavailable - fall back to the raw code */
   }
   return COUNTRY_CODES.map((code) => ({ code, name: (names && names.of(code)) || code })).sort((a, b) =>
     a.name.localeCompare(b.name)
@@ -47,7 +47,7 @@ export function countries() {
 
 export function fillTimezoneSelect(select, current, systemTz) {
   select.innerHTML = '';
-  const auto = new Option(`Auto — system time zone${systemTz ? ` (${systemTz})` : ''}`, 'auto');
+  const auto = new Option(`Auto (use the system time zone${systemTz ? `: ${systemTz}` : ''})`, 'auto');
   select.add(auto);
   for (const tz of timezones()) select.add(new Option(tz, tz));
   select.value = current && current !== 'auto' ? current : 'auto';
@@ -56,7 +56,7 @@ export function fillTimezoneSelect(select, current, systemTz) {
 
 export function fillCountrySelect(select, current, systemCc) {
   select.innerHTML = '';
-  const auto = new Option(`Auto — system country${systemCc ? ` (${systemCc})` : ''}`, 'auto');
+  const auto = new Option(`Auto (use the system country${systemCc ? `: ${systemCc}` : ''})`, 'auto');
   select.add(auto);
   for (const { code, name } of countries()) select.add(new Option(`${name} (${code})`, code));
   select.value = current && current !== 'auto' ? current : 'auto';

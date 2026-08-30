@@ -1,11 +1,11 @@
 'use strict';
 
 // Java usernames are 1-16 chars of [A-Za-z0-9_] (Mojang requires 3-16 for new
-// accounts, but legacy/cracked names can be shorter, so this stays lenient —
+// accounts, but legacy/cracked names can be shorter, so this stays lenient -
 // matches the historical behavior every caller here already relied on).
 //
 // Bedrock players joining through Geyser/Floodgate get a single
-// non-alphanumeric prefix character glued onto that name — "." by default
+// non-alphanumeric prefix character glued onto that name - "." by default
 // (Floodgate's `username-prefix` setting), sometimes "*" on alternate
 // configs. Every username check in the app needs to accept that prefix, or a
 // Bedrock player is invisible to whitelist/ops/bans/kicks/teleports/

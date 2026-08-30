@@ -16,6 +16,20 @@ test.after(async () => {
   await app.stop();
 });
 
+/**
+ * Re-login as admin and return the fresh session cookie. Needed after any
+ * step that disables/rotates 2FA via a DIFFERENT session than `adminCookie`
+ * (e.g. the one just created by completing a /login/2fa flow): that now
+ * correctly revokes every OTHER session for the same user (see
+ * auth.js revokeOtherSessions), which includes the shared `adminCookie`
+ * fixture set up once in test.before - without a fresh login here, every
+ * later test in this file would find `adminCookie` already logged out.
+ */
+async function relogin(password = 'supersecret123') {
+  const r = await app.req('POST', '/login', { body: { username: 'admin', password } });
+  return (r.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+}
+
 /** Enroll 2FA on the given (already-authenticated) account and return its secret + backup codes. */
 async function enroll(cookie, password = 'supersecret123') {
   const setup = await app.req('POST', '/api/account/totp/setup', { cookie, body: {} });
@@ -41,7 +55,7 @@ test('self-service setup/confirm rejects a wrong code and never persists the sec
   });
   assert.equal(bad.status, 400);
 
-  // Never confirmed — logging in still needs only a password, no /login/2fa hop.
+  // Never confirmed - logging in still needs only a password, no /login/2fa hop.
   const login = await app.req('POST', '/login', { body: { username: 'admin', password: 'supersecret123' } });
   assert.equal(login.status, 302);
 });
@@ -87,8 +101,11 @@ test('enrolling forks the login flow onto /login/2fa, and a correct code complet
   const authed = await app.req('GET', '/api/servers/live', { cookie: fullCookie });
   assert.equal(authed.status, 200);
 
-  // Clean up — disable so later tests in this file start from a known state.
+  // Clean up - disable so later tests in this file start from a known state.
   await app.req('POST', '/api/account/totp/disable', { cookie: fullCookie, body: { password: 'supersecret123' } });
+  // That disable just revoked every other admin session, including the
+  // shared `adminCookie` fixture - refresh it for later tests.
+  adminCookie = await relogin();
 });
 
 test('a backup code completes login and is single-use', async () => {
@@ -109,13 +126,15 @@ test('a backup code completes login and is single-use', async () => {
   assert.equal(replay.status, 401);
 
   await app.req('POST', '/api/account/totp/disable', { cookie: fullCookie, body: { password: 'supersecret123' } });
+  // Same as above: that disable revoked the shared adminCookie session too.
+  adminCookie = await relogin();
 });
 
 test('confirm refuses to silently replace an already-enabled secret', async () => {
   const { secret: originalSecret } = await enroll(adminCookie);
 
   // Even a valid setup+code for a NEW secret must not overwrite the live one
-  // without disabling first — this is the path a hijacked session (no
+  // without disabling first - this is the path a hijacked session (no
   // password) could otherwise use to take over 2FA undetected.
   const setup = await app.req('POST', '/api/account/totp/setup', { cookie: adminCookie, body: {} });
   const code = totp.codeAt(setup.json.secret);
@@ -135,6 +154,8 @@ test('confirm refuses to silently replace an already-enabled secret', async () =
   assert.equal(ok.status, 302);
   const fullCookie = (ok.setCookie || []).map((c) => c.split(';')[0]).join('; ');
   await app.req('POST', '/api/account/totp/disable', { cookie: fullCookie, body: { password: 'supersecret123' } });
+  // Same as above: that disable revoked the shared adminCookie session too.
+  adminCookie = await relogin();
 });
 
 test('disable requires the current password', async () => {
@@ -188,7 +209,7 @@ test("an admin can force-reset another user's 2FA without their password", async
   const reset = await app.req('POST', `/api/users/${userId}/totp/disable`, { cookie: adminCookie, body: {} });
   assert.equal(reset.status, 200);
 
-  // 2FA is off again — a plain password login now succeeds without a /login/2fa hop.
+  // 2FA is off again - a plain password login now succeeds without a /login/2fa hop.
   const relogin = await app.req('POST', '/login', { body: { username: 'resetme', password: 'resetmepass123' } });
   assert.equal(relogin.status, 302);
   const cookie2 = (relogin.setCookie || []).map((c) => c.split(';')[0]).join('; ');
@@ -204,7 +225,7 @@ test('an admin cannot use the force-reset route on their own account (no passwor
   const selfReset = await app.req('POST', `/api/users/${adminId}/totp/disable`, { cookie: adminCookie, body: {} });
   assert.equal(selfReset.status, 400);
 
-  // Still enabled — must go through the password-gated self-service path instead.
+  // Still enabled - must go through the password-gated self-service path instead.
   const stillOn = await app.req('POST', '/api/account/totp/disable', {
     cookie: adminCookie,
     body: { password: 'wrong' },

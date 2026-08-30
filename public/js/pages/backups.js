@@ -1,4 +1,4 @@
-// Shared backups behavior — used by BOTH the global /backups page and the
+// Shared backups behavior - used by BOTH the global /backups page and the
 // per-server Backups tab. Contract (document-level delegation):
 //   rows:    [data-backup-row] with data-backup-id, data-server-id,
 //            data-server-name, data-file, data-size, data-reason
@@ -9,6 +9,7 @@
 // progress modal (runTask) polls it.
 
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { fmtBytes } from '../lib/format.js';
 import { runTask } from '../lib/progress.js';
@@ -37,7 +38,7 @@ document.addEventListener('click', async (e) => {
   if (action === 'restore') {
     const ok = await confirmDialog({
       title: `Restore this backup?`,
-      message: `${serverName || 'The server'} is stopped first, a safety backup of the current state is taken, then the server directory is replaced with the archive.`,
+      message: `${serverName || 'The server'} is stopped first, a safety backup of the current state is taken, then the server's files are replaced with this archive.`,
       detail: `${file}\n${fmtBytes(size)} · ${reason || 'manual'}`,
       confirmLabel: 'Restore backup',
       danger: true,
@@ -45,7 +46,7 @@ document.addEventListener('click', async (e) => {
     if (!ok) return;
     try {
       await runTask({
-        title: `Restoring ${file}`,
+        title: `Restoring ${file}…`,
         start: async () => {
           const res = await postJSON(`/api/servers/${serverId}/backups/${backupId}/restore`, {});
           return res.taskId;
@@ -54,8 +55,8 @@ document.addEventListener('click', async (e) => {
       toast('Backup restored. Start the server when you are ready.');
       setTimeout(() => location.reload(), 800);
     } catch (err) {
-      if (err.dismissed) return; // progress hidden — the task tray takes over
-      toast(err.message || 'Restore failed', { kind: 'error', timeout: 9000 });
+      if (err.dismissed) return; // progress hidden - the task tray takes over
+      toast(err.message || 'That backup could not be restored. Please try again.', { kind: 'error', timeout: 9000 });
     }
     return;
   }
@@ -73,7 +74,8 @@ document.addEventListener('click', async (e) => {
     try {
       const res = await fetch(`/api/backups/${backupId}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || data.ok === false) throw new Error(data.error || `Delete failed (${res.status})`);
+      if (!res.ok || data.ok === false)
+        throw new Error(data.error || friendlyError(res, { action: 'delete that backup' }));
       toast(`Backup deleted (${fmtBytes(data.freedBytes)} freed).`);
       row.remove();
       refreshTotal();
@@ -89,7 +91,7 @@ async function createBackup(serverId, serverName) {
   if (!serverId) return;
   try {
     const result = await runTask({
-      title: `Backing up ${serverName}`,
+      title: `Backing up ${serverName}…`,
       start: async () => {
         const res = await postJSON(`/api/servers/${serverId}/backups`, {});
         return res.taskId;
@@ -100,8 +102,8 @@ async function createBackup(serverId, serverName) {
     );
     setTimeout(() => location.reload(), 800);
   } catch (err) {
-    if (err.dismissed) return; // progress hidden — the task tray takes over
-    toast(err.message || 'Backup failed', { kind: 'error', timeout: 9000 });
+    if (err.dismissed) return; // progress hidden - the task tray takes over
+    toast(err.message || 'That backup could not be created. Please try again.', { kind: 'error', timeout: 9000 });
   }
 }
 
@@ -118,7 +120,7 @@ if (serverFilter || reasonFilter) {
       row.classList.toggle('hidden', !match);
       if (match) visible += 1;
     });
-    // Filters can hide every row — say so instead of showing a bare header.
+    // Filters can hide every row - say so instead of showing a bare header.
     document.getElementById('backups-no-match')?.classList.toggle('hidden', visible > 0);
     refreshTotal();
   };
@@ -142,6 +144,7 @@ async function postJSON(url, body) {
     body: JSON.stringify(body || {}),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || `Request failed (${res.status})`);
+  if (!res.ok || data.ok === false)
+    throw new Error(data.error || friendlyError(res, { action: 'start that backup task' }));
   return data;
 }

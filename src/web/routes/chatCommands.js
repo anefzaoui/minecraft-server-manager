@@ -67,7 +67,7 @@ async function isRunning(serverId) {
     const info = await inspectStatus(serverId);
     return info.exists && RUNNING_STATES.has(info.status);
   } catch {
-    return false;
+    return false; // intentional: Docker unreachable - treat the server as not running
   }
 }
 
@@ -118,7 +118,7 @@ router.delete(
   })
 );
 
-// Execute NOW as a named player — same path as chat, minus cooldown/permission.
+// Execute NOW as a named player - same path as chat, minus cooldown/permission.
 router.post(
   '/:cmdId/test',
   asyncHandler(async (req, res, next) => {

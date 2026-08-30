@@ -2,7 +2,7 @@
 
 // Custom chat commands: owner-defined triggers (e.g. !rtp2) detected in the
 // live log stream and executed as the player who typed them, plus a per-server
-// prefix setting. "trigger" is a reserved word in SQLite — always quoted.
+// prefix setting. "trigger" is a reserved word in SQLite - always quoted.
 
 function up(db) {
   db.exec(`

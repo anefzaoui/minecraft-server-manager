@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Shared file library: downloads deduplicated by sha256 under
@@ -19,7 +19,7 @@ const { safeFetch } = require('../utils/urlGuard');
 
 const CATEGORY_DIR = {
   mod: 'library/mods',
-  plugin: 'library/mods', // same pool — kind recorded per row
+  plugin: 'library/mods', // same pool - kind recorded per row
   datapack: 'library/mods',
   resourcepack: 'library/mods',
   modpack: 'library/modpacks',
@@ -27,7 +27,7 @@ const CATEGORY_DIR = {
   icon: 'library/icons',
 };
 
-// No single library download may exceed this — a lying/hostile server can't
+// No single library download may exceed this - a lying/hostile server can't
 // fill the disk through an endless stream.
 const MAX_DOWNLOAD_BYTES = 8 * 1024 ** 3;
 
@@ -53,7 +53,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
     if (totalBytes > MAX_DOWNLOAD_BYTES) {
       throw httpError(
         413,
-        `Download is ${humanBytes(totalBytes)} — the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit blocks it`
+        `Download is ${humanBytes(totalBytes)} - the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit blocks it`
       );
     }
     const { free } = await require('../storage/indexer').diskFree();
@@ -69,7 +69,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
       hash.update(chunk);
       receivedBytes += chunk.length;
       if (receivedBytes > MAX_DOWNLOAD_BYTES) {
-        // Hard abort — content-length can lie or be absent entirely.
+        // Hard abort - content-length can lie or be absent entirely.
         return cb(
           httpError(413, `Download aborted: stream exceeded the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit`)
         );
@@ -103,7 +103,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
   const id = `lib_${nanoid(8)}`;
   // ON CONFLICT closes the check-then-insert race: if a concurrent add for the same
   // (sha256, category) won, our INSERT no-ops (relPath is derived from the sha, so
-  // both point at the identical file — nothing to clean up) and we return theirs.
+  // both point at the identical file - nothing to clean up) and we return theirs.
   db.run(
     `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, source_url,
        platform, project_id, file_id, version, mc_versions_json, loaders_json, icon_url, world_source, world_flavor)
@@ -129,7 +129,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
   );
   const row = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
   if (row && row.id === id) {
-    // We won the insert — do the one-time side effects.
+    // We won the insert - do the one-time side effects.
     if (meta.iconUrl) cacheIcon(id, meta.iconUrl).catch(() => {});
     recordEvent({
       actor,
@@ -163,7 +163,7 @@ async function cacheIcon(libraryId, iconUrl) {
 async function installToServer(libraryId, serverId, destRel, { filename } = {}) {
   const lib = db.get('SELECT * FROM library_files WHERE id = ?', libraryId);
   if (!lib) throw httpError(404, 'Library file not found');
-  // The panel must own the server dir to write into it — a server created before
+  // The panel must own the server dir to write into it - a server created before
   // container-runs-as-panel-user has files owned by uid 1000. Lazy require breaks
   // the servers<->library cycle.
   await require('./servers').ensureOwnership(serverId);
@@ -239,7 +239,7 @@ async function deleteLibraryFile(libraryId, { actor = 'system', force = false } 
   const lib = db.get('SELECT * FROM library_files WHERE id = ?', libraryId);
   if (!lib) return { freedBytes: 0 };
   const used = usageCount(libraryId);
-  if (used > 0 && !force) throw httpError(409, `Still installed on ${used} server(s) — remove it there first`);
+  if (used > 0 && !force) throw httpError(409, `Still installed on ${used} server(s) - remove it there first`);
   await fsp.rm(dataPath(lib.rel_path), { force: true });
   if (lib.icon_rel_path) await fsp.rm(dataPath(lib.icon_rel_path), { force: true });
   db.run('DELETE FROM library_files WHERE id = ?', libraryId);
@@ -251,7 +251,7 @@ async function deleteLibraryFile(libraryId, { actor = 'system', force = false } 
   return { freedBytes: lib.size_bytes };
 }
 
-/** Library rows whose files no other record references — cleanup candidates. */
+/** Library rows whose files no other record references - cleanup candidates. */
 function orphans() {
   return db.all(
     `SELECT lf.* FROM library_files lf

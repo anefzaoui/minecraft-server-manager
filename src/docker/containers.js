@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Container lifecycle for managed Minecraft servers. All containers are
@@ -29,7 +29,7 @@ function containerName(serverId) {
  * @param {object} spec.resources        { memoryMb, swapMb, cpus }
  * @param {string} [spec.containerName]  Docker container name override; default `msm-<serverId>`
  * @param {string} [spec.networkName]    existing host Docker network to attach to; default bridge
- * @param {Array}  [spec.extraBinds]     [{hostPath, containerPath, mode: 'rw'|'ro'}] — RAW host paths, not re-rooted
+ * @param {Array}  [spec.extraBinds]     [{hostPath, containerPath, mode: 'rw'|'ro'}] - RAW host paths, not re-rooted
  */
 async function createContainer(spec) {
   const docker = getDocker();
@@ -47,7 +47,7 @@ async function createContainer(spec) {
     exposed[`${BEDROCK_PORT}/udp`] = {};
     bindings[`${BEDROCK_PORT}/udp`] = [{ HostPort: String(spec.ports.bedrock) }];
   }
-  // Feature ports (e.g. BlueMap's web server) + user-defined extras — [{container: '8100/tcp', host: 8123}]
+  // Feature ports (e.g. BlueMap's web server) + user-defined extras - [{container: '8100/tcp', host: 8123}]
   for (const extra of spec.extraPorts || []) {
     exposed[extra.container] = {};
     bindings[extra.container] = [{ HostPort: String(extra.host) }];
@@ -57,7 +57,7 @@ async function createContainer(spec) {
   const swapBytes = memoryBytes + Math.round((spec.resources.swapMb || 0) * 1024 * 1024);
 
   // Extra binds are already HOST paths (the admin types the real host
-  // location), unlike dataDir which is panel-local and must be re-rooted —
+  // location), unlike dataDir which is panel-local and must be re-rooted -
   // running them through toHostPath would reject anything outside DATA_DIR,
   // which is the entire point of this escape hatch.
   const extraBindStrings = (spec.extraBinds || []).map(
@@ -82,19 +82,86 @@ async function createContainer(spec) {
     ExposedPorts: exposed,
     Tty: false,
     OpenStdin: false,
+    Healthcheck: healthcheckSpec(),
     HostConfig: hostConfig,
   });
   return container.id;
 }
 
-/** Resolve the actual Docker name for a server — its custom name if one was set, else msm-<id>. */
-function resolvedName(serverId) {
-  const row = db.get('SELECT container_name FROM servers WHERE id = ?', serverId);
+/**
+ * Explicit container healthcheck. Without one, `docker inspect` reports a
+ * container as running the instant its process starts - long before the
+ * Minecraft server accepts players - which is why the panel otherwise has to
+ * scrape "Done (" out of the logs to tell those two states apart.
+ *
+ * `mc-health` is bundled in the itzg image and is the same probe its own
+ * Dockerfile uses: it knows the real game/RCON port and is auto-pause aware
+ * (reports healthy while the process is intentionally frozen), so it never
+ * wakes a paused server or false-flags one.
+ *
+ * StartPeriod is deliberately long (2h): a large modpack's first boot
+ * (server-pack download + world generation) can legitimately run 30-60 min,
+ * and while the start period is active a failing probe keeps health at
+ * `starting`, never `unhealthy`. The panel's own STARTUP_STALL_MS ceiling
+ * (services/servers.js) is what surfaces a boot that has genuinely wedged.
+ * Once the server is up, a probe that then starts failing for Retries in a row
+ * flips it to `unhealthy` - a "running process, dead server" signal the panel
+ * previously had no way to detect.
+ */
+function healthcheckSpec() {
+  return {
+    Test: ['CMD-SHELL', 'mc-health'],
+    Interval: 30 * 1e9,
+    Timeout: 10 * 1e9,
+    Retries: 3,
+    StartPeriod: 2 * 3600 * 1e9,
+  };
+}
+
+/**
+ * Resolve the Docker reference for a server: its stored container_id when one
+ * exists, else the configured/derived name. container_id is only written once
+ * a container has actually been created (createServer/recreateServerImpl) and
+ * only changes when a NEW container is created - unlike container_name, which
+ * a config-save (PATCH /api/servers/:id) can update immediately while the real
+ * container still exists, unrenamed, under the old name until the pending
+ * recreate actually runs. Resolving by ID keeps every lookup pointed at the
+ * real container through that window instead of 404ing against a name that
+ * isn't real yet.
+ */
+function containerRef(serverId) {
+  const row = db.get('SELECT container_id, container_name FROM servers WHERE id = ?', serverId);
+  if (row && row.container_id) return row.container_id;
   return (row && row.container_name) || containerName(serverId);
 }
 
 function getContainer(serverId) {
-  return getDocker().getContainer(resolvedName(serverId));
+  return getDocker().getContainer(containerRef(serverId));
+}
+
+/**
+ * Remove a container by NAME if - and only if - it carries our msm.id label
+ * for this exact serverId. Used to self-heal a 409 name conflict on create:
+ * if the panel process crashes between a recreate's createContainer
+ * succeeding and its DB write landing, the DB is left pointing at the
+ * removed old container_id while Docker still holds the just-created
+ * container under the target name - the next recreate attempt would
+ * otherwise hit a permanent 409 on that name with no automatic recovery.
+ * Verifying the label first means this can never remove an unrelated
+ * container that happens to occupy the same name.
+ */
+async function removeStaleNameConflict(name, serverId) {
+  const docker = getDocker();
+  try {
+    const info = await docker.getContainer(name).inspect();
+    const labels = (info.Config && info.Config.Labels) || {};
+    if (labels[LABEL] !== serverId) return false;
+    await docker.getContainer(name).remove({ force: true });
+    return true;
+  } catch (err) {
+    if (err.statusCode === 404) return false;
+    throw err;
+  }
 }
 
 /** Inspect → panel status. Returns { status, health, exitCode, startedAt, pid }. */
@@ -122,6 +189,7 @@ async function inspectStatus(serverId) {
       finishedAt: s.FinishedAt,
       oomKilled: Boolean(s.OOMKilled),
       containerId: info.Id,
+      imageId: info.Image,
     };
   } catch (err) {
     if (err.statusCode === 404) return { exists: false, status: 'stopped' };
@@ -147,11 +215,23 @@ async function stopContainer(serverId, { graceSeconds = 90 } = {}) {
     // Wait for the container to exit on its own after the stop command.
     await Promise.race([container.wait(), new Promise((resolve) => setTimeout(resolve, graceSeconds * 1000).unref())]);
   } catch {
-    // rcon unavailable (early boot, crashed loop) — fall through to docker stop
+    // rcon unavailable (early boot, crashed loop) - fall through to docker stop
   }
   const info = await inspectStatus(serverId);
   if (info.exists && (info.status === 'running' || info.status === 'starting' || info.status === 'unhealthy')) {
-    await container.stop({ t: graceSeconds });
+    try {
+      await container.stop({ t: graceSeconds });
+    } catch (err) {
+      // 304 = already stopped between the inspect above and here; 404 = gone.
+      if (err.statusCode !== 304 && err.statusCode !== 404) throw err;
+    }
+  }
+  // Never report a stop as done without confirming it: a wedged daemon can let
+  // `stop` return/throw without the container actually exiting, and callers
+  // (stopServerImpl) would then record "stopped gracefully" over a live world.
+  const final = await inspectStatus(serverId).catch(() => ({ exists: false }));
+  if (final.exists && ['running', 'starting', 'unhealthy'].includes(final.status)) {
+    throw new Error('The server did not stop in time. Try Force stop, or check that Docker is running.');
   }
 }
 
@@ -174,7 +254,7 @@ async function removeContainer(serverId) {
 /**
  * Run a command via docker exec and capture its raw output (+ exit code on
  * request). A timeout guards against a hung exec (unresponsive/deadlocked JVM)
- * leaving the hijacked stream + connection open forever — critical because
+ * leaving the hijacked stream + connection open forever - critical because
  * liveCache fires this on an interval and hung calls would otherwise stack
  * without bound.
  */
@@ -208,7 +288,7 @@ async function execRaw(serverId, cmd, { timeoutMs = 15000, wantExitCode = false 
     stream.on('error', (err) => finish(reject, err));
   });
   // The inspect is a second daemon round trip, opted into by the one caller
-  // that reads the code — everyone else skips both its cost and its failure
+  // that reads the code - everyone else skips both its cost and its failure
   // modes. It must never hang past the timeout contract above, and it must
   // never fail a command whose output was already captured: the exit code is
   // best-effort, and null means "unknown" (callers already treat non-zero and
@@ -238,7 +318,7 @@ async function execCapture(serverId, cmd, opts = {}) {
  * Like execCapture, but also resolves the command's exit code so callers can
  * tell "ran successfully but printed something unexpected" apart from "the
  * command itself failed" (e.g. rcon-cli exits non-zero and prints a connection
- * error to stderr when RCON isn't listening yet — docker exec itself still
+ * error to stderr when RCON isn't listening yet - docker exec itself still
  * succeeds since the container process is running, so execCapture alone can't
  * distinguish that from a genuine, parseable response). The code is best-effort:
  * `exitCode` is null when the daemon didn't answer the inspect in time, which
@@ -252,7 +332,7 @@ async function execCaptureChecked(serverId, cmd, opts = {}) {
  * Delete a server's data directory using a throwaway root container.
  *
  * The itzg image writes world/mod files as its own UID (default 1000). When the
- * panel process runs as a different host user it can't remove them — `rm` fails
+ * panel process runs as a different host user it can't remove them - `rm` fails
  * with EACCES. Root inside a container can delete files of any UID, so we mount
  * the PARENT directory and remove the target by name. `Cmd: []` is required so
  * the image's default CMD isn't appended as extra arguments to our entrypoint.
@@ -312,8 +392,10 @@ async function chownDataDir(dir, image, uid, gid) {
 module.exports = {
   LABEL,
   containerName,
+  containerRef,
   createContainer,
   getContainer,
+  removeStaleNameConflict,
   inspectStatus,
   startContainer,
   stopContainer,

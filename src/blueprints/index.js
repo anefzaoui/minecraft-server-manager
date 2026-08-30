@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Blueprints: portable .mcserver.zip snapshots of a server's full recipe
@@ -13,7 +13,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const archiver = require('archiver');
-const { readZipIndex, extractZipSafe } = require('../utils/zip');
+const { extractZip, readZipIndex } = require('../utils/zip');
 const { nanoid } = require('nanoid');
 const { z } = require('zod');
 const db = require('../db');
@@ -158,7 +158,8 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
   const configFiles = includeConfig ? collectConfigFiles(serverDir) : [];
   const worldDirs = includeWorld ? worldDirsOf(server, serverDir) : [];
   if (includeWorld && worldDirs.length) {
-    const needed = worldDirs.reduce((n, d) => n + servers.dirSize(d.abs), 0);
+    let needed = 0;
+    for (const d of worldDirs) needed += await servers.dirSize(d.abs);
     const { free } = await indexer.diskFree();
     if (free < needed * 1.1) {
       throw httpError(507, `Not enough disk space to embed the world (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
@@ -289,7 +290,7 @@ async function importPreview(zipPath) {
       .slice(0, 3)
       .map((i) => `${i.path.join('.')}: ${i.message}`)
       .join('; ');
-    throw httpError(400, `Blueprint manifest failed validation — ${detail}`);
+    throw httpError(400, `The blueprint manifest is not valid: ${detail}`);
   }
   const manifest = parsed.data;
   for (const rel of manifest.configFiles) {
@@ -301,32 +302,32 @@ async function importPreview(zipPath) {
   const entryNames = new Set(entries.map((e) => e.name));
   const warnings = [];
   if (!KNOWN_TYPES.has(manifest.config.type)) {
-    warnings.push(`Unknown server type "${manifest.config.type}" — this panel may not know how to run it.`);
+    warnings.push(`Unknown server type "${manifest.config.type}" - this panel may not know how to run it.`);
   }
   const mcMatch = /^1\.(\d+)/.exec(manifest.config.mcVersion);
   if (mcMatch && Number(mcMatch[1]) < 13) {
-    warnings.push(`Minecraft ${manifest.config.mcVersion} is very old — expect Java and mod availability quirks.`);
+    warnings.push(`Minecraft ${manifest.config.mcVersion} is very old - expect Java and mod availability quirks.`);
   }
   if (manifest.embedFiles) {
     const missing = manifest.overlay.filter((o) => o.filename && !entryNames.has(`payload/overlay/${o.filename}`));
     if (missing.length)
       warnings.push(
-        `${missing.length} embedded overlay file(s) are missing from the archive — they will be downloaded instead.`
+        `${missing.length} embedded overlay file(s) are missing from the archive - they will be downloaded instead.`
       );
   }
   for (const entry of manifest.overlay) {
     if (!entry.sourceUrl && !(entry.filename && entryNames.has(`payload/overlay/${entry.filename}`))) {
-      warnings.push(`"${entry.name}" has no source URL and no embedded file — it cannot be installed.`);
+      warnings.push(`"${entry.name}" has no source URL and no embedded file - it cannot be installed.`);
     }
     if (!entry.sha256) {
-      warnings.push(`"${entry.name}" carries no hash — its download will not be verified.`);
+      warnings.push(`"${entry.name}" carries no hash - its download will not be verified.`);
     }
   }
   if (manifest.world && !entries.some((e) => e.name.startsWith('payload/world/'))) {
     warnings.push('The manifest claims a world is included but the archive has no world payload.');
   }
   if (manifest.pack && manifest.pack.platform === 'curseforge') {
-    warnings.push('CurseForge pack — a CurseForge API key must be configured in Settings for the install to work.');
+    warnings.push('CurseForge pack - a CurseForge API key must be configured in Settings for the install to work.');
   }
 
   return {
@@ -343,7 +344,7 @@ async function importPreview(zipPath) {
  * Create a NEW server from a blueprint. `zipRef` is a blueprint id (bp_…) or a
  * zip path inside the data dir. Fresh ports and RCON password are always
  * assigned; identity/resources come from the manifest unless overridden.
- * Returns { server, report } — report has one {name, status, error?} per
+ * Returns { server, report } - report has one {name, status, error?} per
  * pack/overlay item ('ok' | 'hash-mismatch' | 'failed'); failures never abort
  * the rest of the import.
  */
@@ -392,7 +393,11 @@ async function importBlueprint(zipRef, overrides = {}, { actor = 'system', onPro
   try {
     if (hasPayload) {
       onProgress('Extracting blueprint payload…');
-      await extractZipSafe(zipPath, tmpDir);
+      await fsp.mkdir(tmpDir, { recursive: true });
+      // A blueprint payload is config files plus at most one embedded world -
+      // orders of magnitude below the world/backup-restore ceiling. Cap it
+      // tight so a crafted blueprint can't lean on the 50 GB default.
+      await extractZip(zipPath, tmpDir, { maxBytes: 8 * 1024 ** 3 });
     }
 
     // Pinned modpack
@@ -445,7 +450,7 @@ async function importBlueprint(zipRef, overrides = {}, { actor = 'system', onPro
     serverId: server.id,
     actor,
     type: 'blueprint-imported',
-    summary: `Server created from blueprint "${manifest.name}"${report.length ? ` — ${report.length - failed}/${report.length} items ok` : ''}`,
+    summary: `Server created from blueprint "${manifest.name}"${report.length ? ` - ${report.length - failed}/${report.length} items ok` : ''}`,
     details: { blueprint: manifest.name, report },
   });
   indexer.scan().catch(() => {});
@@ -524,7 +529,7 @@ async function resolveOverlaySource(entry, server) {
   if (entry.platform === 'curseforge' && entry.projectId && entry.fileId) {
     const file = await curseforge.getFile(entry.projectId, Number(entry.fileId));
     if (!file || !file.downloadUrl)
-      throw httpError(409, `${entry.name} disallows automated downloads — install it manually`);
+      throw httpError(409, `${entry.name} disallows automated downloads - install it manually`);
     return {
       url: file.downloadUrl,
       meta: {
@@ -569,7 +574,7 @@ async function resolveOverlaySource(entry, server) {
       meta: { platform: 'url', filename: entry.filename || undefined, version: entry.version || undefined },
     };
   }
-  throw httpError(400, 'No embedded file and no source URL — nothing to install from');
+  throw httpError(400, 'No embedded file and no source URL - nothing to install from');
 }
 
 /** Register an extracted payload file in the shared library (dedupe by hash). */
@@ -658,7 +663,7 @@ function decorate(row) {
   try {
     manifest = JSON.parse(row.manifest_json);
   } catch {
-    /* corrupt cache — show bare row */
+    /* corrupt cache - show bare row */
   }
   return {
     ...row,
@@ -702,10 +707,10 @@ function paperStarterManifest() {
     name: 'Optimized Paper Survival',
     createdAt: new Date().toISOString(),
     panelVersion: PANEL_VERSION,
-    notes: 'Paper with Aikar JVM flags and sane survival defaults — a fast vanilla-plus base.',
+    notes: 'Paper with Aikar JVM flags and sane survival defaults - a fast vanilla-plus base.',
     identity: {
       name: 'Optimized Paper Survival',
-      description: 'Paper with Aikar JVM flags and sane survival defaults — a fast vanilla-plus base.',
+      description: 'Paper with Aikar JVM flags and sane survival defaults - a fast vanilla-plus base.',
       icon: 'grass',
       accent: '#3fa62b',
       tags: ['paper', 'survival', 'optimized'],
@@ -744,10 +749,10 @@ function fabricStarterManifest() {
     name: 'Fabric Performance Base',
     createdAt: new Date().toISOString(),
     panelVersion: PANEL_VERSION,
-    notes: 'Fabric with Lithium, FerriteCore, Krypton and Spark — a lean modded starting point.',
+    notes: 'Fabric with Lithium, FerriteCore, Krypton and Spark - a lean modded starting point.',
     identity: {
       name: 'Fabric Performance Base',
-      description: 'Fabric with Lithium, FerriteCore, Krypton and Spark — a lean modded starting point.',
+      description: 'Fabric with Lithium, FerriteCore, Krypton and Spark - a lean modded starting point.',
       icon: 'diamond',
       accent: '#21a7ab',
       tags: ['fabric', 'performance'],
@@ -806,7 +811,7 @@ function collectConfigFiles(serverDir) {
   const rels = [];
   if (fs.existsSync(path.join(serverDir, 'server.properties'))) rels.push('server.properties');
   const walk = (abs, rel) => {
-    let entries = [];
+    let entries;
     try {
       entries = fs.readdirSync(abs, { withFileTypes: true });
     } catch {
@@ -824,7 +829,7 @@ function collectConfigFiles(serverDir) {
 
 /** World dirs to embed: the active level dir plus its Bukkit-style split siblings. */
 function worldDirsOf(server, serverDir) {
-  // activeLevelName honors LEVEL env AND server.properties level-name — a
+  // activeLevelName honors LEVEL env AND server.properties level-name - a
   // renamed/activated world would otherwise be silently missing from exports.
   const level = require('../services/worlds').activeLevelName(server);
   return [level, `${level}_nether`, `${level}_the_end`]

@@ -1,12 +1,12 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Per-server content management (mods/plugins/datapacks/resourcepacks).
 // Two classes of content, handled differently on purpose (see discovery):
-//   pack    — installed by the itzg pack installer; deleting the jar triggers
+//   pack    - installed by the itzg pack installer; deleting the jar triggers
 //             re-install, so disable goes through CF_EXCLUDE_MODS /
 //             MODRINTH_EXCLUDE_FILES (+ *_FORCE_SYNCHRONIZE) and a recreate.
-//   overlay — panel-managed via the shared library; survives pack updates;
+//   overlay - panel-managed via the shared library; survives pack updates;
 //             toggled instantly by renaming to .jar.disabled.
 
 const httpError = require('../utils/httpError');
@@ -22,6 +22,11 @@ const modrinth = require('./modrinthApi');
 const curseforge = require('./curseforgeApi');
 const serversService = require('./servers');
 const indexer = require('../storage/indexer');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+
+const onRescanFailed = (err) =>
+  logger.debug('A background library rescan failed to start.', { err: serializeError(err, { includeStack: false }) });
 
 const PLUGIN_TYPES = new Set(['PAPER', 'PURPUR', 'PUFFERFISH', 'LEAF', 'FOLIA', 'SPIGOT', 'BUKKIT', 'CANYON']);
 
@@ -43,26 +48,58 @@ function contentDir(server, kind) {
   return PLUGIN_TYPES.has(server.type) ? 'plugins' : 'mods';
 }
 
-/** The primary content kind a server runs — the single source for plugin-vs-mod. */
+// server_content rows carry `kind`, so toggling/removing normally knows exactly
+// which directory a file lives in. But files with no row (dropped in manually,
+// or pack-installed content on a non-pack server) have no kind to go on - guessing
+// 'mod' silently missed datapacks/resourcepacks (looked in mods/plugins, found
+// nothing, reported success without touching the file). Probe every content dir
+// instead of guessing, so toggle/remove actually reach the file wherever it is.
+function locateContentDir(server, row, file) {
+  if (row) return contentDir(server, row.kind);
+  for (const kind of ['mod', 'datapack', 'resourcepack']) {
+    const dirRel = contentDir(server, kind);
+    const base = dataPath('servers', server.id, dirRel, file);
+    if (fs.existsSync(base) || fs.existsSync(`${base}.disabled`)) return dirRel;
+  }
+  return contentDir(server, 'mod'); // not found anywhere - fall back to the old default
+}
+
+/** The primary content kind a server runs - the single source for plugin-vs-mod. */
 function contentKindOf(server) {
   return PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
 }
 
-// Modpack servers don't set CF_MOD_LOADER/MODRINTH_LOADER — the pack itself
+// Modpack servers don't set CF_MOD_LOADER/MODRINTH_LOADER - the pack itself
 // decides the loader. mc-image-helper writes a per-loader manifest into the data
 // dir (e.g. .neoforge-manifest.json), so detect from that; otherwise mod installs
 // have no loader to match and grab an arbitrary (e.g. Fabric) build.
+// loaderOf() is called from serverVM() for every server on essentially every
+// page render (sidebar + dashboard/servers list) - cache the directory-listing
+// result briefly instead of re-running a sync readdirSync per server per
+// request. The manifest file this detects only changes across a pack
+// recreate/upgrade (an occasional, deliberate action), so a short TTL bounds
+// the sync-call frequency with a practically unnoticeable staleness window.
+const loaderCache = new Map(); // serverId -> { loader, expiresAt }
+const LOADER_CACHE_TTL_MS = 60 * 1000;
+
 function detectPackLoader(serverId) {
-  let names = [];
+  const cached = loaderCache.get(serverId);
+  if (cached && cached.expiresAt > Date.now()) return cached.loader;
+  let names;
   try {
     names = fs.readdirSync(dataPath('servers', serverId));
   } catch {
     return null;
   }
-  for (const loader of ['neoforge', 'forge', 'fabric', 'quilt']) {
-    if (names.includes(`.${loader}-manifest.json`)) return loader;
+  let loader = null;
+  for (const candidate of ['neoforge', 'forge', 'fabric', 'quilt']) {
+    if (names.includes(`.${candidate}-manifest.json`)) {
+      loader = candidate;
+      break;
+    }
   }
-  return null;
+  loaderCache.set(serverId, { loader, expiresAt: Date.now() + LOADER_CACHE_TTL_MS });
+  return loader;
 }
 
 function loaderOf(server) {
@@ -80,51 +117,93 @@ function loaderOf(server) {
 async function listContent(serverId) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const kind = PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
-  const dirRel = contentDir(server, kind);
-  const dirAbs = dataPath('servers', serverId, dirRel);
+  const primaryKind = contentKindOf(server);
 
   const rows = db.all('SELECT * FROM server_content WHERE server_id = ?', serverId);
   const byFile = new Map(rows.map((r) => [r.filename.replace(/\.disabled$/, ''), r]));
   const seen = new Set();
   const items = [];
 
-  let entries = [];
-  try {
-    entries = await fsp.readdir(dirAbs, { withFileTypes: true });
-  } catch {
-    /* dir doesn't exist yet */
+  // Batch the per-row lookups that used to run once per item (library file,
+  // usage count, update check) - a modpack with a few hundred mods turned
+  // into a few hundred extra round trips each for something a single
+  // IN (...) query covers.
+  const libraryIds = [...new Set(rows.map((r) => r.library_id).filter(Boolean))];
+  const libById = new Map();
+  const usageCounts = new Map();
+  if (libraryIds.length) {
+    const placeholders = libraryIds.map(() => '?').join(',');
+    for (const lib of db.all(`SELECT * FROM library_files WHERE id IN (${placeholders})`, ...libraryIds)) {
+      libById.set(lib.id, lib);
+    }
+    for (const u of db.all(
+      `SELECT library_id, COUNT(*) AS n FROM server_content WHERE library_id IN (${placeholders}) GROUP BY library_id`,
+      ...libraryIds
+    )) {
+      usageCounts.set(u.library_id, u.n);
+    }
   }
+  const rowIds = rows.map((r) => r.id);
+  const updateChecks = new Map();
+  if (rowIds.length) {
+    const placeholders = rowIds.map(() => '?').join(',');
+    for (const c of db.all(
+      `SELECT * FROM update_checks WHERE subject_type = 'content' AND subject_id IN (${placeholders})`,
+      ...rowIds
+    )) {
+      updateChecks.set(c.subject_id, c);
+    }
+  }
+  // latest_name is only set when the checker saw a genuinely newer build;
+  // compare name-to-name (latest_version holds the platform id, not a name).
+  const updateAvailableFor = (row) => {
+    if (!row) return null;
+    const check = updateChecks.get(row.id);
+    return check && check.latest_name && check.latest_name !== row.version ? check.latest_name : null;
+  };
 
-  for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    const isDisabled = entry.name.endsWith('.disabled');
-    const baseName = entry.name.replace(/\.disabled$/, '');
-    if (!baseName.endsWith('.jar') && !baseName.endsWith('.zip')) continue;
-    seen.add(baseName);
-    const row = byFile.get(baseName);
-    const stat = await fsp.stat(path.join(dirAbs, entry.name)).catch(() => null);
-    const lib = row && row.library_id ? db.get('SELECT * FROM library_files WHERE id = ?', row.library_id) : null;
-    items.push({
-      id: row ? row.id : null,
-      name: row ? row.name : prettifyJarName(baseName),
-      file: baseName,
-      kind,
-      source: row ? row.managed_by : server.pack || isPackServer(server) ? 'pack' : 'unknown',
-      version: row ? row.version : null,
-      size: stat ? stat.size : 0,
-      enabled: !isDisabled,
-      disabledVia: row && row.managed_by === 'pack' && !isDisabled ? null : undefined,
-      sharedWith: lib ? library.usageCount(lib.id) : null,
-      iconUrl:
-        lib && lib.icon_rel_path ? `/${lib.icon_rel_path}` : (lib && lib.icon_url) || (row && row.icon_url) || null,
-      updateAvailable: updateFor(row),
-      // Provenance, when known — lets search UIs badge already-installed hits.
-      platform: (lib && lib.platform) || null,
-      projectId: (lib && lib.project_id) || null,
-    });
+  // Datapacks and resource packs work on every server type (vanilla included),
+  // unlike mods/plugins which are loader/platform-specific - always scan all
+  // three dirs, not just the one matching this server's type.
+  for (const kind of [primaryKind, 'datapack', 'resourcepack']) {
+    const dirAbs = dataPath('servers', serverId, contentDir(server, kind));
+    let entries;
+    try {
+      entries = await fsp.readdir(dirAbs, { withFileTypes: true });
+    } catch {
+      continue; // dir doesn't exist yet
+    }
+
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+      const isDisabled = entry.name.endsWith('.disabled');
+      const baseName = entry.name.replace(/\.disabled$/, '');
+      if (!baseName.endsWith('.jar') && !baseName.endsWith('.zip')) continue;
+      seen.add(baseName);
+      const row = byFile.get(baseName);
+      const stat = await fsp.stat(path.join(dirAbs, entry.name)).catch(() => null);
+      const lib = row && row.library_id ? libById.get(row.library_id) : null;
+      items.push({
+        id: row ? row.id : null,
+        name: row ? row.name : prettifyJarName(baseName),
+        file: baseName,
+        kind: row ? row.kind : kind,
+        source: row ? row.managed_by : server.pack || isPackServer(server) ? 'pack' : 'unknown',
+        version: row ? row.version : null,
+        size: stat ? stat.size : 0,
+        enabled: !isDisabled,
+        disabledVia: row && row.managed_by === 'pack' && !isDisabled ? null : undefined,
+        sharedWith: lib ? usageCounts.get(lib.id) || 0 : null,
+        iconUrl:
+          lib && lib.icon_rel_path ? `/${lib.icon_rel_path}` : (lib && lib.icon_url) || (row && row.icon_url) || null,
+        updateAvailable: updateAvailableFor(row),
+        // Provenance, when known - lets search UIs badge already-installed hits.
+        platform: (lib && lib.platform) || null,
+        projectId: (lib && lib.project_id) || null,
+      });
+    }
   }
-  // Overlay rows whose files vanished (user deleted manually) — surface them.
+  // Overlay rows whose files vanished (user deleted manually) - surface them.
   for (const row of rows) {
     const base = row.filename.replace(/\.disabled$/, '');
     if (!seen.has(base)) {
@@ -150,23 +229,12 @@ function isPackServer(server) {
   return ['AUTO_CURSEFORGE', 'MODRINTH', 'FTBA', 'CURSEFORGE', 'GTNH'].includes(server.type);
 }
 
-function updateFor(row) {
-  if (!row) return null;
-  const check = db.get(
-    "SELECT latest_version, latest_name FROM update_checks WHERE subject_type = 'content' AND subject_id = ?",
-    row.id
-  );
-  // latest_name is only set when the checker saw a genuinely newer build;
-  // compare name-to-name (latest_version holds the platform id, not a name).
-  return check && check.latest_name && check.latest_name !== row.version ? check.latest_name : null;
-}
-
 /**
  * Classify an install reference. Pure routing decision, no network.
  * Returns { kind: 'modrinth' | 'curseforge' | 'direct' | 'invalid', ref }.
  *  - modrinth:  modrinth.com page URLs and bare project slugs
  *  - curseforge: curseforge.com page URLs
- *  - direct:    any other URL, INCLUDING cdn.modrinth.com file links —
+ *  - direct:    any other URL, INCLUDING cdn.modrinth.com file links -
  *               those are downloads, not project pages
  */
 function classifyModSource(input) {
@@ -184,7 +252,7 @@ function classifyModSource(input) {
     return { kind: 'direct', ref };
   }
   // Modrinth slug charset (their documented rule): [\w!@$()`.+,"\-'] ×3–64.
-  // \w keeps underscores valid — sodium_extra style slugs used to 500.
+  // \w keeps underscores valid - sodium_extra style slugs used to 500.
   if (/^[\w!@$()`.+,"\-']{3,64}$/.test(ref)) return { kind: 'modrinth', ref };
   return { kind: 'invalid', ref };
 }
@@ -194,16 +262,25 @@ function classifyModSource(input) {
  * or CurseForge URL. Downloads into the library, links into the server dir,
  * and records an overlay row. onProgress passes through to the download.
  */
-async function installFromUrl(serverId, input, { actor = 'system', kind, onProgress } = {}) {
+async function installFromUrl(serverId, input, { actor = 'system', kind, onProgress, ignoreVersion = false } = {}) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const targetKind = kind || (PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod');
-  const mcVersion = server.mc_version === 'LATEST' || server.mc_version === 'SNAPSHOT' ? undefined : server.mc_version;
-  // Loader is only a meaningful version filter for mods: Modrinth tags plugin
-  // builds paper/spigot/bukkit (strict facet — would hide spigot-only plugins)
-  // and datapack builds "datapack", so filtering those by the server's loader
-  // over-filters to zero results.
-  const loader = targetKind === 'mod' ? loaderOf(server) : undefined;
+  let targetKind = kind || contentKindOf(server);
+  // ignoreVersion: the user explicitly asked to install a build that isn't
+  // listed as compatible with this server - accepting the risk waives BOTH
+  // the exact MC version match (e.g. the newest Fabric build only lists
+  // 1.21.1 and the server runs 1.21.2) and the loader/platform match, since
+  // either can be the thing a build simply isn't tagged for.
+  const mcVersion =
+    ignoreVersion || server.mc_version === 'LATEST' || server.mc_version === 'SNAPSHOT' ? undefined : server.mc_version;
+  // loader is the server's actual loader (used by the override note below to
+  // report "not built for <loader>"). effectiveLoader is the one used to filter
+  // builds: only a meaningful version filter for mods, since Modrinth tags
+  // plugin builds paper/spigot/bukkit (a strict facet would hide spigot-only
+  // plugins) and datapack/resourcepack builds by content type, so filtering
+  // those by the server's loader over-filters to zero. The override waives it.
+  const loader = loaderOf(server);
+  const effectiveLoader = ignoreVersion || targetKind !== 'mod' ? undefined : loader;
 
   const source = classifyModSource(input);
   if (source.kind === 'invalid') {
@@ -215,23 +292,36 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
 
   if (source.kind === 'modrinth') {
     const resolved = await modrinth.resolveUrl(source.ref);
+    // Datapacks/resourcepacks aren't loader-specific, and search already sends
+    // kind explicitly - this only fires for "Add by URL"/slug installs where
+    // the caller couldn't have known the project type in advance.
+    if (!kind && (resolved.projectType === 'datapack' || resolved.projectType === 'resourcepack')) {
+      targetKind = resolved.projectType;
+    }
+    const versionLoader = targetKind === 'datapack' || targetKind === 'resourcepack' ? undefined : effectiveLoader;
     let versions = resolved.versionId
       ? [await modrinth.getVersion(resolved.versionId)]
-      : await modrinth.getVersions(resolved.projectId, { loader, mcVersion });
+      : await modrinth.getVersions(resolved.projectId, { loader: versionLoader, mcVersion });
     // The unfiltered plugin query returns every build of hybrid projects
-    // (WorldEdit-style plugin+mod releases) — newest-first could hand a Paper
+    // (WorldEdit-style plugin+mod releases) - newest-first could hand a Paper
     // server a Fabric jar. Keep only builds tagged with a plugin loader,
     // unless the user pinned an exact version themselves.
     if (targetKind === 'plugin' && !resolved.versionId) {
       const { PLUGIN_LOADERS } = require('./modIdentify');
-      versions = versions.filter((v) => (v.loaders || []).some((l) => PLUGIN_LOADERS.has(String(l).toLowerCase())));
+      // Drop builds tagged for a non-plugin loader only (a hybrid project's
+      // Fabric/Forge jar), but keep untagged builds - many pure plugins carry no
+      // loader tag at all, and filtering those out would leave zero results.
+      versions = versions.filter((v) => {
+        const loaders = (v.loaders || []).map((l) => String(l).toLowerCase());
+        return loaders.length === 0 || loaders.some((l) => PLUGIN_LOADERS.has(l));
+      });
     }
     if (!versions.length)
       throw httpError(
         404,
         targetKind === 'plugin'
           ? `No ${resolved.title} plugin build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`
-          : `No ${resolved.title} build matches ${loader || 'this loader'} ${mcVersion || ''}`.trim()
+          : `No ${resolved.title} build matches ${versionLoader || 'this loader'} ${mcVersion || ''}`.trim()
       );
     const version = versions[0];
     const file = modrinth.primaryFile(version);
@@ -251,13 +341,16 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     const resolved = await curseforge.resolveUrl(source.ref);
     const file = resolved.fileId
       ? await curseforge.getFile(resolved.modId, resolved.fileId)
-      : (await curseforge.getFiles(resolved.modId, { mcVersion, loader }))[0];
+      : (await curseforge.getFiles(resolved.modId, { mcVersion, loader: effectiveLoader }))[0];
     if (!file)
-      throw httpError(404, `No ${resolved.name} file matches ${loader || 'this loader'} ${mcVersion || ''}`.trim());
+      throw httpError(
+        404,
+        `No ${resolved.name} file matches ${effectiveLoader || 'this loader'} ${mcVersion || ''}`.trim()
+      );
     if (!file.downloadUrl)
       throw httpError(
         409,
-        `${resolved.name} disallows automated downloads — download it in a browser and upload the jar instead`
+        `${resolved.name} disallows automated downloads - download it in a browser and upload the jar instead`
       );
     downloadUrl = file.downloadUrl;
     Object.assign(meta, {
@@ -272,8 +365,9 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     });
   }
   // source.kind === 'direct' → plain download of the URL as-is.
+  meta.category = targetKind; // may have changed above (Modrinth datapack/resourcepack auto-detect)
 
-  return installResolved(serverId, { downloadUrl, meta, kind: targetKind }, { actor, onProgress });
+  return installResolved(serverId, { downloadUrl, meta, kind: targetKind }, { actor, onProgress, ignoreVersion });
 }
 
 /**
@@ -283,7 +377,11 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
  * bulk installers (modpack zip import) that resolved files via bulk API calls
  * and must not re-resolve one mod at a time.
  */
-async function installResolved(serverId, { downloadUrl, meta, kind = 'mod' }, { actor = 'system', onProgress } = {}) {
+async function installResolved(
+  serverId,
+  { downloadUrl, meta, kind = 'mod' },
+  { actor = 'system', onProgress, ignoreVersion = false } = {}
+) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   const lib = await library.downloadToLibrary(downloadUrl, meta, { onProgress, actor });
@@ -304,15 +402,43 @@ async function installResolved(serverId, { downloadUrl, meta, kind = 'mod' }, { 
     lib.version,
     lib.icon_url
   );
+  // ignoreVersion is only ever set by the single-URL install path; bulk zip
+  // imports call this without it, so their override flags stay false.
+  // meta.mcVersions/meta.loaders are only set for modrinth sources (curseforge
+  // has no meta.loaders at all) - a direct-URL install has nothing to compare
+  // against either way, so neither flag ever fires for one.
+  const overrideLoader = kind === 'mod' ? loaderOf(server) : null;
+  const versionOverridden =
+    ignoreVersion &&
+    server.mc_version &&
+    Array.isArray(meta.mcVersions) &&
+    !meta.mcVersions.includes(server.mc_version);
+  // Only meaningful for plain mods: plugin loader categories are already
+  // known-unreliable, and datapacks/resourcepacks have no loader concept.
+  const loaderOverridden =
+    ignoreVersion &&
+    kind === 'mod' &&
+    overrideLoader &&
+    Array.isArray(meta.loaders) &&
+    !meta.loaders.includes(overrideLoader);
+  const overrideBits = [
+    versionOverridden ? `not listed for ${server.mc_version}` : null,
+    loaderOverridden ? `not built for ${overrideLoader}` : null,
+  ].filter(Boolean);
   recordEvent({
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Custom ${kind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''} (overlay)`,
-    details: { libraryId: lib.id, filename },
+    summary:
+      `Custom ${kind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''}` +
+      (overrideBits.length
+        ? ` - ${overrideBits.join(', ')}, installed anyway (compatibility check overridden)`
+        : ' (overlay)'),
+    details: { libraryId: lib.id, filename, versionOverridden, loaderOverridden },
   });
-  indexer.scan().catch(() => {});
-  return { library: lib, filename };
+  logger.info('Installed custom content on a server.', { serverId, actor, kind, filename });
+  indexer.scan().catch(onRescanFailed);
+  return { library: lib, filename, versionOverridden, loaderOverridden };
 }
 
 /** Toggle content. Overlay: rename instantly. Pack: exclusion env + recreate flag. */
@@ -324,7 +450,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
   const managedBy = row ? row.managed_by : isPackServer(server) ? 'pack' : 'overlay';
 
   if (managedBy === 'overlay' || !isPackServer(server)) {
-    const dirRel = contentDir(server, row ? row.kind : 'mod');
+    const dirRel = locateContentDir(server, row, file);
     const base = dataPath('servers', serverId, dirRel, file);
     const disabled = `${base}.disabled`;
     if (enabled && fs.existsSync(disabled)) await fsp.rename(disabled, base);
@@ -340,7 +466,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
   }
 
   // Pack-managed: manipulate the exclusion env var. Prefer the real CF project
-  // slug/ID from the pack manifest — a name-derived token misses renamed/unofficial
+  // slug/ID from the pack manifest - a name-derived token misses renamed/unofficial
   // mods (e.g. display name "cc tweaked" vs slug "unofficial-cc-tweaked-…"), which
   // silently fails to exclude anything.
   const env = { ...server.env };
@@ -364,7 +490,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: enabled ? 'mod-enabled' : 'mod-disabled',
-    summary: `${file} ${enabled ? 're-included' : 'excluded'} via ${varName} — applies on next restart`,
+    summary: `${file} ${enabled ? 're-included' : 'excluded'} via ${varName} - applies on next restart`,
   });
   return { applied: 'on-restart' };
 }
@@ -375,9 +501,15 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   const row = db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', serverId, file);
-  if (row && row.managed_by === 'pack')
-    throw httpError(409, 'Pack-managed content is excluded, not deleted — use Disable');
-  const dirRel = contentDir(server, row ? row.kind : 'mod');
+  // Pack-installed files have no server_content row at all (only overlay
+  // installs get one), so `row && row.managed_by === 'pack'` never caught
+  // them - a row-less file on a pack server slipped past this guard, got
+  // deleted from disk with nothing recorded to keep it excluded, and came
+  // back the moment the pack next recreated. Mirror listContent()'s own
+  // "pack" classification (row-less + pack server ⇒ pack-managed) instead.
+  const managedByPack = row ? row.managed_by === 'pack' : isPackServer(server);
+  if (managedByPack) throw httpError(409, 'Pack-managed content is excluded, not deleted - use Disable');
+  const dirRel = locateContentDir(server, row, file);
   let freed = 0;
   for (const candidate of [file, `${file}.disabled`]) {
     const abs = dataPath('servers', serverId, dirRel, candidate);
@@ -393,6 +525,7 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
     type: 'mod-removed',
     summary: `Removed ${file} (${(freed / 1024 / 1024).toFixed(1)} MB freed)`,
   });
+  logger.info('Removed content from a server.', { serverId, actor, file, freedBytes: freed });
   return { freedBytes: freed };
 }
 
@@ -418,7 +551,7 @@ async function reapplyOverlay(serverId, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'overlay-reapplied',
-      summary: `Custom overlay re-applied: ${restored} file(s) restored after pack operation`,
+      summary: `Custom mods re-applied: ${restored} file(s) restored after pack operation`,
     });
   }
   return { restored };
@@ -438,7 +571,7 @@ function prettifyJarName(file) {
 // Manual-download handling. A CurseForge pack can pin mods whose authors disallow
 // automated download (or that were pulled from CF). mc-image-helper then writes
 // MODS_NEED_DOWNLOAD.txt and the pack install FAILS until each is excluded or
-// supplied by hand — this turns that dead-end into guided actions.
+// supplied by hand - this turns that dead-end into guided actions.
 
 /** Best-effort filename -> {slug, projectId} map from the pack's CF manifest. */
 function packManifestIndex(serverId) {
@@ -514,7 +647,7 @@ function clearPendingLine(serverId, filename) {
     if (kept.some((l) => /curseforge\.com/i.test(l))) fs.writeFileSync(file, kept.join('\n'));
     else fs.rmSync(file, { force: true });
   } catch {
-    /* ownership not aligned yet — the banner clears on the next successful start */
+    /* ownership not aligned yet - the banner clears on the next successful start */
   }
 }
 
@@ -538,7 +671,7 @@ function excludePackMod(serverId, token, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'mod-excluded',
-    summary: `Excluded pack mod "${token}" via ${varName} — applies on recreate`,
+    summary: `Excluded pack mod "${token}" via ${varName} - applies on recreate`,
   });
   return { excluded: token };
 }
@@ -577,7 +710,7 @@ async function installLocalContent(
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   if (!/\.(jar|zip)$/i.test(filename)) throw httpError(400, 'Only .jar or .zip files can be uploaded');
-  const targetKind = PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
+  const targetKind = contentKindOf(server);
 
   const fromRegistry = identity && (identity.platform === 'modrinth' || identity.platform === 'curseforge');
   const lib = await library.importFile(
@@ -616,10 +749,10 @@ async function installLocalContent(
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Uploaded ${targetKind} installed: ${lib.name} (overlay)`,
+    summary: `Uploaded ${targetKind} installed: ${lib.name}`,
     details: { filename: installed },
   });
-  indexer.scan().catch(() => {});
+  indexer.scan().catch(onRescanFailed);
   return { filename: installed, name: lib.name, version: lib.version, excluded: excludeToken || null };
 }
 

@@ -16,6 +16,11 @@ const { nanoid } = require('nanoid');
 const blueprints = require('../../blueprints');
 const { dataPath } = require('../../storage/pathGuard');
 const { dockerOverridesSchema, requireAdminForOverrides } = require('./dockerOverridesSchema');
+const logger = require('../../logger')('blueprints');
+const { serializeError } = require('../../utils/logSanitize');
+
+const onTempCleanupFailed = (err) =>
+  logger.debug('Could not remove a temporary file.', { err: serializeError(err, { includeStack: false }) });
 
 const router = express.Router();
 
@@ -84,7 +89,7 @@ router.post(
       try {
         preview = await blueprints.importPreview(req.file.path);
       } catch (err) {
-        await fsp.rm(req.file.path, { force: true }).catch(() => {});
+        await fsp.rm(req.file.path, { force: true }).catch(onTempCleanupFailed);
         throw err;
       }
       return res.json({ ok: true, preview, uploadToken: req.file.filename });
@@ -113,14 +118,14 @@ router.post(
     if (input.uploadToken) {
       zipRef = dataPath('tmp', input.uploadToken);
       if (!fs.existsSync(zipRef)) {
-        return res.status(404).json({ ok: false, error: 'Uploaded blueprint expired — upload it again' });
+        return res.status(404).json({ ok: false, error: 'Uploaded blueprint expired - upload it again' });
       }
     }
     if (input.overrides) requireAdminForOverrides(req, input.overrides);
     const { server, report } = await blueprints.importBlueprint(zipRef, input.overrides || {}, {
       actor: req.user.username,
     });
-    if (input.uploadToken) await fsp.rm(zipRef, { force: true }).catch(() => {});
+    if (input.uploadToken) await fsp.rm(zipRef, { force: true }).catch(onTempCleanupFailed);
     res.status(201).json({ ok: true, server: publicServer(server), report });
   })
 );

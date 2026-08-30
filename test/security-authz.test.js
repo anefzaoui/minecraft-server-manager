@@ -6,7 +6,7 @@
 //   - the mods content routes reject path-traversal in the `file` param
 //   - the /settings and /storage pages are admin only
 //   - advanced Docker overrides (extra binds mount arbitrary host paths) are
-//     admin only — an operator must not be able to reach host root through them
+//     admin only - an operator must not be able to reach host root through them
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -18,7 +18,7 @@ let viewerCookie;
 
 /** Create a user with the given role and return its session cookie string. */
 async function login(username, password, role) {
-  authService.createUser({ username, password, role }, { actor: 'test' });
+  await authService.createUser({ username, password, role }, { actor: 'test' });
   const r = await app.req('POST', '/login', { body: { username, password } });
   return (r.setCookie || []).map((c) => c.split(';')[0]).join('; ');
 }
@@ -65,6 +65,39 @@ test('mods delete rejects an encoded traversal in the :file param', async () => 
     cookie: adminCookie,
   });
   assert.equal(r.status, 400);
+});
+
+test('viewer cannot delete backups (403); admin passes the gate', async () => {
+  const asViewer = await app.req('DELETE', '/api/backups/bk_anything', { cookie: viewerCookie });
+  assert.equal(asViewer.status, 403);
+
+  // deleteBackup() is idempotent for a missing id (200, freedBytes: 0) rather
+  // than 404 - this only needs to confirm the role gate was passed.
+  const asAdmin = await app.req('DELETE', '/api/backups/bk_anything', { cookie: adminCookie });
+  assert.equal(asAdmin.status, 200);
+});
+
+test('viewer cannot delete mods (403); admin passes the gate', async () => {
+  const asViewer = await app.req('DELETE', '/api/servers/srv_sec01/mods/some.jar', { cookie: viewerCookie });
+  assert.equal(asViewer.status, 403);
+
+  const asAdmin = await app.req('DELETE', '/api/servers/srv_sec01/mods/some.jar', { cookie: adminCookie });
+  assert.notEqual(asAdmin.status, 403); // gate passed (200 or a benign 404, but never forbidden)
+});
+
+test('side-effecting GETs (staging tmp files) are gated above the method-based viewer check', async () => {
+  for (const path of [
+    '/api/events/export?format=csv',
+    '/api/servers/srv_sec01/events/export?format=csv',
+    '/api/servers/srv_sec01/worlds/world/download',
+    '/api/servers/srv_sec01/integrations/invite/modpack.mrpack',
+  ]) {
+    const asViewer = await app.req('GET', path, { cookie: viewerCookie });
+    assert.equal(asViewer.status, 403, `viewer must be 403 on ${path}`);
+
+    const asAdmin = await app.req('GET', path, { cookie: adminCookie });
+    assert.notEqual(asAdmin.status, 403, `admin gate must pass on ${path}`);
+  }
 });
 
 test('advanced Docker overrides are admin-only; plain operator updates still work', async () => {

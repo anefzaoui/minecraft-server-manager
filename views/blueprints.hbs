@@ -1,4 +1,4 @@
-{{> page-header heading="BLUEPRINTS" sub="Portable server recipes (.mcserver.zip) — export a server, import it anywhere, get the same server."}}
+{{> page-header heading="BLUEPRINTS" sub="Portable server recipes (.mcserver.zip). Export a server, then import it anywhere to rebuild the same setup."}}
 
 <div class="mb-4 flex flex-wrap gap-2">
   <button class="btn btn-primary" id="bp-import-btn">{{{icon 'upload' 'size-4'}}} Import blueprint</button>
@@ -22,8 +22,8 @@
         </div>
       </div>
       <dl class="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3 text-xs">
-        <div><dt class="text-ink-faint">Pack</dt><dd class="mt-0.5 font-medium">{{default pack '—'}}</dd></div>
-        <div><dt class="text-ink-faint">Overlay mods</dt><dd class="mt-0.5 font-medium">{{overlayCount}}</dd></div>
+        <div><dt class="text-ink-faint">Pack</dt><dd class="mt-0.5 font-medium">{{default pack '-'}}</dd></div>
+        <div><dt class="text-ink-faint">Custom mods</dt><dd class="mt-0.5 font-medium">{{overlayCount}}</dd></div>
         <div><dt class="text-ink-faint">Size</dt><dd class="mt-0.5 font-medium">{{bytes size_bytes}}</dd></div>
       </dl>
       <div class="mt-3 flex gap-2">
@@ -35,7 +35,7 @@
   {{/each}}
 </div>
 {{else}}
-  {{> empty-state iconName='drafting-compass' title='No blueprints yet' message='Export one from a server&apos;s Settings tab, or import a .mcserver.zip with the button above — the same recipe then rebuilds the server anywhere.'}}
+  {{> empty-state iconName='drafting-compass' title='No Blueprints Yet' message="Export one from a server's Settings tab, or import a .mcserver.zip file with the button above. The same recipe then rebuilds the server anywhere."}}
 {{/if}}
 </div>
 <script type="module" src="/js/pages/blueprints.js"></script>

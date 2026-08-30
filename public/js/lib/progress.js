@@ -1,7 +1,7 @@
 // Task progress modal: polls /api/tasks/:id and renders a REAL progress bar
 // (step label, percent when known, recent log lines). Replaces fake pulse bars.
 //
-// runTask({ title, start }) — start() must return a task id (string) or an
+// runTask({ title, start }) - start() must return a task id (string) or an
 // object {taskId}. Resolves with the task's result, rejects on failure.
 
 import { openModal } from './modal.js';
@@ -18,7 +18,7 @@ export function runTask({ title, start, pollMs = 700 }) {
       <pre data-logs class="console hidden max-h-32 overflow-y-auto whitespace-pre-wrap text-[11px]"></pre>`;
     let closed = false;
     let settled = false;
-    // Dismissing the modal must SETTLE the promise — a pending-forever promise
+    // Dismissing the modal must SETTLE the promise - a pending-forever promise
     // leaves the launching flow dead (no toast, no redirect) and its trigger
     // button re-clickable. Callers check err.dismissed to skip error toasts.
     const modal = openModal({
@@ -29,7 +29,9 @@ export function runTask({ title, start, pollMs = 700 }) {
         closed = true;
         if (!settled) {
           settled = true;
-          toast('Still running in the background — follow it from the tasks tray in the top bar.', { kind: 'info' });
+          toast('This keeps running in the background. Follow it from the tasks tray in the top bar.', {
+            kind: 'info',
+          });
           reject(Object.assign(new Error('Progress dismissed'), { dismissed: true }));
         }
       },
@@ -46,7 +48,7 @@ export function runTask({ title, start, pollMs = 700 }) {
       try {
         const started = await start();
         taskId = typeof started === 'string' ? started : started.taskId;
-        if (!taskId) throw new Error('No task id returned');
+        if (!taskId) throw new Error('The panel did not start that task. Please try again in a moment.');
       } catch (err) {
         settled = true;
         modal.close();
@@ -55,7 +57,7 @@ export function runTask({ title, start, pollMs = 700 }) {
       }
 
       const poll = async () => {
-        if (closed) return; // user dismissed — task keeps running server-side
+        if (closed) return; // user dismissed - task keeps running server-side
         let data;
         try {
           const res = await fetch(`/api/tasks/${taskId}`);
@@ -67,7 +69,7 @@ export function runTask({ title, start, pollMs = 700 }) {
         if (!data.ok) {
           settled = true;
           modal.close();
-          reject(new Error(data.error || 'Task lost'));
+          reject(new Error(data.error || 'The panel lost track of that task. Check the tasks tray, then try again.'));
           return;
         }
         const t = data.task;
@@ -89,7 +91,7 @@ export function runTask({ title, start, pollMs = 700 }) {
           logsEl.scrollTop = logsEl.scrollHeight;
         }
         if (t.state === 'done') {
-          settled = true; // before the closing beat — a dismiss inside it must not reject
+          settled = true; // before the closing beat - a dismiss inside it must not reject
           barEl.style.width = '100%';
           setTimeout(() => {
             modal.close();
@@ -100,7 +102,7 @@ export function runTask({ title, start, pollMs = 700 }) {
         if (t.state === 'failed') {
           settled = true;
           modal.close();
-          const err = new Error(t.error || 'Task failed');
+          const err = new Error(t.error || 'That task did not finish. Please try again.');
           if (t.requiresForce) err.requiresForce = true;
           if (t.requiresVersionConfirm) {
             err.requiresVersionConfirm = true;

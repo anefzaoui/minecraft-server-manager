@@ -12,6 +12,7 @@ const discord = require('../../integrations/discord');
 const invites = require('../../integrations/invites');
 const statusPage = require('../../integrations/statusPage');
 const serversService = require('../../services/servers');
+const { requireRole, rejectCrossSiteGet } = require('../middleware/auth');
 const { recordEvent } = require('../../events');
 
 const router = express.Router({ mergeParams: true });
@@ -61,6 +62,7 @@ const discordSchema = z.object({
       backups: z.boolean().optional(),
       updates: z.boolean().optional(),
       players: z.boolean().optional(),
+      alerts: z.boolean().optional(),
     })
     .optional(),
 });
@@ -97,13 +99,17 @@ router.get(
   })
 );
 
+// Regenerates the .mrpack (mod-list walk + zip in data/tmp) on every hit - keep
+// it off the viewer role even though it's a GET.
 router.get(
   '/invite/modpack.mrpack',
+  requireRole('admin', 'operator'),
+  rejectCrossSiteGet,
   asyncHandler(async (req, res, next) => {
     const server = mustGet(req);
     const host = req.query.host ? z.string().trim().max(260).parse(req.query.host) : undefined;
     const pack = await invites.generateMrpack(server.id, { host });
-    // Streamed from data/tmp, then deleted — generated fresh per download so
+    // Streamed from data/tmp, then deleted - generated fresh per download so
     // it always reflects the current mod list.
     res.download(pack.absPath, pack.filename, () => {
       fs.unlink(pack.absPath, () => {});
@@ -118,7 +124,7 @@ router.post(
     const { enabled, slug } = z
       .object({
         enabled: z.boolean(),
-        // Slug required only when enabling — a page that never had one must
+        // Slug required only when enabling - a page that never had one must
         // still be switch-off-able.
         slug: z
           .string()

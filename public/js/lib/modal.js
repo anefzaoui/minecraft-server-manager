@@ -4,10 +4,10 @@
 // openModal({ title, content, actions, size, onClose }) -> { el, body, close }
 //   content: string (HTML) or Node
 //   actions: array of { label, kind: 'primary'|'danger'|'default'|'ghost',
-//                       onClick(ctx) — return false to keep the modal open }
+//                       onClick(ctx) - return false to keep the modal open }
 //   size: 'sm' | 'md' | 'lg' (default 'md')
 
-import { enhanceAll } from './select.js'; // circular with select.js — safe: both only call at runtime
+import { enhanceAll } from './select.js'; // circular with select.js - safe: both only call at runtime
 import { setBusy } from './loading.js';
 
 const FOCUSABLE =
@@ -18,8 +18,16 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
   const previouslyFocused = document.activeElement;
 
   const backdrop = document.createElement('div');
+  // grid-cols-1 (not just place-items-center) matters: place-items:center alone
+  // makes the column an auto/content-sized track, so a panel's `w-full` can't
+  // resolve a percentage against it and the browser falls back to sizing the
+  // track off the panel's max-content width - on mobile that let a search
+  // result row's unbreakable bits (icon/downloads/Install button) blow the
+  // whole modal out past the viewport instead of shrinking to fit. The
+  // minmax(0,1fr) track from grid-cols-1 gives w-full a definite size to
+  // resolve against, so max-w-* caps it and content shrinks/wraps as normal.
   backdrop.className =
-    'fixed inset-0 z-[60] grid place-items-center bg-black/60 p-4 backdrop-blur-[2px] animate-[fade-in_.15s_ease-out]';
+    'fixed inset-0 z-[60] grid grid-cols-1 place-items-center bg-black/60 p-4 backdrop-blur-[2px] animate-[fade-in_.15s_ease-out]';
 
   const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' };
   const panel = document.createElement('div');
@@ -56,7 +64,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
       btn.addEventListener('click', async () => {
         if (!action.onClick) return close();
         // Async work in flight: spinner on the clicked button, siblings
-        // disabled — no double-submits, no soft-freeze.
+        // disabled - no double-submits, no soft-freeze.
         if (footer.dataset.busy) return;
         footer.dataset.busy = '1';
         const others = [...footer.querySelectorAll('button')].filter((b) => b !== btn);
@@ -87,7 +95,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
     stack.splice(idx, 1);
     document.removeEventListener('keydown', onKeydown);
     // Exit beat: fade the backdrop and shrink the panel, THEN remove. All the
-    // logic (focus return, onClose, scroll unlock) still fires immediately —
+    // logic (focus return, onClose, scroll unlock) still fires immediately -
     // only the removal waits, with pointer events off so nothing is blocked.
     backdrop.style.pointerEvents = 'none';
     backdrop.style.transition = 'opacity 120ms ease';

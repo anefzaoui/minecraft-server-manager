@@ -8,12 +8,12 @@ const WIKI_API = 'https://minecraft.wiki/api.php';
 const VERSION = process.argv[2] || '1.21.11';
 const OUT_DIR = path.join(__dirname, '..', 'public', 'icons', 'mc-items');
 // The wiki's rate limiter starts returning 429s once more than ~1 request is
-// in flight at a time (verified empirically — concurrency 2 already drops
+// in flight at a time (verified empirically - concurrency 2 already drops
 // ~6% of requests), so this has to stay sequential.
 const CONCURRENCY = 1;
 
 // Ids whose wiki page title doesn't match a plain title-cased version of the
-// id — found by diffing a full run's misses against the wiki by hand.
+// id - found by diffing a full run's misses against the wiki by hand.
 const TITLE_OVERRIDES = {
   // Ore/material storage blocks use "Block of X" naming, not "X Block".
   diamond_block: 'Block of Diamond',
@@ -117,7 +117,7 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Fetch with retry/backoff on 429 — the wiki hands these out liberally under any load. */
+/** Fetch with retry/backoff on 429 - the wiki hands these out liberally under any load. */
 async function fetchWithRetry(url, { retries = 5 } = {}) {
   for (let attempt = 0; ; attempt += 1) {
     const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -134,7 +134,7 @@ async function fetchJson(url) {
 }
 
 // The wiki's "Invicon" files are the actual rendered inventory icon for
-// anything holdable — items and blocks alike — so it's the one source that
+// anything holdable - items and blocks alike - so it's the one source that
 // doesn't need per-shape/per-texture guessing the way raw asset textures do.
 async function wikiIconUrl(title) {
   const params = new URLSearchParams({

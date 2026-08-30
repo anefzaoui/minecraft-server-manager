@@ -149,19 +149,19 @@
 
   <div class="card p-4">
     <div class="mb-4 flex items-center justify-between gap-3">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-link'}}} Discord notifications</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-link'}}} Discord Notifications</h3>
       <span class="msm-toggle"><input type="checkbox" id="ig-dc-enabled" {{#if integrations.discord.enabled}}checked{{/if}}><span></span></span>
     </div>
     <div class="space-y-4">
       <div>
         <label class="label" for="ig-dc-url">Webhook URL</label>
         <input class="input font-mono text-xs" type="password" id="ig-dc-url" autocomplete="off" placeholder="https://discord.com/api/webhooks/…">
-        {{! The stored webhook is shown as a fact, not a placeholder — a
+        {{! The stored webhook is shown as a fact, not a placeholder - a
             placeholder disappears on focus and reads as example text. }}
         {{#if integrations.discord.hasWebhook}}
-          <p class="help">Stored: <code class="rounded bg-inset px-1 font-mono">{{integrations.discord.webhookMasked}}</code> — leave blank to keep it, paste a new URL to replace it.</p>
+          <p class="help">Stored: <code class="rounded bg-inset px-1 font-mono">{{integrations.discord.webhookMasked}}</code>. Leave blank to keep it, or paste a new URL to replace it.</p>
         {{else}}
-          <p class="help">Server Settings → Integrations → Webhooks in your Discord server. Stored encrypted.</p>
+          <p class="help">Create a webhook in your Discord server under Server Settings → Integrations → Webhooks, then paste its URL here. It is stored encrypted.</p>
         {{/if}}
       </div>
       <div>
@@ -172,6 +172,7 @@
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="backups" {{#if integrations.discord.events.backups}}checked{{/if}}> Backups</label>
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="updates" {{#if integrations.discord.events.updates}}checked{{/if}}> Updates</label>
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="players" {{#if integrations.discord.events.players}}checked{{/if}}> Kicks / bans</label>
+          <label class="flex items-center gap-2" title="Out of memory, stalled boot, failed scheduled task, quota stop, health-check failure"><input type="checkbox" class="msm-check" data-dc-event="alerts" {{#if integrations.discord.events.alerts}}checked{{/if}}> Alerts</label>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -179,7 +180,7 @@
         {{#if integrations.discord.hasWebhook}}
           <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} Send test</button>
         {{else}}
-          {{! Disabled controls swallow hover — the wrapper carries the "why". }}
+          {{! Disabled controls swallow hover - the wrapper carries the "why". }}
           <span data-tip="Save a webhook URL first"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} Send test</button></span>
         {{/if}}
         <span class="hidden text-xs text-warn" data-ig-dirty="dc">Unsaved changes</span>
@@ -189,17 +190,19 @@
 
   <div class="card p-4">
     <div class="mb-4 flex items-center justify-between gap-3">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'globe' 'size-4 text-ok'}}} Public status page</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'globe' 'size-4 text-ok'}}} Public Status Page</h3>
       <span class="msm-toggle"><input type="checkbox" id="ig-sp-enabled" {{#if integrations.statusPage.enabled}}checked{{/if}}><span></span></span>
     </div>
     <div class="space-y-4">
       <div>
         <label class="label" for="ig-sp-slug">Page address</label>
         <div class="flex items-center gap-2">
-          <span class="font-mono text-xs text-ink-faint">/status/</span>
-          <input class="input flex-1 font-mono text-xs" id="ig-sp-slug" placeholder="my-server" value="{{integrations.statusPage.slug}}">
+          <span class="shrink-0 font-mono text-xs text-ink-faint">/status/</span>
+          {{! min-w-0: see settings.hbs - an unconstrained flex-1 input refuses to
+              shrink below its intrinsic width and pushes the page wider on mobile. }}
+          <input class="input min-w-0 flex-1 font-mono text-xs" id="ig-sp-slug" placeholder="my-server" value="{{integrations.statusPage.slug}}">
         </div>
-        <p class="help">Anyone with the link sees name, MOTD, version, player count, and uptime — nothing else, and no way into the panel. Off by default.</p>
+        <p class="help">Anyone with the link sees the name, MOTD, version, player count, and uptime, and nothing else. There is no way into the panel from it. Off by default.</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button class="btn btn-primary" id="ig-sp-save">Save</button>
@@ -213,7 +216,7 @@
   </div>
 
   <div class="card p-4 lg:col-span-2">
-    <h3 class="mb-4 flex items-center gap-2 font-semibold">{{{icon 'send' 'size-4 text-warn'}}} Invite friends</h3>
+    <h3 class="mb-4 flex items-center gap-2 font-semibold">{{{icon 'send' 'size-4 text-warn'}}} Invite Friends</h3>
     <div class="grid gap-4 lg:grid-cols-2">
       <div class="space-y-4">
         <div>
@@ -223,7 +226,7 @@
               <option value="{{this}}" data-desc="Local network (LAN)">{{this}}</option>
             {{/each}}
             {{#if integrations.invite.publicAddress}}
-              <option value="{{integrations.invite.publicAddress}}" data-desc="Public IP — needs port forwarding">{{integrations.invite.publicAddress}}</option>
+              <option value="{{integrations.invite.publicAddress}}" data-desc="Public IP address (needs port forwarding)">{{integrations.invite.publicAddress}}</option>
             {{/if}}
             <option value="__custom" data-desc="Domain or address you set up yourself">Custom address…</option>
           </select>
@@ -244,7 +247,7 @@
         {{#if integrations.invite.modded}}
           <div class="rounded-md border border-line bg-raised p-3">
             <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
-            <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App — it installs the right Minecraft version, the mods, and pre-adds this server to their multiplayer list.</p>
+            <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App. It installs the right Minecraft version and the mods, and adds this server to their multiplayer list.</p>
             {{#if integrations.invite.manualMods.length}}
               <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="rounded bg-inset px-1">mods</code> folder themselves:</p>
               <ul class="mt-1 list-inside list-disc text-xs text-ink-soft">
@@ -255,11 +258,11 @@
         {{else}}
           <div class="rounded-md border border-line bg-raised p-3">
             <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
-            <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}} — no mods required on the client.</p>
+            <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}}. No mods are needed on the client.</p>
           </div>
         {{/if}}
         {{#if integrations.invite.whitelistEnforced}}
-          <div class="notice notice-warn text-xs text-warn">Whitelist is enforced — add each friend on the Players tab before they join.</div>
+          <div class="notice notice-warn text-xs text-warn">The whitelist is enforced. Add each friend on the Players tab before they join.</div>
         {{/if}}
         <details class="rounded-md border border-line bg-raised p-3 text-xs">
           <summary class="cursor-pointer font-medium text-sm">Playing over the internet (port forwarding)</summary>
@@ -267,7 +270,7 @@
           {{#if integrations.invite.publicIp}}
             <p class="mt-2">Detected public IP: <code class="rounded bg-inset px-1 font-mono">{{integrations.invite.publicIp}}</code></p>
           {{else}}
-            <p class="mt-2 text-ink-faint">Public IP could not be detected right now (offline?).</p>
+            <p class="mt-2 text-ink-faint">Your public IP address could not be detected right now. The panel may be offline.</p>
           {{/if}}
         </details>
       </div>

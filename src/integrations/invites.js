@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Invites & client modpack generation (MP7).
@@ -45,7 +45,7 @@ function isLan(ip) {
 }
 
 // ---------------------------------------------------------------------------
-// Public IP detection (replaces UPnP — no new dependencies).
+// Public IP detection (replaces UPnP - no new dependencies).
 
 let publicIpCache = { ip: null, at: 0 };
 
@@ -66,7 +66,7 @@ function portForwardGuidance(port) {
     `To let friends outside your network join, forward TCP port ${port} on your router to this machine.`,
     'Open your router admin page (usually 192.168.1.1 or 192.168.0.1), find "Port Forwarding" (sometimes under NAT or Virtual Server),',
     `and add a rule: external port ${port} → this computer's LAN IP, port ${port}, protocol TCP.`,
-    'Then share your public IP with the port. If your ISP uses CGNAT, port forwarding will not work — consider a tunnel (e.g. playit.gg) instead.',
+    'Then share your public IP with the port. If your ISP uses CGNAT, port forwarding will not work - consider a tunnel (e.g. playit.gg) instead.',
   ].join(' ');
 }
 
@@ -93,10 +93,10 @@ async function inviteInfo(serverId) {
     `Address: ${address}`,
     `Version: Minecraft ${mcVersion} (${flavor})`,
   ];
-  if (whitelistEnforced) lines.push('Whitelist is ON — send me your Minecraft username so I can add you.');
+  if (whitelistEnforced) lines.push('Whitelist is ON - send me your Minecraft username so I can add you.');
   if (activeMods.length && !isPluginFlavor(server.type)) {
     lines.push(
-      `Mods: ${activeMods.length} — grab the client modpack (.mrpack) I sent and import it into your launcher (Prism / Modrinth App).`
+      `Mods: ${activeMods.length} - grab the client modpack (.mrpack) I sent and import it into your launcher (Prism / Modrinth App).`
     );
     if (manual.length)
       lines.push(`Also install these manually (not on Modrinth): ${manual.map((m) => m.name).join(', ')}.`);
@@ -151,7 +151,7 @@ async function resolvedMcVersion(server) {
     const manifest = await getVersionManifest();
     return server.mc_version === 'LATEST' ? manifest.latest.release : manifest.latest.snapshot;
   } catch {
-    return server.mc_version; // offline — better than nothing
+    return server.mc_version; // offline - better than nothing
   }
 }
 
@@ -178,7 +178,7 @@ async function generateMrpack(serverId, { host } = {}) {
     try {
       version = await modrinth.getVersion(row.file_id);
     } catch {
-      manual.push(row); // metadata gone from Modrinth — fall back to manual
+      manual.push(row); // metadata gone from Modrinth - fall back to manual
       continue;
     }
     const file = modrinth.primaryFile(version);
@@ -238,7 +238,7 @@ function slugify(name) {
 }
 
 // ---------------------------------------------------------------------------
-// Minimal NBT writer — servers.dat is a tiny fixed structure, so we emit the
+// Minimal NBT writer - servers.dat is a tiny fixed structure, so we emit the
 // bytes directly instead of pulling in an NBT dependency. Uncompressed NBT:
 // root TAG_Compound("") { TAG_List("servers") of TAG_Compound { ip, name } }.
 

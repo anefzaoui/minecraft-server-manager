@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Image management: ensure-pulled with progress, and digest comparison for
@@ -56,15 +56,20 @@ async function ensureImage(ref, onProgress) {
   if (!(await imageExists(ref))) await pullImage(ref, onProgress);
 }
 
-/** Local digest for update comparison (RepoDigests sha). */
-async function localDigest(ref) {
+/**
+ * Local image ID for update comparison. Unlike RepoDigests (which can be
+ * absent for images pulled through some mirrors, or multiple for
+ * multi-registry tags), the image ID is always present and is exactly what a
+ * container's own `inspect().Image` field records - the direct, authoritative
+ * way to tell whether a given container is running a stale image.
+ */
+async function imageId(ref) {
   try {
     const info = await getDocker().getImage(ref).inspect();
-    const rd = info.RepoDigests && info.RepoDigests[0];
-    return rd ? rd.split('@')[1] : null;
+    return info.Id || null;
   } catch {
     return null;
   }
 }
 
-module.exports = { IMAGE_REPO, imageRef, imageExists, pullImage, ensureImage, localDigest };
+module.exports = { IMAGE_REPO, imageRef, imageExists, pullImage, ensureImage, imageId };

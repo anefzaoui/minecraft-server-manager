@@ -1,6 +1,6 @@
 <div data-backups-server="{{server.id}}" class="contents">
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <p class="text-sm text-ink-faint">Retention: keep 10 scheduled + all pre-update backups</p>
+  <p class="text-sm text-ink-faint">Retention, per server: 10 scheduled, 10 pre-update, 20 manual, 5 pre-restore. The newest in each group are kept; older ones are pruned automatically.</p>
   <button class="btn btn-primary btn-sm ml-auto" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back up now</button>
 </div>
 {{#if backups.length}}
@@ -17,9 +17,9 @@
           <td class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
           <td class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
           <td class="text-right"><div class="inline-flex gap-1">
-            {{! Restore stops the server and replaces its data — it must not scan
+            {{! Restore stops the server and replaces its data - it must not scan
                 identically to the harmless Download beside it. }}
-            <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="Stops the server, restores this archive, restarts">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
+            <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="Stops the server, restores this archive, then starts it again">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
             <a class="btn btn-ghost btn-sm" href="/api/backups/{{id}}/download" data-tip="Download archive" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</a>
             <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
           </div></td>
@@ -29,7 +29,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='archive' title='No backups yet' message='Hit Back up now for the first one — scheduled and pre-update backups will also collect here automatically.'}}
+  {{> empty-state iconName='archive' title='No Backups Yet' message='Use Back up now for the first one. Scheduled and pre-update backups also collect here automatically.'}}
 {{/if}}
 </div>
 <script type="module" src="/js/pages/server-backups.js"></script>

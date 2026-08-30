@@ -3,7 +3,7 @@
 // Shared "Advanced Docker Settings" fields, spread into every request schema
 // that can create or update a server (wizard, from-pack, from-mods, blueprint
 // import, PATCH /api/servers/:id) so the 4 new knobs aren't redefined 5 times.
-// Shape validation only — existence/collision checks run server-side in
+// Shape validation only - existence/collision checks run server-side in
 // services/dockerSpec.js#validateOverrides, since those need async Docker/DB
 // calls a zod schema can't make.
 
@@ -47,7 +47,7 @@ const dockerOverridesSchema = {
 };
 
 /**
- * True when a request carries ANY of the 4 override fields — even to clear
+ * True when a request carries ANY of the 4 override fields - even to clear
  * them. Every entry point admin-gates on this: extra binds mount arbitrary
  * host paths into a container, which is host-root-equivalent, so operators
  * (who keep every other server control) must not reach these. The UI omits

@@ -5,19 +5,28 @@
 // line becomes a player_events row; join/leave events also maintain
 // player_sessions.
 
+const path = require('node:path');
 const db = require('../db');
 const serversService = require('../services/servers');
 const { followLogs, fetchLogs } = require('../docker/logs');
 const { classify } = require('./logClassifier');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
 
-const RUNNING = new Set(['running', 'starting', 'unhealthy']);
+const syncThrottle = makeFailureThrottle();
+
+// 'stalled' (starting far longer than expected, no 'Done (' yet) is still a
+// live container - keep its log tap attached so join/leave events don't go
+// unrecorded for the duration of the stall (see liveCache.js's sync()).
+const RUNNING = new Set(['running', 'starting', 'unhealthy', 'stalled']);
 const DEDUPE_WINDOW_MS = 5000; // paired lines (logged-in/joined, lost-connection/left)
 
 const taps = new Map(); // serverId -> { stop, buf }
 let pollTimer = null;
 
 // Docker prepends this RFC3339(Nano) receive time to each line when
-// `timestamps: true` — the authoritative event time, independent of the
+// `timestamps: true` - the authoritative event time, independent of the
 // container's TZ. (nanoseconds trimmed to ms for JS Date.)
 const DOCKER_TS_RE = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)\s([\s\S]*)$/;
 
@@ -44,7 +53,7 @@ function buildTs(hms, now = new Date()) {
 }
 
 function openSession(serverId, player, ts) {
-  // A dangling open session means we missed the leave — close it at the new join.
+  // A dangling open session means we missed the leave - close it at the new join.
   db.run(
     'UPDATE player_sessions SET ended_at = ? WHERE server_id = ? AND player = ? AND ended_at IS NULL',
     ts,
@@ -116,45 +125,54 @@ function handleLine(serverId, line) {
   try {
     inserted = insertEvent(serverId, evt, eventTs, raw);
   } catch (err) {
-    console.error(`[analytics] insert failed for ${serverId}:`, err.message);
+    logger.error('Inserting a player event failed.', { serverId, err: serializeError(err, { includeStack: false }) });
   }
   if (inserted && (evt.type === 'join' || evt.type === 'leave')) {
+    const onPresenceError = (err) =>
+      logger.warn('Forwarding a presence event to the chatbot failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
     try {
       const wizard = require('../services/wizard');
       if (evt.type === 'join') {
-        wizard
-          .handleJoin(serverId, evt.player, eventTs)
-          .catch((err) => console.error(`[wizard] join ${serverId}:`, err.message));
+        wizard.handleJoin(serverId, evt.player, eventTs).catch(onPresenceError);
       } else {
         wizard.handleLeave(serverId, evt.player);
       }
     } catch (err) {
-      console.error(`[wizard] presence ${serverId}:`, err.message);
+      onPresenceError(err);
     }
   }
-  // Custom chat commands (!rtp2 …): fire-and-forget — a broken command handler
+  // Custom chat commands (!rtp2 …): fire-and-forget - a broken command handler
   // must never break log ingestion. Lazy require avoids any module cycle.
   if (evt.type === 'chat' && evt.player !== '[Server]') {
+    const onChatCmdError = (err) =>
+      logger.warn('A custom chat command handler failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
     try {
-      require('../services/chatCommands')
-        .handleChat(serverId, evt.player, evt.message)
-        .catch((err) => console.error(`[chat-commands] ${serverId}:`, err.message));
+      require('../services/chatCommands').handleChat(serverId, evt.player, evt.message).catch(onChatCmdError);
     } catch (err) {
-      console.error(`[chat-commands] ${serverId}:`, err.message);
+      onChatCmdError(err);
     }
+    const onWizardError = (err) =>
+      logger.warn('The chatbot chat handler failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
     try {
-      require('../services/wizard')
-        .handleChat(serverId, evt.player, evt.message)
-        .catch((err) => console.error(`[wizard] ${serverId}:`, err.message));
+      require('../services/wizard').handleChat(serverId, evt.player, evt.message).catch(onWizardError);
     } catch (err) {
-      console.error(`[wizard] ${serverId}:`, err.message);
+      onWizardError(err);
     }
   }
 }
 
 async function attach(serverId) {
   // timestamps:true so each line carries Docker's authoritative UTC receive
-  // time — TZ-independent, unlike the container's bare HH:MM:SS console prefix.
+  // time - TZ-independent, unlike the container's bare HH:MM:SS console prefix.
   const { stream, stop } = await followLogs(serverId, { tail: 0, timestamps: true });
   const tap = { stop, buf: '' };
   taps.set(serverId, tap);
@@ -198,9 +216,15 @@ async function syncTaps() {
     }
     for (const id of running) {
       if (!taps.has(id)) {
-        await attach(id).catch((err) => console.error(`[analytics] tap ${id} failed:`, err.message));
+        await attach(id).catch((err) =>
+          logger.warn('Attaching a log tap failed.', {
+            serverId: id,
+            err: serializeError(err, { includeStack: false }),
+          })
+        );
       }
     }
+    syncThrottle.ok(logger.info, 'The analytics tap sync recovered.');
   } finally {
     syncing = false;
   }
@@ -208,8 +232,12 @@ async function syncTaps() {
 
 /** Start live ingestion; re-syncs taps every 60 s as servers start/stop. */
 async function startIngest() {
-  await syncTaps().catch((err) => console.error('[analytics] initial tap sync failed:', err.message));
-  pollTimer = setInterval(() => syncTaps().catch(() => {}), 60_000);
+  const onSyncFailed = (err) =>
+    syncThrottle.fail(logger.warn, 'An analytics tap sync failed.', {
+      err: serializeError(err, { includeStack: false }),
+    });
+  await syncTaps().catch(onSyncFailed);
+  pollTimer = setInterval(() => syncTaps().catch(onSyncFailed), 60_000);
   if (pollTimer.unref) pollTimer.unref();
 }
 
@@ -222,7 +250,7 @@ function stopIngest() {
 /**
  * One-shot backfill from the container's recent log buffer. Skips lines older
  * than the newest recorded event and exact raw duplicates at the same second.
- * Sessions are not touched — replayed historical joins would reopen them.
+ * Sessions are not touched - replayed historical joins would reopen them.
  */
 async function backfillFromLogs(serverId, { tail = 5000 } = {}) {
   const raw = await fetchLogs(serverId, { tail, timestamps: true });

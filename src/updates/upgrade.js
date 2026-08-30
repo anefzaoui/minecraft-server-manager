@@ -1,13 +1,16 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Controlled upgrade orchestrator: preview → pre-update backup → graceful stop
 // → re-pin → recreate → start → monitor → one-click rollback on failure.
 // Never automatic unless the server's update_policy is 'auto'.
 
+const path = require('node:path');
 const httpError = require('../utils/httpError');
 const { recordEvent } = require('../events');
 const serversService = require('../services/servers');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 const packsService = require('../services/packs');
 const backupsService = require('../services/backups');
 const { fetchLogs } = require('../docker/logs');
@@ -23,7 +26,7 @@ function upgradeStatus(serverId) {
  * Run the full safe upgrade to a target pack version.
  * onStep(step: string) is invoked as the flow progresses.
  * opts.allowVersionChange must be true to cross MC versions (409 otherwise).
- * opts.task: optional tasks.js handle — step() calls are mirrored to it.
+ * opts.task: optional tasks.js handle - step() calls are mirrored to it.
  */
 async function upgradePack(
   serverId,
@@ -36,7 +39,7 @@ async function upgradePack(
     task = null,
   } = {}
 ) {
-  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade is already running for this server');
+  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server');
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   const pack = packsService.getPack(serverId);
@@ -54,14 +57,16 @@ async function upgradePack(
   const step = (s) => {
     activeUpgrades.set(serverId, { step: s, startedAt: activeUpgrades.get(serverId)?.startedAt || Date.now() });
     if (task) task.step(STEP_LABELS[s] || s);
+    logger.debug('A pack upgrade advanced.', { serverId, step: s });
     onStep(s);
   };
 
+  logger.info('Started a pack upgrade.', { serverId, actor, pack: pack.project_name });
   try {
     step('resolving');
     // Thread the pin's own channel through: without this, an explicit versionId-less
     // upgrade on a beta-pinned GTNH server silently resolves to the newest STABLE
-    // (pickLatest's default), while the UI (latestFor) showed the newest BETA — a
+    // (pickLatest's default), while the UI (latestFor) showed the newest BETA - a
     // downgrade the user never confirmed. includeBeta is a no-op for every other
     // platform/branch, which doesn't key off a stored channel.
     const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
@@ -69,10 +74,10 @@ async function upgradePack(
       includeBeta: pack.channel === 'beta',
     });
     if (resolved.versionId === pack.pinned_version_id) {
-      throw httpError(400, `Already on ${pack.pinned_version_name} — nothing to upgrade`);
+      throw httpError(400, `Already on ${pack.pinned_version_name} - nothing to upgrade`);
     }
 
-    // Cross-MC-version upgrades permanently convert the world — demand
+    // Cross-MC-version upgrades permanently convert the world - demand
     // explicit confirmation BEFORE any backup/stop work happens.
     if (
       resolved.mcVersion &&
@@ -105,13 +110,16 @@ async function upgradePack(
     }
 
     step('stopping');
-    const wasRunning = ['running', 'starting', 'unhealthy'].includes(server.status);
+    // 'stalled' is still a genuinely running container - it must be gracefully
+    // stopped too, or applyPack() below rewrites mod/pack files on disk while
+    // the still-live JVM may be concurrently reading/writing the same directory.
+    const wasRunning = ['running', 'starting', 'unhealthy', 'stalled'].includes(server.status);
     if (wasRunning) await serversService.stopServer(serverId, { actor });
 
     step('applying');
     // The pre-update backup above is the safety net; still require the caller
     // to have confirmed cross-MC-version upgrades (checked before backup by
-    // the route via resolvePack diff) — here we proceed.
+    // the route via resolvePack diff) - here we proceed.
     const { previous } = await packsService.applyPack(serverId, resolved, { actor, force: true });
 
     step('recreating');
@@ -119,7 +127,7 @@ async function upgradePack(
     await serversService.startServer(serverId, { actor });
 
     step('monitoring');
-    // CF/Modrinth installs download the whole pack on first boot — give them
+    // CF/Modrinth installs download the whole pack on first boot - give them
     // twice the window. GTNH downloads a ~1-2 GB server pack and then builds a
     // 1.7.10 world with several hundred mods, which routinely outlasts both.
     const INSTALL_TIMEOUTS_MS = { gtnh: 30 * 60 * 1000, curseforge: 20 * 60 * 1000, modrinth: 20 * 60 * 1000 };
@@ -132,9 +140,14 @@ async function upgradePack(
         serverId,
         actor,
         type: 'update-failed',
-        summary: `Pack upgrade to ${resolved.versionName} failed to start — rollback available`,
+        summary: `Pack upgrade to ${resolved.versionName} failed to start - rollback available`,
         details: { backupId, previousVersion: previous ? previous.pinned_version_id : null },
         logExcerpt: excerpt || null,
+      });
+      logger.warn('A pack upgrade did not come up healthy; rollback is available.', {
+        serverId,
+        toVersion: resolved.versionName,
+        backupId,
       });
       const err = httpError(
         502,
@@ -155,6 +168,13 @@ async function upgradePack(
       details: { backupId, from: pack.pinned_version_id, to: resolved.versionId },
       logExcerpt: excerpt || null,
     });
+    logger.info('Finished a pack upgrade.', {
+      serverId,
+      actor,
+      from: pack.pinned_version_name,
+      to: resolved.versionName,
+      backupId,
+    });
     return { ok: true, from: pack.pinned_version_name, to: resolved.versionName, backupId };
   } finally {
     activeUpgrades.delete(serverId);
@@ -163,33 +183,51 @@ async function upgradePack(
 
 /** Roll back: restore the pre-update backup + re-pin the previous version. */
 async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
+  // Same activeUpgrades guard as upgradePack - without it, a rollback fired
+  // while an upgrade is still mid-flight for the same server (e.g. the user
+  // gets impatient during the 'monitoring' wait) can interleave applyPack's
+  // pinned/previous-version bookkeeping and the recreate/start sequence,
+  // leaving it unclear which pack version actually ended up installed.
+  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server');
   const pack = packsService.getPack(serverId);
   if (!pack || !pack.previous_version_id) throw httpError(400, 'No previous pack version recorded');
 
-  await serversService.stopServer(serverId, { actor }).catch(() => {});
-  if (backupId) await backupsService.restoreBackup(serverId, backupId, { actor, skipSafety: true });
+  activeUpgrades.set(serverId, { step: 'rolling-back', startedAt: Date.now() });
+  logger.info('Started a pack rollback.', { serverId, actor, toVersion: pack.previous_version_name, backupId });
+  try {
+    await serversService.stopServer(serverId, { actor }).catch((err) => {
+      logger.debug('A stop before rollback failed; continuing.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    });
+    if (backupId) await backupsService.restoreBackup(serverId, backupId, { actor, skipSafety: true });
 
-  const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
-    versionId: pack.previous_version_id,
-  });
-  await packsService.applyPack(serverId, resolved, { actor, force: true }); // backup restore precedes this
-  await serversService.recreateServer(serverId, { actor, quiet: true });
-  await serversService.startServer(serverId, { actor });
+    const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
+      versionId: pack.previous_version_id,
+    });
+    await packsService.applyPack(serverId, resolved, { actor, force: true }); // backup restore precedes this
+    await serversService.recreateServer(serverId, { actor, quiet: true });
+    await serversService.startServer(serverId, { actor });
 
-  recordEvent({
-    serverId,
-    actor,
-    type: 'update-rolled-back',
-    summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}`,
-  });
-  return { ok: true, version: pack.previous_version_name };
+    recordEvent({
+      serverId,
+      actor,
+      type: 'update-rolled-back',
+      summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}`,
+    });
+    logger.info('Finished a pack rollback.', { serverId, actor, toVersion: pack.previous_version_name, backupId });
+    return { ok: true, version: pack.previous_version_name };
+  } finally {
+    activeUpgrades.delete(serverId);
+  }
 }
 
 /**
  * Wait until the server is genuinely up.
  * With a Docker healthcheck: 3 consecutive 'running' (healthy) checks (~15s).
  * WITHOUT one (health null), inspect says 'running' the instant the process
- * starts — require 6 consecutive checks (~30s) AND a 'Done (' line in recent
+ * starts - require 6 consecutive checks (~30s) AND a 'Done (' line in recent
  * logs, or slow-booting packs get a false OK (and false failures on rollback).
  */
 async function waitForHealthy(serverId, { timeoutMs = 10 * 60 * 1000 } = {}) {
@@ -211,6 +249,14 @@ async function waitForHealthy(serverId, { timeoutMs = 10 * 60 * 1000 } = {}) {
       }
     } else {
       stableChecks = 0;
+      // Healthcheck still inside its (long) StartPeriod: the container reports
+      // 'starting', not 'running', even after the server is genuinely up. Accept
+      // once the MC server itself says it's done, so a slow pack boot with a
+      // lagging mc-health probe isn't falsely called a failed upgrade.
+      if (info.status === 'starting') {
+        const tail = await fetchLogs(serverId, { tail: 100 }).catch(() => '');
+        if (/Done \(/.test(tail)) return true;
+      }
     }
   }
   return false;

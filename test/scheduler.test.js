@@ -9,10 +9,10 @@ const scheduler = require('../src/services/scheduler');
 const app = require('./helpers/app'); // migrates the DB itself
 
 // Etc/GMT-5 is a fixed UTC+5 offset with no DST (IANA's Etc/GMT zones invert
-// the sign) — deterministic, unlike a real "America/..." zone whose offset
+// the sign) - deterministic, unlike a real "America/..." zone whose offset
 // depends on the calendar date the test happens to run on.
 const FIXED_TZ = 'Etc/GMT-5';
-const CRON = '0 3 * * *'; // "3am" — meaningless without a zone attached
+const CRON = '0 3 * * *'; // "3am" - meaningless without a zone attached
 
 let cookie;
 test.before(async () => {

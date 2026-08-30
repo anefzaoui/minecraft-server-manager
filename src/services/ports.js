@@ -1,5 +1,7 @@
 'use strict';
 
+const httpError = require('../utils/httpError');
+
 // Host-port allocation. Scheme (user-approved): game ports first-free from
 // 25565, RCON = game + 1000, Bedrock UDP first-free from 19132. A port is
 // "taken" if any DB server claims it OR the OS reports it in use.
@@ -32,7 +34,7 @@ function dbPortsInUse() {
       if (p && p.hostPort) used.add(p.hostPort);
     }
   }
-  // BlueMap's web-server port lives in `integrations`, not on the server row —
+  // BlueMap's web-server port lives in `integrations`, not on the server row -
   // it must be unioned in too, or a fresh port allocation could collide with it.
   for (const row of db.all("SELECT config_json FROM integrations WHERE kind = 'bluemap' AND enabled = 1")) {
     const hostPort = JSON.parse(row.config_json || '{}').hostPort;
@@ -43,7 +45,7 @@ function dbPortsInUse() {
 }
 
 async function isPortFree(port) {
-  // undefined/null/NaN/'25565xyz' must NOT pass as free — that silently
+  // undefined/null/NaN/'25565xyz' must NOT pass as free - that silently
   // skipped RCON collision validation for explicit game ports.
   if (!Number.isInteger(port)) return false;
   if (port < 1024 || port > 65535) return false;
@@ -59,14 +61,19 @@ async function suggestPorts({ withBedrock = false } = {}) {
     const rcon = game + config.ports.rconOffset;
     if (!used.has(game) && !used.has(rcon) && (await probe(game)) && (await probe(rcon))) break;
     game += 1;
-    if (game > 65000) throw new Error('No free game ports available');
+    if (game > 65000)
+      throw httpError(409, 'No free game ports are available. Delete a server or widen the port range in your .env.');
   }
   const result = { game, rcon: game + config.ports.rconOffset, bedrock: null };
   if (withBedrock) {
     let b = config.ports.bedrockStart;
     while (used.has(b) || !(await probe(b))) {
       b += 1;
-      if (b > 65000) throw new Error('No free Bedrock ports available');
+      if (b > 65000)
+        throw httpError(
+          409,
+          'No free Bedrock ports are available. Delete a server or widen the port range in your .env.'
+        );
     }
     result.bedrock = b;
   }

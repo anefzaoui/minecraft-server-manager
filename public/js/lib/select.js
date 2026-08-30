@@ -1,5 +1,5 @@
 // Custom select. Replaces EVERY native <select> with a styled trigger button
-// that opens a searchable modal picker — consistent across OSes and themes.
+// that opens a searchable modal picker - consistent across OSes and themes.
 //
 // The native <select> stays in the DOM (hidden) as the source of truth: forms
 // submit it, scripts can read .value, and `change` events fire normally.
@@ -8,6 +8,7 @@
 // Options can carry data-desc="secondary line" and data-icon="/path.svg".
 
 import { openModal } from './modal.js';
+import { escapeHtml } from './format.js';
 
 const SEARCH_THRESHOLD = 6; // show the search box for lists this long or more
 
@@ -149,7 +150,7 @@ function openPicker(select, btn) {
     }
   }
 
-  // onClose covers EVERY dismissal path (Esc, backdrop, X) — without it the
+  // onClose covers EVERY dismissal path (Esc, backdrop, X) - without it the
   // trigger stayed stuck announcing aria-expanded="true".
   modal = openModal({ title: label, content, size: 'sm', onClose: () => btn.setAttribute('aria-expanded', 'false') });
   btn.setAttribute('aria-expanded', 'true');
@@ -193,9 +194,11 @@ export function enhanceAll(root = document) {
   root.querySelectorAll('select').forEach(enhanceSelect);
 }
 
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
+// Refresh a select's styled trigger after its .value was set programmatically
+// (setting .value doesn't fire 'change'). Unlike dispatching a synthetic
+// bubbling 'change' event, this can't be mistaken by a page's own delegated
+// change listeners (e.g. unsaved-changes dirty tracking) for a real user edit.
+export function syncSelectTrigger(select) {
+  const btn = select.nextElementSibling;
+  if (btn && btn.classList.contains('msm-select')) syncTrigger(select, btn);
 }

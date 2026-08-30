@@ -22,7 +22,7 @@ const GTNH_JAVA_LADDER = [
 /**
  * @param {string} mcVersion 'LATEST' | 'SNAPSHOT' | '1.20.4' | '26w02a'…
  * @param {string} type      itzg TYPE (FORGE needs java8 below 1.18)
- * @param {object} options   { maxJavaVersion } — GTNH-specific cap
+ * @param {{maxJavaVersion?: number|null}} [options]  { maxJavaVersion } - GTNH-specific cap
  */
 function pickJavaTag(mcVersion, type = 'VANILLA', { maxJavaVersion = null } = {}) {
   // GTNH: the pinned pack version decides, not the 1.7.10 → java8 rule below.
@@ -34,7 +34,7 @@ function pickJavaTag(mcVersion, type = 'VANILLA', { maxJavaVersion = null } = {}
     return (GTNH_JAVA_LADDER.find((step) => cap >= step.min) || { tag: 'java17' }).tag;
   }
   // LATEST/SNAPSHOT and Mojang's 2026+ version scheme (e.g. "26.2") need the
-  // newest Java the image ships (:latest tag) — verified live: 26.x class
+  // newest Java the image ships (:latest tag) - verified live: 26.x class
   // files are version 69 (Java 25), which java21 refuses to load.
   if (!mcVersion || mcVersion === 'LATEST' || mcVersion === 'SNAPSHOT') return 'latest';
   const v = parseVersion(mcVersion);

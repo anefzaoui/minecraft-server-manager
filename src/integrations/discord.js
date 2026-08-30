@@ -1,18 +1,31 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
-// Discord webhook notifications (MP6, webhook mode only — no bot).
+// Discord webhook notifications (MP6, webhook mode only - no bot).
 // The webhook URL is a secret and lives encrypted in integrations.config_cipher;
 // per-event toggles live in plain config_json. Delivery is fire-and-forget:
 // a broken webhook must never break panel operations.
 
+const path = require('node:path');
 const httpError = require('../utils/httpError');
 const db = require('../db');
 const secrets = require('../services/secrets');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
+
+const bridgeThrottle = makeFailureThrottle();
 
 const KIND = 'discord-webhook';
 
-const DEFAULT_EVENTS = { lifecycle: true, crashes: true, backups: true, updates: true, players: true };
+const DEFAULT_EVENTS = {
+  lifecycle: true,
+  crashes: true,
+  backups: true,
+  updates: true,
+  players: true,
+  alerts: true, // OOM, stalled boot, failed scheduled task, quota stop, unhealthy
+};
 
 const WEBHOOK_RE = /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//;
 
@@ -24,6 +37,7 @@ const COLORS = {
   backup: 0x3b82f6, // blue
   update: 0xe99417, // gold
   player: 0x21a7ab, // teal
+  alert: 0xe5484d, // red - something needs a human
 };
 
 // History event type → [notification kind, toggle category]
@@ -39,6 +53,15 @@ const EVENT_MAP = {
   'update-failed': ['update', 'updates'],
   'player-ban': ['player', 'players'],
   'player-kick': ['player', 'players'],
+  // Things that silently left a server broken before nothing forwarded them.
+  oom: ['alert', 'alerts'],
+  unhealthy: ['alert', 'alerts'],
+  'startup-stalled': ['alert', 'alerts'],
+  'stop-failed': ['alert', 'alerts'],
+  'schedule-failed': ['alert', 'alerts'],
+  'quota-exceeded': ['alert', 'alerts'],
+  'offline-after-restart': ['alert', 'alerts'],
+  'crash-report': ['crash', 'crashes'],
 };
 
 function row(serverId) {
@@ -57,14 +80,14 @@ function getConfig(serverId) {
   };
 }
 
-/** Decrypted webhook URL (internal use only — never expose over HTTP). */
+/** Decrypted webhook URL (internal use only - never expose over HTTP). */
 function webhookUrl(serverId) {
   const r = row(serverId);
   if (!r || !r.config_cipher) return null;
   try {
     return JSON.parse(secrets.decrypt(r.config_cipher)).webhookUrl || null;
   } catch {
-    return null; // SESSION_SECRET changed — treat as unset
+    return null; // SESSION_SECRET changed - treat as unset
   }
 }
 
@@ -121,7 +144,7 @@ async function testWebhook(serverId) {
       description: `Webhook is wired up for **${server ? server.display_name : serverId}**. You will receive the event types you enabled.`,
     })
   );
-  if (!res.ok) throw httpError(502, `Discord answered HTTP ${res.status} — check the webhook URL`);
+  if (!res.ok) throw httpError(502, 'Discord rejected the request. Check that the webhook URL is correct.');
   return { ok: true };
 }
 
@@ -173,13 +196,16 @@ function post(url, body) {
   });
 }
 
-// One error log line per server per hour — a dead webhook must not spam the panel log.
+// One error log line per server per hour - a dead webhook must not spam the panel log.
 const lastErrorLog = new Map();
 function logThrottled(serverId, err) {
   const last = lastErrorLog.get(serverId) || 0;
   if (Date.now() - last < 60 * 60 * 1000) return;
   lastErrorLog.set(serverId, Date.now());
-  console.warn(`[discord] webhook delivery failed for ${serverId} (muted for 1h): ${err.message}`);
+  logger.warn('Discord webhook delivery failed; muting this server for an hour.', {
+    serverId,
+    err: serializeError(err, { includeStack: false }),
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -188,16 +214,39 @@ function logThrottled(serverId, err) {
 // recordEvent keeps this module fully decoupled from every event producer.
 
 let pollTimer = null;
+let polling = false;
 let lastSeenId = 0;
+// When a deliverable row fails to send, we hold the high-water mark at the row
+// before it and retry on later polls - a transient network blip must not
+// silently drop an OOM / unhealthy / stop-failed alert. Bounded so a
+// permanently-dead webhook can't wedge the queue for every server forever.
+let retryId = 0;
+let retryCount = 0;
+const MAX_DELIVERY_RETRIES = 4;
 
 function startEventBridge({ intervalMs = 15000 } = {}) {
   if (pollTimer) return;
   // Start at the current high-water mark: never replay pre-boot history.
   lastSeenId = db.get('SELECT COALESCE(MAX(id), 0) AS id FROM events')?.id || 0;
   pollTimer = setInterval(() => {
-    pollOnce().catch((err) => console.warn('[discord] event bridge poll failed:', err.message));
+    // Re-entrancy guard: a poll that outruns the interval (slow-but-responsive
+    // webhook) must not start a second concurrent pass - two passes would read
+    // the same lastSeenId, re-deliver the same rows, and stomp the retry state.
+    if (polling) return;
+    polling = true;
+    pollOnce()
+      .then(() => bridgeThrottle.ok(logger.info, 'The Discord event bridge recovered.'))
+      .catch((err) =>
+        bridgeThrottle.fail(logger.warn, 'A Discord event bridge poll failed.', {
+          err: serializeError(err, { includeStack: false }),
+        })
+      )
+      .finally(() => {
+        polling = false;
+      });
   }, intervalMs);
   if (pollTimer.unref) pollTimer.unref();
+  logger.debug('Started the Discord event bridge.', { intervalMs });
 }
 
 function stopEventBridge() {
@@ -208,24 +257,39 @@ function stopEventBridge() {
 async function pollOnce() {
   const rows = db.all('SELECT * FROM events WHERE id > ? ORDER BY id LIMIT 100', lastSeenId);
   if (!rows.length) return;
-  lastSeenId = rows[rows.length - 1].id;
 
   for (const evt of rows) {
     const mapped = EVENT_MAP[evt.type];
-    if (!mapped || !evt.server_id) continue;
-    const [kind, category] = mapped;
-    const cfg = getConfig(evt.server_id);
-    if (!cfg.enabled || !cfg.hasWebhook || !cfg.events[category]) continue;
+    const cfg = mapped && evt.server_id ? getConfig(evt.server_id) : null;
+    const deliverable = Boolean(cfg && cfg.enabled && cfg.hasWebhook && cfg.events[mapped[1]]);
 
-    const server = db.get('SELECT display_name FROM servers WHERE id = ?', evt.server_id);
-    await notify(evt.server_id, kind, {
-      title: titleFor(evt.type),
-      description: evt.summary,
-      fields: [
-        { name: 'Server', value: server ? server.display_name : evt.server_id },
-        { name: 'By', value: evt.actor || 'system' },
-      ],
-    });
+    if (deliverable) {
+      const [kind] = mapped;
+      const server = db.get('SELECT display_name FROM servers WHERE id = ?', evt.server_id);
+      const ok = await notify(evt.server_id, kind, {
+        title: titleFor(evt.type),
+        description: evt.summary,
+        fields: [
+          { name: 'Server', value: server ? server.display_name : evt.server_id },
+          { name: 'By', value: evt.actor || 'system' },
+        ],
+      });
+      if (!ok) {
+        retryCount = retryId === evt.id ? retryCount + 1 : 1;
+        retryId = evt.id;
+        if (retryCount < MAX_DELIVERY_RETRIES) return; // hold the mark here; retry next poll
+        logger.warn('Gave up forwarding an event to Discord after repeated delivery failures.', {
+          eventId: evt.id,
+          attempts: retryCount,
+        });
+      }
+    }
+
+    lastSeenId = evt.id;
+    if (retryId) {
+      retryId = 0;
+      retryCount = 0;
+    }
   }
 }
 
@@ -242,8 +306,26 @@ function titleFor(type) {
     'update-failed': 'Update failed',
     'player-ban': 'Player banned',
     'player-kick': 'Player kicked',
+    oom: 'Out of memory',
+    unhealthy: 'Server unhealthy',
+    'startup-stalled': 'Startup stalled',
+    'stop-failed': 'Stop failed',
+    'schedule-failed': 'Scheduled task failed',
+    'quota-exceeded': 'Disk quota exceeded',
+    'offline-after-restart': 'Offline after panel restart',
+    'crash-report': 'New crash report',
   };
   return map[type] || type;
 }
 
-module.exports = { getConfig, setConfig, testWebhook, notify, startEventBridge, stopEventBridge, WEBHOOK_RE };
+module.exports = {
+  getConfig,
+  setConfig,
+  testWebhook,
+  notify,
+  startEventBridge,
+  stopEventBridge,
+  WEBHOOK_RE,
+  // Exported for tests: drive one poll cycle deterministically.
+  _pollOnce: pollOnce,
+};

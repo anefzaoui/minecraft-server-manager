@@ -4,7 +4,7 @@
     <span class="pixel text-sm">Minecraft <span class="text-ok">Server Manager</span></span>
   </div>
 
-  {{! Progress dots — one per step, driven by setup.js }}
+  {{! Progress dots - one per step, driven by setup.js }}
   <div class="mb-4 flex items-center justify-center gap-2" id="setup-dots" aria-hidden="true">
     <span class="h-1.5 w-6 rounded-full bg-grass-500 transition-colors" data-dot></span>
     <span class="h-1.5 w-6 rounded-full bg-line transition-colors" data-dot></span>
@@ -18,7 +18,7 @@
     <section data-step="0">
       <h2 class="text-center text-lg font-semibold">Welcome to Minecraft Server Manager</h2>
       <p class="mx-auto mt-2 max-w-sm text-center text-sm text-ink-faint">
-        Your control panel for Minecraft servers on Docker — create, configure, back up, and manage
+        Your control panel for Minecraft servers on Docker. Create, configure, back up, and manage
         modpacks, worlds, players, and more. Let's get a few things set up. It only takes a minute.
       </p>
       <button class="btn btn-primary mt-6 w-full" data-next>Get started {{{icon 'arrow-right' 'size-4'}}}</button>
@@ -53,8 +53,15 @@
         <div>
           <label class="label" for="su-pass">Password</label>
           <input class="input" id="su-pass" name="password" type="password" autocomplete="new-password" required minlength="8">
-          <p class="help">At least 8 characters. If you ever get locked out, reset it from the server with <code>node scripts/reset-password.js &lt;username&gt;</code> (see the README).</p>
+          <p class="help">At least 8 characters. If you get locked out later, you can reset this password from the server; the README explains how.</p>
         </div>
+        {{#if needsPin}}
+        <div>
+          <label class="label" for="su-pin">Setup PIN</label>
+          <input class="input" id="su-pin" name="pin" inputmode="numeric" autocomplete="off" required maxlength="12" placeholder="6-digit PIN from the console">
+          <p class="help">This panel is reachable beyond this machine, so first-run setup is PIN-gated. The 6-digit PIN was printed to the panel’s console/log on startup.</p>
+        </div>
+        {{/if}}
         <div class="flex items-center gap-2">
           <button class="btn btn-ghost" type="button" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
           <button class="btn btn-primary ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} Create admin</button>
@@ -76,7 +83,7 @@
           <input class="input" id="su-domain" placeholder="mc.example.com" autocomplete="off" spellcheck="false">
           <button class="btn shrink-0" type="button" id="su-domain-save">Save domain</button>
         </div>
-        <p class="help">Shown to players instead of your IP in connect addresses, e.g. <code>mc.example.com:25565</code>. No scheme or port.</p>
+        <p class="help">Shown to players instead of your IP address in connect addresses, for example <code>mc.example.com:25565</code>. Enter the domain only, with no scheme or port.</p>
       </div>
 
       <div class="mt-5">
@@ -91,13 +98,13 @@
 
       <div class="mt-5">
         <span class="label">Time zone &amp; region</span>
-        {{! data-native only until tzPicker fills them — it enhances post-fill. }}
+        {{! data-native only until tzPicker fills them - it enhances post-fill. }}
         <div class="grid gap-2 sm:grid-cols-2">
           <select class="input" id="su-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
           <select class="input" id="su-country" data-native aria-label="Country" data-label="Country"></select>
         </div>
-        <p class="help">Detected from your system. Sets how dates and player activity times display across the panel.</p>
-        <button class="btn mt-2" type="button" id="su-loc-save">Save time zone &amp; region</button>
+        <p class="help">Detected from your system. Sets how dates and player-activity times are shown across the panel.</p>
+        <button class="btn mt-2" type="button" id="su-loc-save">Save time zone</button>
       </div>
 
       <div class="mt-6 flex items-center">
@@ -113,7 +120,7 @@
         <p class="mt-1 max-w-sm text-sm text-ink-faint">Minecraft Server Manager is ready. Spin up your first Minecraft server whenever you like.</p>
       </div>
       <div class="mt-4 flex flex-col gap-2">
-        <a class="btn btn-primary w-full" href="/servers/new">{{{icon 'plus' 'size-4'}}} Create your first server</a>
+        <a class="btn btn-primary w-full" href="/servers/new">{{{icon 'plus' 'size-4'}}} Create a server</a>
         <a class="btn btn-ghost w-full" href="/">Go to the dashboard</a>
       </div>
     </section>

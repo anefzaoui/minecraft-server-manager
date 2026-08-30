@@ -45,7 +45,7 @@ test('GET /map/:id/ 404s for an unknown server', async () => {
   assert.equal(r.status, 404);
 });
 
-test('GET /map/:id/ proxies through to the upstream BlueMap server (host-port fallback — no Docker in this test env)', async () => {
+test('GET /map/:id/ proxies through to the upstream BlueMap server (host-port fallback - no Docker in this test env)', async () => {
   const id = app.seedServer('srv_map02');
   const upstream = await listenOnFreePort((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain', 'X-Bluemap': 'yes' });
@@ -73,7 +73,7 @@ test('GET /map/:id/ returns 502 (not a hang) when nothing is listening on the co
   assert.match(r.text, /not responding/);
 });
 
-test('a working target is cached — a second request does not re-probe (same upstream serves it again)', async () => {
+test('a working target is cached - a second request does not re-probe (same upstream serves it again)', async () => {
   const id = app.seedServer('srv_map04');
   let hits = 0;
   const upstream = await listenOnFreePort((req, res) => {

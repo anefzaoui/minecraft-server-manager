@@ -1,10 +1,13 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Mojang username → profile (UUID) resolution, cached in SQLite so repeated
 // player actions never hammer the API. Unknown names resolve to null.
 
+const path = require('node:path');
 const db = require('../db');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
 
 const API_BASE = 'https://api.mojang.com/users/profiles/minecraft/';
 const CACHE_PREFIX = 'mojang-profile:';
@@ -42,6 +45,10 @@ async function resolveProfile(name) {
       profile = { uuid: uuidToDashed(body.id), name: body.name };
     }
   } catch (err) {
+    logger.debug('Resolving a Mojang profile failed.', {
+      err: serializeError(err, { includeStack: false }),
+      servedStale: Boolean(cached),
+    });
     if (cached) return JSON.parse(cached.value_json); // stale beats nothing
     throw err;
   }

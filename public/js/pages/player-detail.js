@@ -1,9 +1,11 @@
 // Per-player page actions: whitelist / op / ban toggles, kick, and the full
 // teleport modal. Uses the same /api/servers/:id/players endpoints as the roster.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
+import { escapeHtml } from '../lib/format.js';
 
 const root = document.querySelector('[data-player-detail]');
 if (root) init(root);
@@ -20,10 +22,10 @@ function init(root) {
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || `Request failed (HTTP ${res.status})`);
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'complete that action' }));
     return data;
   }
-  const fail = (err) => toast(err.message || 'Something went wrong', { kind: 'error' });
+  const fail = (err) => toast(err.message || 'Something went wrong. Please try again.', { kind: 'error' });
   const prettyBiome = (id) => {
     const b = String(id).replace(/^#/, '').split(':').pop().split('/').pop().replace(/_/g, ' ');
     return b.charAt(0).toUpperCase() + b.slice(1);
@@ -51,7 +53,7 @@ function init(root) {
         prettyBiome(a.id).localeCompare(prettyBiome(b.id))
     );
 
-  // ---- in-place chip/banner patching (mirrors the roster page — same
+  // ---- in-place chip/banner patching (mirrors the roster page - same
   // action, same UI, no page flash and no silent success) ----
   const CHIP_ON = {
     whitelist: ['border-grass-700', 'bg-grass-500/15', 'text-ok'],
@@ -72,13 +74,13 @@ function init(root) {
     };
     chip.dataset.tip = tips[role];
   }
-  function setBanBanner(reason) {
+  function setBanBanner(reason, expires) {
     root.querySelector('[data-ban-banner]')?.remove();
     if (reason === false) return;
     const banner = document.createElement('div');
     banner.dataset.banBanner = '';
     banner.className = 'notice notice-danger mt-3 text-xs text-danger';
-    banner.textContent = `Banned: ${reason || 'no reason recorded'}`;
+    banner.textContent = `Banned: ${reason || 'No reason recorded'}${expires ? ` · expires ${expires}` : ''}.`;
     root.querySelector('.card')?.appendChild(banner);
   }
   function setOffline() {
@@ -99,12 +101,12 @@ function init(root) {
         if (kind === 'whitelist') {
           await withBusy(chip, () => api('/whitelist', { name, on: !on }));
           setChip('whitelist', !on);
-          toast(`${name} ${on ? 'removed from whitelist' : 'whitelisted'}`);
+          toast(`${name} ${on ? 'removed from the whitelist' : 'added to the whitelist'}.`);
         } else if (kind === 'op') {
           const { result } = await withBusy(chip, () => api('/op', { name, on: !on }));
           if (result.note) toast(result.note, { kind: 'info', timeout: 8000 });
           setChip('op', !on, !on && result.opLevel ? `Op L${result.opLevel}` : 'Op');
-          toast(`${name} ${on ? 'de-opped' : 'is now an operator'}`);
+          toast(`${name} ${on ? 'is no longer an operator' : 'is now an operator'}.`);
         } else if (kind === 'ban') {
           if (on) {
             const ok = await confirmDialog({
@@ -116,7 +118,7 @@ function init(root) {
             await withBusy(chip, () => api('/pardon', { name }));
             setChip('ban', false, 'Ban');
             setBanBanner(false);
-            toast(`${name} pardoned`);
+            toast(`${name} pardoned.`);
           } else {
             banModal();
           }
@@ -133,12 +135,27 @@ function init(root) {
     // copy-uuid is handled by the global [data-copy] handler in app.js
   });
 
-  // ---- ban (same labeled dialog as the roster page — one action, one UI) ----
+  // ---- ban (same labeled dialog as the roster page - one action, one UI) ----
   function banModal() {
     const content = document.createElement('div');
+    content.className = 'space-y-3';
     content.innerHTML = `
-      <label class="label">Ban reason (recorded in the ban list)</label>
-      <input class="input" data-f="reason" placeholder="Banned by an operator." maxlength="256">`;
+      <div>
+        <label class="label">Ban reason (recorded in the ban list)</label>
+        <input class="input" data-f="reason" placeholder="Banned by an operator" maxlength="256">
+      </div>
+      <div>
+        <label class="label">Duration</label>
+        <select class="input" data-f="duration" data-label="Ban duration">
+          <option value="">Permanent</option>
+          <option value="3600000">1 hour</option>
+          <option value="86400000">1 day</option>
+          <option value="259200000">3 days</option>
+          <option value="604800000">7 days</option>
+          <option value="2592000000">30 days</option>
+        </select>
+        <p class="mt-2 text-xs text-ink-faint">A temporary ban lifts automatically when it expires, so there's no need to remember to pardon them.</p>
+      </div>`;
     openModal({
       title: `Ban ${name}`,
       content,
@@ -151,11 +168,16 @@ function init(root) {
           busyLabel: 'Banning…',
           onClick: async ({ body }) => {
             const reason = body.querySelector('[data-f="reason"]').value.trim();
+            const duration = body.querySelector('[data-f="duration"]').value;
             try {
-              await api('/ban', { name, reason: reason || undefined });
+              const { result } = await api('/ban', {
+                name,
+                reason: reason || undefined,
+                durationMs: duration ? Number(duration) : undefined,
+              });
               setChip('ban', true, 'Banned');
-              setBanBanner(reason);
-              toast(`${name} banned`);
+              setBanBanner(reason, result.banExpires);
+              toast(`${name} banned${result.banExpires ? ` until ${result.banExpires}` : ''}.`);
             } catch (err) {
               fail(err);
               return false;
@@ -166,11 +188,96 @@ function init(root) {
     });
   }
 
+  // ---- moderator notes ----
+  const notesList = root.querySelector('[data-notes-list]');
+  const notesEmpty = root.querySelector('[data-notes-empty]');
+  const notesAddBtn = root.querySelector('[data-notes-add]');
+
+  function renderNotes(notes) {
+    if (!notesList) return;
+    notesList.innerHTML = '';
+    if (notesEmpty) notesEmpty.classList.toggle('hidden', notes.length > 0);
+    for (const n of notes) {
+      const row = document.createElement('div');
+      row.className = 'flex items-start justify-between gap-2 rounded-md bg-inset p-2 text-sm';
+      row.dataset.noteId = n.id;
+      const text = document.createElement('div');
+      text.className = 'min-w-0';
+      const p = document.createElement('p');
+      p.className = 'whitespace-pre-wrap break-words';
+      p.textContent = n.note;
+      const meta = document.createElement('p');
+      meta.className = 'mt-1 text-xs text-ink-faint';
+      meta.textContent = `${n.author} · ${n.createdAt}`;
+      text.append(p, meta);
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-ghost btn-sm text-danger shrink-0';
+      del.setAttribute('aria-label', 'Delete note');
+      del.innerHTML =
+        '<svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+      del.addEventListener('click', async () => {
+        try {
+          await withBusy(del, async () => {
+            const res = await fetch(`${base}/notes/${n.id}`, { method: 'DELETE' });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'delete that note' }));
+            row.remove();
+            if (notesList && !notesList.children.length && notesEmpty) notesEmpty.classList.remove('hidden');
+          });
+        } catch (err) {
+          fail(err);
+        }
+      });
+      row.append(text, del);
+      notesList.appendChild(row);
+    }
+  }
+
+  function loadNotes() {
+    fetch(`${base}/notes?name=${encodeURIComponent(name)}`)
+      .then((r) => r.json())
+      .then((d) => renderNotes(d.notes || []))
+      .catch(() => renderNotes([]));
+  }
+  if (notesList) loadNotes();
+
+  if (notesAddBtn)
+    notesAddBtn.addEventListener('click', () => {
+      const content = document.createElement('div');
+      content.innerHTML = `<label class="label">Note</label><textarea class="input" data-f="note" rows="3" maxlength="1000"></textarea>`;
+      openModal({
+        title: `Note for ${name}`,
+        content,
+        size: 'sm',
+        actions: [
+          { label: 'Cancel', kind: 'ghost' },
+          {
+            label: 'Add note',
+            kind: 'primary',
+            busyLabel: 'Adding…',
+            onClick: async ({ body }) => {
+              const note = body.querySelector('[data-f="note"]').value.trim();
+              if (!note) return false;
+              try {
+                await api('/notes', { name, note });
+                loadNotes();
+                toast('Note added.');
+              } catch (err) {
+                fail(err);
+                return false;
+              }
+            },
+          },
+        ],
+      });
+    });
+
   // ---- kick ----
   function kickModal() {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
-    content.innerHTML = `<div><label class="label">Kick message (optional)</label><input class="input" data-f="message" maxlength="120" placeholder="Back in a bit…"></div>`;
+    content.innerHTML = `<div><label class="label">Kick message (optional)</label><input class="input" data-f="message" maxlength="120" placeholder="Kicked by an operator"></div>`;
     openModal({
       title: `Kick ${name}`,
       content,
@@ -240,7 +347,7 @@ function init(root) {
             <option value="minecraft:the_nether">The Nether</option>
             <option value="minecraft:the_end">The End</option>
           </select></div>
-        <p class="text-xs text-ink-faint">Leave Y empty to land safely on the highest ground.</p>
+        <p class="text-xs text-ink-faint">Leave Y empty to land safely on the highest solid ground.</p>
       </div>
       <div data-tp-panel="biome" class="hidden space-y-3">
         <label class="label">Biome</label>
@@ -293,8 +400,13 @@ function init(root) {
         // items are {id, dimension}; label options as "Nether · Crimson Forest".
         const list = sortByDim(items);
         sel.innerHTML = list.length
-          ? list.map((e) => `<option value="${e.id}">${dimShort(e.dimension)} · ${label(e.id)}</option>`).join('')
-          : '<option value="">None available — start the server</option>';
+          ? list
+              .map(
+                (e) =>
+                  `<option value="${escapeHtml(e.id)}">${escapeHtml(dimShort(e.dimension))} · ${escapeHtml(label(e.id))}</option>`
+              )
+              .join('')
+          : '<option value="">None available. Start the server to load the list.</option>';
         sel.dataset.loaded = '1';
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       });
@@ -304,7 +416,7 @@ function init(root) {
       loadRoster().then((list) => {
         const online = list.filter((p) => p.online && p.name !== name);
         sel.innerHTML = online.length
-          ? online.map((p) => `<option value="${p.name}">${p.name}</option>`).join('')
+          ? online.map((p) => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('')
           : '<option value="">No other players online</option>';
         sel.dataset.loaded = '1';
         sel.dispatchEvent(new Event('change', { bubbles: true }));
@@ -322,14 +434,14 @@ function init(root) {
           busyLabel: 'Searching…',
           onClick: async ({ body }) => {
             if (inflight) {
-              toast('Hold on — the previous teleport is still searching.', { kind: 'error' });
+              toast('The previous teleport is still searching. Please wait for it to finish.', { kind: 'error' });
               return false;
             }
             const f = (k) => body.querySelector(`[data-f="${k}"]`).value;
             let payload;
             if (mode === 'coords') {
               if ([f('x'), f('z')].some((v) => v.trim() === '')) {
-                toast('Enter X and Z (Y optional)', { kind: 'error' });
+                toast('Enter X and Z. Y is optional; leave it empty to land on the surface.', { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, x: Number(f('x')), z: Number(f('z')) };
@@ -337,7 +449,7 @@ function init(root) {
               if (f('dimension')) payload.dimension = f('dimension');
             } else if (mode === 'biome') {
               if (!f('biome')) {
-                toast('Pick a biome', { kind: 'error' });
+                toast('Pick a biome.', { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, biome: f('biome') };
@@ -351,7 +463,7 @@ function init(root) {
               };
             } else if (mode === 'structure') {
               if (!f('structure')) {
-                toast('Pick a structure', { kind: 'error' });
+                toast('Pick a structure.', { kind: 'error' });
                 return false;
               }
               payload = {
@@ -363,7 +475,7 @@ function init(root) {
               };
             } else {
               if (!f('target')) {
-                toast('No target player available', { kind: 'error' });
+                toast('No target player available.', { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, target: f('target') };
@@ -374,12 +486,12 @@ function init(root) {
               const at = (r) => `${r.x}, ${r.z}${r.dimension ? ` in ${dimLong(r.dimension)}` : ''}`;
               toast(
                 mode === 'biome'
-                  ? `${name} sent to ${prettyBiome(result.biome)} at ${at(result)}`
+                  ? `${name} sent to ${prettyBiome(result.biome)} at ${at(result)}.`
                   : mode === 'rtp'
-                    ? `${name} randomly teleported ${result.distance} blocks out to ${at(result)}`
+                    ? `${name} randomly teleported ${result.distance} blocks out to ${at(result)}.`
                     : mode === 'structure'
-                      ? `${name} sent to a ${prettyBiome(result.structure)} at ${at(result)}`
-                      : `${name} teleported`
+                      ? `${name} sent to a ${prettyBiome(result.structure)} at ${at(result)}.`
+                      : `${name} teleported.`
               );
             } catch (err) {
               fail(err);

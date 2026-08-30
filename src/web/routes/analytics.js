@@ -10,6 +10,8 @@ const { z } = require('zod');
 const db = require('../../db');
 const servers = require('../../services/servers');
 const stats = require('../../analytics/stats');
+const logger = require('../../logger')('analytics');
+const { serializeError } = require('../../utils/logSanitize');
 const { backfillFromLogs } = require('../../analytics/ingest');
 
 const router = express.Router({ mergeParams: true });
@@ -208,8 +210,14 @@ router.post(
   '/ingest-now',
   asyncHandler(async (req, res, next) => {
     mustServer(req);
-    const backfill = await backfillFromLogs(req.params.id).catch(() => ({ inserted: 0 }));
-    const statResult = stats.ingestStats(req.params.id);
+    const backfill = await backfillFromLogs(req.params.id).catch((err) => {
+      logger.warn('Backfilling player events from logs failed.', {
+        serverId: req.params.id,
+        err: serializeError(err, { includeStack: false }),
+      });
+      return { inserted: 0 };
+    });
+    const statResult = await stats.ingestStats(req.params.id);
     res.json({ ok: true, events: backfill.inserted, ...statResult });
   })
 );

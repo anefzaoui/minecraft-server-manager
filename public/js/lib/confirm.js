@@ -6,6 +6,7 @@
 // button (used for destructive actions like server deletion).
 
 import { openModal } from './modal.js';
+import { escapeHtml } from './format.js';
 
 export function confirmDialog({
   title = 'Are you sure?',
@@ -52,7 +53,7 @@ export function confirmDialog({
       input.spellcheck = false;
       mismatch = document.createElement('p');
       mismatch.className = 'mt-1 hidden text-xs text-danger';
-      mismatch.textContent = "The name doesn't match.";
+      mismatch.textContent = "That name doesn't match.";
       wrap.append(label, input, mismatch);
       content.appendChild(wrap);
     }
@@ -89,7 +90,7 @@ export function confirmDialog({
         mismatch.classList.add('hidden');
       });
       // Enter in the field confirms once the name matches (and shows the
-      // mismatch hint when it doesn't) — typing the name then hitting Enter
+      // mismatch hint when it doesn't) - typing the name then hitting Enter
       // previously did nothing.
       input.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter') return;
@@ -103,8 +104,4 @@ export function confirmDialog({
       });
     }
   });
-}
-
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }

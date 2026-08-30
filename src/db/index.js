@@ -7,8 +7,15 @@
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const config = require('../config');
+const logger = require('../logger')('db');
 
 let db = null;
+
+// Prepared statements are reusable across calls in node:sqlite, so cache them
+// keyed on the SQL text instead of re-parsing on every run/get/all. The set of
+// distinct SQL strings in the panel is small and static, so this stays bounded
+// without eviction; it's cleared alongside the connection in close().
+const stmtCache = new Map();
 
 function open() {
   if (db) return db;
@@ -16,24 +23,28 @@ function open() {
   db.exec('PRAGMA journal_mode = WAL');
   db.exec('PRAGMA foreign_keys = ON');
   db.exec('PRAGMA busy_timeout = 5000');
+  logger.debug('Opened the panel database.');
   return db;
 }
 
-/** Prepared-statement helpers. All synchronous — node:sqlite mirrors better-sqlite3. */
+function prepare(sql) {
+  let stmt = stmtCache.get(sql);
+  if (!stmt) {
+    stmt = open().prepare(sql);
+    stmtCache.set(sql, stmt);
+  }
+  return stmt;
+}
+
+/** Prepared-statement helpers. All synchronous - node:sqlite mirrors better-sqlite3. */
 function run(sql, ...params) {
-  return open()
-    .prepare(sql)
-    .run(...params);
+  return prepare(sql).run(...params);
 }
 function get(sql, ...params) {
-  return open()
-    .prepare(sql)
-    .get(...params);
+  return prepare(sql).get(...params);
 }
 function all(sql, ...params) {
-  return open()
-    .prepare(sql)
-    .all(...params);
+  return prepare(sql).all(...params);
 }
 function exec(sql) {
   return open().exec(sql);
@@ -55,9 +66,30 @@ function transaction(fn) {
 
 function close() {
   if (db) {
+    stmtCache.clear();
     db.close();
     db = null;
   }
 }
 
-module.exports = { open, run, get, all, exec, transaction, close };
+/**
+ * Hot snapshot of the whole database to `destPath`. Checkpoints the WAL first so
+ * the copy is fully self-contained, then `VACUUM INTO` writes a consistent,
+ * defragmented single-file copy. node:sqlite is synchronous, so this blocks the
+ * event loop for the duration of the rewrite - it runs on the daily maintenance
+ * timer for that reason. Returns the elapsed milliseconds so the caller can log
+ * the pause.
+ */
+function backupTo(destPath) {
+  const started = Date.now();
+  const d = open();
+  try {
+    d.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+  } catch {
+    // intentional: checkpoint is best-effort; VACUUM INTO still produces a valid copy
+  }
+  d.exec(`VACUUM INTO '${String(destPath).replace(/'/g, "''")}'`);
+  return Date.now() - started;
+}
+
+module.exports = { open, run, get, all, exec, transaction, close, backupTo };

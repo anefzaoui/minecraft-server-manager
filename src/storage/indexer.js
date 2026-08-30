@@ -8,9 +8,15 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const config = require('../config');
 const db = require('../db');
+const logger = require('../logger')(path.basename(__filename));
+const { serializeError } = require('../utils/logSanitize');
+const { makeFailureThrottle } = require('../logger');
 
 let scanning = false;
 let timer = null;
+const scanThrottle = makeFailureThrottle();
+const onScanFailed = (err) =>
+  scanThrottle.fail(logger.warn, 'A storage index scan failed.', { err: serializeError(err, { includeStack: false }) });
 
 /** Directories whose sizes we track individually (top-level categories + per-server/per-library-kind). */
 async function scan() {
@@ -28,7 +34,7 @@ async function scan() {
       try {
         entries = await fs.readdir(abs, { withFileTypes: true });
       } catch {
-        return { size: 0, files: 0 };
+        return { size: 0, files: 0 }; // intentional: directory not present or unreadable
       }
       for (const entry of entries) {
         const childAbs = path.join(abs, entry.name);
@@ -43,7 +49,7 @@ async function scan() {
             size += st.size;
             files += 1;
           } catch {
-            /* transient */
+            // intentional: file vanished between readdir and stat
           }
         }
       }
@@ -82,6 +88,7 @@ async function scan() {
       'DELETE FROM storage_snapshots WHERE id NOT IN (SELECT id FROM storage_snapshots ORDER BY id DESC LIMIT 500)'
     );
 
+    scanThrottle.ok(logger.info, 'The storage index scan recovered.');
     return { totalBytes: total.size, dirs: results.size, ms: Date.now() - started };
   } finally {
     scanning = false;
@@ -89,9 +96,26 @@ async function scan() {
 }
 
 function startIndexer({ intervalMs = 15 * 60 * 1000 } = {}) {
-  scan().catch((err) => console.error('[indexer]', err.message));
-  timer = setInterval(() => scan().catch((err) => console.error('[indexer]', err.message)), intervalMs);
+  scan().catch(onScanFailed);
+  timer = setInterval(() => scan().catch(onScanFailed), intervalMs);
   timer.unref();
+}
+
+// Coalesce the "rescan after a filesystem mutation" calls that fire from every
+// upload / delete / copy / backup / restore. A burst of ops (e.g. deleting a
+// dozen files, or a restore that also writes a safety backup) used to kick off a
+// full recursive stat-walk of data/ per op; this collapses them into one walk a
+// short while after the LAST mutation. Trailing debounce: every call pushes the
+// timer out, so a walk never runs mid-restore. The 15-minute interval scan is
+// the backstop if mutations never stop long enough for the timer to fire.
+let debounceTimer = null;
+function scheduleScan({ delayMs = 45_000 } = {}) {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    scan().catch(onScanFailed);
+  }, delayMs);
+  debounceTimer.unref();
 }
 
 /** Instant size lookup from cache; 0 when not yet scanned. */
@@ -105,9 +129,32 @@ function lastScan() {
   return row ? row.t : null;
 }
 
+// In-flight disk-growing operations (backup, restore, world install/
+// duplicate...) reserve the bytes they expect to need so diskFree() reflects
+// what's ACTUALLY available once every concurrent operation's own preflight
+// claim is accounted for - without this, two such operations starting close
+// together (e.g. two servers' scheduled backups landing on the same cron
+// tick) can each independently see enough real free space, both pass their
+// own preflight check, and jointly overrun the disk. This is advisory
+// bookkeeping in this process only, not a hard OS-level reservation.
+let reservedBytes = 0;
+
+/** Reserve `bytes` against diskFree() until the returned release() is called
+ *  (call it in a finally so a thrown/rejected operation still releases it). */
+function reserveDiskSpace(bytes) {
+  reservedBytes += bytes;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    reservedBytes -= bytes;
+  };
+}
+
 async function diskFree() {
   const st = await fs.statfs(config.dataDir);
-  return { free: st.bavail * st.bsize, total: st.blocks * st.bsize };
+  const free = st.bavail * st.bsize;
+  return { free: Math.max(0, free - reservedBytes), total: st.blocks * st.bsize };
 }
 
 /** Quota check used before disk-growing operations. Throws a friendly 409. */
@@ -116,7 +163,7 @@ function assertUnderQuota(server, aboutToAddBytes = 0) {
   const used = sizeOf(`servers/${server.id}`);
   if (used + aboutToAddBytes > server.disk_quota_bytes) {
     const err = new Error(
-      `${server.display_name} is over its disk quota — free space or raise the limit in Settings → Resources`
+      `${server.display_name} is over its disk quota - free space or raise the limit in Settings → Resources`
     );
     err.status = 409;
     throw err;
@@ -130,17 +177,37 @@ async function enforceStrictQuotas() {
   );
   for (const s of servers) {
     const used = sizeOf(`servers/${s.id}`);
-    if (used > s.disk_quota_bytes * 1.1 && ['running', 'starting', 'unhealthy'].includes(s.status)) {
+    if (used > s.disk_quota_bytes * 1.1 && ['running', 'starting', 'unhealthy', 'stalled'].includes(s.status)) {
       const { stopServer } = require('../services/servers');
       const { recordEvent } = require('../events');
       recordEvent({
         serverId: s.id,
         type: 'quota-exceeded',
-        summary: `Strict quota: usage ${(used / 1024 ** 3).toFixed(1)} GB exceeds quota by >10% — stopping server`,
+        summary: `Strict quota: usage ${(used / 1024 ** 3).toFixed(1)} GB exceeds quota by >10% - stopping server`,
       });
-      await stopServer(s.id, { actor: 'system' }).catch(() => {});
+      logger.warn('Stopping a server that is more than 10 percent over its strict disk quota.', {
+        serverId: s.id,
+        usedBytes: used,
+        quotaBytes: s.disk_quota_bytes,
+      });
+      await stopServer(s.id, { actor: 'system' }).catch((err) => {
+        logger.error('Could not stop a server that exceeded its strict disk quota.', {
+          serverId: s.id,
+          err: serializeError(err),
+        });
+      });
     }
   }
 }
 
-module.exports = { scan, startIndexer, sizeOf, lastScan, diskFree, assertUnderQuota, enforceStrictQuotas };
+module.exports = {
+  scan,
+  scheduleScan,
+  startIndexer,
+  sizeOf,
+  lastScan,
+  diskFree,
+  reserveDiskSpace,
+  assertUnderQuota,
+  enforceStrictQuotas,
+};

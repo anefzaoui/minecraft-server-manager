@@ -1,6 +1,7 @@
 // Map tab: enable/disable BlueMap, plus a probe so the embed never shows the
 // proxy's raw error page while the map isn't serving yet.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy } from '../lib/loading.js';
 
@@ -14,7 +15,7 @@ import { setBusy } from '../lib/loading.js';
     let up = false;
     try {
       // GET, not HEAD: the iframe only ever GETs this URL, and BlueMap's
-      // bundled webserver isn't guaranteed to implement HEAD — a HEAD-only
+      // bundled webserver isn't guaranteed to implement HEAD - a HEAD-only
       // probe could report "down" forever even once the map is genuinely up.
       up = (await fetch(frame.dataset.src || frame.src, { method: 'GET' })).ok;
     } catch {
@@ -54,10 +55,10 @@ document.addEventListener('click', async (e) => {
       const res = await fetch(`/api/servers/${id}/map/enable`, { method: 'POST' });
       const data = await res.json();
       if (data.ok) {
-        toast('Live map enabled — restart the server to bring it up.');
+        toast('Live map enabled. Restart the server to bring it up.');
         setTimeout(() => location.reload(), 900);
       } else {
-        toast(data.error || 'Could not enable the map', { kind: 'error', timeout: 9000 });
+        toast(data.error || friendlyError(res, { action: 'enable the live map' }), { kind: 'error', timeout: 9000 });
       }
     } finally {
       restore();
@@ -75,10 +76,10 @@ document.addEventListener('click', async (e) => {
       const res = await fetch(`/api/servers/${id}/map/disable`, { method: 'POST' });
       const data = await res.json();
       if (data.ok) {
-        toast('Map disabled — applies on next restart.');
+        toast('Live map disabled. Applies on the next restart.');
         setTimeout(() => location.reload(), 900);
       } else {
-        toast(data.error || 'Failed', { kind: 'error' });
+        toast(data.error || friendlyError(res, { action: 'disable the live map' }), { kind: 'error' });
       }
     } finally {
       restore();

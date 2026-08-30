@@ -1,4 +1,4 @@
-// @ts-nocheck — dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
+// @ts-nocheck - dynamic Docker/NBT/HTTP-JSON interop; not yet under checkJs (incremental typing).
 'use strict';
 
 // Modrinth public API client (no key required). Cached + rate-limit friendly.
@@ -31,10 +31,10 @@ async function mrFetch(pathname, { ttlMs = 10 * 60 * 1000, search, method = 'GET
   });
   if (res.status === 429) {
     if (cached) return JSON.parse(cached.value_json);
-    throw httpError(429, 'Modrinth rate limit hit — try again in a minute');
+    throw httpError(429, 'Modrinth is rate-limiting us. Please try again in a minute.');
   }
-  if (res.status === 404) throw httpError(404, 'Not found on Modrinth');
-  if (!res.ok) throw httpError(502, `Modrinth answered HTTP ${res.status}`);
+  if (res.status === 404) throw httpError(404, "That wasn't found on Modrinth.");
+  if (!res.ok) throw httpError(502, 'Modrinth is not responding correctly right now. Please try again shortly.');
   const data = await res.json();
   if (method === 'GET') {
     db.run(
@@ -71,6 +71,9 @@ async function search({ query = '', kind = 'mod', loader, mcVersion, limit = 20,
     downloads: h.downloads,
     categories: h.categories,
     latestVersion: h.latest_version,
+    // Every MC version this project has ever shipped a build for - lets the
+    // UI flag "not listed for your server's version" without a second call.
+    gameVersions: h.versions || [],
   }));
 }
 

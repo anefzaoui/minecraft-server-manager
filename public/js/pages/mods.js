@@ -108,12 +108,29 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
   });
 
   // ---- Add by URL ----
+  // Shared "installed despite a compatibility check being overridden" toast text
+  // - both Add by URL and the search results' Install button hit this.
+  function overrideNote(installed) {
+    const bits = [];
+    if (installed && installed.versionOverridden) bits.push(`isn't listed as compatible with ${mc}`);
+    if (installed && installed.loaderOverridden) bits.push("isn't built for this server's loader");
+    return bits.length ? `This build ${bits.join(' and ')}, but was installed anyway.` : '';
+  }
+
   document.getElementById('mods-add-url')?.addEventListener('click', () => {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label">Mod URL or Modrinth slug</label>
-      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium — or any direct .jar URL" autocomplete="off">
+      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any direct .jar URL" autocomplete="off">
       <p class="help">Direct .jar URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work. The right build for this server's loader and MC version is picked automatically.</p>
+      ${
+        mc && !mc.startsWith('LATEST')
+          ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
+               <input type="checkbox" class="msm-check mt-0.5" id="mod-url-ignore-version">
+               <span>Install even if the build isn't listed as compatible with ${escAttr(mc)} or this server's loader.</span>
+             </label>`
+          : ''
+      }
       <div class="mt-3 hidden" id="mod-url-progress"><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
     const modal = openModal({
       title: 'Add mod by URL',
@@ -127,14 +144,19 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
           onClick: async () => {
             const url = content.querySelector('#mod-url').value.trim();
             if (!url) return false;
+            const ignoreVersion = Boolean(content.querySelector('#mod-url-ignore-version')?.checked);
             const progress = content.querySelector('#mod-url-progress');
             progress.classList.remove('hidden');
-            const res = await post(`/api/servers/${serverId}/mods`, { url });
+            const res = await post(`/api/servers/${serverId}/mods`, { url, ignoreVersion });
             if (!res) {
-              progress.classList.add('hidden'); // failure keeps the modal open — no zombie meter
+              progress.classList.add('hidden'); // failure keeps the modal open - no zombie meter
               return false;
             }
-            toast(`Installed ${res.installed.name}${res.installed.version ? ` ${res.installed.version}` : ''}.`);
+            const note = overrideNote(res.installed);
+            toast(
+              `Installed ${res.installed.name}${res.installed.version ? ` ${res.installed.version}` : ''}.${note ? ` ${note}` : ''}`,
+              note ? { kind: 'warn', timeout: 9000 } : undefined
+            );
             setTimeout(() => location.reload(), 700);
           },
         },
@@ -307,7 +329,10 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
   }
 
   // ---- Mod search: Modrinth + CurseForge (reused by the manual-download resolver) ----
-  function openModSearch({ prefill = '', onInstalled = null } = {}) {
+  // allowDatapacks shows a Mods/Datapacks toggle (off for the resolver, which is
+  // hunting a mod replacement for a pack entry, never a datapack). Datapacks are
+  // Modrinth-only, so choosing that tab hides the platform chips.
+  function openModSearch({ prefill = '', onInstalled = null, allowDatapacks = false } = {}) {
     const content = document.createElement('div');
     content.innerHTML = `
       <div class="flex flex-wrap items-center gap-2">
@@ -321,6 +346,22 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
             : ''
         }
       </div>
+      ${
+        allowDatapacks
+          ? `<div class="seg mt-2" id="mr-kind" role="tablist" aria-label="Content type">
+               <button type="button" class="seg-btn" role="tab" aria-selected="true" data-search-kind="content">${contentKind === 'plugin' ? 'Plugins' : 'Mods'}</button>
+               <button type="button" class="seg-btn" role="tab" aria-selected="false" data-search-kind="datapack">Datapacks</button>
+             </div>`
+          : ''
+      }
+      ${
+        mc && !mc.startsWith('LATEST')
+          ? `<label class="mt-2 flex cursor-pointer items-start gap-2 text-sm">
+               <input type="checkbox" class="msm-check mt-0.5" id="mr-any-version">
+               <span>Also show builds not listed as compatible with ${escAttr(mc)} or this server's loader. You accept the risk of installing one.</span>
+             </label>`
+          : ''
+      }
       <div class="mt-3 max-h-96 space-y-2 overflow-y-auto" id="mr-results">
         <p class="p-6 text-center text-sm text-ink-faint">Type to search.</p>
       </div>`;
@@ -332,7 +373,8 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     const q = content.querySelector('#mr-q');
     const results = content.querySelector('#mr-results');
     let platform = 'modrinth';
-    content.querySelector('#mr-platforms')?.addEventListener('click', (e) => {
+    const platformsEl = content.querySelector('#mr-platforms');
+    platformsEl?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-platform]');
       if (!btn || btn.dataset.platform === platform) return;
       platform = btn.dataset.platform;
@@ -341,6 +383,27 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       });
       runSearch();
     });
+
+    // Datapacks are Modrinth-only, so choosing that tab pins the platform to
+    // Modrinth and hides the chips. anyVersion waives the loader/MC filter.
+    let searchKind = 'content';
+    const anyVersion = content.querySelector('#mr-any-version');
+    content.querySelector('#mr-kind')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-search-kind]');
+      if (!btn || btn.getAttribute('aria-selected') === 'true') return;
+      content
+        .querySelectorAll('#mr-kind [data-search-kind]')
+        .forEach((b) => b.setAttribute('aria-selected', String(b === btn)));
+      searchKind = btn.dataset.searchKind;
+      if (searchKind === 'datapack') {
+        platform = 'modrinth';
+        platformsEl?.classList.add('hidden');
+      } else {
+        platformsEl?.classList.remove('hidden');
+      }
+      runSearch();
+    });
+    anyVersion?.addEventListener('change', runSearch);
 
     // Already-installed hits get a badge instead of an Install button. Keyed by
     // platform:projectId — only content installed through a platform can match.
@@ -375,9 +438,12 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       if (!query) return;
       const seq = ++searchSeq;
       results.innerHTML = '<p class="p-6 text-center text-sm text-ink-faint">Searching…</p>';
-      const params = new URLSearchParams({ q: query, kind: contentKind, platform });
-      if (loader) params.set('loader', loader);
-      if (mc && !mc.startsWith('LATEST')) params.set('mc', mc);
+      const ignoreVersion = Boolean(anyVersion?.checked);
+      const kind = searchKind === 'datapack' ? 'datapack' : contentKind;
+      const params = new URLSearchParams({ q: query, kind, platform });
+      // The override waives the loader/MC filter; datapacks carry no loader facet.
+      if (loader && !ignoreVersion && searchKind !== 'datapack') params.set('loader', loader);
+      if (mc && !mc.startsWith('LATEST') && !ignoreVersion) params.set('mc', mc);
       let data;
       try {
         const res = await fetch(`/api/mods/search?${params}`);
@@ -422,8 +488,13 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       row.querySelector('[data-role="install"]')?.addEventListener('click', async (ev) => {
         const btn = ev.currentTarget; // capture before await — currentTarget is null afterwards
         if (hit.platform === 'curseforge') return installCurseforge(hit, row, btn);
+        const isDatapack = searchKind === 'datapack';
         const res2 = await withBusy(btn, 'Installing…', () =>
-          post(`/api/servers/${serverId}/mods`, { url: `https://modrinth.com/mod/${hit.ref}` })
+          post(`/api/servers/${serverId}/mods`, {
+            url: `https://modrinth.com/${isDatapack ? 'datapack' : 'mod'}/${hit.ref}`,
+            ...(isDatapack ? { kind: 'datapack' } : {}),
+            ignoreVersion: Boolean(anyVersion?.checked),
+          })
         );
         if (res2) done(res2);
       });
@@ -499,13 +570,19 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     }
 
     function done(res) {
-      if (res.installed && res.installed.name) toast(`Installed ${res.installed.name}.`);
+      if (res.installed && res.installed.name) {
+        const note = overrideNote(res.installed);
+        toast(
+          `Installed ${res.installed.name}.${note ? ` ${note}` : ''}`,
+          note ? { kind: 'warn', timeout: 9000 } : undefined
+        );
+      }
       modal.close();
       if (onInstalled) onInstalled(res);
       else setTimeout(() => location.reload(), 700);
     }
   }
-  document.getElementById('mods-search')?.addEventListener('click', () => openModSearch());
+  document.getElementById('mods-search')?.addEventListener('click', () => openModSearch({ allowDatapacks: true }));
 
   // ---- Manual-download resolver: MODS_NEED_DOWNLOAD.txt → guided actions ----
   const pendingBox = document.getElementById('mods-pending');

@@ -1,11 +1,12 @@
 // World library page: upload archives, extract from servers, install anywhere.
 // Also exports the shared world modals used by the per-server Worlds tab.
 import { toast } from '../lib/toast.js';
+import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { enhanceAll } from '../lib/select.js';
 import { setBusy } from '../lib/loading.js';
-import { fmtBytes } from '../lib/format.js';
+import { fmtBytes, escapeHtml } from '../lib/format.js';
 
 // ---------------------------------------------------------------------------
 // Shared helpers (imported by worlds-tab.js)
@@ -29,12 +30,12 @@ export async function postJSON(url, body) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false) {
-      toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 9000 });
+      toast(data.error || friendlyError(res, { action: 'complete that action' }), { kind: 'error', timeout: 9000 });
       return null;
     }
     return data;
-  } catch (err) {
-    toast(`Network error: ${err.message}`, { kind: 'error' });
+  } catch {
+    toast(friendlyError(null, { action: 'complete that action' }), { kind: 'error' });
     return null;
   }
 }
@@ -50,7 +51,7 @@ export function uploadWorldModal({ onDone } = {}) {
       Choose archive…
       <input type="file" data-w-file class="hidden" accept=".zip,.mcworld,.tar,.gz,.tgz">
     </label>
-    <p class="help" data-w-filename>No file selected — the world root (level.dat) is detected automatically, Bukkit split dirs included.</p>
+    <p class="help" data-w-filename>No file selected. The world root (the folder with level.dat) is found automatically, including Bukkit split-dimension folders.</p>
     <div class="mt-3 hidden" data-w-progress>
       <div class="meter"><div class="bg-grass-500" style="width:0%" data-w-bar></div></div>
       <p class="help mt-1" data-w-status>Uploading…</p>
@@ -67,9 +68,9 @@ export function uploadWorldModal({ onDone } = {}) {
   let busy = false;
   let activeXhr = null;
   openModal({
-    title: 'Upload world to library',
+    title: 'Upload World to Library',
     content,
-    // Closing the modal must actually cancel the transfer — a "cancelled"
+    // Closing the modal must actually cancel the transfer - a "cancelled"
     // upload used to keep running and reload the page when it finished.
     onClose: () => activeXhr?.abort(),
     actions: [
@@ -107,7 +108,7 @@ export function uploadWorldModal({ onDone } = {}) {
               if (!e.lengthComputable) return;
               const pct = Math.round((e.loaded / e.total) * 100);
               bar.style.width = `${pct}%`;
-              status.textContent = pct < 100 ? `Uploading… ${pct}%` : 'Extracting & normalizing archive…';
+              status.textContent = pct < 100 ? `Uploading… ${pct}%` : 'Extracting and preparing the archive…';
             });
             xhr.addEventListener('load', () => {
               let data = {};
@@ -120,7 +121,10 @@ export function uploadWorldModal({ onDone } = {}) {
                 resolve(undefined); // close modal
               } else {
                 busy = false;
-                toast(data.error || `Upload failed (${xhr.status})`, { kind: 'error', timeout: 9000 });
+                toast(data.error || friendlyError(xhr.status, { action: 'upload that world' }), {
+                  kind: 'error',
+                  timeout: 9000,
+                });
                 resolve(false); // keep modal open
               }
             });
@@ -153,11 +157,11 @@ export function extractWorldModal({ serverId = null, onDone } = {}) {
     }
     <label class="label ${serverId ? '' : 'mt-3'}">Library entry name (optional)</label>
     <input class="input" data-x-name placeholder="Leave empty to name it after the server" autocomplete="off">
-    <p class="help">Takes a consistent snapshot — safe while the server is running (save-off → save-all → copy → save-on).</p>
+    <p class="help">Takes a consistent snapshot, and is safe to run while the server is up. The panel briefly pauses world saving, flushes everything to disk, copies it, then resumes saving.</p>
     <div class="mt-3 hidden" data-x-progress><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
 
   openModal({
-    title: 'Save world to library',
+    title: 'Save World to Library',
     content,
     actions: [
       { label: 'Cancel', kind: 'ghost' },
@@ -205,14 +209,14 @@ export function installWorldModal(libId, libName, { serverId = null, onDone } = 
     }
     <label class="label ${serverId ? '' : 'mt-3'}">Install mode</label>
     <select class="input" data-i-mode data-label="Install mode">
-      <option value="replace" data-desc="Server must be stopped — current world is auto-backed-up first">Replace current world</option>
-      <option value="alongside" data-desc="Adds it as another level dir — switch with Activate later">Install alongside</option>
+      <option value="replace" data-desc="Server must be stopped. The current world is backed up first.">Replace current world</option>
+      <option value="alongside" data-desc="Adds it as another world folder. Switch to it later with Activate.">Install alongside</option>
     </select>
     <div class="mt-3 hidden" data-i-namewrap>
       <label class="label">New world folder name</label>
       <input class="input" data-i-name value="${escapeHtml(libName.replace(/[\\/:*?"<>|]/g, '_').slice(0, 64))}" autocomplete="off">
     </div>
-    <p class="help">Compatibility (flavor + MC version) is checked before anything is touched; replace mode takes a safety backup automatically.</p>
+    <p class="help">Compatibility (server type and Minecraft version) is checked before anything is touched. Replace mode takes a safety backup automatically.</p>
     <div class="mt-3 hidden" data-i-progress><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
 
   const mode = content.querySelector('[data-i-mode]');
@@ -265,7 +269,7 @@ export async function installWithConfirm(url, body) {
   if (res.requiresConfirm) {
     const ok = await confirmDialog({
       title: 'Compatibility warnings',
-      message: 'The panel found potential problems with this install:',
+      message: 'The panel found possible problems with this install:',
       detail: res.warnings.join('\n\n'),
       confirmLabel: 'Install anyway',
       danger: true,
@@ -275,13 +279,6 @@ export async function installWithConfirm(url, body) {
     if (!res) return null;
   }
   return res;
-}
-
-export function escapeHtml(s) {
-  return String(s ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -294,7 +291,7 @@ if (page) {
   });
 
   document.getElementById('world-extract')?.addEventListener('click', () => {
-    if (!serverOptions().length) return toast('No servers yet — create one first.', { kind: 'info' });
+    if (!serverOptions().length) return toast('No servers yet. Create one first.', { kind: 'info' });
     extractWorldModal({ onDone: () => setTimeout(() => location.reload(), 700) });
   });
 
@@ -304,13 +301,13 @@ if (page) {
     const { id, name, size } = row.dataset;
 
     if (e.target.closest('[data-world-install]')) {
-      if (!serverOptions().length) return toast('No servers yet — create one first.', { kind: 'info' });
+      if (!serverOptions().length) return toast('No servers yet. Create one first.', { kind: 'info' });
       installWorldModal(id, name, { onDone: () => setTimeout(() => location.reload(), 700) });
     } else if (e.target.closest('[data-world-delete]')) {
       const btn = e.target.closest('[data-world-delete]');
       const ok = await confirmDialog({
         title: `Delete "${name}" from the library?`,
-        message: 'Removes the archive from ./data/library/worlds. Worlds already installed on servers are not touched.',
+        message: 'Removes this archive from the world library. Worlds already installed on servers are not touched.',
         detail: `${fmtBytes(size)} will be freed.`,
         confirmLabel: 'Delete',
         danger: true,
@@ -324,7 +321,7 @@ if (page) {
           toast(`"${name}" removed (${fmtBytes(data.freedBytes)} freed).`);
           row.remove();
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: 'delete that world' }), { kind: 'error' });
         }
       } finally {
         restore();

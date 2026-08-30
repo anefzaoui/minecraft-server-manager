@@ -2,7 +2,7 @@
 // a clickable preset gallery. Attach to any text input via attachMotdEditor.
 //
 // Editing uses friendly &-codes; call toSectionCodes() on the value before
-// sending it to the server — vanilla only renders real §-codes, and storing
+// sending it to the server - vanilla only renders real §-codes, and storing
 // "&a…" raw shows the literal characters in the client server list.
 
 import { openModal } from './modal.js';
@@ -36,16 +36,16 @@ const FORMATS = [
 ];
 
 export const MOTD_PRESETS = [
-  '&a&lWelcome to {server}&r&7 — have fun, be kind!',
-  '&b&l>>> &f&l{server} &b&l<<<&r\n&7Season 3 — fresh world',
+  '&a&lWelcome to {server}&r&7 - have fun, be kind!',
+  '&b&l>>> &f&l{server} &b&l<<<&r\n&7Season 3 - fresh world',
   '&6⛏ &e{server} &8| &fSurvival &8| &fFriends only',
-  '&c&lHARDCORE&r &8— &7one life, no mercy',
+  '&c&lHARDCORE&r &8- &7one life, no mercy',
   '&d✿ &5{server} &d✿&r\n&7cozy vibes only',
-  '&2&lModded &a{server}&r\n&7bring RAM — 100+ mods',
+  '&2&lModded &a{server}&r\n&7bring RAM - 100+ mods',
   '&9&m----------&r &b&lSkyBlock &9&m----------',
   '&e☀ &fOnline day & night &8| &7low-lag survival',
   '&7[&a1.21&7] &fVanilla+ &8| &cNo grief &8| &b/wild',
-  '&4&l⚠ &cUnder construction&r &7— back soon',
+  '&4&l⚠ &cUnder construction&r &7- back soon',
   '&f❄ &b{server} Winter Event &f❄&r\n&7double XP weekends',
   '&5&k!!&r &d{server} &5&k!!&r\n&7you never know what happens',
   '&6&lEpic Realm&r\n&7a fresh world awaits',
@@ -92,7 +92,7 @@ export function renderMotdInto(el, text) {
       else if (code === 'r') {
         color = '#AAAAAA';
         bold = italic = underline = strike = obf = false;
-      } else buf += ch + text[i]; // unknown code — show literally
+      } else buf += ch + text[i]; // unknown code - show literally
     } else if (ch === '\\' && text[i + 1] === 'n') {
       flush(buf);
       buf = '';
@@ -127,14 +127,14 @@ export function toAmpCodes(text) {
 
 /**
  * Attach the visual editor to an input.
- * opts: { preview: Element, getName: () => string } — getName fills {server}
+ * opts: { preview: Element, getName: () => string } - getName fills {server}
  * in presets. Returns { refresh() }.
  */
 export function attachMotdEditor(input, { preview, getName = () => 'My Server' } = {}) {
   const wrap = document.createElement('div');
   wrap.className = 'mt-1.5 flex flex-wrap items-center gap-1';
 
-  // Color swatches — .swatch borders are theme-aware; the old white ring was
+  // Color swatches - .swatch borders are theme-aware; the old white ring was
   // invisible around the White/Yellow swatches on the light theme's white card.
   // size-6 override: align with the format buttons on one toolbar baseline.
   for (const [code, hex, label] of MC_COLORS) {
@@ -199,9 +199,9 @@ export function attachMotdEditor(input, { preview, getName = () => 'My Server' }
     const hint = document.createElement('p');
     hint.className = 'help';
     hint.textContent =
-      'Click any example to use it — {server} becomes your server name. Tweak it afterwards with the toolbar.';
+      'Click any example to use it. {server} becomes your server name, and you can adjust it afterwards with the toolbar.';
     content.appendChild(hint);
-    const modal = openModal({ title: 'MOTD examples', content, size: 'md' });
+    const modal = openModal({ title: 'MOTD Examples', content, size: 'md' });
     for (const preset of MOTD_PRESETS) {
       const filled = preset.replaceAll('{server}', getName() || 'My Server');
       const row = document.createElement('button');

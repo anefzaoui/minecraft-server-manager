@@ -2,6 +2,7 @@
 'use strict';
 
 const net = require('node:net');
+const path = require('node:path');
 const db = require('../db');
 const urlGuard = require('../utils/urlGuard');
 const secrets = require('./secrets');
@@ -11,6 +12,7 @@ const wizardPowers = require('./wizardPowers');
 const wizardRecipes = require('./wizardRecipes');
 const httpError = require('../utils/httpError');
 const { PLAYER_NAME_RE } = require('../utils/playerName');
+const logger = require('../logger')(path.basename(__filename));
 
 const DEFAULT_PROMPT =
   'You are an ancient, playful wizard who lives inside this Minecraft world. ' +
@@ -538,7 +540,7 @@ async function handleJoin(serverId, player, joinedAt = new Date().toISOString(),
     return true;
   } catch (err) {
     insertTranscript(serverId, player, 'error', `Join greeting failed: ${String(err.message || err)}`);
-    console.warn(`[wizard] join greeting ${serverId}/${player}: ${err.message}`);
+    logger.warn('The chatbot join greeting failed.', { serverId, player, err: err.message });
     return false;
   }
 }
@@ -574,7 +576,7 @@ async function processCheckins({ now = new Date(), send = sendWizardText } = {})
       sent += 1;
     } catch (err) {
       insertTranscript(row.server_id, row.player, 'error', `Check-in failed: ${String(err.message || err)}`);
-      console.warn(`[wizard] check-in ${row.server_id}/${row.player}: ${err.message}`);
+      logger.warn('A chatbot check-in failed.', { serverId: row.server_id, player: row.player, err: err.message });
     }
   }
   return sent;
@@ -603,7 +605,7 @@ function startOutreachWatcher({ intervalMs = 30_000 } = {}) {
       await processCheckins();
       sweepEphemeralState();
     } catch (err) {
-      console.error('[wizard] outreach watcher:', err.message);
+      logger.error('The chatbot outreach watcher failed.', { err: err.message });
     } finally {
       outreachRunning = false;
     }
@@ -736,7 +738,7 @@ async function handleChat(serverId, player, message) {
     // retained; do not duplicate the player's line while recording the failure.
     if (!exchangeRecorded) insertTranscript(serverId, player, 'user', prompt);
     insertTranscript(serverId, player, 'error', String(err.message || err));
-    console.warn(`[wizard] ${serverId}/${player}: ${err.message}`);
+    logger.warn('A chatbot exchange failed.', { serverId, player, err: err.message });
     const safePowerMessage = powerAttempted
       ? err.status === 429
         ? err.message

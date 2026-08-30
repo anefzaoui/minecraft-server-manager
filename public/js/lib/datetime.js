@@ -47,7 +47,7 @@ export function timeAgo(v) {
   const d = toDate(v);
   if (isNaN(d.getTime())) return '';
   const secs = Math.round((Date.now() - d.getTime()) / 1000);
-  if (secs < 0) return formatDateTime(d); // future timestamp — not "just now"
+  if (secs < 0) return formatDateTime(d); // future timestamp - not "just now"
   if (secs < 45) return 'just now';
   if (secs < 3600) return `${Math.round(secs / 60)}m ago`;
   if (secs < 86400) return `${Math.round(secs / 3600)}h ago`;
