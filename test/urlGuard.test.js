@@ -93,3 +93,38 @@ test('assertPublicUrl accepts a public literal IP', async () => {
   const u = await assertPublicUrl('https://8.8.8.8/');
   assert.equal(u.hostname, '8.8.8.8');
 });
+
+// The allowPrivate option is what the self-hosted-LLM guard (wizard.js) relies
+// on: LAN and loopback are reachable, but the addresses that are never a valid
+// target stay blocked so it cannot be turned into a metadata-server SSRF.
+test('isBlockedIp with allowPrivate keeps LAN and loopback but still blocks the dangerous ranges', () => {
+  for (const ip of [
+    '127.0.0.1',
+    '10.0.0.25',
+    '192.168.1.50',
+    '172.16.5.5',
+    '100.64.0.1',
+    '::1',
+    'fc00::1',
+    'fd12::1',
+  ]) {
+    assert.equal(isBlockedIp(ip, { allowPrivate: true }), false, `${ip} should be allowed on a LAN`);
+  }
+  for (const ip of ['0.0.0.0', '169.254.169.254', '224.0.0.1', '239.255.255.250', '::', 'fe80::1', 'ff02::1']) {
+    assert.equal(isBlockedIp(ip, { allowPrivate: true }), true, `${ip} must stay blocked even on a LAN`);
+  }
+  // An IPv4-mapped IPv6 spelling of the cloud-metadata address must not sneak past.
+  assert.equal(isBlockedIp('::ffff:169.254.169.254', { allowPrivate: true }), true);
+  assert.equal(isBlockedIp('0:0:0:0:0:ffff:169.254.169.254', { allowPrivate: true }), true);
+});
+
+test('assertPublicUrl with allowPrivate reaches a LAN host but rejects the metadata address', async () => {
+  const lan = await assertPublicUrl('http://192.168.1.50:11434/', { allowPrivate: true });
+  assert.equal(lan.hostname, '192.168.1.50');
+  const loopback = await assertPublicUrl('http://127.0.0.1:11434/', { allowPrivate: true });
+  assert.equal(loopback.hostname, '127.0.0.1');
+  await assert.rejects(
+    () => assertPublicUrl('http://169.254.169.254/latest/meta-data/', { allowPrivate: true }),
+    /link-local, multicast, or unspecified/
+  );
+});

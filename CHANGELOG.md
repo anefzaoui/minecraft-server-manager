@@ -81,6 +81,19 @@ bumps. Two behaviour changes below need a note before you upgrade.
 - **Solver goes cross-platform** - the Auto-detect compatibility solver accepts CurseForge mods
   alongside Modrinth ones, mapping each CF project's file history into the same loader and
   MC-version intersection.
+- **Per-server OpenAI-compatible chatbot** - admins can connect each Minecraft server to its own
+  Ollama or OpenAI-compatible endpoint and configure the model, invocation name (`@wizard` by
+  default), persona, join greeting, timed check-in, opt-in conversation window, and transcript
+  retention. Vanilla recipe questions use versioned game data and compact 2x2/3x3 chat grids.
+- **Optional chatbot powers** - Basic users may receive enabled self/world powers; separately named
+  Power controllers may affect another exact online player. Gifts, healing, feeding, spawn/time/
+  weather changes, and directional teleports are individually configurable and audited. Powers
+  start disabled and in dry-run mode; configuration and transcripts are admin-only; API keys are
+  encrypted at rest; LAN endpoints are accepted while link-local and metadata targets stay blocked.
+  The model never receives raw RCON: it can select only intent-matched structured tools whose
+  authorization, target, item, quantity, cooldown, and dry-run policy are validated again right
+  before execution; selectors are rejected, cross-player targets must be online and cannot be the
+  caller, and models without tool calling fall back to conversation only.
 
 ### Changed
 

@@ -18,18 +18,24 @@ const httpError = require('./httpError');
 
 const MAX_REDIRECTS = 5;
 
-function isBlockedIpv4(ip) {
+// `allowPrivate` is for callers that legitimately reach a LAN service, such as
+// a self-hosted LLM on the operator's own network. It relaxes the private and
+// loopback ranges but still blocks the addresses that are never a valid target:
+// "this host" (0.0.0.0/8), link-local incl. cloud metadata (169.254.x), and
+// multicast/reserved (>=224). The default caller stays public-only.
+function isBlockedIpv4(ip, { allowPrivate = false } = {}) {
   const p = ip.split('.').map(Number);
   if (p.length !== 4 || p.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return true;
   const [a, b] = p;
   if (a === 0) return true; // 0.0.0.0/8 "this host"
+  if (a === 169 && b === 254) return true; // link-local (cloud metadata)
+  if (a >= 224) return true; // multicast + reserved
+  if (allowPrivate) return false; // LAN-facing caller keeps loopback + RFC1918 + CGNAT
   if (a === 10) return true; // private
   if (a === 127) return true; // loopback
-  if (a === 169 && b === 254) return true; // link-local (cloud metadata)
   if (a === 172 && b >= 16 && b <= 31) return true; // private
   if (a === 192 && b === 168) return true; // private
   if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64/10
-  if (a >= 224) return true; // multicast + reserved
   return false;
 }
 
@@ -71,16 +77,19 @@ function ipv6MappedIpv4(groups) {
   return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join('.');
 }
 
-function isBlockedIpv6(ip) {
+function isBlockedIpv6(ip, { allowPrivate = false } = {}) {
   const s = ip.toLowerCase();
-  if (s === '::' || s === '::1') return true; // unspecified / loopback
-  if (s.startsWith('fe80')) return true; // link-local
-  if (s.startsWith('fc') || s.startsWith('fd')) return true; // unique-local
-  if (s.startsWith('ff')) return true; // multicast
+  if (s === '::') return true; // unspecified (always blocked)
+  if (s.startsWith('fe80')) return true; // link-local (always blocked)
+  if (s.startsWith('ff')) return true; // multicast (always blocked)
   // Catches every IPv4-mapped spelling, not just the textual "::ffff:a.b.c.d"
   // shorthand - e.g. the fully-expanded "0:0:0:0:0:ffff:7f00:1" (=127.0.0.1).
+  // The mapped v4 inherits the same allowPrivate policy.
   const mapped = ipv6MappedIpv4(expandIpv6(s));
-  if (mapped) return isBlockedIpv4(mapped);
+  if (mapped) return isBlockedIpv4(mapped, { allowPrivate });
+  if (allowPrivate) return false; // LAN-facing caller keeps loopback + ULA
+  if (s === '::1') return true; // loopback
+  if (s.startsWith('fc') || s.startsWith('fd')) return true; // unique-local
   return false;
 }
 
@@ -102,16 +111,21 @@ function isAmbiguousNumericHost(host) {
   return labels.length > 0 && labels.every((l) => NUMERIC_LABEL_RE.test(l));
 }
 
-function isBlockedIp(ip) {
+function isBlockedIp(ip, { allowPrivate = false } = {}) {
   // Normalize IPv4-mapped IPv6 (::ffff:1.2.3.4) to its v4 form.
   const v4 = ip.toLowerCase().startsWith('::ffff:') ? ip.slice(ip.lastIndexOf(':') + 1) : ip;
-  if (net.isIPv4(v4)) return isBlockedIpv4(v4);
-  if (net.isIPv6(ip)) return isBlockedIpv6(ip);
+  if (net.isIPv4(v4)) return isBlockedIpv4(v4, { allowPrivate });
+  if (net.isIPv6(ip)) return isBlockedIpv6(ip, { allowPrivate });
   return true; // unknown format - block
 }
 
-/** Throw unless `rawUrl` is an http(s) URL that resolves only to public addresses. */
-async function assertPublicUrl(rawUrl) {
+/**
+ * Throw unless `rawUrl` is an http(s) URL that resolves to an allowed address.
+ * With `{ allowPrivate: true }` the caller opts into LAN/loopback targets (a
+ * self-hosted LLM, say) while link-local, multicast, and unspecified addresses
+ * stay blocked; the default is public-only.
+ */
+async function assertPublicUrl(rawUrl, { allowPrivate = false } = {}) {
   let u;
   try {
     u = new URL(rawUrl);
@@ -136,8 +150,13 @@ async function assertPublicUrl(rawUrl) {
     }
     addrs = results.map((r) => r.address);
   }
-  if (!addrs.length || addrs.some(isBlockedIp)) {
-    throw httpError(400, `Refusing to fetch a private or internal address (${host})`);
+  if (!addrs.length || addrs.some((addr) => isBlockedIp(addr, { allowPrivate }))) {
+    throw httpError(
+      400,
+      allowPrivate
+        ? `Refusing to reach a link-local, multicast, or unspecified address (${host})`
+        : `Refusing to fetch a private or internal address (${host})`
+    );
   }
   return u;
 }

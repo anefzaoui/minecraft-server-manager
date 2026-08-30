@@ -120,10 +120,29 @@ function handleLine(serverId, line) {
   const raw = rest;
   const evt = classify(raw);
   if (!evt) return;
+  const eventTs = dockerTs || buildTs(evt.time);
+  let inserted = false;
   try {
-    insertEvent(serverId, evt, dockerTs || buildTs(evt.time), raw);
+    inserted = insertEvent(serverId, evt, eventTs, raw);
   } catch (err) {
     logger.error('Inserting a player event failed.', { serverId, err: serializeError(err, { includeStack: false }) });
+  }
+  if (inserted && (evt.type === 'join' || evt.type === 'leave')) {
+    const onPresenceError = (err) =>
+      logger.warn('Forwarding a presence event to the chatbot failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    try {
+      const wizard = require('../services/wizard');
+      if (evt.type === 'join') {
+        wizard.handleJoin(serverId, evt.player, eventTs).catch(onPresenceError);
+      } else {
+        wizard.handleLeave(serverId, evt.player);
+      }
+    } catch (err) {
+      onPresenceError(err);
+    }
   }
   // Custom chat commands (!rtp2 …): fire-and-forget - a broken command handler
   // must never break log ingestion. Lazy require avoids any module cycle.
@@ -137,6 +156,16 @@ function handleLine(serverId, line) {
       require('../services/chatCommands').handleChat(serverId, evt.player, evt.message).catch(onChatCmdError);
     } catch (err) {
       onChatCmdError(err);
+    }
+    const onWizardError = (err) =>
+      logger.warn('The chatbot chat handler failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    try {
+      require('../services/wizard').handleChat(serverId, evt.player, evt.message).catch(onWizardError);
+    } catch (err) {
+      onWizardError(err);
     }
   }
 }

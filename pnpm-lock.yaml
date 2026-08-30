@@ -47,6 +47,9 @@ importers:
       marked:
         specifier: ^18.0.11
         version: 18.0.11
+      minecraft-data:
+        specifier: ^3.114.0
+        version: 3.114.0
       multer:
         specifier: ^2.2.0
         version: 2.2.0
@@ -1553,6 +1556,9 @@ packages:
   mime-types@3.0.2:
     resolution: {integrity: sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A==}
     engines: {node: '>=18'}
+
+  minecraft-data@3.114.0:
+    resolution: {integrity: sha512-7V3rl5XQTMa8D8nsVl3L/UYBB+2Kn9eFR8d1MKyge6ygjJC94RExq3anHdiGnrQ65SqtmpEc999SEihSU0drIA==}
 
   minimatch@10.2.6:
     resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
@@ -3366,6 +3372,8 @@ snapshots:
   mime-types@3.0.2:
     dependencies:
       mime-db: 1.54.0
+
+  minecraft-data@3.114.0: {}
 
   minimatch@10.2.6:
     dependencies:

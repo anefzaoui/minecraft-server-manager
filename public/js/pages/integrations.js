@@ -24,6 +24,162 @@ function init() {
     ...root.querySelectorAll('[data-dc-event]'),
   ]);
   const cleanSp = bindDirty('sp', [document.getElementById('ig-sp-enabled'), document.getElementById('ig-sp-slug')]);
+  const cleanWz = bindDirty('wz', [
+    document.getElementById('ig-wz-enabled'),
+    document.getElementById('ig-wz-name'),
+    document.getElementById('ig-wz-url'),
+    document.getElementById('ig-wz-model'),
+    document.getElementById('ig-wz-key'),
+    document.getElementById('ig-wz-key-clear'),
+    document.getElementById('ig-wz-retention'),
+    document.getElementById('ig-wz-prompt'),
+    document.getElementById('ig-wz-welcome-enabled'),
+    document.getElementById('ig-wz-welcome-message'),
+    document.getElementById('ig-wz-checkin-minutes'),
+    document.getElementById('ig-wz-checkin-message'),
+    document.getElementById('ig-wz-conversation-minutes'),
+    document.getElementById('ig-wz-powers-enabled'),
+    document.getElementById('ig-wz-dry-run'),
+    document.getElementById('ig-wz-testers'),
+    document.getElementById('ig-wz-controllers'),
+    document.getElementById('ig-wz-gifts'),
+    document.getElementById('ig-wz-gift-max'),
+    document.getElementById('ig-wz-power-cooldown'),
+    ...root.querySelectorAll('[data-wz-power]'),
+  ]);
+
+  function wizardConnection() {
+    return {
+      baseUrl: document.getElementById('ig-wz-url')?.value.trim() || '',
+      model: document.getElementById('ig-wz-model')?.value.trim() || '',
+      apiKey: document.getElementById('ig-wz-key')?.value || undefined,
+    };
+  }
+
+  function lineList(id) {
+    return (document.getElementById(id)?.value || '')
+      .split(/[\n,]+/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+  }
+
+  document.getElementById('ig-wz-models-load')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    await withBusy(btn, 'Loading…', async () => {
+      const res = await api(`/api/servers/${serverId}/wizard/models`, 'POST', wizardConnection());
+      if (!res.ok) return;
+      const datalist = document.getElementById('ig-wz-models');
+      datalist.replaceChildren(
+        ...res.data.models.map((name) => Object.assign(document.createElement('option'), { value: name }))
+      );
+      toast(
+        res.data.models.length ? `Found ${res.data.models.length} model(s).` : 'Connected, but no models were listed.',
+        {
+          kind: res.data.models.length ? 'success' : 'info',
+        }
+      );
+    });
+  });
+
+  document.getElementById('ig-wz-test')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const conn = wizardConnection();
+    if (!conn.model) return toast('Enter or discover a model first.', { kind: 'error' });
+    await withBusy(btn, 'Testing…', async () => {
+      const res = await api(`/api/servers/${serverId}/wizard/test`, 'POST', conn);
+      if (res.ok) {
+        toast(`LLM replied: ${res.data.reply}`, { kind: 'success', timeout: 8000 });
+      }
+    });
+  });
+
+  document.getElementById('ig-wz-save')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const conn = wizardConnection();
+    const body = {
+      enabled: document.getElementById('ig-wz-enabled').checked,
+      invocationName: document.getElementById('ig-wz-name').value.trim(),
+      ...conn,
+      clearApiKey: Boolean(document.getElementById('ig-wz-key-clear')?.checked),
+      retentionDays: Number(document.getElementById('ig-wz-retention').value),
+      systemPrompt: document.getElementById('ig-wz-prompt').value,
+      welcomeEnabled: document.getElementById('ig-wz-welcome-enabled').checked,
+      welcomeMessage: document.getElementById('ig-wz-welcome-message').value,
+      checkinMinutes: Number(document.getElementById('ig-wz-checkin-minutes').value),
+      checkinMessage: document.getElementById('ig-wz-checkin-message').value,
+      conversationMinutes: Number(document.getElementById('ig-wz-conversation-minutes').value),
+      powersEnabled: document.getElementById('ig-wz-powers-enabled').checked,
+      powersDryRun: document.getElementById('ig-wz-dry-run').checked,
+      powerTesters: lineList('ig-wz-testers'),
+      powerControllers: lineList('ig-wz-controllers'),
+      giftItems: lineList('ig-wz-gifts'),
+      giftMaxCount: Number(document.getElementById('ig-wz-gift-max').value),
+      powerCooldownSec: Number(document.getElementById('ig-wz-power-cooldown').value),
+      powerFlags: Object.fromEntries(
+        [...root.querySelectorAll('[data-wz-power]')].map((box) => [box.dataset.wzPower, box.checked])
+      ),
+    };
+    await withBusy(btn, 'Saving…', async () => {
+      const res = await api(`/api/servers/${serverId}/wizard`, 'POST', body);
+      if (!res.ok) return;
+      toast(
+        res.data.wizard.enabled
+          ? `Chatbot enabled. Players can say @${res.data.wizard.invocationName}.`
+          : 'Chatbot settings saved; chatbot is disabled.'
+      );
+      document.getElementById('ig-wz-key').value = '';
+      if (document.getElementById('ig-wz-key-clear')) document.getElementById('ig-wz-key-clear').checked = false;
+      cleanWz();
+    });
+  });
+
+  document.getElementById('ig-wz-transcripts')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    await withBusy(btn, 'Loading…', async () => {
+      const res = await api(`/api/servers/${serverId}/wizard/transcripts?limit=250`, 'GET');
+      if (!res.ok) return;
+      const list = document.getElementById('ig-wz-transcript-list');
+      list.replaceChildren();
+      for (const row of res.data.transcripts) {
+        const line = document.createElement('div');
+        line.className = 'border-b border-line py-2 last:border-0';
+        const meta = document.createElement('div');
+        meta.className = 'mb-1 text-ink-faint';
+        meta.textContent = `${row.created_at} · ${row.speaker}`;
+        const content = document.createElement('div');
+        content.className = row.role === 'error' ? 'text-danger' : 'whitespace-pre-wrap text-ink-soft';
+        content.textContent = row.content;
+        line.append(meta, content);
+        list.appendChild(line);
+      }
+      if (!res.data.transcripts.length) list.textContent = 'No retained chatbot conversations for this server.';
+      list.classList.remove('hidden');
+    });
+  });
+
+  document.getElementById('ig-wz-power-audit')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    await withBusy(btn, 'Loading…', async () => {
+      const res = await api(`/api/servers/${serverId}/wizard/powers/audit?limit=100`, 'GET');
+      if (!res.ok) return;
+      const list = document.getElementById('ig-wz-power-audit-list');
+      list.replaceChildren();
+      for (const event of res.data.events) {
+        const line = document.createElement('div');
+        line.className = 'border-b border-line py-2 last:border-0';
+        const meta = document.createElement('div');
+        meta.className = 'mb-1 text-ink-faint';
+        meta.textContent = `${event.created_at} · ${event.actor}`;
+        const summary = document.createElement('div');
+        summary.className = 'text-ink-soft';
+        summary.textContent = event.summary;
+        line.append(meta, summary);
+        list.appendChild(line);
+      }
+      if (!res.data.events.length) list.textContent = 'No chatbot power attempts have been recorded for this server.';
+      list.classList.remove('hidden');
+    });
+  });
 
   // ---- Discord ----
   document.getElementById('ig-dc-save')?.addEventListener('click', async (e) => {

@@ -160,6 +160,7 @@ function startBackgroundServices(httpServer) {
   require('./services/scheduler').startScheduler();
   require('./integrations/discord').startEventBridge();
   require('./services/inventory').startSnapshotWatcher();
+  require('./services/wizard').startOutreachWatcher();
 
   // Daily maintenance: prune old analytics timeline rows + closed sessions so the
   // DB doesn't grow without bound over months of uptime. Runs shortly after boot,
@@ -169,6 +170,9 @@ function startBackgroundServices(httpServer) {
   function runMaintenance() {
     try {
       const r = require('./analytics/ingest').pruneOlderThan(ANALYTICS_RETENTION_DAYS);
+      const wizard = require('./services/wizard');
+      wizard.pruneTranscripts();
+      wizard.pruneOutreach(ANALYTICS_RETENTION_DAYS);
       if (r.events || r.sessions) {
         logger.info('Pruned old analytics rows.', {
           events: r.events,
