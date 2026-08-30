@@ -27,6 +27,8 @@ The **Servers** page lists your whole fleet with status and quick stats.
 
 ## A single server
 
+![Players](images/players.png)
+
 Opening a server gives you a tabbed workspace:
 
 - **Overview** - status, live stats, uptime, and the primary start / stop / restart controls.

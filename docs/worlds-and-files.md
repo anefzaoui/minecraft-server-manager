@@ -26,6 +26,8 @@ For modded servers, the **Mods** tab (also under **World**) manages the mod set 
 
 ### Adding mods
 
+![Mods](images/mods.png)
+
 Four ways in, all from the Mods tab toolbar:
 
 - **Search mods** - search **Modrinth or CurseForge** (the CurseForge chip appears once an [API key](settings.md) is stored), filtered to the server's loader and Minecraft version. Results already on the server show an **Installed** badge. If a CurseForge author disallows automated downloads, the panel says so up front and offers **Open CurseForge** + **Upload jar** instead of failing mid-install.

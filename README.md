@@ -10,6 +10,8 @@ storage analytics, a live world map, and more, wrapped in a fast, Minecraft-flav
 **Zero paid services. Everything runs on your machine, and your entire panel is one folder you can
 copy to migrate.**
 
+![Dashboard](docs/images/dashboard.png)
+
 <p align="center">
   <img src="docs/screenshots/01-dashboard.png" alt="Dashboard with all Minecraft servers at a glance" width="920">
 </p>
