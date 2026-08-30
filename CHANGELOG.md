@@ -58,6 +58,29 @@ bumps. Two behaviour changes below need a note before you upgrade.
   when present and raw source otherwise.
 - **New docs**: `docs/integrations.md`; refreshed backups / architecture / updates / getting-started
   / users-and-roles / 2FA guides and the README env table.
+- **Import zip on the Mods tab** - one button, two zip shapes, auto-detected. A **CurseForge
+  modpack export** (`manifest.json`) is resolved through the CurseForge bulk endpoints (two POSTs
+  instead of ~170 GETs for an 87-mod pack), previewed with per-mod warnings, and installed as
+  custom mods with real task progress. A **hand-assembled zip of jars** gets each jar identified
+  (Modrinth sha1 lookup, then CurseForge fingerprint, then the jar's own metadata) and judged
+  against the server: fits / wrong loader / wrong MC version / already installed / unidentified.
+- **Pack overrides, opt-in and reversible** - a modpack export's `overrides/` tree can be applied to
+  the server; every file that would be overwritten is backed up first to `.import-backups/<timestamp>/`
+  inside the server folder. Zip-slip-guarded, size-capped, and the backup tree itself is protected.
+- **Create a server from a zip** - the wizard's From-modpack tab takes a custom zip: the manifest
+  (or a majority vote across identified jars) prefills the loader and Minecraft version, then create,
+  bulk install, optional overrides, and start run as one task. Zips of plugins create Paper servers.
+- **CurseForge search on the existing-server Mods tab** - platform chips (Modrinth default,
+  CurseForge once the API key is stored), with **Installed** badges on results already on the server.
+- **Blocked downloads handled up front** - when a CurseForge author forbids API downloads, the
+  search modal swaps Install for **Open CurseForge** + **Upload jar**, and zip imports partition
+  those mods into a report with per-mod browser links and upload slots.
+- **Datapack support on the Mods tab** and an **opt-in override for Modrinth's MC-version
+  compatibility filter**, so a build not listed for this exact version or loader can still be
+  installed with a clear "not verified" warning.
+- **Solver goes cross-platform** - the Auto-detect compatibility solver accepts CurseForge mods
+  alongside Modrinth ones, mapping each CF project's file history into the same loader and
+  MC-version intersection.
 
 ### Changed
 
@@ -105,6 +128,11 @@ bumps. Two behaviour changes below need a note before you upgrade.
   CSP nonces - no `unsafe-inline` in `script-src`; magic-byte upload sniffing; wizard search
   request-ordering; a shared crash-safe `escapeHtml`); symlink-escape, chat-command-nesting, and
   SSRF/proxy-leak fixes.
+- Plugin servers' mod search no longer over-filters: plugin lookups stop being narrowed by a
+  mod-loader facet (a spigot-only plugin used to resolve to zero builds on a Paper server), and
+  datapack/resourcepack version lookups are no longer filtered by the server's loader either.
+  `/api/mods/search` and `/api/mods/versions` accept plugin servers (`loader=paper`, plugin kind)
+  instead of rejecting them at validation.
 
 ## [0.9.8] - 2026-08-21
 

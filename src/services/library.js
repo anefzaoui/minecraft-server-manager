@@ -209,17 +209,18 @@ async function importFile(localPath, meta, { actor = 'system' } = {}) {
     buf.length,
     null,
     meta.platform || 'upload',
-    null,
-    null,
+    meta.projectId || null,
+    meta.fileId || null,
     meta.version || null,
-    JSON.stringify([]),
-    JSON.stringify([]),
-    null,
+    JSON.stringify(meta.mcVersions || []),
+    JSON.stringify(meta.loaders || []),
+    meta.iconUrl || null,
     null,
     null
   );
   const row = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
   if (row && row.id === id) {
+    if (meta.iconUrl) cacheIcon(id, meta.iconUrl).catch(() => {});
     recordEvent({
       actor,
       type: 'library-added',

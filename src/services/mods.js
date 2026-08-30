@@ -64,6 +64,11 @@ function locateContentDir(server, row, file) {
   return contentDir(server, 'mod'); // not found anywhere - fall back to the old default
 }
 
+/** The primary content kind a server runs - the single source for plugin-vs-mod. */
+function contentKindOf(server) {
+  return PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
+}
+
 // Modpack servers don't set CF_MOD_LOADER/MODRINTH_LOADER - the pack itself
 // decides the loader. mc-image-helper writes a per-loader manifest into the data
 // dir (e.g. .neoforge-manifest.json), so detect from that; otherwise mod installs
@@ -190,10 +195,11 @@ async function listContent(serverId) {
         disabledVia: row && row.managed_by === 'pack' && !isDisabled ? null : undefined,
         sharedWith: lib ? usageCounts.get(lib.id) || 0 : null,
         iconUrl:
-          lib && lib.icon_rel_path
-            ? `/api/icons/library/${path.basename(lib.icon_rel_path)}`
-            : (lib && lib.icon_url) || (row && row.icon_url) || null,
+          lib && lib.icon_rel_path ? `/${lib.icon_rel_path}` : (lib && lib.icon_url) || (row && row.icon_url) || null,
         updateAvailable: updateAvailableFor(row),
+        // Provenance, when known - lets search UIs badge already-installed hits.
+        platform: (lib && lib.platform) || null,
+        projectId: (lib && lib.project_id) || null,
       });
     }
   }
@@ -259,7 +265,7 @@ function classifyModSource(input) {
 async function installFromUrl(serverId, input, { actor = 'system', kind, onProgress, ignoreVersion = false } = {}) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  let targetKind = kind || (PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod');
+  let targetKind = kind || contentKindOf(server);
   // ignoreVersion: the user explicitly asked to install a build that isn't
   // listed as compatible with this server - accepting the risk waives BOTH
   // the exact MC version match (e.g. the newest Fabric build only lists
@@ -267,14 +273,14 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
   // either can be the thing a build simply isn't tagged for.
   const mcVersion =
     ignoreVersion || server.mc_version === 'LATEST' || server.mc_version === 'SNAPSHOT' ? undefined : server.mc_version;
+  // loader is the server's actual loader (used by the override note below to
+  // report "not built for <loader>"). effectiveLoader is the one used to filter
+  // builds: only a meaningful version filter for mods, since Modrinth tags
+  // plugin builds paper/spigot/bukkit (a strict facet would hide spigot-only
+  // plugins) and datapack/resourcepack builds by content type, so filtering
+  // those by the server's loader over-filters to zero. The override waives it.
   const loader = loaderOf(server);
-  // Plugin platforms (Paper/Purpur/Pufferfish/...) are all Bukkit-API
-  // compatible, but Modrinth authors tag loader categories inconsistently -
-  // plenty of Paper-runnable plugins only carry 'spigot' or 'bukkit'.
-  // Filtering strictly to loaderOf()'s hardcoded 'paper' silently missed
-  // those ("No build matches paper") even though the very same search
-  // (which already skips the loader facet for plugins) had just found them.
-  const effectiveLoader = ignoreVersion || targetKind === 'datapack' || targetKind === 'plugin' ? undefined : loader;
+  const effectiveLoader = ignoreVersion || targetKind !== 'mod' ? undefined : loader;
 
   const source = classifyModSource(input);
   if (source.kind === 'invalid') {
@@ -293,13 +299,29 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
       targetKind = resolved.projectType;
     }
     const versionLoader = targetKind === 'datapack' || targetKind === 'resourcepack' ? undefined : effectiveLoader;
-    const versions = resolved.versionId
+    let versions = resolved.versionId
       ? [await modrinth.getVersion(resolved.versionId)]
       : await modrinth.getVersions(resolved.projectId, { loader: versionLoader, mcVersion });
+    // The unfiltered plugin query returns every build of hybrid projects
+    // (WorldEdit-style plugin+mod releases) - newest-first could hand a Paper
+    // server a Fabric jar. Keep only builds tagged with a plugin loader,
+    // unless the user pinned an exact version themselves.
+    if (targetKind === 'plugin' && !resolved.versionId) {
+      const { PLUGIN_LOADERS } = require('./modIdentify');
+      // Drop builds tagged for a non-plugin loader only (a hybrid project's
+      // Fabric/Forge jar), but keep untagged builds - many pure plugins carry no
+      // loader tag at all, and filtering those out would leave zero results.
+      versions = versions.filter((v) => {
+        const loaders = (v.loaders || []).map((l) => String(l).toLowerCase());
+        return loaders.length === 0 || loaders.some((l) => PLUGIN_LOADERS.has(l));
+      });
+    }
     if (!versions.length)
       throw httpError(
         404,
-        `No ${resolved.title} build matches ${versionLoader || 'this loader'} ${mcVersion || ''}`.trim()
+        targetKind === 'plugin'
+          ? `No ${resolved.title} plugin build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`
+          : `No ${resolved.title} build matches ${versionLoader || 'this loader'} ${mcVersion || ''}`.trim()
       );
     const version = versions[0];
     const file = modrinth.primaryFile(version);
@@ -345,9 +367,26 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
   // source.kind === 'direct' → plain download of the URL as-is.
   meta.category = targetKind; // may have changed above (Modrinth datapack/resourcepack auto-detect)
 
+  return installResolved(serverId, { downloadUrl, meta, kind: targetKind }, { actor, onProgress, ignoreVersion });
+}
+
+/**
+ * Install an already-resolved download (URL + metadata) as an overlay.
+ * The shared tail of every install path: library download → quota check →
+ * link into the server dir → server_content row → event. Used directly by
+ * bulk installers (modpack zip import) that resolved files via bulk API calls
+ * and must not re-resolve one mod at a time.
+ */
+async function installResolved(
+  serverId,
+  { downloadUrl, meta, kind = 'mod' },
+  { actor = 'system', onProgress, ignoreVersion = false } = {}
+) {
+  const server = serversService.getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
   const lib = await library.downloadToLibrary(downloadUrl, meta, { onProgress, actor });
   indexer.assertUnderQuota(server, lib.size_bytes);
-  const { filename } = await library.installToServer(lib.id, serverId, contentDir(server, targetKind));
+  const { filename } = await library.installToServer(lib.id, serverId, contentDir(server, kind));
 
   const id = `sc_${nanoid(8)}`;
   db.run(
@@ -357,39 +396,47 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     id,
     serverId,
     lib.id,
-    targetKind,
+    kind,
     lib.name,
     filename,
     lib.version,
     lib.icon_url
   );
+  // ignoreVersion is only ever set by the single-URL install path; bulk zip
+  // imports call this without it, so their override flags stay false.
   // meta.mcVersions/meta.loaders are only set for modrinth sources (curseforge
   // has no meta.loaders at all) - a direct-URL install has nothing to compare
   // against either way, so neither flag ever fires for one.
+  const overrideLoader = kind === 'mod' ? loaderOf(server) : null;
   const versionOverridden =
     ignoreVersion &&
     server.mc_version &&
     Array.isArray(meta.mcVersions) &&
     !meta.mcVersions.includes(server.mc_version);
   // Only meaningful for plain mods: plugin loader categories are already
-  // known-unreliable (effectiveLoader is unconditionally undefined for
-  // plugins above), and datapacks/resourcepacks have no loader concept.
+  // known-unreliable, and datapacks/resourcepacks have no loader concept.
   const loaderOverridden =
-    ignoreVersion && targetKind === 'mod' && loader && Array.isArray(meta.loaders) && !meta.loaders.includes(loader);
+    ignoreVersion &&
+    kind === 'mod' &&
+    overrideLoader &&
+    Array.isArray(meta.loaders) &&
+    !meta.loaders.includes(overrideLoader);
   const overrideBits = [
     versionOverridden ? `not listed for ${server.mc_version}` : null,
-    loaderOverridden ? `not built for ${loader}` : null,
+    loaderOverridden ? `not built for ${overrideLoader}` : null,
   ].filter(Boolean);
   recordEvent({
     serverId,
     actor,
     type: 'mod-installed',
     summary:
-      `Custom ${targetKind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''}` +
-      (overrideBits.length ? ` - ${overrideBits.join(', ')}, installed anyway (compatibility check overridden)` : ''),
+      `Custom ${kind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''}` +
+      (overrideBits.length
+        ? ` - ${overrideBits.join(', ')}, installed anyway (compatibility check overridden)`
+        : ' (overlay)'),
     details: { libraryId: lib.id, filename, versionOverridden, loaderOverridden },
   });
-  logger.info('Installed custom content on a server.', { serverId, actor, kind: targetKind, filename });
+  logger.info('Installed custom content on a server.', { serverId, actor, kind, filename });
   indexer.scan().catch(onRescanFailed);
   return { library: lib, filename, versionOverridden, loaderOverridden };
 }
@@ -629,16 +676,57 @@ function excludePackMod(serverId, token, { actor = 'system' } = {}) {
   return { excluded: token };
 }
 
-/** Install a manually-uploaded jar as an overlay (optionally excluding the pack's copy). */
+/**
+ * Install a manually-uploaded jar as an overlay (optionally excluding the
+ * pack's copy). The jar is identified first (Modrinth hash → CF fingerprint →
+ * embedded metadata) so uploads keep real provenance — name, version, icon,
+ * and the platform/project ids that make them update-checkable later.
+ */
 async function importUploadedMod(serverId, tmpPath, origName, { excludeToken, actor = 'system' } = {}) {
+  const filename = origName || 'mod.jar';
+  let identity = null;
+  try {
+    const buffer = await fsp.readFile(tmpPath);
+    const [identified] = await require('./modIdentify').identifyJars([{ name: filename, buffer }]);
+    identity = identified.identity;
+  } catch {
+    /* identification is best-effort — an unreadable jar still imports as-is */
+  }
+  return installLocalContent(serverId, tmpPath, filename, { identity, excludeToken, actor });
+}
+
+/**
+ * Shared tail of every local-file install: library import (with whatever
+ * identity is known) → quota → link into the server dir → overlay row.
+ * Bulk importers (mod-zip digester) identify in one batch and call this per
+ * jar; the single-upload path identifies one jar then lands here.
+ */
+async function installLocalContent(
+  serverId,
+  tmpPath,
+  filename,
+  { identity = null, excludeToken, actor = 'system' } = {}
+) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const filename = origName || 'mod.jar';
   if (!/\.(jar|zip)$/i.test(filename)) throw httpError(400, 'Only .jar or .zip files can be uploaded');
   const targetKind = PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
+
+  const fromRegistry = identity && (identity.platform === 'modrinth' || identity.platform === 'curseforge');
   const lib = await library.importFile(
     tmpPath,
-    { name: prettifyJarName(filename), filename, category: targetKind },
+    {
+      name: (identity && identity.name) || prettifyJarName(filename),
+      filename,
+      category: targetKind,
+      version: (identity && identity.version) || null,
+      platform: fromRegistry ? identity.platform : 'upload',
+      projectId: fromRegistry ? identity.projectId : null,
+      fileId: fromRegistry ? identity.versionId : null,
+      iconUrl: (identity && identity.iconUrl) || null,
+      mcVersions: (identity && identity.mcVersions) || [],
+      loaders: (identity && identity.loaders) || [],
+    },
     { actor }
   );
   indexer.assertUnderQuota(server, lib.size_bytes);
@@ -665,17 +753,19 @@ async function importUploadedMod(serverId, tmpPath, origName, { excludeToken, ac
     details: { filename: installed },
   });
   indexer.scan().catch(onRescanFailed);
-  return { filename: installed, excluded: excludeToken || null };
+  return { filename: installed, name: lib.name, version: lib.version, excluded: excludeToken || null };
 }
 
 module.exports = {
   listContent,
   installFromUrl,
+  installResolved,
   classifyModSource,
   setEnabled,
   removeContent,
   reapplyOverlay,
   contentDir,
+  contentKindOf,
   loaderOf,
   isPackServer,
   parseModsNeedDownload,
@@ -684,4 +774,5 @@ module.exports = {
   excludePackMod,
   clearPendingLine,
   importUploadedMod,
+  installLocalContent,
 };
