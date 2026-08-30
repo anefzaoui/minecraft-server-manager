@@ -114,46 +114,129 @@ function readEntryBuffers(zipPath, select, { maxEntryBytes = 512 * 1024 * 1024, 
  *   map — rewrite an entry name to a different destination-relative path, or
  *   return null to skip the entry entirely (e.g. extract only overrides/).
  */
-function extractZipSafe(zipFile, destDir, { map } = {}) {
+const MAX_EXTRACT_BYTES = 50 * 1024 ** 3;
+const MAX_EXTRACT_ENTRIES = 200_000;
+
+/**
+ * Extract every entry of `zipFile` under `destDir` - the one extractor for the
+ * whole panel (backup restore, world install, blueprint import, pack
+ * overrides). Merges what used to be two near-identical loops:
+ *
+ *   - zip-slip: entry names (and mapped names) are rejected on NUL / backslash /
+ *     absolute path / drive letter / a `..` segment, AND the fully-resolved
+ *     target is re-checked to sit inside destDir.
+ *   - decompression bomb: summed central-directory sizes AND the actual
+ *     streamed bytes are both capped, and so is the entry count.
+ *   - `map(fileName)` may rewrite an entry's relative destination or return
+ *     null/'' to skip it (pack overrides use this).
+ *   - yauzl only ever writes regular files and directories (never a symlink),
+ *     so an in-archive symlink cannot redirect a later write out of destDir.
+ *
+ * Thrown errors carry `.status` (400 containment, 413 size/count) so the JSON
+ * error handlers surface them as client errors rather than a bare 500.
+ * `destDir` must already exist.
+ */
+function extractZipSafe(
+  zipFile,
+  destDir,
+  { map, maxBytes = MAX_EXTRACT_BYTES, maxEntries = MAX_EXTRACT_ENTRIES } = {}
+) {
+  const root = path.resolve(destDir);
   return new Promise((resolve, reject) => {
-    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(err);
-      zip.on('error', reject);
-      zip.on('end', resolve);
+    yauzl.open(zipFile, { lazyEntries: true }, (openErr, zip) => {
+      if (openErr) return reject(httpError(400, 'Not a valid zip archive'));
+      let settled = false;
+      let entryCount = 0;
+      let declaredBytes = 0;
+      let writtenBytes = 0;
+
+      const fail = (e) => {
+        if (settled) return;
+        settled = true;
+        try {
+          zip.destroy();
+        } catch {
+          /* already closed */
+        }
+        reject(e);
+      };
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+
+      zip.on('error', fail);
+      zip.on('end', done);
       zip.on('entry', (entry) => {
+        if (++entryCount > maxEntries) {
+          return fail(httpError(413, `Archive has too many entries (> ${maxEntries}) - refusing to extract.`));
+        }
+        declaredBytes += entry.uncompressedSize || 0;
+        if (declaredBytes > maxBytes) {
+          return fail(
+            httpError(
+              413,
+              `Archive is too large uncompressed (> ${Math.round(maxBytes / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
+            )
+          );
+        }
+
         if (!safeEntryName(entry.fileName)) {
-          zip.close();
-          return reject(new Error(`Archive entry escapes destination: ${entry.fileName}`));
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
         }
         const isDir = /\/$/.test(entry.fileName);
         const mapped = map ? map(entry.fileName) : entry.fileName;
         if (mapped == null || mapped === '') return zip.readEntry();
         if (!safeEntryName(mapped)) {
-          zip.close();
-          return reject(new Error(`Archive entry escapes destination: ${entry.fileName}`));
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
         }
-        const target = path.resolve(destDir, mapped);
-        if (target !== path.resolve(destDir) && !target.startsWith(path.resolve(destDir) + path.sep)) {
-          zip.close();
-          return reject(new Error(`Archive entry escapes destination: ${entry.fileName}`));
+        const target = path.resolve(root, mapped);
+        if (target !== root && !target.startsWith(root + path.sep)) {
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
         }
+
         if (isDir) {
           fs.mkdirSync(target, { recursive: true });
           zip.readEntry();
-        } else {
-          fs.mkdirSync(path.dirname(target), { recursive: true });
-          zip.openReadStream(entry, (streamErr, readStream) => {
-            if (streamErr) return reject(streamErr);
-            const out = fs.createWriteStream(target);
-            out.on('close', () => zip.readEntry());
-            out.on('error', reject);
-            readStream.pipe(out);
-          });
+          return;
         }
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        zip.openReadStream(entry, (streamErr, readStream) => {
+          if (streamErr) return fail(streamErr);
+          const out = fs.createWriteStream(target);
+          readStream.on('data', (chunk) => {
+            writtenBytes += chunk.length;
+            if (writtenBytes > maxBytes) {
+              readStream.destroy();
+              out.destroy();
+              fail(
+                httpError(
+                  413,
+                  `Archive exceeds the ${Math.round(maxBytes / 1024 ** 3)} GB extraction limit - aborted (possible decompression bomb).`
+                )
+              );
+            }
+          });
+          out.on('close', () => {
+            if (!settled) zip.readEntry();
+          });
+          out.on('error', fail);
+          readStream.pipe(out);
+        });
       });
       zip.readEntry();
     });
   });
 }
 
-module.exports = { safeEntryName, readZipIndex, readEntryBuffers, extractZipSafe };
+module.exports = {
+  safeEntryName,
+  readZipIndex,
+  readEntryBuffers,
+  extractZipSafe,
+  // Compatibility name for callers of the former utils/safeExtract module.
+  extractZip: extractZipSafe,
+  MAX_EXTRACT_BYTES,
+  MAX_EXTRACT_ENTRIES,
+};

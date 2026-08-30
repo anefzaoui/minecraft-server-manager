@@ -32,7 +32,7 @@ const KEEP_PRE_UPDATE = 10;
 const KEEP_MANUAL = 20;
 const KEEP_PRE_RESTORE = 5;
 
-async function createBackup(serverId, { reason = 'manual', actor = 'system', note = '', task = null } = {}) {
+async function createBackupImpl(serverId, { reason = 'manual', actor = 'system', note = '', task = null } = {}) {
   const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
   if (!server) throw httpError(404, 'Server not found');
 
@@ -209,7 +209,9 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
     // own integrity check trips on a transient fault) that must NOT cancel the
     // restore the user explicitly asked for - warn loudly and carry on.
     try {
-      await createBackup(serverId, {
+      // The raw impl: we're already inside the 'restore' op lock, and the
+      // guarded createBackup would 409 against our own lock.
+      await createBackupImpl(serverId, {
         reason: 'pre-restore',
         actor,
         note: `Safety backup before restoring ${backup.filename}`,
@@ -243,7 +245,15 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
       throw err; // original serverDir was never touched
     }
 
-    const oldDir = dataPath('tmp', `restore-old-${serverId}-${nanoid(6)}`);
+    // The displaced world stays a SIBLING of serverDir (same filesystem, so the
+    // rename is atomic) rather than under data/tmp: boot wipes all of tmp/, so a
+    // crash between the two swap renames would have destroyed the only copy of
+    // the live world along with its recovery path. Under data/servers/ a crashed
+    // swap leaves ".restore-displaced-*" on disk for manual recovery instead.
+    // Server enumeration is DB-driven, so the extra directory is inert.
+    // Dash-free suffix (base36 time) so boot recovery can split serverId from
+    // suffix unambiguously even when the serverId itself contains dashes.
+    const oldDir = dataPath('servers', `.restore-displaced-${serverId}-${Date.now().toString(36)}`);
     let hadOldDir = false;
     try {
       await renameDir(serverDir, oldDir);
@@ -270,6 +280,14 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
 }
 
 const restoreBackup = guardOp('restore', restoreBackupImpl);
+
+// Backups read the live server dir; a concurrent recreate/delete/restore could
+// reshuffle files mid-archive and record a structurally-valid but incomplete
+// zip. External callers (scheduler, the manual/pre-update routes) go through
+// the op lock like every other lifecycle mutation. Callers that are ALREADY
+// inside a guarded op (restore's safety backup, world install/reset) use
+// createBackupUnguarded, or the lock would 409 against itself.
+const createBackup = guardOp('backup', createBackupImpl);
 
 async function deleteBackup(backupId, { actor = 'system' } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
@@ -369,9 +387,9 @@ function zipDirectory(sourceDir, outFile, { onProgress = null } = {}) {
 }
 
 // Zip-slip-safe extraction + decompression-bomb ceiling: the one shared
-// implementation (src/utils/safeExtract.js), re-exported here because the
+// implementation (src/utils/zip.js), re-exported here because the
 // restore path and its tests have always reached for `backups.extractZip`.
-const { extractZip } = require('../utils/safeExtract');
+const { extractZip } = require('../utils/zip');
 
 /** Sum of uncompressedSize across every entry in a zip - cheap (reads the
  *  central directory only, no decompression) - used for an accurate restore
@@ -426,4 +444,12 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms).unref());
 }
 
-module.exports = { createBackup, restoreBackup, deleteBackup, pruneRetention, extractZip, zipDirectory };
+module.exports = {
+  createBackup,
+  createBackupUnguarded: createBackupImpl,
+  restoreBackup,
+  deleteBackup,
+  pruneRetention,
+  extractZip,
+  zipDirectory,
+};

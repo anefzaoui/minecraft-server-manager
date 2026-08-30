@@ -214,6 +214,7 @@ function logThrottled(serverId, err) {
 // recordEvent keeps this module fully decoupled from every event producer.
 
 let pollTimer = null;
+let polling = false;
 let lastSeenId = 0;
 // When a deliverable row fails to send, we hold the high-water mark at the row
 // before it and retry on later polls - a transient network blip must not
@@ -228,13 +229,21 @@ function startEventBridge({ intervalMs = 15000 } = {}) {
   // Start at the current high-water mark: never replay pre-boot history.
   lastSeenId = db.get('SELECT COALESCE(MAX(id), 0) AS id FROM events')?.id || 0;
   pollTimer = setInterval(() => {
+    // Re-entrancy guard: a poll that outruns the interval (slow-but-responsive
+    // webhook) must not start a second concurrent pass - two passes would read
+    // the same lastSeenId, re-deliver the same rows, and stomp the retry state.
+    if (polling) return;
+    polling = true;
     pollOnce()
       .then(() => bridgeThrottle.ok(logger.info, 'The Discord event bridge recovered.'))
       .catch((err) =>
         bridgeThrottle.fail(logger.warn, 'A Discord event bridge poll failed.', {
           err: serializeError(err, { includeStack: false }),
         })
-      );
+      )
+      .finally(() => {
+        polling = false;
+      });
   }, intervalMs);
   if (pollTimer.unref) pollTimer.unref();
   logger.debug('Started the Discord event bridge.', { intervalMs });

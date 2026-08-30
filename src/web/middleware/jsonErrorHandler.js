@@ -65,6 +65,9 @@ function makeJsonErrorHandler(tag, { fileTooLarge = 'File too large' } = {}) {
         reason: err.message,
       });
     }
+    // If a streaming route already sent headers, we can't send an error body;
+    // hand off to Express's finalizer rather than throw ERR_HTTP_HEADERS_SENT.
+    if (res.headersSent) return next(err);
     const friendly = friendlyError(err);
     if (friendly) return res.status(status).json({ ok: false, error: friendly });
     if (status >= 500)

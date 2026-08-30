@@ -117,7 +117,7 @@ function loaderOf(server) {
 async function listContent(serverId) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const primaryKind = PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
+  const primaryKind = contentKindOf(server);
 
   const rows = db.all('SELECT * FROM server_content WHERE server_id = ?', serverId);
   const byFile = new Map(rows.map((r) => [r.filename.replace(/\.disabled$/, ''), r]));
@@ -710,7 +710,7 @@ async function installLocalContent(
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   if (!/\.(jar|zip)$/i.test(filename)) throw httpError(400, 'Only .jar or .zip files can be uploaded');
-  const targetKind = PLUGIN_TYPES.has(server.type) ? 'plugin' : 'mod';
+  const targetKind = contentKindOf(server);
 
   const fromRegistry = identity && (identity.platform === 'modrinth' || identity.platform === 'curseforge');
   const lib = await library.importFile(

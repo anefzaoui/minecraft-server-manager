@@ -32,7 +32,7 @@ async function openPickerModal() {
     btn.className = 'swatch grid size-14 place-items-center bg-inset p-1.5';
     btn.dataset.tip = preset.label;
     btn.setAttribute('aria-pressed', String(current === `preset:${preset.key}`));
-    btn.innerHTML = `<img src="${preset.url}" alt="${escapeHtml(preset.label)}" class="size-full object-contain">`;
+    btn.innerHTML = `<img src="${escapeHtml(preset.url)}" alt="${escapeHtml(preset.label)}" class="size-full object-contain">`;
     btn.addEventListener('click', async () => {
       const ok = await post('/api/account/avatar/preset', { key: preset.key });
       if (!ok) return;

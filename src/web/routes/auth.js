@@ -325,9 +325,10 @@ function safeNext(next) {
 function firstIssue(err) {
   if (err && err.issues && err.issues[0]) {
     const m = err.issues[0].message;
-    // Zod's built-in messages ("String must contain at least 8 character(s)")
-    // are developer text - fall back to a plain sentence rather than show them.
-    if (m && !/^(String|Number|Required|Invalid input|Expected)/.test(m)) return m;
+    // Zod's built-in messages are developer text - fall back to a plain sentence
+    // rather than show them. Zod 4 rewrote the size/type wording ("Too small:",
+    // "Too big:", "Invalid input:") so both the v3 and v4 prefixes are filtered.
+    if (m && !/^(String|Number|Required|Invalid input|Expected|Too small|Too big|Invalid)/.test(m)) return m;
     return 'Please check what you entered and try again.';
   }
   // A deliberate, already-friendly error from the auth service or the rate

@@ -8,7 +8,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
 const zlib = require('node:zlib');
-const { extractZip, safeEntryName } = require('../src/utils/safeExtract');
+const { extractZip, safeEntryName } = require('../src/utils/zip');
 
 // Raw STORE-method zip builder - `archiver` sanitizes `../` out of names, so a
 // zip-slip / bomb fixture has to be assembled byte by byte (yauzl reads the

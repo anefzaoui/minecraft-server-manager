@@ -50,7 +50,7 @@ async function req(method, path, { body, form, cookie, headers } = {}) {
     /* non-JSON response (CSV, redirect, …) */
   }
   const setCookie = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
-  return { status: res.status, json, text, setCookie };
+  return { status: res.status, json, text, setCookie, headers: res.headers };
 }
 
 /** Create the first admin (first-run) and return its session cookie string. */

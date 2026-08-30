@@ -127,6 +127,9 @@ test('cached library icons are served authed-only (the /library/icons static mou
 
   const authed = await app.req('GET', '/library/icons/mods/lib_test1.png', { cookie });
   assert.equal(authed.status, 200);
+  // Registry icon URLs can end in .svg - the sandbox CSP is what keeps a
+  // malicious mod author's SVG from running script in the panel origin.
+  assert.match(String(authed.headers.get('content-security-policy')), /sandbox/);
 
   const unauthed = await app.req('GET', '/library/icons/mods/lib_test1.png');
   assert.notEqual(unauthed.status, 200); // login redirect, never the file

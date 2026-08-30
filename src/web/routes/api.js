@@ -1505,6 +1505,7 @@ function sendEventExport(req, res, serverId) {
 router.get(
   '/events/export',
   requireRoleKeys('admin', 'operator'),
+  require('../middleware/auth').rejectCrossSiteGet,
   asyncHandler((req, res, next) => {
     sendEventExport(req, res, String(req.query.server || '') || null);
   })
@@ -1513,6 +1514,7 @@ router.get(
 router.get(
   '/servers/:id/events/export',
   requireRoleKeys('admin', 'operator'),
+  require('../middleware/auth').rejectCrossSiteGet,
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     sendEventExport(req, res, req.params.id);
@@ -1674,23 +1676,11 @@ router.get(
   })
 );
 
-// Mod/plugin/datapack platform icons, cached locally by library.cacheIcon()
-// under data/library/icons/mods/<libraryId>.<ext> so the UI never hotlinks
-// Modrinth/CurseForge CDNs. mods.js builds the <img src> from icon_rel_path.
-router.get(
-  '/icons/library/:file',
-  asyncHandler((req, res, next) => {
-    const file = z
-      .string()
-      .regex(/^lib_[\w-]+\.(png|svg|jpg|jpeg|webp|gif)$/, 'Invalid icon file')
-      .parse(req.params.file);
-    const abs = dataPath('library', 'icons', 'mods', file);
-    if (!fs.existsSync(abs)) throw Object.assign(new Error('Icon not found'), { status: 404 });
-    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.sendFile(abs);
-  })
-);
+// Mod/plugin/datapack platform icons are cached locally by library.cacheIcon()
+// under data/library/icons/ and served by the authenticated /library/icons
+// static mount in app.js (with the same sandbox CSP this route used to set,
+// so a registry-supplied .svg still cannot run script). listContent emits the
+// icon URL from icon_rel_path.
 
 // ---- Users (admin only) ----
 const authService = require('../../services/auth');

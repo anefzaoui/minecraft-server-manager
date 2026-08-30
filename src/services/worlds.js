@@ -17,7 +17,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const archiver = require('archiver');
-const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/safeExtract');
+const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/zip');
 const tar = require('tar');
 const { nanoid } = require('nanoid');
 const db = require('../db');
@@ -424,8 +424,9 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
       );
     }
     targetLevel = activeLevelName(server);
-    const { createBackup } = require('./backups');
-    await createBackup(serverId, {
+    const { createBackupUnguarded } = require('./backups');
+    // Already inside the 'install' op lock - the guarded form would 409 against it.
+    await createBackupUnguarded(serverId, {
       reason: 'manual',
       actor,
       note: `Safety backup before installing world "${lib.name}"`,
@@ -663,8 +664,9 @@ async function resetWorldImpl(
   const applyType = LEVEL_TYPES.has(levelType) ? levelType : '';
 
   if (backup) {
-    const { createBackup } = require('./backups');
-    await createBackup(serverId, {
+    const { createBackupUnguarded } = require('./backups');
+    // Already inside the 'reset' op lock - the guarded form would 409 against it.
+    await createBackupUnguarded(serverId, {
       reason: 'pre-restore',
       actor,
       note: `Safety backup before resetting world "${level}"`,

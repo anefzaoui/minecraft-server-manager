@@ -208,11 +208,32 @@ function clearLoginFailures(username, ip) {
   globalAttempts.delete(globalKey(username));
 }
 
+/**
+ * For the few side-effecting GETs (world-download staging, .mrpack build,
+ * events export): originGuard exempts GET, and the SameSite=lax default means
+ * a cross-site top-level navigation still carries the session cookie - so an
+ * attacker page could trigger the server-side work. Browsers stamp such
+ * navigations with Sec-Fetch-Site: cross-site; reject exactly that. Same-origin
+ * clicks, bookmarks (none/same-origin), and non-browser clients (header absent)
+ * all still work, and these stay plain GETs so res.download keeps working.
+ */
+function rejectCrossSiteGet(req, res, next) {
+  if (String(req.headers['sec-fetch-site'] || '').toLowerCase() === 'cross-site') {
+    logger.warn('Blocked a cross-site navigation to a side-effecting GET.', {
+      path: req.path,
+      userId: req.user ? req.user.id : undefined,
+    });
+    return res.status(403).json({ ok: false, error: 'Cross-site request rejected' });
+  }
+  next();
+}
+
 module.exports = {
   requireAuth,
   requireRole,
   requireWrite,
   originGuard,
+  rejectCrossSiteGet,
   checkLoginAllowed,
   recordLoginFailure,
   clearLoginFailures,

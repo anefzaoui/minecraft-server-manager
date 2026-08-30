@@ -17,7 +17,7 @@ const { serializeError } = require('../../utils/logSanitize');
 
 const onTempCleanupFailed = (err) =>
   logger.debug('Could not remove a temporary file.', { err: serializeError(err, { includeStack: false }) });
-const { requireRole } = require('../middleware/auth');
+const { requireRole, rejectCrossSiteGet } = require('../middleware/auth');
 const db = require('../../db');
 
 // requireAuth guarantees req.user on every /api request.
@@ -245,6 +245,7 @@ serverWorlds.post(
 serverWorlds.get(
   '/:world/download',
   requireRole('admin', 'operator'),
+  rejectCrossSiteGet,
   asyncHandler(async (req, res, next) => {
     const world = worldNameSchema.parse(req.params.world);
     const staged = await worlds.prepareWorldDownload(req.params.id, world, { actor: actorOf(req) });

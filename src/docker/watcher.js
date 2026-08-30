@@ -86,7 +86,14 @@ async function handleEvent(evt) {
     // The process is alive but the server stopped answering `mc-health` -
     // a "running but dead" state the die/oom events never cover. Only act on
     // it for a server the panel currently thinks is up (not one mid-stop).
-    if (['running', 'starting', 'stalled'].includes(server.status)) {
+    // A graceful stop of a slow-saving world keeps status 'running' while
+    // mc-health probes fail, so skip the flip/alert if a stop/restart/kill was
+    // just requested (same window the die handler below uses).
+    const stopRequested = db.get(
+      "SELECT 1 AS x FROM events WHERE server_id = ? AND type IN ('stop-requested','restart-requested','kill-requested') AND created_at > datetime('now', '-3 minutes')",
+      serverId
+    );
+    if (!stopRequested && ['running', 'starting', 'stalled'].includes(server.status)) {
       db.run("UPDATE servers SET status = 'unhealthy' WHERE id = ?", serverId);
       const already = db.get(
         "SELECT 1 AS x FROM events WHERE server_id = ? AND type = 'unhealthy' AND created_at > datetime('now', '-15 minutes')",

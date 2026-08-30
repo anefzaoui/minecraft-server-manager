@@ -35,6 +35,38 @@ function ensureDataRoot() {
     );
   }
   cleanTmp();
+  recoverDisplacedWorlds();
+}
+
+/**
+ * A backup restore swaps the world with two renames, parking the original as
+ * data/servers/.restore-displaced-<serverId>-<suffix>. If the panel died
+ * between the two renames, the server directory is missing and that parked
+ * copy is the only world left - put it back. If the server directory exists,
+ * the restore finished and the parked copy is leftover debris - remove it.
+ */
+function recoverDisplacedWorlds() {
+  const serversDir = path.join(config.dataDir, 'servers');
+  for (const entry of fs.readdirSync(serversDir)) {
+    const m = /^\.restore-displaced-(.+)-[^-]+$/.exec(entry);
+    if (!m) continue;
+    const abs = path.join(serversDir, entry);
+    const serverDir = path.join(serversDir, m[1]);
+    try {
+      if (fs.existsSync(serverDir)) {
+        fs.rmSync(abs, { recursive: true, force: true });
+        logger.info('Removed a leftover displaced-world directory from a completed restore.', { entry });
+      } else {
+        fs.renameSync(abs, serverDir);
+        logger.warn(
+          'Recovered a world displaced by a restore that crashed mid-swap. The restore did not complete; the pre-restore world is back in place.',
+          { serverId: m[1] }
+        );
+      }
+    } catch (err) {
+      logger.error('Could not recover or clean a displaced-world directory.', { entry, err: err.message });
+    }
+  }
 }
 
 /**

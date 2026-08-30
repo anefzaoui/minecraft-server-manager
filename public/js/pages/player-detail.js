@@ -5,6 +5,7 @@ import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
+import { escapeHtml } from '../lib/format.js';
 
 const root = document.querySelector('[data-player-detail]');
 if (root) init(root);
@@ -399,7 +400,12 @@ function init(root) {
         // items are {id, dimension}; label options as "Nether · Crimson Forest".
         const list = sortByDim(items);
         sel.innerHTML = list.length
-          ? list.map((e) => `<option value="${e.id}">${dimShort(e.dimension)} · ${label(e.id)}</option>`).join('')
+          ? list
+              .map(
+                (e) =>
+                  `<option value="${escapeHtml(e.id)}">${escapeHtml(dimShort(e.dimension))} · ${escapeHtml(label(e.id))}</option>`
+              )
+              .join('')
           : '<option value="">None available. Start the server to load the list.</option>';
         sel.dataset.loaded = '1';
         sel.dispatchEvent(new Event('change', { bubbles: true }));
@@ -410,7 +416,7 @@ function init(root) {
       loadRoster().then((list) => {
         const online = list.filter((p) => p.online && p.name !== name);
         sel.innerHTML = online.length
-          ? online.map((p) => `<option value="${p.name}">${p.name}</option>`).join('')
+          ? online.map((p) => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('')
           : '<option value="">No other players online</option>';
         sel.dataset.loaded = '1';
         sel.dispatchEvent(new Event('change', { bubbles: true }));

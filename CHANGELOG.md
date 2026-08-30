@@ -133,6 +133,24 @@ bumps. Two behaviour changes below need a note before you upgrade.
   datapack/resourcepack version lookups are no longer filtered by the server's loader either.
   `/api/mods/search` and `/api/mods/versions` accept plugin servers (`loader=paper`, plugin kind)
   instead of rejecting them at validation.
+- Post-merge review fixes: the teleport target dropdown on the player page now escapes player
+  names (a crafted name on an offline-mode server could otherwise inject markup into an admin's
+  page); `sessions.user_id` is backfilled during migration so "sign out other devices" also
+  revokes sessions that predate the upgrade; the friendly-validation fallback recognizes zod 4's
+  new message wording; the Discord event bridge got the same re-entrancy guard as its sibling
+  pollers (no more duplicate notifications when a webhook responds slowly); an intentional stop
+  no longer records a spurious "unhealthy" alert while the world saves; the central error
+  handlers no longer throw a second error when a download fails mid-stream; the few
+  side-effecting GETs (world download, .mrpack, events export) reject cross-site navigations.
+- Restore safety: the world displaced during a backup restore is parked next to the server
+  directory instead of under tmp (which boot wipes), and boot now recovers it automatically if a
+  restore crashed between the two swap renames. Backups also run under the per-server operation
+  lock so a concurrent recreate or delete can no longer produce a silently incomplete archive.
+- One zip extractor for the whole panel: the decompression-bomb caps moved into the shared
+  `utils/zip.js`, every consumer (backups, worlds, blueprints, pack overrides) now uses it, and
+  the duplicate `utils/safeExtract.js` is gone. Cached mod icons are served by one mechanism (the
+  authenticated static mount, now with the sandbox CSP that keeps a registry-supplied SVG from
+  running script); the duplicate API route was removed.
 
 ## [0.9.8] - 2026-08-21
 

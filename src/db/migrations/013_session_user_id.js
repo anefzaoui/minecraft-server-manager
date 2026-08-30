@@ -12,6 +12,12 @@ function up(db) {
     ALTER TABLE sessions ADD COLUMN user_id TEXT;
     CREATE INDEX idx_sessions_user ON sessions(user_id);
   `);
+  // Backfill from the session payload so sessions that predate this migration are
+  // revocable immediately. Without it, a long-lived "remember me" row is rarely
+  // rewritten, so its user_id would stay NULL for up to 30 days and a password/2FA
+  // change could not evict a stolen pre-upgrade session - the exact case this
+  // column exists for. The store persists session.userId at the JSON top level.
+  db.exec("UPDATE sessions SET user_id = json_extract(data_json, '$.userId') WHERE user_id IS NULL");
 }
 
 module.exports = { up };

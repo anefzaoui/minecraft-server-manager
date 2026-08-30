@@ -283,7 +283,19 @@ function createApp() {
   // URLs - this static mount is what actually serves them. Read-only,
   // authenticated, and scoped to the icons subtree only (never the whole
   // library, which holds the jar pool).
-  app.use('/library/icons', express.static(path.join(config.dataDir, 'library', 'icons'), { index: false }));
+  // The sandbox CSP + nosniff matter here: registry icon URLs can end in .svg,
+  // and an SVG served same-origin without a sandbox could carry script chosen
+  // by a mod author. Same headers the uploaded-image routes use.
+  app.use(
+    '/library/icons',
+    express.static(path.join(config.dataDir, 'library', 'icons'), {
+      index: false,
+      setHeaders(res) {
+        res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+      },
+    })
+  );
   // Account security (2FA) is self-service for every role, including viewer -
   // mounted ahead of the viewer-read-only gate below since protecting your own
   // account isn't a server-management action.
@@ -319,6 +331,10 @@ function createApp() {
       });
       captureError(err, { scope: 'web-html', path: req.path });
     }
+    // A route that already started streaming (archive pipe, res.download) can
+    // fault after headers are sent; sending again throws ERR_HTTP_HEADERS_SENT
+    // inside this handler. Hand off to Express's finalizer instead.
+    if (res.headersSent) return next(err);
     if (req.path.startsWith('/api/') || req.xhr) {
       return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large' : 'Request failed' });
     }
