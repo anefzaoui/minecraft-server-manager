@@ -27,6 +27,8 @@ Custom container names also can't live in the panel's own `msm-` namespace, so a
 
 ## Managing accounts
 
+![Profile picture](images/profile-picture.png)
+
 Admins can create users, change roles, reset passwords, and delete accounts from the Users table. The **2FA** column shows whether each user has two-factor enabled; an admin can **reset** another user's 2FA (for the lost-phone-and-backup-codes case) - but never disable their own without their password, which the self-service flow handles instead.
 
 Failed logins are rate-limited per account (both a per-IP and an account-global counter) to slow down brute-force attempts, and the same limit covers the 2FA code step so a correct password can't reset the counter before code-guessing. In front of that sits a coarser per-client-IP request limiter on the login / 2FA / setup endpoints, tunable via `RATE_LIMIT_AUTH_PER_15MIN` (default 100; behind a reverse proxy, set `TRUST_PROXY` so it keys on the real client IP).

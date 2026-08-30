@@ -6,6 +6,8 @@ its own endpoint, model, invocation name, persona, transcript policy, outreach m
 policy. The default invocation is `@wizard`, and the default persona demonstrates an ancient,
 playful in-world wizard; both are editable.
 
+![Chatbot settings](images/integrations-chatbot.png)
+
 ## Player experience
 
 - Any player can use `@wizard <message>` (or the configured invocation) for conversation and
@@ -17,6 +19,8 @@ playful in-world wizard; both are editable.
   conversation-only.
 - Basic-user self-gifts use an item allowlist. Controllers may give another player any valid
   namespaced vanilla or modded item, subject to the quantity limit and other power safeguards.
+
+![Chatbot transcripts](images/chatbot-transcripts.png)
 
 ## Design and security
 
