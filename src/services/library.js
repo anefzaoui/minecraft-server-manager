@@ -16,6 +16,7 @@ const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { safeFetch } = require('../utils/urlGuard');
+const contentHashes = require('../utils/contentHashes');
 
 const CATEGORY_DIR = {
   mod: 'library/mods',
@@ -34,10 +35,14 @@ const MAX_DOWNLOAD_BYTES = 8 * 1024 ** 3;
 /**
  * Download a URL into the library with hash dedupe.
  * onProgress({receivedBytes, totalBytes}) fires during download.
+ * When meta.expectedHashes ({sha512?/sha256?/sha1?/md5?} from the registry
+ * that published the file) is set, the streamed bytes are verified against the
+ * strongest digest and a mismatch aborts the install.
  * Returns the library_files row (existing row when the hash already exists).
  */
 async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'system' } = {}) {
   const category = meta.category || 'mod';
+  const expected = contentHashes.strongest(meta.expectedHashes);
   const tmpFile = dataPath('tmp', `dl-${nanoid(6)}`);
   // SSRF-guarded: rejects private/loopback/link-local targets and re-checks every
   // redirect hop, so a user-supplied "direct" URL can't reach internal services.
@@ -63,10 +68,14 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
   }
 
   const hash = crypto.createHash('sha256');
+  // sha256 is always computed for dedupe; when the registry published a
+  // different-algo digest, run a second hasher over the same stream.
+  const verifyHash = expected && expected.algo !== 'sha256' ? crypto.createHash(expected.algo) : null;
   let receivedBytes = 0;
   const counter = new (require('node:stream').Transform)({
     transform(chunk, enc, cb) {
       hash.update(chunk);
+      if (verifyHash) verifyHash.update(chunk);
       receivedBytes += chunk.length;
       if (receivedBytes > MAX_DOWNLOAD_BYTES) {
         // Hard abort - content-length can lie or be absent entirely.
@@ -86,6 +95,18 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
   }
 
   const sha256 = hash.digest('hex');
+  if (expected) {
+    const actual = expected.algo === 'sha256' ? sha256 : verifyHash.digest('hex');
+    if (actual !== expected.hex) {
+      await fsp.rm(tmpFile, { force: true }).catch(() => {});
+      throw httpError(
+        502,
+        `Download failed integrity check: ${expected.algo} of the received file does not match what ` +
+          `${new URL(url).host} published (expected ${expected.hex.slice(0, 12)}…, got ${actual.slice(0, 12)}…). ` +
+          'Nothing was installed - try again.'
+      );
+    }
+  }
   const existing = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
   if (existing) {
     await fsp.rm(tmpFile, { force: true });

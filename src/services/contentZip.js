@@ -150,6 +150,7 @@ async function resolveManifestEntries(manifestFiles) {
       iconUrl: (mod && mod.iconUrl) || null,
       downloadable: Boolean(file && file.downloadUrl),
       downloadUrl: (file && file.downloadUrl) || null,
+      hashes: (file && file.hashes) || [],
       url: `https://www.curseforge.com/minecraft/mc-mods/${slug}/files/${entry.fileId}`,
       mcVersions,
       loaders,
@@ -176,6 +177,7 @@ async function previewForServer(serverId, zipPath) {
     const items = (await resolveManifestEntries(info.manifest.files)).map((e) => ({
       ...e,
       downloadUrl: undefined, // CDN URL is server-side detail; the client gets the CF page url
+      hashes: undefined,
       verdict: e.resolved
         ? judge({ source: 'curseforge', loaders: e.loaders, mcVersions: e.mcVersions, kind: 'mod' })
         : { status: 'unknown', loaderOk: null, mcOk: null },
@@ -235,7 +237,11 @@ async function previewForServer(serverId, zipPath) {
 async function previewStandalone(zipPath) {
   const info = await inspect(zipPath);
   if (info.type === 'curseforge-pack') {
-    const items = (await resolveManifestEntries(info.manifest.files)).map((e) => ({ ...e, downloadUrl: undefined }));
+    const items = (await resolveManifestEntries(info.manifest.files)).map((e) => ({
+      ...e,
+      downloadUrl: undefined,
+      hashes: undefined,
+    }));
     return {
       type: 'curseforge-pack',
       pack: {
@@ -408,6 +414,7 @@ async function importForServer(
               iconUrl: e.iconUrl,
               mcVersions: e.mcVersions,
               loaders: e.loaders,
+              expectedHashes: require('../utils/contentHashes').fromCurseforge(e.hashes),
             },
           },
           { actor }

@@ -336,6 +336,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
       iconUrl: resolved.iconUrl,
       mcVersions: version.game_versions,
       loaders: version.loaders,
+      expectedHashes: file.hashes || {},
     });
   } else if (source.kind === 'curseforge') {
     const resolved = await curseforge.resolveUrl(source.ref);
@@ -362,6 +363,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
       version: file.name,
       iconUrl: resolved.iconUrl,
       mcVersions: file.gameVersions,
+      expectedHashes: require('../utils/contentHashes').fromCurseforge(file.hashes),
     });
   }
   // source.kind === 'direct' → plain download of the URL as-is.
