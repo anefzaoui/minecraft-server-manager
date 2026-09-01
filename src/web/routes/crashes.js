@@ -79,6 +79,25 @@ router.get(
   })
 );
 
+// Share to mclo.gs - PUBLISHES the report text publicly, so it's POST-only
+// and only ever fired from an explicit button press.
+router.post(
+  '/:crashId/share',
+  asyncHandler(async (req, res, next) => {
+    const row = ownedCrash(req);
+    res.json({ ok: true, ...(await crashes.shareCrash(row.id, { actor: req.user.username })) });
+  })
+);
+
+// mclo.gs automated analysis (shares first when needed - the UI warns).
+router.post(
+  '/:crashId/insights',
+  asyncHandler(async (req, res, next) => {
+    const row = ownedCrash(req);
+    res.json({ ok: true, insights: await crashes.crashInsights(row.id, { actor: req.user.username }) });
+  })
+);
+
 router.post(
   '/:crashId/viewed',
   asyncHandler((req, res, next) => {
