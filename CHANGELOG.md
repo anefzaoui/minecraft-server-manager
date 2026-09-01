@@ -5,6 +5,53 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.11.0] - 2026-09-01
+
+A content-sources release: three new keyless registries, server-side `.mrpack` import,
+checksum-verified downloads everywhere, mclo.gs crash analysis, and a batch of compatibility
+fixes (Quilt↔Fabric, PaperMC's new Fill v3 API).
+
+### Added
+
+- **Hangar** (PaperMC's plugin registry), **SpigotMC** (via Spiget's `/download/proxy` CDN
+  endpoint, which avoids the Cloudflare wall), and **GitHub Releases** as first-class content
+  sources - all keyless. They appear as chips in the plugin search modal, work in add-by-link, and
+  are covered by the update checker and the one-click updater. GitHub responses are cached with
+  ETag/`If-None-Match` revalidation (304s don't count against the rate limit) and an optional
+  `GITHUB_TOKEN` env var raises the quota; off-site SpigotMC resources get the same
+  browser-download + upload-jar fallback as CurseForge's distribution-denied mods.
+- **Universal add-by-link**: the Add-by-URL box now accepts Modrinth/CurseForge/Hangar/SpigotMC
+  project pages, GitHub repo/release URLs (bare `owner/repo` too, with SpigotMC's `name.12345` id
+  form recognized in URLs), Modrinth slugs, and direct `.jar` URLs.
+- **Server-side Modrinth modpack (`.mrpack`) import**: the zip digester detects
+  `modrinth.index.json` as a third shape next to CurseForge exports and jar zips. Files are
+  canonicalized back into Modrinth projects via the sha1 reverse lookup (keeping real provenance,
+  icons, and update-checkability), verified against the pack's sha512 checksums while downloading,
+  and previewed with fit verdicts; client-only and non-mod entries are surfaced instead of
+  silently dropped; `overrides/` and `server-overrides/` apply in spec order (server wins) with
+  the usual pre-apply backups. The wizard's create-from-zip flow accepts `.mrpack` too and
+  prefills loader, MC version, and loader build from the pack's dependencies.
+- **Checksum-verified downloads**: every registry install streams through the strongest digest the
+  registry publishes (sha512 → sha256 → sha1 → md5; CurseForge's numeric algo codes handled) and a
+  mismatch aborts the install before anything reaches the server.
+- **mclo.gs crash sharing + insights**: crash-report cards gain _Share to mclo.gs_ (publishes the
+  report as a public paste behind an explicit confirm; the link is remembered so nothing uploads
+  twice) and _Analyze_ (mclo.gs's automated analysis - known problems with suggested fixes -
+  rendered in a modal).
+
+### Fixed
+
+- **Quilt servers now see fabric-tagged builds** in search, version pickers, update checks, and
+  zip-import verdicts (Quilt runs Fabric mods; most projects only tag "fabric") - previously the
+  Quilt catalog was nearly empty.
+- **Paper build lists migrated to PaperMC's Fill v3 API** - the legacy `api.papermc.io/v2`
+  endpoint stopped receiving new versions and 404s for Minecraft releases above 1.21.11, which
+  silently emptied the Paper build picker for new versions. Fill's
+  `STABLE`/`RECOMMENDED`/`ALPHA`/`BETA` channels map onto itzg's `default`/`experimental`
+  `PAPER_CHANNEL` vocabulary.
+- **Modrinth rate limits** on bulk sweeps (the update checker) now wait out short reset windows
+  and retry once instead of failing the run on the first 429.
+
 ## [0.10.0] - 2026-08-28
 
 A large operability release: structured logging, rate limiting, a dedicated at-rest encryption key,

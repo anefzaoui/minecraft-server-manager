@@ -90,7 +90,7 @@ async function getReleases(repo, { limit = 30 } = {}) {
         .map((a) => ({
           name: a.name,
           size: a.size,
-          // Built by hand like mcman does - works unauthenticated for public repos.
+          // Built by hand - the plain download URL works unauthenticated for public repos.
           downloadUrl: `https://github.com/${assertRepo(repo)}/releases/download/${encodeURIComponent(rel.tag_name)}/${encodeURIComponent(a.name)}`,
         })),
     }));

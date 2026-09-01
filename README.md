@@ -37,6 +37,24 @@ copy to migrate.**
 - **Custom-mod overlay**: mods you add yourself are downloaded into a shared, sha256-deduplicated
   library and hard-linked into the server; they survive pack updates. Disabling is class-aware
   (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism).
+- **Five content sources, one browser**: Modrinth, CurseForge, and - keyless - **Hangar** (PaperMC's
+  plugin registry), **SpigotMC** (via Spiget's CDN proxy, which dodges the Cloudflare wall), and
+  **GitHub Releases** (stable-release preference, `-sources`/`-javadoc` sidecars skipped, ETag
+  caching so update checks barely touch the rate limit). All five feed search, add-by-link, the
+  update checker, and the one-click updater. Quilt servers automatically accept fabric-tagged builds.
+- **Add by link, from anywhere**: paste a Modrinth/CurseForge/Hangar/SpigotMC project page, a
+  GitHub repo or release URL (bare `owner/repo` works), a Modrinth slug, or a direct `.jar` URL -
+  the panel resolves the right build for the server's loader and MC version.
+- **Server-side `.mrpack` import**: upload a Modrinth modpack and it's previewed and installed like
+  a CurseForge export - files are canonicalized back into real Modrinth projects via hash lookup
+  (so they stay update-checkable), client-only entries are skipped visibly, and both override trees
+  apply in spec order with pre-apply backups. An `.mrpack` can also seed server creation.
+- **Verified downloads**: every install from a registry is streamed through the strongest checksum
+  the registry publishes (sha512 → sha256 → sha1 → md5); a mismatch aborts before anything lands on
+  the server.
+- **Crash analysis via mclo.gs**: one click shares a crash report as an mclo.gs paste (always behind
+  an explicit confirm - it's public) and runs mclo.gs's automated insights: known problems with
+  suggested fixes, rendered right in the History tab.
 - **Console, logs & RCON**: live console over WebSocket, ANSI rendering, search/level filters, a
   command bar with history, and a player list with quick actions. Every server gets a generated,
   encrypted RCON password injected automatically.
@@ -56,7 +74,8 @@ copy to migrate.**
   largest-files, orphan detection, and trend charts.
 - **History & crash reports**: every action (lifecycle, config diffs, mods, packs, backups, RCON,
   player actions, schedules) is a structured event with actor and captured log excerpts. Crash
-  reports are auto-detected, parsed (exception + suspected mods), and exportable.
+  reports are auto-detected, parsed (exception + suspected mods), exportable, and shareable to
+  mclo.gs with automated insights.
 - **Accounts & two-factor auth**: multi-user with **admin / operator / viewer** roles, plus optional
   **two-factor authentication (TOTP)** for any account. Enroll with any authenticator app (Google
   Authenticator, Authy, 1Password, …), keep one-time backup codes, and reset a locked-out user as an
@@ -119,7 +138,7 @@ Not affiliated with any of them.
     <td><img src="docs/screenshots/05-console.png" alt="Live console"><br><sub><b>Live console &amp; RCON</b>: streamed logs with level filters and a command bar with history.</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b>: pack-managed + custom overlay, one-click toggle, Modrinth/CurseForge search, zip import (CurseForge exports or your own jar collections, every jar identified & compatibility-checked).</sub></td>
+    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b>: pack-managed + custom overlay, one-click toggle, five-registry search (Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases), zip import (Modrinth <code>.mrpack</code>, CurseForge exports, or your own jar collections - every jar identified &amp; compatibility-checked, every download checksum-verified).</sub></td>
     <td><img src="docs/screenshots/07-worlds.png" alt="Worlds"><br><sub><b>Worlds</b>: reset/re-roll with a custom or random seed, duplicate, and a shared world library.</sub></td>
   </tr>
   <tr>
