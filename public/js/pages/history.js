@@ -218,7 +218,8 @@ async function showInsights(serverId, crash, card) {
   if (!ins.problems.length) {
     const p = document.createElement('p');
     p.className = 'text-ink-soft';
-    p.textContent = 'mclo.gs found no known problems in this report. The paste link below is still handy for support channels.';
+    p.textContent =
+      'mclo.gs found no known problems in this report. The paste link below is still handy for support channels.';
     content.appendChild(p);
   }
   for (const problem of ins.problems) {

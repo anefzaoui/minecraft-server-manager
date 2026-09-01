@@ -314,8 +314,7 @@ async function previewForServer(serverId, zipPath) {
       verdict: e.loaders.length
         ? judge({ source: 'modrinth', loaders: e.loaders, mcVersions: e.mcVersions, kind: 'mod' })
         : { status: 'unknown', loaderOk: null, mcOk: null },
-      installed:
-        (e.projectId && installed.keys.has(`modrinth:${e.projectId}`)) || installed.filenames.has(e.fileName),
+      installed: (e.projectId && installed.keys.has(`modrinth:${e.projectId}`)) || installed.filenames.has(e.fileName),
     }));
     const warnings = [];
     if (
@@ -499,9 +498,7 @@ async function applyOverridesTo(serverId, zipPath, overridesPrefix, { actor = 's
   const prefixes = Array.isArray(overridesPrefix) ? overridesPrefix : [overridesPrefix];
   const serverDir = dataPath('servers', serverId);
   const { entries } = await readZipIndex(zipPath);
-  const overrideFiles = entries.filter(
-    (e) => prefixes.some((p) => e.name.startsWith(p)) && !e.name.endsWith('/')
-  );
+  const overrideFiles = entries.filter((e) => prefixes.some((p) => e.name.startsWith(p)) && !e.name.endsWith('/'));
   if (!overrideFiles.length) return { applied: 0, backedUp: 0, backupDir: null };
   if (overrideFiles.length > MAX_OVERRIDE_ENTRIES) throw httpError(400, 'Overrides tree has too many files');
   const totalBytes = overrideFiles.reduce((n, e) => n + (e.size || 0), 0);

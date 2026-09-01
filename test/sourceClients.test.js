@@ -110,7 +110,10 @@ test('github client revalidates with If-None-Match and serves 304s from cache', 
 });
 
 test('github rate limiting falls back to cache, else 429s with reset hint', async () => {
-  stubFetch(() => new Response('{}', { status: 403, headers: { 'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 120) } }));
+  stubFetch(
+    () =>
+      new Response('{}', { status: 403, headers: { 'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 120) } })
+  );
   await assert.rejects(githubApi.getReleases('owner/fresh'), /rate-limiting.*GITHUB_TOKEN/s);
 });
 

@@ -255,10 +255,7 @@ function loaderTypeId(loader) {
 
 /** Loader type ids a server accepts (Quilt also runs fabric builds). */
 function loaderTypeIds(loader) {
-  return require('../utils/loaderCompat')
-    .compatibleLoaders(loader)
-    .map(loaderTypeId)
-    .filter(Boolean);
+  return require('../utils/loaderCompat').compatibleLoaders(loader).map(loaderTypeId).filter(Boolean);
 }
 
 module.exports = {

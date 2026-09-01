@@ -48,7 +48,8 @@ async function getInsights(pasteId) {
   });
   if (!res.ok) throw httpError(502, 'mclo.gs is not responding right now. Please try again shortly.');
   const data = await res.json();
-  if (data.success === false) throw httpError(502, `mclo.gs could not analyze that paste${data.error ? `: ${data.error}` : ''}`);
+  if (data.success === false)
+    throw httpError(502, `mclo.gs could not analyze that paste${data.error ? `: ${data.error}` : ''}`);
   const analysis = data.analysis || {};
   return {
     title: data.title || data.type || 'Log analysis',

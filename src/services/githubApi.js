@@ -28,7 +28,7 @@ async function ghFetch(pathname, { ttlMs = 10 * 60 * 1000 } = {}) {
 
   if (res.status === 304 && cached) {
     // Revalidated: refresh the timestamp so the TTL window restarts.
-    db.run('UPDATE api_cache SET fetched_at = datetime(\'now\') WHERE key = ?', cacheKey);
+    db.run("UPDATE api_cache SET fetched_at = datetime('now') WHERE key = ?", cacheKey);
     return cached.data;
   }
   if (res.status === 403 || res.status === 429) {

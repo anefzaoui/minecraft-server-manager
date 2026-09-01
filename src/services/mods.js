@@ -387,9 +387,13 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
         (await hangar.getVersions(resolved.slug, {})).find((v) => v.name === resolved.versionName)
       : versions[0];
     if (!version) {
-      throw httpError(404, `No ${resolved.name} build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`);
+      throw httpError(
+        404,
+        `No ${resolved.name} build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`
+      );
     }
-    if (!version.downloadUrl) throw httpError(409, `${resolved.name} publishes no downloadable Paper file for this version`);
+    if (!version.downloadUrl)
+      throw httpError(409, `${resolved.name} publishes no downloadable Paper file for this version`);
     downloadUrl = version.downloadUrl;
     Object.assign(meta, {
       platform: 'hangar',
@@ -437,7 +441,10 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
       ? releases.find((r) => r.tag === ref.tag)
       : withJars.find((r) => !r.prerelease) || withJars[0];
     if (!release) {
-      throw httpError(404, ref.tag ? `No release tagged ${ref.tag} in ${ref.repo}` : `No release with jar assets in ${ref.repo}`);
+      throw httpError(
+        404,
+        ref.tag ? `No release tagged ${ref.tag} in ${ref.repo}` : `No release with jar assets in ${ref.repo}`
+      );
     }
     const asset = github.pickAsset(release.assets, ref.asset);
     if (!asset) throw httpError(404, `Release ${release.tag} of ${ref.repo} has no jar assets`);

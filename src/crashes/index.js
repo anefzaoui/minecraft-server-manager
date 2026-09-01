@@ -338,9 +338,7 @@ async function crashInsights(crashId, { actor = 'system' } = {}) {
     err.status = 404;
     throw err;
   }
-  const share = row.mclogs_id
-    ? { id: row.mclogs_id, url: row.mclogs_url }
-    : await shareCrash(crashId, { actor });
+  const share = row.mclogs_id ? { id: row.mclogs_id, url: row.mclogs_url } : await shareCrash(crashId, { actor });
   const insights = await require('../integrations/mclogs').getInsights(share.id);
   return { ...insights, url: share.url };
 }
