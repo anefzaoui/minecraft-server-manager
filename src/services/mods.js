@@ -422,7 +422,7 @@ async function installResolved(
     kind === 'mod' &&
     overrideLoader &&
     Array.isArray(meta.loaders) &&
-    !meta.loaders.includes(overrideLoader);
+    !require('../utils/loaderCompat').loaderAccepts(overrideLoader, meta.loaders);
   const overrideBits = [
     versionOverridden ? `not listed for ${server.mc_version}` : null,
     loaderOverridden ? `not built for ${overrideLoader}` : null,

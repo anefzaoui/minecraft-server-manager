@@ -290,7 +290,7 @@ function verdictFor(identity, { kind, loader, mc }) {
   const loaders = (identity.loaders || []).map((l) => String(l).toLowerCase());
   if (loaders.length) {
     if (kind === 'plugin') loaderOk = loaders.some((l) => PLUGIN_LOADERS.has(l));
-    else if (loader) loaderOk = loaders.includes(String(loader).toLowerCase());
+    else if (loader) loaderOk = require('../utils/loaderCompat').loaderAccepts(loader, loaders);
   }
 
   let mcOk = null;

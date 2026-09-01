@@ -6,6 +6,7 @@
 
 const httpError = require('../utils/httpError');
 const db = require('../db');
+const { compatibleLoaders } = require('../utils/loaderCompat');
 
 const BASE = 'https://api.modrinth.com/v2';
 const UA = 'MinecraftServerManager/0.1 (self-hosted panel; contact via repo)';
@@ -56,7 +57,8 @@ async function search({ query = '', kind = 'mod', loader, mcVersion, limit = 20,
   if (kind === 'plugin')
     facets.push(['categories:paper', 'categories:spigot', 'categories:bukkit', 'categories:purpur']);
   else if (kind) facets.push([`project_type:${kind === 'plugin' ? 'mod' : kind}`]);
-  if (loader && kind !== 'plugin') facets.push([`categories:${loader.toLowerCase()}`]);
+  // OR-group of accepted loaders - a Quilt server also matches fabric-tagged projects.
+  if (loader && kind !== 'plugin') facets.push(compatibleLoaders(loader).map((l) => `categories:${l}`));
   if (mcVersion) facets.push([`versions:${mcVersion}`]);
   const data = await mrFetch('/search', {
     search: { query, limit: String(limit), offset: String(offset), index: 'relevance', facets: JSON.stringify(facets) },
@@ -84,7 +86,7 @@ function getProject(idOrSlug) {
 /** Version list filtered to the server's loader + MC version. */
 async function getVersions(idOrSlug, { loader, mcVersion } = {}) {
   const search = {};
-  if (loader) search.loaders = JSON.stringify([loader.toLowerCase()]);
+  if (loader) search.loaders = JSON.stringify(compatibleLoaders(loader));
   if (mcVersion) search.game_versions = JSON.stringify([mcVersion]);
   return mrFetch(`/project/${encodeURIComponent(idOrSlug)}/version`, { search, ttlMs: 10 * 60 * 1000 });
 }
