@@ -1331,6 +1331,13 @@ router.post(
       ref = `https://modrinth.com/mod/${lib.project_id}/version/${check.latest_version}`;
     } else if (lib.platform === 'curseforge') {
       ref = `https://www.curseforge.com/minecraft/mc-mods/${lib.project_id}/files/${check.latest_version}`;
+    } else if (lib.platform === 'hangar') {
+      // The owner segment is decorative - Hangar's version endpoints address by slug.
+      ref = `https://hangar.papermc.io/p/${lib.project_id}/versions/${encodeURIComponent(check.latest_version)}`;
+    } else if (lib.platform === 'spiget') {
+      ref = `https://www.spigotmc.org/resources/${lib.project_id}?version=${check.latest_version}`;
+    } else if (lib.platform === 'github') {
+      ref = `https://github.com/${lib.project_id}/releases/tag/${encodeURIComponent(check.latest_version)}`;
     } else {
       throw Object.assign(new Error(`Cannot auto-update content from platform "${lib.platform}"`), { status: 409 });
     }

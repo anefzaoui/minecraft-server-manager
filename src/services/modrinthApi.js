@@ -20,18 +20,31 @@ async function mrFetch(pathname, { ttlMs = 10 * 60 * 1000, search, method = 'GET
   if (cached && Date.now() - Date.parse(cached.fetched_at + 'Z') < ttlMs) {
     return JSON.parse(cached.value_json);
   }
-  const res = await fetch(url, {
-    method,
-    headers: {
-      'User-Agent': UA,
-      Accept: 'application/json',
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(15000),
-  });
+  const doFetch = () =>
+    fetch(url, {
+      method,
+      headers: {
+        'User-Agent': UA,
+        Accept: 'application/json',
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(15000),
+    });
+  let res = await doFetch();
   if (res.status === 429) {
     if (cached) return JSON.parse(cached.value_json);
+    // Modrinth's x-ratelimit-reset counts SECONDS until the window reopens
+    // (GitHub's same-named header is an epoch timestamp - don't conflate).
+    // A short window is worth one polite wait-and-retry; bulk sweeps like the
+    // update checker otherwise die mid-run on the first 429.
+    const resetSec = Number(res.headers.get('x-ratelimit-reset'));
+    if (Number.isFinite(resetSec) && resetSec > 0 && resetSec <= 15) {
+      await new Promise((r) => setTimeout(r, (resetSec + 1) * 1000));
+      res = await doFetch();
+    }
+  }
+  if (res.status === 429) {
     throw httpError(429, 'Modrinth is rate-limiting us. Please try again in a minute.');
   }
   if (res.status === 404) throw httpError(404, "That wasn't found on Modrinth.");

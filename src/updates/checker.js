@@ -101,6 +101,22 @@ async function checkAll({ actor = 'scheduler' } = {}) {
           const files = await curseforge.getFiles(Number(row.project_id), { mcVersion, loader });
           if (files.length) latest = { id: String(files[0].fileId), name: files[0].name };
           changelogUrl = `https://www.curseforge.com/projects/${row.project_id}`;
+        } else if (row.platform === 'hangar') {
+          const versions = await require('../services/hangarApi').getVersions(row.project_id, { mcVersion });
+          if (versions.length) latest = { id: versions[0].name, name: versions[0].name };
+          changelogUrl = `https://hangar.papermc.io/${row.project_id}/versions`;
+        } else if (row.platform === 'spiget') {
+          const versions = await require('../services/spigetApi').getVersions(row.project_id, { limit: 1 });
+          if (versions.length) latest = { id: versions[0].versionId, name: versions[0].name };
+          changelogUrl = `https://www.spigotmc.org/resources/${row.project_id}/updates`;
+        } else if (row.platform === 'github') {
+          const releases = await require('../services/githubApi').getReleases(row.project_id);
+          const withJars = releases.filter((r) => r.assets.length);
+          const rel = withJars.find((r) => !r.prerelease) || withJars[0];
+          if (rel) {
+            latest = { id: rel.tag, name: rel.tag };
+            changelogUrl = rel.htmlUrl;
+          }
         }
         if (latest) {
           // Name-to-name comparison - mods.updateFor and listOutdated use the
