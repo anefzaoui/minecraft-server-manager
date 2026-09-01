@@ -1,4 +1,5 @@
-// Mods tab: add-by-URL, Modrinth/CurseForge search modal, zip import, toggle, delete.
+// Mods tab: add-by-link, registry search modal (Modrinth/CurseForge/Hangar/
+// SpigotMC), zip + mrpack import, toggle, delete.
 import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
@@ -121,8 +122,8 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label">Mod URL or Modrinth slug</label>
-      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any direct .jar URL" autocomplete="off">
-      <p class="help">Direct .jar URLs, Modrinth project/version URLs or slugs, and CurseForge mod/file URLs all work. The right build for this server's loader and MC version is picked automatically.</p>
+      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any project page / direct .jar URL" autocomplete="off">
+      <p class="help">Paste almost any link: Modrinth, CurseForge, Hangar, or SpigotMC project pages, a GitHub repo or release ("owner/repo" works too), a Modrinth slug, or a direct .jar URL. The right build for this server's loader and MC version is picked automatically.</p>
       ${
         mc && !mc.startsWith('LATEST')
           ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
@@ -338,14 +339,22 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     content.innerHTML = `
       <div class="flex flex-wrap items-center gap-2">
         <input class="input min-w-48 flex-1" id="mr-q" placeholder="Search ${contentKind}s…" autocomplete="off">
-        ${
-          cfEnabled
-            ? `<div class="seg" id="mr-platforms" role="group" aria-label="Search platform">
-                 <button type="button" class="seg-btn" aria-pressed="true" data-platform="modrinth">Modrinth</button>
-                 <button type="button" class="seg-btn" aria-pressed="false" data-platform="curseforge">CurseForge</button>
-               </div>`
-            : ''
-        }
+        ${(() => {
+          // Plugin servers get the two plugin-only registries too (Hangar is
+          // PaperMC's own, Spiget fronts SpigotMC) - both keyless.
+          const chips = [['modrinth', 'Modrinth']];
+          if (cfEnabled) chips.push(['curseforge', 'CurseForge']);
+          if (contentKind === 'plugin') chips.push(['hangar', 'Hangar'], ['spiget', 'SpigotMC']);
+          if (chips.length === 1) return '';
+          return `<div class="seg" id="mr-platforms" role="group" aria-label="Search platform">
+                 ${chips
+                   .map(
+                     ([value, label], i) =>
+                       `<button type="button" class="seg-btn" aria-pressed="${i === 0}" data-platform="${value}">${label}</button>`
+                   )
+                   .join('')}
+               </div>`;
+        })()}
       </div>
       ${
         allowDatapacks
@@ -489,10 +498,19 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       row.querySelector('[data-role="install"]')?.addEventListener('click', async (ev) => {
         const btn = ev.currentTarget; // capture before await — currentTarget is null afterwards
         if (hit.platform === 'curseforge') return installCurseforge(hit, row, btn);
+        // Spiget knows up front when a resource is hosted off SpigotMC - the
+        // proxy can't serve those, so go straight to the manual path.
+        if (hit.platform === 'spiget' && hit.external) return showExternalFallback(hit, row);
         const isDatapack = searchKind === 'datapack';
+        const url =
+          hit.platform === 'hangar'
+            ? `https://hangar.papermc.io/p/${encodeURIComponent(hit.ref)}` // owner segment is decorative
+            : hit.platform === 'spiget'
+              ? `https://www.spigotmc.org/resources/${encodeURIComponent(hit.ref)}`
+              : `https://modrinth.com/${isDatapack ? 'datapack' : 'mod'}/${hit.ref}`;
         const res2 = await withBusy(btn, 'Installing…', () =>
           post(`/api/servers/${serverId}/mods`, {
-            url: `https://modrinth.com/${isDatapack ? 'datapack' : 'mod'}/${hit.ref}`,
+            url,
             ...(isDatapack ? { kind: 'datapack' } : {}),
             ignoreVersion: Boolean(anyVersion?.checked),
           })
@@ -500,6 +518,21 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         if (res2) done(res2);
       });
       return row;
+    }
+
+    // SpigotMC resources hosted off-site: same browser-download + upload path
+    // as CurseForge's distribution-denied mods.
+    function showExternalFallback(hit, row) {
+      const box = row.querySelector('[data-role="fallback"]');
+      box.classList.remove('hidden');
+      box.innerHTML = `
+        <div class="notice notice-warn flex-wrap items-center gap-2 text-xs">
+          <span class="text-warn">This resource is hosted outside SpigotMC — download it in a browser, then upload the jar here.</span>
+          <a class="btn btn-sm" target="_blank" rel="noopener" href="https://www.spigotmc.org/resources/${encodeURIComponent(hit.ref)}">Open SpigotMC</a>
+          <button class="btn btn-sm" data-role="upload">Upload jar</button>
+          <input type="file" accept=".jar,.zip" class="hidden" data-role="file">
+        </div>`;
+      wireFallbackUpload(box);
     }
 
     // CurseForge installs pre-check the chosen build: authors can forbid API
@@ -549,6 +582,11 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
           <input type="file" accept=".jar,.zip" class="hidden" data-role="file">
         </div>`;
       box.querySelector('[data-role="build"]').textContent = build.name || build.versionNumber || 'the file';
+      wireFallbackUpload(box);
+    }
+
+    /** Shared upload wiring for the manual-download fallback boxes. */
+    function wireFallbackUpload(box) {
       const fileInput = box.querySelector('[data-role="file"]');
       box.querySelector('[data-role="upload"]').addEventListener('click', () => fileInput.click());
       fileInput.addEventListener('change', async () => {
