@@ -36,7 +36,7 @@ Opening a server gives you a tabbed workspace:
 - **Players** - who's online, plus inventory, analytics, and [chat commands](console-and-chat.md).
 - **World** - [worlds, mods, the live map, and the file manager](worlds-and-files.md).
 - **Backups** - [snapshots and restore](backups.md) for this server.
-- **Insights** - metrics and per-server history.
+- **Insights** - metrics and per-server history, including crash reports (see below).
 - **Settings** - everything about how the server runs.
 
 ![Server overview](images/server-overview.png)
@@ -48,3 +48,18 @@ The **Settings** tab is the full configuration surface: rename, resources, updat
 ![Server settings](images/server-settings.png)
 
 > Advanced Docker override fields (custom container name, extra port and bind mounts, and raw overrides) are **admin-only**, because a bind mount plus the panel's Docker access is effectively root on the host. See [Users & roles](users-and-roles.md).
+
+## Crash reports & mclo.gs analysis
+
+Crash reports (`crash-reports/*.txt` and JVM `hs_err_pid*.log` files) are picked up automatically, parsed into a one-line summary with the exception and suspected mods, and listed under **Insights → History**:
+
+![Crash report card](images/crash-mclogs-card.png)
+
+Each report card offers a built-in viewer (with collapsible sections and highlighted exceptions), copy-stack-trace, download - and two [mclo.gs](https://mclo.gs) actions:
+
+- **Share to mclo.gs** publishes the report as a public paste and copies the link - the exact thing mod authors and support Discords ask for. The link is remembered on the report, so nothing is ever uploaded twice.
+- **Analyze** runs mclo.gs's automated insights over the paste: known problems with suggested fixes (missing dependencies, version mismatches, common mod conflicts), rendered right in the panel.
+
+![mclo.gs insights](images/crash-insights.png)
+
+Both actions sit behind an explicit confirmation, because a paste is public: crash reports can include player names and your full mod list. The panel never uploads anything on its own.

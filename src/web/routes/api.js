@@ -1331,6 +1331,13 @@ router.post(
       ref = `https://modrinth.com/mod/${lib.project_id}/version/${check.latest_version}`;
     } else if (lib.platform === 'curseforge') {
       ref = `https://www.curseforge.com/minecraft/mc-mods/${lib.project_id}/files/${check.latest_version}`;
+    } else if (lib.platform === 'hangar') {
+      // The owner segment is decorative - Hangar's version endpoints address by slug.
+      ref = `https://hangar.papermc.io/p/${lib.project_id}/versions/${encodeURIComponent(check.latest_version)}`;
+    } else if (lib.platform === 'spiget') {
+      ref = `https://www.spigotmc.org/resources/${lib.project_id}?version=${check.latest_version}`;
+    } else if (lib.platform === 'github') {
+      ref = `https://github.com/${lib.project_id}/releases/tag/${encodeURIComponent(check.latest_version)}`;
     } else {
       throw Object.assign(new Error(`Cannot auto-update content from platform "${lib.platform}"`), { status: 409 });
     }
@@ -1786,7 +1793,7 @@ router.get(
     const { q, platform, kind, loader, mc } = z
       .object({
         q: z.string().trim().max(120).default(''),
-        platform: z.enum(['modrinth', 'curseforge']).default('modrinth'),
+        platform: z.enum(['modrinth', 'curseforge', 'hangar', 'spiget']).default('modrinth'),
         kind: z.enum(CONTENT_KINDS).default('mod'),
         loader: z.enum(BROWSER_LOADERS).optional(),
         mc: z.string().trim().max(32).optional(),
@@ -1808,7 +1815,7 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const { platform, ref, kind, loader, mc } = z
       .object({
-        platform: z.enum(['modrinth', 'curseforge']),
+        platform: z.enum(['modrinth', 'curseforge', 'hangar', 'spiget']),
         ref: z.string().trim().min(1).max(200),
         kind: z.enum(CONTENT_KINDS).default('mod'),
         loader: z.enum(BROWSER_LOADERS).optional(),
@@ -1836,7 +1843,7 @@ router.post(
         selection: z
           .array(
             z.object({
-              platform: z.enum(['modrinth', 'curseforge']),
+              platform: z.enum(['modrinth', 'curseforge', 'hangar', 'spiget']),
               ref: z.string().trim().min(1).max(200),
               versionId: z.string().trim().min(1).max(60),
             })
@@ -1865,7 +1872,7 @@ const fromModsSchema = z
     mods: z
       .array(
         z.object({
-          platform: z.enum(['modrinth', 'curseforge']),
+          platform: z.enum(['modrinth', 'curseforge', 'hangar', 'spiget']),
           ref: z.string().trim().min(1).max(200),
           versionId: z.string().trim().min(1).max(60).optional(),
         })
@@ -1927,11 +1934,19 @@ router.post(
         const base =
           m.platform === 'curseforge'
             ? `https://www.curseforge.com/minecraft/mc-mods/${m.ref}`
-            : `https://modrinth.com/mod/${m.ref}`;
+            : m.platform === 'hangar'
+              ? `https://hangar.papermc.io/p/${m.ref}` // owner segment is decorative
+              : m.platform === 'spiget'
+                ? `https://www.spigotmc.org/resources/${m.ref}`
+                : `https://modrinth.com/mod/${m.ref}`;
         const url = m.versionId
           ? m.platform === 'curseforge'
             ? `${base}/files/${m.versionId}`
-            : `${base}/version/${m.versionId}`
+            : m.platform === 'hangar'
+              ? `${base}/versions/${encodeURIComponent(m.versionId)}`
+              : m.platform === 'spiget'
+                ? `${base}?version=${m.versionId}`
+                : `${base}/version/${m.versionId}`
           : base;
         t.step(`Installing mod ${i + 1}/${input.mods.length}: ${m.ref}`);
         try {

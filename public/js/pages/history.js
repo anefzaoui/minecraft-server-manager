@@ -6,6 +6,7 @@ import { openModal } from '../lib/modal.js';
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
+import { confirmDialog } from '../lib/confirm.js';
 
 const root = document.querySelector('[data-history-server]');
 if (root) init(root.dataset.historyServer);
@@ -21,6 +22,8 @@ function init(serverId) {
         if (action === 'view') withBusy(btn, () => openViewer(serverId, crash, card));
         else if (action === 'copy') withBusy(btn, () => copyTrace(serverId, crash));
         else if (action === 'download') withBusy(btn, () => download(serverId, crash));
+        else if (action === 'share') withBusy(btn, () => shareToMclogs(serverId, crash, card));
+        else if (action === 'insights') withBusy(btn, () => showInsights(serverId, crash, card));
       });
     });
   }
@@ -146,6 +149,121 @@ async function download(serverId, crash, preloaded) {
   } catch (err) {
     toast(err.message, { kind: 'error' });
   }
+}
+
+// ---- mclo.gs sharing + insights (both PUBLISH the report - always confirmed) ----
+
+/** Swap the Share button for a permanent paste link once a report is shared. */
+function markShared(card, url) {
+  if (!card || card.dataset.crashMclogs) return;
+  card.dataset.crashMclogs = url;
+  const shareBtn = card.querySelector('[data-crash-action="share"]');
+  if (shareBtn) {
+    const a = document.createElement('a');
+    a.className = 'btn btn-ghost btn-sm';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.href = url;
+    a.textContent = 'mclo.gs paste';
+    shareBtn.replaceWith(a);
+  }
+}
+
+async function confirmPublish(crash, { analyzing = false } = {}) {
+  return confirmDialog({
+    title: analyzing ? 'Analyze with mclo.gs?' : 'Share to mclo.gs?',
+    message: `${crash.filename} will be uploaded to mclo.gs as a PUBLIC paste - anyone with the link can read it.`,
+    detail: analyzing
+      ? "mclo.gs then runs its automated analysis (known problems + suggested fixes) over the paste. Crash reports can include player names and mod lists - don't share what you wouldn't post on a forum."
+      : "Mod authors and support channels usually ask for exactly this link. Crash reports can include player names and mod lists - don't share what you wouldn't post on a forum.",
+    confirmLabel: analyzing ? 'Publish & analyze' : 'Publish paste',
+  });
+}
+
+async function shareToMclogs(serverId, crash, card) {
+  if (!(await confirmPublish(crash))) return;
+  try {
+    const res = await fetch(`/api/servers/${serverId}/crashes/${crash.id}/share`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'share that crash report' }));
+    markShared(card, data.url);
+    await copyToClipboard(data.url, `Shared: ${data.url} (copied to clipboard)`);
+  } catch (err) {
+    toast(err.message, { kind: 'error', timeout: 9000 });
+  }
+}
+
+async function showInsights(serverId, crash, card) {
+  const alreadyShared = Boolean(card && card.dataset.crashMclogs);
+  if (!alreadyShared && !(await confirmPublish(crash, { analyzing: true }))) return;
+  let data;
+  try {
+    const res = await fetch(`/api/servers/${serverId}/crashes/${crash.id}/insights`, { method: 'POST' });
+    data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'analyze that crash report' }));
+  } catch (err) {
+    toast(err.message, { kind: 'error', timeout: 9000 });
+    return;
+  }
+  const ins = data.insights;
+  markShared(card, ins.url);
+
+  const content = document.createElement('div');
+  content.className = 'space-y-3 text-sm';
+  const meta = document.createElement('p');
+  meta.className = 'text-xs text-ink-faint';
+  meta.textContent = [ins.type, ins.version].filter(Boolean).join(' · ') || 'Automated analysis by mclo.gs';
+  content.appendChild(meta);
+
+  if (!ins.problems.length) {
+    const p = document.createElement('p');
+    p.className = 'text-ink-soft';
+    p.textContent =
+      'mclo.gs found no known problems in this report. The paste link below is still handy for support channels.';
+    content.appendChild(p);
+  }
+  for (const problem of ins.problems) {
+    const box = document.createElement('div');
+    box.className = 'rounded-md border border-warn/40 bg-raised p-2.5';
+    const title = document.createElement('div');
+    title.className = 'font-medium text-warn';
+    title.textContent = problem.message + (problem.counter > 1 ? ` (×${problem.counter})` : '');
+    box.appendChild(title);
+    for (const s of problem.solutions) {
+      const li = document.createElement('div');
+      li.className = 'mt-1 pl-3 text-xs text-ink-soft';
+      li.textContent = `→ ${s}`;
+      box.appendChild(li);
+    }
+    content.appendChild(box);
+  }
+  if (ins.information.length) {
+    const dl = document.createElement('div');
+    dl.className = 'grid gap-x-4 gap-y-0.5 text-xs text-ink-faint sm:grid-cols-2';
+    for (const i of ins.information) {
+      const row = document.createElement('div');
+      row.textContent = `${i.label}: ${i.value}`;
+      dl.appendChild(row);
+    }
+    content.appendChild(dl);
+  }
+
+  openModal({
+    title: ins.title || 'mclo.gs analysis',
+    size: 'lg',
+    content,
+    actions: [
+      {
+        label: 'Open paste',
+        kind: 'ghost',
+        onClick: () => {
+          window.open(ins.url, '_blank', 'noopener');
+          return false;
+        },
+      },
+      { label: 'Close', kind: 'primary' },
+    ],
+  });
 }
 
 async function openViewer(serverId, crash, card) {

@@ -231,6 +231,7 @@ function crashVM(c) {
     summary: c.summary || c.exception,
     suspected: JSON.parse(c.suspected_json || '[]'),
     viewed: Boolean(c.viewed),
+    mclogsUrl: c.mclogs_url || null,
   };
 }
 

@@ -64,7 +64,13 @@ async function search({ query = '', kind = 'mod', mcVersion, loader, limit = 20,
     sortOrder: 'desc',
   };
   if (mcVersion) params.gameVersion = mcVersion;
-  if (loader) params.modLoaderType = loaderTypeId(loader);
+  if (loader) {
+    const ids = loaderTypeIds(loader);
+    // A Quilt server accepts fabric builds too - the search endpoint takes an
+    // OR-list via modLoaderTypes (stringified array).
+    if (ids.length > 1) params.modLoaderTypes = JSON.stringify(ids);
+    else params.modLoaderType = ids[0];
+  }
   const data = await cfFetch('/mods/search', { search: params, ttlMs: 5 * 60 * 1000 });
   return data.data.map(normalizeMod);
 }
@@ -80,13 +86,27 @@ async function getModBySlug(slug, { classId = CLASS_MODPACKS } = {}) {
   return data.data.length ? normalizeMod(data.data[0]) : null;
 }
 
-/** Files (versions) of a project, newest first, optionally filtered. */
+/**
+ * Files (versions) of a project, newest first, optionally filtered. The files
+ * endpoint only takes ONE modLoaderType, so a Quilt server (which also runs
+ * fabric builds) fetches both lists and merges them newest-first.
+ */
 async function getFiles(modId, { mcVersion, loader, pageSize = 50 } = {}) {
-  const params = { pageSize };
-  if (mcVersion) params.gameVersion = mcVersion;
-  if (loader) params.modLoaderType = loaderTypeId(loader);
-  const data = await cfFetch(`/mods/${modId}/files`, { search: params, ttlMs: 10 * 60 * 1000 });
-  return data.data.map(normalizeFile);
+  const fetchOne = async (loaderId) => {
+    const params = { pageSize };
+    if (mcVersion) params.gameVersion = mcVersion;
+    if (loaderId) params.modLoaderType = loaderId;
+    const data = await cfFetch(`/mods/${modId}/files`, { search: params, ttlMs: 10 * 60 * 1000 });
+    return data.data.map(normalizeFile);
+  };
+  const ids = loader ? loaderTypeIds(loader) : [];
+  const lists = await Promise.all((ids.length ? ids : [null]).map(fetchOne));
+  if (lists.length === 1) return lists[0];
+  const seen = new Set();
+  return lists
+    .flat()
+    .filter((f) => !seen.has(f.fileId) && seen.add(f.fileId))
+    .sort((a, b) => String(b.fileDate || '').localeCompare(String(a.fileDate || '')));
 }
 
 async function getFile(modId, fileId) {
@@ -231,6 +251,11 @@ function normalizeFile(f) {
 
 function loaderTypeId(loader) {
   return { forge: 1, fabric: 4, quilt: 5, neoforge: 6 }[String(loader).toLowerCase()] || 0;
+}
+
+/** Loader type ids a server accepts (Quilt also runs fabric builds). */
+function loaderTypeIds(loader) {
+  return require('../utils/loaderCompat').compatibleLoaders(loader).map(loaderTypeId).filter(Boolean);
 }
 
 module.exports = {

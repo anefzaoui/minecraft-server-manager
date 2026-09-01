@@ -2,16 +2,20 @@
 'use strict';
 
 // Backend for the wizard's "From mods" browser AND the per-server mods tab.
-// Three concerns, both platforms:
-//   search()   - find mods/plugins for a loader + MC version (Modrinth or CurseForge)
+// Three concerns, four platforms (Modrinth, CurseForge, and for plugins also
+// Hangar and SpigotMC-via-Spiget):
+//   search()   - find mods/plugins for a loader + MC version
 //   versions() - a mod's builds filtered to that loader + MC, newest first
 //   resolveDependencies() - the required-dependency closure of a selection,
 //                           so the wizard can show "added as dependency" rows
-// A dependency stays on the same platform as its parent (Modrinth project ids
-// and CurseForge mod ids never cross), so no cross-platform mapping is needed.
+// A dependency stays on the same platform as its parent (project ids never
+// cross platforms), so no cross-platform mapping is needed. Hangar and Spiget
+// publish no machine-readable dependency data - their closure is empty.
 
 const modrinth = require('./modrinthApi');
 const curseforge = require('./curseforgeApi');
+const hangar = require('./hangarApi');
+const spiget = require('./spigetApi');
 
 const MAX_DEPS = 50; // safety cap on the resolved-dependency closure
 const MAX_ITER = 300; // recursion guard
@@ -49,6 +53,31 @@ async function search({ query, platform, kind = 'mod', loader, mc, limit = 20 })
       downloads: m.downloads || 0,
     }));
   }
+  if (platform === 'hangar') {
+    const hits = await hangar.search({ query: q, mcVersion, limit });
+    return hits.map((p) => ({
+      platform: 'hangar',
+      ref: p.slug,
+      projectId: p.slug,
+      name: p.name,
+      description: p.description || '',
+      iconUrl: p.iconUrl || null,
+      downloads: p.downloads || 0,
+    }));
+  }
+  if (platform === 'spiget') {
+    const hits = await spiget.search({ query: q, limit });
+    return hits.map((r) => ({
+      platform: 'spiget',
+      ref: String(r.resourceId),
+      projectId: String(r.resourceId),
+      name: r.name,
+      description: r.tag || '',
+      iconUrl: r.iconUrl || null,
+      downloads: r.downloads || 0,
+      external: r.external, // hosted off SpigotMC - manual download only
+    }));
+  }
   const hits = await modrinth.search({ query: q, kind, loader, mcVersion, limit });
   return hits.map((h) => ({
     platform: 'modrinth',
@@ -70,6 +99,14 @@ async function metaFor(platform, refOrId, { kind = 'mod' } = {}) {
       ? await curseforge.getMod(Number(refOrId))
       : await curseforge.resolveUrl(String(refOrId), { kind });
     return { ref: mod.slug, projectId: String(mod.modId), name: mod.name, iconUrl: mod.iconUrl || null };
+  }
+  if (platform === 'hangar') {
+    const p = await hangar.getProject(refOrId);
+    return { ref: p.slug, projectId: p.slug, name: p.name, iconUrl: p.iconUrl || null };
+  }
+  if (platform === 'spiget') {
+    const r = await spiget.getResource(refOrId);
+    return { ref: String(r.resourceId), projectId: String(r.resourceId), name: r.name, iconUrl: r.iconUrl || null };
   }
   const p = await modrinth.getProject(refOrId);
   return { ref: p.slug, projectId: p.id, name: p.title, iconUrl: p.icon_url || null };
@@ -116,6 +153,23 @@ async function versions({ platform, ref, kind = 'mod', loader, mc, limit = 30 })
     const files = await curseforge.getFiles(meta.projectId, { mcVersion, loader });
     return files.slice(0, limit).map(normCurseforgeFile);
   }
+  if (platform === 'hangar') {
+    const list = await hangar.getVersions(ref, { mcVersion, limit });
+    return list.slice(0, limit).map((v) => ({
+      versionId: v.versionId,
+      name: v.name,
+      versionNumber: v.versionNumber,
+      datePublished: v.datePublished,
+      versionType: v.versionType,
+      gameVersions: v.gameVersions,
+      requiredDeps: [],
+      downloadable: Boolean(v.downloadUrl),
+    }));
+  }
+  if (platform === 'spiget') {
+    // Spiget carries no per-version MC tags - the list is simply newest-first.
+    return (await spiget.getVersions(ref, { limit })).slice(0, limit);
+  }
   const list = await modrinth.getVersions(ref, { loader, mcVersion });
   return list.slice(0, limit).map(normModrinthVersion);
 }
@@ -127,6 +181,7 @@ const depKey = (platform, projectId) => `${platform}:${projectId}`;
 /** Required-dependency project ids of ONE build (same platform as its parent). */
 async function requiredDepsOfVersion(platform, projectId, versionId) {
   try {
+    if (platform === 'hangar' || platform === 'spiget') return []; // no machine-readable dependency data
     if (platform === 'curseforge') {
       const file = await curseforge.getFile(Number(projectId), Number(versionId));
       return normCurseforgeFile(file).requiredDeps;

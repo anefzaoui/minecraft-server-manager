@@ -299,6 +299,50 @@ function markViewed(crashId) {
   db.run('UPDATE crash_reports SET viewed = 1 WHERE id = ?', crashId);
 }
 
+/**
+ * Share a crash report to mclo.gs. Publishes the report text on the public
+ * internet, so this only ever runs from an explicit user action; a report
+ * already shared returns its existing paste instead of re-uploading.
+ */
+async function shareCrash(crashId, { actor = 'system' } = {}) {
+  const row = getCrash(crashId);
+  if (!row) {
+    const err = new Error('Crash report not found');
+    err.status = 404;
+    throw err;
+  }
+  if (row.mclogs_url) return { id: row.mclogs_id, url: row.mclogs_url, alreadyShared: true };
+  const text = fs.readFileSync(absPathFor(row.server_id, row.filename), 'utf8');
+  const paste = await require('../integrations/mclogs').uploadLog(text);
+  db.run('UPDATE crash_reports SET mclogs_id = ?, mclogs_url = ? WHERE id = ?', paste.id, paste.url, crashId);
+  recordEvent({
+    serverId: row.server_id,
+    actor,
+    type: 'crash-shared',
+    summary: `Crash report ${row.filename} shared to mclo.gs: ${paste.url}`,
+    details: { crashId, pasteUrl: paste.url },
+  });
+  logger.info('Shared a crash report to mclo.gs.', { serverId: row.server_id, crashId, actor });
+  return { id: paste.id, url: paste.url, alreadyShared: false };
+}
+
+/**
+ * mclo.gs's automated analysis of a crash report (known problems + suggested
+ * solutions). Shares the report first when it isn't yet - the analysis runs
+ * on an mclo.gs paste, so "analyze" implies "publish"; the UI says so.
+ */
+async function crashInsights(crashId, { actor = 'system' } = {}) {
+  const row = getCrash(crashId);
+  if (!row) {
+    const err = new Error('Crash report not found');
+    err.status = 404;
+    throw err;
+  }
+  const share = row.mclogs_id ? { id: row.mclogs_id, url: row.mclogs_url } : await shareCrash(crashId, { actor });
+  const insights = await require('../integrations/mclogs').getInsights(share.id);
+  return { ...insights, url: share.url };
+}
+
 /** Delete a report: unlink the file + remove the row + record the event. */
 function deleteCrash(crashId, { actor = 'system' } = {}) {
   const row = getCrash(crashId);
@@ -343,6 +387,8 @@ module.exports = {
   getCrash,
   getCrashText,
   markViewed,
+  shareCrash,
+  crashInsights,
   deleteCrash,
   deleteOlderThan,
 };

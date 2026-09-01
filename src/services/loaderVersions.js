@@ -32,14 +32,17 @@ function envKeyFor(loader) {
   return ENV_KEY[String(loader).toLowerCase()] || null;
 }
 
-async function cachedJson(cacheKey, url) {
+async function cachedJson(cacheKey, url, { headers } = {}) {
   const cached = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', cacheKey);
   // SQLite datetime('now') is space-separated; normalize to ISO before parsing.
   if (cached && Date.now() - Date.parse(cached.fetched_at.replace(' ', 'T') + 'Z') < TTL_MS) {
     return JSON.parse(cached.value_json);
   }
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) });
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json', ...headers },
+      signal: AbortSignal.timeout(10000),
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     db.run(
@@ -108,12 +111,29 @@ async function forgeBuilds(mc) {
 
 // Paper's build list is scoped to a single MC version, unlike the other
 // loaders' one-global-fetch-then-filter shape - cache key includes `mc`.
+//
+// PaperMC moved distribution to the "Fill" v3 API (fill.papermc.io); the
+// legacy api.papermc.io/v2 stopped receiving versions and 404s for MC
+// releases above 1.21.11. v3 returns a BARE newest-first array of builds and
+// names channels STABLE/RECOMMENDED/ALPHA/BETA - itzg's PAPER_CHANNEL
+// vocabulary stays default/experimental, so map default → the release
+// channels and experimental → the pre-release ones. Fill asks for a real
+// User-Agent (its docs reserve the right to 403 anonymous clients).
+const PAPER_CHANNEL_MAP = {
+  default: new Set(['STABLE', 'RECOMMENDED']),
+  experimental: new Set(['ALPHA', 'BETA']),
+};
 async function paperBuilds(mc, { channel = 'default' } = {}) {
-  const data = await cachedJson(`loader:paper:${mc}`, `https://api.papermc.io/v2/projects/paper/versions/${mc}/builds`);
-  const builds = (data.builds || []).filter((b) => (b.channel || 'default') === channel).reverse(); // newest first
+  const data = await cachedJson(
+    `loader:paper3:${mc}`,
+    `https://fill.papermc.io/v3/projects/paper/versions/${mc}/builds`,
+    { headers: { 'User-Agent': 'MinecraftServerManager (self-hosted panel; github.com/anefzaoui)' } }
+  );
+  const wanted = PAPER_CHANNEL_MAP[channel] || PAPER_CHANNEL_MAP.default;
+  const builds = (Array.isArray(data) ? data : []).filter((b) => b && wanted.has(String(b.channel).toUpperCase()));
   return builds.slice(0, MAX_BUILDS).map((b) => ({
-    version: String(b.build),
-    label: channel === 'default' ? String(b.build) : `${b.build} (${channel})`,
+    version: String(b.id),
+    label: channel === 'default' ? String(b.id) : `${b.id} (${String(b.channel).toLowerCase()})`,
   }));
 }
 
