@@ -165,10 +165,10 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     modal.body.querySelector('#mod-url').focus();
   });
 
-  // ---- Import zip: CurseForge modpack export OR hand-assembled jar zip ----
+  // ---- Import zip: .mrpack / CurseForge modpack export / hand-assembled jar zip ----
   const zipInput = document.createElement('input');
   zipInput.type = 'file';
-  zipInput.accept = '.zip';
+  zipInput.accept = '.zip,.mrpack';
   zipInput.className = 'hidden';
   document.body.appendChild(zipInput);
   document.getElementById('mods-import-zip')?.addEventListener('click', () => zipInput.click());
@@ -205,7 +205,8 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
   };
 
   function openZipPreview(preview, uploadToken) {
-    const isPack = preview.type === 'curseforge-pack';
+    const isMrpack = preview.type === 'mrpack';
+    const isPack = preview.type === 'curseforge-pack' || isMrpack;
     const content = document.createElement('div');
     const head = document.createElement('div');
     if (isPack) {
@@ -215,7 +216,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       head.querySelector('[data-role="packname"]').textContent =
         `${preview.pack.name}${preview.pack.version ? ` ${preview.pack.version}` : ''}`;
       head.querySelector('[data-role="packmeta"]').textContent =
-        `CurseForge modpack export — Minecraft ${preview.pack.mcVersion || '?'}, ${preview.pack.loader || 'unknown loader'}`;
+        `${isMrpack ? 'Modrinth modpack (.mrpack)' : 'CurseForge modpack export'} — Minecraft ${preview.pack.mcVersion || '?'}, ${preview.pack.loader || 'unknown loader'}`;
     } else {
       head.className = 'mb-3 text-sm text-ink-soft';
       head.textContent = `${preview.items.length} jar${preview.items.length === 1 ? '' : 's'} found — each was identified via Modrinth, CurseForge, or its own metadata and checked against this server.`;
@@ -264,7 +265,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
           'beforeend',
           '<span class="badge badge-warn" data-tip="The author disallows automated downloads — resolve after import">manual download</span>'
         );
-      else if (!isPack) badges.insertAdjacentHTML('beforeend', verdictBadge(item.verdict));
+      else badges.insertAdjacentHTML('beforeend', verdictBadge(item.verdict));
       rows.push({ item, row, isBlocked, missing });
       list.appendChild(row);
     }
@@ -281,7 +282,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     }
 
     const modal = openModal({
-      title: isPack ? 'Import CurseForge modpack' : 'Import mods from zip',
+      title: isMrpack ? 'Import Modrinth modpack' : isPack ? 'Import CurseForge modpack' : 'Import mods from zip',
       content,
       size: 'lg',
       actions: [

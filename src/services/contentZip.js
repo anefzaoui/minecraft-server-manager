@@ -1,7 +1,11 @@
 // @ts-nocheck — dynamic zip/registry JSON interop.
 'use strict';
 
-// Mod-zip importer. One upload endpoint, two zip shapes, auto-detected:
+// Mod-zip importer. One upload endpoint, three zip shapes, auto-detected:
+//   mrpack — a Modrinth modpack (modrinth.index.json): files pinned by sha1/
+//     sha512 + download URL, canonicalized back into Modrinth projects via the
+//     hash-reverse-lookup API, plus overrides/ and server-overrides/ trees
+//     (server-overrides win). Files are hash-verified while downloading.
 //   curseforge-pack — a CurseForge modpack export: manifest.json pinning
 //     {projectID, fileID} pairs + an overrides/ tree. Resolved via the CF bulk
 //     endpoints (not one GET per mod), partitioned into downloadable vs
@@ -21,6 +25,7 @@ const { readZipIndex, readEntryBuffers, extractZipSafe, safeEntryName } = requir
 const { recordEvent } = require('../events');
 const { dataPath } = require('../storage/pathGuard');
 const curseforge = require('./curseforgeApi');
+const modrinth = require('./modrinthApi');
 const modIdentify = require('./modIdentify');
 const modsService = require('./mods');
 const serversService = require('./servers');
@@ -71,15 +76,142 @@ function parsePackManifest(text) {
   };
 }
 
+// ---- mrpack (Modrinth modpack) parsing --------------------------------------
+
+const MRPACK_LOADER_KEYS = {
+  'fabric-loader': 'fabric',
+  'quilt-loader': 'quilt',
+  forge: 'forge',
+  neoforge: 'neoforge',
+};
+
+/** Parse a modrinth.index.json (throws 400 on junk). */
+function parseMrpackIndex(text) {
+  let raw;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw httpError(400, 'modrinth.index.json is not valid JSON');
+  }
+  if (!raw || raw.game !== 'minecraft' || !Array.isArray(raw.files)) {
+    throw httpError(400, 'modrinth.index.json is not a Modrinth modpack index');
+  }
+  if (raw.files.length > MAX_MANIFEST_FILES) {
+    throw httpError(400, `Pack pins ${raw.files.length} files — the ${MAX_MANIFEST_FILES} limit blocks it`);
+  }
+  const deps = raw.dependencies || {};
+  const loaderKey = Object.keys(MRPACK_LOADER_KEYS).find((k) => deps[k]);
+  const files = raw.files
+    .filter((f) => f && typeof f.path === 'string' && Array.isArray(f.downloads) && f.downloads.length)
+    .map((f) => ({
+      path: f.path.replace(/\\/g, '/'),
+      sha1: (f.hashes && f.hashes.sha1) || null,
+      sha512: (f.hashes && f.hashes.sha512) || null,
+      url: String(f.downloads[0]),
+      size: Number(f.fileSize) || null,
+      serverEnv: (f.env && f.env.server) || 'required',
+    }));
+  return {
+    name: String(raw.name || 'Modrinth modpack').slice(0, 120),
+    version: String(raw.versionId || '').slice(0, 60),
+    author: '',
+    summary: String(raw.summary || '').slice(0, 300),
+    mcVersion: String(deps.minecraft || '').slice(0, 32),
+    loader: loaderKey ? MRPACK_LOADER_KEYS[loaderKey] : null,
+    loaderVersion: loaderKey ? String(deps[loaderKey]).slice(0, 60) : null,
+    files,
+  };
+}
+
+/**
+ * Canonicalize mrpack entries back into Modrinth projects via the sha1
+ * reverse lookup - a file Modrinth doesn't know (custom re-upload) keeps its
+ * embedded download URL and installs as a plain URL source.
+ * Client-only files (env.server === "unsupported") and non-mods/ paths are
+ * partitioned out for the preview/report rather than silently dropped.
+ */
+async function resolveMrpackEntries(files) {
+  const modFiles = [];
+  const clientOnly = [];
+  const nonMod = [];
+  for (const f of files) {
+    if (!safeEntryName(f.path)) continue; // hostile path - drop outright
+    if (f.serverEnv === 'unsupported') clientOnly.push(f);
+    else if (f.path.startsWith('mods/')) modFiles.push(f);
+    else nonMod.push(f);
+  }
+  let byHash = {};
+  let projects = {};
+  try {
+    byHash = await modrinth.getVersionsByHashes(modFiles.map((f) => f.sha1));
+    const projectIds = Object.values(byHash).map((v) => v.project_id);
+    projects = projectIds.length ? await modrinth.getProjectsBulk(projectIds) : {};
+  } catch {
+    /* Modrinth unreachable - entries still install from their embedded URLs */
+  }
+  const items = modFiles.map((f) => {
+    const fileName = path.basename(f.path);
+    const v = (f.sha1 && byHash[f.sha1]) || null;
+    const p = v ? projects[v.project_id] || {} : {};
+    return {
+      // fileId doubles as the selection key, like the CF branch's numeric one.
+      fileId: f.path,
+      path: f.path,
+      fileName,
+      name: p.title || (v && v.name) || fileName,
+      version: (v && v.version_number) || null,
+      projectId: (v && v.project_id) || null,
+      versionId: (v && v.id) || null,
+      slug: p.slug || null,
+      iconUrl: p.icon_url || null,
+      resolved: true,
+      downloadable: true,
+      downloadUrl: f.url,
+      hashes: { sha1: f.sha1 || undefined, sha512: f.sha512 || undefined },
+      mcVersions: (v && v.game_versions) || [],
+      loaders: (v && v.loaders) || [],
+      url: p.slug ? `https://modrinth.com/mod/${p.slug}` : null,
+    };
+  });
+  return { items, clientOnly, nonMod };
+}
+
 const isJarEntry = (name) =>
   name.toLowerCase().endsWith('.jar') && !name.startsWith('__MACOSX/') && !path.basename(name).startsWith('.');
 
+// mrpack override trees, in apply order: server-overrides extract second, so
+// the server-specific file wins where both trees carry the same path.
+const MRPACK_OVERRIDE_PREFIXES = ['overrides/', 'server-overrides/'];
+
 /**
  * Detect what kind of zip this is and index it.
- * @returns {{type: 'curseforge-pack'|'jars', manifest?, jarEntries, overridesEntries}}
+ * @returns {{type: 'mrpack'|'curseforge-pack'|'jars', manifest?, jarEntries, overridesEntries, overridesPrefixes?}}
  */
 async function inspect(zipPath) {
-  const { entries, texts } = await readZipIndex(zipPath, { textEntry: (n) => n === 'manifest.json' });
+  const { entries, texts } = await readZipIndex(zipPath, {
+    textEntry: (n) => n === 'manifest.json' || n === 'modrinth.index.json',
+  });
+  const mrpackText = texts.get('modrinth.index.json');
+  if (mrpackText) {
+    let manifest = null;
+    try {
+      manifest = parseMrpackIndex(mrpackText);
+    } catch {
+      /* an index that isn't a Modrinth pack → fall through to the other shapes */
+    }
+    if (manifest) {
+      const overridesEntries = entries.filter(
+        (e) => MRPACK_OVERRIDE_PREFIXES.some((p) => e.name.startsWith(p)) && !e.name.endsWith('/')
+      );
+      return {
+        type: 'mrpack',
+        manifest,
+        jarEntries: [],
+        overridesEntries,
+        overridesPrefixes: MRPACK_OVERRIDE_PREFIXES,
+      };
+    }
+  }
   const manifestText = texts.get('manifest.json');
   if (manifestText) {
     let manifest = null;
@@ -173,6 +305,49 @@ async function previewForServer(serverId, zipPath) {
   const installed = await installedIndex(serverId);
   const judge = (identityish) => modIdentify.verdictFor(identityish, { kind, loader: serverLoader, mc: serverMc });
 
+  if (info.type === 'mrpack') {
+    const { items: resolved, clientOnly, nonMod } = await resolveMrpackEntries(info.manifest.files);
+    const items = resolved.map((e) => ({
+      ...e,
+      downloadUrl: undefined, // server-side detail, same as the CF branch
+      hashes: undefined,
+      verdict: e.loaders.length
+        ? judge({ source: 'modrinth', loaders: e.loaders, mcVersions: e.mcVersions, kind: 'mod' })
+        : { status: 'unknown', loaderOk: null, mcOk: null },
+      installed:
+        (e.projectId && installed.keys.has(`modrinth:${e.projectId}`)) || installed.filenames.has(e.fileName),
+    }));
+    const warnings = [];
+    if (
+      info.manifest.mcVersion &&
+      serverMc &&
+      !/^(LATEST|SNAPSHOT)/.test(serverMc) &&
+      info.manifest.mcVersion !== serverMc
+    ) {
+      warnings.push(`Pack targets Minecraft ${info.manifest.mcVersion}, this server runs ${serverMc}`);
+    }
+    if (info.manifest.loader && serverLoader && info.manifest.loader !== serverLoader) {
+      warnings.push(`Pack targets ${info.manifest.loader}, this server runs ${serverLoader}`);
+    }
+    if (clientOnly.length) warnings.push(`${clientOnly.length} client-only file(s) will be skipped`);
+    if (nonMod.length) warnings.push(`${nonMod.length} non-mod file(s) (resource/shader packs) will be skipped`);
+    return {
+      type: 'mrpack',
+      pack: {
+        name: info.manifest.name,
+        version: info.manifest.version,
+        author: info.manifest.author,
+        summary: info.manifest.summary,
+        mcVersion: info.manifest.mcVersion,
+        loader: info.manifest.loader,
+        loaderVersion: info.manifest.loaderVersion,
+      },
+      items,
+      overrides: { count: info.overridesEntries.length },
+      warnings,
+    };
+  }
+
   if (info.type === 'curseforge-pack') {
     const items = (await resolveManifestEntries(info.manifest.files)).map((e) => ({
       ...e,
@@ -236,6 +411,24 @@ async function previewForServer(serverId, zipPath) {
  */
 async function previewStandalone(zipPath) {
   const info = await inspect(zipPath);
+  if (info.type === 'mrpack') {
+    const { items } = await resolveMrpackEntries(info.manifest.files);
+    return {
+      type: 'mrpack',
+      pack: {
+        name: info.manifest.name,
+        version: info.manifest.version,
+        author: info.manifest.author,
+        summary: info.manifest.summary,
+        mcVersion: info.manifest.mcVersion,
+        loader: info.manifest.loader,
+        loaderVersion: info.manifest.loaderVersion,
+      },
+      items: items.map((e) => ({ ...e, downloadUrl: undefined, hashes: undefined })),
+      overrides: { count: info.overridesEntries.length },
+      inferred: { loader: info.manifest.loader, mcVersion: info.manifest.mcVersion, kind: 'mod' },
+    };
+  }
   if (info.type === 'curseforge-pack') {
     const items = (await resolveManifestEntries(info.manifest.files)).map((e) => ({
       ...e,
@@ -295,27 +488,37 @@ async function previewStandalone(zipPath) {
 // ---- Overrides apply --------------------------------------------------------
 
 /**
- * Extract a pack's overrides/ tree into the server dir. Every file that would
- * be overwritten is copied into a timestamped backup dir first.
+ * Extract a pack's overrides tree(s) into the server dir. Every file that
+ * would be overwritten is copied into a timestamped backup dir first.
+ * `overridesPrefix` may be a single prefix (CF packs) or an ordered list
+ * (mrpack: overrides/ then server-overrides/ - later prefixes extract later,
+ * so the server-specific copy of a shared path wins).
  */
 async function applyOverridesTo(serverId, zipPath, overridesPrefix, { actor = 'system' } = {}) {
   serverTarget(serverId);
+  const prefixes = Array.isArray(overridesPrefix) ? overridesPrefix : [overridesPrefix];
   const serverDir = dataPath('servers', serverId);
   const { entries } = await readZipIndex(zipPath);
-  const overrideFiles = entries.filter((e) => e.name.startsWith(overridesPrefix) && !e.name.endsWith('/'));
+  const overrideFiles = entries.filter(
+    (e) => prefixes.some((p) => e.name.startsWith(p)) && !e.name.endsWith('/')
+  );
   if (!overrideFiles.length) return { applied: 0, backedUp: 0, backupDir: null };
   if (overrideFiles.length > MAX_OVERRIDE_ENTRIES) throw httpError(400, 'Overrides tree has too many files');
   const totalBytes = overrideFiles.reduce((n, e) => n + (e.size || 0), 0);
   if (totalBytes > MAX_OVERRIDE_BYTES) throw httpError(413, 'Overrides tree is too large');
 
-  // Reversibility first: copy aside everything the extraction would replace.
+  // Reversibility first: copy aside everything the extraction would replace
+  // (a path present in several trees is backed up once).
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const backupRel = path.join('.import-backups', stamp);
   const backupDir = path.join(serverDir, backupRel);
   let backedUp = 0;
+  const backedUpRels = new Set();
   for (const e of overrideFiles) {
-    const rel = e.name.slice(overridesPrefix.length);
-    if (!rel || !safeEntryName(rel)) continue;
+    const prefix = prefixes.find((p) => e.name.startsWith(p));
+    const rel = e.name.slice(prefix.length);
+    if (!rel || backedUpRels.has(rel) || !safeEntryName(rel)) continue;
+    backedUpRels.add(rel);
     const target = path.join(serverDir, rel);
     if (fs.existsSync(target) && fs.statSync(target).isFile()) {
       const dest = path.join(backupDir, rel);
@@ -326,17 +529,23 @@ async function applyOverridesTo(serverId, zipPath, overridesPrefix, { actor = 's
   }
 
   let applied = 0;
-  await extractZipSafe(zipPath, serverDir, {
-    map: (name) => {
-      if (!name.startsWith(overridesPrefix)) return null;
-      const rel = name.slice(overridesPrefix.length);
-      if (!rel) return null;
-      // Never let overrides touch the panel's own backup tree.
-      if (rel === '.import-backups' || rel.startsWith('.import-backups/')) return null;
-      if (!name.endsWith('/')) applied += 1;
-      return rel;
-    },
-  });
+  const appliedRels = new Set();
+  for (const prefix of prefixes) {
+    await extractZipSafe(zipPath, serverDir, {
+      map: (name) => {
+        if (!name.startsWith(prefix)) return null;
+        const rel = name.slice(prefix.length);
+        if (!rel) return null;
+        // Never let overrides touch the panel's own backup tree.
+        if (rel === '.import-backups' || rel.startsWith('.import-backups/')) return null;
+        if (!name.endsWith('/') && !appliedRels.has(rel)) {
+          appliedRels.add(rel);
+          applied += 1;
+        }
+        return rel;
+      },
+    });
+  }
   recordEvent({
     serverId,
     actor,
@@ -369,7 +578,56 @@ async function importForServer(
   const info = await inspect(zipPath);
   const report = { installed: [], failed: [], blocked: [], skipped: [], overrides: null };
 
-  if (info.type === 'curseforge-pack') {
+  if (info.type === 'mrpack') {
+    onStep(`Resolving ${info.manifest.files.length} files via Modrinth`);
+    const { items, clientOnly, nonMod } = await resolveMrpackEntries(info.manifest.files);
+    for (const f of clientOnly) report.skipped.push({ name: path.basename(f.path), reason: 'client-only' });
+    for (const f of nonMod) {
+      report.skipped.push({ name: path.basename(f.path), reason: 'not a server mod (resource/shader pack)' });
+    }
+    const wanted = selections ? new Set(selections.map(String)) : null;
+    const queue = [];
+    for (const e of items) {
+      if (wanted && !wanted.has(e.path)) report.skipped.push({ name: e.name, reason: 'deselected' });
+      else queue.push(e);
+    }
+    for (let i = 0; i < queue.length; i += 1) {
+      const e = queue[i];
+      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}`);
+      try {
+        const { filename } = await modsService.installResolved(
+          serverId,
+          {
+            downloadUrl: e.downloadUrl,
+            kind: targetKind,
+            meta: {
+              category: targetKind,
+              // Canonicalized files keep real Modrinth provenance (and become
+              // update-checkable); unknown re-uploads stay plain URL sources.
+              platform: e.projectId ? 'modrinth' : 'url',
+              projectId: e.projectId || null,
+              fileId: e.versionId || null,
+              name: e.name,
+              filename: e.fileName,
+              version: e.version,
+              iconUrl: e.iconUrl,
+              mcVersions: e.mcVersions,
+              loaders: e.loaders,
+              expectedHashes: e.hashes,
+            },
+          },
+          { actor }
+        );
+        report.installed.push({ name: e.name, filename });
+      } catch (err) {
+        report.failed.push({ name: e.name, reason: err.message });
+      }
+    }
+    if (applyOverrides) {
+      onStep('Applying pack overrides');
+      report.overrides = await applyOverridesTo(serverId, zipPath, info.overridesPrefixes, { actor });
+    }
+  } else if (info.type === 'curseforge-pack') {
     onStep(`Resolving ${info.manifest.files.length} mods via CurseForge`);
     const entries = await resolveManifestEntries(info.manifest.files);
     const wanted = selections ? new Set(selections.map(Number)) : null;
@@ -496,6 +754,8 @@ async function importForServer(
 module.exports = {
   inspect,
   parsePackManifest,
+  parseMrpackIndex,
+  resolveMrpackEntries,
   previewForServer,
   previewStandalone,
   importForServer,

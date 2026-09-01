@@ -978,7 +978,7 @@ function initZipUpload() {
   const selectedEl = document.getElementById('wz-zip-selected');
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.zip';
+  input.accept = '.zip,.mrpack';
   input.className = 'hidden';
   document.body.appendChild(input);
   let state = null; // { uploadToken, preview, loader, mcVersion, loaderVersion, applyOverrides }
@@ -1007,7 +1007,10 @@ function initZipUpload() {
         preview: data.preview,
         loader: data.preview.inferred.loader,
         mcVersion: data.preview.inferred.mcVersion,
-        loaderVersion: data.preview.type === 'curseforge-pack' ? data.preview.pack.loaderVersion || '' : '',
+        loaderVersion:
+          data.preview.type === 'curseforge-pack' || data.preview.type === 'mrpack'
+            ? data.preview.pack.loaderVersion || ''
+            : '',
         applyOverrides: false,
       };
       document.getElementById('wz-pack-selected')?.classList.add('hidden'); // zip replaces any picked pack
@@ -1027,7 +1030,8 @@ function initZipUpload() {
 
   function render(filename) {
     const p = state.preview;
-    const isPack = p.type === 'curseforge-pack';
+    const isMrpack = p.type === 'mrpack';
+    const isPack = p.type === 'curseforge-pack' || isMrpack;
     const blocked = isPack ? p.items.filter((i) => i.resolved && !i.downloadable).length : 0;
     const unresolved = isPack ? p.items.filter((i) => !i.resolved).length : 0;
     const unidentified = isPack ? 0 : p.items.filter((i) => !i.identity).length;
@@ -1056,7 +1060,7 @@ function initZipUpload() {
       ? `${p.pack.name}${p.pack.version ? ` ${p.pack.version}` : ''}`
       : filename;
     selectedEl.querySelector('[data-role="meta"]').textContent = isPack
-      ? `CurseForge export — Minecraft ${p.pack.mcVersion || '?'}, ${p.pack.loader || 'unknown loader'} · ${bits.join(' · ')}`
+      ? `${isMrpack ? 'Modrinth modpack (.mrpack)' : 'CurseForge export'} — Minecraft ${p.pack.mcVersion || '?'}, ${p.pack.loader || 'unknown loader'} · ${bits.join(' · ')}`
       : `Custom jar zip · ${bits.join(' · ')}`;
     selectedEl.querySelector('[data-role="remove"]').addEventListener('click', clear);
 
