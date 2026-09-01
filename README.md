@@ -1,26 +1,231 @@
 # Minecraft Server Manager
 
-A complete, self-hosted control panel for Minecraft servers that run as Docker containers on the
-[itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) image. It aims to
-rival commercial panels (Pterodactyl, Multicraft, AMP) in polish and capability while staying
-entirely free and local: multi-server lifecycle, pinned modpacks, a shared deduplicated mod
-library, player moderation, crash forensics, backups, schedules, portable server "blueprints",
-storage analytics, a live world map, and more, wrapped in a fast, Minecraft-flavored web UI.
-
-**Zero paid services. Everything runs on your machine, and your entire panel is one folder you can
-copy to migrate.**
-
-![Dashboard](docs/images/dashboard.png)
-
 <p align="center">
   <img src="docs/screenshots/01-dashboard.png" alt="Dashboard with all Minecraft servers at a glance" width="920">
 </p>
 
-> **📚 New here?** The **[full documentation](docs/README.md)** walks through every feature with screenshots: [getting started](docs/getting-started.md), [servers](docs/servers.md), [modpacks](docs/modpacks.md), [backups](docs/backups.md), [two-factor auth](docs/two-factor-authentication.md), and more.
+<p align="center">
+  <a href="https://github.com/anefzaoui/minecraft-server-manager/releases/latest"><img src="https://img.shields.io/github/v/release/anefzaoui/minecraft-server-manager?logo=github" alt="GitHub release"></a>
+  <a href="https://github.com/anefzaoui/minecraft-server-manager/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/anefzaoui/minecraft-server-manager/ci.yml?logo=github&label=ci" alt="CI"></a>
+  <a href="https://github.com/anefzaoui/minecraft-server-manager/actions/workflows/docker-publish.yml"><img src="https://img.shields.io/github/actions/workflow/status/anefzaoui/minecraft-server-manager/docker-publish.yml?logo=docker&logoColor=white&label=docker%20publish" alt="Docker publish"></a>
+  <a href="https://github.com/anefzaoui/minecraft-server-manager/pkgs/container/minecraft-server-manager"><img src="https://img.shields.io/badge/ghcr.io-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white" alt="GHCR image"></a>
+  <img src="https://img.shields.io/github/stars/anefzaoui/minecraft-server-manager?logo=github" alt="GitHub stars">
+  <img src="https://img.shields.io/badge/node-%E2%89%A524-339933?logo=nodedotjs&logoColor=white" alt="Node 24+">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/anefzaoui/minecraft-server-manager" alt="MIT license"></a>
+</p>
+
+A complete, self-hosted control panel for Minecraft servers that run as Docker containers on the
+[itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) image. It aims to
+rival commercial panels (Pterodactyl, Multicraft, AMP) in polish and capability while staying
+entirely free and local.
+
+**Zero paid services. Everything runs on your machine, and your entire panel is one folder you can
+copy to migrate.**
+
+| 🚀 [Installation](#installation) | ✨ [Getting Started](docs/getting-started.md) | 📜 [Documentation](docs/README.md) | 🖼️ [Screenshots](#screenshots) |
+| -------------------------------- | --------------------------------------------- | ---------------------------------- | ------------------------------ |
+
+## Features
+
+- 🐳 Every server is its own **resource-capped Docker container** - create / start / stop / restart / recreate / delete with graceful RCON stop and crash detection
+- 🧙 **Guided wizard**: Simple or Advanced mode, every image env var explained in plain English
+- 📌 **Modpacks always pinned** to an exact version - explicit upgrades with preview, pre-update backup, health monitoring, and **one-click rollback**
+- 🧩 **Five content registries in one browser**: Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases - three of them keyless
+- 🔗 **Add by link**: paste any project page, GitHub repo, slug, or direct jar URL
+- 🗜️ **Import anything**: Modrinth `.mrpack`, CurseForge exports, or your own zip of jars - every jar identified & compatibility-checked
+- 🔒 **Checksum-verified downloads** (sha512 → sha256 → sha1 → md5) - a mismatch never reaches the server
+- 📚 Shared **sha256-deduplicated mod library**, hard-linked into servers; custom mods survive pack updates
+- 🖥️ **Live console** over WebSocket, RCON command bar, log filters, player quick-actions
+- 👮 **Player moderation**: whitelist, ops, bans, IP bans, teleports - online via RCON, offline via JSON edits
+- 💾 **Save-safe backups** with retention classes + cron **schedules** (restart / backup / RCON)
+- 📜 **Blueprints** (`.mcserver.zip`): portable server recipes - export, import anywhere, get the same server
+- 🔥 **Crash forensics**: auto-detected, parsed, suspects identified - plus one-click **mclo.gs sharing & automated insights**
+- 🗺️ One-click **BlueMap live map**, served through the panel's authenticated proxy
+- 📈 **Storage analytics & panel-enforced disk quotas**, playtime/deaths/mining **analytics & scoreboard**, **inventory forensics**, advisory x-ray **investigation**
+- 🪄 Optional **per-server chatbot** (local/OpenAI-compatible LLM) with constrained in-game powers ([docs](docs/chatbot.md))
+- 🔔 **Discord webhooks** with per-event toggles and an Alerts category
+- 👥 **Multi-user roles** (admin / operator / viewer) + **TOTP two-factor auth**
+- 🌐 Optional **public status page**, invite blocks, and generated **client `.mrpack`** with the server pre-added
+- 🧠 **Pick-mods-first solver**: choose mods, get the newest fully-compatible loader + MC version
+
+> **📚 New here?** The **[full documentation](docs/README.md)** walks through every feature with screenshots: [getting started](docs/getting-started.md), [servers](docs/servers.md), [modpacks](docs/modpacks.md), [backups](docs/backups.md), [two-factor auth](docs/two-factor-authentication.md), and more. The [feature tour](#features-in-depth) further down this page has the detailed version of the list above.
 
 ---
 
-## Features
+## Installation
+
+### Requirements
+
+- **Node.js 24+** (current LTS) for the from-source install: uses the built-in `node:sqlite` (flagless from Node 24), so there are
+  **no native modules to compile**. The panel prints a clear message and exits if run on an older Node. (The Docker image bundles its own runtime.)
+- **Docker**
+  - **Windows:** Docker Desktop (WSL2 backend). The panel talks to `\\.\pipe\docker_engine`.
+  - **macOS:** Docker Desktop (`/var/run/docker.sock`).
+  - **Linux:** Docker Engine (`/var/run/docker.sock`; add your user to the `docker` group).
+- A few GB of disk for server images + worlds.
+
+The panel and the Docker daemon are expected to run on the **same host** (server data is bind-mounted
+by host path).
+
+### 🐳 Option 1 - Docker (Linux hosts, Portainer, Dockge, compose)
+
+A pre-built multi-arch image (amd64 + arm64) is published to GHCR on every release:
+`ghcr.io/anefzaoui/minecraft-server-manager:latest` (or pin a version tag, e.g. `:v0.11.0`).
+Grab the [docker-compose.yml](docker-compose.yml) from the repo root, set **one** variable, and start:
+
+```bash
+mkdir -p /opt/msm/data
+echo "DATA_DIR_HOST=/opt/msm/data" > .env   # ABSOLUTE host path for all panel data
+docker compose up -d
+```
+
+Open **http://your-host:25564**. In Portainer/Dockge, paste the compose file as a stack and set
+`DATA_DIR_HOST` in the stack's environment.
+
+> [!IMPORTANT]
+> The panel drives the **host's Docker daemon** through the mounted socket, and anything that holds
+> the Docker socket is root-equivalent on the host - treat the panel's admin login accordingly and
+> never expose the UI raw to the internet. Docker Desktop (Windows/macOS) is not a target for this
+> mode - run the panel natively there.
+
+<details>
+<summary><b>How the containerized panel works - and what to know</b></summary>
+
+- The panel drives the **host's Docker daemon** through the mounted `/var/run/docker.sock` and creates
+  each Minecraft server as a **sibling container** (not a child). Game ports are published by those
+  containers directly on the host, so the panel container itself only exposes the web UI port.
+- `DATA_DIR_HOST` is required and must be the **absolute host path** of the directory mounted at
+  `/data`: bind mounts are resolved by the daemon against the **host** filesystem, so the panel
+  re-roots every path it hands to Docker from its container-local view onto that host path. Without
+  it the daemon would mount host directories that don't exist.
+- The container binds to `0.0.0.0` **inside its own network namespace**; publish `127.0.0.1:25564:25564`
+  instead of `25564:25564` if a reverse proxy on the host fronts the panel (then set `TRUST_PROXY` +
+  `COOKIE_SECURE`).
+- Features that reach a **sibling** container directly - currently just the live map (BlueMap) -
+  try, in order: every Docker-network IP the sibling container has (its own container port, no
+  host-port involved), then the sibling's HOST-published port via `host.docker.internal` (not
+  `127.0.0.1` - that's the panel's own loopback, not the host's). Whichever answers first is
+  cached. The bundled `docker-compose.yml` maps `host.docker.internal` via `extra_hosts:
+host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path; a raw
+  `docker run` or a stack tool that doesn't read `extra_hosts` from the compose file needs the
+  equivalent `--add-host=host.docker.internal:host-gateway` flag, or set `MAP_PROXY_HOST`
+  yourself.
+- **Reverse-proxy setups (Pangolin, NGINX, Traefik…) where a server's Docker network is set**
+  (Advanced Docker Settings) for the reverse proxy to reach it directly: put the **panel**
+  container on that same network too (add a `networks:` block to the panel service in
+  `docker-compose.yml`, referencing it as `external: true`) so the direct container-IP path above
+  actually has a route - without that, the panel falls back to the host-published-port path,
+  which may not be reachable at all in a network topology built around bypassing host ports.
+
+</details>
+
+### 🖥️ Option 2 - From source (any OS, incl. Windows/macOS)
+
+```bash
+git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
+cd minecraft-server-manager
+pnpm install               # installs deps and builds the Tailwind CSS (postinstall)
+pnpm run build             # optional: also build the esbuild client-JS bundle (raw source is served otherwise)
+cp .env.example .env      # optional - all values have sane defaults
+pnpm start                 # or: pnpm run dev (auto-restart + CSS watch)
+```
+
+Open **http://localhost:25564**. By default the panel binds to **localhost only** (`127.0.0.1`), so it's
+reachable just from this machine; set `PANEL_HOST=0.0.0.0` to reach it across your LAN. The **first run**
+walks you through a system check, choosing your time zone, and creating the admin account. If Docker
+isn't running you still get the full UI, and the lifecycle features light up when the daemon comes up.
+
+> If you start with a non-loopback `PANEL_HOST`, first-run `/setup` is PIN-gated: a 6-digit PIN is
+> printed to the server console and must be entered before the admin account can be created.
+
+You do **not** need to set anything in `.env` to start: on first run the panel generates a strong
+random cookie secret (`data/.session-secret`) and a separate at-rest encryption key
+(`data/.secret-key`). Set `SESSION_SECRET` yourself only if you want to control it (e.g. to share one
+across replicas); the at-rest key is always machine-local, so keep `data/.secret-key` with your
+backups.
+
+### ⚙️ Option 3 - Under a process manager (PM2 / systemd)
+
+For a from-source install that should survive reboots. Gotcha with **PM2**: it launches apps
+with whatever Node version started the PM2 _daemon_, and later switching your shell with `nvm` does
+**not** change it. A restart can silently re-launch on the old version and fail the Node-24 preflight.
+Pin the interpreter per app:
+
+```bash
+pm2 start src/server.js --name minecraft-server-manager --interpreter "$(nvm which 24)"
+pm2 save
+```
+
+(or `pm2 kill && pm2 resurrect` to relaunch the whole daemon under your current default Node.)
+
+### 🪟 Windows notes
+
+- Docker Desktop must be running before you start/create servers.
+- Share your project drive with Docker Desktop (Settings → Resources → File sharing) so bind mounts
+  work. The panel's Docker status endpoint tells you if the daemon is unreachable.
+- Bind mounts on Docker Desktop are slower than named volumes; the panel uses bind mounts anyway
+  because _portability wins_: your entire panel is one folder.
+
+> **Time zone & region:** picked during first-run setup (auto-detected from your system) and changeable
+> in Settings. All dates and player-activity times display in the zone you choose.
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/03-server-overview.png" alt="Server overview"><br><sub><b>Server overview & controls</b>: connect address, live usage, and the world-controls rail that rides along on every tab.</sub></td>
+    <td width="50%"><img src="docs/screenshots/02-create-wizard.png" alt="Create wizard"><br><sub><b>Guided create wizard</b>: Simple or Advanced; every <code>server.properties</code> knob applied from the first start.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/04-chat.png" alt="Admin chat"><br><sub><b>Admin chat</b>: styled <code>tellraw</code>/<code>say</code> to everyone or one player: colors, bold/italic/underline, chat-style log.</sub></td>
+    <td><img src="docs/screenshots/05-console.png" alt="Live console"><br><sub><b>Live console &amp; RCON</b>: streamed logs with level filters and a command bar with history.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b>: pack-managed + custom overlay, one-click toggle, five-registry search (Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases), zip import (Modrinth <code>.mrpack</code>, CurseForge exports, or your own jar collections - every jar identified &amp; compatibility-checked, every download checksum-verified).</sub></td>
+    <td><img src="docs/screenshots/07-worlds.png" alt="Worlds"><br><sub><b>Worlds</b>: reset/re-roll with a custom or random seed, duplicate, and a shared world library.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/09-settings.png" alt="Settings"><br><sub><b>Settings</b>: the full image env catalog with plain-English help, resource sliders, and a MOTD editor.</sub></td>
+    <td><img src="docs/screenshots/08-backups.png" alt="Backups"><br><sub><b>Backups</b>: save-safe archives with retention classes and one-click restore.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/10-history.png" alt="History"><br><sub><b>History</b>: every action is a structured event with its actor and captured log excerpts.</sub></td>
+    <td><img src="docs/screenshots/11-chat-commands.png" alt="Custom chat commands"><br><sub><b>Custom chat commands</b>: owner-defined <code>!triggers</code> (RTP, warp, console) with cooldowns &amp; permissions.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/14-schedules.png" alt="Schedules"><br><sub><b>Schedules</b>: per-server and global cron tasks (restart / backup / RCON) with next-run previews.</sub></td>
+    <td><img src="docs/screenshots/15-storage.png" alt="Storage analytics"><br><sub><b>Storage analytics</b>: per-server usage, largest files, orphan detection, and panel-enforced quotas.</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/13-blueprints.png" alt="Blueprints"><br><sub><b>Blueprints</b>: portable <code>.mcserver.zip</code> recipes; export a server, import it anywhere, get the same server.</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+## Why this over Pterodactyl, Crafty Controller, or AMP?
+
+All three are capable general game panels. This one is **purpose-built for Minecraft on the
+[itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) image**, so the parts
+that are fiddly elsewhere are first-class here:
+
+- **vs [Pterodactyl](https://pterodactyl.io/)**: no separate Wings daemon, database server, or "egg"
+  setup to run; it's one Node process talking to your Docker socket. Minecraft-specific features
+  (pinned modpacks, a shared deduplicated mod library, crash forensics, portable blueprints) are built
+  in, not community add-ons.
+- **vs [Crafty Controller](https://craftycontrol.com/)**: same free, self-hosted spirit, but every
+  server is a clean, resource-capped **Docker container** rather than a bare process, with per-server
+  disk quotas, a one-click live map, and portable `.mcserver.zip` blueprints.
+- **vs [AMP](https://cubecoders.com/AMP)**: no per-machine licence and no paid tiers. **MIT-licensed
+  and free**, with the itzg image's entire environment-variable surface exposed and explained in plain
+  English.
+
+Not affiliated with any of them.
+
+---
+
+## Features in depth
 
 **Core**
 
@@ -104,181 +309,6 @@ copy to migrate.**
   propose the newest fully-compatible loader + MC version pair and installs the set on creation.
 - **Public status page**: optional unauthenticated `/status/<slug>` per server (name, version,
   player count only).
-
----
-
-## Why this over Pterodactyl, Crafty Controller, or AMP?
-
-All three are capable general game panels. This one is **purpose-built for Minecraft on the
-[itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) image**, so the parts
-that are fiddly elsewhere are first-class here:
-
-- **vs [Pterodactyl](https://pterodactyl.io/)**: no separate Wings daemon, database server, or "egg"
-  setup to run; it's one Node process talking to your Docker socket. Minecraft-specific features
-  (pinned modpacks, a shared deduplicated mod library, crash forensics, portable blueprints) are built
-  in, not community add-ons.
-- **vs [Crafty Controller](https://craftycontrol.com/)**: same free, self-hosted spirit, but every
-  server is a clean, resource-capped **Docker container** rather than a bare process, with per-server
-  disk quotas, a one-click live map, and portable `.mcserver.zip` blueprints.
-- **vs [AMP](https://cubecoders.com/AMP)**: no per-machine licence and no paid tiers. **MIT-licensed
-  and free**, with the itzg image's entire environment-variable surface exposed and explained in plain
-  English.
-
-Not affiliated with any of them.
-
-## Screenshots
-
-<table>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/03-server-overview.png" alt="Server overview"><br><sub><b>Server overview & controls</b>: connect address, live usage, and the world-controls rail that rides along on every tab.</sub></td>
-    <td width="50%"><img src="docs/screenshots/02-create-wizard.png" alt="Create wizard"><br><sub><b>Guided create wizard</b>: Simple or Advanced; every <code>server.properties</code> knob applied from the first start.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/04-chat.png" alt="Admin chat"><br><sub><b>Admin chat</b>: styled <code>tellraw</code>/<code>say</code> to everyone or one player: colors, bold/italic/underline, chat-style log.</sub></td>
-    <td><img src="docs/screenshots/05-console.png" alt="Live console"><br><sub><b>Live console &amp; RCON</b>: streamed logs with level filters and a command bar with history.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b>: pack-managed + custom overlay, one-click toggle, five-registry search (Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases), zip import (Modrinth <code>.mrpack</code>, CurseForge exports, or your own jar collections - every jar identified &amp; compatibility-checked, every download checksum-verified).</sub></td>
-    <td><img src="docs/screenshots/07-worlds.png" alt="Worlds"><br><sub><b>Worlds</b>: reset/re-roll with a custom or random seed, duplicate, and a shared world library.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/09-settings.png" alt="Settings"><br><sub><b>Settings</b>: the full image env catalog with plain-English help, resource sliders, and a MOTD editor.</sub></td>
-    <td><img src="docs/screenshots/08-backups.png" alt="Backups"><br><sub><b>Backups</b>: save-safe archives with retention classes and one-click restore.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/10-history.png" alt="History"><br><sub><b>History</b>: every action is a structured event with its actor and captured log excerpts.</sub></td>
-    <td><img src="docs/screenshots/11-chat-commands.png" alt="Custom chat commands"><br><sub><b>Custom chat commands</b>: owner-defined <code>!triggers</code> (RTP, warp, console) with cooldowns &amp; permissions.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/14-schedules.png" alt="Schedules"><br><sub><b>Schedules</b>: per-server and global cron tasks (restart / backup / RCON) with next-run previews.</sub></td>
-    <td><img src="docs/screenshots/15-storage.png" alt="Storage analytics"><br><sub><b>Storage analytics</b>: per-server usage, largest files, orphan detection, and panel-enforced quotas.</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/13-blueprints.png" alt="Blueprints"><br><sub><b>Blueprints</b>: portable <code>.mcserver.zip</code> recipes; export a server, import it anywhere, get the same server.</sub></td>
-    <td></td>
-  </tr>
-</table>
-
-## Requirements
-
-- **Node.js 24+** (current LTS): uses the built-in `node:sqlite` (flagless from Node 24), so there are
-  **no native modules to compile**. The panel prints a clear message and exits if run on an older Node.
-- **Docker**
-  - **Windows:** Docker Desktop (WSL2 backend). The panel talks to `\\.\pipe\docker_engine`.
-  - **macOS:** Docker Desktop (`/var/run/docker.sock`).
-  - **Linux:** Docker Engine (`/var/run/docker.sock`; add your user to the `docker` group).
-- A few GB of disk for server images + worlds.
-
-The panel and the Docker daemon are expected to run on the **same host** (server data is bind-mounted
-by host path).
-
-## Quick start
-
-```bash
-git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
-cd minecraft-server-manager
-pnpm install               # installs deps and builds the Tailwind CSS (postinstall)
-pnpm run build             # optional: also build the esbuild client-JS bundle (raw source is served otherwise)
-cp .env.example .env      # optional - all values have sane defaults
-pnpm start                 # or: pnpm run dev (auto-restart + CSS watch)
-```
-
-Open **http://localhost:25564**. By default the panel binds to **localhost only** (`127.0.0.1`), so it's
-reachable just from this machine; set `PANEL_HOST=0.0.0.0` to reach it across your LAN. The **first run**
-walks you through a system check, choosing your time zone, and creating the admin account. If Docker
-isn't running you still get the full UI, and the lifecycle features light up when the daemon comes up.
-
-> If you start with a non-loopback `PANEL_HOST`, first-run `/setup` is PIN-gated: a 6-digit PIN is
-> printed to the server console and must be entered before the admin account can be created.
-
-You do **not** need to set anything in `.env` to start: on first run the panel generates a strong
-random cookie secret (`data/.session-secret`) and a separate at-rest encryption key
-(`data/.secret-key`). Set `SESSION_SECRET` yourself only if you want to control it (e.g. to share one
-across replicas); the at-rest key is always machine-local, so keep `data/.secret-key` with your
-backups.
-
-### Run the panel itself in Docker
-
-A pre-built multi-arch image (amd64 + arm64) is published to GHCR on every release:
-`ghcr.io/anefzaoui/minecraft-server-manager:latest` (or pin a version tag, e.g. `:v0.9.0`).
-Grab the [docker-compose.yml](docker-compose.yml) from the repo root, set **one** variable, and start:
-
-```bash
-mkdir -p /opt/msm/data
-echo "DATA_DIR_HOST=/opt/msm/data" > .env   # ABSOLUTE host path for all panel data
-docker compose up -d
-```
-
-Open **http://your-host:25564**. In Portainer/Dockge, paste the compose file as a stack and set
-`DATA_DIR_HOST` in the stack's environment.
-
-How it works - and what to know:
-
-- The panel drives the **host's Docker daemon** through the mounted `/var/run/docker.sock` and creates
-  each Minecraft server as a **sibling container** (not a child). Game ports are published by those
-  containers directly on the host, so the panel container itself only exposes the web UI port.
-- `DATA_DIR_HOST` is required and must be the **absolute host path** of the directory mounted at
-  `/data`: bind mounts are resolved by the daemon against the **host** filesystem, so the panel
-  re-roots every path it hands to Docker from its container-local view onto that host path. Without
-  it the daemon would mount host directories that don't exist.
-- The container binds to `0.0.0.0` **inside its own network namespace**; publish `127.0.0.1:25564:25564`
-  instead of `25564:25564` if a reverse proxy on the host fronts the panel (then set `TRUST_PROXY` +
-  `COOKIE_SECURE`).
-- Anything that holds the Docker socket is root-equivalent on the host - treat the panel's admin
-  login accordingly and never expose the UI raw to the internet.
-- Docker Desktop (Windows/macOS) is not a target for this mode - run the panel natively there;
-  containerized deployment is aimed at Linux hosts (Portainer, Dockge, plain compose).
-- Features that reach a **sibling** container directly - currently just the live map (BlueMap) -
-  try, in order: every Docker-network IP the sibling container has (its own container port, no
-  host-port involved), then the sibling's HOST-published port via `host.docker.internal` (not
-  `127.0.0.1` - that's the panel's own loopback, not the host's). Whichever answers first is
-  cached. The bundled `docker-compose.yml` maps `host.docker.internal` via `extra_hosts:
-host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path; a raw
-  `docker run` or a stack tool that doesn't read `extra_hosts` from the compose file needs the
-  equivalent `--add-host=host.docker.internal:host-gateway` flag, or set `MAP_PROXY_HOST`
-  yourself.
-- **Reverse-proxy setups (Pangolin, NGINX, Traefik…) where a server's Docker network is set**
-  (Advanced Docker Settings) for the reverse proxy to reach it directly: put the **panel**
-  container on that same network too (add a `networks:` block to the panel service in
-  `docker-compose.yml`, referencing it as `external: true`) so the direct container-IP path above
-  actually has a route - without that, the panel falls back to the host-published-port path,
-  which may not be reachable at all in a network topology built around bypassing host ports.
-
-### Configuration (`.env`, all optional)
-
-| Variable                                                                    | Default                    | Purpose                                                                                                                                                                                                                                                                                                  |
-| --------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATA_DIR`                                                                  | `./data`                   | Root for **all** panel state (DB, server data, backups, library).                                                                                                                                                                                                                                        |
-| `DATA_DIR_HOST`                                                             | = `DATA_DIR`               | Only when the panel runs **in a container**: the absolute host path of the `DATA_DIR` mount, used to re-root bind mounts for the host daemon.                                                                                                                                                            |
-| `MAP_PROXY_HOST`                                                            | see note                   | Address the panel uses to reach sibling containers' host-published ports (currently just the live map). `127.0.0.1` bare metal; auto-switches to `host.docker.internal` when `DATA_DIR_HOST` is set (containerized panel - needs `extra_hosts`, see above). Override for rootless Docker/remote daemons. |
-| `PANEL_HOST` / `PANEL_PORT`                                                 | `127.0.0.1` / `25564`      | Web UI bind address + port. Localhost-only by default; set `PANEL_HOST=0.0.0.0` for LAN access.                                                                                                                                                                                                          |
-| `SESSION_SECRET`                                                            | auto-generated             | Signs session cookies. Auto-created and persisted at `$DATA_DIR/.session-secret` if unset. At-rest encryption uses a **separate** auto-generated `$DATA_DIR/.secret-key`, so rotating this no longer invalidates stored secrets.                                                                         |
-| `TRUST_PROXY` / `COOKIE_SECURE` / `COOKIE_SAMESITE`                         | - / - / `lax`              | Set when behind a TLS-terminating reverse proxy. `TRUST_PROXY` (hops, `loopback`, or IP list) is required for `req.ip` to see the real client, which the rate limiters key on. `COOKIE_SAMESITE` is `lax`/`strict`/`none`; `none` requires `COOKIE_SECURE`.                                              |
-| `RATE_LIMIT_API_PER_MIN` / `RATE_LIMIT_AUTH_PER_15MIN`                      | `1200` / `100`             | Per-client-IP request ceilings: all of `/api`, and login / 2FA / setup POSTs. `0` disables that limiter. A volume backstop on top of the per-account login lockout.                                                                                                                                      |
-| `MSM_EXIT_ON_FATAL`                                                         | -                          | `1`/`true`/`yes` makes the post-boot runtime guard hard-exit on an uncaught exception/rejection instead of logging and staying up - for supervised deployments (`systemd`, Docker `restart:`).                                                                                                           |
-| `DOCKER_HOST`                                                               | auto-detected              | Docker endpoint override for rootless Docker, Podman, or a remote daemon (per-OS socket/pipe otherwise).                                                                                                                                                                                                 |
-| `CF_API_KEY`                                                                | -                          | Optional [CurseForge API key](https://console.curseforge.com/) to seed on first run (also settable in the UI). Wrap in single quotes; CF keys often contain `$`.                                                                                                                                         |
-| `MC_IMAGE_REPO`                                                             | `itzg/minecraft-server`    | Docker image repo for servers; override for a private mirror / air-gapped registry.                                                                                                                                                                                                                      |
-| `DEFAULT_HEAP_MB` / `DEFAULT_CONTAINER_MEMORY_MB` / `DEFAULT_DISK_QUOTA_GB` | host-aware                 | Starting resource defaults for new servers. Clamped to your host RAM when unset.                                                                                                                                                                                                                         |
-| `PORT_GAME_START` / `PORT_RCON_OFFSET` / `PORT_BEDROCK_START`               | `25565` / `1000` / `19132` | Port allocation scheme.                                                                                                                                                                                                                                                                                  |
-| `LOG_LEVEL`                                                                 | `info`                     | Log verbosity: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`. Structured JSON to stdout.                                                                                                                                                                                                  |
-| `LOG_PRETTY`                                                                | auto (TTY in dev)          | `false` forces JSON output; ignored in production.                                                                                                                                                                                                                                                       |
-| `SENTRY_DSN` (+ `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`)          | -                          | Optional error-reporting seam. Inert unless a DSN is set; the wiring in `src/instrument.js` is a no-op stub for now.                                                                                                                                                                                     |
-
-> **Exposure:** the panel binds to localhost by default. Set `PANEL_HOST=0.0.0.0` for LAN access, and only
-> put it on the internet behind a reverse proxy with TLS (set `TRUST_PROXY` + `COOKIE_SECURE`). Auth is
-> mandatory from the first run.
-
-> **Time zone & region:** picked during first-run setup (auto-detected from your system) and changeable
-> in Settings. All dates and player-activity times display in the zone you choose.
-
-### Windows notes
-
-- Docker Desktop must be running before you start/create servers.
-- Share your project drive with Docker Desktop (Settings → Resources → File sharing) so bind mounts
-  work. The panel's Docker status endpoint tells you if the daemon is unreachable.
-- Bind mounts on Docker Desktop are slower than named volumes; the panel uses bind mounts anyway
-  because _portability wins_: your entire panel is one folder.
 
 ---
 
@@ -373,19 +403,33 @@ Exposing the raw panel port on the internet means logins travel over **plain HTT
   ssh -L 25564:127.0.0.1:25564 user@your-server     # then open http://localhost:25564 locally
   ```
 
-### Running under a process manager (PM2 / systemd)
+---
 
-The panel requires **Node.js 24+** (built-in `node:sqlite`). Gotcha with **PM2**: it launches apps
-with whatever Node version started the PM2 _daemon_, and later switching your shell with `nvm` does
-**not** change it. A restart can silently re-launch on the old version and fail the Node-24 preflight.
-Pin the interpreter per app:
+## Configuration (`.env`, all optional)
 
-```bash
-pm2 start src/server.js --name minecraft-server-manager --interpreter "$(nvm which 24)"
-pm2 save
-```
+| Variable                                                                    | Default                    | Purpose                                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATA_DIR`                                                                  | `./data`                   | Root for **all** panel state (DB, server data, backups, library).                                                                                                                                                                                                                                        |
+| `DATA_DIR_HOST`                                                             | = `DATA_DIR`               | Only when the panel runs **in a container**: the absolute host path of the `DATA_DIR` mount, used to re-root bind mounts for the host daemon.                                                                                                                                                            |
+| `MAP_PROXY_HOST`                                                            | see note                   | Address the panel uses to reach sibling containers' host-published ports (currently just the live map). `127.0.0.1` bare metal; auto-switches to `host.docker.internal` when `DATA_DIR_HOST` is set (containerized panel - needs `extra_hosts`, see above). Override for rootless Docker/remote daemons. |
+| `PANEL_HOST` / `PANEL_PORT`                                                 | `127.0.0.1` / `25564`      | Web UI bind address + port. Localhost-only by default; set `PANEL_HOST=0.0.0.0` for LAN access.                                                                                                                                                                                                          |
+| `SESSION_SECRET`                                                            | auto-generated             | Signs session cookies. Auto-created and persisted at `$DATA_DIR/.session-secret` if unset. At-rest encryption uses a **separate** auto-generated `$DATA_DIR/.secret-key`, so rotating this no longer invalidates stored secrets.                                                                         |
+| `TRUST_PROXY` / `COOKIE_SECURE` / `COOKIE_SAMESITE`                         | - / - / `lax`              | Set when behind a TLS-terminating reverse proxy. `TRUST_PROXY` (hops, `loopback`, or IP list) is required for `req.ip` to see the real client, which the rate limiters key on. `COOKIE_SAMESITE` is `lax`/`strict`/`none`; `none` requires `COOKIE_SECURE`.                                              |
+| `RATE_LIMIT_API_PER_MIN` / `RATE_LIMIT_AUTH_PER_15MIN`                      | `1200` / `100`             | Per-client-IP request ceilings: all of `/api`, and login / 2FA / setup POSTs. `0` disables that limiter. A volume backstop on top of the per-account login lockout.                                                                                                                                      |
+| `MSM_EXIT_ON_FATAL`                                                         | -                          | `1`/`true`/`yes` makes the post-boot runtime guard hard-exit on an uncaught exception/rejection instead of logging and staying up - for supervised deployments (`systemd`, Docker `restart:`).                                                                                                           |
+| `DOCKER_HOST`                                                               | auto-detected              | Docker endpoint override for rootless Docker, Podman, or a remote daemon (per-OS socket/pipe otherwise).                                                                                                                                                                                                 |
+| `CF_API_KEY`                                                                | -                          | Optional [CurseForge API key](https://console.curseforge.com/) to seed on first run (also settable in the UI). Wrap in single quotes; CF keys often contain `$`.                                                                                                                                         |
+| `GITHUB_TOKEN`                                                              | -                          | Optional GitHub token to raise the unauthenticated API quota for the GitHub Releases content source (ETag caching keeps usage minimal either way).                                                                                                                                                       |
+| `MC_IMAGE_REPO`                                                             | `itzg/minecraft-server`    | Docker image repo for servers; override for a private mirror / air-gapped registry.                                                                                                                                                                                                                      |
+| `DEFAULT_HEAP_MB` / `DEFAULT_CONTAINER_MEMORY_MB` / `DEFAULT_DISK_QUOTA_GB` | host-aware                 | Starting resource defaults for new servers. Clamped to your host RAM when unset.                                                                                                                                                                                                                         |
+| `PORT_GAME_START` / `PORT_RCON_OFFSET` / `PORT_BEDROCK_START`               | `25565` / `1000` / `19132` | Port allocation scheme.                                                                                                                                                                                                                                                                                  |
+| `LOG_LEVEL`                                                                 | `info`                     | Log verbosity: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`. Structured JSON to stdout.                                                                                                                                                                                                  |
+| `LOG_PRETTY`                                                                | auto (TTY in dev)          | `false` forces JSON output; ignored in production.                                                                                                                                                                                                                                                       |
+| `SENTRY_DSN` (+ `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`)          | -                          | Optional error-reporting seam. Inert unless a DSN is set; the wiring in `src/instrument.js` is a no-op stub for now.                                                                                                                                                                                     |
 
-(or `pm2 kill && pm2 resurrect` to relaunch the whole daemon under your current default Node.)
+> **Exposure:** the panel binds to localhost by default. Set `PANEL_HOST=0.0.0.0` for LAN access, and only
+> put it on the internet behind a reverse proxy with TLS (set `TRUST_PROXY` + `COOKIE_SECURE`). Auth is
+> mandatory from the first run.
 
 ---
 
