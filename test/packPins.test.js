@@ -6,11 +6,11 @@ const assert = require('node:assert/strict');
 const { unpinnedPackSelectors, assertPinnedPackEnv } = require('../src/services/packPins');
 
 test('pinned pack envs pass for every platform', () => {
+  assert.deepEqual(unpinnedPackSelectors('AUTO_CURSEFORGE', { CF_SLUG: 'all-the-mods-10', CF_FILE_ID: '5891234' }), []);
   assert.deepEqual(
-    unpinnedPackSelectors('AUTO_CURSEFORGE', { CF_SLUG: 'all-the-mods-10', CF_FILE_ID: '5891234' }),
+    unpinnedPackSelectors('MODRINTH', { MODRINTH_MODPACK: 'cobblemon', MODRINTH_VERSION: 'AbCd1234' }),
     []
   );
-  assert.deepEqual(unpinnedPackSelectors('MODRINTH', { MODRINTH_MODPACK: 'cobblemon', MODRINTH_VERSION: 'AbCd1234' }), []);
   assert.deepEqual(unpinnedPackSelectors('FTBA', { FTB_MODPACK_ID: '126', FTB_MODPACK_VERSION_ID: '11929' }), []);
   assert.deepEqual(unpinnedPackSelectors('GTNH', { GTNH_PACK_VERSION: '2.8.4' }), []);
   assert.doesNotThrow(() => assertPinnedPackEnv('AUTO_CURSEFORGE', { CF_SLUG: 'atm10', CF_FILE_ID: '1' }));
@@ -39,7 +39,10 @@ test('URL-embedded pins and fixed local zips count as pinned', () => {
     unpinnedPackSelectors('MODRINTH', { MODRINTH_MODPACK: 'https://modrinth.com/modpack/cobblemon/version/1.6.1' }),
     []
   );
-  assert.deepEqual(unpinnedPackSelectors('AUTO_CURSEFORGE', { CF_SLUG: 'atm10', CF_MODPACK_ZIP: '/packs/mine.zip' }), []);
+  assert.deepEqual(
+    unpinnedPackSelectors('AUTO_CURSEFORGE', { CF_SLUG: 'atm10', CF_MODPACK_ZIP: '/packs/mine.zip' }),
+    []
+  );
 });
 
 test('empty-string pins do not count as pinned', () => {

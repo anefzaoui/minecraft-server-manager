@@ -12,9 +12,9 @@ policy finally does what it says - including a real, guarded auto-update mode. (
 
 ### Added
 
-- **The update policy is now real.** *Manual only* excludes the server from the update badge, the
+- **The update policy is now real.** _Manual only_ excludes the server from the update badge, the
   Updates page, and the daily check's notifications entirely - the true "never touch my versions"
-  mode. *Auto-update* applies pending **pack** updates after the scheduled daily check through the
+  mode. _Auto-update_ applies pending **pack** updates after the scheduled daily check through the
   same guarded path as a manual upgrade: pre-update backup, first-boot health monitoring, and an
   **automatic rollback** when the new version fails to come up. Updates that would change the
   server's Minecraft version are always skipped with an event - world conversion stays a human
@@ -27,7 +27,7 @@ policy finally does what it says - including a real, guarded auto-update mode. (
 - **No more silent modpack self-updates.** Servers created before 0.9.7 (or with hand-edited env)
   could carry a pack selector with no version pin, making the container image download the newest
   pack version on every start - the failure mode behind lost worlds in #21/#22. A boot sweep now
-  pins every such server to the version that is *actually installed* (from the panel's own record
+  pins every such server to the version that is _actually installed_ (from the panel's own record
   or the image's install manifest, with the pack slug cross-checked - never a freshly resolved
   "latest"), backfills the panel's pack record so these servers join the guarded upgrade flow, and
   flags the container for recreate. Servers with no readable evidence get a prominent Settings

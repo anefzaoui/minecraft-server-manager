@@ -85,7 +85,10 @@ test('a manifest for a different pack is not trusted', () => {
 
 test('pins an unpinned Modrinth server from its install manifest', () => {
   seedServer('srv_mrmani', 'MODRINTH', { MODRINTH_MODPACK: 'fabulously-optimized' });
-  writeManifest('srv_mrmani', '.modrinth-manifest.json', { projectSlug: 'fabulously-optimized', versionId: 'aBc123Xy' });
+  writeManifest('srv_mrmani', '.modrinth-manifest.json', {
+    projectSlug: 'fabulously-optimized',
+    versionId: 'aBc123Xy',
+  });
   pinUnpinnedServers();
   assert.equal(serverRow('srv_mrmani').env.MODRINTH_VERSION, 'aBc123Xy');
 });
