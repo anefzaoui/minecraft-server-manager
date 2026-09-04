@@ -5,6 +5,38 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.12.0] - 2026-09-04
+
+An update-safety release: the last unpinned-modpack path is gone, and the per-server update
+policy finally does what it says - including a real, guarded auto-update mode. (#22, #24)
+
+### Added
+
+- **The update policy is now real.** *Manual only* excludes the server from the update badge, the
+  Updates page, and the daily check's notifications entirely - the true "never touch my versions"
+  mode. *Auto-update* applies pending **pack** updates after the scheduled daily check through the
+  same guarded path as a manual upgrade: pre-update backup, first-boot health monitoring, and an
+  **automatic rollback** when the new version fails to come up. Updates that would change the
+  server's Minecraft version are always skipped with an event - world conversion stays a human
+  decision. The manual "check now" buttons never trigger auto-updates. Previously all three
+  options were stored but changed nothing.
+- The README now points to the new **community Discord** (support forum, showcase, dev corner).
+
+### Fixed
+
+- **No more silent modpack self-updates.** Servers created before 0.9.7 (or with hand-edited env)
+  could carry a pack selector with no version pin, making the container image download the newest
+  pack version on every start - the failure mode behind lost worlds in #21/#22. A boot sweep now
+  pins every such server to the version that is *actually installed* (from the panel's own record
+  or the image's install manifest, with the pack slug cross-checked - never a freshly resolved
+  "latest"), backfills the panel's pack record so these servers join the guarded upgrade flow, and
+  flags the container for recreate. Servers with no readable evidence get a prominent Settings
+  warning with a manual version picker instead of a guess.
+- Every path that writes server env (create, config update, blueprint import) now **rejects an
+  unpinned pack selector** outright, so the state can't come back.
+- The settings-page policy radios and the modpacks doc now describe the actual behavior of each
+  option.
+
 ## [0.11.0] - 2026-09-01
 
 A content-sources release: three new keyless registries, server-side `.mrpack` import,
