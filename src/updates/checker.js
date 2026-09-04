@@ -47,6 +47,11 @@ async function checkAll({ actor = 'scheduler' } = {}) {
   // and resolve each DISTINCT ref once per run rather than once per server.
   const imageIdCache = new Map();
   for (const server of serversService.listServers()) {
+    // 'manual' means "leave me alone": the check rows are still refreshed (so
+    // flipping the policy later shows current state instantly), but nothing
+    // lands in findings - no badge, no "updates available" event, no bridge
+    // notification (#24).
+    const quiet = server.update_policy === 'manual';
     // Pack updates
     try {
       const result = await packsService.latestFor(server.id);
@@ -63,7 +68,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
           latestName: result.latest.name,
           changelogUrl: changelog,
         });
-        if (result.updateAvailable)
+        if (result.updateAvailable && !quiet)
           findings.push({
             server: server.display_name,
             kind: 'pack',
@@ -128,7 +133,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
             latestName: latest.name,
             changelogUrl: isNew ? changelogUrl : null,
           });
-          if (isNew)
+          if (isNew && !quiet)
             findings.push({
               server: server.display_name,
               kind: 'mod',
@@ -164,7 +169,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
         const latestId = imageIdCache.get(ref);
         const isNew = Boolean(latestId) && latestId !== status.imageId;
         upsertCheck('image', server.id, status.imageId, { isNew, latestId, latestName: ref, changelogUrl: null });
-        if (isNew)
+        if (isNew && !quiet)
           findings.push({
             server: server.display_name,
             kind: 'image',
@@ -185,7 +190,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
     // already resolve to newest on every recreate; nothing to check there).
     if (!packsService.getPack(server.id)) {
       try {
-        await checkStandaloneVersion(server, findings);
+        await checkStandaloneVersion(server, quiet ? [] : findings);
       } catch (err) {
         logger.debug('A standalone version update check failed; keeping the cached result.', {
           serverId: server.id,
@@ -313,7 +318,10 @@ function listOutdated() {
   const rows = [];
   for (const c of db.all('SELECT * FROM update_checks WHERE latest_version IS NOT NULL')) {
     if (c.subject_type === 'pack') {
-      const server = db.get('SELECT id, display_name FROM servers WHERE id = ? AND deleted_at IS NULL', c.subject_id);
+      const server = db.get(
+        "SELECT id, display_name FROM servers WHERE id = ? AND deleted_at IS NULL AND update_policy != 'manual'",
+        c.subject_id
+      );
       const pack = db.get('SELECT * FROM server_packs WHERE server_id = ?', c.subject_id);
       if (server && pack && pack.pinned_version_id !== c.latest_version) {
         rows.push({
@@ -329,7 +337,9 @@ function listOutdated() {
       }
     } else if (c.subject_type === 'content') {
       const row = db.get(
-        `SELECT sc.*, s.display_name, s.id AS sid FROM server_content sc JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL WHERE sc.id = ?`,
+        `SELECT sc.*, s.display_name, s.id AS sid FROM server_content sc
+           JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
+         WHERE sc.id = ?`,
         c.subject_id
       );
       // Name-to-name: skip rows the user already updated since the last check.
@@ -347,6 +357,7 @@ function listOutdated() {
       }
     } else if (c.subject_type === 'image') {
       const server = serversService.getServer(c.subject_id);
+      if (server && server.update_policy === 'manual') continue;
       // No durable local field records "the image this container was built
       // from" - a stale row simply self-corrects on the next checkAll() run
       // (re-pull + re-compare), same eventual-consistency window as everything
@@ -365,6 +376,7 @@ function listOutdated() {
       }
     } else if (c.subject_type === 'mc_version') {
       const server = serversService.getServer(c.subject_id);
+      if (server && server.update_policy === 'manual') continue;
       if (server && server.mc_version === c.current_version) {
         rows.push({
           serverId: server.id,
@@ -379,6 +391,7 @@ function listOutdated() {
       }
     } else if (c.subject_type === 'loader_build') {
       const server = serversService.getServer(c.subject_id);
+      if (server && server.update_policy === 'manual') continue;
       if (server) {
         const loader = modsService.loaderOf(server);
         const envKey = loader && LOADER_BUILD_ENV_KEY[loader];
@@ -413,26 +426,26 @@ function countOutdated() {
     SELECT
       (SELECT COUNT(*) FROM update_checks c
          JOIN server_packs p ON p.server_id = c.subject_id
-         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
          WHERE c.subject_type = 'pack' AND c.latest_version IS NOT NULL
            AND p.pinned_version_id != c.latest_version)
       +
       (SELECT COUNT(*) FROM update_checks c
          JOIN server_content sc ON sc.id = c.subject_id
-         JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL
+         JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
          WHERE c.subject_type = 'content' AND c.latest_version IS NOT NULL
            AND c.latest_name IS NOT NULL AND c.latest_name != sc.version)
       +
       (SELECT COUNT(*) FROM update_checks c
-         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
          WHERE c.subject_type = 'image' AND c.latest_version IS NOT NULL AND s.container_id IS NOT NULL)
       +
       (SELECT COUNT(*) FROM update_checks c
-         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
          WHERE c.subject_type = 'mc_version' AND c.latest_version IS NOT NULL AND s.mc_version = c.current_version)
       +
       (SELECT COUNT(*) FROM update_checks c
-         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
          WHERE c.subject_type = 'loader_build' AND c.latest_version IS NOT NULL)
       AS total
   `);

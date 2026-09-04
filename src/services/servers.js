@@ -274,6 +274,9 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
       'CurseForge needs an API key - add yours in Settings → API keys first (console.curseforge.com), then create the server.'
     );
   }
+  // Same fail-fast idea for the pinning invariant: an unpinned pack selector
+  // would make the image re-resolve "latest" on every start (issue #22).
+  require('./packPins').assertPinnedPackEnv(input.type, inputEnv);
 
   const id = `srv_${nanoid(8)}`;
 
@@ -652,6 +655,9 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     params.push(JSON.stringify(changes.tags));
   }
   if (changes.env) {
+    // The type column is not editable here, so the pinning check runs against
+    // the server's existing type with the incoming env (issue #22).
+    require('./packPins').assertPinnedPackEnv(before.type, changes.env);
     diff.env = ['(changed)', '(changed)'];
     sets.push('env_json = ?');
     params.push(JSON.stringify(changes.env));

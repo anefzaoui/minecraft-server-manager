@@ -117,12 +117,20 @@
       </div>
     </div>
 
+    {{#if server.packUnpinned}}
+    <div class="notice notice-warn max-w-prose text-sm">
+      <b>This modpack has no pinned version.</b> The container downloads the newest pack version every time it
+      starts - which can silently change your mods and even your world's Minecraft version. Open the
+      <b>Modpack</b> section and pick the version you're running to lock it in.
+    </div>
+    {{/if}}
+
     <div class="card p-4">
       <h3 class="mb-3 font-semibold">Update Policy</h3>
       <div class="space-y-2 text-sm">
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual only <span class="text-xs text-ink-faint">(never change my versions)</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify me <span class="text-xs text-ink-faint">(show a badge when updates exist)</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-update <span class="text-xs text-ink-faint">(with an automatic pre-update backup)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual only <span class="text-xs text-ink-faint">(never changes anything, and no update badges for this server)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify me <span class="text-xs text-ink-faint">(show a badge when updates exist; you apply them)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure - never across Minecraft versions)</span></label>
       </div>
     </div>
 

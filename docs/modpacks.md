@@ -16,7 +16,17 @@ The **Modpacks** page (and the **From modpack** tab in the [creation wizard](ser
 
 ## How pinning works
 
-When you pick a pack, the panel resolves the exact version, records it, and installs that. On the **Updates** page you'll be told when a newer version is available; upgrading is a deliberate, guarded action with a pre-update backup and rollback - never automatic. Stable-tracking servers are never offered a beta.
+When you pick a pack, the panel resolves the exact version, records it, and installs that. On the **Updates** page you'll be told when a newer version is available; upgrading is a deliberate, guarded action with a pre-update backup and rollback. Stable-tracking servers are never offered a beta.
+
+Servers created on very old panel versions (before 0.9.7) could be left _unpinned_, meaning the container image would quietly install the newest pack version on every start. The panel now repairs these at boot: it locks each one to the version that is actually installed (read from the panel's own records or the image's install manifest - never a freshly resolved "latest") and logs an event. If it can't tell what's installed, the server's Settings page shows a warning asking you to pick the version manually, and any attempt to save an unpinned modpack configuration is rejected outright.
+
+## Update policy
+
+Each server has an update policy in **Settings**, and all three options mean what they say:
+
+- **Manual only** - nothing ever changes on its own, and the server is left out of the update badge and Updates page entirely. The "leave me alone" mode: ideal for a hand-tuned or imported pack you never want touched.
+- **Notify me** (default) - the daily check surfaces available updates as a badge and on the Updates page; applying them is always your click.
+- **Auto-update** - after the scheduled daily check, pending **pack** updates are applied through the same guarded path as a manual upgrade: pre-update backup, health monitoring, and an automatic rollback if the new version fails to boot. Updates that would move the server to a different Minecraft version are always skipped with an event instead - converting a world permanently is a decision the panel refuses to make for you. The manual "check now" buttons only check; they never trigger auto-updates.
 
 ## Upgrading a pack
 
