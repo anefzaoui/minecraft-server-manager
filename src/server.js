@@ -83,6 +83,16 @@ try {
   }
 
   require('./services/apiKeys').importFromEnvOnce();
+
+  // Servers from before 0.9.7 (or with hand-edited env) can still carry an
+  // unpinned modpack selector, which silently auto-updates on every start
+  // (#22). Pin them to what's already installed; no-op once repaired.
+  try {
+    require('./services/packPins').pinUnpinnedServers();
+  } catch (err) {
+    logger.error('The unpinned-modpack sweep failed.', { err: serializeError(err) });
+  }
+
   require('./blueprints')
     .seedStarters()
     .catch((err) => logger.error('Seeding starter blueprints failed.', { err: serializeError(err) }));

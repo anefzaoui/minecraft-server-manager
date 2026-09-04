@@ -7,7 +7,9 @@
 // packs.js - installs have pinned since 0.9.7, but servers created before
 // that, or env edited by hand, can still carry the unpinned shape).
 
+const path = require('node:path');
 const httpError = require('../utils/httpError');
+const logger = require('../logger')(path.basename(__filename));
 
 const has = (env, key) => env[key] != null && String(env[key]).trim() !== '';
 
@@ -87,4 +89,127 @@ function assertPinnedPackEnv(type, env) {
   );
 }
 
-module.exports = { unpinnedPackSelectors, assertPinnedPackEnv };
+// ---- boot-time repair of already-unpinned servers ---------------------------
+
+/**
+ * The version pin to adopt for one unpinned selector, from best evidence:
+ * 1. the server's own server_packs row (the panel's recorded intent), else
+ * 2. the image's install manifest in the data dir - what is ACTUALLY installed
+ *    (.curseforge-manifest.json / .modrinth-manifest.json, written by
+ *    mc-image-helper; slug is cross-checked so a leftover manifest from a
+ *    different pack can't mis-pin).
+ * Never resolves "latest": no evidence → no pin (the settings UI shows an
+ * unpinned warning with a manual picker instead).
+ */
+function findPinEvidence(server, issue) {
+  const pack = require('./packs').getPack(server.id);
+  if (pack && pack.platform === issue.platform && pack.pinned_version_id) {
+    return {
+      pin: String(pack.pinned_version_id),
+      name: pack.pinned_version_name || String(pack.pinned_version_id),
+      source: 'panel record',
+    };
+  }
+
+  const fs = require('node:fs');
+  const { dataPath } = require('../storage/pathGuard');
+  const readManifest = (file) => {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(dataPath('servers', server.id), file), 'utf8'));
+    } catch {
+      return null; // absent or unreadable - simply not evidence
+    }
+  };
+
+  if (issue.platform === 'curseforge') {
+    const m = readManifest('.curseforge-manifest.json');
+    if (!m || !m.fileId) return null;
+    const expected =
+      (server.env.CF_SLUG || '').trim().toLowerCase() ||
+      (String(server.env.CF_PAGE_URL || '').match(/\/modpacks\/([^/?#]+)/i) || [])[1]?.toLowerCase();
+    if (expected && m.slug && m.slug.toLowerCase() !== expected) return null;
+    return {
+      pin: String(m.fileId),
+      name: m.modpackVersion || m.fileName || String(m.fileId),
+      source: 'installed manifest',
+      manifest: m,
+    };
+  }
+  if (issue.platform === 'modrinth') {
+    const m = readManifest('.modrinth-manifest.json');
+    if (!m || !m.versionId) return null;
+    const ref = String(server.env.MODRINTH_MODPACK || '').trim();
+    const expected = ref && !ref.includes('/') ? ref.toLowerCase() : null;
+    if (expected && m.projectSlug && m.projectSlug.toLowerCase() !== expected) return null;
+    return { pin: String(m.versionId), name: String(m.versionId), source: 'installed manifest', manifest: m };
+  }
+  return null; // ftb/gtnh: no on-disk manifest to trust - panel record only
+}
+
+/**
+ * One-shot boot repair (idempotent: pinned servers stop matching): pin every
+ * unpinned pack selector to the version that is already installed, so the
+ * next recreate can't silently upgrade it. Evidence-less servers are only
+ * logged - the UI warns and offers a manual pick.
+ */
+function pinUnpinnedServers() {
+  const db = require('../db');
+  const { recordEvent } = require('../events');
+  const serversService = require('./servers');
+  let pinned = 0;
+  let unresolved = 0;
+
+  for (const server of serversService.listServers()) {
+    const issues = unpinnedPackSelectors(server.type, server.env);
+    if (!issues.length) continue;
+    const env = { ...server.env };
+    const applied = [];
+    for (const issue of issues) {
+      const evidence = findPinEvidence(server, issue);
+      if (!evidence) {
+        unresolved += 1;
+        logger.warn('A server has an unpinned modpack and no installed version could be read - pin it manually.', {
+          serverId: server.id,
+          platform: issue.platform,
+        });
+        continue;
+      }
+      env[issue.pinKey] = evidence.pin;
+      applied.push({ issue, evidence });
+    }
+    if (!applied.length) continue;
+
+    db.run('UPDATE servers SET env_json = ?, pending_recreate = 1 WHERE id = ?', JSON.stringify(env), server.id);
+    for (const { issue, evidence } of applied) {
+      // A CF manifest carries enough to give a legacy server the server_packs
+      // row the upgrade/update-check flows key off; never clobber an existing row.
+      if (evidence.manifest && issue.platform === 'curseforge') {
+        db.run(
+          `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
+           VALUES (?, 'curseforge', ?, ?, ?, ?) ON CONFLICT(server_id) DO NOTHING`,
+          server.id,
+          evidence.manifest.slug || server.env.CF_SLUG || '?',
+          evidence.manifest.modpackName || evidence.manifest.slug || 'CurseForge modpack',
+          evidence.pin,
+          evidence.name
+        );
+      }
+      recordEvent({
+        serverId: server.id,
+        actor: 'system',
+        type: 'pack-pinned',
+        summary: `Locked the ${issue.platform} modpack to the installed version (${evidence.name}) - it was set to auto-update on every start`,
+        details: { pinKey: issue.pinKey, pin: evidence.pin, source: evidence.source },
+      });
+      pinned += 1;
+    }
+    logger.info('Pinned an unpinned modpack server to its installed version.', {
+      serverId: server.id,
+      pins: applied.map(({ issue, evidence }) => `${issue.pinKey}=${evidence.pin} (${evidence.source})`),
+    });
+  }
+  if (pinned || unresolved) logger.info('Finished the unpinned-modpack sweep.', { pinned, unresolved });
+  return { pinned, unresolved };
+}
+
+module.exports = { unpinnedPackSelectors, assertPinnedPackEnv, pinUnpinnedServers };
