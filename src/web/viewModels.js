@@ -103,6 +103,10 @@ async function serverVM(s, { withLive = true } = {}) {
     autoRestart: Boolean(s.auto_restart),
     notes: s.notes,
     updatePolicy: s.update_policy,
+    // True only for a server the boot sweep could not repair (no recorded or
+    // installed version to pin to) - the settings page warns and asks for a
+    // manual version pick (#22).
+    packUnpinned: require('../services/packPins').unpinnedPackSelectors(s.type, s.env).length > 0,
     pendingRecreate: Boolean(s.pending_recreate),
     lastStarted: s.last_started_at || '-',
     created: s.created_at,
