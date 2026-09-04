@@ -64,6 +64,10 @@ async function runTask(schedule) {
     }
     case 'update-check':
       await require('../updates/checker').checkAll({ actor });
+      // Only the scheduled daily check triggers auto-updates - the manual
+      // "check now" buttons never apply anything (#24; the settings-page
+      // policy label promises exactly this).
+      await require('../updates/upgrade').runAutoUpgrades({ actor });
       break;
     case 'storage-scan':
       await require('../storage/indexer').scan();
