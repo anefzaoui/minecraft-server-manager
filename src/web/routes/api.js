@@ -374,9 +374,12 @@ router.get(
   })
 );
 
-router.get('/docker/status', asyncHandler(async (req, res) => {
-  res.json({ ok: true, docker: await checkDocker() });
-}));
+router.get(
+  '/docker/status',
+  asyncHandler(async (req, res) => {
+    res.json({ ok: true, docker: await checkDocker() });
+  })
+);
 
 // ---- API keys (Settings page) - admin only ----
 const apiKeys = require('../../services/apiKeys');
@@ -633,8 +636,9 @@ router.post(
   })
 );
 
-router.post('/servers/:id/pack', async (req, res, next) => {
-  try {
+router.post(
+  '/servers/:id/pack',
+  asyncHandler(async (req, res) => {
     const { platform, ref, versionId, force } = z
       .object({
         platform: z.enum(['curseforge', 'modrinth', 'ftb', 'gtnh']),
@@ -647,16 +651,18 @@ router.post('/servers/:id/pack', async (req, res, next) => {
         force: z.coerce.boolean().optional(),
       })
       .parse(req.body);
-    const resolved = await packs.resolvePack(platform, ref, { versionId });
-    await packs.applyPack(req.params.id, resolved, { actor: req.user.username, force });
-    res.json({ ok: true, pack: resolved, note: 'Applied - recreate/restart to install' });
-  } catch (err) {
-    if (err.requiresForce) {
-      return res.status(409).json({ ok: false, error: err.message, requiresForce: true, warnings: err.warnings });
+    try {
+      const resolved = await packs.resolvePack(platform, ref, { versionId });
+      await packs.applyPack(req.params.id, resolved, { actor: req.user.username, force });
+      res.json({ ok: true, pack: resolved, note: 'Applied - recreate/restart to install' });
+    } catch (err) {
+      if (err.requiresForce) {
+        return res.status(409).json({ ok: false, error: err.message, requiresForce: true, warnings: err.warnings });
+      }
+      throw err;
     }
-    next(err);
-  }
-});
+  })
+);
 
 const UPGRADE_STEP_LABELS = {
   resolving: 'Resolving target version',

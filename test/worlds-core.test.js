@@ -4,7 +4,6 @@ require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const fsp = require('node:fs/promises');
 const path = require('node:path');
 const worlds = require('../src/services/worlds');
 const app = require('./helpers/app');
@@ -86,13 +85,25 @@ test('compatWarnings flags loader family and version differences', () => {
     []
   );
   // loader family mismatch
-  assert.equal(worlds.compatWarnings({ flavor: 'FORGE', version: '1.21' }, { type: 'PAPER', mc_version: '1.21' }).length, 1);
+  assert.equal(
+    worlds.compatWarnings({ flavor: 'FORGE', version: '1.21' }, { type: 'PAPER', mc_version: '1.21' }).length,
+    1
+  );
   // newer world version (can't downgrade)
-  assert.equal(worlds.compatWarnings({ flavor: 'PAPER', version: '1.22' }, { type: 'PAPER', mc_version: '1.21' }).length, 1);
+  assert.equal(
+    worlds.compatWarnings({ flavor: 'PAPER', version: '1.22' }, { type: 'PAPER', mc_version: '1.21' }).length,
+    1
+  );
   // older world version (upgrade warning)
-  assert.equal(worlds.compatWarnings({ flavor: 'PAPER', version: '1.20' }, { type: 'PAPER', mc_version: '1.21' }).length, 1);
+  assert.equal(
+    worlds.compatWarnings({ flavor: 'PAPER', version: '1.20' }, { type: 'PAPER', mc_version: '1.21' }).length,
+    1
+  );
   // LATEST target -> no version warning
-  assert.deepEqual(worlds.compatWarnings({ flavor: 'PAPER', version: '1.20' }, { type: 'PAPER', mc_version: 'LATEST' }), []);
+  assert.deepEqual(
+    worlds.compatWarnings({ flavor: 'PAPER', version: '1.20' }, { type: 'PAPER', mc_version: 'LATEST' }),
+    []
+  );
 });
 
 test('serverWorldDims includes split dims that exist on disk', () => {

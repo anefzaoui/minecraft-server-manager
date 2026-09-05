@@ -69,18 +69,23 @@ async function main() {
   const tabs = [
     'overview',
     'console',
+    'chat',
+    'commands',
     'players',
     'inventory',
+    'analytics',
     'mods',
+    'worlds',
     'map',
     'files',
-    'worlds',
     'backups',
     'history',
-    'analytics',
     'metrics',
-    'integrations',
     'settings',
+    'discord',
+    'status-page',
+    'invites',
+    'chatbot',
   ];
   const targets = [...pages, ...(sid ? tabs.map((t) => `/servers/${sid}/${t}`) : [])];
   for (const url of targets) {

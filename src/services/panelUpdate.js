@@ -44,7 +44,7 @@ function readCached() {
  * Check for a newer panel release.
  * @param {object} [opts]
  * @param {boolean} [opts.refresh] drop caches and hit GitHub for real.
- * @returns {object} { current, latest|null, isNewer, error|null, checkedAt|null }
+ * @returns {Promise<object>} { current, latest|null, isNewer, error|null, checkedAt|null }
  *  - GitHub down with a stale-cache to fall back on: degrades with error set.
  *  - GitHub down with nothing cached: throws (route turns it into a 502).
  */

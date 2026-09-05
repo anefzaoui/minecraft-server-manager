@@ -163,13 +163,7 @@ async function ingestStats(serverId) {
   for (const row of rows) {
     const prev = existing.get(row.uuid);
     if (prev === row.json) continue;
-    inserts.push([
-      serverId,
-      row.uuid,
-      row.name,
-      new Date().toISOString(),
-      row.json,
-    ]);
+    inserts.push([serverId, row.uuid, row.name, new Date().toISOString(), row.json]);
   }
   if (inserts.length) {
     db.transaction(() => {
@@ -277,7 +271,6 @@ function latestSnapshotsBulk(serverId, uuids) {
 function baselineSnapshotsBulk(serverId, uuids, cutoffIso) {
   const out = new Map();
   const CHUNK = 900;
-  const remaining = [];
   for (let i = 0; i < uuids.length; i += CHUNK) {
     const chunk = uuids.slice(i, i + CHUNK);
     const ph = chunk.map(() => '?').join(',');
@@ -433,7 +426,9 @@ function scoreboard(serverId, { metric = 'playtimeTicks', window = 'all' } = {})
 
 function computeScoreboard(serverId, metric, window) {
   const cutoff = windowCutoff(window);
-  const uuids = db.all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId).map((r) => r.uuid);
+  const uuids = db
+    .all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId)
+    .map((r) => r.uuid);
   const latestMap = latestSnapshotsBulk(serverId, uuids);
   const baseMap = cutoff ? baselineSnapshotsBulk(serverId, uuids, cutoff) : null;
   const rows = [];
@@ -483,7 +478,9 @@ function countLE(sorted, v) {
 }
 
 function computeXrayReport(serverId) {
-  const uuids = db.all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId).map((r) => r.uuid);
+  const uuids = db
+    .all('SELECT DISTINCT uuid FROM player_stat_snapshots WHERE server_id = ?', serverId)
+    .map((r) => r.uuid);
   const latestMap = latestSnapshotsBulk(serverId, uuids);
   const players = uuids
     .map((uuid) => latestMap.get(uuid))
@@ -517,8 +514,7 @@ function computeXrayReport(serverId) {
         ...p,
         diamondRatio: Number(p.diamondRatio.toFixed(5)),
         debrisRatio: Number(p.debrisRatio.toFixed(5)),
-        percentile:
-          ratios.length > 1 ? Math.round((countLE(ratios, p.diamondRatio) / ratios.length) * 100) : 100,
+        percentile: ratios.length > 1 ? Math.round((countLE(ratios, p.diamondRatio) / ratios.length) * 100) : 100,
         flagged: flaggedDiamond || flaggedDebris,
         reasons: [
           ...(flaggedDiamond ? [`diamond ratio ${(p.diamondRatio / effDiamond).toFixed(1)}x server median`] : []),

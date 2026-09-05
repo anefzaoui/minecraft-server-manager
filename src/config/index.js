@@ -69,10 +69,6 @@ function resolveSentry() {
     enabled: dsn !== '',
     environment: (process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development').trim(),
     tracesSampleRate: numFloatFromEnv('SENTRY_TRACES_SAMPLE_RATE', 0, { min: 0, max: 1 }),
-    enableLogs:
-      String(process.env.SENTRY_ENABLE_LOGS || '')
-        .trim()
-        .toLowerCase() === 'true',
   };
 }
 

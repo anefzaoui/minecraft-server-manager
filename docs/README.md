@@ -40,4 +40,4 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 
 ---
 
-> Screenshots in these docs are taken in the panel's dark theme. Your panel starts in dark mode by default; use the theme toggle in the top bar to switch to light.
+> Screenshots in these docs are taken in the panel's dark theme. The panel starts dark unless your OS prefers light; use the theme toggle in the top bar to switch.

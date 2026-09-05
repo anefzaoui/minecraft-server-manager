@@ -33,11 +33,12 @@ Opening a server gives you a tabbed workspace:
 
 - **Overview** - status, live stats, uptime, and the primary start / stop / restart controls.
 - **Console** - the live log stream and command input, plus in-game chat ([details](console-and-chat.md)).
-- **Players** - who's online, plus inventory, analytics, and [chat commands](console-and-chat.md).
-- **World** - [worlds, mods, the live map, and the file manager](worlds-and-files.md).
+- **Players** - who's online, plus inventory, statistics, and [chat commands](console-and-chat.md).
+- **Mods** - the installed mod list, the [mod browser](modpacks.md), and content updates.
+- **World** - [worlds, the live map, and the file manager](worlds-and-files.md).
 - **Backups** - [snapshots and restore](backups.md) for this server.
-- **Insights** - metrics and per-server history, including crash reports (see below).
-- **Settings** - everything about how the server runs.
+- **Monitoring** - per-server history and live metrics, including crash reports (see below).
+- **Settings** - everything about how the server runs, plus the [integrations](integrations.md) (Discord, status page, invites, chatbot).
 
 ![Server overview](images/server-overview.png)
 
@@ -51,7 +52,7 @@ The **Settings** tab is the full configuration surface: rename, resources, updat
 
 ## Crash reports & mclo.gs analysis
 
-Crash reports (`crash-reports/*.txt` and JVM `hs_err_pid*.log` files) are picked up automatically, parsed into a one-line summary with the exception and suspected mods, and listed under **Insights → History**:
+Crash reports (`crash-reports/*.txt` and JVM `hs_err_pid*.log` files) are picked up automatically, parsed into a one-line summary with the exception and suspected mods, and listed under **Monitoring → History**:
 
 ![Crash report card](images/crash-mclogs-card.png)
 

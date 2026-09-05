@@ -5,6 +5,7 @@
 // encrypted - never here.
 
 const db = require('../db');
+const httpError = require('../utils/httpError');
 
 function get(key, fallback = null) {
   const row = db.get('SELECT value_json FROM settings WHERE key = ?', key);
@@ -45,9 +46,7 @@ function normalizeHost(host) {
   const valid =
     /^[a-z0-9.-]{1,253}$/.test(h) && !h.startsWith('.') && !h.endsWith('.') && !h.startsWith('-') && !h.includes('..');
   if (!valid) {
-    const err = new Error('Enter a valid domain or hostname, e.g. mc.example.com (no scheme, path or port).');
-    err.status = 400;
-    throw err;
+    throw httpError(400, 'Enter a valid domain or hostname, e.g. mc.example.com (no scheme, path or port).');
   }
   return h;
 }
