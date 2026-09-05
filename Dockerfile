@@ -9,18 +9,30 @@
 # inside that file. The bundles are built explicitly after the full source copy.
 FROM node:24-alpine AS build
 WORKDIR /app
+ARG PNPM_VERSION=11.25.0
 ENV MSM_SKIP_POSTINSTALL=1
-RUN corepack enable
+# Pin pnpm directly instead of corepack (deprecated, being removed from Node):
+# exact packageManager version, no shim, no second download.
+RUN npm install -g pnpm@${PNPM_VERSION}
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY scripts ./scripts
-RUN corepack install
-RUN pnpm install --frozen-lockfile
-COPY . .
+# Cache-mount the pnpm store so installs are incremental; the runtime stage
+# shares this store id, so its --prod install reuses what was already fetched.
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+# Build inputs only (Tailwind scans assets/views/public for classes; src/ has
+# none, the app doesn't build from it) so a src-only change cache-hits this
+# RUN layer instead of re-running Tailwind + esbuild.
+COPY assets ./assets
+COPY views ./views
+COPY public ./public
 RUN pnpm run build
+COPY src ./src
 
 # Runtime stage: production deps + the app, with the built CSS + JS bundles overlaid.
 FROM node:24-alpine
 WORKDIR /app
+ARG PNPM_VERSION=11.25.0
 # LOG_PRETTY=false: logs are newline-delimited JSON on stdout for the container
 # runtime to collect; the pretty transport is a dev-only convenience.
 ENV NODE_ENV=production \
@@ -29,11 +41,11 @@ ENV NODE_ENV=production \
     PANEL_HOST=0.0.0.0 \
     PANEL_PORT=25564 \
     LOG_PRETTY=false
-RUN corepack enable
+RUN npm install -g pnpm@${PNPM_VERSION}
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY scripts ./scripts
-RUN corepack install
-RUN pnpm install --frozen-lockfile --prod
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --prod
 COPY src ./src
 COPY views ./views
 COPY --from=build /app/public ./public

@@ -10,7 +10,11 @@ test
 types
 .env
 *.log
+pnpm-debug.log*
+.eslintcache
+.prettiercache
 .vscode
 .idea
 Dockerfile
 docker-compose.yml
+.codegraph/
