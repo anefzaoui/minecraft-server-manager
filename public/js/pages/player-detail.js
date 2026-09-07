@@ -132,6 +132,27 @@ function init(root) {
     if (!act) return;
     if (act.dataset.act === 'kick') kickModal();
     else if (act.dataset.act === 'teleport') teleportModal();
+    else if (act.dataset.act === 'delete-player') {
+      const ok = await confirmDialog({
+        title: `Delete ${name}?`,
+        message:
+          'This removes the player from the whitelist, operators, bans, and usercache; deletes their saved inventory, stats and advancements; and clears their moderators notes. This cannot be undone.',
+        confirmLabel: 'Delete',
+        danger: true,
+      });
+      if (!ok) return;
+      try {
+        await withBusy(act, async () => {
+          const res = await fetch(`${base}/${encodeURIComponent(name)}`, { method: 'DELETE' });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || data.ok === false)
+            throw new Error(data.error || friendlyError(res, { action: 'delete that player' }));
+        });
+        location.href = `/servers/${serverId}/players`;
+      } catch (err) {
+        fail(err);
+      }
+    }
     // copy-uuid is handled by the global [data-copy] handler in app.js
   });
 

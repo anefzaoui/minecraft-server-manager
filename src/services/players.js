@@ -495,6 +495,106 @@ async function pardonIp(serverId, ip, { running = false, actor = 'system' } = {}
   return { ip, banned: false };
 }
 
+// ---------------------------------------------------------------------------
+// Delete player (full wipe of roles + world data)
+
+const ROLE_FILES = ['usercache.json', 'whitelist.json', 'ops.json', 'banned-players.json'];
+
+/** Drop every entry matching a player's uuid (lowercase-name fallback) from a role file. */
+function stripPlayerFromFile(serverId, file, who) {
+  const lower = who.name.toLowerCase();
+  const remaining = readJson(serverId, file).filter(
+    (e) => !(e.uuid === who.uuid) && !(e.name && e.name.toLowerCase() === lower)
+  );
+  writeJson(serverId, file, remaining);
+}
+
+/**
+ * Remove a player (and their on-disk world data) from a server.
+ *
+ *   • Every entry in usercache / whitelist / ops / banned-players is removed.
+ *   • Their playerdata (.dat / .dat_old) is deleted from the active world's
+ *     modern (players/data) and legacy (playerdata) locations.
+ *   • Their stats/<uuid>.json and advancements/<uuid>.json are deleted.
+ *   • Their inventory snapshots (logs/<serverId>/inventories/<uuid>) are removed.
+ *   • Their moderator notes are removed.
+ *
+ * A live player cannot be deleted (RCON would immediately re-mint their role
+ * entries and a running world keeps a live .dat in memory), so deletion is
+ * blocked while the name is in the RCON online list.
+ */
+async function deletePlayer(serverId, name, { running = false, actor = 'system' } = {}) {
+  const who = await resolveIdentity(serverId, name);
+  if (running) {
+    const online = await listOnlineNames(serverId, { throwOnError: true }).catch(() => []);
+    if (online.some((n) => n.toLowerCase() === who.name.toLowerCase())) {
+      throw httpError(
+        409,
+        `${who.name} is still online - kick them or wait for them to leave before deleting their data`
+      );
+    }
+  }
+
+  // Role files.
+  for (const file of ROLE_FILES) stripPlayerFromFile(serverId, file, who);
+
+  // World-scoped data. Resolve the active level exactly like inventory.js so we
+  // never guess a path (level-name / LEVEL env both honored).
+  let removed = { playerdata: 0, stats: false, advancements: false, snapshots: false, notes: 0 };
+  try {
+    const server = require('./servers').getServer(serverId);
+    const level = require('./worlds').activeLevelName(server);
+    const base = dataPath('servers', serverId, level);
+
+    // Playerdata - delete both the modern and legacy .dat (+ .dat_old backups),
+    // tolerating either layout or none at all (never-joined players have none).
+    for (const dir of [nodePath.join(base, 'players', 'data'), nodePath.join(base, 'playerdata')]) {
+      for (const ext of ['.dat', '.dat_old']) {
+        const file = nodePath.join(dir, `${who.uuid}${ext}`);
+        if (!fs.existsSync(file)) continue;
+        fs.rmSync(file, { force: true });
+        removed.playerdata += 1;
+      }
+    }
+
+    // Stats + advancements are JSON files named by uuid.
+    try {
+      fs.rmSync(nodePath.join(base, 'stats', `${who.uuid}.json`), { force: true });
+      removed.stats = true;
+    } catch {
+      /* no stats dir yet */
+    }
+    try {
+      fs.rmSync(nodePath.join(base, 'advancements', `${who.uuid}.json`), { force: true });
+      removed.advancements = true;
+    } catch {
+      /* no advancements dir yet */
+    }
+  } catch {
+    /* the server/world may be gone entirely - role-file cleanup above already ran */
+  }
+
+  // Inventory snapshots live under logs/, not the world dir.
+  try {
+    fs.rmSync(dataPath('logs', serverId, 'inventories', who.uuid), { recursive: true, force: true });
+    removed.snapshots = true;
+  } catch {
+    /* no snapshots */
+  }
+
+  // Moderator notes.
+  removed.notes = require('./playerNotes').deletePlayerNotes(serverId, who.uuid);
+
+  recordEvent({
+    serverId,
+    actor,
+    type: 'player-deleted',
+    summary: `${who.name} and all their data were deleted`,
+    details: { name: who.name, uuid: who.uuid, removed },
+  });
+  return { name: who.name, uuid: who.uuid, removed };
+}
+
 const SWEEP_RUNNING_STATES = new Set(['running', 'unhealthy']); // rcon still answers while unhealthy
 
 /**
@@ -1208,6 +1308,7 @@ module.exports = {
   pardonPlayer,
   banIp,
   pardonIp,
+  deletePlayer,
   sweepExpiredBans,
   kickPlayer,
   tpToCoords,

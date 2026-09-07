@@ -317,6 +317,15 @@ router.post(
   })
 );
 
+router.delete(
+  '/:name',
+  asyncHandler(async (req, res, next) => {
+    const name = nameSchema.parse(req.params.name);
+    const { server, ctx } = await loadContext(req);
+    res.json({ ok: true, result: await players.deletePlayer(server.id, name, ctx) });
+  })
+);
+
 router.post(
   '/kick',
   asyncHandler(async (req, res, next) => {

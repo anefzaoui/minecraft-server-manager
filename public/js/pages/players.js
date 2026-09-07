@@ -285,7 +285,30 @@ function init(root) {
     else if (act.dataset.act === 'op-level') opLevelModal(name);
     else if (act.dataset.act === 'ban-reason') banModal(name);
     else if (act.dataset.act === 'notes') notesModal(name);
-    else if (act.dataset.act === 'copy-uuid') {
+    else if (act.dataset.act === 'delete-player') {
+      confirmDialog({
+        title: `Delete ${name}?`,
+        message:
+          'This removes the player from the whitelist, operators, bans, and usercache; deletes their saved inventory, stats and advancements; and clears their moderators notes. This cannot be undone.',
+        confirmLabel: 'Delete',
+        danger: true,
+      }).then(async (ok) => {
+        if (!ok) return;
+        try {
+          const res = await fetch(`/api/servers/${serverId}/players/${encodeURIComponent(name)}`, { method: 'DELETE' });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || data.ok === false)
+            throw new Error(data.error || friendlyError(res, { action: 'delete that player' }));
+          const row = rowFor(name);
+          row?.remove();
+          applyFilter();
+          if (!root.querySelector('[data-player-row]')) location.reload();
+          toast(`${name} deleted.`);
+        } catch (err) {
+          fail(err);
+        }
+      });
+    } else if (act.dataset.act === 'copy-uuid') {
       window.CD.copyText(act.dataset.uuid).then((ok) => {
         if (ok) toast('UUID copied.');
       });

@@ -120,6 +120,7 @@
                   <button data-act="ban-reason" data-name="{{name}}">{{{icon 'ban' 'size-3.5'}}} Ban with Reason…</button>
                   <button data-act="notes" data-name="{{name}}">{{{icon 'sticky-note' 'size-3.5'}}} Moderator Notes…</button>
                   {{#if uuid}}<button data-act="copy-uuid" data-uuid="{{uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
+                  {{#unless online}}<button class="text-danger" data-act="delete-player" data-name="{{name}}">{{{icon 'trash-2' 'size-3.5'}}} Delete Player…</button>{{/unless}}
                 </template>
               </div>
             </td>

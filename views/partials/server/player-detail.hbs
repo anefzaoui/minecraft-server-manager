@@ -39,6 +39,7 @@
         {{/if}}
         {{! Labeled like its siblings - a lone glyph in a row of labeled actions reads as noise. }}
         {{#if player.uuid}}<button class="btn btn-ghost btn-sm" data-act="copy-uuid" data-copy="{{player.uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
+        {{#if player.uuid}}{{#unless player.online}}<button class="btn btn-ghost btn-sm text-danger" data-act="delete-player" data-tip="Delete this player and all of their saved data (whitelist/op/ban status, inventory, stats, advancements and notes)">{{{icon 'trash-2' 'size-3.5'}}} Delete Player…</button>{{/unless}}{{/if}}
       </div>
     </div>
     {{#if player.banned}}

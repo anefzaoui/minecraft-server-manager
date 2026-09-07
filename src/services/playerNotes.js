@@ -57,4 +57,10 @@ function deleteNote(serverId, id, { actor = 'system' } = {}) {
   });
 }
 
-module.exports = { listNotes, addNote, deleteNote };
+/** Remove every note for a player (used when their whole record is deleted). Returns count removed. */
+function deletePlayerNotes(serverId, uuid) {
+  const removed = db.run('DELETE FROM player_notes WHERE server_id = ? AND uuid = ?', serverId, uuid).changes || 0;
+  return removed;
+}
+
+module.exports = { listNotes, addNote, deleteNote, deletePlayerNotes };
