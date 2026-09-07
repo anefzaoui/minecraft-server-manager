@@ -166,7 +166,8 @@ function init(root) {
         img.className = 'pointer-events-none absolute inset-0.5 object-contain [image-rendering:pixelated]';
         img.alt = '';
         img.loading = 'lazy';
-        img.src = `${iconBase}/${item.id.slice('minecraft:'.length)}.png`;        img.addEventListener('load', () => abbrevEl?.classList.add('hidden'));
+        img.src = `${iconBase}/${item.id.slice('minecraft:'.length)}.png`;
+        img.addEventListener('load', () => abbrevEl?.classList.add('hidden'));
         img.addEventListener('error', () => {
           // No local texture (bed/banner/chest/head/… - see itemGlyph.js) -
           // a purpose-built glyph beats the 2-3 letter text abbreviation.
@@ -862,10 +863,10 @@ function init(root) {
             return false;
           }
         }
-        return postEdit(
-          `/player/${currentUuid}/add`,
-          { item: itemId, count: n },
-          (r) => `${r.count}× ${r.item} added to slot ${r.slot}. A backup of the save file is kept.`
+        return postEdit(`/player/${currentUuid}/add`, { item: itemId, count: n }, (r) =>
+          r.mechanism === 'rcon'
+            ? `${r.count}× ${r.item} given to ${r.player} via server command.`
+            : `${r.count}× ${r.item} added to slot ${r.slot}. A backup of the save file is kept.`
         );
       },
     });

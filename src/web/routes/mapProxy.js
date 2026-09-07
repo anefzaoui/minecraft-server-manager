@@ -22,6 +22,7 @@ const http = require('node:http');
 const net = require('node:net');
 const path = require('node:path');
 const express = require('express');
+const asyncHandler = require('../middleware/asyncHandler');
 const config = require('../../config');
 const logger = require('../../logger')(path.basename(__filename));
 const { getDocker } = require('../../docker/connect');
@@ -95,85 +96,88 @@ async function resolveTarget(server, cfg) {
   return candidates[candidates.length - 1];
 }
 
-router.use('/:id', async (req, res) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    logger.debug('Rejected a non-GET request to the map proxy.', { serverId: req.params.id, method: req.method });
-    return res.status(405).send('Method not allowed');
-  }
-  const server = getServer(req.params.id);
-  const cfg = server ? getMapConfig(server.id) : { enabled: false };
-  if (!server || !cfg.enabled || !cfg.hostPort) {
-    logger.debug('Rejected a map proxy request for a server without a live map.', { serverId: req.params.id });
-    return res.status(404).send('Live map is not enabled for this server');
-  }
-
-  const target = await resolveTarget(server, cfg);
-
-  // BlueMap's bundled webserver only serves static tiles/assets, so forward a
-  // small allowlist of request headers rather than the client's whole set -
-  // nothing else (cookies, auth, x-forwarded-*, custom headers) has any business
-  // reaching a target that may sit on a shared Docker network.
-  const FORWARD_REQ = ['accept', 'accept-encoding', 'accept-language', 'range', 'if-none-match', 'if-modified-since'];
-  const fwd = { host: `${target.host}:${target.port}` };
-  for (const h of FORWARD_REQ) if (req.headers[h] != null) fwd[h] = req.headers[h];
-
-  // Symmetrically, copy back only headers a static asset legitimately needs -
-  // never a Set-Cookie / CSP / auth header BlueMap might emit.
-  const COPY_RES = new Set([
-    'content-type',
-    'content-length',
-    'content-encoding',
-    'content-range',
-    'accept-ranges',
-    'cache-control',
-    'last-modified',
-    'etag',
-    'expires',
-    'vary',
-  ]);
-
-  const upstream = http.request(
-    {
-      host: target.host,
-      port: target.port,
-      path: req.url === '/' ? '/' : req.url,
-      method: req.method,
-      headers: fwd,
-      timeout: 20000,
-    },
-    (up) => {
-      res.status(up.statusCode || 502);
-      for (const [k, v] of Object.entries(up.headers)) {
-        if (COPY_RES.has(k.toLowerCase())) res.setHeader(k, v);
-      }
-      up.pipe(res);
+router.use(
+  '/:id',
+  asyncHandler(async (req, res) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      logger.debug('Rejected a non-GET request to the map proxy.', { serverId: req.params.id, method: req.method });
+      return res.status(405).send('Method not allowed');
     }
-  );
-  upstream.on('timeout', () => upstream.destroy(new Error('timeout')));
-  upstream.on('error', (err) => {
-    targetCache.delete(server.id); // stale - the next request re-probes every candidate
-    logger.warn('A live-map proxy request failed.', {
-      serverId: server.id,
-      target: `${target.host}:${target.port}`,
-      code: err.code || 'timeout',
-    });
-    if (res.headersSent) return res.end();
-    if (err.code === 'ENOTFOUND') {
-      return res
+    const server = getServer(req.params.id);
+    const cfg = server ? getMapConfig(server.id) : { enabled: false };
+    if (!server || !cfg.enabled || !cfg.hostPort) {
+      logger.debug('Rejected a map proxy request for a server without a live map.', { serverId: req.params.id });
+      return res.status(404).send('Live map is not enabled for this server');
+    }
+
+    const target = await resolveTarget(server, cfg);
+
+    // BlueMap's bundled webserver only serves static tiles/assets, so forward a
+    // small allowlist of request headers rather than the client's whole set -
+    // nothing else (cookies, auth, x-forwarded-*, custom headers) has any business
+    // reaching a target that may sit on a shared Docker network.
+    const FORWARD_REQ = ['accept', 'accept-encoding', 'accept-language', 'range', 'if-none-match', 'if-modified-since'];
+    const fwd = { host: `${target.host}:${target.port}` };
+    for (const h of FORWARD_REQ) if (req.headers[h] != null) fwd[h] = req.headers[h];
+
+    // Symmetrically, copy back only headers a static asset legitimately needs -
+    // never a Set-Cookie / CSP / auth header BlueMap might emit.
+    const COPY_RES = new Set([
+      'content-type',
+      'content-length',
+      'content-encoding',
+      'content-range',
+      'accept-ranges',
+      'cache-control',
+      'last-modified',
+      'etag',
+      'expires',
+      'vary',
+    ]);
+
+    const upstream = http.request(
+      {
+        host: target.host,
+        port: target.port,
+        path: req.url === '/' ? '/' : req.url,
+        method: req.method,
+        headers: fwd,
+        timeout: 20000,
+      },
+      (up) => {
+        res.status(up.statusCode || 502);
+        for (const [k, v] of Object.entries(up.headers)) {
+          if (COPY_RES.has(k.toLowerCase())) res.setHeader(k, v);
+        }
+        up.pipe(res);
+      }
+    );
+    upstream.on('timeout', () => upstream.destroy(new Error('timeout')));
+    upstream.on('error', (err) => {
+      targetCache.delete(server.id); // stale - the next request re-probes every candidate
+      logger.warn('A live-map proxy request failed.', {
+        serverId: server.id,
+        target: `${target.host}:${target.port}`,
+        code: err.code || 'timeout',
+      });
+      if (res.headersSent) return res.end();
+      if (err.code === 'ENOTFOUND') {
+        return res
+          .status(502)
+          .send(
+            `Cannot resolve map-proxy host "${target.host}" - if the panel runs in its own container, ` +
+              'add `extra_hosts: ["host.docker.internal:host-gateway"]` to its compose service ' +
+              '(see docker-compose.yml), or set MAP_PROXY_HOST explicitly.'
+          );
+      }
+      res
         .status(502)
         .send(
-          `Cannot resolve map-proxy host "${target.host}" - if the panel runs in its own container, ` +
-            'add `extra_hosts: ["host.docker.internal:host-gateway"]` to its compose service ' +
-            '(see docker-compose.yml), or set MAP_PROXY_HOST explicitly.'
+          'The map server is not responding - is the Minecraft server running? BlueMap needs a minute after startup to come up.'
         );
-    }
-    res
-      .status(502)
-      .send(
-        'The map server is not responding - is the Minecraft server running? BlueMap needs a minute after startup to come up.'
-      );
-  });
-  req.pipe(upstream);
-});
+    });
+    req.pipe(upstream);
+  })
+);
 
 module.exports = router;

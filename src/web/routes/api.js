@@ -51,6 +51,23 @@ function requireServer(id) {
   return server;
 }
 
+/**
+ * Optional 0..max numeric for the cpus / diskQuotaGb inputs. Unlike
+ * z.coerce.number(), a cleared/empty field maps to "unset" (use the configured
+ * default) instead of a silent 0 - which for a disk quota means "off" and for
+ * cpus means "unlimited". An explicit "0" still round-trips.
+ */
+const optNum0 = (max) =>
+  z
+    .union([z.string(), z.number(), z.null()])
+    .transform((v) => (typeof v === 'string' ? v.trim() : v))
+    .transform((v) => (v === '' || v === null ? undefined : Number(v)))
+    .refine(
+      (v) => v === undefined || (Number.isFinite(v) && v >= 0 && v <= max),
+      `Expected a number between 0 and ${max}`
+    )
+    .optional();
+
 const createSchema = z
   .object({
     name: z.string().trim().min(1).max(80),
@@ -76,8 +93,8 @@ const createSchema = z
     withBedrock: z.coerce.boolean().optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
-    cpus: z.coerce.number().min(0).max(128).optional(),
-    diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
+    cpus: optNum0(128),
+    diskQuotaGb: optNum0(16384),
     updatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
     autoStart: z.coerce.boolean().optional(),
     start: z.coerce.boolean().optional(),
@@ -125,8 +142,8 @@ router.patch(
         javaTag: z.string().max(16).optional(),
         heapMb: z.coerce.number().int().min(512).max(262144).optional(),
         containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
-        cpus: z.coerce.number().min(0).max(128).optional(),
-        diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
+        cpus: optNum0(128),
+        diskQuotaGb: optNum0(16384),
         quotaStrict: z.coerce.boolean().optional(),
         updatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
         autoStart: z.coerce.boolean().optional(),
@@ -180,7 +197,7 @@ const previewSchema = z.object({
   heapMb: z.coerce.number().int().min(512).max(262144).optional(),
   containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
   containerSwapMb: z.coerce.number().int().min(0).optional(),
-  cpus: z.coerce.number().min(0).max(128).optional(),
+  cpus: optNum0(128),
   portGame: z.coerce.number().int().min(1024).max(65535).optional(),
   portRcon: z.coerce.number().int().min(1024).max(65535).optional(),
   portBedrock: z.coerce.number().int().min(1024).max(65535).optional(),
@@ -944,7 +961,7 @@ const fromPackSchema = z
       .optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
-    diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
+    diskQuotaGb: optNum0(16384),
     portGame: z.coerce.number().int().min(1024).max(65535).optional(),
     env: z.record(z.string(), z.string()).optional(),
     ...dockerOverridesSchema,
@@ -1509,8 +1526,12 @@ router.post(
       `Shrinking "${world}" on ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
+        // Decide from the CONTAINER's current state, not the DB row above (which
+        // is only refreshed by the 60s status poll and can be stale right after a
+        // start/stop). A stale "stopped" here would corrupt: shrink would run
+        // while the JVM is actually writing region files.
         let wasRunning = false;
-        if (isLive && autoStopStart) {
+        if (autoStopStart && (await worldShrink.isLive(server.id))) {
           wasRunning = true;
           t.step('Stopping the server');
           await servers.stopServer(server.id, { actor });
@@ -2406,7 +2427,7 @@ const fromModsSchema = z
       .default([]),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
-    diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
+    diskQuotaGb: optNum0(16384),
     portGame: z.coerce.number().int().min(1024).max(65535).optional(),
     env: z.record(z.string(), z.string()).optional(),
     ...dockerOverridesSchema,
@@ -2543,7 +2564,7 @@ const fromZipSchema = z
     applyOverrides: z.coerce.boolean().optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
-    diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
+    diskQuotaGb: optNum0(16384),
     portGame: z.coerce.number().int().min(1024).max(65535).optional(),
     env: z.record(z.string(), z.string()).optional(),
     ...dockerOverridesSchema,

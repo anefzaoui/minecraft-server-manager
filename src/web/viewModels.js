@@ -5,8 +5,6 @@
 const { getVersionManifest } = require('../services/mojang');
 const db = require('../db');
 
-const GB = 1024 ** 3;
-
 /**
  * UX rule (user-mandated): LATEST/SNAPSHOT are never shown bare - always
  * resolve to "LATEST (26.2)" style using the cached Mojang manifest.
@@ -58,7 +56,7 @@ function sidebarServerVMs() {
     accent: s.accent,
     status: s.status,
     flavor: flavorLabel(s.type),
-    disk: { used: sizes.get(`servers/${s.id}`) || 0, quota: s.disk_quota_bytes || 25 * GB },
+    disk: { used: sizes.get(`servers/${s.id}`) || 0, quota: s.disk_quota_bytes },
   }));
 }
 
@@ -93,7 +91,9 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
   const diskUsedFor = ctx ? ctx.disk : diskUsed;
   const packFor = ctx ? ctx.packVM : packVM;
   const updateFor = ctx ? ctx.update : hasPackUpdate;
-  const crashesFor = ctx ? ctx.crashes : (id) => db.get('SELECT COUNT(*) AS n FROM crash_reports WHERE server_id = ? AND viewed = 0', id)?.n || 0;
+  const crashesFor = ctx
+    ? ctx.crashes
+    : (id) => db.get('SELECT COUNT(*) AS n FROM crash_reports WHERE server_id = ? AND viewed = 0', id)?.n || 0;
   const vm = {
     id: s.id,
     name: s.display_name,
@@ -111,7 +111,7 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     resources: { heapMb: s.heap_mb, containerMemoryMb: s.container_memory_mb, cpus: s.cpus },
     stats: { cpuPct: 0, memUsedMb: 0, uptime: null, perf: null, perfSupported: true },
     players: { online: 0, max: Number(s.env.MAX_PLAYERS) || 20, names: [] },
-    disk: { used: diskUsedFor(s.id), quota: s.disk_quota_bytes || 25 * GB },
+    disk: { used: diskUsedFor(s.id), quota: s.disk_quota_bytes },
     pack: packFor(s.id),
     updateAvailable: updateFor(s.id),
     crashesUnread: crashesFor(s.id),
@@ -171,13 +171,17 @@ function buildServerContext(rows) {
   const checks = new Map();
   for (const chunk of chunked(ids)) {
     const ph = chunk.map(() => '?').join(',');
-    for (const p of db.all(`SELECT * FROM server_packs WHERE server_id IN (${ph})`, ...chunk)) packs.set(p.server_id, p);
+    for (const p of db.all(`SELECT * FROM server_packs WHERE server_id IN (${ph})`, ...chunk))
+      packs.set(p.server_id, p);
   }
   if (packs.size) {
     const packIds = [...packs.values()].map((p) => p.server_id);
     for (const chunk of chunked(packIds)) {
       const ph = chunk.map(() => '?').join(',');
-      for (const c of db.all(`SELECT * FROM update_checks WHERE subject_type = 'pack' AND subject_id IN (${ph})`, ...chunk))
+      for (const c of db.all(
+        `SELECT * FROM update_checks WHERE subject_type = 'pack' AND subject_id IN (${ph})`,
+        ...chunk
+      ))
         checks.set(c.subject_id, c);
     }
   }
@@ -186,7 +190,10 @@ function buildServerContext(rows) {
   const disk = new Map();
   for (const chunk of chunked(ids)) {
     const ph = chunk.map(() => '?').join(',');
-    for (const r of db.all(`SELECT rel_path, size_bytes FROM storage_index WHERE rel_path IN (${ph})`, ...chunk.map((id) => `servers/${id}`)))
+    for (const r of db.all(
+      `SELECT rel_path, size_bytes FROM storage_index WHERE rel_path IN (${ph})`,
+      ...chunk.map((id) => `servers/${id}`)
+    ))
       disk.set(r.rel_path.slice('servers/'.length), r.size_bytes);
   }
 
@@ -194,7 +201,10 @@ function buildServerContext(rows) {
   const crashes = new Map();
   for (const chunk of chunked(ids)) {
     const ph = chunk.map(() => '?').join(',');
-    for (const r of db.all(`SELECT server_id, COUNT(*) AS n FROM crash_reports WHERE server_id IN (${ph}) AND viewed = 0 GROUP BY server_id`, ...chunk))
+    for (const r of db.all(
+      `SELECT server_id, COUNT(*) AS n FROM crash_reports WHERE server_id IN (${ph}) AND viewed = 0 GROUP BY server_id`,
+      ...chunk
+    ))
       crashes.set(r.server_id, r.n);
   }
 
@@ -347,7 +357,13 @@ function crashVM(c) {
     ts: c.file_mtime,
     size: c.size_bytes,
     summary: c.summary || c.exception,
-    suspected: (() => { try { return JSON.parse(c.suspected_json || '[]'); } catch { return []; } })(),
+    suspected: (() => {
+      try {
+        return JSON.parse(c.suspected_json || '[]');
+      } catch {
+        return [];
+      }
+    })(),
     viewed: Boolean(c.viewed),
     mclogsUrl: c.mclogs_url || null,
   };

@@ -70,12 +70,16 @@ async function isPortFree(port) {
 /** Suggest a { game, rcon } pair (and bedrock when requested). */
 async function suggestPorts({ withBedrock = false } = {}) {
   const used = dbPortsInUse();
+  // RCON = game + offset, so the largest LEGAL game port is 65535 - offset.
+  // Probing an rcon > 65535 would fail every candidate and misreport "no free
+  // game ports" for a perfectly good range.
+  const maxGame = 65535 - config.ports.rconOffset;
   let game = config.ports.gameStart;
   for (;;) {
     const rcon = game + config.ports.rconOffset;
     if (!used.has(game) && !used.has(rcon) && (await probe(game)) && (await probe(rcon))) break;
     game += 1;
-    if (game > 65000)
+    if (game > maxGame)
       throw httpError(409, 'No free game ports are available. Delete a server or widen the port range in your .env.');
   }
   const result = { game, rcon: game + config.ports.rconOffset, bedrock: null };

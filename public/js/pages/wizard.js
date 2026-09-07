@@ -223,10 +223,13 @@ function init() {
 
   function resources() {
     const heapMb = Number(document.getElementById('wz-ram').value);
+    const quotaRaw = document.getElementById('wz-quota').value.trim();
     return {
       heapMb,
       containerMemoryMb: Math.round((heapMb * 1.5) / 512) * 512,
-      diskQuotaGb: Number(document.getElementById('wz-quota').value),
+      // Blank = "use the admin-configured default", not a hard 0 (which means
+      // quota off) - an empty field must never silently flip the quota off.
+      diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),
       portGame: Number(document.getElementById('wz-port').value) || undefined,
     };
   }

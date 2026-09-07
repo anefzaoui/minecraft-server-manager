@@ -252,6 +252,10 @@ function init(serverId) {
       } else if (msg.kind === 'error') {
         ackPending();
         appendLine(`[panel/WARN]: ${msg.message}`);
+      } else if (msg.kind === 'log-end') {
+        // The upstream docker log stream ended (server stopped / restarted).
+        // The server keeps this socket open, so drive the reconnect ourselves.
+        ws.close();
       }
     });
     ws.addEventListener('close', () => {

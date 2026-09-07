@@ -175,7 +175,10 @@ async function createBackupImpl(
     } else {
       try {
         if (task) task.step('Removing rarely-visited chunks from the world');
-        const r = await require('./worldShrink').shrinkWorld(serverId, {
+        // shrinkWorldImpl (not the guardOp-wrapped shrinkWorld): this runs
+        // inside the guardOp('backup') critical section, which already excludes
+        // lifecycle ops - a nested 'shrink' guard would 409 against its own backup.
+        const r = await require('./worldShrink').shrinkWorldImpl(serverId, {
           actor,
           minInhabitedTicks: Number.isFinite(shrinkMinTicks) ? shrinkMinTicks : undefined,
         });

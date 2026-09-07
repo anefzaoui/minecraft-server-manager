@@ -3,7 +3,9 @@
 // WebSocket endpoints:
 //   /ws/console/<serverId>  - live log stream down, RCON commands up
 //   /ws/stats/<serverId>    - normalized stats samples every 2s
-// Messages are JSON: {kind: 'log'|'stats'|'cmd'|'cmd-result'|'error', ...}
+// Messages are JSON: {kind: 'log'|'stats'|'cmd'|'cmd-result'|'error'|'log-end', ...}
+// 'log-end' marks the end of one console log stream (server stopped/restarted);
+// the client closes the socket on it so its reconnect/backoff resumes a fresh one.
 
 const { WebSocketServer } = require('ws');
 const signature = require('cookie-signature');

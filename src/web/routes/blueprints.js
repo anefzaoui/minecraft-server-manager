@@ -35,6 +35,19 @@ const upload = multer({
 
 const uploadTokenSchema = z.string().regex(/^bpup-[A-Za-z0-9_-]{10}\.mcserver\.zip$/, 'Invalid upload token');
 
+// Cleared cpus/diskQuotaGb inputs mean "leave the blueprint's value" rather
+// than a silent 0 (quota off / unlimited cpu). See src/web/routes/api.js.
+const optNum0 = (max) =>
+  z
+    .union([z.string(), z.number(), z.null()])
+    .transform((v) => (typeof v === 'string' ? v.trim() : v))
+    .transform((v) => (v === '' || v === null ? undefined : Number(v)))
+    .refine(
+      (v) => v === undefined || (Number.isFinite(v) && v >= 0 && v <= max),
+      `Expected a number between 0 and ${max}`
+    )
+    .optional();
+
 const overridesSchema = z.object({
   name: z.string().trim().min(1).max(80).optional(),
   description: z.string().max(4000).optional(),
@@ -47,8 +60,8 @@ const overridesSchema = z.object({
   mcVersion: z.string().trim().max(32).optional(),
   heapMb: z.coerce.number().int().min(512).max(262144).optional(),
   containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
-  cpus: z.coerce.number().min(0).max(128).optional(),
-  diskQuotaGb: z.coerce.number().min(0).max(16384).optional(),
+  cpus: optNum0(128),
+  diskQuotaGb: optNum0(16384),
   ...dockerOverridesSchema,
 });
 

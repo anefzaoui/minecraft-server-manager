@@ -1215,7 +1215,7 @@ async function addItem(serverId, uuid, itemId, count = 1, { actor = 'system' } =
   count = clampCount(count);
   const ctx = await editContext(serverId, uuid);
   if (ctx.mechanism === 'rcon') {
-    return { ...(await giveItem(serverId, ctx.name, item, count, { actor })), mechanism: 'rcon' };
+    return { ...(await giveItem(serverId, ctx.name, item, count, { actor })), mechanism: 'rcon', slot: null };
   }
   const playerLabel = ctx.name || ctx.uuid;
   const slot = await withDatFile(serverId, ctx, (root) => {

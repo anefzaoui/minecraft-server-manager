@@ -46,14 +46,21 @@ function hashToken(plaintext) {
   return crypto.createHash('sha256').update(String(plaintext)).digest('hex');
 }
 
-/** SQLite `datetime('now')` writes "YYYY-MM-DD HH:MM:SS" (UTC, no zone marker). */
-function nowSql() {
-  return new Date().toISOString().slice(0, 19).replace('T', ' ');
+/** Parse a stored timestamp to epoch ms. Accepts the SQLite `datetime('now')`
+ *  "YYYY-MM-DD HH:MM:SS" (UTC, no marker) form AND the ISO-8601 "…T…Z" value
+ *  the UI sends for an expiry; a naive `T` vs space compare would rank one
+ *  always above the other and make expiries never fire. */
+function sqlTimeToMs(ts) {
+  const s = String(ts);
+  return Date.parse(/^\d{4}-\d{2}-\d{2} /.test(s) ? s.replace(' ', 'T') + 'Z' : s);
 }
 
-/** Parse a stored "YYYY-MM-DD HH:MM:SS" (UTC) timestamp to epoch ms. */
-function sqlTimeToMs(ts) {
-  return Date.parse(String(ts).replace(' ', 'T') + 'Z');
+/** True when an absolute expiry has passed. NaN-safe so a malformed value can
+ *  never disable expiry checking. */
+function isExpired(expiresAt) {
+  if (!expiresAt) return false;
+  const ms = sqlTimeToMs(expiresAt);
+  return Number.isFinite(ms) && ms <= Date.now();
 }
 
 /**
@@ -62,7 +69,7 @@ function sqlTimeToMs(ts) {
  * @returns {PublicApiToken}
  */
 function toPublic(row) {
-  const expired = Boolean(row.expires_at) && row.expires_at <= nowSql();
+  const expired = isExpired(row.expires_at);
   return {
     id: row.id,
     label: row.label,
@@ -162,7 +169,7 @@ function verifyToken(plaintext) {
   const row = db.get('SELECT * FROM api_tokens WHERE token_hash = ?', hashToken(plaintext));
   if (!row) return null;
   if (row.revoked_at) return { ok: false, reason: 'revoked' };
-  if (row.expires_at && row.expires_at <= nowSql()) return { ok: false, reason: 'expired' };
+  if (isExpired(row.expires_at)) return { ok: false, reason: 'expired' };
   const pub = toPublic(row);
   return { ok: true, token: pub, scope: pub.scope, permissions: pub.permissions };
 }

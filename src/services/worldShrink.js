@@ -20,6 +20,7 @@ const httpError = require('../utils/httpError');
 const { recordEvent } = require('../events');
 const { inspectStatus } = require('../docker/containers');
 const { withSaveLock } = require('./serverLocks');
+const { guardOp } = require('./opLock');
 const { serverWorldDims, activeLevelName } = require('./worlds');
 const { parseHeader, chunkInhabitedTime, repack } = require('../utils/mcaRegion');
 const db = require('../db');
@@ -58,6 +59,18 @@ async function assertStopped(serverId) {
   if (!['stopped', 'crashed'].includes(info.status)) {
     throw httpError(409, 'Stop the server before shrinking its world. Shrinking edits the world files directly.');
   }
+}
+
+/** TRUE when the container is up in a state that would be writing to the world. */
+async function isLive(serverId) {
+  const LIVE = new Set(['running', 'starting', 'unhealthy', 'stalled', 'updating']);
+  let info;
+  try {
+    info = await inspectStatus(serverId);
+  } catch {
+    return false;
+  }
+  return Boolean(info.exists) && LIVE.has(info.status);
 }
 
 async function shrinkRegionFile(abs, { rx, rz, isOverworld, minInhabitedTicks, spawnKeepChunks, dryRun }) {
@@ -107,7 +120,7 @@ async function shrinkRegionFile(abs, { rx, rz, isOverworld, minInhabitedTicks, s
  * @param {string} [opts.actor]
  * @returns {Promise<{worldName,regionsScanned,chunksScanned,chunksRemoved,bytesFreed,dryRun,minInhabitedTicks,spawnKeepChunks}>}
  */
-async function shrinkWorld(serverId, opts = {}) {
+async function shrinkWorldImpl(serverId, opts = {}) {
   const server = mustServer(serverId);
   const minInhabitedTicks =
     Number.isFinite(opts.minInhabitedTicks) && opts.minInhabitedTicks > 0
@@ -126,6 +139,11 @@ async function shrinkWorld(serverId, opts = {}) {
   if (!dims.length || !fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
 
   const run = async () => {
+    // Re-check inside the critical section: shrink edits region files directly,
+    // and a start racing between the fast-fail above and the file mutations is
+    // exactly how a live world gets torn. With guardOp('shrink') in flight no
+    // start/stop/restore/backup can interleave here either.
+    await assertStopped(serverId);
     let regionsScanned = 0;
     let chunksScanned = 0;
     let chunksRemoved = 0;
@@ -163,7 +181,15 @@ async function shrinkWorld(serverId, opts = {}) {
         actor,
         type: 'world-shrunk',
         summary: `Shrank "${worldName}": removed ${chunksRemoved} rarely-visited chunk(s), freed ${humanBytes(bytesFreed)}`,
-        details: { worldName, chunksRemoved, regionsScanned, chunksScanned, bytesFreed, minInhabitedTicks, spawnKeepChunks },
+        details: {
+          worldName,
+          chunksRemoved,
+          regionsScanned,
+          chunksScanned,
+          bytesFreed,
+          minInhabitedTicks,
+          spawnKeepChunks,
+        },
       });
     }
     return {
@@ -182,4 +208,10 @@ async function shrinkWorld(serverId, opts = {}) {
   return dryRun ? run() : withSaveLock(serverId, run);
 }
 
-module.exports = { shrinkWorld };
+// The operation guard serializes shrink against container lifecycle (start/stop),
+// restore, install, rename, backup, … so the region repack can never overlap a
+// boot. The withSaveLock mutex additionally keeps it out of a concurrent
+// save-off/copy/save-on section (backup copy / world export) on the same server.
+const shrinkWorld = guardOp('shrink', shrinkWorldImpl);
+
+module.exports = { shrinkWorld, shrinkWorldImpl, isLive };

@@ -124,6 +124,11 @@ function resolveDefaults() {
   const envHeap = numFromEnv('DEFAULT_HEAP_MB', 0, { min: 0, max: 1024 * 1024 });
   const envContainer = numFromEnv('DEFAULT_CONTAINER_MEMORY_MB', 0, { min: 0, max: 1024 * 1024 });
   const envQuota = numFromEnv('DEFAULT_DISK_QUOTA_GB', 0, { min: 0, max: 1024 * 1024 });
+  // DEFAULT_DISK_QUOTA_GB=0 is meaningful ("quotas off") and must survive,
+  // unlike the memory pair where 0 means "auto". So decide from the variable's
+  // presence, not the parsed value.
+  const quotaRaw = process.env.DEFAULT_DISK_QUOTA_GB;
+  const quotaExplicitlySet = quotaRaw !== undefined && String(quotaRaw).trim() !== '';
 
   const hostMb = os.totalmem() / MB;
   // ~25% of host RAM for the heap, rounded to 512 MB, clamped to [1024, 8192].
@@ -136,7 +141,7 @@ function resolveDefaults() {
     heapMb,
     containerMemoryMb,
     cpus: 0, // 0 = unlimited
-    diskQuotaGb: envQuota || 25,
+    diskQuotaGb: quotaExplicitlySet ? envQuota : 25,
     quotaWarnPct: 80,
     quotaCriticalPct: 95,
   };

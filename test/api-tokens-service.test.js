@@ -54,6 +54,18 @@ test('an expired token verifies as expired', () => {
   assert.deepEqual(apiTokens.verifyToken(created.token), { ok: false, reason: 'expired' });
 });
 
+test('an expiry stored in the ISO-8601 form the UI sends actually expires', () => {
+  // The Settings page sends `new Date(x).toISOString()` ("2026-09-06T10:00:00.000Z").
+  // The compare must not treat `'T' > ' '` at position 10 as "not yet expired".
+  const created = apiTokens.createToken(
+    { label: 'unit-expiry-iso', scopeAll: true, expiresAt: '2000-01-01T00:00:00.000Z' },
+    { actor: 'tester' }
+  );
+  assert.deepEqual(apiTokens.verifyToken(created.token), { ok: false, reason: 'expired' });
+  const listed = apiTokens.listTokens().find((t) => t.id === created.id);
+  assert.equal(listed.status, 'expired');
+});
+
 test('scope round-trips and scopeAllowsServer honours the subset', () => {
   const created = apiTokens.createToken(
     { label: 'unit-scope', scopeAll: false, serverIds: ['srv_aaa', 'srv_bbb'] },

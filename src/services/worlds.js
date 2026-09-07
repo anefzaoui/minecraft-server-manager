@@ -24,6 +24,7 @@ const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { execCapture, inspectStatus } = require('../docker/containers');
+const { serializeError } = require('../utils/logSanitize');
 const indexer = require('../storage/indexer');
 const library = require('./library');
 const { withSaveLock } = require('./serverLocks');
@@ -33,16 +34,43 @@ const logger = require('../logger')(path.basename(__filename));
 // Run the save-off/flush → copy → save-on dance under the shared per-server save
 // lock when the server is running, so it can't overlap a concurrent backup or
 // world export and tear the copy. When stopped, just run the copy directly.
-async function withPausedSaves(serverId, running, copy) {
+async function withPausedSaves(serverId, running, copy, actor = 'system') {
   if (!running) return copy();
   return withSaveLock(serverId, async () => {
-    await execCapture(serverId, ['rcon-cli', 'save-off']).catch(() => {});
-    await execCapture(serverId, ['rcon-cli', 'save-all', 'flush']).catch(() => {});
+    await execCapture(serverId, ['rcon-cli', 'save-off']).catch((err) => {
+      logger.warn('Pausing world saves before a world operation failed; the copy may be slightly inconsistent.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    });
+    await execCapture(serverId, ['rcon-cli', 'save-all', 'flush']).catch((err) => {
+      logger.warn('Flushing world saves before a world operation failed; the copy may be slightly inconsistent.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    });
     await sleep(2000); // let region writes settle
     try {
       return await copy();
     } finally {
-      await execCapture(serverId, ['rcon-cli', 'save-on']).catch(() => {});
+      // save-on MUST succeed - if it is swallowed here the server would be left
+      // with world saves paused and nobody told. Surface it loudly (mirrors the
+      // backup path).
+      try {
+        await execCapture(serverId, ['rcon-cli', 'save-on']);
+      } catch (err) {
+        logger.error(
+          'Re-enabling world saves after a world operation failed: the server may still have saves paused.',
+          { serverId, err: serializeError(err, { includeStack: false }) }
+        );
+        recordEvent({
+          serverId,
+          actor,
+          type: 'world-save-warning',
+          summary:
+            'World saves were not re-enabled after a world operation - check the server console and run save-on.',
+        });
+      }
     }
   });
 }
@@ -280,11 +308,16 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
 
   try {
     // Consistent copy: pause saves, flush, copy to tmp, resume - then zip at leisure.
-    await withPausedSaves(serverId, running, async () => {
-      for (const dim of dims) {
-        await fsp.cp(dim, path.join(tmpDir, path.basename(dim)), { recursive: true });
-      }
-    });
+    await withPausedSaves(
+      serverId,
+      running,
+      async () => {
+        for (const dim of dims) {
+          await fsp.cp(dim, path.join(tmpDir, path.basename(dim)), { recursive: true });
+        }
+      },
+      actor
+    );
 
     const mainCopy = path.join(tmpDir, level);
     const dimCopies = dims.slice(1).map((d) => path.join(tmpDir, path.basename(d)));
@@ -556,12 +589,17 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
   const running = active && (await isRunning(serverId));
   const releaseReservation = indexer.reserveDiskSpace(sizeBytes);
   try {
-    await withPausedSaves(serverId, running, async () => {
-      for (const dim of dims) {
-        const suffix = path.basename(dim).slice(worldName.length);
-        await fsp.cp(dim, dataPath('servers', serverId, copyName + suffix), { recursive: true });
-      }
-    });
+    await withPausedSaves(
+      serverId,
+      running,
+      async () => {
+        for (const dim of dims) {
+          const suffix = path.basename(dim).slice(worldName.length);
+          await fsp.cp(dim, dataPath('servers', serverId, copyName + suffix), { recursive: true });
+        }
+      },
+      actor
+    );
   } finally {
     releaseReservation();
   }
@@ -728,7 +766,7 @@ async function resetWorldImpl(
 const resetWorld = guardOp('reset', resetWorldImpl);
 
 /** Delete a non-active world from a server. Returns freed bytes. */
-async function deleteServerWorld(serverId, worldName, { actor = 'system' } = {}) {
+async function deleteServerWorldImpl(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
   if (worldName === activeLevelName(server)) {
@@ -749,6 +787,11 @@ async function deleteServerWorld(serverId, worldName, { actor = 'system' } = {})
   indexer.scheduleScan();
   return { freedBytes };
 }
+
+// Delete can rm -rf a whole world inside the server dir tree, so it must never
+// interleave with a backup/restore/install that is zipping or swapping the same
+// tree - guard it like every other world mutation.
+const deleteServerWorld = guardOp('delete-world', deleteServerWorldImpl);
 
 // ---------------------------------------------------------------------------
 // Downloads
@@ -771,9 +814,14 @@ async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = 
   const active = worldName === activeLevelName(server);
   const running = active && (await isRunning(serverId));
   const zipAbs = dataPath('tmp', `world-dl-${nanoid(6)}.zip`);
-  await withPausedSaves(serverId, running, async () => {
-    await zipWorld(zipAbs, dims[0], dims.slice(1));
-  });
+  await withPausedSaves(
+    serverId,
+    running,
+    async () => {
+      await zipWorld(zipAbs, dims[0], dims.slice(1));
+    },
+    actor
+  );
   const size = (await fsp.stat(zipAbs)).size;
   recordEvent({
     serverId,
@@ -962,10 +1010,24 @@ function readLevelBuffer(levelDatAbs) {
 /** Zip a world: root contents at the top level, split dims as sibling dirs. */
 function zipWorld(outFile, rootAbs, dimDirs = []) {
   return new Promise((resolve, reject) => {
+    let done = false;
+    const fail = (err) => {
+      if (done) return;
+      done = true;
+      fsp.rm(outFile, { force: true }).catch(() => {});
+      reject(err);
+    };
     const output = fs.createWriteStream(outFile);
     const archive = archiver('zip', { zlib: { level: 6 } });
-    output.on('close', resolve);
-    archive.on('error', reject);
+    output.on('close', () => {
+      done = true;
+      resolve();
+    });
+    // 'error' on the write stream (ENOSPC/EACCES on the target) would otherwise
+    // leave this promise unsettled forever and, with no listener, surface as an
+    // uncaught exception. Clean up the partial file either way.
+    output.on('error', fail);
+    archive.on('error', fail);
     archive.pipe(output);
     archive.directory(rootAbs, false);
     for (const dim of dimDirs) archive.directory(dim, path.basename(dim));
