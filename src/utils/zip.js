@@ -249,7 +249,9 @@ function forEachEntryBuffer(zipPath, select, fn, { maxEntryBytes = 512 * 1024 * 
       const fail = (e) => {
         if (done) return;
         done = true;
-        try { zip.close(); } catch {}
+        try {
+          zip.close();
+        } catch {}
         reject(e);
       };
       zip.on('error', fail);
@@ -279,7 +281,10 @@ function forEachEntryBuffer(zipPath, select, fn, { maxEntryBytes = 512 * 1024 * 
       };
       zip.on('entry', readEntry);
       zip.on('end', () => {
-        if (!done) { done = true; resolve(); }
+        if (!done) {
+          done = true;
+          resolve();
+        }
       });
       zip.readEntry();
     });

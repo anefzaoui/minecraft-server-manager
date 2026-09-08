@@ -99,7 +99,11 @@ function makeRouter(scope) {
   router.get(
     '/search',
     asyncHandler(async (req, res, next) => {
-      const q = z.string().min(2).max(200).parse(req.query.q ?? '');
+      const q = z
+        .string()
+        .min(2)
+        .max(200)
+        .parse(req.query.q ?? '');
       const subdir = pathSchema.parse(req.query.path ?? '');
       const caseSensitive = req.query.case === '1' || req.query.case === 'true';
       res.json({ ok: true, ...(await files.searchFiles(sid(req), q, { caseSensitive, subdir })) });

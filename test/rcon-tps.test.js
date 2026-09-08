@@ -30,7 +30,9 @@ test('parses Forge `forge tps` overall line', () => {
 });
 
 test('parses Paper `mspt` avg from the "from last 5s" group', () => {
-  const r = parseTps('Server tick times (avg/min/max) from last 5s, 10s, 1m:\n1.23/0.90/4.50, 1.30/0.88/6.0, 1.4/0.9/9.9');
+  const r = parseTps(
+    'Server tick times (avg/min/max) from last 5s, 10s, 1m:\n1.23/0.90/4.50, 1.30/0.88/6.0, 1.4/0.9/9.9'
+  );
   assert.equal(r.mspt, 1.23);
 });
 

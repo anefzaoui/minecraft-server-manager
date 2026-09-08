@@ -222,9 +222,25 @@ function init(rootEl) {
 
   // ---- Text editor (modal textarea) ----
   const LANG_BY_EXT = {
-    properties: 'Properties', json: 'JSON', json5: 'JSON5', yml: 'YAML', yaml: 'YAML', toml: 'TOML',
-    txt: 'Text', md: 'Markdown', mcfunction: 'mcfunction', cfg: 'Config', conf: 'Config', ini: 'INI',
-    js: 'JavaScript', ts: 'TypeScript', sh: 'Shell', xml: 'XML', html: 'HTML', css: 'CSS', log: 'Log',
+    properties: 'Properties',
+    json: 'JSON',
+    json5: 'JSON5',
+    yml: 'YAML',
+    yaml: 'YAML',
+    toml: 'TOML',
+    txt: 'Text',
+    md: 'Markdown',
+    mcfunction: 'mcfunction',
+    cfg: 'Config',
+    conf: 'Config',
+    ini: 'INI',
+    js: 'JavaScript',
+    ts: 'TypeScript',
+    sh: 'Shell',
+    xml: 'XML',
+    html: 'HTML',
+    css: 'CSS',
+    log: 'Log',
   };
 
   async function openEditor(path, name, gotoLine = 0) {
@@ -282,7 +298,11 @@ function init(rootEl) {
     textarea.focus();
     if (gotoLine > 0) {
       // Put the caret at the start of the target line and scroll it into view.
-      const offset = textarea.value.split('\n').slice(0, gotoLine - 1).join('\n').length + (gotoLine > 1 ? 1 : 0);
+      const offset =
+        textarea.value
+          .split('\n')
+          .slice(0, gotoLine - 1)
+          .join('\n').length + (gotoLine > 1 ? 1 : 0);
       textarea.setSelectionRange(offset, offset);
       const approxLineHeight = 16;
       textarea.scrollTop = Math.max(0, (gotoLine - 3) * approxLineHeight);

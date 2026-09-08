@@ -66,7 +66,10 @@ async function resolveSkin(uuid) {
         ? decodeTextures(body.properties.find((p) => p && p.name === 'textures')?.value)
         : null;
       const skinTex = textures && textures.SKIN;
-      skin = skinTex && skinTex.url ? { url: skinTex.url, model: skinTex.metadata?.model === 'slim' ? 'slim' : 'wide' } : null;
+      skin =
+        skinTex && skinTex.url
+          ? { url: skinTex.url, model: skinTex.metadata?.model === 'slim' ? 'slim' : 'wide' }
+          : null;
     }
   } catch (err) {
     logger.debug('Resolving a Mojang skin failed.', {

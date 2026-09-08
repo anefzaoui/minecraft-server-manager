@@ -93,7 +93,7 @@ test('pruneRetention is a no-op when every bucket is under its cap', async () =>
   assert.equal(countByReason(id, 'scheduled'), 3);
 });
 
-test('a per-server override changes that server\'s count caps', async () => {
+test("a per-server override changes that server's count caps", async () => {
   const id = 'srv_ret_override';
   seedServer(id);
   seedBackups(id, 'manual', 10);

@@ -157,8 +157,13 @@ async function solve(projectRefs) {
     // at O(min|set| · (m-1)) instead of O(|sets[0]| · (m-1)) when the first
     // project happens to support the most versions.
     {
-      let seed = sets[0], seedIdx = 0;
-      for (let i = 1; i < sets.length; i += 1) if (sets[i].size < seed.size) { seed = sets[i]; seedIdx = i; }
+      let seed = sets[0],
+        seedIdx = 0;
+      for (let i = 1; i < sets.length; i += 1)
+        if (sets[i].size < seed.size) {
+          seed = sets[i];
+          seedIdx = i;
+        }
       intersection = [...seed];
       for (let i = 0; i < sets.length; i += 1) {
         if (i === seedIdx) continue;

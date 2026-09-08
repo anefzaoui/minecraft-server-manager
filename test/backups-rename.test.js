@@ -70,7 +70,11 @@ async function touch(p) {
 }
 
 const row = (id) => db.get('SELECT * FROM backups WHERE id = ?', id);
-const exists = async (p) => fsp.access(p).then(() => true, () => false);
+const exists = async (p) =>
+  fsp.access(p).then(
+    () => true,
+    () => false
+  );
 
 test('renameBackup renames the DB row and the file on disk together', async () => {
   seedServer();
@@ -87,7 +91,11 @@ test('renameBackup renames the DB row and the file on disk together', async () =
   assert.equal(r.filename, 'My First Backup.zip');
   assert.equal(r.rel_path, `backups/${SERVER}/My First Backup.zip`);
   assert.equal(await exists(oldPath), false, 'old archive should be gone');
-  assert.equal(await exists(path.join(dataPath('backups'), SERVER, 'My First Backup.zip')), true, 'renamed archive should exist');
+  assert.equal(
+    await exists(path.join(dataPath('backups'), SERVER, 'My First Backup.zip')),
+    true,
+    'renamed archive should exist'
+  );
   const ev = db.get(`SELECT * FROM events WHERE type = 'backup-renamed' ORDER BY id DESC LIMIT 1`);
   assert.ok(ev, 'a backup-renamed event should be recorded');
   assert.equal(ev.actor, 'test-op');
@@ -106,7 +114,11 @@ test('renaming to the current name is a 200 no-op (row and file untouched)', asy
   assert.equal(r.status, 200);
   assert.equal(r.json.backup.filename, 'same.zip');
   assert.equal(await exists(p), true);
-  assert.equal(db.get(`SELECT COUNT(*) AS n FROM events WHERE type = 'backup-renamed'`).n, 0, 'no-op must not log an event');
+  assert.equal(
+    db.get(`SELECT COUNT(*) AS n FROM events WHERE type = 'backup-renamed'`).n,
+    0,
+    'no-op must not log an event'
+  );
 });
 
 test('role gate: operator 200, viewer 403', async () => {
@@ -115,10 +127,16 @@ test('role gate: operator 200, viewer 403', async () => {
   seedBackup(id, 'role.zip');
   await touch(path.join(dataPath('backups'), SERVER, 'role.zip'));
 
-  const asViewer = await app.req('PATCH', `/api/backups/${id}`, { cookie: viewerCookie, body: { filename: 'role-renamed.zip' } });
+  const asViewer = await app.req('PATCH', `/api/backups/${id}`, {
+    cookie: viewerCookie,
+    body: { filename: 'role-renamed.zip' },
+  });
   assert.equal(asViewer.status, 403);
 
-  const asOp = await app.req('PATCH', `/api/backups/${id}`, { cookie: opCookie, body: { filename: 'role-renamed.zip' } });
+  const asOp = await app.req('PATCH', `/api/backups/${id}`, {
+    cookie: opCookie,
+    body: { filename: 'role-renamed.zip' },
+  });
   assert.equal(asOp.status, 200);
   assert.equal(asOp.json.backup.filename, 'role-renamed.zip');
   assert.equal(row(id).filename, 'role-renamed.zip');

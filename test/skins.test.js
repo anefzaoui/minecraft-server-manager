@@ -25,9 +25,7 @@ function profileProps({ model } = {}) {
     json: async () => ({
       id: UUID.replace(/-/g, ''),
       name: 'Notch',
-      properties: [
-        { name: 'textures', value: Buffer.from(JSON.stringify(textures)).toString('base64') },
-      ],
+      properties: [{ name: 'textures', value: Buffer.from(JSON.stringify(textures)).toString('base64') }],
     }),
   };
 }
@@ -101,7 +99,11 @@ test('getSkinImage fetches and in-memory caches pixel bytes', async () => {
   global.fetch = async (url) => {
     calls++;
     assert.equal(url, SKIN_URL);
-    return { ok: true, status: 200, arrayBuffer: async () => png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength) };
+    return {
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength),
+    };
   };
   try {
     const first = await getSkinImage(SKIN_URL);

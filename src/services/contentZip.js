@@ -822,7 +822,8 @@ async function importForServer(
       const entry = names[i];
       const base = path.basename(entry);
       onStep(`Installing ${i + 1}/${names.length}: ${base}`);
-      const tmpFile = jarPaths.get(entry) || path.join(tmpDir, `zipjar-${Date.now()}-${i}-${base.replace(/[^\w.-]/g, '_')}`);
+      const tmpFile =
+        jarPaths.get(entry) || path.join(tmpDir, `zipjar-${Date.now()}-${i}-${base.replace(/[^\w.-]/g, '_')}`);
       try {
         const res = await modsService.installLocalContent(serverId, tmpFile, base, {
           identity: identityByEntry.get(entry) || null,

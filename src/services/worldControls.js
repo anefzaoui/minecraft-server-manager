@@ -400,7 +400,15 @@ function offlineStateFromLevelData(data, opts = {}) {
     const ticks = ((dayTime % 24000) + 24000) % 24000;
     state.timeTicks = ticks;
     state.timeLabel =
-      ticks < 6000 ? 'Morning' : ticks < 12000 ? 'Afternoon' : ticks < 13800 ? 'Sunset' : ticks < 22200 ? 'Night' : 'Sunrise';
+      ticks < 6000
+        ? 'Morning'
+        : ticks < 12000
+          ? 'Afternoon'
+          : ticks < 13800
+            ? 'Sunset'
+            : ticks < 22200
+              ? 'Night'
+              : 'Sunrise';
     state.clock = clockFromTicks(ticks);
   }
   const gameTime = longToNum(data.Time);

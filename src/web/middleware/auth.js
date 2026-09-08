@@ -223,11 +223,25 @@ function listActiveLockouts() {
   for (const [key, entry] of loginAttempts) {
     if (!locked(entry, MAX_ATTEMPTS)) continue;
     const [username, ip] = key.split('|');
-    out.push({ scope: 'ip', username, ip, count: entry.count, until: entry.until, minutesLeft: Math.ceil((entry.until - now) / 60000) });
+    out.push({
+      scope: 'ip',
+      username,
+      ip,
+      count: entry.count,
+      until: entry.until,
+      minutesLeft: Math.ceil((entry.until - now) / 60000),
+    });
   }
   for (const [username, entry] of globalAttempts) {
     if (!locked(entry, GLOBAL_MAX_ATTEMPTS)) continue;
-    out.push({ scope: 'account', username, ip: null, count: entry.count, until: entry.until, minutesLeft: Math.ceil((entry.until - now) / 60000) });
+    out.push({
+      scope: 'account',
+      username,
+      ip: null,
+      count: entry.count,
+      until: entry.until,
+      minutesLeft: Math.ceil((entry.until - now) / 60000),
+    });
   }
   return out.sort((a, b) => a.until - b.until);
 }

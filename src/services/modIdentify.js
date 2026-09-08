@@ -184,10 +184,10 @@ async function identifyJars(files) {
     const buffer = f.buffer || null;
     return {
       filename: f.name,
-      size: f.size != null ? f.size : (buffer ? buffer.length : 0),
+      size: f.size != null ? f.size : buffer ? buffer.length : 0,
       sha1: f.sha1 || (buffer ? crypto.createHash('sha1').update(buffer).digest('hex') : null),
       sha256: f.sha256 || (buffer ? crypto.createHash('sha256').update(buffer).digest('hex') : null),
-      fingerprint: f.fingerprint != null ? f.fingerprint : (buffer ? curseforgeFingerprint(buffer) : null),
+      fingerprint: f.fingerprint != null ? f.fingerprint : buffer ? curseforgeFingerprint(buffer) : null,
       // Pre-parsed metadata (avoids retaining the whole jar buffer on the
       // bounded preview path); parseJarMeta(buffer) is the fallback.
       meta: f.meta || null,

@@ -286,11 +286,16 @@ test('getSnapshot rejects invalid paths and missing files', () => {
     (e) => e.status === 400
   );
   assert.throws(
-    () => inventory.getSnapshot('srv_snap01', 'logs/srv_snap01/inventories/00000000-0000-0000-0000-0000000000aa/1-x.json'),
+    () =>
+      inventory.getSnapshot('srv_snap01', 'logs/srv_snap01/inventories/00000000-0000-0000-0000-0000000000aa/1-x.json'),
     (e) => e.status === 400
   );
   assert.throws(
-    () => inventory.getSnapshot('srv_snap01', 'logs/srv_snap01/inventories/00000000-0000-0000-0000-0000000000aa/1234567890-x.json'),
+    () =>
+      inventory.getSnapshot(
+        'srv_snap01',
+        'logs/srv_snap01/inventories/00000000-0000-0000-0000-0000000000aa/1234567890-x.json'
+      ),
     (e) => e.status === 404
   );
 });

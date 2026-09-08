@@ -270,9 +270,7 @@ async function backfillFromLogs(serverId, { tail = 5000 } = {}) {
   // Load the server's existing event keys once so the per-line dedupe check is a
   // Set membership, not a SELECT-per-line across a multi-thousand-line backfill.
   const seen = new Set(
-    db
-      .all('SELECT ts, raw FROM player_events WHERE server_id = ?', serverId)
-      .map((r) => `${r.ts}\u0000${r.raw}`)
+    db.all('SELECT ts, raw FROM player_events WHERE server_id = ?', serverId).map((r) => `${r.ts}\u0000${r.raw}`)
   );
   const now = new Date();
   let inserted = 0;

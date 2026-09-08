@@ -79,7 +79,16 @@ test('PATCH merges a changed catalog field over the existing env without clobber
 test('PATCH preserves a numeric 0 - it is a real value, not "not set"', async () => {
   const patch = await app.req('PATCH', '/api/servers/srv_adv01', {
     cookie,
-    body: { env: { MOTD: 'Hi', DIFFICULTY: 'normal', PVP: 'true', ALLOW_FLIGHT: 'true', MAX_PLAYERS: '32', NETWORK_COMPRESSION_THRESHOLD: '0' } },
+    body: {
+      env: {
+        MOTD: 'Hi',
+        DIFFICULTY: 'normal',
+        PVP: 'true',
+        ALLOW_FLIGHT: 'true',
+        MAX_PLAYERS: '32',
+        NETWORK_COMPRESSION_THRESHOLD: '0',
+      },
+    },
   });
   assert.equal(patch.status, 200);
   assert.equal(patch.json.needsRecreate, true);

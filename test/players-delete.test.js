@@ -73,7 +73,14 @@ function seed(id) {
   ]);
   write(id, 'ops.json', [{ name: 'Alice', uuid: ALICE, level: 4, bypassesPlayerLimit: false }]);
   write(id, 'banned-players.json', [
-    { name: 'Alice', uuid: ALICE, created: '2025-01-01 00:00:00 +0000', source: 'x', expires: 'forever', reason: 'bye' },
+    {
+      name: 'Alice',
+      uuid: ALICE,
+      created: '2025-01-01 00:00:00 +0000',
+      source: 'x',
+      expires: 'forever',
+      reason: 'bye',
+    },
   ]);
 
   const level = dataPath('servers', id, 'world');
@@ -117,8 +124,14 @@ test('deletePlayer wipes roles, both playerdata layouts, stats, advancements, sn
       `${file} still has Alice`
     );
   }
-  assert.equal(read(id, 'usercache.json').some((e) => e.uuid === BOB), true);
-  assert.equal(read(id, 'whitelist.json').some((e) => e.uuid === BOB), true);
+  assert.equal(
+    read(id, 'usercache.json').some((e) => e.uuid === BOB),
+    true
+  );
+  assert.equal(
+    read(id, 'whitelist.json').some((e) => e.uuid === BOB),
+    true
+  );
 
   // World data: Alice's files gone from both layouts, Bob's untouched.
   for (const dir of [nodePath.join(level, 'players', 'data'), nodePath.join(level, 'playerdata')]) {
@@ -162,7 +175,10 @@ test('deletePlayer tolerates a never-joined player with no on-disk data', async 
   const res = await players.deletePlayer(id, 'Alice');
   assert.equal(res.removed.playerdata, 0);
   assert.equal(fs.existsSync(dataPath('servers', id, 'world')), true, 'the whole world dir must survive');
-  assert.equal(read(id, 'usercache.json').some((e) => e.uuid === ALICE), false);
+  assert.equal(
+    read(id, 'usercache.json').some((e) => e.uuid === ALICE),
+    false
+  );
 });
 
 test('deletePlayer refuses while the player is online (RCON list)', async () => {
@@ -172,11 +188,11 @@ test('deletePlayer refuses while the player is online (RCON list)', async () => 
     (err) => err.status === 409 && /still online/.test(err.message)
   );
   // Nothing was touched.
-  assert.equal(read(id, 'whitelist.json').some((e) => e.uuid === ALICE), true);
   assert.equal(
-    fs.existsSync(nodePath.join(dataPath('servers', id, 'world'), 'players', 'data', `${ALICE}.dat`)),
+    read(id, 'whitelist.json').some((e) => e.uuid === ALICE),
     true
   );
+  assert.equal(fs.existsSync(nodePath.join(dataPath('servers', id, 'world'), 'players', 'data', `${ALICE}.dat`)), true);
 });
 
 test('deletePlayer rejects an invalid name', async () => {
@@ -194,8 +210,14 @@ test('DELETE /api/servers/:id/players/:name wipes a player end to end', async ()
 
   const list = await app.req('GET', `/api/servers/${id}/players`, { cookie });
   assert.equal(list.status, 200);
-  assert.equal(list.json.players.some((p) => p.uuid === ALICE), false);
-  assert.equal(list.json.players.some((p) => p.uuid === BOB), true);
+  assert.equal(
+    list.json.players.some((p) => p.uuid === ALICE),
+    false
+  );
+  assert.equal(
+    list.json.players.some((p) => p.uuid === BOB),
+    true
+  );
 
   // The detail page still renders (it shows a fallback row for unknown players)
   // but no longer carries Alice's identity.

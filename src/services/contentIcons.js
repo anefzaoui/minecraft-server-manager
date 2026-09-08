@@ -44,8 +44,7 @@ async function backfillContentMeta({ limit = 500 } = {}) {
   // Run the fs-dependent half of needsRepair() asynchronously (no sync existsSync
   // on the event loop) and collect at most `limit` repair-worthy rows.
   const needsRepairAsync = async (r) => {
-    const registry =
-      (r.platform === 'modrinth' || r.platform === 'curseforge') && r.project_id;
+    const registry = (r.platform === 'modrinth' || r.platform === 'curseforge') && r.project_id;
     if (!r.icon_url && !registry) return false;
     let iconMissing = !r.icon_rel_path;
     if (!iconMissing) {
@@ -56,8 +55,7 @@ async function backfillContentMeta({ limit = 500 } = {}) {
       }
     }
     const metaMissing =
-      registry &&
-      (!r.version || looksLikeFilename(r.name, r.filename) || (r.mc_versions_json || '[]') === '[]');
+      registry && (!r.version || looksLikeFilename(r.name, r.filename) || (r.mc_versions_json || '[]') === '[]');
     return iconMissing || metaMissing;
   };
 

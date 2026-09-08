@@ -51,7 +51,14 @@ function seed(id) {
   ]);
   write('whitelist.json', [{ name: 'Bob', uuid: BOB }]);
   write('banned-players.json', [
-    { name: 'Carol', uuid: CAROL, created: '2025-01-01 00:00:00 +0000', source: 'x', expires: 'forever', reason: 'bye' },
+    {
+      name: 'Carol',
+      uuid: CAROL,
+      created: '2025-01-01 00:00:00 +0000',
+      source: 'x',
+      expires: 'forever',
+      reason: 'bye',
+    },
   ]);
   return id;
 }

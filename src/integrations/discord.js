@@ -252,10 +252,11 @@ function initialMark() {
   if (!stored) return maxId;
   // Don't replay further back than the window: find the newest event that is
   // already too old to replay and never look before it.
-  const cutoff = db.get(
-    `SELECT COALESCE(MAX(id), 0) AS id FROM events WHERE created_at < datetime('now', ?)`,
-    `-${REPLAY_WINDOW_HOURS} hours`
-  )?.id || 0;
+  const cutoff =
+    db.get(
+      `SELECT COALESCE(MAX(id), 0) AS id FROM events WHERE created_at < datetime('now', ?)`,
+      `-${REPLAY_WINDOW_HOURS} hours`
+    )?.id || 0;
   const from = Math.max(stored, cutoff);
   if (from < maxId) {
     logger.info('Discord bridge resuming after restart; replaying undelivered events.', {

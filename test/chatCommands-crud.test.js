@@ -18,19 +18,16 @@ function freshServer(prefix) {
 }
 
 test('validateSpec normalizes trigger, cooldown and messages', () => {
-  const spec = chat.createCommand(
-    freshServer('validate'),
-    {
-      trigger: '  Rtp2  ',
-      description: 'Teleport me',
-      action: 'rtp',
-      params: { minDistance: 500, maxDistance: 5000 },
-      permission: 'everyone',
-      cooldownSec: 30,
-      msgPending: 'Finding a spot',
-      msgSuccess: 'Landed {distance} away',
-    }
-  );
+  const spec = chat.createCommand(freshServer('validate'), {
+    trigger: '  Rtp2  ',
+    description: 'Teleport me',
+    action: 'rtp',
+    params: { minDistance: 500, maxDistance: 5000 },
+    permission: 'everyone',
+    cooldownSec: 30,
+    msgPending: 'Finding a spot',
+    msgSuccess: 'Landed {distance} away',
+  });
   assert.equal(spec.trigger, 'rtp2');
   assert.equal(spec.action, 'rtp');
   assert.equal(spec.cooldown_sec, 30);
@@ -41,22 +38,54 @@ test('validateSpec normalizes trigger, cooldown and messages', () => {
 
 test('validateSpec rejects bad triggers, actions, permissions and cooldowns', () => {
   const id = freshServer('bad');
-  assert.throws(() => chat.createCommand(id, { trigger: '', action: 'rtp', permission: 'everyone', cooldownSec: 0 }), /Triggers are 1-24/);
-  assert.throws(() => chat.createCommand(id, { trigger: 'has space', action: 'rtp', permission: 'everyone', cooldownSec: 0 }), /Triggers are 1-24/);
-  assert.throws(() => chat.createCommand(id, { trigger: 'ok', action: 'fly', permission: 'everyone', cooldownSec: 0 }), /Unknown action/);
-  assert.throws(() => chat.createCommand(id, { trigger: 'ok', action: 'rtp', permission: 'mods', cooldownSec: 0 }), /Unknown permission/);
-  assert.throws(() => chat.createCommand(id, { trigger: 'ok', action: 'rtp', permission: 'everyone', cooldownSec: -1 }), /Cooldown must be 0-86400/);
-  assert.throws(() => chat.createCommand(id, { trigger: 'ok', action: 'rtp', permission: 'everyone', cooldownSec: 99999 }), /Cooldown must be 0-86400/);
+  assert.throws(
+    () => chat.createCommand(id, { trigger: '', action: 'rtp', permission: 'everyone', cooldownSec: 0 }),
+    /Triggers are 1-24/
+  );
+  assert.throws(
+    () => chat.createCommand(id, { trigger: 'has space', action: 'rtp', permission: 'everyone', cooldownSec: 0 }),
+    /Triggers are 1-24/
+  );
+  assert.throws(
+    () => chat.createCommand(id, { trigger: 'ok', action: 'fly', permission: 'everyone', cooldownSec: 0 }),
+    /Unknown action/
+  );
+  assert.throws(
+    () => chat.createCommand(id, { trigger: 'ok', action: 'rtp', permission: 'mods', cooldownSec: 0 }),
+    /Unknown permission/
+  );
+  assert.throws(
+    () => chat.createCommand(id, { trigger: 'ok', action: 'rtp', permission: 'everyone', cooldownSec: -1 }),
+    /Cooldown must be 0-86400/
+  );
+  assert.throws(
+    () => chat.createCommand(id, { trigger: 'ok', action: 'rtp', permission: 'everyone', cooldownSec: 99999 }),
+    /Cooldown must be 0-86400/
+  );
 });
 
 test('rtp params enforce min<max and a distance cap', () => {
   const id = freshServer('rtp');
   assert.throws(
-    () => chat.createCommand(id, { trigger: 'go', action: 'rtp', permission: 'everyone', cooldownSec: 0, params: { minDistance: 9000, maxDistance: 500 } }),
+    () =>
+      chat.createCommand(id, {
+        trigger: 'go',
+        action: 'rtp',
+        permission: 'everyone',
+        cooldownSec: 0,
+        params: { minDistance: 9000, maxDistance: 500 },
+      }),
     /Max distance must be greater/
   );
   assert.throws(
-    () => chat.createCommand(id, { trigger: 'go', action: 'rtp', permission: 'everyone', cooldownSec: 0, params: { minDistance: 500, maxDistance: 2000000 } }),
+    () =>
+      chat.createCommand(id, {
+        trigger: 'go',
+        action: 'rtp',
+        permission: 'everyone',
+        cooldownSec: 0,
+        params: { minDistance: 500, maxDistance: 2000000 },
+      }),
     /capped at 1,000,000/
   );
 });
@@ -64,30 +93,77 @@ test('rtp params enforce min<max and a distance cap', () => {
 test('structure and biome validate params; console validates commands and ops-gating', () => {
   const id = freshServer('prm');
   assert.throws(
-    () => chat.createCommand(id, { trigger: 's', action: 'structure', permission: 'everyone', cooldownSec: 0, params: { structure: 'nope' } }),
+    () =>
+      chat.createCommand(id, {
+        trigger: 's',
+        action: 'structure',
+        permission: 'everyone',
+        cooldownSec: 0,
+        params: { structure: 'nope' },
+      }),
     /valid structure/
   );
   assert.throws(
-    () => chat.createCommand(id, { trigger: 'b', action: 'biome', permission: 'everyone', cooldownSec: 0, params: { biome: 'nope' } }),
+    () =>
+      chat.createCommand(id, {
+        trigger: 'b',
+        action: 'biome',
+        permission: 'everyone',
+        cooldownSec: 0,
+        params: { biome: 'nope' },
+      }),
     /valid biome/
   );
-  const s = chat.createCommand(id, { trigger: 's2', action: 'structure', permission: 'everyone', cooldownSec: 0, params: { structure: '#minecraft:village', random: false } });
+  const s = chat.createCommand(id, {
+    trigger: 's2',
+    action: 'structure',
+    permission: 'everyone',
+    cooldownSec: 0,
+    params: { structure: '#minecraft:village', random: false },
+  });
   assert.equal(s.params.structure, '#minecraft:village');
   assert.equal(s.params.random, false);
 
   assert.throws(
-    () => chat.createCommand(id, { trigger: 'c', action: 'console', permission: 'everyone', cooldownSec: 0, params: { commands: [] } }),
+    () =>
+      chat.createCommand(id, {
+        trigger: 'c',
+        action: 'console',
+        permission: 'everyone',
+        cooldownSec: 0,
+        params: { commands: [] },
+      }),
     /at least one console command/
   );
   assert.throws(
-    () => chat.createCommand(id, { trigger: 'c', action: 'console', permission: 'everyone', cooldownSec: 0, params: { commands: ['stop'] } }),
+    () =>
+      chat.createCommand(id, {
+        trigger: 'c',
+        action: 'console',
+        permission: 'everyone',
+        cooldownSec: 0,
+        params: { commands: ['stop'] },
+      }),
     /only allowed when permission is set to Ops/
   );
-  const cc = chat.createCommand(id, { trigger: 'c', action: 'console', permission: 'ops', cooldownSec: 0, params: { commands: ['/say hi'] } });
+  const cc = chat.createCommand(id, {
+    trigger: 'c',
+    action: 'console',
+    permission: 'ops',
+    cooldownSec: 0,
+    params: { commands: ['/say hi'] },
+  });
   assert.deepEqual(cc.params.commands, ['say hi']);
   const many = Array.from({ length: 11 }, (_, i) => `say ${i}`);
   assert.throws(
-    () => chat.createCommand(id, { trigger: 'c9', action: 'console', permission: 'ops', cooldownSec: 0, params: { commands: many } }),
+    () =>
+      chat.createCommand(id, {
+        trigger: 'c9',
+        action: 'console',
+        permission: 'ops',
+        cooldownSec: 0,
+        params: { commands: many },
+      }),
     /Max 10/
   );
 });
@@ -96,7 +172,14 @@ test('duplicate trigger returns 409; getCommand/listCommands reflect rows', () =
   const id = freshServer('dup');
   chat.createCommand(id, { trigger: 'rtp', action: 'rtp', permission: 'everyone', cooldownSec: 0 });
   assert.throws(
-    () => chat.createCommand(id, { trigger: 'RTP', action: 'biome', permission: 'everyone', cooldownSec: 0, params: { biome: 'minecraft:desert' } }),
+    () =>
+      chat.createCommand(id, {
+        trigger: 'RTP',
+        action: 'biome',
+        permission: 'everyone',
+        cooldownSec: 0,
+        params: { biome: 'minecraft:desert' },
+      }),
     /already exists/
   );
   const list = chat.listCommands(id);
@@ -147,13 +230,37 @@ test('prefix defaults to ! and is settable/validated', () => {
 
 test('actionSummary summarizes each action kind', () => {
   const id = freshServer('sum');
-  const rtp = chat.createCommand(id, { trigger: 'a', action: 'rtp', permission: 'everyone', cooldownSec: 0, params: { minDistance: 200, maxDistance: 4000, center: 'origin' } });
+  const rtp = chat.createCommand(id, {
+    trigger: 'a',
+    action: 'rtp',
+    permission: 'everyone',
+    cooldownSec: 0,
+    params: { minDistance: 200, maxDistance: 4000, center: 'origin' },
+  });
   assert.equal(chat.actionSummary(rtp), 'rtp 200-4000 around 0,0');
-  const st = chat.createCommand(id, { trigger: 'b', action: 'structure', permission: 'everyone', cooldownSec: 0, params: { structure: '#minecraft:village', random: false } });
+  const st = chat.createCommand(id, {
+    trigger: 'b',
+    action: 'structure',
+    permission: 'everyone',
+    cooldownSec: 0,
+    params: { structure: '#minecraft:village', random: false },
+  });
   assert.equal(chat.actionSummary(st), 'structure minecraft:village (nearest)');
-  const bi = chat.createCommand(id, { trigger: 'c', action: 'biome', permission: 'everyone', cooldownSec: 0, params: { biome: 'minecraft:desert' } });
+  const bi = chat.createCommand(id, {
+    trigger: 'c',
+    action: 'biome',
+    permission: 'everyone',
+    cooldownSec: 0,
+    params: { biome: 'minecraft:desert' },
+  });
   assert.equal(chat.actionSummary(bi), 'biome minecraft:desert');
-  const cc = chat.createCommand(id, { trigger: 'd', action: 'console', permission: 'everyone', cooldownSec: 0, params: { commands: ['say hi', 'say bye'] } });
+  const cc = chat.createCommand(id, {
+    trigger: 'd',
+    action: 'console',
+    permission: 'everyone',
+    cooldownSec: 0,
+    params: { commands: ['say hi', 'say bye'] },
+  });
   assert.equal(chat.actionSummary(cc), 'console ×2');
 });
 

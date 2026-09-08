@@ -29,17 +29,16 @@ function neoforgeEntries() {
   };
 }
 
-test('detectNativeLoader: neoforge pre-installed server zip (path-based)',
-  async () => {
-    const zip = await tempZip('sb4.zip', neoforgeEntries());
-    const got = await contentZip.detectNativeLoader(zip);
-    assert.deepEqual(got, {
-      isPreparedServer: true,
-      loader: 'neoforge',
-      loaderVersion: '21.1.248',
-      mcVersion: '1.20.1',
-    });
+test('detectNativeLoader: neoforge pre-installed server zip (path-based)', async () => {
+  const zip = await tempZip('sb4.zip', neoforgeEntries());
+  const got = await contentZip.detectNativeLoader(zip);
+  assert.deepEqual(got, {
+    isPreparedServer: true,
+    loader: 'neoforge',
+    loaderVersion: '21.1.248',
+    mcVersion: '1.20.1',
   });
+});
 
 test('detectNativeLoader: forge zip yields MC version from the forge path', async () => {
   const zip = await tempZip('forge-srv.zip', {

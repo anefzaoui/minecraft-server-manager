@@ -308,8 +308,7 @@ function diagnoseFatal(logText) {
   // Bound the scanned text to the newest tail - these are startup-fatal errors,
   // so scanning the whole (potentially large) excerpt up to 6 times is wasted
   // work that only grows with uptime.
-  const scan =
-    logText.length > DIAG_MAX_CHARS ? logText.slice(-DIAG_MAX_CHARS) : logText;
+  const scan = logText.length > DIAG_MAX_CHARS ? logText.slice(-DIAG_MAX_CHARS) : logText;
   const KNOWN = [
     {
       key: 'cf-api-key',
