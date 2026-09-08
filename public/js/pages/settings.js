@@ -7,6 +7,8 @@ import { withBusy } from '../lib/loading.js';
 import { fillTimezoneSelect, fillCountrySelect } from '../lib/tzPicker.js';
 
 const page = document.getElementById('settings-page');
+const selfEl = document.getElementById('settings-self');
+const selfUserId = selfEl ? JSON.parse(selfEl.textContent) : null;
 if (page) init();
 
 function init() {
@@ -368,28 +370,49 @@ function init() {
     // Build with textContent for the (user-controlled) username so it can't inject markup.
     const label = document.createElement('label');
     label.className = 'label';
-    label.textContent = `New password for ${username}`;
+    const isSelf = userId === selfUserId;
+    label.textContent = isSelf ? 'Set your new password' : `New password for ${username}`;
     content.appendChild(label);
     content.insertAdjacentHTML(
       'beforeend',
       '<input class="input" id="pw-new" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p>'
     );
+    // Re-verify the acting admin's own password before any password mutation
+    // (mirrors the account 2FA routes) - a hijacked-but-live admin session can't
+    // silently take over accounts / itself without knowing the real password.
+    const curLabel = document.createElement('label');
+    curLabel.className = 'label mt-3';
+    curLabel.textContent = 'Confirm with your current password';
+    content.appendChild(curLabel);
+    content.insertAdjacentHTML(
+      'beforeend',
+      '<input class="input" id="pw-current" type="password" autocomplete="current-password">'
+    );
     openModal({
-      title: 'Set Password',
+      title: isSelf ? 'Change Your Password' : 'Set Password',
       size: 'sm',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
-          label: 'Set Password',
+          label: isSelf ? 'Change Password' : 'Set Password',
           kind: 'primary',
           busyLabel: 'Saving…',
           onClick: async () => {
             const res = await post(`/api/users/${userId}/password`, {
               password: content.querySelector('#pw-new').value,
+              currentPassword: content.querySelector('#pw-current').value,
             });
             if (!res) return false;
-            toast('Password updated.');
+            if (res.signedOutAll) {
+              toast('Password updated. Sign in again with your new password.', { timeout: 4000 });
+              setTimeout(() => {
+                location.href = '/login';
+              }, 800);
+            } else {
+              toast('Password updated.');
+            }
+            return false;
           },
         },
       ],
@@ -441,7 +464,10 @@ function init() {
         const u = data.update || {};
         if (!msmUpdateOut) return;
         const esc = (s) =>
-          String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+          String(s).replace(
+            /[&<>"']/g,
+            (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+          );
         if (u.error && !u.latest) {
           msmUpdateOut.innerHTML = `<p class="help mt-2 text-danger">Could not check GitHub right now: ${esc(u.error)}</p>`;
           return;
@@ -478,9 +504,7 @@ function init() {
     const apply = (res) => {
       if (!res) return;
       for (const [key, el] of Object.entries(inputs)) el.value = res.defaults[key];
-      const customized = FIELDS.some(
-        ([, key]) => Number(inputs[key].value) !== Number(inputs[key].dataset.default)
-      );
+      const customized = FIELDS.some(([, key]) => Number(inputs[key].value) !== Number(inputs[key].dataset.default));
       note.textContent = customized
         ? 'Custom defaults are set. The wizard and new servers use these.'
         : 'Using the built-in defaults from .env and this machine.';

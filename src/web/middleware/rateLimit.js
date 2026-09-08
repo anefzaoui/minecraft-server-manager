@@ -19,9 +19,11 @@ function jsonHandler(req, res) {
   res.status(429).json({ ok: false, error: 'Too many requests - slow down and try again shortly.' });
 }
 
-// express-rate-limit warns when it can't trust the proxy chain; TRUST_PROXY is a
-// deliberate operator choice here, so quiet those specific validations.
-const validate = { trustProxy: false, xForwardedForHeader: false };
+// TRUST_PROXY=true is refused at boot (src/config) precisely because it would
+// let a client spoof req.ip and dodge these per-IP limits (and the login
+// lockout). Leave express-rate-limit's own trust-proxy validation enabled so a
+// genuinely misconfigured chain still warns loudly in production logs.
+const validate = undefined;
 
 const passthrough = (req, res, next) => next();
 

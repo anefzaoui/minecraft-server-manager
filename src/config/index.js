@@ -148,17 +148,30 @@ function resolveDefaults() {
 }
 
 /**
- * Parse the `trust proxy` setting for Express. Accepts a hop count (`1`), a
- * boolean (`true`/`false`), or any value Express understands (`loopback`, a
- * comma-separated IP/subnet list). Unset → false (trust nothing), the safe
- * default for a directly-exposed panel.
+ * Parse the `trust proxy` setting for Express. Accepts a hop count (`1`), an
+ * explicit `loopback`/`uniquelocal`, or a comma-separated IP/subnet list that
+ * names the actual proxy(es). Unset → false (trust nothing), the safe default
+ * for a directly-exposed panel.
+ *
+ * A bare `true` is explicitly refused: it trusts the FIRST (left-most) entry of
+ * an attacker-supplied `X-Forwarded-For`, which lets any client spoof `req.ip`
+ * and dodge every per-IP control that keys on it (the per-account+per-IP login
+ * lockout and the API/auth rate limiters). Trust nothing unless the operator
+ * names the real proxy hop count or its ints.
  */
 function resolveTrustProxy() {
   const raw = (process.env.TRUST_PROXY || '').trim();
   if (!raw) return false;
   if (/^\d+$/.test(raw)) return Number(raw);
-  if (raw.toLowerCase() === 'true') return true;
-  if (raw.toLowerCase() === 'false') return false;
+  const low = raw.toLowerCase();
+  if (low === 'true') {
+    throw new Error(
+      'TRUST_PROXY=true is not allowed - it trusts an attacker-supplied X-Forwarded-For and defeats ' +
+        'the per-IP login lockout and rate limiters. Use the proxy hop count (e.g. TRUST_PROXY=1) or ' +
+        'a comma-separated list of proxy IPs/CIDRs (e.g. TRUST_PROXY=192.168.1.10).'
+    );
+  }
+  if (low === 'false') return false;
   return raw; // 'loopback' | 'uniquelocal' | comma-list of IPs - Express parses these
 }
 
@@ -302,6 +315,18 @@ if (!config.sessionSecret || config.sessionSecret.length < 16) {
 if (config.cookieSameSite === 'none' && config.cookieSecure === false) {
   throw new Error(
     'COOKIE_SAMESITE=none requires a secure cookie - also set COOKIE_SECURE=true (or COOKIE_SECURE=auto with TRUST_PROXY).'
+  );
+}
+
+// COOKIE_SECURE=auto lets Express decide from `req.secure`, which ONLY becomes
+// true when `trust proxy` is set (the panel itself serves plain HTTP; the TLS
+// hop dies at the reverse proxy). With no TRUST_PROXY the cookie silently ships
+// WITHOUT the Secure flag - readable/forgeable in transit - which is exactly
+// the downgrade `auto` exists to prevent. Fail fast instead of guessing.
+if (config.cookieSecure === 'auto' && config.trustProxy === false) {
+  throw new Error(
+    'COOKIE_SECURE=auto requires TRUST_PROXY so Express can see the proxy-terminated HTTPS hop (set the hop count or proxy IP/CIDR list). ' +
+      'If the panel is genuinely plain-HTTP, set COOKIE_SECURE=false; if it IS behind a TLS proxy, set TRUST_PROXY.'
   );
 }
 

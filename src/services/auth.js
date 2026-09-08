@@ -90,6 +90,34 @@ async function setPassword(id, password, { actor = 'system', exceptSid = null } 
   recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(id)?.username}` });
 }
 
+/**
+ * Admin password change with re-authentication. `actorId` is the acting admin's
+ * own id and `currentPassword` their current password - verified first, exactly
+ * like the account 2FA routes (confirmTotp/disableTotp), so a hijacked-but-live
+ * session can't mutate anyone's password without knowing the real one. The
+ * caller decides ``exceptSid``: when the target IS the acting admin they must
+ * pass null so the acting session is revoked too (it adopted the new password
+ * without re-verification through the login path).
+ */
+async function changePassword(
+  actorId,
+  targetId,
+  currentPassword,
+  newPassword,
+  { actor = 'system', exceptSid = null } = {}
+) {
+  if (typeof newPassword !== 'string' || newPassword.length < 8)
+    throw httpError(400, 'A password must be at least 8 characters.');
+  const acting = db.get('SELECT * FROM users WHERE id = ?', actorId);
+  if (!acting || !(await bcrypt.compare(String(currentPassword || ''), acting.password_hash))) {
+    throw httpError(401, 'That password is incorrect.');
+  }
+  if (!db.get('SELECT id FROM users WHERE id = ?', targetId)) throw httpError(404, 'User not found');
+  db.run('UPDATE users SET password_hash = ? WHERE id = ?', await bcrypt.hash(newPassword, BCRYPT_COST), targetId);
+  revokeOtherSessions(targetId, exceptSid);
+  recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(targetId)?.username}` });
+}
+
 function setRole(id, role, { actor = 'system' } = {}) {
   if (!['admin', 'operator', 'viewer'].includes(role)) throw httpError(400, 'Pick a role: admin, operator, or viewer.');
   const admins = db.get("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'").n;
@@ -318,6 +346,7 @@ module.exports = {
   getUser,
   listUsers,
   setPassword,
+  changePassword,
   setRole,
   deleteUser,
   pruneExpiredSessions,

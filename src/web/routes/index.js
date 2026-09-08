@@ -8,7 +8,15 @@ const asyncHandler = require('../middleware/asyncHandler');
 const express = require('express');
 const serversService = require('../../services/servers');
 const eventsService = require('../../events');
-const { serverVM, buildServerContext, sidebarServerVMs, packServerVMs, eventsVM, crashVM, safeJsonParse } = require('../viewModels');
+const {
+  serverVM,
+  buildServerContext,
+  sidebarServerVMs,
+  packServerVMs,
+  eventsVM,
+  crashVM,
+  safeJsonParse,
+} = require('../viewModels');
 const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
@@ -198,7 +206,16 @@ function buildDashboardOverview(servers) {
       ...(since ? [...types, since] : types)
     )?.n || 0;
 
-  const byStatus = { running: 0, starting: 0, stopped: 0, unhealthy: 0, stalled: 0, updating: 0, crashed: 0, 'over-quota': 0 };
+  const byStatus = {
+    running: 0,
+    starting: 0,
+    stopped: 0,
+    unhealthy: 0,
+    stalled: 0,
+    updating: 0,
+    crashed: 0,
+    'over-quota': 0,
+  };
   let memAllottedMb = 0;
   let memUsedMb = 0;
   let diskUsedBytes = 0;
@@ -498,7 +515,9 @@ router.get(
       if (!['admin', 'operator'].includes(req.user.role)) {
         context.files = [];
         context.filePath = rel;
-        context.crumbs = rel ? rel.split('/').map((seg, i, a) => ({ name: seg, path: a.slice(0, i + 1).join('/') })) : [];
+        context.crumbs = rel
+          ? rel.split('/').map((seg, i, a) => ({ name: seg, path: a.slice(0, i + 1).join('/') }))
+          : [];
         context.parentPath = '';
       } else {
         try {
@@ -649,10 +668,10 @@ router.get(
         context.integrations.invite = await require('../../integrations/invites')
           .inviteInfo(row.id)
           .catch(() => null);
-    } else if (tab === 'chatbot') {
-      if (req.user.role !== 'admin') return next();
-      // Chatbot endpoint/model/prompt and transcript controls are admin-only.
-      context.integrations.wizard = require('../../services/wizard').getConfig(row.id);
+      } else if (tab === 'chatbot') {
+        if (req.user.role !== 'admin') return next();
+        // Chatbot endpoint/model/prompt and transcript controls are admin-only.
+        context.integrations.wizard = require('../../services/wizard').getConfig(row.id);
       }
     } else if (tab === 'players') {
       const playersService = require('../../services/players');
@@ -995,6 +1014,7 @@ router.get('/settings', requireRole('admin'), (req, res) => {
     publicHost,
     cookieSecureWarning: Boolean(publicHost) && config.cookieSecure === false,
     users: require('../../services/auth').listUsers(),
+    selfUserId: req.user.id,
     panel: {
       host: config.host,
       port: config.port,

@@ -31,6 +31,15 @@ test('check() accepts the right PIN and rejects everything else', () => {
   assert.equal(setupGate.check(pin + '0'), false); // length mismatch, no throw
 });
 
+test('after enough wrong PINs the gate locks out even correct PINs', () => {
+  const pin = setupGate.ensurePin();
+  // The first wrong attempt was already counted above; add enough more.
+  for (let i = 0; i < 10; i++) setupGate.check('123456');
+  assert.equal(setupGate.isLocked(), true);
+  // Correct PIN is rejected while locked.
+  assert.equal(setupGate.check(pin), false);
+});
+
 test('once an admin exists the gate is inert (setup is closed anyway)', () => {
   db.run("INSERT INTO users (id, username, password_hash, role) VALUES ('usr_seed', 'seed', 'x', 'admin')");
   assert.equal(setupGate.required(), false);

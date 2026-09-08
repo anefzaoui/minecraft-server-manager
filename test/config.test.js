@@ -133,6 +133,18 @@ test('COOKIE_SAMESITE=none without a secure cookie fails fast', () => {
   assert.match(res.stderr, /COOKIE_SAMESITE=none/);
 });
 
+test('TRUST_PROXY=true fails fast instead of trusting a spoofable X-Forwarded-For', () => {
+  const res = loadConfig({ TRUST_PROXY: 'true' });
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /TRUST_PROXY=true is not allowed/);
+});
+
+test('COOKIE_SECURE=auto without TRUST_PROXY fails fast (silent non-Secure downgrade)', () => {
+  const res = loadConfig({ COOKIE_SECURE: 'auto' });
+  assert.notEqual(res.status, 0);
+  assert.match(res.stderr, /COOKIE_SECURE=auto requires TRUST_PROXY/);
+});
+
 test('TRUST_PROXY / COOKIE_SECURE resolve to usable values', () => {
   const res = spawnSync(
     process.execPath,

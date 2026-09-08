@@ -2275,9 +2275,39 @@ router.post(
   '/users/:id/password',
   requireRole('admin'),
   asyncHandler(async (req, res, next) => {
-    const { password } = z.object({ password: z.string().min(8).max(200) }).parse(req.body);
-    await authService.setPassword(req.params.id, password, { actor: req.user.username, exceptSid: req.sessionID });
-    res.json({ ok: true });
+    const { password, currentPassword } = z
+      .object({
+        password: z.string().min(8).max(200),
+        currentPassword: z.string().min(1).max(200),
+      })
+      .parse(req.body);
+    const isSelf = req.params.id === req.user.id;
+    // Re-verify the acting admin's own password (shared login lockout), mirroring
+    // the account 2FA routes - a hijacked-but-live session can't set any
+    // password, including its own, without knowing the real one.
+    authMw.checkLoginAllowed(req.user.username, req.ip);
+    try {
+      // Self password change rotates the ACTING session away too (exceptSid=null):
+      // the attacker's preserved session must not survive adopting the new password.
+      await authService.changePassword(req.user.id, req.params.id, currentPassword, password, {
+        actor: req.user.username,
+        exceptSid: isSelf ? null : req.sessionID,
+      });
+    } catch (err) {
+      if (err.status === 401) {
+        authMw.recordLoginFailure(req.user.username, req.ip);
+        logger.warn('Rejected a password change with a wrong admin password.', { userId: req.user.id, ip: req.ip });
+      }
+      throw err;
+    }
+    authMw.clearLoginFailures(req.user.username, req.ip);
+    if (isSelf) {
+      // Drop the acting session's server-side row + clear its cookie so the
+      // client must re-authenticate with the new password.
+      req.session.destroy(() => {});
+    }
+    logger.info('Admin changed a password.', { actor: req.user.username, targetId: req.params.id, isSelf });
+    res.json({ ok: true, signedOutAll: isSelf });
   })
 );
 
