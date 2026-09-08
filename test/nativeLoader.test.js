@@ -5,10 +5,17 @@
 // the container to the loader build already inside the archive instead of
 // reinstalling/replacing it.
 
+require('./helpers/env'); // isolate DATA_DIR before any src/ require
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { migrate } = require('../src/db/migrate');
 const contentZip = require('../src/services/contentZip');
 const { tempZip, jarBuffer } = require('./helpers/zipfix');
+
+// previewStandalone() identifies jars, which reads the api_keys table for a
+// CurseForge key. node:test gives each file a fresh temp DATA_DIR, so migrate
+// the throwaway DB here instead of relying on another test file running first.
+migrate();
 
 // Layout a neoforge 1.20.1 / 21.1.248 pre-installed server directory.
 function neoforgeEntries() {
