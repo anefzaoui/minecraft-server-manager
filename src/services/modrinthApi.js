@@ -109,16 +109,20 @@ function getVersion(versionId) {
 }
 
 /**
- * Resolve any Modrinth URL (or slug) to {projectId, slug, versionId?}.
+ * Resolve any Modrinth URL (or slug) to {projectId, slug, versionId?, urlKind?}.
  * Handles /mod|plugin|datapack|resourcepack|modpack/<slug>[/version/<ver>].
+ * urlKind is the URL's content-type segment ('datapack', 'resourcepack', ...),
+ * authoritative when project_type hides it (datapacks Modrinth types as `mod`).
  */
 async function resolveUrl(input) {
   let slug = input.trim();
   let versionRef = null;
-  const m = /modrinth\.com\/(?:mod|plugin|datapack|resourcepack|modpack)\/([^/]+)(?:\/version\/([^/?#]+))?/.exec(input);
+  let urlKind = null;
+  const m = /modrinth\.com\/(mod|plugin|datapack|resourcepack|modpack)\/([^/]+)(?:\/version\/([^/?#]+))?/.exec(input);
   if (m) {
-    slug = m[1];
-    versionRef = m[2] || null;
+    urlKind = m[1];
+    slug = m[2];
+    versionRef = m[3] || null;
   }
   const project = await getProject(slug);
   let versionId = null;
@@ -133,6 +137,7 @@ async function resolveUrl(input) {
     title: project.title,
     iconUrl: project.icon_url || null,
     projectType: project.project_type,
+    urlKind,
     versionId,
   };
 }

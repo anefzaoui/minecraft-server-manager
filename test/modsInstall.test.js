@@ -112,6 +112,109 @@ test('installFromUrl 404s clearly when a project has no plugin build at all', as
   }
 });
 
+// A datapack Modrinth types as `mod` (it also ships a Fabric wrapper): the
+// project_type is "mod", only the .zip build's per-version loaders is
+// ['datapack']. Pasting the /datapack/ URL onto a Paper server must resolve
+// kind=datapack from the URL segment, not 404 on the plugin-loader filter.
+const DP_PROJECT = {
+  id: 'P2',
+  slug: 'skyblock-islands',
+  title: 'SkyBlock Biome Islands',
+  project_type: 'mod',
+  icon_url: null,
+};
+const DP_ZIP = {
+  id: 'v-dp',
+  version_number: '1.0.8',
+  loaders: ['datapack'],
+  game_versions: ['1.20.1'],
+  date_published: '2026-03-01',
+  files: [{ url: 'https://cdn.modrinth.com/sky_1_0_8.zip', filename: 'sky_1_0_8.zip', primary: true }],
+};
+const DP_MODJAR = {
+  id: 'v-modjar',
+  version_number: '1.0.8+mod',
+  loaders: ['fabric'],
+  game_versions: ['1.20.1'],
+  date_published: '2026-03-02',
+  files: [{ url: 'https://cdn.modrinth.com/sky_1_0_8.jar', filename: 'sky_1_0_8.jar', primary: true }],
+};
+
+function stubDownloadByCategory() {
+  const real = library.downloadToLibrary;
+  const downloads = [];
+  library.downloadToLibrary = async (url, meta) => {
+    downloads.push(url);
+    const cat = meta.category || 'mod';
+    const dir = { plugin: 'plugins', mod: 'mods', datapack: 'datapacks', resourcepack: 'resourcepacks' }[cat] || 'mods';
+    const id = `lib_dp${downloads.length}`;
+    const rel = `library/${dir}/${id}-${meta.filename}`;
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const { dataPath } = require('../src/storage/pathGuard');
+    fs.mkdirSync(path.dirname(dataPath(rel)), { recursive: true });
+    fs.writeFileSync(dataPath(rel), 'zip');
+    db.run(
+      `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, platform, project_id, file_id, version)
+       VALUES (?, ?, ?, ?, ?, ?, 3, 'modrinth', ?, ?, ?)`,
+      id,
+      cat,
+      meta.name,
+      meta.filename,
+      rel,
+      `sha-${id}`,
+      meta.projectId,
+      meta.fileId,
+      meta.version
+    );
+    return db.get('SELECT * FROM library_files WHERE id = ?', id);
+  };
+  return { downloads, restore: () => (library.downloadToLibrary = real) };
+}
+
+test('installFromUrl resolves a /datapack/ URL to kind=datapack on a plugin server', async () => {
+  const sid = app.seedServer('srv_dp');
+  db.run("UPDATE servers SET type = 'PAPER', mc_version = '1.20.1' WHERE id = ?", sid);
+  const dl = stubDownloadByCategory();
+  stubModrinth((url) => {
+    if (url.pathname.endsWith('/version')) return [DP_MODJAR, DP_ZIP]; // newest-first: the +mod jar leads
+    return DP_PROJECT;
+  });
+  try {
+    await mods.installFromUrl(sid, 'https://modrinth.com/datapack/skyblock-islands', { actor: 'tester' });
+    assert.deepEqual(dl.downloads, ['https://cdn.modrinth.com/sky_1_0_8.zip'], '.zip build chosen over the +mod jar');
+    const row = db.get("SELECT * FROM server_content WHERE server_id = ? AND filename = 'sky_1_0_8.zip'", sid);
+    assert.ok(row);
+    assert.equal(row.kind, 'datapack');
+    const fs = require('node:fs');
+    const { dataPath } = require('../src/storage/pathGuard');
+    assert.ok(
+      fs.existsSync(dataPath('servers', sid, 'world/datapacks', 'sky_1_0_8.zip')),
+      'linked into world/datapacks/'
+    );
+  } finally {
+    dl.restore();
+    unstub();
+  }
+});
+
+test('installFromUrl still rejects a /datapack/ URL whose only build is a jar', async () => {
+  const sid = app.seedServer('srv_dp2');
+  db.run("UPDATE servers SET type = 'PAPER', mc_version = '1.20.1' WHERE id = ?", sid);
+  stubModrinth((url) => {
+    if (url.pathname.endsWith('/version')) return [DP_MODJAR];
+    return DP_PROJECT;
+  });
+  try {
+    await assert.rejects(
+      () => mods.installFromUrl(sid, 'https://modrinth.com/datapack/skyblock-islands', { actor: 'tester' }),
+      /only published as a mod jar|no .*datapack .*\.zip/i
+    );
+  } finally {
+    unstub();
+  }
+});
+
 test('teardown', async () => {
   await app.stop();
 });

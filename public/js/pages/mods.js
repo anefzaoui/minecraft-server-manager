@@ -145,6 +145,15 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       <label class="label">Mod URL or Modrinth slug</label>
       <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any project page / direct .jar URL" autocomplete="off">
       <p class="help">Paste almost any link: Modrinth, CurseForge, Hangar, or SpigotMC project pages, a GitHub repo or release ("owner/repo" works too), a Modrinth slug, or a direct .jar URL. The right build for this server's loader and MC version is picked automatically.</p>
+      <label class="label mt-3">Content type</label>
+      <select class="input" id="mod-url-kind" data-label="Content type">
+        <option value="">Auto-detect</option>
+        <option value="mod">Mod</option>
+        <option value="plugin">Plugin</option>
+        <option value="datapack">Datapack</option>
+        <option value="resourcepack">Resource pack</option>
+      </select>
+      <p class="help">Leave on Auto-detect unless a link installs as the wrong type - some datapacks are published under a "mod" project.</p>
       ${
         mc && !mc.startsWith('LATEST')
           ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
@@ -166,10 +175,11 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
           onClick: async () => {
             const url = content.querySelector('#mod-url').value.trim();
             if (!url) return false;
+            const kind = content.querySelector('#mod-url-kind').value;
             const ignoreVersion = Boolean(content.querySelector('#mod-url-ignore-version')?.checked);
             const progress = content.querySelector('#mod-url-progress');
             progress.classList.remove('hidden');
-            const res = await post(`/api/servers/${serverId}/mods`, { url, ignoreVersion });
+            const res = await post(`/api/servers/${serverId}/mods`, { url, ...(kind ? { kind } : {}), ignoreVersion });
             if (!res) {
               progress.classList.add('hidden'); // failure keeps the modal open - no zombie meter
               return false;

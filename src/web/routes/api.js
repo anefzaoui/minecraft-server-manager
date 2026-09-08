@@ -2349,7 +2349,7 @@ const MOD_LOADERS = ['fabric', 'forge', 'neoforge', 'quilt'];
 // Plugin servers report 'paper' as their loader; the browser strips it for
 // plugin searches server-side, but the schema must let it through.
 const BROWSER_LOADERS = [...MOD_LOADERS, 'paper'];
-const CONTENT_KINDS = ['mod', 'plugin'];
+const CONTENT_KINDS = ['mod', 'plugin', 'datapack', 'resourcepack'];
 
 // Loader build versions to pin (fabric/quilt are MC-independent; neoforge/forge need mc).
 router.get(

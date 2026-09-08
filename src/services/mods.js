@@ -490,8 +490,17 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     // Datapacks/resourcepacks aren't loader-specific, and search already sends
     // kind explicitly - this only fires for "Add by URL"/slug installs where
     // the caller couldn't have known the project type in advance.
-    if (!kind && (resolved.projectType === 'datapack' || resolved.projectType === 'resourcepack')) {
-      targetKind = resolved.projectType;
+    if (!kind) {
+      if (resolved.projectType === 'datapack' || resolved.projectType === 'resourcepack') {
+        targetKind = resolved.projectType;
+      } else if (resolved.urlKind === 'datapack' || resolved.urlKind === 'resourcepack') {
+        // Modrinth types some datapack projects as `mod` (they also ship a
+        // Fabric wrapper); the /datapack//resourcepack/ segment in the pasted
+        // URL is authoritative when project_type hides it. This must land before
+        // the plugin-loader filter below, which would otherwise drop every
+        // datapack-tagged build and 404 on a plugin-type server.
+        targetKind = resolved.urlKind;
+      }
     }
     const versionLoader = targetKind === 'datapack' || targetKind === 'resourcepack' ? undefined : effectiveLoader;
     let versions = resolved.versionId
