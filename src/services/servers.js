@@ -25,21 +25,31 @@ const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 
-function rowToServer(row) {
+function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
-  return {
+  const server = {
     ...row,
     tags: JSON.parse(row.tags_json || '[]'),
     env: JSON.parse(row.env_json || '{}'),
     containerName: row.container_name || null,
     networkName: row.network_name || null,
-    extraPorts: JSON.parse(row.extra_ports_json || '[]'),
-    extraBinds: JSON.parse(row.extra_binds_json || '[]'),
   };
+  if (parseOverrides) {
+    server.extraPorts = JSON.parse(row.extra_ports_json || '[]');
+    server.extraBinds = JSON.parse(row.extra_binds_json || '[]');
+  }
+  return server;
 }
 
 function listServers() {
-  return db.all('SELECT * FROM servers WHERE deleted_at IS NULL ORDER BY created_at').map(rowToServer);
+  // Lean parse for the fleet-wide list: extra_ports_json / extra_binds_json are
+  // only ever consumed by the singleton paths (getServer → create/container/
+  // preview), so parsing them on EVERY server row for every sidebar/dashboard/
+  // status-refresh render was dead work. The raw strings still ride along in
+  // the spread; nothing reads them from a listServers result.
+  return db
+    .all('SELECT * FROM servers WHERE deleted_at IS NULL ORDER BY created_at')
+    .map((row) => rowToServer(row, { parseOverrides: false }));
 }
 
 function getServer(id) {

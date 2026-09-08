@@ -178,9 +178,34 @@ async function listCandidateFiles(serverId) {
   return out;
 }
 
+// Dir-mtime change gate. Crash reports and hs_err logs are write-once files -
+// they are never modified in place - so the two watched directories' mtimes are
+// an EXACT "anything new?" signal: a dir's mtime only changes when a file is
+// added or removed. Comparing them to the last scan lets a quiet fleet skip the
+// two readdirs AND the N per-candidate existence SELECTs the watcher otherwise
+// pays for every server every 30 seconds. A file dropped in the same
+// millisecond a scan stat's the dir is picked up by that very scan (it stats
+// before it lists); any later add bumps the dir mtime above the cached value,
+// so the next tick re-scans. No permanent miss is possible.
+const lastDirMtimes = new Map(); // serverId -> { crash: number|null, root: number|null }
+
+function dirMtimeOrNull(abs) {
+  try {
+    return fs.statSync(abs).mtimeMs;
+  } catch {
+    return null;
+  } // dir missing / unreadable
+}
+
 /** Scan one server for crash files not yet indexed; parse + insert + record event. */
 async function scanServer(serverId) {
   const inserted = [];
+  const dirMtimes = {
+    crash: dirMtimeOrNull(dataPath('servers', serverId, 'crash-reports')),
+    root: dirMtimeOrNull(dataPath('servers', serverId)),
+  };
+  const last = lastDirMtimes.get(serverId);
+  if (last && last.crash === dirMtimes.crash && last.root === dirMtimes.root) return inserted;
   for (const filename of await listCandidateFiles(serverId)) {
     if (db.get('SELECT id FROM crash_reports WHERE server_id = ? AND filename = ?', serverId, filename)) continue;
 
@@ -223,6 +248,7 @@ async function scanServer(serverId) {
     });
     inserted.push(id);
   }
+  lastDirMtimes.set(serverId, dirMtimes);
   return inserted;
 }
 
@@ -273,9 +299,18 @@ function stopCrashWatcher() {
   }
 }
 
-function listCrashes(serverId) {
+/**
+ * Newest-first reports for a server. `limit` bounds the list view (the export
+ * path calls without it so the archive stays complete).
+ * @param {string} serverId
+ * @param {{ limit?: number }} [opts]
+ */
+function listCrashes(serverId, { limit } = {}) {
   return db
-    .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC', serverId)
+    .all(
+      `SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC${limit ? ' LIMIT ?' : ''}`,
+      ...[serverId, ...(limit ? [limit] : [])]
+    )
     .map((row) => ({ ...row, suspected: JSON.parse(row.suspected_json || '[]') }));
 }
 

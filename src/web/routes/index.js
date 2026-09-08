@@ -715,11 +715,11 @@ router.get(
     } else if (tab === 'history') {
       context.events = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 100 }));
       context.crashReports = db
-        .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC', row.id)
+        .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
         .map(crashVM);
     } else if (tab === 'backups') {
       context.backups = db
-        .all('SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC', row.id)
+        .all('SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT 50', row.id)
         .map((b) => ({ id: b.id, file: b.filename, size: b.size_bytes, reason: b.reason, ts: b.created_at }));
       const rc = require('../../services/backupRetention').effective(row.id);
       context.retention = {
@@ -791,8 +791,15 @@ router.get('/updates', (req, res) => {
 });
 
 router.get('/backups', (req, res) => {
+  // Bounded list (newest 200) with a separate totals query. The pre-audit code
+  // rendered every backup row the table held and derived the totals from that
+  // in-memory array - a fleet with months of retention materialized the whole
+  // table on every page load just to show the newest entries.
+  const totals = db.get('SELECT COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS s FROM backups');
   const backups = db
-    .all(`SELECT b.*, s.display_name FROM backups b JOIN servers s ON s.id = b.server_id ORDER BY b.created_at DESC`)
+    .all(
+      `SELECT b.*, s.display_name FROM backups b JOIN servers s ON s.id = b.server_id ORDER BY b.created_at DESC LIMIT 200`
+    )
     .map((b) => ({
       id: b.id,
       serverId: b.server_id,
@@ -806,7 +813,7 @@ router.get('/backups', (req, res) => {
     title: 'Backups',
     active: 'backups',
     backups,
-    totals: { count: backups.length, bytes: backups.reduce((n, b) => n + (b.size || 0), 0) },
+    totals: { count: totals.n, bytes: totals.s },
   });
 });
 

@@ -14,6 +14,9 @@ const { makeFailureThrottle } = require('../logger');
 
 let scanning = false;
 let timer = null;
+// When the last scan STARTED; the interval skip uses it to avoid re-walking the
+// whole tree minutes after a mutation-driven scheduleScan() already did.
+let lastScanAt = 0;
 const scanThrottle = makeFailureThrottle();
 const onScanFailed = (err) =>
   scanThrottle.fail(logger.warn, 'A storage index scan failed.', { err: serializeError(err, { includeStack: false }) });
@@ -22,6 +25,7 @@ const onScanFailed = (err) =>
 async function scan() {
   if (scanning) return { skipped: true };
   scanning = true;
+  lastScanAt = Date.now();
   const started = Date.now();
   try {
     const root = config.dataDir;
@@ -60,6 +64,15 @@ async function scan() {
     const total = await walk(root, '');
     results.set('', total);
 
+    // Skip the DB rewrite when the walk produced exactly what the table already
+    // holds. In-place file rewrites that leave sizes unchanged (a rewritten
+    // config, an overwritten log) otherwise churn the whole DELETE+reinsert AND
+    // a storage_snapshot row every 15 minutes for zero information.
+    if (cachedEqual(results)) {
+      scanThrottle.ok(logger.info, 'The storage index scan recovered.');
+      return { totalBytes: total.size, dirs: results.size, ms: Date.now() - started, unchanged: true };
+    }
+
     db.transaction(() => {
       db.run('DELETE FROM storage_index');
       const insert = db
@@ -95,9 +108,35 @@ async function scan() {
   }
 }
 
+/** True when the scanned depth ≤ 3 rows exactly match the cache table's. */
+function cachedEqual(results) {
+  const rows = db.all('SELECT rel_path, size_bytes, file_count FROM storage_index');
+  if (rows.length === 0) return false;
+  if (rows.length !== countCachedEntries(results)) return false;
+  for (const r of rows) {
+    const v = results.get(r.rel_path);
+    if (!v || v.size !== r.size_bytes || v.files !== r.file_count) return false;
+  }
+  return true;
+}
+
+function countCachedEntries(results) {
+  let n = 0;
+  for (const rel of results.keys()) {
+    if (rel.split('/').length <= 3) n += 1;
+  }
+  return n;
+}
+
 function startIndexer({ intervalMs = 15 * 60 * 1000 } = {}) {
   scan().catch(onScanFailed);
-  timer = setInterval(() => scan().catch(onScanFailed), intervalMs);
+  // Mutation-driven scheduleScan() calls frequently land near an interval tick;
+  // re-walking the whole tree again minutes after one finished is pure waste,
+  // so skip a tick that follows a scan by less than half the interval.
+  timer = setInterval(() => {
+    if (Date.now() - lastScanAt < intervalMs / 2) return;
+    scan().catch(onScanFailed);
+  }, intervalMs);
   timer.unref();
 }
 

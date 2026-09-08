@@ -167,6 +167,17 @@ function startBackgroundServices(httpServer) {
   // then every 24h.
   const ANALYTICS_RETENTION_DAYS = 90;
   const PANEL_DB_BACKUPS_KEEP = 14;
+  // Event history retention: previously events pruned ONLY when an admin hit
+  // POST /api/events/prune by hand, so the scheduler/watcher/lowdash writes the
+  // panel generates every day piled up without bound. A year of full action
+  // history is a reasonable ceiling for a control panel; a full year is past
+  // the point where anyone's auditing that far back.
+  const EVENT_RETENTION_DAYS = 365;
+  // API-cache retention: mostly short-TTL platform responses (searches, page
+  // metadata) that fall out of use but never got cleaned. 30 days bounds the
+  // table; long-lived keys like the Mojang manifest keep a fresh fetched_at so
+  // they always survive.
+  const API_CACHE_RETENTION_DAYS = 30;
   async function runMaintenance() {
     try {
       const r = require('./analytics/ingest').pruneOlderThan(ANALYTICS_RETENTION_DAYS);
@@ -182,6 +193,26 @@ function startBackgroundServices(httpServer) {
       }
     } catch (err) {
       logger.error('Pruning old analytics rows failed.', { err: serializeError(err) });
+    }
+    // Event history + API-cache retention (see the constants above).
+    try {
+      const eventsPruned = await require('./events').pruneEvents(EVENT_RETENTION_DAYS, { actor: 'system' });
+      if (eventsPruned.removed) {
+        logger.info('Pruned old event history.', {
+          removedEvents: eventsPruned.removed,
+          removedExcerpts: eventsPruned.excerpts,
+          olderThanDays: EVENT_RETENTION_DAYS,
+        });
+      }
+      const apiCacheRemoved = require('./db').run(
+        "DELETE FROM api_cache WHERE fetched_at < datetime('now', ?)",
+        `-${API_CACHE_RETENTION_DAYS} days`
+      ).changes;
+      if (apiCacheRemoved) {
+        logger.info('Pruned old API cache rows.', { removed: apiCacheRemoved });
+      }
+    } catch (err) {
+      logger.error('Pruning event history or API cache failed.', { err: serializeError(err) });
     }
     // Snapshot the panel DB itself - the server backups only cover per-server
     // world dirs, so without this the users/schedules/pins/history/2FA store has

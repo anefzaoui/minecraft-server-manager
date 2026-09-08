@@ -49,7 +49,9 @@ function recordEvent({ serverId = null, actor = 'system', type, summary, details
     fsp
       .mkdir(path.dirname(abs), { recursive: true })
       .then(() => fsp.writeFile(abs, content))
-      .catch((err) => logger.warn('Failed to persist a captured event log excerpt.', { path: excerptRel, err: err.message }));
+      .catch((err) =>
+        logger.warn('Failed to persist a captured event log excerpt.', { path: excerptRel, err: err.message })
+      );
   }
   const result = db.run(
     `INSERT INTO events (server_id, actor, type, summary, details_json, log_excerpt_path)
@@ -160,28 +162,55 @@ function exportEvents(serverId, { format = 'json', q = '', type = '' } = {}) {
   return { filename, contentType: 'text/csv', body };
 }
 
+// Prune advancement window. One pass against months of history must not
+// materialize every row id + excerpt path in memory at once, nor fire thousands
+// of fs.rm promises in a single Promise.allSettled, nor hold one giant
+// transaction open while those file deletes churn - that was the original
+// admin-prune behavior, and it's also how the daily maintenance call would
+// behave. Each window deletes its excerpts, deletes its rows, then advances.
+const PRUNE_BATCH = 1000;
+
 /** Delete events (and their captured log excerpts) older than `days`. */
 async function pruneEvents(days, { actor = 'system' } = {}) {
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' ');
-  const rows = db.all('SELECT id, log_excerpt_path FROM events WHERE created_at < ?', cutoff);
-  // Remove excerpts off the event loop - the admin-triggered prune can delete
-  // thousands of files under data/logs/<id>/events.
-  await Promise.allSettled(
-    rows.flatMap((row) => {
-      if (!row.log_excerpt_path) return [];
-      return fsp.rm(dataPath(row.log_excerpt_path), { force: true }).catch(() => {});
-    })
-  );
-  db.run('DELETE FROM events WHERE created_at < ?', cutoff);
+  let removedEvents = 0;
+  let removedExcerpts = 0;
+  // Advance by MAX(id) rather than re-querying created_at each batch so a
+  // window can't re-read rows the previous DELETE just removed.
+  let floor = 0;
+  for (;;) {
+    const rows = db.all(
+      'SELECT id, log_excerpt_path FROM events WHERE created_at < ? AND id > ? ORDER BY id LIMIT ?',
+      cutoff,
+      floor,
+      PRUNE_BATCH
+    );
+    if (!rows.length) break;
+    for (const row of rows) {
+      if (row.log_excerpt_path) {
+        removedExcerpts += 1;
+        // Excerpts are removed off the event loop - a prune can delete
+        // thousands of files under data/logs/<id>/events, and awaiting each
+        // rm keeps the memory / in-flight-promise count bounded.
+        await fsp.rm(dataPath(row.log_excerpt_path), { force: true }).catch(() => {});
+      }
+    }
+    const qmarks = rows.map(() => '?').join(',');
+    db.run(`DELETE FROM events WHERE id IN (${qmarks})`, ...rows.map((r) => r.id));
+    removedEvents += rows.length;
+    floor = rows[rows.length - 1].id;
+  }
   // A prune can remove the last event of a type, so the cached filter list may
   // now offer a type that matches nothing. Drop it; knownTypes() rebuilds lazily.
   distinctTypes = null;
-  recordEvent({
-    actor,
-    type: 'events-pruned',
-    summary: `Event history pruned: ${rows.length} event(s) older than ${days} days removed`,
-  });
-  return { removed: rows.length };
+  if (removedEvents) {
+    recordEvent({
+      actor,
+      type: 'events-pruned',
+      summary: `Event history pruned: ${removedEvents} event(s) older than ${days} days removed`,
+    });
+  }
+  return { removed: removedEvents, excerpts: removedExcerpts };
 }
 
 module.exports = { recordEvent, listEvents, getEvent, readExcerpt, exportEvents, pruneEvents, knownTypes };

@@ -31,7 +31,9 @@ router.get(
         err: serializeError(err, { includeStack: false }),
       });
     });
-    res.json({ ok: true, crashes: crashes.listCrashes(serverId) });
+    // Newest 200 - an unbounded list would read the whole table on every
+    // crash-tab render for a server that's had a long crash-loop.
+    res.json({ ok: true, crashes: crashes.listCrashes(serverId, { limit: 200 }) });
   })
 );
 

@@ -17,6 +17,21 @@ const TTL_MS = 6 * 60 * 60 * 1000;
 // network fetch instead of stampeding Mojang (and each seeing a DB miss).
 const inFlight = new Map();
 
+// In-process memo of the last parsed manifest. Callers that render a whole
+// page call getVersionManifest() once PER SERVER (each dashboard VM resolves
+// display_version through the manifest), so without this every page load paid a
+// 70KB SELECT + JSON.parse per server even though the SQLite row is hot. The DB
+// is still the source of truth and the cross-restart cache - this just stops
+// re-reading it N times within one process. Small (one slim manifest) and
+// correct: the memo only lives as long as the DB entry's own TTL.
+let memo = null; // { slim, atMs }
+
+function parseAndMemo(valueJson) {
+  const slim = JSON.parse(valueJson);
+  memo = { slim, atMs: Date.now() };
+  return slim;
+}
+
 function singleFlight(key, fn) {
   const pending = inFlight.get(key);
   if (pending) return pending;
@@ -39,15 +54,17 @@ async function fetchManifest() {
     CACHE_KEY,
     JSON.stringify(slim)
   );
+  memo = { slim, atMs: Date.now() };
   return slim;
 }
 
 async function getVersionManifest() {
+  if (memo && Date.now() - memo.atMs < TTL_MS) return memo.slim;
   const cached = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', CACHE_KEY);
   // SQLite datetime('now') is space-separated ('2026-07-14 03:00:00'); normalize
   // to ISO 8601 before parsing (matches how the rest of the code reads timestamps).
   if (cached && Date.now() - Date.parse(cached.fetched_at.replace(' ', 'T') + 'Z') < TTL_MS) {
-    return JSON.parse(cached.value_json);
+    return parseAndMemo(cached.value_json);
   }
   try {
     return await singleFlight(CACHE_KEY, async () => {
@@ -55,7 +72,7 @@ async function getVersionManifest() {
       // populated it (or refreshed an expired copy) while we queued behind it.
       const fresh = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', CACHE_KEY);
       if (fresh && Date.now() - Date.parse(fresh.fetched_at.replace(' ', 'T') + 'Z') < TTL_MS) {
-        return JSON.parse(fresh.value_json);
+        return parseAndMemo(fresh.value_json);
       }
       return fetchManifest();
     });
@@ -64,7 +81,7 @@ async function getVersionManifest() {
       err: serializeError(err, { includeStack: false }),
       servedStale: Boolean(cached),
     });
-    if (cached) return JSON.parse(cached.value_json); // stale beats nothing
+    if (cached) return parseAndMemo(cached.value_json); // stale beats nothing
     throw err;
   }
 }
