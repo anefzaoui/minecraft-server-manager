@@ -57,7 +57,8 @@ function seedOverlayModWithUpdate(serverId, { installed, latestName, latestId })
 
 test('an ignored update disappears from listContent and the outdated count; un-ignore brings it back', async () => {
   const sid = app.seedServer('srv_ignore_upd');
-  db.run("UPDATE servers SET type = 'FABRIC', mc_version = '1.20.1' WHERE id = ?", sid);
+  // update_policy defaults to 'manual', which countOutdated() now excludes.
+  db.run("UPDATE servers SET type = 'FABRIC', mc_version = '1.20.1', update_policy = 'notify' WHERE id = ?", sid);
   const scId = seedOverlayModWithUpdate(sid, { installed: '0.5.3', latestName: '0.5.8', latestId: 'ver-058' });
 
   const before = (await mods.listContent(sid)).find((i) => i.file === 'sodium.jar');
@@ -81,7 +82,7 @@ test('an ignored update disappears from listContent and the outdated count; un-i
 
 test('ignore is version-specific: a newer build than the ignored one still surfaces', async () => {
   const sid = app.seedServer('srv_ignore_newer');
-  db.run("UPDATE servers SET type = 'FABRIC', mc_version = '1.20.1' WHERE id = ?", sid);
+  db.run("UPDATE servers SET type = 'FABRIC', mc_version = '1.20.1', update_policy = 'notify' WHERE id = ?", sid);
   const scId = seedOverlayModWithUpdate(sid, { installed: '0.5.3', latestName: '0.5.8', latestId: 'ver-058' });
   mods.setIgnoredUpdate(sid, { contentId: scId }, { ignore: true, actor: 'tester' });
 

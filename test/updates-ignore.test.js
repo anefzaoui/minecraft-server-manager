@@ -13,7 +13,14 @@ const db = require('../src/db');
 const checker = require('../src/updates/checker');
 
 function seedMcVersionUpdate(serverId, { current, latest }) {
-  db.run("UPDATE servers SET type = 'FABRIC', mc_version = ? WHERE id = ?", current, serverId);
+  // update_policy defaults to 'manual', which listOutdated()/countOutdated()
+  // now exclude - the ignore behaviour under test only applies to a server
+  // that would otherwise surface the update.
+  db.run(
+    "UPDATE servers SET type = 'FABRIC', mc_version = ?, update_policy = 'notify' WHERE id = ?",
+    current,
+    serverId
+  );
   db.run(
     `INSERT INTO update_checks (subject_type, subject_id, current_version, latest_version, latest_name)
      VALUES ('mc_version', ?, ?, ?, ?)

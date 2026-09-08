@@ -37,11 +37,12 @@ test.beforeEach(() => {
   db.run("DELETE FROM api_cache WHERE key = 'panel-latest-release'");
 });
 
+// One minor ahead of package.json's current version (0.12.0).
 const RELEASE = {
-  tag: 'v0.12.0',
-  name: 'v0.12.0',
+  tag: 'v0.13.0',
+  name: 'v0.13.0',
   publishedAt: '2026-01-01T00:00:00Z',
-  htmlUrl: 'https://github.com/anefzaoui/minecraft-server-manager/releases/tag/v0.12.0',
+  htmlUrl: 'https://github.com/anefzaoui/minecraft-server-manager/releases/tag/v0.13.0',
 };
 
 test('compareVersions decides -1/0/1 for semver and null for unknown shapes', () => {
@@ -56,19 +57,19 @@ test('compareVersions decides -1/0/1 for semver and null for unknown shapes', ()
 test('checkLatest reports an update when GitHub has a newer semver tag', async (t) => {
   t.mock.method(githubApi, 'getReleases', async () => [RELEASE]);
   const r = await panelUpdate.checkLatest();
-  assert.equal(r.current, '0.11.0');
+  assert.equal(r.current, '0.12.0');
   assert.equal(r.isNewer, true);
-  assert.equal(r.latest.version, '0.12.0');
+  assert.equal(r.latest.version, '0.13.0');
   assert.equal(r.latest.htmlUrl, RELEASE.htmlUrl);
   assert.equal(r.error, null);
   assert.ok(db.get("SELECT 1 FROM api_cache WHERE key = 'panel-latest-release'"), 'result should be cached');
 });
 
 test('checkLatest reports no update for the same or an older tag, and tolerates non-semver tags', async (t) => {
-  for (const tag of ['v0.11.0', 'v0.10.0']) {
+  for (const tag of ['v0.12.0', 'v0.10.0']) {
     t.mock.method(githubApi, 'getReleases', async () => [{ ...RELEASE, tag }]);
     const r = await panelUpdate.checkLatest({ refresh: true });
-    assert.equal(r.isNewer, false, `${tag} must not look newer than 0.11.0`);
+    assert.equal(r.isNewer, false, `${tag} must not look newer than 0.12.0`);
   }
   t.mock.method(githubApi, 'getReleases', async () => [{ ...RELEASE, tag: 'nightly-2026-01-01' }]);
   const r = await panelUpdate.checkLatest({ refresh: true });
@@ -129,6 +130,6 @@ test('the Settings page renders the control without ever calling GitHub', async 
   const r = await app.req('GET', '/settings', { cookie });
   assert.equal(r.status, 200);
   assert.match(r.text, /id="msm-update-btn"/);
-  assert.match(r.text, /v0\.11\.0/);
+  assert.match(r.text, /v0\.12\.0/);
   assert.equal(spy.mock.callCount(), 0, 'page render must not hit the network');
 });

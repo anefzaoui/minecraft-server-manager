@@ -25,6 +25,17 @@ copy to migrate.**
 | 🚀 [Installation](#installation) | ✨ [Getting Started](docs/getting-started.md) | 📜 [Documentation](docs/README.md) | 🖼️ [Screenshots](#screenshots) |
 | -------------------------------- | --------------------------------------------- | ---------------------------------- | ------------------------------ |
 
+<h3 align="center">💬 We now have a Discord!</h3>
+
+<p align="center">
+  <b>Report bugs, suggest features, get help from real humans, and show off your servers.</b><br>
+  There's a support forum, a showcase for your creations, and a dev corner if you want to contribute.
+</p>
+
+<p align="center">
+  <a href="https://discord.gg/Ud6TrQkbDZ"><img src="https://img.shields.io/badge/Join%20the%20MSM%20Discord-5865F2?logo=discord&logoColor=white&style=for-the-badge" alt="Join the MSM Discord"></a>
+</p>
+
 ## Features
 
 - 🐳 Every server is its own **resource-capped Docker container** - create / start / stop / restart / recreate / delete with graceful RCON stop and crash detection

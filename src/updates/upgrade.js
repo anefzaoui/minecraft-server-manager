@@ -154,6 +154,9 @@ async function upgradePack(
         `The server did not come up healthy after the upgrade. Use rollback to restore ${pack.pinned_version_name}.`
       );
       err.rollbackAvailable = Boolean(backupId);
+      // The unattended auto-update path needs the id to roll back without a
+      // human in the loop; the interactive path keeps offering the button.
+      err.backupId = backupId;
       throw err;
     }
 
@@ -179,6 +182,74 @@ async function upgradePack(
   } finally {
     activeUpgrades.delete(serverId);
   }
+}
+
+/**
+ * Apply pending pack updates for every server whose update_policy is 'auto',
+ * one at a time, straight after the scheduled daily check (deliberately NOT
+ * from the manual "check now" buttons - the settings label promises the daily
+ * check, so that is the only trigger). Unattended safety: the pre-update
+ * backup stays on, cross-MC-version updates are skipped with an event (they
+ * permanently convert the world - always a human decision), and a failed
+ * boot rolls back automatically instead of waiting for a click (#24).
+ */
+async function runAutoUpgrades({ actor = 'scheduler' } = {}) {
+  const db = require('../db');
+  const results = { applied: 0, skipped: 0, failed: 0 };
+  for (const server of serversService.listServers()) {
+    if (server.update_policy !== 'auto') continue;
+    const pack = packsService.getPack(server.id);
+    if (!pack) continue; // packs only for now; images/loaders stay manual
+    const check = db.get(
+      "SELECT * FROM update_checks WHERE subject_type = 'pack' AND subject_id = ? AND latest_version IS NOT NULL",
+      server.id
+    );
+    if (!check || check.latest_version === pack.pinned_version_id) continue;
+    try {
+      await upgradePack(server.id, { versionId: check.latest_version, actor });
+      results.applied += 1;
+    } catch (err) {
+      if (err.requiresVersionConfirm) {
+        results.skipped += 1;
+        recordEvent({
+          serverId: server.id,
+          actor,
+          type: 'auto-update-skipped',
+          summary: `Auto-update to ${check.latest_name || check.latest_version} skipped: it moves Minecraft ${err.fromMcVersion} → ${err.toMcVersion}, which permanently converts the world - apply it manually when ready`,
+        });
+        continue;
+      }
+      results.failed += 1;
+      logger.warn('An automatic pack upgrade failed.', {
+        serverId: server.id,
+        toVersion: check.latest_name || check.latest_version,
+        err: serializeError(err, { includeStack: false }),
+      });
+      if (err.rollbackAvailable && err.backupId) {
+        try {
+          await rollbackPack(server.id, { backupId: err.backupId, actor });
+        } catch (rbErr) {
+          // upgradePack already recorded update-failed; this event is the
+          // "your server needs you" escalation for the truly bad night.
+          recordEvent({
+            serverId: server.id,
+            actor,
+            type: 'auto-update-failed',
+            summary: `Auto-update failed AND the automatic rollback failed - the server needs manual attention (backup ${err.backupId} is intact)`,
+          });
+          logger.error('The automatic rollback after a failed auto-update also failed.', {
+            serverId: server.id,
+            backupId: err.backupId,
+            err: serializeError(rbErr),
+          });
+        }
+      }
+    }
+  }
+  if (results.applied || results.skipped || results.failed) {
+    logger.info('Finished the automatic pack upgrades.', results);
+  }
+  return results;
 }
 
 /** Roll back: restore the pre-update backup + re-pin the previous version. */
@@ -266,4 +337,4 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms).unref());
 }
 
-module.exports = { upgradePack, rollbackPack, upgradeStatus };
+module.exports = { upgradePack, rollbackPack, upgradeStatus, runAutoUpgrades };
