@@ -40,11 +40,11 @@ test('validateSpec rejects bad triggers, actions, permissions and cooldowns', ()
   const id = freshServer('bad');
   assert.throws(
     () => chat.createCommand(id, { trigger: '', action: 'rtp', permission: 'everyone', cooldownSec: 0 }),
-    /Triggers are 1-24/
+    /Triggers are 1 to 24/
   );
   assert.throws(
     () => chat.createCommand(id, { trigger: 'has space', action: 'rtp', permission: 'everyone', cooldownSec: 0 }),
-    /Triggers are 1-24/
+    /Triggers are 1 to 24/
   );
   assert.throws(
     () => chat.createCommand(id, { trigger: 'ok', action: 'fly', permission: 'everyone', cooldownSec: 0 }),

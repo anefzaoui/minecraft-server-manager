@@ -80,9 +80,9 @@
     <div class="card p-4">
       <h3 class="mb-3 font-semibold">Health &amp; Stability</h3>
       <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-        <div><dt class="text-xs text-ink-faint">Container health</dt><dd class="font-medium">{{#if health.health}}{{capitalize health.health}}{{else}}-{{/if}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">Container health</dt><dd class="font-medium">{{#if health.health}}{{capitalize health.health}}{{else}}Unknown{{/if}}</dd></div>
         <div><dt class="text-xs text-ink-faint">Boot phase</dt><dd class="font-medium">{{default server.statusDetail "Running"}}</dd></div>
-        <div><dt class="text-xs text-ink-faint">Last exit code</dt><dd class="font-medium">{{#if health}}{{#if health.exitCode}}{{health.exitCode}}{{else}}0 / running{{/if}}{{else}}-{{/if}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">Last exit code</dt><dd class="font-medium">{{#if health}}{{#if health.exitCode}}{{health.exitCode}}{{else}}0 / running{{/if}}{{else}}Unknown{{/if}}</dd></div>
         <div><dt class="text-xs text-ink-faint">Out-of-memory kills</dt><dd class="font-medium">{{stability.oomKills}}{{#if stability.oomKills24h}} <span class="text-xs font-normal text-warn">· {{stability.oomKills24h}} / 24h</span>{{/if}}</dd></div>
         <div><dt class="text-xs text-ink-faint">Auto-restarts</dt><dd class="font-medium">{{stability.autoRestarts}}{{#if stability.autoRestarts24h}} <span class="text-xs font-normal text-warn">· {{stability.autoRestarts24h}} / 24h</span>{{/if}}</dd></div>
         <div><dt class="text-xs text-ink-faint">Crashes logged</dt><dd class="font-medium">{{stability.crashes}}{{#if stability.crashes7d}} <span class="text-xs font-normal text-ink-faint">· {{stability.crashes24h}} / 24h, {{stability.crashes7d}} / 7d</span>{{/if}}</dd></div>

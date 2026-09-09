@@ -29,7 +29,7 @@ const reasonSchema = z.string().trim().max(256).optional();
 const ipSchema = z
   .string()
   .trim()
-  .regex(/^[0-9a-fA-F.:]{3,45}$/, 'Enter a valid IPv4 or IPv6 address');
+  .regex(/^[0-9a-fA-F.:]{3,45}$/, 'Enter a valid IPv4 or IPv6 address.');
 // Cap at 10 years - a "duration" past that is just a permanent ban with extra steps.
 const durationSchema = z.coerce
   .number()

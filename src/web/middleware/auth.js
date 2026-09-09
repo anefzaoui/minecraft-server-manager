@@ -120,7 +120,9 @@ function originGuard(req, res, next) {
           path: req.path,
           method: req.method,
         });
-        return res.status(403).json({ ok: false, error: 'Cross-origin request rejected (Origin header required)' });
+        return res
+          .status(403)
+          .json({ ok: false, error: 'Cross-origin request rejected. An Origin header is required.' });
       }
       return next();
     }
@@ -132,7 +134,7 @@ function originGuard(req, res, next) {
       path: req.path,
       method: req.method,
     });
-    return res.status(403).json({ ok: false, error: 'Cross-origin request rejected' });
+    return res.status(403).json({ ok: false, error: 'Cross-origin request rejected.' });
   }
   if (originHost !== req.headers.host) {
     logger.warn('Rejected a cross-origin state-changing request.', {
@@ -140,7 +142,7 @@ function originGuard(req, res, next) {
       path: req.path,
       method: req.method,
     });
-    return res.status(403).json({ ok: false, error: 'Cross-origin request rejected' });
+    return res.status(403).json({ ok: false, error: 'Cross-origin request rejected.' });
   }
   next();
 }
@@ -287,7 +289,7 @@ function rejectCrossSiteGet(req, res, next) {
       path: req.path,
       userId: req.user ? req.user.id : undefined,
     });
-    return res.status(403).json({ ok: false, error: 'Cross-site request rejected' });
+    return res.status(403).json({ ok: false, error: 'Cross-site request rejected.' });
   }
   next();
 }

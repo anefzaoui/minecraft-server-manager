@@ -163,7 +163,7 @@ module.exports = [
     key: 'FUNCTION_PERMISSION_LEVEL',
     scope: 'env',
     label: 'Datapack function permission level',
-    help: 'Permission level (1–4) that datapack functions run with. Raise it only if a datapack needs privileged commands.',
+    help: 'Permission level (1 to 4) that datapack functions run with. Raise it only if a datapack needs privileged commands.',
     type: 'number',
     min: 1,
     max: 4,

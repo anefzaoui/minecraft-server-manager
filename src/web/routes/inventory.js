@@ -32,9 +32,9 @@ const nameSchema = z
 const itemSchema = z
   .string()
   .trim()
-  .regex(/^([a-z0-9_.-]+:)?[a-z0-9_./-]{1,120}$/, 'Enter a valid item id (e.g. minecraft:diamond_sword)');
+  .regex(/^([a-z0-9_.-]+:)?[a-z0-9_./-]{1,120}$/, 'Enter a valid item ID (for example, minecraft:diamond_sword).');
 const snapshotFileSchema = z.string().trim().min(1).max(300);
-const querySchema = z.string().trim().min(1, 'Enter something to search for').max(100);
+const querySchema = z.string().trim().min(1, 'Enter something to search for.').max(100);
 
 const giveSchema = z.object({
   player: nameSchema,
@@ -72,9 +72,9 @@ const slotEditSchema = z
     nested: nestedSchema.optional(),
   })
   .superRefine((v, ctx) => {
-    if (v.op === 'set' && !v.item) ctx.addIssue({ code: 'custom', message: 'op "set" needs an item id' });
+    if (v.op === 'set' && !v.item) ctx.addIssue({ code: 'custom', message: 'Choose an item to place in the slot.' });
     if (v.op === 'count' && v.count === undefined)
-      ctx.addIssue({ code: 'custom', message: 'op "count" needs a count' });
+      ctx.addIssue({ code: 'custom', message: 'Enter a count for the slot.' });
   });
 const moveSchema = z.object({ from: slotRefSchema, to: slotRefSchema });
 const addSchema = z.object({

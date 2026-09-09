@@ -110,7 +110,7 @@ async function createBackupImpl(
               actor,
               type: 'backup-warning',
               summary:
-                'World saves were not re-enabled after this backup - check the server console and re-run save-on.',
+                'World saves were not re-enabled after this backup. Check the server console and run save-on again.',
             });
             inconsistent = true;
           }
@@ -152,7 +152,7 @@ async function createBackupImpl(
   );
   const warnings = [
     inconsistent ? 'world saves could not be paused, archive may be slightly inconsistent' : null,
-    empty ? 'archive contains no files - the server has nothing on disk yet' : null,
+    empty ? 'the archive contains no files because the server has nothing on disk yet' : null,
   ].filter(Boolean);
   recordEvent({
     serverId,
@@ -160,7 +160,7 @@ async function createBackupImpl(
     type: 'backup-created',
     summary:
       `Backup created (${reason}, ${(size / 1024 ** 3).toFixed(2)} GB)` +
-      (warnings.length ? ` - WARNING: ${warnings.join('; ')}` : ''),
+      (warnings.length ? `. Warning: ${warnings.join('; ')}.` : '.'),
     details: { id, filename, reason, inconsistent, empty, entryCount },
   });
   logger.info('Created a backup.', { serverId, backupId: id, reason, sizeBytes: size, inconsistent, empty });
@@ -170,7 +170,7 @@ async function createBackupImpl(
   // shrinking edits region files directly.
   if (shrinkAfter) {
     if (running) {
-      if (task) task.step('Shrink skipped - the server was running');
+      if (task) task.step('Shrink skipped because the server was running');
       logger.info('Skipped the post-backup world shrink because the server was running.', { serverId });
     } else {
       try {
@@ -278,7 +278,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
         serverId,
         actor,
         type: 'backup-warning',
-        summary: `Restore proceeded without a safety backup: ${err.message}`,
+        summary: `Restore proceeded without a safety backup because it could not be created.`,
       });
     }
   }

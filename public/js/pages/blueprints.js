@@ -215,7 +215,7 @@ function openProgress(text) {
     <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
     <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import. It keeps running in the background.</p>`;
   content.querySelector('p').textContent = text;
-  return openModal({ title: 'Please Wait…', content, actions: [] });
+  return openModal({ title: 'Importing…', content, actions: [] });
 }
 
 function sourceLabel(entry) {

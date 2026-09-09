@@ -95,7 +95,7 @@
             <input type="range" min="1024" max="20480" step="512" value="{{server.resources.containerMemoryMb}}" id="st-cmem" class="msm-range msm-range-alt flex-1" data-out="out-cmem" data-unit=" MB">
             <span class="w-20 text-right font-mono text-sm" id="out-cmem">{{server.resources.containerMemoryMb}} MB</span>
           </div>
-          <p class="help">The hard limit Docker enforces. Keep it 25–50% above the Java heap: Java needs extra room beyond the heap, and if the server reaches this limit it is stopped for running out of memory.</p>
+          <p class="help">The hard limit Docker enforces. Keep it 25% to 50% above the Java heap: Java needs extra room beyond the heap, and if the server reaches this limit it is stopped for running out of memory.</p>
         </div>
         <div class="rounded-md border p-2.5 text-xs" id="st-headroom" aria-live="polite"></div>
         <div>
@@ -120,7 +120,7 @@
     {{#if server.packUnpinned}}
     <div class="notice notice-warn max-w-prose text-sm">
       <b>This modpack has no pinned version.</b> The container downloads the newest pack version every time it
-      starts - which can silently change your mods and even your world's Minecraft version. Open the
+      starts. That can silently change your mods and even your world's Minecraft version. Open the
       <b>Modpack</b> section and pick the version you're running to lock it in.
     </div>
     {{/if}}
@@ -128,9 +128,9 @@
     <div class="card p-4">
       <h3 class="mb-3 font-semibold">Update Policy</h3>
       <div class="space-y-2 text-sm">
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual only <span class="text-xs text-ink-faint">(never changes anything, and no update badges for this server)</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify me <span class="text-xs text-ink-faint">(show a badge when updates exist; you apply them)</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure - never across Minecraft versions)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual Only <span class="text-xs text-ink-faint">(never changes anything, and no update badges for this server)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify Me <span class="text-xs text-ink-faint">(show a badge when updates exist; you apply them)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure, but never across Minecraft versions)</span></label>
       </div>
     </div>
 

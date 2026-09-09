@@ -53,7 +53,7 @@ const nameSchema = z
   .trim()
   .min(1)
   .max(180)
-  .regex(/^[^\\/\0]+$/, 'Names cannot contain path separators');
+  .regex(/^[^\\/\0]+$/, 'Names cannot contain path separators.');
 
 function makeRouter(scope) {
   const router = express.Router({ mergeParams: true });
@@ -190,7 +190,7 @@ function makeRouter(scope) {
   });
 
   // JSON error handler (same contract as /api).
-  router.use(makeJsonErrorHandler('files', { fileTooLarge: 'File too large (4 GB upload limit)' }));
+  router.use(makeJsonErrorHandler('files', { fileTooLarge: 'That file is too large (4 GB upload limit).' }));
 
   return router;
 }

@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-The **Schedules** page automates recurring tasks with cron expressions - no external cron, no scripts.
+The **Schedules** page automates recurring tasks with cron expressions. No external cron, no scripts.
 
 ![Schedules](images/schedules.png)
 

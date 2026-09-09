@@ -132,7 +132,7 @@ function init() {
       browser.clear();
       solverState.pick = null;
       solverState.mods = [];
-      if (hadSelection) toast('Left "From mods" - the queued mods were cleared.', { kind: 'info' });
+      if (hadSelection) toast('Left "From Mods". The queued mods were cleared.', { kind: 'info' });
     }
     sourceTab = tab;
     sourceTabsEl?.querySelectorAll('[data-source]').forEach((b) => setClasses(b, b.dataset.source === tab));
@@ -420,7 +420,7 @@ function init() {
     };
     try {
       const result = await runTask({
-        title: `Creating ${name} from zip`,
+        title: `Creating ${name} from zip…`,
         start: async () => {
           const res = await fetch('/api/servers/from-zip', {
             method: 'POST',
@@ -428,7 +428,7 @@ function init() {
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Creation failed');
+          if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'create the server' }));
           return data.taskId;
         },
       });
@@ -442,7 +442,7 @@ function init() {
       });
     } catch (err) {
       if (err.dismissed) return; // creation continues server-side - task tray takes over
-      toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
+      toast(err.message || 'That server could not be created. Please try again.', { kind: 'error', timeout: 12000 });
     }
   }
 
@@ -1077,7 +1077,7 @@ function initZipUpload() {
       nativeRow.className = 'mt-3 flex cursor-pointer items-start gap-2 text-xs text-ink-soft';
       nativeRow.innerHTML = `
         <input type="checkbox" class="msm-check mt-0.5 shrink-0" data-role="native" ${state.nativeLoader ? 'checked' : ''}>
-        <span><b>Use the loader already in this zip</b> — this is a pre-installed server directory, so MSM pins the container to the included
+        <span><b>Use the loader already in this zip.</b> This is a pre-installed server directory, so the panel keeps this server on the included
           ${escapeHtml(p.native.loader || 'loader')} build ${escapeHtml(p.native.loaderVersion || '')} instead of reinstalling one.
           ${p.native.mcVersion ? `Detected Minecraft ${escapeHtml(p.native.mcVersion)}.` : 'Minecraft version is detected from the archive.'}</span>`;
       selectedEl.appendChild(nativeRow);

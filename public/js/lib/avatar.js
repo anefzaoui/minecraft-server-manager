@@ -56,7 +56,7 @@ async function openPickerModal() {
   const uploadBtn = document.createElement('button');
   uploadBtn.type = 'button';
   uploadBtn.className = 'btn';
-  uploadBtn.textContent = 'Upload image';
+  uploadBtn.textContent = 'Upload Image';
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className = 'btn btn-ghost';

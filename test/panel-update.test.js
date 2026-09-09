@@ -122,7 +122,11 @@ test('GitHub down with a stale cache degrades (200 + error); with nothing cached
 
   const cold = await app.req('GET', '/api/settings/panel-update?refresh=1', { cookie });
   assert.equal(cold.status, 502, 'nothing cached + GitHub down must surface as a 502');
-  assert.equal(cold.json.error, 'Unexpected server error - check the panel logs.', '5xx internals stay redacted');
+  assert.equal(
+    cold.json.error,
+    'Something went wrong on the server. Check the panel logs for details.',
+    '5xx internals stay redacted'
+  );
 });
 
 test('the Settings page renders the control without ever calling GitHub', async (t) => {

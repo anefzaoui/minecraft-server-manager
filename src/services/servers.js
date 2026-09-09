@@ -83,8 +83,7 @@ function assembleEnv(server) {
     recordEvent({
       serverId: server.id,
       type: 'rcon-password-regenerated',
-      summary:
-        'Stored RCON password could not be decrypted (SESSION_SECRET changed) - a new one was generated automatically',
+      summary: 'The saved RCON password could not be read. The panel generated a new one automatically.',
     });
   }
   env.RCON_PASSWORD = rconPassword;
@@ -281,7 +280,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   if (wantsCurseforge && !require('./apiKeys').getKey('curseforge')) {
     throw httpError(
       412,
-      'CurseForge needs an API key - add yours in Settings → API keys first (console.curseforge.com), then create the server.'
+      'CurseForge needs an API key. Add yours in Settings → API keys first (from console.curseforge.com), then create the server.'
     );
   }
   // Same fail-fast idea for the pinning invariant: an unpinned pack selector
@@ -499,14 +498,14 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
   // racing its own save against the archiver's mid-read of the same files.
   try {
     await withSaveLock(id, () => containers.stopContainer(id));
-  } catch (err) {
+  } catch {
     // stopContainer only throws when the container is verifiably STILL running -
     // never claim a graceful stop that didn't happen.
     recordEvent({
       serverId: id,
       actor,
       type: 'stop-failed',
-      summary: `Graceful stop did not take effect: ${err.message}. The container is still running. Try Force kill.`,
+      summary: `The graceful stop did not take effect, and the server is still running. Try Force Stop.`,
     });
     throw httpError(502, 'The server did not stop. Try Force stop, or check that Docker is running.');
   }
@@ -538,7 +537,7 @@ async function killServerImpl(id, { actor = 'system' } = {}) {
   recordEvent({ serverId: id, actor, type: 'kill-requested', summary: 'Force kill requested' });
   await containers.killContainer(id);
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
-  recordEvent({ serverId: id, actor, type: 'killed', summary: 'Server force-killed (world may not have saved)' });
+  recordEvent({ serverId: id, actor, type: 'killed', summary: 'Server force-stopped. The world may not have saved.' });
 }
 
 const killServer = guardOp('kill', killServerImpl);
@@ -622,7 +621,12 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
     server.env_json
   );
   if (!quiet)
-    recordEvent({ serverId: id, actor, type: 'recreated', summary: 'Container recreated with current configuration' });
+    recordEvent({
+      serverId: id,
+      actor,
+      type: 'recreated',
+      summary: 'Container rebuilt with the current configuration.',
+    });
   if (wasRunning) await startServerImpl(id, { actor });
 }
 
@@ -724,7 +728,7 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     serverId: id,
     actor,
     type: 'config-changed',
-    summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (recreate required)' : ''}`,
+    summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (rebuild required)' : ''}`,
     details: { diff, needsRecreate },
   });
   return { server: getServer(id), needsRecreate };
@@ -878,7 +882,7 @@ async function refreshStatuses({ boot = false } = {}) {
       new Promise((_, reject) => {
         timer = setTimeout(
           () =>
-            reject(new Error(`Status refresh exceeded ${REFRESH_MAX_MS} ms - the Docker daemon may be unresponsive.`)),
+            reject(new Error(`Status refresh exceeded ${REFRESH_MAX_MS} ms. The Docker daemon may be unresponsive.`)),
           REFRESH_MAX_MS
         );
         timer.unref();
@@ -939,7 +943,7 @@ async function refreshStatusesInner({ boot }) {
                 type: 'startup-stalled',
                 summary: diag
                   ? `Startup stalled after ${Math.round(elapsedMs / 60_000)} min: ${diag.summary}`
-                  : `Still starting after ${Math.round(elapsedMs / 60_000)} minutes with no "Done" in the logs - check the console for what's blocking it`,
+                  : `Still starting after ${Math.round(elapsedMs / 60_000)} minutes with no "Done" in the logs. Check the console for what's blocking it.`,
                 details: { elapsedMs, diagnosis: diag ? diag.key : null },
                 logExcerpt: tail || null,
               });

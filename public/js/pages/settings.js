@@ -81,7 +81,7 @@ function init() {
         if (res) {
           if (locNote)
             locNote.textContent = `Currently: ${res.localization.timezone} · ${res.localization.locale || ''}`;
-          toast(`Time zone set to ${res.localization.timezone}. Reload to apply everywhere.`);
+          toast(`Time zone set to ${res.localization.timezone}. Refresh to apply everywhere.`);
         }
       });
     });

@@ -202,7 +202,7 @@ function assertUnderQuota(server, aboutToAddBytes = 0) {
   const used = sizeOf(`servers/${server.id}`);
   if (used + aboutToAddBytes > server.disk_quota_bytes) {
     const err = new Error(
-      `${server.display_name} is over its disk quota - free space or raise the limit in Settings → Resources`
+      `${server.display_name} is over its disk quota. Free some space or raise the limit in Settings → Resources.`
     );
     err.status = 409;
     throw err;
@@ -222,7 +222,7 @@ async function enforceStrictQuotas() {
       recordEvent({
         serverId: s.id,
         type: 'quota-exceeded',
-        summary: `Strict quota: usage ${(used / 1024 ** 3).toFixed(1)} GB exceeds quota by >10% - stopping server`,
+        summary: `Strict quota: usage ${(used / 1024 ** 3).toFixed(1)} GB exceeds the quota by more than 10%. Stopping the server.`,
       });
       logger.warn('Stopping a server that is more than 10 percent over its strict disk quota.', {
         serverId: s.id,

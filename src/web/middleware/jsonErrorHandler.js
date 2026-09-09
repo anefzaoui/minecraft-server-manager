@@ -21,7 +21,7 @@ function friendlyError(err) {
   }
   if (/port is already allocated/i.test(msg)) return 'That port is already taken by another container.';
   if (/No such image/i.test(msg))
-    return 'The server image is missing - it will be pulled automatically on the next start.';
+    return 'The server image is missing. It will be downloaded automatically on the next start.';
   return null;
 }
 
@@ -71,7 +71,9 @@ function makeJsonErrorHandler(tag, { fileTooLarge = 'File too large' } = {}) {
     const friendly = friendlyError(err);
     if (friendly) return res.status(status).json({ ok: false, error: friendly });
     if (status >= 500)
-      return res.status(status).json({ ok: false, error: 'Unexpected server error - check the panel logs.' });
+      return res
+        .status(status)
+        .json({ ok: false, error: 'Something went wrong on the server. Check the panel logs for details.' });
     return res.status(status).json({ ok: false, error: err.message || 'Unexpected error' });
   };
 }

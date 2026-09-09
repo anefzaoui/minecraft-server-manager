@@ -38,19 +38,19 @@ copy to migrate.**
 
 ## Features
 
-- 🐳 Every server is its own **resource-capped Docker container** - create / start / stop / restart / recreate / delete with graceful RCON stop and crash detection
+- 🐳 Every server is its own **resource-capped Docker container**: create / start / stop / restart / rebuild / delete with graceful RCON stop and crash detection
 - 🧙 **Guided wizard**: Simple or Advanced mode, every image env var explained in plain English
-- 📌 **Modpacks always pinned** to an exact version - explicit upgrades with preview, pre-update backup, health monitoring, and **one-click rollback**
-- 🧩 **Five content registries in one browser**: Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases - three of them keyless
+- 📌 **Modpacks always pinned** to an exact version, with explicit upgrades that offer a preview, pre-update backup, health monitoring, and **one-click rollback**
+- 🧩 **Five content registries in one browser**: Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases (three of them keyless)
 - 🔗 **Add by link**: paste any project page, GitHub repo, slug, or direct jar URL
-- 🗜️ **Import anything**: Modrinth `.mrpack`, CurseForge exports, or your own zip of jars - every jar identified & compatibility-checked
-- 🔒 **Checksum-verified downloads** (sha512 → sha256 → sha1 → md5) - a mismatch never reaches the server
+- 🗜️ **Import anything**: Modrinth `.mrpack`, CurseForge exports, or your own zip of jars, with every jar identified and compatibility-checked
+- 🔒 **Checksum-verified downloads** (sha512 → sha256 → sha1 → md5), so a mismatch never reaches the server
 - 📚 Shared **sha256-deduplicated mod library**, hard-linked into servers; custom mods survive pack updates
 - 🖥️ **Live console** over WebSocket, RCON command bar, log filters, player quick-actions
-- 👮 **Player moderation**: whitelist, ops, bans, IP bans, teleports - online via RCON, offline via JSON edits
+- 👮 **Player moderation**: whitelist, ops, bans, IP bans, teleports, online via RCON and offline via JSON edits
 - 💾 **Save-safe backups** with retention classes + cron **schedules** (restart / backup / RCON)
-- 📜 **Blueprints** (`.mcserver.zip`): portable server recipes - export, import anywhere, get the same server
-- 🔥 **Crash forensics**: auto-detected, parsed, suspects identified - plus one-click **mclo.gs sharing & automated insights**
+- 📜 **Blueprints** (`.mcserver.zip`): portable server recipes you export, import anywhere, and get the same server from
+- 🔥 **Crash forensics**: auto-detected, parsed, suspects identified, plus one-click **mclo.gs sharing and automated insights**
 - 🗺️ One-click **BlueMap live map**, served through the panel's authenticated proxy
 - 📈 **Storage analytics & panel-enforced disk quotas**, playtime/deaths/mining **analytics & scoreboard**, **inventory forensics**, advisory x-ray **investigation**
 - 🪄 Optional **per-server chatbot** (local/OpenAI-compatible LLM) with constrained in-game powers ([docs](docs/chatbot.md))
@@ -78,7 +78,7 @@ copy to migrate.**
 The panel and the Docker daemon are expected to run on the **same host** (server data is bind-mounted
 by host path).
 
-### 🐳 Option 1 - Docker (Linux hosts, Portainer, Dockge, compose)
+### 🐳 Option 1: Docker (Linux hosts, Portainer, Dockge, compose)
 
 A pre-built multi-arch image (amd64 + arm64) is published to GHCR on every release:
 `ghcr.io/anefzaoui/minecraft-server-manager:latest` (or pin a version tag, e.g. `:v0.11.0`).
@@ -95,12 +95,12 @@ Open **http://your-host:25564**. In Portainer/Dockge, paste the compose file as 
 
 > [!IMPORTANT]
 > The panel drives the **host's Docker daemon** through the mounted socket, and anything that holds
-> the Docker socket is root-equivalent on the host - treat the panel's admin login accordingly and
+> the Docker socket is root-equivalent on the host, so treat the panel's admin login accordingly and
 > never expose the UI raw to the internet. Docker Desktop (Windows/macOS) is not a target for this
-> mode - run the panel natively there.
+> mode; run the panel natively there.
 
 <details>
-<summary><b>How the containerized panel works - and what to know</b></summary>
+<summary><b>How the containerized panel works, and what to know</b></summary>
 
 - The panel drives the **host's Docker daemon** through the mounted `/var/run/docker.sock` and creates
   each Minecraft server as a **sibling container** (not a child). Game ports are published by those
@@ -130,7 +130,7 @@ host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path;
 
 </details>
 
-### 🖥️ Option 2 - From source (any OS, incl. Windows/macOS)
+### 🖥️ Option 2: From source (any OS, incl. Windows/macOS)
 
 ```bash
 git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
@@ -155,7 +155,7 @@ random cookie secret (`data/.session-secret`) and a separate at-rest encryption 
 across replicas); the at-rest key is always machine-local, so keep `data/.secret-key` with your
 backups.
 
-### ⚙️ Option 3 - Under a process manager (PM2 / systemd)
+### ⚙️ Option 3: Under a process manager (PM2 / systemd)
 
 For a from-source install that should survive reboots. Gotcha with **PM2**: it launches apps
 with whatever Node version started the PM2 _daemon_, and later switching your shell with `nvm` does
@@ -194,7 +194,7 @@ pm2 save
     <td><img src="docs/screenshots/05-console.png" alt="Live console"><br><sub><b>Live console &amp; RCON</b>: streamed logs with level filters and a command bar with history.</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b>: pack-managed + custom overlay, one-click toggle, five-registry search (Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases), zip import (Modrinth <code>.mrpack</code>, CurseForge exports, or your own jar collections - every jar identified &amp; compatibility-checked, every download checksum-verified).</sub></td>
+    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b>: pack-managed and custom mods, one-click toggle, five-registry search (Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases), zip import (Modrinth <code>.mrpack</code>, CurseForge exports, or your own jar collections). Every jar is identified and compatibility-checked, and every download is checksum-verified.</sub></td>
     <td><img src="docs/screenshots/07-worlds.png" alt="Worlds"><br><sub><b>Worlds</b>: reset/re-roll with a custom or random seed, duplicate, and a shared world library.</sub></td>
   </tr>
   <tr>
@@ -253,7 +253,7 @@ Not affiliated with any of them.
 - **Custom-mod overlay**: mods you add yourself are downloaded into a shared, sha256-deduplicated
   library and hard-linked into the server; they survive pack updates. Disabling is class-aware
   (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism).
-- **Five content sources, one browser**: Modrinth, CurseForge, and - keyless - **Hangar** (PaperMC's
+- **Five content sources, one browser**: Modrinth, CurseForge, and (keyless) **Hangar** (PaperMC's
   plugin registry), **SpigotMC** (via Spiget's CDN proxy, which dodges the Cloudflare wall), and
   **GitHub Releases** (stable-release preference, `-sources`/`-javadoc` sidecars skipped, ETag
   caching so update checks barely touch the rate limit). All five feed search, add-by-link, the
@@ -262,19 +262,19 @@ Not affiliated with any of them.
   GitHub repo or release URL (bare `owner/repo` works), a Modrinth slug, or a direct `.jar` URL -
   the panel resolves the right build for the server's loader and MC version.
 - **Server-side `.mrpack` import**: upload a Modrinth modpack and it's previewed and installed like
-  a CurseForge export - files are canonicalized back into real Modrinth projects via hash lookup
+  a CurseForge export; files are canonicalized back into real Modrinth projects via hash lookup
   (so they stay update-checkable), client-only entries are skipped visibly, and both override trees
   apply in spec order with pre-apply backups. An `.mrpack` can also seed server creation.
 - **Verified downloads**: every install from a registry is streamed through the strongest checksum
   the registry publishes (sha512 → sha256 → sha1 → md5); a mismatch aborts before anything lands on
   the server.
 - **Crash analysis via mclo.gs**: one click shares a crash report as an mclo.gs paste (always behind
-  an explicit confirm - it's public) and runs mclo.gs's automated insights: known problems with
+  an explicit confirm, since it's public) and runs mclo.gs's automated insights: known problems with
   suggested fixes, rendered right in the History tab.
 - **Console, logs & RCON**: live console over WebSocket, ANSI rendering, search/level filters, a
   command bar with history, and a player list with quick actions. Every server gets a generated,
   encrypted RCON password injected automatically.
-- **Player moderation**: whitelist, ops (levels 1–4), bans, IP bans; via RCON while running and via
+- **Player moderation**: whitelist, ops (levels 1 to 4), bans, IP bans; via RCON while running and via
   direct JSON edits while stopped ("applies on start"). Teleport by coordinates, to a player, or to
   the nearest biome.
 - **Backups & schedules**: save-safe archive/restore with per-reason retention caps and free-space
@@ -318,7 +318,7 @@ Not affiliated with any of them.
   the server pre-added to the in-game server list.
 - **Pick-mods-first solver**: choose the mods you want; the solver intersects Modrinth metadata to
   propose the newest fully-compatible loader + MC version pair and installs the set on creation.
-- **Public status page**: optional unauthenticated `/status/<slug>` per server - live status, MOTD,
+- **Public status page**: optional unauthenticated `/status/<slug>` per server: live status, MOTD,
   version, flavor, icon, uptime, and player count, styled with the server's accent.
 - **Public API**: optional read-only `/api/v1`, authenticated with admin-minted Bearer tokens that
   are scopable per server, revocable, and expiring; server list + live status. See
@@ -343,8 +343,8 @@ it runs on. This section covers how to reach it from elsewhere and exactly which
 
 The panel itself sits at **25564**, one below the game runway, so game instances count cleanly
 upward from 25565 with nothing interrupting the sequence. Game ports are then assigned **first-free**,
-one game + RCON pair per server. Ten servers therefore occupy game `25565–25574` (TCP+UDP), RCON
-`26565–26574` (TCP), and, where Bedrock is enabled, `19132+` (UDP). The 1000-port RCON offset is
+one game + RCON pair per server. Ten servers therefore occupy game `25565-25574` (TCP+UDP), RCON
+`26565-26574` (TCP), and, where Bedrock is enabled, `19132+` (UDP). The 1000-port RCON offset is
 deliberate: it keeps RCON in a separate block so you can open a contiguous **game** range without ever
 exposing RCON.
 
@@ -447,7 +447,7 @@ Exposing the raw panel port on the internet means logins travel over **plain HTT
 
 ---
 
-## The `./data` directory - everything lives here
+## The `./data` directory: everything lives here
 
 ```
 data/
@@ -479,7 +479,7 @@ world. Every file operation is contained to this root (path-guard enforced).
 - **Java heap** (`MEMORY`): what Minecraft may use.
 - **Container limit** (Docker `HostConfig.Memory`): the hard cap; hitting it OOM-kills the server.
 
-Keep the container limit 25–50% above the heap. The wizard does this automatically; the Settings
+Keep the container limit 25-50% above the heap. The wizard does this automatically; the Settings
 form validates it.
 
 ### Java version selection
@@ -492,7 +492,7 @@ The image does **not** pick Java for you. The panel maps MC version → image ta
 GTNH is installed from its own release index rather than CurseForge, and the panel always pins an
 exact pack version. Java is chosen per version from the index's own `maxJavaVersion`: GTNH 2.8.0 and
 later run on **Java 25** via the pack's bundled lwjgl3ify patches, older releases on Java 21 or 17.
-Budget **6 GB of heap and 20 GB of disk** to start - the wizard raises both for you. See the
+Budget **6 GB of heap and 20 GB of disk** to start; the wizard raises both for you. See the
 [modpacks guide](docs/modpacks.md) for the full pack workflow.
 
 ### Disk quotas are panel-enforced
@@ -508,7 +508,7 @@ using a **dedicated** random key at `$DATA_DIR/.secret-key` (auto-generated on f
 `0600`). It's independent of `SESSION_SECRET`, so rotating the cookie secret no longer invalidates
 stored credentials. Values written before this key existed used a `SESSION_SECRET`-derived key,
 kept as a decrypt-only fallback and re-encrypted under the dedicated key automatically on boot.
-**Back up `.secret-key` with your data** - losing it means re-entering every stored credential.
+**Back up `.secret-key` with your data.** Losing it means re-entering every stored credential.
 Blueprints never contain secrets. The panel refuses to set footgun env vars (`REMOVE_OLD_MODS`,
 `LOAD_ENV_FROM_*`).
 

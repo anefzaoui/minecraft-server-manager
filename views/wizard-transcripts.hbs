@@ -1,8 +1,4 @@
-<div class="mb-5">
-  <p class="text-xs font-medium uppercase tracking-wider text-ink-faint">Administration</p>
-  <h1 class="mt-1 text-2xl font-bold">Chatbot transcript archives</h1>
-  <p class="mt-1 text-sm text-ink-faint">Retained per each server's policy, including conversations from servers that were later deleted.</p>
-</div>
+{{> page-header heading="CHATBOT TRANSCRIPTS" sub="Kept according to each server's retention policy, including conversations from servers that were later deleted."}}
 
 <div class="card overflow-hidden">
   {{#if transcripts.length}}
@@ -20,6 +16,6 @@
       {{/each}}
     </div>
   {{else}}
-    <div class="p-10 text-center text-sm text-ink-faint">No chatbot transcripts are currently retained.</div>
+    <div class="p-10 text-center text-sm text-ink-faint">No chatbot transcripts are being kept right now.</div>
   {{/if}}
 </div>

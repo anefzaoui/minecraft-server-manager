@@ -37,7 +37,7 @@ export async function showPackDetails({ platform, ref, installedServerId } = {})
     ? `serverId=${encodeURIComponent(installedServerId)}`
     : `platform=${encodeURIComponent(platform)}&ref=${encodeURIComponent(ref)}`;
   const loading = openModal({
-    title: 'Loading Pack Details…',
+    title: 'Loading pack details…',
     size: 'sm',
     content: '<p class="text-sm text-ink-faint">Fetching from the platform…</p>',
   });

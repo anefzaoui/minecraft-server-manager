@@ -34,7 +34,8 @@ function setStatusPage(serverId, { enabled, slug }) {
     );
     return getStatusPage(serverId);
   }
-  if (!SLUG_RE.test(slug)) throw httpError(400, 'The page address must be 3–40 lowercase letters, numbers, or dashes');
+  if (!SLUG_RE.test(slug))
+    throw httpError(400, 'The page address must be 3 to 40 lowercase letters, numbers, or dashes.');
   const clash = db
     .all('SELECT server_id, config_json FROM integrations WHERE kind = ?', KIND)
     .find((r) => r.server_id !== serverId && JSON.parse(r.config_json || '{}').slug === slug);

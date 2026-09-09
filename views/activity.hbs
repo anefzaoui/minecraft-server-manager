@@ -39,7 +39,7 @@
   </ol>
   {{#if events.length}}
   <div class="flex items-center justify-between border-t border-line p-3 text-xs text-ink-faint">
-    <span>Showing {{from}}–{{to}} of {{total}} events</span>
+    <span>Showing {{from}} to {{to}} of {{total}} events</span>
     <div class="flex items-center gap-2">
       {{#if prevHref}}<a class="btn btn-ghost btn-sm" href="{{prevHref}}" aria-label="Previous page">{{{icon 'chevron-left' 'size-4'}}}</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="Previous page">{{{icon 'chevron-left' 'size-4'}}}</button>{{/if}}
       <span class="tabular-nums">Page {{page}} of {{pages}}</span>

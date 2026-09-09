@@ -56,8 +56,8 @@ const worldNameSchema = z
   .trim()
   .min(1)
   .max(64)
-  .regex(/^[^\\/\0]+$/, 'World names cannot contain path separators')
-  .refine((v) => !v.startsWith('.'), { message: 'World names cannot start with a dot' });
+  .regex(/^[^\\/\0]+$/, 'World names cannot contain path separators.')
+  .refine((v) => !v.startsWith('.'), { message: 'World names cannot start with a dot.' });
 const modeSchema = z.enum(['replace', 'alongside']);
 
 // ---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ router.get(
 
 router.post('/upload', worldUploadPreflight, upload.single('file'), async (req, res, next) => {
   try {
-    if (!req.file) throw badRequest('Attach a world archive (zip, .mcworld, tar or tar.gz)');
+    if (!req.file) throw badRequest('Attach a world archive (zip, .mcworld, tar, or tar.gz).');
     const { name } = z.object({ name: z.string().trim().max(120).optional() }).parse(req.body || {});
     const row = await worlds.importArchive(req.file.path, {
       name,
@@ -292,7 +292,7 @@ function notFound(message) {
 
 // JSON error handlers (same contract as /api): friendly zod messages + status.
 for (const r of [router, serverWorlds]) {
-  r.use(makeJsonErrorHandler('worlds', { fileTooLarge: 'That archive is too large (20 GB limit)' }));
+  r.use(makeJsonErrorHandler('worlds', { fileTooLarge: 'That archive is too large (20 GB limit).' }));
 }
 
 router.serverWorlds = serverWorlds;

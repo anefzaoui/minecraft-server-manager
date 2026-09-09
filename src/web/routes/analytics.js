@@ -170,7 +170,7 @@ router.get(
       .regex(/^[0-9a-fA-F-]{32,36}$/)
       .parse(req.params.uuid);
     const data = stats.profile(req.params.id, uuid);
-    if (!data) return res.status(404).json({ ok: false, error: 'No stats recorded for this player yet' });
+    if (!data) return res.status(404).json({ ok: false, error: 'No stats recorded for this player yet.' });
     res.json({ ok: true, profile: data });
   })
 );

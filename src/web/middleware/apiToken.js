@@ -16,7 +16,7 @@ function bearerAuth(req, res, next) {
   const raw = bearerToken(req);
   if (!raw) {
     logger.debug('Rejected a public API request with no bearer token.', { path: req.path, ip: req.ip });
-    return res.status(401).json({ ok: false, error: 'Missing or malformed Authorization header' });
+    return res.status(401).json({ ok: false, error: 'The Authorization header is missing or malformed.' });
   }
   const result = apiTokens.verifyToken(raw);
   if (!result || result.ok !== true) {
@@ -37,7 +37,7 @@ function bearerAuth(req, res, next) {
  */
 function readOnly(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD') return next();
-  return res.status(405).set('Allow', 'GET').json({ ok: false, error: 'This API is read-only' });
+  return res.status(405).set('Allow', 'GET').json({ ok: false, error: 'This API is read-only.' });
 }
 
 module.exports = { bearerAuth, readOnly };

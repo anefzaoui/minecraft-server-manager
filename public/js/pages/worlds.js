@@ -76,7 +76,7 @@ export function uploadWorldModal({ onDone } = {}) {
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       {
-        label: 'Upload & import',
+        label: 'Upload & Import',
         kind: 'primary',
         busyLabel: 'Uploading…',
         onClick: () => {
@@ -130,7 +130,7 @@ export function uploadWorldModal({ onDone } = {}) {
             });
             xhr.addEventListener('error', () => {
               busy = false;
-              toast('Network error during upload.', { kind: 'error' });
+              toast('The upload could not be completed. Check your connection and try again.', { kind: 'error' });
               resolve(false);
             });
             xhr.send(form);

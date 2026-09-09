@@ -1,5 +1,7 @@
 # Architecture
 
+[← Back to docs index](README.md)
+
 Minecraft Server Manager is a single-process, server-rendered Node.js application. It manages
 Minecraft servers that run as Docker containers using the
 [itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server) image, talking to the
@@ -34,7 +36,7 @@ Dependencies flow in one direction:
                  └──────────────┬──────────────┘
                                 │
                  ┌──────────────▼──────────────┐
-                 │         services/*          │   domain logic - the actual features
+                 │         services/*          │   domain logic (the actual features)
                  └───┬─────────┬─────────┬─────┘
                      │         │         │
         ┌────────────▼──┐ ┌────▼────┐ ┌──▼──────────┐
@@ -46,7 +48,7 @@ Dependencies flow in one direction:
   `files`, …), mounted in `web/app.js`. Routers validate with zod, call a service, and return JSON
   or render a view. Business logic does not belong here. Two routers are mounted in the **public
   zone**, before `requireAuth`: `routes/status.js` (opt-in per-server HTML status pages) and
-  `routes/apiV1.js` (`/api/v1` - a read-only JSON API authenticated by an admin-minted Bearer token
+  `routes/apiV1.js` (`/api/v1`, a read-only JSON API authenticated by an admin-minted Bearer token
   from `services/apiTokens.js`, off unless enabled in Settings; see `docs/public-api.md`).
 - **`services/`** - the heart of the app. Each service owns one domain and may depend on
   infrastructure and on other services.
@@ -136,7 +138,7 @@ Cross-cutting:
 9. Start background services: WS broker, storage indexer, crash + inventory watchers, scheduler,
    Discord event bridge, and the **daily maintenance timer** (prune old analytics rows + snapshot
    `panel.db`).
-10. Initialize Docker **in the background** - the UI is fully usable while the daemon is down;
+10. Initialize Docker **in the background**. The UI is fully usable while the daemon is down;
     Docker features light up when it becomes reachable. Once connected, `refreshStatuses({ boot })`
     reconciles cached statuses, emits a one-time `offline-after-restart` event for a server that was
     up before the panel restarted and won't be brought back, and the boot loop starts

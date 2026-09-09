@@ -100,8 +100,8 @@ function init(root) {
       hint.className = 'mt-0.5 text-[11px] leading-tight ' + (enforcedNow() ? 'text-warn' : 'text-ink-faint');
       if (enforcedNow()) {
         hint.dataset.tip =
-          'Whitelist enforcement is on - this player has never been whitelisted, so they will be turned away when they try to join.';
-        hint.textContent = 'Not whitelisted - join blocked';
+          'Whitelist enforcement is on. This player has never been whitelisted, so they will be turned away when they try to join.';
+        hint.textContent = 'Not whitelisted, join blocked';
       } else {
         hint.textContent = 'Not whitelisted';
       }
@@ -573,7 +573,7 @@ function init(root) {
       </select>
       <p class="mt-2 text-xs text-ink-faint">Levels below 4 take effect after the next restart of a running server.</p>`;
     openModal({
-      title: `Operator level for ${name}`,
+      title: `Operator Level for ${name}`,
       content,
       size: 'sm',
       actions: [

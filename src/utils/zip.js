@@ -170,14 +170,14 @@ function extractZipSafe(
       zip.on('end', done);
       zip.on('entry', (entry) => {
         if (++entryCount > maxEntries) {
-          return fail(httpError(413, `Archive has too many entries (> ${maxEntries}) - refusing to extract.`));
+          return fail(httpError(413, `Archive has too many entries (more than ${maxEntries}). Refusing to extract.`));
         }
         declaredBytes += entry.uncompressedSize || 0;
         if (declaredBytes > maxBytes) {
           return fail(
             httpError(
               413,
-              `Archive is too large uncompressed (> ${Math.round(maxBytes / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
+              `Archive is too large uncompressed (more than ${Math.round(maxBytes / 1024 ** 3)} GB). Refusing to extract (possible decompression bomb).`
             )
           );
         }
@@ -213,7 +213,7 @@ function extractZipSafe(
               fail(
                 httpError(
                   413,
-                  `Archive exceeds the ${Math.round(maxBytes / 1024 ** 3)} GB extraction limit - aborted (possible decompression bomb).`
+                  `Archive exceeds the ${Math.round(maxBytes / 1024 ** 3)} GB extraction limit. Aborted (possible decompression bomb).`
                 )
               );
             }

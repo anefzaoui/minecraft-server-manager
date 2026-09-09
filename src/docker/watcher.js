@@ -144,7 +144,8 @@ async function handleEvent(evt) {
     recordEvent({
       serverId,
       type: 'oom',
-      summary: 'Container hit its memory limit (OOM). Raise the container memory limit or lower the Java heap.',
+      summary:
+        'The server was stopped for running out of memory. Raise the container memory limit or lower the Java heap.',
     });
     return;
   }
@@ -199,7 +200,7 @@ async function handleEvent(evt) {
     serverId,
     type: kind,
     summary: cleanExit
-      ? `Server stopped unexpectedly (exit code ${exitCode}) - not requested by the panel${server.auto_restart ? ', restarting' : ''}`
+      ? `Server stopped unexpectedly (exit code ${exitCode}). Not requested by the panel.${server.auto_restart ? ' Restarting.' : ''}`
       : diagnosis
         ? `Server crashed: ${diagnosis.summary}`
         : `Server crashed (exit code ${exitCode})`,
@@ -313,35 +314,36 @@ function diagnoseFatal(logText) {
     {
       key: 'cf-api-key',
       re: /API key is not set.*CF_API_KEY/is,
-      summary:
-        'CurseForge API key missing in the container - add your key in Settings → API keys, then Recreate this server.',
+      summary: 'The CurseForge API key is missing. Add your key in Settings → API keys, then rebuild this server.',
     },
     {
       key: 'eula',
       re: /You need to agree to the EULA/i,
-      summary: 'The Minecraft EULA was not accepted - recreate the server from the panel (it sets EULA automatically).',
+      summary:
+        'The Minecraft EULA was not accepted. Rebuild the server from the panel and it will accept the EULA automatically.',
     },
     {
       key: 'java-version',
       re: /UnsupportedClassVersionError/i,
       summary:
-        'Wrong Java version for this Minecraft build - set the Java image override in Settings (or clear it to auto) and Recreate.',
+        'Wrong Java version for this Minecraft build. Set the Java image override in Settings (or clear it to auto), then rebuild the server.',
     },
     {
       key: 'world-downgrade',
       re: /No key dimensions in MapLike|loading a newer world|created by a newer version/i,
       summary:
-        'The world was created on a newer Minecraft version than this server runs - reset or swap the world (Worlds tab), or raise the MC version.',
+        'The world was created on a newer Minecraft version than this server runs. Reset or swap the world on the Worlds tab, or raise the Minecraft version.',
     },
     {
       key: 'port-bind',
       re: /Failed to bind to port|Address already in use/i,
-      summary: 'The game port is already in use on this machine - change the port in Settings and Recreate.',
+      summary: 'The game port is already in use on this machine. Change the port in Settings, then rebuild the server.',
     },
     {
       key: 'oom',
       re: /OutOfMemoryError/i,
-      summary: 'Java ran out of heap - raise RAM in Settings → Resources (packs usually need 4–8 GB) and Recreate.',
+      summary:
+        'Java ran out of memory. Raise RAM in Settings → Resources (packs usually need 4 to 8 GB), then rebuild the server.',
     },
   ];
   for (const k of KNOWN) if (k.re.test(scan)) return k;

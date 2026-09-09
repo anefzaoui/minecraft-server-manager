@@ -1,6 +1,6 @@
-# Minecraft Server Manager - Documentation
+# Minecraft Server Manager Documentation
 
-A complete, self-hosted control panel for [itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server). Create, run, and manage Minecraft servers from your browser - no command line, no editing YAML by hand.
+A complete, self-hosted control panel for [itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server). Create, run, and manage Minecraft servers from your browser. No command line, no editing YAML by hand.
 
 ![Dashboard](images/dashboard.png)
 

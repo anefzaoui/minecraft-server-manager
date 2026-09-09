@@ -161,8 +161,8 @@ const QUICK_ACTIONS = {
   'mobgrief-off': { rule: 'mobGriefing', value: 'false', label: 'Mob griefing OFF (no creeper holes)' },
   'phantoms-off': { rule: 'doInsomnia', value: 'false', label: 'Phantoms OFF (no insomnia)' },
   // PvP has no gamerule - it's the server.properties `pvp` value (see below).
-  'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled - applies on restart' },
-  'pvp-off': { prop: 'pvp', value: false, label: 'PvP disabled - applies on restart' },
+  'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled. Applies on the next restart.' },
+  'pvp-off': { prop: 'pvp', value: false, label: 'PvP disabled. Applies on the next restart.' },
   'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful' },
   'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy' },
   'difficulty-normal': { cmd: ['difficulty', 'normal'], label: 'Difficulty: Normal' },

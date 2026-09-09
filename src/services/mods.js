@@ -559,7 +559,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     if (!file)
       throw httpError(
         409,
-        `That ${resolved.title} version has no ${targetKind === 'resourcepack' ? 'resource pack' : 'datapack'} (.zip) file - it's only published as a mod jar. Install the datapack version, or add it as a mod instead.`
+        `That ${resolved.title} version has no ${targetKind === 'resourcepack' ? 'resource pack' : 'datapack'} (.zip) file. It's only published as a mod jar. Install the datapack version, or add it as a mod instead.`
       );
     downloadUrl = file.url;
     Object.assign(meta, {
@@ -587,7 +587,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     if (!file.downloadUrl)
       throw httpError(
         409,
-        `${resolved.name} disallows automated downloads - download it in a browser and upload the jar instead`
+        `${resolved.name} does not allow automated downloads. Download it in a browser and upload the jar instead.`
       );
     downloadUrl = file.downloadUrl;
     Object.assign(meta, {
@@ -637,7 +637,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     if (resource.external) {
       throw httpError(
         409,
-        `${resource.name} is hosted outside SpigotMC and can't be auto-downloaded - download it in a browser (${resource.pageUrl}) and upload the jar instead`
+        `${resource.name} is hosted outside SpigotMC and can't be downloaded automatically. Download it in a browser (${resource.pageUrl}) and upload the jar instead.`
       );
     }
     const versions = await spiget.getVersions(ref.resourceId);
@@ -690,7 +690,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
   if (isZipOnlyKind(targetKind) && /\.jar(\?|#|$)/i.test(meta.filename || downloadUrl)) {
     throw httpError(
       409,
-      `A ${targetKind === 'resourcepack' ? 'resource pack' : 'datapack'} must be a .zip - this download is a .jar (a mod-wrapped build). Install the .zip, or add it as a mod instead.`
+      `A ${targetKind === 'resourcepack' ? 'resource pack' : 'datapack'} must be a .zip. This download is a .jar (a mod-wrapped build). Install the .zip, or add it as a mod instead.`
     );
   }
   meta.category = targetKind; // may have changed above (Modrinth datapack/resourcepack auto-detect)
@@ -759,9 +759,7 @@ async function installResolved(
     type: 'mod-installed',
     summary:
       `Custom ${kind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''}` +
-      (overrideBits.length
-        ? ` - ${overrideBits.join(', ')}, installed anyway (compatibility check overridden)`
-        : ' (overlay)'),
+      (overrideBits.length ? `. Compatibility check overridden: ${overrideBits.join(', ')}, installed anyway.` : '.'),
     details: { libraryId: lib.id, filename, versionOverridden, loaderOverridden },
   });
   logger.info('Installed custom content on a server.', { serverId, actor, kind, filename });
@@ -818,7 +816,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: enabled ? 'mod-enabled' : 'mod-disabled',
-    summary: `${file} ${enabled ? 're-included' : 'excluded'} via ${varName} - applies on next restart`,
+    summary: `${file} ${enabled ? 're-included' : 'excluded'}. Applies on the next restart.`,
   });
   return { applied: 'on-restart' };
 }
@@ -836,7 +834,7 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
   // back the moment the pack next recreated. Mirror listContent()'s own
   // "pack" classification (row-less + pack server ⇒ pack-managed) instead.
   const managedByPack = row ? row.managed_by === 'pack' : isPackServer(server);
-  if (managedByPack) throw httpError(409, 'Pack-managed content is excluded, not deleted - use Disable');
+  if (managedByPack) throw httpError(409, 'Pack-managed content is excluded, not deleted. Use Disable instead.');
   const dirRel = locateContentDir(server, row, file);
   let freed = 0;
   for (const candidate of [file, `${file}.disabled`]) {
@@ -862,9 +860,9 @@ function overlayRow(serverId, { file, contentId }) {
   const row = contentId
     ? db.get('SELECT * FROM server_content WHERE id = ? AND server_id = ?', contentId, serverId)
     : db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', serverId, file);
-  if (!row) throw httpError(404, 'This file is not panel-managed - reinstall it from a URL instead');
+  if (!row) throw httpError(404, 'This file is not panel-managed. Reinstall it from a URL instead.');
   if (row.managed_by === 'pack') {
-    throw httpError(409, 'Pack-managed content updates with the pack - upgrade the modpack instead');
+    throw httpError(409, 'Pack-managed content updates with the pack. Upgrade the modpack instead.');
   }
   return row;
 }
@@ -883,7 +881,7 @@ function setIgnoredUpdate(serverId, { file, contentId }, { ignore, actor = 'syst
   if (ignore) {
     const check = db.get("SELECT * FROM update_checks WHERE subject_type = 'content' AND subject_id = ?", row.id);
     if (!check || !check.latest_name || check.latest_name === row.version) {
-      throw httpError(409, 'No pending update to ignore - run an update check first');
+      throw httpError(409, 'No pending update to ignore. Run an update check first.');
     }
     db.run('UPDATE server_content SET ignored_update_version = ? WHERE id = ?', check.latest_name, row.id);
     recordEvent({
@@ -922,7 +920,7 @@ async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'syst
   }
   const check = db.get("SELECT * FROM update_checks WHERE subject_type = 'content' AND subject_id = ?", row.id);
   if (!check || !check.latest_version) {
-    throw httpError(409, 'No newer version is known - run an update check first');
+    throw httpError(409, 'No newer version is known. Run an update check first.');
   }
 
   let ref;
@@ -1095,7 +1093,7 @@ function excludePackMod(serverId, token, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'mod-excluded',
-    summary: `Excluded pack mod "${token}" via ${varName} - applies on recreate`,
+    summary: `Excluded pack mod "${token}". Applies after a rebuild.`,
   });
   return { excluded: token };
 }

@@ -113,7 +113,8 @@ function setConfig(serverId, { enabled, webhookUrl: url, events } = {}) {
     if (url === null || url === '') {
       cipher = null;
     } else {
-      if (!WEBHOOK_RE.test(url)) throw httpError(400, 'Webhook URL must start with https://discord.com/api/webhooks/');
+      if (!WEBHOOK_RE.test(url))
+        throw httpError(400, 'The webhook URL must start with https://discord.com/api/webhooks/.');
       cipher = secrets.encrypt(JSON.stringify({ webhookUrl: url }));
     }
   }
@@ -136,7 +137,7 @@ function setConfig(serverId, { enabled, webhookUrl: url, events } = {}) {
 /** Send a test embed so the user can confirm the webhook works. Throws on failure. */
 async function testWebhook(serverId) {
   const url = webhookUrl(serverId);
-  if (!url) throw httpError(400, 'No webhook URL saved for this server yet');
+  if (!url) throw httpError(400, 'No webhook URL is saved for this server yet.');
   const server = db.get('SELECT display_name FROM servers WHERE id = ?', serverId);
   const res = await post(
     url,

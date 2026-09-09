@@ -89,7 +89,7 @@ function init(serverId) {
       help.textContent = 'Changes the displayed name and the file you download. Restore and retention are unaffected.';
       content.append(label, input, help);
       openModal({
-        title: 'Rename backup',
+        title: 'Rename Backup',
         content,
         actions: [
           { label: 'Cancel', kind: 'ghost' },

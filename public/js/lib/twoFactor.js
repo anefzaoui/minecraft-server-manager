@@ -132,7 +132,7 @@ function showBackupCodes(codes, title, { reloadOnClose = false } = {}) {
   const copyBtn = document.createElement('button');
   copyBtn.type = 'button';
   copyBtn.className = 'btn btn-sm';
-  copyBtn.textContent = 'Copy all';
+  copyBtn.textContent = 'Copy All';
   copyBtn.dataset.copy = codes.join('\n');
   content.append(list, warn, copyBtn);
 

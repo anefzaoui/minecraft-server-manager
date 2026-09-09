@@ -188,7 +188,7 @@ async function resolveIdentity(serverId, name) {
   } catch {
     throw httpError(
       502,
-      `Could not resolve "${name}" - the player has never joined this server and the Mojang API is unreachable. Try again when online.`
+      `Could not look up "${name}". The player has never joined this server, and the Mojang API is unreachable. Try again when you are online.`
     );
   }
   if (!profile || !profile.uuid) throw httpError(404, `No Minecraft account named "${name}" exists`);
@@ -301,7 +301,7 @@ async function setWhitelisted(serverId, name, on, { running = false, actor = 'sy
     serverId,
     actor,
     type: 'player-whitelist',
-    summary: `${who.name} ${on ? 'added to' : 'removed from'} the whitelist${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `${who.name} ${on ? 'added to' : 'removed from'} the whitelist${running ? '' : ' (file edit, applies on the next start)'}`,
     details: { name: who.name, uuid: who.uuid, on, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, whitelisted: Boolean(on) };
@@ -333,7 +333,7 @@ async function setWhitelistEnforced(serverId, on, { running = false, actor = 'sy
     serverId,
     actor,
     type: 'player-whitelist-enforce',
-    summary: `Whitelist enforcement turned ${on ? 'on' : 'off'}${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `Whitelist enforcement turned ${on ? 'on' : 'off'}${running ? '' : ' (file edit, applies on the next start)'}`,
     details: { on, via: running ? 'rcon' : 'file' },
   });
   return { whitelistEnforced: Boolean(on) };
@@ -380,8 +380,8 @@ async function setOp(serverId, name, on, level = 4, { running = false, actor = '
     actor,
     type: on ? 'player-op' : 'player-deop',
     summary: on
-      ? `${who.name} opped (level ${level})${running ? '' : ' (file edit - applies on start)'}`
-      : `${who.name} de-opped${running ? '' : ' (file edit - applies on start)'}`,
+      ? `${who.name} opped (level ${level})${running ? '' : ' (file edit, applies on the next start)'}`
+      : `${who.name} de-opped${running ? '' : ' (file edit, applies on the next start)'}`,
     details: { name: who.name, uuid: who.uuid, on, level: on ? level : null, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, op: Boolean(on), opLevel: on ? level : null, note };
@@ -413,7 +413,7 @@ async function banPlayer(serverId, name, reason, { running = false, actor = 'sys
     serverId,
     actor,
     type: 'player-ban',
-    summary: `${who.name} banned${durationMs ? ` until ${expires}` : ''}: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `${who.name} banned${durationMs ? ` until ${expires}` : ''}: ${reason}${running ? '' : ' (file edit, applies on the next start)'}`,
     details: { name: who.name, uuid: who.uuid, reason, expires, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, banned: true, banReason: reason, banExpires: durationMs ? expires : null };
@@ -433,7 +433,7 @@ async function pardonPlayer(serverId, name, { running = false, actor = 'system' 
     serverId,
     actor,
     type: 'player-pardon',
-    summary: `${who.name} pardoned${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `${who.name} pardoned${running ? '' : ' (file edit, applies on the next start)'}`,
     details: { name: who.name, uuid: who.uuid, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, banned: false };
@@ -468,7 +468,7 @@ async function banIp(
     serverId,
     actor,
     type: 'player-ban-ip',
-    summary: `IP ${ip} banned${durationMs ? ` until ${expires}` : ''}${linkedPlayer ? ` (linked to ${linkedPlayer})` : ''}: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `IP ${ip} banned${durationMs ? ` until ${expires}` : ''}${linkedPlayer ? ` (linked to ${linkedPlayer})` : ''}: ${reason}${running ? '' : ' (file edit, applies on the next start)'}`,
     details: { ip, reason, expires, player: linkedPlayer, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: true, banExpires: durationMs ? expires : null, player: linkedPlayer };
@@ -489,7 +489,7 @@ async function pardonIp(serverId, ip, { running = false, actor = 'system' } = {}
     serverId,
     actor,
     type: 'player-pardon-ip',
-    summary: `IP ${ip} pardoned${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `IP ${ip} pardoned${running ? '' : ' (file edit, applies on the next start)'}`,
     details: { ip, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: false };
@@ -530,7 +530,7 @@ async function deletePlayer(serverId, name, { running = false, actor = 'system' 
     if (online.some((n) => n.toLowerCase() === who.name.toLowerCase())) {
       throw httpError(
         409,
-        `${who.name} is still online - kick them or wait for them to leave before deleting their data`
+        `${who.name} is still online. Kick them or wait for them to leave before deleting their data.`
       );
     }
   }
@@ -676,7 +676,7 @@ async function kickPlayer(serverId, name, message, { running = false, actor = 's
 const teleportBusy = new Set();
 async function withTeleportSlot(serverId, fn) {
   if (teleportBusy.has(serverId)) {
-    throw httpError(429, 'A teleport is already searching on this server - give it a second and try again.');
+    throw httpError(429, 'A teleport is already searching on this server. Give it a second and try again.');
   }
   teleportBusy.add(serverId);
   try {
@@ -688,7 +688,7 @@ async function withTeleportSlot(serverId, fn) {
 
 function assertTpOutput(out, player) {
   if (/No entity was found|No player was found/i.test(out)) {
-    throw httpError(404, `${player} is not online - teleport needs a live player`);
+    throw httpError(404, `${player} is not online. Teleport needs a player who is currently connected.`);
   }
   if (/Unknown or incomplete command|Incorrect argument/i.test(out)) {
     throw httpError(400, `Teleport command rejected by the server: ${out}`);
@@ -811,7 +811,7 @@ async function runLocate(serverId, prefix, type, id) {
   if (/there is no \w+ with type|isn'?t a valid|unknown \w+ type/i.test(located)) {
     throw httpError(
       404,
-      `"${String(id).replace(/^#/, '')}" isn't available on this server - a mod may have renamed or removed it.`
+      `"${String(id).replace(/^#/, '')}" isn't available on this server. A mod may have renamed or removed it.`
     );
   }
   return located;
@@ -848,7 +848,7 @@ async function surfaceTeleport(serverId, player, x, z, dimension) {
   }
   const err = httpError(
     409,
-    `No safe ground within 512 blocks of ${x}, ${z}${dimension ? ` in ${prettyDimension(dimension)}` : ''} (open water or void) - try different coordinates or give an explicit Y.`
+    `No safe ground within 512 blocks of ${x}, ${z}${dimension ? ` in ${prettyDimension(dimension)}` : ''} (open water or void). Try different coordinates or give an explicit Y.`
   );
   err.output = out;
   throw err;
@@ -996,7 +996,7 @@ async function tpToStructure(
   if (/Could not find/i.test(located) || !located.trim()) {
     throw httpError(
       404,
-      `No ${structureRef.replace(/^#/, '')} found in ${prettyDimension(searchDim)}${random ? ' - try again (each try searches a new random point)' : ''}.`
+      `No ${structureRef.replace(/^#/, '')} found in ${prettyDimension(searchDim)}${random ? '. Try again, since each try searches a new random point' : ''}.`
     );
   }
   const m = /is at \[(-?\d+),\s*(~|-?\d+),\s*(-?\d+)\]/.exec(located);
@@ -1061,7 +1061,7 @@ async function rtpPlayer(
   }
   throw httpError(
     409,
-    `Couldn't find safe ground in ${ATTEMPTS} tries (lots of ocean around?) - try a bigger max distance. ${lastErr ? '' : ''}`.trim()
+    `Couldn't find safe ground in ${ATTEMPTS} tries (lots of ocean around?). Try a bigger max distance. ${lastErr ? '' : ''}`.trim()
   );
 }
 
@@ -1264,7 +1264,7 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
   if (/Could not find/i.test(located)) {
     throw httpError(
       404,
-      `No ${biomeId} was found in ${prettyDimension(searchDim)}${sameDim ? ` near ${player}` : ''} - try from a different spot`
+      `No ${biomeId} was found in ${prettyDimension(searchDim)}${sameDim ? ` near ${player}` : ''}. Try from a different spot.`
     );
   }
   // "The nearest minecraft:desert is at [123, ~, -456] (789 blocks away)"
@@ -1274,7 +1274,7 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
       502,
       located
         ? 'Could not read the search result from the server. Try again in a moment.'
-        : `The server returned nothing for ${biomeId} in ${searchDim} - it may not generate in this world (modded packs sometimes replace vanilla biomes).`
+        : `The server returned nothing for ${biomeId} in ${searchDim}. It may not generate in this world (modded packs sometimes replace vanilla biomes).`
     );
   }
   const x = Number(m[1]);

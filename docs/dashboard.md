@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-The dashboard is your home base - every server, its live status, and a running feed of what's been happening.
+The dashboard is your home base: every server, its live status, and a running feed of what's been happening.
 
 ![Dashboard](images/dashboard.png)
 
@@ -25,4 +25,4 @@ You can search and sort your servers, and switch between grid and list layouts w
 
 ## Recent activity
 
-The feed at the bottom is a live, human-readable audit trail - logins, backups, blueprint exports, update checks, chat-command changes, server starts and stops, and more. Every entry is tagged with the server it belongs to (or the panel itself) and how long ago it happened. The full history lives on the [Activity](activity.md) page.
+The feed at the bottom is a live, human-readable audit trail: logins, backups, blueprint exports, update checks, chat-command changes, server starts and stops, and more. Every entry is tagged with the server it belongs to (or the panel itself) and how long ago it happened. The full history lives on the [Activity](activity.md) page.

@@ -91,7 +91,7 @@ function init() {
     await withBusy(btn, 'Testing…', async () => {
       const res = await api(`/api/servers/${serverId}/wizard/test`, 'POST', conn);
       if (res.ok) {
-        toast(`LLM replied: ${res.data.reply}`, { kind: 'success', timeout: 8000 });
+        toast(`Test reply received: "${res.data.reply}"`, { kind: 'success', timeout: 8000 });
       }
     });
   });
@@ -269,7 +269,7 @@ function init() {
     // A valid slug is only mandatory when turning the page ON - turning it off
     // must work even for a page that never had a slug.
     if (enabled && !/^[a-z0-9-]{3,40}$/.test(slug)) {
-      toast('Slug must be 3–40 lowercase letters, digits, or dashes.', { kind: 'error' });
+      toast('Slug must be 3 to 40 lowercase letters, digits, or dashes.', { kind: 'error' });
       return;
     }
     const body = { enabled };

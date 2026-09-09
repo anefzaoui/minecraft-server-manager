@@ -59,7 +59,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
     if (totalBytes > MAX_DOWNLOAD_BYTES) {
       throw httpError(
         413,
-        `Download is ${humanBytes(totalBytes)} - the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit blocks it`
+        `Download is ${humanBytes(totalBytes)}, which is over the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit.`
       );
     }
     const { free } = await require('../storage/indexer').diskFree();

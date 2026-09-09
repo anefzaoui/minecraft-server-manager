@@ -130,7 +130,7 @@ function init(root) {
       if (label)
         cell.innerHTML = `<span class="text-[8px] uppercase tracking-wide text-ink-faint/60">${esc(label)}</span>`;
       cell.dataset.tip = editable
-        ? `Empty ${label || slotName(at.container, at.slot)} - click to put an item here`
+        ? `Empty ${label || slotName(at.container, at.slot)}. Click to put an item here.`
         : label
           ? `Empty ${label} slot`
           : '';
@@ -550,7 +550,7 @@ function init(root) {
       `<p class="text-xs text-ink-faint">${(() => {
         const n = sub.items.filter((i) => i.id).length;
         return `${n} ${n === 1 ? 'stack' : 'stacks'}`;
-      })()}${editable ? '. Click one to edit it' : ''}. Deeper nested containers open from their own item menus after a reload.</p>`
+      })()}${editable ? '. Click one to edit it' : ''}. Deeper nested containers open from their own item menus after a refresh.</p>`
     );
   }
 

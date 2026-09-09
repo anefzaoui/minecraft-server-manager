@@ -4,13 +4,13 @@
 
 ## Worlds
 
-The **Worlds** page manages the world data across your servers - swap the active world, upload a world, or download one.
+The **Worlds** page manages the world data across your servers: swap the active world, upload a world, or download one.
 
 ![Worlds](images/worlds.png)
 
 ## The file manager
 
-Under a server's **World** section, the **Files** tab is a full in-browser file manager for that server's data directory. List, read, edit, create, rename, move, copy, delete, and upload files - everything you'd normally do over SSH, from the browser.
+Under a server's **World** section, the **Files** tab is a full in-browser file manager for that server's data directory. List, read, edit, create, rename, move, copy, delete, and upload files: everything you'd normally do over SSH, from the browser.
 
 ![File manager](images/server-files.png)
 
@@ -18,11 +18,11 @@ Text files open in an editor with a 2 MB limit; larger files can be downloaded. 
 
 ### Staying inside the sandbox
 
-Every file operation is confined to the server's own data directory. The panel resolves each path and refuses anything that would escape - `..` traversal, absolute paths, and even symlinks that point outside the directory (including dangling ones that don't exist yet). A mod or plugin can't plant a link to trick the file manager into reading or writing elsewhere on the host.
+Every file operation is confined to the server's own data directory. The panel resolves each path and refuses anything that would escape: `..` traversal, absolute paths, and even symlinks that point outside the directory (including dangling ones that don't exist yet). A mod or plugin can't plant a link to trick the file manager into reading or writing elsewhere on the host.
 
 ## Mods
 
-For modded servers, the **Mods** tab (also under **World**) manages the mod set - browse and add mods, and see what's installed. Mod and pack updates surface on the [Updates](updates.md) page.
+For modded servers, the **Mods** tab (also under **World**) manages the mod set: browse and add mods, and see what's installed. Mod and pack updates surface on the [Updates](updates.md) page.
 
 ### Adding mods
 
@@ -49,4 +49,4 @@ Four ways in, all from the Mods tab toolbar:
 
 Every registry install is **checksum-verified while it downloads**: the stream is checked against the strongest digest the registry publishes (sha512 → sha256 → sha1 → md5) and a mismatch aborts before anything lands on the server.
 
-A whole zip - `.mrpack` included - can also **create a server**: in the wizard's _From modpack_ tab, upload it and the pack manifest (or a majority vote across the identified jars) fills in the loader, Minecraft version, and loader build.
+A whole zip (`.mrpack` included) can also **create a server**: in the wizard's _From modpack_ tab, upload it and the pack manifest (or a majority vote across the identified jars) fills in the loader, Minecraft version, and loader build.

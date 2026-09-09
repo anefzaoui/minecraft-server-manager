@@ -101,7 +101,8 @@ const createSchema = z
     ...dockerOverridesSchema,
   })
   .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
-    message: 'Container memory limit must be higher than the Java heap (or the JVM will be OOM-killed)',
+    message:
+      'Container memory limit must be higher than the Java heap, or the server will be stopped for running out of memory.',
   });
 
 router.post(
@@ -152,7 +153,7 @@ router.patch(
         ...dockerOverridesSchema,
       })
       .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
-        message: 'Container memory limit must be higher than the Java heap',
+        message: 'Container memory limit must be higher than the Java heap.',
       })
       .parse(req.body);
     requireAdminForOverrides(req, changes);
@@ -372,7 +373,7 @@ router.get(
   '/ports/check',
   asyncHandler(async (req, res, next) => {
     const port = Number(req.query.port);
-    if (!Number.isInteger(port)) return res.status(400).json({ ok: false, error: 'port required' });
+    if (!Number.isInteger(port)) return res.status(400).json({ ok: false, error: 'A port number is required.' });
     res.json({ ok: true, port, free: await ports.isPortFree(port) });
   })
 );
@@ -412,7 +413,10 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const { key } = z.object({ key: z.string().trim().min(10).max(200) }).parse(req.body);
     const test = await apiKeys.testCurseForgeKey(key);
-    if (!test.ok) return res.status(400).json({ ok: false, error: test.error });
+    if (!test.ok)
+      return res
+        .status(400)
+        .json({ ok: false, error: test.error || 'That CurseForge key could not be verified. Check it and try again.' });
     apiKeys.setKey('curseforge', key, { actor: req.user.username });
     res.json({ ok: true });
   })
@@ -567,7 +571,7 @@ const apiTokenCreateSchema = z
     expiresAt: z.string().datetime().optional(),
   })
   .refine((v) => v.scopeAll || (v.serverIds && v.serverIds.length > 0), {
-    message: 'Choose specific servers or grant access to all servers',
+    message: 'Choose specific servers or grant access to all servers.',
   });
 
 router.post(
@@ -671,7 +675,7 @@ router.post(
     try {
       const resolved = await packs.resolvePack(platform, ref, { versionId });
       await packs.applyPack(req.params.id, resolved, { actor: req.user.username, force });
-      res.json({ ok: true, pack: resolved, note: 'Applied - recreate/restart to install' });
+      res.json({ ok: true, pack: resolved, note: 'Applied. Rebuild or restart the server to install.' });
     } catch (err) {
       if (err.requiresForce) {
         return res.status(409).json({ ok: false, error: err.message, requiresForce: true, warnings: err.warnings });
@@ -865,7 +869,7 @@ router.get(
         serverId: z.string().trim().max(40).optional(),
       })
       .refine((v) => Boolean(v.serverId) || (v.platform && v.ref), {
-        message: 'Provide platform+ref or serverId',
+        message: 'Provide either a platform and reference, or a server.',
       })
       .parse({
         platform: req.query.platform || undefined,
@@ -967,7 +971,8 @@ const fromPackSchema = z
     ...dockerOverridesSchema,
   })
   .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
-    message: 'Container memory limit must be higher than the Java heap (or the JVM will be OOM-killed)',
+    message:
+      'Container memory limit must be higher than the Java heap, or the server will be stopped for running out of memory.',
   });
 
 // One-shot "create server from modpack": resolve (pin) → create (image pull
@@ -980,7 +985,7 @@ router.post(
     requireAdminForOverrides(req, input);
     const actor = req.user.username;
     const taskId = tasks.run(`Creating ${input.name} from a ${input.platform} pack`, { actor }, async (t) => {
-      t.step('Resolving pack version (pinned - never "latest")');
+      t.step('Resolving pack version (pinned, never "latest")');
       const resolved = await packs.resolvePack(input.platform, input.ref, { versionId: input.versionId });
       const type = packs.packEnv(resolved).TYPE;
       t.step('Creating server');
@@ -1011,7 +1016,7 @@ router.post(
       t.step(`Pinning ${resolved.projectName} @ ${resolved.versionName}`);
       // force: fresh server - there is no world yet to version-guard.
       await packs.applyPack(server.id, resolved, { actor, force: true });
-      t.step('Starting server - the pack downloads and installs on first boot');
+      t.step('Starting the server (the pack downloads and installs on first boot)');
       await servers.startServer(server.id, { actor });
       return {
         serverId: server.id,
@@ -1144,7 +1149,7 @@ router.post(
         envKey: z.enum(LOADER_BUILD_ENV_KEYS).optional(),
       })
       .refine((v) => Boolean(v.targetVersion) || Boolean(v.targetLoaderBuild && v.envKey), {
-        message: 'Provide targetVersion, or targetLoaderBuild with envKey',
+        message: 'Provide a target version, or a target loader build with its env key.',
       })
       .parse(req.body);
     const server = requireServer(req.params.id);
@@ -1690,7 +1695,7 @@ router.post(
         file: z.string().min(1).max(200).optional(),
         contentId: z.string().trim().max(40).optional(),
       })
-      .refine((v) => Boolean(v.file) || Boolean(v.contentId), { message: 'Provide file or contentId' })
+      .refine((v) => Boolean(v.file) || Boolean(v.contentId), { message: 'Provide either a file or a content ID.' })
       .parse(req.body);
     const server = requireServer(req.params.id);
     const actor = req.user.username;
@@ -1722,7 +1727,7 @@ router.post(
         contentId: z.string().trim().max(40).optional(),
         ignore: z.boolean(),
       })
-      .refine((v) => Boolean(v.file) || Boolean(v.contentId), { message: 'Provide file or contentId' })
+      .refine((v) => Boolean(v.file) || Boolean(v.contentId), { message: 'Provide either a file or a content ID.' })
       .parse(req.body);
     const server = requireServer(req.params.id);
     const out = mods.setIgnoredUpdate(server.id, { file, contentId }, { ignore, actor: req.user.username });
@@ -1887,7 +1892,7 @@ router.post(
     const input = zipImportBodySchema.parse(req.body);
     const zipPath = dataPath('tmp', input.uploadToken);
     if (!fs.existsSync(zipPath)) {
-      return res.status(404).json({ ok: false, error: 'Uploaded zip expired, upload it again' });
+      return res.status(404).json({ ok: false, error: 'The uploaded zip expired. Upload it again.' });
     }
     const actor = req.user.username;
     const taskId = tasks.run(
@@ -2058,7 +2063,7 @@ router.get(
     if (!list.length) throw Object.assign(new Error('This server has no log files yet'), { status: 404 });
     const total = list.reduce((n, f) => n + f.size, 0);
     if (total > LOG_BUNDLE_MAX_BYTES) {
-      throw Object.assign(new Error('Log folder is too large to bundle - download individual files instead'), {
+      throw Object.assign(new Error('The log folder is too large to bundle. Download individual files instead.'), {
         status: 413,
       });
     }
@@ -2093,7 +2098,7 @@ router.post('/servers/:id/icon', iconUpload.single('icon'), async (req, res, nex
     if (!req.file) throw Object.assign(new Error('Attach an image (field "icon")'), { status: 400 });
     const ext = ICON_EXTS[req.file.mimetype];
     if (!ext) {
-      throw Object.assign(new Error('Icons must be PNG, JPEG, WebP or SVG (max 16 MB)'), { status: 400 });
+      throw Object.assign(new Error('Icons must be PNG, JPEG, WebP, or SVG (max 16 MB).'), { status: 400 });
     }
     if (!(await matchesImageType(req.file.path, req.file.mimetype))) {
       throw Object.assign(new Error("File contents don't match the declared image type"), { status: 400 });
@@ -2463,7 +2468,8 @@ const fromModsSchema = z
     ...dockerOverridesSchema,
   })
   .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
-    message: 'Container memory limit must be higher than the Java heap (or the JVM will be OOM-killed)',
+    message:
+      'Container memory limit must be higher than the Java heap, or the server will be stopped for running out of memory.',
   });
 
 // One-shot "create server from mods": create (no start) → install each mod
@@ -2600,7 +2606,8 @@ const fromZipSchema = z
     ...dockerOverridesSchema,
   })
   .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
-    message: 'Container memory limit must be higher than the Java heap (or the JVM will be OOM-killed)',
+    message:
+      'Container memory limit must be higher than the Java heap, or the server will be stopped for running out of memory.',
   });
 
 // One-shot "create server from an uploaded zip": create (no start) → bulk
@@ -2614,7 +2621,7 @@ router.post(
     requireAdminForOverrides(req, input);
     const zipPath = dataPath('tmp', input.uploadToken);
     if (!fs.existsSync(zipPath)) {
-      return res.status(404).json({ ok: false, error: 'Uploaded zip expired, upload it again' });
+      return res.status(404).json({ ok: false, error: 'The uploaded zip expired. Upload it again.' });
     }
     const actor = req.user.username;
     const env = { ...(input.env || {}) };

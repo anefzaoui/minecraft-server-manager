@@ -121,7 +121,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
           // Last row gone → re-render for the proper empty state.
           if (tbody && !tbody.querySelector('[data-mod-row]')) setTimeout(() => location.reload(), 600);
         } else {
-          toast(data.error || 'Delete failed', { kind: 'error' });
+          toast(data.error || 'That file could not be deleted. Please try again.', { kind: 'error' });
         }
       } finally {
         restore();
@@ -143,7 +143,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label">Mod URL or Modrinth slug</label>
-      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium - or any project page / direct .jar URL" autocomplete="off">
+      <input class="input font-mono" id="mod-url" placeholder="https://modrinth.com/mod/sodium" autocomplete="off">
       <p class="help">Paste almost any link: Modrinth, CurseForge, Hangar, or SpigotMC project pages, a GitHub repo or release ("owner/repo" works too), a Modrinth slug, or a direct .jar URL. The right build for this server's loader and MC version is picked automatically.</p>
       <label class="label mt-3">Content type</label>
       <select class="input" id="mod-url-kind" data-label="Content type">
@@ -153,7 +153,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         <option value="datapack">Datapack</option>
         <option value="resourcepack">Resource pack</option>
       </select>
-      <p class="help">Leave on Auto-detect unless a link installs as the wrong type - some datapacks are published under a "mod" project.</p>
+      <p class="help">Leave on Auto-detect unless a link installs as the wrong type. Some datapacks are published under a "mod" project.</p>
       ${
         mc && !mc.startsWith('LATEST')
           ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
@@ -164,12 +164,12 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       }
       <div class="mt-3 hidden" id="mod-url-progress"><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
     const modal = openModal({
-      title: 'Add mod by URL',
+      title: 'Add Mod by URL',
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
-          label: 'Download & install',
+          label: 'Download & Install',
           kind: 'primary',
           busyLabel: 'Installing…',
           onClick: async () => {
@@ -314,7 +314,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     }
 
     const modal = openModal({
-      title: isMrpack ? 'Import Modrinth modpack' : isPack ? 'Import CurseForge modpack' : 'Import mods from zip',
+      title: isMrpack ? 'Import Modrinth Modpack' : isPack ? 'Import CurseForge Modpack' : 'Import Mods from Zip',
       content,
       size: 'lg',
       actions: [
@@ -334,7 +334,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
             let report;
             try {
               report = await runTask({
-                title: 'Importing mod zip',
+                title: 'Importing mod zip…',
                 start: async () => {
                   const res = await post(`/api/servers/${serverId}/mods/import-zip`, {
                     uploadToken,
@@ -407,7 +407,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         <p class="p-6 text-center text-sm text-ink-faint">Type to search.</p>
       </div>`;
     const modal = openModal({
-      title: contentKind === 'plugin' ? 'Search plugins' : 'Search mods',
+      title: contentKind === 'plugin' ? 'Search Plugins' : 'Search Mods',
       content,
       size: 'lg',
     });
@@ -666,7 +666,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     let result;
     try {
       result = await runTask({
-        title: 'Updating mods',
+        title: 'Updating mods…',
         start: async () => {
           const res = await post(`/api/servers/${serverId}/mods/update-all`, {});
           if (!res) throw Object.assign(new Error('Update failed to start'), { dismissed: true });
@@ -724,7 +724,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     content.innerHTML = `
       <p class="mb-3 text-sm text-ink-soft">These mods disallow automated download (or were pulled from CurseForge), so the pack can't finish. For each one, <b>Exclude</b> it, install a replacement via <b>search</b>, or <b>upload</b> the jar you downloaded by hand. Changes apply on the next recreate.</p>
       <div class="space-y-2" id="pending-list"></div>`;
-    openModal({ title: 'Mods that need manual action', content, size: 'lg' });
+    openModal({ title: 'Mods That Need Manual Action', content, size: 'lg' });
     const listEl = content.querySelector('#pending-list');
 
     function render(mods) {
@@ -827,12 +827,15 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        toast(data.error || `Request failed (${res.status})`, { kind: 'error', timeout: 9000 });
+        toast(data.error || 'That request could not be completed. Please try again in a moment.', {
+          kind: 'error',
+          timeout: 9000,
+        });
         return null;
       }
       return data;
-    } catch (err) {
-      toast(`Network error: ${err.message}`, { kind: 'error' });
+    } catch {
+      toast('The panel could not be reached. Check your connection and try again.', { kind: 'error' });
       return null;
     }
   }

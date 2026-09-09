@@ -6,7 +6,7 @@ Each server carries its integrations under the **Settings** group: **Discord**, 
 
 ## Discord notifications
 
-The panel forwards server events to a Discord channel through a webhook - no bot, no OAuth.
+The panel forwards server events to a Discord channel through a webhook. No bot, no OAuth.
 
 ### Setup
 
@@ -31,12 +31,12 @@ Notifications are grouped into toggleable categories. All are on by default.
 
 ### The Alerts category
 
-`Alerts` is the "something needs a human" channel - conditions that used to be visible only in the panel:
+`Alerts` is the "something needs a human" channel, for conditions that used to be visible only in the panel:
 
 | Event                   | Meaning                                                                                                        |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `oom`                   | The container was stopped for running out of memory.                                                           |
-| `unhealthy`             | The process is up but the `mc-health` probe is failing - a live but dead server.                               |
+| `unhealthy`             | The process is up but the `mc-health` probe is failing: a live but dead server.                                |
 | `startup-stalled`       | Still starting after ~10 min with no "Done" in the logs (with a diagnosis of what to fix, where one is known). |
 | `stop-failed`           | A graceful stop didn't take effect and the container is still running.                                         |
 | `schedule-failed`       | A scheduled restart / backup / command failed.                                                                 |

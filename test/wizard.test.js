@@ -46,7 +46,7 @@ test('chatbot configuration and transcripts are admin-only', async () => {
 
   const adminPage = await app.req('GET', `/servers/${serverId}/chatbot`, { cookie: adminCookie });
   const operatorPage = await app.req('GET', `/servers/${serverId}/chatbot`, { cookie: operatorCookie });
-  assert.match(adminPage.text, /Chatbot settings/);
+  assert.match(adminPage.text, /Chatbot Settings/);
   assert.match(adminPage.text, /Basic users/);
   assert.match(adminPage.text, /Refresh This Server's Transcripts/);
   assert.match(adminPage.text, /Refresh Power Audit/);
@@ -60,7 +60,7 @@ test('chatbot configuration and transcripts are admin-only', async () => {
     'minecraft:torch',
     'minecraft:arrow',
   ]);
-  assert.doesNotMatch(operatorPage.text, /Chatbot settings/);
+  assert.doesNotMatch(operatorPage.text, /Chatbot Settings/);
 });
 
 test('per-server config encrypts the API key and defaults retention to seven days', async () => {

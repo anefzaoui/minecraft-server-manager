@@ -1,6 +1,8 @@
 # Public API
 
-A small, read-only HTTP API for fetching server status from outside the panel - a
+[← Back to docs index](README.md)
+
+A small, read-only HTTP API for fetching server status from outside the panel: a
 status dashboard, an uptime monitor, a Discord bot, a home-automation rule. It is
 served by the panel itself and returns the same live data the panel's own pages
 show (from the in-memory cache), so polling it never touches Docker.
@@ -10,13 +12,13 @@ until a token exists.
 
 ## Enabling it
 
-**Settings → Public API → New Key** - give it a name, choose what it can see (all
+**Settings → Public API → New Key**. Give it a name, choose what it can see (all
 servers, or a specific subset), and optionally an expiry date. The full key (a
-Bearer token) is shown **once**, in a dialog; copy it now - only a short prefix
+Bearer token) is shown **once**, in a dialog; copy it now, because only a short prefix
 is kept afterwards, for identification in the list.
 
 Creating the first key turns the API on automatically (the **Let outside apps
-read status** switch is a pause control - turn it off to stop serving without
+read status** switch is a pause control: turn it off to stop serving without
 cancelling any keys). Cancel a key from the same table at any time; clients using it lose
 access immediately.
 
@@ -32,7 +34,7 @@ Send the token as a Bearer credential:
 Authorization: Bearer msm_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-There are no cookies and **no CORS** - this is for server-to-server and CLI
+There are no cookies and **no CORS**: this is for server-to-server and CLI
 callers, not browser apps on another origin. If the panel is behind a reverse
 proxy, make sure the proxy forwards the `Authorization` header.
 

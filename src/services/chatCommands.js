@@ -55,7 +55,10 @@ function validateSpec({
     .trim()
     .toLowerCase();
   if (!TRIGGER_RE.test(trigger)) {
-    throw httpError(400, 'Triggers are 1-24 letters, digits, - or _ (no spaces, no prefix)');
+    throw httpError(
+      400,
+      'Triggers are 1 to 24 characters: letters, digits, hyphens, or underscores. No spaces or prefix.'
+    );
   }
   if (!ACTIONS.has(action)) throw httpError(400, 'Unknown action');
   if (!PERMISSIONS.has(permission)) throw httpError(400, 'Unknown permission level');
@@ -512,7 +515,7 @@ async function handleChat(serverId, player, message) {
       serverId,
       actor: `chat:${player}`,
       type: 'chat-command',
-      summary: `${player} tried ${label} - denied (needs ${cmd.permission})`,
+      summary: `${player} tried ${label}. Denied (needs ${cmd.permission}).`,
       details: { trigger, action: cmd.action, player, success: false, reason: 'permission' },
     });
     return;
@@ -532,7 +535,7 @@ async function handleChat(serverId, player, message) {
   // One execution per player at a time (locate searches take seconds).
   const flightKey = `${serverId}:${player.toLowerCase()}`;
   if (inflight.has(flightKey)) {
-    whisper(serverId, player, 'Your previous command is still running - give it a second.');
+    whisper(serverId, player, 'Your previous command is still running. Give it a second.');
     return;
   }
   inflight.add(flightKey);
@@ -569,8 +572,8 @@ async function handleChat(serverId, player, message) {
   } catch (err) {
     const friendly =
       err.status === 429
-        ? 'The server is busy with another teleport - try again in a few seconds.'
-        : err.message || 'That command failed - tell the server owner.';
+        ? 'The server is busy with another teleport. Try again in a few seconds.'
+        : err.message || 'That command failed. Tell the server owner.';
     // State 3 - failure: custom template (with {error}) or the built-in message.
     const failMsg = cmd.msg_failure
       ? renderTemplate(cmd.msg_failure, { ...baseVars, error: err.message || 'error' })
@@ -580,7 +583,7 @@ async function handleChat(serverId, player, message) {
       serverId,
       actor: `chat:${player}`,
       type: 'chat-command',
-      summary: `${player} ran ${label} - failed: ${String(err.message || err).slice(0, 140)}`,
+      summary: `${player} ran ${label}, but it failed.`,
       details: { trigger, action: cmd.action, player, args, success: false, reason: err.message },
     });
   } finally {
@@ -599,7 +602,7 @@ async function testCommand(serverId, cmdId, player, { actor = 'system' } = {}) {
   if (!PLAYER_RE.test(String(player))) throw httpError(400, 'Invalid player name');
 
   const flightKey = `${serverId}:${String(player).toLowerCase()}`;
-  if (inflight.has(flightKey)) throw httpError(429, 'That player already has a command running - wait a moment.');
+  if (inflight.has(flightKey)) throw httpError(429, 'That player already has a command running. Wait a moment.');
   inflight.add(flightKey);
   const ctx = { running: true, actor };
   const baseVars = { player, trigger: cmd.trigger, arg1: '', arg2: '', arg3: '' };
@@ -615,7 +618,7 @@ async function testCommand(serverId, cmdId, player, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'chat-command',
-      summary: `${player} ran ${getPrefix(serverId)}${cmd.trigger} (${actionSummary(cmd)}) - panel test`,
+      summary: `${player} ran ${getPrefix(serverId)}${cmd.trigger} (${actionSummary(cmd)}). Panel test.`,
       details: { trigger: cmd.trigger, action: cmd.action, params: cmd.params, player, success: true, via: 'test' },
     });
     return { message, result };
@@ -626,7 +629,7 @@ async function testCommand(serverId, cmdId, player, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'chat-command',
-      summary: `Panel test of ${getPrefix(serverId)}${cmd.trigger} as ${player} failed: ${String(err.message || err).slice(0, 140)}`,
+      summary: `Panel test of ${getPrefix(serverId)}${cmd.trigger} as ${player} failed.`,
       details: { trigger: cmd.trigger, action: cmd.action, player, success: false, reason: err.message, via: 'test' },
     });
     throw err;

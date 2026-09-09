@@ -112,7 +112,7 @@ async function enableMap(serverId, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   if (!supportsMap(server)) {
-    throw httpError(400, `Live map needs a mod loader or plugin server - ${server.type} isn't supported by BlueMap`);
+    throw httpError(400, `Live map needs a mod loader or plugin server. BlueMap does not support ${server.type}.`);
   }
 
   const hostPort = await freePort();
@@ -146,7 +146,7 @@ async function enableMap(serverId, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'map-enabled',
-    summary: `Live map enabled (BlueMap on port ${hostPort}) - applies on next restart`,
+    summary: `Live map enabled (BlueMap on port ${hostPort}). Applies on the next restart.`,
   });
   return { hostPort };
 }
@@ -165,7 +165,7 @@ async function disableMap(serverId, { actor = 'system' } = {}) {
   );
   if (row) await modsService.removeContent(serverId, row.filename, { actor }).catch(() => {});
   db.run('UPDATE servers SET pending_recreate = 1 WHERE id = ?', serverId);
-  recordEvent({ serverId, actor, type: 'map-disabled', summary: 'Live map disabled - applies on next restart' });
+  recordEvent({ serverId, actor, type: 'map-disabled', summary: 'Live map disabled. Applies on the next restart.' });
 }
 
 /** Extra container ports for a server, consumed by the servers service. */

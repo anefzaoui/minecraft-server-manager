@@ -74,7 +74,7 @@ async function upgradePack(
       includeBeta: pack.channel === 'beta',
     });
     if (resolved.versionId === pack.pinned_version_id) {
-      throw httpError(400, `Already on ${pack.pinned_version_name} - nothing to upgrade`);
+      throw httpError(400, `Already on ${pack.pinned_version_name}. Nothing to upgrade.`);
     }
 
     // Cross-MC-version upgrades permanently convert the world - demand
@@ -140,7 +140,7 @@ async function upgradePack(
         serverId,
         actor,
         type: 'update-failed',
-        summary: `Pack upgrade to ${resolved.versionName} failed to start - rollback available`,
+        summary: `Pack upgrade to ${resolved.versionName} failed to start. A rollback is available.`,
         details: { backupId, previousVersion: previous ? previous.pinned_version_id : null },
         logExcerpt: excerpt || null,
       });
@@ -215,7 +215,7 @@ async function runAutoUpgrades({ actor = 'scheduler' } = {}) {
           serverId: server.id,
           actor,
           type: 'auto-update-skipped',
-          summary: `Auto-update to ${check.latest_name || check.latest_version} skipped: it moves Minecraft ${err.fromMcVersion} → ${err.toMcVersion}, which permanently converts the world - apply it manually when ready`,
+          summary: `Auto-update to ${check.latest_name || check.latest_version} skipped: it moves Minecraft ${err.fromMcVersion} → ${err.toMcVersion}, which permanently converts the world. Apply it manually when you are ready.`,
         });
         continue;
       }
@@ -235,7 +235,7 @@ async function runAutoUpgrades({ actor = 'scheduler' } = {}) {
             serverId: server.id,
             actor,
             type: 'auto-update-failed',
-            summary: `Auto-update failed AND the automatic rollback failed - the server needs manual attention (backup ${err.backupId} is intact)`,
+            summary: `Auto-update failed, and the automatic rollback also failed. The server needs manual attention. The pre-update backup is intact.`,
           });
           logger.error('The automatic rollback after a failed auto-update also failed.', {
             serverId: server.id,

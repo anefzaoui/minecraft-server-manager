@@ -41,7 +41,7 @@ function setKey(provider, key, { actor = 'system' } = {}) {
       recordEvent({
         actor,
         type: 'api-key-set',
-        summary: `${flagged.changes} CurseForge server(s) flagged for recreate to pick up the new key`,
+        summary: `${flagged.changes} CurseForge server(s) need a rebuild to pick up the new key.`,
       });
     }
   }

@@ -24,7 +24,7 @@ const TASK_TYPES = {
   rcon: { label: 'Run command', serverScoped: true },
   'update-check': { label: 'Update check', serverScoped: false },
   'storage-scan': { label: 'Storage re-scan', serverScoped: false },
-  'tmp-clean': { label: 'Purge tmp', serverScoped: false },
+  'tmp-clean': { label: 'Clear temporary files', serverScoped: false },
   'ban-expiry-sweep': { label: 'Ban expiry sweep', serverScoped: false },
   'content-meta-backfill': { label: 'Content metadata backfill', serverScoped: false },
 };

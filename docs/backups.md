@@ -12,7 +12,7 @@ From a server's **Backups** tab (or via a [schedule](schedules.md)) you can snap
 
 Every archive is **integrity-checked** the moment it's written: the panel reopens the zip and reads its directory. A torn or unopenable archive is deleted and the backup call fails there and then, rather than the problem surfacing months later when a restore is the only thing between you and data loss. A zero-entry archive (a server that has never started) is allowed but flagged on the event.
 
-Tick **"Also shrink the world afterwards"** (on the Backups tab, or in a backup schedule) to remove rarely-visited chunks once the archive is safely written - see **[Shrinking a world](world-shrink.md)**. The shrink only runs while the server is stopped; on a running server the backup still happens and the shrink is skipped.
+Tick **"Also shrink the world afterwards"** (on the Backups tab, or in a backup schedule) to remove rarely-visited chunks once the archive is safely written (see **[Shrinking a world](world-shrink.md)**). The shrink only runs while the server is stopped; on a running server the backup still happens and the shrink is skipped.
 
 ![Server backups](images/server-backups.png)
 
@@ -27,7 +27,7 @@ Backups are tagged by why they were taken:
 
 ## Retention
 
-Retention is capped **per server, per reason** - the newest in each group are kept, older ones are pruned automatically after each successful backup:
+Retention is capped **per server, per reason**: the newest in each group are kept, older ones are pruned automatically after each successful backup:
 
 | Reason      | Kept |
 | ----------- | ---- |
@@ -38,7 +38,7 @@ Retention is capped **per server, per reason** - the newest in each group are ke
 
 `pre-restore` has its own small bucket precisely so an automatic safety backup can never evict a `manual` backup you deliberately kept.
 
-> Retention is bounded automatically, but large modded archives still count toward a server's [disk quota](storage.md) - keep an eye on the total for big packs.
+> Retention is bounded automatically, but large modded archives still count toward a server's [disk quota](storage.md), so keep an eye on the total for big packs.
 
 ## Restoring
 
@@ -46,7 +46,7 @@ Restoring a backup stops the server (verifying the container really stopped befo
 
 ## The panel's own database
 
-Server backups only cover per-server world directories. The panel's own database (`panel.db` - users, roles, 2FA secrets, schedules, pack pins, history) is snapshotted separately on the daily maintenance timer:
+Server backups only cover per-server world directories. The panel's own database (`panel.db`, holding users, roles, 2FA secrets, schedules, pack pins, and history) is snapshotted separately on the daily maintenance timer:
 
 - `VACUUM INTO` writes a consistent, defragmented copy to `data/backups/_panel/`; the newest **14** are kept.
 - On boot the panel runs `PRAGMA integrity_check` and logs loudly if it fails, pointing you at `data/backups/_panel` for the newest good copy.

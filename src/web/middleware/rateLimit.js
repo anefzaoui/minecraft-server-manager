@@ -16,7 +16,7 @@ const config = require('../../config');
 const { tokenRateKey } = require('./bearer');
 
 function jsonHandler(req, res) {
-  res.status(429).json({ ok: false, error: 'Too many requests - slow down and try again shortly.' });
+  res.status(429).json({ ok: false, error: 'Too many requests. Slow down and try again shortly.' });
 }
 
 // TRUST_PROXY=true is refused at boot (src/config) precisely because it would

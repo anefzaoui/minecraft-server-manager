@@ -123,7 +123,7 @@ bumps. Two behaviour changes below need a note before you upgrade.
   stop, offline-after-restart, crash loop, crash report, and update-failed are forwarded under a new
   toggleable category (on by default). See the new [integrations guide](docs/integrations.md).
 - **Automatic daily backups + panel-DB snapshots.** Every new server is seeded a daily backup
-  schedule on create (staggered 02:00–05:59). The panel's own database is snapshotted via
+  schedule on create (staggered 02:00-05:59). The panel's own database is snapshotted via
   `VACUUM INTO` to `data/backups/_panel/` on a daily timer (newest 14 kept), and an
   `integrity_check` pragma runs on boot.
 - **Avatar cropper.** Custom profile-picture uploads now pass through a client-side square-crop
@@ -326,7 +326,7 @@ pipeline learns every known `/list` phrasing plus a set of live-cache hardening 
 - Fresh GTNH installs actually install: the panel no longer sets `SKIP_GTNH_UPDATE_CHECK`, which
   told the image to skip the code path that downloads the pack in the first place and crash-looped
   every new GTNH server on missing files.
-- Pack upgrades no longer time out at 10 minutes for GTNH, which downloads a ~1–2 GB server pack
+- Pack upgrades no longer time out at 10 minutes for GTNH, which downloads a ~1-2 GB server pack
   and builds a several-hundred-mod world on first boot; it now gets 30 minutes before the upgrade
   is treated as failed.
 
@@ -744,9 +744,9 @@ UI bug originated server-side.
 
 - **Light theme now passes WCAG AA for all accent-colored text.** Links and status text previously
   used raw palette classes (`text-diamond-400`, `text-grass-400`, `text-gold-400`,
-  `text-redstone-400`) in both themes; on the light canvas those measure 1.9–2.8:1. New semantic
-  tokens (`link`, `ok`, `warn`, `danger`) resolve to the 400 steps in dark (6.4–9.5:1) and the
-  600/700 steps in light (4.9–7.0:1), and 200+ call sites across every view and page script now go
+  `text-redstone-400`) in both themes; on the light canvas those measure 1.9-2.8:1. New semantic
+  tokens (`link`, `ok`, `warn`, `danger`) resolve to the 400 steps in dark (6.4-9.5:1) and the
+  600/700 steps in light (4.9-7.0:1), and 200+ call sites across every view and page script now go
   through them. Server status text goes through a new `statusText` helper. The always-dark console
   keeps its raw palette classes on purpose.
 - **Primary/danger button hover states now pass contrast.** Hover used to lighten
@@ -1004,7 +1004,7 @@ Initial public release - a complete, self-hosted control panel for Minecraft ser
 - **Console, logs & RCON** - live console over WebSocket, ANSI rendering, search/level filters, a
   command bar with history, and a player list with quick actions; a generated, encrypted RCON
   password is injected per server.
-- **Player moderation** - whitelist, ops (levels 1–4), bans, IP bans (RCON while running, direct JSON
+- **Player moderation** - whitelist, ops (levels 1 to 4), bans, IP bans (RCON while running, direct JSON
   edits while stopped), and teleports by coordinates, to a player, or to the nearest biome/structure.
 - **Backups & schedules** - save-safe archive/restore with retention classes and free-space
   preflight; per-server and global cron tasks (restart / backup / RCON) with next-run previews.

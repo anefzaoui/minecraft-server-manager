@@ -191,7 +191,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   $('[data-ib-rebuild]').addEventListener('click', async () => {
     try {
       const result = await runTask({
-        title: 'Rebuilding Item Registry',
+        title: 'Rebuilding the item registry…',
         start: async () => {
           const res = await fetch(`${base}/rebuild`, { method: 'POST' });
           const data = await res.json().catch(() => ({}));

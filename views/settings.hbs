@@ -22,7 +22,7 @@
       </div>
       <div>
         <span class="label">Modrinth</span>
-        <p class="help">No key needed &ndash; Modrinth's public API is used directly.</p>
+        <p class="help">No key needed. Modrinth's public API is used directly.</p>
       </div>
     </div>
   {{/settings/card}}
@@ -77,7 +77,7 @@
           <button class="btn" id="msm-update-btn">Check for Updates</button>
         </div>
         <div id="msm-update-out"></div>
-        <p class="help">Compares the installed version with the latest release on GitHub. You download and install the update yourself &mdash; the panel never modifies its own files.</p>
+        <p class="help">Compares the installed version with the latest release on GitHub. You download and install the update yourself. The panel never modifies its own files.</p>
       </div>
 
       <div class="border-t border-line pt-4">
@@ -195,18 +195,18 @@
         checked=publicApiEnabled}}
 
     <div class="mt-4 border-t border-line pt-4">
-      <p class="help mt-0 max-w-prose">Each app connects with its own <b>access key</b> (sent as an <span class="font-mono">Authorization: Bearer</span> header). Make one key per app; anyone holding a key can see the servers you allow it &ndash; name, type, whether it's running, players online, and resource use. Cancel a key to cut that app off straight away.</p>
+      <p class="help mt-0 max-w-prose">Each app connects with its own <b>access key</b> (sent as an <span class="font-mono">Authorization: Bearer</span> header). Make one key per app; anyone holding a key can see the servers you allow it: name, type, whether it's running, players online, and resource use. Cancel a key to cut that app off straight away.</p>
       <div class="mt-4 overflow-x-auto">
         <table class="table-base table-stack" id="api-tokens-table">
-          <thead><tr><th>Name</th><th>Key</th><th>Can see</th><th>Created</th><th>Last used</th><th>Expires</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+          <thead><tr><th>Name</th><th>Key</th><th>Can See</th><th>Created</th><th>Last Used</th><th>Expires</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
           <tbody>
             {{#each apiTokens}}
               <tr data-token-id="{{id}}">
                 <td data-th="Name" class="font-medium">{{label}}</td>
                 <td data-th="Key" class="font-mono text-xs">{{tokenPrefix}}&hellip;</td>
-                <td data-th="Can see">{{#if scope.all}}Every server{{else}}{{scope.serverIds.length}} server(s){{/if}}</td>
+                <td data-th="Can See">{{#if scope.all}}Every server{{else}}{{scope.serverIds.length}} server(s){{/if}}</td>
                 <td data-th="Created" class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
-                <td data-th="Last used" class="whitespace-nowrap text-xs text-ink-faint">{{#if lastUsedAt}}<span data-ts="{{lastUsedAt}}">{{lastUsedAt}}</span>{{else}}never{{/if}}</td>
+                <td data-th="Last Used" class="whitespace-nowrap text-xs text-ink-faint">{{#if lastUsedAt}}<span data-ts="{{lastUsedAt}}">{{lastUsedAt}}</span>{{else}}never{{/if}}</td>
                 <td data-th="Expires" class="whitespace-nowrap text-xs text-ink-faint">{{#if expiresAt}}<span data-ts="{{expiresAt}}">{{expiresAt}}</span>{{else}}never{{/if}}</td>
                 <td data-th="Status">{{#if (eq status 'active')}}<span class="badge badge-ok">Active</span>{{else}}<span class="badge">{{status}}</span>{{/if}}</td>
                 <td data-th="" class="text-right">

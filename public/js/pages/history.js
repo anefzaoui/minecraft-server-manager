@@ -172,11 +172,11 @@ function markShared(card, url) {
 async function confirmPublish(crash, { analyzing = false } = {}) {
   return confirmDialog({
     title: analyzing ? 'Analyze with mclo.gs?' : 'Share to mclo.gs?',
-    message: `${crash.filename} will be uploaded to mclo.gs as a PUBLIC paste - anyone with the link can read it.`,
+    message: `${crash.filename} will be uploaded to mclo.gs as a public paste. Anyone with the link can read it.`,
     detail: analyzing
-      ? "mclo.gs then runs its automated analysis (known problems + suggested fixes) over the paste. Crash reports can include player names and mod lists - don't share what you wouldn't post on a forum."
-      : "Mod authors and support channels usually ask for exactly this link. Crash reports can include player names and mod lists - don't share what you wouldn't post on a forum.",
-    confirmLabel: analyzing ? 'Publish & analyze' : 'Publish paste',
+      ? "mclo.gs then runs its automated analysis (known problems with suggested fixes) over the paste. Crash reports can include player names and mod lists, so don't share what you wouldn't post on a forum."
+      : "Mod authors and support channels usually ask for exactly this link. Crash reports can include player names and mod lists, so don't share what you wouldn't post on a forum.",
+    confirmLabel: analyzing ? 'Publish & Analyze' : 'Publish Paste',
   });
 }
 

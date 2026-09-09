@@ -198,7 +198,7 @@ function pinUnpinnedServers() {
         serverId: server.id,
         actor: 'system',
         type: 'pack-pinned',
-        summary: `Locked the ${issue.platform} modpack to the installed version (${evidence.name}) - it was set to auto-update on every start`,
+        summary: `Locked the ${issue.platform} modpack to the installed version (${evidence.name}). It was set to auto-update on every start.`,
         details: { pinKey: issue.pinKey, pin: evidence.pin, source: evidence.source },
       });
       pinned += 1;

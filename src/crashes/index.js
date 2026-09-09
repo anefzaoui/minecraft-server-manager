@@ -117,7 +117,7 @@ function parseCrashReport(text) {
     if (parts.length >= 3) suspects.add(parts[1]);
   }
 
-  const summary = exception ? exception + (description ? ` - ${description}` : '') : description || 'Crash report';
+  const summary = exception ? exception + (description ? `: ${description}` : '') : description || 'Crash report';
   return { description, exception, summary, suspects: [...suspects] };
 }
 
@@ -152,7 +152,7 @@ function parseHsErr(text) {
   return {
     description: '',
     exception: 'JVM fatal error',
-    summary: 'JVM fatal error' + (problem ? ` - ${problem}` : ''),
+    summary: 'JVM fatal error' + (problem ? `: ${problem}` : ''),
     suspects: [],
   };
 }
@@ -236,7 +236,7 @@ async function scanServer(serverId) {
       serverId,
       type: 'crash-report',
       actor: 'system',
-      summary: `New crash report: ${filename} - ${parsed.exception || parsed.summary}`,
+      summary: `New crash report: ${filename}. ${parsed.exception || parsed.summary}`,
       details: { crashId: id },
     });
     db.run('UPDATE crash_reports SET event_id = ? WHERE id = ?', eventId, id);

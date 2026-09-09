@@ -94,7 +94,7 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
   }
 
   openModal({
-    title: 'Zip import report',
+    title: 'Zip Import Report',
     content,
     size: 'lg',
     actions: [{ label: 'Done', kind: 'primary', onClick: () => onDone() }],

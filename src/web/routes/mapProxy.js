@@ -165,7 +165,7 @@ router.use(
         return res
           .status(502)
           .send(
-            `Cannot resolve map-proxy host "${target.host}" - if the panel runs in its own container, ` +
+            `Cannot resolve the map-proxy host "${target.host}". If the panel runs in its own container, ` +
               'add `extra_hosts: ["host.docker.internal:host-gateway"]` to its compose service ' +
               '(see docker-compose.yml), or set MAP_PROXY_HOST explicitly.'
           );
@@ -173,7 +173,7 @@ router.use(
       res
         .status(502)
         .send(
-          'The map server is not responding - is the Minecraft server running? BlueMap needs a minute after startup to come up.'
+          'The map server is not responding. Is the Minecraft server running? BlueMap needs a minute after startup to come up.'
         );
     });
     req.pipe(upstream);

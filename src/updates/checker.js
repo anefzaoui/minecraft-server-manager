@@ -258,7 +258,7 @@ function setUpdateIgnored(subjectType, subjectId, { ignore = true, actor = 'syst
   }
   const check = db.get('SELECT * FROM update_checks WHERE subject_type = ? AND subject_id = ?', subjectType, subjectId);
   if (!check || !check.latest_version) {
-    throw httpError(409, 'No pending update to ignore - run an update check first');
+    throw httpError(409, 'No pending update to ignore. Run an update check first.');
   }
   db.run(
     'UPDATE update_checks SET ignored_version = ? WHERE subject_type = ? AND subject_id = ?',

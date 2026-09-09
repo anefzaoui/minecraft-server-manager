@@ -131,7 +131,7 @@ router.post(
     if (input.uploadToken) {
       zipRef = dataPath('tmp', input.uploadToken);
       if (!fs.existsSync(zipRef)) {
-        return res.status(404).json({ ok: false, error: 'Uploaded blueprint expired - upload it again' });
+        return res.status(404).json({ ok: false, error: 'The uploaded blueprint expired. Upload it again.' });
       }
     }
     if (input.overrides) requireAdminForOverrides(req, input.overrides);
@@ -193,6 +193,6 @@ function publicServer(s) {
 }
 
 // JSON error handler for this subtree (mirrors routes/api.js).
-router.use(makeJsonErrorHandler('blueprints', { fileTooLarge: 'Upload is too large' }));
+router.use(makeJsonErrorHandler('blueprints', { fileTooLarge: 'That upload is too large.' }));
 
 module.exports = router;

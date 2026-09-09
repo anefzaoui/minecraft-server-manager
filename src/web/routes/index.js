@@ -841,13 +841,13 @@ router.get(
     const catNames = {
       servers: 'Servers',
       backups: 'Backups',
-      'library/worlds': 'Library - worlds',
-      'library/mods': 'Library - mods & content',
-      'library/modpacks': 'Library - modpacks',
-      'library/icons': 'Library - icons',
-      logs: 'Logs & event captures',
+      'library/worlds': 'Worlds library',
+      'library/mods': 'Mods and content library',
+      'library/modpacks': 'Modpacks library',
+      'library/icons': 'Icons library',
+      logs: 'Logs and event captures',
       blueprints: 'Blueprints',
-      tmp: 'tmp',
+      tmp: 'Temporary files',
     };
     const categories = Object.entries(catNames)
       .map(([rel, name]) => ({
@@ -868,7 +868,7 @@ router.get(
       { label: 'Library', cls: 'bg-gold-400', size: indexer.sizeOf('library') },
     ];
     segs.push({
-      label: 'Logs, blueprints, tmp',
+      label: 'Logs, blueprints, temporary files',
       cls: 'bg-stone-500',
       size: Math.max(0, totalUsed - segs.reduce((n, s) => n + s.size, 0)),
     });
@@ -883,7 +883,7 @@ router.get(
       return { key: action, action: label, frees: p.freedBytes, count: p.removed, days: olderThanDays || null };
     };
     const cleanup = await Promise.all([
-      preview('tmp', 'Purge tmp/ (files older than 1 h)'),
+      preview('tmp', 'Clear temporary files older than 1 hour'),
       preview('orphans', 'Remove orphaned library files'),
       preview('old-logs', `Delete archived logs older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
       preview('old-crashes', `Delete crash reports older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),

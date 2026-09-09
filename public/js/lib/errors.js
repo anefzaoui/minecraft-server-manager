@@ -12,7 +12,7 @@ const REASONS = {
   401: 'your session has expired, so sign in again',
   403: 'you do not have permission to do that',
   404: 'the panel could not find what that action needed',
-  409: 'something changed since the page loaded, so reload and try again',
+  409: 'something changed since the page loaded, so refresh and try again',
   413: 'that file is too large',
   429: 'the panel is being rate-limited, so wait a moment',
   503: 'Docker or the server looks unavailable right now',

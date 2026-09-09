@@ -1,11 +1,13 @@
 # Shrinking a world
 
+[← Back to docs index](README.md)
+
 Over time a world spreads out: every place a player has ever walked, flown, or
 been carried by an Ender pearl leaves generated chunks on disk, even if nobody
 ever went back. **Shrink world** removes the chunks that almost nobody has spent
 time in, so the world takes less space. Minecraft rebuilds a removed area from
 the world seed the moment someone travels there again, so this is safe for
-land nobody is using - but anything a player _built_ in a spot they barely stood
+land nobody is using, but anything a player _built_ in a spot they barely stood
 in would go too, which is why a backup is taken first.
 
 ## What counts as "rarely visited"
@@ -29,7 +31,7 @@ It's a good idea to take a backup from the **Backups** tab first.
 
 On the **Backups** tab, tick **"Also shrink the world afterwards"** before
 **Back Up Now**. The backup archive is written first (that archive is your
-undo), then the world is shrunk - but only if the server is stopped. If the
+undo), then the world is shrunk, but only if the server is stopped. If the
 server is running, the backup still runs and the shrink is skipped with a note.
 
 Scheduled backups have the same option: in the schedule editor, choose the

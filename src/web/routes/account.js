@@ -56,7 +56,7 @@ router.post(
   asyncHandler(async (req, res) => {
     if (!throttle('totp-setup', req.user.id, SETUP_MAX, SETUP_WINDOW_MS)) {
       logger.warn('Throttled a two-factor setup request.', { userId: req.user.id });
-      return res.status(429).json({ ok: false, error: 'Too many 2FA setup attempts - wait a minute and try again.' });
+      return res.status(429).json({ ok: false, error: 'Too many 2FA setup attempts. Wait a minute and try again.' });
     }
     const { secret, otpauthUrl } = authService.beginTotpEnrollment(req.user.id);
     const qrDataUrl = await QRCode.toDataURL(otpauthUrl, { margin: 1, width: 220 });
@@ -168,7 +168,7 @@ const AVATAR_MAX = 30;
 function avatarWriteThrottle(req, res, next) {
   if (!throttle('avatar-write', req.user.id, AVATAR_MAX, AVATAR_WINDOW_MS)) {
     logger.warn('Throttled a profile picture change.', { userId: req.user.id });
-    return res.status(429).json({ ok: false, error: 'Too many avatar changes - wait a minute and try again.' });
+    return res.status(429).json({ ok: false, error: 'Too many avatar changes. Wait a minute and try again.' });
   }
   next();
 }
@@ -207,7 +207,9 @@ router.post(
       if (!req.file) throw Object.assign(new Error('Attach an image (field "avatar")'), { status: 400 });
       const ext = avatarStore.AVATAR_EXTS[req.file.mimetype];
       if (!ext) {
-        throw Object.assign(new Error('Avatars must be PNG, JPEG, WebP or SVG (max 16 MB)'), { status: 400 });
+        throw Object.assign(new Error('Profile pictures must be PNG, JPEG, WebP, or SVG (max 16 MB).'), {
+          status: 400,
+        });
       }
       if (!(await matchesImageType(req.file.path, req.file.mimetype))) {
         logger.warn('Rejected a profile picture upload whose bytes do not match its declared type.', {
