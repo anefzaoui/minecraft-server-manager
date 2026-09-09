@@ -15,6 +15,9 @@ function init(serverId) {
   let autoScroll = true;
   let ws = null;
   let reconnectDelay = 1000;
+  // Reconnect cadence after a clean stream end (server stopped) - see the close
+  // handler for why this can't share the exponential backoff above.
+  const STOPPED_RETRY_MS = 5000;
   // Server-rendered initial lines show instantly; the WS resends the same tail
   // on connect, so the first 'log' batch replaces them instead of duplicating.
   let clearedInitial = false;
@@ -221,7 +224,11 @@ function init(serverId) {
   // One visible marker while the stream is down - the log just stopping is
   // indistinguishable from a quiet server.
   let disconnectNote = null;
+  // Set when the last close was a clean 'log-end' (server not running) rather
+  // than a dropped socket - drives the slow reconnect cadence below.
+  let streamEnded = false;
   function connect() {
+    streamEnded = false;
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}/ws/console/${serverId}`);
     ws.addEventListener('open', () => {
@@ -254,7 +261,10 @@ function init(serverId) {
         appendLine(`[panel/WARN]: ${msg.message}`);
       } else if (msg.kind === 'log-end') {
         // The upstream docker log stream ended (server stopped / restarted).
-        // The server keeps this socket open, so drive the reconnect ourselves.
+        // The server keeps this socket open, so drive the reconnect ourselves -
+        // on the slow "stopped" cadence, since retrying at once just re-tails a
+        // container that produces no output until it starts again.
+        streamEnded = true;
         ws.close();
       }
     });
@@ -263,12 +273,23 @@ function init(serverId) {
       if (!disconnectNote) {
         disconnectNote = document.createElement('div');
         disconnectNote.className = 'text-gold-300';
-        disconnectNote.textContent = '[panel/WARN]: Log stream disconnected. Reconnecting…';
+        disconnectNote.textContent = streamEnded
+          ? '[panel/WARN]: Server is stopped. Watching for it to start again…'
+          : '[panel/WARN]: Log stream disconnected. Reconnecting…';
         log.appendChild(disconnectNote);
         if (autoScroll) log.scrollTop = log.scrollHeight;
       }
-      setTimeout(connect, reconnectDelay);
-      reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+      // A clean stream end means the server is not running, but our WS server
+      // still accepts the upgrade - so 'open' fires on every reconnect and
+      // resets the backoff, leaving a ~1s loop that re-tails a stopped
+      // container forever. Poll on a slow fixed cadence instead; keep the
+      // exponential backoff for genuine drops (network blips, panel restart).
+      if (streamEnded) {
+        setTimeout(connect, STOPPED_RETRY_MS);
+      } else {
+        setTimeout(connect, reconnectDelay);
+        reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+      }
     });
   }
   connect();
