@@ -9,6 +9,9 @@ public/dist/
 # CodeGraph index
 .codegraph/
 
+# Claude Code — keep shared commands, ignore local plans
+.claude/plans/
+
 
 # Logs / editor / OS noise
 *.log
