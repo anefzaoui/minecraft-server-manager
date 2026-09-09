@@ -87,6 +87,10 @@ function init(serverId, running) {
         lastSyncTicks = s.timeTicks;
         ticks = s.timeTicks;
         if (s.day) day = s.day;
+        // 26.x doesn't expose doDaylightCycle as a readable gamerule (it moved to
+        // /time pause|resume), so its chip would sit blank forever. Fall back to
+        // the freeze inference the clock already computed.
+        if (s.doDaylightCycle === undefined) s.doDaylightCycle = !frozen;
         renderClock();
         stateLine.classList.add('hidden');
       } else {
@@ -95,9 +99,11 @@ function init(serverId, running) {
         stateLine.textContent = 'Connected. This server version does not report the world clock.';
       }
       applyChips(s);
+      applyDifficulty(s);
       // Some rules could not be read this cycle - say so instead of leaving
-      // their chips looking authoritative. The clock line takes priority.
-      if (data.degraded && typeof s.timeTicks !== 'number') {
+      // their chips looking authoritative. This holds on a running server too:
+      // the clock lives in its own box, so this line doesn't hide it.
+      if (data.degraded) {
         stateLine.classList.remove('hidden');
         stateLine.textContent = 'Some world settings could not be read just now. They will refresh on the next check.';
       }
@@ -109,12 +115,27 @@ function init(serverId, running) {
 
   // Reflect gamerule states on the toggle chips: aria-pressed carries the state
   // (the CSS chip[aria-pressed] rule styles it), data-tip explains it.
+  //
+  // A rule missing from `s` was NOT read this cycle (collapsed "all rules"
+  // section, a flaked RCON read, or a rule this server version doesn't expose).
+  // Leaving the chip as-is and flagging it "unknown" is honest; forcing it to
+  // look off would both misreport the status and make the next click send the
+  // wrong -on/-off action.
   function applyChips(s, { readonly = false } = {}) {
     root.querySelectorAll('[data-wc-toggle]').forEach((chip) => {
       const value = s[chip.dataset.rule];
+      if (value === undefined) {
+        if (chip.dataset.on === undefined) chip.dataset.wcUnknown = '1';
+        return;
+      }
+      delete chip.dataset.wcUnknown;
       chip.dataset.on = value ? '1' : '0';
       chip.setAttribute('aria-pressed', String(value === true));
-      if (value !== undefined) {
+      if (chip.dataset.rule === 'pvp') {
+        chip.dataset.tip = value
+          ? 'On. Click to turn off (applies on the next restart).'
+          : 'Off. Click to turn on (applies on the next restart).';
+      } else {
         chip.dataset.tip = readonly
           ? value
             ? 'On (last saved). Start the server to change it.'
@@ -123,6 +144,15 @@ function init(serverId, running) {
             ? 'On. Click to turn off.'
             : 'Off. Click to turn on.';
       }
+    });
+  }
+
+  // Difficulty is a pick-one row of plain [data-wc] buttons (not toggles), so
+  // carry the active one in aria-pressed the same way the chips do.
+  function applyDifficulty(s) {
+    if (!s.difficulty) return;
+    root.querySelectorAll('[data-wc^="difficulty-"]').forEach((btn) => {
+      btn.setAttribute('aria-pressed', String(btn.dataset.wc === `difficulty-${s.difficulty}`));
     });
   }
 
@@ -137,6 +167,7 @@ function init(serverId, running) {
       phaseEl.textContent = `${phaseOf(s.timeTicks)} · last saved`;
     }
     applyChips(s, { readonly: true });
+    applyDifficulty(s);
     stateLine.classList.remove('hidden');
     stateLine.textContent = 'Server offline, showing the last saved world settings. Start the server to change them.';
   }

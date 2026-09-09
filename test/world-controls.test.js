@@ -82,6 +82,14 @@ test('offlineStateFromLevelData decodes a Long stored as [high, low]', () => {
   assert.equal(s.timeLabel, 'Sunset');
 });
 
+test('offlineStateFromLevelData maps the Difficulty byte to a name', () => {
+  assert.equal(offlineStateFromLevelData({ Difficulty: 0 }).difficulty, 'peaceful');
+  assert.equal(offlineStateFromLevelData({ Difficulty: 2 }).difficulty, 'normal');
+  assert.equal(offlineStateFromLevelData({ Difficulty: 3 }).difficulty, 'hard');
+  assert.ok(!('difficulty' in offlineStateFromLevelData({})), 'absent when the field is missing');
+  assert.ok(!('difficulty' in offlineStateFromLevelData({ Difficulty: 7 })), 'absent for an out-of-range byte');
+});
+
 test('offlineStateFromLevelData reads gamerules in either casing', () => {
   const s = offlineStateFromLevelData({
     GameRules: { keepInventory: 'true', do_mob_spawning: 'false', doDaylightCycle: 'true' },

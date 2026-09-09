@@ -575,6 +575,11 @@
   button.chip[aria-pressed='true'] {
     @apply border-grass-500 bg-grass-600/10 text-ok;
   }
+  /* World Controls: a rule that couldn't be read this cycle - don't let it pass
+     for a known "off". Dashed border + muted text, no colour claim either way. */
+  button.chip[data-wc-unknown] {
+    @apply border-dashed text-ink-faint;
+  }
 
   /* Whole-group disable (composers while the server is stopped): real
      disabled - the old pointer-events-none trick let keyboard events straight

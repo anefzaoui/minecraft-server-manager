@@ -272,6 +272,18 @@ async function queryDay(serverId) {
   return m ? Math.floor(Number(m[1]) / 24000) + 1 : null;
 }
 
+const DIFFICULTIES = ['peaceful', 'easy', 'normal', 'hard'];
+
+/** Current world difficulty as one of DIFFICULTIES, or null if it can't be read. */
+async function queryDifficulty(serverId) {
+  // `/difficulty` with no args reports the current value on every version:
+  // "The difficulty is Normal". The word is translated on a non-English server,
+  // so match a known token rather than trusting the sentence shape.
+  const out = await rcon(serverId, ['difficulty']);
+  const m = /\b(peaceful|easy|normal|hard)\b/i.exec(out);
+  return m ? m[1].toLowerCase() : null;
+}
+
 // PvP isn't a gamerule - it's the server.properties `pvp` value, applied at
 // (re)start and then in force for everyone, including players who join later.
 // We edit the file directly (like the whitelist toggle); the itzg image leaves a
@@ -356,13 +368,33 @@ async function readStateLive(serverId, opts = {}) {
   const first = rules[0];
   const firstSnake = await rcon(serverId, ['gamerule', GAMERULES[first]]);
   const spelling = looksLikeError(firstSnake) ? 'camel' : 'snake';
+  const other = spelling === 'snake' ? 'camel' : 'snake';
   const firstVal = spelling === 'snake' ? parseGameruleBool(firstSnake) : await queryGamerule(serverId, first, 'camel');
   if (firstVal !== null) state[first] = firstVal;
+  else if (spelling === 'camel') {
+    // The probe already fetched the snake_case reply - reuse it, no extra round trip.
+    const alt = parseGameruleBool(firstSnake);
+    if (alt !== null) state[first] = alt;
+  }
   const rest = rules.slice(1);
   const values = await mapLimit(rest, 6, (rule) => queryGamerule(serverId, rule, spelling));
   rest.forEach((rule, i) => {
     if (values[i] !== null) state[rule] = values[i];
   });
+  // A rule reads back null either because the era probe guessed the wrong casing
+  // (its probe rule happened to be missing on this version) or because one RCON
+  // round trip flaked. Retry just the misses once with the other spelling -
+  // otherwise their chips read as "off" when they were only unread. Cost is
+  // bounded to the failures, which is normally zero.
+  const missed = rules.filter((rule) => !Object.hasOwn(state, rule));
+  if (missed.length) {
+    const retry = await mapLimit(missed, 6, (rule) => queryGamerule(serverId, rule, other));
+    missed.forEach((rule, i) => {
+      if (retry[i] !== null) state[rule] = retry[i];
+    });
+  }
+  const difficulty = await queryDifficulty(serverId).catch(() => null);
+  if (difficulty) state.difficulty = difficulty;
   state.pvp = readPvp(serverId); // from server.properties - the pending/effective value
   return state;
 }
@@ -413,6 +445,10 @@ function offlineStateFromLevelData(data, opts = {}) {
   }
   const gameTime = longToNum(data.Time);
   if (Number.isFinite(gameTime)) state.day = Math.floor(gameTime / 24000) + 1;
+
+  // level.dat stores Difficulty as a 0-3 byte (peaceful..hard).
+  const diff = longToNum(data.Difficulty);
+  if (Number.isFinite(diff) && DIFFICULTIES[diff]) state.difficulty = DIFFICULTIES[diff];
 
   // level.dat GameRules keys are camelCase on <=1.21 and snake_case on 26.x -
   // GAMERULES maps one to the other, so try both spellings per rule.
