@@ -44,8 +44,11 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
-      # postinstall builds the CSS bundle; the rest are explicit gates.
+      # Skip the postinstall CSS build - `pnpm run build` below is the gate and
+      # rebuilds it anyway, so letting postinstall run just does Tailwind twice.
       - run: pnpm install --frozen-lockfile
+        env:
+          MSM_SKIP_POSTINSTALL: '1'
       - run: pnpm run lint
       - run: pnpm run format:check
       - run: pnpm run typecheck
@@ -64,8 +67,35 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
+      # The unit suite is headless (no rendered CSS needed), so skip the
+      # postinstall Tailwind build here too.
       - run: pnpm install --frozen-lockfile
+        env:
+          MSM_SKIP_POSTINSTALL: '1'
       - run: pnpm test
+
+  # PRs never reach the publish `docker` job below, so without this the image
+  # build (and the Dockerfile itself) is only exercised AFTER merge, on the push
+  # to main that also publishes. Build one arch, no push, to catch a broken
+  # Dockerfile on the PR. Reads the amd64 publish cache but never writes it, so a
+  # PR build can't evict main's cache entries.
+  docker-build:
+    needs: [checks, tests]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          provenance: false
+          cache-from: type=gha,scope=linux-amd64
 
   docker:
     needs: [checks, tests]
@@ -106,6 +136,11 @@ jobs:
         with:
           context: .
           platforms: ${{ matrix.platform }}
+          # provenance=false: with push-by-digest the default provenance
+          # attestation nests an extra manifest under each digest, which
+          # `buildx imagetools create` then folds into the final list as
+          # bogus unknown/unknown platform entries.
+          provenance: false
           outputs: type=image,name=ghcr.io/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
           # Scoped per arch - a shared gha cache key would have the two builds
           # overwriting each other's manifest. mode=max also exports the
@@ -170,13 +205,15 @@ jobs:
     # only creates a release when one doesn't already exist for the current
     # version, so each version is released exactly once (and pushing an
     # existing version is a no-op). Notes come straight from CHANGELOG.md.
-    needs: [checks, tests]
+    # `needs: merge` so a version is only released once its image is actually
+    # published - a release must never point at an image that failed to build.
+    needs: [merge]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
+      # Shallow clone is enough: the notes come from the working-tree
+      # CHANGELOG.md and the release targets $GITHUB_SHA directly.
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - id: version
         run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"

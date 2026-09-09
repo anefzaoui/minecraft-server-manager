@@ -1,4 +1,13 @@
-@import 'tailwindcss';
+/* source(none) turns OFF Tailwind v4's automatic content detection so the scan
+   set is exactly these three roots - not "whatever files sit under the build
+   cwd". src/ counts: status and quota colours are full class literals in
+   src/web/app.js (STATUS_DOT, meterColor) and are emitted only because Tailwind
+   sees them here, so the Docker build copies src/ before `pnpm run build`. Add a
+   line if a new directory ever carries class names. */
+@import 'tailwindcss' source(none);
+@source '../../src';
+@source '../../views';
+@source '../../public/js';
 
 /* ---- The three commitments ----
    Palette: a cool-tinted "stone" neutral ramp (#0e1113 → #fafbfb) with grass green
