@@ -30,16 +30,16 @@
 
   {{#if mods.length}}
   <div class="card overflow-x-auto">
-    <table class="table-base" id="mods-table">
+    <table class="table-base table-stack" id="mods-table">
       <thead><tr>
         <th>Mod</th><th>Source</th><th>Version</th><th class="text-right">Size</th><th>Status</th><th class="text-right">Actions</th>
       </tr></thead>
       <tbody>
         {{#each mods}}
           <tr class="{{#unless enabled}}opacity-60{{/unless}}" data-mod-row data-file="{{file}}" data-name="{{name}}" data-source="{{source}}" data-enabled="{{enabled}}">
-            {{! w-full + max-w-0 so `truncate` actually engages - long mod file
+            {{! w-full + max-w-0 (sm+ only) so `truncate` actually engages - long mod file
                 names were widening the table into horizontal scroll. }}
-            <td class="w-full max-w-0">
+            <td data-th="" class="sm:w-full sm:max-w-0">
               <div class="flex items-center gap-2.5">
                 {{#if iconUrl}}
                   <img src="{{iconUrl}}" alt="" loading="lazy" data-mod-icon class="size-8 shrink-0 rounded bg-inset object-cover">
@@ -52,7 +52,7 @@
                 </div>
               </div>
             </td>
-            <td>
+            <td data-th="Source">
               {{#if (eq source 'pack')}}
                 <span class="badge badge-info">pack</span>
               {{else if (eq source 'overlay')}}
@@ -63,13 +63,13 @@
               {{/if}}
               {{#if (eq kind 'datapack')}}<div class="mt-1"><span class="badge">datapack</span></div>{{/if}}
             </td>
-            <td>
+            <td data-th="Version">
               {{default version '-'}}
               {{#if updateAvailable}}<span class="badge badge-warn ml-1" data-tip="Update available">→ {{updateAvailable}}</span>{{/if}}
               {{#if updateIgnored}}<span class="badge ml-1 text-ink-faint" data-tip="This update is ignored and won't be applied">ignored → {{updateIgnored}}</span>{{/if}}
             </td>
-            <td class="text-right text-ink-faint">{{bytes size}}</td>
-            <td>
+            <td data-th="Size" class="text-right text-ink-faint">{{bytes size}}</td>
+            <td data-th="Status">
               {{#if missing}}
                 <span class="text-xs font-medium text-danger" data-tip="File missing on disk. Reinstall it from the library.">Missing</span>
               {{else if enabled}}
@@ -78,8 +78,8 @@
                 <span class="text-xs font-medium text-ink-faint">Disabled</span>
               {{/if}}
             </td>
-            <td class="text-right">
-              <div class="inline-flex gap-1">
+            <td data-th="" class="text-right">
+              <div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
                 {{#if updateAvailable}}
                   <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="Update to {{updateAvailable}}, then restart the server">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
                   <button class="btn btn-ghost btn-sm" data-mod-ignore-update data-tip="Stop offering {{updateAvailable}}">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>

@@ -44,14 +44,14 @@
   <div class="card">
     <div class="border-b border-line p-3 font-semibold">By Category</div>
     <div class="overflow-x-auto">
-      <table class="table-base">
+      <table class="table-base table-stack">
         <tbody>
           {{#each storage.categories}}
             <tr>
-              <td><div class="font-medium">{{name}}</div><div class="break-all font-mono text-xs text-ink-faint">{{path}}</div></td>
-              <td class="w-40"><div class="meter"><div class="bg-diamond-400" style="width: {{pct size ../storage.totalUsed}}%"></div></div></td>
-              <td class="w-24 text-right text-ink-faint">{{bytes size}}</td>
-              <td class="w-10 text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open in the global file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
+              <td data-th=""><div class="font-medium">{{name}}</div><div class="break-all font-mono text-xs text-ink-faint">{{path}}</div></td>
+              <td data-th="" class="sm:w-40"><div class="meter"><div class="bg-diamond-400" style="width: {{pct size ../storage.totalUsed}}%"></div></div></td>
+              <td data-th="" class="text-ink-faint sm:w-24 sm:text-right">{{bytes size}}</td>
+              <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open in the global file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
             </tr>
           {{/each}}
         </tbody>
@@ -76,16 +76,16 @@
     <div class="card">
       <div class="border-b border-line p-3 font-semibold">Quota Status (All Servers)</div>
       <div class="overflow-x-auto">
-        <table class="table-base">
+        <table class="table-base table-stack">
           <tbody>
             {{#each servers}}
               <tr>
-                <td><a class="font-medium text-link hover:underline" href="/servers/{{id}}">{{name}}</a></td>
-                <td class="w-40"><div class="meter"><div class="{{meterColor disk.used disk.quota}}" style="width: {{pct disk.used disk.quota}}%"></div></div></td>
-                <td class="w-32 text-right text-xs text-ink-faint">{{bytes disk.used}} / {{bytes disk.quota}}</td>
+                <td data-th=""><a class="font-medium text-link hover:underline" href="/servers/{{id}}">{{name}}</a></td>
+                <td data-th="" class="sm:w-40"><div class="meter"><div class="{{meterColor disk.used disk.quota}}" style="width: {{pct disk.used disk.quota}}%"></div></div></td>
+                <td data-th="" class="text-xs text-ink-faint sm:w-32 sm:text-right">{{bytes disk.used}} / {{bytes disk.quota}}</td>
               </tr>
             {{else}}
-              <tr><td class="p-6 text-center text-ink-faint">No servers yet. Per-server quotas appear here once you create one.</td></tr>
+              <tr><td data-th="" class="p-6 text-center text-ink-faint">No servers yet. Per-server quotas appear here once you create one.</td></tr>
             {{/each}}
           </tbody>
         </table>
@@ -98,13 +98,13 @@
 <div class="card mt-6">
   <div class="border-b border-line p-3 font-semibold">Largest Files</div>
   <div class="overflow-x-auto">
-    <table class="table-base">
+    <table class="table-base table-stack">
       <tbody>
         {{#each storage.largestFiles}}
           <tr>
-            <td class="break-all font-mono text-xs">{{path}}</td>
-            <td class="w-24 text-right text-ink-faint">{{bytes size}}</td>
-            <td class="w-10 text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open containing folder in the file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
+            <td data-th="" class="break-all font-mono text-xs">{{path}}</td>
+            <td data-th="" class="text-ink-faint sm:w-24 sm:text-right">{{bytes size}}</td>
+            <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open containing folder in the file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
           </tr>
         {{/each}}
       </tbody>

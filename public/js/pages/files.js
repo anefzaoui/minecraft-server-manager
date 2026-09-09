@@ -197,7 +197,7 @@ function init(rootEl) {
             const tr = document.createElement('tr');
             tr.dataset.filesEmpty = '';
             tr.innerHTML =
-              '<td colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty. Upload files or create a folder above.</td>';
+              '<td data-th="" colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty. Upload files or create a folder above.</td>';
             tbody.appendChild(tr);
           }
         } else {

@@ -14,18 +14,18 @@
 </div>
 {{#if backups.length}}
 <div class="card overflow-x-auto">
-  <table class="table-base" id="bk-table">
+  <table class="table-base table-stack" id="bk-table">
     <thead><tr><th>Archive</th><th>Reason</th><th class="text-right">Size</th><th class="text-right">Created</th><th class="text-right">Actions</th></tr></thead>
     <tbody>
       {{#each backups}}
         <tr data-backup-row data-backup-id="{{id}}" data-file="{{file}}" data-size="{{size}}">
-          {{! w-full + max-w-0 so long archive names truncate instead of pushing
+          {{! w-full + max-w-0 (sm+ only) so long archive names truncate instead of pushing
               the Actions column into horizontal scroll. }}
-          <td class="w-full max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
-          <td><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
-          <td class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
-          <td class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
-          <td class="text-right"><div class="inline-flex gap-1">
+          <td data-th="Archive" class="sm:w-full sm:max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
+          <td data-th="Reason"><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
+          <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
+          <td data-th="Created" class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
+          <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
             {{! Restore stops the server and replaces its data - it must not scan
                 identically to the harmless Download beside it. }}
             <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="Stops the server, restores this archive, then starts it again">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>

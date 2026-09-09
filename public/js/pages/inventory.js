@@ -662,17 +662,17 @@ function init(root) {
       return;
     }
     box.innerHTML = `
-      <div class="overflow-x-auto"><table class="table-base">
+      <div class="overflow-x-auto"><table class="table-base table-stack">
         <thead><tr><th class="w-8"></th><th>Taken</th><th>Trigger</th><th class="text-right">Size</th></tr></thead>
         <tbody>
           ${snapshots
             .map(
               (s) => `
             <tr>
-              <td><input type="checkbox" class="msm-check" data-snap-file="${esc(s.file)}" aria-label="Select snapshot"></td>
-              <td class="text-sm">${esc(when(s.ts))}</td>
-              <td><span class="chip">${esc(s.reason)}</span></td>
-              <td class="text-right text-xs text-ink-faint">${(s.size / 1024).toFixed(1)} KB</td>
+              <td data-th="" class="sm:w-8"><input type="checkbox" class="msm-check" data-snap-file="${esc(s.file)}" aria-label="Select snapshot"></td>
+              <td data-th="Taken" class="text-sm">${esc(when(s.ts))}</td>
+              <td data-th="Trigger"><span class="chip">${esc(s.reason)}</span></td>
+              <td data-th="Size" class="text-right text-xs text-ink-faint">${(s.size / 1024).toFixed(1)} KB</td>
             </tr>`
             )
             .join('')}
@@ -783,25 +783,25 @@ function init(root) {
         return;
       }
       box.innerHTML = `
-        <table class="table-base">
+        <div class="overflow-x-auto"><table class="table-base table-stack">
           <thead><tr><th>Player</th><th>Where</th><th>Slot</th><th>Item</th><th class="text-right">Count</th></tr></thead>
           <tbody>
             ${results
               .map(
                 (r) => `
               <tr>
-                <td class="text-sm">${esc(r.player.name || r.player.uuid)}</td>
-                <td><span class="chip">${esc(whereLabel(r.where))}</span></td>
-                <td class="font-mono text-xs">${r.slot === null ? '-' : esc(r.slot)}</td>
-                <td class="text-sm">
+                <td data-th="Player" class="text-sm">${esc(r.player.name || r.player.uuid)}</td>
+                <td data-th="Where"><span class="chip">${esc(whereLabel(r.where))}</span></td>
+                <td data-th="Slot" class="font-mono text-xs">${r.slot === null ? '-' : esc(r.slot)}</td>
+                <td data-th="Item" class="text-sm">
                   ${r.displayName ? `<span class="text-warn">"${esc(r.displayName)}"</span> <span class="text-xs text-ink-faint">(${esc(r.id)})</span>` : `<span class="font-mono text-xs">${esc(r.id)}</span>`}
                 </td>
-                <td class="text-right font-mono text-xs">${esc(r.count)}</td>
+                <td data-th="Count" class="text-right font-mono text-xs">${esc(r.count)}</td>
               </tr>`
               )
               .join('')}
           </tbody>
-        </table>`;
+        </table></div>`;
     } catch (err) {
       fail(err);
     }

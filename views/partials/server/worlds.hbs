@@ -9,28 +9,28 @@
 
   {{#if worlds.length}}
   <div class="card overflow-x-auto">
-    <table class="table-base" id="server-worlds-table">
+    <table class="table-base table-stack" id="server-worlds-table">
       <thead><tr><th>World</th><th>Dimensions</th><th class="text-right">Size</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
       <tbody>
         {{#each worlds}}
           <tr data-world-row data-world="{{name}}" data-size="{{sizeBytes}}" data-active="{{active}}">
-            <td class="w-full max-w-0">
+            <td data-th="" class="sm:w-full sm:max-w-0">
               <div class="truncate font-medium" title="{{name}}">{{name}}</div>
               {{#if seed}}<div class="text-xs text-ink-faint">seed {{seed}}</div>{{/if}}
             </td>
-            <td class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
-            <td class="whitespace-nowrap text-right text-ink-faint">{{bytes sizeBytes}}</td>
+            <td data-th="Dimensions" class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
+            <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes sizeBytes}}</td>
             {{! Status shows STATE only (both branches same height); the
                 Activate control lives with the other actions - mixed badge
                 and button here made row heights visibly alternate. }}
-            <td>
+            <td data-th="Status">
               {{#if active}}
                 <span class="badge badge-ok">active</span>
               {{else}}
                 <span class="badge">inactive</span>
               {{/if}}
             </td>
-            <td class="text-right"><div class="inline-flex gap-1">
+            <td data-th="" class="text-right"><div class="flex flex-wrap justify-end gap-1">
               {{#unless active}}
                 <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Make this the active world. The server must be stopped.">{{{icon 'play' 'size-3.5'}}} Activate</button>
               {{/unless}}

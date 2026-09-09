@@ -38,22 +38,22 @@
 
   {{#if chatCommands.length}}
   <div class="card overflow-x-auto">
-    <table class="table-base">
+    <table class="table-base table-stack">
       <thead><tr>
         <th>Command</th><th>Action</th><th>Permission</th><th>Cooldown</th><th class="text-right">Uses</th><th>Enabled</th><th class="text-right">Actions</th>
       </tr></thead>
       <tbody>
         {{#each chatCommands}}
           <tr data-cc-row data-id="{{id}}">
-            <td>
+            <td data-th="Command">
               <div class="font-mono font-medium">{{../chatPrefix}}{{trigger}}</div>
-              {{#if description}}<div class="max-w-56 truncate text-xs text-ink-faint" data-tip="{{description}}">{{description}}</div>{{/if}}
+              {{#if description}}<div class="truncate text-xs text-ink-faint sm:max-w-56" data-tip="{{description}}">{{description}}</div>{{/if}}
             </td>
-            <td>
+            <td data-th="Action">
               <span class="chip">{{action}}</span>
-              <div class="mt-0.5 max-w-56 truncate text-xs text-ink-faint" data-tip="{{actionSummary}}">{{actionSummary}}</div>
+              <div class="mt-0.5 truncate text-xs text-ink-faint sm:max-w-56" data-tip="{{actionSummary}}">{{actionSummary}}</div>
             </td>
-            <td>
+            <td data-th="Permission">
               {{#if (eq permission 'ops')}}
                 <span class="badge badge-danger">ops only</span>
               {{else if (eq permission 'whitelist')}}
@@ -62,16 +62,16 @@
                 <span class="badge badge-ok">everyone</span>
               {{/if}}
             </td>
-            <td class="text-sm text-ink-soft">{{cooldownLabel}}</td>
-            <td class="text-right text-sm tabular-nums text-ink-soft">
+            <td data-th="Cooldown" class="text-sm text-ink-soft">{{cooldownLabel}}</td>
+            <td data-th="Uses" class="text-right text-sm tabular-nums text-ink-soft">
               <span data-cc-uses>{{uses}}</span>
               {{#if lastUsed}}<div class="text-[11px] text-ink-faint">last {{lastUsed}}</div>{{/if}}
             </td>
-            <td>
+            <td data-th="Enabled">
               <label class="inline-flex cursor-pointer"><span class="msm-toggle"><input type="checkbox" data-cc-toggle {{#if enabled}}checked{{/if}}><span></span></span></label>
             </td>
-            <td class="text-right">
-              <div class="inline-flex gap-1">
+            <td data-th="" class="text-right">
+              <div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
                 <button class="btn btn-ghost btn-sm" data-cc-test data-tip="Run now as a named player (permission and cooldown checks are skipped)">{{{icon 'play' 'size-3.5'}}}</button>
                 <button class="btn btn-ghost btn-sm" data-cc-edit data-tip="Edit command">{{{icon 'pencil' 'size-3.5'}}}</button>
                 <button class="btn btn-ghost btn-sm text-danger" data-cc-delete data-tip="Delete command" aria-label="Delete {{trigger}}">{{{icon 'trash-2' 'size-3.5'}}}</button>

@@ -857,20 +857,22 @@ function init(root) {
     const tr = document.createElement('tr');
     tr.dataset.banipRow = ip;
     const cells = [
-      ['font-mono', ip],
-      ['text-xs text-ink-soft', player || '-'],
-      ['text-xs text-ink-soft', reason || '-'],
-      ['text-xs text-ink-faint', 'just now'],
-      ['text-xs text-ink-faint', expires && expires !== 'forever' ? expires : 'Permanent'],
+      ['IP', 'font-mono', ip],
+      ['Player', 'text-xs text-ink-soft', player || '-'],
+      ['Reason', 'text-xs text-ink-soft', reason || '-'],
+      ['Date', 'text-xs text-ink-faint', 'just now'],
+      ['Expires', 'text-xs text-ink-faint', expires && expires !== 'forever' ? expires : 'Permanent'],
     ];
-    for (const [cls, text] of cells) {
+    for (const [th, cls, text] of cells) {
       const td = document.createElement('td');
       td.className = cls;
+      td.dataset.th = th;
       td.textContent = text;
       tr.appendChild(td);
     }
     const actions = document.createElement('td');
     actions.className = 'text-right';
+    actions.dataset.th = '';
     actions.innerHTML = `<button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-tip="Remove this IP ban">
       <svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
     actions.querySelector('button').dataset.ip = ip;

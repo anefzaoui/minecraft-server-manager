@@ -29,7 +29,7 @@
 
   {{#if players.length}}
   <div class="card overflow-x-auto">
-    <table class="table-base">
+    <table class="table-base table-stack">
       <thead><tr>
         <th>Player</th><th>Status</th><th>Roles</th><th>Details</th><th class="text-right">Actions</th>
       </tr></thead>
@@ -42,7 +42,7 @@
               data-op="{{#if op}}1{{else}}0{{/if}}"
               data-banned="{{#if banned}}1{{else}}0{{/if}}"
               data-last-seen="{{lastSeen}}">
-            <td>
+            <td data-th="">
               <a href="/servers/{{../server.id}}/players/{{name}}" class="group flex items-center gap-2.5" data-tip="Open {{name}}'s page: roles, teleport, and inventory">
                 <span class="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded bg-inset text-xs font-bold">
                   {{#if bedrock}}{{{icon 'gamepad-2' 'size-4'}}}{{else}}{{name.[0]}}{{/if}}
@@ -57,7 +57,7 @@
                 </div>
               </a>
             </td>
-            <td data-player-status>
+            <td data-th="Status" data-player-status>
               {{#if online}}
                 <span class="flex items-center gap-1.5 text-xs font-medium text-ok"><span class="status-dot relative bg-grass-500 pulse"></span> Online</span>
               {{else if banned}}
@@ -76,7 +76,7 @@
             </td>
             {{! Off-state chips keep full opacity - dimming reads as disabled,
                 and genuinely disabled composers already use opacity for that. }}
-            <td>
+            <td data-th="Roles">
               <div class="flex flex-wrap gap-1.5">
                 <button class="chip {{#if whitelisted}}border-grass-700 bg-grass-500/15 text-ok{{/if}}"
                         data-role-toggle="whitelist" data-name="{{name}}" data-on="{{#if whitelisted}}1{{else}}0{{/if}}"
@@ -95,17 +95,17 @@
                 </button>
               </div>
             </td>
-            <td class="text-xs text-ink-faint" data-ban-details>
+            <td data-th="Details" class="text-xs text-ink-faint" data-ban-details>
               {{#if banned}}
-                <div class="max-w-56 truncate text-danger" title="{{default banReason 'No reason recorded'}}">{{default banReason 'No reason recorded'}}</div>
+                <div class="truncate text-danger sm:max-w-56" title="{{default banReason 'No reason recorded'}}">{{default banReason 'No reason recorded'}}</div>
                 {{#if banDate}}<div class="mt-0.5">{{banDate}}{{#if banSource}} · {{banSource}}{{/if}}</div>{{/if}}
                 {{#if banExpires}}<div class="mt-0.5 text-warn">expires {{banExpires}}</div>{{/if}}
               {{else}}
                 -
               {{/if}}
             </td>
-            <td class="text-right">
-              <div class="inline-flex gap-1">
+            <td data-th="" class="text-right">
+              <div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
                 {{#if online}}
                   <button class="btn btn-ghost btn-sm" data-act="kick" data-name="{{name}}" data-tip="Kick with a message">{{{icon 'log-out' 'size-3.5'}}}</button>
                 {{/if}}
@@ -157,17 +157,17 @@
     </div>
     {{! Both branches stay in the DOM so bans/pardons can swap them in place. }}
     <div class="overflow-x-auto {{#unless bannedIps.length}}hidden{{/unless}}" id="banip-table">
-      <table class="table-base">
+      <table class="table-base table-stack">
         <thead><tr><th>IP</th><th>Player</th><th>Reason</th><th>Date</th><th>Expires</th><th class="text-right">Actions</th></tr></thead>
         <tbody id="banip-rows">
           {{#each bannedIps}}
             <tr data-banip-row="{{ip}}">
-              <td class="font-mono">{{ip}}</td>
-              <td class="text-xs text-ink-soft">{{default player '-'}}</td>
-              <td class="text-xs text-ink-soft">{{default reason '-'}}</td>
-              <td class="text-xs text-ink-faint">{{default created '-'}}</td>
-              <td class="text-xs text-ink-faint">{{#if (eq expires 'forever')}}Permanent{{else}}{{expires}}{{/if}}</td>
-              <td class="text-right">
+              <td data-th="IP" class="font-mono">{{ip}}</td>
+              <td data-th="Player" class="text-xs text-ink-soft">{{default player '-'}}</td>
+              <td data-th="Reason" class="text-xs text-ink-soft">{{default reason '-'}}</td>
+              <td data-th="Date" class="text-xs text-ink-faint">{{default created '-'}}</td>
+              <td data-th="Expires" class="text-xs text-ink-faint">{{#if (eq expires 'forever')}}Permanent{{else}}{{expires}}{{/if}}</td>
+              <td data-th="" class="text-right">
                 <button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban">{{{icon 'x' 'size-3.5'}}}</button>
               </td>
             </tr>
