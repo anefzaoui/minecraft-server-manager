@@ -729,7 +729,8 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
 
     function render(mods) {
       if (!mods.length) {
-        listEl.innerHTML = '<p class="notice notice-ok text-ok">All resolved. Recreate the server to apply.</p>';
+        listEl.innerHTML =
+          '<div class="notice notice-ok"><svg class="icon size-4 mt-0.5 shrink-0 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div>All resolved. Recreate the server to apply.</div></div>';
         return;
       }
       listEl.innerHTML = '';

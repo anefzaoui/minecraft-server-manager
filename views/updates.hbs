@@ -46,8 +46,9 @@
   </table>
 </div>
 
-<div class="mt-4 rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">
-  {{{icon 'info' 'size-4'}}} Your custom mods are always kept across pack updates. If a pack update changes the Minecraft or loader version, each custom mod is checked for compatibility, with a one-click "update this mod too" when a matching build exists. <b>Ignore</b> hides a specific version from this page and the sidebar count; a newer build than the one you ignored comes back on its own.
+<div class="notice mt-4 text-xs">
+  {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
+  <div>Your custom mods are always kept across pack updates. If a pack update changes the Minecraft or loader version, each custom mod is checked for compatibility, with a one-click "update this mod too" when a matching build exists. <b class="text-ink">Ignore</b> hides a specific version from this page and the sidebar count; a newer build than the one you ignored comes back on its own.</div>
 </div>
 {{else}}
   {{> empty-state iconName='circle-check' title='Everything Is Up to Date' message='No pending updates across your servers. Run a check to ask Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases and the Minecraft/loader/image registries for anything new.'}}

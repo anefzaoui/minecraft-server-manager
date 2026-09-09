@@ -37,8 +37,9 @@
     </table>
   </div>
 
-  <div class="mt-4 max-w-prose rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">
-    {{{icon 'lightbulb' 'size-4'}}} Installing a world into a server offers <b class="text-ink-soft">replace</b> (the current world is backed up first) or <b class="text-ink-soft">install alongside</b> (activate it later). Copying between servers works even while the source is running: the panel takes a consistent snapshot first.
+  <div class="notice mt-4 max-w-prose text-xs">
+    {{{icon 'lightbulb' 'size-4 mt-0.5 shrink-0'}}}
+    <div>Installing a world into a server offers <b class="text-ink">replace</b> (the current world is backed up first) or <b class="text-ink">install alongside</b> (activate it later). Copying between servers works even while the source is running: the panel takes a consistent snapshot first.</div>
   </div>
   {{else}}
     {{> empty-state iconName='earth' title='No Worlds in the Library Yet' message='Upload a world archive or save one from a running server with the buttons above. Installs, copies, and downloads all start from here.'}}

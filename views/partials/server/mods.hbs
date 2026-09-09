@@ -21,10 +21,11 @@
   <div id="mods-pending" class="mb-4 hidden"></div>
 
   {{#if server.pack}}
-    <div class="mb-4 max-w-prose rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
-      <b class="text-link">Pack-managed</b> mods are installed by {{platformName server.pack.platform}} ({{server.pack.name}} {{server.pack.version}}).
+    <div class="notice notice-info mb-4 max-w-prose text-xs">
+      {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
+      <div><b class="text-link">Pack-managed</b> mods are installed by {{platformName server.pack.platform}} ({{server.pack.name}} {{server.pack.version}}).
       Disabling one takes effect on the next restart. <b class="text-ok">Custom</b> mods are ones you added yourself.
-      They live in the shared library, survive pack updates, and can be turned on or off instantly.
+      They live in the shared library, survive pack updates, and can be turned on or off instantly.</div>
     </div>
   {{/if}}
 

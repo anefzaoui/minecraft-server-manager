@@ -43,7 +43,7 @@
       </div>
     </div>
     {{#if player.banned}}
-      <div class="notice notice-danger mt-3 text-xs text-danger" data-ban-banner>Banned: {{default player.banReason 'No reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}{{#if player.banExpires}} · expires {{player.banExpires}}{{/if}}</div>
+      <div class="notice notice-danger mt-3 text-xs" data-ban-banner>{{{icon 'ban' 'size-4 mt-0.5 shrink-0 text-danger'}}}<div><b class="text-danger">Banned:</b> {{default player.banReason 'No reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}{{#if player.banExpires}} · expires {{player.banExpires}}{{/if}}</div></div>
     {{/if}}
   </div>
 

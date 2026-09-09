@@ -79,8 +79,13 @@ function init(root) {
     if (reason === false) return;
     const banner = document.createElement('div');
     banner.dataset.banBanner = '';
-    banner.className = 'notice notice-danger mt-3 text-xs text-danger';
-    banner.textContent = `Banned: ${reason || 'No reason recorded'}${expires ? ` · expires ${expires}` : ''}.`;
+    banner.className = 'notice notice-danger mt-3 text-xs';
+    const text = document.createElement('div');
+    text.innerHTML = '<b class="text-danger">Banned:</b> ';
+    text.append(`${reason || 'No reason recorded'}${expires ? ` · expires ${expires}` : ''}.`);
+    banner.innerHTML =
+      '<svg class="icon size-4 mt-0.5 shrink-0 text-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>';
+    banner.appendChild(text);
     root.querySelector('.card')?.appendChild(banner);
   }
   function setOffline() {

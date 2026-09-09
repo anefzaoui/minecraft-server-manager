@@ -97,7 +97,7 @@
           </div>
           <p class="help">The hard limit Docker enforces. Keep it 25% to 50% above the Java heap: Java needs extra room beyond the heap, and if the server reaches this limit it is stopped for running out of memory.</p>
         </div>
-        <div class="rounded-md border p-2.5 text-xs" id="st-headroom" aria-live="polite"></div>
+        <div class="rounded-md border border-line p-2.5 text-xs" id="st-headroom" aria-live="polite"></div>
         <div>
           <label class="label" for="st-cpu">CPU limit</label>
           <div class="flex items-center gap-3">
@@ -197,8 +197,9 @@
 
   {{#if advancedSections.length}}
   <div class="space-y-3 lg:col-span-2" id="st-advanced">
-    <div class="rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
-      {{{icon 'info' 'size-3.5'}}} Every environment variable this server's image supports, taken straight from its documentation. It's the same list as the create wizard's Advanced mode, pre-filled with what's currently set. Leave a field empty to use that variable's default; only values you change are sent. Takes effect after the container is rebuilt.
+    <div class="notice notice-info text-xs">
+      {{{icon 'info' 'size-3.5 mt-0.5 shrink-0'}}}
+      <div>Every environment variable this server's image supports, taken straight from its documentation. It's the same list as the create wizard's Advanced mode, pre-filled with what's currently set. Leave a field empty to use that variable's default; only values you change are sent. Takes effect after the container is rebuilt.</div>
     </div>
     {{#each advancedSections}}
       <details class="card group">
