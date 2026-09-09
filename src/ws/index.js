@@ -116,7 +116,7 @@ async function handleConsole(ws, serverId, user) {
         serverId,
         actor: user.username,
         type: 'rcon',
-        summary: `RCON: ${redact(command)}`,
+        summary: `RCON: ${redact(command)}.`,
         details: { output: output.trim().slice(0, 2000) },
       });
     } catch (err) {

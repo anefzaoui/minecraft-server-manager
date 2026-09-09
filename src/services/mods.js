@@ -786,7 +786,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: enabled ? 'mod-enabled' : 'mod-disabled',
-      summary: `${file} ${enabled ? 'enabled' : 'disabled'} (instant)`,
+      summary: `${file} ${enabled ? 'enabled' : 'disabled'} (instant).`,
     });
     return { applied: 'instant' };
   }
@@ -849,7 +849,7 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'mod-removed',
-    summary: `Removed ${file} (${(freed / 1024 / 1024).toFixed(1)} MB freed)`,
+    summary: `Removed ${file} (${(freed / 1024 / 1024).toFixed(1)} MB freed).`,
   });
   logger.info('Removed content from a server.', { serverId, actor, file, freedBytes: freed });
   return { freedBytes: freed };
@@ -888,7 +888,7 @@ function setIgnoredUpdate(serverId, { file, contentId }, { ignore, actor = 'syst
       serverId,
       actor,
       type: 'mod-update-ignored',
-      summary: `Update ignored for ${row.name}: ${check.latest_name} will not be offered`,
+      summary: `Update ignored for ${row.name}: ${check.latest_name} will not be offered.`,
     });
     return { ignored: check.latest_name };
   }
@@ -898,7 +898,7 @@ function setIgnoredUpdate(serverId, { file, contentId }, { ignore, actor = 'syst
     serverId,
     actor,
     type: 'mod-update-unignored',
-    summary: `Update no longer ignored for ${row.name}`,
+    summary: `Update no longer ignored for ${row.name}.`,
   });
   return { ignored: null };
 }
@@ -973,7 +973,7 @@ async function reapplyOverlay(serverId, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'overlay-reapplied',
-      summary: `Custom mods re-applied: ${restored} file(s) restored after pack operation`,
+      summary: `Custom mods re-applied: ${restored} file(s) restored after pack operation.`,
     });
   }
   return { restored };
@@ -1171,7 +1171,7 @@ async function installLocalContent(
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Uploaded ${targetKind} installed: ${lib.name}`,
+    summary: `Uploaded ${targetKind} installed: ${lib.name}.`,
     details: { filename: installed },
   });
   indexer.scan().catch(onRescanFailed);

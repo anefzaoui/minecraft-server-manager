@@ -127,7 +127,7 @@ physically press on `:active`).
 
 **Mobile-first — design the narrow layout first, then add breakpoint prefixes to widen it.**
 
-- Bare utilities are the phone layout; `sm:` / `md:` / `lg:` / `xl:` only *add* to it. Never write a
+- Bare utilities are the phone layout; `sm:` / `md:` / `lg:` / `xl:` only _add_ to it. Never write a
   desktop layout that `max-*:` / `sm:hidden` peels back.
 - Every data table is a `.table-base` and gets `.table-stack` so rows collapse into "Label: value"
   cards below `sm` (label from each `<td data-th="…">`). Keep the `overflow-x-auto` wrapper for the
@@ -145,7 +145,7 @@ physically press on `:active`).
   (`grass-500`, `stone-700`) at call sites. Dark is the default theme; light is opt-in via
   `<html data-theme="light">`, and only semantic tokens swap.
 - **Fixed component classes** (in `@layer components`): `.btn` + `.btn-primary` / `.btn-danger` /
-  `.btn-ghost` / `.btn-sm`; `.card`; `.badge` + `.badge-ok/-warn/-danger/-info` (the *only* badge
+  `.btn-ghost` / `.btn-sm`; `.card`; `.badge` + `.badge-ok/-warn/-danger/-info` (the _only_ badge
   colorways); `.chip`; `.notice` + `.notice-ok/-warn/-danger/-info` (the one inline callout — no
   ad-hoc border/background pairs). Shared view partials: `page-header`, `brand-lockup`,
   `empty-state`, `settings/card`, `settings/toggle-row`.
@@ -168,7 +168,7 @@ validation and error messages, and the docs — follows one house style (full de
   non-progress `openModal` titles.
 - **ALL CAPS:** only `page-header heading=`.
 - **Sentence case (a full sentence):** everything else — help, hints, tooltips, placeholders,
-  empty-state bodies, toasts, confirm-dialog bodies *and* titles, event and history summaries.
+  empty-state bodies, toasts, confirm-dialog bodies _and_ titles, event and history summaries.
 - Proper nouns stay capitalised in any casing: Minecraft, Mojang, Docker, Java, RCON, Modrinth,
   CurseForge, BlueMap, Discord, Fabric/Forge/NeoForge/Quilt/Paper/Purpur, Bedrock, Geyser, Node.js,
   pnpm. Capitalise an interpolated `${loader}` through the `capitalize()` helper.
@@ -177,7 +177,13 @@ validation and error messages, and the docs — follows one house style (full de
 
 - Every sentence-shaped string ends in `.`, `!`, or `?`. Bare fragments, single-word labels, and
   short example placeholders do not.
-- `runTask` / progress titles are sentence-case gerunds ending in `…` ("Creating backup…").
+- **`recordEvent({ summary })` history summaries always end in a period** — including the terse
+  `Label: detail` lines ("Folder created: plugins/x.jar.", "Server restarted.").
+- **In-progress status lines end in `…`, never a period.** This covers `runTask` / progress modal
+  titles _and_ every `task.step(...)` / `onProgress(...)` / `onStep(...)` label — sentence-case
+  gerunds ("Creating backup…", "Querying Modrinth, CurseForge, …"). A step that reports an outcome
+  instead of an ongoing action is a sentence and takes a period ("Shrink skipped because the server
+  was running.").
 - **No `" - "` as a sentence dash, and no `–` or `—`.** Split into two sentences, use a colon, or a
   parenthetical. Hyphenated compounds are fine.
 - Straight quotes everywhere, **except** the field catalog (`src/config/field-catalog/`), which uses

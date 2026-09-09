@@ -180,7 +180,7 @@ async function shrinkWorldImpl(serverId, opts = {}) {
         serverId,
         actor,
         type: 'world-shrunk',
-        summary: `Shrank "${worldName}": removed ${chunksRemoved} rarely-visited chunk(s), freed ${humanBytes(bytesFreed)}`,
+        summary: `Shrank "${worldName}": removed ${chunksRemoved} rarely-visited chunk(s), freed ${humanBytes(bytesFreed)}.`,
         details: {
           worldName,
           chunksRemoved,

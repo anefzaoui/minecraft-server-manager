@@ -152,7 +152,7 @@ function parseHsErr(text) {
   return {
     description: '',
     exception: 'JVM fatal error',
-    summary: 'JVM fatal error' + (problem ? `: ${problem}` : ''),
+    summary: 'JVM fatal error' + (problem ? `: ${problem}.` : '.'),
     suspects: [],
   };
 }
@@ -236,7 +236,7 @@ async function scanServer(serverId) {
       serverId,
       type: 'crash-report',
       actor: 'system',
-      summary: `New crash report: ${filename}. ${parsed.exception || parsed.summary}`,
+      summary: `New crash report: ${filename}. ${parsed.exception || parsed.summary}.`,
       details: { crashId: id },
     });
     db.run('UPDATE crash_reports SET event_id = ? WHERE id = ?', eventId, id);
@@ -355,7 +355,7 @@ async function shareCrash(crashId, { actor = 'system' } = {}) {
     serverId: row.server_id,
     actor,
     type: 'crash-shared',
-    summary: `Crash report ${row.filename} shared to mclo.gs: ${paste.url}`,
+    summary: `Crash report ${row.filename} shared to mclo.gs: ${paste.url}.`,
     details: { crashId, pasteUrl: paste.url },
   });
   logger.info('Shared a crash report to mclo.gs.', { serverId: row.server_id, crashId, actor });
@@ -397,7 +397,7 @@ function deleteCrash(crashId, { actor = 'system' } = {}) {
     serverId: row.server_id,
     type: 'crash-report-deleted',
     actor,
-    summary: `Deleted crash report: ${row.filename}`,
+    summary: `Deleted crash report: ${row.filename}.`,
     details: { crashId, filename: row.filename, freedBytes: row.size_bytes },
   });
   return { freedBytes: row.size_bytes };

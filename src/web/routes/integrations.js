@@ -77,7 +77,7 @@ router.post(
       serverId: server.id,
       actor: req.user ? req.user.username : 'admin',
       type: 'integration-changed',
-      summary: `Discord webhook ${config.enabled ? 'enabled' : 'disabled'}${input.webhookUrl !== undefined ? ' (URL updated)' : ''}`,
+      summary: `Discord webhook ${config.enabled ? 'enabled' : 'disabled'}${input.webhookUrl !== undefined ? ' (URL updated)' : ''}.`,
     });
     res.json({ ok: true, discord: config });
   })
@@ -139,7 +139,7 @@ router.post(
       serverId: server.id,
       actor: req.user ? req.user.username : 'admin',
       type: 'integration-changed',
-      summary: `Public status page ${config.enabled ? `enabled at /status/${config.slug}` : 'disabled'}`,
+      summary: `Public status page ${config.enabled ? `enabled at /status/${config.slug}` : 'disabled'}.`,
     });
     res.json({ ok: true, statusPage: config });
   })

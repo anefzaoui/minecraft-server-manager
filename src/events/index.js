@@ -207,7 +207,7 @@ async function pruneEvents(days, { actor = 'system' } = {}) {
     recordEvent({
       actor,
       type: 'events-pruned',
-      summary: `Event history pruned: ${removedEvents} event(s) older than ${days} days removed`,
+      summary: `Event history pruned: ${removedEvents} event(s) older than ${days} days removed.`,
     });
   }
   return { removed: removedEvents, excerpts: removedExcerpts };

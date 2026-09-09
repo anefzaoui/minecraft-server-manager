@@ -176,7 +176,7 @@ async function handleEvent(evt) {
   if (intentionalStop) {
     db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", serverId);
     if (!stopRequested) {
-      recordEvent({ serverId, type: 'stopped', summary: `Server stopped (exit code ${exitCode})` });
+      recordEvent({ serverId, type: 'stopped', summary: `Server stopped (exit code ${exitCode}).` });
     }
     return;
   }
@@ -203,7 +203,7 @@ async function handleEvent(evt) {
       ? `Server stopped unexpectedly (exit code ${exitCode}). Not requested by the panel.${server.auto_restart ? ' Restarting.' : ''}`
       : diagnosis
         ? `Server crashed: ${diagnosis.summary}`
-        : `Server crashed (exit code ${exitCode})`,
+        : `Server crashed (exit code ${exitCode}).`,
     details: {
       exitCode,
       duringStopWindow: Boolean(stopRequested),
@@ -254,7 +254,7 @@ function armRestart(serverId, { kind }) {
       recordEvent({
         serverId,
         type: 'crash-loop',
-        summary: `Auto-restart suspended: ${recentCrashes} unexpected exits within ${CRASH_WINDOW_MINUTES} minutes`,
+        summary: `Auto-restart suspended: ${recentCrashes} unexpected exits within ${CRASH_WINDOW_MINUTES} minutes.`,
       });
     }
     return;
@@ -273,7 +273,7 @@ function armRestart(serverId, { kind }) {
         recordEvent({
           serverId,
           type: 'auto-restarted',
-          summary: `Auto-restart attempt ${recentCrashes}/${MAX_RAPID_CRASHES} after ${kind === 'unexpected-stop' ? 'an unexpected stop' : 'a crash'}`,
+          summary: `Auto-restart attempt ${recentCrashes}/${MAX_RAPID_CRASHES} after ${kind === 'unexpected-stop' ? 'an unexpected stop' : 'a crash'}.`,
         });
       }
     } catch (err) {

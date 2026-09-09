@@ -597,7 +597,7 @@ router.post(
       eventsService.recordEvent({
         actor: req.user.username,
         type: 'config-changed',
-        summary: 'Public API enabled (first token created)',
+        summary: 'Public API enabled (first token created).',
       });
       logger.info('Enabled the public API alongside a new token.', { actor: req.user.username });
     }
@@ -624,7 +624,7 @@ router.post(
     eventsService.recordEvent({
       actor: req.user.username,
       type: 'config-changed',
-      summary: `Public API ${now ? 'enabled' : 'disabled'}`,
+      summary: `Public API ${now ? 'enabled' : 'disabled'}.`,
     });
     logger.info('Toggled the public API.', { enabled: now, actor: req.user.username });
     res.json({ ok: true, enabled: now });
@@ -686,15 +686,15 @@ router.post(
 );
 
 const UPGRADE_STEP_LABELS = {
-  resolving: 'Resolving target version',
-  'backing-up': 'Creating pre-update backup',
-  stopping: 'Stopping server',
-  applying: 'Re-pinning pack version',
-  recreating: 'Recreating container',
+  resolving: 'Resolving target version…',
+  'backing-up': 'Creating pre-update backup…',
+  stopping: 'Stopping server…',
+  applying: 'Re-pinning pack version…',
+  recreating: 'Recreating container…',
   // No fixed minutes in the label: the window is per-platform (30 min for
   // GTNH, 20 for CurseForge/Modrinth, 10 otherwise - see upgrade.js).
-  monitoring: 'Starting & monitoring the new version',
-  overlay: 'Re-applying custom overlay mods',
+  monitoring: 'Starting & monitoring the new version…',
+  overlay: 'Re-applying custom overlay mods…',
 };
 
 // Long operation - returns {ok, taskId}; poll /api/tasks/:id (client: runTask).
@@ -757,7 +757,7 @@ router.post(
       `Rolling back pack on ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
-        t.step(backupId ? 'Restoring pre-update backup & re-pinning' : 'Re-pinning previous version');
+        t.step(backupId ? 'Restoring pre-update backup & re-pinning…' : 'Re-pinning previous version…');
         return upgrade.rollbackPack(server.id, { backupId: backupId || undefined, actor });
       }
     );
@@ -985,10 +985,10 @@ router.post(
     requireAdminForOverrides(req, input);
     const actor = req.user.username;
     const taskId = tasks.run(`Creating ${input.name} from a ${input.platform} pack`, { actor }, async (t) => {
-      t.step('Resolving pack version (pinned, never "latest")');
+      t.step('Resolving pack version (pinned, never "latest")…');
       const resolved = await packs.resolvePack(input.platform, input.ref, { versionId: input.versionId });
       const type = packs.packEnv(resolved).TYPE;
-      t.step('Creating server');
+      t.step('Creating server…');
       const server = await servers.createServer(
         {
           name: input.name,
@@ -1013,10 +1013,10 @@ router.post(
         // re-pull the correct one when the applyPack below flags a recreate.
         { actor, start: false, onProgress: (s) => t.step(s), javaTagHint: resolved.javaTag }
       );
-      t.step(`Pinning ${resolved.projectName} @ ${resolved.versionName}`);
+      t.step(`Pinning ${resolved.projectName} @ ${resolved.versionName}…`);
       // force: fresh server - there is no world yet to version-guard.
       await packs.applyPack(server.id, resolved, { actor, force: true });
-      t.step('Starting the server (the pack downloads and installs on first boot)');
+      t.step('Starting the server (the pack downloads and installs on first boot)…');
       await servers.startServer(server.id, { actor });
       return {
         serverId: server.id,
@@ -1035,7 +1035,7 @@ router.post(
     const actor = req.user.username;
     const taskId = tasks.run('Checking for updates', { actor }, async (t) => {
       t.step(
-        'Querying Modrinth, CurseForge, Hangar, SpigotMC and GitHub for mods/plugins, plus the Minecraft, loader-build and Docker-image registries'
+        'Querying Modrinth, CurseForge, Hangar, SpigotMC and GitHub for mods/plugins, plus the Minecraft, loader-build and Docker-image registries…'
       );
       const findings = await checker.checkAll({ actor });
       return { findings };
@@ -1087,7 +1087,7 @@ router.post(
       `Checking updates for ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
-        t.step('Querying Modrinth, CurseForge, Hangar, SpigotMC, GitHub and the Minecraft/loader/image registries');
+        t.step('Querying Modrinth, CurseForge, Hangar, SpigotMC, GitHub and the Minecraft/loader/image registries…');
         const findings = await checker.checkAll({ actor });
         return { findings: findings.filter((f) => f.server === server.display_name) };
       }
@@ -1109,7 +1109,7 @@ router.post(
       `Updating container image on ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
-        t.step('Recreating container with the newer image');
+        t.step('Recreating container with the newer image…');
         await servers.recreateServer(server.id, { actor });
         return { ok: true };
       }
@@ -1161,7 +1161,7 @@ router.post(
         const versionChanging = targetVersion && targetVersion !== server.mc_version;
         let backupId = null;
         if (versionChanging) {
-          t.step('Creating pre-update backup');
+          t.step('Creating pre-update backup…');
           const backup = await backups.createBackup(server.id, {
             reason: 'pre-update',
             actor,
@@ -1170,12 +1170,12 @@ router.post(
           });
           backupId = backup.id;
         }
-        t.step('Applying new version');
+        t.step('Applying new version…');
         const changes = {};
         if (versionChanging) changes.mcVersion = targetVersion;
         if (targetLoaderBuild && envKey) changes.env = { ...server.env, [envKey]: targetLoaderBuild };
         servers.updateServer(server.id, changes, { actor });
-        t.step('Recreating container');
+        t.step('Recreating container…');
         await servers.recreateServer(server.id, { actor });
         return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
       }
@@ -1289,7 +1289,7 @@ router.post(
     const note = String(req.body?.note || '');
     const shrinkAfter = Boolean(req.body?.shrink);
     const taskId = tasks.run(`Backing up ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
-      t.step('Snapshotting server directory (save-off → save-all → zip → save-on)');
+      t.step('Snapshotting server directory (save-off → save-all → zip → save-on)…');
       const backup = await backups.createBackup(server.id, { reason: 'manual', actor, note, shrinkAfter });
       return { id: backup.id, filename: backup.filename, size: backup.size_bytes };
     });
@@ -1309,7 +1309,7 @@ router.post(
       `Restoring backup on ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
-        t.step('Stopping server & taking a safety backup');
+        t.step('Stopping server & taking a safety backup…');
         await backups.restoreBackup(server.id, backupId, { actor });
         return { ok: true };
       }
@@ -1538,13 +1538,13 @@ router.post(
         let wasRunning = false;
         if (autoStopStart && (await worldShrink.isLive(server.id))) {
           wasRunning = true;
-          t.step('Stopping the server');
+          t.step('Stopping the server…');
           await servers.stopServer(server.id, { actor });
         }
-        t.step('Scanning region files for rarely-visited chunks');
+        t.step('Scanning region files for rarely-visited chunks…');
         const result = await worldShrink.shrinkWorld(server.id, shrinkOpts);
         if (wasRunning) {
-          t.step('Starting the server back up');
+          t.step('Starting the server back up…');
           await servers.startServer(server.id, { actor });
         }
         return { ...result, restarted: wasRunning };
@@ -1757,7 +1757,7 @@ router.post(
       const updated = [];
       const failed = [];
       for (const row of rows) {
-        t.step(`Updating ${row.name}`);
+        t.step(`Updating ${row.name}…`);
         try {
           const r = await mods.applyOverlayUpdate(server.id, { contentId: row.id }, { actor });
           updated.push({ name: r.name, version: r.version });
@@ -2150,7 +2150,7 @@ router.post('/servers/:id/icon', iconUpload.single('icon'), async (req, res, nex
       serverId: server.id,
       actor: req.user.username,
       type: 'config-changed',
-      summary: 'Custom server icon uploaded',
+      summary: 'Custom server icon uploaded.',
     });
     logger.info('Uploaded a custom server icon.', { serverId: server.id, actor: req.user.username });
     res.json({ ok: true, icon: `custom:${filename}`, url: `/api/icons/custom/${filename}` });
@@ -2240,8 +2240,8 @@ router.post(
       actor: req.user.username,
       type: 'login-unlocked',
       summary: all
-        ? `${req.user.username} cleared all sign-in lockouts`
-        : `${req.user.username} cleared the sign-in lockout for "${username}"`,
+        ? `${req.user.username} cleared all sign-in lockouts.`
+        : `${req.user.username} cleared the sign-in lockout for "${username}".`,
       details: { username: username || null, ip: ip || null, all: Boolean(all), removed },
     });
     res.json({ ok: true, removed, lockouts: authMw.listActiveLockouts() });
@@ -2486,7 +2486,7 @@ router.post(
       const env = { ...(input.env || {}) };
       const envKey = loaderVersions.envKeyFor(input.loader);
       if (input.loaderVersion && envKey) env[envKey] = input.loaderVersion;
-      t.step('Creating server');
+      t.step('Creating server…');
       const server = await servers.createServer(
         {
           name: input.name,
@@ -2530,7 +2530,7 @@ router.post(
                 ? `${base}?version=${m.versionId}`
                 : `${base}/version/${m.versionId}`
           : base;
-        t.step(`Installing mod ${i + 1}/${input.mods.length}: ${m.ref}`);
+        t.step(`Installing mod ${i + 1}/${input.mods.length}: ${m.ref}…`);
         try {
           await mods.installFromUrl(server.id, url, { actor });
         } catch (err) {
@@ -2543,7 +2543,7 @@ router.post(
           });
         }
       }
-      t.step('Starting server');
+      t.step('Starting server…');
       await servers.startServer(server.id, { actor });
       return {
         serverId: server.id,
@@ -2646,7 +2646,7 @@ router.post(
       try {
         const envKey = loader !== 'paper' ? loaderVersions.envKeyFor(loader) : null;
         if (loaderVersion && envKey) env[envKey] = loaderVersion;
-        t.step('Creating server');
+        t.step('Creating server…');
         const server = await servers.createServer(
           {
             name: input.name,
@@ -2674,7 +2674,7 @@ router.post(
           actor,
           onStep: (s) => t.step(s),
         });
-        t.step('Starting server');
+        t.step('Starting server…');
         await servers.startServer(server.id, { actor });
         return { serverId: server.id, name: server.display_name, report };
       } finally {

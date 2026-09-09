@@ -350,7 +350,7 @@ function confirmDelete({ name }) {
     delInput.className = 'msm-check mt-0.5 shrink-0';
     delInput.checked = false;
     const delText = document.createElement('span');
-    delText.textContent = 'Also permanently delete the server files and backups from disk';
+    delText.textContent = 'Also permanently delete the server files and backups from disk.';
     delWrap.append(delInput, delText);
     content.appendChild(delWrap);
 

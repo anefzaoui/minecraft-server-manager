@@ -655,7 +655,7 @@ async function applyOverridesTo(serverId, zipPath, overridesPrefix, { actor = 's
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Modpack overrides applied: ${applied} files (${backedUp} overwritten files backed up to ${backupRel})`,
+    summary: `Modpack overrides applied: ${applied} files (${backedUp} overwritten files backed up to ${backupRel}).`,
     details: { applied, backedUp, backupDir: backedUp ? backupRel : null },
   });
   return { applied, backedUp, backupDir: backedUp ? backupRel : null };
@@ -684,7 +684,7 @@ async function importForServer(
   const report = { installed: [], failed: [], blocked: [], skipped: [], overrides: null };
 
   if (info.type === 'mrpack') {
-    onStep(`Resolving ${info.manifest.files.length} files via Modrinth`);
+    onStep(`Resolving ${info.manifest.files.length} files via Modrinth…`);
     const { items, clientOnly, nonMod } = await resolveMrpackEntries(info.manifest.files);
     for (const f of clientOnly) report.skipped.push({ name: path.basename(f.path), reason: 'client-only' });
     for (const f of nonMod) {
@@ -698,7 +698,7 @@ async function importForServer(
     }
     for (let i = 0; i < queue.length; i += 1) {
       const e = queue[i];
-      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}`);
+      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}…`);
       try {
         const { filename } = await modsService.installResolved(
           serverId,
@@ -729,11 +729,11 @@ async function importForServer(
       }
     }
     if (applyOverrides) {
-      onStep('Applying pack overrides');
+      onStep('Applying pack overrides…');
       report.overrides = await applyOverridesTo(serverId, zipPath, info.overridesPrefixes, { actor });
     }
   } else if (info.type === 'curseforge-pack') {
-    onStep(`Resolving ${info.manifest.files.length} mods via CurseForge`);
+    onStep(`Resolving ${info.manifest.files.length} mods via CurseForge…`);
     const entries = await resolveManifestEntries(info.manifest.files);
     const wanted = selections ? new Set(selections.map(Number)) : null;
     const queue = [];
@@ -759,7 +759,7 @@ async function importForServer(
     }
     for (let i = 0; i < queue.length; i += 1) {
       const e = queue[i];
-      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}`);
+      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}…`);
       try {
         const { filename } = await modsService.installResolved(
           serverId,
@@ -788,11 +788,11 @@ async function importForServer(
       }
     }
     if (applyOverrides) {
-      onStep('Applying pack overrides');
+      onStep('Applying pack overrides…');
       report.overrides = await applyOverridesTo(serverId, zipPath, info.manifest.overridesPrefix, { actor });
     }
   } else {
-    onStep(`Reading ${info.jarEntries.length} jars`);
+    onStep(`Reading ${info.jarEntries.length} jars…`);
     const tmpDir = dataPath('tmp');
     await fsp.mkdir(tmpDir, { recursive: true });
     const { identified, jarPaths } = await identifyJarsBounded(zipPath, { tmpDir });
@@ -821,7 +821,7 @@ async function importForServer(
     for (let i = 0; i < names.length; i += 1) {
       const entry = names[i];
       const base = path.basename(entry);
-      onStep(`Installing ${i + 1}/${names.length}: ${base}`);
+      onStep(`Installing ${i + 1}/${names.length}: ${base}…`);
       const tmpFile =
         jarPaths.get(entry) || path.join(tmpDir, `zipjar-${Date.now()}-${i}-${base.replace(/[^\w.-]/g, '_')}`);
       try {
@@ -842,7 +842,7 @@ async function importForServer(
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Zip import: ${report.installed.length} installed, ${report.failed.length} failed, ${report.blocked.length} need manual download`,
+    summary: `Zip import: ${report.installed.length} installed, ${report.failed.length} failed, ${report.blocked.length} need manual download.`,
     details: {
       installed: report.installed.length,
       failed: report.failed.length,

@@ -158,7 +158,7 @@ router.post(
         recordEvent({
           actor: username,
           type: 'login',
-          summary: `First admin account created and signed in: ${username}`,
+          summary: `First admin account created and signed in: ${username}.`,
         });
         logger.info('Created the first administrator account.', { userId: user.id, username });
         return wantsJson ? res.json({ ok: true, user: { username: user.username } }) : res.redirect('/');
@@ -215,8 +215,8 @@ router.post(
             type: 'login-locked',
             summary:
               lock.scope === 'account'
-                ? `Sign-in locked for "${username}" (too many failed attempts across addresses)`
-                : `Sign-in locked for "${username}" from ${req.ip} (too many failed attempts)`,
+                ? `Sign-in locked for "${username}" (too many failed attempts across addresses).`
+                : `Sign-in locked for "${username}" from ${req.ip} (too many failed attempts).`,
             details: { username, ip: req.ip, scope: lock.scope },
           });
         }
@@ -256,7 +256,7 @@ router.post(
         recordEvent({
           actor: user.username,
           type: 'login',
-          summary: `${user.username} signed in from ${req.ip}`,
+          summary: `${user.username} signed in from ${req.ip}.`,
           details: { ip: req.ip, via: 'password' },
         });
         logger.info('Signed a user in.', { userId: user.id, username: user.username, ip: req.ip, via: 'password' });
@@ -292,8 +292,8 @@ router.post(
             type: 'login-locked',
             summary:
               lock.scope === 'account'
-                ? `Sign-in locked for "${pendingUsername}" (too many failed two-factor attempts)`
-                : `Sign-in locked for "${pendingUsername}" from ${req.ip} (too many failed two-factor attempts)`,
+                ? `Sign-in locked for "${pendingUsername}" (too many failed two-factor attempts).`
+                : `Sign-in locked for "${pendingUsername}" from ${req.ip} (too many failed two-factor attempts).`,
             details: { username: pendingUsername, ip: req.ip, scope: lock.scope, step: '2fa' },
           });
         }
@@ -326,7 +326,7 @@ router.post(
         recordEvent({
           actor: pendingUsername,
           type: 'login',
-          summary: `${pendingUsername} signed in from ${req.ip} (2FA)`,
+          summary: `${pendingUsername} signed in from ${req.ip} (2FA).`,
           details: { ip: req.ip, via: '2fa' },
         });
         logger.info('Signed a user in.', {
@@ -362,7 +362,7 @@ router.post('/logout', (req, res) => {
       sameSite: config.cookieSameSite,
       secure: config.cookieSecure === true,
     });
-    recordEvent({ actor: name, type: 'logout', summary: `${name} signed out` });
+    recordEvent({ actor: name, type: 'logout', summary: `${name} signed out.` });
     logger.info('Signed a user out.', { userId: uid });
     res.redirect('/login');
   });

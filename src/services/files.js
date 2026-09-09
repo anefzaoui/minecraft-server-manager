@@ -140,7 +140,7 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
     serverId: serverId || null,
     actor,
     type: 'file-written',
-    summary: `File ${existing ? 'saved' : 'created'}: ${rel} (${humanBytes(bytes)})`,
+    summary: `File ${existing ? 'saved' : 'created'}: ${rel} (${humanBytes(bytes)}).`,
     details: { path: rel, sizeBytes: bytes, created: !existing },
   });
   return { path: rel, size: bytes };
@@ -155,7 +155,7 @@ async function mkdir(serverId, relPath, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-mkdir',
-    summary: `Folder created: ${rel}`,
+    summary: `Folder created: ${rel}.`,
     details: { path: rel },
   });
   return { path: rel };
@@ -179,7 +179,7 @@ async function rename(serverId, relPath, newName, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-renamed',
-    summary: `Renamed: ${rel} → ${clean}`,
+    summary: `Renamed: ${rel} → ${clean}.`,
     details: { from: rel, to: clean },
   });
   return { path: rel.includes('/') ? `${rel.slice(0, rel.lastIndexOf('/'))}/${clean}` : clean };
@@ -204,7 +204,7 @@ async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-moved',
-    summary: `Moved: ${rel} → ${toRel}`,
+    summary: `Moved: ${rel} → ${toRel}.`,
     details: { from: rel, to: toRel },
   });
   return { path: toRel };
@@ -233,7 +233,7 @@ async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-copied',
-    summary: `Copied: ${rel} → ${toRel} (${humanBytes(bytes)})`,
+    summary: `Copied: ${rel} → ${toRel} (${humanBytes(bytes)}).`,
     details: { from: rel, to: toRel, sizeBytes: bytes },
   });
   indexer.scheduleScan();
@@ -253,7 +253,7 @@ async function remove(serverId, relPath, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-deleted',
-    summary: `Deleted: ${rel} (${humanBytes(freedBytes)} freed)`,
+    summary: `Deleted: ${rel} (${humanBytes(freedBytes)} freed).`,
     details: { path: rel, freedBytes },
   });
   indexer.scheduleScan();
@@ -276,7 +276,7 @@ async function acceptUpload(serverId, destRel, tmpAbs, originalName, { actor = '
     serverId: serverId || null,
     actor,
     type: 'file-uploaded',
-    summary: `Uploaded: ${rel} (${humanBytes(size)})`,
+    summary: `Uploaded: ${rel} (${humanBytes(size)}).`,
     details: { path: rel, sizeBytes: size },
   });
   indexer.scheduleScan();

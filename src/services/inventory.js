@@ -572,7 +572,7 @@ async function giveItem(serverId, playerName, itemId, count = 1, { actor = 'syst
     serverId,
     actor,
     type: 'player-give',
-    summary: `Gave ${playerName} ${n} × ${item}`,
+    summary: `Gave ${playerName} ${n} × ${item}.`,
     details: { player: playerName, item, count: n, output: out },
   });
   return { player: playerName, item, count: n, output: out };
@@ -590,7 +590,7 @@ async function clearItem(serverId, playerName, itemId = null, { actor = 'system'
     serverId,
     actor,
     type: 'player-clear',
-    summary: item ? `Cleared ${item} from ${playerName}` : `Cleared the entire inventory of ${playerName}`,
+    summary: item ? `Cleared ${item} from ${playerName}.` : `Cleared the entire inventory of ${playerName}.`,
     details: { player: playerName, item, output: out, nothingRemoved: nothing },
   });
   return { player: playerName, item, output: out, nothingRemoved: nothing };
@@ -1160,7 +1160,7 @@ async function editSlot(
     serverId,
     actor,
     type: 'inventory-edit',
-    summary: `${summary} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'})`,
+    summary: `${summary} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'}).`,
     details: {
       player: playerLabel,
       uuid: ctx.uuid,
@@ -1193,7 +1193,7 @@ async function moveItem(serverId, uuid, from, to, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'inventory-edit',
-    summary: `${playerLabel}: ${result.item} ${result.swapped ? 'swapped' : 'moved'} ${fromSpec.rconSlot} -> ${toSpec.rconSlot} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'})`,
+    summary: `${playerLabel}: ${result.item} ${result.swapped ? 'swapped' : 'moved'} ${fromSpec.rconSlot} -> ${toSpec.rconSlot} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'}).`,
     details: {
       player: playerLabel,
       uuid: ctx.uuid,
@@ -1236,7 +1236,7 @@ async function addItem(serverId, uuid, itemId, count = 1, { actor = 'system' } =
     serverId,
     actor,
     type: 'inventory-edit',
-    summary: `${playerLabel}: ${count}x ${item} added to slot ${slot} (file edit)`,
+    summary: `${playerLabel}: ${count}x ${item} added to slot ${slot} (file edit).`,
     details: { player: playerLabel, uuid: ctx.uuid, op: 'add', item, count, slot, via: 'file' },
   });
   return { player: playerLabel, item, count, slot, mechanism: 'file' };

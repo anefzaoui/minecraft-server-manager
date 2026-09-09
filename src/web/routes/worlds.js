@@ -144,7 +144,7 @@ router.patch(
     require('../../events').recordEvent({
       actor: actorOf(req),
       type: 'world-renamed',
-      summary: `Library world renamed: "${lib.name}" → "${name}"`,
+      summary: `Library world renamed: "${lib.name}" → "${name}".`,
       details: { libraryId: lib.id },
     });
     res.json({ ok: true, world: { id: lib.id, name } });

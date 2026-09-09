@@ -196,7 +196,7 @@ function setPrefix(serverId, prefix, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'chat-command-config',
-    summary: `Chat command prefix set to "${prefix}"`,
+    summary: `Chat command prefix set to "${prefix}".`,
     details: { prefix },
   });
   return { prefix };
@@ -234,7 +234,7 @@ function createCommand(serverId, input, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'chat-command-config',
-    summary: `Chat command ${getPrefix(serverId)}${spec.trigger} created (${actionSummary(spec)})`,
+    summary: `Chat command ${getPrefix(serverId)}${spec.trigger} created (${actionSummary(spec)}).`,
     details: { id, ...spec },
   });
   return getCommand(serverId, id);
@@ -253,7 +253,7 @@ function updateCommand(serverId, cmdId, changes, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'chat-command-config',
-      summary: `Chat command ${getPrefix(serverId)}${existing.trigger} ${changes.enabled ? 'enabled' : 'disabled'}`,
+      summary: `Chat command ${getPrefix(serverId)}${existing.trigger} ${changes.enabled ? 'enabled' : 'disabled'}.`,
       details: { id: cmdId, enabled: Boolean(changes.enabled) },
     });
     return getCommand(serverId, cmdId);
@@ -299,7 +299,7 @@ function updateCommand(serverId, cmdId, changes, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'chat-command-config',
-    summary: `Chat command ${getPrefix(serverId)}${spec.trigger} updated (${actionSummary(spec)})`,
+    summary: `Chat command ${getPrefix(serverId)}${spec.trigger} updated (${actionSummary(spec)}).`,
     details: { id: cmdId, ...spec, enabled: Boolean(enabled) },
   });
   return getCommand(serverId, cmdId);
@@ -314,7 +314,7 @@ function deleteCommand(serverId, cmdId, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'chat-command-config',
-    summary: `Chat command ${getPrefix(serverId)}${existing.trigger} deleted`,
+    summary: `Chat command ${getPrefix(serverId)}${existing.trigger} deleted.`,
     details: { id: cmdId, trigger: existing.trigger },
   });
   return { deleted: true };
@@ -566,7 +566,7 @@ async function handleChat(serverId, player, message) {
       serverId,
       actor: `chat:${player}`,
       type: 'chat-command',
-      summary: `${player} ran ${label} (${actionSummary(cmd)})`,
+      summary: `${player} ran ${label} (${actionSummary(cmd)}).`,
       details: { trigger, action: cmd.action, params: cmd.params, player, args, success: true },
     });
   } catch (err) {

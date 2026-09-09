@@ -259,7 +259,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
     serverId,
     actor,
     type: 'blueprint-exported',
-    summary: `Blueprint exported: ${server.display_name} (${filename}, ${(size / 1024 ** 2).toFixed(1)} MB)`,
+    summary: `Blueprint exported: ${server.display_name} (${filename}, ${(size / 1024 ** 2).toFixed(1)} MB).`,
     details: { id, filename, includeConfig, embedFiles, includeWorld, overlayCount: manifest.overlay.length },
   });
   indexer.scan().catch(() => {});
@@ -650,7 +650,7 @@ async function deleteBlueprint(id, { actor = 'system' } = {}) {
   recordEvent({
     actor,
     type: 'blueprint-deleted',
-    summary: `Blueprint deleted: ${row.name} (${(row.size_bytes / 1024 ** 2).toFixed(1)} MB freed)`,
+    summary: `Blueprint deleted: ${row.name} (${(row.size_bytes / 1024 ** 2).toFixed(1)} MB freed).`,
     details: { id, filename: row.filename },
   });
   return { freedBytes: row.size_bytes };
@@ -695,7 +695,7 @@ async function seedStarters() {
   recordEvent({
     actor: 'system',
     type: 'blueprints-seeded',
-    summary: `Starter blueprints installed: ${created.map((c) => c.name).join(', ')}`,
+    summary: `Starter blueprints installed: ${created.map((c) => c.name).join(', ')}.`,
   });
   return { seeded: created.length, blueprints: created };
 }

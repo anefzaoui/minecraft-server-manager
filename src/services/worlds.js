@@ -273,7 +273,7 @@ async function addZipToLibrary(zipAbs, { name, actor, worldSource, worldFlavor, 
   recordEvent({
     actor,
     type: 'world-library-added',
-    summary: `World added to library: ${name} (${humanBytes(size)})`,
+    summary: `World added to library: ${name} (${humanBytes(size)}).`,
     details: { id, sha256, sizeBytes: size, split: Boolean(split), mcVersion: mcVersion || null, source: worldSource },
   });
   indexer.scheduleScan();
@@ -339,7 +339,7 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
       serverId,
       actor,
       type: 'world-extracted',
-      summary: `World "${level}" saved to library as "${row.name}" (${humanBytes(row.size_bytes)})`,
+      summary: `World "${level}" saved to library as "${row.name}" (${humanBytes(row.size_bytes)}).`,
       details: { libraryId: row.id, level, sizeBytes: row.size_bytes, running },
     });
     return row;
@@ -511,7 +511,7 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
     serverId,
     actor,
     type: 'world-installed',
-    summary: `World "${lib.name}" installed as "${targetLevel}" (${mode}, ${humanBytes(sizeBytes)})`,
+    summary: `World "${lib.name}" installed as "${targetLevel}" (${mode}, ${humanBytes(sizeBytes)}).`,
     details: { libraryId, mode, installedAs: targetLevel, sizeBytes, replacedBytes, warnings },
   });
   logger.info('Installed a world onto a server.', { serverId, actor, installedAs: targetLevel, mode, sizeBytes });
@@ -560,7 +560,7 @@ async function copyBetweenServers(
     serverId: targetServerId,
     actor,
     type: 'world-copied',
-    summary: `World copied from ${source.display_name} (${humanBytes(result.sizeBytes)}, ${mode})`,
+    summary: `World copied from ${source.display_name} (${humanBytes(result.sizeBytes)}, ${mode}).`,
     details: { sourceServerId, libraryId: row.id, ...result },
   });
   return { library: row, ...result };
@@ -608,7 +608,7 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'world-duplicated',
-    summary: `World "${worldName}" duplicated as "${copyName}" (${humanBytes(sizeBytes)})`,
+    summary: `World "${worldName}" duplicated as "${copyName}" (${humanBytes(sizeBytes)}).`,
     details: { worldName, copyName, sizeBytes },
   });
   indexer.scheduleScan();
@@ -639,7 +639,7 @@ async function renameWorldImpl(serverId, worldName, newName, { actor = 'system' 
     serverId,
     actor,
     type: 'world-renamed',
-    summary: `World "${worldName}" renamed to "${clean}"${wasActive ? ' (active world - level-name updated)' : ''}`,
+    summary: `World "${worldName}" renamed to "${clean}"${wasActive ? ' (active world - level-name updated)' : ''}.`,
     details: { from: worldName, to: clean, wasActive },
   });
   return { name: clean, wasActive };
@@ -662,7 +662,7 @@ async function activateWorldImpl(serverId, worldName, { actor = 'system' } = {})
     serverId,
     actor,
     type: 'world-activated',
-    summary: `Active world switched: "${previous}" → "${worldName}"`,
+    summary: `Active world switched: "${previous}" → "${worldName}".`,
     details: { from: previous, to: worldName },
   });
   return { active: worldName, changed: true };
@@ -741,7 +741,7 @@ async function resetWorldImpl(
     serverId,
     actor,
     type: 'world-reset',
-    summary: `World "${level}" reset ${seedNote}${applyType ? `, type ${applyType}` : ''} (${humanBytes(freedBytes)} cleared)`,
+    summary: `World "${level}" reset ${seedNote}${applyType ? `, type ${applyType}` : ''} (${humanBytes(freedBytes)} cleared).`,
     details: {
       level,
       seedMode,
@@ -780,7 +780,7 @@ async function deleteServerWorldImpl(serverId, worldName, { actor = 'system' } =
     serverId,
     actor,
     type: 'world-deleted',
-    summary: `World "${worldName}" deleted (${humanBytes(freedBytes)} freed)`,
+    summary: `World "${worldName}" deleted (${humanBytes(freedBytes)} freed).`,
     details: { worldName, freedBytes },
   });
   logger.info('Deleted a world from a server.', { serverId, actor, worldName, freedBytes });
@@ -827,7 +827,7 @@ async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = 
     serverId,
     actor,
     type: 'world-downloaded',
-    summary: `World "${worldName}" downloaded (${humanBytes(size)})`,
+    summary: `World "${worldName}" downloaded (${humanBytes(size)}).`,
     details: { worldName, sizeBytes: size },
   });
   return {

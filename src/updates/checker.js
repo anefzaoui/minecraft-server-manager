@@ -212,8 +212,8 @@ async function checkAll({ actor = 'scheduler' } = {}) {
     actor,
     type: 'update-check',
     summary: findings.length
-      ? `Update check: ${findings.length} update(s) available`
-      : 'Update check: everything up to date',
+      ? `Update check: ${findings.length} update(s) available.`
+      : 'Update check: everything up to date.',
     details: { findings },
   });
   logger.info('Finished an update check.', {
@@ -271,7 +271,7 @@ function setUpdateIgnored(subjectType, subjectId, { ignore = true, actor = 'syst
     serverId: subjectId,
     actor,
     type: ignore ? 'update-ignored' : 'update-unignored',
-    summary: `${ignore ? 'Ignoring' : 'No longer ignoring'} ${check.latest_name || check.latest_version} (${subjectType.replace('_', ' ')})`,
+    summary: `${ignore ? 'Ignoring' : 'No longer ignoring'} ${check.latest_name || check.latest_version} (${subjectType.replace('_', ' ')}).`,
   });
   return { ignored: ignore ? check.latest_version : null };
 }

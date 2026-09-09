@@ -362,7 +362,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     const image = resolveImage(server, { javaTagHint });
     onProgress(`Pulling image ${image} (first time can take a few minutes)…`);
     await images.ensureImage(image, ({ current, total }) => {
-      if (total) onProgress(`Downloading image: ${Math.round((current / total) * 100)}%`);
+      if (total) onProgress(`Downloading image: ${Math.round((current / total) * 100)}%…`);
     });
 
     onProgress('Creating container…');
@@ -412,7 +412,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     serverId: id,
     actor,
     type: 'created',
-    summary: `Server created: ${input.name} (${server.type} ${server.mc_version}, port ${ports.game})`,
+    summary: `Server created: ${input.name} (${server.type} ${server.mc_version}, port ${ports.game}).`,
     details: { type: server.type, mcVersion: server.mc_version, ports },
   });
   logger.info('Created a server.', { serverId: id, actor, type: server.type, mcVersion: server.mc_version });
@@ -484,13 +484,13 @@ async function startServerImpl(id, { actor = 'system' } = {}) {
   }
   await containers.startContainer(id);
   db.run("UPDATE servers SET status = 'starting', last_started_at = datetime('now') WHERE id = ?", id);
-  recordEvent({ serverId: id, actor, type: 'started', summary: 'Server start requested' });
+  recordEvent({ serverId: id, actor, type: 'started', summary: 'Server start requested.' });
   logger.info('Started a server.', { serverId: id, actor });
 }
 
 async function stopServerImpl(id, { actor = 'system' } = {}) {
   mustGet(id);
-  recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Graceful stop requested' });
+  recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Graceful stop requested.' });
   // A graceful stop triggers the game's own shutdown-time world save (rcon
   // `stop`, or docker's SIGTERM if that doesn't finish in time). Sharing the
   // backup/world-export save lock means a stop that lands mid-backup waits
@@ -515,17 +515,17 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
     serverId: id,
     actor,
     type: 'stopped',
-    summary: 'Server stopped gracefully',
+    summary: 'Server stopped gracefully.',
     logExcerpt: excerpt || null,
   });
   logger.info('Stopped a server.', { serverId: id, actor });
 }
 
 async function restartServerImpl(id, { actor = 'system' } = {}) {
-  recordEvent({ serverId: id, actor, type: 'restart-requested', summary: 'Restart requested' });
+  recordEvent({ serverId: id, actor, type: 'restart-requested', summary: 'Restart requested.' });
   await stopServerImpl(id, { actor });
   await startServerImpl(id, { actor });
-  recordEvent({ serverId: id, actor, type: 'restarted', summary: 'Server restarted' });
+  recordEvent({ serverId: id, actor, type: 'restarted', summary: 'Server restarted.' });
 }
 
 const startServer = guardOp('start', startServerImpl);
@@ -534,7 +534,7 @@ const restartServer = guardOp('restart', restartServerImpl);
 
 async function killServerImpl(id, { actor = 'system' } = {}) {
   mustGet(id);
-  recordEvent({ serverId: id, actor, type: 'kill-requested', summary: 'Force kill requested' });
+  recordEvent({ serverId: id, actor, type: 'kill-requested', summary: 'Force kill requested.' });
   await containers.killContainer(id);
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
   recordEvent({ serverId: id, actor, type: 'killed', summary: 'Server force-stopped. The world may not have saved.' });
@@ -833,7 +833,7 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBa
         : keepBackups
           ? ' (backups kept)'
           : ''
-    }`,
+    }.`,
     details: { keepWorld, keepBackups, freedBytes },
   });
   logger.info('Deleted a server.', { serverId: id, actor, keepWorld, keepBackups, freedBytes });

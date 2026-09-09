@@ -126,7 +126,7 @@ function createToken({ label, scopeAll = false, serverIds = [], expiresAt = null
   recordEvent({
     actor,
     type: 'api-token-created',
-    summary: `Public API token "${label}" created`,
+    summary: `Public API token "${label}" created.`,
     details: { tokenId: id, scopeAll: Boolean(scopeAll), serverCount: ids.length },
   });
   logger.info('Created a read-only API token.', {
@@ -155,7 +155,7 @@ function revokeToken(id, { actor }) {
   if (Number(res.changes) === 0) {
     throw Object.assign(new Error('API token not found'), { status: 404 });
   }
-  recordEvent({ actor, type: 'api-token-revoked', summary: 'Public API token revoked', details: { tokenId: id } });
+  recordEvent({ actor, type: 'api-token-revoked', summary: 'Public API token revoked.', details: { tokenId: id } });
   logger.info('Revoked a read-only API token.', { tokenId: id, actor });
 }
 

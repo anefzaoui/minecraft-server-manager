@@ -38,7 +38,7 @@ function addNote(serverId, { uuid, name }, note, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'player-note-added',
-    summary: `Note added for ${name}`,
+    summary: `Note added for ${name}.`,
     details: { name, uuid },
   });
   return publicNote(db.get('SELECT * FROM player_notes WHERE id = ?', id));
@@ -52,7 +52,7 @@ function deleteNote(serverId, id, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'player-note-deleted',
-    summary: `Note removed for ${row.name}`,
+    summary: `Note removed for ${row.name}.`,
     details: { name: row.name, uuid: row.uuid },
   });
 }

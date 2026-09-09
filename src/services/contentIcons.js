@@ -91,7 +91,7 @@ async function backfillContentMeta({ limit = 500 } = {}) {
     recordEvent({
       actor: 'system',
       type: 'content-meta-backfilled',
-      summary: `Repaired metadata for ${repaired} content file${repaired === 1 ? '' : 's'} (of ${rows.length} checked)`,
+      summary: `Repaired metadata for ${repaired} content file${repaired === 1 ? '' : 's'} (of ${rows.length} checked).`,
     });
   }
   logger.info('Content-metadata backfill finished.', result);

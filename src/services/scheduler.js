@@ -64,7 +64,7 @@ async function runTask(schedule) {
         serverId: schedule.server_id,
         actor,
         type: 'rcon',
-        summary: `Scheduled RCON: ${payload.command}`,
+        summary: `Scheduled RCON: ${payload.command}.`,
         details: { output: out.slice(0, 1000) },
       });
       break;
@@ -112,7 +112,7 @@ function schedule(job) {
         serverId: job.server_id || null,
         actor: 'scheduler',
         type: 'schedule-fired',
-        summary: `Scheduled task fired: ${TASK_TYPES[job.task_type]?.label || job.task_type}`,
+        summary: `Scheduled task fired: ${TASK_TYPES[job.task_type]?.label || job.task_type}.`,
       });
       logger.info('A scheduled task fired.', {
         scheduleId: job.id,
@@ -126,7 +126,7 @@ function schedule(job) {
           serverId: job.server_id || null,
           actor: 'scheduler',
           type: 'schedule-failed',
-          summary: `Scheduled ${job.task_type} failed: ${err.message}`,
+          summary: `Scheduled ${job.task_type} failed: ${err.message}.`,
         });
         logger.error('A scheduled task failed.', {
           scheduleId: job.id,
@@ -209,7 +209,7 @@ function createSchedule({ serverId = null, taskType, cron, payload = {}, enabled
     serverId,
     actor,
     type: 'schedule-created',
-    summary: `Schedule created: ${TASK_TYPES[taskType].label} (${cron})`,
+    summary: `Schedule created: ${TASK_TYPES[taskType].label} (${cron}).`,
   });
   return listSchedules().find((s) => s.id === id);
 }
@@ -222,7 +222,7 @@ function setEnabled(id, enabled, { actor = 'system' } = {}) {
     serverId: job?.server_id || null,
     actor,
     type: 'schedule-toggled',
-    summary: `Schedule ${enabled ? 'enabled' : 'disabled'}: ${job?.task_type}`,
+    summary: `Schedule ${enabled ? 'enabled' : 'disabled'}: ${job?.task_type}.`,
   });
 }
 
@@ -235,7 +235,7 @@ function deleteSchedule(id, { actor = 'system' } = {}) {
       serverId: job.server_id,
       actor,
       type: 'schedule-deleted',
-      summary: `Schedule deleted: ${job.task_type}`,
+      summary: `Schedule deleted: ${job.task_type}.`,
     });
 }
 

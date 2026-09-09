@@ -91,7 +91,7 @@ function init() {
     await withBusy(btn, 'Testing…', async () => {
       const res = await api(`/api/servers/${serverId}/wizard/test`, 'POST', conn);
       if (res.ok) {
-        toast(`Test reply received: "${res.data.reply}"`, { kind: 'success', timeout: 8000 });
+        toast(`Test reply received: "${res.data.reply}".`, { kind: 'success', timeout: 8000 });
       }
     });
   });

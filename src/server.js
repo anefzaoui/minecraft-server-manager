@@ -38,7 +38,7 @@ function installRuntimeGuards() {
       require('./events').recordEvent({
         type: 'panel-error',
         actor: 'system',
-        summary: `Uncaught ${kind}: ${info.errorMessage}`.slice(0, 300),
+        summary: `Uncaught ${kind}: ${info.errorMessage}.`.slice(0, 300),
         details: info,
       });
     } catch {

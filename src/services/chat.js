@@ -114,7 +114,7 @@ async function sendChat(serverId, opts = {}) {
     serverId,
     actor,
     type: 'chat-sent',
-    summary: `Chat (${mode}) → ${target}: ${text.slice(0, 80)}`,
+    summary: `Chat (${mode}) → ${target}: ${text.slice(0, 80)}.`,
     details: { ...message, text: text.slice(0, 300) },
   });
   return { ...message, actor, ts: new Date().toISOString() };

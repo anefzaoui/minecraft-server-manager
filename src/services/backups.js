@@ -57,7 +57,7 @@ async function createBackupImpl(
   await fsp.mkdir(path.dirname(absPath), { recursive: true });
 
   const archive = async () => {
-    if (task) task.step('Compressing server files');
+    if (task) task.step('Compressing server files…');
     await zipDirectory(dataPath('servers', serverId), absPath, {
       onProgress: task ? (processedBytes) => task.progress(processedBytes, needed) : null,
     });
@@ -74,7 +74,7 @@ async function createBackupImpl(
       // Serialize the pause-saves/copy/resume-saves section per server so a
       // concurrent backup or world export can't re-enable writes mid-copy.
       await withSaveLock(serverId, async () => {
-        if (task) task.step('Pausing world saves');
+        if (task) task.step('Pausing world saves…');
         const paused = await execCapture(serverId, ['rcon-cli', 'save-off'])
           .then(() => true)
           .catch((err) => {
@@ -170,11 +170,11 @@ async function createBackupImpl(
   // shrinking edits region files directly.
   if (shrinkAfter) {
     if (running) {
-      if (task) task.step('Shrink skipped because the server was running');
+      if (task) task.step('Shrink skipped because the server was running.');
       logger.info('Skipped the post-backup world shrink because the server was running.', { serverId });
     } else {
       try {
-        if (task) task.step('Removing rarely-visited chunks from the world');
+        if (task) task.step('Removing rarely-visited chunks from the world…');
         // shrinkWorldImpl (not the guardOp-wrapped shrinkWorld): this runs
         // inside the guardOp('backup') critical section, which already excludes
         // lifecycle ops - a nested 'shrink' guard would 409 against its own backup.
@@ -238,7 +238,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
     throw httpError(507, `Not enough disk space to restore (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
   }
 
-  if (task) task.step('Stopping server');
+  if (task) task.step('Stopping server…');
   // Guarded stopServer would deadlock here (this function already holds the
   // shared op lock under 'restore' - see module.exports) - use the raw impl.
   const { stopServerUnguarded } = require('./servers');
@@ -253,7 +253,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
   }
 
   if (!skipSafety) {
-    if (task) task.step('Creating safety backup');
+    if (task) task.step('Creating safety backup…');
     // createBackup makes its own reservation for safetyBytes - not duplicated
     // here, which only reserves the extraction's own uncompressedBytes below.
     // The safety backup is best-effort insurance: if it can't be made (e.g. its
@@ -283,7 +283,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
     }
   }
 
-  if (task) task.step('Extracting backup');
+  if (task) task.step('Extracting backup…');
   const serverDir = dataPath('servers', serverId);
   const stagingDir = dataPath('tmp', `restore-${serverId}-${nanoid(6)}`);
   await fsp.mkdir(stagingDir, { recursive: true });
@@ -325,7 +325,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
     releaseReservation();
   }
 
-  recordEvent({ serverId, actor, type: 'backup-restored', summary: `Restored backup ${backup.filename}` });
+  recordEvent({ serverId, actor, type: 'backup-restored', summary: `Restored backup ${backup.filename}.` });
   indexer.scheduleScan();
   return { ok: true };
 }
@@ -349,7 +349,7 @@ async function deleteBackup(backupId, { actor = 'system' } = {}) {
     serverId: backup.server_id,
     actor,
     type: 'backup-deleted',
-    summary: `Backup deleted: ${backup.filename} (${(backup.size_bytes / 1024 ** 3).toFixed(2)} GB freed)`,
+    summary: `Backup deleted: ${backup.filename} (${(backup.size_bytes / 1024 ** 3).toFixed(2)} GB freed).`,
   });
   return { freedBytes: backup.size_bytes };
 }
@@ -391,7 +391,7 @@ async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
     serverId: backup.server_id,
     actor,
     type: 'backup-renamed',
-    summary: `Backup renamed: ${backup.filename} → ${name}`,
+    summary: `Backup renamed: ${backup.filename} → ${name}.`,
     details: { from: backup.filename, to: name },
   });
   return updated;

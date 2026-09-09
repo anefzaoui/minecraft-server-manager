@@ -487,7 +487,7 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'rcon',
-      summary: `Quick action: ${quick.label}`,
+      summary: `Quick action: ${quick.label}.`,
       details: { action, output: (out || '').slice(0, 300) },
     });
     invalidateState(serverId); // the next /world/state read must see this change
@@ -501,7 +501,7 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'rcon',
-      summary: `Quick action failed: ${quick.label}`,
+      summary: `Quick action failed: ${quick.label}.`,
       details: { action, reply: String(detail || '').slice(0, 300) },
     });
     // 4xx, not 5xx: the JSON error handler passes a sub-500 err.message straight

@@ -44,7 +44,7 @@ async function createUser({ username, password, role = 'admin' }, { actor = 'sys
     await bcrypt.hash(password, BCRYPT_COST),
     role
   );
-  recordEvent({ actor, type: 'user-created', summary: `User created: ${username} (${role})` });
+  recordEvent({ actor, type: 'user-created', summary: `User created: ${username} (${role}).` });
   return getUser(id);
 }
 
@@ -87,7 +87,7 @@ async function setPassword(id, password, { actor = 'system', exceptSid = null } 
     throw httpError(400, 'A password must be at least 8 characters.');
   db.run('UPDATE users SET password_hash = ? WHERE id = ?', await bcrypt.hash(password, BCRYPT_COST), id);
   revokeOtherSessions(id, exceptSid);
-  recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(id)?.username}` });
+  recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(id)?.username}.` });
 }
 
 /**
@@ -115,7 +115,11 @@ async function changePassword(
   if (!db.get('SELECT id FROM users WHERE id = ?', targetId)) throw httpError(404, 'User not found');
   db.run('UPDATE users SET password_hash = ? WHERE id = ?', await bcrypt.hash(newPassword, BCRYPT_COST), targetId);
   revokeOtherSessions(targetId, exceptSid);
-  recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(targetId)?.username}` });
+  recordEvent({
+    actor,
+    type: 'user-password-changed',
+    summary: `Password changed for ${getUser(targetId)?.username}.`,
+  });
 }
 
 function setRole(id, role, { actor = 'system' } = {}) {
@@ -126,7 +130,7 @@ function setRole(id, role, { actor = 'system' } = {}) {
     throw httpError(409, "You can't change the last admin's role.");
   }
   db.run('UPDATE users SET role = ? WHERE id = ?', role, id);
-  recordEvent({ actor, type: 'user-role-changed', summary: `${user?.username} role → ${role}` });
+  recordEvent({ actor, type: 'user-role-changed', summary: `${user?.username} role → ${role}.` });
 }
 
 function deleteUser(id, { actor = 'system' } = {}) {
@@ -136,7 +140,7 @@ function deleteUser(id, { actor = 'system' } = {}) {
     throw httpError(409, "You can't delete the last admin account.");
   }
   db.run('DELETE FROM users WHERE id = ?', id);
-  recordEvent({ actor, type: 'user-deleted', summary: `User deleted: ${user.username}` });
+  recordEvent({ actor, type: 'user-deleted', summary: `User deleted: ${user.username}.` });
 }
 
 function publicUser(u) {
@@ -164,7 +168,7 @@ function setAvatarPreset(id, key, { actor = 'system' } = {}) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   db.run('UPDATE users SET avatar = ? WHERE id = ?', `preset:${key}`, id);
-  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} set a preset avatar` });
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} set a preset avatar.` });
 }
 
 /** Record an uploaded avatar file (the route has already validated + saved it to disk). */
@@ -172,7 +176,7 @@ function setAvatarCustom(id, filename, { actor = 'system' } = {}) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   db.run('UPDATE users SET avatar = ? WHERE id = ?', `custom:${filename}`, id);
-  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} uploaded a custom avatar` });
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} uploaded a custom avatar.` });
 }
 
 /** Revert to the default initial-letter avatar. */
@@ -180,7 +184,7 @@ function clearAvatar(id, { actor = 'system' } = {}) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   db.run('UPDATE users SET avatar = NULL WHERE id = ?', id);
-  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} reset their avatar` });
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} reset their avatar.` });
 }
 
 // ---------------------------------------------------------------------------
@@ -231,7 +235,7 @@ async function confirmTotp(id, secret, code, password, { actor = 'system', excep
   // disableTotp, regenerateBackupCodes all revoke too): any session that was
   // trusted on the weaker password-only path must re-authenticate with 2FA.
   revokeOtherSessions(id, exceptSid);
-  recordEvent({ actor, type: 'user-2fa-enabled', summary: `Two-factor authentication enabled for ${user.username}` });
+  recordEvent({ actor, type: 'user-2fa-enabled', summary: `Two-factor authentication enabled for ${user.username}.` });
   return { backupCodes };
 }
 
@@ -248,7 +252,7 @@ async function disableTotp(id, password, { actor = 'system', exceptSid = null } 
   recordEvent({
     actor,
     type: 'user-2fa-disabled',
-    summary: `Two-factor authentication disabled for ${user.username}`,
+    summary: `Two-factor authentication disabled for ${user.username}.`,
   });
 }
 
@@ -265,7 +269,7 @@ function adminDisableTotp(id, { actor = 'system' } = {}) {
   recordEvent({
     actor,
     type: 'user-2fa-disabled',
-    summary: `Two-factor authentication reset for ${user.username} by an admin`,
+    summary: `Two-factor authentication reset for ${user.username} by an admin.`,
   });
 }
 
@@ -279,7 +283,7 @@ async function regenerateBackupCodes(id, password, { actor = 'system', exceptSid
   const hashed = await Promise.all(backupCodes.map((c) => bcrypt.hash(c, BCRYPT_COST)));
   db.run('UPDATE users SET totp_backup_codes_json = ? WHERE id = ?', JSON.stringify(hashed), id);
   revokeOtherSessions(id, exceptSid);
-  recordEvent({ actor, type: 'user-2fa-backup-codes', summary: `Backup codes regenerated for ${user.username}` });
+  recordEvent({ actor, type: 'user-2fa-backup-codes', summary: `Backup codes regenerated for ${user.username}.` });
   return { backupCodes };
 }
 
@@ -324,7 +328,7 @@ async function verifyTotpLogin(id, code) {
   recordEvent({
     actor: user.username,
     type: 'user-2fa-backup-used',
-    summary: `${user.username} signed in with a backup code (${codes.length} left)`,
+    summary: `${user.username} signed in with a backup code (${codes.length} left).`,
   });
   return true;
 }

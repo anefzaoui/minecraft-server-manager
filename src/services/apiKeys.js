@@ -29,7 +29,7 @@ function setKey(provider, key, { actor = 'system' } = {}) {
     provider,
     secrets.encrypt(key)
   );
-  recordEvent({ actor, type: 'api-key-set', summary: `API key updated for ${provider}` });
+  recordEvent({ actor, type: 'api-key-set', summary: `API key updated for ${provider}.` });
 
   // Containers bake the key into their env at create time - a rotated key
   // only reaches CurseForge servers after a recreate. Flag them.
@@ -49,7 +49,7 @@ function setKey(provider, key, { actor = 'system' } = {}) {
 
 function deleteKey(provider, { actor = 'system' } = {}) {
   db.run('DELETE FROM api_keys WHERE provider = ?', provider);
-  recordEvent({ actor, type: 'api-key-removed', summary: `API key removed for ${provider}` });
+  recordEvent({ actor, type: 'api-key-removed', summary: `API key removed for ${provider}.` });
 }
 
 function maskedKey(provider) {

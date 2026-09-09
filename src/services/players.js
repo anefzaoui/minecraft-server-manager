@@ -301,7 +301,7 @@ async function setWhitelisted(serverId, name, on, { running = false, actor = 'sy
     serverId,
     actor,
     type: 'player-whitelist',
-    summary: `${who.name} ${on ? 'added to' : 'removed from'} the whitelist${running ? '' : ' (file edit, applies on the next start)'}`,
+    summary: `${who.name} ${on ? 'added to' : 'removed from'} the whitelist${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { name: who.name, uuid: who.uuid, on, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, whitelisted: Boolean(on) };
@@ -333,7 +333,7 @@ async function setWhitelistEnforced(serverId, on, { running = false, actor = 'sy
     serverId,
     actor,
     type: 'player-whitelist-enforce',
-    summary: `Whitelist enforcement turned ${on ? 'on' : 'off'}${running ? '' : ' (file edit, applies on the next start)'}`,
+    summary: `Whitelist enforcement turned ${on ? 'on' : 'off'}${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { on, via: running ? 'rcon' : 'file' },
   });
   return { whitelistEnforced: Boolean(on) };
@@ -380,8 +380,8 @@ async function setOp(serverId, name, on, level = 4, { running = false, actor = '
     actor,
     type: on ? 'player-op' : 'player-deop',
     summary: on
-      ? `${who.name} opped (level ${level})${running ? '' : ' (file edit, applies on the next start)'}`
-      : `${who.name} de-opped${running ? '' : ' (file edit, applies on the next start)'}`,
+      ? `${who.name} opped (level ${level})${running ? '' : ' (file edit, applies on the next start)'}.`
+      : `${who.name} de-opped${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { name: who.name, uuid: who.uuid, on, level: on ? level : null, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, op: Boolean(on), opLevel: on ? level : null, note };
@@ -413,7 +413,7 @@ async function banPlayer(serverId, name, reason, { running = false, actor = 'sys
     serverId,
     actor,
     type: 'player-ban',
-    summary: `${who.name} banned${durationMs ? ` until ${expires}` : ''}: ${reason}${running ? '' : ' (file edit, applies on the next start)'}`,
+    summary: `${who.name} banned${durationMs ? ` until ${expires}` : ''}: ${reason}${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { name: who.name, uuid: who.uuid, reason, expires, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, banned: true, banReason: reason, banExpires: durationMs ? expires : null };
@@ -433,7 +433,7 @@ async function pardonPlayer(serverId, name, { running = false, actor = 'system' 
     serverId,
     actor,
     type: 'player-pardon',
-    summary: `${who.name} pardoned${running ? '' : ' (file edit, applies on the next start)'}`,
+    summary: `${who.name} pardoned${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { name: who.name, uuid: who.uuid, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, banned: false };
@@ -468,7 +468,7 @@ async function banIp(
     serverId,
     actor,
     type: 'player-ban-ip',
-    summary: `IP ${ip} banned${durationMs ? ` until ${expires}` : ''}${linkedPlayer ? ` (linked to ${linkedPlayer})` : ''}: ${reason}${running ? '' : ' (file edit, applies on the next start)'}`,
+    summary: `IP ${ip} banned${durationMs ? ` until ${expires}` : ''}${linkedPlayer ? ` (linked to ${linkedPlayer})` : ''}: ${reason}${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { ip, reason, expires, player: linkedPlayer, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: true, banExpires: durationMs ? expires : null, player: linkedPlayer };
@@ -489,7 +489,7 @@ async function pardonIp(serverId, ip, { running = false, actor = 'system' } = {}
     serverId,
     actor,
     type: 'player-pardon-ip',
-    summary: `IP ${ip} pardoned${running ? '' : ' (file edit, applies on the next start)'}`,
+    summary: `IP ${ip} pardoned${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { ip, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: false };
@@ -589,7 +589,7 @@ async function deletePlayer(serverId, name, { running = false, actor = 'system' 
     serverId,
     actor,
     type: 'player-deleted',
-    summary: `${who.name} and all their data were deleted`,
+    summary: `${who.name} and all their data were deleted.`,
     details: { name: who.name, uuid: who.uuid, removed },
   });
   return { name: who.name, uuid: who.uuid, removed };
@@ -661,7 +661,7 @@ async function kickPlayer(serverId, name, message, { running = false, actor = 's
     serverId,
     actor,
     type: 'player-kick',
-    summary: `${name} kicked: ${message}`,
+    summary: `${name} kicked: ${message}.`,
     details: { name, message },
   });
   return { name, kicked: true };
@@ -1009,7 +1009,7 @@ async function tpToStructure(
     serverId,
     actor,
     type: 'player-teleport',
-    summary: `${player} sent to ${random ? 'a random' : 'the nearest'} ${structureRef.replace(/^#/, '')} in ${prettyDimension(searchDim)} at ${x}, ${z} (surface)`,
+    summary: `${player} sent to ${random ? 'a random' : 'the nearest'} ${structureRef.replace(/^#/, '')} in ${prettyDimension(searchDim)} at ${x}, ${z} (surface).`,
     details: { player, mode: 'structure', structure: structureRef, x, z, random, dimension: searchDim },
   });
   return { player, structure: structureRef, x, z, dimension: searchDim, output: out };
@@ -1050,7 +1050,7 @@ async function rtpPlayer(
         serverId,
         actor,
         type: 'player-teleport',
-        summary: `${player} randomly teleported to ${x}, ${z} (surface, ${Math.round(dist)} blocks out, attempt ${attempt}/${ATTEMPTS})`,
+        summary: `${player} randomly teleported to ${x}, ${z} (surface, ${Math.round(dist)} blocks out, attempt ${attempt}/${ATTEMPTS}).`,
         details: { player, mode: 'rtp', x, z, dimension: dim, distance: Math.round(dist), attempt },
       });
       return { player, x, z, dimension: dim, distance: Math.round(dist), attempts: attempt, output: out };
@@ -1200,7 +1200,7 @@ async function tpToCoords(
     serverId,
     actor,
     type: 'player-teleport',
-    summary: `${player} teleported to ${where}${!hasY ? ' (surface)' : safe ? ' (soft landing)' : ''}`,
+    summary: `${player} teleported to ${where}${!hasY ? ' (surface)' : safe ? ' (soft landing)' : ''}.`,
     details: {
       player,
       mode: 'coords',
@@ -1225,7 +1225,7 @@ async function tpToPlayer(serverId, player, target, { running = false, actor = '
     serverId,
     actor,
     type: 'player-teleport',
-    summary: `${player} teleported to ${target}`,
+    summary: `${player} teleported to ${target}.`,
     details: { player, mode: 'player', target },
   });
   return { player, target, output: out };
@@ -1288,7 +1288,7 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
     serverId,
     actor,
     type: 'player-teleport',
-    summary: `${player} teleported to nearest ${biomeId} (${x}, ${z}, surface${searchDim ? `, ${searchDim}` : ''})`,
+    summary: `${player} teleported to nearest ${biomeId} (${x}, ${z}, surface${searchDim ? `, ${searchDim}` : ''}).`,
     details: { player, mode: 'biome', biome: biomeId, x, z, surface: true, dimension: searchDim },
   });
   return { player, biome: biomeId, x, z, dimension: searchDim, output: out };

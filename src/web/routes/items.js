@@ -69,7 +69,7 @@ router.post(
       `Rebuilding item registry for ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
-        t.step('Scanning mod jars & the server jar for item names');
+        t.step('Scanning mod jars & the server jar for item names…');
         const registry = await itemRegistry.getRegistry(server.id, {
           force: true,
           onProgress: (done, total, label) => {

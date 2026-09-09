@@ -112,8 +112,16 @@ users:
   full sentence in sentence case.
 - **Terminal punctuation:** every sentence-shaped string ends in `.`, `!`, or
   `?`. Bare fragments, single-word labels, and short example placeholders do
-  not. `runTask` / progress titles are sentence-case gerunds ending in `…`
-  ("Creating backup…").
+  not.
+- **History summaries:** every `recordEvent({ summary })` string ends in a
+  period, including the terse `Label: detail` lines ("Folder created:
+  plugins/x.jar.", "Server restarted.").
+- **In-progress status lines end in `…`, never a period** — `runTask` /
+  progress modal titles and every `task.step(...)` / `onProgress(...)` /
+  `onStep(...)` label, as sentence-case gerunds ("Creating backup…",
+  "Querying Modrinth, CurseForge, …"). A step that reports an outcome rather
+  than an ongoing action is a sentence and takes a period ("Shrink skipped
+  because the server was running.").
 - **No `" - "` as a sentence dash, and no `–` or `—`.** Split into two
   sentences, use a colon, or a parenthetical. Hyphenated compounds are fine.
 - **Proper nouns stay capitalised:** Minecraft, Mojang, Docker, Java, RCON,

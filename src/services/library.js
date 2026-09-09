@@ -162,7 +162,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
     recordEvent({
       actor,
       type: 'library-added',
-      summary: `Added to library: ${meta.name || filename} (${humanBytes(size)})`,
+      summary: `Added to library: ${meta.name || filename} (${humanBytes(size)}).`,
       details: { id, category, sha256 },
     });
   } else if (row && !row.icon_rel_path && (meta.iconUrl || row.icon_url)) {
@@ -344,7 +344,7 @@ async function importFile(localPath, meta, { actor = 'system' } = {}) {
     recordEvent({
       actor,
       type: 'library-added',
-      summary: `Uploaded to library: ${meta.name || filename} (${humanBytes(buf.length)})`,
+      summary: `Uploaded to library: ${meta.name || filename} (${humanBytes(buf.length)}).`,
       details: { id, category, sha256 },
     });
   }
@@ -366,7 +366,7 @@ async function deleteLibraryFile(libraryId, { actor = 'system', force = false } 
   recordEvent({
     actor,
     type: 'library-deleted',
-    summary: `Removed from library: ${lib.name} (${humanBytes(lib.size_bytes)} freed)`,
+    summary: `Removed from library: ${lib.name} (${humanBytes(lib.size_bytes)} freed).`,
   });
   return { freedBytes: lib.size_bytes };
 }

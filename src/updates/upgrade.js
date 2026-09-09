@@ -46,13 +46,13 @@ async function upgradePack(
   if (!pack) throw httpError(400, 'This server has no managed modpack');
 
   const STEP_LABELS = {
-    resolving: 'Resolving target version',
-    'backing-up': 'Creating pre-update backup',
-    stopping: 'Stopping server',
-    applying: 'Applying pack version',
-    recreating: 'Recreating container',
-    monitoring: 'Waiting for the server to come up',
-    overlay: 'Restoring custom mod overlay',
+    resolving: 'Resolving target version…',
+    'backing-up': 'Creating pre-update backup…',
+    stopping: 'Stopping server…',
+    applying: 'Applying pack version…',
+    recreating: 'Recreating container…',
+    monitoring: 'Waiting for the server to come up…',
+    overlay: 'Restoring custom mod overlay…',
   };
   const step = (s) => {
     activeUpgrades.set(serverId, { step: s, startedAt: activeUpgrades.get(serverId)?.startedAt || Date.now() });
@@ -167,7 +167,7 @@ async function upgradePack(
       serverId,
       actor,
       type: 'update-applied',
-      summary: `Pack upgraded: ${pack.project_name} ${pack.pinned_version_name} → ${resolved.versionName}`,
+      summary: `Pack upgraded: ${pack.project_name} ${pack.pinned_version_name} → ${resolved.versionName}.`,
       details: { backupId, from: pack.pinned_version_id, to: resolved.versionId },
       logExcerpt: excerpt || null,
     });
@@ -285,7 +285,7 @@ async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'update-rolled-back',
-      summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}`,
+      summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}.`,
     });
     logger.info('Finished a pack rollback.', { serverId, actor, toVersion: pack.previous_version_name, backupId });
     return { ok: true, version: pack.previous_version_name };
