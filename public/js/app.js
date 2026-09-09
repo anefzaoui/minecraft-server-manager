@@ -166,6 +166,21 @@ for (const el of document.querySelectorAll('[data-ts], [data-ts-ago]')) {
   });
 })();
 
+// ---- World-controls rail: static open panel at xl, collapsible below ----
+// The <details> ships closed (good on a phone - it's ~70 chips); at xl it must
+// always be open and lose its disclosure row so it reads as the sticky rail it
+// used to be.
+(() => {
+  const rail = document.getElementById('wc-rail');
+  if (!rail || rail.tagName !== 'DETAILS') return;
+  const wide = window.matchMedia('(min-width: 1280px)'); // Tailwind xl
+  const sync = () => {
+    rail.open = wide.matches;
+  };
+  sync();
+  wide.addEventListener('change', sync);
+})();
+
 // ---- Dashboard: live text filter over server cards ----
 (() => {
   const input = document.getElementById('server-filter');
