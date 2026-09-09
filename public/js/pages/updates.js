@@ -75,6 +75,15 @@ document.getElementById('updates-table')?.addEventListener('click', async (e) =>
   }
 });
 
+// Drop a row once its update has been applied - the entry is no longer pending.
+// When it was the last one, reload so the "everything up to date" empty state
+// renders in place of the now-empty table.
+function dropUpdateRow(row) {
+  const tbody = row.closest('tbody');
+  row.remove();
+  if (tbody && !tbody.querySelector('[data-update-row]')) setTimeout(() => location.reload(), 900);
+}
+
 // Ignore / un-ignore one row. subjectType tells the API which store to use
 // (content → per-mod flag, everything else → update_checks.ignored_version).
 async function toggleIgnore(row, btn, ignore) {
@@ -119,7 +128,7 @@ async function upgradePack(row, { serverId, serverName, subject, current, latest
       return;
     }
     toast(`Upgraded: ${result.from} → ${result.to}.`);
-    setTimeout(() => location.reload(), 900);
+    dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'The upgrade could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
@@ -160,10 +169,7 @@ async function upgradeMod(row, btn, { serverId, subject, current, latest, conten
     await withBusy(btn, 'Updating…', async () => {
       const data = await postJSON(`/api/servers/${serverId}/mods/update`, { contentId });
       toast(`${data.installed.name} updated to ${data.installed.version || latest}.`);
-      const tbody = row.closest('tbody');
-      row.remove();
-      // Last row gone → re-render for the "everything up to date" empty state.
-      if (tbody && !tbody.querySelector('[data-update-row]')) setTimeout(() => location.reload(), 900);
+      dropUpdateRow(row);
     });
   } catch (err) {
     toast(err.message || 'That mod could not be updated. Please try again.', { kind: 'error', timeout: 9000 });
@@ -191,7 +197,7 @@ async function upgradeImage(row, { serverId, serverName, current, latest }) {
       return;
     }
     toast('Server image updated.');
-    setTimeout(() => location.reload(), 900);
+    dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'The image update could not be completed. Please try again.', {
@@ -225,7 +231,7 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
         ).taskId,
     });
     toast(`Updated: ${result.from} → ${result.to}.`);
-    setTimeout(() => location.reload(), 900);
+    dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'The update could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
