@@ -12,7 +12,10 @@
       {{! No z needed: the sticky header (z-20) already stacks above the page,
           and within it DOM order wins. A z here would be capped at 20 anyway.
           The menu-in animation replays each open (display none → block). }}
-      <div data-task-panel class="card absolute right-0 top-10 hidden w-80 origin-top-right shadow-overlay animate-[menu-in_.12s_ease-out]">
+      {{! Below sm the header's backdrop-blur is the containing block for this
+          fixed panel, so inset-x-2 spans the viewport (minus a gutter) as a
+          drop sheet; at sm+ it's the anchored w-80 dropdown. }}
+      <div data-task-panel class="card hidden origin-top-right shadow-overlay animate-[menu-in_.12s_ease-out] max-sm:fixed max-sm:inset-x-2 max-sm:top-[calc(100%+0.5rem)] sm:absolute sm:right-0 sm:top-10 sm:w-80">
         <div class="border-b border-line px-3 py-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">Background tasks</div>
         <div data-task-list class="max-h-96 overflow-y-auto"></div>
       </div>
@@ -27,7 +30,7 @@
     {{! rounded-md, not a circle - the only fully-round control would break the
         blocky register. Diamond is identity color here (decorative, not meaning),
         used only as the fallback initial-letter background. }}
-    <button class="grid size-8 place-items-center overflow-hidden rounded-md bg-diamond-700 text-xs font-bold text-white" data-menu="user-menu" data-tip="{{user.username}} ({{capitalize user.role}})" data-user-totp-enabled="{{#if user.totpEnabled}}1{{/if}}" data-user-avatar="{{user.avatar}}">
+    <button class="grid size-8 place-items-center overflow-hidden rounded-md bg-diamond-700 text-xs font-bold text-white [@media(pointer:coarse)]:size-11" data-menu="user-menu" data-tip="{{user.username}} ({{capitalize user.role}})" data-user-totp-enabled="{{#if user.totpEnabled}}1{{/if}}" data-user-avatar="{{user.avatar}}">
       {{#if (avatarSrc user.avatar)}}
         <img src="{{avatarSrc user.avatar}}" alt="" class="size-full object-contain">
       {{else}}

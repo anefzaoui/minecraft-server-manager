@@ -86,22 +86,83 @@ for (const el of document.querySelectorAll('[data-ts], [data-ts-ago]')) {
 })();
 
 // ---- Mobile sidebar ----
+// A real drawer: locks body scroll, traps Tab inside the panel, moves focus in
+// on open and back to the toggle on close, and force-closes (clearing the
+// translate) when the viewport grows past the lg breakpoint where the sidebar
+// becomes a static column.
 (() => {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('sidebar-backdrop');
   const toggle = document.getElementById('sidebar-toggle');
   if (!sidebar || !toggle) return;
-  const close = () => {
+
+  const desktop = window.matchMedia('(min-width: 1024px)');
+  const isOpen = () => !sidebar.classList.contains('-translate-x-full');
+
+  const focusables = () =>
+    [...sidebar.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(
+      (el) => el.offsetParent !== null
+    );
+
+  const onKeydown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const items = focusables();
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
+  function open() {
+    sidebar.classList.remove('-translate-x-full');
+    backdrop.classList.remove('hidden');
+    toggle.setAttribute('aria-expanded', 'true');
+    // Only lock scroll / trap focus while it's an overlay (below lg).
+    if (!desktop.matches) {
+      document.documentElement.style.overflow = 'hidden';
+      document.addEventListener('keydown', onKeydown);
+      focusables()[0]?.focus();
+    }
+  }
+
+  function close() {
+    if (!isOpen()) return;
     sidebar.classList.add('-translate-x-full');
     backdrop.classList.add('hidden');
-  };
-  toggle.addEventListener('click', () => {
-    const closed = sidebar.classList.toggle('-translate-x-full');
-    backdrop.classList.toggle('hidden', closed);
-  });
+    toggle.setAttribute('aria-expanded', 'false');
+    document.documentElement.style.overflow = '';
+    document.removeEventListener('keydown', onKeydown);
+    toggle.focus();
+  }
+
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-controls', 'sidebar');
+  toggle.addEventListener('click', () => (isOpen() ? close() : open()));
   backdrop.addEventListener('click', close);
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !sidebar.classList.contains('-translate-x-full')) close();
+
+  // Crossing into desktop: the panel is a static column again - drop the
+  // overlay state so a drawer left "open" doesn't keep the body scroll-locked.
+  desktop.addEventListener('change', (e) => {
+    if (e.matches) {
+      sidebar.classList.remove('-translate-x-full');
+      backdrop.classList.add('hidden');
+      document.documentElement.style.overflow = '';
+      document.removeEventListener('keydown', onKeydown);
+      toggle.setAttribute('aria-expanded', 'false');
+    } else {
+      sidebar.classList.add('-translate-x-full');
+    }
   });
 })();
 

@@ -1,5 +1,12 @@
-// Tooltips for any element with data-tip="text". Hover + keyboard focus on
-// desktop, tap on touch. Single floating element, viewport-aware placement.
+// Tooltips for any element with data-tip="text". Hover + keyboard focus only -
+// on a touch device the hover event fires on tap and the tip then sticks over
+// the control it describes with no way to dismiss it, so the visual tooltip is
+// suppressed there. labelTips() still promotes data-tip to an accessible name
+// on every device.
+
+// A real mouse / trackpad. Re-checked lazily rather than cached so a hybrid
+// device that gains a mouse mid-session starts showing tooltips.
+const canHover = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 let tipEl;
 let currentTarget = null;
@@ -60,6 +67,7 @@ function hide() {
 }
 
 document.addEventListener('pointerover', (e) => {
+  if (!canHover()) return;
   const t = e.target.closest('[data-tip]');
   if (!t || t === currentTarget) return;
   clearTimeout(showTimer);
@@ -72,7 +80,10 @@ document.addEventListener('pointerover', (e) => {
 document.addEventListener('pointerout', (e) => {
   if (e.target.closest('[data-tip]')) hide();
 });
+// A tap anywhere dismisses a tooltip that a stylus / focus left visible.
+document.addEventListener('pointerdown', hide, true);
 document.addEventListener('focusin', (e) => {
+  if (!canHover()) return;
   const t = e.target.closest('[data-tip]');
   if (t) show(t);
 });

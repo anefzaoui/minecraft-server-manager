@@ -27,8 +27,10 @@ function open(trigger) {
 
   const menu = document.createElement('div');
   // z-[68]: menus must clear a modal backdrop (60) when triggered from inside
-  // one. See the stacking scale in input.css.
-  menu.className = 'card fixed z-[68] min-w-44 p-1 shadow-overlay animate-[menu-in_.12s_ease-out]';
+  // one. See the stacking scale in input.css. max-h + scroll so a long menu on
+  // a short (phone) viewport stays on screen instead of running off both ends.
+  menu.className =
+    'card fixed z-[68] min-w-44 max-h-[min(70vh,28rem)] overflow-y-auto p-1 shadow-overlay animate-[menu-in_.12s_ease-out]';
   menu.setAttribute('role', 'menu');
   menu.appendChild(tpl.content.cloneNode(true));
   menu.querySelectorAll('button, a').forEach((el) => {
@@ -101,4 +103,15 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
   }
 });
-document.addEventListener('scroll', close, true);
+// Close on scroll of the page (the menu is position:fixed and would detach from
+// its trigger) - but NOT when the scroll is inside the menu itself, or touch
+// momentum scrolling a long menu would dismiss it mid-read.
+document.addEventListener(
+  'scroll',
+  (e) => {
+    if (!openMenu) return;
+    if (e.target instanceof Node && openMenu.contains(e.target)) return;
+    close();
+  },
+  true
+);

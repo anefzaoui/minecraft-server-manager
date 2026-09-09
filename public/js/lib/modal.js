@@ -27,7 +27,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
   // minmax(0,1fr) track from grid-cols-1 gives w-full a definite size to
   // resolve against, so max-w-* caps it and content shrinks/wraps as normal.
   backdrop.className =
-    'fixed inset-0 z-[60] grid grid-cols-1 place-items-center bg-black/60 p-4 backdrop-blur-[2px] animate-[fade-in_.15s_ease-out]';
+    'fixed inset-0 z-[60] grid grid-cols-1 place-items-center bg-black/60 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-[2px] animate-[fade-in_.15s_ease-out]';
 
   const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' };
   const panel = document.createElement('div');
@@ -55,7 +55,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
   let footer = null;
   if (actions.length) {
     footer = document.createElement('div');
-    footer.className = 'flex justify-end gap-2 border-t border-line px-5 py-3.5';
+    footer.className = 'flex flex-wrap justify-end gap-2 border-t border-line px-5 py-3.5';
     for (const action of actions) {
       const btn = document.createElement('button');
       const kinds = { primary: 'btn btn-primary', danger: 'btn btn-danger', ghost: 'btn btn-ghost', default: 'btn' };

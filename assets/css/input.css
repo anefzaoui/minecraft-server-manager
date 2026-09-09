@@ -369,7 +369,12 @@
      users on desktop see zero change. */
   @media (pointer: coarse) {
     .btn-sm,
-    button.chip {
+    button.chip,
+    label.chip,
+    .seg-btn,
+    .tile,
+    .swatch,
+    .icon-btn {
       min-height: 2.75rem;
       min-width: 2.75rem;
     }
@@ -380,6 +385,25 @@
     }
     select.input {
       min-height: 2.75rem;
+    }
+    /* A bare checkbox/radio is 16px; float the whole row it sits in to 44px so
+       the label text is part of the target, without inflating the box itself. */
+    label:has(> input.msm-check),
+    label:has(> input.msm-radio) {
+      min-height: 2.75rem;
+    }
+    /* Range: keep the 8px track but give the control a 44px hit area, and a
+       thumb big enough to grab. */
+    input[type='range'].msm-range {
+      min-height: 2.75rem;
+    }
+    input[type='range'].msm-range::-webkit-slider-thumb {
+      width: 1.75rem;
+      height: 1.75rem;
+    }
+    input[type='range'].msm-range::-moz-range-thumb {
+      width: 1.75rem;
+      height: 1.75rem;
     }
   }
 

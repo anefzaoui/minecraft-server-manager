@@ -172,6 +172,9 @@ function labelFor(select) {
 
 export function enhanceSelect(select) {
   if (select.dataset.native !== undefined || select.dataset.enhanced) return;
+  // The styled trigger is a single-value control - a <select multiple> would
+  // silently lose every selection past the first. Leave those native.
+  if (select.multiple) return;
   select.dataset.enhanced = '1';
   const label = select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || 'Select an option';
   const btn = buildTrigger(select, label);
