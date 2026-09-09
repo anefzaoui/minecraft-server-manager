@@ -1,4 +1,4 @@
-<div class="grid gap-4 lg:grid-cols-2" id="ig-root" data-server-id="{{server.id}}" data-invite="{{json integrations.invite}}">
+<div class="space-y-4" id="ig-root" data-server-id="{{server.id}}" data-invite="{{json integrations.invite}}">
 
   {{#if (eq sub 'chatbot')}}
   {{#if integrations.wizard}}
@@ -54,7 +54,7 @@
 
       <div>
         <label class="label" for="ig-wz-prompt">Chatbot persona and system prompt</label>
-        <textarea class="input min-h-72 font-mono text-xs leading-5" id="ig-wz-prompt" maxlength="12000">{{integrations.wizard.systemPrompt}}</textarea>
+        <textarea class="input min-h-72 max-h-[60vh] resize-y font-mono text-xs leading-5" id="ig-wz-prompt" maxlength="12000">{{integrations.wizard.systemPrompt}}</textarea>
         <p class="help">This is sent as the system message for this server. Powers are exposed as fixed, validated tools, never raw console commands.</p>
       </div>
     </div>
@@ -70,12 +70,12 @@
       <div class="mt-4 grid gap-4 lg:grid-cols-2">
         <div>
           <label class="label" for="ig-wz-welcome-message">Join greeting</label>
-          <textarea class="input min-h-24 text-xs" id="ig-wz-welcome-message" maxlength="400">{{integrations.wizard.welcomeMessage}}</textarea>
+          <textarea class="input min-h-24 max-h-72 resize-y text-xs" id="ig-wz-welcome-message" maxlength="400">{{integrations.wizard.welcomeMessage}}</textarea>
           <p class="help">Broadcast once when a player joins. Variables: <code class="code-inline">{player}</code>, <code class="code-inline">{chatbot}</code>, and <code class="code-inline">{mention}</code>. The older <code class="code-inline">{wizard}</code> variable remains supported.</p>
         </div>
         <div>
           <label class="label" for="ig-wz-checkin-message">Playtime check-in</label>
-          <textarea class="input min-h-24 text-xs" id="ig-wz-checkin-message" maxlength="400">{{integrations.wizard.checkinMessage}}</textarea>
+          <textarea class="input min-h-24 max-h-72 resize-y text-xs" id="ig-wz-checkin-message" maxlength="400">{{integrations.wizard.checkinMessage}}</textarea>
           <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
             <span>Send privately after</span>
             <input class="input w-24" type="number" id="ig-wz-checkin-minutes" min="0" max="1440" value="{{integrations.wizard.checkinMinutes}}">
@@ -106,17 +106,17 @@
       <div class="mt-4 grid gap-4 lg:grid-cols-4">
         <div>
           <label class="label" for="ig-wz-testers">Basic users</label>
-          <textarea class="input min-h-28 font-mono text-xs" id="ig-wz-testers" placeholder="Gleep52&#10;PlayerA">{{{joinLines integrations.wizard.powerTesters}}}</textarea>
+          <textarea class="input min-h-28 max-h-72 resize-y font-mono text-xs" id="ig-wz-testers" placeholder="Gleep52&#10;PlayerA">{{{joinLines integrations.wizard.powerTesters}}}</textarea>
           <p class="help">One exact player name per line. Maximum 50.</p>
         </div>
         <div>
           <label class="label" for="ig-wz-controllers">Power controllers</label>
-          <textarea class="input min-h-28 font-mono text-xs" id="ig-wz-controllers" placeholder="Gleep52">{{{joinLines integrations.wizard.powerControllers}}}</textarea>
+          <textarea class="input min-h-28 max-h-72 resize-y font-mono text-xs" id="ig-wz-controllers" placeholder="Gleep52">{{{joinLines integrations.wizard.powerControllers}}}</textarea>
           <p class="help">Only these exact players may affect another online player. Their gifts may use any valid item ID, but still obey the quantity limit. Add them to Basic users too if they should retain self/world powers.</p>
         </div>
         <div>
           <label class="label" for="ig-wz-gifts">Allowed gifts</label>
-          <textarea class="input min-h-28 font-mono text-xs" id="ig-wz-gifts">{{{joinLines integrations.wizard.giftItems}}}</textarea>
+          <textarea class="input min-h-28 max-h-72 resize-y font-mono text-xs" id="ig-wz-gifts">{{{joinLines integrations.wizard.giftItems}}}</textarea>
           <p class="help">One namespaced item ID per line. Restricts gifts that Basic users give themselves; power controllers may give other players any valid vanilla or modded item.</p>
         </div>
         <div class="space-y-3">

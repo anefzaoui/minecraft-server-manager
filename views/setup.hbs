@@ -78,17 +78,17 @@
 
       <div class="mt-5">
         <label class="label" for="su-domain">Public domain <span class="text-ink-faint">(optional)</span></label>
-        <div class="flex gap-2">
-          <input class="input" id="su-domain" placeholder="mc.example.com" autocomplete="off" spellcheck="false">
+        <div class="flex flex-wrap gap-2">
+          <input class="input min-w-0 flex-1" id="su-domain" placeholder="mc.example.com" autocomplete="off" spellcheck="false">
           <button class="btn shrink-0" type="button" id="su-domain-save">Save Domain</button>
         </div>
-        <p class="help">Shown to players instead of your IP address in connect addresses, for example <code>mc.example.com:25565</code>. Enter the domain only, with no scheme or port.</p>
+        <p class="help">Shown to players instead of your IP address in connect addresses, for example <code class="code-inline">mc.example.com:25565</code>. Enter the domain only, with no scheme or port.</p>
       </div>
 
       <div class="mt-5">
         <label class="label" for="su-cf">CurseForge API key <span class="text-ink-faint">(optional)</span></label>
-        <div class="flex gap-2">
-          <input class="input" id="su-cf" type="password" placeholder="$2a$10$…" autocomplete="off" spellcheck="false">
+        <div class="flex flex-wrap gap-2">
+          <input class="input min-w-0 flex-1" id="su-cf" type="password" placeholder="$2a$10$…" autocomplete="off" spellcheck="false">
           <button class="btn shrink-0" type="button" id="su-cf-save">Test &amp; Save</button>
         </div>
         <p class="help">Needed only for automated CurseForge modpacks. Get one at

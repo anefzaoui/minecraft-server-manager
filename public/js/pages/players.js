@@ -610,12 +610,12 @@ function init(root) {
     const content = document.createElement('div');
     content.className = 'space-y-4 text-sm';
     content.innerHTML = `
-      <div class="seg w-full" role="tablist">
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
+      <div class="seg max-w-full" role="tablist">
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
       </div>
 
       <div data-tp-panel="coords" class="space-y-3">
