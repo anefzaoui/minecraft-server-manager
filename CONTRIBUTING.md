@@ -21,6 +21,14 @@ Docker running to exercise anything that touches containers. First run creates t
 All state lives under `./data` (or `$DATA_DIR`). To start from a clean slate, stop the app and delete
 that directory; it's rebuilt on boot.
 
+## Optional: CodeGraph indexing
+
+This repo works well with CodeGraph, which builds a local symbol/call-graph index for faster code
+navigation and better AI-assisted edits. It's entirely optional and per-developer: install the
+CodeGraph CLI, run its daemon at the repo root, and it maintains a `.codegraph/` directory. That
+directory is gitignored (a large, machine-local SQLite index plus a daemon socket and PID file) and
+each developer's daemon rebuilds it, so there's nothing to commit or share.
+
 ## Before you open a PR
 
 These are the exact gates CI runs. Each works on a clean clone with no Docker or running app:
