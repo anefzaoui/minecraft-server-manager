@@ -14,7 +14,7 @@
   {{! ---- Top stat strip ---- }}
   <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
     <div class="card p-3">
-      <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Status</div>
+      <div class="eyebrow">Status</div>
       <div class="mt-1 flex items-center gap-1.5 text-sm font-bold {{statusText server.status}}">
         <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
         {{statusLabel server.status}}
@@ -22,15 +22,15 @@
       <div class="text-xs text-ink-faint">{{default server.statusDetail "-"}}</div>
     </div>
     <div class="card p-3">
-      <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Uptime</div>
+      <div class="eyebrow">Uptime</div>
       <div class="mt-1 text-lg font-bold tabular-nums" data-metric="uptime">{{default server.stats.uptime "-"}}</div>
     </div>
     <div class="card p-3">
-      <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Players</div>
+      <div class="eyebrow">Players</div>
       <div class="mt-1 text-lg font-bold tabular-nums" data-metric="players">{{server.players.online}}/{{server.players.max}}</div>
     </div>
     <div class="card p-3">
-      <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">TPS</div>
+      <div class="eyebrow">TPS</div>
       {{#if server.stats.perf}}
         <div class="mt-1 text-lg font-bold tabular-nums" data-metric="tps">{{server.stats.perf.tps1}}</div>
         <div class="text-xs text-ink-faint" data-metric="mspt">{{#if server.stats.perf.mspt}}{{server.stats.perf.mspt}} ms/tick{{else}}last 1&nbsp;min{{/if}}</div>
@@ -43,12 +43,12 @@
       {{/if}}
     </div>
     <div class="card p-3">
-      <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">CPU</div>
+      <div class="eyebrow">CPU</div>
       <div class="mt-1 text-lg font-bold tabular-nums" data-metric="cpu">{{server.stats.cpuPct}}%</div>
       <div class="text-xs text-ink-faint">{{#if server.resources.cpus}}of {{server.resources.cpus}} cores{{else}}no limit{{/if}}</div>
     </div>
     <div class="card p-3">
-      <div class="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Memory</div>
+      <div class="eyebrow">Memory</div>
       <div class="mt-1 text-lg font-bold tabular-nums" data-metric="mem">{{server.stats.memUsedMb}}</div>
       <div class="text-xs text-ink-faint">/ {{server.resources.containerMemoryMb}} MB</div>
     </div>
@@ -148,7 +148,7 @@
         {{/if}}
       </div>
       <div>
-        <div class="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-faint">Worlds</div>
+        <div class="mb-2 eyebrow">Worlds</div>
         {{#if worldSizes.length}}
           <ul class="space-y-1.5 text-sm">
             {{#each worldSizes}}

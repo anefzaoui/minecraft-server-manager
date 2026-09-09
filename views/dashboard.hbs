@@ -1,3 +1,5 @@
+{{#unless serversOnly}}{{> page-header heading="DASHBOARD" sub="Every server at a glance: status, resource use, and the latest activity across the panel."}}{{/unless}}
+
 <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if serversOnly}}hidden{{/if}}">
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Servers online</div>
@@ -21,7 +23,7 @@
 </div>
 
 {{#unless serversOnly}}
-<div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 {{#if noServers}}hidden{{/if}}">
+<div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if noServers}}hidden{{/if}}">
   <div class="card min-w-0 p-4">
     <div class="flex items-center gap-1 text-xs text-ink-faint">{{{icon 'memory-stick' 'size-3.5'}}} Memory allotted</div>
     <div class="mt-1 break-words text-2xl font-bold tabular-nums">{{overview.mem.allottedMb}}<span class="text-base font-medium text-ink-faint"> MB</span></div>
@@ -126,18 +128,20 @@
     <h2 class="font-semibold">Recent Activity</h2>
     <a href="/activity" class="text-sm text-link hover:underline">View All →</a>
   </div>
-  <div class="card divide-y divide-line">
-    {{#each activity}}
-      <div class="flex items-center gap-3 px-4 py-3 text-sm">
-        <span class="badge shrink-0">{{type}}</span>
-        <span class="min-w-0 flex-1 truncate">{{summary}}</span>
-        {{! deleted-server names are plain faint text - link-styled dead spans read as broken. }}
-        {{#if serverId}}<a href="/servers/{{serverId}}" class="hidden shrink-0 text-xs text-link hover:underline sm:block">{{server}}</a>{{else}}<span class="hidden shrink-0 text-xs text-ink-faint sm:block">{{server}}</span>{{/if}}
-        <span class="shrink-0 text-xs text-ink-faint" data-ts-ago="{{ts}}">{{ts}}</span>
-      </div>
-    {{else}}
-      <div class="px-4 py-8 text-center text-sm text-ink-faint">No activity yet. Actions on your servers will show up here.</div>
-    {{/each}}
+  <div class="card">
+    <ol class="divide-y divide-line">
+      {{#each activity}}
+        <li class="flex flex-wrap items-center gap-2 p-3 text-sm">
+          <span class="badge shrink-0">{{type}}</span>
+          <span class="min-w-0 flex-1">{{summary}}</span>
+          {{! deleted-server names are plain faint text - link-styled dead spans read as broken. }}
+          {{#if serverId}}<a href="/servers/{{serverId}}" class="shrink-0 text-xs text-link hover:underline">{{server}}</a>{{else}}<span class="shrink-0 text-xs text-ink-faint">{{server}}</span>{{/if}}
+          <span class="shrink-0 text-xs text-ink-faint" data-ts-ago="{{ts}}">{{ts}}</span>
+        </li>
+      {{else}}
+        <li class="p-8 text-center text-sm text-ink-faint">No activity yet. Actions on your servers will show up here.</li>
+      {{/each}}
+    </ol>
   </div>
 </div>
 <script type="module" src="/js/pages/dashboard.js"></script>

@@ -12,7 +12,7 @@
       tab order, and Enter/Space fired commands at a stopped server. }}
   <fieldset class="min-w-0 space-y-3" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Time</div>
+      <div class="mb-1 eyebrow">Time</div>
       <div class="flex flex-wrap gap-1.5">
         <button class="chip" data-wc="time-day">{{{icon 'sun' 'size-3.5'}}} Day</button>
         <button class="chip" data-wc="time-noon">{{{icon 'sun' 'size-3.5'}}} Noon</button>
@@ -21,7 +21,7 @@
       </div>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Weather</div>
+      <div class="mb-1 eyebrow">Weather</div>
       <div class="flex flex-wrap gap-1.5">
         <button class="chip" data-wc="weather-clear">{{{icon 'sun' 'size-3.5'}}} Clear</button>
         <button class="chip" data-wc="weather-rain">{{{icon 'cloud-rain' 'size-3.5'}}} Rain</button>
@@ -29,7 +29,7 @@
       </div>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Common Rules</div>
+      <div class="mb-1 eyebrow">Common Rules</div>
       <div class="flex flex-wrap gap-1.5">
         <button class="chip" data-wc-toggle="keepinv" data-rule="keepInventory">Keep Inventory</button>
         <button class="chip" data-wc-toggle="instantrespawn" data-rule="doImmediateRespawn">Instant Respawn</button>
@@ -48,7 +48,7 @@
       </div>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Combat</div>
+      <div class="mb-1 eyebrow">Combat</div>
       <div class="flex flex-wrap items-center gap-1.5">
         {{! Unlike every other chip here, PvP writes server.properties and only
             takes effect on the next start - the "on restart" tag and the pending
@@ -61,7 +61,7 @@
       <p class="mt-1 text-[11px] text-ink-faint">Changes the PvP setting for the whole server. It takes effect on the next restart.</p>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Difficulty &amp; Saving</div>
+      <div class="mb-1 eyebrow">Difficulty &amp; Saving</div>
       <div class="flex flex-wrap gap-1.5">
         <button class="chip" data-wc="difficulty-peaceful">Peaceful</button>
         <button class="chip" data-wc="difficulty-easy">Easy</button>
@@ -81,7 +81,7 @@
       </summary>
       <div class="space-y-3 border-t border-line p-3">
         <div>
-          <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">World Rules</div>
+          <div class="mb-1 eyebrow">World Rules</div>
           <div class="flex flex-wrap gap-1.5">
             <button class="chip" data-wc-toggle="limitedcraft" data-rule="doLimitedCrafting">Limited Crafting</button>
             <button class="chip" data-wc-toggle="tiledrops" data-rule="doTileDrops">Block Drops</button>
@@ -102,7 +102,7 @@
           </div>
         </div>
         <div>
-          <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Mobs &amp; Damage</div>
+          <div class="mb-1 eyebrow">Mobs &amp; Damage</div>
           <div class="flex flex-wrap gap-1.5">
             <button class="chip" data-wc-toggle="mobloot" data-rule="doMobLoot">Mob Loot</button>
             <button class="chip" data-wc-toggle="patrols" data-rule="doPatrolSpawning">Pillager Patrols</button>
@@ -117,7 +117,7 @@
           </div>
         </div>
         <div>
-          <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Chat &amp; Messages</div>
+          <div class="mb-1 eyebrow">Chat &amp; Messages</div>
           <div class="flex flex-wrap gap-1.5">
             <button class="chip" data-wc-toggle="cmdblockout" data-rule="commandBlockOutput">Command Block Output</button>
             <button class="chip" data-wc-toggle="logadmin" data-rule="logAdminCommands">Admin Command Logging</button>

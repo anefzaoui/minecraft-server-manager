@@ -605,6 +605,19 @@
     @apply mt-1 max-w-prose text-xs leading-relaxed text-ink-faint;
   }
 
+  /* Section eyebrow - the small all-caps label above a group of controls
+     (sidebar "Servers", world-controls sections, modpacks column headers).
+     Was hand-rolled as this exact utility string ~15 times. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-ink-faint;
+  }
+
+  /* Inline code inside body copy (a var name, a command, a hostname). Three
+     slightly different hand-rolled treatments existed; this is the one. */
+  .code-inline {
+    @apply rounded bg-inset px-1 font-mono text-[0.9em] text-ink-soft;
+  }
+
   .table-base {
     @apply w-full text-left text-sm;
     font-variant-numeric: tabular-nums;

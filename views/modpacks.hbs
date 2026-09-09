@@ -15,11 +15,11 @@
   </div>
 
   <div class="hidden" id="packs-results-wrap">
-    <h3 class="mb-3 mt-6 text-xs font-semibold uppercase tracking-wider text-ink-faint">Search Results</h3>
+    <h3 class="mb-3 mt-6 eyebrow">Search Results</h3>
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="packs-results"></div>
   </div>
 
-  <h3 class="mb-3 mt-6 text-xs font-semibold uppercase tracking-wider text-ink-faint">Installed</h3>
+  <h3 class="mb-3 mt-6 eyebrow">Installed</h3>
 
   {{#unless packServers.length}}
     {{> empty-state iconName='package' title='No Modpacks Installed' message='No server is running a managed modpack yet. Search above, then use the create wizard. Every install is version-pinned, so restarts never surprise you.' ctaHref='/servers/new' ctaLabel='Create a Server'}}

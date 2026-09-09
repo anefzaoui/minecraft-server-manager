@@ -1,8 +1,7 @@
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 h-dvh w-60 -translate-x-full border-r border-line bg-surface transition-transform lg:sticky lg:top-0 lg:translate-x-0">
   <div class="flex h-full flex-col">
     <a href="/" class="flex items-center gap-2.5 border-b border-line px-4 py-4 texture-top">
-      <span class="grid size-9 place-items-center rounded-md bg-grass-600 text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)]">{{{icon 'pickaxe' 'size-5'}}}</span>
-      <span class="pixel text-[11px] leading-tight text-ink">Minecraft <span class="text-ok">Server Manager</span></span>
+      {{> brand-lockup size='size-9' textSize='text-[11px]'}}
     </a>
 
     <nav class="flex-1 space-y-0.5 overflow-y-auto p-3">
@@ -39,7 +38,7 @@
       </a>
 
       {{#if servers.length}}
-        <div class="pt-3 pb-1 pl-3 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Servers</div>
+        <div class="pt-3 pb-1 pl-3 eyebrow">Servers</div>
         {{#each servers}}
           <a class="nav-item" href="/servers/{{id}}">
             <img src="{{iconSrc this.icon}}" alt="" class="size-5 rounded-sm" style="background: {{this.accent}}" data-fallback-icon="/icons/servers/grass.svg">

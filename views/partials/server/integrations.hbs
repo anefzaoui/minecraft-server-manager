@@ -6,7 +6,7 @@
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h3 class="flex items-center gap-2 font-semibold">{{{icon 'sparkles' 'size-4 text-link'}}} Chatbot Settings</h3>
-        <p class="mt-1 text-xs text-ink-faint">Players invoke this chatbot with <code class="rounded bg-inset px-1">@{{integrations.wizard.invocationName}}</code>. Configuration and transcripts are visible only to admins.</p>
+        <p class="mt-1 text-xs text-ink-faint">Players invoke this chatbot with <code class="code-inline">@{{integrations.wizard.invocationName}}</code>. Configuration and transcripts are visible only to admins.</p>
       </div>
       <span class="msm-toggle"><input type="checkbox" id="ig-wz-enabled" {{#if integrations.wizard.enabled}}checked{{/if}}><span></span></span>
     </div>
@@ -19,12 +19,12 @@
             <span class="font-mono text-sm text-ink-faint">@</span>
             <input class="input font-mono text-xs" id="ig-wz-name" maxlength="32" pattern="[A-Za-z][A-Za-z0-9_-]{0,31}" value="{{integrations.wizard.invocationName}}" placeholder="wizard">
           </div>
-          <p class="help">Players call the chatbot with this name, for example <code class="rounded bg-inset px-1">@bubba</code>. It also becomes the chatbot's chat and transcript label.</p>
+          <p class="help">Players call the chatbot with this name, for example <code class="code-inline">@bubba</code>. It also becomes the chatbot's chat and transcript label.</p>
         </div>
         <div>
           <label class="label" for="ig-wz-url">OpenAI-compatible base URL</label>
           <input class="input font-mono text-xs" id="ig-wz-url" value="{{integrations.wizard.baseUrl}}" placeholder="http://192.168.1.50:11434">
-          <p class="help">Ollama works with its host and port; <code class="rounded bg-inset px-1">/v1</code> is added automatically. LAN/private addresses are supported.</p>
+          <p class="help">Ollama works with its host and port; <code class="code-inline">/v1</code> is added automatically. LAN/private addresses are supported.</p>
         </div>
         <div>
           <label class="label" for="ig-wz-model">Model</label>
@@ -71,7 +71,7 @@
         <div>
           <label class="label" for="ig-wz-welcome-message">Join greeting</label>
           <textarea class="input min-h-24 text-xs" id="ig-wz-welcome-message" maxlength="400">{{integrations.wizard.welcomeMessage}}</textarea>
-          <p class="help">Broadcast once when a player joins. Variables: <code>{player}</code>, <code>{chatbot}</code>, and <code>{mention}</code>. The older <code>{wizard}</code> variable remains supported.</p>
+          <p class="help">Broadcast once when a player joins. Variables: <code class="code-inline">{player}</code>, <code class="code-inline">{chatbot}</code>, and <code class="code-inline">{mention}</code>. The older <code class="code-inline">{wizard}</code> variable remains supported.</p>
         </div>
         <div>
           <label class="label" for="ig-wz-checkin-message">Playtime check-in</label>
@@ -81,7 +81,7 @@
             <input class="input w-24" type="number" id="ig-wz-checkin-minutes" min="0" max="1440" value="{{integrations.wizard.checkinMinutes}}">
             <span class="text-ink-soft">minutes online</span>
           </div>
-          <p class="help">Sent once per play session. Set 0 to disable. The message may also use <code>{minutes}</code>.</p>
+          <p class="help">Sent once per play session. Set 0 to disable. The message may also use <code class="code-inline">{minutes}</code>.</p>
         </div>
       </div>
       <div class="mt-4">
@@ -89,9 +89,9 @@
         <div class="flex flex-wrap items-center gap-2 text-sm">
           <span>Keep listening for</span>
           <input class="input w-24" type="number" id="ig-wz-conversation-minutes" min="0" max="60" value="{{integrations.wizard.conversationMinutes}}">
-          <span class="text-ink-soft">minutes after a player says <code>@{{integrations.wizard.invocationName}} chat</code></span>
+          <span class="text-ink-soft">minutes after a player says <code class="code-inline">@{{integrations.wizard.invocationName}} chat</code></span>
         </div>
-        <p class="help">During this explicitly opened window, that player can reply without repeating the mention. <code>@{{integrations.wizard.invocationName}} bye</code>, leaving the server, or the timeout closes it. Messages beginning with <code>!</code>, <code>/</code>, or another <code>@</code> are ignored. Set 0 to disable.</p>
+        <p class="help">During this explicitly opened window, that player can reply without repeating the mention. <code class="code-inline">@{{integrations.wizard.invocationName}} bye</code>, leaving the server, or the timeout closes it. Messages beginning with <code class="code-inline">!</code>, <code class="code-inline">/</code>, or another <code class="code-inline">@</code> are ignored. Set 0 to disable.</p>
       </div>
     </div>
 
@@ -166,7 +166,7 @@
         {{! The stored webhook is shown as a fact, not a placeholder - a
             placeholder disappears on focus and reads as example text. }}
         {{#if integrations.discord.hasWebhook}}
-          <p class="help">Stored: <code class="rounded bg-inset px-1 font-mono">{{integrations.discord.webhookMasked}}</code>. Leave blank to keep it, or paste a new URL to replace it.</p>
+          <p class="help">Stored: <code class="code-inline">{{integrations.discord.webhookMasked}}</code>. Leave blank to keep it, or paste a new URL to replace it.</p>
         {{else}}
           <p class="help">Create a webhook in your Discord server under Server Settings → Integrations → Webhooks, then paste its URL here. It is stored encrypted.</p>
         {{/if}}
@@ -260,7 +260,7 @@
             <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
             <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App. It installs the right Minecraft version and the mods, and adds this server to their multiplayer list.</p>
             {{#if integrations.invite.manualMods.length}}
-              <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="rounded bg-inset px-1">mods</code> folder themselves:</p>
+              <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="code-inline">mods</code> folder themselves:</p>
               <ul class="mt-1 list-inside list-disc text-xs text-ink-soft">
                 {{#each integrations.invite.manualMods}}<li>{{name}} <span class="font-mono text-ink-faint">({{filename}})</span></li>{{/each}}
               </ul>
@@ -279,7 +279,7 @@
           <summary class="cursor-pointer font-medium text-sm">Playing over the internet (port forwarding)</summary>
           <p class="mt-2 text-ink-soft">{{integrations.invite.portForwardGuidance}}</p>
           {{#if integrations.invite.publicIp}}
-            <p class="mt-2">Detected public IP: <code class="rounded bg-inset px-1 font-mono">{{integrations.invite.publicIp}}</code></p>
+            <p class="mt-2">Detected public IP: <code class="code-inline">{{integrations.invite.publicIp}}</code></p>
           {{else}}
             <p class="mt-2 text-ink-faint">Your public IP address could not be detected right now. The panel may be offline.</p>
           {{/if}}
