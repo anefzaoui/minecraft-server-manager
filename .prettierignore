@@ -13,3 +13,6 @@ pnpm-lock.yaml
 # Handlebars templates: Prettier's hbs formatting reflows markup in ways that hurt
 # readability here - keep them hand-formatted.
 *.hbs
+
+# Claude Code tooling config and slash-command prompts - not project source.
+.claude
