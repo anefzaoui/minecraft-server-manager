@@ -59,6 +59,11 @@ function init(serverId, running) {
   }
 
   async function refreshState() {
+    // Below xl the whole rail is a collapsed <details>; nothing is on screen,
+    // so there is nothing to read (an empty list would otherwise mean "all
+    // ~40 rules", one RCON round trip each, every poll, on every phone).
+    const rail = root.closest('details#wc-rail') || document.getElementById('wc-rail');
+    if (rail && rail.tagName === 'DETAILS' && !rail.open) return;
     try {
       const rules = visibleRules();
       const qs = rules.length ? `?rules=${encodeURIComponent(rules.join(','))}` : '';
@@ -180,8 +185,10 @@ function init(serverId, running) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'That command could not be run. Please try again.');
+      // A proxy 502/504 page or a 413 is not JSON - fall back to a plain message
+      // instead of surfacing "Unexpected token '<'" to the user.
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || 'That command could not be run. Please try again.');
       toast(data.label);
       // PvP is a server.properties write, not a live command - flag that a
       // restart is needed before it actually changes anything in-game.
@@ -221,6 +228,11 @@ function init(serverId, running) {
   });
 
   refreshState();
+  // A collapsed rail (phones, narrow windows) skipped the read above; read
+  // the moment it is opened.
+  document.getElementById('wc-rail')?.addEventListener('toggle', (e) => {
+    if (e.target.open) refreshState();
+  });
   if (running) {
     // Local tick: one real second ≈ 20 game ticks. Resync over RCON every 30s.
     setInterval(() => {

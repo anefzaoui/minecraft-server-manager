@@ -44,7 +44,7 @@
 
     <div class="mt-3" data-card-disk>
       <div class="mb-1 flex justify-between text-[11px] text-ink-faint">
-        <span>Disk</span><span>{{bytes disk.used}} of {{bytes disk.quota}}</span>
+        <span>Disk</span><span>{{bytes disk.used}}{{#if disk.quota}} of {{bytes disk.quota}}{{else}} (no quota){{/if}}</span>
       </div>
       <div class="meter"><div class="{{meterColor disk.used disk.quota}}" style="width: {{pct disk.used disk.quota}}%"></div></div>
     </div>

@@ -88,11 +88,14 @@ function init(serverId) {
   // on a timer: `list` for player counts, and `time query …` / bare `gamerule
   // <name>` reads while the World Controls page is open. Scoped to those forms
   // so a state-changing command you type (time set, gamerule x true, …) shows.
+  // Every pattern is anchored to the log-line body right after the
+  // "[thread/LEVEL]: " prefix (optionally a "[Plugin] " tag), so a player
+  // saying "Thread RCON Client started" in chat ("<Steve> ...") never matches.
   const RCON_NOISE = [
-    /Thread RCON Client\b.*\b(started|shutting down)\b/i,
-    /Thread RCON Listener started\b/i,
-    /\bRCON running on \b/i,
-    /Rcon issued server command:\s*\/?(list|time query \w+|gamerule \S+)\s*$/i,
+    /\]:\s*Thread RCON Client\b.*\b(started|shutting down)\b/i,
+    /\]:\s*Thread RCON Listener started\b/i,
+    /\]:\s*RCON running on \b/i,
+    /\]:\s*(?:\[[^\]]+\]\s*)?Rcon issued server command:\s*\/?(list|time query \w+|gamerule \S+)\s*$/i,
   ];
   let hideRconNoise = true;
   try {
@@ -228,12 +231,18 @@ function init(serverId) {
   // than a dropped socket - drives the slow reconnect cadence below.
   let streamEnded = false;
   function connect() {
+    // Reconnecting after a clean stream end re-tails the container: the broker
+    // replays the last lines, which are already on screen. Replace the log with
+    // that batch instead of appending it again (and again, every poll) - and
+    // keep the "server is stopped" note until real output arrives.
+    const retailing = streamEnded;
+    if (retailing) clearedInitial = false;
     streamEnded = false;
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}/ws/console/${serverId}`);
     ws.addEventListener('open', () => {
       reconnectDelay = 1000;
-      if (disconnectNote) {
+      if (disconnectNote && !retailing) {
         disconnectNote.remove();
         disconnectNote = null;
       }
@@ -249,6 +258,7 @@ function init(serverId) {
         if (!clearedInitial) {
           clearedInitial = true;
           log.innerHTML = '';
+          disconnectNote = null; // wiped with the rest of the log
         }
         for (const line of msg.text.split(/\r?\n/)) if (line.trim()) appendLine(line);
       } else if (msg.kind === 'cmd-result') {

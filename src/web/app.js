@@ -146,7 +146,16 @@ function createApp() {
         concat: (...args) => args.slice(0, -1).join(''),
         // Character references avoid Handlebars adding the partial's indentation
         // after every literal newline inside a <textarea> value.
-        joinLines: (values) => (Array.isArray(values) ? values.join('&#10;') : ''),
+        // Renders inside a <textarea> via triple-stash, so escape each line
+        // ourselves: a stored value containing "</textarea><script>" must stay text.
+        joinLines: (values) =>
+          Array.isArray(values)
+            ? values
+                .map((v) =>
+                  String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                )
+                .join('&#10;')
+            : '',
         inc: (v) => Number(v) + 1,
         mul: (a, b) => Number(a) * Number(b),
         plural: (n, one, many) => (Number(n) === 1 ? one : many),
@@ -284,7 +293,7 @@ function createApp() {
   // Public, read-only API: Bearer-token auth (no cookie), GET-only. Mounted in
   // the public zone - BEFORE requireAuth (there is no session to load) and
   // BEFORE `app.use('/api', apiLimiter)` so the panel-wide per-IP limiter does
-  // not also apply here; the router brings its own per-token publicApiLimiter.
+  // not also apply here; the router brings its own per-IP and per-token limiters.
   // originGuard/requireWrite below are GET-only no-ops for it. Keep this order.
   app.use('/api/v1', require('./routes/apiV1'));
   // Cap /api request volume before any auth/DB work runs on a flood.

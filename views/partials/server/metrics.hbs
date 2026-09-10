@@ -140,7 +140,7 @@
           <p class="text-sm text-ink-faint">No folder sizes yet. Run a storage scan from the <a class="text-link hover:underline" href="/storage">Storage page</a>.</p>
         {{/if}}
         <div class="mt-4 border-t border-line pt-3">
-          <div class="mb-1 flex justify-between text-xs"><span>Quota</span><span class="text-ink-faint">{{bytes server.disk.used}} / {{bytes server.disk.quota}}</span></div>
+          <div class="mb-1 flex justify-between text-xs"><span>Quota</span><span class="text-ink-faint">{{bytes server.disk.used}}{{#if server.disk.quota}} / {{bytes server.disk.quota}}{{else}} (no quota){{/if}}</span></div>
           <div class="meter"><div class="{{meterColor server.disk.used server.disk.quota}}" style="width: {{pct server.disk.used server.disk.quota}}%"></div></div>
         </div>
         {{#if diskFree}}

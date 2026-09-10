@@ -89,12 +89,14 @@ function applyCombinedLive(data) {
     if (!active) continue;
     const memSeg = root.querySelector(`[data-combined-seg="memory"][data-seg-id="${id}"]`);
     const cpuSeg = root.querySelector(`[data-combined-seg="cpu"][data-seg-id="${id}"]`);
+    // Live numbers when the poll has them, the server-rendered ones otherwise -
+    // so the "Total memory / Total CPU" cards move with the servers, not just the bars.
     if (memSeg) {
-      sums.memUsed += Number(memSeg.dataset.segMb) || 0;
+      sums.memUsed += live && live.memUsedMb != null ? Number(live.memUsedMb) : Number(memSeg.dataset.segMb) || 0;
       sums.memLimit += Number(memSeg.dataset.segLimit) || 0;
     }
     if (cpuSeg) {
-      sums.cpuUsed += Number(cpuSeg.dataset.segCpu) || 0;
+      sums.cpuUsed += live && live.cpuPct != null ? Number(live.cpuPct) : Number(cpuSeg.dataset.segCpu) || 0;
       sums.cpuCap += Number(cpuSeg.dataset.segCap) || 0;
     }
     if (live && live.players) {
@@ -139,11 +141,11 @@ function applyCombinedLive(data) {
     const memCell = row.querySelector(`[data-combined-row-mem="${id}"]`);
     const playersCell = row.querySelector(`[data-combined-row-players="${id}"]`);
     if (live) {
-      if (cpuCell && live.cpuPct != null) cpuCell.innerHTML = `${live.cpuPct}%`;
+      if (cpuCell && live.cpuPct != null) cpuCell.textContent = `${Number(live.cpuPct)}%`;
       if (memCell && live.memUsedMb != null)
-        memCell.innerHTML = `${live.memUsedMb} <span class="text-ink-faint">MB</span>`;
+        memCell.innerHTML = `${Number(live.memUsedMb)} <span class="text-ink-faint">MB</span>`;
       if (playersCell && live.players) {
-        playersCell.innerHTML = `${live.players.online}<span class="text-ink-faint">/${live.players.max}</span>`;
+        playersCell.innerHTML = `${Number(live.players.online)}<span class="text-ink-faint">/${Number(live.players.max)}</span>`;
         row.dataset.rowPlayers = live.players.online;
         row.dataset.rowPlayersMax = live.players.max;
       }
@@ -223,6 +225,7 @@ async function hydrateDocker() {
 const STATUS_META = {
   running: { label: 'Running', dot: 'bg-grass-500', text: 'text-ok', pulse: true },
   starting: { label: 'Starting', dot: 'bg-gold-500', text: 'text-warn', pulse: true },
+  stalled: { label: 'Stalled', dot: 'bg-redstone-500', text: 'text-danger', pulse: false },
   unhealthy: { label: 'Unhealthy', dot: 'bg-gold-500', text: 'text-warn', pulse: true },
   updating: { label: 'Updating', dot: 'bg-diamond-500', text: 'text-link', pulse: true },
   stopped: { label: 'Stopped', dot: 'bg-stone-500', text: 'text-ink-faint', pulse: false },

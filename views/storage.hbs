@@ -85,7 +85,7 @@
               <tr>
                 <td data-th=""><a class="font-medium text-link hover:underline" href="/servers/{{id}}">{{name}}</a></td>
                 <td data-th="" class="sm:w-40"><div class="meter"><div class="{{meterColor disk.used disk.quota}}" style="width: {{pct disk.used disk.quota}}%"></div></div></td>
-                <td data-th="" class="text-xs text-ink-faint sm:w-32 sm:text-right">{{bytes disk.used}} / {{bytes disk.quota}}</td>
+                <td data-th="" class="text-xs text-ink-faint sm:w-32 sm:text-right">{{bytes disk.used}}{{#if disk.quota}} / {{bytes disk.quota}}{{else}} (no quota){{/if}}</td>
               </tr>
             {{else}}
               <tr><td data-th="" class="p-6 text-center text-ink-faint">No servers yet. Per-server quotas appear here once you create one.</td></tr>
