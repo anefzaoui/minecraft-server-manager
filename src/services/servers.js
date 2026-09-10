@@ -68,11 +68,23 @@ function panelUidGid() {
   return { uid: process.getuid(), gid: process.getgid() };
 }
 
+// Catalog fields typed size-mb are plain number inputs, so their env value is
+// stored as the bare number the user typed ("4096"). The image passes that
+// straight to Java, which reads a bare number as BYTES: INIT_MEMORY=512 became
+// -Xms512 and the JVM refused to start ("Too small initial heap", verified
+// live). Normalise at assembly time so already-stored values are fixed too.
+const SIZE_MB_ENV_KEYS = require('../config/field-catalog')
+  .fields.filter((f) => f.scope === 'env' && f.type === 'size-mb')
+  .map((f) => f.key);
+
 function assembleEnv(server) {
   const env = { ...server.env };
   env.EULA = 'TRUE';
   env.TYPE = server.type;
   if (server.mc_version && server.mc_version !== 'LATEST') env.VERSION = server.mc_version;
+  for (const key of SIZE_MB_ENV_KEYS) {
+    if (/^\d+$/.test(String(env[key] ?? '').trim())) env[key] = `${String(env[key]).trim()}M`;
+  }
   env.MEMORY = `${server.heap_mb}M`;
   env.ENABLE_RCON = 'true';
   let rconPassword = secrets.tryDecrypt(server.rcon_password_cipher);

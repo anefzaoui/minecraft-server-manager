@@ -38,7 +38,7 @@
       </div>
       <div class="min-w-0">
         <div class="text-ink-faint">Memory</div>
-        <div class="mt-0.5 truncate font-semibold">{{#if (eq status 'running')}}{{stats.memUsedMb}}<span class="font-normal text-ink-faint"> / {{resources.containerMemoryMb}} MB</span>{{else}}-{{/if}}</div>
+        <div class="mt-0.5 truncate font-semibold"{{#if memory.note}} data-tip="{{memory.note}}"{{/if}}>{{#if (eq status 'running')}}{{stats.memUsedMb}}<span class="font-normal text-ink-faint"> / {{resources.containerMemoryMb}} MB</span>{{else}}-{{/if}}</div>
       </div>
     </div>
 
