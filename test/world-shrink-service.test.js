@@ -90,3 +90,79 @@ test('the dry run does not modify the region file', async () => {
   await shrinkWorld(SID, { worldName: WORLD, dryRun: true, spawnKeepChunks: 0 });
   assert.deepEqual(fs.readFileSync(abs), before);
 });
+
+// ---------------------------------------------------------------------------
+// Companion stores, sub-dimensions, and the real spawn
+
+const { SECTOR: SEC } = require('../src/utils/mcaRegion');
+
+function levelDat(spawnX, spawnZ) {
+  const root = nbt.comp({
+    Data: nbt.comp({
+      SpawnX: { type: 'int', value: spawnX },
+      SpawnY: { type: 'int', value: 64 },
+      SpawnZ: { type: 'int', value: spawnZ },
+    }),
+  });
+  return zlib.gzipSync(nbt.writeUncompressed(root));
+}
+
+function presentSlots(file) {
+  const buf = fs.readFileSync(file);
+  const out = [];
+  for (let i = 0; i < 1024; i++) if (buf.readUInt32BE(i * 4) !== 0) out.push(i);
+  return out;
+}
+
+test('dropped chunks also leave the entities/ and poi/ region files', async () => {
+  const world = path.join(config.dataDir, 'servers', SID, 'w_companion');
+  for (const sub of ['region', 'entities', 'poi']) fs.mkdirSync(path.join(world, sub), { recursive: true });
+  // slot 20 is far from spawn and unvisited -> dropped; slot 25 is visited -> kept
+  fs.writeFileSync(path.join(world, 'region', 'r.0.0.mca'), makeRegion({ 20: 1, 25: 5000 }));
+  fs.writeFileSync(path.join(world, 'entities', 'r.0.0.mca'), makeRegion({ 20: 1, 25: 1 }));
+  fs.writeFileSync(path.join(world, 'poi', 'r.0.0.mca'), makeRegion({ 20: 1 }));
+  const r = await shrinkWorld(SID, { worldName: 'w_companion' });
+  assert.equal(r.chunksRemoved, 1);
+  assert.deepEqual(presentSlots(path.join(world, 'region', 'r.0.0.mca')), [25]);
+  assert.deepEqual(presentSlots(path.join(world, 'entities', 'r.0.0.mca')), [25], 'stale entities left with the chunk');
+  assert.equal(fs.existsSync(path.join(world, 'poi', 'r.0.0.mca')), false, 'a poi file emptied by the drop is removed');
+});
+
+test('vanilla/Forge sub-dimensions (DIM-1, DIM1, dimensions/*) are shrunk too, without spawn protection', async () => {
+  const world = path.join(config.dataDir, 'servers', SID, 'w_dims');
+  fs.mkdirSync(path.join(world, 'region'), { recursive: true });
+  fs.writeFileSync(path.join(world, 'region', 'r.0.0.mca'), makeRegion({ 0: 1 })); // spawn-protected in the overworld
+  for (const sub of ['DIM-1', 'DIM1', path.join('dimensions', 'mymod', 'void')]) {
+    fs.mkdirSync(path.join(world, sub, 'region'), { recursive: true });
+    fs.writeFileSync(path.join(world, sub, 'region', 'r.0.0.mca'), makeRegion({ 0: 1 })); // same slot, no protection here
+  }
+  const r = await shrinkWorld(SID, { worldName: 'w_dims' });
+  assert.deepEqual(r.dimensions.sort(), ['.', 'DIM-1', 'DIM1', path.join('dimensions', 'mymod', 'void')].sort());
+  assert.equal(r.chunksRemoved, 3, 'the three sub-dimension chunks went, the overworld spawn chunk stayed');
+  assert.equal(fs.existsSync(path.join(world, 'region', 'r.0.0.mca')), true);
+  assert.equal(fs.existsSync(path.join(world, 'DIM-1', 'region', 'r.0.0.mca')), false);
+});
+
+test('spawn protection is centred on the level.dat spawn, not the world origin', async () => {
+  const world = path.join(config.dataDir, 'servers', SID, 'w_spawn');
+  fs.mkdirSync(path.join(world, 'region'), { recursive: true });
+  fs.writeFileSync(path.join(world, 'level.dat'), levelDat(20 * 16 + 3, 0)); // spawn in chunk (20, 0)
+  // slot 0 = chunk (0,0): far from the real spawn -> dropped. slot 20 = chunk (20,0): the spawn -> kept.
+  fs.writeFileSync(path.join(world, 'region', 'r.0.0.mca'), makeRegion({ 0: 1, 20: 1 }));
+  const r = await shrinkWorld(SID, { worldName: 'w_spawn' });
+  assert.deepEqual(r.spawn, { cx: 20, cz: 0, source: 'level.dat' });
+  assert.equal(r.chunksRemoved, 1);
+  assert.deepEqual(presentSlots(path.join(world, 'region', 'r.0.0.mca')), [20]);
+});
+
+test('an unreadable chunk (unsupported compression) is kept and counted', async () => {
+  const world = path.join(config.dataDir, 'servers', SID, 'w_lz4');
+  fs.mkdirSync(path.join(world, 'region'), { recursive: true });
+  const buf = makeRegion({ 20: 1 });
+  buf.writeUInt8(4, 2 * SEC + 4); // flip slot 20's compression byte to 4 (LZ4)
+  fs.writeFileSync(path.join(world, 'region', 'r.0.0.mca'), buf);
+  const r = await shrinkWorld(SID, { worldName: 'w_lz4' });
+  assert.equal(r.chunksRemoved, 0);
+  assert.equal(r.chunksUnreadable, 1);
+  assert.deepEqual(presentSlots(path.join(world, 'region', 'r.0.0.mca')), [20]);
+});

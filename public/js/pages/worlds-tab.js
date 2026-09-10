@@ -261,9 +261,16 @@ function init(serverId, serverName, serverStatus) {
             const res = await postJSON(`${base}/${encodeURIComponent(world)}/shrink`, { dryRun: true, ...opts() });
             if (!res) return false;
             resultEl.classList.remove('hidden');
+            const dims =
+              Array.isArray(res.dimensions) && res.dimensions.length > 1
+                ? ` across ${res.dimensions.length} dimensions`
+                : '';
+            const unreadable = res.chunksUnreadable
+              ? ` ${res.chunksUnreadable.toLocaleString()} chunk(s) could not be read (unsupported compression) and will be kept.`
+              : '';
             resultEl.textContent = res.chunksRemoved
-              ? `About ${res.chunksRemoved.toLocaleString()} chunks (~${fmtBytes(res.bytesFreed)}) would be removed, from ${res.regionsScanned} region file(s).`
-              : 'Nothing to remove: every chunk in this world has been visited long enough.';
+              ? `About ${res.chunksRemoved.toLocaleString()} chunks (~${fmtBytes(res.bytesFreed)}) would be removed, from ${res.regionsScanned} region file(s)${dims}.${unreadable}`
+              : `Nothing to remove: every chunk in this world has been visited long enough.${unreadable}`;
             return false; // keep the modal open
           },
         },

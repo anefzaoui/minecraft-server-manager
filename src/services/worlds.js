@@ -995,6 +995,23 @@ function readLevelSeed(levelDatAbs) {
   return null;
 }
 
+/** Read the world spawn (SpawnX/SpawnZ block coords) out of level.dat, or null. */
+function readLevelSpawn(levelDatAbs) {
+  const buf = readLevelBuffer(levelDatAbs);
+  if (!buf) return null;
+  // NBT int tag: 0x03, name length (2B BE), name, 4-byte BE value
+  const readInt = (name) => {
+    const needle = Buffer.concat([Buffer.from([0x03, 0x00, name.length]), Buffer.from(name, 'latin1')]);
+    const idx = buf.indexOf(needle);
+    if (idx === -1 || idx + needle.length + 4 > buf.length) return null;
+    return buf.readInt32BE(idx + needle.length);
+  };
+  const x = readInt('SpawnX');
+  const z = readInt('SpawnZ');
+  if (x == null || z == null) return null;
+  return { x, z };
+}
+
 function readLevelBuffer(levelDatAbs) {
   try {
     const raw = fs.readFileSync(levelDatAbs);
@@ -1229,6 +1246,8 @@ function sleep(ms) {
 }
 
 module.exports = {
+  isDimName,
+  readLevelSpawn,
   detectWorldRoot,
   importArchive,
   extractFromServer,
