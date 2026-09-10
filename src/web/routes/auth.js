@@ -124,13 +124,13 @@ router.post(
         .parse(req.body);
       // On an exposed bind, the admin claim needs the PIN printed to the console.
       const setupGate = require('../../services/setupGate');
-      if (setupGate.isLocked()) {
+      if (setupGate.isLocked(req.ip)) {
         const msg = 'Too many wrong PIN attempts. Wait a moment and try again (or restart the panel to unlock early).';
         return wantsJson
           ? res.status(429).json({ ok: false, error: msg })
           : res.status(429).render('setup', { title: 'Welcome', layout: 'bare', needsPin: true, error: msg });
       }
-      if (!setupGate.check(pin)) {
+      if (!setupGate.check(pin, req.ip)) {
         const msg = "That setup PIN is wrong. Check the panel's console output for the 6-digit PIN.";
         return wantsJson
           ? res.status(403).json({ ok: false, error: msg })

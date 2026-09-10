@@ -10,7 +10,7 @@ const express = require('express');
 const { z } = require('zod');
 const { makeJsonErrorHandler } = require('../middleware/jsonErrorHandler');
 const { bearerAuth, readOnly } = require('../middleware/apiToken');
-const { publicApiLimiter } = require('../middleware/rateLimit');
+const { publicApiIpLimiter, publicApiTokenLimiter } = require('../middleware/rateLimit');
 const settings = require('../../services/settings');
 const servers = require('../../services/servers');
 const liveCache = require('../../services/liveCache');
@@ -23,9 +23,10 @@ router.use((req, res, next) => {
   if (!settings.isPublicApiEnabled()) return res.status(404).json({ ok: false, error: 'Not found' });
   next();
 });
-router.use(publicApiLimiter); // cheapest guard first; IP-keyed until a token is seen
+router.use(publicApiIpLimiter); // cheapest guard first: per-IP cap on pre-auth probing
 router.use(readOnly); // 405 on non-GET before any token/DB work
 router.use(bearerAuth); // 401 unless a live, unrevoked, unexpired token
+router.use(publicApiTokenLimiter); // the documented per-token budget
 
 // Public status vocabulary - a stable v1 contract that insulates callers from
 // internal status churn (e.g. 'unhealthy', 'stalled', 'over-quota').
@@ -96,6 +97,10 @@ router.get('/servers/:id', (req, res) => {
   }
   res.json({ ok: true, server: serverStatusView(row) });
 });
+
+// Terminal 404: the surface is self-contained. Without this an unknown path
+// under /api/v1 would fall through into the session-authenticated /api stack.
+router.use((req, res) => res.status(404).json({ ok: false, error: 'Not found' }));
 
 router.use(makeJsonErrorHandler('api-v1'));
 

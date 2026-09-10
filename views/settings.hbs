@@ -41,7 +41,7 @@
           {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
           <div>
             <span class="font-semibold text-danger">The login cookie is not marked Secure.</span>
-            <span>A public domain is set, but the secure-cookie option is not. If this panel is reachable over plain HTTP, the login cookie can be read in transit. Put the panel behind HTTPS and set <span class="font-mono">COOKIE_SECURE=true</span>, or <span class="font-mono">COOKIE_SECURE=auto</span>, in the environment. See the README for details.</span>
+            <span>A public domain is set, but the secure-cookie option is not. If this panel is reachable over plain HTTP, the login cookie can be read in transit. Put the panel behind HTTPS and set <span class="font-mono">COOKIE_SECURE=true</span>, or <span class="font-mono">COOKIE_SECURE=auto</span> together with <span class="font-mono">TRUST_PROXY</span>, in the environment. See the README for details.</span>
           </div>
         </div>
         {{/if}}

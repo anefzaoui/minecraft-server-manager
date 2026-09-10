@@ -38,13 +38,17 @@ There are no cookies and **no CORS**: this is for server-to-server and CLI
 callers, not browser apps on another origin. If the panel is behind a reverse
 proxy, make sure the proxy forwards the `Authorization` header.
 
-Failures return `401` with `{ "ok": false, "error": "..." }`. A non-`GET`
-request returns `405`. When the API is disabled, every route returns `404`.
+Failures return `401` with `{ "ok": false, "error": "..." }`. Anything other than `GET`
+(or `HEAD`) returns `405`. Unknown paths return `404`. When the API is disabled, every route
+returns `404`.
 
 ## Rate limit
 
 Each token gets its own budget, `RATE_LIMIT_PUBLIC_API_PER_MIN` (default `120`
-requests/minute; `0` disables the limiter). Over the limit returns `429`.
+requests/minute; `0` disables the limiter). Over the limit returns `429`. Requests that
+never present a valid token (missing, malformed, revoked, or expired) are capped separately
+per client IP at five times that number, so probing cannot bypass the budget by rotating
+tokens.
 
 ## Endpoints
 

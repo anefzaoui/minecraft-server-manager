@@ -133,16 +133,25 @@ test('COOKIE_SAMESITE=none without a secure cookie fails fast', () => {
   assert.match(res.stderr, /COOKIE_SAMESITE=none/);
 });
 
-test('TRUST_PROXY=true fails fast instead of trusting a spoofable X-Forwarded-For', () => {
-  const res = loadConfig({ TRUST_PROXY: 'true' });
-  assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /TRUST_PROXY=true is not allowed/);
+test('TRUST_PROXY=true still boots (deprecated) but is downgraded to one hop with a warning', () => {
+  const res = spawnSync(
+    process.execPath,
+    ['-e', "const c=require('./src/config'); process.stdout.write(JSON.stringify({tp:c.trustProxy}))"],
+    {
+      cwd: ROOT,
+      env: { ...process.env, SESSION_SECRET: 'valid-session-secret-abcdef123456', TRUST_PROXY: 'true' },
+      encoding: 'utf8',
+    }
+  );
+  assert.equal(res.status, 0, res.stderr);
+  assert.deepEqual(JSON.parse(res.stdout), { tp: 1 });
+  assert.match(res.stderr, /TRUST_PROXY=true is deprecated/);
 });
 
-test('COOKIE_SECURE=auto without TRUST_PROXY fails fast (silent non-Secure downgrade)', () => {
+test('COOKIE_SECURE=auto without TRUST_PROXY boots with a loud warning (silent non-Secure downgrade)', () => {
   const res = loadConfig({ COOKIE_SECURE: 'auto' });
-  assert.notEqual(res.status, 0);
-  assert.match(res.stderr, /COOKIE_SECURE=auto requires TRUST_PROXY/);
+  assert.equal(res.status, 0, res.stderr);
+  assert.match(res.stderr, /COOKIE_SECURE=auto has no effect without TRUST_PROXY/);
 });
 
 test('TRUST_PROXY / COOKIE_SECURE resolve to usable values', () => {

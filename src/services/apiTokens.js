@@ -55,12 +55,13 @@ function sqlTimeToMs(ts) {
   return Date.parse(/^\d{4}-\d{2}-\d{2} /.test(s) ? s.replace(' ', 'T') + 'Z' : s);
 }
 
-/** True when an absolute expiry has passed. NaN-safe so a malformed value can
- *  never disable expiry checking. */
+/** True when an absolute expiry has passed. Fails closed: a value that does
+ *  not parse counts as expired, so a malformed row can never disable expiry. */
 function isExpired(expiresAt) {
   if (!expiresAt) return false;
   const ms = sqlTimeToMs(expiresAt);
-  return Number.isFinite(ms) && ms <= Date.now();
+  if (!Number.isFinite(ms)) return true;
+  return ms <= Date.now();
 }
 
 /**

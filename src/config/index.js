@@ -153,11 +153,11 @@ function resolveDefaults() {
  * names the actual proxy(es). Unset → false (trust nothing), the safe default
  * for a directly-exposed panel.
  *
- * A bare `true` is explicitly refused: it trusts the FIRST (left-most) entry of
- * an attacker-supplied `X-Forwarded-For`, which lets any client spoof `req.ip`
- * and dodge every per-IP control that keys on it (the per-account+per-IP login
- * lockout and the API/auth rate limiters). Trust nothing unless the operator
- * names the real proxy hop count or its ints.
+ * A bare `true` is deprecated (treated as one hop, with a boot warning): it
+ * trusts the FIRST (left-most) entry of an attacker-supplied `X-Forwarded-For`,
+ * which lets any client spoof `req.ip` and dodge every per-IP control that keys
+ * on it (the per-account+per-IP login lockout and the API/auth rate limiters).
+ * Trust nothing unless the operator names the real proxy hop count or its IPs.
  */
 function resolveTrustProxy() {
   const raw = (process.env.TRUST_PROXY || '').trim();
@@ -165,11 +165,15 @@ function resolveTrustProxy() {
   if (/^\d+$/.test(raw)) return Number(raw);
   const low = raw.toLowerCase();
   if (low === 'true') {
-    throw new Error(
-      'TRUST_PROXY=true is not allowed - it trusts an attacker-supplied X-Forwarded-For and defeats ' +
-        'the per-IP login lockout and rate limiters. Use the proxy hop count (e.g. TRUST_PROXY=1) or ' +
-        'a comma-separated list of proxy IPs/CIDRs (e.g. TRUST_PROXY=192.168.1.10).'
+    // Accepted for one more release so an existing .env keeps booting, but
+    // downgraded to "one hop" (the only thing a bare `true` can sensibly mean
+    // for a single reverse proxy) with a loud warning. A later release refuses it.
+    console.warn(
+      '[boot] TRUST_PROXY=true is deprecated and treated as TRUST_PROXY=1. A bare true trusts an attacker-supplied ' +
+        'X-Forwarded-For and defeats the per-IP login lockout and rate limiters. Set the proxy hop count ' +
+        '(TRUST_PROXY=1) or a comma-separated list of proxy IPs/CIDRs (TRUST_PROXY=192.168.1.10) before the next upgrade.'
     );
+    return 1;
   }
   if (low === 'false') return false;
   return raw; // 'loopback' | 'uniquelocal' | comma-list of IPs - Express parses these
@@ -322,11 +326,13 @@ if (config.cookieSameSite === 'none' && config.cookieSecure === false) {
 // true when `trust proxy` is set (the panel itself serves plain HTTP; the TLS
 // hop dies at the reverse proxy). With no TRUST_PROXY the cookie silently ships
 // WITHOUT the Secure flag - readable/forgeable in transit - which is exactly
-// the downgrade `auto` exists to prevent. Fail fast instead of guessing.
+// the downgrade `auto` exists to prevent. This booted silently before, so warn
+// loudly for one release rather than refusing to start; a later release fails.
 if (config.cookieSecure === 'auto' && config.trustProxy === false) {
-  throw new Error(
-    'COOKIE_SECURE=auto requires TRUST_PROXY so Express can see the proxy-terminated HTTPS hop (set the hop count or proxy IP/CIDR list). ' +
-      'If the panel is genuinely plain-HTTP, set COOKIE_SECURE=false; if it IS behind a TLS proxy, set TRUST_PROXY.'
+  console.warn(
+    '[boot] COOKIE_SECURE=auto has no effect without TRUST_PROXY: Express cannot see the proxy-terminated HTTPS hop, so the ' +
+      'session cookie is sent WITHOUT the Secure flag. Set TRUST_PROXY (the hop count or the proxy IP/CIDR list) if the panel ' +
+      'is behind a TLS proxy, or COOKIE_SECURE=false if it is genuinely plain HTTP. A future release will refuse to start like this.'
   );
 }
 
