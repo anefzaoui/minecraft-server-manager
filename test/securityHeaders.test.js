@@ -5,6 +5,7 @@
 // profile-picture cropper (public/js/lib/imageCrop.js) can't preview the
 // chosen image and the whole crop/upload flow silently fails.
 
+require('./helpers/env'); // first: points DATA_DIR at a throwaway dir before any src/ module loads
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { securityHeaders } = require('../src/web/middleware/securityHeaders');

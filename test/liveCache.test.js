@@ -1,5 +1,6 @@
 'use strict';
 
+require('./helpers/env'); // first: points DATA_DIR at a throwaway dir before any src/ module loads
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const liveCache = require('../src/services/liveCache');

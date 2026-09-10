@@ -8,6 +8,19 @@ const os = require('node:os');
 const fs = require('node:fs');
 const path = require('node:path');
 
+// Loud failure instead of silent damage: if any src/ module is already loaded,
+// config has bound DATA_DIR to the REAL data directory and everything below is
+// too late - the test would run migrations and DELETEs against a developer's
+// live panel database. (This happened: a test that required
+// src/storage/pathGuard before this helper wiped the servers in ./data.)
+const early = Object.keys(require.cache).find((k) => /[\\/]src[\\/]/.test(k) && !/[\\/]node_modules[\\/]/.test(k));
+if (early) {
+  throw new Error(
+    `test/helpers/env must be required before any src/ module, but ${path.relative(process.cwd(), early)} is already loaded. ` +
+      "Move `require('./helpers/env')` (or './helpers/app') to the top of the test file."
+  );
+}
+
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-test-'));
 process.env.DATA_DIR = dir;
 if (!process.env.SESSION_SECRET) {

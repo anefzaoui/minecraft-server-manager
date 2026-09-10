@@ -4,11 +4,14 @@
 // column now distinguishes Joined (never whitelisted) vs Whitelisted vs Banned,
 // and shows a "join blocked" hint for un-whitelisted names while enforcement is on.
 
+// First, before any src/ module: the harness points DATA_DIR at a throwaway
+// directory. Loading src/storage/pathGuard ahead of it once ran this file's
+// `DELETE FROM servers` against a developer's real panel database.
+const app = require('./helpers/app');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { dataPath } = require('../src/storage/pathGuard');
-const app = require('./helpers/app');
 
 let cookie;
 
