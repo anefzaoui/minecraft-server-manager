@@ -109,6 +109,10 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     status: s.status,
     ports: { game: s.port_game, rcon: s.port_rcon, bedrock: s.port_bedrock },
     resources: { heapMb: s.heap_mb, containerMemoryMb: s.container_memory_mb, cpus: s.cpus },
+    // What the memory meter is going to show and why (#25): a heap given to
+    // Java up front reads as fully used from the first minute, so the meters
+    // say so and where the heap sits relative to the container limit.
+    memory: memoryVM(s),
     stats: { cpuPct: 0, memUsedMb: 0, uptime: null, perf: null, perfSupported: true },
     players: { online: 0, max: Number(s.env.MAX_PLAYERS) || 20, names: [] },
     disk: { used: diskUsedFor(s.id), quota: s.disk_quota_bytes },
@@ -242,6 +246,20 @@ function packFromRow(pack, check) {
     versionId: pack.pinned_version_id,
     latest: check && check.latest_name ? check.latest_name : pack.pinned_version_name,
     latestVersionId: check && check.latest_version ? check.latest_version : null,
+  };
+}
+
+/** Heap-vs-limit facts for the memory meters. */
+function memoryVM(s) {
+  const plan = require('../services/jvm').heapPlan(s.env, s.heap_mb);
+  const limit = Number(s.container_memory_mb) || 0;
+  return {
+    heapMb: plan.heapMb,
+    initMb: plan.initMb,
+    growsOnDemand: plan.growsOnDemand,
+    note: plan.note,
+    // Where the heap sits on a meter whose full width is the container limit.
+    heapPct: limit && plan.heapMb ? Math.min(100, Math.round((plan.heapMb / limit) * 100)) : 0,
   };
 }
 

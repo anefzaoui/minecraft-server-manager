@@ -96,3 +96,28 @@ test('PATCH preserves a numeric 0 - it is a real value, not "not set"', async ()
   const env = JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', 'srv_adv01').env_json);
   assert.equal(env.NETWORK_COMPRESSION_THRESHOLD, '0'); // 0 must survive, not be dropped as falsy
 });
+
+test('bare numbers in size fields reach the container as megabytes (#25 follow-up)', async () => {
+  // The Initial/Maximum heap inputs store the bare number typed; Java reads a
+  // bare -Xms/-Xmx as BYTES and refuses to start ("Too small initial heap").
+  const patch = await app.req('PATCH', '/api/servers/srv_adv01', {
+    cookie,
+    body: { env: { INIT_MEMORY: '512', MAX_MEMORY: '2048M' } },
+  });
+  assert.equal(patch.status, 200);
+  const spec = await app.req('GET', '/api/servers/srv_adv01/docker-spec', { cookie });
+  assert.equal(spec.status, 200);
+  assert.match(spec.json.yaml, /INIT_MEMORY: 512M/, 'bare MB gets its unit');
+  assert.match(spec.json.yaml, /MAX_MEMORY: 2048M/, 'an explicit unit is left alone');
+});
+
+test('the overview explains a heap given up front and marks it on the memory meter', async () => {
+  await app.req('PATCH', '/api/servers/srv_adv01', { cookie, body: { env: {} } });
+  let page = await app.req('GET', '/servers/srv_adv01', { cookie, headers: { Accept: 'text/html' } });
+  assert.equal(page.status, 200);
+  assert.match(page.text, /whole 1024 MB heap up front/);
+  assert.match(page.text, /class="meter-mark"/);
+  await app.req('PATCH', '/api/servers/srv_adv01', { cookie, body: { env: { INIT_MEMORY: '512' } } });
+  page = await app.req('GET', '/servers/srv_adv01', { cookie, headers: { Accept: 'text/html' } });
+  assert.match(page.text, /starts with 512 MB and grows toward its 1024 MB heap/);
+});
