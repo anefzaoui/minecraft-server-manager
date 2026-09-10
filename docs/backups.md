@@ -42,6 +42,8 @@ Two optional ceilings apply on top of the per-reason counts, both off by default
 
 Backups can be **renamed** from the backup list (the rename button on each row). The archive on disk and the panel's record move together, so download, restore, and retention keep working with the new name.
 
+![Rename a backup](images/backup-rename.png)
+
 > Retention is bounded automatically, but large modded archives still count toward a server's [disk quota](storage.md), so keep an eye on the total for big packs.
 
 ## Restoring

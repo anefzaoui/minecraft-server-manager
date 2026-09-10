@@ -17,6 +17,8 @@ servers, or a specific subset), and optionally an expiry date. The full key (a
 Bearer token) is shown **once**, in a dialog; copy it now, because only a short prefix
 is kept afterwards, for identification in the list.
 
+![Public API settings](images/settings-public-api.png)
+
 Creating the first key turns the API on automatically (the **Let outside apps
 read status** switch is a pause control: turn it off to stop serving without
 cancelling any keys). Cancel a key from the same table at any time; clients using it lose

@@ -46,6 +46,8 @@ it, so a regenerated chunk does not inherit stale mobs, minecarts, or job sites.
    shrink, and start it again in one go (the server is started again even if
    the shrink fails). Progress shows in the task tray.
 
+![Shrink world](images/world-shrink.png)
+
 ## Doing it as part of a backup
 
 On the **Backups** tab, tick **"Also shrink the world afterwards"** before

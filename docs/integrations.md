@@ -14,6 +14,8 @@ The panel forwards server events to a Discord channel through a webhook. No bot,
 2. In the panel, open the server's **Settings → Discord** tab, paste the URL into **Webhook URL**, turn the card **on**, and **Save**. The URL is stored encrypted (in the same at-rest store as your API keys).
 3. Use **Send test** to confirm it works.
 
+![Discord integration](images/integrations-discord.png)
+
 To replace a stored URL, paste a new one and save; leave the field blank to keep the current one. The stored URL is shown masked (the token is hidden).
 
 ### What gets sent

@@ -8,6 +8,10 @@ Click **Create a Server** (top bar) or the **Create a server** card to open the 
 
 ![Create a server](images/create-wizard.png)
 
+The wizard pre-fills memory, CPU, and disk-quota fields from **Defaults for new servers** on the Settings page, which an admin can change at any time.
+
+![Defaults for new servers](images/settings-defaults.png)
+
 You choose:
 
 - A **name** (and optional icon, accent color, and tags to organize your fleet).
@@ -41,6 +45,14 @@ Opening a server gives you a tabbed workspace:
 - **Settings** - everything about how the server runs, plus the [integrations](integrations.md) (Discord, status page, invites, chatbot).
 
 ![Server overview](images/server-overview.png)
+
+The **World Controls** rail rides along on every tab: the in-game clock, weather, the common gamerules as toggle chips, and "Show all world rules" for the rest.
+
+![World controls](images/world-controls.png)
+
+**Monitoring → Live** shows TPS and milliseconds per tick, a health and stability card with the last 24 h / 7 d of crashes and restarts, and per-world sizes.
+
+![Live monitoring](images/monitoring-live.png)
 
 ## Server settings
 
