@@ -4,7 +4,7 @@
 
 ## Creating a server
 
-Click **New Server** (top bar) or the **Create a server** card to open the wizard.
+Click **Create a Server** (top bar) or the **Create a server** card to open the wizard.
 
 ![Create a server](images/create-wizard.png)
 

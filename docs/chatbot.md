@@ -50,7 +50,7 @@ modded recipes direct the player to JEI/REI rather than fabricating an answer.
 - `src/analytics/ingest.js`: forwards parsed joins, leaves, and player chat to the chatbot.
 - `src/web/routes/wizard.js`, `public/js/pages/integrations.js`, and
   `views/partials/server/integrations.hbs`: admin API and per-server Integrations UI.
-- `src/db/migrations/010_wizard_chat.js` through `014_wizard_power_controllers.js`: persistent schema.
+- `src/db/migrations/011_wizard_chat.js` through `019_wizard_power_controllers.js`: persistent schema.
 - `test/wizard.test.js`: authorization, tool-boundary, retention, outreach, and chat behavior tests.
 
 The internal `wizard` route/module/table names are retained for upgrade and API compatibility;

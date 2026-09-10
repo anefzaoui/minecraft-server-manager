@@ -19,7 +19,7 @@ Across the top:
 
 Each server shows as a card with its status (Running, Starting, Stopped, Crashed), the type and Minecraft version, and its game port. For running servers you also get live **players**, **CPU**, **memory**, and **disk** usage, updated continuously.
 
-Click a card to open that server. The empty **Create a server** card and the top-bar **New Server** button both start the [creation wizard](servers.md).
+Click a card to open that server. The empty **Create a server** card and the top-bar **Create a Server** button both start the [creation wizard](servers.md).
 
 You can search and sort your servers, and switch between grid and list layouts with the toggle on the right.
 

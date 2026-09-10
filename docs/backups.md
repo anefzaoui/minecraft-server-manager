@@ -38,6 +38,10 @@ Retention is capped **per server, per reason**: the newest in each group are kep
 
 `pre-restore` has its own small bucket precisely so an automatic safety backup can never evict a `manual` backup you deliberately kept.
 
+Two optional ceilings apply on top of the per-reason counts, both off by default: a **maximum age** (backups older than N days are pruned, whatever their reason) and a **maximum total size** per server (the oldest backups are pruned until the total fits, `pre-restore` ones first). The newest backup of a server is never pruned by either ceiling. All of these can be changed globally on the Settings page, and overridden per server on its Backups tab.
+
+Backups can be **renamed** from the backup list (the rename button on each row). The archive on disk and the panel's record move together, so download, restore, and retention keep working with the new name.
+
 > Retention is bounded automatically, but large modded archives still count toward a server's [disk quota](storage.md), so keep an eye on the total for big packs.
 
 ## Restoring

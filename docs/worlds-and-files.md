@@ -22,7 +22,7 @@ Every file operation is confined to the server's own data directory. The panel r
 
 ## Mods
 
-For modded servers, the **Mods** tab (also under **World**) manages the mod set: browse and add mods, and see what's installed. Mod and pack updates surface on the [Updates](updates.md) page.
+For modded servers, the **Mods** tab (its own group in the server sidebar) manages the mod set: browse and add mods, and see what's installed. Mod and pack updates surface on the [Updates](updates.md) page.
 
 ### Adding mods
 
