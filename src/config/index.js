@@ -69,10 +69,6 @@ function resolveSentry() {
     enabled: dsn !== '',
     environment: (process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development').trim(),
     tracesSampleRate: numFloatFromEnv('SENTRY_TRACES_SAMPLE_RATE', 0, { min: 0, max: 1 }),
-    enableLogs:
-      String(process.env.SENTRY_ENABLE_LOGS || '')
-        .trim()
-        .toLowerCase() === 'true',
   };
 }
 
@@ -128,6 +124,11 @@ function resolveDefaults() {
   const envHeap = numFromEnv('DEFAULT_HEAP_MB', 0, { min: 0, max: 1024 * 1024 });
   const envContainer = numFromEnv('DEFAULT_CONTAINER_MEMORY_MB', 0, { min: 0, max: 1024 * 1024 });
   const envQuota = numFromEnv('DEFAULT_DISK_QUOTA_GB', 0, { min: 0, max: 1024 * 1024 });
+  // DEFAULT_DISK_QUOTA_GB=0 is meaningful ("quotas off") and must survive,
+  // unlike the memory pair where 0 means "auto". So decide from the variable's
+  // presence, not the parsed value.
+  const quotaRaw = process.env.DEFAULT_DISK_QUOTA_GB;
+  const quotaExplicitlySet = quotaRaw !== undefined && String(quotaRaw).trim() !== '';
 
   const hostMb = os.totalmem() / MB;
   // ~25% of host RAM for the heap, rounded to 512 MB, clamped to [1024, 8192].
@@ -140,24 +141,41 @@ function resolveDefaults() {
     heapMb,
     containerMemoryMb,
     cpus: 0, // 0 = unlimited
-    diskQuotaGb: envQuota || 25,
+    diskQuotaGb: quotaExplicitlySet ? envQuota : 25,
     quotaWarnPct: 80,
     quotaCriticalPct: 95,
   };
 }
 
 /**
- * Parse the `trust proxy` setting for Express. Accepts a hop count (`1`), a
- * boolean (`true`/`false`), or any value Express understands (`loopback`, a
- * comma-separated IP/subnet list). Unset → false (trust nothing), the safe
- * default for a directly-exposed panel.
+ * Parse the `trust proxy` setting for Express. Accepts a hop count (`1`), an
+ * explicit `loopback`/`uniquelocal`, or a comma-separated IP/subnet list that
+ * names the actual proxy(es). Unset → false (trust nothing), the safe default
+ * for a directly-exposed panel.
+ *
+ * A bare `true` is deprecated (treated as one hop, with a boot warning): it
+ * trusts the FIRST (left-most) entry of an attacker-supplied `X-Forwarded-For`,
+ * which lets any client spoof `req.ip` and dodge every per-IP control that keys
+ * on it (the per-account+per-IP login lockout and the API/auth rate limiters).
+ * Trust nothing unless the operator names the real proxy hop count or its IPs.
  */
 function resolveTrustProxy() {
   const raw = (process.env.TRUST_PROXY || '').trim();
   if (!raw) return false;
   if (/^\d+$/.test(raw)) return Number(raw);
-  if (raw.toLowerCase() === 'true') return true;
-  if (raw.toLowerCase() === 'false') return false;
+  const low = raw.toLowerCase();
+  if (low === 'true') {
+    // Accepted for one more release so an existing .env keeps booting, but
+    // downgraded to "one hop" (the only thing a bare `true` can sensibly mean
+    // for a single reverse proxy) with a loud warning. A later release refuses it.
+    console.warn(
+      '[boot] TRUST_PROXY=true is deprecated and treated as TRUST_PROXY=1. A bare true trusts an attacker-supplied ' +
+        'X-Forwarded-For and defeats the per-IP login lockout and rate limiters. Set the proxy hop count ' +
+        '(TRUST_PROXY=1) or a comma-separated list of proxy IPs/CIDRs (TRUST_PROXY=192.168.1.10) before the next upgrade.'
+    );
+    return 1;
+  }
+  if (low === 'false') return false;
   return raw; // 'loopback' | 'uniquelocal' | comma-list of IPs - Express parses these
 }
 
@@ -284,6 +302,9 @@ const config = {
   rateLimit: {
     apiPerMin: numFromEnv('RATE_LIMIT_API_PER_MIN', 1200, { min: 0, max: 1_000_000 }),
     authPer15Min: numFromEnv('RATE_LIMIT_AUTH_PER_15MIN', 100, { min: 0, max: 1_000_000 }),
+    // Per-token ceiling on the public /api/v1 surface (keyed on the token, IP
+    // fallback when absent). 0 = off.
+    publicApiPerMin: numFromEnv('RATE_LIMIT_PUBLIC_API_PER_MIN', 120, { min: 0, max: 1_000_000 }),
   },
 };
 
@@ -298,6 +319,20 @@ if (!config.sessionSecret || config.sessionSecret.length < 16) {
 if (config.cookieSameSite === 'none' && config.cookieSecure === false) {
   throw new Error(
     'COOKIE_SAMESITE=none requires a secure cookie - also set COOKIE_SECURE=true (or COOKIE_SECURE=auto with TRUST_PROXY).'
+  );
+}
+
+// COOKIE_SECURE=auto lets Express decide from `req.secure`, which ONLY becomes
+// true when `trust proxy` is set (the panel itself serves plain HTTP; the TLS
+// hop dies at the reverse proxy). With no TRUST_PROXY the cookie silently ships
+// WITHOUT the Secure flag - readable/forgeable in transit - which is exactly
+// the downgrade `auto` exists to prevent. This booted silently before, so warn
+// loudly for one release rather than refusing to start; a later release fails.
+if (config.cookieSecure === 'auto' && config.trustProxy === false) {
+  console.warn(
+    '[boot] COOKIE_SECURE=auto has no effect without TRUST_PROXY: Express cannot see the proxy-terminated HTTPS hop, so the ' +
+      'session cookie is sent WITHOUT the Secure flag. Set TRUST_PROXY (the hop count or the proxy IP/CIDR list) if the panel ' +
+      'is behind a TLS proxy, or COOKIE_SECURE=false if it is genuinely plain HTTP. A future release will refuse to start like this.'
   );
 }
 

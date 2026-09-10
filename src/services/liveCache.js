@@ -11,6 +11,7 @@ const { statsStream, statsOnce } = require('../docker/stats');
 const { execCaptureChecked, inspectStatus } = require('../docker/containers');
 const { fetchLogs } = require('../docker/logs');
 const { parsePlayerList } = require('../utils/rconList');
+const { parseTps } = require('../utils/rconTps');
 const { cleanText } = require('../utils/ansi');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
@@ -68,31 +69,49 @@ const entries = new Map(); // serverId -> {stats, players, uptimeStartedAt, stop
 let syncTimer = null;
 let syncing = false;
 
-const EMPTY = { stats: null, players: null, startedAt: null, phase: null, upConfirmed: false };
+const EMPTY = {
+  stats: null,
+  players: null,
+  startedAt: null,
+  phase: null,
+  upConfirmed: false,
+  perf: null,
+  perfSupported: true,
+};
 
-function get(serverId) {
-  const e = entries.get(serverId);
-  if (!e) return EMPTY;
+// Tick-performance probes, tried in order until one answers. Whichever works is
+// remembered per server so later polls are a single RCON call.
+const PERF_PROBES = [
+  ['rcon-cli', 'spark', 'tps'],
+  ['rcon-cli', 'tps'],
+  ['rcon-cli', 'forge', 'tps'],
+  ['rcon-cli', 'neoforge', 'tps'],
+];
+
+function snapshot(e) {
   return {
     stats: e.stats || null,
     players: e.players || null,
     startedAt: e.startedAt || null,
     phase: e.phase || null,
     upConfirmed: e.upConfirmed || false,
+    // Tick performance (TPS / MSPT), or null on server types that don't report
+    // it. `perfSupported` is false once every probe command has been tried and
+    // none worked - the UI uses it to say "not reported" instead of "loading".
+    perf: e.perf || null,
+    perfSupported: e.perfSupported !== false,
   };
+}
+
+function get(serverId) {
+  const e = entries.get(serverId);
+  if (!e) return EMPTY;
+  return snapshot(e);
 }
 
 function getAll() {
   const out = {};
-  for (const [id, e] of entries) {
-    out[id] = {
-      stats: e.stats || null,
-      players: e.players || null,
-      startedAt: e.startedAt || null,
-      phase: e.phase || null,
-      upConfirmed: e.upConfirmed || false,
-    };
-  }
+  for (const [id, e] of entries) out[id] = snapshot(e);
   return out;
 }
 
@@ -120,6 +139,10 @@ async function attach(serverId, containerId = null) {
     upConfirmed: false,
     stopStats: null,
     playerTimer: null,
+    perf: null,
+    perfCmd: null, // array once a probe works, false once all have been tried
+    perfSupported: true,
+    perfTimer: null,
     containerId,
   };
   entries.set(serverId, entry);
@@ -165,6 +188,9 @@ async function attach(serverId, containerId = null) {
             entry.players = null; // the old boot's list is not this boot's
             entry.upConfirmed = false;
             entry.phase = null; // let refreshPhase classify the new boot
+            entry.perf = null; // re-probe: a recreate may be a different flavor
+            entry.perfCmd = null;
+            entry.perfSupported = true;
           } else if (info.startedAt && !entry.startedAt) {
             // attach() ran before the container was Running (startedAt null) -
             // record the real boot time WITHOUT treating it as a restart.
@@ -216,12 +242,56 @@ async function attach(serverId, containerId = null) {
     }
   };
 
+  // Tick-performance probe: only once the server actually answers RCON, so a
+  // long modded boot isn't spammed with `tps` attempts. Sticks to the first
+  // command that works; gives up for the boot once every probe has failed.
+  let perfInFlight = false;
+  const refreshPerf = async () => {
+    if (perfInFlight || entry.perfCmd === false) return;
+    if (!(entry.players || entry.upConfirmed)) return;
+    perfInFlight = true;
+    try {
+      const cmds = entry.perfCmd ? [entry.perfCmd] : PERF_PROBES;
+      for (const cmd of cmds) {
+        let out;
+        try {
+          out = cleanText((await execCaptureChecked(serverId, cmd)).stdout);
+        } catch {
+          continue;
+        }
+        const perf = parseTps(out);
+        if (!perf) continue;
+        entry.perf = { ...perf, at: Date.now() };
+        entry.perfCmd = cmd;
+        entry.perfSupported = true;
+        // Paper's `tps` omits MSPT - fill it from `mspt` when we can.
+        if (perf.mspt == null && perf.source === 'paper' && cmd[cmd.length - 1] === 'tps') {
+          try {
+            const m = parseTps(cleanText((await execCaptureChecked(serverId, ['rcon-cli', 'mspt'])).stdout));
+            if (m && m.mspt != null) entry.perf.mspt = m.mspt;
+          } catch {
+            /* mspt is optional */
+          }
+        }
+        return;
+      }
+      if (!entry.perfCmd) {
+        entry.perfCmd = false; // sentinel: probed everything, nothing reports it
+        entry.perfSupported = false;
+      }
+    } finally {
+      perfInFlight = false;
+    }
+  };
+
   refreshPlayers();
   refreshPhase();
   entry.playerTimer = setInterval(refreshPlayers, 20000);
   entry.playerTimer.unref();
   entry.phaseTimer = setInterval(refreshPhase, 8000);
   entry.phaseTimer.unref();
+  entry.perfTimer = setInterval(refreshPerf, 10000);
+  entry.perfTimer.unref();
 }
 
 function detach(serverId) {
@@ -236,6 +306,7 @@ function detach(serverId) {
   }
   if (entry.playerTimer) clearInterval(entry.playerTimer);
   if (entry.phaseTimer) clearInterval(entry.phaseTimer);
+  if (entry.perfTimer) clearInterval(entry.perfTimer);
   entries.delete(serverId);
 }
 
@@ -293,4 +364,4 @@ async function sampleOnce(serverId) {
   }
 }
 
-module.exports = { get, getAll, statusDetail, startLiveCache, sync, detach, sampleOnce };
+module.exports = { get, getAll, classifyPhase, statusDetail, startLiveCache, sync, detach, sampleOnce };

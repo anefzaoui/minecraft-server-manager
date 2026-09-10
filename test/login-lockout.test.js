@@ -3,7 +3,13 @@
 require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { checkLoginAllowed, recordLoginFailure, clearLoginFailures } = require('../src/web/middleware/auth');
+const {
+  checkLoginAllowed,
+  recordLoginFailure,
+  clearLoginFailures,
+  listActiveLockouts,
+  clearLockouts,
+} = require('../src/web/middleware/auth');
 
 const rejects429 = (fn) => assert.throws(fn, (e) => e.status === 429);
 const allows = (fn) => assert.doesNotThrow(fn);
@@ -51,4 +57,38 @@ test('a successful login (clearLoginFailures) frees both the per-IP and the glob
   rejects429(() => checkLoginAllowed(u, '10.9.9.9'));
   clearLoginFailures(u, '10.9.9.9');
   allows(() => checkLoginAllowed(u, '10.9.9.9'));
+});
+
+test('recordLoginFailure reports the failure that trips a lock (for the audit event)', () => {
+  const u = `u_${Math.random().toString(36).slice(2)}`;
+  let last;
+  for (let i = 0; i < 8; i++) last = recordLoginFailure(u, '10.5.5.5');
+  assert.equal(last.lockedNow, true);
+  assert.equal(last.scope, 'ip');
+  // A 9th failure while already locked is not a fresh trip.
+  assert.equal(recordLoginFailure(u, '10.5.5.5').lockedNow, false);
+  clearLockouts({ username: u });
+});
+
+test('listActiveLockouts surfaces active locks; clearLockouts unlocks them', () => {
+  const u = `u_${Math.random().toString(36).slice(2)}`;
+  for (let i = 0; i < 8; i++) recordLoginFailure(u, '10.7.7.7');
+  const locks = listActiveLockouts().filter((l) => l.username === u);
+  assert.equal(locks.length, 1);
+  assert.equal(locks[0].scope, 'ip');
+  assert.equal(locks[0].ip, '10.7.7.7');
+  assert.ok(locks[0].minutesLeft > 0 && locks[0].minutesLeft <= 10);
+
+  const removed = clearLockouts({ username: u });
+  assert.ok(removed >= 1);
+  assert.equal(listActiveLockouts().filter((l) => l.username === u).length, 0);
+  allows(() => checkLoginAllowed(u, '10.7.7.7'));
+});
+
+test('clearLockouts({ all: true }) wipes every counter', () => {
+  const u = `u_${Math.random().toString(36).slice(2)}`;
+  for (let i = 0; i < 8; i++) recordLoginFailure(u, '10.8.8.8');
+  assert.ok(listActiveLockouts().length >= 1);
+  clearLockouts({ all: true });
+  assert.equal(listActiveLockouts().length, 0);
 });

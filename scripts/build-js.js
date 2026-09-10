@@ -35,7 +35,10 @@ async function main() {
     format: 'esm',
     splitting: true,
     target: ['es2022'],
-    sourcemap: false,
+    // 'linked' emits .map files next to each bundle and references them, so the
+    // minified prod bundle stays debuggable in devtools; the maps are only
+    // fetched when devtools is open.
+    sourcemap: 'linked',
     metafile: true,
     logLevel: 'warning',
   });

@@ -13,19 +13,20 @@
     <button class="btn btn-sm" id="inv-snapshot" data-tip="Save this inventory as a snapshot for later comparison">{{{icon 'camera' 'size-3.5'}}} Snapshot</button>
     <div class="ml-auto flex gap-2">
       {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server (vanilla and modded) and give one to an online player">{{{icon 'gift' 'size-3.5'}}} Give item</button>
-        <button class="btn btn-sm" id="inv-clear" data-tip="Remove items from an online player">{{{icon 'eraser' 'size-3.5'}}} Clear items</button>
+        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server (vanilla and modded) and give one to an online player">{{{icon 'gift' 'size-3.5'}}} Give Item</button>
+        <button class="btn btn-sm" id="inv-clear" data-tip="Remove items from an online player">{{{icon 'eraser' 'size-3.5'}}} Clear Items</button>
       {{else}}
-        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server and add one straight into the selected player's save file">{{{icon 'gift' 'size-3.5'}}} Give item</button>
-        <span data-tip="Start the server to clear items in bulk, or delete slots one by one below"><button class="btn btn-sm" id="inv-clear" disabled>{{{icon 'eraser' 'size-3.5'}}} Clear items</button></span>
+        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server and add one straight into the selected player's save file">{{{icon 'gift' 'size-3.5'}}} Give Item</button>
+        <span data-tip="Start the server to clear items in bulk, or delete slots one by one below"><button class="btn btn-sm" id="inv-clear" disabled>{{{icon 'eraser' 'size-3.5'}}} Clear Items</button></span>
       {{/if}}
     </div>
   </div>
 
-  <div class="mb-4 max-w-prose rounded-md border border-line bg-inset/50 p-3 text-xs text-ink-faint">
-    Inventories are read from each player's saved data. For online players, this shows the state as of the last world save.
+  <div class="notice mb-4 max-w-prose text-xs">
+    {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
+    <div>Inventories are read from each player's saved data. For online players, this shows the state as of the last world save.
     Click any slot to edit it: change counts, replace, move, or delete items.
-    Snapshots are taken automatically on joins and deaths.
+    Snapshots are taken automatically on joins and deaths.</div>
   </div>
 
   <div class="hidden card p-10 text-center text-sm text-ink-faint" id="inv-empty">
@@ -51,11 +52,11 @@
         {{! The 9-wide slot grids are ~392px min - wider than a phone. Scroll
             them inside the card instead of widening the page (same pattern as
             every data table). }}
-        <div class="mb-1 text-[11px] uppercase tracking-wider text-ink-faint">Main</div>
+        <div class="mb-1 eyebrow">Main</div>
         <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-main"></div></div>
-        <div class="mb-1 mt-3 text-[11px] uppercase tracking-wider text-ink-faint">Hotbar</div>
+        <div class="mb-1 mt-3 eyebrow">Hotbar</div>
         <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-hotbar"></div></div>
-        <div class="mb-1 mt-3 text-[11px] uppercase tracking-wider text-ink-faint">Armor &amp; offhand</div>
+        <div class="mb-1 mt-3 eyebrow">Armor &amp; offhand</div>
         <div class="overflow-x-auto"><div class="grid w-max grid-cols-5 gap-1" id="inv-grid-armor"></div></div>
       </div>
 
@@ -85,7 +86,7 @@
     <div class="mb-3 flex flex-wrap items-center gap-2">
       <h3 class="flex items-center gap-2 font-semibold">{{{icon 'history' 'size-4'}}} Snapshots</h3>
       <span class="text-xs text-ink-faint">Pick two to compare.</span>
-      <span class="ml-auto" data-tip="Select exactly two snapshots to compare them"><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} Compare selected</button></span>
+      <span class="ml-auto" data-tip="Select exactly two snapshots to compare them"><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} Compare Selected</button></span>
     </div>
     <div id="inv-snapshots"></div>
     <div id="inv-diff" class="mt-4 hidden"></div>

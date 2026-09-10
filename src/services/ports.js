@@ -10,13 +10,39 @@ const net = require('node:net');
 const db = require('../db');
 const config = require('../config');
 
-function probe(port, host = '0.0.0.0') {
+/** OS availability probe. Bounded by a timeout so a wedged bind/close can't
+ *  leave the caller (and a server create) hanging forever. */
+function probe(port, host = '0.0.0.0', timeoutMs = 2000) {
   return new Promise((resolve) => {
     const srv = net.createServer();
     srv.unref();
-    srv.once('error', () => resolve(false));
+    let settled = false;
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try {
+        srv.close();
+      } catch {
+        /* not listening */
+      }
+      resolve(ok);
+    };
+    const timer = setTimeout(() => finish(false), timeoutMs);
+    timer.unref();
+    srv.once('error', () => finish(false)); // EADDRINUSE or any bind failure = not free
     srv.listen({ port, host, exclusive: true }, () => {
-      srv.close(() => resolve(true));
+      // If the timeout already answered "not free", finish() is a no-op and
+      // would leave this late-but-successful listener holding the port.
+      if (settled) {
+        try {
+          srv.close();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      finish(true);
     });
   });
 }
@@ -56,12 +82,16 @@ async function isPortFree(port) {
 /** Suggest a { game, rcon } pair (and bedrock when requested). */
 async function suggestPorts({ withBedrock = false } = {}) {
   const used = dbPortsInUse();
+  // RCON = game + offset, so the largest LEGAL game port is 65535 - offset.
+  // Probing an rcon > 65535 would fail every candidate and misreport "no free
+  // game ports" for a perfectly good range.
+  const maxGame = 65535 - config.ports.rconOffset;
   let game = config.ports.gameStart;
   for (;;) {
     const rcon = game + config.ports.rconOffset;
     if (!used.has(game) && !used.has(rcon) && (await probe(game)) && (await probe(rcon))) break;
     game += 1;
-    if (game > 65000)
+    if (game > maxGame)
       throw httpError(409, 'No free game ports are available. Delete a server or widen the port range in your .env.');
   }
   const result = { game, rcon: game + config.ports.rconOffset, bedrock: null };
@@ -80,4 +110,4 @@ async function suggestPorts({ withBedrock = false } = {}) {
   return result;
 }
 
-module.exports = { isPortFree, suggestPorts };
+module.exports = { isPortFree, suggestPorts, probe, dbPortsInUse };

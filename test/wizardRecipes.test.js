@@ -1,5 +1,6 @@
 'use strict';
 
+require('./helpers/env'); // first: points DATA_DIR at a throwaway dir before any src/ module loads
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const recipes = require('../src/services/wizardRecipes');
@@ -7,18 +8,18 @@ const recipes = require('../src/services/wizardRecipes');
 test('fishing-pole questions use the versioned vanilla recipe and a visual 3x3 grid', () => {
   assert.equal(
     recipes.recipeReply('how do I craft myself a fishing pole using a crafting table?', '1.20.1'),
-    ['Fishing Rod ×1 — 3×3', '[ ][ ][1]', '[ ][1][2]', '[1][ ][2]', '1 Stick ×3 · 2 String ×2'].join('\n')
+    ['Fishing Rod ×1, 3×3', '[ ][ ][1]', '[ ][1][2]', '[1][ ][2]', '1 Stick ×3 · 2 String ×2'].join('\n')
   );
 });
 
 test('2x2 and shapeless recipes are rendered into bounded square grids', () => {
   const table = recipes.recipeReply('what is the crafting recipe for a crafting table?', '1.20.1');
-  assert.match(table, /^Crafting Table ×1 — 2×2\n(?:\[1\]){2}\n(?:\[1\]){2}\n1 Oak Planks ×4$/);
+  assert.match(table, /^Crafting Table ×1, 2×2\n(?:\[1\]){2}\n(?:\[1\]){2}\n1 Oak Planks ×4$/);
   const data = recipes.dataForVersion('1.20.1');
   const item = { name: 'example', displayName: 'Example' };
   assert.equal(
     recipes.renderRecipe(item, { ingredients: [807, 810], result: { count: 1 } }, data),
-    ['Example ×1 — 2×2 shapeless', '[1][2]', '[ ][ ]', '1 Stick ×1 · 2 String ×1'].join('\n')
+    ['Example ×1, 2×2 shapeless', '[1][2]', '[ ][ ]', '1 Stick ×1 · 2 String ×1'].join('\n')
   );
 });
 
@@ -40,7 +41,7 @@ test('generic item families ask the player to choose a specific craftable item',
     recipes.recipeReply('how do I craft a pickaxe?', '1.20.1'),
     'Which kind? Try Wooden Pickaxe, Stone Pickaxe, Golden Pickaxe, Iron Pickaxe, or Diamond Pickaxe.'
   );
-  assert.match(recipes.recipeReply('how do I craft an iron pickaxe?', '1.20.1'), /^Iron Pickaxe ×1 — 3×3/);
+  assert.match(recipes.recipeReply('how do I craft an iron pickaxe?', '1.20.1'), /^Iron Pickaxe ×1, 3×3/);
 });
 
 test('unsupported pinned versions do not silently substitute a different recipe version', () => {

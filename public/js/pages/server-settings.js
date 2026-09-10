@@ -249,7 +249,7 @@ function init(serverId) {
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
-          label: 'Export blueprint',
+          label: 'Export Blueprint',
           kind: 'primary',
           busyLabel: 'Exporting…',
           onClick: async ({ body }) => {
@@ -374,6 +374,10 @@ function init(serverId) {
   document.getElementById('st-save')?.addEventListener('click', async (e) => {
     const saveBtn = e.currentTarget; // capture before await - currentTarget is null afterwards
     const heapMb = Number(document.getElementById('st-heap').value);
+    // Blank cpus/disk-quota = leave the current value untouched, not a hard 0
+    // (which for a quota means "off"). An explicit "0" still round-trips.
+    const cpuRaw = document.getElementById('st-cpu').value.trim();
+    const quotaRaw = document.getElementById('st-quota').value.trim();
     const body = {
       name: document.getElementById('st-name').value.trim(),
       description: document.getElementById('st-desc').value,
@@ -383,8 +387,8 @@ function init(serverId) {
       tags: [...tags],
       heapMb,
       containerMemoryMb: Number(document.getElementById('st-cmem').value),
-      cpus: Number(document.getElementById('st-cpu').value),
-      diskQuotaGb: Number(document.getElementById('st-quota').value),
+      cpus: cpuRaw === '' ? undefined : Number(cpuRaw),
+      diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),
       updatePolicy: root.querySelector('input[name="up"]:checked')?.value || 'manual',
       autoStart: document.getElementById('st-autostart')?.checked ?? false,
       autoRestart: document.getElementById('st-autorestart')?.checked ?? true,

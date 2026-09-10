@@ -8,7 +8,7 @@ function up(db) {
   db.exec(`
     ALTER TABLE wizard_configs ADD COLUMN welcome_enabled INTEGER NOT NULL DEFAULT 1;
     ALTER TABLE wizard_configs ADD COLUMN welcome_message TEXT NOT NULL DEFAULT
-      'Welcome, {player}! I am {wizard}, this server''s resident guide and conversational companion. Ask me for help—or just chat—by writing {mention} followed by your message.';
+      'Welcome, {player}! I am {wizard}, this server''s resident guide and conversational companion. Ask me for help, or just chat, by writing {mention} followed by your message.';
     ALTER TABLE wizard_configs ADD COLUMN checkin_minutes INTEGER NOT NULL DEFAULT 15
       CHECK (checkin_minutes BETWEEN 0 AND 1440);
     ALTER TABLE wizard_configs ADD COLUMN checkin_message TEXT NOT NULL DEFAULT

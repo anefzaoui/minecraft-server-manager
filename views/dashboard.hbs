@@ -1,3 +1,5 @@
+{{#unless serversOnly}}{{> page-header heading="DASHBOARD" sub="Every server at a glance: status, resource use, and the latest activity across the panel."}}{{/unless}}
+
 <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if serversOnly}}hidden{{/if}}">
   <div class="card p-4">
     <div class="text-xs text-ink-faint">Servers online</div>
@@ -20,13 +22,67 @@
   </div>
 </div>
 
+{{#unless serversOnly}}
+<div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 {{#if noServers}}hidden{{/if}}">
+  <div class="card min-w-0 p-4">
+    <div class="flex items-center gap-1 text-xs text-ink-faint">{{{icon 'memory-stick' 'size-3.5'}}} Memory allotted</div>
+    <div class="mt-1 break-words text-2xl font-bold tabular-nums">{{overview.mem.allottedMb}}<span class="text-base font-medium text-ink-faint"> MB</span></div>
+    <div class="text-xs text-ink-faint"><span data-overview-mem-used>{{overview.mem.usedMb}}</span> MB in use{{#if overview.mem.allottedMb}} · {{pct overview.mem.usedMb overview.mem.allottedMb}}% used{{/if}}</div>
+  </div>
+
+  <div class="card min-w-0 p-4">
+    <div class="flex items-center gap-1 text-xs text-ink-faint">{{{icon 'hard-drive' 'size-3.5'}}} Storage used</div>
+    <div class="mt-1 break-words text-2xl font-bold tabular-nums">{{bytes overview.disk.usedBytes}}</div>
+    <div class="text-xs text-ink-faint">across all server data folders</div>
+  </div>
+
+  <div class="card min-w-0 p-4">
+    <div class="flex items-center gap-1 text-xs text-ink-faint">{{{icon 'activity' 'size-3.5'}}} Health · 24h</div>
+    <div class="mt-1 break-words text-2xl font-bold tabular-nums {{#if overview.healthTotal}}text-danger{{else}}text-ok{{/if}}">{{overview.healthTotal}}<span class="text-base font-medium text-ink-faint"> alert{{#unless (eq overview.healthTotal 1)}}s{{/unless}}</span></div>
+    <div class="text-xs text-ink-faint">{{#if overview.healthTotal}}{{overview.health.crashes}} crash{{#unless (eq overview.health.crashes 1)}}es{{/unless}}, {{overview.health.oom}} out of memory, {{overview.health.autoRestarted}} auto-restart{{#unless (eq overview.health.autoRestarted 1)}}s{{/unless}}{{else}}No crashes, out-of-memory stops, or auto-restarts{{/if}}</div>
+  </div>
+
+  <div class="card min-w-0 p-4">
+    <div class="flex items-center gap-1 text-xs text-ink-faint">{{{icon 'circle-arrow-up' 'size-3.5'}}} Updates</div>
+    <div class="mt-1 break-words text-2xl font-bold tabular-nums {{#if overview.updates.all}}text-warn{{/if}}">{{overview.updates.all}}</div>
+    <div class="text-xs text-ink-faint">{{overview.updates.mods}} mod{{#unless (eq overview.updates.mods 1)}}s{{/unless}} / {{overview.updates.server}} server-level</div>
+  </div>
+</div>
+{{/unless}}
+
+{{#unless serversOnly}}
+<div class="mb-6 {{#if noServers}}hidden{{/if}}">
+  <h2 class="mb-3 font-semibold">Servers by Status</h2>
+  <div class="card flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 text-sm">
+    {{#if overview.byStatus.running}}<span class="flex items-center gap-1.5"><span class="status-dot bg-grass-500"></span>{{overview.byStatus.running}} Running</span>{{/if}}
+    {{#if overview.byStatus.starting}}<span class="flex items-center gap-1.5"><span class="status-dot bg-gold-500"></span>{{overview.byStatus.starting}} Starting</span>{{/if}}
+    {{#if overview.byStatus.unhealthy}}<span class="flex items-center gap-1.5"><span class="status-dot bg-gold-500"></span>{{overview.byStatus.unhealthy}} Unhealthy</span>{{/if}}
+    {{#if overview.byStatus.stalled}}<span class="flex items-center gap-1.5"><span class="status-dot bg-redstone-500"></span>{{overview.byStatus.stalled}} Stalled</span>{{/if}}
+    {{#if overview.byStatus.updating}}<span class="flex items-center gap-1.5"><span class="status-dot bg-diamond-500"></span>{{overview.byStatus.updating}} Updating</span>{{/if}}
+    {{#if overview.byStatus.crashed}}<span class="flex items-center gap-1.5"><span class="status-dot bg-redstone-500"></span>{{overview.byStatus.crashed}} Crashed</span>{{/if}}
+    {{#if overview.byStatus.stopped}}<span class="flex items-center gap-1.5"><span class="status-dot bg-stone-500"></span>{{overview.byStatus.stopped}} Stopped</span>{{/if}}
+  </div>
+</div>
+{{/unless}}
+
 <div id="docker-warning" class="notice notice-danger mb-4 hidden">
   {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
   <div>
     <span class="font-semibold text-danger">Docker isn't reachable.</span>
-    <span id="docker-warning-reason">Start Docker, then reload. Creating or starting servers needs Docker running.</span>
+    <span id="docker-warning-reason">Start Docker, then refresh. Creating or starting servers needs Docker running.</span>
   </div>
 </div>
+
+{{#unless serversOnly}}
+<div class="mb-6 {{#if noServers}}hidden{{/if}}" id="combined-overview">
+  <div class="mb-3 flex items-center justify-between">
+    <h2 class="font-semibold">Resource Overview</h2>
+  </div>
+  <div data-combined-root>
+    {{> combined-graphs}}
+  </div>
+</div>
+{{/unless}}
 
 {{#unless noServers}}
 <div class="mb-4 flex flex-wrap items-center gap-2">
@@ -50,7 +106,7 @@
 {{/unless}}
 
 {{#if noServers}}
-  {{> empty-state iconName='pickaxe' title='No Servers Yet' message='Create your first Minecraft server. Pick a server type and version, or start from a blueprint. You will be playing in minutes.' ctaHref='/servers/new' ctaLabel='Create a server'}}
+  {{> empty-state iconName='pickaxe' title='No Servers Yet' message='Create your first Minecraft server. Pick a server type and version, or start from a blueprint. You will be playing in minutes.' ctaHref='/servers/new' ctaLabel='Create a Server'}}
 {{else}}
 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="server-grid">
   {{#each servers}}
@@ -60,8 +116,8 @@
   <a href="/servers/new" class="grid min-h-44 place-items-center rounded-lg border-2 border-dashed border-line text-ink-faint transition hover:border-grass-600 hover:text-ok">
     <div class="grid place-items-center text-center">
       {{{icon 'plus' 'size-8'}}}
-      <div class="mt-2 text-sm font-medium">Create a server</div>
-      {{! label kept in sync with the empty-state CTA and topbar "New server" }}
+      <div class="mt-2 text-sm font-medium">Create a Server</div>
+      {{! label kept in sync with the empty-state CTA, topbar, and setup }} 
     </div>
   </a>
 </div>
@@ -70,20 +126,22 @@
 <div class="mt-8 {{#if serversOnly}}hidden{{/if}}">
   <div class="mb-3 flex items-center justify-between">
     <h2 class="font-semibold">Recent Activity</h2>
-    <a href="/activity" class="text-sm text-link hover:underline">View all →</a>
+    <a href="/activity" class="text-sm text-link hover:underline">View All →</a>
   </div>
-  <div class="card divide-y divide-line">
-    {{#each activity}}
-      <div class="flex items-center gap-3 px-4 py-3 text-sm">
-        <span class="badge shrink-0">{{type}}</span>
-        <span class="min-w-0 flex-1 truncate">{{summary}}</span>
-        {{! deleted-server names are plain faint text - link-styled dead spans read as broken. }}
-        {{#if serverId}}<a href="/servers/{{serverId}}" class="hidden shrink-0 text-xs text-link hover:underline sm:block">{{server}}</a>{{else}}<span class="hidden shrink-0 text-xs text-ink-faint sm:block">{{server}}</span>{{/if}}
-        <span class="shrink-0 text-xs text-ink-faint" data-ts-ago="{{ts}}">{{ts}}</span>
-      </div>
-    {{else}}
-      <div class="px-4 py-8 text-center text-sm text-ink-faint">No activity yet. Actions on your servers will show up here.</div>
-    {{/each}}
+  <div class="card">
+    <ol class="divide-y divide-line">
+      {{#each activity}}
+        <li class="flex flex-wrap items-center gap-2 p-3 text-sm">
+          <span class="badge shrink-0">{{type}}</span>
+          <span class="min-w-0 flex-1">{{summary}}</span>
+          {{! deleted-server names are plain faint text - link-styled dead spans read as broken. }}
+          {{#if serverId}}<a href="/servers/{{serverId}}" class="shrink-0 text-xs text-link hover:underline">{{server}}</a>{{else}}<span class="shrink-0 text-xs text-ink-faint">{{server}}</span>{{/if}}
+          <span class="shrink-0 text-xs text-ink-faint" data-ts-ago="{{ts}}">{{ts}}</span>
+        </li>
+      {{else}}
+        <li class="p-8 text-center text-sm text-ink-faint">No activity yet. Actions on your servers will show up here.</li>
+      {{/each}}
+    </ol>
   </div>
 </div>
 <script type="module" src="/js/pages/dashboard.js"></script>

@@ -1,4 +1,13 @@
-@import 'tailwindcss';
+/* source(none) turns OFF Tailwind v4's automatic content detection so the scan
+   set is exactly these three roots - not "whatever files sit under the build
+   cwd". src/ counts: status and quota colours are full class literals in
+   src/web/app.js (STATUS_DOT, meterColor) and are emitted only because Tailwind
+   sees them here, so the Docker build copies src/ before `pnpm run build`. Add a
+   line if a new directory ever carries class names. */
+@import 'tailwindcss' source(none);
+@source '../../src';
+@source '../../views';
+@source '../../public/js';
 
 /* ---- The three commitments ----
    Palette: a cool-tinted "stone" neutral ramp (#0e1113 → #fafbfb) with grass green
@@ -369,9 +378,41 @@
      users on desktop see zero change. */
   @media (pointer: coarse) {
     .btn-sm,
-    button.chip {
+    button.chip,
+    label.chip,
+    .seg-btn,
+    .tile,
+    .swatch,
+    .icon-btn {
       min-height: 2.75rem;
       min-width: 2.75rem;
+    }
+    /* Same 44px floor for the switch's clickable area and for inline selects
+       (Settings' role picker, time zone, etc.) that otherwise render ~32px. */
+    .msm-toggle {
+      min-height: 2.75rem;
+    }
+    select.input {
+      min-height: 2.75rem;
+    }
+    /* A bare checkbox/radio is 16px; float the whole row it sits in to 44px so
+       the label text is part of the target, without inflating the box itself. */
+    label:has(> input.msm-check),
+    label:has(> input.msm-radio) {
+      min-height: 2.75rem;
+    }
+    /* Range: keep the 8px track but give the control a 44px hit area, and a
+       thumb big enough to grab. */
+    input[type='range'].msm-range {
+      min-height: 2.75rem;
+    }
+    input[type='range'].msm-range::-webkit-slider-thumb {
+      width: 1.75rem;
+      height: 1.75rem;
+    }
+    input[type='range'].msm-range::-moz-range-thumb {
+      width: 1.75rem;
+      height: 1.75rem;
     }
   }
 
@@ -543,6 +584,11 @@
   button.chip[aria-pressed='true'] {
     @apply border-grass-500 bg-grass-600/10 text-ok;
   }
+  /* World Controls: a rule that couldn't be read this cycle - don't let it pass
+     for a known "off". Dashed border + muted text, no colour claim either way. */
+  button.chip[data-wc-unknown] {
+    @apply border-dashed text-ink-faint;
+  }
 
   /* Whole-group disable (composers while the server is stopped): real
      disabled - the old pointer-events-none trick let keyboard events straight
@@ -573,6 +619,19 @@
     @apply mt-1 max-w-prose text-xs leading-relaxed text-ink-faint;
   }
 
+  /* Section eyebrow - the small all-caps label above a group of controls
+     (sidebar "Servers", world-controls sections, modpacks column headers).
+     Was hand-rolled as this exact utility string ~15 times. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-ink-faint;
+  }
+
+  /* Inline code inside body copy (a var name, a command, a hostname). Three
+     slightly different hand-rolled treatments existed; this is the one. */
+  .code-inline {
+    @apply rounded bg-inset px-1 font-mono text-[0.9em] text-ink-soft;
+  }
+
   .table-base {
     @apply w-full text-left text-sm;
     font-variant-numeric: tabular-nums;
@@ -587,6 +646,39 @@
   @media (hover: hover) {
     .table-base tbody tr:hover {
       @apply bg-inset/50;
+    }
+  }
+
+  /* Add .table-stack to a .table-base and, below sm, every row collapses into a
+     little card and every cell becomes a "Label: value" line. The label text
+     comes from each <td data-th="…">; give an actions cell data-th="" to drop
+     the label and let its buttons sit on their own line. Keep the usual
+     overflow-x-auto wrapper for the sm-and-up table. */
+  @media (width < 40rem) {
+    .table-stack thead {
+      @apply sr-only;
+    }
+    .table-stack tbody tr {
+      @apply block rounded-md border border-line bg-inset/30 p-3;
+    }
+    .table-stack tbody tr + tr {
+      @apply mt-2;
+    }
+    .table-stack td {
+      @apply flex items-baseline justify-between gap-4 border-0 px-0 py-1 text-sm;
+    }
+    .table-stack td::before {
+      content: attr(data-th);
+      @apply shrink-0 text-xs font-semibold uppercase tracking-wider text-ink-faint;
+    }
+    .table-stack td[data-th='']::before {
+      content: none;
+    }
+    .table-stack td[data-th=''] {
+      @apply justify-start pt-2;
+    }
+    .table-stack td:empty {
+      @apply hidden;
     }
   }
 

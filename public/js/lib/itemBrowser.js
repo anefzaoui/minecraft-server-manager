@@ -47,10 +47,10 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     <div data-ib-list class="min-h-48 divide-y divide-line/60 rounded-md border border-line"></div>
     <div class="flex flex-wrap items-center gap-2">
       <span class="text-xs text-ink-faint" data-ib-status></span>
-      <button class="btn btn-sm hidden" data-ib-more>Load more</button>
+      <button class="btn btn-sm hidden" data-ib-more>Load More</button>
       <span class="ml-auto flex items-center gap-3">
         ${onManual ? '<a href="#" class="text-xs text-link hover:underline" data-ib-manual>Enter ID manually</a>' : ''}
-        <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="Re-scan the mod and server files. Use this after adding or removing mods.">Rebuild registry</button>
+        <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="Re-scan the mod and server files. Use this after adding or removing mods.">Rebuild Registry</button>
       </span>
     </div>`;
 
@@ -191,7 +191,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   $('[data-ib-rebuild]').addEventListener('click', async () => {
     try {
       const result = await runTask({
-        title: 'Rebuilding Item Registry',
+        title: 'Rebuilding the item registry…',
         start: async () => {
           const res = await fetch(`${base}/rebuild`, { method: 'POST' });
           const data = await res.json().catch(() => ({}));

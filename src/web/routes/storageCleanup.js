@@ -138,7 +138,7 @@ async function runCleanup(action, { olderThanDays, dryRun = false, actor = 'syst
     recordEvent({
       actor,
       type: 'storage-cleanup',
-      summary: `Storage cleanup (${action}): ${removed} item(s) removed, ${(freedBytes / 1024 ** 2).toFixed(1)} MB freed`,
+      summary: `Storage cleanup (${action}): ${removed} item(s) removed, ${(freedBytes / 1024 ** 2).toFixed(1)} MB freed.`,
       details: { action, removed, freedBytes, olderThanDays: days },
     });
     logger.info('Ran a storage cleanup.', { action, removed, freedBytes, olderThanDays: days, actor });

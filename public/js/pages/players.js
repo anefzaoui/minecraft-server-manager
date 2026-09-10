@@ -7,6 +7,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
+import { renderPlayerHead } from '../lib/playerHead.js';
 
 const root = document.querySelector('[data-players-root]');
 if (root) init(root);
@@ -14,6 +15,24 @@ if (root) init(root);
 function init(root) {
   const serverId = root.dataset.serverId;
   const running = root.dataset.running === '1';
+
+  const skinImgs = Array.from(root.querySelectorAll('[data-skin-uuid]'));
+  if (skinImgs.length) {
+    // Prefetch skins server-side in parallel (Mojang session + texture), so
+    // the individual head <img> requests hit the warm cache instead of each
+    // serializing an upstream round trip. Fire-and-forget; heads render from
+    // the same-origin proxy either way.
+    const base = `/api/servers/${serverId}/players/skin-prefetch`;
+    const uuids = [...new Set(skinImgs.map((img) => img.dataset.skinUuid))];
+    fetch(base, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uuids }),
+    }).catch(() => {});
+  }
+  for (const img of skinImgs) {
+    renderPlayerHead(img, img.dataset.skinUuid, { serverId });
+  }
   let players = [];
   try {
     players = JSON.parse(document.getElementById('players-data').textContent) || [];
@@ -50,6 +69,57 @@ function init(root) {
     ban: ['border-danger/40', 'bg-redstone-500/15', 'text-danger'],
   };
   const rowFor = (name) => root.querySelector(`[data-player-row][data-name="${CSS.escape(name)}"]`);
+  const enforcedNow = () => document.getElementById('players-wl-enforce')?.checked === true;
+
+  /** Rebuild a row's Status cell from its data attrs: online / banned / whitelisted / joined. */
+  function renderStatus(row) {
+    const cell = row.querySelector('[data-player-status]');
+    if (!cell) return;
+    const d = row.dataset;
+    cell.innerHTML = '';
+    const append = (node) => cell.appendChild(node);
+
+    const label = (text, cls, dot, pulse = false) => {
+      const span = document.createElement('span');
+      span.className = `flex items-center gap-1.5 text-xs font-medium ${cls}`;
+      const dotEl = document.createElement('span');
+      dotEl.className = `status-dot ${dot}${pulse ? ' relative pulse' : ''}`;
+      span.append(dotEl, document.createTextNode(text));
+      return span;
+    };
+
+    if (d.online === '1') {
+      append(label('Online', 'text-ok', 'bg-grass-500', true));
+    } else if (d.banned === '1') {
+      append(label('Banned', 'text-danger', 'bg-redstone-500'));
+    } else if (d.whitelisted === '1') {
+      append(label('Whitelisted', 'text-ok', 'bg-grass-700'));
+    } else {
+      append(label('Joined', 'text-ink-soft', 'bg-stone-500'));
+      const hint = document.createElement('div');
+      hint.className = 'mt-0.5 text-[11px] leading-tight ' + (enforcedNow() ? 'text-warn' : 'text-ink-faint');
+      if (enforcedNow()) {
+        hint.dataset.tip =
+          'Whitelist enforcement is on. This player has never been whitelisted, so they will be turned away when they try to join.';
+        hint.textContent = 'Not whitelisted, join blocked';
+      } else {
+        hint.textContent = 'Not whitelisted';
+      }
+      append(hint);
+    }
+    if (d.lastSeen) {
+      const seen = document.createElement('div');
+      seen.className = 'mt-0.5 text-[11px] leading-tight text-ink-faint';
+      seen.dataset.tip = "The last time this name was seen in the server's cache";
+      seen.textContent = `seen ~${d.lastSeen}`;
+      append(seen);
+    }
+  }
+
+  /** Resync every row's status after whitelist enforcement flips. */
+  function refreshStatuses() {
+    for (const row of root.querySelectorAll('[data-player-row]')) renderStatus(row);
+  }
 
   function setChip(row, role, on, { label, tip } = {}) {
     const chip = row.querySelector(`[data-role-toggle="${role}"]`);
@@ -106,14 +176,10 @@ function init(root) {
       }
     }
     if ('online' in changes && !changes.online) {
-      const status = row.querySelector('[data-player-status]');
-      if (status) {
-        row.dataset.online = '0';
-        status.innerHTML =
-          '<span class="flex items-center gap-1.5 text-xs font-medium text-ink-faint"><span class="status-dot bg-stone-500"></span> Offline</span>';
-      }
+      row.dataset.online = '0';
       row.querySelector('[data-act="kick"]')?.remove();
     }
+    renderStatus(row); // online / banned / whitelisted / joined (join-blocked when enforced)
     applyFilter(); // the row may enter/leave the active filter
     if (message) toast(message);
   }
@@ -152,6 +218,7 @@ function init(root) {
         toast(
           `Whitelist enforcement turned ${enforce.checked ? 'on' : 'off'}.${running ? '' : ' Applies on the next start.'}`
         );
+        refreshStatuses(); // joined-but-not-whitelisted rows pick up the join-blocked hint
       } catch (err) {
         enforce.checked = !enforce.checked;
         fail(err);
@@ -218,7 +285,30 @@ function init(root) {
     else if (act.dataset.act === 'op-level') opLevelModal(name);
     else if (act.dataset.act === 'ban-reason') banModal(name);
     else if (act.dataset.act === 'notes') notesModal(name);
-    else if (act.dataset.act === 'copy-uuid') {
+    else if (act.dataset.act === 'delete-player') {
+      confirmDialog({
+        title: `Delete ${name}?`,
+        message:
+          'This removes the player from the whitelist, operators, bans, and usercache; deletes their saved inventory, stats and advancements; and clears their moderators notes. This cannot be undone.',
+        confirmLabel: 'Delete',
+        danger: true,
+      }).then(async (ok) => {
+        if (!ok) return;
+        try {
+          const res = await fetch(`/api/servers/${serverId}/players/${encodeURIComponent(name)}`, { method: 'DELETE' });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || data.ok === false)
+            throw new Error(data.error || friendlyError(res, { action: 'delete that player' }));
+          const row = rowFor(name);
+          row?.remove();
+          applyFilter();
+          if (!root.querySelector('[data-player-row]')) location.reload();
+          toast(`${name} deleted.`);
+        } catch (err) {
+          fail(err);
+        }
+      });
+    } else if (act.dataset.act === 'copy-uuid') {
       window.CD.copyText(act.dataset.uuid).then((ok) => {
         if (ok) toast('UUID copied.');
       });
@@ -355,7 +445,7 @@ function init(root) {
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
-          label: 'Ban player',
+          label: 'Ban Player',
           kind: 'danger',
           busyLabel: 'Banning…',
           onClick: async ({ body }) => {
@@ -483,7 +573,7 @@ function init(root) {
       </select>
       <p class="mt-2 text-xs text-ink-faint">Levels below 4 take effect after the next restart of a running server.</p>`;
     openModal({
-      title: `Operator level for ${name}`,
+      title: `Operator Level for ${name}`,
       content,
       size: 'sm',
       actions: [
@@ -520,12 +610,12 @@ function init(root) {
     const content = document.createElement('div');
     content.className = 'space-y-4 text-sm';
     content.innerHTML = `
-      <div class="seg w-full" role="tablist">
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
+      <div class="seg max-w-full" role="tablist">
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
       </div>
 
       <div data-tp-panel="coords" class="space-y-3">
@@ -767,20 +857,22 @@ function init(root) {
     const tr = document.createElement('tr');
     tr.dataset.banipRow = ip;
     const cells = [
-      ['font-mono', ip],
-      ['text-xs text-ink-soft', player || '-'],
-      ['text-xs text-ink-soft', reason || '-'],
-      ['text-xs text-ink-faint', 'just now'],
-      ['text-xs text-ink-faint', expires && expires !== 'forever' ? expires : 'Permanent'],
+      ['IP', 'font-mono', ip],
+      ['Player', 'text-xs text-ink-soft', player || '-'],
+      ['Reason', 'text-xs text-ink-soft', reason || '-'],
+      ['Date', 'text-xs text-ink-faint', 'just now'],
+      ['Expires', 'text-xs text-ink-faint', expires && expires !== 'forever' ? expires : 'Permanent'],
     ];
-    for (const [cls, text] of cells) {
+    for (const [th, cls, text] of cells) {
       const td = document.createElement('td');
       td.className = cls;
+      td.dataset.th = th;
       td.textContent = text;
       tr.appendChild(td);
     }
     const actions = document.createElement('td');
     actions.className = 'text-right';
+    actions.dataset.th = '';
     actions.innerHTML = `<button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-tip="Remove this IP ban">
       <svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
     actions.querySelector('button').dataset.ip = ip;

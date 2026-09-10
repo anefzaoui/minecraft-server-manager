@@ -6,6 +6,7 @@ const express = require('express');
 const { engine } = require('express-handlebars');
 
 const config = require('../config');
+const settings = require('../services/settings');
 const routes = require('./routes');
 const { icon } = require('./icons');
 const { avatarSrc } = require('../config/avatars');
@@ -132,18 +133,29 @@ function createApp() {
         // Quota bar color by usage percentage against the configured thresholds.
         meterColor: (used, total) => {
           if (!total) return 'bg-diamond-400';
+          const d = settings.getDefaults();
           const p = (used / total) * 100;
-          if (p >= config.defaults.quotaCriticalPct) return 'bg-redstone-500';
-          if (p >= config.defaults.quotaWarnPct) return 'bg-gold-400';
+          if (p >= d.quotaCriticalPct) return 'bg-redstone-500';
+          if (p >= d.quotaWarnPct) return 'bg-gold-400';
           return 'bg-grass-500';
         },
         capitalize: (s) => (typeof s === 'string' && s ? s[0].toUpperCase() + s.slice(1) : s),
+        short: (s, n) => (typeof s === 'string' ? s.replace(/^sha256:/, '').slice(0, Number(n) || 12) : s),
         initial: (s) => (typeof s === 'string' && s ? s[0].toUpperCase() : '?'),
         default: (v, fallback) => (v === undefined || v === null || v === '' ? fallback : v),
         concat: (...args) => args.slice(0, -1).join(''),
         // Character references avoid Handlebars adding the partial's indentation
         // after every literal newline inside a <textarea> value.
-        joinLines: (values) => (Array.isArray(values) ? values.join('&#10;') : ''),
+        // Renders inside a <textarea> via triple-stash, so escape each line
+        // ourselves: a stored value containing "</textarea><script>" must stay text.
+        joinLines: (values) =>
+          Array.isArray(values)
+            ? values
+                .map((v) =>
+                  String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                )
+                .join('&#10;')
+            : '',
         inc: (v) => Number(v) + 1,
         mul: (a, b) => Number(a) * Number(b),
         plural: (n, one, many) => (Number(n) === 1 ? one : many),
@@ -278,6 +290,12 @@ function createApp() {
   app.use(['/login', '/login/2fa', '/setup'], authLimiter);
   app.use(require('./routes/auth'));
   app.use('/status', require('./routes/status')); // public, read-only, opt-in per server
+  // Public, read-only API: Bearer-token auth (no cookie), GET-only. Mounted in
+  // the public zone - BEFORE requireAuth (there is no session to load) and
+  // BEFORE `app.use('/api', apiLimiter)` so the panel-wide per-IP limiter does
+  // not also apply here; the router brings its own per-IP and per-token limiters.
+  // originGuard/requireWrite below are GET-only no-ops for it. Keep this order.
+  app.use('/api/v1', require('./routes/apiV1'));
   // Cap /api request volume before any auth/DB work runs on a flood.
   app.use('/api', apiLimiter);
   app.use(requireAuth);

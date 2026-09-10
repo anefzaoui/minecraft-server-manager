@@ -1,4 +1,7 @@
-// Integrations tab: Discord webhook config, invite helper, public status page.
+// Integrations pages (under Settings): Discord webhook config, invite helper,
+// public status page, and chatbot settings. Each renders as its own page now,
+// so every DOM lookup below is guarded - a section that isn't on the current
+// page simply gets no handlers wired.
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { setBusy, withBusy } from '../lib/loading.js';
@@ -88,7 +91,7 @@ function init() {
     await withBusy(btn, 'Testing…', async () => {
       const res = await api(`/api/servers/${serverId}/wizard/test`, 'POST', conn);
       if (res.ok) {
-        toast(`LLM replied: ${res.data.reply}`, { kind: 'success', timeout: 8000 });
+        toast(`Test reply received: "${res.data.reply}".`, { kind: 'success', timeout: 8000 });
       }
     });
   });
@@ -266,7 +269,7 @@ function init() {
     // A valid slug is only mandatory when turning the page ON - turning it off
     // must work even for a page that never had a slug.
     if (enabled && !/^[a-z0-9-]{3,40}$/.test(slug)) {
-      toast('Slug must be 3–40 lowercase letters, digits, or dashes.', { kind: 'error' });
+      toast('Slug must be 3 to 40 lowercase letters, digits, or dashes.', { kind: 'error' });
       return;
     }
     const body = { enabled };

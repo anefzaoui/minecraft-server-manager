@@ -2,6 +2,9 @@
 
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const { PNG } = require('pngjs');
+
+const TARGET_SIZE = 32;
 
 const MCDATA_BASE = 'https://cdn.jsdelivr.net/gh/PrismarineJS/minecraft-data@master/data/pc';
 const WIKI_API = 'https://minecraft.wiki/api.php';
@@ -156,13 +159,53 @@ async function tryFetch(name) {
     if (!url) return null;
     const res = await fetchWithRetry(url);
     if (!res.ok) return null;
-    return Buffer.from(await res.arrayBuffer());
+    const buf = Buffer.from(await res.arrayBuffer());
+    return normalizePng(buf);
   } catch {
     return null;
   }
 }
 
+/**
+ * Resize a PNG buffer to TARGET_SIZE x TARGET_SIZE using nearest-neighbour
+ * sampling so pixel-art stays sharp.  Icons that are already the target size
+ * are returned as-is.  Returns the original buffer on parse failure so the
+ * file is left untouched rather than lost.
+ */
+function normalizePng(buf) {
+  let src;
+  try {
+    src = PNG.sync.read(buf);
+  } catch {
+    return buf; // non-standard PNG (APNG, trailing data) — leave as-is
+  }
+  if (src.width === TARGET_SIZE && src.height === TARGET_SIZE) return buf;
+  const dst = new PNG({ width: TARGET_SIZE, height: TARGET_SIZE });
+  const scaleX = src.width / TARGET_SIZE;
+  const scaleY = src.height / TARGET_SIZE;
+  for (let y = 0; y < TARGET_SIZE; y++) {
+    const srcY = Math.min(Math.floor(y * scaleY), src.height - 1);
+    for (let x = 0; x < TARGET_SIZE; x++) {
+      const srcX = Math.min(Math.floor(x * scaleX), src.width - 1);
+      const si = (srcY * src.width + srcX) << 2;
+      const di = (y * TARGET_SIZE + x) << 2;
+      dst.data[di] = src.data[si];
+      dst.data[di + 1] = src.data[si + 1];
+      dst.data[di + 2] = src.data[si + 2];
+      dst.data[di + 3] = src.data[si + 3];
+    }
+  }
+  return PNG.sync.write(dst);
+}
+
 async function main() {
+  const normalizeOnly = process.argv.includes('--normalize');
+
+  if (normalizeOnly) {
+    await normalizeExistingIcons();
+    return;
+  }
+
   console.log(`Fetching item list for ${VERSION}...`);
   const items = await fetchJson(`${MCDATA_BASE}/${VERSION}/items.json`);
   const names = [...new Set(items.map((it) => it.name).filter(Boolean))].filter((n) => n !== 'air').sort();
@@ -196,6 +239,26 @@ async function main() {
     console.log(`${misses.length} item(s) have no wiki icon (falls back to a category/generic glyph client-side):`);
     console.log(misses.join(', '));
   }
+}
+
+/** Resize every existing icon in OUT_DIR to TARGET_SIZE without re-fetching. */
+async function normalizeExistingIcons() {
+  const files = (await fs.readdir(OUT_DIR)).filter((f) => f.endsWith('.png'));
+  console.log(`Normalizing ${files.length} existing icons to ${TARGET_SIZE}x${TARGET_SIZE}...`);
+  let resized = 0;
+  let skipped = 0;
+  for (const file of files) {
+    const buf = await fs.readFile(path.join(OUT_DIR, file));
+    const normalized = normalizePng(buf);
+    if (normalized !== buf) {
+      await fs.writeFile(path.join(OUT_DIR, file), normalized);
+      resized += 1;
+    } else {
+      skipped += 1;
+    }
+    if ((resized + skipped) % 200 === 0) console.log(`  ${resized + skipped}/${files.length}...`);
+  }
+  console.log(`Done: ${resized} resized, ${skipped} already ${TARGET_SIZE}x${TARGET_SIZE}.`);
 }
 
 main().catch((err) => {

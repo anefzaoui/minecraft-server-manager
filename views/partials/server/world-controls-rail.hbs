@@ -1,0 +1,13 @@
+{{! World-controls presentation wrapper. At xl it's the static sticky rail
+    beside the tab content; below xl it collapses to a card the reader opens on
+    demand, so it isn't ~70 stacked chips at the foot of every tab. app.js
+    ('World-controls rail') forces it open and hides the summary at xl. }}
+<details id="wc-rail" open class="group xl:sticky xl:top-20 xl:[&>summary]:hidden">
+  <summary
+    class="btn btn-ghost mb-2 w-full justify-between marker:content-none xl:mb-0 [&::-webkit-details-marker]:hidden"
+  >
+    <span class="flex items-center gap-2">{{{icon 'sliders-horizontal' 'size-4'}}} World Controls</span>
+    {{{icon 'chevron-down' 'size-4 shrink-0 transition group-open:rotate-180'}}}
+  </summary>
+  {{> server/world-controls}}
+</details>

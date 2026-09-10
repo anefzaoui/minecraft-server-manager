@@ -1,9 +1,8 @@
 <div class="card w-full max-w-sm p-6">
   <div class="mb-6 flex items-center justify-center gap-2.5">
-    <span class="grid size-10 place-items-center rounded-md bg-grass-600 text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)]">{{{icon 'shield-check' 'size-5'}}}</span>
-    <span class="pixel text-sm">Minecraft <span class="text-ok">Server Manager</span></span>
+    {{> brand-lockup glyph='shield-check'}}
   </div>
-  {{#if error}}<div class="notice notice-danger mb-4 text-danger">{{error}}</div>{{/if}}
+  {{#if error}}<div class="notice notice-danger mb-4">{{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}<div>{{error}}</div></div>{{/if}}
   <form method="post" action="/login/2fa" class="space-y-4" data-disable-on-submit>
     <div>
       <label class="label" for="tf-code">Authenticator code</label>
@@ -12,5 +11,5 @@
     </div>
     <button class="btn btn-primary w-full" type="submit">Verify</button>
   </form>
-  <a class="mt-4 block text-center text-xs text-ink-faint hover:text-ink" href="/login">Back to sign in</a>
+  <a class="mt-4 block text-center text-xs text-ink-faint hover:text-ink" href="/login">Back to Sign In</a>
 </div>

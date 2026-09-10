@@ -13,34 +13,77 @@ const MANIFEST_URL = 'https://launchermeta.mojang.com/mc/game/version_manifest_v
 const CACHE_KEY = 'mojang-version-manifest';
 const TTL_MS = 6 * 60 * 60 * 1000;
 
+// Single-flight memo: N concurrent callers for the same key all wait on one
+// network fetch instead of stampeding Mojang (and each seeing a DB miss).
+const inFlight = new Map();
+
+// In-process memo of the last parsed manifest. Callers that render a whole
+// page call getVersionManifest() once PER SERVER (each dashboard VM resolves
+// display_version through the manifest), so without this every page load paid a
+// 70KB SELECT + JSON.parse per server even though the SQLite row is hot. The DB
+// is still the source of truth and the cross-restart cache - this just stops
+// re-reading it N times within one process. Small (one slim manifest) and
+// correct: the memo only lives as long as the DB entry's own TTL.
+let memo = null; // { slim, atMs }
+
+function parseAndMemo(valueJson) {
+  const slim = JSON.parse(valueJson);
+  memo = { slim, atMs: Date.now() };
+  return slim;
+}
+
+function singleFlight(key, fn) {
+  const pending = inFlight.get(key);
+  if (pending) return pending;
+  const p = fn().finally(() => inFlight.delete(key));
+  inFlight.set(key, p);
+  return p;
+}
+
+async function fetchManifest() {
+  const res = await fetch(MANIFEST_URL, { signal: AbortSignal.timeout(10000) });
+  if (!res.ok) throw new Error(`manifest HTTP ${res.status}`);
+  const manifest = await res.json();
+  const slim = {
+    latest: manifest.latest,
+    versions: manifest.versions.map((v) => ({ id: v.id, type: v.type, releaseTime: v.releaseTime })),
+  };
+  db.run(
+    `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))
+     ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, fetched_at = excluded.fetched_at`,
+    CACHE_KEY,
+    JSON.stringify(slim)
+  );
+  memo = { slim, atMs: Date.now() };
+  return slim;
+}
+
 async function getVersionManifest() {
+  if (memo && Date.now() - memo.atMs < TTL_MS) return memo.slim;
   const cached = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', CACHE_KEY);
   // SQLite datetime('now') is space-separated ('2026-07-14 03:00:00'); normalize
   // to ISO 8601 before parsing (matches how the rest of the code reads timestamps).
   if (cached && Date.now() - Date.parse(cached.fetched_at.replace(' ', 'T') + 'Z') < TTL_MS) {
-    return JSON.parse(cached.value_json);
+    return parseAndMemo(cached.value_json);
   }
   try {
-    const res = await fetch(MANIFEST_URL, { signal: AbortSignal.timeout(10000) });
-    if (!res.ok) throw new Error(`manifest HTTP ${res.status}`);
-    const manifest = await res.json();
-    const slim = {
-      latest: manifest.latest,
-      versions: manifest.versions.map((v) => ({ id: v.id, type: v.type, releaseTime: v.releaseTime })),
-    };
-    db.run(
-      `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))
-       ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, fetched_at = excluded.fetched_at`,
-      CACHE_KEY,
-      JSON.stringify(slim)
-    );
-    return slim;
+    return await singleFlight(CACHE_KEY, async () => {
+      // Re-check the cache inside the flight in case a concurrent caller
+      // populated it (or refreshed an expired copy) while we queued behind it.
+      const fresh = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', CACHE_KEY);
+      if (fresh && Date.now() - Date.parse(fresh.fetched_at.replace(' ', 'T') + 'Z') < TTL_MS) {
+        return parseAndMemo(fresh.value_json);
+      }
+      return fetchManifest();
+    });
   } catch (err) {
     logger.debug('Fetching the Mojang version manifest failed.', {
       err: serializeError(err, { includeStack: false }),
       servedStale: Boolean(cached),
     });
-    if (cached) return JSON.parse(cached.value_json); // stale beats nothing
+    // Stale beats nothing - but do NOT memoize it, or one failed refresh would
+    // pin the stale copy for the whole memo TTL; the next call retries.
+    if (cached) return JSON.parse(cached.value_json);
     throw err;
   }
 }

@@ -14,14 +14,21 @@ function init() {
   const known = new Map(); // id -> last seen state (for completion toasts)
   let open = false;
 
-  btn.addEventListener('click', () => {
-    open = !open;
+  const setOpen = (v) => {
+    open = v;
     panel.classList.toggle('hidden', !open);
-  });
+    btn.setAttribute('aria-expanded', String(open));
+  };
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-haspopup', 'true');
+  btn.addEventListener('click', () => setOpen(!open));
   document.addEventListener('click', (e) => {
-    if (open && !mount.contains(e.target)) {
-      open = false;
-      panel.classList.add('hidden');
+    if (open && !mount.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && open) {
+      setOpen(false);
+      btn.focus();
     }
   });
 
@@ -41,7 +48,7 @@ function init() {
     for (const t of tasks) {
       const prev = known.get(t.id);
       if (prev === 'running' && t.state !== 'running') {
-        toast(t.state === 'done' ? `${t.title}: finished.` : `${t.title}: failed.${t.error ? ` ${t.error}` : ''}`, {
+        toast(t.state === 'done' ? `${t.title} finished.` : `${t.title} failed.${t.error ? ` ${t.error}` : ''}`, {
           kind: t.state === 'done' ? 'success' : 'error',
           timeout: 7000,
         });
@@ -79,10 +86,7 @@ function init() {
       list.appendChild(row);
     }
     list.scrollTop = scrollTop;
-    if (!tasks.length && open) {
-      open = false;
-      panel.classList.add('hidden');
-    }
+    if (!tasks.length && open) setOpen(false);
     schedule(running.length ? 2500 : 10000);
   }
 

@@ -24,8 +24,9 @@ const TASK_TYPES = {
   rcon: { label: 'Run command', serverScoped: true },
   'update-check': { label: 'Update check', serverScoped: false },
   'storage-scan': { label: 'Storage re-scan', serverScoped: false },
-  'tmp-clean': { label: 'Purge tmp', serverScoped: false },
+  'tmp-clean': { label: 'Clear temporary files', serverScoped: false },
   'ban-expiry-sweep': { label: 'Ban expiry sweep', serverScoped: false },
+  'content-meta-backfill': { label: 'Content metadata backfill', serverScoped: false },
 };
 
 async function runTask(schedule) {
@@ -43,7 +44,13 @@ async function runTask(schedule) {
       await servers.startServer(schedule.server_id, { actor });
       break;
     case 'backup':
-      await require('./backups').createBackup(schedule.server_id, { reason: 'scheduled', actor });
+      await require('./backups').createBackup(schedule.server_id, {
+        reason: 'scheduled',
+        actor,
+        // Opt-in per schedule: trim rarely-visited chunks after the archive is
+        // written. Only runs when the server is stopped (see createBackupImpl).
+        shrinkAfter: Boolean(payload.shrink),
+      });
       break;
     case 'rcon': {
       const { execCapture } = require('../docker/containers');
@@ -57,7 +64,7 @@ async function runTask(schedule) {
         serverId: schedule.server_id,
         actor,
         type: 'rcon',
-        summary: `Scheduled RCON: ${payload.command}`,
+        summary: `Scheduled RCON: ${payload.command}.`,
         details: { output: out.slice(0, 1000) },
       });
       break;
@@ -82,6 +89,9 @@ async function runTask(schedule) {
     case 'ban-expiry-sweep':
       await require('./players').sweepExpiredBans();
       break;
+    case 'content-meta-backfill':
+      await require('./contentIcons').backfillContentMeta();
+      break;
     default:
       throw new Error(`Unknown task type ${schedule.task_type}`);
   }
@@ -102,7 +112,7 @@ function schedule(job) {
         serverId: job.server_id || null,
         actor: 'scheduler',
         type: 'schedule-fired',
-        summary: `Scheduled task fired: ${TASK_TYPES[job.task_type]?.label || job.task_type}`,
+        summary: `Scheduled task fired: ${TASK_TYPES[job.task_type]?.label || job.task_type}.`,
       });
       logger.info('A scheduled task fired.', {
         scheduleId: job.id,
@@ -116,7 +126,7 @@ function schedule(job) {
           serverId: job.server_id || null,
           actor: 'scheduler',
           type: 'schedule-failed',
-          summary: `Scheduled ${job.task_type} failed: ${err.message}`,
+          summary: `Scheduled ${job.task_type} failed: ${err.message}.`,
         });
         logger.error('A scheduled task failed.', {
           scheduleId: job.id,
@@ -164,6 +174,7 @@ function seedGlobalDefaults() {
     { task_type: 'storage-scan', cron: '0 */6 * * *' },
     { task_type: 'tmp-clean', cron: '30 4 * * *' },
     { task_type: 'ban-expiry-sweep', cron: '*/15 * * * *' },
+    { task_type: 'content-meta-backfill', cron: '20 3 * * *' },
   ];
   for (const d of defaults) {
     const exists = db.get('SELECT 1 AS x FROM schedules WHERE task_type = ? AND server_id IS NULL', d.task_type);
@@ -181,7 +192,16 @@ function seedGlobalDefaults() {
 
 function createSchedule({ serverId = null, taskType, cron, payload = {}, enabled = true }, { actor = 'system' } = {}) {
   if (!TASK_TYPES[taskType]) throw httpError(400, `Unknown task type ${taskType}`);
-  new Cron(cron, { timezone: getTimezone() }); // validates; throws on bad expression
+  try {
+    new Cron(cron, { timezone: getTimezone() }); // validates; throws on a bad expression
+  } catch {
+    // croner's error is a plain Error, which the JSON error handler would
+    // report as a generic 500 - this is user input, so say what is wrong.
+    throw httpError(
+      400,
+      `"${cron}" is not a valid schedule. Use five cron fields such as "0 4 * * *" (minute hour day month weekday).`
+    );
+  }
   const id = `sch_${nanoid(8)}`;
   db.run(
     'INSERT INTO schedules (id, server_id, task_type, cron, payload_json, enabled) VALUES (?, ?, ?, ?, ?, ?)',
@@ -198,7 +218,7 @@ function createSchedule({ serverId = null, taskType, cron, payload = {}, enabled
     serverId,
     actor,
     type: 'schedule-created',
-    summary: `Schedule created: ${TASK_TYPES[taskType].label} (${cron})`,
+    summary: `Schedule created: ${TASK_TYPES[taskType].label} (${cron}).`,
   });
   return listSchedules().find((s) => s.id === id);
 }
@@ -211,7 +231,7 @@ function setEnabled(id, enabled, { actor = 'system' } = {}) {
     serverId: job?.server_id || null,
     actor,
     type: 'schedule-toggled',
-    summary: `Schedule ${enabled ? 'enabled' : 'disabled'}: ${job?.task_type}`,
+    summary: `Schedule ${enabled ? 'enabled' : 'disabled'}: ${job?.task_type}.`,
   });
 }
 
@@ -224,7 +244,7 @@ function deleteSchedule(id, { actor = 'system' } = {}) {
       serverId: job.server_id,
       actor,
       type: 'schedule-deleted',
-      summary: `Schedule deleted: ${job.task_type}`,
+      summary: `Schedule deleted: ${job.task_type}.`,
     });
 }
 

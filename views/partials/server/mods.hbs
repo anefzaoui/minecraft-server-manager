@@ -7,8 +7,11 @@
     </select>
     {{/if}}
     <div class="ml-auto flex flex-wrap gap-2">
-      <button class="btn btn-sm" id="mods-search">{{{icon 'search' 'size-3.5'}}} Search mods</button>
-      <button class="btn btn-sm" id="mods-import-zip" data-tip="Modrinth .mrpack, CurseForge modpack export, or any zip of mod jars">{{{icon 'archive' 'size-3.5'}}} Import zip</button>
+      {{#if hasModUpdates}}
+      <button class="btn btn-ghost btn-sm text-warn" id="mods-update-all" data-tip="Apply every available update, then restart the server once">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update All</button>
+      {{/if}}
+      <button class="btn btn-sm" id="mods-search">{{{icon 'search' 'size-3.5'}}} Search Mods</button>
+      <button class="btn btn-sm" id="mods-import-zip" data-tip="Modrinth .mrpack, CurseForge modpack export, or any zip of mod jars">{{{icon 'archive' 'size-3.5'}}} Import Zip</button>
       <button class="btn btn-primary btn-sm" id="mods-add-url">{{{icon 'plus' 'size-3.5'}}} Add by URL</button>
       {{! button labels kept in sync with the modal titles in mods.js }}
     </div>
@@ -18,28 +21,29 @@
   <div id="mods-pending" class="mb-4 hidden"></div>
 
   {{#if server.pack}}
-    <div class="mb-4 max-w-prose rounded-md border border-link/40 bg-diamond-500/10 p-3 text-xs text-ink-soft">
-      <b class="text-link">Pack-managed</b> mods are installed by {{platformName server.pack.platform}} ({{server.pack.name}} {{server.pack.version}}).
+    <div class="notice notice-info mb-4 max-w-prose text-xs">
+      {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
+      <div><b class="text-link">Pack-managed</b> mods are installed by {{platformName server.pack.platform}} ({{server.pack.name}} {{server.pack.version}}).
       Disabling one takes effect on the next restart. <b class="text-ok">Custom</b> mods are ones you added yourself.
-      They live in the shared library, survive pack updates, and can be turned on or off instantly.
+      They live in the shared library, survive pack updates, and can be turned on or off instantly.</div>
     </div>
   {{/if}}
 
   {{#if mods.length}}
   <div class="card overflow-x-auto">
-    <table class="table-base" id="mods-table">
+    <table class="table-base table-stack" id="mods-table">
       <thead><tr>
         <th>Mod</th><th>Source</th><th>Version</th><th class="text-right">Size</th><th>Status</th><th class="text-right">Actions</th>
       </tr></thead>
       <tbody>
         {{#each mods}}
           <tr class="{{#unless enabled}}opacity-60{{/unless}}" data-mod-row data-file="{{file}}" data-name="{{name}}" data-source="{{source}}" data-enabled="{{enabled}}">
-            {{! w-full + max-w-0 so `truncate` actually engages - long mod file
+            {{! w-full + max-w-0 (sm+ only) so `truncate` actually engages - long mod file
                 names were widening the table into horizontal scroll. }}
-            <td class="w-full max-w-0">
+            <td data-th="" class="sm:w-full sm:max-w-0">
               <div class="flex items-center gap-2.5">
                 {{#if iconUrl}}
-                  <img src="{{iconUrl}}" alt="" class="size-8 shrink-0 rounded bg-inset object-cover">
+                  <img src="{{iconUrl}}" alt="" loading="lazy" data-mod-icon class="size-8 shrink-0 rounded bg-inset object-cover">
                 {{else}}
                   <span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-ink-faint">{{{icon 'puzzle' 'size-4'}}}</span>
                 {{/if}}
@@ -49,7 +53,7 @@
                 </div>
               </div>
             </td>
-            <td>
+            <td data-th="Source">
               {{#if (eq source 'pack')}}
                 <span class="badge badge-info">pack</span>
               {{else if (eq source 'overlay')}}
@@ -60,12 +64,13 @@
               {{/if}}
               {{#if (eq kind 'datapack')}}<div class="mt-1"><span class="badge">datapack</span></div>{{/if}}
             </td>
-            <td>
+            <td data-th="Version">
               {{default version '-'}}
               {{#if updateAvailable}}<span class="badge badge-warn ml-1" data-tip="Update available">→ {{updateAvailable}}</span>{{/if}}
+              {{#if updateIgnored}}<span class="badge ml-1 text-ink-faint" data-tip="This update is ignored and won't be applied">ignored → {{updateIgnored}}</span>{{/if}}
             </td>
-            <td class="text-right text-ink-faint">{{bytes size}}</td>
-            <td>
+            <td data-th="Size" class="text-right text-ink-faint">{{bytes size}}</td>
+            <td data-th="Status">
               {{#if missing}}
                 <span class="text-xs font-medium text-danger" data-tip="File missing on disk. Reinstall it from the library.">Missing</span>
               {{else if enabled}}
@@ -74,10 +79,14 @@
                 <span class="text-xs font-medium text-ink-faint">Disabled</span>
               {{/if}}
             </td>
-            <td class="text-right">
-              <div class="inline-flex gap-1">
+            <td data-th="" class="text-right">
+              <div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
                 {{#if updateAvailable}}
-                  <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="Update to {{updateAvailable}}">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
+                  <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="Update to {{updateAvailable}}, then restart the server">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-ignore-update data-tip="Stop offering {{updateAvailable}}">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>
+                {{/if}}
+                {{#if updateIgnored}}
+                  <button class="btn btn-ghost btn-sm" data-mod-unignore-update data-tip="Offer {{updateIgnored}} again">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
                 {{/if}}
                 {{#unless missing}}
                   <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}Pack mods take effect on the next restart.{{else}}Takes effect instantly.{{/if}}">{{#if enabled}}Disable{{else}}Enable{{/if}}</button>
@@ -92,6 +101,10 @@
       </tbody>
     </table>
   </div>
+  {{! Cloned in by the global image-error handler (app.js) when a /library/icons
+      request 404s, so a stale icon path degrades to this exact placeholder
+      instead of a broken-image glyph. }}
+  <template id="mod-icon-fallback"><span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-ink-faint">{{{icon 'puzzle' 'size-4'}}}</span></template>
   {{else}}
     {{> empty-state iconName='puzzle' title='No Mods Installed Yet' message='Search Modrinth or CurseForge; add a mod, plugin, or datapack by URL; or import a zip with the buttons above. Custom content lives in the shared library and survives pack updates.'}}
   {{/if}}

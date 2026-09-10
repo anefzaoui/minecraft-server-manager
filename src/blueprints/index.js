@@ -17,13 +17,12 @@ const { extractZip, readZipIndex } = require('../utils/zip');
 const { nanoid } = require('nanoid');
 const { z } = require('zod');
 const db = require('../db');
-const config = require('../config');
 const { dataPath, safeJoin } = require('../storage/pathGuard');
 
 // Starter blueprints inherit the panel's host-aware resource defaults so they
 // import cleanly on a small VPS as well as a big workstation.
 function starterResources() {
-  const d = config.defaults;
+  const d = require('../services/settings').getDefaults();
   return {
     heapMb: d.heapMb,
     containerMemoryMb: d.containerMemoryMb,
@@ -260,7 +259,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
     serverId,
     actor,
     type: 'blueprint-exported',
-    summary: `Blueprint exported: ${server.display_name} (${filename}, ${(size / 1024 ** 2).toFixed(1)} MB)`,
+    summary: `Blueprint exported: ${server.display_name} (${filename}, ${(size / 1024 ** 2).toFixed(1)} MB).`,
     details: { id, filename, includeConfig, embedFiles, includeWorld, overlayCount: manifest.overlay.length },
   });
   indexer.scan().catch(() => {});
@@ -302,32 +301,32 @@ async function importPreview(zipPath) {
   const entryNames = new Set(entries.map((e) => e.name));
   const warnings = [];
   if (!KNOWN_TYPES.has(manifest.config.type)) {
-    warnings.push(`Unknown server type "${manifest.config.type}" - this panel may not know how to run it.`);
+    warnings.push(`Unknown server type "${manifest.config.type}". This panel may not know how to run it.`);
   }
   const mcMatch = /^1\.(\d+)/.exec(manifest.config.mcVersion);
   if (mcMatch && Number(mcMatch[1]) < 13) {
-    warnings.push(`Minecraft ${manifest.config.mcVersion} is very old - expect Java and mod availability quirks.`);
+    warnings.push(`Minecraft ${manifest.config.mcVersion} is very old. Expect Java and mod availability quirks.`);
   }
   if (manifest.embedFiles) {
     const missing = manifest.overlay.filter((o) => o.filename && !entryNames.has(`payload/overlay/${o.filename}`));
     if (missing.length)
       warnings.push(
-        `${missing.length} embedded overlay file(s) are missing from the archive - they will be downloaded instead.`
+        `${missing.length} embedded custom file(s) are missing from the archive. They will be downloaded instead.`
       );
   }
   for (const entry of manifest.overlay) {
     if (!entry.sourceUrl && !(entry.filename && entryNames.has(`payload/overlay/${entry.filename}`))) {
-      warnings.push(`"${entry.name}" has no source URL and no embedded file - it cannot be installed.`);
+      warnings.push(`"${entry.name}" has no source URL and no embedded file, so it cannot be installed.`);
     }
     if (!entry.sha256) {
-      warnings.push(`"${entry.name}" carries no hash - its download will not be verified.`);
+      warnings.push(`"${entry.name}" carries no hash, so its download will not be verified.`);
     }
   }
   if (manifest.world && !entries.some((e) => e.name.startsWith('payload/world/'))) {
     warnings.push('The manifest claims a world is included but the archive has no world payload.');
   }
   if (manifest.pack && manifest.pack.platform === 'curseforge') {
-    warnings.push('CurseForge pack - a CurseForge API key must be configured in Settings for the install to work.');
+    warnings.push('This is a CurseForge pack. A CurseForge API key must be set in Settings for the install to work.');
   }
 
   return {
@@ -450,7 +449,7 @@ async function importBlueprint(zipRef, overrides = {}, { actor = 'system', onPro
     serverId: server.id,
     actor,
     type: 'blueprint-imported',
-    summary: `Server created from blueprint "${manifest.name}"${report.length ? ` - ${report.length - failed}/${report.length} items ok` : ''}`,
+    summary: `Server created from blueprint "${manifest.name}"${report.length ? `. ${report.length - failed} of ${report.length} items installed.` : '.'}`,
     details: { blueprint: manifest.name, report },
   });
   indexer.scan().catch(() => {});
@@ -529,7 +528,7 @@ async function resolveOverlaySource(entry, server) {
   if (entry.platform === 'curseforge' && entry.projectId && entry.fileId) {
     const file = await curseforge.getFile(entry.projectId, Number(entry.fileId));
     if (!file || !file.downloadUrl)
-      throw httpError(409, `${entry.name} disallows automated downloads - install it manually`);
+      throw httpError(409, `${entry.name} does not allow automated downloads. Install it manually.`);
     return {
       url: file.downloadUrl,
       meta: {
@@ -574,7 +573,7 @@ async function resolveOverlaySource(entry, server) {
       meta: { platform: 'url', filename: entry.filename || undefined, version: entry.version || undefined },
     };
   }
-  throw httpError(400, 'No embedded file and no source URL - nothing to install from');
+  throw httpError(400, 'No embedded file and no source URL, so there is nothing to install from.');
 }
 
 /** Register an extracted payload file in the shared library (dedupe by hash). */
@@ -651,7 +650,7 @@ async function deleteBlueprint(id, { actor = 'system' } = {}) {
   recordEvent({
     actor,
     type: 'blueprint-deleted',
-    summary: `Blueprint deleted: ${row.name} (${(row.size_bytes / 1024 ** 2).toFixed(1)} MB freed)`,
+    summary: `Blueprint deleted: ${row.name} (${(row.size_bytes / 1024 ** 2).toFixed(1)} MB freed).`,
     details: { id, filename: row.filename },
   });
   return { freedBytes: row.size_bytes };
@@ -696,7 +695,7 @@ async function seedStarters() {
   recordEvent({
     actor: 'system',
     type: 'blueprints-seeded',
-    summary: `Starter blueprints installed: ${created.map((c) => c.name).join(', ')}`,
+    summary: `Starter blueprints installed: ${created.map((c) => c.name).join(', ')}.`,
   });
   return { seeded: created.length, blueprints: created };
 }
@@ -707,10 +706,10 @@ function paperStarterManifest() {
     name: 'Optimized Paper Survival',
     createdAt: new Date().toISOString(),
     panelVersion: PANEL_VERSION,
-    notes: 'Paper with Aikar JVM flags and sane survival defaults - a fast vanilla-plus base.',
+    notes: 'Paper with Aikar JVM flags and sensible survival defaults. A fast vanilla-plus base.',
     identity: {
       name: 'Optimized Paper Survival',
-      description: 'Paper with Aikar JVM flags and sane survival defaults - a fast vanilla-plus base.',
+      description: 'Paper with Aikar JVM flags and sensible survival defaults. A fast vanilla-plus base.',
       icon: 'grass',
       accent: '#3fa62b',
       tags: ['paper', 'survival', 'optimized'],
@@ -749,10 +748,10 @@ function fabricStarterManifest() {
     name: 'Fabric Performance Base',
     createdAt: new Date().toISOString(),
     panelVersion: PANEL_VERSION,
-    notes: 'Fabric with Lithium, FerriteCore, Krypton and Spark - a lean modded starting point.',
+    notes: 'Fabric with Lithium, FerriteCore, Krypton, and Spark. A lean modded starting point.',
     identity: {
       name: 'Fabric Performance Base',
-      description: 'Fabric with Lithium, FerriteCore, Krypton and Spark - a lean modded starting point.',
+      description: 'Fabric with Lithium, FerriteCore, Krypton, and Spark. A lean modded starting point.',
       icon: 'diamond',
       accent: '#21a7ab',
       tags: ['fabric', 'performance'],

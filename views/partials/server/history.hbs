@@ -29,14 +29,14 @@
               <span class="badge badge-warn" title="Suspected from stack trace">suspect: {{this}}</span>
             {{/each}}
             {{! One treatment (icon + label) for all three sibling actions. }}
-            <button class="btn btn-ghost btn-sm" data-crash-action="view">{{{icon 'file-search' 'size-3.5'}}} Open viewer</button>
-            <button class="btn btn-ghost btn-sm" data-crash-action="copy">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy stack trace</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="view">{{{icon 'file-search' 'size-3.5'}}} Open Viewer</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="copy">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy Stack Trace</button>
             <button class="btn btn-ghost btn-sm" data-crash-action="download">{{{icon 'download' 'size-3.5'}}} Download</button>
-            <button class="btn btn-ghost btn-sm" data-crash-action="insights" data-tip="Automated analysis by mclo.gs — known problems with suggested fixes. Publishes the report as a public paste first.">{{{icon 'sparkles' 'size-3.5'}}} Analyze</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="insights" data-tip="Automated analysis by mclo.gs: known problems with suggested fixes. Publishes the report as a public paste first.">{{{icon 'sparkles' 'size-3.5'}}} Analyze</button>
             {{#if mclogsUrl}}
-              <a class="btn btn-ghost btn-sm" data-role="mclogs-link" href="{{mclogsUrl}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} mclo.gs paste</a>
+              <a class="btn btn-ghost btn-sm" data-role="mclogs-link" href="{{mclogsUrl}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} mclo.gs Paste</a>
             {{else}}
-              <button class="btn btn-ghost btn-sm" data-crash-action="share" data-tip="Publish this report as a public mclo.gs paste — a link anyone can open (mod authors usually ask for one).">{{{icon 'share-2' 'size-3.5'}}} Share to mclo.gs</button>
+              <button class="btn btn-ghost btn-sm" data-crash-action="share" data-tip="Publish this report as a public mclo.gs paste, a link anyone can open (mod authors usually ask for one).">{{{icon 'share-2' 'size-3.5'}}} Share to mclo.gs</button>
             {{/if}}
           </div>
         </div>
@@ -62,7 +62,7 @@
           </div>
         {{/if}}
         {{#if hasLog}}
-          <button class="btn btn-ghost btn-sm mt-1.5" data-event-log data-event-id="{{id}}">{{{icon 'file-text' 'size-3.5'}}} View captured log</button>
+          <button class="btn btn-ghost btn-sm mt-1.5" data-event-log data-event-id="{{id}}">{{{icon 'file-text' 'size-3.5'}}} View Captured Log</button>
         {{/if}}
       </li>
     {{/each}}

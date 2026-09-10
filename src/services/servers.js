@@ -25,21 +25,31 @@ const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 
-function rowToServer(row) {
+function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
-  return {
+  const server = {
     ...row,
     tags: JSON.parse(row.tags_json || '[]'),
     env: JSON.parse(row.env_json || '{}'),
     containerName: row.container_name || null,
     networkName: row.network_name || null,
-    extraPorts: JSON.parse(row.extra_ports_json || '[]'),
-    extraBinds: JSON.parse(row.extra_binds_json || '[]'),
   };
+  if (parseOverrides) {
+    server.extraPorts = JSON.parse(row.extra_ports_json || '[]');
+    server.extraBinds = JSON.parse(row.extra_binds_json || '[]');
+  }
+  return server;
 }
 
 function listServers() {
-  return db.all('SELECT * FROM servers WHERE deleted_at IS NULL ORDER BY created_at').map(rowToServer);
+  // Lean parse for the fleet-wide list: extra_ports_json / extra_binds_json are
+  // only ever consumed by the singleton paths (getServer → create/container/
+  // preview), so parsing them on EVERY server row for every sidebar/dashboard/
+  // status-refresh render was dead work. The raw strings still ride along in
+  // the spread; nothing reads them from a listServers result.
+  return db
+    .all('SELECT * FROM servers WHERE deleted_at IS NULL ORDER BY created_at')
+    .map((row) => rowToServer(row, { parseOverrides: false }));
 }
 
 function getServer(id) {
@@ -73,8 +83,7 @@ function assembleEnv(server) {
     recordEvent({
       serverId: server.id,
       type: 'rcon-password-regenerated',
-      summary:
-        'Stored RCON password could not be decrypted (SESSION_SECRET changed) - a new one was generated automatically',
+      summary: 'The saved RCON password could not be read. The panel generated a new one automatically.',
     });
   }
   env.RCON_PASSWORD = rconPassword;
@@ -180,7 +189,7 @@ function mergeExtraPorts(server) {
 function previewCreateSpec(input) {
   const javaTag = input.javaTag || pickJavaTag(input.mcVersion || 'LATEST', input.type || 'VANILLA');
   const image = images.imageRef(javaTag);
-  const defaults = config.defaults;
+  const defaults = settings.getDefaults();
   const env = { ...(input.env || {}) };
   env.EULA = 'TRUE';
   env.TYPE = input.type || 'VANILLA';
@@ -271,7 +280,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   if (wantsCurseforge && !require('./apiKeys').getKey('curseforge')) {
     throw httpError(
       412,
-      'CurseForge needs an API key - add yours in Settings → API keys first (console.curseforge.com), then create the server.'
+      'CurseForge needs an API key. Add yours in Settings → API keys first (from console.curseforge.com), then create the server.'
     );
   }
   // Same fail-fast idea for the pinning invariant: an unpinned pack selector
@@ -305,7 +314,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   });
 
   const rconPassword = secrets.generatePassword();
-  const defaults = config.defaults;
+  const defaults = settings.getDefaults();
 
   db.run(
     `INSERT INTO servers (id, display_name, description, icon, accent, tags_json, type, mc_version,
@@ -353,7 +362,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     const image = resolveImage(server, { javaTagHint });
     onProgress(`Pulling image ${image} (first time can take a few minutes)…`);
     await images.ensureImage(image, ({ current, total }) => {
-      if (total) onProgress(`Downloading image: ${Math.round((current / total) * 100)}%`);
+      if (total) onProgress(`Downloading image: ${Math.round((current / total) * 100)}%…`);
     });
 
     onProgress('Creating container…');
@@ -403,7 +412,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     serverId: id,
     actor,
     type: 'created',
-    summary: `Server created: ${input.name} (${server.type} ${server.mc_version}, port ${ports.game})`,
+    summary: `Server created: ${input.name} (${server.type} ${server.mc_version}, port ${ports.game}).`,
     details: { type: server.type, mcVersion: server.mc_version, ports },
   });
   logger.info('Created a server.', { serverId: id, actor, type: server.type, mcVersion: server.mc_version });
@@ -475,13 +484,13 @@ async function startServerImpl(id, { actor = 'system' } = {}) {
   }
   await containers.startContainer(id);
   db.run("UPDATE servers SET status = 'starting', last_started_at = datetime('now') WHERE id = ?", id);
-  recordEvent({ serverId: id, actor, type: 'started', summary: 'Server start requested' });
+  recordEvent({ serverId: id, actor, type: 'started', summary: 'Server start requested.' });
   logger.info('Started a server.', { serverId: id, actor });
 }
 
 async function stopServerImpl(id, { actor = 'system' } = {}) {
   mustGet(id);
-  recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Graceful stop requested' });
+  recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Graceful stop requested.' });
   // A graceful stop triggers the game's own shutdown-time world save (rcon
   // `stop`, or docker's SIGTERM if that doesn't finish in time). Sharing the
   // backup/world-export save lock means a stop that lands mid-backup waits
@@ -489,14 +498,14 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
   // racing its own save against the archiver's mid-read of the same files.
   try {
     await withSaveLock(id, () => containers.stopContainer(id));
-  } catch (err) {
+  } catch {
     // stopContainer only throws when the container is verifiably STILL running -
     // never claim a graceful stop that didn't happen.
     recordEvent({
       serverId: id,
       actor,
       type: 'stop-failed',
-      summary: `Graceful stop did not take effect: ${err.message}. The container is still running. Try Force kill.`,
+      summary: `The graceful stop did not take effect, and the server is still running. Try Force Stop.`,
     });
     throw httpError(502, 'The server did not stop. Try Force stop, or check that Docker is running.');
   }
@@ -506,17 +515,17 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
     serverId: id,
     actor,
     type: 'stopped',
-    summary: 'Server stopped gracefully',
+    summary: 'Server stopped gracefully.',
     logExcerpt: excerpt || null,
   });
   logger.info('Stopped a server.', { serverId: id, actor });
 }
 
 async function restartServerImpl(id, { actor = 'system' } = {}) {
-  recordEvent({ serverId: id, actor, type: 'restart-requested', summary: 'Restart requested' });
+  recordEvent({ serverId: id, actor, type: 'restart-requested', summary: 'Restart requested.' });
   await stopServerImpl(id, { actor });
   await startServerImpl(id, { actor });
-  recordEvent({ serverId: id, actor, type: 'restarted', summary: 'Server restarted' });
+  recordEvent({ serverId: id, actor, type: 'restarted', summary: 'Server restarted.' });
 }
 
 const startServer = guardOp('start', startServerImpl);
@@ -525,10 +534,10 @@ const restartServer = guardOp('restart', restartServerImpl);
 
 async function killServerImpl(id, { actor = 'system' } = {}) {
   mustGet(id);
-  recordEvent({ serverId: id, actor, type: 'kill-requested', summary: 'Force kill requested' });
+  recordEvent({ serverId: id, actor, type: 'kill-requested', summary: 'Force kill requested.' });
   await containers.killContainer(id);
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
-  recordEvent({ serverId: id, actor, type: 'killed', summary: 'Server force-killed (world may not have saved)' });
+  recordEvent({ serverId: id, actor, type: 'killed', summary: 'Server force-stopped. The world may not have saved.' });
 }
 
 const killServer = guardOp('kill', killServerImpl);
@@ -612,7 +621,12 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
     server.env_json
   );
   if (!quiet)
-    recordEvent({ serverId: id, actor, type: 'recreated', summary: 'Container recreated with current configuration' });
+    recordEvent({
+      serverId: id,
+      actor,
+      type: 'recreated',
+      summary: 'Container rebuilt with the current configuration.',
+    });
   if (wasRunning) await startServerImpl(id, { actor });
 }
 
@@ -714,14 +728,20 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     serverId: id,
     actor,
     type: 'config-changed',
-    summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (recreate required)' : ''}`,
+    summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (rebuild required)' : ''}`,
     details: { diff, needsRecreate },
   });
   return { server: getServer(id), needsRecreate };
 }
 
-/** Delete server: container, DB rows, and (optionally) its data directory. */
-async function deleteServerImpl(id, { actor = 'system', keepWorld = false } = {}) {
+/**
+ * Delete server: container, DB rows, and (optionally) its data directory and
+ * backups. By DEFAULT the whole data directory (world, mods, config) and the
+ * backup rows + archive files are LEFT ON DISK — so a deleted server's data is
+ * never silently destroyed. Pass `keepWorld: false` and/or `keepBackups: false`
+ * to explicitly remove them (the UI makes this an opt-in checkbox).
+ */
+async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBackups = true } = {}) {
   const server = mustGet(id);
   await containers.stopContainer(id).catch(() => {});
   await containers.removeContainer(id);
@@ -766,15 +786,18 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = false } = {}
     }
   }
 
-  // Backups: DB rows + the files directory.
-  const backupRows = db.all('SELECT size_bytes FROM backups WHERE server_id = ?', id);
-  freedBytes += backupRows.reduce((n, b) => n + (b.size_bytes || 0), 0);
-  db.run('DELETE FROM backups WHERE server_id = ?', id);
-  // force: true already no-ops on a missing path - no need for an existsSync guard.
-  await fsp.rm(dataPath('backups', id), { recursive: true, force: true });
+  // Backups: DB rows + the files directory (optional - keep them for reuse).
+  if (!keepBackups) {
+    const backupRows = db.all('SELECT size_bytes FROM backups WHERE server_id = ?', id);
+    freedBytes += backupRows.reduce((n, b) => n + (b.size_bytes || 0), 0);
+    db.run('DELETE FROM backups WHERE server_id = ?', id);
+    // force: true already no-ops on a missing path - no need for an existsSync guard.
+    await fsp.rm(dataPath('backups', id), { recursive: true, force: true });
+  }
 
-  // Archived logs / event excerpts.
-  await fsp.rm(dataPath('logs', id), { recursive: true, force: true });
+  // Archived logs, event excerpts and inventory snapshots: part of "the
+  // server's files" the dialog promises to keep, so they go only with the world.
+  if (!keepWorld) await fsp.rm(dataPath('logs', id), { recursive: true, force: true });
 
   // All row cleanup + the soft-delete flag run in ONE transaction so a mid-cleanup
   // error can't leave a "live" (deleted_at IS NULL) server whose content/backups
@@ -803,10 +826,18 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = false } = {}
     serverId: id,
     actor,
     type: 'deleted',
-    summary: `Server deleted: ${server.display_name}${keepWorld ? ' (world kept on disk)' : ''}`,
-    details: { keepWorld, freedBytes },
+    summary: `Server deleted: ${server.display_name}${
+      keepWorld
+        ? keepBackups
+          ? ' (files and backups kept on disk)'
+          : ' (files kept on disk)'
+        : keepBackups
+          ? ' (backups kept)'
+          : ''
+    }.`,
+    details: { keepWorld, keepBackups, freedBytes },
   });
-  logger.info('Deleted a server.', { serverId: id, actor, keepWorld, freedBytes });
+  logger.info('Deleted a server.', { serverId: id, actor, keepWorld, keepBackups, freedBytes });
   return { freedBytes };
 }
 
@@ -852,7 +883,7 @@ async function refreshStatuses({ boot = false } = {}) {
       new Promise((_, reject) => {
         timer = setTimeout(
           () =>
-            reject(new Error(`Status refresh exceeded ${REFRESH_MAX_MS} ms - the Docker daemon may be unresponsive.`)),
+            reject(new Error(`Status refresh exceeded ${REFRESH_MAX_MS} ms. The Docker daemon may be unresponsive.`)),
           REFRESH_MAX_MS
         );
         timer.unref();
@@ -864,10 +895,17 @@ async function refreshStatuses({ boot = false } = {}) {
   }
 }
 
+// Bounded concurrency for the per-server status refresh (each server pays a
+// Docker inspect - and for a boot-cross-check a docker logs read). Running them
+// one-at-a-time makes the 60s poll N×(daemon latency); overloading with an
+// unbounded fan-out could hammer the daemon. A modest pool overlaps the
+// round-trips without exhausting sockets.
+const STATUS_REFRESH_CONCURRENCY = 8;
+
 async function refreshStatusesInner({ boot }) {
-  let failed = 0;
   const all = listServers();
-  for (const server of all) {
+  let failed = 0;
+  const refreshOne = async (server) => {
     try {
       const info = await containers.inspectStatus(server.id);
       let status = info.exists ? info.status : 'stopped';
@@ -906,7 +944,7 @@ async function refreshStatusesInner({ boot }) {
                 type: 'startup-stalled',
                 summary: diag
                   ? `Startup stalled after ${Math.round(elapsedMs / 60_000)} min: ${diag.summary}`
-                  : `Still starting after ${Math.round(elapsedMs / 60_000)} minutes with no "Done" in the logs - check the console for what's blocking it`,
+                  : `Still starting after ${Math.round(elapsedMs / 60_000)} minutes with no "Done" in the logs. Check the console for what's blocking it.`,
                 details: { elapsedMs, diagnosis: diag ? diag.key : null },
                 logExcerpt: tail || null,
               });
@@ -947,7 +985,16 @@ async function refreshStatusesInner({ boot }) {
         err: serializeError(err, { includeStack: false }),
       });
     }
-  }
+  };
+  let i = 0;
+  const workers = Array.from({ length: Math.min(STATUS_REFRESH_CONCURRENCY, all.length) }, async () => {
+    while (i < all.length) {
+      const server = all[i];
+      i += 1; // sync claim, safe across the pool
+      await refreshOne(server);
+    }
+  });
+  await Promise.all(workers);
   if (failed > 0) {
     logger.warn('Some servers could not be refreshed; the Docker daemon may be offline.', {
       failed,
@@ -956,18 +1003,41 @@ async function refreshStatusesInner({ boot }) {
   }
 }
 
+// Parallel, bounded-concurrency directory size walker. Server world dirs hold a
+// great many small files; serializing one fsp.stat at a time is needlessly slow.
+// A small concurrency pool overlaps the directory reads without exhausting file
+// descriptors on huge trees.
+const DIR_SIZE_CONCURRENCY = 32;
 async function dirSize(dir) {
-  let total = 0;
+  // Dirent types come from readdir and never follow symlinks, so a link to a
+  // parent directory cannot recurse forever and a linked file is not counted
+  // twice (lstat below for the same reason).
+  const jobs = [];
   for (const entry of await fsp.readdir(dir, { withFileTypes: true })) {
-    const p = path.join(dir, entry.name);
-    try {
-      if (entry.isDirectory()) total += await dirSize(p);
-      else if (entry.isFile()) total += (await fsp.stat(p)).size;
-    } catch {
-      /* transient file */
-    }
+    if (entry.isSymbolicLink()) continue;
+    if (entry.isDirectory() || entry.isFile()) jobs.push({ p: path.join(dir, entry.name), dir: entry.isDirectory() });
   }
-  return total;
+  let i = 0;
+  const push = async ({ p, dir: isDir }) => {
+    try {
+      if (isDir) return await dirSize(p);
+      const st = await fsp.lstat(p);
+      return st.isFile() ? st.size : 0;
+    } catch {
+      return 0; // transient file
+    }
+  };
+  const workers = Array.from({ length: Math.min(DIR_SIZE_CONCURRENCY, jobs.length) }, async () => {
+    let sub = 0; // worker-local accumulator avoids lost updates on a shared total
+    while (i < jobs.length) {
+      const p = jobs[i];
+      i += 1; // sync claim, safe across the pool
+      sub += await push(p);
+    }
+    return sub;
+  });
+  const results = await Promise.all(workers);
+  return results.reduce((a, b) => a + b, 0);
 }
 
 function mustGet(id) {

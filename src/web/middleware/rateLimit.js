@@ -11,16 +11,18 @@
 // otherwise every client collapses onto the proxy's address and shares one
 // bucket. Raise RATE_LIMIT_API_PER_MIN (or set it to 0) if that bites.
 
-const { rateLimit } = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const config = require('../../config');
 
 function jsonHandler(req, res) {
-  res.status(429).json({ ok: false, error: 'Too many requests - slow down and try again shortly.' });
+  res.status(429).json({ ok: false, error: 'Too many requests. Slow down and try again shortly.' });
 }
 
-// express-rate-limit warns when it can't trust the proxy chain; TRUST_PROXY is a
-// deliberate operator choice here, so quiet those specific validations.
-const validate = { trustProxy: false, xForwardedForHeader: false };
+// TRUST_PROXY=true is refused at boot (src/config) precisely because it would
+// let a client spoof req.ip and dodge these per-IP limits (and the login
+// lockout). Leave express-rate-limit's own trust-proxy validation enabled so a
+// genuinely misconfigured chain still warns loudly in production logs.
+const validate = undefined;
 
 const passthrough = (req, res, next) => next();
 
@@ -52,4 +54,46 @@ const authLimiter = config.rateLimit.authPer15Min
     })
   : passthrough;
 
-module.exports = { apiLimiter, authLimiter };
+/**
+ * Two ceilings on the public /api/v1 surface:
+ *
+ *  - publicApiIpLimiter runs BEFORE token verification and buckets on the
+ *    client IP (IPv6-safe key). It caps the cost of unauthenticated probing -
+ *    every request there still costs a hash + a DB lookup - at five times the
+ *    per-token budget, so a NAT that fronts several legitimate tokens is not
+ *    starved. It must never key on the presented token: a flood that rotates
+ *    random Bearer values would otherwise get a fresh bucket per request.
+ *  - publicApiTokenLimiter runs AFTER bearerAuth and buckets on the verified
+ *    token id, which is the documented per-token budget
+ *    (RATE_LIMIT_PUBLIC_API_PER_MIN).
+ *
+ * Both need TRUST_PROXY behind a reverse proxy, same caveat as above.
+ */
+const PUBLIC_IP_MULTIPLIER = 5;
+const publicApiIpLimiter = config.rateLimit.publicApiPerMin
+  ? rateLimit({
+      windowMs: 60_000,
+      limit: config.rateLimit.publicApiPerMin * PUBLIC_IP_MULTIPLIER,
+      standardHeaders: false,
+      legacyHeaders: false,
+      handler: jsonHandler,
+      validate,
+      keyGenerator: (req) => 'ip:' + ipKeyGenerator(req.ip),
+    })
+  : passthrough;
+
+const publicApiTokenLimiter = config.rateLimit.publicApiPerMin
+  ? rateLimit({
+      windowMs: 60_000,
+      limit: config.rateLimit.publicApiPerMin,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      handler: jsonHandler,
+      validate,
+      // bearerAuth has already run: req.apiToken is the verified token. The IP
+      // fallback only matters if someone mounts this limiter out of order.
+      keyGenerator: (req) => (req.apiToken ? 'tok:' + req.apiToken.id : 'ip:' + ipKeyGenerator(req.ip)),
+    })
+  : passthrough;
+
+module.exports = { apiLimiter, authLimiter, publicApiIpLimiter, publicApiTokenLimiter };

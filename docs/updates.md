@@ -15,13 +15,13 @@ The **Updates** page tracks what's out of date across your fleet in one place:
 
 The panel checks each server's pinned versions against the upstream source and lists anything with a newer release. A matching count also appears on the [dashboard](dashboard.md)'s "Updates available" tile.
 
-Checks run on demand and can be scheduled ([Schedules](schedules.md)). Update **policy** is per-server - you decide whether the panel just notifies you, or leaves everything manual.
+Checks run on demand and can be scheduled ([Schedules](schedules.md)). Update **policy** is per-server: you decide whether the panel just notifies you, or leaves everything manual.
 
 ## Applying an update
 
 Updates are never silent. When you choose to upgrade a pack, the panel:
 
-1. Takes a **pre-update backup** (so it's reversible - the last 10 pre-update backups per server are kept).
+1. Takes a **pre-update backup** (so it's reversible; the last 10 pre-update backups per server are kept).
 2. Re-pins the exact new version.
 3. Recreates the container, re-resolving the Java runtime if needed.
 4. Monitors the first boot, with a per-platform time budget.

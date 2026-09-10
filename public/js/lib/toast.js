@@ -11,7 +11,8 @@ function ensureHost() {
     host.id = 'toasts';
     // z-[65]: above modals (60) - errors fired from modal actions must be
     // readable - below tooltips (70). See the stacking scale in input.css.
-    host.className = 'fixed bottom-4 right-4 z-[65] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2';
+    host.className =
+      'fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-[calc(1rem+env(safe-area-inset-right))] z-[65] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2';
     document.body.appendChild(host);
   }
   host.setAttribute('role', 'status');

@@ -5,6 +5,105 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.13.0] - 2026-09-10
+
+A large community release: a public read-only API, a live monitoring dashboard, world
+shrinking, per-update "ignore", admin-configurable server defaults, backup renaming, a
+mobile-first pass over every page, and a long list of audit-driven fixes. Closes #21, #23,
+#27, #28, #29, #30, #31, #32.
+
+### Before you upgrade
+
+- **`TRUST_PROXY=true` is deprecated.** It trusts an attacker-supplied `X-Forwarded-For`, which
+  defeats the per-IP login lockout and the rate limiters. It still boots for now (treated as
+  `TRUST_PROXY=1`, with a warning in the log) but will be refused in a later release: set the
+  proxy hop count (`1`) or the proxy's IP/CIDR list instead.
+- **`COOKIE_SECURE=auto` needs `TRUST_PROXY`.** Set alone, the panel cannot see the proxy's
+  HTTPS hop and the session cookie ships without the Secure flag. The panel now warns loudly at
+  boot; a later release will refuse to start like this.
+- `SENTRY_ENABLE_LOGS` no longer exists (it never did anything with the dormant Sentry seam).
+- Database migrations were renumbered so every file has a unique prefix (the old `010`-`015`
+  duplicates are now `011`-`025`). Existing panels are migrated transparently; nothing re-runs.
+- The Docker image and the GitHub Release are now published by the same CI workflow that runs
+  the gates, and only after they pass. The required status check on `main` is still `quality`.
+
+### Added
+
+- **Public read-only API** (`GET /api/v1/servers`, `GET /api/v1/servers/:id`) behind
+  admin-minted Bearer tokens: scopable to a subset of servers, revocable, optionally
+  time-limited, rate-limited per token and per IP, off by default. See
+  [docs/public-api.md](docs/public-api.md).
+- **Monitoring → Live** dashboard: TPS/MSPT (Paper, Purpur, spark, Forge/NeoForge), a Health &
+  Stability card with 24 h / 7 d crash counts, per-world sizes and host disk free; plus a
+  combined live resource overview and an at-a-glance status breakdown on the main dashboard.
+- **Shrink World**: remove chunks nobody has spent time in (configurable threshold and spawn
+  radius, real spawn read from `level.dat`, every dimension including `DIM-1`/`DIM1`/custom,
+  entities and points of interest dropped with the chunk), with a dry-run preview, an
+  optional stop-shrink-start round trip, and an opt-in on manual and scheduled backups. See
+  [docs/world-shrink.md](docs/world-shrink.md).
+- **Ignore an update** per mod, modpack, Docker image, Minecraft version, or loader build. An
+  ignored build stays out of the badge, the digest, and the automatic update policy until a
+  newer one appears.
+- **Defaults for new servers** (heap, container limit, CPUs, disk quota, warning thresholds)
+  are editable on Settings; the create wizard pre-fills from them. (#31)
+- **Backup rename** from the backup list; the archive and the record move together. (#32)
+- **Backup retention ceilings**: an optional maximum age and maximum total size per server,
+  with per-server overrides; the newest backup is never pruned.
+- **Delete Player**: a full wipe of a player's roles, saved data, stats, advancements,
+  inventory snapshots and moderator notes, refused while they are online.
+- **Check for Updates** on Settings compares the panel version with the newest stable GitHub
+  release (never pre-releases) and links to it; it never modifies files.
+- **World Controls** now covers every vanilla boolean gamerule, reads them concurrently, and
+  reports a rejected command as a plain sentence.
+- **Roster status** distinguishes Online / Whitelisted / Joined / Banned, with a "join
+  blocked" hint when whitelist enforcement is on. (#29)
+- **Custom zip uploads** detect a loader already installed in a prepared server pack and pin
+  the container to it. (#30)
+- Console: a "Hide RCON noise" toggle (on by default, remembered per browser).
+- Profile pictures: WebP, uploads up to 16 MB, a working cropper preview, decompression-bomb
+  and SVG-scrub guards, and orphaned files cleaned up on replace or removal.
+- Mods / datapacks: orphaned files on disk are adopted back into the panel by content hash or
+  an unambiguous name; broken icons and missing metadata are repaired lazily and nightly.
+- Mobile-first pass: every data table stacks into cards on narrow screens, toolbars and grids
+  collapse, touch targets have a real minimum size, and the per-server navigation is regrouped
+  (Console, Mods, Monitoring, Discord / Status Page / Invites / Chatbot). Old deep links
+  redirect.
+
+### Fixed
+
+- **Auto-restart after a crash** fires again on Docker daemons that report the event kind as
+  `Action` instead of `status`. Unrequested clean exits (an in-game `/stop`, a console `stop`,
+  the image's own auto-stop, a host shutdown) stay "stopped" and are never fought by the
+  watcher; a crash inside a stop/restart window is still recorded as a crash. (#23)
+- **Delete Server keeps its files and backups by default**, and the confirmation says exactly
+  what it does. (#21)
+- `ONLINE_MODE` defaults to on in Advanced Settings and the wizard, matching the image. (#27)
+- A numeric `0` in Advanced Settings is a real value, not "unset"; cleared CPU / quota inputs
+  no longer silently become `0`. (#28)
+- Offline (file-mode) inventory edits work again.
+- The Shrink World preview works on a running server, as the dialog promises; only a real
+  shrink requires the server to be stopped.
+- Installing a mod with "ignore version" prefers a build for the server's own loader; it no
+  longer hands a Fabric server the newest NeoForge jar.
+- A malformed zip (a path that escapes the archive, unsupported entries) is refused with a
+  clear message instead of a generic server error, on every upload path.
+- An invalid cron expression on a new schedule is refused with a clear message instead of a
+  generic server error.
+- A stalled Docker daemon can no longer hang a panel request forever: every `docker exec`
+  (RCON commands, live probes) gives up at its deadline, including creating the exec itself.
+- A stopped server's console no longer replays its last lines every few seconds.
+- Auth: the setup PIN locks out one address after a handful of wrong tries and everyone after
+  ten, with a fresh counter after each window; the acting admin re-enters their password to
+  change any password; other sessions are revoked when 2FA is enabled; the public API's
+  pre-auth rate limit is keyed per IP so rotating bogus tokens cannot bypass it.
+- Docker events buffer is capped with exponential reconnect backoff; Mojang lookups are
+  single-flight; directory sizing no longer follows symlinks; the crash watcher and the storage
+  indexer skip redundant work.
+- Daily maintenance prunes event history (365 days) and stale API-cache rows (30 days) in
+  bounded windows, and the panel-database snapshot runs in a worker thread.
+- Performance indexes for the Activity / History pages, the dashboard crash badge, and the
+  player-event prune (migration 025).
+
 ## [0.12.0] - 2026-09-04
 
 An update-safety release: the last unpinned-modpack path is gone, and the per-server update
@@ -123,7 +222,7 @@ bumps. Two behaviour changes below need a note before you upgrade.
   stop, offline-after-restart, crash loop, crash report, and update-failed are forwarded under a new
   toggleable category (on by default). See the new [integrations guide](docs/integrations.md).
 - **Automatic daily backups + panel-DB snapshots.** Every new server is seeded a daily backup
-  schedule on create (staggered 02:00–05:59). The panel's own database is snapshotted via
+  schedule on create (staggered 02:00-05:59). The panel's own database is snapshotted via
   `VACUUM INTO` to `data/backups/_panel/` on a daily timer (newest 14 kept), and an
   `integrity_check` pragma runs on boot.
 - **Avatar cropper.** Custom profile-picture uploads now pass through a client-side square-crop
@@ -326,7 +425,7 @@ pipeline learns every known `/list` phrasing plus a set of live-cache hardening 
 - Fresh GTNH installs actually install: the panel no longer sets `SKIP_GTNH_UPDATE_CHECK`, which
   told the image to skip the code path that downloads the pack in the first place and crash-looped
   every new GTNH server on missing files.
-- Pack upgrades no longer time out at 10 minutes for GTNH, which downloads a ~1–2 GB server pack
+- Pack upgrades no longer time out at 10 minutes for GTNH, which downloads a ~1-2 GB server pack
   and builds a several-hundred-mod world on first boot; it now gets 30 minutes before the upgrade
   is treated as failed.
 
@@ -744,9 +843,9 @@ UI bug originated server-side.
 
 - **Light theme now passes WCAG AA for all accent-colored text.** Links and status text previously
   used raw palette classes (`text-diamond-400`, `text-grass-400`, `text-gold-400`,
-  `text-redstone-400`) in both themes; on the light canvas those measure 1.9–2.8:1. New semantic
-  tokens (`link`, `ok`, `warn`, `danger`) resolve to the 400 steps in dark (6.4–9.5:1) and the
-  600/700 steps in light (4.9–7.0:1), and 200+ call sites across every view and page script now go
+  `text-redstone-400`) in both themes; on the light canvas those measure 1.9-2.8:1. New semantic
+  tokens (`link`, `ok`, `warn`, `danger`) resolve to the 400 steps in dark (6.4-9.5:1) and the
+  600/700 steps in light (4.9-7.0:1), and 200+ call sites across every view and page script now go
   through them. Server status text goes through a new `statusText` helper. The always-dark console
   keeps its raw palette classes on purpose.
 - **Primary/danger button hover states now pass contrast.** Hover used to lighten
@@ -1004,7 +1103,7 @@ Initial public release - a complete, self-hosted control panel for Minecraft ser
 - **Console, logs & RCON** - live console over WebSocket, ANSI rendering, search/level filters, a
   command bar with history, and a player list with quick actions; a generated, encrypted RCON
   password is injected per server.
-- **Player moderation** - whitelist, ops (levels 1–4), bans, IP bans (RCON while running, direct JSON
+- **Player moderation** - whitelist, ops (levels 1 to 4), bans, IP bans (RCON while running, direct JSON
   edits while stopped), and teleports by coordinates, to a player, or to the nearest biome/structure.
 - **Backups & schedules** - save-safe archive/restore with retention classes and free-space
   preflight; per-server and global cron tasks (restart / backup / RCON) with next-run previews.

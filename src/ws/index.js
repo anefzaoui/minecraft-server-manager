@@ -3,7 +3,9 @@
 // WebSocket endpoints:
 //   /ws/console/<serverId>  - live log stream down, RCON commands up
 //   /ws/stats/<serverId>    - normalized stats samples every 2s
-// Messages are JSON: {kind: 'log'|'stats'|'cmd'|'cmd-result'|'error', ...}
+// Messages are JSON: {kind: 'log'|'stats'|'cmd'|'cmd-result'|'error'|'log-end', ...}
+// 'log-end' marks the end of one console log stream (server stopped/restarted);
+// the client closes the socket on it so its reconnect/backoff resumes a fresh one.
 
 const { WebSocketServer } = require('ws');
 const signature = require('cookie-signature');
@@ -104,7 +106,20 @@ async function handleConsole(ws, serverId, user) {
         send({ kind: 'cmd-result', command, output: '', error: 'Server is not running.' });
         return;
       }
-      const raw = await execCapture(serverId, ['rcon-cli', '--', ...command.split(/\s+/)]);
+      const words = command.split(/\s+/);
+      // A console `stop` (or Paper's `restart`) is a stop the operator asked for.
+      // Record it as such BEFORE the command runs so the Docker die event that
+      // follows lands inside the stop window and is not recorded as a crash or
+      // auto-restarted (the watcher only knows about panel-requested stops).
+      if (words[0].toLowerCase() === 'stop' || words[0].toLowerCase() === 'restart') {
+        recordEvent({
+          serverId,
+          actor: user.username,
+          type: 'stop-requested',
+          summary: `Stop requested from the console (${words[0].toLowerCase()}).`,
+        });
+      }
+      const raw = await execCapture(serverId, ['rcon-cli', '--', ...words]);
       const output = require('../utils/ansi').stripAnsi(raw);
       send({ kind: 'cmd-result', command, output: output.trim() });
       // Optional in-game attribution: the vanilla "Rcon" sender can't be renamed,
@@ -114,7 +129,7 @@ async function handleConsole(ws, serverId, user) {
         serverId,
         actor: user.username,
         type: 'rcon',
-        summary: `RCON: ${redact(command)}`,
+        summary: `RCON: ${redact(command)}.`,
         details: { output: output.trim().slice(0, 2000) },
       });
     } catch (err) {
@@ -303,10 +318,22 @@ async function handleStats(ws, serverId) {
     cleanup();
   });
   ws.on('close', cleanup);
+  const liveCache = require('../services/liveCache');
   unsubscribe = subscribeStats(
     serverId,
     (sample) => {
-      if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ kind: 'stats', ...sample }));
+      if (ws.readyState !== ws.OPEN) return;
+      // Fold in the latest cached tick-performance sample (TPS/MSPT) so the
+      // metrics page can stream it on the same socket as CPU/mem/network.
+      const live = liveCache.get(serverId);
+      ws.send(
+        JSON.stringify({
+          kind: 'stats',
+          ...sample,
+          perf: live.perf || null,
+          perfSupported: live.perfSupported !== false,
+        })
+      );
     },
     (err) => {
       if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ kind: 'error', message: err.message }));
@@ -333,6 +360,7 @@ function sessionUser(req) {
     const cookies = Object.fromEntries(
       (req.headers.cookie || '').split(';').map((c) => {
         const idx = c.indexOf('=');
+        if (idx === -1) return [c.trim(), ''];
         return [c.slice(0, idx).trim(), decodeURIComponent(c.slice(idx + 1))];
       })
     );

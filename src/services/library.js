@@ -17,6 +17,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { safeFetch } = require('../utils/urlGuard');
 const contentHashes = require('../utils/contentHashes');
+const logger = require('../logger')(path.basename(__filename));
 
 const CATEGORY_DIR = {
   mod: 'library/mods',
@@ -58,7 +59,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
     if (totalBytes > MAX_DOWNLOAD_BYTES) {
       throw httpError(
         413,
-        `Download is ${humanBytes(totalBytes)} - the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit blocks it`
+        `Download is ${humanBytes(totalBytes)}, which is over the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit.`
       );
     }
     const { free } = await require('../storage/indexer').diskFree();
@@ -110,6 +111,12 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
   const existing = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
   if (existing) {
     await fsp.rm(tmpFile, { force: true });
+    // The file was already in the library, but its icon may never have cached
+    // (transient fetch failure at the original add) - retry now that we have a
+    // fresh iconUrl to work from.
+    if (!existing.icon_rel_path && (meta.iconUrl || existing.icon_url)) {
+      cacheIcon(existing.id, meta.iconUrl || existing.icon_url).catch(() => {});
+    }
     return existing;
   }
 
@@ -155,9 +162,12 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
     recordEvent({
       actor,
       type: 'library-added',
-      summary: `Added to library: ${meta.name || filename} (${humanBytes(size)})`,
+      summary: `Added to library: ${meta.name || filename} (${humanBytes(size)}).`,
       details: { id, category, sha256 },
     });
+  } else if (row && !row.icon_rel_path && (meta.iconUrl || row.icon_url)) {
+    // Lost the insert race - still make sure the winner's row has its icon.
+    cacheIcon(row.id, meta.iconUrl || row.icon_url).catch(() => {});
   }
   return row;
 }
@@ -166,7 +176,10 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
 async function cacheIcon(libraryId, iconUrl) {
   try {
     const res = await safeFetch(iconUrl, { signal: AbortSignal.timeout(15000) });
-    if (!res.ok) return;
+    if (!res.ok) {
+      logger.debug('An icon fetch returned a non-OK status.', { libraryId, status: res.status });
+      return;
+    }
     const ext = path.extname(new URL(iconUrl).pathname) || '.png';
     const rel = `library/icons/mods/${libraryId}${ext}`;
     await fsp.mkdir(path.dirname(dataPath(rel)), { recursive: true });
@@ -174,6 +187,105 @@ async function cacheIcon(libraryId, iconUrl) {
     db.run('UPDATE library_files SET icon_rel_path = ? WHERE id = ?', rel, libraryId);
   } catch {
     /* icons are best-effort */
+  }
+}
+
+function looksLikeFilename(name, filename) {
+  if (!name) return true;
+  if (!filename) return false;
+  const n = String(name).trim().toLowerCase();
+  const f = String(filename).toLowerCase();
+  return n === f || n === f.replace(/\.(jar|zip)$/, '');
+}
+
+/**
+ * Repair the metadata gaps that leave the Mods tab showing a bare placeholder -
+ * a missing/broken local icon, and (when the row came from a registry) a
+ * filename-derived name, an empty version, or empty MC-version / loader lists.
+ * Does at most one platform round-trip. Best-effort: every failure is swallowed
+ * with a debug line, so it is safe to call fire-and-forget from a render path.
+ */
+const META_RECHECK_DAYS = 7;
+
+/** True when this row's metadata was (re)checked against its registry within
+ *  META_RECHECK_DAYS - callers use it to skip a row that cannot be completed. */
+function metaCheckedRecently(libRow) {
+  if (!libRow || !libRow.meta_checked_at) return false;
+  const ms = Date.parse(String(libRow.meta_checked_at).replace(' ', 'T') + 'Z');
+  return Number.isFinite(ms) && Date.now() - ms < META_RECHECK_DAYS * 86_400_000;
+}
+
+async function ensureContentMeta(libRow) {
+  if (!libRow || !libRow.id) return;
+  try {
+    const haveIcon = libRow.icon_rel_path && fs.existsSync(dataPath(libRow.icon_rel_path));
+    const haveName = !looksLikeFilename(libRow.name, libRow.filename);
+    const haveVersion = Boolean(libRow.version);
+    const haveMcVersions = libRow.mc_versions_json && libRow.mc_versions_json !== '[]';
+    const haveLoaders = libRow.loaders_json && libRow.loaders_json !== '[]';
+    if (haveIcon && haveName && haveVersion && haveMcVersions) return;
+
+    const patch = {};
+    let iconUrl = libRow.icon_url || null;
+
+    if (libRow.platform && libRow.project_id) {
+      if (libRow.platform === 'modrinth') {
+        const project = await require('./modrinthApi').getProject(libRow.project_id);
+        if (project) {
+          if (!iconUrl && project.icon_url) iconUrl = project.icon_url;
+          if (!haveName && project.title) patch.name = project.title;
+          if (!haveMcVersions && Array.isArray(project.game_versions) && project.game_versions.length) {
+            patch.mc_versions_json = JSON.stringify(project.game_versions);
+          }
+          if (!haveLoaders && Array.isArray(project.loaders) && project.loaders.length) {
+            patch.loaders_json = JSON.stringify(project.loaders);
+          }
+        }
+        if (!haveVersion && libRow.file_id) {
+          const version = await require('./modrinthApi')
+            .getVersion(libRow.file_id)
+            .catch(() => null);
+          if (version && version.version_number) patch.version = version.version_number;
+        }
+      } else if (libRow.platform === 'curseforge') {
+        const mod = await require('./curseforgeApi').getMod(Number(libRow.project_id));
+        if (mod) {
+          if (!iconUrl && mod.iconUrl) iconUrl = mod.iconUrl;
+          if (!haveName && mod.name) patch.name = mod.name;
+        }
+        if (!haveVersion && libRow.file_id) {
+          const file = await require('./curseforgeApi')
+            .getFile(Number(libRow.project_id), Number(libRow.file_id))
+            .catch(() => null);
+          if (file && (file.name || file.fileName)) patch.version = file.name || file.fileName;
+        }
+      }
+    }
+
+    if (iconUrl && iconUrl !== libRow.icon_url) patch.icon_url = iconUrl;
+
+    const cols = Object.keys(patch);
+    if (cols.length) {
+      db.run(
+        `UPDATE library_files SET ${cols.map((c) => `${c} = ?`).join(', ')} WHERE id = ?`,
+        ...cols.map((c) => patch[c]),
+        libRow.id
+      );
+    }
+    if (iconUrl && !haveIcon) await cacheIcon(libRow.id, iconUrl);
+  } catch (err) {
+    logger.debug('ensureContentMeta could not repair a library row.', {
+      libraryId: libRow.id,
+      err: String(err && err.message),
+    });
+  } finally {
+    // Stamp the attempt whatever it yielded, so a row the registry cannot
+    // complete is not asked about again until the next recheck window.
+    try {
+      db.run("UPDATE library_files SET meta_checked_at = datetime('now') WHERE id = ?", libRow.id);
+    } catch {
+      /* best-effort */
+    }
   }
 }
 
@@ -210,7 +322,12 @@ async function importFile(localPath, meta, { actor = 'system' } = {}) {
   if (buf.length > MAX_DOWNLOAD_BYTES) throw httpError(413, 'File is too large');
   const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
   const existing = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
-  if (existing) return existing;
+  if (existing) {
+    if (!existing.icon_rel_path && (meta.iconUrl || existing.icon_url)) {
+      cacheIcon(existing.id, meta.iconUrl || existing.icon_url).catch(() => {});
+    }
+    return existing;
+  }
   const filename = sanitizeFilename(meta.filename || path.basename(localPath));
   const relPath = `${CATEGORY_DIR[category]}/${sha256.slice(0, 8)}-${filename}`;
   await fsp.mkdir(path.dirname(dataPath(relPath)), { recursive: true });
@@ -245,7 +362,7 @@ async function importFile(localPath, meta, { actor = 'system' } = {}) {
     recordEvent({
       actor,
       type: 'library-added',
-      summary: `Uploaded to library: ${meta.name || filename} (${humanBytes(buf.length)})`,
+      summary: `Uploaded to library: ${meta.name || filename} (${humanBytes(buf.length)}).`,
       details: { id, category, sha256 },
     });
   }
@@ -267,7 +384,7 @@ async function deleteLibraryFile(libraryId, { actor = 'system', force = false } 
   recordEvent({
     actor,
     type: 'library-deleted',
-    summary: `Removed from library: ${lib.name} (${humanBytes(lib.size_bytes)} freed)`,
+    summary: `Removed from library: ${lib.name} (${humanBytes(lib.size_bytes)} freed).`,
   });
   return { freedBytes: lib.size_bytes };
 }
@@ -297,6 +414,8 @@ module.exports = {
   installToServer,
   deleteLibraryFile,
   cacheIcon,
+  ensureContentMeta,
+  metaCheckedRecently,
   usageCount,
   orphans,
   CATEGORY_DIR,

@@ -7,7 +7,6 @@
 <p align="center">
   <a href="https://github.com/anefzaoui/minecraft-server-manager/releases/latest"><img src="https://img.shields.io/github/v/release/anefzaoui/minecraft-server-manager?logo=github" alt="GitHub release"></a>
   <a href="https://github.com/anefzaoui/minecraft-server-manager/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/anefzaoui/minecraft-server-manager/ci.yml?logo=github&label=ci" alt="CI"></a>
-  <a href="https://github.com/anefzaoui/minecraft-server-manager/actions/workflows/docker-publish.yml"><img src="https://img.shields.io/github/actions/workflow/status/anefzaoui/minecraft-server-manager/docker-publish.yml?logo=docker&logoColor=white&label=docker%20publish" alt="Docker publish"></a>
   <a href="https://github.com/anefzaoui/minecraft-server-manager/pkgs/container/minecraft-server-manager"><img src="https://img.shields.io/badge/ghcr.io-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white" alt="GHCR image"></a>
   <img src="https://img.shields.io/github/stars/anefzaoui/minecraft-server-manager?logo=github" alt="GitHub stars">
   <img src="https://img.shields.io/badge/node-%E2%89%A524-339933?logo=nodedotjs&logoColor=white" alt="Node 24+">
@@ -38,19 +37,19 @@ copy to migrate.**
 
 ## Features
 
-- 🐳 Every server is its own **resource-capped Docker container** - create / start / stop / restart / recreate / delete with graceful RCON stop and crash detection
+- 🐳 Every server is its own **resource-capped Docker container**: create / start / stop / restart / rebuild / delete with graceful RCON stop and crash detection
 - 🧙 **Guided wizard**: Simple or Advanced mode, every image env var explained in plain English
-- 📌 **Modpacks always pinned** to an exact version - explicit upgrades with preview, pre-update backup, health monitoring, and **one-click rollback**
-- 🧩 **Five content registries in one browser**: Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases - three of them keyless
+- 📌 **Modpacks always pinned** to an exact version, with explicit upgrades that offer a preview, pre-update backup, health monitoring, and **one-click rollback**
+- 🧩 **Five content registries in one browser**: Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases (three of them keyless)
 - 🔗 **Add by link**: paste any project page, GitHub repo, slug, or direct jar URL
-- 🗜️ **Import anything**: Modrinth `.mrpack`, CurseForge exports, or your own zip of jars - every jar identified & compatibility-checked
-- 🔒 **Checksum-verified downloads** (sha512 → sha256 → sha1 → md5) - a mismatch never reaches the server
+- 🗜️ **Import anything**: Modrinth `.mrpack`, CurseForge exports, or your own zip of jars, with every jar identified and compatibility-checked
+- 🔒 **Checksum-verified downloads** (sha512 → sha256 → sha1 → md5), so a mismatch never reaches the server
 - 📚 Shared **sha256-deduplicated mod library**, hard-linked into servers; custom mods survive pack updates
 - 🖥️ **Live console** over WebSocket, RCON command bar, log filters, player quick-actions
-- 👮 **Player moderation**: whitelist, ops, bans, IP bans, teleports - online via RCON, offline via JSON edits
+- 👮 **Player moderation**: whitelist, ops, bans, IP bans, teleports, online via RCON and offline via JSON edits
 - 💾 **Save-safe backups** with retention classes + cron **schedules** (restart / backup / RCON)
-- 📜 **Blueprints** (`.mcserver.zip`): portable server recipes - export, import anywhere, get the same server
-- 🔥 **Crash forensics**: auto-detected, parsed, suspects identified - plus one-click **mclo.gs sharing & automated insights**
+- 📜 **Blueprints** (`.mcserver.zip`): portable server recipes you export, import anywhere, and get the same server from
+- 🔥 **Crash forensics**: auto-detected, parsed, suspects identified, plus one-click **mclo.gs sharing and automated insights**
 - 🗺️ One-click **BlueMap live map**, served through the panel's authenticated proxy
 - 📈 **Storage analytics & panel-enforced disk quotas**, playtime/deaths/mining **analytics & scoreboard**, **inventory forensics**, advisory x-ray **investigation**
 - 🪄 Optional **per-server chatbot** (local/OpenAI-compatible LLM) with constrained in-game powers ([docs](docs/chatbot.md))
@@ -78,7 +77,7 @@ copy to migrate.**
 The panel and the Docker daemon are expected to run on the **same host** (server data is bind-mounted
 by host path).
 
-### 🐳 Option 1 - Docker (Linux hosts, Portainer, Dockge, compose)
+### 🐳 Option 1: Docker (Linux hosts, Portainer, Dockge, compose)
 
 A pre-built multi-arch image (amd64 + arm64) is published to GHCR on every release:
 `ghcr.io/anefzaoui/minecraft-server-manager:latest` (or pin a version tag, e.g. `:v0.11.0`).
@@ -95,12 +94,12 @@ Open **http://your-host:25564**. In Portainer/Dockge, paste the compose file as 
 
 > [!IMPORTANT]
 > The panel drives the **host's Docker daemon** through the mounted socket, and anything that holds
-> the Docker socket is root-equivalent on the host - treat the panel's admin login accordingly and
+> the Docker socket is root-equivalent on the host, so treat the panel's admin login accordingly and
 > never expose the UI raw to the internet. Docker Desktop (Windows/macOS) is not a target for this
-> mode - run the panel natively there.
+> mode; run the panel natively there.
 
 <details>
-<summary><b>How the containerized panel works - and what to know</b></summary>
+<summary><b>How the containerized panel works, and what to know</b></summary>
 
 - The panel drives the **host's Docker daemon** through the mounted `/var/run/docker.sock` and creates
   each Minecraft server as a **sibling container** (not a child). Game ports are published by those
@@ -130,7 +129,7 @@ host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path;
 
 </details>
 
-### 🖥️ Option 2 - From source (any OS, incl. Windows/macOS)
+### 🖥️ Option 2: From source (any OS, incl. Windows/macOS)
 
 ```bash
 git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
@@ -155,7 +154,7 @@ random cookie secret (`data/.session-secret`) and a separate at-rest encryption 
 across replicas); the at-rest key is always machine-local, so keep `data/.secret-key` with your
 backups.
 
-### ⚙️ Option 3 - Under a process manager (PM2 / systemd)
+### ⚙️ Option 3: Under a process manager (PM2 / systemd)
 
 For a from-source install that should survive reboots. Gotcha with **PM2**: it launches apps
 with whatever Node version started the PM2 _daemon_, and later switching your shell with `nvm` does
@@ -194,7 +193,7 @@ pm2 save
     <td><img src="docs/screenshots/05-console.png" alt="Live console"><br><sub><b>Live console &amp; RCON</b>: streamed logs with level filters and a command bar with history.</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b>: pack-managed + custom overlay, one-click toggle, five-registry search (Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases), zip import (Modrinth <code>.mrpack</code>, CurseForge exports, or your own jar collections - every jar identified &amp; compatibility-checked, every download checksum-verified).</sub></td>
+    <td><img src="docs/screenshots/06-mods.png" alt="Mods & plugins"><br><sub><b>Mods &amp; plugins</b>: pack-managed and custom mods, one-click toggle, five-registry search (Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases), zip import (Modrinth <code>.mrpack</code>, CurseForge exports, or your own jar collections). Every jar is identified and compatibility-checked, and every download is checksum-verified.</sub></td>
     <td><img src="docs/screenshots/07-worlds.png" alt="Worlds"><br><sub><b>Worlds</b>: reset/re-roll with a custom or random seed, duplicate, and a shared world library.</sub></td>
   </tr>
   <tr>
@@ -253,7 +252,7 @@ Not affiliated with any of them.
 - **Custom-mod overlay**: mods you add yourself are downloaded into a shared, sha256-deduplicated
   library and hard-linked into the server; they survive pack updates. Disabling is class-aware
   (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism).
-- **Five content sources, one browser**: Modrinth, CurseForge, and - keyless - **Hangar** (PaperMC's
+- **Five content sources, one browser**: Modrinth, CurseForge, and (keyless) **Hangar** (PaperMC's
   plugin registry), **SpigotMC** (via Spiget's CDN proxy, which dodges the Cloudflare wall), and
   **GitHub Releases** (stable-release preference, `-sources`/`-javadoc` sidecars skipped, ETag
   caching so update checks barely touch the rate limit). All five feed search, add-by-link, the
@@ -262,19 +261,19 @@ Not affiliated with any of them.
   GitHub repo or release URL (bare `owner/repo` works), a Modrinth slug, or a direct `.jar` URL -
   the panel resolves the right build for the server's loader and MC version.
 - **Server-side `.mrpack` import**: upload a Modrinth modpack and it's previewed and installed like
-  a CurseForge export - files are canonicalized back into real Modrinth projects via hash lookup
+  a CurseForge export; files are canonicalized back into real Modrinth projects via hash lookup
   (so they stay update-checkable), client-only entries are skipped visibly, and both override trees
   apply in spec order with pre-apply backups. An `.mrpack` can also seed server creation.
 - **Verified downloads**: every install from a registry is streamed through the strongest checksum
   the registry publishes (sha512 → sha256 → sha1 → md5); a mismatch aborts before anything lands on
   the server.
 - **Crash analysis via mclo.gs**: one click shares a crash report as an mclo.gs paste (always behind
-  an explicit confirm - it's public) and runs mclo.gs's automated insights: known problems with
+  an explicit confirm, since it's public) and runs mclo.gs's automated insights: known problems with
   suggested fixes, rendered right in the History tab.
 - **Console, logs & RCON**: live console over WebSocket, ANSI rendering, search/level filters, a
   command bar with history, and a player list with quick actions. Every server gets a generated,
   encrypted RCON password injected automatically.
-- **Player moderation**: whitelist, ops (levels 1–4), bans, IP bans; via RCON while running and via
+- **Player moderation**: whitelist, ops (levels 1 to 4), bans, IP bans; via RCON while running and via
   direct JSON edits while stopped ("applies on start"). Teleport by coordinates, to a player, or to
   the nearest biome.
 - **Backups & schedules**: save-safe archive/restore with per-reason retention caps and free-space
@@ -318,8 +317,11 @@ Not affiliated with any of them.
   the server pre-added to the in-game server list.
 - **Pick-mods-first solver**: choose the mods you want; the solver intersects Modrinth metadata to
   propose the newest fully-compatible loader + MC version pair and installs the set on creation.
-- **Public status page**: optional unauthenticated `/status/<slug>` per server (name, version,
-  player count only).
+- **Public status page**: optional unauthenticated `/status/<slug>` per server: live status, MOTD,
+  version, flavor, icon, uptime, and player count, styled with the server's accent.
+- **Public API**: optional read-only `/api/v1`, authenticated with admin-minted Bearer tokens that
+  are scopable per server, revocable, and expiring; server list + live status. See
+  [docs/public-api.md](docs/public-api.md).
 
 ---
 
@@ -340,8 +342,8 @@ it runs on. This section covers how to reach it from elsewhere and exactly which
 
 The panel itself sits at **25564**, one below the game runway, so game instances count cleanly
 upward from 25565 with nothing interrupting the sequence. Game ports are then assigned **first-free**,
-one game + RCON pair per server. Ten servers therefore occupy game `25565–25574` (TCP+UDP), RCON
-`26565–26574` (TCP), and, where Bedrock is enabled, `19132+` (UDP). The 1000-port RCON offset is
+one game + RCON pair per server. Ten servers therefore occupy game `25565-25574` (TCP+UDP), RCON
+`26565-26574` (TCP), and, where Bedrock is enabled, `19132+` (UDP). The 1000-port RCON offset is
 deliberate: it keeps RCON in a separate block so you can open a contiguous **game** range without ever
 exposing RCON.
 
@@ -418,25 +420,25 @@ Exposing the raw panel port on the internet means logins travel over **plain HTT
 
 ## Configuration (`.env`, all optional)
 
-| Variable                                                                    | Default                    | Purpose                                                                                                                                                                                                                                                                                                  |
-| --------------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATA_DIR`                                                                  | `./data`                   | Root for **all** panel state (DB, server data, backups, library).                                                                                                                                                                                                                                        |
-| `DATA_DIR_HOST`                                                             | = `DATA_DIR`               | Only when the panel runs **in a container**: the absolute host path of the `DATA_DIR` mount, used to re-root bind mounts for the host daemon.                                                                                                                                                            |
-| `MAP_PROXY_HOST`                                                            | see note                   | Address the panel uses to reach sibling containers' host-published ports (currently just the live map). `127.0.0.1` bare metal; auto-switches to `host.docker.internal` when `DATA_DIR_HOST` is set (containerized panel - needs `extra_hosts`, see above). Override for rootless Docker/remote daemons. |
-| `PANEL_HOST` / `PANEL_PORT`                                                 | `127.0.0.1` / `25564`      | Web UI bind address + port. Localhost-only by default; set `PANEL_HOST=0.0.0.0` for LAN access.                                                                                                                                                                                                          |
-| `SESSION_SECRET`                                                            | auto-generated             | Signs session cookies. Auto-created and persisted at `$DATA_DIR/.session-secret` if unset. At-rest encryption uses a **separate** auto-generated `$DATA_DIR/.secret-key`, so rotating this no longer invalidates stored secrets.                                                                         |
-| `TRUST_PROXY` / `COOKIE_SECURE` / `COOKIE_SAMESITE`                         | - / - / `lax`              | Set when behind a TLS-terminating reverse proxy. `TRUST_PROXY` (hops, `loopback`, or IP list) is required for `req.ip` to see the real client, which the rate limiters key on. `COOKIE_SAMESITE` is `lax`/`strict`/`none`; `none` requires `COOKIE_SECURE`.                                              |
-| `RATE_LIMIT_API_PER_MIN` / `RATE_LIMIT_AUTH_PER_15MIN`                      | `1200` / `100`             | Per-client-IP request ceilings: all of `/api`, and login / 2FA / setup POSTs. `0` disables that limiter. A volume backstop on top of the per-account login lockout.                                                                                                                                      |
-| `MSM_EXIT_ON_FATAL`                                                         | -                          | `1`/`true`/`yes` makes the post-boot runtime guard hard-exit on an uncaught exception/rejection instead of logging and staying up - for supervised deployments (`systemd`, Docker `restart:`).                                                                                                           |
-| `DOCKER_HOST`                                                               | auto-detected              | Docker endpoint override for rootless Docker, Podman, or a remote daemon (per-OS socket/pipe otherwise).                                                                                                                                                                                                 |
-| `CF_API_KEY`                                                                | -                          | Optional [CurseForge API key](https://console.curseforge.com/) to seed on first run (also settable in the UI). Wrap in single quotes; CF keys often contain `$`.                                                                                                                                         |
-| `GITHUB_TOKEN`                                                              | -                          | Optional GitHub token to raise the unauthenticated API quota for the GitHub Releases content source (ETag caching keeps usage minimal either way).                                                                                                                                                       |
-| `MC_IMAGE_REPO`                                                             | `itzg/minecraft-server`    | Docker image repo for servers; override for a private mirror / air-gapped registry.                                                                                                                                                                                                                      |
-| `DEFAULT_HEAP_MB` / `DEFAULT_CONTAINER_MEMORY_MB` / `DEFAULT_DISK_QUOTA_GB` | host-aware                 | Starting resource defaults for new servers. Clamped to your host RAM when unset.                                                                                                                                                                                                                         |
-| `PORT_GAME_START` / `PORT_RCON_OFFSET` / `PORT_BEDROCK_START`               | `25565` / `1000` / `19132` | Port allocation scheme.                                                                                                                                                                                                                                                                                  |
-| `LOG_LEVEL`                                                                 | `info`                     | Log verbosity: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`. Structured JSON to stdout.                                                                                                                                                                                                  |
-| `LOG_PRETTY`                                                                | auto (TTY in dev)          | `false` forces JSON output; ignored in production.                                                                                                                                                                                                                                                       |
-| `SENTRY_DSN` (+ `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`)          | -                          | Optional error-reporting seam. Inert unless a DSN is set; the wiring in `src/instrument.js` is a no-op stub for now.                                                                                                                                                                                     |
+| Variable                                                                                 | Default                    | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATA_DIR`                                                                               | `./data`                   | Root for **all** panel state (DB, server data, backups, library).                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `DATA_DIR_HOST`                                                                          | = `DATA_DIR`               | Only when the panel runs **in a container**: the absolute host path of the `DATA_DIR` mount, used to re-root bind mounts for the host daemon.                                                                                                                                                                                                                                                                                                                                                                                       |
+| `MAP_PROXY_HOST`                                                                         | see note                   | Address the panel uses to reach sibling containers' host-published ports (currently just the live map). `127.0.0.1` bare metal; auto-switches to `host.docker.internal` when `DATA_DIR_HOST` is set (containerized panel - needs `extra_hosts`, see above). Override for rootless Docker/remote daemons.                                                                                                                                                                                                                            |
+| `PANEL_HOST` / `PANEL_PORT`                                                              | `127.0.0.1` / `25564`      | Web UI bind address + port. Localhost-only by default; set `PANEL_HOST=0.0.0.0` for LAN access.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `SESSION_SECRET`                                                                         | auto-generated             | Signs session cookies. Auto-created and persisted at `$DATA_DIR/.session-secret` if unset. At-rest encryption uses a **separate** auto-generated `$DATA_DIR/.secret-key`, so rotating this no longer invalidates stored secrets.                                                                                                                                                                                                                                                                                                    |
+| `TRUST_PROXY` / `COOKIE_SECURE` / `COOKIE_SAMESITE`                                      | - / - / `lax`              | Set when behind a TLS-terminating reverse proxy. `TRUST_PROXY` (hop count, `loopback`, or IP/CIDR list - a bare `true` is deprecated and treated as `1` with a boot warning, because it trusts a spoofable `X-Forwarded-For`) is required for `req.ip` to see the real client, which the rate limiters key on. `COOKIE_SECURE` is `true`/`false`/`auto` (`auto` only works together with `TRUST_PROXY`; the panel warns at boot when it is set alone). `COOKIE_SAMESITE` is `lax`/`strict`/`none`; `none` requires `COOKIE_SECURE`. |
+| `RATE_LIMIT_API_PER_MIN` / `RATE_LIMIT_AUTH_PER_15MIN` / `RATE_LIMIT_PUBLIC_API_PER_MIN` | `1200` / `100` / `120`     | Per-client-IP request ceilings: all of `/api`, login / 2FA / setup POSTs, and per-token requests to the public `/api/v1`. `0` disables that limiter. A volume backstop on top of the per-account login lockout.                                                                                                                                                                                                                                                                                                                     |
+| `MSM_EXIT_ON_FATAL`                                                                      | -                          | `1`/`true`/`yes` makes the post-boot runtime guard hard-exit on an uncaught exception/rejection instead of logging and staying up - for supervised deployments (`systemd`, Docker `restart:`).                                                                                                                                                                                                                                                                                                                                      |
+| `DOCKER_HOST`                                                                            | auto-detected              | Docker endpoint override for rootless Docker, Podman, or a remote daemon (per-OS socket/pipe otherwise).                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `CF_API_KEY`                                                                             | -                          | Optional [CurseForge API key](https://console.curseforge.com/) to seed on first run (also settable in the UI). Wrap in single quotes; CF keys often contain `$`.                                                                                                                                                                                                                                                                                                                                                                    |
+| `GITHUB_TOKEN`                                                                           | -                          | Optional GitHub token to raise the unauthenticated API quota for the GitHub Releases content source (ETag caching keeps usage minimal either way).                                                                                                                                                                                                                                                                                                                                                                                  |
+| `MC_IMAGE_REPO`                                                                          | `itzg/minecraft-server`    | Docker image repo for servers; override for a private mirror / air-gapped registry.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `DEFAULT_HEAP_MB` / `DEFAULT_CONTAINER_MEMORY_MB` / `DEFAULT_DISK_QUOTA_GB`              | host-aware                 | Starting resource defaults for new servers. The memory pair adapts to the host's RAM when unset (heap ≈ 25% of RAM, container limit ≈ 1.5× that); the disk quota defaults to a flat `25` GB.                                                                                                                                                                                                                                                                                                                                        |
+| `PORT_GAME_START` / `PORT_RCON_OFFSET` / `PORT_BEDROCK_START`                            | `25565` / `1000` / `19132` | Port allocation scheme.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `LOG_LEVEL`                                                                              | `info`                     | Log verbosity: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent`. Structured JSON to stdout.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `LOG_PRETTY`                                                                             | auto (TTY in dev)          | `false` forces JSON output; ignored in production.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `SENTRY_DSN` (+ `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`)                       | -                          | Optional error-reporting seam. Inert unless a DSN is set; the wiring in `src/instrument.js` is a no-op stub for now.                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 > **Exposure:** the panel binds to localhost by default. Set `PANEL_HOST=0.0.0.0` for LAN access, and only
 > put it on the internet behind a reverse proxy with TLS (set `TRUST_PROXY` + `COOKIE_SECURE`). Auth is
@@ -444,7 +446,7 @@ Exposing the raw panel port on the internet means logins travel over **plain HTT
 
 ---
 
-## The `./data` directory - everything lives here
+## The `./data` directory: everything lives here
 
 ```
 data/
@@ -476,7 +478,7 @@ world. Every file operation is contained to this root (path-guard enforced).
 - **Java heap** (`MEMORY`): what Minecraft may use.
 - **Container limit** (Docker `HostConfig.Memory`): the hard cap; hitting it OOM-kills the server.
 
-Keep the container limit 25–50% above the heap. The wizard does this automatically; the Settings
+Keep the container limit 25-50% above the heap. The wizard does this automatically; the Settings
 form validates it.
 
 ### Java version selection
@@ -489,7 +491,7 @@ The image does **not** pick Java for you. The panel maps MC version → image ta
 GTNH is installed from its own release index rather than CurseForge, and the panel always pins an
 exact pack version. Java is chosen per version from the index's own `maxJavaVersion`: GTNH 2.8.0 and
 later run on **Java 25** via the pack's bundled lwjgl3ify patches, older releases on Java 21 or 17.
-Budget **6 GB of heap and 20 GB of disk** to start - the wizard raises both for you. See the
+Budget **6 GB of heap and 20 GB of disk** to start; the wizard raises both for you. See the
 [modpacks guide](docs/modpacks.md) for the full pack workflow.
 
 ### Disk quotas are panel-enforced
@@ -505,7 +507,7 @@ using a **dedicated** random key at `$DATA_DIR/.secret-key` (auto-generated on f
 `0600`). It's independent of `SESSION_SECRET`, so rotating the cookie secret no longer invalidates
 stored credentials. Values written before this key existed used a `SESSION_SECRET`-derived key,
 kept as a decrypt-only fallback and re-encrypted under the dedicated key automatically on boot.
-**Back up `.secret-key` with your data** - losing it means re-entering every stored credential.
+**Back up `.secret-key` with your data.** Losing it means re-entering every stored credential.
 Blueprints never contain secrets. The panel refuses to set footgun env vars (`REMOVE_OLD_MODS`,
 `LOAD_ENV_FROM_*`).
 

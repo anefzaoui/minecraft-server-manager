@@ -31,7 +31,9 @@ router.get(
         err: serializeError(err, { includeStack: false }),
       });
     });
-    res.json({ ok: true, crashes: crashes.listCrashes(serverId) });
+    // Newest 200 - an unbounded list would read the whole table on every
+    // crash-tab render for a server that's had a long crash-loop.
+    res.json({ ok: true, crashes: crashes.listCrashes(serverId, { limit: 200 }) });
   })
 );
 
@@ -46,7 +48,10 @@ router.get(
     res.setHeader('Content-Disposition', `attachment; filename="crash-reports-${serverId}.zip"`);
 
     const archive = archiver('zip', { zlib: { level: 9 } });
-    archive.on('error', (err) => next(err));
+    archive.on('error', (err) => {
+      if (!res.headersSent) return next(err);
+      res.destroy();
+    });
     archive.pipe(res);
     for (const row of rows) {
       const abs = row.filename.startsWith('hs_err')
@@ -71,9 +76,9 @@ router.delete(
 
 router.get(
   '/:crashId/text',
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const row = ownedCrash(req);
-    const text = crashes.getCrashText(row.server_id, row.filename);
+    const text = await crashes.getCrashText(row.server_id, row.filename);
     crashes.markViewed(row.id); // opening the report counts as reading it
     res.type('text/plain').send(text);
   })

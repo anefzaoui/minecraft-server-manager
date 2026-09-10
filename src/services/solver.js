@@ -152,8 +152,26 @@ async function solve(projectRefs) {
   for (const loader of LOADERS) {
     const sets = projects.map((p) => p.loaderMap.get(loader.id));
     if (sets.some((s) => s.size === 0)) continue; // some project has no builds for this loader
-    let intersection = [...sets[0]];
-    for (const s of sets.slice(1)) intersection = intersection.filter((gv) => s.has(gv));
+    let intersection;
+    // Seed from the SMALLEST set and filter through the rest: bounds the work
+    // at O(min|set| · (m-1)) instead of O(|sets[0]| · (m-1)) when the first
+    // project happens to support the most versions.
+    {
+      let seed = sets[0],
+        seedIdx = 0;
+      for (let i = 1; i < sets.length; i += 1)
+        if (sets[i].size < seed.size) {
+          seed = sets[i];
+          seedIdx = i;
+        }
+      intersection = [...seed];
+      for (let i = 0; i < sets.length; i += 1) {
+        if (i === seedIdx) continue;
+        const s = sets[i];
+        intersection = intersection.filter((gv) => s.has(gv));
+        if (!intersection.length) break;
+      }
+    }
     for (const gv of intersection) fullPairs.push(pairMeta(loader.id, gv));
   }
   fullPairs.sort(comparePairs);

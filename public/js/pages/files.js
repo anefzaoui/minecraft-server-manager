@@ -1,6 +1,7 @@
 // File manager tab: navigation is server-rendered (?path=), actions go through
 // /api/servers/:id/files (or /api/files when unscoped). Text edit in a modal
-// textarea for v1 - CodeMirror lands later.
+// textarea (line numbers + wrap toggle; a full editor lands later) plus a
+// bounded "find in files" grep.
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
@@ -82,6 +83,83 @@ function init(rootEl) {
     });
   });
 
+  // ---- Find in files ----
+  document.getElementById('files-search')?.addEventListener('click', () => {
+    const content = document.createElement('div');
+    content.innerHTML = `
+      <label class="label" for="fs-q">Search text</label>
+      <input class="input" id="fs-q" placeholder="a word or phrase (min 2 chars)" autocomplete="off">
+      <label class="mt-2 flex items-center gap-2 text-xs text-ink-faint">
+        <input type="checkbox" class="msm-check" id="fs-case"> Match case
+      </label>
+      <p class="help mt-1">Searches text files${currentPath ? ` under <span class="font-mono">${escapeHtml(currentPath)}</span>` : ' from here down'}. Large and binary files are skipped.</p>
+      <div class="mt-3 max-h-80 overflow-y-auto rounded-md border border-line text-sm" id="fs-results" hidden></div>`;
+    const q = content.querySelector('#fs-q');
+    const results = content.querySelector('#fs-results');
+
+    const run = async () => {
+      const term = q.value.trim();
+      if (term.length < 2) return false;
+      results.hidden = false;
+      results.innerHTML = '<div class="p-3 text-ink-faint">Searching…</div>';
+      const params = new URLSearchParams({ q: term });
+      if (currentPath) params.set('path', currentPath);
+      if (content.querySelector('#fs-case').checked) params.set('case', '1');
+      let data;
+      try {
+        const res = await fetch(`${base}/search?${params}`);
+        data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          results.innerHTML = `<div class="p-3 text-danger">${escapeHtml(data.error || 'Search failed.')}</div>`;
+          return false;
+        }
+      } catch {
+        results.innerHTML = '<div class="p-3 text-danger">Search failed.</div>';
+        return false;
+      }
+      if (!data.matches.length) {
+        results.innerHTML = '<div class="p-3 text-ink-faint">No matches.</div>';
+        return false;
+      }
+      results.innerHTML =
+        data.matches
+          .map(
+            (m) => `
+        <button class="flex w-full items-baseline gap-2 border-b border-line px-3 py-1.5 text-left last:border-0 hover:bg-inset" data-fs-open="${escapeHtml(m.path)}" data-fs-line="${m.line}">
+          <span class="min-w-0 shrink-0 truncate font-mono text-xs text-link">${escapeHtml(m.path)}:${m.line}</span>
+          <span class="min-w-0 flex-1 truncate font-mono text-xs text-ink-faint">${escapeHtml(m.text)}</span>
+        </button>`
+          )
+          .join('') +
+        (data.truncated
+          ? '<div class="px-3 py-1.5 text-xs text-ink-faint">Showing the first results only. Narrow the search to see the rest.</div>'
+          : '');
+      return false; // keep the modal open
+    };
+
+    openModal({
+      title: 'Find in Files',
+      content,
+      size: 'lg',
+      actions: [
+        { label: 'Close', kind: 'ghost' },
+        { label: 'Search', kind: 'primary', busyLabel: 'Searching…', onClick: run },
+      ],
+    });
+    q.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        run();
+      }
+    });
+    results.addEventListener('click', (e) => {
+      const hit = e.target.closest('[data-fs-open]');
+      if (!hit) return;
+      openEditor(hit.dataset.fsOpen, hit.dataset.fsOpen.split('/').pop(), Number(hit.dataset.fsLine) || 0);
+    });
+    q.focus();
+  });
+
   // ---- Row actions ----
   document.getElementById('files-table')?.addEventListener('click', async (e) => {
     const row = e.target.closest('[data-file-row]');
@@ -119,7 +197,7 @@ function init(rootEl) {
             const tr = document.createElement('tr');
             tr.dataset.filesEmpty = '';
             tr.innerHTML =
-              '<td colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty. Upload files or create a folder above.</td>';
+              '<td data-th="" colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty. Upload files or create a folder above.</td>';
             tbody.appendChild(tr);
           }
         } else {
@@ -142,19 +220,62 @@ function init(rootEl) {
     else destinationModal('Copy', path, name, `${base}/copy`);
   });
 
-  // ---- Text editor (modal textarea, v1) ----
-  async function openEditor(path, name) {
+  // ---- Text editor (modal textarea) ----
+  const LANG_BY_EXT = {
+    properties: 'Properties',
+    json: 'JSON',
+    json5: 'JSON5',
+    yml: 'YAML',
+    yaml: 'YAML',
+    toml: 'TOML',
+    txt: 'Text',
+    md: 'Markdown',
+    mcfunction: 'mcfunction',
+    cfg: 'Config',
+    conf: 'Config',
+    ini: 'INI',
+    js: 'JavaScript',
+    ts: 'TypeScript',
+    sh: 'Shell',
+    xml: 'XML',
+    html: 'HTML',
+    css: 'CSS',
+    log: 'Log',
+  };
+
+  async function openEditor(path, name, gotoLine = 0) {
     const res = await fetch(`${base}/read?path=${encodeURIComponent(path)}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false) {
       return toast(data.error || friendlyError(res, { action: 'open this file' }), { kind: 'error', timeout: 8000 });
     }
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    const lang = LANG_BY_EXT[ext] || (ext ? ext.toUpperCase() : 'Text');
+    const lineCount = data.content.split('\n').length;
     const content = document.createElement('div');
     content.innerHTML = `
-      <textarea class="input h-96 w-full resize-y font-mono text-xs leading-relaxed" spellcheck="false"></textarea>
-      <p class="help mt-2">${escapeHtml(path)} · ${fmtBytes(data.size)}. Saves are written safely in one step.</p>`;
+      <div class="mb-1 flex items-center gap-2 text-xs text-ink-faint">
+        <span class="badge">${escapeHtml(lang)}</span>
+        <span>${lineCount} line${lineCount === 1 ? '' : 's'} · ${fmtBytes(data.size)}</span>
+        <label class="ml-auto flex cursor-pointer items-center gap-1.5"><input type="checkbox" class="msm-check" data-ed-wrap> Wrap</label>
+      </div>
+      <textarea class="input h-96 w-full resize-y whitespace-pre font-mono text-xs leading-relaxed" spellcheck="false" wrap="off"></textarea>
+      <p class="help mt-2">${escapeHtml(path)}. Tab inserts a tab; saves are written safely in one step.</p>`;
     const textarea = content.querySelector('textarea');
     textarea.value = data.content;
+    content.querySelector('[data-ed-wrap]').addEventListener('change', (e) => {
+      const on = e.target.checked;
+      textarea.setAttribute('wrap', on ? 'soft' : 'off');
+      textarea.classList.toggle('whitespace-pre', !on);
+      textarea.classList.toggle('whitespace-pre-wrap', on);
+    });
+    // Tab should indent, not move focus out of the editor.
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab' || e.shiftKey) return;
+      e.preventDefault();
+      const { selectionStart: s, selectionEnd: en } = textarea;
+      textarea.setRangeText('\t', s, en, 'end');
+    });
     openModal({
       title: `Edit ${name}`,
       content,
@@ -175,6 +296,17 @@ function init(rootEl) {
       ],
     });
     textarea.focus();
+    if (gotoLine > 0) {
+      // Put the caret at the start of the target line and scroll it into view.
+      const offset =
+        textarea.value
+          .split('\n')
+          .slice(0, gotoLine - 1)
+          .join('\n').length + (gotoLine > 1 ? 1 : 0);
+      textarea.setSelectionRange(offset, offset);
+      const approxLineHeight = 16;
+      textarea.scrollTop = Math.max(0, (gotoLine - 3) * approxLineHeight);
+    }
   }
 
   function renameModal(path, name) {

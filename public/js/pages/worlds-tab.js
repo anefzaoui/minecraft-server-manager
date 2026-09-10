@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
+import { runTask } from '../lib/progress.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 import { escapeHtml } from '../lib/format.js';
 import {
@@ -85,6 +86,8 @@ function init(serverId, serverName, serverStatus) {
       copyToModal(world);
     } else if (e.target.closest('[data-world-rename]')) {
       renameModal(world);
+    } else if (e.target.closest('[data-world-shrink]')) {
+      shrinkModal(world);
     } else if (e.target.closest('[data-world-reset]')) {
       resetModal(world, size);
     } else if (e.target.closest('[data-world-delete]')) {
@@ -93,7 +96,7 @@ function init(serverId, serverName, serverStatus) {
         title: `Delete world "${world}"?`,
         message: 'Removes this world and all of its dimensions from the server. It is not the active world.',
         detail: `${fmtBytes(size)} will be freed. No automatic backup is taken for worlds that aren't active.`,
-        confirmLabel: 'Delete world',
+        confirmLabel: 'Delete World',
         danger: true,
         requireText: world,
       });
@@ -148,7 +151,7 @@ function init(serverId, serverName, serverStatus) {
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
-          label: 'Copy world',
+          label: 'Copy World',
           kind: 'primary',
           busyLabel: 'Copying…',
           onClick: async () => {
@@ -206,6 +209,107 @@ function init(serverId, serverName, serverStatus) {
     modal.body.querySelector('[data-r-name]').focus();
   }
 
+  // ---- Shrink (remove rarely-visited chunks) ----
+  function shrinkModal(world) {
+    const content = document.createElement('div');
+    content.innerHTML = `
+      <p class="text-sm">This removes parts of <b>${escapeHtml(world)}</b> that players have barely
+        spent time in, so the world takes less space on disk. Minecraft rebuilds a removed area from
+        the seed the next time someone travels there.</p>
+      <p class="help mt-2"><b>Back up first</b>. Anything a player built but barely stood in would be
+        removed too.</p>
+      <div class="mt-3 grid grid-cols-2 gap-3">
+        <div>
+          <label class="label" for="sh-secs">Remove chunks visited under</label>
+          <div class="flex items-center gap-1.5">
+            <input class="input w-20" id="sh-secs" type="number" min="1" max="3600" value="30">
+            <span class="text-sm text-ink-faint">seconds</span>
+          </div>
+        </div>
+        <div>
+          <label class="label" for="sh-keep">Always keep spawn (chunks)</label>
+          <input class="input w-24" id="sh-keep" type="number" min="0" max="256" value="8">
+        </div>
+      </div>
+      ${
+        isRunning
+          ? `<label class="notice notice-warn mt-3 flex items-center gap-2 text-sm">
+               <input type="checkbox" class="msm-check" id="sh-wrap">
+               The server is running, so stop it, shrink the world, then start it again.
+             </label>`
+          : '<p class="help mt-2">The server is stopped, so the shrink runs directly.</p>'
+      }
+      <div class="mt-3 hidden rounded-md border border-line bg-inset/40 px-3 py-2 text-sm" data-sh-result></div>`;
+    const resultEl = content.querySelector('[data-sh-result]');
+    const opts = () => {
+      const secs = Math.max(1, Math.min(3600, Number(content.querySelector('#sh-secs').value) || 30));
+      const keep = Math.max(0, Math.min(256, Number(content.querySelector('#sh-keep').value) || 0));
+      return { minInhabitedTicks: secs * 20, spawnKeepChunks: keep };
+    };
+
+    openModal({
+      title: `Shrink "${world}"`,
+      content,
+      actions: [
+        { label: 'Cancel', kind: 'ghost' },
+        {
+          label: 'Preview',
+          kind: 'ghost',
+          busyLabel: 'Checking…',
+          onClick: async () => {
+            // A dry run never touches the server, so it works while it's running too.
+            const res = await postJSON(`${base}/${encodeURIComponent(world)}/shrink`, { dryRun: true, ...opts() });
+            if (!res) return false;
+            resultEl.classList.remove('hidden');
+            const dims =
+              Array.isArray(res.dimensions) && res.dimensions.length > 1
+                ? ` across ${res.dimensions.length} dimensions`
+                : '';
+            const unreadable = res.chunksUnreadable
+              ? ` ${res.chunksUnreadable.toLocaleString()} chunk(s) could not be read (unsupported compression) and will be kept.`
+              : '';
+            resultEl.textContent = res.chunksRemoved
+              ? `About ${res.chunksRemoved.toLocaleString()} chunks (~${fmtBytes(res.bytesFreed)}) would be removed, from ${res.regionsScanned} region file(s)${dims}.${unreadable}`
+              : `Nothing to remove: every chunk in this world has been visited long enough.${unreadable}`;
+            return false; // keep the modal open
+          },
+        },
+        {
+          label: 'Shrink World',
+          kind: 'primary',
+          busyLabel: 'Shrinking…',
+          onClick: async () => {
+            const wrap = isRunning && content.querySelector('#sh-wrap')?.checked;
+            if (isRunning && !wrap) {
+              toast('Tick the stop-and-restart option, or stop the server first.', { kind: 'error' });
+              return false;
+            }
+            try {
+              const r = await runTask({
+                title: `Shrinking "${world}"…`,
+                start: () =>
+                  postJSON(`${base}/${encodeURIComponent(world)}/shrink`, { ...opts(), autoStopStart: Boolean(wrap) }),
+              });
+              toast(
+                r && r.chunksRemoved
+                  ? `Removed ${r.chunksRemoved.toLocaleString()} chunks, freeing ${fmtBytes(r.bytesFreed)}.${r.restarted ? ' Server restarted.' : ''}`
+                  : `No rarely-visited chunks to remove.${r && r.restarted ? ' Server restarted.' : ''}`
+              );
+              reload();
+            } catch (err) {
+              if (err.dismissed) return true; // task tray took over
+              toast(err.message || 'The world could not be shrunk. Please try again.', {
+                kind: 'error',
+                timeout: 9000,
+              });
+              return false;
+            }
+          },
+        },
+      ],
+    });
+  }
+
   // ---- Reset / re-roll (active world) ----
   function resetModal(world, size) {
     const content = document.createElement('div');
@@ -250,7 +354,7 @@ function init(serverId, serverName, serverStatus) {
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
-          label: 'Reset world',
+          label: 'Reset World',
           kind: 'danger',
           busyLabel: 'Resetting…',
           onClick: async () => {

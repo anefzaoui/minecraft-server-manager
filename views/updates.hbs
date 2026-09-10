@@ -2,30 +2,43 @@
 
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <span class="text-sm text-ink-faint">Last checked: {{#if lastChecked}}<span data-ts="{{lastChecked}}">{{lastChecked}}</span>{{else}}never{{/if}}</span>
-  <button class="btn btn-sm ml-auto" id="updates-check-all">{{{icon 'rotate-cw' 'size-3.5'}}} Check all now</button>
+  <button class="btn btn-sm ml-auto" id="updates-check-all">{{{icon 'rotate-cw' 'size-3.5'}}} Check All Now</button>
 </div>
+
+<p class="mb-4 text-xs text-ink-faint">
+  A check asks <b>Modrinth</b>, <b>CurseForge</b>, <b>Hangar</b>, <b>SpigotMC</b> and <b>GitHub&nbsp;Releases</b> about your custom
+  mods, plugins, datapacks and resource packs, and the <b>Minecraft version manifest</b>, <b>loader build lists</b> and
+  <b>Docker image tags</b> for each server. Pinned modpacks are compared against their platform too.
+</p>
 
 {{#if updates.length}}
 <div class="card overflow-x-auto">
-  <table class="table-base" id="updates-table">
+  <table class="table-base table-stack" id="updates-table">
     <thead><tr><th>Server</th><th>Type</th><th>Subject</th><th>Current</th><th>Latest</th><th class="text-right">Actions</th></tr></thead>
     <tbody>
       {{#each updates}}
-        <tr data-update-row data-server-id="{{serverId}}" data-server-name="{{server}}"
-            data-kind="{{kind}}" data-subject="{{subject}}" data-current="{{current}}" data-latest="{{latest}}"
+        <tr data-update-row class="{{#if ignored}}opacity-60{{/if}}" data-server-id="{{serverId}}" data-server-name="{{server}}"
+            data-kind="{{kind}}" data-subject-type="{{subjectType}}" data-subject="{{subject}}" data-current="{{current}}" data-latest="{{latest}}"
             {{#if versionId}}data-version-id="{{versionId}}"{{/if}} {{#if contentId}}data-content-id="{{contentId}}"{{/if}}
             {{#if imageUpgrade}}data-image-upgrade="1"{{/if}}
             {{#if targetVersion}}data-target-version="{{targetVersion}}"{{/if}}
             {{#if targetLoaderBuild}}data-target-build="{{targetLoaderBuild}}" data-env-key="{{envKey}}"{{/if}}>
-          <td class="whitespace-nowrap">{{#if serverId}}<a class="text-link hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
-          <td><span class="badge">{{kind}}</span></td>
-          {{! w-full + max-w-0 so long pack/mod names truncate instead of widening the table. }}
-          <td class="w-full max-w-0"><span class="block truncate font-medium" title="{{subject}}">{{subject}}</span></td>
-          <td class="max-w-40 truncate font-mono text-xs text-ink-faint" title="{{current}}">{{current}}</td>
-          <td class="max-w-40 truncate font-mono text-xs text-warn" title="{{latest}}">{{latest}}</td>
-          <td class="text-right"><div class="inline-flex gap-1">
+          <td data-th="Server" class="whitespace-nowrap">{{#if serverId}}<a class="text-link hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
+          <td data-th="Type"><span class="badge">{{kind}}</span></td>
+          {{! w-full + max-w-0 (sm+ only) so long pack/mod names truncate instead of widening the table. }}
+          <td data-th="Subject" class="sm:w-full sm:max-w-0"><span class="block truncate font-medium" title="{{subject}}">{{subject}}</span></td>
+          <td data-th="Current" class="truncate font-mono text-xs text-ink-faint sm:max-w-40" title="{{current}}">{{current}}</td>
+          <td data-th="Latest" class="truncate font-mono text-xs sm:max-w-40 {{#if ignored}}text-ink-faint{{else}}text-warn{{/if}}" title="{{latest}}">
+            {{latest}}{{#if ignored}} <span class="badge ml-1 text-ink-faint" data-tip="This update is ignored and won't be offered">ignored</span>{{/if}}
+          </td>
+          <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
             {{#if changelog}}<a class="btn btn-ghost btn-sm" href="{{changelog}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Changelog</a>{{/if}}
-            <button class="btn btn-sm" data-update-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
+            {{#if ignored}}
+              <button class="btn btn-ghost btn-sm" data-update-unignore data-tip="Offer {{latest}} again">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
+            {{else}}
+              <button class="btn btn-ghost btn-sm" data-update-ignore data-tip="Stop offering {{latest}} for this subject">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>
+              <button class="btn btn-sm" data-update-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
+            {{/if}}
           </div></td>
         </tr>
       {{/each}}
@@ -33,10 +46,11 @@
   </table>
 </div>
 
-<div class="mt-4 max-w-prose rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">
-  {{{icon 'info' 'size-4'}}} Your custom mods are always kept across pack updates. If a pack update changes the Minecraft or loader version, each custom mod is checked for compatibility, with a one-click "update this mod too" when a matching build exists.
+<div class="notice mt-4 text-xs">
+  {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
+  <div>Your custom mods are always kept across pack updates. If a pack update changes the Minecraft or loader version, each custom mod is checked for compatibility, with a one-click "update this mod too" when a matching build exists. <b class="text-ink">Ignore</b> hides a specific version from this page and the sidebar count; a newer build than the one you ignored comes back on its own.</div>
 </div>
 {{else}}
-  {{> empty-state iconName='circle-check' title='Everything Is Up to Date' message='No pending updates across your servers. Run a check to ask CurseForge, Modrinth, and the version registry for anything new.'}}
+  {{> empty-state iconName='circle-check' title='Everything Is Up to Date' message='No pending updates across your servers. Run a check to ask Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases and the Minecraft/loader/image registries for anything new.'}}
 {{/if}}
 <script type="module" src="/js/pages/updates.js"></script>

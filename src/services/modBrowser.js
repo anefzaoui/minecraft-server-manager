@@ -27,12 +27,13 @@ function normMc(mc) {
 
 // ---- Search -----------------------------------------------------------------
 
-// Plugin loaders aren't real loader filters on either platform: Modrinth uses
-// category facets for plugins, CurseForge's bukkit-plugins class has no
-// modLoaderType. Strip the loader for plugin searches so it can't 400 or
-// over-filter.
+// Loader is only a real version filter for mods. Plugin loaders aren't real
+// loader filters on either platform (Modrinth uses category facets for plugins,
+// CurseForge's bukkit-plugins class has no modLoaderType), and datapack/
+// resourcepack builds are tagged by content type - passing a loader for any of
+// those can 400 or over-filter to zero. Strip it for every non-mod kind.
 function effectiveLoader(kind, loader) {
-  return kind === 'plugin' ? undefined : loader;
+  return kind === 'mod' ? loader : undefined;
 }
 
 /** Unified mod/plugin search. Returns [{platform, ref, projectId, name, description, iconUrl, downloads}]. */

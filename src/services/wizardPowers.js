@@ -318,7 +318,7 @@ function recordRejection(serverId, player, reason, request = null) {
     serverId,
     actor: `wizard:${player}`,
     type: 'wizard-power',
-    summary: `${player}: Chatbot power rejected`,
+    summary: `${player}: Chatbot power rejected.`,
     details: {
       player,
       caller: player,
@@ -400,7 +400,7 @@ async function execute(serverId, player, request, cfg) {
       serverId,
       actor: `wizard:${player}`,
       type: 'wizard-power',
-      summary: `Dry run: ${player} would ${action}`,
+      summary: `Dry run: ${player} would ${action}.`,
       details,
     });
     return { dryRun: true, message: `Dry run only: I would ${action}.` };
@@ -454,7 +454,7 @@ async function execute(serverId, player, request, cfg) {
       serverId,
       actor,
       type: 'wizard-power',
-      summary: `${player}: ${action}`,
+      summary: `${player}: ${action}.`,
       details: { ...details, succeeded: true },
     });
     return { dryRun: false, message: `It is done: I ${action}.` };
@@ -463,7 +463,7 @@ async function execute(serverId, player, request, cfg) {
       serverId,
       actor: `wizard:${player}`,
       type: 'wizard-power',
-      summary: `${player}: ${action} failed`,
+      summary: `${player}: ${action} failed.`,
       details: { ...details, succeeded: false, error: String(err.message || err).slice(0, 300) },
     });
     throw err;

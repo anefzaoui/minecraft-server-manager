@@ -1,89 +1,134 @@
-{{> page-header heading="SETTINGS" sub="Panel configuration, API keys, and users."}}
+{{> page-header heading="SETTINGS" sub="Panel settings, connection keys, and user accounts."}}
 
 {{! [&>*]:min-w-0 - grid items default to min-width:auto, so without it a card
     containing a wrapping flex row (the API-key/domain inputs) is sized off that
     row's UNWRAPPED max-content width and drags the whole grid (and page) wider
     than the viewport on mobile, even though the row itself wraps correctly. }}
-<div class="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0" id="settings-page">
-  <div class="card p-4">
-    <h3 class="mb-4 font-semibold">API Keys</h3>
-    <div class="space-y-4">
+<div class="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0" id="settings-page">
+
+  {{#> settings/card heading="API Keys" desc="Keys the panel uses to reach mod sites on your behalf. Stored encrypted."}}
+    <div class="space-y-5">
       <div>
         <label class="label" for="set-cf-key">CurseForge API key</label>
-        {{! min-w-0 is required here: a flex item's default min-width is its
-            content's intrinsic width, so this monospace placeholder would
-            otherwise refuse to shrink and push the whole page wider than the
-            viewport on narrow screens. flex-wrap lets the buttons drop to
-            their own row instead of forcing a fourth squeeze. }}
+        {{! min-w-0 + flex-wrap: the monospace placeholder would otherwise refuse
+            to shrink and push the page wider than a narrow screen; wrapping lets
+            the buttons drop to their own row. }}
         <div class="flex flex-wrap gap-2">
           <input class="input min-w-0 flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} (stored){{else}}paste your key from console.curseforge.com{{/if}}" autocomplete="off">
-          <button class="btn" id="set-cf-save">Save key</button>
-          <button class="btn btn-ghost" id="set-cf-test" data-tip="Test the stored key against CurseForge">Test key</button>
+          <button class="btn" id="set-cf-save">Save Key</button>
+          <button class="btn btn-ghost" id="set-cf-test" data-tip="Test the stored key against CurseForge">Test Key</button>
         </div>
-        <p class="help">Required for automatic CurseForge modpacks and CurseForge mod downloads. Stored encrypted, and new keys are tested against CurseForge before they are saved.</p>
+        <p class="help">Needed for automatic CurseForge modpacks and CurseForge mod downloads. New keys are checked against CurseForge before they're saved.</p>
       </div>
       <div>
-        <label class="label">Modrinth</label>
+        <span class="label">Modrinth</span>
         <p class="help">No key needed. Modrinth's public API is used directly.</p>
       </div>
     </div>
-  </div>
+  {{/settings/card}}
 
-  <div class="card p-4">
-    <h3 class="mb-4 font-semibold">Panel</h3>
-    <div class="mb-4">
-      <label class="label" for="set-domain">Public domain</label>
-      <div class="flex flex-wrap gap-2">
-        <input class="input min-w-0 flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
-        <button class="btn" id="set-domain-save">Save domain</button>
-      </div>
-      <p class="help">Shown to players instead of your IP address in connect addresses (for example, <span class="font-mono">mc.example.com:25565</span>). Leave blank to use the server's IP address. Enter the domain only, with no scheme or port.</p>
-      {{#if cookieSecureWarning}}
-      <div class="notice notice-danger mt-2">
-        {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
-        <div>
-          <span class="font-semibold text-danger">The login cookie is not marked Secure.</span>
-          <span>A public domain is set, but the secure-cookie option is not. If this panel is reachable over plain HTTP, the login cookie can be read in transit. Put the panel behind HTTPS and set <span class="font-mono">COOKIE_SECURE=true</span>, or <span class="font-mono">COOKIE_SECURE=auto</span>, in the environment. See the README for details.</span>
+  {{#> settings/card heading="Panel"}}
+    <div class="space-y-5">
+      <div>
+        <label class="label" for="set-domain">Public domain</label>
+        <div class="flex flex-wrap gap-2">
+          <input class="input min-w-0 flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
+          <button class="btn" id="set-domain-save">Save Domain</button>
         </div>
+        <p class="help">Shown to players instead of your IP address in connect addresses (for example, <span class="font-mono">mc.example.com:25565</span>). Leave blank to use the server's IP address. Enter the domain only, with no scheme or port.</p>
+        {{#if cookieSecureWarning}}
+        <div class="notice notice-danger mt-2">
+          {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
+          <div>
+            <span class="font-semibold text-danger">The login cookie is not marked Secure.</span>
+            <span>A public domain is set, but the secure-cookie option is not. If this panel is reachable over plain HTTP, the login cookie can be read in transit. Put the panel behind HTTPS and set <span class="font-mono">COOKIE_SECURE=true</span>, or <span class="font-mono">COOKIE_SECURE=auto</span> together with <span class="font-mono">TRUST_PROXY</span>, in the environment. See the README for details.</span>
+          </div>
+        </div>
+        {{/if}}
       </div>
-      {{/if}}
-    </div>
-    <div class="mb-4">
-      <span class="label">Time zone &amp; region</span>
-      {{! data-native only until tzPicker fills them - it enhances post-fill. }}
-      <div class="grid gap-2 sm:grid-cols-2">
-        <select class="input" id="set-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
-        <select class="input" id="set-country" data-native aria-label="Country" data-label="Country"></select>
-      </div>
-      <div class="mt-2 flex items-center gap-2">
-        <button class="btn" id="set-loc-save">Save time zone</button>
-        <span class="help" id="set-loc-note"></span>
-      </div>
-      <p class="help">Controls how dates and player-activity times are shown across the panel. "Auto" follows this machine's system settings.</p>
-    </div>
-    <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-      <div><dt class="text-xs text-ink-faint">Bind address</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Port</dt><dd class="font-mono font-medium">{{panel.port}}</dd></div>
-    </dl>
-    <p class="help mt-3 max-w-prose">Set these in <span class="font-mono">.env</span> (PANEL_HOST and PANEL_PORT). A restart applies the changes. Theme is per-browser, set with the topbar toggle.</p>
-    <h3 class="mt-6 mb-3 font-semibold">Defaults for New Servers</h3>
-    <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-      <div><dt class="text-xs text-ink-faint">Java heap</dt><dd class="font-medium">{{defaults.heapMb}} MB</dd></div>
-      <div><dt class="text-xs text-ink-faint">Container limit</dt><dd class="font-medium">{{defaults.containerMemoryMb}} MB</dd></div>
-      <div><dt class="text-xs text-ink-faint">Disk quota</dt><dd class="font-medium">{{defaults.diskQuotaGb}} GB</dd></div>
-      <div><dt class="text-xs text-ink-faint">Quota warnings</dt><dd class="font-medium">{{defaults.quotaWarnPct}}% / {{defaults.quotaCriticalPct}}%</dd></div>
-    </dl>
-  </div>
 
-  <div class="card p-4 lg:col-span-2">
-    <h3 class="mb-4 font-semibold">Users</h3>
+      <div>
+        <span class="label">Time zone &amp; region</span>
+        {{! data-native only until tzPicker fills them - it enhances post-fill. }}
+        <div class="grid gap-2 sm:grid-cols-2">
+          <select class="input" id="set-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
+          <select class="input" id="set-country" data-native aria-label="Country" data-label="Country"></select>
+        </div>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <button class="btn" id="set-loc-save">Save Time Zone</button>
+          <span class="help mt-0" id="set-loc-note"></span>
+        </div>
+        <p class="help">Controls how dates and player-activity times are shown across the panel. "Auto" follows this machine's system settings.</p>
+      </div>
+
+      <div class="border-t border-line pt-4">
+        <span class="label">Bind address &amp; port</span>
+        <dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+          <div><dt class="text-xs text-ink-faint">Bind address</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">Port</dt><dd class="font-mono font-medium">{{panel.port}}</dd></div>
+        </dl>
+        <p class="help">Set these in <span class="font-mono">.env</span> (PANEL_HOST and PANEL_PORT). A restart applies the changes. Theme is per-browser, set with the topbar toggle.</p>
+      </div>
+
+      <div class="border-t border-line pt-4">
+        <span class="label">Panel version</span>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-mono text-sm">v{{panel.version}}</span>
+          <button class="btn" id="msm-update-btn">Check for Updates</button>
+        </div>
+        <div id="msm-update-out"></div>
+        <p class="help">Compares the installed version with the latest release on GitHub. You download and install the update yourself. The panel never modifies its own files.</p>
+      </div>
+
+      <div class="border-t border-line pt-4">
+        <span class="label">Defaults for new servers</span>
+        <div class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+          <div>
+            <label class="label" for="dflt-heap">Java heap (MB)</label>
+            <input class="input" id="dflt-heap" type="number" inputmode="numeric" value="{{defaults.heapMb}}" data-default="{{defaultsBase.heapMb}}">
+          </div>
+          <div>
+            <label class="label" for="dflt-container">Container limit (MB)</label>
+            <input class="input" id="dflt-container" type="number" inputmode="numeric" value="{{defaults.containerMemoryMb}}" data-default="{{defaultsBase.containerMemoryMb}}">
+            <p class="help">Usually 50% above the heap. Ignored when the wizard sets its own.</p>
+          </div>
+          <div>
+            <label class="label" for="dflt-cpus">CPU cores</label>
+            <input class="input" id="dflt-cpus" type="number" inputmode="decimal" step="0.5" min="0" value="{{defaults.cpus}}" data-default="{{defaultsBase.cpus}}">
+            <p class="help">0 = no limit on CPU usage.</p>
+          </div>
+          <div>
+            <label class="label" for="dflt-quota">Disk quota (GB)</label>
+            <input class="input" id="dflt-quota" type="number" inputmode="numeric" value="{{defaults.diskQuotaGb}}" data-default="{{defaultsBase.diskQuotaGb}}">
+            <p class="help">0 = storage use is not limited.</p>
+          </div>
+          <div>
+            <label class="label" for="dflt-warnpct">Quota warn (%)</label>
+            <input class="input" id="dflt-warnpct" type="number" inputmode="numeric" min="0" max="99" value="{{defaults.quotaWarnPct}}" data-default="{{defaultsBase.quotaWarnPct}}">
+          </div>
+          <div>
+            <label class="label" for="dflt-critpct">Quota critical (%)</label>
+            <input class="input" id="dflt-critpct" type="number" inputmode="numeric" min="1" max="100" value="{{defaults.quotaCriticalPct}}" data-default="{{defaultsBase.quotaCriticalPct}}">
+          </div>
+        </div>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <button class="btn" id="dflt-save">Save Defaults</button>
+          <button class="btn btn-ghost" id="dflt-restore">Restore Built-ins</button>
+          <span class="help mt-0" id="dflt-note"></span>
+        </div>
+        <p class="help">These pre-fill the create-wizard, apply when a server is created via the API or a blueprint, and drive the quota-bar colors on the dashboard.</p>
+      </div>
+    </div>
+  {{/settings/card}}
+
+  {{#> settings/card heading="Users" wide=true}}
     <div class="overflow-x-auto">
-      <table class="table-base" id="users-table">
+      <table class="table-base table-stack" id="users-table">
         <thead><tr><th>User</th><th>Role</th><th>2FA</th><th>Created</th><th class="text-right">Actions</th></tr></thead>
         <tbody>
           {{#each users}}
             <tr data-user-id="{{id}}" data-username="{{username}}">
-              <td class="font-medium">
+              <td data-th="User" class="font-medium">
                 <div class="flex items-center gap-2">
                   <span class="grid size-6 shrink-0 place-items-center overflow-hidden rounded-md bg-diamond-700 text-[10px] font-bold text-white">
                     {{#if (avatarSrc avatar)}}
@@ -95,36 +140,36 @@
                   {{username}}{{#if (eq id ../user.id)}} <span class="badge">you</span>{{/if}}
                 </div>
               </td>
-              <td>
+              <td data-th="Role">
                 <select class="input w-auto" data-user-role data-prev-role="{{role}}" data-label="Role for {{username}}">
                   <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>Admin</option>
                   <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>Operator</option>
                   <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>Viewer</option>
                 </select>
               </td>
-              <td>
+              <td data-th="2FA">
                 {{#if totpEnabled}}
                   <span class="badge badge-ok">On</span>
                 {{else}}
                   <span class="text-xs text-ink-faint">Off</span>
                 {{/if}}
               </td>
-              <td class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
-              <td class="text-right">
+              <td data-th="Created" class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
+              <td data-th="" class="text-right">
                 <button class="btn btn-ghost btn-sm" data-menu="user-menu-{{@index}}" data-tip="Actions for {{username}}" aria-label="Actions for {{username}}">{{{icon 'ellipsis' 'size-3.5'}}}</button>
                 <template id="user-menu-{{@index}}">
-                  <button data-user-password data-user-id="{{id}}" data-username="{{username}}">{{{icon 'key' 'size-3.5'}}} Set password</button>
+                  <button data-user-password data-user-id="{{id}}" data-username="{{username}}">{{{icon 'key' 'size-3.5'}}} Set Password</button>
                   {{! Your own row: self-service, same modal as the topbar user menu -
                       2FA can only ever be set up on the device you're enrolling, so
                       there's nothing an admin can do here for someone ELSE's row. }}
                   {{#if (eq id ../user.id)}}
-                    <button data-open-2fa>{{{icon 'shield-check' 'size-3.5'}}} {{#if totpEnabled}}Manage 2FA{{else}}Set up 2FA{{/if}}</button>
+                    <button data-open-2fa>{{{icon 'shield-check' 'size-3.5'}}} {{#if totpEnabled}}Manage 2FA{{else}}Set Up 2FA{{/if}}</button>
                   {{else if totpEnabled}}
                     <button data-user-totp-reset data-user-id="{{id}}" data-username="{{username}}">{{{icon 'shield-check' 'size-3.5'}}} Reset 2FA</button>
                   {{/if}}
                   {{! No self-delete affordance - deleting your own account mid-session is a trap, not a feature. }}
                   {{#unless (eq id ../user.id)}}
-                    <button class="text-danger" data-user-delete data-user-id="{{id}}" data-username="{{username}}">{{{icon 'trash-2' 'size-3.5'}}} Delete user</button>
+                    <button class="btn btn-ghost btn-sm text-danger" data-user-delete data-user-id="{{id}}" data-username="{{username}}">{{{icon 'trash-2' 'size-3.5'}}} Delete User</button>
                   {{/unless}}
                 </template>
               </td>
@@ -133,8 +178,53 @@
         </tbody>
       </table>
     </div>
-    <button class="btn btn-sm mt-3" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add user</button>
+    <button class="btn btn-primary btn-sm mt-4" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add User</button>
     <p class="help mt-2 max-w-prose">Roles: <b>Admin</b> can do everything. <b>Operator</b> can manage servers, but not storage, users, or update policies. <b>Viewer</b> is read-only.</p>
-  </div>
+  {{/settings/card}}
+
+  {{#> settings/card heading="Sign-in Security" id="lockouts-card" wide=true desc="Accounts and addresses currently blocked from signing in after too many failed attempts. Locks clear on their own after the cooldown; unlock one here to end it early."}}
+    <div id="lockouts-body" class="text-sm text-ink-faint">Checking…</div>
+    <button class="btn btn-sm mt-4 hidden" id="lockouts-clear-all">{{{icon 'lock-open' 'size-3.5'}}} Clear All Locks</button>
+  {{/settings/card}}
+
+  {{#> settings/card heading="Public API" id="api-tokens-card" wide=true desc="Let another app or website read your servers' status, like a live status page, an uptime monitor, or a Discord bot. It is read-only: nothing outside can start, stop, or change anything."}}
+    {{> settings/toggle-row
+        label="Let outside apps read status"
+        help="Switches on by itself when you make your first key below. Turn it off any time to pause outside access without losing your keys."
+        inputId="public-api-enabled"
+        checked=publicApiEnabled}}
+
+    <div class="mt-4 border-t border-line pt-4">
+      <p class="help mt-0 max-w-prose">Each app connects with its own <b>access key</b> (sent as an <span class="font-mono">Authorization: Bearer</span> header). Make one key per app; anyone holding a key can see the servers you allow it: name, type, whether it's running, players online, and resource use. Cancel a key to cut that app off straight away.</p>
+      <div class="mt-4 overflow-x-auto">
+        <table class="table-base table-stack" id="api-tokens-table">
+          <thead><tr><th>Name</th><th>Key</th><th>Can See</th><th>Created</th><th>Last Used</th><th>Expires</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+          <tbody>
+            {{#each apiTokens}}
+              <tr data-token-id="{{id}}">
+                <td data-th="Name" class="font-medium">{{label}}</td>
+                <td data-th="Key" class="font-mono text-xs">{{tokenPrefix}}&hellip;</td>
+                <td data-th="Can See">{{#if scope.all}}Every server{{else}}{{scope.serverIds.length}} server(s){{/if}}</td>
+                <td data-th="Created" class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
+                <td data-th="Last Used" class="whitespace-nowrap text-xs text-ink-faint">{{#if lastUsedAt}}<span data-ts="{{lastUsedAt}}">{{lastUsedAt}}</span>{{else}}never{{/if}}</td>
+                <td data-th="Expires" class="whitespace-nowrap text-xs text-ink-faint">{{#if expiresAt}}<span data-ts="{{expiresAt}}">{{expiresAt}}</span>{{else}}never{{/if}}</td>
+                <td data-th="Status">{{#if (eq status 'active')}}<span class="badge badge-ok">Active</span>{{else}}<span class="badge">{{status}}</span>{{/if}}</td>
+                <td data-th="" class="text-right">
+                  {{#unless revokedAt}}
+                    <button class="btn btn-ghost btn-sm text-danger" data-token-revoke data-token-id="{{id}}" data-label="{{label}}">Cancel</button>
+                  {{/unless}}
+                </td>
+              </tr>
+            {{else}}
+              <tr><td data-th="" colspan="8" class="text-sm text-ink-faint">No keys yet. Make one for each app that needs access.</td></tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-primary btn-sm mt-4" id="api-token-add">{{{icon 'plus' 'size-3.5'}}} New Key</button>
+      <script type="application/json" id="api-token-servers">{{json serverOptions}}</script>
+    </div>
+  {{/settings/card}}
 </div>
+<script type="application/json" id="settings-self">{{json selfUserId}}</script>
 <script type="module" src="/js/pages/settings.js"></script>

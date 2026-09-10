@@ -20,6 +20,8 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const { promisify } = require('node:util');
+const gzipAsync = promisify(zlib.gzip);
 const nbt = require('prismarine-nbt');
 const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
@@ -74,8 +76,28 @@ function playerdataDir(serverId) {
   return fs.existsSync(modern) ? modern : legacy;
 }
 
-/** usercache.json → Map(lowercased uuid → name) plus Map(lowercased name → uuid). */
+// usercache.json is re-read and re-parsed on every inventory read (the snapshot
+// watcher alone calls it once per event row, and every inventory API read too).
+// It only changes when a player logs in/out, so key the parse on the file's
+// mtime: any real change flips the mtime and invalidates instantly (strictly
+// correct, never stale). statSync on a known path is far cheaper than reading +
+// parsing a 1000-entry JSON file again. Bounded per-server LRU so a fleet of
+// servers can't grow it without bound.
+const usercacheCache = new Map();
+const USER_CACHE_MAX = 128;
 function usercacheMaps(serverId) {
+  let mtime = 0;
+  try {
+    mtime = fs.statSync(dataPath('servers', serverId, 'usercache.json')).mtimeMs;
+  } catch {
+    /* no usercache file yet */
+  }
+  const hit = usercacheCache.get(serverId);
+  if (hit && hit.mtime === mtime) {
+    usercacheCache.delete(serverId);
+    usercacheCache.set(serverId, hit); // move to most-recently-used
+    return hit.maps;
+  }
   const byUuid = new Map();
   const byName = new Map();
   try {
@@ -91,7 +113,10 @@ function usercacheMaps(serverId) {
   } catch {
     /* no usercache yet */
   }
-  return { byUuid, byName };
+  const maps = { byUuid, byName };
+  usercacheCache.set(serverId, { mtime, maps });
+  if (usercacheCache.size > USER_CACHE_MAX) usercacheCache.delete(usercacheCache.keys().next().value);
+  return maps;
 }
 
 /**
@@ -339,10 +364,13 @@ async function listSnapshots(serverId, uuid) {
   return snapshots;
 }
 
-/** Load one snapshot by its rel path (strict shape check + path guard). */
-function getSnapshot(relFile) {
+/** Load one snapshot by its rel path (strict shape check + path guard). The
+ *  file's embedded server id is checked against `serverId` so a caller passing
+ *  an arbitrary `?file=` can't read or diff another server's inventory. */
+function getSnapshot(serverId, relFile) {
   const m = SNAPSHOT_FILE_RE.exec(String(relFile || ''));
   if (!m) throw httpError(400, 'Invalid snapshot file reference');
+  if (m[1] !== serverId) throw httpError(400, 'Snapshot does not belong to this server');
   let raw;
   try {
     raw = fs.readFileSync(dataPath(relFile), 'utf8'); // dataPath re-guards containment
@@ -374,9 +402,9 @@ function tallyItems(data) {
  * renamed item counts as its own line.
  * @returns {{a, b, added:[], removed:[], changed:[{id,displayName,from,to}]}}
  */
-function diffSnapshots(aFile, bFile) {
-  const a = getSnapshot(aFile);
-  const b = getSnapshot(bFile);
+function diffSnapshots(serverId, aFile, bFile) {
+  const a = getSnapshot(serverId, aFile);
+  const b = getSnapshot(serverId, bFile);
   const before = tallyItems(a.data);
   const after = tallyItems(b.data);
 
@@ -483,8 +511,15 @@ async function pollPlayerEventsInner() {
       if (!fs.existsSync(path.join(playerdataDir(row.server_id), `${uuid}.dat`))) continue; // no .dat yet
       await snapshot(row.server_id, uuid, row.type);
       await pruneSnapshots(row.server_id);
-    } catch {
-      // One failed snapshot (corrupt file, deleted server, …) must not stop the sweep.
+    } catch (err) {
+      // One failed snapshot (corrupt file, deleted server, …) must not stop the
+      // sweep - but a persistently-failing player has to be visible, throttled
+      // so a corrupt file can't spam.
+      watcherThrottle.fail(logger.warn, 'An inventory snapshot for a player failed and was skipped.', {
+        serverId: row.server_id,
+        player: row.player,
+        err: serializeError(err, { includeStack: false }),
+      });
     }
   }
 }
@@ -539,7 +574,7 @@ async function giveItem(serverId, playerName, itemId, count = 1, { actor = 'syst
     serverId,
     actor,
     type: 'player-give',
-    summary: `Gave ${playerName} ${n} × ${item}`,
+    summary: `Gave ${playerName} ${n} × ${item}.`,
     details: { player: playerName, item, count: n, output: out },
   });
   return { player: playerName, item, count: n, output: out };
@@ -557,7 +592,7 @@ async function clearItem(serverId, playerName, itemId = null, { actor = 'system'
     serverId,
     actor,
     type: 'player-clear',
-    summary: item ? `Cleared ${item} from ${playerName}` : `Cleared the entire inventory of ${playerName}`,
+    summary: item ? `Cleared ${item} from ${playerName}.` : `Cleared the entire inventory of ${playerName}.`,
     details: { player: playerName, item, output: out, nothingRemoved: nothing },
   });
   return { player: playerName, item, output: out, nothingRemoved: nothing };
@@ -1047,7 +1082,10 @@ async function withDatFile(serverId, ctx, mutate) {
     }
     const result = mutate(parsed.value);
     await backupDat(file);
-    const out = zlib.gzipSync(nbt.writeUncompressed(parsed, 'big')); // playerdata is always gzip'd big-endian
+    // gzip off the event loop: serializing a full inventory NBT can spend
+    // 50-200ms in zlib, so use the promise API instead of the blocking gzipSync.
+    // (`zlib.gzip` itself is callback-only and throws without one.)
+    const out = await gzipAsync(nbt.writeUncompressed(parsed, 'big')); // playerdata is always gzip'd big-endian
     const tmp = `${file}.msm-tmp-${process.pid}-${require('node:crypto').randomUUID()}`;
     await fsp.writeFile(tmp, out);
     await fsp.rename(tmp, file);
@@ -1125,7 +1163,7 @@ async function editSlot(
     serverId,
     actor,
     type: 'inventory-edit',
-    summary: `${summary} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'})`,
+    summary: `${summary} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'}).`,
     details: {
       player: playerLabel,
       uuid: ctx.uuid,
@@ -1158,7 +1196,7 @@ async function moveItem(serverId, uuid, from, to, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'inventory-edit',
-    summary: `${playerLabel}: ${result.item} ${result.swapped ? 'swapped' : 'moved'} ${fromSpec.rconSlot} -> ${toSpec.rconSlot} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'})`,
+    summary: `${playerLabel}: ${result.item} ${result.swapped ? 'swapped' : 'moved'} ${fromSpec.rconSlot} -> ${toSpec.rconSlot} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'}).`,
     details: {
       player: playerLabel,
       uuid: ctx.uuid,
@@ -1180,7 +1218,7 @@ async function addItem(serverId, uuid, itemId, count = 1, { actor = 'system' } =
   count = clampCount(count);
   const ctx = await editContext(serverId, uuid);
   if (ctx.mechanism === 'rcon') {
-    return { ...(await giveItem(serverId, ctx.name, item, count, { actor })), mechanism: 'rcon' };
+    return { ...(await giveItem(serverId, ctx.name, item, count, { actor })), mechanism: 'rcon', slot: null };
   }
   const playerLabel = ctx.name || ctx.uuid;
   const slot = await withDatFile(serverId, ctx, (root) => {
@@ -1201,7 +1239,7 @@ async function addItem(serverId, uuid, itemId, count = 1, { actor = 'system' } =
     serverId,
     actor,
     type: 'inventory-edit',
-    summary: `${playerLabel}: ${count}x ${item} added to slot ${slot} (file edit)`,
+    summary: `${playerLabel}: ${count}x ${item} added to slot ${slot} (file edit).`,
     details: { player: playerLabel, uuid: ctx.uuid, op: 'add', item, count, slot, via: 'file' },
   });
   return { player: playerLabel, item, count, slot, mechanism: 'file' };

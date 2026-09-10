@@ -143,7 +143,7 @@ function renderRecipe(item, recipe, data) {
     totals.set(key, total);
   }
   const resultCount = Math.max(1, Number(recipe.result?.count) || 1);
-  const title = `${item.displayName || item.name} ×${resultCount} — ${size}×${size}${shaped ? '' : ' shapeless'}`;
+  const title = `${item.displayName || item.name} ×${resultCount}, ${size}×${size}${shaped ? '' : ' shapeless'}`;
   const rows = cells.map((row) => row.map((cell) => `[${cell ? symbols.get(String(cell.id)) : ' '}]`).join(''));
   const legend = [...symbols.entries()]
     .map(([key, symbol]) => {

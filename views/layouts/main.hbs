@@ -40,7 +40,7 @@
     </div>
   </div>
 
-  <div id="toasts" class="fixed bottom-4 right-4 z-[65] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2"></div>
+  <div id="toasts" class="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-[calc(1rem+env(safe-area-inset-right))] z-[65] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2"></div>
   {{#if panelLocalization}}<script nonce="{{cspNonce}}">window.MSM = Object.assign(window.MSM || {}, {{{json panelLocalization}}});</script>{{/if}}
   <script type="module" src="/js/app.js"></script>
 </body>

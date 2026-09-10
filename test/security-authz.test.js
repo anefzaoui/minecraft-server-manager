@@ -138,3 +138,23 @@ test('/settings and /storage pages are admin only', async () => {
     assert.equal(asAdmin.status, 200, `${path} should render for an admin`);
   }
 });
+
+test('/events/prune is admin-only: the delete is global (no server scoping), so an operator or viewer must not be able to wipe the audit trail', async () => {
+  const operatorCookie = await login('op_prune', 'operatorpass123', 'operator');
+
+  const asViewer = await app.req('POST', '/api/events/prune', { cookie: viewerCookie, body: { days: 7 } });
+  assert.equal(asViewer.status, 403, 'viewer must be 403 on events/prune');
+
+  const asOperator = await app.req('POST', '/api/events/prune', { cookie: operatorCookie, body: { days: 7 } });
+  assert.equal(asOperator.status, 403, 'operator must be 403 on events/prune (admin-only)');
+
+  const asAdmin = await app.req('POST', '/api/events/prune', { cookie: adminCookie, body: { days: 0 } });
+  assert.ok([400, 200].includes(asAdmin.status), `admin gate must pass (400 for days:0 or 200, got ${asAdmin.status})`);
+});
+
+test('/api/v1 sits in the public zone: a cookieless call is a Bearer 401, not a login redirect', async () => {
+  await app.req('POST', '/api/settings/public-api', { cookie: adminCookie, body: { enabled: true } });
+  const r = await app.req('GET', '/api/v1/servers');
+  assert.equal(r.status, 401); // token auth answered - never a 302 to /login
+  assert.match(r.json.error, /Authorization/);
+});

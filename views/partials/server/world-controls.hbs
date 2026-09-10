@@ -3,7 +3,7 @@
   <p class="mb-3 text-xs text-ink-faint" data-wc-state>{{#if (eq server.status 'running')}}Loading world state…{{else}}Available while the server runs.{{/if}}</p>
   <div class="mb-3 hidden items-center justify-between rounded-md border border-line bg-inset px-3 py-2" data-wc-clock-box>
     <div>
-      <div class="text-lg font-bold tabular-nums leading-tight" data-wc-clock>–:––</div>
+      <div class="text-lg font-bold tabular-nums leading-tight" data-wc-clock>--:--</div>
       <div class="text-[11px] text-ink-faint"><span data-wc-phase></span><span data-wc-day-wrap class="hidden"> · Day <span data-wc-day></span></span></div>
     </div>
     {{{icon 'clock' 'size-5 text-ink-faint'}}}
@@ -12,59 +12,119 @@
       tab order, and Enter/Space fired commands at a stopped server. }}
   <fieldset class="min-w-0 space-y-3" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Time</div>
+      <div class="mb-1 eyebrow">Time</div>
       <div class="flex flex-wrap gap-1.5">
-        <button class="chip hover:border-grass-600" data-wc="time-day">{{{icon 'sun' 'size-3.5'}}} Day</button>
-        <button class="chip hover:border-grass-600" data-wc="time-noon">{{{icon 'sun' 'size-3.5'}}} Noon</button>
-        <button class="chip hover:border-grass-600" data-wc="time-night">{{{icon 'moon' 'size-3.5'}}} Night</button>
-        <button class="chip hover:border-grass-600" data-wc="time-midnight">{{{icon 'moon-star' 'size-3.5'}}} Midnight</button>
+        <button class="chip" data-wc="time-day">{{{icon 'sun' 'size-3.5'}}} Day</button>
+        <button class="chip" data-wc="time-noon">{{{icon 'sun' 'size-3.5'}}} Noon</button>
+        <button class="chip" data-wc="time-night">{{{icon 'moon' 'size-3.5'}}} Night</button>
+        <button class="chip" data-wc="time-midnight">{{{icon 'moon-star' 'size-3.5'}}} Midnight</button>
       </div>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Weather</div>
+      <div class="mb-1 eyebrow">Weather</div>
       <div class="flex flex-wrap gap-1.5">
-        <button class="chip hover:border-grass-600" data-wc="weather-clear">{{{icon 'sun' 'size-3.5'}}} Clear</button>
-        <button class="chip hover:border-grass-600" data-wc="weather-rain">{{{icon 'cloud-rain' 'size-3.5'}}} Rain</button>
-        <button class="chip hover:border-grass-600" data-wc="weather-thunder">{{{icon 'cloud-lightning' 'size-3.5'}}} Thunder</button>
+        <button class="chip" data-wc="weather-clear">{{{icon 'sun' 'size-3.5'}}} Clear</button>
+        <button class="chip" data-wc="weather-rain">{{{icon 'cloud-rain' 'size-3.5'}}} Rain</button>
+        <button class="chip" data-wc="weather-thunder">{{{icon 'cloud-lightning' 'size-3.5'}}} Thunder</button>
       </div>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Rules</div>
+      <div class="mb-1 eyebrow">Common Rules</div>
       <div class="flex flex-wrap gap-1.5">
-        <button class="chip hover:border-grass-600" data-wc-toggle="keepinv" data-rule="keepInventory">Keep inventory</button>
-        <button class="chip hover:border-grass-600" data-wc-toggle="daycycle" data-rule="doDaylightCycle">Day/night cycle</button>
-        <button class="chip hover:border-grass-600" data-wc-toggle="weathercycle" data-rule="doWeatherCycle">Weather cycle</button>
-        <button class="chip hover:border-grass-600" data-wc-toggle="instantrespawn" data-rule="doImmediateRespawn">Instant respawn</button>
+        <button class="chip" data-wc-toggle="keepinv" data-rule="keepInventory">Keep Inventory</button>
+        <button class="chip" data-wc-toggle="instantrespawn" data-rule="doImmediateRespawn">Instant Respawn</button>
+        <button class="chip" data-wc-toggle="daycycle" data-rule="doDaylightCycle">Day/Night Cycle</button>
+        <button class="chip" data-wc-toggle="weathercycle" data-rule="doWeatherCycle">Weather Cycle</button>
+        <button class="chip" data-wc-toggle="mobspawn" data-rule="doMobSpawning">Mob Spawning</button>
+        <button class="chip" data-wc-toggle="mobgrief" data-rule="mobGriefing">Mob Griefing</button>
+        <button class="chip" data-wc-toggle="phantoms" data-rule="doInsomnia">Phantoms</button>
+        <button class="chip" data-wc-toggle="naturalregen" data-rule="naturalRegeneration">Natural Regeneration</button>
+        <button class="chip" data-wc-toggle="falldmg" data-rule="fallDamage">Fall Damage</button>
+        <button class="chip" data-wc-toggle="firetick" data-rule="doFireTick">Fire Spread</button>
+        <button class="chip" data-wc-toggle="tntexplodes" data-rule="tntExplodes">TNT Explosions</button>
+        <button class="chip" data-wc-toggle="deathmsg" data-rule="showDeathMessages">Death Messages</button>
+        <button class="chip" data-wc-toggle="advancements" data-rule="announceAdvancements">Advancement Announcements</button>
+        <button class="chip" data-wc-toggle="cmdfeedback" data-rule="sendCommandFeedback">Command Feedback</button>
       </div>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Mobs &amp; damage</div>
-      <div class="flex flex-wrap gap-1.5">
-        <button class="chip hover:border-grass-600" data-wc-toggle="mobspawn" data-rule="doMobSpawning">Mob spawning</button>
-        <button class="chip hover:border-grass-600" data-wc-toggle="mobgrief" data-rule="mobGriefing">Mob griefing</button>
-        <button class="chip hover:border-grass-600" data-wc-toggle="phantoms" data-rule="doInsomnia">Phantoms</button>
-        <button class="chip hover:border-grass-600" data-wc-toggle="firetick" data-rule="doFireTick">Fire spread</button>
-        <button class="chip hover:border-grass-600" data-wc-toggle="falldmg" data-rule="fallDamage">Fall damage</button>
-        <button class="chip hover:border-grass-600" data-wc-toggle="naturalregen" data-rule="naturalRegeneration">Natural regen</button>
-      </div>
-    </div>
-    <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Combat</div>
-      <div class="flex flex-wrap gap-1.5">
-        <button class="chip hover:border-grass-600" data-wc-toggle="pvp" data-rule="pvp">PvP</button>
+      <div class="mb-1 eyebrow">Combat</div>
+      <div class="flex flex-wrap items-center gap-1.5">
+        {{! Unlike every other chip here, PvP writes server.properties and only
+            takes effect on the next start - the "on restart" tag and the pending
+            badge keep it from reading as an instant toggle like its neighbours. }}
+        <button class="chip" data-wc-toggle="pvp" data-rule="pvp">
+          PvP <span class="text-[10px] font-normal text-ink-faint">· on restart</span>
+        </button>
+        <span class="badge badge-warn hidden" data-wc-pvp-pending>Restart to apply</span>
       </div>
       <p class="mt-1 text-[11px] text-ink-faint">Changes the PvP setting for the whole server. It takes effect on the next restart.</p>
     </div>
     <div>
-      <div class="mb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">Difficulty &amp; saving</div>
+      <div class="mb-1 eyebrow">Difficulty &amp; Saving</div>
       <div class="flex flex-wrap gap-1.5">
-        <button class="chip hover:border-grass-600" data-wc="difficulty-peaceful">Peaceful</button>
-        <button class="chip hover:border-grass-600" data-wc="difficulty-easy">Easy</button>
-        <button class="chip hover:border-grass-600" data-wc="difficulty-normal">Normal</button>
-        <button class="chip hover:border-grass-600" data-wc="difficulty-hard">Hard</button>
-        <button class="chip hover:border-grass-600" data-wc="save-all">{{{icon 'save' 'size-3.5'}}} Save world</button>
+        <button class="chip" data-wc="difficulty-peaceful">Peaceful</button>
+        <button class="chip" data-wc="difficulty-easy">Easy</button>
+        <button class="chip" data-wc="difficulty-normal">Normal</button>
+        <button class="chip" data-wc="difficulty-hard">Hard</button>
+        <button class="chip" data-wc="save-all">{{{icon 'save' 'size-3.5'}}} Save World</button>
       </div>
     </div>
+
+    {{! Everything else lives here so the common controls above stay uncluttered.
+        The world state poll only reads the rules for chips that are visible, so
+        these gamerules aren't queried until this section is opened. }}
+    <details class="group rounded-md border border-line" data-wc-all>
+      <summary class="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs font-semibold text-ink-faint marker:content-none">
+        {{{icon 'sliders-horizontal' 'size-3.5'}}} Show all world rules
+        <span class="ml-auto transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
+      </summary>
+      <div class="space-y-3 border-t border-line p-3">
+        <div>
+          <div class="mb-1 eyebrow">World Rules</div>
+          <div class="flex flex-wrap gap-1.5">
+            <button class="chip" data-wc-toggle="limitedcraft" data-rule="doLimitedCrafting">Limited Crafting</button>
+            <button class="chip" data-wc-toggle="tiledrops" data-rule="doTileDrops">Block Drops</button>
+            <button class="chip" data-wc-toggle="entitydrops" data-rule="doEntityDrops">Entity Drops</button>
+            <button class="chip" data-wc-toggle="firetickaway" data-rule="allowFireTicksAwayFromPlayer">Fire Ticks Away From Players</button>
+            <button class="chip" data-wc-toggle="vinesspread" data-rule="doVinesSpread">Vines Spread</button>
+            <button class="chip" data-wc-toggle="waterconv" data-rule="waterSourceConversion">Water Source Conversion</button>
+            <button class="chip" data-wc-toggle="lavaconv" data-rule="lavaSourceConversion">Lava Source Conversion</button>
+            <button class="chip" data-wc-toggle="projbreak" data-rule="projectilesCanBreakBlocks">Projectiles Break Blocks</button>
+            <button class="chip" data-wc-toggle="blockdropdecay" data-rule="blockExplosionDropDecay">Block-Explosion Drop Decay</button>
+            <button class="chip" data-wc-toggle="mobdropdecay" data-rule="mobExplosionDropDecay">Mob-Explosion Drop Decay</button>
+            <button class="chip" data-wc-toggle="tntdropdecay" data-rule="tntExplosionDropDecay">TNT-Explosion Drop Decay</button>
+            <button class="chip" data-wc-toggle="pearlvanish" data-rule="enderPearlsVanishOnDeath">Ender Pearls Vanish On Death</button>
+            <button class="chip" data-wc-toggle="globalsound" data-rule="globalSoundEvents">Global Sound Events</button>
+            <button class="chip" data-wc-toggle="specchunks" data-rule="spectatorsGenerateChunks">Spectators Generate Chunks</button>
+            <button class="chip" data-wc-toggle="reduceddebug" data-rule="reducedDebugInfo">Reduced Debug Info</button>
+            <button class="chip" data-wc-toggle="noelytracheck" data-rule="disableElytraMovementCheck">Disable Elytra Check</button>
+          </div>
+        </div>
+        <div>
+          <div class="mb-1 eyebrow">Mobs &amp; Damage</div>
+          <div class="flex flex-wrap gap-1.5">
+            <button class="chip" data-wc-toggle="mobloot" data-rule="doMobLoot">Mob Loot</button>
+            <button class="chip" data-wc-toggle="patrols" data-rule="doPatrolSpawning">Pillager Patrols</button>
+            <button class="chip" data-wc-toggle="traders" data-rule="doTraderSpawning">Wandering Traders</button>
+            <button class="chip" data-wc-toggle="wardens" data-rule="doWardenSpawning">Warden Spawning</button>
+            <button class="chip" data-wc-toggle="noraids" data-rule="disableRaids">Disable Raids</button>
+            <button class="chip" data-wc-toggle="forgivedead" data-rule="forgiveDeadPlayers">Forgive Dead Players</button>
+            <button class="chip" data-wc-toggle="universalanger" data-rule="universalAnger">Universal Anger</button>
+            <button class="chip" data-wc-toggle="firedmg" data-rule="fireDamage">Fire Damage</button>
+            <button class="chip" data-wc-toggle="drowndmg" data-rule="drowningDamage">Drowning Damage</button>
+            <button class="chip" data-wc-toggle="freezedmg" data-rule="freezeDamage">Freeze Damage</button>
+          </div>
+        </div>
+        <div>
+          <div class="mb-1 eyebrow">Chat &amp; Messages</div>
+          <div class="flex flex-wrap gap-1.5">
+            <button class="chip" data-wc-toggle="cmdblockout" data-rule="commandBlockOutput">Command Block Output</button>
+            <button class="chip" data-wc-toggle="logadmin" data-rule="logAdminCommands">Admin Command Logging</button>
+          </div>
+        </div>
+      </div>
+    </details>
   </fieldset>
 </div>
 <script type="module" src="/js/pages/world-controls.js"></script>

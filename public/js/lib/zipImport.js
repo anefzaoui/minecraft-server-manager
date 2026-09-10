@@ -61,7 +61,7 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
           <span class="block truncate font-mono text-xs text-ink-faint" data-role="file"></span>
         </span>
         <a class="btn btn-sm" target="_blank" rel="noopener" data-role="open">Open CF page</a>
-        <button class="btn btn-sm" data-role="upload">Upload jar</button>
+        <button class="btn btn-sm" data-role="upload">Upload Jar</button>
         <input type="file" accept=".jar,.zip" class="hidden" data-role="filepick">`;
       row.querySelector('[data-role="name"]').textContent = b.name;
       row.querySelector('[data-role="file"]').textContent = b.fileName || '';
@@ -94,7 +94,7 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
   }
 
   openModal({
-    title: 'Zip import report',
+    title: 'Zip Import Report',
     content,
     size: 'lg',
     actions: [{ label: 'Done', kind: 'primary', onClick: () => onDone() }],

@@ -4,8 +4,8 @@
 // fails on drift. All coordinates are in image-display pixels (on-screen <img>).
 
 export const MIN_CROP_PX = 40; // smallest selectable square, in image-display px
-export const OUTPUT_MAX_PX = 512; // avatar canvas cap
-export const PNG_KEEP_MAX = 500 * 1024; // a PNG export above this falls back to JPEG
+export const OUTPUT_MAX_PX = 2048; // avatar canvas cap (square edge)
+export const PNG_KEEP_MAX = 4 * 1024 * 1024; // a PNG export above this falls back to JPEG (server cap is 16 MB)
 
 /**
  * Clamp a square box so it sits fully inside a w x h area, preserving its size

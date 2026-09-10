@@ -31,7 +31,7 @@ router.get(
         name: vm.name,
         icon: vm.icon,
         accent: vm.accent,
-        motd: (row.env.MOTD || '').replace(/[§&][0-9a-fk-or]/gi, ''),
+        motd: ((row.env && row.env.MOTD) || '').replace(/[§&][0-9a-fk-or]/gi, ''),
         flavor: vm.flavor,
         mcVersion: vm.mcVersion,
         status: vm.status,

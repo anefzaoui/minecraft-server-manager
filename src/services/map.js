@@ -5,7 +5,6 @@
 // to the browser only through the panel's authenticated proxy.
 
 const httpError = require('../utils/httpError');
-const net = require('node:net');
 const fs = require('node:fs');
 const path = require('node:path');
 const db = require('../db');
@@ -13,6 +12,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const serversService = require('./servers');
 const modsService = require('./mods');
+const portsService = require('./ports');
 const config = require('../config');
 
 const BLUEMAP_CONTAINER_PORT = '8100/tcp';
@@ -112,7 +112,7 @@ async function enableMap(serverId, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   if (!supportsMap(server)) {
-    throw httpError(400, `Live map needs a mod loader or plugin server - ${server.type} isn't supported by BlueMap`);
+    throw httpError(400, `Live map needs a mod loader or plugin server. BlueMap does not support ${server.type}.`);
   }
 
   const hostPort = await freePort();
@@ -146,7 +146,7 @@ async function enableMap(serverId, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'map-enabled',
-    summary: `Live map enabled (BlueMap on port ${hostPort}) - applies on next restart`,
+    summary: `Live map enabled (BlueMap on port ${hostPort}). Applies on the next restart.`,
   });
   return { hostPort };
 }
@@ -165,7 +165,7 @@ async function disableMap(serverId, { actor = 'system' } = {}) {
   );
   if (row) await modsService.removeContent(serverId, row.filename, { actor }).catch(() => {});
   db.run('UPDATE servers SET pending_recreate = 1 WHERE id = ?', serverId);
-  recordEvent({ serverId, actor, type: 'map-disabled', summary: 'Live map disabled - applies on next restart' });
+  recordEvent({ serverId, actor, type: 'map-disabled', summary: 'Live map disabled. Applies on the next restart.' });
 }
 
 /** Extra container ports for a server, consumed by the servers service. */
@@ -175,20 +175,15 @@ function extraPortsFor(serverId) {
 }
 
 async function freePort() {
-  const used = new Set(
-    db
-      .all("SELECT config_json FROM integrations WHERE kind = 'bluemap'")
-      .map((r) => JSON.parse(r.config_json || '{}').hostPort)
-  );
+  // Union every DB-claimed port family - server game/rcon/bedrock/extra ports
+  // AND other BlueMap hosts AND the panel's own port - with a live OS probe.
+  // Sharing portsService.dbPortsInUse() with suggestPorts() shrinks the
+  // collision window between a concurrent server-create and a map-enable (they
+  // otherwise both probe the same free-looking port before either commits).
+  const used = portsService.dbPortsInUse();
   for (let port = HOST_PORT_START; port < HOST_PORT_START + 500; port += 1) {
     if (used.has(port)) continue;
-    const free = await new Promise((resolve) => {
-      const srv = net.createServer();
-      srv.unref();
-      srv.once('error', () => resolve(false));
-      srv.listen({ port, host: '0.0.0.0', exclusive: true }, () => srv.close(() => resolve(true)));
-    });
-    if (free) return port;
+    if (await portsService.probe(port)) return port;
   }
   throw httpError(503, 'No free port for the map web server');
 }

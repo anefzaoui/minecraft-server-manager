@@ -18,7 +18,7 @@ async function ghFetch(pathname, { ttlMs = 10 * 60 * 1000 } = {}) {
   const cacheKey = `github:${pathname}`;
   const row = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', cacheKey);
   const cached = row ? JSON.parse(row.value_json) : null; // {etag, data}
-  if (cached && Date.now() - Date.parse(row.fetched_at + 'Z') < ttlMs) return cached.data;
+  if (cached && Date.now() - Date.parse(row.fetched_at.replace(' ', 'T') + 'Z') < ttlMs) return cached.data;
 
   const headers = { 'User-Agent': UA, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;

@@ -22,7 +22,7 @@ async function hangarFetch(pathname, { ttlMs = 10 * 60 * 1000, search } = {}) {
   if (search) for (const [k, v] of Object.entries(search)) if (v !== undefined) url.searchParams.set(k, String(v));
   const cacheKey = `hangar:${url.pathname}${url.search}`;
   const cached = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', cacheKey);
-  if (cached && Date.now() - Date.parse(cached.fetched_at + 'Z') < ttlMs) {
+  if (cached && Date.now() - Date.parse(cached.fetched_at.replace(' ', 'T') + 'Z') < ttlMs) {
     return JSON.parse(cached.value_json);
   }
   const res = await fetch(url, {

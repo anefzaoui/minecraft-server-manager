@@ -18,27 +18,28 @@
           <span class="text-ink">data</span>
         {{/if}}
       </nav>
-      <div class="ml-auto flex gap-2">
+      <div class="ml-auto flex flex-wrap gap-2">
+        <button class="btn btn-sm" id="files-search" data-tip="Search the text of files under this folder">{{{icon 'search' 'size-3.5'}}} Find in Files</button>
         <button class="btn btn-sm" id="files-upload">{{{icon 'upload' 'size-3.5'}}} Upload</button>
-        <button class="btn btn-sm" id="files-mkdir">{{{icon 'folder-plus' 'size-3.5'}}} New folder</button>
+        <button class="btn btn-sm" id="files-mkdir">{{{icon 'folder-plus' 'size-3.5'}}} New Folder</button>
       </div>
     </div>
     <div class="overflow-x-auto">
-      <table class="table-base" id="files-table">
+      <table class="table-base table-stack" id="files-table">
         <thead><tr><th>Name</th><th class="text-right">Size</th><th class="text-right">Modified</th><th class="text-right">Actions</th></tr></thead>
         <tbody>
           {{#if filePath}}
             <tr>
-              <td colspan="4">
+              <td data-th="" colspan="4">
                 <a class="flex items-center gap-2 text-ink-faint hover:text-link" href="/files{{#if parentEnc}}?path={{parentEnc}}{{/if}}">{{{icon 'corner-left-up' 'size-4'}}} ..</a>
               </td>
             </tr>
           {{/if}}
           {{#each files}}
             <tr data-file-row data-path="{{path}}" data-name="{{name}}" data-dir="{{dir}}" data-size="{{size}}">
-              {{! w-full + max-w-0: makes `truncate` actually engage in an
+              {{! w-full + max-w-0 (sm+ only): makes `truncate` actually engage in an
                   auto-layout table - long names no longer force horizontal scroll. }}
-              <td class="w-full max-w-0">
+              <td data-th="" class="sm:w-full sm:max-w-0">
                 <div class="flex items-center gap-2">
                   {{#if dir}}
                     {{{icon 'folder' 'size-4 shrink-0 text-warn'}}}
@@ -49,11 +50,11 @@
                   {{/if}}
                 </div>
               </td>
-              <td class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
-              <td class="whitespace-nowrap text-right text-ink-faint" data-ts="{{mtime}}">{{mtime}}</td>
-              <td class="text-right"><div class="inline-flex gap-1">
+              <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
+              <td data-th="Modified" class="whitespace-nowrap text-right text-ink-faint" data-ts="{{mtime}}">{{mtime}}</td>
+              <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
                 {{#unless dir}}
-                  <button class="btn btn-ghost btn-sm" data-file-edit data-tip="Edit as text (≤ 2 MB)">{{{icon 'file-code' 'size-3.5'}}}</button>
+                  <button class="btn btn-ghost btn-sm" data-file-edit data-tip="Edit as text (≤ 8 MB)">{{{icon 'file-code' 'size-3.5'}}}</button>
                   <button class="btn btn-ghost btn-sm" data-file-download data-tip="Download">{{{icon 'download' 'size-3.5'}}}</button>
                 {{/unless}}
                 <button class="btn btn-ghost btn-sm" data-menu="file-menu-{{@index}}" data-tip="Rename, move, copy…">{{{icon 'ellipsis' 'size-3.5'}}}</button>
@@ -66,7 +67,7 @@
               </div></td>
             </tr>
           {{else}}
-            <tr data-files-empty><td colspan="4" class="py-10 text-center text-sm text-ink-faint">
+            <tr data-files-empty><td data-th="" colspan="4" class="py-10 text-center text-sm text-ink-faint">
               {{{icon 'folder-open' 'mx-auto size-6'}}}
               <p class="mt-2">This folder is empty. Upload files or create a folder above.</p>
             </td></tr>

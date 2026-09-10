@@ -11,7 +11,7 @@
     <option value="">All types</option>
     {{#each types}}<option value="{{this}}" {{#if (eq this ../filters.type)}}selected{{/if}}>{{this}}</option>{{/each}}
   </select>
-  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply filters</button>
+  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply Filters</button>
   <div class="ml-auto flex gap-1">
     <a class="btn btn-sm" href="/api/events/export?format=csv{{exportQs}}" data-tip="Export the filtered events as CSV">{{{icon 'download' 'size-3.5'}}} CSV</a>
     <a class="btn btn-sm" href="/api/events/export?format=json{{exportQs}}" data-tip="Export the filtered events as JSON">{{{icon 'download' 'size-3.5'}}} JSON</a>
@@ -39,7 +39,7 @@
   </ol>
   {{#if events.length}}
   <div class="flex items-center justify-between border-t border-line p-3 text-xs text-ink-faint">
-    <span>Showing {{from}}–{{to}} of {{total}} events</span>
+    <span>Showing {{from}} to {{to}} of {{total}} events</span>
     <div class="flex items-center gap-2">
       {{#if prevHref}}<a class="btn btn-ghost btn-sm" href="{{prevHref}}" aria-label="Previous page">{{{icon 'chevron-left' 'size-4'}}}</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="Previous page">{{{icon 'chevron-left' 'size-4'}}}</button>{{/if}}
       <span class="tabular-nums">Page {{page}} of {{pages}}</span>

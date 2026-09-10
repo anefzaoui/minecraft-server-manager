@@ -44,7 +44,7 @@ async function createUser({ username, password, role = 'admin' }, { actor = 'sys
     await bcrypt.hash(password, BCRYPT_COST),
     role
   );
-  recordEvent({ actor, type: 'user-created', summary: `User created: ${username} (${role})` });
+  recordEvent({ actor, type: 'user-created', summary: `User created: ${username} (${role}).` });
   return getUser(id);
 }
 
@@ -87,7 +87,39 @@ async function setPassword(id, password, { actor = 'system', exceptSid = null } 
     throw httpError(400, 'A password must be at least 8 characters.');
   db.run('UPDATE users SET password_hash = ? WHERE id = ?', await bcrypt.hash(password, BCRYPT_COST), id);
   revokeOtherSessions(id, exceptSid);
-  recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(id)?.username}` });
+  recordEvent({ actor, type: 'user-password-changed', summary: `Password changed for ${getUser(id)?.username}.` });
+}
+
+/**
+ * Admin password change with re-authentication. `actorId` is the acting admin's
+ * own id and `currentPassword` their current password - verified first, exactly
+ * like the account 2FA routes (confirmTotp/disableTotp), so a hijacked-but-live
+ * session can't mutate anyone's password without knowing the real one. The
+ * caller decides ``exceptSid``: when the target IS the acting admin they must
+ * pass null so the acting session is revoked too (it adopted the new password
+ * without re-verification through the login path).
+ */
+async function changePassword(
+  actorId,
+  targetId,
+  currentPassword,
+  newPassword,
+  { actor = 'system', exceptSid = null } = {}
+) {
+  if (typeof newPassword !== 'string' || newPassword.length < 8)
+    throw httpError(400, 'A password must be at least 8 characters.');
+  const acting = db.get('SELECT * FROM users WHERE id = ?', actorId);
+  if (!acting || !(await bcrypt.compare(String(currentPassword || ''), acting.password_hash))) {
+    throw httpError(401, 'That password is incorrect.');
+  }
+  if (!db.get('SELECT id FROM users WHERE id = ?', targetId)) throw httpError(404, 'User not found');
+  db.run('UPDATE users SET password_hash = ? WHERE id = ?', await bcrypt.hash(newPassword, BCRYPT_COST), targetId);
+  revokeOtherSessions(targetId, exceptSid);
+  recordEvent({
+    actor,
+    type: 'user-password-changed',
+    summary: `Password changed for ${getUser(targetId)?.username}.`,
+  });
 }
 
 function setRole(id, role, { actor = 'system' } = {}) {
@@ -98,7 +130,7 @@ function setRole(id, role, { actor = 'system' } = {}) {
     throw httpError(409, "You can't change the last admin's role.");
   }
   db.run('UPDATE users SET role = ? WHERE id = ?', role, id);
-  recordEvent({ actor, type: 'user-role-changed', summary: `${user?.username} role → ${role}` });
+  recordEvent({ actor, type: 'user-role-changed', summary: `${user?.username} role → ${role}.` });
 }
 
 function deleteUser(id, { actor = 'system' } = {}) {
@@ -108,7 +140,7 @@ function deleteUser(id, { actor = 'system' } = {}) {
     throw httpError(409, "You can't delete the last admin account.");
   }
   db.run('DELETE FROM users WHERE id = ?', id);
-  recordEvent({ actor, type: 'user-deleted', summary: `User deleted: ${user.username}` });
+  recordEvent({ actor, type: 'user-deleted', summary: `User deleted: ${user.username}.` });
 }
 
 function publicUser(u) {
@@ -136,7 +168,7 @@ function setAvatarPreset(id, key, { actor = 'system' } = {}) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   db.run('UPDATE users SET avatar = ? WHERE id = ?', `preset:${key}`, id);
-  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} set a preset avatar` });
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} set a preset avatar.` });
 }
 
 /** Record an uploaded avatar file (the route has already validated + saved it to disk). */
@@ -144,7 +176,7 @@ function setAvatarCustom(id, filename, { actor = 'system' } = {}) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   db.run('UPDATE users SET avatar = ? WHERE id = ?', `custom:${filename}`, id);
-  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} uploaded a custom avatar` });
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} uploaded a custom avatar.` });
 }
 
 /** Revert to the default initial-letter avatar. */
@@ -152,7 +184,7 @@ function clearAvatar(id, { actor = 'system' } = {}) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   db.run('UPDATE users SET avatar = NULL WHERE id = ?', id);
-  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} reset their avatar` });
+  recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} reset their avatar.` });
 }
 
 // ---------------------------------------------------------------------------
@@ -170,7 +202,7 @@ function beginTotpEnrollment(id) {
 }
 
 /** Verify the account password + the first live code, then persist the secret + backup codes. */
-async function confirmTotp(id, secret, code, password, { actor = 'system' } = {}) {
+async function confirmTotp(id, secret, code, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
   if (!user) throw httpError(404, 'User not found');
   if (user.totp_enabled) {
@@ -199,7 +231,11 @@ async function confirmTotp(id, secret, code, password, { actor = 'system' } = {}
     JSON.stringify(hashed),
     id
   );
-  recordEvent({ actor, type: 'user-2fa-enabled', summary: `Two-factor authentication enabled for ${user.username}` });
+  // Enabling 2FA is a credential mutation like every other one (setPassword,
+  // disableTotp, regenerateBackupCodes all revoke too): any session that was
+  // trusted on the weaker password-only path must re-authenticate with 2FA.
+  revokeOtherSessions(id, exceptSid);
+  recordEvent({ actor, type: 'user-2fa-enabled', summary: `Two-factor authentication enabled for ${user.username}.` });
   return { backupCodes };
 }
 
@@ -216,7 +252,7 @@ async function disableTotp(id, password, { actor = 'system', exceptSid = null } 
   recordEvent({
     actor,
     type: 'user-2fa-disabled',
-    summary: `Two-factor authentication disabled for ${user.username}`,
+    summary: `Two-factor authentication disabled for ${user.username}.`,
   });
 }
 
@@ -233,7 +269,7 @@ function adminDisableTotp(id, { actor = 'system' } = {}) {
   recordEvent({
     actor,
     type: 'user-2fa-disabled',
-    summary: `Two-factor authentication reset for ${user.username} by an admin`,
+    summary: `Two-factor authentication reset for ${user.username} by an admin.`,
   });
 }
 
@@ -247,7 +283,7 @@ async function regenerateBackupCodes(id, password, { actor = 'system', exceptSid
   const hashed = await Promise.all(backupCodes.map((c) => bcrypt.hash(c, BCRYPT_COST)));
   db.run('UPDATE users SET totp_backup_codes_json = ? WHERE id = ?', JSON.stringify(hashed), id);
   revokeOtherSessions(id, exceptSid);
-  recordEvent({ actor, type: 'user-2fa-backup-codes', summary: `Backup codes regenerated for ${user.username}` });
+  recordEvent({ actor, type: 'user-2fa-backup-codes', summary: `Backup codes regenerated for ${user.username}.` });
   return { backupCodes };
 }
 
@@ -276,7 +312,14 @@ async function verifyTotpLogin(id, code) {
   } catch {
     codes = [];
   }
+  // Format gate BEFORE any bcrypt work. Backup codes are 10 hex chars split as
+  // xxxxx-xxxxx; a random/garbage guess here would otherwise pay a full
+  // bcrypt compare against every stored hash (~1s CPU) on each wrong attempt.
+  // The route already lockouts repeated failures, so this turns a blind spray
+  // into a zero-cost rejection while valid-looking guesses stay brute-force
+  // bounded by that lockout.
   const cleanCode = String(code || '').trim();
+  if (!codes.length || !/^[0-9a-f]{5}-[0-9a-f]{5}$/i.test(cleanCode)) return false;
   const matches = await Promise.all(codes.map((hash) => bcrypt.compare(cleanCode, hash)));
   const idx = matches.findIndex(Boolean);
   if (idx === -1) return false;
@@ -285,7 +328,7 @@ async function verifyTotpLogin(id, code) {
   recordEvent({
     actor: user.username,
     type: 'user-2fa-backup-used',
-    summary: `${user.username} signed in with a backup code (${codes.length} left)`,
+    summary: `${user.username} signed in with a backup code (${codes.length} left).`,
   });
   return true;
 }
@@ -307,6 +350,7 @@ module.exports = {
   getUser,
   listUsers,
   setPassword,
+  changePassword,
   setRole,
   deleteUser,
   pruneExpiredSessions,

@@ -1,0 +1,71 @@
+{{#if combined.breakdown.length}}
+  <div class="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-4">
+    <div class="card min-w-0 p-4">
+      <div class="text-xs text-ink-faint">Total memory</div>
+      <div class="mt-1 break-words text-2xl font-bold tabular-nums"><span data-combined-total-mem>{{combined.memoryUsedMb}}</span><span class="text-base font-medium text-ink-faint"> MB</span></div>
+      <div class="text-xs text-ink-faint"><span data-combined-total-mem-limit>{{combined.memoryLimitMb}}</span> MB allotted</div>
+    </div>
+    <div class="card min-w-0 p-4">
+      <div class="text-xs text-ink-faint">Total CPU</div>
+      <div class="mt-1 break-words text-2xl font-bold tabular-nums"><span data-combined-total-cpu>{{combined.cpuTotal}}</span><span class="text-base font-medium text-ink-faint">%</span></div>
+      <div class="text-xs text-ink-faint">across <span data-combined-total-running>{{combined.running}}</span> {{plural combined.running 'server' 'servers'}}</div>
+    </div>
+    <div class="card min-w-0 p-4">
+      <div class="text-xs text-ink-faint">Players online</div>
+      <div class="mt-1 break-words text-2xl font-bold tabular-nums"><span data-combined-total-players>{{combined.playersOnline}}</span><span class="text-base font-medium text-ink-faint"> / <span data-combined-total-players-max>{{combined.playersMax}}</span></span></div>
+      <div class="text-xs text-ink-faint">across <span data-combined-total-running-2>{{combined.running}}</span> {{plural combined.running 'server' 'servers'}}</div>
+    </div>
+    <div class="card min-w-0 p-4">
+      <div class="text-xs text-ink-faint">Running</div>
+      <div class="mt-1 break-words text-2xl font-bold tabular-nums" data-combined-total-running-3>{{combined.running}}</div>
+      <div class="text-xs text-ink-faint">server{{#unless (eq combined.running 1)}}s{{/unless}} live now</div>
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div class="card p-4">
+      <h3 class="mb-2 font-semibold">Memory <span class="text-xs font-normal text-ink-faint">used vs allotted</span></h3>
+      <div class="flex h-3 w-full overflow-hidden rounded-sm bg-inset" data-combined-bar="memory" data-combined-limit="{{combined.memoryLimitMb}}">
+        {{#each combined.breakdown}}
+          <div data-combined-seg="memory" data-seg-id="{{this.id}}" data-seg-mb="{{this.memUsedMb}}" data-seg-limit="{{this.memLimitMb}}" style="width: {{pct this.memUsedMb ../combined.memoryLimitMb}}%; background: {{this.accent}};" title="{{this.name}}"></div>
+        {{/each}}
+      </div>
+      <div class="mt-1 flex items-baseline justify-between gap-2 break-words text-xs text-ink-faint">
+        <span data-combined-mem-total>{{combined.memoryUsedMb}} MB</span>
+        <span>{{combined.memoryLimitMb}} MB total allotted</span>
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <h3 class="mb-2 font-semibold">CPU <span class="text-xs font-normal text-ink-faint">share of allotted cores</span></h3>
+      <div class="flex h-3 w-full overflow-hidden rounded-sm bg-inset" data-combined-bar="cpu" data-combined-cap="{{combined.cpuCapacity}}">
+        {{#each combined.breakdown}}
+          <div data-combined-seg="cpu" data-seg-id="{{this.id}}" data-seg-cpu="{{this.cpuPct}}" data-seg-cap="{{mul this.cpus 100}}" style="width: {{pct this.cpuPct ../combined.cpuCapacity}}%; background: {{this.accent}};" title="{{this.name}}"></div>
+        {{/each}}
+      </div>
+      <div class="mt-1 flex items-baseline justify-between gap-2 break-words text-xs text-ink-faint">
+        <span data-combined-cpu-total>{{combined.cpuTotal}}%</span>
+        <span>{{combined.cpuCapacity}}% core capacity</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 card p-4">
+    <h3 class="mb-2 font-semibold">Per-Server Live Usage</h3>
+    <div class="divide-y divide-line text-sm">
+      {{#each combined.breakdown}}
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 py-2.5" data-combined-row="{{this.id}}" data-row-players="{{this.playersOnline}}" data-row-players-max="{{this.playersMax}}">
+          <span class="size-2.5 shrink-0 rounded-full" style="background: {{this.accent}}"></span>
+          <a href="/servers/{{this.id}}" class="min-w-0 font-medium hover:underline">{{this.name}}</a>
+          <span class="ml-auto grid w-full min-w-0 grid-cols-3 gap-3 text-xs tabular-nums sm:w-auto sm:grid-cols-none sm:gap-6 sm:text-right">
+            <span class="flex items-center justify-between gap-1 sm:block"><span class="text-ink-faint sm:hidden">CPU</span><span class="break-words" data-combined-row-cpu="{{this.id}}">{{this.cpuPct}}%</span></span>
+            <span class="flex items-center justify-between gap-1 sm:block"><span class="text-ink-faint sm:hidden">Mem</span><span class="break-words" data-combined-row-mem="{{this.id}}">{{this.memUsedMb}} <span class="text-ink-faint">MB</span></span></span>
+            <span class="flex items-center justify-between gap-1 sm:block"><span class="text-ink-faint sm:hidden">Players</span><span class="break-words" data-combined-row-players="{{this.id}}">{{this.playersOnline}}<span class="text-ink-faint">/{{this.playersMax}}</span></span></span>
+          </span>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+{{else}}
+  <div class="card p-4 text-sm text-ink-faint">No servers are running right now. Start a server to see combined resource usage here.</div>
+{{/if}}

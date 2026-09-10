@@ -36,12 +36,12 @@ const FORMATS = [
 ];
 
 export const MOTD_PRESETS = [
-  '&a&lWelcome to {server}&r&7 - have fun, be kind!',
-  '&b&l>>> &f&l{server} &b&l<<<&r\n&7Season 3 - fresh world',
+  '&a&lWelcome to {server}&r&7. Have fun, be kind!',
+  '&b&l>>> &f&l{server} &b&l<<<&r\n&7Season 3: fresh world',
   '&6⛏ &e{server} &8| &fSurvival &8| &fFriends only',
   '&c&lHARDCORE&r &8- &7one life, no mercy',
   '&d✿ &5{server} &d✿&r\n&7cozy vibes only',
-  '&2&lModded &a{server}&r\n&7bring RAM - 100+ mods',
+  '&2&lModded &a{server}&r\n&7bring RAM, 100+ mods',
   '&9&m----------&r &b&lSkyBlock &9&m----------',
   '&e☀ &fOnline day & night &8| &7low-lag survival',
   '&7[&a1.21&7] &fVanilla+ &8| &cNo grief &8| &b/wild',

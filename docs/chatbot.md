@@ -1,5 +1,7 @@
 # Per-server Minecraft chatbot
 
+[← Back to docs index](README.md)
+
 This fork adds an admin-configured chatbot to each managed Minecraft server. It connects to an
 OpenAI-compatible chat-completions endpoint, including Ollama on another LAN host. Each server has
 its own endpoint, model, invocation name, persona, transcript policy, outreach messages, and power
@@ -37,19 +39,19 @@ modded recipes direct the player to JEI/REI rather than fabricating an answer.
 
 ## Main implementation files
 
-- `src/services/wizard.js` — per-server configuration, OpenAI-compatible requests, chat handling,
+- `src/services/wizard.js`: per-server configuration, OpenAI-compatible requests, chat handling,
   outreach, transcript retention, and response limits.
-- `src/services/wizardPowers.js` — role checks, intent-specific tool schemas, validation, execution,
+- `src/services/wizardPowers.js`: role checks, intent-specific tool schemas, validation, execution,
   cooldowns, and power auditing.
-- `src/services/wizardRecipes.js` — deterministic versioned recipe lookup and grid formatting. Recipe
+- `src/services/wizardRecipes.js`: deterministic versioned recipe lookup and grid formatting. Recipe
   and item data come from the bundled [`minecraft-data`](https://github.com/PrismarineJS/minecraft-data)
   package. (An earlier draft of this doc pointed at a `src/data/recipes/` folder that was never
   committed; there is no such folder, and the data lives in the package. See "Dependency footprint".)
-- `src/analytics/ingest.js` — forwards parsed joins, leaves, and player chat to the chatbot.
+- `src/analytics/ingest.js`: forwards parsed joins, leaves, and player chat to the chatbot.
 - `src/web/routes/wizard.js`, `public/js/pages/integrations.js`, and
-  `views/partials/server/integrations.hbs` — admin API and per-server Integrations UI.
-- `src/db/migrations/010_wizard_chat.js` through `014_wizard_power_controllers.js` — persistent schema.
-- `test/wizard.test.js` — authorization, tool-boundary, retention, outreach, and chat behavior tests.
+  `views/partials/server/integrations.hbs`: admin API and per-server Integrations UI.
+- `src/db/migrations/011_wizard_chat.js` through `019_wizard_power_controllers.js`: persistent schema.
+- `test/wizard.test.js`: authorization, tool-boundary, retention, outreach, and chat behavior tests.
 
 The internal `wizard` route/module/table names are retained for upgrade and API compatibility;
 “chatbot” is the user-facing product term. Likewise, the stored `power_testers_json` field maps to

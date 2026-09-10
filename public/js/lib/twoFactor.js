@@ -87,7 +87,7 @@ function openManageModal(trigger) {
     actions: [
       { label: 'Close', kind: 'ghost' },
       {
-        label: 'Regenerate backup codes',
+        label: 'Regenerate Backup Codes',
         busyLabel: 'Regenerating…',
         onClick: async () => {
           const password = content.querySelector('#tf-mgmt-password').value;
@@ -132,7 +132,7 @@ function showBackupCodes(codes, title, { reloadOnClose = false } = {}) {
   const copyBtn = document.createElement('button');
   copyBtn.type = 'button';
   copyBtn.className = 'btn btn-sm';
-  copyBtn.textContent = 'Copy all';
+  copyBtn.textContent = 'Copy All';
   copyBtn.dataset.copy = codes.join('\n');
   content.append(list, warn, copyBtn);
 

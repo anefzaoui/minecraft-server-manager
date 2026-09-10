@@ -8,8 +8,8 @@
 // image-display pixels (the on-screen <img> size), never natural pixels.
 
 const MIN_CROP_PX = 40; // smallest selectable square, in image-display px
-const OUTPUT_MAX_PX = 512; // avatar canvas cap - matches the 512 KB server limit in practice
-const PNG_KEEP_MAX = 500 * 1024; // a PNG export above this falls back to JPEG
+const OUTPUT_MAX_PX = 2048; // avatar canvas cap (square edge)
+const PNG_KEEP_MAX = 4 * 1024 * 1024; // a PNG export above this falls back to JPEG (server cap is 16 MB)
 
 /**
  * Clamp a square box so it sits fully inside a w x h area, preserving its size

@@ -180,15 +180,21 @@ function splitCfGameVersions(gameVersions) {
  *      mcVersions: [], mcConstraint?, kind}}
  */
 async function identifyJars(files) {
-  const items = files.map((f) => ({
-    filename: f.name,
-    size: f.buffer.length,
-    sha1: crypto.createHash('sha1').update(f.buffer).digest('hex'),
-    sha256: crypto.createHash('sha256').update(f.buffer).digest('hex'),
-    fingerprint: curseforgeFingerprint(f.buffer),
-    buffer: f.buffer,
-    identity: null,
-  }));
+  const items = files.map((f) => {
+    const buffer = f.buffer || null;
+    return {
+      filename: f.name,
+      size: f.size != null ? f.size : buffer ? buffer.length : 0,
+      sha1: f.sha1 || (buffer ? crypto.createHash('sha1').update(buffer).digest('hex') : null),
+      sha256: f.sha256 || (buffer ? crypto.createHash('sha256').update(buffer).digest('hex') : null),
+      fingerprint: f.fingerprint != null ? f.fingerprint : buffer ? curseforgeFingerprint(buffer) : null,
+      // Pre-parsed metadata (avoids retaining the whole jar buffer on the
+      // bounded preview path); parseJarMeta(buffer) is the fallback.
+      meta: f.meta || null,
+      buffer,
+      identity: null,
+    };
+  });
 
   // Layer 1: Modrinth by sha1 (no key needed).
   try {
@@ -249,10 +255,11 @@ async function identifyJars(files) {
     }
   }
 
-  // Layer 3: the jar's own metadata.
+  // Layer 3: the jar's own metadata. On the bounded path the metadata was parsed
+  // while the buffer was still in hand (f.meta); otherwise it is parsed here.
   for (const item of items) {
     if (!item.identity) {
-      const meta = await parseJarMeta(item.buffer);
+      const meta = item.meta || (item.buffer ? await parseJarMeta(item.buffer) : null);
       if (meta) {
         item.identity = {
           source: 'metadata',

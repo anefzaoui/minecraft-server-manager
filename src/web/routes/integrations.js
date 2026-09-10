@@ -51,7 +51,7 @@ const discordSchema = z.object({
     .max(400)
     .regex(
       /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//,
-      'Webhook URL must start with https://discord.com/api/webhooks/'
+      'The webhook URL must start with https://discord.com/api/webhooks/.'
     )
     .or(z.literal(''))
     .optional(),
@@ -77,7 +77,7 @@ router.post(
       serverId: server.id,
       actor: req.user ? req.user.username : 'admin',
       type: 'integration-changed',
-      summary: `Discord webhook ${config.enabled ? 'enabled' : 'disabled'}${input.webhookUrl !== undefined ? ' (URL updated)' : ''}`,
+      summary: `Discord webhook ${config.enabled ? 'enabled' : 'disabled'}${input.webhookUrl !== undefined ? ' (URL updated)' : ''}.`,
     });
     res.json({ ok: true, discord: config });
   })
@@ -129,17 +129,17 @@ router.post(
         slug: z
           .string()
           .trim()
-          .regex(/^[a-z0-9-]{3,40}$/, 'Slug must be 3–40 chars of lowercase letters, digits, or dashes')
+          .regex(/^[a-z0-9-]{3,40}$/, 'Slug must be 3 to 40 characters: lowercase letters, digits, or dashes.')
           .optional(),
       })
-      .refine((v) => !v.enabled || v.slug, { message: 'A slug is required to enable the status page' })
+      .refine((v) => !v.enabled || v.slug, { message: 'A slug is required to enable the status page.' })
       .parse(req.body);
     const config = statusPage.setStatusPage(server.id, { enabled, slug: slug || null });
     recordEvent({
       serverId: server.id,
       actor: req.user ? req.user.username : 'admin',
       type: 'integration-changed',
-      summary: `Public status page ${config.enabled ? `enabled at /status/${config.slug}` : 'disabled'}`,
+      summary: `Public status page ${config.enabled ? `enabled at /status/${config.slug}` : 'disabled'}.`,
     });
     res.json({ ok: true, statusPage: config });
   })

@@ -12,7 +12,7 @@ module.exports = [
     type: 'enum',
     default: 'VANILLA',
     options: [
-      { value: 'VANILLA', label: 'Vanilla', desc: 'Official Mojang server - no mods or plugins, datapacks only.' },
+      { value: 'VANILLA', label: 'Vanilla', desc: 'Official Mojang server. No mods or plugins, datapacks only.' },
       { value: 'PAPER', label: 'Paper', desc: 'High-performance Spigot fork; the most popular plugin server.' },
       { value: 'PURPUR', label: 'Purpur', desc: 'Paper fork focused on configurability and extra gameplay features.' },
       { value: 'PUFFERFISH', label: 'Pufferfish', desc: 'Optimized Paper fork aimed at large servers.' },
@@ -183,7 +183,7 @@ module.exports = [
     key: 'FABRIC_LAUNCHER_VERSION',
     scope: 'env',
     label: 'Fabric launcher version',
-    help: 'Pins a specific version of the Fabric server launcher itself. Rarely needed - leave empty for the latest.',
+    help: 'Pins a specific version of the Fabric server launcher itself. Rarely needed. Leave it empty for the latest.',
     type: 'text',
     mode: 'advanced',
     section: 'flavor',
@@ -227,7 +227,7 @@ module.exports = [
       {
         value: 'java17',
         label: 'Java 17',
-        desc: 'For Minecraft 1.18 – 1.20.4, and a fallback for some Forge 1.21 mods.',
+        desc: 'For Minecraft 1.18 to 1.20.4, and a fallback for some Forge 1.21 mods.',
       },
       { value: 'java21', label: 'Java 21', desc: 'For Minecraft 1.20.5 and later.' },
       { value: 'java25', label: 'Java 25', desc: 'Newest runtime, for the latest Minecraft versions.' },

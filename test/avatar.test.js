@@ -22,6 +22,19 @@ const JPEG_1x1 = Buffer.from(
   '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAT8AH//Z',
   'base64'
 );
+const WEBP_1x1 = Buffer.from('UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA', 'base64');
+
+// A PNG header that *declares* a 40000x40000 image in ~30 bytes - the decompression
+// bomb the server has no image library to catch except by reading the IHDR.
+const PNG_HUGE_HEADER = Buffer.concat([
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  Buffer.from([0x00, 0x00, 0x00, 0x0d]),
+  Buffer.from('IHDR'),
+  Buffer.from([0x00, 0x00, 0x9c, 0x40]), // width  = 40000
+  Buffer.from([0x00, 0x00, 0x9c, 0x40]), // height = 40000
+  Buffer.from([0x08, 0x06, 0x00, 0x00, 0x00]),
+  Buffer.from([0x00, 0x00, 0x00, 0x00]), // (CRC not validated)
+]);
 
 function avatarForm(bytes, type, filename) {
   const form = new FormData();
@@ -178,6 +191,103 @@ test('rejects a non-image upload', async () => {
     form: avatarForm(Buffer.from('definitely not an image'), 'image/png', 'avatar.png'),
   });
   assert.equal(r.status, 400);
+});
+
+test('a WebP upload is stored with a .webp extension and served back', async () => {
+  const up = await app.req('POST', '/api/account/avatar/upload', {
+    cookie: adminCookie,
+    form: avatarForm(WEBP_1x1, 'image/webp', 'avatar.webp'),
+  });
+  assert.equal(up.status, 200);
+  assert.match(up.json.avatar, /^custom:usr_[\w-]+\.webp$/);
+
+  const served = await app.req('GET', up.json.url, { cookie: adminCookie });
+  assert.equal(served.status, 200);
+
+  await app.req('DELETE', '/api/account/avatar', { cookie: adminCookie });
+});
+
+test('rejects a raster whose header declares absurd pixel dimensions', async () => {
+  const r = await app.req('POST', '/api/account/avatar/upload', {
+    cookie: adminCookie,
+    form: avatarForm(PNG_HUGE_HEADER, 'image/png', 'avatar.png'),
+  });
+  assert.equal(r.status, 400);
+  assert.match(r.json.error, /pixels/i);
+});
+
+test('an over-limit upload is rejected with the 16 MB message', async () => {
+  const tooBig = Buffer.concat([PNG_2x1, Buffer.alloc(17 * 1024 * 1024, 0x20)]);
+  const r = await app.req('POST', '/api/account/avatar/upload', {
+    cookie: adminCookie,
+    form: avatarForm(tooBig, 'image/png', 'avatar.png'),
+  });
+  assert.equal(r.status, 400);
+  assert.match(r.json.error, /16 MB/);
+});
+
+test('Remove deletes the uploaded file from disk, not just the DB marker', async () => {
+  const create = await app.req('POST', '/api/users', {
+    cookie: adminCookie,
+    body: { username: 'avatarcleanup', password: 'cleanuppass123', role: 'viewer' },
+  });
+  assert.equal(create.status, 201);
+  const login = await app.req('POST', '/login', { body: { username: 'avatarcleanup', password: 'cleanuppass123' } });
+  const cookie = (login.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+
+  const up = await app.req('POST', '/api/account/avatar/upload', {
+    cookie,
+    form: avatarForm(PNG_2x1, 'image/png', 'avatar.png'),
+  });
+  assert.equal(up.status, 200);
+  assert.equal((await app.req('GET', up.json.url, { cookie })).status, 200);
+
+  const del = await app.req('DELETE', '/api/account/avatar', { cookie });
+  assert.equal(del.status, 200);
+  // The file is gone: the previously-working URL now 404s.
+  assert.equal((await app.req('GET', up.json.url, { cookie })).status, 404);
+});
+
+test('switching to a preset also removes a prior uploaded file', async () => {
+  const create = await app.req('POST', '/api/users', {
+    cookie: adminCookie,
+    body: { username: 'avatarswap', password: 'swappass123', role: 'viewer' },
+  });
+  assert.equal(create.status, 201);
+  const login = await app.req('POST', '/login', { body: { username: 'avatarswap', password: 'swappass123' } });
+  const cookie = (login.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+
+  const up = await app.req('POST', '/api/account/avatar/upload', {
+    cookie,
+    form: avatarForm(JPEG_1x1, 'image/jpeg', 'avatar.jpg'),
+  });
+  assert.equal(up.status, 200);
+
+  const preset = await app.req('POST', '/api/account/avatar/preset', { cookie, body: { key: 'torch' } });
+  assert.equal(preset.status, 200);
+  assert.equal((await app.req('GET', up.json.url, { cookie })).status, 404);
+});
+
+test('deleting a user removes their uploaded avatar file', async () => {
+  const create = await app.req('POST', '/api/users', {
+    cookie: adminCookie,
+    body: { username: 'avatargone', password: 'gonepass123', role: 'viewer' },
+  });
+  assert.equal(create.status, 201);
+  const userId = create.json.user.id;
+  const login = await app.req('POST', '/login', { body: { username: 'avatargone', password: 'gonepass123' } });
+  const cookie = (login.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+
+  const up = await app.req('POST', '/api/account/avatar/upload', {
+    cookie,
+    form: avatarForm(PNG_2x1, 'image/png', 'avatar.png'),
+  });
+  assert.equal(up.status, 200);
+  const url = up.json.url;
+
+  const del = await app.req('DELETE', `/api/users/${userId}`, { cookie: adminCookie });
+  assert.equal(del.status, 200);
+  assert.equal((await app.req('GET', url, { cookie: adminCookie })).status, 404);
 });
 
 test('server icons are original SVGs in their own directory, distinct artwork from the avatar presets', () => {

@@ -2,35 +2,35 @@
   <div class="mb-4 flex flex-wrap items-center gap-2">
     <h3 class="font-semibold">Worlds on This Server</h3>
     <div class="ml-auto flex gap-2">
-      <button class="btn btn-sm" id="worlds-extract" data-tip="Save the active world into the library. Works while the server is running.">{{{icon 'camera' 'size-3.5'}}} Save to library</button>
-      <button class="btn btn-primary btn-sm" id="worlds-upload" data-tip="Upload a world archive. The world root is found automatically, and it lands in the library below.">{{{icon 'upload' 'size-3.5'}}} Upload world</button>
+      <button class="btn btn-sm" id="worlds-extract" data-tip="Save the active world into the library. Works while the server is running.">{{{icon 'camera' 'size-3.5'}}} Save to Library</button>
+      <button class="btn btn-primary btn-sm" id="worlds-upload" data-tip="Upload a world archive. The world root is found automatically, and it lands in the library below.">{{{icon 'upload' 'size-3.5'}}} Upload World</button>
     </div>
   </div>
 
   {{#if worlds.length}}
   <div class="card overflow-x-auto">
-    <table class="table-base" id="server-worlds-table">
+    <table class="table-base table-stack" id="server-worlds-table">
       <thead><tr><th>World</th><th>Dimensions</th><th class="text-right">Size</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
       <tbody>
         {{#each worlds}}
           <tr data-world-row data-world="{{name}}" data-size="{{sizeBytes}}" data-active="{{active}}">
-            <td class="w-full max-w-0">
+            <td data-th="" class="sm:w-full sm:max-w-0">
               <div class="truncate font-medium" title="{{name}}">{{name}}</div>
               {{#if seed}}<div class="text-xs text-ink-faint">seed {{seed}}</div>{{/if}}
             </td>
-            <td class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
-            <td class="whitespace-nowrap text-right text-ink-faint">{{bytes sizeBytes}}</td>
+            <td data-th="Dimensions" class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
+            <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes sizeBytes}}</td>
             {{! Status shows STATE only (both branches same height); the
                 Activate control lives with the other actions - mixed badge
                 and button here made row heights visibly alternate. }}
-            <td>
+            <td data-th="Status">
               {{#if active}}
                 <span class="badge badge-ok">active</span>
               {{else}}
                 <span class="badge">inactive</span>
               {{/if}}
             </td>
-            <td class="text-right"><div class="inline-flex gap-1">
+            <td data-th="" class="text-right"><div class="flex flex-wrap justify-end gap-1">
               {{#unless active}}
                 <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Make this the active world. The server must be stopped.">{{{icon 'play' 'size-3.5'}}} Activate</button>
               {{/unless}}
@@ -38,6 +38,7 @@
               <button class="btn btn-ghost btn-sm" data-world-duplicate data-tip="Make a copy of this world on this server">{{{icon 'copy' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-copy data-tip="Copy to another server. A compatibility check and a safety backup run first.">{{{icon 'arrow-right' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-rename data-tip="Rename this world. The server must be stopped.">{{{icon 'pencil' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-shrink data-tip="Shrink this world on disk by removing chunks no player has spent 30+ seconds in. The server must be stopped; back up first.">{{{icon 'shrink' 'size-3.5'}}}</button>
               {{#if active}}
                 {{! refresh-ccw, not undo-2 - this DELETES the world; undo-2 is
                     what the (recovering) backup Restore uses. }}
@@ -66,7 +67,7 @@
             <div class="text-xs text-ink-faint">{{source}}{{#if flavor}} · {{flavor}}{{/if}}{{#if mcVersion}} {{mcVersion}}{{/if}} · <span data-ts="{{created}}">{{created}}</span></div>
           </div>
           <span class="text-xs text-ink-faint">{{bytes size}}</span>
-          <button class="btn btn-sm" data-lib-install data-tip="Install into this server, replacing the current world or alongside it">{{{icon 'import' 'size-3.5'}}} Install here</button>
+          <button class="btn btn-sm" data-lib-install data-tip="Install into this server, replacing the current world or alongside it">{{{icon 'import' 'size-3.5'}}} Install Here</button>
           <a href="/worlds" class="btn btn-ghost btn-sm">Open in Worlds {{{icon 'arrow-right' 'size-3.5'}}}</a>
         </div>
       {{/each}}

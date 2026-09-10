@@ -114,7 +114,7 @@ function showPreview(preview, importBody) {
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       {
-        label: 'Create server',
+        label: 'Create a Server',
         kind: 'primary',
         onClick: () => {
           // Kick off after this modal closes so the progress modal is on top.
@@ -195,9 +195,9 @@ function showReport(server, report) {
     title: 'Blueprint Import Finished',
     content,
     actions: [
-      { label: 'Stay here', kind: 'ghost' },
+      { label: 'Stay Here', kind: 'ghost' },
       {
-        label: 'Open server',
+        label: 'Open Server',
         kind: 'primary',
         onClick: () => {
           location.href = `/servers/${server.id}`;
@@ -215,7 +215,7 @@ function openProgress(text) {
     <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
     <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import. It keeps running in the background.</p>`;
   content.querySelector('p').textContent = text;
-  return openModal({ title: 'Please Wait…', content, actions: [] });
+  return openModal({ title: 'Importing…', content, actions: [] });
 }
 
 function sourceLabel(entry) {

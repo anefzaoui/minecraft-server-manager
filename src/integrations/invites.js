@@ -66,7 +66,7 @@ function portForwardGuidance(port) {
     `To let friends outside your network join, forward TCP port ${port} on your router to this machine.`,
     'Open your router admin page (usually 192.168.1.1 or 192.168.0.1), find "Port Forwarding" (sometimes under NAT or Virtual Server),',
     `and add a rule: external port ${port} → this computer's LAN IP, port ${port}, protocol TCP.`,
-    'Then share your public IP with the port. If your ISP uses CGNAT, port forwarding will not work - consider a tunnel (e.g. playit.gg) instead.',
+    'Then share your public IP with the port. If your ISP uses CGNAT, port forwarding will not work, so consider a tunnel (for example, playit.gg) instead.',
   ].join(' ');
 }
 
@@ -93,10 +93,10 @@ async function inviteInfo(serverId) {
     `Address: ${address}`,
     `Version: Minecraft ${mcVersion} (${flavor})`,
   ];
-  if (whitelistEnforced) lines.push('Whitelist is ON - send me your Minecraft username so I can add you.');
+  if (whitelistEnforced) lines.push('Whitelist is on. Send me your Minecraft username so I can add you.');
   if (activeMods.length && !isPluginFlavor(server.type)) {
     lines.push(
-      `Mods: ${activeMods.length} - grab the client modpack (.mrpack) I sent and import it into your launcher (Prism / Modrinth App).`
+      `Mods: ${activeMods.length}. Grab the client modpack (.mrpack) I sent and import it into your launcher (Prism or Modrinth App).`
     );
     if (manual.length)
       lines.push(`Also install these manually (not on Modrinth): ${manual.map((m) => m.name).join(', ')}.`);

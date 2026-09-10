@@ -1,6 +1,6 @@
-# Minecraft Server Manager - Documentation
+# Minecraft Server Manager Documentation
 
-A complete, self-hosted control panel for [itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server). Create, run, and manage Minecraft servers from your browser - no command line, no editing YAML by hand.
+A complete, self-hosted control panel for [itzg/docker-minecraft-server](https://github.com/itzg/docker-minecraft-server). Create, run, and manage Minecraft servers from your browser. No command line, no editing YAML by hand.
 
 ![Dashboard](images/dashboard.png)
 
@@ -15,6 +15,7 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 - **[Console & chat commands](console-and-chat.md)** - the live console, and custom in-game chat commands that run as the player.
 - **[Modpacks](modpacks.md)** - install CurseForge, Modrinth, FTB, and GT New Horizons packs, always pinned to an exact version.
 - **[Worlds & files](worlds-and-files.md)** - swap worlds, manage mods, and edit files directly in the browser.
+- **[Shrinking a world](world-shrink.md)** - reclaim disk space by removing chunks nobody visits, on its own or as part of a backup.
 
 ## Data & automation
 
@@ -26,6 +27,7 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 - **[Updates](updates.md)** - track new server, pack, image, and mod versions.
 - **[Activity log](activity.md)** - an audit trail of everything that happened.
 - **[Integrations](integrations.md)** - Discord webhook notifications and the Alerts category.
+- **[Public API](public-api.md)** - a read-only, token-authenticated HTTP API for fetching server status from outside the panel.
 
 ## Accounts & security
 
@@ -38,4 +40,4 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 
 ---
 
-> Screenshots in these docs are taken in the panel's dark theme. Your panel starts in dark mode by default; use the theme toggle in the top bar to switch to light.
+> Screenshots in these docs are taken in the panel's dark theme. The panel starts dark unless your OS prefers light; use the theme toggle in the top bar to switch.

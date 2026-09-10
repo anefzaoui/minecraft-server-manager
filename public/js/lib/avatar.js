@@ -9,17 +9,25 @@ import { friendlyError } from './errors.js';
 import { escapeHtml } from './format.js';
 import { openCropModal } from './imageCrop.js';
 
+let pickerOpen = false;
+
 document.addEventListener('click', (e) => {
   if (!e.target.closest('[data-open-avatar-picker]')) return;
   openPickerModal();
 });
 
 async function openPickerModal() {
+  if (pickerOpen) return; // guard: the menu item is clickable again during the async fetch below
+  pickerOpen = true;
+
   const trigger = document.querySelector('[data-menu="user-menu"]');
   const current = trigger?.dataset.userAvatar || '';
 
   const res = await get('/api/account/avatar/presets');
-  if (!res) return;
+  if (!res) {
+    pickerOpen = false;
+    return;
+  }
 
   const content = document.createElement('div');
   content.className = 'space-y-4';
@@ -48,7 +56,7 @@ async function openPickerModal() {
   const uploadBtn = document.createElement('button');
   uploadBtn.type = 'button';
   uploadBtn.className = 'btn';
-  uploadBtn.textContent = 'Upload image';
+  uploadBtn.textContent = 'Upload Image';
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className = 'btn btn-ghost';
@@ -58,21 +66,21 @@ async function openPickerModal() {
 
   const help = document.createElement('p');
   help.className = 'text-xs text-ink-faint';
-  help.textContent = 'PNG, SVG, or JPEG. Your picture is cropped to a square, up to 512×512.';
+  help.textContent = 'PNG, JPEG, WebP, or SVG. Your picture is cropped to a square, up to 2048×2048.';
   content.appendChild(help);
 
   uploadBtn.addEventListener('click', () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'image/png,image/svg+xml,image/jpeg';
+    input.accept = 'image/png,image/jpeg,image/webp,image/svg+xml';
     input.addEventListener('change', async () => {
       const file = input.files && input.files[0];
       if (!file) return;
 
       const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name);
-      const maxRaw = isSvg ? 2 * 1024 * 1024 : 15 * 1024 * 1024;
+      const maxRaw = isSvg ? 5 * 1024 * 1024 : 40 * 1024 * 1024;
       if (file.size > maxRaw) {
-        toast(isSvg ? 'SVG must be 2 MB or smaller.' : 'Image must be 15 MB or smaller.', { kind: 'error' });
+        toast(isSvg ? 'SVG must be 5 MB or smaller.' : 'Image must be 40 MB or smaller.', { kind: 'error' });
         return;
       }
 
@@ -109,7 +117,14 @@ async function openPickerModal() {
     finish();
   });
 
-  openModal({ title: 'Profile Picture', content, actions: [{ label: 'Close', kind: 'ghost' }] });
+  openModal({
+    title: 'Profile Picture',
+    content,
+    actions: [{ label: 'Close', kind: 'ghost' }],
+    onClose: () => {
+      pickerOpen = false;
+    },
+  });
 }
 
 function finish() {

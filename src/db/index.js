@@ -75,21 +75,28 @@ function close() {
 /**
  * Hot snapshot of the whole database to `destPath`. Checkpoints the WAL first so
  * the copy is fully self-contained, then `VACUUM INTO` writes a consistent,
- * defragmented single-file copy. node:sqlite is synchronous, so this blocks the
- * event loop for the duration of the rewrite - it runs on the daily maintenance
- * timer for that reason. Returns the elapsed milliseconds so the caller can log
- * the pause.
+ * defragmented single-file copy. The rewrite runs in a worker thread so the
+ * event loop is never blocked by it (VACUUM INTO can be slow on a large DB).
+ * Resolves with the elapsed milliseconds.
  */
 function backupTo(destPath) {
-  const started = Date.now();
-  const d = open();
-  try {
-    d.exec('PRAGMA wal_checkpoint(TRUNCATE)');
-  } catch {
-    // intentional: checkpoint is best-effort; VACUUM INTO still produces a valid copy
-  }
-  d.exec(`VACUUM INTO '${String(destPath).replace(/'/g, "''")}'`);
-  return Date.now() - started;
+  return new Promise((resolve, reject) => {
+    const { Worker } = require('node:worker_threads');
+    const worker = new Worker(path.join(__dirname, 'vacuum-worker.js'), {
+      workerData: { dbPath: path.join(config.dataDir, 'panel.db'), destPath },
+    });
+    worker.once('message', (msg) => {
+      try {
+        worker.terminate();
+      } catch {}
+      if (msg && msg.ok) resolve(msg.blockedMs);
+      else reject(new Error((msg && msg.error) || 'Panel DB backup failed'));
+    });
+    worker.once('error', (err) => reject(err));
+    worker.once('exit', (code) => {
+      if (code !== 0) reject(new Error(`Panel DB backup worker exited with code ${code}`));
+    });
+  });
 }
 
 module.exports = { open, run, get, all, exec, transaction, close, backupTo };

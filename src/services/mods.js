@@ -13,6 +13,7 @@ const httpError = require('../utils/httpError');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { nanoid } = require('nanoid');
 const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
@@ -29,6 +30,74 @@ const onRescanFailed = (err) =>
   logger.debug('A background library rescan failed to start.', { err: serializeError(err, { includeStack: false }) });
 
 const PLUGIN_TYPES = new Set(['PAPER', 'PURPUR', 'PUFFERFISH', 'LEAF', 'FOLIA', 'SPIGOT', 'BUKKIT', 'CANYON']);
+
+// --- Orphan adoption (listContent) -------------------------------------------
+// Files on disk with no server_content row get matched back to a library_files
+// row so they show their real name/version/icon instead of a bare placeholder.
+// Caches keep the cost near zero on repeat renders.
+const adoptHashCache = new Map(); // abs path -> { stamp: `${mtimeMs}:${size}`, hex: sha256 | null }
+const metaRepairInFlight = new Set(); // library ids currently being refreshed
+
+function stripContentExt(name) {
+  return name.replace(/\.(jar|zip)$/i, '');
+}
+
+/** A library name that is really just the file name carries no display value. */
+function nameIsFilenameLike(name, filename) {
+  if (!name) return true;
+  const n = name.trim().toLowerCase();
+  return n === filename.toLowerCase() || n === stripContentExt(filename).toLowerCase();
+}
+
+const ADOPT_HASH_CACHE_MAX = 2000;
+
+async function sha256File(abs, stat) {
+  // Keyed by path so a changed file overwrites its entry instead of adding one;
+  // bounded so a long-lived panel with churning content dirs cannot grow it forever.
+  const stamp = `${stat ? stat.mtimeMs : 0}:${stat ? stat.size : 0}`;
+  const cached = adoptHashCache.get(abs);
+  if (cached && cached.stamp === stamp) return cached.hex;
+  let hex;
+  try {
+    const hash = crypto.createHash('sha256');
+    await require('node:stream/promises').pipeline(fs.createReadStream(abs), hash);
+    hex = hash.digest('hex');
+  } catch {
+    hex = null;
+  }
+  if (adoptHashCache.size >= ADOPT_HASH_CACHE_MAX) {
+    adoptHashCache.delete(adoptHashCache.keys().next().value); // oldest insertion
+  }
+  adoptHashCache.set(abs, { stamp, hex });
+  return hex;
+}
+
+/** Write the overlay server_content row a confidently-adopted orphan should have
+ *  had, so toggle/delete/update-check start keying off it and later renders skip
+ *  the on-disk match. Best-effort - a listing never fails because this did. */
+function healOverlayRow(serverId, lib, filename, kind) {
+  try {
+    db.run(
+      `INSERT INTO server_content (id, server_id, library_id, kind, managed_by, name, filename, version, icon_url)
+       VALUES (?, ?, ?, ?, 'overlay', ?, ?, ?, ?)
+       ON CONFLICT(server_id, filename) DO NOTHING`,
+      `sc_${nanoid(8)}`,
+      serverId,
+      lib.id,
+      kind,
+      lib.name || prettifyJarName(filename),
+      filename,
+      lib.version || null,
+      lib.icon_url || null
+    );
+  } catch (err) {
+    logger.debug('Could not heal an orphaned overlay row.', {
+      serverId,
+      filename,
+      err: String(err && err.message),
+    });
+  }
+}
 
 // Content filenames must be bare names inside the server's content dir. dataPath()
 // only guarantees containment within DATA_DIR, so a `file` like "../../../panel.db"
@@ -156,10 +225,92 @@ async function listContent(serverId) {
   }
   // latest_name is only set when the checker saw a genuinely newer build;
   // compare name-to-name (latest_version holds the platform id, not a name).
-  const updateAvailableFor = (row) => {
+  // A row whose ignored_update_version matches the pending build is treated as
+  // up to date here (no badge, no bulk apply) but still reported via
+  // updateIgnoredFor so the UI can show it and offer "un-ignore".
+  const pendingUpdateFor = (row) => {
     if (!row) return null;
     const check = updateChecks.get(row.id);
     return check && check.latest_name && check.latest_name !== row.version ? check.latest_name : null;
+  };
+  const updateAvailableFor = (row) => {
+    const pending = pendingUpdateFor(row);
+    return pending && pending !== row.ignored_update_version ? pending : null;
+  };
+  const updateIgnoredFor = (row) => {
+    const pending = pendingUpdateFor(row);
+    return pending && pending === row.ignored_update_version ? pending : null;
+  };
+
+  // Orphan adoption index. On a pack server a row-less file *is* pack-managed, so
+  // only non-pack servers adopt. Built lazily and once - a listing with no
+  // orphans never touches library_files here.
+  const canAdopt = !isPackServer(server) && !server.pack;
+  let adoptIndex = null;
+  const buildAdoptIndex = () => {
+    if (adoptIndex) return adoptIndex;
+    // Name indexes keep EVERY row for a name - the library dedups by hash, so
+    // two different projects uploaded under the same generic file name
+    // ("mod.jar") legitimately coexist - and matching filters them by a
+    // category compatible with the directory the file sits in (see
+    // adoptableCategories), so a world/datapacks/foo.zip never adopts a
+    // resource-pack row just because the names collide.
+    const byExactName = new Map(); // filename -> row[]
+    const byLowerName = new Map(); // filename.toLowerCase() -> row[]
+    const bySha = new Map(); // sha256 -> row (the library dedups on it)
+    const byStem = new Map(); // stem -> row[]
+    const push = (map, key, row) => {
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(row);
+    };
+    for (const r of db.all(
+      `SELECT id, name, filename, version, icon_url, icon_rel_path, platform, project_id, file_id,
+              mc_versions_json, loaders_json, sha256, category, meta_checked_at
+       FROM library_files WHERE category IN ('mod','plugin','datapack','resourcepack')`
+    )) {
+      push(byExactName, r.filename, r);
+      push(byLowerName, r.filename.toLowerCase(), r);
+      if (r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
+      push(byStem, stripContentExt(r.filename).toLowerCase(), r);
+    }
+    adoptIndex = { byExactName, byLowerName, bySha, byStem };
+    return adoptIndex;
+  };
+
+  // Library categories a file in the `kind` directory may adopt. Registries
+  // type some datapacks / resource packs as "mod" (Modrinth's project type),
+  // so those rows are fair game for the pack dirs; a mod or plugin jar only
+  // ever matches its own category.
+  const adoptableCategories = (kind) =>
+    kind === 'datapack' || kind === 'resourcepack' ? new Set([kind, 'mod']) : new Set([kind]);
+
+  // Match a row-less on-disk file to a library row. `confident` gates DB healing
+  // (writing the missing server_content row, which later drives update checks
+  // and "update" replacements of the file) - so only a content-hash match, or an
+  // exact file name that is UNIQUE within the category, is certain enough. A
+  // name shared by several library rows, a case-only match, or a stem-only
+  // match drives display but nothing more.
+  const matchOrphanLib = async (baseName, kind, absPath, stat) => {
+    if (!canAdopt) return { lib: null, confident: false };
+    const { byExactName, byLowerName, bySha, byStem } = buildAdoptIndex();
+    const ok = adoptableCategories(kind);
+    const fit = (rows) => (rows || []).filter((r) => ok.has(r.category));
+    const exact = fit(byExactName.get(baseName));
+    const sha = await sha256File(absPath, stat);
+    const shaHit = sha && bySha.get(sha);
+    // A content-hash match is certain whatever the file is called.
+    if (shaHit && ok.has(shaHit.category)) return { lib: shaHit, confident: true };
+    // An exact file name is certain only when ONE compatible row carries it
+    // (the bytes may differ: a manual replacement by another build of what is
+    // presumably the same project). Several rows with the same name is a
+    // coin toss, so it only drives display.
+    if (exact.length === 1) return { lib: exact[0], confident: true };
+    if (exact.length > 1) return { lib: exact[0], confident: false };
+    const lower = fit(byLowerName.get(baseName.toLowerCase()));
+    if (lower.length) return { lib: lower[0], confident: false };
+    const stemHits = fit(byStem.get(stripContentExt(baseName).toLowerCase()));
+    if (stemHits.length === 1) return { lib: stemHits[0], confident: false };
+    return { lib: null, confident: false };
   };
 
   // Datapacks and resource packs work on every server type (vanilla included),
@@ -181,15 +332,56 @@ async function listContent(serverId) {
       if (!baseName.endsWith('.jar') && !baseName.endsWith('.zip')) continue;
       seen.add(baseName);
       const row = byFile.get(baseName);
-      const stat = await fsp.stat(path.join(dirAbs, entry.name)).catch(() => null);
-      const lib = row && row.library_id ? libById.get(row.library_id) : null;
+      const absPath = path.join(dirAbs, entry.name);
+      const stat = await fsp.stat(absPath).catch(() => null);
+
+      // A file with no server_content row is an orphaned custom install - the row
+      // was dropped (e.g. migration 016) or never written while the file stayed
+      // on disk. Match it back to a library_files row so it shows its real
+      // name/version/icon instead of a bare placeholder, and heal the missing
+      // row when the match is certain.
+      let adoptedLib = null;
+      if (!row) {
+        const m = await matchOrphanLib(baseName, kind, absPath, stat);
+        adoptedLib = m.lib;
+        if (adoptedLib && m.confident) healOverlayRow(serverId, adoptedLib, baseName, kind);
+      }
+
+      const lib = (row && row.library_id ? libById.get(row.library_id) : null) || adoptedLib;
+
+      // If the backing library row knows its platform project but is missing a
+      // usable icon or its display name/version, refresh it in the background so
+      // the next render is complete. Deduped per library id, never awaited.
+      if (lib && lib.platform && lib.project_id && !metaRepairInFlight.has(lib.id)) {
+        const iconMissing = !lib.icon_rel_path && !lib.icon_url;
+        const metaMissing = !lib.version || nameIsFilenameLike(lib.name, lib.filename || baseName);
+        // A row the registry could not complete (project gone, no icon
+        // published) is not re-fetched on every render: meta_checked_at is
+        // stamped after each attempt and the nightly backfill retries later.
+        if ((iconMissing || metaMissing) && !library.metaCheckedRecently(lib)) {
+          metaRepairInFlight.add(lib.id);
+          library
+            .ensureContentMeta(lib)
+            .catch(() => {})
+            .finally(() => metaRepairInFlight.delete(lib.id));
+        }
+      }
+
+      const adoptedName = adoptedLib && !nameIsFilenameLike(adoptedLib.name, baseName) ? adoptedLib.name : null;
+
       items.push({
         id: row ? row.id : null,
-        name: row ? row.name : prettifyJarName(baseName),
+        name: row ? row.name : adoptedName || prettifyJarName(baseName),
         file: baseName,
         kind: row ? row.kind : kind,
-        source: row ? row.managed_by : server.pack || isPackServer(server) ? 'pack' : 'unknown',
-        version: row ? row.version : null,
+        source: row
+          ? row.managed_by
+          : adoptedLib
+            ? 'overlay'
+            : server.pack || isPackServer(server)
+              ? 'pack'
+              : 'unknown',
+        version: row ? row.version : (adoptedLib && adoptedLib.version) || null,
         size: stat ? stat.size : 0,
         enabled: !isDisabled,
         disabledVia: row && row.managed_by === 'pack' && !isDisabled ? null : undefined,
@@ -197,6 +389,7 @@ async function listContent(serverId) {
         iconUrl:
           lib && lib.icon_rel_path ? `/${lib.icon_rel_path}` : (lib && lib.icon_url) || (row && row.icon_url) || null,
         updateAvailable: updateAvailableFor(row),
+        updateIgnored: updateIgnoredFor(row),
         // Provenance, when known - lets search UIs badge already-installed hits.
         platform: (lib && lib.platform) || null,
         projectId: (lib && lib.project_id) || null,
@@ -267,6 +460,31 @@ function classifyModSource(input) {
   return { kind: 'invalid', ref };
 }
 
+/** Datapacks and resource packs are only ever .zip archives. */
+function isZipOnlyKind(kind) {
+  return kind === 'datapack' || kind === 'resourcepack';
+}
+
+// Pick the file to download from a resolved registry version. For a mod/plugin
+// that's just the registry's "primary" file. For a datapack/resource pack it
+// MUST be the .zip: several Modrinth projects also publish a Fabric/Quilt
+// "mod-wrapped" build as its own version whose only file is a .jar (version
+// number like "1.5.2+mod"). A .jar dropped into world/datapacks/ or
+// resourcepacks/ is silently ignored by the game and then lingers forever as a
+// phantom "Missing" overlay row next to the real .zip. Returns null when a
+// zip-only kind has no .zip to offer, so the caller can fail with a clear message.
+function pickDownloadFile(version, kind) {
+  const files = Array.isArray(version.files) ? version.files : [];
+  if (isZipOnlyKind(kind)) {
+    const zip = files.find((f) => /\.zip(\?|#|$)/i.test(f.filename || f.url || ''));
+    if (zip) return zip;
+    // Empty/stubbed file lists (odd API states, tests) carry no signal either
+    // way - defer to the registry's own primary pick rather than hard-failing.
+    return files.length ? null : modrinth.primaryFile(version);
+  }
+  return modrinth.primaryFile(version);
+}
+
 /**
  * Install content from any source reference: direct URL, Modrinth URL/slug,
  * or CurseForge URL. Downloads into the library, links into the server dir,
@@ -308,8 +526,17 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     // Datapacks/resourcepacks aren't loader-specific, and search already sends
     // kind explicitly - this only fires for "Add by URL"/slug installs where
     // the caller couldn't have known the project type in advance.
-    if (!kind && (resolved.projectType === 'datapack' || resolved.projectType === 'resourcepack')) {
-      targetKind = resolved.projectType;
+    if (!kind) {
+      if (resolved.projectType === 'datapack' || resolved.projectType === 'resourcepack') {
+        targetKind = resolved.projectType;
+      } else if (resolved.urlKind === 'datapack' || resolved.urlKind === 'resourcepack') {
+        // Modrinth types some datapack projects as `mod` (they also ship a
+        // Fabric wrapper); the /datapack//resourcepack/ segment in the pasted
+        // URL is authoritative when project_type hides it. This must land before
+        // the plugin-loader filter below, which would otherwise drop every
+        // datapack-tagged build and 404 on a plugin-type server.
+        targetKind = resolved.urlKind;
+      }
     }
     const versionLoader = targetKind === 'datapack' || targetKind === 'resourcepack' ? undefined : effectiveLoader;
     let versions = resolved.versionId
@@ -329,15 +556,62 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
         return loaders.length === 0 || loaders.some((l) => PLUGIN_LOADERS.has(l));
       });
     }
+    // Datapack/resource pack: some projects publish a "+mod" version (jar-only,
+    // often newest) alongside the real datapack version - keep only versions
+    // that actually ship a .zip so newest-first can't land on the mod jar. If
+    // the API returned no file lists at all (stubs/edge states), leave it be.
+    if (
+      isZipOnlyKind(targetKind) &&
+      !resolved.versionId &&
+      versions.some((v) => Array.isArray(v.files) && v.files.length)
+    ) {
+      const withZip = versions.filter((v) =>
+        (v.files || []).some((f) => /\.zip(\?|#|$)/i.test(f.filename || f.url || ''))
+      );
+      if (withZip.length) versions = withZip;
+    }
+    // ignoreVersion widens the query to every loader; that must not hand a
+    // Fabric server the newest NeoForge jar when a Fabric build exists at all.
+    // Stable-sort so builds for the server's loader family come first, newest
+    // first within each group.
+    if (ignoreVersion && targetKind === 'mod' && loader && !resolved.versionId) {
+      const wanted = new Set(
+        require('../utils/loaderCompat')
+          .compatibleLoaders(loader)
+          .map((l) => String(l).toLowerCase())
+      );
+      const fits = (v) => (v.loaders || []).some((l) => wanted.has(String(l).toLowerCase()));
+      versions = [...versions.filter(fits), ...versions.filter((v) => !fits(v))];
+    }
     if (!versions.length)
       throw httpError(
         404,
         targetKind === 'plugin'
           ? `No ${resolved.title} plugin build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`
-          : `No ${resolved.title} build matches ${versionLoader || 'this loader'} ${mcVersion || ''}`.trim()
+          : isZipOnlyKind(targetKind)
+            ? `No ${resolved.title} ${targetKind === 'datapack' ? 'datapack' : 'resource pack'} build matches Minecraft ${mcVersion || 'this version'}.`
+            : `No ${resolved.title} build matches ${versionLoader || 'this loader'}${mcVersion ? ` on Minecraft ${mcVersion}` : ''}.`
       );
     const version = versions[0];
-    const file = modrinth.primaryFile(version);
+    // Modrinth types some datapack projects as `mod` (they also ship a Fabric
+    // wrapper). When "Add by URL" left the kind unset and the build we picked is
+    // a .zip tagged `datapack`, treat it as a datapack so it lands in
+    // world/datapacks/ and is stored with category 'datapack' - otherwise it
+    // installs as a mod and later renders as an unlabelled "file" row.
+    if (
+      !kind &&
+      targetKind === 'mod' &&
+      (version.loaders || []).map((l) => String(l).toLowerCase()).includes('datapack')
+    ) {
+      const zip = (version.files || []).find((f) => /\.zip(\?|#|$)/i.test(f.filename || f.url || ''));
+      if (zip) targetKind = 'datapack';
+    }
+    const file = pickDownloadFile(version, targetKind);
+    if (!file)
+      throw httpError(
+        409,
+        `That ${resolved.title} version has no ${targetKind === 'resourcepack' ? 'resource pack' : 'datapack'} (.zip) file. It's only published as a mod jar. Install the datapack version, or add it as a mod instead.`
+      );
     downloadUrl = file.url;
     Object.assign(meta, {
       platform: 'modrinth',
@@ -353,18 +627,28 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     });
   } else if (source.kind === 'curseforge') {
     const resolved = await curseforge.resolveUrl(source.ref);
-    const file = resolved.fileId
-      ? await curseforge.getFile(resolved.modId, resolved.fileId)
-      : (await curseforge.getFiles(resolved.modId, { mcVersion, loader: effectiveLoader }))[0];
+    let file;
+    if (resolved.fileId) {
+      file = await curseforge.getFile(resolved.modId, resolved.fileId);
+    } else {
+      let files = await curseforge.getFiles(resolved.modId, { mcVersion, loader: effectiveLoader });
+      // Same loader preference as the Modrinth path when the filter was waived.
+      if (ignoreVersion && targetKind === 'mod' && loader) {
+        const want = String(loader).toLowerCase();
+        const fits = (f) => (f.gameVersions || []).some((g) => String(g).toLowerCase() === want);
+        files = [...files.filter(fits), ...files.filter((f) => !fits(f))];
+      }
+      file = files[0];
+    }
     if (!file)
       throw httpError(
         404,
-        `No ${resolved.name} file matches ${effectiveLoader || 'this loader'} ${mcVersion || ''}`.trim()
+        `No ${resolved.name} file matches ${effectiveLoader || 'this loader'}${mcVersion ? ` on Minecraft ${mcVersion}` : ''}.`
       );
     if (!file.downloadUrl)
       throw httpError(
         409,
-        `${resolved.name} disallows automated downloads - download it in a browser and upload the jar instead`
+        `${resolved.name} does not allow automated downloads. Download it in a browser and upload the jar instead.`
       );
     downloadUrl = file.downloadUrl;
     Object.assign(meta, {
@@ -414,7 +698,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     if (resource.external) {
       throw httpError(
         409,
-        `${resource.name} is hosted outside SpigotMC and can't be auto-downloaded - download it in a browser (${resource.pageUrl}) and upload the jar instead`
+        `${resource.name} is hosted outside SpigotMC and can't be downloaded automatically. Download it in a browser (${resource.pageUrl}) and upload the jar instead.`
       );
     }
     const versions = await spiget.getVersions(ref.resourceId);
@@ -460,6 +744,16 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     });
   }
   // source.kind === 'direct' → plain download of the URL as-is.
+  // A datapack/resource pack must be a .zip; a .jar here is a mod-wrapped build
+  // that the game ignores in world/datapacks/ or resourcepacks/ (and then shows
+  // up as a phantom "Missing" overlay row). Registry sources already pick the
+  // right file above - this only catches a pasted direct .jar URL.
+  if (isZipOnlyKind(targetKind) && /\.jar(\?|#|$)/i.test(meta.filename || downloadUrl)) {
+    throw httpError(
+      409,
+      `A ${targetKind === 'resourcepack' ? 'resource pack' : 'datapack'} must be a .zip. This download is a .jar (a mod-wrapped build). Install the .zip, or add it as a mod instead.`
+    );
+  }
   meta.category = targetKind; // may have changed above (Modrinth datapack/resourcepack auto-detect)
 
   return installResolved(serverId, { downloadUrl, meta, kind: targetKind }, { actor, onProgress, ignoreVersion });
@@ -526,9 +820,7 @@ async function installResolved(
     type: 'mod-installed',
     summary:
       `Custom ${kind} installed: ${lib.name}${lib.version ? ` ${lib.version}` : ''}` +
-      (overrideBits.length
-        ? ` - ${overrideBits.join(', ')}, installed anyway (compatibility check overridden)`
-        : ' (overlay)'),
+      (overrideBits.length ? `. Compatibility check overridden: ${overrideBits.join(', ')}, installed anyway.` : '.'),
     details: { libraryId: lib.id, filename, versionOverridden, loaderOverridden },
   });
   logger.info('Installed custom content on a server.', { serverId, actor, kind, filename });
@@ -555,7 +847,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: enabled ? 'mod-enabled' : 'mod-disabled',
-      summary: `${file} ${enabled ? 'enabled' : 'disabled'} (instant)`,
+      summary: `${file} ${enabled ? 'enabled' : 'disabled'} (instant).`,
     });
     return { applied: 'instant' };
   }
@@ -585,7 +877,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: enabled ? 'mod-enabled' : 'mod-disabled',
-    summary: `${file} ${enabled ? 're-included' : 'excluded'} via ${varName} - applies on next restart`,
+    summary: `${file} ${enabled ? 're-included' : 'excluded'}. Applies on the next restart.`,
   });
   return { applied: 'on-restart' };
 }
@@ -603,7 +895,7 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
   // back the moment the pack next recreated. Mirror listContent()'s own
   // "pack" classification (row-less + pack server ⇒ pack-managed) instead.
   const managedByPack = row ? row.managed_by === 'pack' : isPackServer(server);
-  if (managedByPack) throw httpError(409, 'Pack-managed content is excluded, not deleted - use Disable');
+  if (managedByPack) throw httpError(409, 'Pack-managed content is excluded, not deleted. Use Disable instead.');
   const dirRel = locateContentDir(server, row, file);
   let freed = 0;
   for (const candidate of [file, `${file}.disabled`]) {
@@ -618,10 +910,106 @@ async function removeContent(serverId, file, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'mod-removed',
-    summary: `Removed ${file} (${(freed / 1024 / 1024).toFixed(1)} MB freed)`,
+    summary: `Removed ${file} (${(freed / 1024 / 1024).toFixed(1)} MB freed).`,
   });
   logger.info('Removed content from a server.', { serverId, actor, file, freedBytes: freed });
   return { freedBytes: freed };
+}
+
+/** Resolve an overlay content row by row id or installed filename. */
+function overlayRow(serverId, { file, contentId }) {
+  const row = contentId
+    ? db.get('SELECT * FROM server_content WHERE id = ? AND server_id = ?', contentId, serverId)
+    : db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', serverId, file);
+  if (!row) throw httpError(404, 'This file is not panel-managed. Reinstall it from a URL instead.');
+  if (row.managed_by === 'pack') {
+    throw httpError(409, 'Pack-managed content updates with the pack. Upgrade the modpack instead.');
+  }
+  return row;
+}
+
+/**
+ * Ignore (or un-ignore) the currently-offered update for one overlay mod.
+ * Ignoring pins the pending version name so it stops surfacing on the mods
+ * tab, the Updates page, and the sidebar count; a later, genuinely newer
+ * build re-surfaces on its own. `ignore: false` clears it.
+ */
+function setIgnoredUpdate(serverId, { file, contentId }, { ignore, actor = 'system' } = {}) {
+  const server = serversService.getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
+  const row = overlayRow(serverId, { file, contentId });
+
+  if (ignore) {
+    const check = db.get("SELECT * FROM update_checks WHERE subject_type = 'content' AND subject_id = ?", row.id);
+    if (!check || !check.latest_name || check.latest_name === row.version) {
+      throw httpError(409, 'No pending update to ignore. Run an update check first.');
+    }
+    db.run('UPDATE server_content SET ignored_update_version = ? WHERE id = ?', check.latest_name, row.id);
+    recordEvent({
+      serverId,
+      actor,
+      type: 'mod-update-ignored',
+      summary: `Update ignored for ${row.name}: ${check.latest_name} will not be offered.`,
+    });
+    return { ignored: check.latest_name };
+  }
+
+  db.run('UPDATE server_content SET ignored_update_version = NULL WHERE id = ?', row.id);
+  recordEvent({
+    serverId,
+    actor,
+    type: 'mod-update-unignored',
+    summary: `Update no longer ignored for ${row.name}.`,
+  });
+  return { ignored: null };
+}
+
+/**
+ * Apply the latest checked update to one overlay mod: re-download the pinned
+ * build through its platform, swap the old file, keep the enabled/disabled
+ * state. Shared by the single-mod update route and the bulk "Update all" task.
+ * Does NOT restart the server - the caller decides that.
+ */
+async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'system' } = {}) {
+  const server = serversService.getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
+  const row = overlayRow(serverId, { file, contentId });
+
+  const lib = row.library_id ? db.get('SELECT * FROM library_files WHERE id = ?', row.library_id) : null;
+  if (!lib || !lib.project_id) {
+    throw httpError(409, 'No update source is known for this mod (installed from a direct URL or upload)');
+  }
+  const check = db.get("SELECT * FROM update_checks WHERE subject_type = 'content' AND subject_id = ?", row.id);
+  if (!check || !check.latest_version) {
+    throw httpError(409, 'No newer version is known. Run an update check first.');
+  }
+
+  let ref;
+  if (lib.platform === 'modrinth') {
+    ref = `https://modrinth.com/mod/${lib.project_id}/version/${check.latest_version}`;
+  } else if (lib.platform === 'curseforge') {
+    ref = `https://www.curseforge.com/minecraft/mc-mods/${lib.project_id}/files/${check.latest_version}`;
+  } else if (lib.platform === 'hangar') {
+    // The owner segment is decorative - Hangar's version endpoints address by slug.
+    ref = `https://hangar.papermc.io/p/${lib.project_id}/versions/${encodeURIComponent(check.latest_version)}`;
+  } else if (lib.platform === 'spiget') {
+    ref = `https://www.spigotmc.org/resources/${lib.project_id}?version=${check.latest_version}`;
+  } else if (lib.platform === 'github') {
+    ref = `https://github.com/${lib.project_id}/releases/tag/${encodeURIComponent(check.latest_version)}`;
+  } else {
+    throw httpError(409, `Cannot auto-update content from platform "${lib.platform}"`);
+  }
+
+  const wasEnabled = Boolean(row.enabled);
+  await removeContent(serverId, row.filename, { actor });
+  const result = await installFromUrl(serverId, ref, { actor, kind: row.kind });
+  if (!wasEnabled) await setEnabled(serverId, result.filename, false, { actor });
+  return {
+    name: result.library.name,
+    filename: result.filename,
+    version: result.library.version,
+    wasEnabled,
+  };
 }
 
 /** Re-apply the overlay after a pack install/update (belt-and-braces). */
@@ -646,7 +1034,7 @@ async function reapplyOverlay(serverId, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'overlay-reapplied',
-      summary: `Custom mods re-applied: ${restored} file(s) restored after pack operation`,
+      summary: `Custom mods re-applied: ${restored} file(s) restored after pack operation.`,
     });
   }
   return { restored };
@@ -766,7 +1154,7 @@ function excludePackMod(serverId, token, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'mod-excluded',
-    summary: `Excluded pack mod "${token}" via ${varName} - applies on recreate`,
+    summary: `Excluded pack mod "${token}". Applies after a rebuild.`,
   });
   return { excluded: token };
 }
@@ -844,7 +1232,7 @@ async function installLocalContent(
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Uploaded ${targetKind} installed: ${lib.name}`,
+    summary: `Uploaded ${targetKind} installed: ${lib.name}.`,
     details: { filename: installed },
   });
   indexer.scan().catch(onRescanFailed);
@@ -853,11 +1241,15 @@ async function installLocalContent(
 
 module.exports = {
   listContent,
+  isZipOnlyKind,
+  pickDownloadFile,
   installFromUrl,
   installResolved,
   classifyModSource,
   setEnabled,
   removeContent,
+  setIgnoredUpdate,
+  applyOverlayUpdate,
   reapplyOverlay,
   contentDir,
   contentKindOf,

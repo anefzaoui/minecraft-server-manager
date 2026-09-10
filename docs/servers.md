@@ -4,9 +4,13 @@
 
 ## Creating a server
 
-Click **New server** (top bar) or the **Create a server** card to open the wizard.
+Click **Create a Server** (top bar) or the **Create a server** card to open the wizard.
 
 ![Create a server](images/create-wizard.png)
+
+The wizard pre-fills memory, CPU, and disk-quota fields from **Defaults for new servers** on the Settings page, which an admin can change at any time.
+
+![Defaults for new servers](images/settings-defaults.png)
 
 You choose:
 
@@ -15,9 +19,9 @@ You choose:
 - A **Minecraft version** - `LATEST`, a snapshot, or a specific version.
 - **Resources** - RAM (heap), container memory limit, CPU, and a disk quota.
 
-Prefer a modpack? The **From modpack** tab installs a CurseForge, Modrinth, FTB, or GT New Horizons pack instead - see [Modpacks](modpacks.md) - or takes a **custom zip you upload**: a CurseForge modpack export (`manifest.json`) or any zip of mod jars. The manifest (or a majority vote across the identified jars) fills in the loader and Minecraft version, and every mod installs in one task. You can also start from a saved [Blueprint](blueprints.md).
+Prefer a modpack? The **From modpack** tab installs a CurseForge, Modrinth, FTB, or GT New Horizons pack instead (see [Modpacks](modpacks.md)), or takes a **custom zip you upload**: a CurseForge modpack export (`manifest.json`) or any zip of mod jars. The manifest (or a majority vote across the identified jars) fills in the loader and Minecraft version, and every mod installs in one task. You can also start from a saved [Blueprint](blueprints.md).
 
-The panel picks a sensible Java runtime for your version automatically, pulls the image, creates the container, and (optionally) starts it - all from the one form.
+The panel picks a sensible Java runtime for your version automatically, pulls the image, creates the container, and (optionally) starts it, all from the one form.
 
 ## The servers list
 
@@ -33,13 +37,22 @@ Opening a server gives you a tabbed workspace:
 
 - **Overview** - status, live stats, uptime, and the primary start / stop / restart controls.
 - **Console** - the live log stream and command input, plus in-game chat ([details](console-and-chat.md)).
-- **Players** - who's online, plus inventory, analytics, and [chat commands](console-and-chat.md).
-- **World** - [worlds, mods, the live map, and the file manager](worlds-and-files.md).
+- **Players** - who's online, plus inventory, statistics, and [chat commands](console-and-chat.md).
+- **Mods** - the installed mod list, the [mod browser](modpacks.md), and content updates.
+- **World** - [worlds, the live map, and the file manager](worlds-and-files.md).
 - **Backups** - [snapshots and restore](backups.md) for this server.
-- **Insights** - metrics and per-server history, including crash reports (see below).
-- **Settings** - everything about how the server runs.
+- **Monitoring** - per-server history and live metrics, including crash reports (see below).
+- **Settings** - everything about how the server runs, plus the [integrations](integrations.md) (Discord, status page, invites, chatbot).
 
 ![Server overview](images/server-overview.png)
+
+The **World Controls** rail rides along on every tab: the in-game clock, weather, the common gamerules as toggle chips, and "Show all world rules" for the rest.
+
+![World controls](images/world-controls.png)
+
+**Monitoring → Live** shows TPS and milliseconds per tick, a health and stability card with the last 24 h / 7 d of crashes and restarts, and per-world sizes.
+
+![Live monitoring](images/monitoring-live.png)
 
 ## Server settings
 
@@ -51,11 +64,11 @@ The **Settings** tab is the full configuration surface: rename, resources, updat
 
 ## Crash reports & mclo.gs analysis
 
-Crash reports (`crash-reports/*.txt` and JVM `hs_err_pid*.log` files) are picked up automatically, parsed into a one-line summary with the exception and suspected mods, and listed under **Insights → History**:
+Crash reports (`crash-reports/*.txt` and JVM `hs_err_pid*.log` files) are picked up automatically, parsed into a one-line summary with the exception and suspected mods, and listed under **Monitoring → History**:
 
 ![Crash report card](images/crash-mclogs-card.png)
 
-Each report card offers a built-in viewer (with collapsible sections and highlighted exceptions), copy-stack-trace, download - and two [mclo.gs](https://mclo.gs) actions:
+Each report card offers a built-in viewer (with collapsible sections and highlighted exceptions), copy-stack-trace, and download, plus two [mclo.gs](https://mclo.gs) actions:
 
 - **Share to mclo.gs** publishes the report as a public paste and copies the link - the exact thing mod authors and support Discords ask for. The link is remembered on the report, so nothing is ever uploaded twice.
 - **Analyze** runs mclo.gs's automated insights over the paste: known problems with suggested fixes (missing dependencies, version mismatches, common mod conflicts), rendered right in the panel.

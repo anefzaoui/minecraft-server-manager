@@ -10,6 +10,7 @@ const { z } = require('zod');
 const servers = require('../../services/servers');
 const players = require('../../services/players');
 const playerNotes = require('../../services/playerNotes');
+const { resolveSkin, getSkinImage } = require('../../services/skins');
 const { inspectStatus } = require('../../docker/containers');
 const biomes = require('../../config/biomes');
 const { PLAYER_NAME_RE } = require('../../utils/playerName');
@@ -28,7 +29,7 @@ const reasonSchema = z.string().trim().max(256).optional();
 const ipSchema = z
   .string()
   .trim()
-  .regex(/^[0-9a-fA-F.:]{3,45}$/, 'Enter a valid IPv4 or IPv6 address');
+  .regex(/^[0-9a-fA-F.:]{3,45}$/, 'Enter a valid IPv4 or IPv6 address.');
 // Cap at 10 years - a "duration" past that is just a permanent ban with extra steps.
 const durationSchema = z.coerce
   .number()
@@ -130,6 +131,100 @@ router.get(
   })
 );
 
+// Skin lookup for the roster's head images. Returns { url, model } or null
+// when Mojang has no profile for that uuid. Best-effort: a failure here is the
+// signal for the UI to keep its placeholder head, never an error page.
+router.get(
+  '/skin/:uuid',
+  asyncHandler(async (req, res, next) => {
+    const uuid = z
+      .string()
+      .trim()
+      .regex(/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i)
+      .parse(req.params.uuid);
+    try {
+      res.json({ ok: true, skin: await resolveSkin(uuid) });
+    } catch (err) {
+      logger.debug('Could not resolve a skin; the UI will use a placeholder head.', {
+        uuid,
+        err: serializeError(err, { includeStack: false }),
+      });
+      res.json({ ok: true, skin: null });
+    }
+  })
+);
+
+// Prefetch skins for a batch of uuids so later /skin-image/:uuid requests are
+// served from the SQLite/memory caches instead of each waiting on the Mojang
+// session API. Runs the upstream lookups in parallel (bounded), then returns
+// quickly - the client fires the individual head requests right after.
+router.post(
+  '/skin-prefetch',
+  asyncHandler(async (req, res, next) => {
+    const { uuids } = z
+      .object({
+        uuids: z
+          .array(
+            z
+              .string()
+              .trim()
+              .regex(/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i)
+          )
+          .max(128),
+      })
+      .parse(req.body || {});
+    const unique = [...new Set(uuids)];
+    const LIMIT = 8;
+    let cursor = 0;
+    const worker = async () => {
+      for (;;) {
+        const uuid = unique[cursor++];
+        if (uuid === undefined) return;
+        try {
+          const skin = await resolveSkin(uuid);
+          if (skin && skin.url) {
+            await getSkinImage(skin.url).catch(() => null);
+          }
+        } catch {
+          /* best-effort; individual requests handle the fallback */
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(LIMIT, unique.length) }, worker));
+    res.json({ ok: true, prefetched: unique.length });
+  })
+);
+
+// Streams a player's skin texture PNG same-origin (so the client canvas can
+// crop the face without the texture CDN tainting it). Long-lived + immutable
+// cache: texture URLs are content-addressed, so the bytes never change.
+router.get(
+  '/skin-image/:uuid',
+  asyncHandler(async (req, res, next) => {
+    const uuid = z
+      .string()
+      .trim()
+      .regex(/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i)
+      .parse(req.params.uuid);
+    let url;
+    try {
+      const skin = await resolveSkin(uuid);
+      url = skin && skin.url;
+      if (!url) return res.sendStatus(404);
+      const buffer = await getSkinImage(url);
+      res.set('Content-Type', 'image/png');
+      res.set('Cache-Control', 'public, max-age=31536000, immutable');
+      res.send(buffer);
+    } catch (err) {
+      logger.debug('Could not proxy a skin texture; the UI will use a placeholder head.', {
+        uuid,
+        err: serializeError(err, { includeStack: false }),
+      });
+      res.sendStatus(500);
+    }
+  })
+);
+
 router.get('/structures', async (req, res) => {
   try {
     const { ctx } = await loadContext(req);
@@ -228,6 +323,15 @@ router.post(
     const { ip } = pardonIpSchema.parse(req.body);
     const { server, ctx } = await loadContext(req);
     res.json({ ok: true, result: await players.pardonIp(server.id, ip, ctx) });
+  })
+);
+
+router.delete(
+  '/:name',
+  asyncHandler(async (req, res, next) => {
+    const name = nameSchema.parse(req.params.name);
+    const { server, ctx } = await loadContext(req);
+    res.json({ ok: true, result: await players.deletePlayer(server.id, name, ctx) });
   })
 );
 

@@ -1,26 +1,36 @@
 <div data-backups-server="{{server.id}}" class="contents">
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <p class="text-sm text-ink-faint">Retention, per server: 10 scheduled, 10 pre-update, 20 manual, 5 pre-restore. The newest in each group are kept; older ones are pruned automatically.</p>
-  <button class="btn btn-primary btn-sm ml-auto" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back up now</button>
+  <p class="text-sm text-ink-faint">
+    Retention for this server: {{retention.keepScheduled}} scheduled, {{retention.keepPreUpdate}} pre-update,
+    {{retention.keepManual}} manual, {{retention.keepPreRestore}} pre-restore. The newest in each group are kept; older ones
+    are pruned automatically.{{#if retention.maxAgeDays}} Anything older than {{retention.maxAgeDays}} days is also removed.{{/if}}{{#if retention.maxTotalGb}} Total backups are capped at {{retention.maxTotalGb}} GB (oldest are removed first).{{/if}}
+  </p>
+  <div class="ml-auto flex flex-wrap items-center gap-3">
+    <label class="flex items-center gap-2 text-xs text-ink-faint" data-tip="After the backup is saved, remove chunks no player has spent 30+ seconds in to shrink the world. Only runs while the server is stopped.">
+      <input type="checkbox" class="msm-check" id="bk-shrink"> Also shrink the world afterwards.
+    </label>
+    <button class="btn btn-primary btn-sm" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back Up Now</button>
+  </div>
 </div>
 {{#if backups.length}}
 <div class="card overflow-x-auto">
-  <table class="table-base" id="bk-table">
+  <table class="table-base table-stack" id="bk-table">
     <thead><tr><th>Archive</th><th>Reason</th><th class="text-right">Size</th><th class="text-right">Created</th><th class="text-right">Actions</th></tr></thead>
     <tbody>
       {{#each backups}}
         <tr data-backup-row data-backup-id="{{id}}" data-file="{{file}}" data-size="{{size}}">
-          {{! w-full + max-w-0 so long archive names truncate instead of pushing
+          {{! w-full + max-w-0 (sm+ only) so long archive names truncate instead of pushing
               the Actions column into horizontal scroll. }}
-          <td class="w-full max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
-          <td><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
-          <td class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
-          <td class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
-          <td class="text-right"><div class="inline-flex gap-1">
+          <td data-th="Archive" class="sm:w-full sm:max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
+          <td data-th="Reason"><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
+          <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
+          <td data-th="Created" class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
+          <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
             {{! Restore stops the server and replaces its data - it must not scan
                 identically to the harmless Download beside it. }}
             <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="Stops the server, restores this archive, then starts it again">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
             <a class="btn btn-ghost btn-sm" href="/api/backups/{{id}}/download" data-tip="Download archive" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</a>
+            <button class="btn btn-ghost btn-sm" data-backup-rename data-tip="Rename archive" aria-label="Rename {{file}}">{{{icon 'square-pen' 'size-3.5'}}}</button>
             <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
           </div></td>
         </tr>
@@ -29,7 +39,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='archive' title='No Backups Yet' message='Use Back up now for the first one. Scheduled and pre-update backups also collect here automatically.'}}
+  {{> empty-state iconName='archive' title='No Backups Yet' message='Use Back Up Now for the first one. Scheduled and pre-update backups also collect here automatically.'}}
 {{/if}}
 </div>
 <script type="module" src="/js/pages/server-backups.js"></script>

@@ -56,6 +56,9 @@ test('settings tab renders the advanced catalog with the right exclusions', asyn
   assert.doesNotMatch(r.text, /object Object/);
   // A real boolean default renders as a real value, not the broken placeholder.
   assert.match(r.text, /data-catalog-key="ENABLE_RCON"[^>]*data-catalog-default="true"/);
+  // ONLINE_MODE must default to TRUE (the itzg image's behaviour) so the
+  // checkbox agrees with what the container actually does when unset.
+  assert.match(r.text, /data-catalog-key="ONLINE_MODE"[^>]*data-catalog-default="true"/);
 });
 
 test('PATCH merges a changed catalog field over the existing env without clobbering it', async () => {
@@ -71,4 +74,25 @@ test('PATCH merges a changed catalog field over the existing env without clobber
   assert.equal(env.MAX_PLAYERS, '32');
   assert.equal(env.MOTD, 'Hi'); // untouched keys survive the merge
   assert.equal(env.ALLOW_FLIGHT, 'true');
+});
+
+test('PATCH preserves a numeric 0 - it is a real value, not "not set"', async () => {
+  const patch = await app.req('PATCH', '/api/servers/srv_adv01', {
+    cookie,
+    body: {
+      env: {
+        MOTD: 'Hi',
+        DIFFICULTY: 'normal',
+        PVP: 'true',
+        ALLOW_FLIGHT: 'true',
+        MAX_PLAYERS: '32',
+        NETWORK_COMPRESSION_THRESHOLD: '0',
+      },
+    },
+  });
+  assert.equal(patch.status, 200);
+  assert.equal(patch.json.needsRecreate, true);
+
+  const env = JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', 'srv_adv01').env_json);
+  assert.equal(env.NETWORK_COMPRESSION_THRESHOLD, '0'); // 0 must survive, not be dropped as falsy
 });

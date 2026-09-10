@@ -39,17 +39,18 @@
         {{/if}}
         {{! Labeled like its siblings - a lone glyph in a row of labeled actions reads as noise. }}
         {{#if player.uuid}}<button class="btn btn-ghost btn-sm" data-act="copy-uuid" data-copy="{{player.uuid}}">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy UUID</button>{{/if}}
+        {{#if player.uuid}}{{#unless player.online}}<button class="btn btn-ghost btn-sm text-danger" data-act="delete-player" data-tip="Delete this player and all of their saved data (whitelist/op/ban status, inventory, stats, advancements and notes)">{{{icon 'trash-2' 'size-3.5'}}} Delete Player…</button>{{/unless}}{{/if}}
       </div>
     </div>
     {{#if player.banned}}
-      <div class="notice notice-danger mt-3 text-xs text-danger" data-ban-banner>Banned: {{default player.banReason 'No reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}{{#if player.banExpires}} · expires {{player.banExpires}}{{/if}}</div>
+      <div class="notice notice-danger mt-3 text-xs" data-ban-banner>{{{icon 'ban' 'size-4 mt-0.5 shrink-0 text-danger'}}}<div><b class="text-danger">Banned:</b> {{default player.banReason 'No reason recorded'}}{{#if player.banDate}} · {{player.banDate}}{{/if}}{{#if player.banExpires}} · expires {{player.banExpires}}{{/if}}</div></div>
     {{/if}}
   </div>
 
   <div class="card mb-4 p-4" data-notes-card>
     <div class="mb-3 flex items-center justify-between">
       <h3 class="font-semibold">Moderator Notes</h3>
-      <button class="btn btn-ghost btn-sm" data-notes-add>{{{icon 'plus' 'size-3.5'}}} Add note</button>
+      <button class="btn btn-ghost btn-sm" data-notes-add>{{{icon 'plus' 'size-3.5'}}} Add Note</button>
     </div>
     <div class="space-y-2" data-notes-list></div>
     <p class="text-sm text-ink-faint" data-notes-empty>No notes yet. These are only visible to panel users.</p>

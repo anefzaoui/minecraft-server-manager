@@ -85,6 +85,10 @@ module.exports = [
     label: 'Online mode (Mojang auth)',
     help: 'Verifies every player against Mojang’s authentication servers (vanilla default on). Turning it off lets anyone join with any name, including pirated clients. This is a serious security risk unless you run behind a proxy that handles authentication.',
     type: 'boolean',
+    // The itzg image defaults ONLINE_MODE to TRUE - the checkbox must agree
+    // with what the container actually does, or the panel lies "offline mode"
+    // to people who never touched the field.
+    default: true,
     mode: 'advanced',
     section: 'gameplay',
     danger: true,
@@ -159,7 +163,7 @@ module.exports = [
     key: 'FUNCTION_PERMISSION_LEVEL',
     scope: 'env',
     label: 'Datapack function permission level',
-    help: 'Permission level (1–4) that datapack functions run with. Raise it only if a datapack needs privileged commands.',
+    help: 'Permission level (1 to 4) that datapack functions run with. Raise it only if a datapack needs privileged commands.',
     type: 'number',
     min: 1,
     max: 4,

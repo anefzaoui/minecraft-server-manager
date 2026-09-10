@@ -117,7 +117,7 @@ function parseCrashReport(text) {
     if (parts.length >= 3) suspects.add(parts[1]);
   }
 
-  const summary = exception ? exception + (description ? ` - ${description}` : '') : description || 'Crash report';
+  const summary = exception ? exception + (description ? `: ${description}` : '') : description || 'Crash report';
   return { description, exception, summary, suspects: [...suspects] };
 }
 
@@ -152,7 +152,7 @@ function parseHsErr(text) {
   return {
     description: '',
     exception: 'JVM fatal error',
-    summary: 'JVM fatal error' + (problem ? ` - ${problem}` : ''),
+    summary: 'JVM fatal error' + (problem ? `: ${problem}.` : '.'),
     suspects: [],
   };
 }
@@ -178,9 +178,46 @@ async function listCandidateFiles(serverId) {
   return out;
 }
 
+// Dir-mtime change gate. Crash reports and hs_err logs are write-once files -
+// they are never modified in place - so the two watched directories' mtimes are
+// an EXACT "anything new?" signal: a dir's mtime only changes when a file is
+// added or removed. Comparing them to the last scan lets a quiet fleet skip the
+// two readdirs AND the N per-candidate existence SELECTs the watcher otherwise
+// pays for every server every 30 seconds. A file dropped in the same
+// millisecond a scan stat's the dir is picked up by that very scan (it stats
+// before it lists); any later add bumps the dir mtime above the cached value,
+// so the next tick re-scans. The one gap is filesystem timestamp granularity:
+// on a coarse clock (1 s on some network shares and Docker Desktop mounts) a
+// second file landing in the same tick as the scan leaves the mtime equal, and
+// a report still being written when it is listed would be parsed partial. So a
+// dir mtime that is younger than MTIME_SETTLE_MS is never remembered - the
+// next tick always re-scans a directory that was changing while we looked.
+const lastDirMtimes = new Map(); // serverId -> { crash: number|null, root: number|null }
+const MTIME_SETTLE_MS = 2500;
+
+function dirMtimeOrNull(abs) {
+  try {
+    return fs.statSync(abs).mtimeMs;
+  } catch {
+    return null;
+  } // dir missing / unreadable
+}
+
+/** The value to remember for a dir: its mtime once it has settled, else undefined (= "check again"). */
+function settledMtime(mtime) {
+  if (mtime == null) return null;
+  return Date.now() - mtime < MTIME_SETTLE_MS ? undefined : mtime;
+}
+
 /** Scan one server for crash files not yet indexed; parse + insert + record event. */
 async function scanServer(serverId) {
   const inserted = [];
+  const dirMtimes = {
+    crash: dirMtimeOrNull(dataPath('servers', serverId, 'crash-reports')),
+    root: dirMtimeOrNull(dataPath('servers', serverId)),
+  };
+  const last = lastDirMtimes.get(serverId);
+  if (last && last.crash === dirMtimes.crash && last.root === dirMtimes.root) return inserted;
   for (const filename of await listCandidateFiles(serverId)) {
     if (db.get('SELECT id FROM crash_reports WHERE server_id = ? AND filename = ?', serverId, filename)) continue;
 
@@ -211,7 +248,7 @@ async function scanServer(serverId) {
       serverId,
       type: 'crash-report',
       actor: 'system',
-      summary: `New crash report: ${filename} - ${parsed.exception || parsed.summary}`,
+      summary: `New crash report: ${filename}. ${parsed.exception || parsed.summary}.`,
       details: { crashId: id },
     });
     db.run('UPDATE crash_reports SET event_id = ? WHERE id = ?', eventId, id);
@@ -223,6 +260,7 @@ async function scanServer(serverId) {
     });
     inserted.push(id);
   }
+  lastDirMtimes.set(serverId, { crash: settledMtime(dirMtimes.crash), root: settledMtime(dirMtimes.root) });
   return inserted;
 }
 
@@ -273,9 +311,18 @@ function stopCrashWatcher() {
   }
 }
 
-function listCrashes(serverId) {
+/**
+ * Newest-first reports for a server. `limit` bounds the list view (the export
+ * path calls without it so the archive stays complete).
+ * @param {string} serverId
+ * @param {{ limit?: number }} [opts]
+ */
+function listCrashes(serverId, { limit } = {}) {
   return db
-    .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC', serverId)
+    .all(
+      `SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC${limit ? ' LIMIT ?' : ''}`,
+      ...[serverId, ...(limit ? [limit] : [])]
+    )
     .map((row) => ({ ...row, suspected: JSON.parse(row.suspected_json || '[]') }));
 }
 
@@ -285,14 +332,15 @@ function getCrash(crashId) {
 }
 
 /** Read a report's full text. The filename MUST be one indexed for this server. */
-function getCrashText(serverId, filename) {
+async function getCrashText(serverId, filename) {
   const row = db.get('SELECT id FROM crash_reports WHERE server_id = ? AND filename = ?', serverId, filename);
   if (!row) {
     const err = new Error('Crash report not found');
     err.status = 404;
     throw err;
   }
-  return fs.readFileSync(absPathFor(serverId, filename), 'utf8');
+  // Reports are 100KB+ - read async so a view never blocks the event loop.
+  return fsp.readFile(absPathFor(serverId, filename), 'utf8');
 }
 
 function markViewed(crashId) {
@@ -312,14 +360,14 @@ async function shareCrash(crashId, { actor = 'system' } = {}) {
     throw err;
   }
   if (row.mclogs_url) return { id: row.mclogs_id, url: row.mclogs_url, alreadyShared: true };
-  const text = fs.readFileSync(absPathFor(row.server_id, row.filename), 'utf8');
+  const text = await fsp.readFile(absPathFor(row.server_id, row.filename), 'utf8');
   const paste = await require('../integrations/mclogs').uploadLog(text);
   db.run('UPDATE crash_reports SET mclogs_id = ?, mclogs_url = ? WHERE id = ?', paste.id, paste.url, crashId);
   recordEvent({
     serverId: row.server_id,
     actor,
     type: 'crash-shared',
-    summary: `Crash report ${row.filename} shared to mclo.gs: ${paste.url}`,
+    summary: `Crash report ${row.filename} shared to mclo.gs: ${paste.url}.`,
     details: { crashId, pasteUrl: paste.url },
   });
   logger.info('Shared a crash report to mclo.gs.', { serverId: row.server_id, crashId, actor });
@@ -361,7 +409,7 @@ function deleteCrash(crashId, { actor = 'system' } = {}) {
     serverId: row.server_id,
     type: 'crash-report-deleted',
     actor,
-    summary: `Deleted crash report: ${row.filename}`,
+    summary: `Deleted crash report: ${row.filename}.`,
     details: { crashId, filename: row.filename, freedBytes: row.size_bytes },
   });
   return { freedBytes: row.size_bytes };

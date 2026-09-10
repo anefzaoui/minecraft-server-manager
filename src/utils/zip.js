@@ -11,6 +11,21 @@ const yauzl = require('yauzl');
 const httpError = require('./httpError');
 
 /** Entry names must be relative, forward-slashed, and free of dot-segments. */
+// yauzl validates entry names and structure itself and reports problems through
+// the archive's 'error' event ("invalid relative path: ../x", "invalid
+// characters in fileName", "unsupported compression method", ...). Those are
+// facts about the uploaded file, not faults in the panel, so they must reach
+// the client as a 400 with a plain sentence rather than a generic 500.
+const YAUZL_CONTENT_ERROR =
+  /invalid|unsupported|not a zip|end of central directory|multi-disk|too many|exceeds|expected/i;
+function zipFailure(err) {
+  if (err && err.status) return err;
+  if (err && YAUZL_CONTENT_ERROR.test(String(err.message || ''))) {
+    return httpError(400, `This zip archive is malformed or unsupported (${String(err.message).slice(0, 120)}).`);
+  }
+  return err;
+}
+
 function safeEntryName(name) {
   if (!name || name.includes('\0') || name.includes('\\')) return false;
   if (path.isAbsolute(name) || /^[a-zA-Z]:/.test(name)) return false;
@@ -29,7 +44,7 @@ function readZipIndex(zipPath, { textEntry, maxTextBytes = 20 * 1024 * 1024 } = 
       if (err) return reject(httpError(400, 'Not a valid zip archive'));
       const entries = [];
       const texts = new Map();
-      zip.on('error', reject);
+      zip.on('error', (e) => reject(zipFailure(e)));
       zip.on('end', () => resolve({ entries, texts }));
       zip.on('entry', (entry) => {
         if (!safeEntryName(entry.fileName)) {
@@ -40,7 +55,7 @@ function readZipIndex(zipPath, { textEntry, maxTextBytes = 20 * 1024 * 1024 } = 
         const wantText = textEntry && !/\/$/.test(entry.fileName) && textEntry(entry.fileName);
         if (wantText && entry.uncompressedSize <= maxTextBytes) {
           zip.openReadStream(entry, (streamErr, readStream) => {
-            if (streamErr) return reject(streamErr);
+            if (streamErr) return reject(zipFailure(streamErr));
             const chunks = [];
             readStream.on('data', (c) => chunks.push(c));
             readStream.on('error', reject);
@@ -73,7 +88,7 @@ function readEntryBuffers(zipPath, select, { maxEntryBytes = 512 * 1024 * 1024, 
       if (err) return reject(httpError(400, 'Not a valid zip archive'));
       const out = new Map();
       let total = 0;
-      zip.on('error', reject);
+      zip.on('error', (e) => reject(zipFailure(e)));
       zip.on('end', () => resolve(out));
       zip.on('entry', (entry) => {
         if (!safeEntryName(entry.fileName)) {
@@ -166,18 +181,18 @@ function extractZipSafe(
         resolve();
       };
 
-      zip.on('error', fail);
+      zip.on('error', (e) => fail(zipFailure(e)));
       zip.on('end', done);
       zip.on('entry', (entry) => {
         if (++entryCount > maxEntries) {
-          return fail(httpError(413, `Archive has too many entries (> ${maxEntries}) - refusing to extract.`));
+          return fail(httpError(413, `Archive has too many entries (more than ${maxEntries}). Refusing to extract.`));
         }
         declaredBytes += entry.uncompressedSize || 0;
         if (declaredBytes > maxBytes) {
           return fail(
             httpError(
               413,
-              `Archive is too large uncompressed (> ${Math.round(maxBytes / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
+              `Archive is too large uncompressed (more than ${Math.round(maxBytes / 1024 ** 3)} GB). Refusing to extract (possible decompression bomb).`
             )
           );
         }
@@ -213,7 +228,7 @@ function extractZipSafe(
               fail(
                 httpError(
                   413,
-                  `Archive exceeds the ${Math.round(maxBytes / 1024 ** 3)} GB extraction limit - aborted (possible decompression bomb).`
+                  `Archive exceeds the ${Math.round(maxBytes / 1024 ** 3)} GB extraction limit. Aborted (possible decompression bomb).`
                 )
               );
             }
@@ -230,10 +245,72 @@ function extractZipSafe(
   });
 }
 
+/**
+ * Walk a zip and hand each selected entry to `fn({name, buffer})` one at a time,
+ * freeing each buffer before the next is read. Bounds peak memory for archives
+ * of many entries (e.g. modpack jar previews) at a single entry's size instead
+ * of all matched entries at once. Each entry buffer is size-capped.
+ * @param {string} zipPath
+ * @param {(name: string) => boolean} select
+ * @param {(file: {name: string, buffer: Buffer}) => Promise<void>|void} fn
+ * @param {{maxEntryBytes?: number}} opts
+ * @returns {Promise<void>}
+ */
+function forEachEntryBuffer(zipPath, select, fn, { maxEntryBytes = 512 * 1024 * 1024 } = {}) {
+  return new Promise((resolve, reject) => {
+    yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
+      if (err) return reject(httpError(400, 'Not a valid zip archive'));
+      let done = false;
+      const fail = (e) => {
+        if (done) return;
+        done = true;
+        try {
+          zip.close();
+        } catch {}
+        reject(e);
+      };
+      zip.on('error', (e) => fail(zipFailure(e)));
+      const readEntry = (entry) => {
+        if (done) return;
+        if (/\/$/.test(entry.fileName) || !select(entry.fileName)) return zip.readEntry();
+        zip.openReadStream(entry, (streamErr, readStream) => {
+          if (streamErr) return fail(streamErr);
+          const chunks = [];
+          let size = 0;
+          readStream.on('data', (c) => {
+            size += c.length;
+            if (size > maxEntryBytes) return fail(httpError(413, 'Zip entry exceeds the allowed size'));
+            chunks.push(c);
+          });
+          readStream.on('error', fail);
+          readStream.on('end', async () => {
+            const buffer = Buffer.concat(chunks);
+            try {
+              await fn({ name: entry.fileName, buffer });
+            } catch (e) {
+              return fail(e);
+            }
+            if (!done) zip.readEntry();
+          });
+        });
+      };
+      zip.on('entry', readEntry);
+      zip.on('end', () => {
+        if (!done) {
+          done = true;
+          resolve();
+        }
+      });
+      zip.readEntry();
+    });
+  });
+}
+
 module.exports = {
   safeEntryName,
   readZipIndex,
   readEntryBuffers,
+  forEachEntryBuffer,
   extractZipSafe,
   // Compatibility name for callers of the former utils/safeExtract module.
   extractZip: extractZipSafe,

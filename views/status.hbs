@@ -17,16 +17,16 @@
     </div>
     <dl class="grid grid-cols-3 gap-px border-t border-line bg-line text-center tabular-nums">
       <div class="bg-raised p-3">
-        <dt class="text-[11px] uppercase tracking-wider text-ink-faint">Version</dt>
+        <dt class="eyebrow">Version</dt>
         <dd class="mt-0.5 text-sm font-semibold">{{page.flavor}} {{page.mcVersion}}</dd>
       </div>
       <div class="bg-raised p-3">
-        <dt class="text-[11px] uppercase tracking-wider text-ink-faint">Players</dt>
+        <dt class="eyebrow">Players</dt>
         <dd class="mt-0.5 text-sm font-semibold">{{page.online}} / {{page.max}}</dd>
       </div>
       <div class="bg-raised p-3">
-        <dt class="text-[11px] uppercase tracking-wider text-ink-faint">Uptime</dt>
-        <dd class="mt-0.5 text-sm font-semibold">{{#if page.uptime}}{{page.uptime}}{{else}}-{{/if}}</dd>
+        <dt class="eyebrow">Uptime</dt>
+        <dd class="mt-0.5 text-sm font-semibold">{{#if page.uptime}}{{page.uptime}}{{else}}Unknown{{/if}}</dd>
       </div>
     </dl>
     <p class="border-t border-line p-2.5 text-center text-[11px] text-ink-faint">Powered by Minecraft Server Manager</p>

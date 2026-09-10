@@ -31,7 +31,7 @@ function assertName(name) {
   if (!PLAYER_NAME_RE.test(String(name)))
     throw httpError(
       400,
-      'Invalid player name (letters, digits and _ only, max 16 chars - a leading . or * for Bedrock players is fine)'
+      'Invalid player name (letters, digits and _ only, max 16 characters - a leading . or * for Bedrock players is fine)'
     );
   return String(name);
 }
@@ -84,7 +84,7 @@ function readJson(serverId, file) {
 function writeJson(serverId, file, data) {
   if (!FILES.has(file)) throw httpError(400, `Unsupported player file: ${file}`);
   const target = dataPath('servers', serverId, file);
-  const tmp = dataPath('servers', serverId, `${file}.tmp`);
+  const tmp = dataPath('servers', serverId, `${file}.${process.pid}-${Date.now()}.tmp`);
   fs.mkdirSync(dataPath('servers', serverId), { recursive: true });
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2) + '\n');
   fs.renameSync(tmp, target);
@@ -168,10 +168,19 @@ function isBanExpired(expires) {
 }
 
 /** Find {uuid, name} in the server's own files (usercache + role files). */
+// A uuid read back from the server's own JSON files feeds file paths
+// (playerdata/<uuid>.dat, stats/<uuid>.json, ...). Those files are written by
+// the Minecraft process - and by any plugin or mod running inside it - so an
+// entry is only trusted when it looks like a uuid. Anything else is ignored and
+// the name resolves through Mojang instead.
+const UUID_RE = /^[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}$/;
+
 function localIdentity(serverId, name) {
   const lower = name.toLowerCase();
   for (const file of ['usercache.json', 'whitelist.json', 'ops.json', 'banned-players.json']) {
-    const hit = readJson(serverId, file).find((e) => e.name && e.name.toLowerCase() === lower && e.uuid);
+    const hit = readJson(serverId, file).find(
+      (e) => e.name && e.name.toLowerCase() === lower && typeof e.uuid === 'string' && UUID_RE.test(e.uuid)
+    );
     if (hit) return { uuid: hit.uuid, name: hit.name };
   }
   return null;
@@ -188,7 +197,7 @@ async function resolveIdentity(serverId, name) {
   } catch {
     throw httpError(
       502,
-      `Could not resolve "${name}" - the player has never joined this server and the Mojang API is unreachable. Try again when online.`
+      `Could not look up "${name}". The player has never joined this server, and the Mojang API is unreachable. Try again when you are online.`
     );
   }
   if (!profile || !profile.uuid) throw httpError(404, `No Minecraft account named "${name}" exists`);
@@ -301,7 +310,7 @@ async function setWhitelisted(serverId, name, on, { running = false, actor = 'sy
     serverId,
     actor,
     type: 'player-whitelist',
-    summary: `${who.name} ${on ? 'added to' : 'removed from'} the whitelist${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `${who.name} ${on ? 'added to' : 'removed from'} the whitelist${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { name: who.name, uuid: who.uuid, on, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, whitelisted: Boolean(on) };
@@ -333,7 +342,7 @@ async function setWhitelistEnforced(serverId, on, { running = false, actor = 'sy
     serverId,
     actor,
     type: 'player-whitelist-enforce',
-    summary: `Whitelist enforcement turned ${on ? 'on' : 'off'}${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `Whitelist enforcement turned ${on ? 'on' : 'off'}${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { on, via: running ? 'rcon' : 'file' },
   });
   return { whitelistEnforced: Boolean(on) };
@@ -380,8 +389,8 @@ async function setOp(serverId, name, on, level = 4, { running = false, actor = '
     actor,
     type: on ? 'player-op' : 'player-deop',
     summary: on
-      ? `${who.name} opped (level ${level})${running ? '' : ' (file edit - applies on start)'}`
-      : `${who.name} de-opped${running ? '' : ' (file edit - applies on start)'}`,
+      ? `${who.name} opped (level ${level})${running ? '' : ' (file edit, applies on the next start)'}.`
+      : `${who.name} de-opped${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { name: who.name, uuid: who.uuid, on, level: on ? level : null, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, op: Boolean(on), opLevel: on ? level : null, note };
@@ -413,7 +422,7 @@ async function banPlayer(serverId, name, reason, { running = false, actor = 'sys
     serverId,
     actor,
     type: 'player-ban',
-    summary: `${who.name} banned${durationMs ? ` until ${expires}` : ''}: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `${who.name} banned${durationMs ? ` until ${expires}` : ''}: ${reason}${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { name: who.name, uuid: who.uuid, reason, expires, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, banned: true, banReason: reason, banExpires: durationMs ? expires : null };
@@ -433,7 +442,7 @@ async function pardonPlayer(serverId, name, { running = false, actor = 'system' 
     serverId,
     actor,
     type: 'player-pardon',
-    summary: `${who.name} pardoned${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `${who.name} pardoned${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { name: who.name, uuid: who.uuid, via: running ? 'rcon' : 'file' },
   });
   return { name: who.name, uuid: who.uuid, banned: false };
@@ -468,7 +477,7 @@ async function banIp(
     serverId,
     actor,
     type: 'player-ban-ip',
-    summary: `IP ${ip} banned${durationMs ? ` until ${expires}` : ''}${linkedPlayer ? ` (linked to ${linkedPlayer})` : ''}: ${reason}${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `IP ${ip} banned${durationMs ? ` until ${expires}` : ''}${linkedPlayer ? ` (linked to ${linkedPlayer})` : ''}: ${reason}${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { ip, reason, expires, player: linkedPlayer, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: true, banExpires: durationMs ? expires : null, player: linkedPlayer };
@@ -489,10 +498,131 @@ async function pardonIp(serverId, ip, { running = false, actor = 'system' } = {}
     serverId,
     actor,
     type: 'player-pardon-ip',
-    summary: `IP ${ip} pardoned${running ? '' : ' (file edit - applies on start)'}`,
+    summary: `IP ${ip} pardoned${running ? '' : ' (file edit, applies on the next start)'}.`,
     details: { ip, via: running ? 'rcon' : 'file' },
   });
   return { ip, banned: false };
+}
+
+// ---------------------------------------------------------------------------
+// Delete player (full wipe of roles + world data)
+
+const ROLE_FILES = ['usercache.json', 'whitelist.json', 'ops.json', 'banned-players.json'];
+
+/** Drop every entry matching a player's uuid (lowercase-name fallback) from a role file. */
+function stripPlayerFromFile(serverId, file, who) {
+  const lower = who.name.toLowerCase();
+  const remaining = readJson(serverId, file).filter(
+    (e) => !(e.uuid === who.uuid) && !(e.name && e.name.toLowerCase() === lower)
+  );
+  writeJson(serverId, file, remaining);
+}
+
+/**
+ * Remove a player (and their on-disk world data) from a server.
+ *
+ *   • Every entry in usercache / whitelist / ops / banned-players is removed.
+ *   • Their playerdata (.dat / .dat_old) is deleted from the active world's
+ *     modern (players/data) and legacy (playerdata) locations.
+ *   • Their stats/<uuid>.json and advancements/<uuid>.json are deleted.
+ *   • Their inventory snapshots (logs/<serverId>/inventories/<uuid>) are removed.
+ *   • Their moderator notes are removed.
+ *
+ * A live player cannot be deleted (RCON would immediately re-mint their role
+ * entries and a running world keeps a live .dat in memory), so deletion is
+ * blocked while the name is in the RCON online list.
+ */
+async function deletePlayer(serverId, name, { running = false, actor = 'system' } = {}) {
+  const who = await resolveIdentity(serverId, name);
+  if (!UUID_RE.test(who.uuid)) throw httpError(422, `Could not determine a valid uuid for ${who.name}.`);
+  if (running) {
+    // Fail closed: if RCON does not answer we do not know whether they are
+    // online, and a running server would rewrite a live player's data from
+    // memory right after we deleted it.
+    let online;
+    try {
+      online = await listOnlineNames(serverId, { throwOnError: true });
+    } catch {
+      throw httpError(
+        503,
+        `Couldn't confirm ${who.name} is offline (the server didn't answer). Try again in a moment, or stop the server first.`
+      );
+    }
+    if (online.some((n) => n.toLowerCase() === who.name.toLowerCase())) {
+      throw httpError(
+        409,
+        `${who.name} is still online. Kick them or wait for them to leave before deleting their data.`
+      );
+    }
+    // A running server keeps its role lists in memory and rewrites the JSON
+    // files from that copy, so a file-only edit would be undone on the next
+    // change or shutdown. Drop the roles over RCON first; each command is
+    // best-effort because the player may simply not hold that role.
+    for (const args of [
+      ['whitelist', 'remove', who.name],
+      ['deop', who.name],
+      ['pardon', who.name],
+    ]) {
+      await rcon(serverId, ...args).catch(() => {});
+    }
+  }
+
+  // Role files (also rewritten on disk so a stopped server, or one that does
+  // not rewrite them itself, forgets the player too).
+  for (const file of ROLE_FILES) stripPlayerFromFile(serverId, file, who);
+
+  // World-scoped data. Resolve the active level exactly like inventory.js so we
+  // never guess a path (level-name / LEVEL env both honored).
+  let removed = { playerdata: 0, stats: false, advancements: false, snapshots: false, notes: 0 };
+  try {
+    const server = require('./servers').getServer(serverId);
+    const level = require('./worlds').activeLevelName(server);
+    // Every path goes through the guard (never a bare path.join on a uuid that
+    // came from a file the Minecraft process wrote).
+    const inWorld = (...segs) => dataPath('servers', serverId, level, ...segs);
+
+    // Playerdata - delete both the modern and legacy .dat (+ .dat_old backups),
+    // tolerating either layout or none at all (never-joined players have none).
+    for (const dir of [['players', 'data'], ['playerdata']]) {
+      for (const ext of ['.dat', '.dat_old']) {
+        const file = inWorld(...dir, `${who.uuid}${ext}`);
+        if (!fs.existsSync(file)) continue;
+        fs.rmSync(file, { force: true });
+        removed.playerdata += 1;
+      }
+    }
+
+    // Stats + advancements are JSON files named by uuid. Report what was
+    // actually there rather than "true" for a file that never existed.
+    for (const kind of ['stats', 'advancements']) {
+      const file = inWorld(kind, `${who.uuid}.json`);
+      if (!fs.existsSync(file)) continue;
+      fs.rmSync(file, { force: true });
+      removed[kind] = true;
+    }
+  } catch {
+    /* the server/world may be gone entirely - role-file cleanup above already ran */
+  }
+
+  // Inventory snapshots live under logs/, not the world dir.
+  try {
+    fs.rmSync(dataPath('logs', serverId, 'inventories', who.uuid), { recursive: true, force: true });
+    removed.snapshots = true;
+  } catch {
+    /* no snapshots */
+  }
+
+  // Moderator notes.
+  removed.notes = require('./playerNotes').deletePlayerNotes(serverId, who.uuid);
+
+  recordEvent({
+    serverId,
+    actor,
+    type: 'player-deleted',
+    summary: `${who.name} and all their data were deleted.`,
+    details: { name: who.name, uuid: who.uuid, removed },
+  });
+  return { name: who.name, uuid: who.uuid, removed };
 }
 
 const SWEEP_RUNNING_STATES = new Set(['running', 'unhealthy']); // rcon still answers while unhealthy
@@ -561,7 +691,7 @@ async function kickPlayer(serverId, name, message, { running = false, actor = 's
     serverId,
     actor,
     type: 'player-kick',
-    summary: `${name} kicked: ${message}`,
+    summary: `${name} kicked: ${message}.`,
     details: { name, message },
   });
   return { name, kicked: true };
@@ -576,7 +706,7 @@ async function kickPlayer(serverId, name, message, { running = false, actor = 's
 const teleportBusy = new Set();
 async function withTeleportSlot(serverId, fn) {
   if (teleportBusy.has(serverId)) {
-    throw httpError(429, 'A teleport is already searching on this server - give it a second and try again.');
+    throw httpError(429, 'A teleport is already searching on this server. Give it a second and try again.');
   }
   teleportBusy.add(serverId);
   try {
@@ -588,7 +718,7 @@ async function withTeleportSlot(serverId, fn) {
 
 function assertTpOutput(out, player) {
   if (/No entity was found|No player was found/i.test(out)) {
-    throw httpError(404, `${player} is not online - teleport needs a live player`);
+    throw httpError(404, `${player} is not online. Teleport needs a player who is currently connected.`);
   }
   if (/Unknown or incomplete command|Incorrect argument/i.test(out)) {
     throw httpError(400, `Teleport command rejected by the server: ${out}`);
@@ -711,7 +841,7 @@ async function runLocate(serverId, prefix, type, id) {
   if (/there is no \w+ with type|isn'?t a valid|unknown \w+ type/i.test(located)) {
     throw httpError(
       404,
-      `"${String(id).replace(/^#/, '')}" isn't available on this server - a mod may have renamed or removed it.`
+      `"${String(id).replace(/^#/, '')}" isn't available on this server. A mod may have renamed or removed it.`
     );
   }
   return located;
@@ -748,7 +878,7 @@ async function surfaceTeleport(serverId, player, x, z, dimension) {
   }
   const err = httpError(
     409,
-    `No safe ground within 512 blocks of ${x}, ${z}${dimension ? ` in ${prettyDimension(dimension)}` : ''} (open water or void) - try different coordinates or give an explicit Y.`
+    `No safe ground within 512 blocks of ${x}, ${z}${dimension ? ` in ${prettyDimension(dimension)}` : ''} (open water or void). Try different coordinates or give an explicit Y.`
   );
   err.output = out;
   throw err;
@@ -896,7 +1026,7 @@ async function tpToStructure(
   if (/Could not find/i.test(located) || !located.trim()) {
     throw httpError(
       404,
-      `No ${structureRef.replace(/^#/, '')} found in ${prettyDimension(searchDim)}${random ? ' - try again (each try searches a new random point)' : ''}.`
+      `No ${structureRef.replace(/^#/, '')} found in ${prettyDimension(searchDim)}${random ? '. Try again, since each try searches a new random point' : ''}.`
     );
   }
   const m = /is at \[(-?\d+),\s*(~|-?\d+),\s*(-?\d+)\]/.exec(located);
@@ -909,7 +1039,7 @@ async function tpToStructure(
     serverId,
     actor,
     type: 'player-teleport',
-    summary: `${player} sent to ${random ? 'a random' : 'the nearest'} ${structureRef.replace(/^#/, '')} in ${prettyDimension(searchDim)} at ${x}, ${z} (surface)`,
+    summary: `${player} sent to ${random ? 'a random' : 'the nearest'} ${structureRef.replace(/^#/, '')} in ${prettyDimension(searchDim)} at ${x}, ${z} (surface).`,
     details: { player, mode: 'structure', structure: structureRef, x, z, random, dimension: searchDim },
   });
   return { player, structure: structureRef, x, z, dimension: searchDim, output: out };
@@ -950,7 +1080,7 @@ async function rtpPlayer(
         serverId,
         actor,
         type: 'player-teleport',
-        summary: `${player} randomly teleported to ${x}, ${z} (surface, ${Math.round(dist)} blocks out, attempt ${attempt}/${ATTEMPTS})`,
+        summary: `${player} randomly teleported to ${x}, ${z} (surface, ${Math.round(dist)} blocks out, attempt ${attempt}/${ATTEMPTS}).`,
         details: { player, mode: 'rtp', x, z, dimension: dim, distance: Math.round(dist), attempt },
       });
       return { player, x, z, dimension: dim, distance: Math.round(dist), attempts: attempt, output: out };
@@ -961,7 +1091,7 @@ async function rtpPlayer(
   }
   throw httpError(
     409,
-    `Couldn't find safe ground in ${ATTEMPTS} tries (lots of ocean around?) - try a bigger max distance. ${lastErr ? '' : ''}`.trim()
+    `Couldn't find safe ground in ${ATTEMPTS} tries (lots of ocean around?). Try a bigger max distance. ${lastErr ? '' : ''}`.trim()
   );
 }
 
@@ -1100,7 +1230,7 @@ async function tpToCoords(
     serverId,
     actor,
     type: 'player-teleport',
-    summary: `${player} teleported to ${where}${!hasY ? ' (surface)' : safe ? ' (soft landing)' : ''}`,
+    summary: `${player} teleported to ${where}${!hasY ? ' (surface)' : safe ? ' (soft landing)' : ''}.`,
     details: {
       player,
       mode: 'coords',
@@ -1125,7 +1255,7 @@ async function tpToPlayer(serverId, player, target, { running = false, actor = '
     serverId,
     actor,
     type: 'player-teleport',
-    summary: `${player} teleported to ${target}`,
+    summary: `${player} teleported to ${target}.`,
     details: { player, mode: 'player', target },
   });
   return { player, target, output: out };
@@ -1164,7 +1294,7 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
   if (/Could not find/i.test(located)) {
     throw httpError(
       404,
-      `No ${biomeId} was found in ${prettyDimension(searchDim)}${sameDim ? ` near ${player}` : ''} - try from a different spot`
+      `No ${biomeId} was found in ${prettyDimension(searchDim)}${sameDim ? ` near ${player}` : ''}. Try from a different spot.`
     );
   }
   // "The nearest minecraft:desert is at [123, ~, -456] (789 blocks away)"
@@ -1174,7 +1304,7 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
       502,
       located
         ? 'Could not read the search result from the server. Try again in a moment.'
-        : `The server returned nothing for ${biomeId} in ${searchDim} - it may not generate in this world (modded packs sometimes replace vanilla biomes).`
+        : `The server returned nothing for ${biomeId} in ${searchDim}. It may not generate in this world (modded packs sometimes replace vanilla biomes).`
     );
   }
   const x = Number(m[1]);
@@ -1188,7 +1318,7 @@ async function tpToBiome(serverId, player, biomeId, { running = false, actor = '
     serverId,
     actor,
     type: 'player-teleport',
-    summary: `${player} teleported to nearest ${biomeId} (${x}, ${z}, surface${searchDim ? `, ${searchDim}` : ''})`,
+    summary: `${player} teleported to nearest ${biomeId} (${x}, ${z}, surface${searchDim ? `, ${searchDim}` : ''}).`,
     details: { player, mode: 'biome', biome: biomeId, x, z, surface: true, dimension: searchDim },
   });
   return { player, biome: biomeId, x, z, dimension: searchDim, output: out };
@@ -1208,6 +1338,7 @@ module.exports = {
   pardonPlayer,
   banIp,
   pardonIp,
+  deletePlayer,
   sweepExpiredBans,
   kickPlayer,
   tpToCoords,

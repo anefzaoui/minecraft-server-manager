@@ -260,8 +260,8 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
     actor,
     type: previous ? 'modpack-updated' : 'modpack-applied',
     summary: previous
-      ? `Pack ${resolved.projectName}: ${previous.pinned_version_name} → ${resolved.versionName} (pinned)`
-      : `Pack applied: ${resolved.projectName} @ ${resolved.versionName} (pinned)`,
+      ? `Pack ${resolved.projectName}: ${previous.pinned_version_name} → ${resolved.versionName} (pinned).`
+      : `Pack applied: ${resolved.projectName} @ ${resolved.versionName} (pinned).`,
     details: {
       platform: resolved.platform,
       versionId: resolved.versionId,

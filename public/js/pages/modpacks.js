@@ -37,7 +37,7 @@ export async function showPackDetails({ platform, ref, installedServerId } = {})
     ? `serverId=${encodeURIComponent(installedServerId)}`
     : `platform=${encodeURIComponent(platform)}&ref=${encodeURIComponent(ref)}`;
   const loading = openModal({
-    title: 'Loading Pack Details…',
+    title: 'Loading pack details…',
     size: 'sm',
     content: '<p class="text-sm text-ink-faint">Fetching from the platform…</p>',
   });
@@ -121,7 +121,7 @@ function renderPackDetails(pack) {
 
   const actions = [
     {
-      label: 'Create server with this pack',
+      label: 'Create Server with This Pack',
       kind: 'primary',
       onClick: () => {
         const v = versionSel.value ? `&version=${encodeURIComponent(versionSel.value)}` : '';
@@ -131,7 +131,7 @@ function renderPackDetails(pack) {
   ];
   if (pack.installed) {
     actions.unshift({
-      label: 'Open server',
+      label: 'Open Server',
       kind: 'default',
       onClick: () => {
         location.href = `/servers/${pack.installed.serverId}`;
@@ -268,7 +268,7 @@ function initPage() {
         <p class="mt-2 line-clamp-2 flex-1 text-xs text-ink-faint">${escapeHtml(p.description || '')}</p>
         <div class="mt-3 flex gap-2 border-t border-line pt-3">
           <button type="button" class="btn btn-ghost btn-sm" data-details="${i}">Details</button>
-          <button type="button" class="btn btn-sm ml-auto" data-create="${i}">Create server</button>
+          <button type="button" class="btn btn-sm ml-auto" data-create="${i}">Create a Server</button>
         </div>
       </div>`
       )
@@ -320,7 +320,7 @@ function initPage() {
         message: `${serverName} moves from ${current} to ${latest}. The panel takes an automatic backup first, applies the new version, and starts the server back up, watching that it comes back healthy.`,
         detail:
           'Your custom mods are preserved, and you can roll back with one click from the Updates page if it does not come up. The server is briefly offline during the swap.',
-        confirmLabel: 'Upgrade now',
+        confirmLabel: 'Upgrade Now',
       });
       if (!ok) return;
       try {

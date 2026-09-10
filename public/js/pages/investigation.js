@@ -32,18 +32,18 @@ function init(serverId) {
     }
     results.innerHTML = '';
     const table = document.createElement('table');
-    table.className = 'table-base';
+    table.className = 'table-base table-stack';
     table.innerHTML = `<thead><tr><th>Player</th><th class="text-right">Stone mined</th><th class="text-right">Diamonds</th><th class="text-right">Diamond ratio</th><th>Verdict</th></tr></thead><tbody></tbody>`;
     const tbody = table.querySelector('tbody');
     for (const p of players) {
       const tr = document.createElement('tr');
       const flagged = p.flagged || p.suspicious;
       tr.innerHTML = `
-        <td class="font-medium"></td>
-        <td class="text-right text-ink-faint">${Number(p.stoneMined || 0).toLocaleString()}</td>
-        <td class="text-right text-ink-faint">${Number(p.diamondsMined || 0).toLocaleString()}</td>
-        <td class="text-right font-mono text-xs">${p.diamondRatio != null ? Number(p.diamondRatio).toFixed(4) : '-'}${p.medianRatio != null ? ` <span class="text-ink-faint">(median ${Number(p.medianRatio).toFixed(4)})</span>` : ''}</td>
-        <td>${flagged ? '<span class="badge badge-danger">suspicious</span>' : '<span class="badge badge-ok">normal</span>'}</td>`;
+        <td data-th="Player" class="font-medium"></td>
+        <td data-th="Stone mined" class="text-right text-ink-faint">${Number(p.stoneMined || 0).toLocaleString()}</td>
+        <td data-th="Diamonds" class="text-right text-ink-faint">${Number(p.diamondsMined || 0).toLocaleString()}</td>
+        <td data-th="Diamond ratio" class="text-right font-mono text-xs">${p.diamondRatio != null ? Number(p.diamondRatio).toFixed(4) : '-'}${p.medianRatio != null ? ` <span class="text-ink-faint">(median ${Number(p.medianRatio).toFixed(4)})</span>` : ''}</td>
+        <td data-th="Verdict">${flagged ? '<span class="badge badge-danger">suspicious</span>' : '<span class="badge badge-ok">normal</span>'}</td>`;
       tr.querySelector('td').textContent = p.name || p.uuid;
       tbody.appendChild(tr);
     }

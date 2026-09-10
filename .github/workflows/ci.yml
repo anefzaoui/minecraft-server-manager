@@ -1,13 +1,40 @@
 name: CI
 
+# Quality + tests on every PR and push to main. On non-PR runs (push to main,
+# or manual workflow_dispatch) the production pipeline also runs: the panel
+# image is built for linux/amd64 + linux/arm64 and published to GHCR (:latest
+# plus an immutable :v<version> tag), then an idempotent GitHub Release per
+# version. The docker/merge/release jobs all `needs` checks + tests, so
+# untested code never ships - and since the checks run once per event and the
+# publish jobs reuse those results, there's no duplicated test run on main.
+#
+# Each arch builds on its OWN native runner and pushes an untagged, by-digest
+# image; the merge job then stitches the two digests into one manifest list.
+# Emulating arm64 on an amd64 runner is not an option here: Node/V8 hits
+# instructions qemu-user mis-emulates and `pnpm install` dies with
+# "uncaught target signal 4 (Illegal instruction)", then hangs until the job
+# is cancelled.
 on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # Serialize per-branch; only cancel stale PR runs - never an in-flight main
+  # publish (a superseded push should not kill a build mid-upload).
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Least privilege by default: the PR-facing jobs run untrusted code, so the
+# workflow token they see is read-only. Only the publish jobs below escalate.
+permissions:
+  contents: read
 
 jobs:
-  quality:
+  checks:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -18,10 +45,228 @@ jobs:
           node-version: '24'
           cache: 'pnpm'
 
-      # postinstall builds the CSS bundle; the rest are explicit gates.
+      # Skip the postinstall CSS build - `pnpm run build` below is the gate and
+      # rebuilds it anyway, so letting postinstall run just does Tailwind twice.
       - run: pnpm install --frozen-lockfile
+        env:
+          MSM_SKIP_POSTINSTALL: '1'
       - run: pnpm run lint
       - run: pnpm run format:check
       - run: pnpm run typecheck
-      - run: pnpm test
       - run: pnpm run build
+
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      # The unit suite is headless (no rendered CSS needed), so skip the
+      # postinstall Tailwind build here too.
+      - run: pnpm install --frozen-lockfile
+        env:
+          MSM_SKIP_POSTINSTALL: '1'
+      - run: pnpm test
+
+  # PRs never reach the publish `docker` job below, so without this the image
+  # build (and the Dockerfile itself) is only exercised AFTER merge, on the push
+  # to main that also publishes. Build one arch, no push, to catch a broken
+  # Dockerfile on the PR. Reads the amd64 publish cache but never writes it, so a
+  # PR build can't evict main's cache entries.
+  docker-build:
+    needs: [checks, tests]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          provenance: false
+          cache-from: type=gha,scope=linux-amd64
+
+  # Required status check for branch protection on main: one job named
+  # `quality` that is green only when every PR gate is. Keeps the protection
+  # rule stable while the gates themselves can be split or renamed freely.
+  quality:
+    needs: [checks, tests, docker-build]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every gate passed
+        run: |
+          echo "checks=${{ needs.checks.result }} tests=${{ needs.tests.result }} docker-build=${{ needs.docker-build.result }}"
+          test "${{ needs.checks.result }}" = success
+          test "${{ needs.tests.result }}" = success
+          # docker-build only runs on pull requests; a skipped run is fine on push.
+          case "${{ needs.docker-build.result }}" in success|skipped) ;; *) exit 1 ;; esac
+
+  docker:
+    needs: [checks, tests]
+    # Publish only from main. `push` is already main-only, but workflow_dispatch
+    # can be launched from any branch - never let that overwrite :latest.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      # GHCR/OCI names must be lowercase - github.repository preserves the
+      # owner's actual casing (e.g. OwenWright8/...), which buildx rejects.
+      - name: Prepare env
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          platform="${{ matrix.platform }}"
+          echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # No tags here: push-by-digest uploads the layers and manifest without
+      # claiming a tag, so the two arches cannot clobber each other's :latest.
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          # provenance=false: with push-by-digest the default provenance
+          # attestation nests an extra manifest under each digest, which
+          # `buildx imagetools create` then folds into the final list as
+          # bogus unknown/unknown platform entries.
+          provenance: false
+          outputs: type=image,name=ghcr.io/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+          # Scoped per arch - a shared gha cache key would have the two builds
+          # overwriting each other's manifest. mode=max also exports the
+          # Dockerfile's RUN cache mounts (pnpm store) so installs can be
+          # skipped and the Tailwind/esbuild layer can cache-hit across runs.
+          cache-from: type=gha,scope=${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=${{ env.PLATFORM_PAIR }}
+
+      - name: Export digest
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs: [docker]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: version
+        run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Lowercase image name
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create \
+            -t "ghcr.io/${IMAGE_NAME}:latest" \
+            -t "ghcr.io/${IMAGE_NAME}:v${{ steps.version.outputs.value }}" \
+            $(printf "ghcr.io/${IMAGE_NAME}@sha256:%s " *)
+
+      - name: Inspect
+        run: docker buildx imagetools inspect "ghcr.io/${IMAGE_NAME}:v${{ steps.version.outputs.value }}"
+
+  release:
+    # Publish a GitHub Release for each new package.json version. Idempotent -
+    # only creates a release when one doesn't already exist for the current
+    # version, so each version is released exactly once (and pushing an
+    # existing version is a no-op). Notes come straight from CHANGELOG.md.
+    # `needs: merge` so a version is only released once its image is actually
+    # published - a release must never point at an image that failed to build.
+    needs: [merge]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write # creates the tag + release
+    runs-on: ubuntu-latest
+    steps:
+      # Shallow clone is enough: the notes come from the working-tree
+      # CHANGELOG.md and the release targets $GITHUB_SHA directly.
+      - uses: actions/checkout@v4
+
+      - id: version
+        run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.value }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build release notes from CHANGELOG
+        if: steps.check.outputs.exists == 'false'
+        run: node scripts/changelog-notes.js "${{ steps.version.outputs.value }}" > release-notes.md
+
+      - name: Create GitHub Release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "v${{ steps.version.outputs.value }}"
+          --title "v${{ steps.version.outputs.value }}"
+          --notes-file release-notes.md
+          --target "$GITHUB_SHA"

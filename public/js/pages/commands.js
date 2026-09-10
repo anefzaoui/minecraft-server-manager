@@ -175,7 +175,7 @@ function init(root) {
           <label class="label">Console commands (one per line, run in order)</label>
           <textarea class="input min-h-28 font-mono text-xs" data-f="commands" rows="4" spellcheck="false" placeholder="give {player} minecraft:golden_apple 1&#10;tell {player} Enjoy!">${esc(Array.isArray(p.commands) ? p.commands.join('\n') : '')}</textarea>
           <p class="mt-1 text-xs text-ink-faint">
-            Placeholders: <code class="font-mono">{player}</code> = who typed it, <code class="font-mono">{arg1}</code>–<code class="font-mono">{arg3}</code> = words after the trigger
+            Placeholders: <code class="font-mono">{player}</code> = who typed it, <code class="font-mono">{arg1}</code> to <code class="font-mono">{arg3}</code> = words after the trigger
             (sanitized; blank when absent). Commands starting with stop / op / deop / ban / pardon / whitelist require the Ops permission level.
           </p>
         </div>
@@ -335,14 +335,14 @@ function init(root) {
       rtp: '{player} {x} {z} {distance} {dimension}',
       structure: '{player} {structure} {x} {z} {dimension}',
       biome: '{player} {biome} {x} {z} {dimension}',
-      console: '{player} {arg1}–{arg3}',
+      console: '{player} {arg1}-{arg3}',
     };
     function updatePlaceholderHint() {
       const el = content.querySelector('[data-cc-placeholders]');
       if (!el) return;
       const action = f('action').value;
       el.innerHTML =
-        `Placeholders. While running: <code class="font-mono">{player}</code> <code class="font-mono">{arg1}</code>–<code class="font-mono">{arg3}</code> · ` +
+        `Placeholders. While running: <code class="font-mono">{player}</code> <code class="font-mono">{arg1}</code> to <code class="font-mono">{arg3}</code> · ` +
         `On success: ${(SUCCESS_TOKENS[action] || '{player}')
           .split(' ')
           .map((t) => `<code class="font-mono">${esc(t)}</code>`)
@@ -457,7 +457,7 @@ function init(root) {
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
-          label: 'Run now',
+          label: 'Run Now',
           kind: 'primary',
           busyLabel: 'Running…',
           onClick: async ({ body }) => {

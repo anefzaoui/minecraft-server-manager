@@ -19,7 +19,7 @@ const RUNNING_STATES = new Set(['running', 'unhealthy']); // rcon still answers 
 const triggerSchema = z
   .string()
   .trim()
-  .regex(/^[a-z0-9_-]{1,24}$/i, 'Triggers are 1-24 letters, digits, - or _');
+  .regex(/^[a-z0-9_-]{1,24}$/i, 'Triggers are 1 to 24 characters: letters, digits, hyphens, or underscores.');
 const paramsSchema = z.record(z.string(), z.any());
 
 const messageSchema = z.string().max(200); // '' clears it (back to the built-in default)
@@ -135,7 +135,7 @@ router.post(
       })
       .parse(req.body);
     if (!(await isRunning(req.params.id))) {
-      throw Object.assign(new Error('The server must be running to test a chat command'), { status: 409 });
+      throw Object.assign(new Error('The server must be running to test a chat command.'), { status: 409 });
     }
     const result = await chatCommands.testCommand(req.params.id, req.params.cmdId, player, {
       actor: req.user.username,

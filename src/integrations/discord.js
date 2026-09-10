@@ -10,6 +10,7 @@ const path = require('node:path');
 const httpError = require('../utils/httpError');
 const db = require('../db');
 const secrets = require('../services/secrets');
+const settings = require('../services/settings');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 const { makeFailureThrottle } = require('../logger');
@@ -112,7 +113,8 @@ function setConfig(serverId, { enabled, webhookUrl: url, events } = {}) {
     if (url === null || url === '') {
       cipher = null;
     } else {
-      if (!WEBHOOK_RE.test(url)) throw httpError(400, 'Webhook URL must start with https://discord.com/api/webhooks/');
+      if (!WEBHOOK_RE.test(url))
+        throw httpError(400, 'The webhook URL must start with https://discord.com/api/webhooks/.');
       cipher = secrets.encrypt(JSON.stringify({ webhookUrl: url }));
     }
   }
@@ -135,7 +137,7 @@ function setConfig(serverId, { enabled, webhookUrl: url, events } = {}) {
 /** Send a test embed so the user can confirm the webhook works. Throws on failure. */
 async function testWebhook(serverId) {
   const url = webhookUrl(serverId);
-  if (!url) throw httpError(400, 'No webhook URL saved for this server yet');
+  if (!url) throw httpError(400, 'No webhook URL is saved for this server yet.');
   const server = db.get('SELECT display_name FROM servers WHERE id = ?', serverId);
   const res = await post(
     url,
@@ -216,6 +218,7 @@ function logThrottled(serverId, err) {
 let pollTimer = null;
 let polling = false;
 let lastSeenId = 0;
+let persistedMark = 0; // last value written to settings; avoids redundant writes
 // When a deliverable row fails to send, we hold the high-water mark at the row
 // before it and retry on later polls - a transient network blip must not
 // silently drop an OOM / unhealthy / stop-failed alert. Bounded so a
@@ -224,10 +227,51 @@ let retryId = 0;
 let retryCount = 0;
 const MAX_DELIVERY_RETRIES = 4;
 
+// The high-water mark is persisted so a panel restart doesn't silently skip
+// alerts (OOM, crash, stop-failed) raised while it was down. But a long outage
+// must not dump hours of stale history into the channel on boot, so replay is
+// clamped to this window.
+const MARK_KEY = 'discord_bridge_last_seen_id';
+const REPLAY_WINDOW_HOURS = 2;
+
+function persistMark() {
+  if (lastSeenId === persistedMark) return;
+  try {
+    settings.set(MARK_KEY, lastSeenId);
+    persistedMark = lastSeenId;
+  } catch (err) {
+    logger.debug('Could not persist the Discord bridge high-water mark.', {
+      err: serializeError(err, { includeStack: false }),
+    });
+  }
+}
+
+function initialMark() {
+  const maxId = db.get('SELECT COALESCE(MAX(id), 0) AS id FROM events')?.id || 0;
+  const stored = Number(settings.get(MARK_KEY, 0)) || 0;
+  // First run / never persisted: start at the tip, exactly as before.
+  if (!stored) return maxId;
+  // Don't replay further back than the window: find the newest event that is
+  // already too old to replay and never look before it.
+  const cutoff =
+    db.get(
+      `SELECT COALESCE(MAX(id), 0) AS id FROM events WHERE created_at < datetime('now', ?)`,
+      `-${REPLAY_WINDOW_HOURS} hours`
+    )?.id || 0;
+  const from = Math.max(stored, cutoff);
+  if (from < maxId) {
+    logger.info('Discord bridge resuming after restart; replaying undelivered events.', {
+      fromEventId: from,
+      throughEventId: maxId,
+    });
+  }
+  return Math.min(from, maxId);
+}
+
 function startEventBridge({ intervalMs = 15000 } = {}) {
   if (pollTimer) return;
-  // Start at the current high-water mark: never replay pre-boot history.
-  lastSeenId = db.get('SELECT COALESCE(MAX(id), 0) AS id FROM events')?.id || 0;
+  lastSeenId = initialMark();
+  persistedMark = lastSeenId;
   pollTimer = setInterval(() => {
     // Re-entrancy guard: a poll that outruns the interval (slow-but-responsive
     // webhook) must not start a second concurrent pass - two passes would read
@@ -258,26 +302,46 @@ async function pollOnce() {
   const rows = db.all('SELECT * FROM events WHERE id > ? ORDER BY id LIMIT 100', lastSeenId);
   if (!rows.length) return;
 
+  // Batch-load per-server configs and display names once per poll instead of
+  // re-querying the DB for every row (up to 100 events can fan out to a single
+  // server, and config row lookups dominate the poll's DB cost).
+  const integRows = db.all('SELECT * FROM integrations WHERE kind = ?', KIND);
+  const integById = new Map(integRows.map((r) => [r.server_id, r]));
+  const nameRows = db.all('SELECT id, display_name FROM servers WHERE deleted_at IS NULL');
+  const nameById = new Map(nameRows.map((r) => [r.id, r.display_name]));
+  const cfgFor = (serverId) => {
+    const r = integById.get(serverId);
+    const cfg = r ? JSON.parse(r.config_json || '{}') : {};
+    return {
+      enabled: Boolean(r && r.enabled),
+      hasWebhook: Boolean(r && r.config_cipher),
+      events: { ...DEFAULT_EVENTS, ...(cfg.events || {}) },
+    };
+  };
+
   for (const evt of rows) {
     const mapped = EVENT_MAP[evt.type];
-    const cfg = mapped && evt.server_id ? getConfig(evt.server_id) : null;
+    const cfg = mapped && evt.server_id ? cfgFor(evt.server_id) : null;
     const deliverable = Boolean(cfg && cfg.enabled && cfg.hasWebhook && cfg.events[mapped[1]]);
 
     if (deliverable) {
       const [kind] = mapped;
-      const server = db.get('SELECT display_name FROM servers WHERE id = ?', evt.server_id);
+      const serverName = nameById.get(evt.server_id) || evt.server_id;
       const ok = await notify(evt.server_id, kind, {
         title: titleFor(evt.type),
         description: evt.summary,
         fields: [
-          { name: 'Server', value: server ? server.display_name : evt.server_id },
+          { name: 'Server', value: serverName },
           { name: 'By', value: evt.actor || 'system' },
         ],
       });
       if (!ok) {
         retryCount = retryId === evt.id ? retryCount + 1 : 1;
         retryId = evt.id;
-        if (retryCount < MAX_DELIVERY_RETRIES) return; // hold the mark here; retry next poll
+        if (retryCount < MAX_DELIVERY_RETRIES) {
+          persistMark(); // keep whatever we did deliver before this row
+          return; // hold the mark here; retry next poll
+        }
         logger.warn('Gave up forwarding an event to Discord after repeated delivery failures.', {
           eventId: evt.id,
           attempts: retryCount,
@@ -291,6 +355,7 @@ async function pollOnce() {
       retryCount = 0;
     }
   }
+  persistMark();
 }
 
 function titleFor(type) {
@@ -326,6 +391,8 @@ module.exports = {
   startEventBridge,
   stopEventBridge,
   WEBHOOK_RE,
-  // Exported for tests: drive one poll cycle deterministically.
+  // Exported for tests: drive one poll cycle / resolve the boot mark deterministically.
   _pollOnce: pollOnce,
+  _initialMark: initialMark,
+  _MARK_KEY: MARK_KEY,
 };

@@ -8,7 +8,15 @@ const asyncHandler = require('../middleware/asyncHandler');
 const express = require('express');
 const serversService = require('../../services/servers');
 const eventsService = require('../../events');
-const { serverVM, sidebarServerVMs, packServerVMs, eventVM, crashVM, safeJsonParse } = require('../viewModels');
+const {
+  serverVM,
+  buildServerContext,
+  sidebarServerVMs,
+  packServerVMs,
+  eventsVM,
+  crashVM,
+  safeJsonParse,
+} = require('../viewModels');
 const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
@@ -32,53 +40,69 @@ const SERVER_TABS = [
   'overview',
   'console',
   'chat',
-  'players',
   'commands',
+  'players',
   'inventory',
+  'analytics',
   'mods',
   'map',
   'files',
   'worlds',
   'backups',
   'history',
-  'analytics',
   'metrics',
-  'integrations',
   'settings',
+  'discord',
+  'status-page',
+  'invites',
+  'chatbot',
 ];
 
-// Two-level information architecture: the 15 tabs are grouped into a handful of
-// domain sections (top nav), each with a sub-nav of related sections. Inventory is
-// not a top tab any more - it lives per-player on the player page. All existing
-// routes still work; only the navigation is reorganized.
+// Two-level information architecture: the tabs are grouped into a handful of
+// domain sections (top nav), each with a sub-nav of related sections. Grouped by
+// user intent: Console is everything you say to / automate on the running
+// server; Players is only about people; World is world-scoped; Settings holds
+// the per-integration pages. All existing routes still work (see the
+// /integrations redirect below); only the navigation is reorganized.
 const TAB_GROUPS = [
   { key: 'overview', label: 'Overview', icon: 'layout-dashboard', tabs: ['overview'] },
-  { key: 'console', label: 'Console', icon: 'terminal', tabs: ['console', 'chat'] },
-  { key: 'players', label: 'Players', icon: 'users', tabs: ['players', 'inventory', 'analytics', 'commands'] },
-  { key: 'world', label: 'World', icon: 'earth', tabs: ['worlds', 'mods', 'map', 'files'] },
+  { key: 'console', label: 'Console', icon: 'terminal', tabs: ['console', 'chat', 'commands'] },
+  { key: 'players', label: 'Players', icon: 'users', tabs: ['players', 'inventory', 'analytics'] },
+  { key: 'mods', label: 'Mods', icon: 'puzzle', tabs: ['mods'] },
+  { key: 'world', label: 'World', icon: 'earth', tabs: ['worlds', 'map', 'files'] },
   { key: 'backups', label: 'Backups', icon: 'archive', tabs: ['backups'] },
-  { key: 'insights', label: 'Insights', icon: 'activity', tabs: ['metrics', 'history'] },
-  { key: 'settings', label: 'Settings', icon: 'settings', tabs: ['settings', 'integrations'] },
+  { key: 'monitoring', label: 'Monitoring', icon: 'activity', tabs: ['history', 'metrics'] },
+  {
+    key: 'settings',
+    label: 'Settings',
+    icon: 'settings',
+    tabs: ['settings', 'discord', 'status-page', 'invites', 'chatbot'],
+  },
 ];
 const SUB_LABELS = {
   console: 'Console',
   chat: 'Chat',
+  commands: 'Commands',
   players: 'Roster',
   inventory: 'Inventory',
   analytics: 'Stats',
-  commands: 'Chat Commands',
   worlds: 'Worlds',
   mods: 'Mods',
   map: 'Map',
   files: 'Files',
-  metrics: 'Metrics',
+  metrics: 'Live',
   history: 'History',
   settings: 'Configuration',
-  integrations: 'Integrations',
+  discord: 'Discord',
+  'status-page': 'Status Page',
+  invites: 'Invites',
+  chatbot: 'Chatbot',
 };
+// Sub-nav entries only shown to admins (the API 403s these for other roles).
+const ADMIN_ONLY_TABS = new Set(['chatbot']);
 
 /** Build the two-level nav (top groups + contextual sub-nav) for a given active tab. */
-function buildNav(id, tab, server) {
+function buildNav(id, tab, server, { isAdmin = false } = {}) {
   const crashes = server && server.crashesUnread;
   const group = TAB_GROUPS.find((g) => g.tabs.includes(tab)) || TAB_GROUPS[0];
   const groups = TAB_GROUPS.map((g) => ({
@@ -88,9 +112,10 @@ function buildNav(id, tab, server) {
     active: g.key === group.key,
     badge: g.tabs.includes('history') && crashes ? crashes : null,
   }));
+  const visibleSubTabs = group.tabs.filter((t) => isAdmin || !ADMIN_ONLY_TABS.has(t));
   const sub =
-    group.tabs.length > 1
-      ? group.tabs.map((t) => ({
+    visibleSubTabs.length > 1
+      ? visibleSubTabs.map((t) => ({
           label: SUB_LABELS[t] || t,
           href: `/servers/${id}/${t}`,
           active: t === tab,
@@ -130,10 +155,145 @@ const DASH_SORTS = {
   created: (a, b) => String(b.created).localeCompare(String(a.created)),
 };
 
+// Combined live totals across every running server for the dashboard's
+// "Resource overview" graphs. Fed entirely by the in-memory live cache each
+// serverVM already reads (serverVM.js:118), so nothing here touches Docker.
+// Only servers with actual live stats participate in the resource sums; a
+// server that is "running" in status but hasn't produced a sample yet is
+// listed but contributes zero rather than being falsely included.
+function buildCombinedOverview(servers) {
+  const running = [];
+  for (const s of servers) {
+    if (s.status !== 'running' && s.status !== 'starting' && s.status !== 'unhealthy' && s.status !== 'stalled') {
+      continue;
+    }
+    running.push({
+      id: s.id,
+      name: s.name,
+      accent: s.accent,
+      status: s.status,
+      cpuPct: Math.round((s.stats.cpuPct || 0) * 10) / 10,
+      cpus: s.resources.cpus || 0,
+      memUsedMb: s.stats.memUsedMb || 0,
+      memLimitMb: s.resources.containerMemoryMb || 0,
+      playersOnline: s.players.online || 0,
+      playersMax: s.players.max || 0,
+    });
+  }
+  return {
+    hasLive: running.some((s) => s.cpuPct > 0 || s.memUsedMb > 0 || s.playersOnline > 0),
+    running: running.length,
+    playersOnline: running.reduce((n, s) => n + s.playersOnline, 0),
+    playersMax: running.reduce((n, s) => n + s.playersMax, 0),
+    memoryUsedMb: running.reduce((n, s) => n + s.memUsedMb, 0),
+    memoryLimitMb: running.reduce((n, s) => n + s.memLimitMb, 0),
+    cpuTotal: Math.round(running.reduce((n, s) => n + s.cpuPct, 0)),
+    // Each server's own CPU% is relative to its own core allowance, so the
+    // meaningful total is the sum of the used portions of those allowances.
+    cpuCapacity: running.reduce((n, s) => n + s.cpus * 100, 0),
+    breakdown: running,
+  };
+}
+
+// Dashboard "At a glance" panel: everything below is aggregated from the
+// server VMs already built above (memory, disk, status counts) plus cheap
+// event/SQLite lookups (24h health, update breakdown). No extra Docker calls.
+function buildDashboardOverview(servers) {
+  const countEvents = (types, since) =>
+    db.get(
+      `SELECT COUNT(*) AS n FROM events WHERE type IN (${types.map(() => '?').join(',')})` +
+        (since ? ` AND created_at >= datetime('now', ?)` : ''),
+      ...(since ? [...types, since] : types)
+    )?.n || 0;
+
+  const byStatus = {
+    running: 0,
+    starting: 0,
+    stopped: 0,
+    unhealthy: 0,
+    stalled: 0,
+    updating: 0,
+    crashed: 0,
+    'over-quota': 0,
+  };
+  let memAllottedMb = 0;
+  let memUsedMb = 0;
+  let diskUsedBytes = 0;
+  let playersOnline = 0;
+  let playersMax = 0;
+  for (const s of servers) {
+    byStatus[s.status] = (byStatus[s.status] || 0) + 1;
+    memAllottedMb += s.resources.containerMemoryMb || 0;
+    memUsedMb += s.stats.memUsedMb || 0;
+    diskUsedBytes += s.disk.used || 0;
+    playersOnline += s.players.online || 0;
+    playersMax += s.players.max || 0;
+  }
+
+  const health = {
+    oom: countEvents(['oom'], '-1 day'),
+    autoRestarted: countEvents(['auto-restarted'], '-1 day'),
+    crashes: countEvents(['crashed'], '-1 day'),
+  };
+  const healthTotal = health.oom + health.autoRestarted + health.crashes;
+
+  let updates = { all: 0, mods: 0, server: 0 };
+  try {
+    updates = require('../../updates/checker').countOutdatedByKind();
+  } catch {
+    /* check store unavailable - show zeroes */
+  }
+
+  return {
+    byStatus,
+    mem: { allottedMb: Math.round(memAllottedMb), usedMb: Math.round(memUsedMb) },
+    disk: { usedBytes: diskUsedBytes },
+    players: { online: playersOnline, max: playersMax },
+    health,
+    healthTotal,
+    updates,
+  };
+}
+
 async function renderServerList(req, res, next, { page }) {
   try {
     const rows = serversService.listServers();
-    const servers = await Promise.all(rows.map((s) => serverVM(s)));
+    const ctx = buildServerContext(rows); // one batched DB pass for all servers
+    const results = await Promise.allSettled(rows.map((s) => serverVM(s, { ctx })));
+    const servers = results
+      .map((r, i) => {
+        if (r.status === 'fulfilled') return r.value;
+        logger.error('Failed to load server VM', { serverId: rows[i].id, err: serializeError(r.reason) });
+        return {
+          id: rows[i].id,
+          name: rows[i].display_name,
+          description: rows[i].description || '',
+          icon: rows[i].icon,
+          accent: rows[i].accent,
+          type: rows[i].type,
+          flavor: '',
+          mcVersion: rows[i].mc_version || '',
+          status: 'unknown',
+          ports: { game: rows[i].port_game, rcon: rows[i].port_rcon, bedrock: rows[i].port_bedrock },
+          resources: { heapMb: rows[i].heap_mb, containerMemoryMb: rows[i].container_memory_mb, cpus: rows[i].cpus },
+          stats: { cpuPct: 0, memUsedMb: 0, uptime: null, perf: null, perfSupported: true },
+          players: { online: 0, max: Number((rows[i].env && rows[i].env.MAX_PLAYERS) || 20), names: [] },
+          disk: { used: 0, quota: rows[i].disk_quota_bytes || 0 },
+          pack: null,
+          updateAvailable: false,
+          crashesUnread: 0,
+          autoStart: Boolean(rows[i].auto_start),
+          autoRestart: Boolean(rows[i].auto_restart),
+          notes: rows[i].notes || '',
+          updatePolicy: rows[i].update_policy,
+          pendingRecreate: false,
+          lastStarted: rows[i].last_started_at || '-',
+          created: rows[i].created_at,
+          consoleLabel: rows[i].console_label || '',
+          loadError: r.reason ? serializeError(r.reason, { includeStack: false }) : undefined,
+        };
+      })
+      .filter(Boolean);
     const sort = DASH_SORTS[req.query.sort] ? String(req.query.sort) : 'status';
     servers.sort(DASH_SORTS[sort]);
     const context = {
@@ -150,11 +310,16 @@ async function renderServerList(req, res, next, { page }) {
         players: servers.reduce((n, s) => n + s.players.online, 0),
         updates: res.locals.updatesCount,
       },
+      combined: buildCombinedOverview(servers),
       activity: [],
     };
     if (page === 'dashboard') {
-      const events = eventsService.listEvents({ limit: 6 }).filter((e) => !e.type.endsWith('-requested'));
-      context.activity = events.map(eventVM);
+      const events = eventsService
+        .listEvents({ limit: 20 })
+        .filter((e) => !e.type.endsWith('-requested'))
+        .slice(0, 6);
+      context.activity = eventsVM(events);
+      context.overview = buildDashboardOverview(servers);
     }
     res.render('dashboard', context);
   } catch (err) {
@@ -204,6 +369,7 @@ router.get('/servers/new', async (req, res) => {
     suggestedPort,
     advancedSections,
     curseforgeEnabled,
+    defaults: require('../../services/settings').getDefaults(),
   });
 });
 
@@ -246,11 +412,17 @@ router.get(
       active: 'servers',
       server,
       tab: 'players',
-      nav: buildNav(row.id, 'players', server),
+      nav: buildNav(row.id, 'players', server, { isAdmin: req.user.role === 'admin' }),
       player,
     });
   })
 );
+
+// Back-compat: the old single Integrations tab is now four per-integration
+// pages under Settings. Land on the first one.
+router.get('/servers/:id/integrations', (req, res) => {
+  res.redirect(302, `/servers/${req.params.id}/discord`);
+});
 
 router.get(
   '/servers/:id{/:tab}',
@@ -263,18 +435,21 @@ router.get(
     const server = await serverVM(row);
     // Docker settings (container name, network, extra ports/binds - including
     // host filesystem paths) are added ONLY here, never in serverVM, since
-    // that view model is shared with the public /status/:slug page.
-    server.containerName = row.containerName;
-    server.networkName = row.networkName;
-    server.extraPorts = row.extraPorts;
-    server.extraBinds = row.extraBinds;
+    // that view model is shared with the public /status/:slug page. They are
+    // admin-only: host paths and container internals must not leak to viewers.
+    if (req.user.role === 'admin') {
+      server.containerName = row.containerName;
+      server.networkName = row.networkName;
+      server.extraPorts = row.extraPorts;
+      server.extraBinds = row.extraBinds;
+    }
     const context = {
       title: server.name,
       active: 'servers',
       server,
       tab,
       tabs: SERVER_TABS,
-      nav: buildNav(row.id, tab, server),
+      nav: buildNav(row.id, tab, server, { isAdmin: req.user.role === 'admin' }),
       mods: [],
       backups: [],
       worlds: [],
@@ -311,6 +486,8 @@ router.get(
       context.mods = await require('../../services/mods')
         .listContent(row.id)
         .catch(() => []);
+      // Toggles the "Update all" toolbar button (ignored updates don't count).
+      context.hasModUpdates = context.mods.some((m) => m.updateAvailable);
       // Same gate as the wizard: CurseForge search/import needs the stored key.
       try {
         context.curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
@@ -330,22 +507,34 @@ router.get(
         status: s.status,
       }));
     } else if (tab === 'files') {
+      // File browsing exposes raw server files (names/sizes/types/downloads),
+      // so only accounts that can read them via the files API (admin/operator)
+      // get a listing here - the API route sets this same contract explicitly.
       const filesService = require('../../services/files');
       const rel = String(req.query.path || '');
-      try {
-        const listing = await filesService.list(row.id, rel);
-        context.files = listing.entries;
-        context.filePath = listing.path;
-        context.crumbs = listing.path
-          ? listing.path.split('/').map((seg, i, a) => ({ name: seg, path: a.slice(0, i + 1).join('/') }))
-          : [];
-        context.parentPath = context.crumbs.length > 1 ? context.crumbs[context.crumbs.length - 2].path : '';
-      } catch (err) {
-        pageDegraded('server-files-tab', err);
+      if (!['admin', 'operator'].includes(req.user.role)) {
         context.files = [];
-        context.filePath = '';
-        context.crumbs = [];
+        context.filePath = rel;
+        context.crumbs = rel
+          ? rel.split('/').map((seg, i, a) => ({ name: seg, path: a.slice(0, i + 1).join('/') }))
+          : [];
         context.parentPath = '';
+      } else {
+        try {
+          const listing = await filesService.list(row.id, rel);
+          context.files = listing.entries;
+          context.filePath = listing.path;
+          context.crumbs = listing.path
+            ? listing.path.split('/').map((seg, i, a) => ({ name: seg, path: a.slice(0, i + 1).join('/') }))
+            : [];
+          context.parentPath = context.crumbs.length > 1 ? context.crumbs[context.crumbs.length - 2].path : '';
+        } catch (err) {
+          pageDegraded('server-files-tab', err);
+          context.files = [];
+          context.filePath = '';
+          context.crumbs = [];
+          context.parentPath = '';
+        }
       }
     } else if (tab === 'map') {
       const mapService = require('../../services/map');
@@ -356,6 +545,53 @@ router.get(
       // Real per-category sizes from the storage index (view contract:
       // [{label, size, pct, color}]; empty → "run a scan" state).
       const indexer = require('../../storage/indexer');
+
+      // --- Health & stability: values already collected elsewhere, never shown
+      // on a live view. All best-effort - a Docker hiccup must not 500 the tab.
+      const isLive = ['running', 'starting', 'unhealthy', 'stalled'].includes(row.status);
+      if (isLive) {
+        try {
+          context.health = await require('../../docker/containers').inspectStatus(row.id);
+        } catch {
+          /* leave undefined - the card just omits the Docker-sourced fields */
+        }
+      }
+      // All-time totals plus a recent window, so the card shows whether trouble
+      // is current or ancient history. The events table is the persistence here
+      // (pruned at 90 days by the daily maintenance job), indexed on created_at.
+      const countEvents = (type, since) =>
+        db.get(
+          `SELECT COUNT(*) AS n FROM events WHERE server_id = ? AND type = ?` +
+            (since ? ` AND created_at >= datetime('now', ?)` : ''),
+          ...(since ? [row.id, type, since] : [row.id, type])
+        )?.n || 0;
+      context.stability = {
+        oomKills: countEvents('oom'),
+        oomKills24h: countEvents('oom', '-1 day'),
+        autoRestarts: countEvents('auto-restarted'),
+        autoRestarts24h: countEvents('auto-restarted', '-1 day'),
+        crashes: countEvents('crashed'),
+        crashes24h: countEvents('crashed', '-1 day'),
+        crashes7d: countEvents('crashed', '-7 days'),
+      };
+      context.lastCrash = db.get(
+        'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
+        row.id
+      );
+      context.recentEvents = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 8 }));
+
+      // --- Per-world / per-dimension sizes + host disk free.
+      try {
+        context.worldSizes = await require('../../services/worlds').listServerWorlds(row.id);
+      } catch {
+        context.worldSizes = [];
+      }
+      try {
+        context.diskFree = (await indexer.diskFree()).free;
+      } catch {
+        /* statfs failed - card omits the "free on disk" line */
+      }
+
       const total = indexer.sizeOf(`servers/${row.id}`);
       if (total > 0) {
         const cats = [
@@ -387,7 +623,13 @@ router.get(
     } else if (tab === 'settings') {
       // MOTD editing: expose the env for a client-side merge-and-PATCH; the
       // stored §-codes become &-codes for friendly editing.
-      context.settingsEnv = JSON.stringify(row.env);
+      // The raw env goes only to accounts that can write it back (the client
+      // merges-and-PATCHes against the API, which `requireWrite` blocks for
+      // viewers, and env_json can carry secrets like RCON_PASSWORD) - same
+      // privilege split as the admin-only Docker fields above.
+      if (req.user.role === 'admin' || req.user.role === 'operator') {
+        context.settingsEnv = JSON.stringify(row.env);
+      }
       context.motd = String(row.env.MOTD || '').replace(/§([0-9a-fk-orA-FK-OR])/g, '&$1');
 
       // Every catalog field configurable at creation, minus what's covered
@@ -413,17 +655,22 @@ router.get(
             .filter((f) => f.scope === 'env' && !(s.id === 'gameplay' && EXCLUDED_GAMEPLAY_KEYS.has(f.key))),
         }))
         .filter((s) => s.fields.length);
-    } else if (tab === 'integrations') {
-      context.integrations = {
-        discord: require('../../integrations/discord').getConfig(row.id),
-        statusPage: require('../../integrations/statusPage').getStatusPage(row.id),
-        invite: await require('../../integrations/invites')
+    } else if (tab === 'discord' || tab === 'status-page' || tab === 'invites' || tab === 'chatbot') {
+      // Each integration is its own page now; hydrate only the slice it needs.
+      // integrations.hbs switches on `sub` and renders exactly one card.
+      context.integrationsSub = tab;
+      context.integrations = {};
+      if (tab === 'discord') {
+        context.integrations.discord = require('../../integrations/discord').getConfig(row.id);
+      } else if (tab === 'status-page') {
+        context.integrations.statusPage = require('../../integrations/statusPage').getStatusPage(row.id);
+      } else if (tab === 'invites') {
+        context.integrations.invite = await require('../../integrations/invites')
           .inviteInfo(row.id)
-          .catch(() => null),
-      };
-      // Chatbot endpoint/model/prompt and transcript controls are admin-only.
-      // Do not even hydrate them into a non-admin render context.
-      if (req.user.role === 'admin') {
+          .catch(() => null);
+      } else if (tab === 'chatbot') {
+        if (req.user.role !== 'admin') return next();
+        // Chatbot endpoint/model/prompt and transcript controls are admin-only.
         context.integrations.wizard = require('../../services/wizard').getConfig(row.id);
       }
     } else if (tab === 'players') {
@@ -466,14 +713,23 @@ router.get(
         });
       context.wsConsole = true;
     } else if (tab === 'history') {
-      context.events = eventsService.listEvents({ serverId: row.id, limit: 100 }).map(eventVM);
+      context.events = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 100 }));
       context.crashReports = db
-        .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC', row.id)
+        .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
         .map(crashVM);
     } else if (tab === 'backups') {
       context.backups = db
-        .all('SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC', row.id)
+        .all('SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT 50', row.id)
         .map((b) => ({ id: b.id, file: b.filename, size: b.size_bytes, reason: b.reason, ts: b.created_at }));
+      const rc = require('../../services/backupRetention').effective(row.id);
+      context.retention = {
+        keepScheduled: rc.keepScheduled,
+        keepPreUpdate: rc.keepPreUpdate,
+        keepManual: rc.keepManual,
+        keepPreRestore: rc.keepPreRestore,
+        maxAgeDays: rc.maxAgeDays,
+        maxTotalGb: rc.maxTotalGb,
+      };
     }
 
     res.render('server-detail', context);
@@ -535,8 +791,15 @@ router.get('/updates', (req, res) => {
 });
 
 router.get('/backups', (req, res) => {
+  // Bounded list (newest 200) with a separate totals query. The pre-audit code
+  // rendered every backup row the table held and derived the totals from that
+  // in-memory array - a fleet with months of retention materialized the whole
+  // table on every page load just to show the newest entries.
+  const totals = db.get('SELECT COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS s FROM backups');
   const backups = db
-    .all(`SELECT b.*, s.display_name FROM backups b JOIN servers s ON s.id = b.server_id ORDER BY b.created_at DESC`)
+    .all(
+      `SELECT b.*, s.display_name FROM backups b JOIN servers s ON s.id = b.server_id ORDER BY b.created_at DESC LIMIT 200`
+    )
     .map((b) => ({
       id: b.id,
       serverId: b.server_id,
@@ -550,7 +813,7 @@ router.get('/backups', (req, res) => {
     title: 'Backups',
     active: 'backups',
     backups,
-    totals: { count: backups.length, bytes: backups.reduce((n, b) => n + (b.size || 0), 0) },
+    totals: { count: totals.n, bytes: totals.s },
   });
 });
 
@@ -578,13 +841,13 @@ router.get(
     const catNames = {
       servers: 'Servers',
       backups: 'Backups',
-      'library/worlds': 'Library - worlds',
-      'library/mods': 'Library - mods & content',
-      'library/modpacks': 'Library - modpacks',
-      'library/icons': 'Library - icons',
-      logs: 'Logs & event captures',
+      'library/worlds': 'Worlds library',
+      'library/mods': 'Mods and content library',
+      'library/modpacks': 'Modpacks library',
+      'library/icons': 'Icons library',
+      logs: 'Logs and event captures',
       blueprints: 'Blueprints',
-      tmp: 'tmp',
+      tmp: 'Temporary files',
     };
     const categories = Object.entries(catNames)
       .map(([rel, name]) => ({
@@ -605,7 +868,7 @@ router.get(
       { label: 'Library', cls: 'bg-gold-400', size: indexer.sizeOf('library') },
     ];
     segs.push({
-      label: 'Logs, blueprints, tmp',
+      label: 'Logs, blueprints, temporary files',
       cls: 'bg-stone-500',
       size: Math.max(0, totalUsed - segs.reduce((n, s) => n + s.size, 0)),
     });
@@ -620,7 +883,7 @@ router.get(
       return { key: action, action: label, frees: p.freedBytes, count: p.removed, days: olderThanDays || null };
     };
     const cleanup = await Promise.all([
-      preview('tmp', 'Purge tmp/ (files older than 1 h)'),
+      preview('tmp', 'Clear temporary files older than 1 hour'),
       preview('orphans', 'Remove orphaned library files'),
       preview('old-logs', `Delete archived logs older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
       preview('old-crashes', `Delete crash reports older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
@@ -677,17 +940,19 @@ router.get('/activity', (req, res) => {
   }
   const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
-  const total = db.get(`SELECT COUNT(*) AS n FROM events ${whereSql}`, ...params).n;
+  const total = db.get(`SELECT COUNT(*) AS n FROM events ${whereSql}`, ...params)?.n || 0;
   const pages = Math.max(1, Math.ceil(total / ACTIVITY_PER_PAGE));
   const page = Math.min(pages, Math.max(1, parseInt(req.query.page, 10) || 1));
-  const events = db
-    .all(
-      `SELECT * FROM events ${whereSql} ORDER BY id DESC LIMIT ? OFFSET ?`,
-      ...params,
-      ACTIVITY_PER_PAGE,
-      (page - 1) * ACTIVITY_PER_PAGE
-    )
-    .map((r) => eventVM({ ...r, details: safeJsonParse(r.details_json) }));
+  const events = eventsVM(
+    db
+      .all(
+        `SELECT * FROM events ${whereSql} ORDER BY id DESC LIMIT ? OFFSET ?`,
+        ...params,
+        ACTIVITY_PER_PAGE,
+        (page - 1) * ACTIVITY_PER_PAGE
+      )
+      .map((r) => ({ ...r, details: safeJsonParse(r.details_json) }))
+  );
 
   const filterParams = new URLSearchParams();
   if (q) filterParams.set('q', q);
@@ -747,7 +1012,8 @@ router.get(
 router.get('/settings', requireRole('admin'), (req, res) => {
   const apiKeys = require('../../services/apiKeys');
   const config = require('../../config');
-  const publicHost = require('../../services/settings').getPublicHost();
+  const settings = require('../../services/settings');
+  const publicHost = settings.getPublicHost();
   res.render('settings', {
     title: 'Settings',
     active: 'settings',
@@ -755,8 +1021,19 @@ router.get('/settings', requireRole('admin'), (req, res) => {
     publicHost,
     cookieSecureWarning: Boolean(publicHost) && config.cookieSecure === false,
     users: require('../../services/auth').listUsers(),
-    panel: { host: config.host, port: config.port },
-    defaults: config.defaults,
+    selfUserId: req.user.id,
+    panel: {
+      host: config.host,
+      port: config.port,
+      version: req.app.locals.appVersion,
+    },
+    defaults: settings.getDefaults(),
+    defaultsBase: config.defaults,
+    publicApiEnabled: settings.isPublicApiEnabled(),
+    apiTokens: require('../../services/apiTokens').listTokens(),
+    serverOptions: require('../../services/servers')
+      .listServers()
+      .map((s) => ({ id: s.id, name: s.display_name })),
   });
 });
 

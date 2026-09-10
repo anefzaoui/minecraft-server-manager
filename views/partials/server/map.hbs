@@ -9,11 +9,14 @@
         <a class="btn btn-sm" href="/map/{{server.id}}/" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Fullscreen</a>
         {{! Divider: destructive Disable must not sit flush against Fullscreen. }}
         <span class="h-5 w-px bg-line" aria-hidden="true"></span>
-        <button class="btn btn-ghost btn-sm text-danger" data-map-disable data-server-id="{{server.id}}">Disable map</button>
+        <button class="btn btn-ghost btn-sm text-danger" data-map-disable data-server-id="{{server.id}}">Disable Map</button>
       </div>
     </div>
     {{! map.js probes the proxy first - without this a stopped server showed
-        the proxy's raw error page inside the frame. }}
+        the proxy's raw error page inside the frame.
+        Raw stone-* palette, not theme tokens, on purpose: this is the letterbox
+        behind an always-dark 3D map canvas and must stay dark in both themes -
+        same rationale as .console (input.css). }}
     <div class="hidden h-[70vh] place-items-center bg-stone-950 px-6 text-center" data-map-placeholder>
       <div class="text-sm text-stone-400">
         {{{icon 'map' 'mx-auto size-6 text-stone-500'}}}
@@ -31,10 +34,13 @@
       real-time 3D map here, with player positions and every dimension. It is served only through the panel, never exposed directly.
     </p>
     {{#if mapSupported}}
-      <button class="btn btn-primary mt-5" data-map-enable data-server-id="{{server.id}}">{{{icon 'map' 'size-4'}}} Enable live map</button>
+      <button class="btn btn-primary mt-5" data-map-enable data-server-id="{{server.id}}">{{{icon 'map' 'size-4'}}} Enable Live Map</button>
       <p class="help mt-2">Installs the right BlueMap build for this server's loader. Takes effect on the next restart.</p>
     {{else}}
-      <p class="mt-4 rounded-md border border-line bg-raised p-3 text-xs text-ink-faint">BlueMap has no build for <b>{{server.flavor}}</b> servers. It needs a mod loader (Fabric, Forge, NeoForge, or Quilt) or a plugin server (the Paper family).</p>
+      <div class="notice mt-4 text-xs">
+        {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
+        <div>BlueMap has no build for <b class="text-ink">{{server.flavor}}</b> servers. It needs a mod loader (Fabric, Forge, NeoForge, or Quilt) or a plugin server (the Paper family).</div>
+      </div>
     {{/if}}
   </div>
 {{/if}}

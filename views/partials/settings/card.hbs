@@ -1,0 +1,16 @@
+{{!-- Settings section card - block partial so every section shares one header
+    treatment, padding and rhythm:
+
+      {{#> settings/card heading="Panel" desc="Optional one-liner."}}
+        …section body…
+      {{/settings/card}}
+
+    Params: heading, desc (optional sub-line), wide (span both columns at lg),
+    id (optional element id). --}}
+<section class="card p-4 sm:p-5{{#if wide}} lg:col-span-2{{/if}}"{{#if id}} id="{{id}}"{{/if}}>
+  <div class="mb-4">
+    <h3 class="text-sm font-semibold text-ink">{{heading}}</h3>
+    {{#if desc}}<p class="mt-1 max-w-prose text-xs leading-relaxed text-ink-faint">{{desc}}</p>{{/if}}
+  </div>
+  {{> @partial-block}}
+</section>

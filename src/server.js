@@ -38,7 +38,7 @@ function installRuntimeGuards() {
       require('./events').recordEvent({
         type: 'panel-error',
         actor: 'system',
-        summary: `Uncaught ${kind}: ${info.errorMessage}`.slice(0, 300),
+        summary: `Uncaught ${kind}: ${info.errorMessage}.`.slice(0, 300),
         details: info,
       });
     } catch {
@@ -177,7 +177,18 @@ function startBackgroundServices(httpServer) {
   // then every 24h.
   const ANALYTICS_RETENTION_DAYS = 90;
   const PANEL_DB_BACKUPS_KEEP = 14;
-  function runMaintenance() {
+  // Event history retention: previously events pruned ONLY when an admin hit
+  // POST /api/events/prune by hand, so the scheduler/watcher/lowdash writes the
+  // panel generates every day piled up without bound. A year of full action
+  // history is a reasonable ceiling for a control panel; a full year is past
+  // the point where anyone's auditing that far back.
+  const EVENT_RETENTION_DAYS = 365;
+  // API-cache retention: mostly short-TTL platform responses (searches, page
+  // metadata) that fall out of use but never got cleaned. 30 days bounds the
+  // table; long-lived keys like the Mojang manifest keep a fresh fetched_at so
+  // they always survive.
+  const API_CACHE_RETENTION_DAYS = 30;
+  async function runMaintenance() {
     try {
       const r = require('./analytics/ingest').pruneOlderThan(ANALYTICS_RETENTION_DAYS);
       const wizard = require('./services/wizard');
@@ -193,6 +204,30 @@ function startBackgroundServices(httpServer) {
     } catch (err) {
       logger.error('Pruning old analytics rows failed.', { err: serializeError(err) });
     }
+    // Event history + API-cache retention (see the constants above).
+    try {
+      const eventsPruned = await require('./events').pruneEvents(EVENT_RETENTION_DAYS, { actor: 'system' });
+      if (eventsPruned.removed) {
+        logger.info('Pruned old event history.', {
+          removedEvents: eventsPruned.removed,
+          removedExcerpts: eventsPruned.excerpts,
+          olderThanDays: EVENT_RETENTION_DAYS,
+        });
+      }
+      // Skip keys that carry their own invalidation and are meant to live for
+      // as long as the thing they describe: the per-server item registry is
+      // fingerprint-validated against the installed jars (never TTL-refreshed),
+      // so pruning it by age would force a full jar rescan every month.
+      const apiCacheRemoved = require('./db').run(
+        "DELETE FROM api_cache WHERE fetched_at < datetime('now', ?) AND key NOT LIKE 'item-registry:%'",
+        `-${API_CACHE_RETENTION_DAYS} days`
+      ).changes;
+      if (apiCacheRemoved) {
+        logger.info('Pruned old API cache rows.', { removed: apiCacheRemoved });
+      }
+    } catch (err) {
+      logger.error('Pruning event history or API cache failed.', { err: serializeError(err) });
+    }
     // Snapshot the panel DB itself - the server backups only cover per-server
     // world dirs, so without this the users/schedules/pins/history/2FA store has
     // no backup at all. VACUUM INTO is a safe hot copy; keep the newest N.
@@ -203,9 +238,9 @@ function startBackgroundServices(httpServer) {
       const dir = dataPath('backups', '_panel');
       fs.mkdirSync(dir, { recursive: true });
       const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
-      // VACUUM INTO is synchronous and blocks the event loop while it runs - log
-      // the pause so a long one is visible rather than mysterious.
-      const blockedMs = require('./db').backupTo(nodePath.join(dir, `panel-${stamp}.db`));
+      // VACUUM INTO runs in a worker thread now, so it can't block the event
+      // loop; log how long the copy took.
+      const blockedMs = await require('./db').backupTo(nodePath.join(dir, `panel-${stamp}.db`));
       logger.info('Snapshotted the panel database.', { blockedMs, dir: 'data/backups/_panel' });
       const snaps = fs
         .readdirSync(dir)
@@ -220,6 +255,22 @@ function startBackgroundServices(httpServer) {
   }
   setTimeout(runMaintenance, 60_000).unref();
   setInterval(runMaintenance, 24 * 3600 * 1000).unref();
+
+  // One-shot after boot so a freshly-updated panel repairs missing mod/datapack
+  // icons and names right away instead of waiting for the nightly
+  // content-meta-backfill schedule. Steady-state repair happens lazily from the
+  // Mods tab render.
+  setTimeout(
+    () =>
+      require('./services/contentIcons')
+        .backfillContentMeta()
+        .catch((err) => {
+          logger.error('The boot-time content-metadata backfill failed. The nightly schedule will retry.', {
+            err: serializeError(err, { includeStack: false }),
+          });
+        }),
+    90_000
+  ).unref();
 
   // Docker integration comes up in the background - the panel must stay usable
   // when the daemon is down (setup wizard handles that state).

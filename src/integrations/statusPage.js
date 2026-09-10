@@ -34,11 +34,12 @@ function setStatusPage(serverId, { enabled, slug }) {
     );
     return getStatusPage(serverId);
   }
-  if (!SLUG_RE.test(slug)) throw httpError(400, 'Slug must be 3–40 chars of lowercase letters, digits, or dashes');
+  if (!SLUG_RE.test(slug))
+    throw httpError(400, 'The page address must be 3 to 40 lowercase letters, numbers, or dashes.');
   const clash = db
     .all('SELECT server_id, config_json FROM integrations WHERE kind = ?', KIND)
     .find((r) => r.server_id !== serverId && JSON.parse(r.config_json || '{}').slug === slug);
-  if (clash) throw httpError(409, `The slug "${slug}" is already used by another server`);
+  if (clash) throw httpError(409, `That page address is already in use by another server.`);
 
   db.run(
     `INSERT INTO integrations (server_id, kind, enabled, config_json, updated_at)

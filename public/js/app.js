@@ -8,6 +8,7 @@ import { confirmDialog } from './lib/confirm.js';
 import { enhanceAll } from './lib/select.js';
 import { setBusy, withBusy } from './lib/loading.js';
 import { formatDateTime, timeAgo } from './lib/datetime.js';
+import { escapeHtml } from './lib/format.js';
 import './lib/tooltip.js';
 import './lib/dropdown.js';
 import './lib/taskTray.js';
@@ -29,9 +30,25 @@ document.addEventListener(
   (e) => {
     const img = e.target;
     if (!(img instanceof HTMLImageElement)) return;
+
     const fallback = img.dataset.fallbackIcon;
-    if (!fallback || img.src === new URL(fallback, location.href).href) return;
-    img.src = fallback;
+    if (fallback && img.src !== new URL(fallback, location.href).href) {
+      img.src = fallback;
+      return;
+    }
+
+    // Mod-list icons have no fallback URL - swap in the server-rendered puzzle
+    // placeholder template so a dead /library/icons path never shows a
+    // broken-image glyph. Guarded so it can't loop.
+    if (img.dataset.modIcon !== undefined && !img.dataset.iconFailed) {
+      img.dataset.iconFailed = '1';
+      const tpl = document.getElementById('mod-icon-fallback');
+      if (tpl && tpl.content.firstElementChild) {
+        img.replaceWith(tpl.content.firstElementChild.cloneNode(true));
+      } else {
+        img.remove();
+      }
+    }
   },
   true
 );
@@ -69,23 +86,99 @@ for (const el of document.querySelectorAll('[data-ts], [data-ts-ago]')) {
 })();
 
 // ---- Mobile sidebar ----
+// A real drawer: locks body scroll, traps Tab inside the panel, moves focus in
+// on open and back to the toggle on close, and force-closes (clearing the
+// translate) when the viewport grows past the lg breakpoint where the sidebar
+// becomes a static column.
 (() => {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('sidebar-backdrop');
   const toggle = document.getElementById('sidebar-toggle');
   if (!sidebar || !toggle) return;
-  const close = () => {
+
+  const desktop = window.matchMedia('(min-width: 1024px)');
+  const isOpen = () => !sidebar.classList.contains('-translate-x-full');
+
+  const focusables = () =>
+    [...sidebar.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(
+      (el) => el.offsetParent !== null
+    );
+
+  const onKeydown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const items = focusables();
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
+  function open() {
+    sidebar.classList.remove('-translate-x-full');
+    backdrop.classList.remove('hidden');
+    toggle.setAttribute('aria-expanded', 'true');
+    // Only lock scroll / trap focus while it's an overlay (below lg).
+    if (!desktop.matches) {
+      document.documentElement.style.overflow = 'hidden';
+      document.addEventListener('keydown', onKeydown);
+      focusables()[0]?.focus();
+    }
+  }
+
+  function close() {
+    if (!isOpen()) return;
     sidebar.classList.add('-translate-x-full');
     backdrop.classList.add('hidden');
-  };
-  toggle.addEventListener('click', () => {
-    const closed = sidebar.classList.toggle('-translate-x-full');
-    backdrop.classList.toggle('hidden', closed);
-  });
+    toggle.setAttribute('aria-expanded', 'false');
+    document.documentElement.style.overflow = '';
+    document.removeEventListener('keydown', onKeydown);
+    toggle.focus();
+  }
+
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-controls', 'sidebar');
+  toggle.addEventListener('click', () => (isOpen() ? close() : open()));
   backdrop.addEventListener('click', close);
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !sidebar.classList.contains('-translate-x-full')) close();
+
+  // Crossing into desktop: the panel is a static column again - drop the
+  // overlay state so a drawer left "open" doesn't keep the body scroll-locked.
+  desktop.addEventListener('change', (e) => {
+    if (e.matches) {
+      sidebar.classList.remove('-translate-x-full');
+      backdrop.classList.add('hidden');
+      document.documentElement.style.overflow = '';
+      document.removeEventListener('keydown', onKeydown);
+      toggle.setAttribute('aria-expanded', 'false');
+    } else {
+      sidebar.classList.add('-translate-x-full');
+    }
   });
+})();
+
+// ---- World-controls rail: static open panel at xl, collapsible below ----
+// The <details> ships closed (good on a phone - it's ~70 chips); at xl it must
+// always be open and lose its disclosure row so it reads as the sticky rail it
+// used to be.
+(() => {
+  const rail = document.getElementById('wc-rail');
+  if (!rail || rail.tagName !== 'DETAILS') return;
+  const wide = window.matchMedia('(min-width: 1280px)'); // Tailwind xl
+  const sync = () => {
+    rail.open = wide.matches;
+  };
+  sync();
+  wide.addEventListener('change', sync);
 })();
 
 // ---- Dashboard: live text filter over server cards ----
@@ -151,16 +244,10 @@ document.addEventListener('click', async (e) => {
   const name = btn.dataset.serverName || 'server';
 
   if (action === 'delete') {
-    const ok = await confirmDialog({
-      title: `Delete ${name}?`,
-      message: 'This permanently deletes the container, its world, mods, and config. Backups are kept.',
-      confirmLabel: 'Delete forever',
-      danger: true,
-      requireText: name,
-    });
+    const ok = await confirmDelete({ name, id });
     if (!ok) return;
     const restore = setBusy(btn, 'Deleting…');
-    const res = await api(`/api/servers/${id}`, 'DELETE');
+    const res = await api(`/api/servers/${id}${ok.deleteData ? '?deleteFiles=true&deleteBackups=true' : ''}`, 'DELETE');
     if (res.ok) {
       toast('Server deleted.');
       location.href = '/';
@@ -182,7 +269,7 @@ document.addEventListener('click', async (e) => {
       title: `Force stop ${name}?`,
       message:
         'A force stop skips the normal shutdown, so any unsaved world changes can be lost. Use Stop instead unless the server is frozen.',
-      confirmLabel: 'Force stop',
+      confirmLabel: 'Force Stop',
       danger: true,
     });
     if (!ok) return;
@@ -235,6 +322,94 @@ async function api(url, method = 'GET', body) {
   }
 }
 window.CD.api = api;
+
+// ---- Delete confirmation: requires typing the server name. Files and backups
+// are KEPT on disk by default; a danger checkbox opts in to permanently
+// deleting them. Resolves to falsy when cancelled, or { deleteData: boolean }. ----
+function confirmDelete({ name }) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const settle = (v) => {
+      if (settled) return;
+      settled = true;
+      resolve(v);
+    };
+
+    const content = document.createElement('div');
+    content.className = 'space-y-3 text-sm';
+
+    const p = document.createElement('p');
+    p.textContent =
+      'This removes the server from the panel but keeps its files and backups on disk. Tick the box below only if you want to permanently delete those files and backups too.';
+    content.appendChild(p);
+
+    const delWrap = document.createElement('label');
+    delWrap.className = 'flex cursor-pointer items-start gap-2 rounded-md border border-danger/40 bg-red-500/10 p-2.5';
+    const delInput = document.createElement('input');
+    delInput.type = 'checkbox';
+    delInput.className = 'msm-check mt-0.5 shrink-0';
+    delInput.checked = false;
+    const delText = document.createElement('span');
+    delText.textContent = 'Also permanently delete the server files and backups from disk.';
+    delWrap.append(delInput, delText);
+    content.appendChild(delWrap);
+
+    const wrap = document.createElement('div');
+    const label = document.createElement('label');
+    label.className = 'label';
+    label.innerHTML = `Type <b class="font-mono">${escapeHtml(name)}</b> to confirm`;
+    const input = document.createElement('input');
+    input.className = 'input font-mono';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    const mismatch = document.createElement('p');
+    mismatch.className = 'mt-1 hidden text-xs text-danger';
+    mismatch.textContent = "That name doesn't match.";
+    wrap.append(label, input, mismatch);
+    content.appendChild(wrap);
+
+    const modal = openModal({
+      title: `Delete ${name}?`,
+      content,
+      size: 'sm',
+      onClose: () => settle(null),
+      actions: [
+        { label: 'Cancel', kind: 'ghost', onClick: () => settle(null) },
+        {
+          label: 'Delete Forever',
+          kind: 'danger',
+          onClick: () => {
+            if (input.value !== name) {
+              input.classList.add('border-danger');
+              mismatch.classList.remove('hidden');
+              input.focus();
+              return false;
+            }
+            settle({ deleteData: delInput.checked });
+          },
+        },
+      ],
+    });
+
+    const confirmBtn = modal.el.querySelector('.btn-danger');
+    confirmBtn.disabled = true;
+    input.addEventListener('input', () => {
+      confirmBtn.disabled = input.value !== name;
+      input.classList.remove('border-danger');
+      mismatch.classList.add('hidden');
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      if (confirmBtn.disabled) {
+        input.classList.add('border-danger');
+        mismatch.classList.remove('hidden');
+        return;
+      }
+      confirmBtn.click();
+    });
+  });
+}
 
 // ---- Copy-to-clipboard: [data-copy="text"] or [data-copy-from="#selector"] ----
 // Robust across contexts: the async Clipboard API only works on HTTPS/localhost,

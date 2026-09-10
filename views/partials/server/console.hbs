@@ -4,18 +4,32 @@
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="INFO" checked> INFO</label>
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="WARN" checked> WARN</label>
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="ERROR" checked> ERROR</label>
+    <label class="chip cursor-pointer gap-1.5" data-tip="Hides the repeating connection lines the panel adds every few seconds while it checks on your server over its remote console (RCON): player count, time and world settings. Turn this off to see the raw log exactly as the server writes it."><input type="checkbox" class="msm-check" id="console-hide-rcon" checked> Hide Console Noise</label>
     <div class="ml-auto flex flex-wrap items-center gap-2">
       <div class="flex items-center gap-1.5" data-tip="Announce your console commands in the game chat under this name, for example Server Admin. Leave blank to stay silent. This is separate from the game's own [Rcon] line.">
         {{{icon 'megaphone' 'size-3.5 text-ink-faint'}}}
         <input class="input w-36" id="console-label" placeholder="Announce as…" aria-label="Announce console commands as" value="{{server.consoleLabel}}" maxlength="48" autocomplete="off" spellcheck="false">
         <button class="btn btn-sm" id="console-label-save">Save</button>
       </div>
-      {{! A real download link - window.open gave no feedback and no download semantics. }}
-      <a class="btn btn-sm" href="/api/servers/{{server.id}}/logs?tail=5000" download="{{server.name}}-console.log">{{{icon 'download' 'size-3.5'}}} Download</a>
+      <button class="btn btn-sm" data-menu="console-dl-menu">{{{icon 'download' 'size-3.5'}}} Download {{{icon 'chevron-down' 'size-3.5'}}}</button>
+      <template id="console-dl-menu">
+        <a href="/api/servers/{{server.id}}/logs?tail=2000" download="{{server.name}}-recent.log">{{{icon 'scroll-text' 'size-3.5'}}} Recent Output (Last 2000 Lines)</a>
+        <a href="/api/servers/{{server.id}}/logs/game/latest.log" download>{{{icon 'file-text' 'size-3.5'}}} Full latest.log</a>
+        <a href="/api/servers/{{server.id}}/logs/bundle.zip" download>{{{icon 'folder-archive' 'size-3.5'}}} All Log Files (.zip)</a>
+      </template>
     </div>
   </div>
 
-  <div class="console h-96 overflow-y-auto" id="console-log">
+  {{! Rotated game logs the server itself keeps next to latest.log. Populated by
+      console.js on load; hidden until there's at least one. }}
+  <details class="mb-3 rounded-md border border-line text-xs" data-console-logfiles hidden>
+    <summary class="cursor-pointer px-3 py-2 font-semibold text-ink-faint marker:content-none">
+      {{{icon 'archive' 'size-3.5'}}} Older log files <span data-console-logfiles-count></span>
+    </summary>
+    <div class="divide-y divide-line border-t border-line" data-console-logfiles-list></div>
+  </details>
+
+  <div class="console h-96 overflow-y-auto overflow-x-auto break-words" id="console-log">
     {{#if consoleLines}}
       {{#each consoleLines}}
         <div data-level="{{level}}"{{#if (eq level 'WARN')}} class="text-gold-300"{{/if}}{{#if (eq level 'ERROR')}} class="text-redstone-400"{{/if}}>{{text}}</div>
@@ -39,11 +53,11 @@
     <button class="btn btn-primary" id="console-send">{{{icon 'terminal' 'size-4'}}} Send</button>
   </div>
   <div class="mt-2 flex flex-wrap gap-1.5">
-    <button class="chip hover:border-grass-600" data-quick-cmd="time set day">{{{icon 'sun' 'size-3.5'}}} time set day</button>
-    <button class="chip hover:border-grass-600" data-quick-cmd="weather clear">{{{icon 'cloud-sun' 'size-3.5'}}} weather clear</button>
-    <button class="chip hover:border-grass-600" data-quick-cmd="save-all">{{{icon 'save' 'size-3.5'}}} save-all</button>
-    <button class="chip hover:border-grass-600" data-quick-cmd="whitelist list">{{{icon 'clipboard-copy' 'size-3.5'}}} whitelist list</button>
-    <button class="chip hover:border-grass-600" data-quick-cmd="list">{{{icon 'users' 'size-3.5'}}} list</button>
+    <button class="chip" data-quick-cmd="time set day">{{{icon 'sun' 'size-3.5'}}} time set day</button>
+    <button class="chip" data-quick-cmd="weather clear">{{{icon 'cloud-sun' 'size-3.5'}}} weather clear</button>
+    <button class="chip" data-quick-cmd="save-all">{{{icon 'save' 'size-3.5'}}} save-all</button>
+    <button class="chip" data-quick-cmd="whitelist list">{{{icon 'clipboard-copy' 'size-3.5'}}} whitelist list</button>
+    <button class="chip" data-quick-cmd="list">{{{icon 'users' 'size-3.5'}}} list</button>
   </div>
 </div>
 <script type="module" src="/js/pages/console.js"></script>

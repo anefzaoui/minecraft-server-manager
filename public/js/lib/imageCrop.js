@@ -14,8 +14,8 @@ import { openModal } from './modal.js';
 import { toast } from './toast.js';
 import { clampBox, resizeBox, pickExport, MIN_CROP_PX, OUTPUT_MAX_PX } from './cropMath.js';
 
-const RASTER_MAX = 1024; // long-edge px cap for the crop source (SVG raster + oversized photos)
-const SERVER_MAX_BYTES = 512 * 1024; // must match the multer limit in routes/account.js
+const RASTER_MAX = 2048; // long-edge px cap for the crop source (SVG raster + oversized photos)
+const SERVER_MAX_BYTES = 16 * 1024 * 1024; // must match the multer limit in routes/account.js
 
 export function openCropModal(file) {
   return new Promise((resolve) => {
@@ -48,7 +48,7 @@ export function openCropModal(file) {
           actions: [
             { label: 'Cancel', kind: 'ghost' },
             {
-              label: 'Use photo',
+              label: 'Use Photo',
               kind: 'primary',
               busyLabel: 'Processing…',
               onClick: async () => {

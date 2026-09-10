@@ -2,6 +2,7 @@
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { setBusy, withBusy } from '../lib/loading.js';
+import { fmtBytes, escapeHtml } from '../lib/format.js';
 
 const log = document.getElementById('console-log');
 const input = document.getElementById('console-input');
@@ -14,6 +15,9 @@ function init(serverId) {
   let autoScroll = true;
   let ws = null;
   let reconnectDelay = 1000;
+  // Reconnect cadence after a clean stream end (server stopped) - see the close
+  // handler for why this can't share the exponential backoff above.
+  const STOPPED_RETRY_MS = 5000;
   // Server-rendered initial lines show instantly; the WS resends the same tail
   // on connect, so the first 'log' batch replaces them instead of duplicating.
   let clearedInitial = false;
@@ -45,8 +49,60 @@ function init(serverId) {
     })
   );
 
+  // ---- Rotated game-log files (logs/*.log.gz next to latest.log) ----
+  (async () => {
+    const box = document.querySelector('[data-console-logfiles]');
+    if (!box) return;
+    try {
+      const res = await fetch(`/api/servers/${serverId}/logs/game`);
+      const data = await res.json().catch(() => ({}));
+      // latest.log is already a menu item; list only the rotated history here.
+      const rotated = (data.files || []).filter((f) => f.file !== 'latest.log');
+      if (!res.ok || !rotated.length) return;
+      box.querySelector('[data-console-logfiles-count]').textContent = `(${rotated.length})`;
+      box.querySelector('[data-console-logfiles-list]').innerHTML = rotated
+        .map(
+          (f) => `
+        <a class="flex items-center justify-between gap-3 px-3 py-1.5 hover:bg-inset" download
+           href="/api/servers/${serverId}/logs/game/${encodeURIComponent(f.file)}">
+          <span class="min-w-0 truncate font-mono">${escapeHtml(f.file)}</span>
+          <span class="shrink-0 text-ink-faint">${fmtBytes(f.size)}</span>
+        </a>`
+        )
+        .join('');
+      box.hidden = false;
+    } catch {
+      /* offline / no logs dir yet - leave the section hidden */
+    }
+  })();
+
   const filters = { INFO: true, WARN: true, ERROR: true };
   const filterInput = document.getElementById('console-filter');
+
+  // The panel opens a short-lived RCON connection every poll cycle, so the
+  // server logs this pair of lines every ~20s. They classify as INFO, so the
+  // level checkboxes can't isolate them - hence a dedicated toggle. Kept tight
+  // so panel-issued "[rcon]: …" command output is never matched. The last entry
+  // catches the plugin echo ("[Essentials] Rcon issued server command: /…", and
+  // the plain "[Server] …" core variant) for the read-only polls the panel runs
+  // on a timer: `list` for player counts, and `time query …` / bare `gamerule
+  // <name>` reads while the World Controls page is open. Scoped to those forms
+  // so a state-changing command you type (time set, gamerule x true, …) shows.
+  // Every pattern is anchored to the log-line body right after the
+  // "[thread/LEVEL]: " prefix (optionally a "[Plugin] " tag), so a player
+  // saying "Thread RCON Client started" in chat ("<Steve> ...") never matches.
+  const RCON_NOISE = [
+    /\]:\s*Thread RCON Client\b.*\b(started|shutting down)\b/i,
+    /\]:\s*Thread RCON Listener started\b/i,
+    /\]:\s*RCON running on \b/i,
+    /\]:\s*(?:\[[^\]]+\]\s*)?Rcon issued server command:\s*\/?(list|time query \w+|gamerule \S+)\s*$/i,
+  ];
+  let hideRconNoise = true;
+  try {
+    hideRconNoise = localStorage.getItem('msm-console-hide-rcon') !== '0';
+  } catch {
+    /* private mode / storage disabled - keep the default */
+  }
 
   function classify(text) {
     if (/\/(ERROR|FATAL)\]/.test(text)) return 'ERROR';
@@ -140,7 +196,8 @@ function init(serverId) {
         match = el.textContent.toLowerCase().includes(q.toLowerCase());
       }
     }
-    el.classList.toggle('hidden', !filters[el.dataset.level] || !match);
+    const noisy = hideRconNoise && RCON_NOISE.some((re) => re.test(el.textContent));
+    el.classList.toggle('hidden', !filters[el.dataset.level] || !match || noisy);
   }
 
   function refilter() {
@@ -170,12 +227,22 @@ function init(serverId) {
   // One visible marker while the stream is down - the log just stopping is
   // indistinguishable from a quiet server.
   let disconnectNote = null;
+  // Set when the last close was a clean 'log-end' (server not running) rather
+  // than a dropped socket - drives the slow reconnect cadence below.
+  let streamEnded = false;
   function connect() {
+    // Reconnecting after a clean stream end re-tails the container: the broker
+    // replays the last lines, which are already on screen. Replace the log with
+    // that batch instead of appending it again (and again, every poll) - and
+    // keep the "server is stopped" note until real output arrives.
+    const retailing = streamEnded;
+    if (retailing) clearedInitial = false;
+    streamEnded = false;
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}/ws/console/${serverId}`);
     ws.addEventListener('open', () => {
       reconnectDelay = 1000;
-      if (disconnectNote) {
+      if (disconnectNote && !retailing) {
         disconnectNote.remove();
         disconnectNote = null;
       }
@@ -191,6 +258,7 @@ function init(serverId) {
         if (!clearedInitial) {
           clearedInitial = true;
           log.innerHTML = '';
+          disconnectNote = null; // wiped with the rest of the log
         }
         for (const line of msg.text.split(/\r?\n/)) if (line.trim()) appendLine(line);
       } else if (msg.kind === 'cmd-result') {
@@ -201,6 +269,13 @@ function init(serverId) {
       } else if (msg.kind === 'error') {
         ackPending();
         appendLine(`[panel/WARN]: ${msg.message}`);
+      } else if (msg.kind === 'log-end') {
+        // The upstream docker log stream ended (server stopped / restarted).
+        // The server keeps this socket open, so drive the reconnect ourselves -
+        // on the slow "stopped" cadence, since retrying at once just re-tails a
+        // container that produces no output until it starts again.
+        streamEnded = true;
+        ws.close();
       }
     });
     ws.addEventListener('close', () => {
@@ -208,12 +283,23 @@ function init(serverId) {
       if (!disconnectNote) {
         disconnectNote = document.createElement('div');
         disconnectNote.className = 'text-gold-300';
-        disconnectNote.textContent = '[panel/WARN]: Log stream disconnected. Reconnecting…';
+        disconnectNote.textContent = streamEnded
+          ? '[panel/WARN]: Server is stopped. Watching for it to start again…'
+          : '[panel/WARN]: Log stream disconnected. Reconnecting…';
         log.appendChild(disconnectNote);
         if (autoScroll) log.scrollTop = log.scrollHeight;
       }
-      setTimeout(connect, reconnectDelay);
-      reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+      // A clean stream end means the server is not running, but our WS server
+      // still accepts the upgrade - so 'open' fires on every reconnect and
+      // resets the backoff, leaving a ~1s loop that re-tails a stopped
+      // container forever. Poll on a slow fixed cadence instead; keep the
+      // exponential backoff for genuine drops (network blips, panel restart).
+      if (streamEnded) {
+        setTimeout(connect, STOPPED_RETRY_MS);
+      } else {
+        setTimeout(connect, reconnectDelay);
+        reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+      }
     });
   }
   connect();
@@ -230,6 +316,23 @@ function init(serverId) {
       refilter();
     });
   });
+
+  const noiseToggle = document.getElementById('console-hide-rcon');
+  if (noiseToggle) {
+    noiseToggle.checked = hideRconNoise;
+    noiseToggle.addEventListener('change', () => {
+      hideRconNoise = noiseToggle.checked;
+      try {
+        localStorage.setItem('msm-console-hide-rcon', hideRconNoise ? '1' : '0');
+      } catch {
+        /* storage disabled - the toggle still works for this session */
+      }
+      refilter();
+    });
+  }
+  // The server-rendered initial tail is visible until something filters it -
+  // run one pass now so a stored "hide" preference applies before any WS line.
+  refilter();
 
   // The send control stays busy until the RCON response (cmd-result/error) or
   // ws ack arrives. Entries self-remove; a failsafe timeout catches lost acks.

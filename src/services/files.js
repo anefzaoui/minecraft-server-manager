@@ -16,7 +16,13 @@ const { safeJoin } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const indexer = require('../storage/indexer');
 
-const MAX_TEXT_BYTES = 2 * 1024 * 1024; // editor cap
+const MAX_TEXT_BYTES = 8 * 1024 * 1024; // editor cap
+const MAX_TEXT_MB_LABEL = '8 MB';
+// "find in files" limits - keep a search over a big modpack dir bounded.
+const SEARCH_MAX_MATCHES = 300;
+const SEARCH_MAX_FILE_BYTES = 2 * 1024 * 1024;
+const SEARCH_MAX_FILES_SCANNED = 8000;
+const SEARCH_SKIP_DIRS = new Set(['.git', 'node_modules', 'cache', '.cache', 'libraries', 'versions', 'crash-reports']);
 // Global scope: panel-internal files at the DATA_DIR root that must never be read,
 // written, listed, or downloaded from the UI - the database (password hashes + the
 // at-rest secret cipher) and the session secret (that cipher's key + the cookie
@@ -92,7 +98,7 @@ async function list(serverId, relPath = '') {
   return { path: rel, entries };
 }
 
-/** Read a text file (≤ 2 MB; binary rejected by null-byte sniff). */
+/** Read a text file (≤ MAX_TEXT_BYTES; binary rejected by null-byte sniff). */
 async function readText(serverId, relPath) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
@@ -101,7 +107,7 @@ async function readText(serverId, relPath) {
   if (st.size > MAX_TEXT_BYTES) {
     throw httpError(
       413,
-      `File is too large for the editor (${humanBytes(st.size)} - limit is 2 MB). Download it instead.`
+      `File is too large for the editor (${humanBytes(st.size)} - limit is ${MAX_TEXT_MB_LABEL}). Download it instead.`
     );
   }
   const buf = await fsp.readFile(abs);
@@ -117,7 +123,7 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
   guardProtected(serverId, rel);
   if (!rel) throw httpError(400, 'Cannot write the root');
   const bytes = Buffer.byteLength(content, 'utf8');
-  if (bytes > MAX_TEXT_BYTES) throw httpError(413, 'Content exceeds the 2 MB editor limit');
+  if (bytes > MAX_TEXT_BYTES) throw httpError(413, `Content exceeds the ${MAX_TEXT_MB_LABEL} editor limit`);
   assertRoom(serverId, bytes);
 
   const parent = path.dirname(abs);
@@ -134,7 +140,7 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
     serverId: serverId || null,
     actor,
     type: 'file-written',
-    summary: `File ${existing ? 'saved' : 'created'}: ${rel} (${humanBytes(bytes)})`,
+    summary: `File ${existing ? 'saved' : 'created'}: ${rel} (${humanBytes(bytes)}).`,
     details: { path: rel, sizeBytes: bytes, created: !existing },
   });
   return { path: rel, size: bytes };
@@ -149,7 +155,7 @@ async function mkdir(serverId, relPath, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-mkdir',
-    summary: `Folder created: ${rel}`,
+    summary: `Folder created: ${rel}.`,
     details: { path: rel },
   });
   return { path: rel };
@@ -173,7 +179,7 @@ async function rename(serverId, relPath, newName, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-renamed',
-    summary: `Renamed: ${rel} → ${clean}`,
+    summary: `Renamed: ${rel} → ${clean}.`,
     details: { from: rel, to: clean },
   });
   return { path: rel.includes('/') ? `${rel.slice(0, rel.lastIndexOf('/'))}/${clean}` : clean };
@@ -198,7 +204,7 @@ async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-moved',
-    summary: `Moved: ${rel} → ${toRel}`,
+    summary: `Moved: ${rel} → ${toRel}.`,
     details: { from: rel, to: toRel },
   });
   return { path: toRel };
@@ -227,7 +233,7 @@ async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-copied',
-    summary: `Copied: ${rel} → ${toRel} (${humanBytes(bytes)})`,
+    summary: `Copied: ${rel} → ${toRel} (${humanBytes(bytes)}).`,
     details: { from: rel, to: toRel, sizeBytes: bytes },
   });
   indexer.scheduleScan();
@@ -247,7 +253,7 @@ async function remove(serverId, relPath, { actor = 'system' } = {}) {
     serverId: serverId || null,
     actor,
     type: 'file-deleted',
-    summary: `Deleted: ${rel} (${humanBytes(freedBytes)} freed)`,
+    summary: `Deleted: ${rel} (${humanBytes(freedBytes)} freed).`,
     details: { path: rel, freedBytes },
   });
   indexer.scheduleScan();
@@ -270,7 +276,7 @@ async function acceptUpload(serverId, destRel, tmpAbs, originalName, { actor = '
     serverId: serverId || null,
     actor,
     type: 'file-uploaded',
-    summary: `Uploaded: ${rel} (${humanBytes(size)})`,
+    summary: `Uploaded: ${rel} (${humanBytes(size)}).`,
     details: { path: rel, sizeBytes: size },
   });
   indexer.scheduleScan();
@@ -355,10 +361,93 @@ function humanBytes(n) {
   return `${Math.max(1, Math.round(n / 1024))} KB`;
 }
 
+/**
+ * Grep for a plain substring across text files under the scope. Bounded on every
+ * axis (files scanned, per-file size, total matches) so a search over a big
+ * modpack tree can't run away. Returns { query, matches:[{path,line,col,text}],
+ * truncated, filesScanned }.
+ */
+async function searchFiles(serverId, query, { caseSensitive = false, subdir = '' } = {}) {
+  const needle = String(query || '');
+  if (needle.length < 2) throw httpError(400, 'Enter at least 2 characters to search for.');
+  if (needle.length > 200) throw httpError(400, 'Search text is too long.');
+  const { abs: rootAbs, rel: rootRel } = resolvePath(serverId, subdir);
+  const rootStat = await fsp.stat(rootAbs).catch(() => null);
+  if (!rootStat || !rootStat.isDirectory()) throw httpError(404, 'Folder not found');
+
+  const hay = caseSensitive ? null : needle.toLowerCase();
+  const matches = [];
+  let filesScanned = 0;
+  let truncated = false;
+
+  const walk = async (dirAbs, dirRel) => {
+    if (truncated) return;
+    let dirents;
+    try {
+      dirents = await fsp.readdir(dirAbs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of dirents) {
+      if (truncated) return;
+      const childRel = dirRel ? `${dirRel}/${e.name}` : e.name;
+      if (!serverId && isProtectedGlobal(childRel)) continue;
+      const childAbs = path.join(dirAbs, e.name);
+      if (e.isDirectory()) {
+        if (SEARCH_SKIP_DIRS.has(e.name)) continue;
+        await walk(childAbs, childRel);
+        continue;
+      }
+      if (!e.isFile()) continue;
+      if (++filesScanned > SEARCH_MAX_FILES_SCANNED) {
+        truncated = true;
+        return;
+      }
+      let st;
+      try {
+        st = await fsp.stat(childAbs);
+      } catch {
+        continue;
+      }
+      if (st.size === 0 || st.size > SEARCH_MAX_FILE_BYTES) continue;
+      let buf;
+      try {
+        buf = await fsp.readFile(childAbs);
+      } catch {
+        continue;
+      }
+      if (buf.subarray(0, 8192).includes(0)) continue; // binary
+      const text = buf.toString('utf8');
+      const lines = text.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const idx = caseSensitive ? line.indexOf(needle) : line.toLowerCase().indexOf(hay);
+        if (idx === -1) continue;
+        matches.push({
+          // path is relative to the manager's root, so the client can open it directly
+          path: rootRel ? `${rootRel}/${childRel}`.replace(/^\/+/, '') : childRel,
+          line: i + 1,
+          col: idx + 1,
+          text: line.length > 300 ? `${line.slice(0, 300)}…` : line,
+        });
+        if (matches.length >= SEARCH_MAX_MATCHES) {
+          truncated = true;
+          return;
+        }
+        break; // one hit per line is enough for a results list
+      }
+    }
+  };
+
+  await walk(rootAbs, '');
+  return { query: needle, matches, truncated, filesScanned };
+}
+
 module.exports = {
   list,
   readText,
   writeText,
+  searchFiles,
   mkdir,
   rename,
   move,

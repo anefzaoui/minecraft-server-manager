@@ -16,14 +16,15 @@ const CLASS_PLUGINS = 5;
 
 async function cfFetch(pathname, { search, ttlMs = 10 * 60 * 1000, method = 'GET', body } = {}) {
   const key = apiKeys.getKey('curseforge');
-  if (!key) throw httpError(412, 'CurseForge API key not set - add it in Settings');
+  if (!key) throw httpError(412, 'The CurseForge API key is not set. Add it in Settings.');
 
   const url = new URL(BASE + pathname);
   if (search) for (const [k, v] of Object.entries(search)) url.searchParams.set(k, String(v));
   const cacheKey = `curseforge:${method}:${url.pathname}${url.search}:${body ? JSON.stringify(body) : ''}`;
   const cached =
     method === 'GET' ? db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', cacheKey) : null;
-  if (cached && Date.now() - Date.parse(cached.fetched_at + 'Z') < ttlMs) return JSON.parse(cached.value_json);
+  if (cached && Date.now() - Date.parse(cached.fetched_at.replace(' ', 'T') + 'Z') < ttlMs)
+    return JSON.parse(cached.value_json);
   const res = await fetch(url, {
     method,
     headers: { 'x-api-key': key, Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
@@ -36,7 +37,7 @@ async function cfFetch(pathname, { search, ttlMs = 10 * 60 * 1000, method = 'GET
     if (cached) return JSON.parse(cached.value_json);
     throw httpError(429, 'CurseForge is rate-limiting us. Please try again in a minute.');
   }
-  if (res.status === 403) throw httpError(403, 'CurseForge rejected the API key - re-check it in Settings');
+  if (res.status === 403) throw httpError(403, 'CurseForge rejected the API key. Check it in Settings.');
   if (res.status === 404) throw httpError(404, "That wasn't found on CurseForge.");
   if (!res.ok) throw httpError(502, 'CurseForge is not responding correctly right now. Please try again shortly.');
   const data = await res.json();

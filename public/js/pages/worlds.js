@@ -76,7 +76,7 @@ export function uploadWorldModal({ onDone } = {}) {
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       {
-        label: 'Upload & import',
+        label: 'Upload & Import',
         kind: 'primary',
         busyLabel: 'Uploading…',
         onClick: () => {
@@ -130,7 +130,7 @@ export function uploadWorldModal({ onDone } = {}) {
             });
             xhr.addEventListener('error', () => {
               busy = false;
-              toast('Network error during upload.', { kind: 'error' });
+              toast('The upload could not be completed. Check your connection and try again.', { kind: 'error' });
               resolve(false);
             });
             xhr.send(form);
@@ -166,7 +166,7 @@ export function extractWorldModal({ serverId = null, onDone } = {}) {
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       {
-        label: 'Snapshot world',
+        label: 'Snapshot World',
         kind: 'primary',
         busyLabel: 'Snapshotting…',
         onClick: async () => {
@@ -230,7 +230,7 @@ export function installWorldModal(libId, libName, { serverId = null, onDone } = 
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       {
-        label: 'Install world',
+        label: 'Install World',
         kind: 'primary',
         busyLabel: 'Installing…',
         onClick: async () => {
@@ -271,7 +271,7 @@ export async function installWithConfirm(url, body) {
       title: 'Compatibility warnings',
       message: 'The panel found possible problems with this install:',
       detail: res.warnings.join('\n\n'),
-      confirmLabel: 'Install anyway',
+      confirmLabel: 'Install Anyway',
       danger: true,
     });
     if (!ok) return null;

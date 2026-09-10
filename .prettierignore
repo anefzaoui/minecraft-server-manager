@@ -9,6 +9,10 @@ public/icons
 docker-minecraft-server
 discovery
 pnpm-lock.yaml
+.env.example
 # Handlebars templates: Prettier's hbs formatting reflows markup in ways that hurt
 # readability here - keep them hand-formatted.
 *.hbs
+
+# Claude Code local tooling state - not project source.
+.claude

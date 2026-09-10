@@ -94,6 +94,64 @@ const DEATH_BY_VERBS = [
   'was killed by',
 ];
 
+// Death-verb matching used to scan every verb (a linear startsWith per line),
+// which is hot: every log line whose leading token is a player name paid the
+// full ~90-verb scan. A single trie turns that into one walk over the message,
+// preserving the exact sequential semantics below:
+//   - any DEATH_PLAIN verb matching at a word boundary wins (return shape is
+//     identical for every plain verb), else
+//   - the lowest-array-index DEATH_BY verb matching at a boundary decides the
+//     killer token (its length picks the word right after the verb).
+function buildDeathTrie(plainVerbs, byVerbs) {
+  const root = { c: {}, p: -1, b: -1 };
+  const insert = (verb, kind, idx) => {
+    let n = root;
+    for (const ch of verb) {
+      if (!n.c[ch]) n.c[ch] = { c: {}, p: -1, b: -1 };
+      n = n.c[ch];
+    }
+    if (kind === 'p') n.p = idx;
+    else n.b = idx;
+  };
+  plainVerbs.forEach((v, i) => insert(v, 'p', i));
+  byVerbs.forEach((v, i) => insert(v, 'b', i));
+  return root;
+}
+const DEATH_TRIE = buildDeathTrie(DEATH_PLAIN_VERBS, DEATH_BY_VERBS);
+
+/**
+ * Match a death-message tail (the part after the player token) against the
+ * verb trie. Returns { kind: 'plain' } when any plain verb matches at a word
+ * boundary, { kind: 'by', len } when a killer verb does (len = verb length to
+ * slice the killer token from), or null on no match.
+ */
+function matchDeathTail(rest) {
+  let node = DEATH_TRIE;
+  let plainHit = false;
+  let bestByIdx = Infinity;
+  let bestByLen = -1;
+  for (let i = 0; i < rest.length; i++) {
+    node = node.c[rest[i]];
+    if (!node) break;
+    const atEnd = i === rest.length - 1;
+    const isSpace = !atEnd && rest[i + 1] === ' ';
+    // Plain verbs match at a word boundary (end of string or a following space),
+    // mirroring `rest === verb || rest.startsWith(verb + ' ')`.
+    if (atEnd || isSpace) {
+      if (node.p >= 0) plainHit = true;
+    }
+    // Killer verbs only match when a killer token follows (a space after the
+    // verb), mirroring `rest.startsWith(verb + ' ')` with a real tail.
+    if (isSpace && node.b >= 0 && node.b < bestByIdx) {
+      bestByIdx = node.b;
+      bestByLen = i + 1;
+    }
+  }
+  if (plainHit) return { kind: 'plain' };
+  if (bestByIdx < Infinity) return { kind: 'by', len: bestByLen };
+  return null;
+}
+
 // Single-word vanilla mob names as they appear in death messages (multi-word
 // mobs like "Wither Skeleton" fail the player-name shape check anyway).
 const MOB_NAMES = new Set([
@@ -191,23 +249,20 @@ function classify(line) {
     const player = text.slice(0, space);
     const rest = text.slice(space + 1);
     if (PLAYER_RE.test(player)) {
-      for (const verb of DEATH_PLAIN_VERBS) {
-        if (rest === verb || rest.startsWith(verb + ' ')) {
-          return { time, type: 'death', player, target: '', message: text };
-        }
+      const hit = matchDeathTail(rest);
+      if (hit && hit.kind === 'plain') {
+        return { time, type: 'death', player, target: '', message: text };
       }
-      for (const verb of DEATH_BY_VERBS) {
-        if (rest.startsWith(verb + ' ')) {
-          const killer = rest.slice(verb.length + 1).split(/\s+/)[0] || '';
-          // Only record target when the killer looks like a real player (PvP).
-          return {
-            time,
-            type: 'death',
-            player,
-            target: looksLikePlayer(killer) ? killer : '',
-            message: text,
-          };
-        }
+      if (hit && hit.kind === 'by') {
+        const killer = rest.slice(hit.len + 1).split(/\s+/)[0] || '';
+        // Only record target when the killer looks like a real player (PvP).
+        return {
+          time,
+          type: 'death',
+          player,
+          target: looksLikePlayer(killer) ? killer : '',
+          message: text,
+        };
       }
     }
   }

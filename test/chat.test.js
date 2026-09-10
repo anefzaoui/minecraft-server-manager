@@ -47,3 +47,12 @@ test('deliveryLines turns recipe rows into separate tellraw payloads only when r
   assert.deepEqual(chat.deliveryLines('title\n[1][ ][1]\n[1][ ][1]', true), ['title', '[1][ ][1]', '[1][ ][1]']);
   assert.deepEqual(chat.deliveryLines('ordinary\nmessage'), ['ordinary\nmessage']);
 });
+
+test('sendChat rejects empty or whitespace-only text before touching RCON', async () => {
+  await assert.rejects(() => chat.sendChat('srv_x', { text: '' }), /Message text is required/);
+  await assert.rejects(() => chat.sendChat('srv_x', { text: '   \n  ' }), /Message text is required/);
+});
+
+test('sendChat rejects messages over the 512-char limit before touching RCON', async () => {
+  await assert.rejects(() => chat.sendChat('srv_x', { text: 'x'.repeat(513) }), /too long/);
+});

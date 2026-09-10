@@ -1,42 +1,171 @@
 {{#if (or (eq server.status 'stopped') (eq server.status 'crashed'))}}
-  <div class="notice mb-4">Live CPU, memory, and network charts update while the server is running. Start the server to see metrics.</div>
+  <div class="notice mb-4">Live numbers update while the server is running. Start the server to watch it work.</div>
 {{else if (or (eq server.status 'starting') (eq server.status 'updating'))}}
-  {{! Without this, starting/updating shows three blank grids with no explanation. }}
-  <div class="notice mb-4">The server is still coming up. Charts start updating as soon as it is running.</div>
+  <div class="notice mb-4">The server is still coming up. The charts and numbers start moving as soon as it is running.</div>
 {{/if}}
-<div class="grid gap-4 lg:grid-cols-2" data-metrics-server="{{server.id}}" data-metrics-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy') (eq server.status 'stalled'))}}1{{else}}0{{/if}}" data-metrics-mem-limit="{{server.resources.containerMemoryMb}}" data-metrics-cpu-limit="{{server.resources.cpus}}">
-  <div class="card p-4">
-    <h3 class="mb-2 font-semibold">CPU <span class="text-xs font-normal text-ink-faint">vs limit</span></h3>
-    <canvas data-chart="cpu" height="140"></canvas>
-  </div>
-  <div class="card p-4">
-    <h3 class="mb-2 font-semibold">Memory <span class="text-xs font-normal text-ink-faint">vs container limit</span></h3>
-    <canvas data-chart="memory" height="140"></canvas>
-  </div>
-  <div class="card p-4">
-    <h3 class="mb-2 font-semibold">Network</h3>
-    <canvas data-chart="network" height="140"></canvas>
-  </div>
-  <div class="card p-4">
-    <h3 class="mb-3 font-semibold">Storage Breakdown</h3>
-    {{#if breakdown}}
-      <div class="space-y-2.5 text-xs">
-        {{#each breakdown}}
-          <div>
-            <div class="mb-1 flex justify-between"><span>{{label}}</span><span class="text-ink-faint">{{bytes size}}</span></div>
-            <div class="meter"><div class="{{default color 'bg-stone-500'}}" style="width: {{this.pct}}%"></div></div>
-          </div>
-        {{/each}}
+
+<div data-metrics-server="{{server.id}}"
+     data-metrics-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy') (eq server.status 'stalled'))}}1{{else}}0{{/if}}"
+     data-metrics-mem-limit="{{server.resources.containerMemoryMb}}"
+     data-metrics-cpu-limit="{{server.resources.cpus}}"
+     data-metrics-perf-supported="{{#if server.stats.perfSupported}}1{{else}}0{{/if}}"
+     {{#if server.stats.startedAt}}data-metrics-started-at="{{server.stats.startedAt}}"{{/if}}>
+
+  {{! ---- Top stat strip ---- }}
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    <div class="card p-3">
+      <div class="eyebrow">Status</div>
+      <div class="mt-1 flex items-center gap-1.5 text-sm font-bold {{statusText server.status}}">
+        <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
+        {{statusLabel server.status}}
       </div>
-    {{else}}
-      <p class="text-sm text-ink-faint">No folder sizes yet. Run a storage scan from the <a class="text-link hover:underline" href="/storage">Storage page</a> to see the breakdown.</p>
-    {{/if}}
-    <div class="mt-4 border-t border-line pt-3">
-      <div class="mb-1 flex justify-between text-xs"><span>Quota</span><span class="text-ink-faint">{{bytes server.disk.used}} / {{bytes server.disk.quota}}</span></div>
-      <div class="meter"><div class="{{meterColor server.disk.used server.disk.quota}}" style="width: {{pct server.disk.used server.disk.quota}}%"></div></div>
+      <div class="text-xs text-ink-faint">{{default server.statusDetail "-"}}</div>
+    </div>
+    <div class="card p-3">
+      <div class="eyebrow">Uptime</div>
+      <div class="mt-1 text-lg font-bold tabular-nums" data-metric="uptime">{{default server.stats.uptime "-"}}</div>
+    </div>
+    <div class="card p-3">
+      <div class="eyebrow">Players</div>
+      <div class="mt-1 text-lg font-bold tabular-nums" data-metric="players">{{server.players.online}}/{{server.players.max}}</div>
+    </div>
+    <div class="card p-3">
+      <div class="eyebrow">TPS</div>
+      {{#if server.stats.perf}}
+        <div class="mt-1 text-lg font-bold tabular-nums" data-metric="tps">{{server.stats.perf.tps1}}</div>
+        <div class="text-xs text-ink-faint" data-metric="mspt">{{#if server.stats.perf.mspt}}{{server.stats.perf.mspt}} ms/tick{{else}}last 1&nbsp;min{{/if}}</div>
+      {{else if server.stats.perfSupported}}
+        <div class="mt-1 text-lg font-bold tabular-nums text-ink-faint" data-metric="tps">…</div>
+        <div class="text-xs text-ink-faint">reading…</div>
+      {{else}}
+        <div class="mt-1 text-sm font-semibold text-ink-faint" data-metric="tps">Not reported</div>
+        <div class="text-xs text-ink-faint">needs Paper, Spark, or Forge</div>
+      {{/if}}
+    </div>
+    <div class="card p-3">
+      <div class="eyebrow">CPU</div>
+      <div class="mt-1 text-lg font-bold tabular-nums" data-metric="cpu">{{server.stats.cpuPct}}%</div>
+      <div class="text-xs text-ink-faint">{{#if server.resources.cpus}}of {{server.resources.cpus}} cores{{else}}no limit{{/if}}</div>
+    </div>
+    <div class="card p-3">
+      <div class="eyebrow">Memory</div>
+      <div class="mt-1 text-lg font-bold tabular-nums" data-metric="mem">{{server.stats.memUsedMb}}</div>
+      <div class="text-xs text-ink-faint">/ {{server.resources.containerMemoryMb}} MB</div>
     </div>
   </div>
+
+  {{! ---- Charts ---- }}
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div class="card p-4">
+      <h3 class="mb-2 font-semibold">CPU <span class="text-xs font-normal text-ink-faint">vs limit</span></h3>
+      <canvas data-chart="cpu" height="140"></canvas>
+    </div>
+    <div class="card p-4">
+      <h3 class="mb-2 font-semibold">Memory <span class="text-xs font-normal text-ink-faint">vs container limit</span></h3>
+      <canvas data-chart="memory" height="140"></canvas>
+    </div>
+    <div class="card p-4">
+      <h3 class="mb-2 font-semibold">Network</h3>
+      <canvas data-chart="network" height="140"></canvas>
+    </div>
+    <div class="card p-4" data-tps-card {{#unless server.stats.perfSupported}}hidden{{/unless}}>
+      <h3 class="mb-2 font-semibold">Tick Rate <span class="text-xs font-normal text-ink-faint">TPS &amp; ms per tick</span></h3>
+      <canvas data-chart="tps" height="140"></canvas>
+      <p class="help">20 TPS is a healthy server. A lasting drop means the server can't keep up with what's happening in the world.</p>
+    </div>
+  </div>
+
+  {{! ---- Health & stability ---- }}
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div class="card p-4">
+      <h3 class="mb-3 font-semibold">Health &amp; Stability</h3>
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+        <div><dt class="text-xs text-ink-faint">Container health</dt><dd class="font-medium">{{#if health.health}}{{capitalize health.health}}{{else}}Unknown{{/if}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">Boot phase</dt><dd class="font-medium">{{default server.statusDetail "Running"}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">Last exit code</dt><dd class="font-medium">{{#if health}}{{#if health.exitCode}}{{health.exitCode}}{{else}}0 / running{{/if}}{{else}}Unknown{{/if}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">Out-of-memory kills</dt><dd class="font-medium">{{stability.oomKills}}{{#if stability.oomKills24h}} <span class="text-xs font-normal text-warn">· {{stability.oomKills24h}} / 24h</span>{{/if}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">Auto-restarts</dt><dd class="font-medium">{{stability.autoRestarts}}{{#if stability.autoRestarts24h}} <span class="text-xs font-normal text-warn">· {{stability.autoRestarts24h}} / 24h</span>{{/if}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">Crashes logged</dt><dd class="font-medium">{{stability.crashes}}{{#if stability.crashes7d}} <span class="text-xs font-normal text-ink-faint">· {{stability.crashes24h}} / 24h, {{stability.crashes7d}} / 7d</span>{{/if}}</dd></div>
+      </dl>
+      {{#if lastCrash}}
+        <div class="mt-3 border-t border-line pt-3 text-sm">
+          <span class="text-xs text-ink-faint">Most recent crash</span>
+          <p class="mt-0.5"><a class="text-link hover:underline" href="/servers/{{server.id}}/history">{{default lastCrash.summary lastCrash.exception}}</a> <span class="text-xs text-ink-faint" data-ts="{{lastCrash.file_mtime}}">{{lastCrash.file_mtime}}</span></p>
+        </div>
+      {{/if}}
+      {{#if health.containerId}}
+        <p class="help">Container <span class="font-mono">{{short health.containerId 12}}</span> · image <span class="font-mono">{{short health.imageId 12}}</span></p>
+      {{/if}}
+    </div>
+
+    {{! ---- Recent activity ---- }}
+    <div class="card p-4">
+      <div class="mb-3 flex items-center justify-between gap-2">
+        <h3 class="font-semibold">Recent Activity</h3>
+        <a class="text-xs text-link hover:underline" href="/servers/{{server.id}}/history">Full History →</a>
+      </div>
+      {{#if recentEvents.length}}
+        <ul class="space-y-2 text-sm">
+          {{#each recentEvents}}
+            <li class="flex items-baseline justify-between gap-3">
+              <span class="min-w-0"><span class="truncate">{{summary}}</span> <span class="text-xs text-ink-faint">· {{actor}}</span></span>
+              <span class="shrink-0 text-xs text-ink-faint" data-ts="{{ts}}">{{ts}}</span>
+            </li>
+          {{/each}}
+        </ul>
+      {{else}}
+        <p class="text-sm text-ink-faint">Nothing logged for this server yet.</p>
+      {{/if}}
+      {{#if server.crashesUnread}}
+        <p class="mt-3 border-t border-line pt-3 text-sm text-danger">{{server.crashesUnread}} unread {{plural server.crashesUnread 'crash report' 'crash reports'}}. See the History tab.</p>
+      {{/if}}
+    </div>
+  </div>
+
+  {{! ---- Storage ---- }}
+  <div class="mt-4 card p-4">
+    <h3 class="mb-3 font-semibold">Storage</h3>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div>
+        {{#if breakdown}}
+          <div class="space-y-2.5 text-xs">
+            {{#each breakdown}}
+              <div>
+                <div class="mb-1 flex justify-between"><span>{{label}}</span><span class="text-ink-faint">{{bytes size}}</span></div>
+                <div class="meter"><div class="{{default color 'bg-stone-500'}}" style="width: {{this.pct}}%"></div></div>
+              </div>
+            {{/each}}
+          </div>
+        {{else}}
+          <p class="text-sm text-ink-faint">No folder sizes yet. Run a storage scan from the <a class="text-link hover:underline" href="/storage">Storage page</a>.</p>
+        {{/if}}
+        <div class="mt-4 border-t border-line pt-3">
+          <div class="mb-1 flex justify-between text-xs"><span>Quota</span><span class="text-ink-faint">{{bytes server.disk.used}}{{#if server.disk.quota}} / {{bytes server.disk.quota}}{{else}} (no quota){{/if}}</span></div>
+          <div class="meter"><div class="{{meterColor server.disk.used server.disk.quota}}" style="width: {{pct server.disk.used server.disk.quota}}%"></div></div>
+        </div>
+        {{#if diskFree}}
+          <p class="help">{{bytes diskFree}} free on the disk this server lives on.</p>
+        {{/if}}
+      </div>
+      <div>
+        <div class="mb-2 eyebrow">Worlds</div>
+        {{#if worldSizes.length}}
+          <ul class="space-y-1.5 text-sm">
+            {{#each worldSizes}}
+              <li class="flex items-baseline justify-between gap-3">
+                <span class="min-w-0 truncate">{{name}}{{#if active}} <span class="badge badge-ok">active</span>{{/if}}</span>
+                <span class="shrink-0 text-xs text-ink-faint">{{bytes sizeBytes}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{else}}
+          <p class="text-sm text-ink-faint">No worlds found yet.</p>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+
+  <p class="help mt-3">The charts and top numbers update live while the server runs. Everything else refreshes when you reload.</p>
 </div>
-<p class="help mt-3">Charts update live while the server runs.</p>
 <script src="/vendor/chart.umd.js"></script>
 <script type="module" src="/js/pages/metrics.js"></script>

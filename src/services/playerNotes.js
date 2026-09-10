@@ -38,7 +38,7 @@ function addNote(serverId, { uuid, name }, note, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'player-note-added',
-    summary: `Note added for ${name}`,
+    summary: `Note added for ${name}.`,
     details: { name, uuid },
   });
   return publicNote(db.get('SELECT * FROM player_notes WHERE id = ?', id));
@@ -52,9 +52,15 @@ function deleteNote(serverId, id, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'player-note-deleted',
-    summary: `Note removed for ${row.name}`,
+    summary: `Note removed for ${row.name}.`,
     details: { name: row.name, uuid: row.uuid },
   });
 }
 
-module.exports = { listNotes, addNote, deleteNote };
+/** Remove every note for a player (used when their whole record is deleted). Returns count removed. */
+function deletePlayerNotes(serverId, uuid) {
+  const removed = db.run('DELETE FROM player_notes WHERE server_id = ? AND uuid = ?', serverId, uuid).changes || 0;
+  return removed;
+}
+
+module.exports = { listNotes, addNote, deleteNote, deletePlayerNotes };

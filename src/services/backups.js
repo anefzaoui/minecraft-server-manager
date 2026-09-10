@@ -6,6 +6,7 @@
 // retention pruning, and restore.
 
 const httpError = require('../utils/httpError');
+const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const { Worker } = require('node:worker_threads');
@@ -21,18 +22,19 @@ const { guardOp } = require('./opLock');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 
-// Retention caps, per server, per reason. Every bucket is bounded now - the
-// old rule ("manual + pre-update are never auto-pruned") let a long-lived
-// server accumulate backups until the free-space preflight started failing
-// every new backup. Restore/world-reset safety snapshots get their OWN bucket
-// ('pre-restore') so they can't silently evict backups a user deliberately
-// created and kept (reason 'manual').
-const KEEP_SCHEDULED = 10;
-const KEEP_PRE_UPDATE = 10;
-const KEEP_MANUAL = 20;
-const KEEP_PRE_RESTORE = 5;
+// Retention caps live in services/backupRetention.js now (panel-wide defaults +
+// optional per-server overrides, plus age and total-size ceilings). Every bucket
+// is still bounded by default - the old rule ("manual + pre-update are never
+// auto-pruned") let a long-lived server accumulate backups until the free-space
+// preflight started failing every new backup. Restore/world-reset safety
+// snapshots get their OWN bucket ('pre-restore') so they can't silently evict
+// backups a user deliberately created and kept (reason 'manual').
+const backupRetention = require('./backupRetention');
 
-async function createBackupImpl(serverId, { reason = 'manual', actor = 'system', note = '', task = null } = {}) {
+async function createBackupImpl(
+  serverId,
+  { reason = 'manual', actor = 'system', note = '', task = null, shrinkAfter = false, shrinkMinTicks } = {}
+) {
   const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
   if (!server) throw httpError(404, 'Server not found');
 
@@ -55,7 +57,7 @@ async function createBackupImpl(serverId, { reason = 'manual', actor = 'system',
   await fsp.mkdir(path.dirname(absPath), { recursive: true });
 
   const archive = async () => {
-    if (task) task.step('Compressing server files');
+    if (task) task.step('Compressing server files…');
     await zipDirectory(dataPath('servers', serverId), absPath, {
       onProgress: task ? (processedBytes) => task.progress(processedBytes, needed) : null,
     });
@@ -72,7 +74,7 @@ async function createBackupImpl(serverId, { reason = 'manual', actor = 'system',
       // Serialize the pause-saves/copy/resume-saves section per server so a
       // concurrent backup or world export can't re-enable writes mid-copy.
       await withSaveLock(serverId, async () => {
-        if (task) task.step('Pausing world saves');
+        if (task) task.step('Pausing world saves…');
         const paused = await execCapture(serverId, ['rcon-cli', 'save-off'])
           .then(() => true)
           .catch((err) => {
@@ -83,12 +85,35 @@ async function createBackupImpl(serverId, { reason = 'manual', actor = 'system',
             return false;
           });
         inconsistent = !paused;
-        await execCapture(serverId, ['rcon-cli', 'save-all', 'flush']).catch(() => {});
+        await execCapture(serverId, ['rcon-cli', 'save-all', 'flush']).catch((err) => {
+          logger.warn('Flushing world saves before a backup failed; the archive may be slightly inconsistent.', {
+            serverId,
+            err: serializeError(err, { includeStack: false }),
+          });
+          inconsistent = true;
+        });
         await sleep(2000); // let region writes settle
         try {
           await archive();
         } finally {
-          await execCapture(serverId, ['rcon-cli', 'save-on']).catch(() => {});
+          // save-on MUST succeed - if it is swallowed here the server would be
+          // left with world saves disabled and nobody told. Surface it loudly.
+          try {
+            await execCapture(serverId, ['rcon-cli', 'save-on']);
+          } catch (err) {
+            logger.error('Re-enabling world saves after a backup failed: the server may still have saves paused.', {
+              serverId,
+              err: serializeError(err, { includeStack: false }),
+            });
+            recordEvent({
+              serverId,
+              actor,
+              type: 'backup-warning',
+              summary:
+                'World saves were not re-enabled after this backup. Check the server console and run save-on again.',
+            });
+            inconsistent = true;
+          }
         }
       });
     } else {
@@ -127,7 +152,7 @@ async function createBackupImpl(serverId, { reason = 'manual', actor = 'system',
   );
   const warnings = [
     inconsistent ? 'world saves could not be paused, archive may be slightly inconsistent' : null,
-    empty ? 'archive contains no files - the server has nothing on disk yet' : null,
+    empty ? 'the archive contains no files because the server has nothing on disk yet' : null,
   ].filter(Boolean);
   recordEvent({
     serverId,
@@ -135,10 +160,36 @@ async function createBackupImpl(serverId, { reason = 'manual', actor = 'system',
     type: 'backup-created',
     summary:
       `Backup created (${reason}, ${(size / 1024 ** 3).toFixed(2)} GB)` +
-      (warnings.length ? ` - WARNING: ${warnings.join('; ')}` : ''),
+      (warnings.length ? `. Warning: ${warnings.join('; ')}.` : '.'),
     details: { id, filename, reason, inconsistent, empty, entryCount },
   });
   logger.info('Created a backup.', { serverId, backupId: id, reason, sizeBytes: size, inconsistent, empty });
+
+  // Optional: after the archive is safely written (it is the undo), trim
+  // rarely-visited chunks from the active world. Only ever on a stopped server -
+  // shrinking edits region files directly.
+  if (shrinkAfter) {
+    if (running) {
+      if (task) task.step('Shrink skipped because the server was running.');
+      logger.info('Skipped the post-backup world shrink because the server was running.', { serverId });
+    } else {
+      try {
+        if (task) task.step('Removing rarely-visited chunks from the world…');
+        // shrinkWorldImpl (not the guardOp-wrapped shrinkWorld): this runs
+        // inside the guardOp('backup') critical section, which already excludes
+        // lifecycle ops - a nested 'shrink' guard would 409 against its own backup.
+        const r = await require('./worldShrink').shrinkWorldImpl(serverId, {
+          actor,
+          minInhabitedTicks: Number.isFinite(shrinkMinTicks) ? shrinkMinTicks : undefined,
+        });
+        logger.info('Post-backup world shrink finished.', { serverId, ...r });
+      } catch (err) {
+        // The backup succeeded - a shrink failure must not fail the whole op.
+        logger.error('The post-backup world shrink failed.', { serverId, err: serializeError(err) });
+      }
+    }
+  }
+
   // The backup above already succeeded and is already recorded - a retention
   // problem must never surface as this call failing.
   await pruneRetention(serverId, { actor }).catch((err) => {
@@ -187,7 +238,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
     throw httpError(507, `Not enough disk space to restore (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
   }
 
-  if (task) task.step('Stopping server');
+  if (task) task.step('Stopping server…');
   // Guarded stopServer would deadlock here (this function already holds the
   // shared op lock under 'restore' - see module.exports) - use the raw impl.
   const { stopServerUnguarded } = require('./servers');
@@ -202,7 +253,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
   }
 
   if (!skipSafety) {
-    if (task) task.step('Creating safety backup');
+    if (task) task.step('Creating safety backup…');
     // createBackup makes its own reservation for safetyBytes - not duplicated
     // here, which only reserves the extraction's own uncompressedBytes below.
     // The safety backup is best-effort insurance: if it can't be made (e.g. its
@@ -227,12 +278,12 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
         serverId,
         actor,
         type: 'backup-warning',
-        summary: `Restore proceeded without a safety backup: ${err.message}`,
+        summary: `Restore proceeded without a safety backup because it could not be created.`,
       });
     }
   }
 
-  if (task) task.step('Extracting backup');
+  if (task) task.step('Extracting backup…');
   const serverDir = dataPath('servers', serverId);
   const stagingDir = dataPath('tmp', `restore-${serverId}-${nanoid(6)}`);
   await fsp.mkdir(stagingDir, { recursive: true });
@@ -274,7 +325,7 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
     releaseReservation();
   }
 
-  recordEvent({ serverId, actor, type: 'backup-restored', summary: `Restored backup ${backup.filename}` });
+  recordEvent({ serverId, actor, type: 'backup-restored', summary: `Restored backup ${backup.filename}.` });
   indexer.scheduleScan();
   return { ok: true };
 }
@@ -292,15 +343,65 @@ const createBackup = guardOp('backup', createBackupImpl);
 async function deleteBackup(backupId, { actor = 'system' } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
   if (!backup) return { freedBytes: 0 };
-  await fsp.rm(dataPath(backup.rel_path), { force: true });
   db.run('DELETE FROM backups WHERE id = ?', backupId);
+  await fsp.rm(dataPath(backup.rel_path), { force: true });
   recordEvent({
     serverId: backup.server_id,
     actor,
     type: 'backup-deleted',
-    summary: `Backup deleted: ${backup.filename} (${(backup.size_bytes / 1024 ** 3).toFixed(2)} GB freed)`,
+    summary: `Backup deleted: ${backup.filename} (${(backup.size_bytes / 1024 ** 3).toFixed(2)} GB freed).`,
   });
   return { freedBytes: backup.size_bytes };
+}
+
+/** Accept a friendly display name - flat filename only, no path tricks. */
+function cleanBackupName(raw) {
+  const name = String(raw || '').trim();
+  if (!name || name.length > 120) {
+    throw httpError(400, 'Use a name between 1 and 120 characters.');
+  }
+  if (/[\\/]/.test(name)) throw httpError(400, 'Backup names cannot contain path separators.');
+  if (name === '.' || name === '..' || /[\u0000-\u001f\u007f]/.test(name)) {
+    throw httpError(400, 'That backup name is not allowed.');
+  }
+  return name;
+}
+
+/**
+ * Rename a backup's archive: the on-disk file AND its filename/rel_path DB
+ * row move together, so restore/download/retention keep working untouched.
+ * Returns the updated row (id, filename, size_bytes, reason, created_at, …).
+ */
+async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
+  const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
+  if (!backup) throw httpError(404, 'Backup not found');
+  const name = cleanBackupName(newName);
+  if (name === backup.filename) return backup;
+
+  const abs = dataPath(backup.rel_path);
+  if (!fs.existsSync(abs)) throw httpError(404, 'Backup archive is missing on disk');
+  const targetRel = `backups/${backup.server_id}/${name}`;
+  const target = dataPath(targetRel);
+  if (fs.existsSync(target)) throw httpError(409, `A backup named "${name}" already exists here`);
+
+  await fsp.rename(abs, target);
+  try {
+    db.run('UPDATE backups SET filename = ?, rel_path = ? WHERE id = ?', name, targetRel, backupId);
+  } catch (err) {
+    // Keep the row and the file in agreement: undo the move rather than leave a
+    // row that points at a name that no longer exists.
+    await fsp.rename(target, abs).catch(() => {});
+    throw err;
+  }
+  const updated = db.get('SELECT * FROM backups WHERE id = ?', backupId);
+  recordEvent({
+    serverId: backup.server_id,
+    actor,
+    type: 'backup-renamed',
+    summary: `Backup renamed: ${backup.filename} → ${name}.`,
+    details: { from: backup.filename, to: name },
+  });
+  return updated;
 }
 
 /**
@@ -319,37 +420,81 @@ async function deleteBackup(backupId, { actor = 'system' } = {}) {
  * the free-space preflight).
  */
 async function pruneRetention(serverId, { actor = 'system' } = {}) {
-  const buckets = [
-    ['scheduled', KEEP_SCHEDULED],
-    ['pre-update', KEEP_PRE_UPDATE],
-    ['manual', KEEP_MANUAL],
-    ['pre-restore', KEEP_PRE_RESTORE], // restore / world-reset safety snapshots
-  ];
+  const cfg = backupRetention.effective(serverId);
   let deleted = 0;
+
+  const drop = async (id) => {
+    try {
+      await deleteBackup(id, { actor });
+      deleted++;
+    } catch (err) {
+      logger.error('Retention could not delete an old backup.', { serverId, backupId: id, err: serializeError(err) });
+    }
+  };
+
+  // 1) Per-reason count caps. id DESC as a tiebreaker: created_at has 1-second
+  // resolution and a safety backup often lands in the same second as another, so
+  // "the Nth oldest" must not be left to insertion-order luck.
+  const buckets = [
+    ['scheduled', cfg.keepScheduled],
+    ['pre-update', cfg.keepPreUpdate],
+    ['manual', cfg.keepManual],
+    ['pre-restore', cfg.keepPreRestore], // restore / world-reset safety snapshots
+  ];
   for (const [reason, keep] of buckets) {
     const stale = db.all(
-      // id DESC as a tiebreaker: created_at has 1-second resolution and a safety
-      // backup often lands in the same second as another, so "the Nth oldest"
-      // must not be left to insertion-order luck.
       `SELECT id FROM backups WHERE server_id = ? AND reason = ?
        ORDER BY created_at DESC, id DESC LIMIT -1 OFFSET ?`,
       serverId,
       reason,
       keep
     );
-    for (const b of stale) {
-      try {
-        await deleteBackup(b.id, { actor });
-        deleted++;
-      } catch (err) {
-        logger.error('Retention could not delete an old backup.', {
-          serverId,
-          backupId: b.id,
-          err: serializeError(err),
-        });
-      }
+    for (const b of stale) await drop(b.id);
+  }
+
+  // The newest backup overall is never removed by the age or size passes below -
+  // a server must not be left with zero backups just because it went quiet or
+  // its worlds grew.
+  const newest = db.get(
+    'SELECT id FROM backups WHERE server_id = ? ORDER BY created_at DESC, id DESC LIMIT 1',
+    serverId
+  );
+  const keepId = newest?.id;
+
+  // 2) Age ceiling (opt-in; 0 = off).
+  if (cfg.maxAgeDays > 0) {
+    const old = db.all(
+      `SELECT id FROM backups
+       WHERE server_id = ? AND id <> ? AND created_at < datetime('now', ?)`,
+      serverId,
+      keepId ?? -1,
+      `-${cfg.maxAgeDays} days`
+    );
+    for (const b of old) await drop(b.id);
+  }
+
+  // 3) Total-size ceiling (opt-in; 0 = off). Delete oldest-first until under the
+  // cap, but sacrifice the automatic safety snapshots ('pre-restore') before any
+  // backup a person asked for.
+  if (cfg.maxTotalGb > 0) {
+    const capBytes = cfg.maxTotalGb * 1024 ** 3;
+    const rows = db.all(
+      `SELECT id, size_bytes, reason FROM backups WHERE server_id = ? ORDER BY created_at ASC, id ASC`,
+      serverId
+    );
+    let total = rows.reduce((sum, r) => sum + (r.size_bytes || 0), 0);
+    const order = [...rows].sort((a, b) => {
+      const rank = (r) => (r.reason === 'pre-restore' ? 0 : r.reason === 'scheduled' ? 1 : 2);
+      return rank(a) - rank(b); // stable: preserves the created_at ASC order within a rank
+    });
+    for (const r of order) {
+      if (total <= capBytes) break;
+      if (r.id === keepId) continue;
+      await drop(r.id);
+      total -= r.size_bytes || 0;
     }
   }
+
   return deleted;
 }
 
@@ -449,6 +594,7 @@ module.exports = {
   createBackupUnguarded: createBackupImpl,
   restoreBackup,
   deleteBackup,
+  renameBackup,
   pruneRetention,
   extractZip,
   zipDirectory,

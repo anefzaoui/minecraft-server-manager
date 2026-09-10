@@ -23,6 +23,11 @@ const config = require('../../config');
 //    injection is far lower severity than script injection, and converting
 //    every one of those to CSS custom properties is a materially larger,
 //    higher-regression-risk change than the residual risk justifies.
+//  - img-src allows blob: so the client-side profile-picture cropper
+//    (public/js/lib/imageCrop.js) can preview the chosen image and its
+//    downscaled canvas output via URL.createObjectURL. blob: URLs are minted
+//    by the page from data it already holds - they can't reference anything
+//    cross-origin - so this widens nothing an attacker could use.
 function securityHeaders(req, res, next) {
   const nonce = crypto.randomBytes(16).toString('base64');
   res.locals.cspNonce = nonce;
@@ -33,7 +38,7 @@ function securityHeaders(req, res, next) {
     "frame-ancestors 'self'",
     "frame-src 'self'",
     "form-action 'self'",
-    "img-src 'self' data: https:",
+    "img-src 'self' data: blob: https:",
     "style-src 'self' 'unsafe-inline'",
     `script-src 'self' 'nonce-${nonce}'`,
     "connect-src 'self'",

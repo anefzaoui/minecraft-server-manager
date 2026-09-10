@@ -24,6 +24,7 @@ const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { execCapture, inspectStatus } = require('../docker/containers');
+const { serializeError } = require('../utils/logSanitize');
 const indexer = require('../storage/indexer');
 const library = require('./library');
 const { withSaveLock } = require('./serverLocks');
@@ -33,16 +34,43 @@ const logger = require('../logger')(path.basename(__filename));
 // Run the save-off/flush → copy → save-on dance under the shared per-server save
 // lock when the server is running, so it can't overlap a concurrent backup or
 // world export and tear the copy. When stopped, just run the copy directly.
-async function withPausedSaves(serverId, running, copy) {
+async function withPausedSaves(serverId, running, copy, actor = 'system') {
   if (!running) return copy();
   return withSaveLock(serverId, async () => {
-    await execCapture(serverId, ['rcon-cli', 'save-off']).catch(() => {});
-    await execCapture(serverId, ['rcon-cli', 'save-all', 'flush']).catch(() => {});
+    await execCapture(serverId, ['rcon-cli', 'save-off']).catch((err) => {
+      logger.warn('Pausing world saves before a world operation failed; the copy may be slightly inconsistent.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    });
+    await execCapture(serverId, ['rcon-cli', 'save-all', 'flush']).catch((err) => {
+      logger.warn('Flushing world saves before a world operation failed; the copy may be slightly inconsistent.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+    });
     await sleep(2000); // let region writes settle
     try {
       return await copy();
     } finally {
-      await execCapture(serverId, ['rcon-cli', 'save-on']).catch(() => {});
+      // save-on MUST succeed - if it is swallowed here the server would be left
+      // with world saves paused and nobody told. Surface it loudly (mirrors the
+      // backup path).
+      try {
+        await execCapture(serverId, ['rcon-cli', 'save-on']);
+      } catch (err) {
+        logger.error(
+          'Re-enabling world saves after a world operation failed: the server may still have saves paused.',
+          { serverId, err: serializeError(err, { includeStack: false }) }
+        );
+        recordEvent({
+          serverId,
+          actor,
+          type: 'world-save-warning',
+          summary:
+            'World saves were not re-enabled after a world operation - check the server console and run save-on.',
+        });
+      }
     }
   });
 }
@@ -245,7 +273,7 @@ async function addZipToLibrary(zipAbs, { name, actor, worldSource, worldFlavor, 
   recordEvent({
     actor,
     type: 'world-library-added',
-    summary: `World added to library: ${name} (${humanBytes(size)})`,
+    summary: `World added to library: ${name} (${humanBytes(size)}).`,
     details: { id, sha256, sizeBytes: size, split: Boolean(split), mcVersion: mcVersion || null, source: worldSource },
   });
   indexer.scheduleScan();
@@ -280,11 +308,16 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
 
   try {
     // Consistent copy: pause saves, flush, copy to tmp, resume - then zip at leisure.
-    await withPausedSaves(serverId, running, async () => {
-      for (const dim of dims) {
-        await fsp.cp(dim, path.join(tmpDir, path.basename(dim)), { recursive: true });
-      }
-    });
+    await withPausedSaves(
+      serverId,
+      running,
+      async () => {
+        for (const dim of dims) {
+          await fsp.cp(dim, path.join(tmpDir, path.basename(dim)), { recursive: true });
+        }
+      },
+      actor
+    );
 
     const mainCopy = path.join(tmpDir, level);
     const dimCopies = dims.slice(1).map((d) => path.join(tmpDir, path.basename(d)));
@@ -306,7 +339,7 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
       serverId,
       actor,
       type: 'world-extracted',
-      summary: `World "${level}" saved to library as "${row.name}" (${humanBytes(row.size_bytes)})`,
+      summary: `World "${level}" saved to library as "${row.name}" (${humanBytes(row.size_bytes)}).`,
       details: { libraryId: row.id, level, sizeBytes: row.size_bytes, running },
     });
     return row;
@@ -478,7 +511,7 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
     serverId,
     actor,
     type: 'world-installed',
-    summary: `World "${lib.name}" installed as "${targetLevel}" (${mode}, ${humanBytes(sizeBytes)})`,
+    summary: `World "${lib.name}" installed as "${targetLevel}" (${mode}, ${humanBytes(sizeBytes)}).`,
     details: { libraryId, mode, installedAs: targetLevel, sizeBytes, replacedBytes, warnings },
   });
   logger.info('Installed a world onto a server.', { serverId, actor, installedAs: targetLevel, mode, sizeBytes });
@@ -527,7 +560,7 @@ async function copyBetweenServers(
     serverId: targetServerId,
     actor,
     type: 'world-copied',
-    summary: `World copied from ${source.display_name} (${humanBytes(result.sizeBytes)}, ${mode})`,
+    summary: `World copied from ${source.display_name} (${humanBytes(result.sizeBytes)}, ${mode}).`,
     details: { sourceServerId, libraryId: row.id, ...result },
   });
   return { library: row, ...result };
@@ -556,12 +589,17 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
   const running = active && (await isRunning(serverId));
   const releaseReservation = indexer.reserveDiskSpace(sizeBytes);
   try {
-    await withPausedSaves(serverId, running, async () => {
-      for (const dim of dims) {
-        const suffix = path.basename(dim).slice(worldName.length);
-        await fsp.cp(dim, dataPath('servers', serverId, copyName + suffix), { recursive: true });
-      }
-    });
+    await withPausedSaves(
+      serverId,
+      running,
+      async () => {
+        for (const dim of dims) {
+          const suffix = path.basename(dim).slice(worldName.length);
+          await fsp.cp(dim, dataPath('servers', serverId, copyName + suffix), { recursive: true });
+        }
+      },
+      actor
+    );
   } finally {
     releaseReservation();
   }
@@ -570,7 +608,7 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'world-duplicated',
-    summary: `World "${worldName}" duplicated as "${copyName}" (${humanBytes(sizeBytes)})`,
+    summary: `World "${worldName}" duplicated as "${copyName}" (${humanBytes(sizeBytes)}).`,
     details: { worldName, copyName, sizeBytes },
   });
   indexer.scheduleScan();
@@ -601,7 +639,7 @@ async function renameWorldImpl(serverId, worldName, newName, { actor = 'system' 
     serverId,
     actor,
     type: 'world-renamed',
-    summary: `World "${worldName}" renamed to "${clean}"${wasActive ? ' (active world - level-name updated)' : ''}`,
+    summary: `World "${worldName}" renamed to "${clean}"${wasActive ? ' (active world - level-name updated)' : ''}.`,
     details: { from: worldName, to: clean, wasActive },
   });
   return { name: clean, wasActive };
@@ -624,7 +662,7 @@ async function activateWorldImpl(serverId, worldName, { actor = 'system' } = {})
     serverId,
     actor,
     type: 'world-activated',
-    summary: `Active world switched: "${previous}" → "${worldName}"`,
+    summary: `Active world switched: "${previous}" → "${worldName}".`,
     details: { from: previous, to: worldName },
   });
   return { active: worldName, changed: true };
@@ -703,7 +741,7 @@ async function resetWorldImpl(
     serverId,
     actor,
     type: 'world-reset',
-    summary: `World "${level}" reset ${seedNote}${applyType ? `, type ${applyType}` : ''} (${humanBytes(freedBytes)} cleared)`,
+    summary: `World "${level}" reset ${seedNote}${applyType ? `, type ${applyType}` : ''} (${humanBytes(freedBytes)} cleared).`,
     details: {
       level,
       seedMode,
@@ -728,7 +766,7 @@ async function resetWorldImpl(
 const resetWorld = guardOp('reset', resetWorldImpl);
 
 /** Delete a non-active world from a server. Returns freed bytes. */
-async function deleteServerWorld(serverId, worldName, { actor = 'system' } = {}) {
+async function deleteServerWorldImpl(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
   if (worldName === activeLevelName(server)) {
@@ -742,13 +780,18 @@ async function deleteServerWorld(serverId, worldName, { actor = 'system' } = {})
     serverId,
     actor,
     type: 'world-deleted',
-    summary: `World "${worldName}" deleted (${humanBytes(freedBytes)} freed)`,
+    summary: `World "${worldName}" deleted (${humanBytes(freedBytes)} freed).`,
     details: { worldName, freedBytes },
   });
   logger.info('Deleted a world from a server.', { serverId, actor, worldName, freedBytes });
   indexer.scheduleScan();
   return { freedBytes };
 }
+
+// Delete can rm -rf a whole world inside the server dir tree, so it must never
+// interleave with a backup/restore/install that is zipping or swapping the same
+// tree - guard it like every other world mutation.
+const deleteServerWorld = guardOp('delete-world', deleteServerWorldImpl);
 
 // ---------------------------------------------------------------------------
 // Downloads
@@ -771,15 +814,20 @@ async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = 
   const active = worldName === activeLevelName(server);
   const running = active && (await isRunning(serverId));
   const zipAbs = dataPath('tmp', `world-dl-${nanoid(6)}.zip`);
-  await withPausedSaves(serverId, running, async () => {
-    await zipWorld(zipAbs, dims[0], dims.slice(1));
-  });
+  await withPausedSaves(
+    serverId,
+    running,
+    async () => {
+      await zipWorld(zipAbs, dims[0], dims.slice(1));
+    },
+    actor
+  );
   const size = (await fsp.stat(zipAbs)).size;
   recordEvent({
     serverId,
     actor,
     type: 'world-downloaded',
-    summary: `World "${worldName}" downloaded (${humanBytes(size)})`,
+    summary: `World "${worldName}" downloaded (${humanBytes(size)}).`,
     details: { worldName, sizeBytes: size },
   });
   return {
@@ -947,6 +995,23 @@ function readLevelSeed(levelDatAbs) {
   return null;
 }
 
+/** Read the world spawn (SpawnX/SpawnZ block coords) out of level.dat, or null. */
+function readLevelSpawn(levelDatAbs) {
+  const buf = readLevelBuffer(levelDatAbs);
+  if (!buf) return null;
+  // NBT int tag: 0x03, name length (2B BE), name, 4-byte BE value
+  const readInt = (name) => {
+    const needle = Buffer.concat([Buffer.from([0x03, 0x00, name.length]), Buffer.from(name, 'latin1')]);
+    const idx = buf.indexOf(needle);
+    if (idx === -1 || idx + needle.length + 4 > buf.length) return null;
+    return buf.readInt32BE(idx + needle.length);
+  };
+  const x = readInt('SpawnX');
+  const z = readInt('SpawnZ');
+  if (x == null || z == null) return null;
+  return { x, z };
+}
+
 function readLevelBuffer(levelDatAbs) {
   try {
     const raw = fs.readFileSync(levelDatAbs);
@@ -962,10 +1027,24 @@ function readLevelBuffer(levelDatAbs) {
 /** Zip a world: root contents at the top level, split dims as sibling dirs. */
 function zipWorld(outFile, rootAbs, dimDirs = []) {
   return new Promise((resolve, reject) => {
+    let done = false;
+    const fail = (err) => {
+      if (done) return;
+      done = true;
+      fsp.rm(outFile, { force: true }).catch(() => {});
+      reject(err);
+    };
     const output = fs.createWriteStream(outFile);
     const archive = archiver('zip', { zlib: { level: 6 } });
-    output.on('close', resolve);
-    archive.on('error', reject);
+    output.on('close', () => {
+      done = true;
+      resolve();
+    });
+    // 'error' on the write stream (ENOSPC/EACCES on the target) would otherwise
+    // leave this promise unsettled forever and, with no listener, surface as an
+    // uncaught exception. Clean up the partial file either way.
+    output.on('error', fail);
+    archive.on('error', fail);
     archive.pipe(output);
     archive.directory(rootAbs, false);
     for (const dim of dimDirs) archive.directory(dim, path.basename(dim));
@@ -1028,33 +1107,48 @@ async function isRunning(serverId) {
   return info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
 }
 
+// Parallel, bounded-concurrency directory size walker. World trees hold a great
+// many small files; serializing one fsp.stat at a time is needlessly slow (the
+// same pattern servers.js uses for backup size estimates).
+const DIR_SIZE_CONCURRENCY = 32;
 async function dirsSize(absDirs) {
-  let total = 0;
-  for (const dir of absDirs) total += await dirSize(dir);
-  return total;
+  const totals = await Promise.all(absDirs.map((dir) => dirSize(dir)));
+  return totals.reduce((a, b) => a + b, 0);
 }
 
 async function dirSize(abs) {
-  let total = 0;
   let entries;
   try {
     entries = await fsp.readdir(abs, { withFileTypes: true });
   } catch {
     return 0;
   }
+  const jobs = [];
   for (const e of entries) {
-    const child = path.join(abs, e.name);
     if (e.isSymbolicLink()) continue;
-    if (e.isDirectory()) total += await dirSize(child);
-    else if (e.isFile()) {
-      try {
-        total += (await fsp.stat(child)).size;
-      } catch {
-        /* transient */
-      }
-    }
+    jobs.push(path.join(abs, e.name));
   }
-  return total;
+  let i = 0;
+  const push = async (p) => {
+    try {
+      const st = await fsp.stat(p);
+      if (st.isDirectory()) return dirSize(p);
+      return st.size;
+    } catch {
+      return 0; // transient
+    }
+  };
+  const workers = Array.from({ length: Math.min(DIR_SIZE_CONCURRENCY, jobs.length) }, async () => {
+    let sub = 0; // worker-local accumulator avoids lost updates on a shared total
+    while (i < jobs.length) {
+      const p = jobs[i];
+      i += 1; // sync claim, safe across the pool
+      sub += await push(p);
+    }
+    return sub;
+  });
+  const results = await Promise.all(workers);
+  return results.reduce((a, b) => a + b, 0);
 }
 
 function sha256File(abs) {
@@ -1152,6 +1246,8 @@ function sleep(ms) {
 }
 
 module.exports = {
+  isDimName,
+  readLevelSpawn,
   detectWorldRoot,
   importArchive,
   extractFromServer,
@@ -1169,6 +1265,7 @@ module.exports = {
   libraryWorlds,
   deleteLibraryWorld,
   activeLevelName,
+  serverWorldDims,
   compatWarnings,
   readLevelVersion,
 };

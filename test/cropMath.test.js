@@ -71,8 +71,16 @@ test('pickExport keeps a small PNG as PNG', () => {
   });
 });
 
+test('pickExport keeps a multi-MB PNG as PNG now that the cap is 16 MB', () => {
+  assert.equal(pickExport('image/png', 3 * 1024 * 1024).type, 'image/png');
+});
+
 test('pickExport falls back to JPEG for an oversized PNG', () => {
-  assert.deepEqual(pickExport('image/png', 600 * 1024), { type: 'image/jpeg', quality: 0.9, filename: 'avatar.jpg' });
+  assert.deepEqual(pickExport('image/png', 5 * 1024 * 1024), {
+    type: 'image/jpeg',
+    quality: 0.9,
+    filename: 'avatar.jpg',
+  });
 });
 
 test('pickExport always uses JPEG for a JPEG (or rasterized-SVG) source', () => {
@@ -126,7 +134,8 @@ test('the browser ESM copy of cropMath produces identical results to the CJS one
 
   for (const args of [
     ['image/png', 100 * 1024],
-    ['image/png', 600 * 1024],
+    ['image/png', 3 * 1024 * 1024],
+    ['image/png', 5 * 1024 * 1024],
     ['image/jpeg', null],
     ['image/png', null],
   ]) {

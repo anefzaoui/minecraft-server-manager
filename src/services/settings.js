@@ -5,6 +5,7 @@
 // encrypted - never here.
 
 const db = require('../db');
+const httpError = require('../utils/httpError');
 
 function get(key, fallback = null) {
   const row = db.get('SELECT value_json FROM settings WHERE key = ?', key);
@@ -45,9 +46,7 @@ function normalizeHost(host) {
   const valid =
     /^[a-z0-9.-]{1,253}$/.test(h) && !h.startsWith('.') && !h.endsWith('.') && !h.startsWith('-') && !h.includes('..');
   if (!valid) {
-    const err = new Error('Enter a valid domain or hostname, e.g. mc.example.com (no scheme, path or port).');
-    err.status = 400;
-    throw err;
+    throw httpError(400, 'Enter a valid domain or hostname, e.g. mc.example.com (no scheme, path or port).');
   }
   return h;
 }
@@ -159,6 +158,22 @@ function setCountry(cc) {
   return clean;
 }
 
+// ---------------------------------------------------------------------------
+// Public read-only API (/api/v1). Off by default - it is an internet-facing
+// surface, so serving it is a deliberate opt-in even though it stays inert
+// until an admin also mints a token (services/apiTokens.js).
+
+/** Whether GET /api/v1 is served. */
+function isPublicApiEnabled() {
+  return get('public_api_enabled', false) === true;
+}
+
+/** Enable or disable the public API. Returns the new state. */
+function setPublicApiEnabled(on) {
+  set('public_api_enabled', Boolean(on));
+  return Boolean(on);
+}
+
 /** A BCP-47 locale for date/number formatting, from host language + chosen country. */
 function resolveLocale() {
   let sysLoc = 'en-US';
@@ -192,6 +207,62 @@ function clientLocalization() {
   return { timezone: getTimezone(), locale: resolveLocale() };
 }
 
+// ---------------------------------------------------------------------------
+// Defaults for new servers. The env/built-in base lives in config.defaults
+// (see src/config resolveDefaults). An operator can override those per-field
+// here so blueprints, API creates, and the create wizard pre-fill their values
+// without editing .env. "Restore" drops the overrides back to the built-ins.
+
+const config = require('../config');
+const DEFAULTS_KEY = 'panel_defaults';
+
+const DEFAULT_FIELDS = ['heapMb', 'containerMemoryMb', 'cpus', 'diskQuotaGb', 'quotaWarnPct', 'quotaCriticalPct'];
+const CLAMPS = {
+  heapMb: [512, 262144],
+  containerMemoryMb: [1024, 524288],
+  cpus: [0, 128],
+  diskQuotaGb: [0, 16384],
+  quotaWarnPct: [0, 99],
+  quotaCriticalPct: [1, 100],
+};
+
+/** Sanitise an incoming patch to known default fields within sane bounds. */
+function sanitizeDefaults(patch = {}) {
+  const out = {};
+  for (const k of DEFAULT_FIELDS) {
+    const raw = patch[k];
+    if (raw === undefined || raw === null || raw === '') continue;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) continue;
+    const [min, max] = CLAMPS[k];
+    out[k] = Math.min(max, Math.max(min, k === 'cpus' ? n : Math.round(n)));
+  }
+  return out;
+}
+
+/** The effective per-instance defaults: built-in/env base layered with saved overrides. */
+function getDefaults() {
+  return { ...config.defaults, ...sanitizeDefaults(get(DEFAULTS_KEY, {})) };
+}
+
+/** Persist operator-set overrides for some/all default fields. Returns the new effective defaults. */
+function setDefaults(patch) {
+  const saved = get(DEFAULTS_KEY, {});
+  const next = { ...saved, ...sanitizeDefaults(patch) };
+  const effective = { ...config.defaults, ...next };
+  if (effective.quotaWarnPct >= effective.quotaCriticalPct) {
+    throw require('../utils/httpError')(400, 'The disk warning threshold must be lower than the critical threshold.');
+  }
+  set(DEFAULTS_KEY, next);
+  return getDefaults();
+}
+
+/** Clear operator overrides - back to the built-in/.env defaults. Returns the new effective defaults. */
+function resetDefaults() {
+  remove(DEFAULTS_KEY);
+  return getDefaults();
+}
+
 module.exports = {
   get,
   set,
@@ -200,6 +271,8 @@ module.exports = {
   setPublicHost,
   publicAddress,
   normalizeHost,
+  isPublicApiEnabled,
+  setPublicApiEnabled,
   getTimezone,
   setTimezone,
   getCountry,
@@ -211,4 +284,9 @@ module.exports = {
   isValidCountry,
   localization,
   clientLocalization,
+  getDefaults,
+  setDefaults,
+  resetDefaults,
+  sanitizeDefaults,
+  DEFAULT_FIELDS,
 };

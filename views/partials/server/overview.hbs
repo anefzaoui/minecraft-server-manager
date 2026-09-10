@@ -12,13 +12,13 @@
             {{! size attr: the field grows with the address instead of clipping long LAN hostnames. }}
             <input class="input w-auto font-mono" id="ov-address" value="{{addresses.[0]}}" size="{{addresses.[0].length}}" readonly>
           {{/if}}
-          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy address</button>
+          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy Address</button>
         </div>
-        <p class="help">Playing from the internet? Set up port forwarding or grab the full invite from the Integrations tab.</p>
+        <p class="help">Playing from the internet? Set up port forwarding or grab the full invite from the Invites tab (under Settings).</p>
       </div>
     {{/if}}
     <h3 class="mb-3 font-semibold">About</h3>
-    <div class="prose-sm max-w-prose text-sm text-ink-soft [&_a]:text-link [&_code]:rounded [&_code]:bg-inset [&_code]:px-1">{{{markdown server.description}}}</div>
+    <div class="prose-sm max-w-prose text-sm text-ink-soft [&_a]:text-link [&_code]:rounded [&_code]:bg-inset [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.9em] [&_code]:text-ink-soft">{{{markdown server.description}}}</div>
     <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
       <div><dt class="text-xs text-ink-faint">Created</dt><dd class="font-medium">{{server.created}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
@@ -58,7 +58,7 @@
           <div class="meter"><div data-ov-mem-bar class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div></div>
         </div>
         <div>
-          <div class="mb-1 flex justify-between text-ink-faint"><span>Disk quota</span><span>{{bytes server.disk.used}} / {{bytes server.disk.quota}}</span></div>
+          <div class="mb-1 flex justify-between text-ink-faint"><span>Disk quota</span><span>{{bytes server.disk.used}}{{#if server.disk.quota}} / {{bytes server.disk.quota}}{{else}} (no quota){{/if}}</span></div>
           <div class="meter"><div class="{{meterColor server.disk.used server.disk.quota}}" style="width: {{pct server.disk.used server.disk.quota}}%"></div></div>
         </div>
       </div>

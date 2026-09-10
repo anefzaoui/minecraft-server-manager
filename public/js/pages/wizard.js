@@ -132,7 +132,7 @@ function init() {
       browser.clear();
       solverState.pick = null;
       solverState.mods = [];
-      if (hadSelection) toast('Left "From mods" - the queued mods were cleared.', { kind: 'info' });
+      if (hadSelection) toast('Left "From Mods". The queued mods were cleared.', { kind: 'info' });
     }
     sourceTab = tab;
     sourceTabsEl?.querySelectorAll('[data-source]').forEach((b) => setClasses(b, b.dataset.source === tab));
@@ -223,10 +223,13 @@ function init() {
 
   function resources() {
     const heapMb = Number(document.getElementById('wz-ram').value);
+    const quotaRaw = document.getElementById('wz-quota').value.trim();
     return {
       heapMb,
       containerMemoryMb: Math.round((heapMb * 1.5) / 512) * 512,
-      diskQuotaGb: Number(document.getElementById('wz-quota').value),
+      // Blank = "use the admin-configured default", not a hard 0 (which means
+      // quota off) - an empty field must never silently flip the quota off.
+      diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),
       portGame: Number(document.getElementById('wz-port').value) || undefined,
     };
   }
@@ -407,6 +410,7 @@ function init() {
       loader,
       mcVersion,
       ...(zipState.loaderVersion ? { loaderVersion: zipState.loaderVersion } : {}),
+      ...(zipState.nativeLoader ? { nativeLoader: true } : {}),
       uploadToken: zipState.uploadToken,
       ...(selections ? { selections } : {}),
       applyOverrides: Boolean(zipState.applyOverrides),
@@ -416,7 +420,7 @@ function init() {
     };
     try {
       const result = await runTask({
-        title: `Creating ${name} from zip`,
+        title: `Creating ${name} from zip…`,
         start: async () => {
           const res = await fetch('/api/servers/from-zip', {
             method: 'POST',
@@ -424,7 +428,7 @@ function init() {
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Creation failed');
+          if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'create the server' }));
           return data.taskId;
         },
       });
@@ -438,7 +442,7 @@ function init() {
       });
     } catch (err) {
       if (err.dismissed) return; // creation continues server-side - task tray takes over
-      toast(err.message || 'Creation failed', { kind: 'error', timeout: 12000 });
+      toast(err.message || 'That server could not be created. Please try again.', { kind: 'error', timeout: 12000 });
     }
   }
 
@@ -1012,6 +1016,7 @@ function initZipUpload() {
             ? data.preview.pack.loaderVersion || ''
             : '',
         applyOverrides: false,
+        nativeLoader: false,
       };
       document.getElementById('wz-pack-selected')?.classList.add('hidden'); // zip replaces any picked pack
       render(file.name);
@@ -1053,16 +1058,58 @@ function initZipUpload() {
         <div class="mt-3 hidden gap-4 sm:grid-cols-2" data-role="pickers"></div>
         <label class="mt-3 hidden cursor-pointer items-start gap-2 text-xs text-ink-soft" data-role="overrides-row">
           <input type="checkbox" class="msm-check mt-0.5 shrink-0" data-role="overrides">
-          <span>Also apply the pack's <b data-role="ovr-count"></b> override files (configs/scripts) after install — overwritten files are backed up inside the server folder.</span>
+          <span>Also apply the pack's <b data-role="ovr-count"></b> override files (configs/scripts) after install. Overwritten files are backed up inside the server folder.</span>
         </label>
       </div>`;
     selectedEl.querySelector('[data-role="title"]').textContent = isPack
       ? `${p.pack.name}${p.pack.version ? ` ${p.pack.version}` : ''}`
       : filename;
     selectedEl.querySelector('[data-role="meta"]').textContent = isPack
-      ? `${isMrpack ? 'Modrinth modpack (.mrpack)' : 'CurseForge export'} — Minecraft ${p.pack.mcVersion || '?'}, ${p.pack.loader || 'unknown loader'} · ${bits.join(' · ')}`
-      : `Custom jar zip · ${bits.join(' · ')}`;
+      ? `${isMrpack ? 'Modrinth modpack (.mrpack)' : 'CurseForge export'}, Minecraft ${p.pack.mcVersion || '?'}, ${p.pack.loader || 'unknown loader'} · ${bits.join(' · ')}`
+      : `Custom jar zip · ${bits.join(' · ')}${p.native && p.native.isPreparedServer ? ' · pre-installed server' : ''}`;
     selectedEl.querySelector('[data-role="remove"]').addEventListener('click', clear);
+
+    // Jar zips that carry a complete, pre-installed loader (a locally-prepared
+    // server pack) can be created without MSM re-supplying loader versions: pin
+    // the container to the build that's already inside the archive.
+    if (!isPack && p.native && p.native.isPreparedServer) {
+      const nativeRow = document.createElement('label');
+      nativeRow.className = 'mt-3 flex cursor-pointer items-start gap-2 text-xs text-ink-soft';
+      nativeRow.innerHTML = `
+        <input type="checkbox" class="msm-check mt-0.5 shrink-0" data-role="native" ${state.nativeLoader ? 'checked' : ''}>
+        <span><b>Use the loader already in this zip.</b> This is a pre-installed server directory, so the panel keeps this server on the included
+          ${escapeHtml(p.native.loader || 'loader')} build ${escapeHtml(p.native.loaderVersion || '')} instead of reinstalling one.
+          ${p.native.mcVersion ? `Detected Minecraft ${escapeHtml(p.native.mcVersion)}.` : 'Minecraft version is detected from the archive.'}</span>`;
+      selectedEl.appendChild(nativeRow);
+      nativeRow.querySelector('[data-role="native"]').addEventListener('change', (e) => {
+        state.nativeLoader = e.target.checked;
+        if (e.target.checked) {
+          if (p.native.loader) state.loader = p.native.loader;
+          if (p.native.mcVersion) state.mcVersion = p.native.mcVersion;
+          if (p.native.loaderVersion) state.loaderVersion = p.native.loaderVersion;
+        } else {
+          state.loaderVersion = '';
+        }
+        // Reflect the choice in the manual pickers (when they're rendered): in
+        // native mode the detected values win and aren't hand-editable.
+        const loaderSel = selectedEl.querySelector('[data-role="loader"]');
+        const mcEl = selectedEl.querySelector('[data-role="mc"]');
+        if (loaderSel) {
+          loaderSel.disabled = e.target.checked;
+          loaderSel.value = state.loader || loaderSel.value;
+        }
+        if (mcEl) {
+          mcEl.disabled = e.target.checked;
+          if (state.mcVersion) {
+            if (mcEl.tagName === 'INPUT') mcEl.value = state.mcVersion;
+            else if (![...mcEl.options].some((o) => o.value === state.mcVersion)) {
+              mcEl.add(new Option(state.mcVersion, state.mcVersion));
+            }
+            mcEl.value = state.mcVersion;
+          }
+        }
+      });
+    }
 
     if (isPack && p.overrides && p.overrides.count > 0) {
       const row = selectedEl.querySelector('[data-role="overrides-row"]');
@@ -1607,7 +1654,7 @@ function initSolver({ onApplied = () => {} } = {}) {
     applyRow.className = 'mt-3 flex items-center gap-2';
     applyRow.innerHTML = `
       <button type="button" data-apply class="btn btn-primary btn-sm">Apply</button>
-      <span class="text-xs text-ink-faint">Sets the loader + version; press "Create &amp; start" to build the server and install the mods.</span>`;
+      <span class="text-xs text-ink-faint">Sets the loader + version; press "Create &amp; Start" to build the server and install the mods.</span>`;
     resultEl.appendChild(applyRow);
   }
 

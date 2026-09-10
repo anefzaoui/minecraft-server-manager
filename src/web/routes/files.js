@@ -53,7 +53,7 @@ const nameSchema = z
   .trim()
   .min(1)
   .max(180)
-  .regex(/^[^\\/\0]+$/, 'Names cannot contain path separators');
+  .regex(/^[^\\/\0]+$/, 'Names cannot contain path separators.');
 
 function makeRouter(scope) {
   const router = express.Router({ mergeParams: true });
@@ -94,16 +94,32 @@ function makeRouter(scope) {
     })
   );
 
-  // The text editor allows up to 2 MB of content; the app-wide body parser skips
+  // Find-in-files: plain substring grep across text files under ?path (or the
+  // scope root). Bounded server-side - see services/files.searchFiles.
+  router.get(
+    '/search',
+    asyncHandler(async (req, res, next) => {
+      const q = z
+        .string()
+        .min(2)
+        .max(200)
+        .parse(req.query.q ?? '');
+      const subdir = pathSchema.parse(req.query.path ?? '');
+      const caseSensitive = req.query.case === '1' || req.query.case === 'true';
+      res.json({ ok: true, ...(await files.searchFiles(sid(req), q, { caseSensitive, subdir })) });
+    })
+  );
+
+  // The text editor allows up to 8 MB of content; the app-wide body parser skips
   // this path so this larger parser is the one that reads it (see web/app.js).
   router.post(
     '/write',
-    express.json({ limit: '3mb' }),
+    express.json({ limit: '9mb' }),
     asyncHandler(async (req, res, next) => {
       const { path: rel, content } = z
         .object({
           path: pathSchema,
-          content: z.string().max(2 * 1024 * 1024, 'Content exceeds the 2 MB editor limit'),
+          content: z.string().max(8 * 1024 * 1024, 'Content exceeds the 8 MB editor limit'),
         })
         .parse(req.body);
       res.json({ ok: true, ...(await files.writeText(sid(req), rel, content, { actor: actorOf(req) })) });
@@ -174,7 +190,7 @@ function makeRouter(scope) {
   });
 
   // JSON error handler (same contract as /api).
-  router.use(makeJsonErrorHandler('files', { fileTooLarge: 'File too large (4 GB upload limit)' }));
+  router.use(makeJsonErrorHandler('files', { fileTooLarge: 'That file is too large (4 GB upload limit).' }));
 
   return router;
 }

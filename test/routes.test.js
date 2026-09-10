@@ -141,3 +141,53 @@ test('cached library icons are served authed-only (the /library/icons static mou
   const escape = await app.req('GET', '/library/icons/../mods/secret.jar', { cookie });
   assert.notEqual(escape.status, 200);
 });
+
+test('the Mods tab marks icon <img>s and ships the puzzle fallback template', async () => {
+  const fsp = require('node:fs/promises');
+  const path = require('node:path');
+  const { dataPath } = require('../src/storage/pathGuard');
+  const id = app.seedServer('srv_modicons'); // PAPER, no pack
+  const dpDir = dataPath('servers', id, 'world/datapacks');
+  await fsp.mkdir(dpDir, { recursive: true });
+  await fsp.writeFile(path.join(dpDir, 'render-dp.zip'), 'x');
+  db.run(
+    `INSERT INTO server_content (id, server_id, kind, managed_by, name, filename, version, icon_url)
+     VALUES ('sc_render', ?, 'datapack', 'overlay', 'Render DP', 'render-dp.zip', '1.0',
+             'https://example.invalid/render.png')`,
+    id
+  );
+
+  const r = await app.req('GET', `/servers/${id}/mods`, { cookie, headers: { Accept: 'text/html' } });
+  assert.equal(r.status, 200);
+  assert.match(r.text, /<img[^>]*\bdata-mod-icon\b/);
+  const templates = r.text.match(/<template id="mod-icon-fallback">/g) || [];
+  assert.equal(templates.length, 1, 'exactly one fallback template');
+  assert.match(r.text, /<template id="mod-icon-fallback">.*bg-inset.*<\/template>/s);
+});
+
+test('dashboard renders the combined resource overview', async () => {
+  app.seedServer('srv_dashcombined');
+  const r = await app.req('GET', '/', { cookie, headers: { Accept: 'text/html' } });
+  assert.equal(r.status, 200);
+  // Section wrapper and heading always render once servers exist.
+  assert.match(r.text, /Resource Overview/);
+  assert.match(r.text, /id="combined-overview"/);
+  // The "At a glance" band (memory, storage, health, updates) renders.
+  assert.match(r.text, /Memory allotted/);
+  assert.match(r.text, /Storage used/);
+  assert.match(r.text, /Servers by Status/);
+  // A stopped server produces no live breakdown, so the fallback copy shows.
+  assert.match(r.text, /No servers are running right now\./);
+});
+
+test('dashboard renders the per-server breakdown with a live server', async () => {
+  app.seedServer('srv_dashlive');
+  db.run("UPDATE servers SET status = 'running', cpus = 2 WHERE id = 'srv_dashlive'");
+  const r = await app.req('GET', '/', { cookie, headers: { Accept: 'text/html' } });
+  assert.equal(r.status, 200, 'a running server must not crash the dashboard');
+  // The running server's CPU segment computes cap = cpus * 100 via the `mul` helper.
+  assert.match(r.text, /data-seg-cap="200"/);
+  assert.match(r.text, /data-combined-row="srv_dashlive"/);
+  // The run-only fallback copy is NOT shown when a server is running.
+  assert.doesNotMatch(r.text, /No servers are running right now\./);
+});

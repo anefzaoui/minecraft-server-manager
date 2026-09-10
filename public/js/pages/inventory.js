@@ -120,7 +120,7 @@ function init(root) {
     // (delete, move) can spin the on-page cell while the request runs.
     if (at) cell.dataset.slotKey = `${at.container}:${at.slot}`;
     cell.className =
-      'relative grid size-9 sm:size-10 place-items-center rounded border text-[10px] font-semibold select-none ' +
+      'relative grid size-12 sm:size-14 place-items-center rounded border text-[11px] font-semibold select-none ' +
       (editable
         ? 'cursor-pointer transition hover:ring-2 hover:ring-diamond-400/60 focus-visible:ring-2 focus-visible:ring-diamond-400 '
         : '');
@@ -130,7 +130,7 @@ function init(root) {
       if (label)
         cell.innerHTML = `<span class="text-[8px] uppercase tracking-wide text-ink-faint/60">${esc(label)}</span>`;
       cell.dataset.tip = editable
-        ? `Empty ${label || slotName(at.container, at.slot)} - click to put an item here`
+        ? `Empty ${label || slotName(at.container, at.slot)}. Click to put an item here.`
         : label
           ? `Empty ${label} slot`
           : '';
@@ -312,7 +312,7 @@ function init(root) {
           !(await confirmDialog({
             title: `Delete ${item.displayName || prettyId(item.id)}?`,
             message: `Removes ${item.count}× ${item.id} from ${where}. Take a snapshot first if you might want it back.`,
-            confirmLabel: 'Delete item',
+            confirmLabel: 'Delete Item',
             danger: true, // without this the destructive confirm rendered as a green primary
           }))
         )
@@ -367,7 +367,7 @@ function init(root) {
       title: 'Change Count',
       header: itemHeader(item, slotName(at.container, at.slot)),
       value: item.count,
-      confirmLabel: 'Set count',
+      confirmLabel: 'Set Count',
       onSubmit: (n) =>
         postEdit(
           `/player/${currentUuid}/slot`,
@@ -550,7 +550,7 @@ function init(root) {
       `<p class="text-xs text-ink-faint">${(() => {
         const n = sub.items.filter((i) => i.id).length;
         return `${n} ${n === 1 ? 'stack' : 'stacks'}`;
-      })()}${editable ? '. Click one to edit it' : ''}. Deeper nested containers open from their own item menus after a reload.</p>`
+      })()}${editable ? '. Click one to edit it' : ''}. Deeper nested containers open from their own item menus after a refresh.</p>`
     );
   }
 
@@ -662,17 +662,17 @@ function init(root) {
       return;
     }
     box.innerHTML = `
-      <div class="overflow-x-auto"><table class="table-base">
+      <div class="overflow-x-auto"><table class="table-base table-stack">
         <thead><tr><th class="w-8"></th><th>Taken</th><th>Trigger</th><th class="text-right">Size</th></tr></thead>
         <tbody>
           ${snapshots
             .map(
               (s) => `
             <tr>
-              <td><input type="checkbox" class="msm-check" data-snap-file="${esc(s.file)}" aria-label="Select snapshot"></td>
-              <td class="text-sm">${esc(when(s.ts))}</td>
-              <td><span class="chip">${esc(s.reason)}</span></td>
-              <td class="text-right text-xs text-ink-faint">${(s.size / 1024).toFixed(1)} KB</td>
+              <td data-th="" class="sm:w-8"><input type="checkbox" class="msm-check" data-snap-file="${esc(s.file)}" aria-label="Select snapshot"></td>
+              <td data-th="Taken" class="text-sm">${esc(when(s.ts))}</td>
+              <td data-th="Trigger"><span class="chip">${esc(s.reason)}</span></td>
+              <td data-th="Size" class="text-right text-xs text-ink-faint">${(s.size / 1024).toFixed(1)} KB</td>
             </tr>`
             )
             .join('')}
@@ -783,25 +783,25 @@ function init(root) {
         return;
       }
       box.innerHTML = `
-        <table class="table-base">
+        <div class="overflow-x-auto"><table class="table-base table-stack">
           <thead><tr><th>Player</th><th>Where</th><th>Slot</th><th>Item</th><th class="text-right">Count</th></tr></thead>
           <tbody>
             ${results
               .map(
                 (r) => `
               <tr>
-                <td class="text-sm">${esc(r.player.name || r.player.uuid)}</td>
-                <td><span class="chip">${esc(whereLabel(r.where))}</span></td>
-                <td class="font-mono text-xs">${r.slot === null ? '-' : esc(r.slot)}</td>
-                <td class="text-sm">
+                <td data-th="Player" class="text-sm">${esc(r.player.name || r.player.uuid)}</td>
+                <td data-th="Where"><span class="chip">${esc(whereLabel(r.where))}</span></td>
+                <td data-th="Slot" class="font-mono text-xs">${r.slot === null ? '-' : esc(r.slot)}</td>
+                <td data-th="Item" class="text-sm">
                   ${r.displayName ? `<span class="text-warn">"${esc(r.displayName)}"</span> <span class="text-xs text-ink-faint">(${esc(r.id)})</span>` : `<span class="font-mono text-xs">${esc(r.id)}</span>`}
                 </td>
-                <td class="text-right font-mono text-xs">${esc(r.count)}</td>
+                <td data-th="Count" class="text-right font-mono text-xs">${esc(r.count)}</td>
               </tr>`
               )
               .join('')}
           </tbody>
-        </table>`;
+        </table></div>`;
     } catch (err) {
       fail(err);
     }
@@ -852,7 +852,7 @@ function init(root) {
       title: item ? `Add ${item.name}` : 'Add Item',
       header,
       value: 1,
-      confirmLabel: 'Add to save file',
+      confirmLabel: 'Add to Save File',
       onSubmit: async (n, body) => {
         let itemId = item ? item.id : null;
         if (!itemId) {
@@ -863,10 +863,10 @@ function init(root) {
             return false;
           }
         }
-        return postEdit(
-          `/player/${currentUuid}/add`,
-          { item: itemId, count: n },
-          (r) => `${r.count}× ${r.item} added to slot ${r.slot}. A backup of the save file is kept.`
+        return postEdit(`/player/${currentUuid}/add`, { item: itemId, count: n }, (r) =>
+          r.mechanism === 'rcon'
+            ? `${r.count}× ${r.item} given to ${r.player} via server command.`
+            : `${r.count}× ${r.item} added to slot ${r.slot}. A backup of the save file is kept.`
         );
       },
     });
@@ -978,7 +978,7 @@ function init(root) {
                 title: `Clear the entire inventory of ${player}?`,
                 message:
                   'Every item they carry will be deleted. This cannot be undone, so take a snapshot first if you might need it back.',
-                confirmLabel: 'Clear everything',
+                confirmLabel: 'Clear Everything',
                 danger: true, // the most destructive dialog on the tab must not look like a positive action
               }))
             )

@@ -114,6 +114,9 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
       <label class="label">RCON command</label>
       <input class="input font-mono" data-sc-cmd placeholder="say Server restarts in 5 minutes" autocomplete="off">
     </div>
+    <div class="mt-3 hidden" data-sc-shrinkwrap>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="msm-check" data-sc-shrink> Shrink the world after each backup <span class="text-xs text-ink-faint">(removes rarely-visited chunks; only runs while the server is stopped)</span></label>
+    </div>
     <label class="label mt-3">Cron expression</label>
     <input class="input font-mono" data-sc-cron placeholder="0 4 * * *" autocomplete="off" spellcheck="false">
     <p class="help">Five fields: minute hour day-of-month month day-of-week. Example: <b class="font-mono">0 4 * * *</b> = daily at 04:00.</p>
@@ -126,6 +129,8 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   const typeSel = content.querySelector('[data-sc-type]');
   const cmdWrap = content.querySelector('[data-sc-cmdwrap]');
   const cmdInput = content.querySelector('[data-sc-cmd]');
+  const shrinkWrap = content.querySelector('[data-sc-shrinkwrap]');
+  const shrinkInput = content.querySelector('[data-sc-shrink]');
   const cronInput = content.querySelector('[data-sc-cron]');
   const preview = content.querySelector('[data-sc-preview]');
 
@@ -134,11 +139,13 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
     typeSel.value = edit.taskType;
     cronInput.value = edit.cron;
     if (edit.payload && edit.payload.command) cmdInput.value = edit.payload.command;
+    if (edit.payload && edit.payload.shrink) shrinkInput.checked = true;
   }
 
   const typeMeta = () => taskTypes.find((t) => t.value === typeSel.value) || {};
   const syncTypeUi = () => {
     cmdWrap.classList.toggle('hidden', typeSel.value !== 'rcon');
+    shrinkWrap.classList.toggle('hidden', typeSel.value !== 'backup');
     // Panel-wide tasks ignore the server - disable the picker instead of
     // silently discarding whatever was selected in it.
     const scoped = Boolean(typeMeta().serverScoped);
@@ -181,7 +188,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       {
-        label: edit ? 'Save changes' : 'Create schedule',
+        label: edit ? 'Save Changes' : 'Create Schedule',
         kind: 'primary',
         busyLabel: edit ? 'Saving…' : 'Creating…',
         onClick: async () => {
@@ -205,6 +212,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
             }
             payload.command = command;
           }
+          if (typeSel.value === 'backup' && shrinkInput.checked) payload.shrink = true;
           const body = {
             serverId: meta.serverScoped ? serverId : null,
             taskType: typeSel.value,

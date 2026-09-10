@@ -44,12 +44,12 @@ test('chatbot configuration and transcripts are admin-only', async () => {
   assert.equal((await app.req('GET', `/api/servers/${serverId}/wizard`, { cookie: adminCookie })).status, 200);
   assert.equal((await app.req('GET', '/wizard-transcripts', { cookie: adminCookie })).status, 200);
 
-  const adminPage = await app.req('GET', `/servers/${serverId}/integrations`, { cookie: adminCookie });
-  const operatorPage = await app.req('GET', `/servers/${serverId}/integrations`, { cookie: operatorCookie });
-  assert.match(adminPage.text, /Chatbot settings/);
+  const adminPage = await app.req('GET', `/servers/${serverId}/chatbot`, { cookie: adminCookie });
+  const operatorPage = await app.req('GET', `/servers/${serverId}/chatbot`, { cookie: operatorCookie });
+  assert.match(adminPage.text, /Chatbot Settings/);
   assert.match(adminPage.text, /Basic users/);
-  assert.match(adminPage.text, /Refresh this server's transcripts/);
-  assert.match(adminPage.text, /Refresh power audit/);
+  assert.match(adminPage.text, /Refresh This Server's Transcripts/);
+  assert.match(adminPage.text, /Refresh Power Audit/);
   assert.match(adminPage.text, /Player outreach/);
   assert.match(adminPage.text, /@wizard chat/);
   assert.match(adminPage.text, /Power controllers/);
@@ -60,7 +60,7 @@ test('chatbot configuration and transcripts are admin-only', async () => {
     'minecraft:torch',
     'minecraft:arrow',
   ]);
-  assert.doesNotMatch(operatorPage.text, /Chatbot settings/);
+  assert.doesNotMatch(operatorPage.text, /Chatbot Settings/);
 });
 
 test('per-server config encrypts the API key and defaults retention to seven days', async () => {

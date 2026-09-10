@@ -46,13 +46,13 @@ async function upgradePack(
   if (!pack) throw httpError(400, 'This server has no managed modpack');
 
   const STEP_LABELS = {
-    resolving: 'Resolving target version',
-    'backing-up': 'Creating pre-update backup',
-    stopping: 'Stopping server',
-    applying: 'Applying pack version',
-    recreating: 'Recreating container',
-    monitoring: 'Waiting for the server to come up',
-    overlay: 'Restoring custom mod overlay',
+    resolving: 'Resolving target version…',
+    'backing-up': 'Creating pre-update backup…',
+    stopping: 'Stopping server…',
+    applying: 'Applying pack version…',
+    recreating: 'Recreating container…',
+    monitoring: 'Waiting for the server to come up…',
+    overlay: 'Restoring custom mod overlay…',
   };
   const step = (s) => {
     activeUpgrades.set(serverId, { step: s, startedAt: activeUpgrades.get(serverId)?.startedAt || Date.now() });
@@ -74,7 +74,7 @@ async function upgradePack(
       includeBeta: pack.channel === 'beta',
     });
     if (resolved.versionId === pack.pinned_version_id) {
-      throw httpError(400, `Already on ${pack.pinned_version_name} - nothing to upgrade`);
+      throw httpError(400, `Already on ${pack.pinned_version_name}. Nothing to upgrade.`);
     }
 
     // Cross-MC-version upgrades permanently convert the world - demand
@@ -140,7 +140,7 @@ async function upgradePack(
         serverId,
         actor,
         type: 'update-failed',
-        summary: `Pack upgrade to ${resolved.versionName} failed to start - rollback available`,
+        summary: `Pack upgrade to ${resolved.versionName} failed to start. A rollback is available.`,
         details: { backupId, previousVersion: previous ? previous.pinned_version_id : null },
         logExcerpt: excerpt || null,
       });
@@ -167,7 +167,7 @@ async function upgradePack(
       serverId,
       actor,
       type: 'update-applied',
-      summary: `Pack upgraded: ${pack.project_name} ${pack.pinned_version_name} → ${resolved.versionName}`,
+      summary: `Pack upgraded: ${pack.project_name} ${pack.pinned_version_name} → ${resolved.versionName}.`,
       details: { backupId, from: pack.pinned_version_id, to: resolved.versionId },
       logExcerpt: excerpt || null,
     });
@@ -205,6 +205,13 @@ async function runAutoUpgrades({ actor = 'scheduler' } = {}) {
       server.id
     );
     if (!check || check.latest_version === pack.pinned_version_id) continue;
+    // "Ignore this update" pins update_checks.ignored_version to the offered
+    // build; auto policy must respect it exactly like the badge and digest do.
+    // A newer build changes latest_version and the ignore lapses on its own.
+    if (check.ignored_version != null && String(check.ignored_version) === String(check.latest_version)) {
+      results.skipped += 1;
+      continue;
+    }
     try {
       await upgradePack(server.id, { versionId: check.latest_version, actor });
       results.applied += 1;
@@ -215,7 +222,7 @@ async function runAutoUpgrades({ actor = 'scheduler' } = {}) {
           serverId: server.id,
           actor,
           type: 'auto-update-skipped',
-          summary: `Auto-update to ${check.latest_name || check.latest_version} skipped: it moves Minecraft ${err.fromMcVersion} → ${err.toMcVersion}, which permanently converts the world - apply it manually when ready`,
+          summary: `Auto-update to ${check.latest_name || check.latest_version} skipped: it moves Minecraft ${err.fromMcVersion} → ${err.toMcVersion}, which permanently converts the world. Apply it manually when you are ready.`,
         });
         continue;
       }
@@ -235,7 +242,7 @@ async function runAutoUpgrades({ actor = 'scheduler' } = {}) {
             serverId: server.id,
             actor,
             type: 'auto-update-failed',
-            summary: `Auto-update failed AND the automatic rollback failed - the server needs manual attention (backup ${err.backupId} is intact)`,
+            summary: `Auto-update failed, and the automatic rollback also failed. The server needs manual attention. The pre-update backup is intact.`,
           });
           logger.error('The automatic rollback after a failed auto-update also failed.', {
             serverId: server.id,
@@ -285,7 +292,7 @@ async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'update-rolled-back',
-      summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}`,
+      summary: `Rolled back to ${pack.previous_version_name}${backupId ? ' (backup restored)' : ''}.`,
     });
     logger.info('Finished a pack rollback.', { serverId, actor, toVersion: pack.previous_version_name, backupId });
     return { ok: true, version: pack.previous_version_name };

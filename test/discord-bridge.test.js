@@ -57,3 +57,31 @@ test('a transient webhook failure retries the row instead of skipping the alert'
   await discord._pollOnce();
   assert.equal(calls.length, before, 'a delivered row is not re-sent');
 });
+
+test('the boot mark replays events after the persisted mark, but not older than the window', () => {
+  const settings = require('../src/services/settings');
+  seedServer('srv_mark');
+
+  // Simulate: the bridge last persisted mark 5, then the panel was down while
+  // events 6..N were recorded.
+  settings.set(discord._MARK_KEY, 5);
+  const recent = [];
+  for (let i = 0; i < 4; i++) {
+    recent.push(recordEvent({ serverId: 'srv_mark', type: 'oom', summary: `blip ${i}` }));
+  }
+  const maxId = db.get('SELECT MAX(id) AS id FROM events').id;
+
+  // Nothing is older than the replay window in this fresh test DB, so replay
+  // resumes exactly from the persisted mark.
+  assert.equal(discord._initialMark(), 5);
+
+  // Age every existing event past the window: now there is nothing left to
+  // replay and the mark jumps to the tip.
+  db.run(`UPDATE events SET created_at = datetime('now', '-1 day')`);
+  assert.equal(discord._initialMark(), maxId);
+
+  // First run ever (no persisted mark): start at the tip, never replay history.
+  settings.remove(discord._MARK_KEY);
+  assert.equal(discord._initialMark(), maxId);
+  void recent;
+});

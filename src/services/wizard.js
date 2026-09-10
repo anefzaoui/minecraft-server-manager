@@ -21,7 +21,7 @@ const DEFAULT_PROMPT =
   'Never claim that you performed a gameplay action unless an available tool completed successfully.';
 const DEFAULT_WELCOME_MESSAGE =
   "Welcome, {player}! I am {chatbot}, this server's resident guide and conversational companion. " +
-  'Ask me for help—or just chat—by writing {mention} followed by your message.';
+  'Ask me for help, or just chat, by writing {mention} followed by your message.';
 const DEFAULT_CHECKIN_MESSAGE =
   '{player}, you have been exploring for a while. How are you doing? ' +
   'If you need help or company, say {mention} followed by your message.';

@@ -63,6 +63,13 @@ async function followLogs(serverId, { tail = 200, timestamps = false } = {}) {
   };
 }
 
+// Absolute ceiling on a single demultiplexed log frame. Docker frames carry a
+// uint32 length from the container's stdout/stderr stream - a noisy or hostile
+// container could declare a huge size and force a large subarray/join. Real
+// Minecraft console lines never approach this (even a full stack trace or config
+// dump is a few KB), so clamp oversized frames rather than materialize them.
+const MAX_FRAME_BYTES = 8 * 1024 * 1024;
+
 /** Docker multiplexed log buffer → plain text (strips 8-byte frame headers). */
 function demuxBuffer(buf) {
   if (!Buffer.isBuffer(buf)) return String(buf);
@@ -76,6 +83,12 @@ function demuxBuffer(buf) {
       break;
     }
     const size = buf.readUInt32BE(offset + 4);
+    if (size > MAX_FRAME_BYTES || offset + 8 + size > buf.length) {
+      // Declared size is absurd or runs past the buffer - drop the frame and
+      // stop rather than allocate over a huge logical range (subarray clamps,
+      // but the join would still be unbounded). Reached only on malformed input.
+      break;
+    }
     parts.push(buf.subarray(offset + 8, offset + 8 + size).toString('utf8'));
     offset += 8 + size;
   }

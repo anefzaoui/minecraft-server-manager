@@ -22,7 +22,7 @@ const syncThrottle = makeFailureThrottle();
 const RUNNING = new Set(['running', 'starting', 'unhealthy', 'stalled']);
 const DEDUPE_WINDOW_MS = 5000; // paired lines (logged-in/joined, lost-connection/left)
 
-const taps = new Map(); // serverId -> { stop, buf }
+const taps = new Map(); // serverId -> { stop }
 let pollTimer = null;
 
 // Docker prepends this RFC3339(Nano) receive time to each line when
@@ -174,14 +174,19 @@ async function attach(serverId) {
   // timestamps:true so each line carries Docker's authoritative UTC receive
   // time - TZ-independent, unlike the container's bare HH:MM:SS console prefix.
   const { stream, stop } = await followLogs(serverId, { tail: 0, timestamps: true });
-  const tap = { stop, buf: '' };
+  let buf = Buffer.alloc(0);
+  const tap = { stop };
   taps.set(serverId, tap);
   stream.on('data', (chunk) => {
-    tap.buf += chunk.toString('utf8');
+    // Accumulate raw bytes and only split on newlines. Decoding each chunk with
+    // toString('utf8') alone would corrupt a multi-byte UTF-8 sequence split
+    // across chunks (a player name with non-ASCII letters), so keep the bytes
+    // whole and decode line-by-line once a boundary is found.
+    buf = Buffer.concat([buf, Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)]);
     let nl;
-    while ((nl = tap.buf.indexOf('\n')) !== -1) {
-      const line = tap.buf.slice(0, nl);
-      tap.buf = tap.buf.slice(nl + 1);
+    while ((nl = buf.indexOf(0x0a)) !== -1) {
+      const line = buf.subarray(0, nl).toString('utf8');
+      buf = buf.subarray(nl + 1);
       if (line.trim()) handleLine(serverId, line);
     }
   });
@@ -244,7 +249,14 @@ async function startIngest() {
 function stopIngest() {
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = null;
+  // Don't rely solely on each stream's end/close firing cleanup: stop the raw
+  // handles AND close any sessions still open (ingest is stopping, so a
+  // dangling open session would never see its leave event). `stop()` destroys
+  // the underlying stream, whose end/close handler deletes each tap; iterate a
+  // snapshot of the ids so late cleanup can't invalidate the loop.
+  const ids = [...taps.keys()];
   for (const tap of taps.values()) tap.stop();
+  for (const id of ids) closeAllSessions(id);
 }
 
 /**
@@ -255,6 +267,17 @@ function stopIngest() {
 async function backfillFromLogs(serverId, { tail = 5000 } = {}) {
   const raw = await fetchLogs(serverId, { tail, timestamps: true });
   const newest = db.get('SELECT ts FROM player_events WHERE server_id = ? ORDER BY ts DESC LIMIT 1', serverId);
+  // Load the server's existing event keys once so the per-line dedupe check is a
+  // Set membership, not a SELECT-per-line across a multi-thousand-line backfill.
+  // Lines older than the newest recorded event are skipped below, so only rows
+  // at or after that timestamp can ever collide - no need to load the whole
+  // retention window (hundreds of thousands of rows on a busy server).
+  const seen = new Set(
+    (newest
+      ? db.all('SELECT ts, raw FROM player_events WHERE server_id = ? AND ts >= ?', serverId, newest.ts)
+      : []
+    ).map((r) => `${r.ts}\u0000${r.raw}`)
+  );
   const now = new Date();
   let inserted = 0;
   for (const rawLine of raw.split(/\r?\n/)) {
@@ -264,7 +287,9 @@ async function backfillFromLogs(serverId, { tail = 5000 } = {}) {
     if (!evt) continue;
     const ts = dockerTs || buildTs(evt.time, now);
     if (newest && ts < newest.ts) continue;
-    if (db.get('SELECT 1 FROM player_events WHERE server_id = ? AND ts = ? AND raw = ?', serverId, ts, line)) continue;
+    const key = `${ts}\u0000${line}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     if (insertEvent(serverId, evt, ts, line, { sessions: false })) inserted++;
   }
   return { inserted };

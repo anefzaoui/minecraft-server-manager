@@ -258,10 +258,49 @@ async function removeContainer(serverId) {
  * liveCache fires this on an interval and hung calls would otherwise stack
  * without bound.
  */
+/** Reject `promise` once `deadline` (epoch ms) passes; a late settle is ignored
+ *  except that a late stream is destroyed so it cannot leak a hijacked socket. */
+function withDeadline(promise, deadline, label) {
+  const left = deadline - Date.now();
+  if (left <= 0) return Promise.reject(new Error(`exec timed out before it started: ${label}`));
+  let timer;
+  return Promise.race([
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        return v;
+      },
+      (e) => {
+        clearTimeout(timer);
+        throw e;
+      }
+    ),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error(`exec timed out after ${left}ms: ${label}`));
+        // If the daemon eventually answers, drop whatever it hands us.
+        promise.then((v) => v && typeof v.destroy === 'function' && v.destroy()).catch(() => {});
+      }, left);
+      timer.unref?.();
+    }),
+  ]);
+}
+
 async function execRaw(serverId, cmd, { timeoutMs = 15000, wantExitCode = false } = {}) {
+  // ONE deadline for the whole call: creating the exec and starting it are
+  // daemon round trips too, and a wedged Docker daemon (seen live under an
+  // overloaded VM) can hang either of them for minutes - which hung the HTTP
+  // request that triggered the command. The timeout below only covered the
+  // output stream.
+  const deadline = Date.now() + timeoutMs;
+  const label = cmd.join(' ');
   const container = getContainer(serverId);
-  const exec = await container.exec({ Cmd: cmd, AttachStdout: true, AttachStderr: true });
-  const stream = await exec.start({});
+  const exec = await withDeadline(
+    container.exec({ Cmd: cmd, AttachStdout: true, AttachStderr: true }),
+    deadline,
+    label
+  );
+  const stream = await withDeadline(exec.start({}), deadline, label);
   const stdout = await new Promise((resolve, reject) => {
     const chunks = [];
     // Demux the Docker stream framing (8-byte headers).
@@ -280,8 +319,8 @@ async function execRaw(serverId, cmd, { timeoutMs = 15000, wantExitCode = false 
       fn(arg);
     };
     const timer = setTimeout(
-      () => finish(reject, new Error(`exec timed out after ${timeoutMs}ms: ${cmd.join(' ')}`)),
-      timeoutMs
+      () => finish(reject, new Error(`exec timed out after ${timeoutMs}ms: ${label}`)),
+      Math.max(1, deadline - Date.now())
     );
     timer.unref?.();
     stream.on('end', () => finish(resolve, Buffer.concat(chunks).toString('utf8')));
@@ -298,7 +337,7 @@ async function execRaw(serverId, cmd, { timeoutMs = 15000, wantExitCode = false 
     try {
       const inspected = await Promise.race([
         exec.inspect(),
-        new Promise((resolve) => setTimeout(resolve, timeoutMs, null).unref?.()),
+        new Promise((resolve) => setTimeout(resolve, Math.max(1, deadline - Date.now()), null).unref?.()),
       ]);
       if (inspected && typeof inspected.ExitCode === 'number') exitCode = inspected.ExitCode;
     } catch {

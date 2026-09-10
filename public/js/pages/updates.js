@@ -8,6 +8,8 @@
 //   Docker image rows (data-image-upgrade): POST /api/servers/:id/image/upgrade.
 //   Standalone MC-version/loader-build rows (data-target-version and/or
 //   data-target-build): POST /api/servers/:id/mcversion/upgrade.
+//   Any row: Ignore / Un-ignore via POST /api/updates/ignore ({subjectType,
+//   serverId, contentId?, ignore}) - an ignored row stays visible but greyed.
 
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
@@ -38,6 +40,12 @@ document.getElementById('updates-check-all')?.addEventListener('click', async ()
 });
 
 document.getElementById('updates-table')?.addEventListener('click', async (e) => {
+  const ignoreBtn = e.target.closest('[data-update-ignore], [data-update-unignore]');
+  if (ignoreBtn) {
+    const row = ignoreBtn.closest('[data-update-row]');
+    if (row) await toggleIgnore(row, ignoreBtn, ignoreBtn.hasAttribute('data-update-ignore'));
+    return;
+  }
   const btn = e.target.closest('[data-update-upgrade]');
   if (!btn) return;
   const row = btn.closest('[data-update-row]');
@@ -67,13 +75,47 @@ document.getElementById('updates-table')?.addEventListener('click', async (e) =>
   }
 });
 
+// Drop a row once its update has been applied - the entry is no longer pending.
+// When it was the last one, reload so the "everything up to date" empty state
+// renders in place of the now-empty table.
+function dropUpdateRow(row) {
+  const tbody = row.closest('tbody');
+  row.remove();
+  if (tbody && !tbody.querySelector('[data-update-row]')) setTimeout(() => location.reload(), 900);
+}
+
+// Ignore / un-ignore one row. subjectType tells the API which store to use
+// (content → per-mod flag, everything else → update_checks.ignored_version).
+async function toggleIgnore(row, btn, ignore) {
+  const { serverId, subjectType, contentId, subject, latest } = row.dataset;
+  try {
+    await withBusy(btn, ignore ? 'Ignoring…' : 'Un-ignoring…', () =>
+      postJSON('/api/updates/ignore', {
+        subjectType: subjectType || (contentId ? 'content' : ''),
+        serverId,
+        contentId: contentId || undefined,
+        ignore,
+      })
+    );
+    toast(
+      ignore
+        ? `Now ignoring ${latest} for ${subject}. It won't be offered until a newer build appears.`
+        : `${subject} updates are offered again.`,
+      { kind: 'success' }
+    );
+    setTimeout(() => location.reload(), 700);
+  } catch (err) {
+    toast(err.message || 'That could not be changed. Please try again.', { kind: 'error', timeout: 9000 });
+  }
+}
+
 async function upgradePack(row, { serverId, serverName, subject, current, latest, versionId }) {
   const ok = await confirmDialog({
     title: `Upgrade ${subject}?`,
     message: `${serverName} moves from ${current} to ${latest}. The panel takes an automatic backup first, applies the new version, and starts the server back up, watching that it comes back healthy.`,
     detail:
       'Your custom mods are preserved, and you can roll back with one click if it does not come up. The server is briefly offline during the swap.',
-    confirmLabel: 'Upgrade now',
+    confirmLabel: 'Upgrade Now',
   });
   if (!ok) return;
   try {
@@ -86,7 +128,7 @@ async function upgradePack(row, { serverId, serverName, subject, current, latest
       return;
     }
     toast(`Upgraded: ${result.from} → ${result.to}.`);
-    setTimeout(() => location.reload(), 900);
+    dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'The upgrade could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
@@ -98,7 +140,7 @@ async function offerRollback(serverId, serverName, errorMessage) {
     title: 'Upgrade failed. Roll back?',
     message: errorMessage || 'The server did not come back healthy after the upgrade.',
     detail: 'Rolling back restores the automatic pre-update backup and pins the previous pack version.',
-    confirmLabel: 'Roll back',
+    confirmLabel: 'Roll Back',
     danger: true,
   });
   if (!ok) return;
@@ -119,7 +161,7 @@ async function upgradeMod(row, btn, { serverId, subject, current, latest, conten
   const ok = await confirmDialog({
     title: `Update ${subject}?`,
     message: `${current} → ${latest}. The old file is replaced, and the enabled or disabled state is kept.`,
-    confirmLabel: 'Update mod',
+    confirmLabel: 'Update Mod',
   });
   if (!ok) return;
   toast(`Updating ${subject}…`, { kind: 'info' });
@@ -127,10 +169,7 @@ async function upgradeMod(row, btn, { serverId, subject, current, latest, conten
     await withBusy(btn, 'Updating…', async () => {
       const data = await postJSON(`/api/servers/${serverId}/mods/update`, { contentId });
       toast(`${data.installed.name} updated to ${data.installed.version || latest}.`);
-      const tbody = row.closest('tbody');
-      row.remove();
-      // Last row gone → re-render for the "everything up to date" empty state.
-      if (tbody && !tbody.querySelector('[data-update-row]')) setTimeout(() => location.reload(), 900);
+      dropUpdateRow(row);
     });
   } catch (err) {
     toast(err.message || 'That mod could not be updated. Please try again.', { kind: 'error', timeout: 9000 });
@@ -142,7 +181,7 @@ async function upgradeImage(row, { serverId, serverName, current, latest }) {
     title: 'Update the server image?',
     message: `${serverName} moves from ${current} to ${latest}. The panel rebuilds the container on the newer image.`,
     detail: 'Your world and files are untouched; only the container is replaced. The server is briefly offline.',
-    confirmLabel: 'Update now',
+    confirmLabel: 'Update Now',
   });
   if (!ok) return;
   try {
@@ -158,7 +197,7 @@ async function upgradeImage(row, { serverId, serverName, current, latest }) {
       return;
     }
     toast('Server image updated.');
-    setTimeout(() => location.reload(), 900);
+    dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'The image update could not be completed. Please try again.', {
@@ -176,7 +215,7 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
     title: targetVersion ? 'Update the Minecraft version?' : 'Update the loader build?',
     message,
     detail: 'The server is briefly offline while the container is rebuilt.',
-    confirmLabel: 'Update now',
+    confirmLabel: 'Update Now',
   });
   if (!ok) return;
   try {
@@ -192,7 +231,7 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
         ).taskId,
     });
     toast(`Updated: ${result.from} → ${result.to}.`);
-    setTimeout(() => location.reload(), 900);
+    dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
     toast(err.message || 'The update could not be completed. Please try again.', { kind: 'error', timeout: 12000 });

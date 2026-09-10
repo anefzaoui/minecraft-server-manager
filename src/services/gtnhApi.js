@@ -77,7 +77,7 @@ function pickLatest(entries, { includeBeta = false } = {}) {
 async function fetchIndex() {
   const cached = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', CACHE_KEY);
   const stale = () => (cached ? normalizeIndex(JSON.parse(cached.value_json)) : null);
-  if (cached && Date.now() - Date.parse(cached.fetched_at + 'Z') < TTL_MS) return stale();
+  if (cached && Date.now() - Date.parse(cached.fetched_at.replace(' ', 'T') + 'Z') < TTL_MS) return stale();
 
   let res;
   try {

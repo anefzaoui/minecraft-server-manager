@@ -7,6 +7,7 @@
 
 const path = require('node:path');
 const db = require('../db');
+const httpError = require('../utils/httpError');
 const { recordEvent } = require('../events');
 const serversService = require('../services/servers');
 const logger = require('../logger')(path.basename(__filename));
@@ -68,7 +69,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
           latestName: result.latest.name,
           changelogUrl: changelog,
         });
-        if (result.updateAvailable && !quiet)
+        if (result.updateAvailable && !quiet && !isUpdateIgnored('pack', server.id, result.latest.id))
           findings.push({
             server: server.display_name,
             kind: 'pack',
@@ -99,8 +100,18 @@ async function checkAll({ actor = 'scheduler' } = {}) {
         let latest = null;
         let changelogUrl = null;
         if (row.platform === 'modrinth') {
-          const versions = await modrinth.getVersions(row.project_id, { loader, mcVersion });
-          if (versions.length) latest = { id: versions[0].id, name: versions[0].version_number };
+          // Datapacks / resource packs are installed as real .zip files (never
+          // the `+mod` jar build a dual-published datapack also ships), so the
+          // loader filter does not apply and the newest version that actually
+          // carries a .zip is the one on offer - otherwise a jar-only build
+          // would surface as a phantom update that can never be applied.
+          const zipOnly = modsService.isZipOnlyKind(row.kind);
+          const versions = await modrinth.getVersions(row.project_id, {
+            loader: zipOnly ? undefined : loader,
+            mcVersion,
+          });
+          const pick = zipOnly ? versions.find((v) => modsService.pickDownloadFile(v, row.kind)) : versions[0];
+          if (pick) latest = { id: pick.id, name: pick.version_number };
           changelogUrl = `https://modrinth.com/project/${row.project_id}/changelog`;
         } else if (row.platform === 'curseforge') {
           const files = await curseforge.getFiles(Number(row.project_id), { mcVersion, loader });
@@ -133,7 +144,9 @@ async function checkAll({ actor = 'scheduler' } = {}) {
             latestName: latest.name,
             changelogUrl: isNew ? changelogUrl : null,
           });
-          if (isNew && !quiet)
+          // Cache stays accurate above so "un-ignore" needs no re-check; only
+          // keep an ignored build out of the findings notification.
+          if (isNew && !quiet && latest.name !== row.ignored_update_version)
             findings.push({
               server: server.display_name,
               kind: 'mod',
@@ -169,7 +182,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
         const latestId = imageIdCache.get(ref);
         const isNew = Boolean(latestId) && latestId !== status.imageId;
         upsertCheck('image', server.id, status.imageId, { isNew, latestId, latestName: ref, changelogUrl: null });
-        if (isNew && !quiet)
+        if (isNew && !quiet && !isUpdateIgnored('image', server.id, latestId))
           findings.push({
             server: server.display_name,
             kind: 'image',
@@ -209,8 +222,8 @@ async function checkAll({ actor = 'scheduler' } = {}) {
     actor,
     type: 'update-check',
     summary: findings.length
-      ? `Update check: ${findings.length} update(s) available`
-      : 'Update check: everything up to date',
+      ? `Update check: ${findings.length} update(s) available.`
+      : 'Update check: everything up to date.',
     details: { findings },
   });
   logger.info('Finished an update check.', {
@@ -223,6 +236,54 @@ async function checkAll({ actor = 'scheduler' } = {}) {
 
 function shortId(id) {
   return id ? id.replace(/^sha256:/, '').slice(0, 12) : '?';
+}
+
+/**
+ * True when the user chose to ignore exactly the update currently on offer for
+ * this subject (update_checks.ignored_version === the pending latest_version).
+ * A newer build changes latest_version, so the ignore lapses on its own.
+ * Content rows keep their own ignore on server_content.ignored_update_version -
+ * this is only for the pack / image / mc_version / loader_build kinds.
+ */
+function isUpdateIgnored(subjectType, subjectId, latestId) {
+  if (latestId == null) return false;
+  const row = db.get(
+    'SELECT ignored_version FROM update_checks WHERE subject_type = ? AND subject_id = ?',
+    subjectType,
+    subjectId
+  );
+  return Boolean(row && row.ignored_version != null && String(row.ignored_version) === String(latestId));
+}
+
+/**
+ * Ignore (or un-ignore) the update currently offered for a pack / image /
+ * mc_version / loader_build subject. Pins update_checks.ignored_version to the
+ * pending latest_version; `ignore: false` clears it. (Overlay content uses
+ * mods.setIgnoredUpdate instead - different table, same behaviour.)
+ */
+function setUpdateIgnored(subjectType, subjectId, { ignore = true, actor = 'system' } = {}) {
+  if (subjectType === 'content') {
+    // Callers should route content through mods.setIgnoredUpdate; guard anyway.
+    throw httpError(400, 'Use the per-mod ignore for overlay content');
+  }
+  const check = db.get('SELECT * FROM update_checks WHERE subject_type = ? AND subject_id = ?', subjectType, subjectId);
+  if (!check || !check.latest_version) {
+    throw httpError(409, 'No pending update to ignore. Run an update check first.');
+  }
+  db.run(
+    'UPDATE update_checks SET ignored_version = ? WHERE subject_type = ? AND subject_id = ?',
+    ignore ? check.latest_version : null,
+    subjectType,
+    subjectId
+  );
+  // Every non-content subject here is keyed by server id.
+  recordEvent({
+    serverId: subjectId,
+    actor,
+    type: ignore ? 'update-ignored' : 'update-unignored',
+    summary: `${ignore ? 'Ignoring' : 'No longer ignoring'} ${check.latest_name || check.latest_version} (${subjectType.replace('_', ' ')}).`,
+  });
+  return { ignored: ignore ? check.latest_version : null };
 }
 
 /** MC version + loader/Paper build checks for a server with no managed modpack. */
@@ -244,7 +305,7 @@ async function checkStandaloneVersion(server, findings) {
         latestName: latestRelease,
         changelogUrl: null,
       });
-      if (isNew)
+      if (isNew && !isUpdateIgnored('mc_version', server.id, latestRelease))
         findings.push({
           server: server.display_name,
           kind: 'mc_version',
@@ -269,7 +330,7 @@ async function checkStandaloneVersion(server, findings) {
       latestName: newest ? newest.label : null,
       changelogUrl: null,
     });
-    if (isNew)
+    if (isNew && !isUpdateIgnored('loader_build', server.id, newest.version))
       findings.push({
         server: server.display_name,
         kind: 'loader_build',
@@ -316,6 +377,10 @@ function packChangelogUrl(platform, projectRef) {
 /** Everything outdated, joined for the Updates page. */
 function listOutdated() {
   const rows = [];
+  // ignored rows stay in the list (greyed, with an "un-ignore" action) so the
+  // Updates page is the one place to manage them; countOutdated() and the
+  // digest exclude them instead.
+  const ignoredByVersion = (c) => c.ignored_version != null && String(c.ignored_version) === String(c.latest_version);
   for (const c of db.all('SELECT * FROM update_checks WHERE latest_version IS NOT NULL')) {
     if (c.subject_type === 'pack') {
       const server = db.get(
@@ -328,11 +393,13 @@ function listOutdated() {
           serverId: server.id,
           server: server.display_name,
           kind: 'Modpack',
+          subjectType: 'pack',
           subject: pack.project_name,
           current: pack.pinned_version_name,
           latest: c.latest_name,
           versionId: c.latest_version,
           changelogUrl: c.changelog_url || null,
+          ignored: ignoredByVersion(c),
         });
       }
     } else if (c.subject_type === 'content') {
@@ -342,17 +409,20 @@ function listOutdated() {
          WHERE sc.id = ?`,
         c.subject_id
       );
-      // Name-to-name: skip rows the user already updated since the last check.
+      // Name-to-name: skip only rows the user already updated since the last
+      // check. An ignored row still shows (greyed) so it can be un-ignored here.
       if (row && c.latest_name && c.latest_name !== row.version) {
         rows.push({
           serverId: row.sid,
           server: row.display_name,
           kind: CONTENT_KIND_LABEL[row.kind] || 'Mod (overlay)',
+          subjectType: 'content',
           subject: row.name,
           current: c.current_version,
           latest: c.latest_name,
           contentId: row.id,
           changelogUrl: c.changelog_url || null,
+          ignored: c.latest_name === row.ignored_update_version,
         });
       }
     } else if (c.subject_type === 'image') {
@@ -367,11 +437,13 @@ function listOutdated() {
           serverId: server.id,
           server: server.display_name,
           kind: 'Docker image',
+          subjectType: 'image',
           subject: c.latest_name,
           current: shortId(c.current_version),
           latest: shortId(c.latest_version),
           imageUpgrade: true,
           changelogUrl: null,
+          ignored: ignoredByVersion(c),
         });
       }
     } else if (c.subject_type === 'mc_version') {
@@ -382,11 +454,13 @@ function listOutdated() {
           serverId: server.id,
           server: server.display_name,
           kind: 'Minecraft version',
+          subjectType: 'mc_version',
           subject: 'Minecraft version',
           current: c.current_version,
           latest: c.latest_name,
           targetVersion: c.latest_version,
           changelogUrl: c.changelog_url || null,
+          ignored: ignoredByVersion(c),
         });
       }
     } else if (c.subject_type === 'loader_build') {
@@ -400,12 +474,14 @@ function listOutdated() {
             serverId: server.id,
             server: server.display_name,
             kind: 'Loader build',
+            subjectType: 'loader_build',
             subject: `${loader} build`,
             current: c.current_version,
             latest: c.latest_name || c.latest_version,
             targetLoaderBuild: c.latest_version,
             envKey,
             changelogUrl: null,
+            ignored: ignoredByVersion(c),
           });
         }
       }
@@ -421,35 +497,55 @@ function listOutdated() {
  * full per-row join-and-materialize listOutdated() does is pure waste when
  * only a number is needed.
  */
-function countOutdated() {
+function countOutdatedByKind() {
   const row = db.get(`
     SELECT
       (SELECT COUNT(*) FROM update_checks c
          JOIN server_packs p ON p.server_id = c.subject_id
          JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
          WHERE c.subject_type = 'pack' AND c.latest_version IS NOT NULL
-           AND p.pinned_version_id != c.latest_version)
-      +
+           AND p.pinned_version_id != c.latest_version
+           AND (c.ignored_version IS NULL OR c.ignored_version != c.latest_version))
+      AS packs,
       (SELECT COUNT(*) FROM update_checks c
          JOIN server_content sc ON sc.id = c.subject_id
          JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
          WHERE c.subject_type = 'content' AND c.latest_version IS NOT NULL
-           AND c.latest_name IS NOT NULL AND c.latest_name != sc.version)
-      +
+           AND c.latest_name IS NOT NULL AND c.latest_name != sc.version
+           AND (sc.ignored_update_version IS NULL OR sc.ignored_update_version != c.latest_name))
+      AS content,
       (SELECT COUNT(*) FROM update_checks c
          JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
-         WHERE c.subject_type = 'image' AND c.latest_version IS NOT NULL AND s.container_id IS NOT NULL)
-      +
+         WHERE c.subject_type = 'image' AND c.latest_version IS NOT NULL AND s.container_id IS NOT NULL
+           AND (c.ignored_version IS NULL OR c.ignored_version != c.latest_version))
+      AS images,
       (SELECT COUNT(*) FROM update_checks c
          JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
-         WHERE c.subject_type = 'mc_version' AND c.latest_version IS NOT NULL AND s.mc_version = c.current_version)
-      +
+         WHERE c.subject_type = 'mc_version' AND c.latest_version IS NOT NULL AND s.mc_version = c.current_version
+           AND (c.ignored_version IS NULL OR c.ignored_version != c.latest_version))
+      AS mc,
       (SELECT COUNT(*) FROM update_checks c
          JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
-         WHERE c.subject_type = 'loader_build' AND c.latest_version IS NOT NULL)
-      AS total
+         WHERE c.subject_type = 'loader_build' AND c.latest_version IS NOT NULL
+           AND (c.ignored_version IS NULL OR c.ignored_version != c.latest_version))
+      AS loader
   `);
-  return row ? row.total : 0;
+  const packs = row?.packs || 0;
+  const content = row?.content || 0;
+  const images = row?.images || 0;
+  const mc = row?.mc || 0;
+  const loader = row?.loader || 0;
+  return {
+    all: packs + content + images + mc + loader,
+    // Mods/plugins/datapacks/resource packs the user installed as content.
+    mods: packs + content,
+    // Server-level rebuilds: the container image or the Minecraft/loader version.
+    server: images + mc + loader,
+  };
+}
+
+function countOutdated() {
+  return countOutdatedByKind().all;
 }
 
 function lastCheckedAt() {
@@ -457,4 +553,4 @@ function lastCheckedAt() {
   return row ? row.fetched_at : null;
 }
 
-module.exports = { checkAll, listOutdated, countOutdated, lastCheckedAt };
+module.exports = { checkAll, listOutdated, countOutdated, countOutdatedByKind, lastCheckedAt, setUpdateIgnored };

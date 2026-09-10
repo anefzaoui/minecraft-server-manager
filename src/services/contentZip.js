@@ -19,9 +19,11 @@
 
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
+const crypto = require('node:crypto');
 const path = require('node:path');
 const httpError = require('../utils/httpError');
-const { readZipIndex, readEntryBuffers, extractZipSafe, safeEntryName } = require('../utils/zip');
+const { readZipIndex, forEachEntryBuffer, extractZipSafe, safeEntryName } = require('../utils/zip');
+const { curseforgeFingerprint } = require('../utils/murmur2');
 const { recordEvent } = require('../events');
 const { dataPath } = require('../storage/pathGuard');
 const curseforge = require('./curseforgeApi');
@@ -34,6 +36,106 @@ const MAX_MANIFEST_FILES = 1000; // a pack pinning more than this is malformed
 const MAX_JARS = 500;
 const MAX_OVERRIDE_ENTRIES = 20000;
 const MAX_OVERRIDE_BYTES = 8 * 1024 ** 3; // decompression-bomb ceiling (headers can lie; sizes re-checked on extract)
+
+// ---- Pre-installed-server detection -----------------------------------------
+//
+// "Custom zip" uploads are usually loose mod/plugin jars, but they can also be
+// a FULLY PREPARED server directory (someone ran an FTB pack's installer
+// locally and zipped the result). Such a zip already contains the loader's
+// installed libraries, so the container should be pinned to that SAME loader
+// build - itzg's start script then reconciles instead of installing/replacing
+// a fresh loader, and the user never has to type NEOFORGE_VERSION etc. These
+// patterns recognize the launcher-args file each loader drops into `libraries/`
+// when it installs itself.
+
+const NATIVE_LOADER_PROBES = [
+  // neoforge: libraries/net/neoforged/neoforge/<build>/unix_args.txt
+  { loader: 'neoforge', re: /^libraries\/net\/neoforged\/neoforge\/([^/]+)\// },
+  // forge: libraries/net/minecraftforge/forge/<mc>-<build>/unix_args.txt
+  { loader: 'forge', re: /^libraries\/net\/minecraftforge\/forge\/([\d.]+)-([^/]+)\// },
+  // fabric: libraries/net/fabricmc/fabric-loader/<build>/
+  { loader: 'fabric', re: /^libraries\/net\/fabricmc\/fabric-loader\/([^/]+)\// },
+  // quilt: libraries/org/quiltmc/quilt-loader/<build>/
+  { loader: 'quilt', re: /^libraries\/org\/quiltmc\/quilt-loader\/([^/]+)\// },
+];
+
+/**
+ * Best-effort scan of a zip for a pre-installed loader install. Returns what
+ * it finds (never throws on a partial/invalid layout):
+ *   { isPreparedServer, loader, loaderVersion, mcVersion }
+ * A zip is treated as a pre-installed server when it contains a `libraries/`
+ * loader tree AND a server marker (`versions/`, `server.properties`, …) —
+ * loose mod jars alone never qualify.
+ */
+async function detectNativeLoader(zipPath) {
+  const { entries } = await readZipIndex(zipPath);
+  const names = entries.map((e) => e.name);
+  const hasLibraries = names.some((n) => n.startsWith('libraries/'));
+  const hasServerMarker = names.some((n) => /^(server\.jar|server\.properties|eula\.txt|versions\/)/.test(n));
+  if (!hasLibraries || !hasServerMarker) {
+    return { isPreparedServer: false, loader: null, loaderVersion: null, mcVersion: null };
+  }
+  let loader = null;
+  let loaderVersion = null;
+  let mcVersion = null;
+  for (const n of names) {
+    for (const probe of NATIVE_LOADER_PROBES) {
+      const m = probe.re.exec(n);
+      if (!m || !m[1]) continue;
+      loader = probe.loader;
+      if (probe.loader === 'forge') {
+        mcVersion = m[1];
+        loaderVersion = m[2];
+      } else {
+        loaderVersion = m[1];
+      }
+      break;
+    }
+    if (loader) break;
+  }
+  // versions/<mc>/... — present in loader-installed server dirs (vanilla and
+  // loader launchers both read it). Forge's version already rode on its path.
+  if (!mcVersion) {
+    const v = names.find((n) => /^versions\/[^/]+\//.test(n));
+    if (v) mcVersion = v.split('/')[1] || null;
+  }
+  return { isPreparedServer: true, loader, loaderVersion, mcVersion };
+}
+
+// Identify every jar in a zip with bounded memory: each jar is buffered, parsed
+// and hashed one at a time (metadata extracted while the buffer is in hand),
+// then its compact hash/meta record is kept and the buffer is freed before the
+// next jar. Peak memory is ~one jar instead of every jar at once (previews of
+// big packs would otherwise hold the whole pack in RAM). Falls back to the
+// same identifyJars pipeline, so identities are byte-for-byte unchanged.
+//
+// When {tmpDir} is provided, each jar buffer is also written to a temp file in
+// that directory during the pass. The returned jarPaths Map<entryName, tmpPath>
+// lets the install loop reference those pre-extracted files without retaining
+// any buffers in memory.
+async function identifyJarsBounded(zipPath, { tmpDir } = {}) {
+  const jars = [];
+  const jarPaths = new Map();
+  let idx = 0;
+  await forEachEntryBuffer(zipPath, isJarEntry, async ({ name, buffer }) => {
+    const meta = await modIdentify.parseJarMeta(buffer);
+    jars.push({
+      name,
+      size: buffer.length,
+      sha1: crypto.createHash('sha1').update(buffer).digest('hex'),
+      sha256: crypto.createHash('sha256').update(buffer).digest('hex'),
+      fingerprint: curseforgeFingerprint(buffer),
+      meta,
+    });
+    if (tmpDir) {
+      const file = path.join(tmpDir, `zipjar-${Date.now()}-${idx++}-${path.basename(name).replace(/[^\w.-]/g, '_')}`);
+      await fsp.writeFile(file, buffer);
+      jarPaths.set(name, file);
+    }
+  });
+  const identified = await modIdentify.identifyJars(jars);
+  return { identified, jarPaths };
+}
 
 // ---- Detection & manifest parsing ------------------------------------------
 
@@ -49,7 +151,7 @@ function parsePackManifest(text) {
     throw httpError(400, 'manifest.json is not a CurseForge modpack manifest');
   }
   if (raw.files.length > MAX_MANIFEST_FILES) {
-    throw httpError(400, `Manifest pins ${raw.files.length} files — the ${MAX_MANIFEST_FILES} limit blocks it`);
+    throw httpError(400, `Manifest pins ${raw.files.length} files, but the ${MAX_MANIFEST_FILES} limit blocks it`);
   }
   const files = raw.files
     .map((f) => ({
@@ -97,7 +199,7 @@ function parseMrpackIndex(text) {
     throw httpError(400, 'modrinth.index.json is not a Modrinth modpack index');
   }
   if (raw.files.length > MAX_MANIFEST_FILES) {
-    throw httpError(400, `Pack pins ${raw.files.length} files — the ${MAX_MANIFEST_FILES} limit blocks it`);
+    throw httpError(400, `Pack pins ${raw.files.length} files, but the ${MAX_MANIFEST_FILES} limit blocks it`);
   }
   const deps = raw.dependencies || {};
   const loaderKey = Object.keys(MRPACK_LOADER_KEYS).find((k) => deps[k]);
@@ -235,7 +337,7 @@ async function inspect(zipPath) {
     );
   }
   if (jarEntries.length > MAX_JARS) {
-    throw httpError(400, `Zip contains ${jarEntries.length} jars — the ${MAX_JARS} limit blocks it`);
+    throw httpError(400, `Zip contains ${jarEntries.length} jars, but the ${MAX_JARS} limit blocks it`);
   }
   return { type: 'jars', manifest: null, jarEntries, overridesEntries: [] };
 }
@@ -387,8 +489,7 @@ async function previewForServer(serverId, zipPath) {
   }
 
   // jars
-  const buffers = await readEntryBuffers(zipPath, isJarEntry);
-  const identified = await modIdentify.identifyJars([...buffers.entries()].map(([name, buffer]) => ({ name, buffer })));
+  const { identified } = await identifyJarsBounded(zipPath);
   const items = identified.map((j) => ({
     entry: j.filename,
     filename: path.basename(j.filename),
@@ -449,8 +550,7 @@ async function previewStandalone(zipPath) {
       inferred: { loader: info.manifest.loader, mcVersion: info.manifest.mcVersion, kind: 'mod' },
     };
   }
-  const buffers = await readEntryBuffers(zipPath, isJarEntry);
-  const identified = await modIdentify.identifyJars([...buffers.entries()].map(([name, buffer]) => ({ name, buffer })));
+  const { identified } = await identifyJarsBounded(zipPath);
   const items = identified.map((j) => ({
     entry: j.filename,
     filename: path.basename(j.filename),
@@ -471,10 +571,15 @@ async function previewStandalone(zipPath) {
   const kind = (kindVotes[0] && kindVotes[0][0]) || 'mod';
   const modLoaderVotes = loaderVotes.filter(([l]) => ['fabric', 'forge', 'neoforge', 'quilt'].includes(l));
   const mcVotes = tally(items.flatMap((i) => (i.identity && i.identity.mcVersions) || []));
+  // A zip that embedded its own loader install (e.g. a locally-prepared FTB
+  // server) can be created WITHOUT MSM re-supplying loader versions - the
+  // already-installed build is what the container should pin to.
+  const native = await detectNativeLoader(zipPath);
   return {
     type: 'jars',
     items,
     overrides: { count: 0 },
+    native,
     inferred: {
       kind,
       loader: kind === 'plugin' ? 'paper' : (modLoaderVotes[0] && modLoaderVotes[0][0]) || null,
@@ -506,8 +611,11 @@ async function applyOverridesTo(serverId, zipPath, overridesPrefix, { actor = 's
 
   // Reversibility first: copy aside everything the extraction would replace
   // (a path present in several trees is backed up once).
+  // backupRel is a POSIX-style path on purpose: it's reported to callers, stored
+  // in the history event, and compared against '/'-separated zip entry names
+  // below - path.join would use '\' on Windows and break all three.
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const backupRel = path.join('.import-backups', stamp);
+  const backupRel = `.import-backups/${stamp}`;
   const backupDir = path.join(serverDir, backupRel);
   let backedUp = 0;
   const backedUpRels = new Set();
@@ -547,7 +655,7 @@ async function applyOverridesTo(serverId, zipPath, overridesPrefix, { actor = 's
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Modpack overrides applied: ${applied} files (${backedUp} overwritten files backed up to ${backupRel})`,
+    summary: `Modpack overrides applied: ${applied} files (${backedUp} overwritten files backed up to ${backupRel}).`,
     details: { applied, backedUp, backupDir: backedUp ? backupRel : null },
   });
   return { applied, backedUp, backupDir: backedUp ? backupRel : null };
@@ -576,7 +684,7 @@ async function importForServer(
   const report = { installed: [], failed: [], blocked: [], skipped: [], overrides: null };
 
   if (info.type === 'mrpack') {
-    onStep(`Resolving ${info.manifest.files.length} files via Modrinth`);
+    onStep(`Resolving ${info.manifest.files.length} files via Modrinth…`);
     const { items, clientOnly, nonMod } = await resolveMrpackEntries(info.manifest.files);
     for (const f of clientOnly) report.skipped.push({ name: path.basename(f.path), reason: 'client-only' });
     for (const f of nonMod) {
@@ -590,7 +698,7 @@ async function importForServer(
     }
     for (let i = 0; i < queue.length; i += 1) {
       const e = queue[i];
-      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}`);
+      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}…`);
       try {
         const { filename } = await modsService.installResolved(
           serverId,
@@ -621,11 +729,11 @@ async function importForServer(
       }
     }
     if (applyOverrides) {
-      onStep('Applying pack overrides');
+      onStep('Applying pack overrides…');
       report.overrides = await applyOverridesTo(serverId, zipPath, info.overridesPrefixes, { actor });
     }
   } else if (info.type === 'curseforge-pack') {
-    onStep(`Resolving ${info.manifest.files.length} mods via CurseForge`);
+    onStep(`Resolving ${info.manifest.files.length} mods via CurseForge…`);
     const entries = await resolveManifestEntries(info.manifest.files);
     const wanted = selections ? new Set(selections.map(Number)) : null;
     const queue = [];
@@ -651,7 +759,7 @@ async function importForServer(
     }
     for (let i = 0; i < queue.length; i += 1) {
       const e = queue[i];
-      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}`);
+      onStep(`Installing mod ${i + 1}/${queue.length}: ${e.name}…`);
       try {
         const { filename } = await modsService.installResolved(
           serverId,
@@ -680,15 +788,14 @@ async function importForServer(
       }
     }
     if (applyOverrides) {
-      onStep('Applying pack overrides');
+      onStep('Applying pack overrides…');
       report.overrides = await applyOverridesTo(serverId, zipPath, info.manifest.overridesPrefix, { actor });
     }
   } else {
-    onStep(`Reading ${info.jarEntries.length} jars`);
-    const buffers = await readEntryBuffers(zipPath, isJarEntry);
-    const identified = await modIdentify.identifyJars(
-      [...buffers.entries()].map(([name, buffer]) => ({ name, buffer }))
-    );
+    onStep(`Reading ${info.jarEntries.length} jars…`);
+    const tmpDir = dataPath('tmp');
+    await fsp.mkdir(tmpDir, { recursive: true });
+    const { identified, jarPaths } = await identifyJarsBounded(zipPath, { tmpDir });
     const identityByEntry = new Map(identified.map((j) => [j.filename, j.identity]));
     // Documented default (no selections): install every jar whose verdict isn't
     // wrong-* — unidentified jars stay in, but a jar known to be the wrong
@@ -701,7 +808,7 @@ async function importForServer(
       });
     const wanted = selections ? new Set(selections) : null;
     const names = [];
-    for (const entry of buffers.keys()) {
+    for (const entry of identified.map((j) => j.filename)) {
       const verdict = wanted ? null : judge(entry);
       if (wanted && !wanted.has(entry)) {
         report.skipped.push({ name: path.basename(entry), reason: 'deselected' });
@@ -711,15 +818,13 @@ async function importForServer(
         names.push(entry);
       }
     }
-    const tmpDir = dataPath('tmp');
-    await fsp.mkdir(tmpDir, { recursive: true });
     for (let i = 0; i < names.length; i += 1) {
       const entry = names[i];
       const base = path.basename(entry);
-      onStep(`Installing ${i + 1}/${names.length}: ${base}`);
-      const tmpFile = path.join(tmpDir, `zipjar-${Date.now()}-${i}-${base.replace(/[^\w.-]/g, '_')}`);
+      onStep(`Installing ${i + 1}/${names.length}: ${base}…`);
+      const tmpFile =
+        jarPaths.get(entry) || path.join(tmpDir, `zipjar-${Date.now()}-${i}-${base.replace(/[^\w.-]/g, '_')}`);
       try {
-        await fsp.writeFile(tmpFile, buffers.get(entry));
         const res = await modsService.installLocalContent(serverId, tmpFile, base, {
           identity: identityByEntry.get(entry) || null,
           actor,
@@ -737,7 +842,7 @@ async function importForServer(
     serverId,
     actor,
     type: 'mod-installed',
-    summary: `Zip import: ${report.installed.length} installed, ${report.failed.length} failed, ${report.blocked.length} need manual download`,
+    summary: `Zip import: ${report.installed.length} installed, ${report.failed.length} failed, ${report.blocked.length} need manual download.`,
     details: {
       installed: report.installed.length,
       failed: report.failed.length,
@@ -750,6 +855,7 @@ async function importForServer(
 
 module.exports = {
   inspect,
+  detectNativeLoader,
   parsePackManifest,
   parseMrpackIndex,
   resolveMrpackEntries,
