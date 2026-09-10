@@ -45,11 +45,12 @@ pnpm run build         # Tailwind CSS + esbuild client-JS bundle
 test:smoke` is the separate live sweep against a running panel. While iterating on a change, `pnpm run
 test:watch` re-runs the suite on every save.
 
-`main` is protected: the CI job `quality` (all five gates above) is a required status check, the PR
-branch must be up to date with `main`, and direct pushes, force pushes and deletion are blocked for
-everyone including admins. Every change (releases too) lands through a PR, which is what keeps the
-`:latest` image and GitHub Release workflows (both fire on push to `main`) from ever publishing an
-untested commit.
+`main` is protected: the CI status check `quality` is required. It is an aggregate job that is green
+only when the `checks` job (lint, format, typecheck, build), the `tests` job, and the PR-only
+`docker-build` job all pass. The PR branch must be up to date with `main`, and direct pushes, force
+pushes and deletion are blocked for everyone including admins. Every change (releases too) lands
+through a PR. The same workflow publishes the `:latest` image and the GitHub Release on a push to
+`main`, and those jobs only run after the gates pass, so an untested commit can never ship.
 
 Keep changes focused and match the surrounding style (Prettier enforces it). Server code is **plain
 CommonJS JS, with no TypeScript compile step**. The browser code in `public/js/` is ESM, bundled and

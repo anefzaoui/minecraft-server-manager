@@ -14,5 +14,5 @@ pnpm-lock.yaml
 # readability here - keep them hand-formatted.
 *.hbs
 
-# Claude Code tooling config and slash-command prompts - not project source.
+# Claude Code local tooling state - not project source.
 .claude

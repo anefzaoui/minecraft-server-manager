@@ -34,7 +34,8 @@ node --test test/foo.test.js   # run one test file
 pnpm run db:migrate     # apply src/db/migrations/* by hand
 ```
 
-`main` is protected; every change lands through a PR whose `quality` check runs all five gates.
+`main` is protected; every change lands through a PR. The required `quality` status check is an
+aggregate of the `checks` (lint, format, typecheck, build), `tests`, and `docker-build` CI jobs.
 
 ## Architecture — layering flows one direction only
 

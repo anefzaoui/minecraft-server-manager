@@ -26,9 +26,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+# Least privilege by default: the PR-facing jobs run untrusted code, so the
+# workflow token they see is read-only. Only the publish jobs below escalate.
 permissions:
-  contents: write # release job creates tags + releases
-  packages: write # docker jobs push to GHCR
+  contents: read
 
 jobs:
   checks:
@@ -97,9 +98,31 @@ jobs:
           provenance: false
           cache-from: type=gha,scope=linux-amd64
 
+  # Required status check for branch protection on main: one job named
+  # `quality` that is green only when every PR gate is. Keeps the protection
+  # rule stable while the gates themselves can be split or renamed freely.
+  quality:
+    needs: [checks, tests, docker-build]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every gate passed
+        run: |
+          echo "checks=${{ needs.checks.result }} tests=${{ needs.tests.result }} docker-build=${{ needs.docker-build.result }}"
+          test "${{ needs.checks.result }}" = success
+          test "${{ needs.tests.result }}" = success
+          # docker-build only runs on pull requests; a skipped run is fine on push.
+          case "${{ needs.docker-build.result }}" in success|skipped) ;; *) exit 1 ;; esac
+
   docker:
     needs: [checks, tests]
-    if: github.event_name != 'pull_request'
+    # Publish only from main. `push` is already main-only, but workflow_dispatch
+    # can be launched from any branch - never let that overwrite :latest.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -164,6 +187,10 @@ jobs:
 
   merge:
     needs: [docker]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -208,7 +235,9 @@ jobs:
     # `needs: merge` so a version is only released once its image is actually
     # published - a release must never point at an image that failed to build.
     needs: [merge]
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write # creates the tag + release
     runs-on: ubuntu-latest
     steps:
       # Shallow clone is enough: the notes come from the working-tree
