@@ -570,12 +570,27 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
       );
       if (withZip.length) versions = withZip;
     }
+    // ignoreVersion widens the query to every loader; that must not hand a
+    // Fabric server the newest NeoForge jar when a Fabric build exists at all.
+    // Stable-sort so builds for the server's loader family come first, newest
+    // first within each group.
+    if (ignoreVersion && targetKind === 'mod' && loader && !resolved.versionId) {
+      const wanted = new Set(
+        require('../utils/loaderCompat')
+          .compatibleLoaders(loader)
+          .map((l) => String(l).toLowerCase())
+      );
+      const fits = (v) => (v.loaders || []).some((l) => wanted.has(String(l).toLowerCase()));
+      versions = [...versions.filter(fits), ...versions.filter((v) => !fits(v))];
+    }
     if (!versions.length)
       throw httpError(
         404,
         targetKind === 'plugin'
           ? `No ${resolved.title} plugin build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`
-          : `No ${resolved.title} build matches ${versionLoader || 'this loader'} ${mcVersion || ''}`.trim()
+          : isZipOnlyKind(targetKind)
+            ? `No ${resolved.title} ${targetKind === 'datapack' ? 'datapack' : 'resource pack'} build matches Minecraft ${mcVersion || 'this version'}.`
+            : `No ${resolved.title} build matches ${versionLoader || 'this loader'}${mcVersion ? ` on Minecraft ${mcVersion}` : ''}.`
       );
     const version = versions[0];
     // Modrinth types some datapack projects as `mod` (they also ship a Fabric
@@ -612,13 +627,23 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     });
   } else if (source.kind === 'curseforge') {
     const resolved = await curseforge.resolveUrl(source.ref);
-    const file = resolved.fileId
-      ? await curseforge.getFile(resolved.modId, resolved.fileId)
-      : (await curseforge.getFiles(resolved.modId, { mcVersion, loader: effectiveLoader }))[0];
+    let file;
+    if (resolved.fileId) {
+      file = await curseforge.getFile(resolved.modId, resolved.fileId);
+    } else {
+      let files = await curseforge.getFiles(resolved.modId, { mcVersion, loader: effectiveLoader });
+      // Same loader preference as the Modrinth path when the filter was waived.
+      if (ignoreVersion && targetKind === 'mod' && loader) {
+        const want = String(loader).toLowerCase();
+        const fits = (f) => (f.gameVersions || []).some((g) => String(g).toLowerCase() === want);
+        files = [...files.filter(fits), ...files.filter((f) => !fits(f))];
+      }
+      file = files[0];
+    }
     if (!file)
       throw httpError(
         404,
-        `No ${resolved.name} file matches ${effectiveLoader || 'this loader'} ${mcVersion || ''}`.trim()
+        `No ${resolved.name} file matches ${effectiveLoader || 'this loader'}${mcVersion ? ` on Minecraft ${mcVersion}` : ''}.`
       );
     if (!file.downloadUrl)
       throw httpError(

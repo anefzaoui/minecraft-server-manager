@@ -6,7 +6,8 @@
 // removed chunk from the seed the next time someone goes there.
 //
 // Safety rails:
-//   - the server MUST be stopped (we edit region files directly);
+//   - the server MUST be stopped (we edit region files directly); a dry run
+//     only reads, so it is allowed while the server is up;
 //   - overworld chunks within 8 chunks of the world spawn (read from level.dat,
 //     falling back to the origin) are always kept;
 //   - a chunk whose InhabitedTime can't be read (unsupported compression such as
@@ -235,7 +236,10 @@ async function shrinkWorldImpl(serverId, opts = {}) {
   const actor = opts.actor || 'system';
   const worldName = opts.worldName || activeLevelName(server);
 
-  await assertStopped(serverId);
+  // A dry run only reads region files, so it is allowed while the server is
+  // up (that is what the Preview button promises). A chunk the JVM happens to
+  // be rewriting at that instant just counts as unreadable in the estimate.
+  if (!dryRun) await assertStopped(serverId);
 
   const dims = discoverDimensions(serverId, worldName);
   if (!dims.length || !fs.existsSync(dims[0].dir)) throw httpError(404, `No world named "${worldName}" on this server`);
@@ -246,7 +250,7 @@ async function shrinkWorldImpl(serverId, opts = {}) {
     // and a start racing between the fast-fail above and the file mutations is
     // exactly how a live world gets torn. With guardOp('shrink') in flight no
     // start/stop/restore/backup can interleave here either.
-    await assertStopped(serverId);
+    if (!dryRun) await assertStopped(serverId);
     let regionsScanned = 0;
     let chunksScanned = 0;
     let chunksRemoved = 0;

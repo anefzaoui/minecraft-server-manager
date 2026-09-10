@@ -215,6 +215,67 @@ test('installFromUrl still rejects a /datapack/ URL whose only build is a jar', 
   }
 });
 
+test("installFromUrl with ignoreVersion still prefers a build for the server's own loader", async () => {
+  const sid = app.seedServer('srv_ignorever_loader');
+  db.run("UPDATE servers SET type = 'FABRIC', mc_version = '1.21.1' WHERE id = ?", sid);
+  const realDownload = library.downloadToLibrary;
+  const downloads = [];
+  library.downloadToLibrary = async (url, meta) => {
+    downloads.push(url);
+    const id = `lib_iv${downloads.length}`;
+    const rel = `library/mods/${id}.jar`;
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const { dataPath } = require('../src/storage/pathGuard');
+    fs.mkdirSync(path.dirname(dataPath(rel)), { recursive: true });
+    fs.writeFileSync(dataPath(rel), 'jar');
+    db.run(
+      `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, platform, project_id, file_id, version)
+       VALUES (?, 'mod', ?, ?, ?, ?, 3, 'modrinth', ?, ?, ?)`,
+      id,
+      meta.name,
+      meta.filename,
+      rel,
+      `sha-${id}`,
+      meta.projectId,
+      meta.fileId,
+      meta.version
+    );
+    return db.get('SELECT * FROM library_files WHERE id = ?', id);
+  };
+  const NEOFORGE_NEWER = {
+    id: 'v-neo',
+    version_number: '0.25.3-neoforge',
+    loaders: ['neoforge'],
+    game_versions: ['26.2'],
+    date_published: '2026-03-01',
+    files: [{ url: 'https://cdn.modrinth.com/lithium-neoforge.jar', filename: 'lithium-neoforge.jar', primary: true }],
+  };
+  const FABRIC_OLDER = {
+    id: 'v-fab',
+    version_number: '0.14.0-fabric',
+    loaders: ['fabric'],
+    game_versions: ['1.21.1'],
+    date_published: '2026-01-01',
+    files: [{ url: 'https://cdn.modrinth.com/lithium-fabric.jar', filename: 'lithium-fabric.jar', primary: true }],
+  };
+  stubModrinth((url) => {
+    if (url.pathname.endsWith('/version')) return [NEOFORGE_NEWER, FABRIC_OLDER]; // newest-first, every loader
+    return { id: 'P2', slug: 'lithium', title: 'Lithium', project_type: 'mod', icon_url: null };
+  });
+  try {
+    await mods.installFromUrl(sid, 'https://modrinth.com/mod/lithium', { actor: 'tester', ignoreVersion: true });
+    assert.deepEqual(
+      downloads,
+      ['https://cdn.modrinth.com/lithium-fabric.jar'],
+      'the Fabric build wins over a newer NeoForge one'
+    );
+  } finally {
+    library.downloadToLibrary = realDownload;
+    unstub();
+  }
+});
+
 test('teardown', async () => {
   await app.stop();
 });
