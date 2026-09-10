@@ -20,6 +20,8 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const { promisify } = require('node:util');
+const gzipAsync = promisify(zlib.gzip);
 const nbt = require('prismarine-nbt');
 const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
@@ -1081,8 +1083,9 @@ async function withDatFile(serverId, ctx, mutate) {
     const result = mutate(parsed.value);
     await backupDat(file);
     // gzip off the event loop: serializing a full inventory NBT can spend
-    // 50-200ms in zlib - awaited (async) instead of the blocking gzipSync.
-    const out = await zlib.gzip(nbt.writeUncompressed(parsed, 'big')); // playerdata is always gzip'd big-endian
+    // 50-200ms in zlib, so use the promise API instead of the blocking gzipSync.
+    // (`zlib.gzip` itself is callback-only and throws without one.)
+    const out = await gzipAsync(nbt.writeUncompressed(parsed, 'big')); // playerdata is always gzip'd big-endian
     const tmp = `${file}.msm-tmp-${process.pid}-${require('node:crypto').randomUUID()}`;
     await fsp.writeFile(tmp, out);
     await fsp.rename(tmp, file);
