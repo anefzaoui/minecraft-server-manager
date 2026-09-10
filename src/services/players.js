@@ -168,10 +168,19 @@ function isBanExpired(expires) {
 }
 
 /** Find {uuid, name} in the server's own files (usercache + role files). */
+// A uuid read back from the server's own JSON files feeds file paths
+// (playerdata/<uuid>.dat, stats/<uuid>.json, ...). Those files are written by
+// the Minecraft process - and by any plugin or mod running inside it - so an
+// entry is only trusted when it looks like a uuid. Anything else is ignored and
+// the name resolves through Mojang instead.
+const UUID_RE = /^[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}$/;
+
 function localIdentity(serverId, name) {
   const lower = name.toLowerCase();
   for (const file of ['usercache.json', 'whitelist.json', 'ops.json', 'banned-players.json']) {
-    const hit = readJson(serverId, file).find((e) => e.name && e.name.toLowerCase() === lower && e.uuid);
+    const hit = readJson(serverId, file).find(
+      (e) => e.name && e.name.toLowerCase() === lower && typeof e.uuid === 'string' && UUID_RE.test(e.uuid)
+    );
     if (hit) return { uuid: hit.uuid, name: hit.name };
   }
   return null;
@@ -525,17 +534,41 @@ function stripPlayerFromFile(serverId, file, who) {
  */
 async function deletePlayer(serverId, name, { running = false, actor = 'system' } = {}) {
   const who = await resolveIdentity(serverId, name);
+  if (!UUID_RE.test(who.uuid)) throw httpError(422, `Could not determine a valid uuid for ${who.name}.`);
   if (running) {
-    const online = await listOnlineNames(serverId, { throwOnError: true }).catch(() => []);
+    // Fail closed: if RCON does not answer we do not know whether they are
+    // online, and a running server would rewrite a live player's data from
+    // memory right after we deleted it.
+    let online;
+    try {
+      online = await listOnlineNames(serverId, { throwOnError: true });
+    } catch {
+      throw httpError(
+        503,
+        `Couldn't confirm ${who.name} is offline (the server didn't answer). Try again in a moment, or stop the server first.`
+      );
+    }
     if (online.some((n) => n.toLowerCase() === who.name.toLowerCase())) {
       throw httpError(
         409,
         `${who.name} is still online. Kick them or wait for them to leave before deleting their data.`
       );
     }
+    // A running server keeps its role lists in memory and rewrites the JSON
+    // files from that copy, so a file-only edit would be undone on the next
+    // change or shutdown. Drop the roles over RCON first; each command is
+    // best-effort because the player may simply not hold that role.
+    for (const args of [
+      ['whitelist', 'remove', who.name],
+      ['deop', who.name],
+      ['pardon', who.name],
+    ]) {
+      await rcon(serverId, ...args).catch(() => {});
+    }
   }
 
-  // Role files.
+  // Role files (also rewritten on disk so a stopped server, or one that does
+  // not rewrite them itself, forgets the player too).
   for (const file of ROLE_FILES) stripPlayerFromFile(serverId, file, who);
 
   // World-scoped data. Resolve the active level exactly like inventory.js so we
@@ -544,31 +577,28 @@ async function deletePlayer(serverId, name, { running = false, actor = 'system' 
   try {
     const server = require('./servers').getServer(serverId);
     const level = require('./worlds').activeLevelName(server);
-    const base = dataPath('servers', serverId, level);
+    // Every path goes through the guard (never a bare path.join on a uuid that
+    // came from a file the Minecraft process wrote).
+    const inWorld = (...segs) => dataPath('servers', serverId, level, ...segs);
 
     // Playerdata - delete both the modern and legacy .dat (+ .dat_old backups),
     // tolerating either layout or none at all (never-joined players have none).
-    for (const dir of [nodePath.join(base, 'players', 'data'), nodePath.join(base, 'playerdata')]) {
+    for (const dir of [['players', 'data'], ['playerdata']]) {
       for (const ext of ['.dat', '.dat_old']) {
-        const file = nodePath.join(dir, `${who.uuid}${ext}`);
+        const file = inWorld(...dir, `${who.uuid}${ext}`);
         if (!fs.existsSync(file)) continue;
         fs.rmSync(file, { force: true });
         removed.playerdata += 1;
       }
     }
 
-    // Stats + advancements are JSON files named by uuid.
-    try {
-      fs.rmSync(nodePath.join(base, 'stats', `${who.uuid}.json`), { force: true });
-      removed.stats = true;
-    } catch {
-      /* no stats dir yet */
-    }
-    try {
-      fs.rmSync(nodePath.join(base, 'advancements', `${who.uuid}.json`), { force: true });
-      removed.advancements = true;
-    } catch {
-      /* no advancements dir yet */
+    // Stats + advancements are JSON files named by uuid. Report what was
+    // actually there rather than "true" for a file that never existed.
+    for (const kind of ['stats', 'advancements']) {
+      const file = inWorld(kind, `${who.uuid}.json`);
+      if (!fs.existsSync(file)) continue;
+      fs.rmSync(file, { force: true });
+      removed[kind] = true;
     }
   } catch {
     /* the server/world may be gone entirely - role-file cleanup above already ran */

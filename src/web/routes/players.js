@@ -161,7 +161,18 @@ router.get(
 router.post(
   '/skin-prefetch',
   asyncHandler(async (req, res, next) => {
-    const { uuids } = z.object({ uuids: z.array(z.string().trim().min(1).max(64)).max(128) }).parse(req.body || {});
+    const { uuids } = z
+      .object({
+        uuids: z
+          .array(
+            z
+              .string()
+              .trim()
+              .regex(/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i)
+          )
+          .max(128),
+      })
+      .parse(req.body || {});
     const unique = [...new Set(uuids)];
     const LIMIT = 8;
     let cursor = 0;

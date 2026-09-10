@@ -27,6 +27,8 @@ const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const imageCache = new Map();
 const IMAGE_CACHE_CAP = 200;
 const IMAGE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+// A Minecraft skin is a 64x64 PNG (a few KB); anything near this is not a skin.
+const MAX_SKIN_BYTES = 512 * 1024;
 
 /** Decode a base64 textures blob into { SKIN: {url, model?} } (or null). */
 function decodeTextures(encoded) {
@@ -111,7 +113,15 @@ async function getSkinImage(url) {
 
   const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error(`Mojang texture HTTP ${res.status}`);
+  // A skin is a 64x64 (or 64x32) PNG - a few KB. Refuse anything that is not
+  // an image or is implausibly large before buffering it.
+  const header = (name) => (res.headers && typeof res.headers.get === 'function' ? res.headers.get(name) : null);
+  const type = String(header('content-type') || '');
+  if (type && !type.startsWith('image/')) throw new Error(`Mojang texture is not an image (${type})`);
+  const declared = Number(header('content-length') || 0);
+  if (declared > MAX_SKIN_BYTES) throw new Error('Mojang texture is too large');
   const buffer = Buffer.from(await res.arrayBuffer());
+  if (buffer.length > MAX_SKIN_BYTES) throw new Error('Mojang texture is too large');
 
   // Drop expired entries and trim back to the cap when over it. Runs only on a
   // miss (which is already paying a network fetch), so it stays amortized.

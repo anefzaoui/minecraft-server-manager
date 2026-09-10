@@ -12,9 +12,18 @@ require('./helpers/env');
 // exercised headlessly. Offline paths never touch it (they skip under
 // `running: false`).
 const ONLINE_LIST = 'There are 1 of a max of 20 players online: Alice\n';
+// Tests flip `rconAnswer` to simulate an empty list, an RCON outage, etc.
+let rconAnswer = async () => ONLINE_LIST;
+const rconCalls = [];
 const containersPath = require.resolve('../src/docker/containers');
 const containers = require(containersPath);
-require.cache[containersPath].exports = { ...containers, execCapture: async () => ONLINE_LIST };
+require.cache[containersPath].exports = {
+  ...containers,
+  execCapture: async (serverId, args) => {
+    rconCalls.push(args);
+    return rconAnswer(args);
+  },
+};
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -233,4 +242,65 @@ test('DELETE rejects an invalid player name with 400', async () => {
   const r = await app.req('DELETE', `/api/servers/${id}/players/bad%20name%21`, { cookie });
   assert.equal(r.status, 400);
   assert.equal(r.json.ok, false);
+});
+
+test('deletePlayer fails closed when RCON does not answer on a running server', async () => {
+  const id = seed('srv_del_rcondown');
+  rconAnswer = async () => {
+    throw new Error('connection refused');
+  };
+  await assert.rejects(
+    () => players.deletePlayer(id, 'Alice', { running: true }),
+    (err) => err.status === 503 && /didn't answer/.test(err.message)
+  );
+  assert.equal(
+    read(id, 'whitelist.json').some((e) => e.uuid === ALICE),
+    true,
+    'nothing was touched'
+  );
+  rconAnswer = async () => ONLINE_LIST;
+});
+
+test('deletePlayer on a running server drops the roles over RCON too, so the JVM cannot rewrite them back', async () => {
+  const id = seed('srv_del_running');
+  rconAnswer = async (args) => (args.includes('list') ? 'There are 0 of a max of 20 players online:\n' : '');
+  rconCalls.length = 0;
+  await players.deletePlayer(id, 'Alice', { running: true });
+  const sent = rconCalls.map((a) => a.slice(2).join(' '));
+  assert.ok(sent.includes('whitelist remove Alice'), sent.join(' | '));
+  assert.ok(sent.includes('deop Alice'));
+  assert.ok(sent.includes('pardon Alice'));
+  assert.equal(
+    read(id, 'whitelist.json').some((e) => e.uuid === ALICE),
+    false
+  );
+  rconAnswer = async () => ONLINE_LIST;
+});
+
+test('a crafted uuid in a role file is never used as a file path', async () => {
+  const id = seed('srv_del_crafted');
+  // Something inside the container wrote a "uuid" that walks out of the world dir.
+  write(id, 'whitelist.json', [{ name: 'Mallory', uuid: '../../../srv_victim/ops' }]);
+  write(id, 'usercache.json', []);
+  write(id, 'ops.json', []);
+  write(id, 'banned-players.json', []);
+  const victim = dataPath('servers', 'srv_victim');
+  fs.mkdirSync(victim, { recursive: true });
+  fs.writeFileSync(nodePath.join(victim, 'ops.json'), '[]');
+
+  const mojangPath = require.resolve('../src/services/mojangProfiles');
+  const realResolve = require(mojangPath).resolveProfile;
+  require(mojangPath).resolveProfile = async () => {
+    throw new Error('offline');
+  };
+  try {
+    // The bogus entry is ignored, so the name has to resolve through Mojang - which is down here.
+    await assert.rejects(
+      () => players.deletePlayer(id, 'Mallory', { running: false }),
+      (err) => err.status === 502
+    );
+  } finally {
+    require(mojangPath).resolveProfile = realResolve;
+  }
+  assert.equal(fs.existsSync(nodePath.join(victim, 'ops.json')), true, 'the file outside the world dir survived');
 });
