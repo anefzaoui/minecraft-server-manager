@@ -478,8 +478,26 @@ world. Every file operation is contained to this root (path-guard enforced).
 - **Java heap** (`MEMORY`): what Minecraft may use.
 - **Container limit** (Docker `HostConfig.Memory`): the hard cap; hitting it OOM-kills the server.
 
-Keep the container limit 25-50% above the heap. The wizard does this automatically; the Settings
-form validates it.
+Keep the container limit 25-50% above the heap, and at least 2 GB above it for a modpack. The
+wizard does this automatically; the Settings form validates it.
+
+**"Memory used" settles at the heap size. That is not a leak.** The image hands `MEMORY` to Java
+as both the starting and the maximum heap, and Java fills a heap it was given up front within the
+first minute of world generation, whether or not Aikar's or MeowIce's flags are on (they only make
+it instantaneous). Measured on a Paper 1.21.1 server with a 2 GB heap:
+
+| Setting                                                 | Memory used |
+| ------------------------------------------------------- | ----------- |
+| Default (`MEMORY` only), with or without presets        | ~2.5 GB     |
+| Presets plus `-XX:-AlwaysPreTouch` in Extra JVM options | ~1.9 GB     |
+| `INIT_MEMORY=512M` ("Initial heap" in Settings)         | ~1.35 GB    |
+
+The panel's meters mark where the heap sits on the container-limit scale and say so. If you want
+idle memory to follow real use, set a smaller **Initial heap**; the trade-off is that Aikar's
+flags recommend equal heaps for the steadiest tick times. Java also needs memory outside the
+heap: about 0.5 GB on vanilla, 1.5-2 GB on a large modpack, which is what the headroom above is
+for. Hypervisor dashboards (Proxmox, for example) count the VM's disk cache as used memory, so
+they read higher than the panel, which subtracts cache like `docker stats` does.
 
 ### Java version selection
 

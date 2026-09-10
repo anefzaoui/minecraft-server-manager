@@ -50,7 +50,7 @@
     <div class="card p-3">
       <div class="eyebrow">Memory</div>
       <div class="mt-1 text-lg font-bold tabular-nums" data-metric="mem">{{server.stats.memUsedMb}}</div>
-      <div class="text-xs text-ink-faint">/ {{server.resources.containerMemoryMb}} MB</div>
+      <div class="text-xs text-ink-faint">/ {{server.resources.containerMemoryMb}} MB{{#if server.memory.heapMb}} · heap {{server.memory.heapMb}} MB{{/if}}</div>
     </div>
   </div>
 
@@ -63,6 +63,7 @@
     <div class="card p-4">
       <h3 class="mb-2 font-semibold">Memory <span class="text-xs font-normal text-ink-faint">vs container limit</span></h3>
       <canvas data-chart="memory" height="140"></canvas>
+      {{#if server.memory.note}}<p class="mt-2 text-xs text-ink-faint">{{server.memory.note}}</p>{{/if}}
     </div>
     <div class="card p-4">
       <h3 class="mb-2 font-semibold">Network</h3>

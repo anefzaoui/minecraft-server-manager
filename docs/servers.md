@@ -60,6 +60,8 @@ The **Settings** tab is the full configuration surface: rename, resources, updat
 
 ![Server settings](images/server-settings.png)
 
+**About the memory meter.** "RAM (Java heap)" is handed to Java as both its starting and its maximum heap, and Java fills a heap it was given up front within the first minute, with or without the Aikar / MeowIce flag presets. So the memory meter settles at about the heap size and stays there even when nobody is playing; the tick on the meter marks where the heap sits under the container limit, and the note under it says so. If you would rather see memory follow real use, set a smaller **Initial heap** (advanced): on a 2 GB heap that brought idle use from 2.5 GB to 1.35 GB in our measurements. Java also needs memory outside the heap (about 0.5 GB on vanilla, 1.5 to 2 GB on a large modpack), which is what the container limit's headroom is for. See the README's "Two memory limits" for the numbers.
+
 > Advanced Docker override fields (custom container name, extra port and bind mounts, and raw overrides) are **admin-only**, because a bind mount plus the panel's Docker access is effectively root on the host. See [Users & roles](users-and-roles.md).
 
 ## Crash reports & mclo.gs analysis

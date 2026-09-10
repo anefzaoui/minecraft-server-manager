@@ -5,6 +5,25 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.13.1] - 2026-09-10
+
+### Fixed
+
+- **The memory meter explains itself** (#25). "RAM (Java heap)" is handed to Java as both the
+  starting and the maximum heap, and Java fills a heap it was given up front within the first
+  minute of world generation, whether or not Aikar's or MeowIce's flags are on (measured: a 2 GB
+  heap reads 2.5 GB either way; the presets only make it instantaneous). A 12 GB heap therefore
+  reads as 12 GB with nobody playing, which looked like a leak. The Overview and Monitoring meters
+  now mark where the heap sits under the container limit and say what the number means, the
+  server card says it on hover, and the field help for RAM, Initial heap and the two flag presets
+  tells you before you choose. The lever that actually lowers idle memory, a smaller **Initial
+  heap**, is now explained where it lives (512 MB on that 2 GB heap: 1.35 GB idle).
+- **Initial heap / Maximum heap actually apply.** Both advanced fields stored the bare number
+  you typed, which Java reads as bytes; `INIT_MEMORY=4096` became `-Xms4096` and the server could
+  not start. Bare numbers in size fields are now sent to the image as megabytes.
+- README and the servers guide carry the measured numbers and the headroom guidance (at least
+  2 GB above the heap for a modpack; hypervisor dashboards count disk cache, the panel does not).
+
 ## [0.13.0] - 2026-09-10
 
 A large community release: a public read-only API, a live monitoring dashboard, world
