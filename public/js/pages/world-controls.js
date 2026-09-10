@@ -105,6 +105,13 @@ function init(serverId, running) {
       }
       applyChips(s);
       applyDifficulty(s);
+      // Rules this Minecraft version does not have: hide their chips outright
+      // (they are neither on, off, nor unread) so the rail only shows what the
+      // server can actually change.
+      const unsupported = new Set(Array.isArray(data.unsupported) ? data.unsupported : []);
+      root.querySelectorAll('[data-wc-toggle]').forEach((chip) => {
+        chip.hidden = unsupported.has(chip.dataset.rule);
+      });
       // Some rules could not be read this cycle - say so instead of leaving
       // their chips looking authoritative. This holds on a running server too:
       // the clock lives in its own box, so this line doesn't hide it.

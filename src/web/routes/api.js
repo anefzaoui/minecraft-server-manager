@@ -1448,17 +1448,18 @@ router.get(
       if (server.status === 'starting' || server.status === 'updating') {
         return res.json({ ok: true, running: false, state: {} });
       }
-      const state = await worldControls.getStateOffline(req.params.id, { rules });
-      const degraded = asked ? asked.some((r) => !Object.hasOwn(state, r)) : false;
-      return res.json({ ok: true, running: false, offline: true, degraded, state });
+      const { state, unsupported } = splitUnsupported(await worldControls.getStateOffline(req.params.id, { rules }));
+      const degraded = asked ? asked.some((r) => !Object.hasOwn(state, r) && !unsupported.includes(r)) : false;
+      return res.json({ ok: true, running: false, offline: true, degraded, unsupported, state });
     }
 
     try {
-      const state = await worldControls.getState(req.params.id, { rules });
+      const { state, unsupported } = splitUnsupported(await worldControls.getState(req.params.id, { rules }));
       // Flag a partial read so the page can say "some settings couldn't be read"
-      // rather than showing stale chips as if they were current.
-      const degraded = asked ? asked.some((r) => !Object.hasOwn(state, r)) : false;
-      res.json({ ok: true, running: true, degraded, state });
+      // rather than showing stale chips as if they were current. A rule this
+      // Minecraft version does not have is not a partial read.
+      const degraded = asked ? asked.some((r) => !Object.hasOwn(state, r) && !unsupported.includes(r)) : false;
+      res.json({ ok: true, running: true, degraded, unsupported, state });
     } catch (err) {
       // The status says running but RCON isn't answering (just-booted, wedged).
       // Fall back to the on-disk values rather than showing nothing.
@@ -1466,12 +1467,18 @@ router.get(
         serverId: req.params.id,
         err: serializeError(err, { includeStack: false }),
       });
-      const state = await worldControls.getStateOffline(req.params.id, { rules });
-      const degraded = asked ? asked.some((r) => !Object.hasOwn(state, r)) : false;
-      res.json({ ok: true, running: false, offline: true, degraded, state });
+      const { state, unsupported } = splitUnsupported(await worldControls.getStateOffline(req.params.id, { rules }));
+      const degraded = asked ? asked.some((r) => !Object.hasOwn(state, r) && !unsupported.includes(r)) : false;
+      res.json({ ok: true, running: false, offline: true, degraded, unsupported, state });
     }
   })
 );
+
+/** Pull the service's `unsupported` list out of the state object it rides on. */
+function splitUnsupported(full) {
+  const { unsupported = [], ...state } = full || {};
+  return { state, unsupported };
+}
 
 router.post(
   '/servers/:id/world/quick',

@@ -197,10 +197,18 @@ function parseGameruleBool(out) {
 // spelling: 'snake' | 'camel' to force one form (getState, once it knows the
 // server's era), or undefined to try snake_case then camelCase.
 async function queryGamerule(serverId, rule, spelling) {
+  return (await queryGameruleRaw(serverId, rule, spelling)).value;
+}
+
+// Same read, but keep the reply so the caller can tell "this server version has
+// no such rule" (an error reply for BOTH spellings) apart from a flaked read.
+async function queryGameruleRaw(serverId, rule, spelling) {
   const snake = ['gamerule', GAMERULES[rule]];
   const camel = ['gamerule', rule];
-  if (spelling) return parseGameruleBool(await rcon(serverId, spelling === 'snake' ? snake : camel));
-  return parseGameruleBool(await tryVariants(serverId, [snake, camel]));
+  const out = spelling
+    ? await rcon(serverId, spelling === 'snake' ? snake : camel)
+    : await tryVariants(serverId, [snake, camel]);
+  return { value: parseGameruleBool(out), rejected: looksLikeError(out) };
 }
 
 /** Run fn over items at most `limit` at a time; resolves to the results array. */
@@ -377,9 +385,12 @@ async function readStateLive(serverId, opts = {}) {
     if (alt !== null) state[first] = alt;
   }
   const rest = rules.slice(1);
-  const values = await mapLimit(rest, 6, (rule) => queryGamerule(serverId, rule, spelling));
+  const rejected = new Set();
+  if (spelling === 'camel' ? looksLikeError(firstSnake) && !Object.hasOwn(state, first) : false) rejected.add(first);
+  const values = await mapLimit(rest, 6, (rule) => queryGameruleRaw(serverId, rule, spelling));
   rest.forEach((rule, i) => {
-    if (values[i] !== null) state[rule] = values[i];
+    if (values[i].value !== null) state[rule] = values[i].value;
+    else if (values[i].rejected) rejected.add(rule);
   });
   // A rule reads back null either because the era probe guessed the wrong casing
   // (its probe rule happened to be missing on this version) or because one RCON
@@ -387,12 +398,18 @@ async function readStateLive(serverId, opts = {}) {
   // otherwise their chips read as "off" when they were only unread. Cost is
   // bounded to the failures, which is normally zero.
   const missed = rules.filter((rule) => !Object.hasOwn(state, rule));
+  const unsupported = [];
   if (missed.length) {
-    const retry = await mapLimit(missed, 6, (rule) => queryGamerule(serverId, rule, other));
+    const retry = await mapLimit(missed, 6, (rule) => queryGameruleRaw(serverId, rule, other));
     missed.forEach((rule, i) => {
-      if (retry[i] !== null) state[rule] = retry[i];
+      if (retry[i].value !== null) state[rule] = retry[i].value;
+      // Both spellings answered with an error: this Minecraft version simply
+      // does not have the rule (e.g. tntExplodes before 1.21.5). That is not a
+      // failed read - report it so the UI can hide the chip instead of warning.
+      else if (retry[i].rejected && (rejected.has(rule) || rule === first)) unsupported.push(rule);
     });
   }
+  if (unsupported.length) state.unsupported = unsupported;
   const difficulty = await queryDifficulty(serverId).catch(() => null);
   if (difficulty) state.difficulty = difficulty;
   state.pvp = readPvp(serverId); // from server.properties - the pending/effective value
@@ -461,6 +478,12 @@ function offlineStateFromLevelData(data, opts = {}) {
   for (const rule of wanted) {
     const v = asBool(gr[rule]) ?? asBool(gr[GAMERULES[rule]]);
     if (v !== null) state[rule] = v;
+  }
+  // level.dat lists every gamerule the version knows, so a rule absent from a
+  // populated GameRules compound is one this version does not have.
+  if (Object.keys(gr).length) {
+    const unsupported = wanted.filter((rule) => !Object.hasOwn(state, rule));
+    if (unsupported.length) state.unsupported = unsupported;
   }
   return state;
 }
