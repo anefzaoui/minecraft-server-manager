@@ -84,6 +84,39 @@ test('setUpdateIgnored refuses content subjects (handled per-mod instead)', () =
   assert.throws(() => checker.setUpdateIgnored('content', 'sc_whatever', { ignore: true }), /per-mod/i);
 });
 
+test('the auto update policy never installs a version the user chose to ignore', async () => {
+  const upgrade = require('../src/updates/upgrade');
+  const sid = app.seedServer('srv_upd_auto_ign');
+  db.run("UPDATE servers SET update_policy = 'auto' WHERE id = ?", sid);
+  db.run(
+    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
+     VALUES (?, 'modrinth', 'some-pack', 'Some Pack', 'ver_old', '1.0.0')`,
+    sid
+  );
+  db.run(
+    `INSERT INTO update_checks (subject_type, subject_id, current_version, latest_version, latest_name)
+     VALUES ('pack', ?, 'ver_old', 'ver_new', '1.1.0')`,
+    sid
+  );
+  checker.setUpdateIgnored('pack', sid, { ignore: true, actor: 'tester' });
+
+  const ignored = await upgrade.runAutoUpgrades({ actor: 'scheduler' });
+  assert.equal(ignored.skipped, 1, 'the ignored build was skipped');
+  assert.equal(ignored.applied + ignored.failed, 0, 'no upgrade was even attempted');
+  assert.equal(
+    db.get("SELECT COUNT(*) AS n FROM events WHERE server_id = ? AND type IN ('update-applied','update-failed')", sid)
+      .n,
+    0
+  );
+
+  // Un-ignore: the nightly run attempts the upgrade again (it fails here - no
+  // network - which proves it was attempted).
+  checker.setUpdateIgnored('pack', sid, { ignore: false, actor: 'tester' });
+  const attempted = await upgrade.runAutoUpgrades({ actor: 'scheduler' });
+  assert.equal(attempted.skipped, 0);
+  assert.equal(attempted.applied + attempted.failed, 1, 'the upgrade was attempted once un-ignored');
+});
+
 test('teardown', async () => {
   await app.stop();
 });

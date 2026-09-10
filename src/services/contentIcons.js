@@ -15,6 +15,10 @@ const library = require('./library');
 const logger = require('../logger')(path.basename(__filename));
 
 const CONCURRENCY = 3;
+// A row is asked about again no sooner than this after its last attempt, so a
+// row the registry cannot complete costs a couple of requests a week, not a
+// couple per boot.
+const RECHECK_DAYS = 7;
 
 function looksLikeFilename(name, filename) {
   if (!name) return true;
@@ -37,8 +41,10 @@ async function backfillContentMeta({ limit = 500 } = {}) {
      WHERE category IN ('mod','plugin','datapack','resourcepack')
        AND (icon_url IS NOT NULL AND icon_url != ''
             OR (platform IN ('modrinth', 'curseforge') AND project_id IS NOT NULL AND project_id != ''))
-     ORDER BY id
+       AND (meta_checked_at IS NULL OR meta_checked_at < datetime('now', ?))
+     ORDER BY meta_checked_at IS NOT NULL, meta_checked_at, id
      LIMIT ?`,
+    `-${RECHECK_DAYS} days`,
     Math.round(limit * 8)
   );
   // Run the fs-dependent half of needsRepair() asynchronously (no sync existsSync
@@ -54,8 +60,13 @@ async function backfillContentMeta({ limit = 500 } = {}) {
         iconMissing = true;
       }
     }
+    // Only Modrinth reports a game-version list; a CurseForge row never fills
+    // mc_versions_json, so requiring it there would flag every CF row forever.
     const metaMissing =
-      registry && (!r.version || looksLikeFilename(r.name, r.filename) || (r.mc_versions_json || '[]') === '[]');
+      registry &&
+      (!r.version ||
+        looksLikeFilename(r.name, r.filename) ||
+        (r.platform === 'modrinth' && (r.mc_versions_json || '[]') === '[]'));
     return iconMissing || metaMissing;
   };
 

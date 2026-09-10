@@ -100,8 +100,18 @@ async function checkAll({ actor = 'scheduler' } = {}) {
         let latest = null;
         let changelogUrl = null;
         if (row.platform === 'modrinth') {
-          const versions = await modrinth.getVersions(row.project_id, { loader, mcVersion });
-          if (versions.length) latest = { id: versions[0].id, name: versions[0].version_number };
+          // Datapacks / resource packs are installed as real .zip files (never
+          // the `+mod` jar build a dual-published datapack also ships), so the
+          // loader filter does not apply and the newest version that actually
+          // carries a .zip is the one on offer - otherwise a jar-only build
+          // would surface as a phantom update that can never be applied.
+          const zipOnly = modsService.isZipOnlyKind(row.kind);
+          const versions = await modrinth.getVersions(row.project_id, {
+            loader: zipOnly ? undefined : loader,
+            mcVersion,
+          });
+          const pick = zipOnly ? versions.find((v) => modsService.pickDownloadFile(v, row.kind)) : versions[0];
+          if (pick) latest = { id: pick.id, name: pick.version_number };
           changelogUrl = `https://modrinth.com/project/${row.project_id}/changelog`;
         } else if (row.platform === 'curseforge') {
           const files = await curseforge.getFiles(Number(row.project_id), { mcVersion, loader });

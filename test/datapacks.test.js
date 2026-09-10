@@ -540,7 +540,7 @@ test('a pack server neither adopts nor heals a row-less datapack file', async ()
 });
 
 test('an ambiguous stem-only match drives display but is not healed', async () => {
-  const id = app.seedServer('srv_dp_ambig');
+  const id = app.seedServer('srv_dp_ambiguous_name');
   const restore = muteMetaRepair();
   const dpDir = dataPath('servers', id, 'world/datapacks');
   await fsp.mkdir(dpDir, { recursive: true });
@@ -618,5 +618,61 @@ test('installFromUrl routes a Modrinth "mod" that is really a datapack (loader t
     modrinth.primaryFile = realPrimaryFile;
     library.downloadToLibrary = realDownload;
     library.installToServer = realInstall;
+  }
+});
+
+test('an orphan is only healed into a row when the library match is unambiguous', async () => {
+  const id = app.seedServer('srv_dp_ambig_two');
+  const restore = muteMetaRepair();
+  const db = require('../src/db');
+  const dpDir = dataPath('servers', id, 'world/datapacks');
+  await fsp.mkdir(dpDir, { recursive: true });
+  await fsp.writeFile(path.join(dpDir, 'pack.zip'), 'on-disk-bytes-that-match-neither');
+  // Two different projects both uploaded as "pack.zip" (the library dedups by hash, not name).
+  for (const [lid, name, sha] of [
+    ['lib_amb_a', 'Project A', 'sha-ambig-a'],
+    ['lib_amb_b', 'Project B', 'sha-ambig-b'],
+  ]) {
+    db.run(
+      `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, version, platform, project_id)
+       VALUES (?, 'datapack', ?, 'pack.zip', ?, ?, 10, '1.0', 'modrinth', ?)`,
+      lid,
+      name,
+      `library/${lid}`,
+      sha,
+      lid
+    );
+  }
+  try {
+    const item = (await mods.listContent(id)).find((i) => i.file === 'pack.zip');
+    assert.ok(item, 'the file is listed');
+    assert.equal(
+      db.get("SELECT COUNT(*) AS n FROM server_content WHERE server_id = ? AND filename = 'pack.zip'", id).n,
+      0,
+      'no server_content row was written for a coin-toss match (it would drive wrong update checks)'
+    );
+  } finally {
+    restore();
+  }
+});
+
+test('a resource-pack row never adopts a file that lives in the datapacks folder', async () => {
+  const id = app.seedServer('srv_dp_wrong_category');
+  const restore = muteMetaRepair();
+  const db = require('../src/db');
+  const dpDir = dataPath('servers', id, 'world/datapacks');
+  await fsp.mkdir(dpDir, { recursive: true });
+  await fsp.writeFile(path.join(dpDir, 'shared-name.zip'), 'datapack-bytes');
+  db.run(
+    `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, version, platform, project_id)
+     VALUES ('lib_rp_only', 'resourcepack', 'Fancy Textures', 'shared-name.zip', 'library/lib_rp_only', 'sha-rp', 10, '3.0', 'modrinth', 'fancy-textures')`
+  );
+  try {
+    const item = (await mods.listContent(id)).find((i) => i.file === 'shared-name.zip');
+    assert.ok(item);
+    assert.notEqual(item.name, 'Fancy Textures', 'the resource-pack row was not adopted for a datapack');
+    assert.equal(db.get('SELECT COUNT(*) AS n FROM server_content WHERE server_id = ?', id).n, 0);
+  } finally {
+    restore();
   }
 });

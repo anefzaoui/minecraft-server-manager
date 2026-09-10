@@ -136,3 +136,32 @@ test('backfillContentMeta only touches rows that need repair and reports counts'
     library.ensureContentMeta = real;
   }
 });
+
+test('a row the registry could not complete is stamped and left alone until the recheck window passes', async (t) => {
+  let calls = 0;
+  t.mock.method(modrinth, 'getProject', async (id) => {
+    if (id === 'gone-project') calls += 1; // rows from earlier tests may be repaired too
+    return null; // project gone / no icon published: nothing to repair with
+  });
+  const row = seedLib('lib_stamped', {
+    platform: 'modrinth',
+    project_id: 'gone-project',
+    version: '1.0',
+    name: 'Gone',
+  });
+  await library.ensureContentMeta(row);
+  assert.equal(calls, 1);
+  const after = db.get('SELECT meta_checked_at FROM library_files WHERE id = ?', row.id);
+  assert.ok(after.meta_checked_at, 'the attempt was stamped');
+  assert.equal(library.metaCheckedRecently(after), true);
+
+  // The nightly backfill skips it now...
+  const r = await backfillContentMeta();
+  assert.equal(calls, 1, 'backfill did not re-fetch a freshly checked row');
+  assert.ok(r.scanned >= 0);
+
+  // ...and picks it up again once the stamp is old enough.
+  db.run("UPDATE library_files SET meta_checked_at = datetime('now', '-8 days') WHERE id = ?", row.id);
+  await backfillContentMeta();
+  assert.equal(calls, 2, 'backfill retried after the recheck window');
+});

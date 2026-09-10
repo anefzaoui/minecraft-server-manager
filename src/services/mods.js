@@ -35,7 +35,7 @@ const PLUGIN_TYPES = new Set(['PAPER', 'PURPUR', 'PUFFERFISH', 'LEAF', 'FOLIA', 
 // Files on disk with no server_content row get matched back to a library_files
 // row so they show their real name/version/icon instead of a bare placeholder.
 // Caches keep the cost near zero on repeat renders.
-const adoptHashCache = new Map(); // `${abs}:${mtimeMs}:${size}` -> sha256 | null
+const adoptHashCache = new Map(); // abs path -> { stamp: `${mtimeMs}:${size}`, hex: sha256 | null }
 const metaRepairInFlight = new Set(); // library ids currently being refreshed
 
 function stripContentExt(name) {
@@ -49,9 +49,14 @@ function nameIsFilenameLike(name, filename) {
   return n === filename.toLowerCase() || n === stripContentExt(filename).toLowerCase();
 }
 
+const ADOPT_HASH_CACHE_MAX = 2000;
+
 async function sha256File(abs, stat) {
-  const key = `${abs}:${stat ? stat.mtimeMs : 0}:${stat ? stat.size : 0}`;
-  if (adoptHashCache.has(key)) return adoptHashCache.get(key);
+  // Keyed by path so a changed file overwrites its entry instead of adding one;
+  // bounded so a long-lived panel with churning content dirs cannot grow it forever.
+  const stamp = `${stat ? stat.mtimeMs : 0}:${stat ? stat.size : 0}`;
+  const cached = adoptHashCache.get(abs);
+  if (cached && cached.stamp === stamp) return cached.hex;
   let hex;
   try {
     const hash = crypto.createHash('sha256');
@@ -60,7 +65,10 @@ async function sha256File(abs, stat) {
   } catch {
     hex = null;
   }
-  adoptHashCache.set(key, hex);
+  if (adoptHashCache.size >= ADOPT_HASH_CACHE_MAX) {
+    adoptHashCache.delete(adoptHashCache.keys().next().value); // oldest insertion
+  }
+  adoptHashCache.set(abs, { stamp, hex });
   return hex;
 }
 
@@ -241,42 +249,67 @@ async function listContent(serverId) {
   let adoptIndex = null;
   const buildAdoptIndex = () => {
     if (adoptIndex) return adoptIndex;
-    const byExactName = new Map();
-    const byLowerName = new Map();
-    const bySha = new Map();
-    const byStem = new Map();
+    // Name indexes keep EVERY row for a name - the library dedups by hash, so
+    // two different projects uploaded under the same generic file name
+    // ("mod.jar") legitimately coexist - and matching filters them by a
+    // category compatible with the directory the file sits in (see
+    // adoptableCategories), so a world/datapacks/foo.zip never adopts a
+    // resource-pack row just because the names collide.
+    const byExactName = new Map(); // filename -> row[]
+    const byLowerName = new Map(); // filename.toLowerCase() -> row[]
+    const bySha = new Map(); // sha256 -> row (the library dedups on it)
+    const byStem = new Map(); // stem -> row[]
+    const push = (map, key, row) => {
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(row);
+    };
     for (const r of db.all(
       `SELECT id, name, filename, version, icon_url, icon_rel_path, platform, project_id, file_id,
-              mc_versions_json, loaders_json, sha256, category
+              mc_versions_json, loaders_json, sha256, category, meta_checked_at
        FROM library_files WHERE category IN ('mod','plugin','datapack','resourcepack')`
     )) {
-      if (!byExactName.has(r.filename)) byExactName.set(r.filename, r);
-      const lower = r.filename.toLowerCase();
-      if (!byLowerName.has(lower)) byLowerName.set(lower, r);
+      push(byExactName, r.filename, r);
+      push(byLowerName, r.filename.toLowerCase(), r);
       if (r.sha256 && !bySha.has(r.sha256)) bySha.set(r.sha256, r);
-      const stem = stripContentExt(r.filename).toLowerCase();
-      if (!byStem.has(stem)) byStem.set(stem, []);
-      byStem.get(stem).push(r);
+      push(byStem, stripContentExt(r.filename).toLowerCase(), r);
     }
     adoptIndex = { byExactName, byLowerName, bySha, byStem };
     return adoptIndex;
   };
 
+  // Library categories a file in the `kind` directory may adopt. Registries
+  // type some datapacks / resource packs as "mod" (Modrinth's project type),
+  // so those rows are fair game for the pack dirs; a mod or plugin jar only
+  // ever matches its own category.
+  const adoptableCategories = (kind) =>
+    kind === 'datapack' || kind === 'resourcepack' ? new Set([kind, 'mod']) : new Set([kind]);
+
   // Match a row-less on-disk file to a library row. `confident` gates DB healing
-  // (writing the missing server_content row) - only exact-name and hash matches
-  // are certain enough; case- and stem-only matches drive display but nothing more.
+  // (writing the missing server_content row, which later drives update checks
+  // and "update" replacements of the file) - so only a content-hash match, or an
+  // exact file name that is UNIQUE within the category, is certain enough. A
+  // name shared by several library rows, a case-only match, or a stem-only
+  // match drives display but nothing more.
   const matchOrphanLib = async (baseName, kind, absPath, stat) => {
     if (!canAdopt) return { lib: null, confident: false };
     const { byExactName, byLowerName, bySha, byStem } = buildAdoptIndex();
-    const exact = byExactName.get(baseName);
-    if (exact) return { lib: exact, confident: true };
-    const lower = byLowerName.get(baseName.toLowerCase());
-    if (lower) return { lib: lower, confident: false };
+    const ok = adoptableCategories(kind);
+    const fit = (rows) => (rows || []).filter((r) => ok.has(r.category));
+    const exact = fit(byExactName.get(baseName));
     const sha = await sha256File(absPath, stat);
     const shaHit = sha && bySha.get(sha);
-    if (shaHit) return { lib: shaHit, confident: true };
-    const stemHits = byStem.get(stripContentExt(baseName).toLowerCase());
-    if (stemHits && stemHits.length === 1) return { lib: stemHits[0], confident: false };
+    // A content-hash match is certain whatever the file is called.
+    if (shaHit && ok.has(shaHit.category)) return { lib: shaHit, confident: true };
+    // An exact file name is certain only when ONE compatible row carries it
+    // (the bytes may differ: a manual replacement by another build of what is
+    // presumably the same project). Several rows with the same name is a
+    // coin toss, so it only drives display.
+    if (exact.length === 1) return { lib: exact[0], confident: true };
+    if (exact.length > 1) return { lib: exact[0], confident: false };
+    const lower = fit(byLowerName.get(baseName.toLowerCase()));
+    if (lower.length) return { lib: lower[0], confident: false };
+    const stemHits = fit(byStem.get(stripContentExt(baseName).toLowerCase()));
+    if (stemHits.length === 1) return { lib: stemHits[0], confident: false };
     return { lib: null, confident: false };
   };
 
@@ -322,7 +355,10 @@ async function listContent(serverId) {
       if (lib && lib.platform && lib.project_id && !metaRepairInFlight.has(lib.id)) {
         const iconMissing = !lib.icon_rel_path && !lib.icon_url;
         const metaMissing = !lib.version || nameIsFilenameLike(lib.name, lib.filename || baseName);
-        if (iconMissing || metaMissing) {
+        // A row the registry could not complete (project gone, no icon
+        // published) is not re-fetched on every render: meta_checked_at is
+        // stamped after each attempt and the nightly backfill retries later.
+        if ((iconMissing || metaMissing) && !library.metaCheckedRecently(lib)) {
           metaRepairInFlight.add(lib.id);
           library
             .ensureContentMeta(lib)
@@ -1180,6 +1216,8 @@ async function installLocalContent(
 
 module.exports = {
   listContent,
+  isZipOnlyKind,
+  pickDownloadFile,
   installFromUrl,
   installResolved,
   classifyModSource,

@@ -205,6 +205,13 @@ async function runAutoUpgrades({ actor = 'scheduler' } = {}) {
       server.id
     );
     if (!check || check.latest_version === pack.pinned_version_id) continue;
+    // "Ignore this update" pins update_checks.ignored_version to the offered
+    // build; auto policy must respect it exactly like the badge and digest do.
+    // A newer build changes latest_version and the ignore lapses on its own.
+    if (check.ignored_version != null && String(check.ignored_version) === String(check.latest_version)) {
+      results.skipped += 1;
+      continue;
+    }
     try {
       await upgradePack(server.id, { versionId: check.latest_version, actor });
       results.applied += 1;

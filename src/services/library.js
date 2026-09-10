@@ -205,6 +205,16 @@ function looksLikeFilename(name, filename) {
  * Does at most one platform round-trip. Best-effort: every failure is swallowed
  * with a debug line, so it is safe to call fire-and-forget from a render path.
  */
+const META_RECHECK_DAYS = 7;
+
+/** True when this row's metadata was (re)checked against its registry within
+ *  META_RECHECK_DAYS - callers use it to skip a row that cannot be completed. */
+function metaCheckedRecently(libRow) {
+  if (!libRow || !libRow.meta_checked_at) return false;
+  const ms = Date.parse(String(libRow.meta_checked_at).replace(' ', 'T') + 'Z');
+  return Number.isFinite(ms) && Date.now() - ms < META_RECHECK_DAYS * 86_400_000;
+}
+
 async function ensureContentMeta(libRow) {
   if (!libRow || !libRow.id) return;
   try {
@@ -268,6 +278,14 @@ async function ensureContentMeta(libRow) {
       libraryId: libRow.id,
       err: String(err && err.message),
     });
+  } finally {
+    // Stamp the attempt whatever it yielded, so a row the registry cannot
+    // complete is not asked about again until the next recheck window.
+    try {
+      db.run("UPDATE library_files SET meta_checked_at = datetime('now') WHERE id = ?", libRow.id);
+    } catch {
+      /* best-effort */
+    }
   }
 }
 
@@ -397,6 +415,7 @@ module.exports = {
   deleteLibraryFile,
   cacheIcon,
   ensureContentMeta,
+  metaCheckedRecently,
   usageCount,
   orphans,
   CATEGORY_DIR,
