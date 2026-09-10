@@ -104,3 +104,30 @@ test('status:"die" and Action:"die" both reach the restart path identically', as
   assert.equal(JSON.parse(statusEv.details_json).armedRestart, true);
   assert.equal(JSON.parse(actionEv.details_json).armedRestart, true);
 });
+
+test('a clean exit the panel never asked for is a stop, not a crash, and is never auto-restarted', async () => {
+  const id = seedServer('srv_wcln', true);
+  started = 0;
+  await watcher.handleEvent(dieEvent(id, { exitCode: '0' }));
+  assert.equal(db.get('SELECT status FROM servers WHERE id = ?', id).status, 'stopped');
+  assert.ok(
+    db.get("SELECT 1 AS x FROM events WHERE server_id = ? AND type = 'stopped'", id),
+    'a stopped event was recorded'
+  );
+  assert.equal(db.get("SELECT COUNT(*) AS n FROM events WHERE server_id = ? AND type = 'crashed'", id).n, 0);
+  await new Promise((r) => setTimeout(r, 30));
+  assert.equal(started, 0, 'an in-game /stop or console stop must not be fought by the watcher');
+});
+
+test('a non-zero exit inside a stop/restart window is still recorded as a crash (unarmed)', async () => {
+  const id = seedServer('srv_wwin', true);
+  const { recordEvent } = require('../src/events');
+  recordEvent({ serverId: id, type: 'restart-requested', summary: 'Restart requested.' });
+  started = 0;
+  await watcher.handleEvent(dieEvent(id, { exitCode: '1' }));
+  assert.equal(db.get('SELECT status FROM servers WHERE id = ?', id).status, 'crashed');
+  const crash = db.get("SELECT details_json FROM events WHERE server_id = ? AND type = 'crashed'", id);
+  assert.ok(crash, 'the crash is visible in history even though a restart was in progress');
+  assert.equal(JSON.parse(crash.details_json).armedRestart, false);
+  assert.equal(JSON.parse(crash.details_json).duringStopWindow, true);
+});

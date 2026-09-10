@@ -106,7 +106,20 @@ async function handleConsole(ws, serverId, user) {
         send({ kind: 'cmd-result', command, output: '', error: 'Server is not running.' });
         return;
       }
-      const raw = await execCapture(serverId, ['rcon-cli', '--', ...command.split(/\s+/)]);
+      const words = command.split(/\s+/);
+      // A console `stop` (or Paper's `restart`) is a stop the operator asked for.
+      // Record it as such BEFORE the command runs so the Docker die event that
+      // follows lands inside the stop window and is not recorded as a crash or
+      // auto-restarted (the watcher only knows about panel-requested stops).
+      if (words[0].toLowerCase() === 'stop' || words[0].toLowerCase() === 'restart') {
+        recordEvent({
+          serverId,
+          actor: user.username,
+          type: 'stop-requested',
+          summary: `Stop requested from the console (${words[0].toLowerCase()}).`,
+        });
+      }
+      const raw = await execCapture(serverId, ['rcon-cli', '--', ...words]);
       const output = require('../utils/ansi').stripAnsi(raw);
       send({ kind: 'cmd-result', command, output: output.trim() });
       // Optional in-game attribution: the vanilla "Rcon" sender can't be renamed,
