@@ -81,6 +81,16 @@ mobile-first pass over every page, and a long list of audit-driven fixes. Closes
 - A numeric `0` in Advanced Settings is a real value, not "unset"; cleared CPU / quota inputs
   no longer silently become `0`. (#28)
 - Offline (file-mode) inventory edits work again.
+- The Shrink World preview works on a running server, as the dialog promises; only a real
+  shrink requires the server to be stopped.
+- Installing a mod with "ignore version" prefers a build for the server's own loader; it no
+  longer hands a Fabric server the newest NeoForge jar.
+- A malformed zip (a path that escapes the archive, unsupported entries) is refused with a
+  clear message instead of a generic server error, on every upload path.
+- An invalid cron expression on a new schedule is refused with a clear message instead of a
+  generic server error.
+- A stalled Docker daemon can no longer hang a panel request forever: every `docker exec`
+  (RCON commands, live probes) gives up at its deadline, including creating the exec itself.
 - A stopped server's console no longer replays its last lines every few seconds.
 - Auth: the setup PIN locks out one address after a handful of wrong tries and everyone after
   ten, with a fresh counter after each window; the acting admin re-enters their password to

@@ -86,8 +86,11 @@ test('createSchedule rejects an unknown task type', () => {
   assert.throws(() => scheduler.createSchedule({ taskType: 'not-a-thing', cron: CRON }), /Unknown task type/);
 });
 
-test('createSchedule rejects an invalid cron expression', () => {
-  assert.throws(() => scheduler.createSchedule({ taskType: 'update-check', cron: 'not a cron' }));
+test('createSchedule rejects an invalid cron expression with a 400, not a generic error', () => {
+  assert.throws(
+    () => scheduler.createSchedule({ taskType: 'update-check', cron: 'not a cron' }),
+    (err) => err.status === 400 && /not a valid schedule/.test(err.message)
+  );
 });
 
 test('createSchedule persists a server-scoped schedule and lists it with a label', () => {

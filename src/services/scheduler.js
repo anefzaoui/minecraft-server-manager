@@ -192,7 +192,16 @@ function seedGlobalDefaults() {
 
 function createSchedule({ serverId = null, taskType, cron, payload = {}, enabled = true }, { actor = 'system' } = {}) {
   if (!TASK_TYPES[taskType]) throw httpError(400, `Unknown task type ${taskType}`);
-  new Cron(cron, { timezone: getTimezone() }); // validates; throws on bad expression
+  try {
+    new Cron(cron, { timezone: getTimezone() }); // validates; throws on a bad expression
+  } catch {
+    // croner's error is a plain Error, which the JSON error handler would
+    // report as a generic 500 - this is user input, so say what is wrong.
+    throw httpError(
+      400,
+      `"${cron}" is not a valid schedule. Use five cron fields such as "0 4 * * *" (minute hour day month weekday).`
+    );
+  }
   const id = `sch_${nanoid(8)}`;
   db.run(
     'INSERT INTO schedules (id, server_id, task_type, cron, payload_json, enabled) VALUES (?, ?, ?, ?, ?, ?)',
