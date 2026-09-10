@@ -214,8 +214,12 @@ function startBackgroundServices(httpServer) {
           olderThanDays: EVENT_RETENTION_DAYS,
         });
       }
+      // Skip keys that carry their own invalidation and are meant to live for
+      // as long as the thing they describe: the per-server item registry is
+      // fingerprint-validated against the installed jars (never TTL-refreshed),
+      // so pruning it by age would force a full jar rescan every month.
       const apiCacheRemoved = require('./db').run(
-        "DELETE FROM api_cache WHERE fetched_at < datetime('now', ?)",
+        "DELETE FROM api_cache WHERE fetched_at < datetime('now', ?) AND key NOT LIKE 'item-registry:%'",
         `-${API_CACHE_RETENTION_DAYS} days`
       ).changes;
       if (apiCacheRemoved) {

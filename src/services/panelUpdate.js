@@ -15,7 +15,7 @@ const installedVersion = require('../../package.json').version;
 const PANEL_REPO = 'anefzaoui/minecraft-server-manager';
 // Mapped result row (the underlying github: row already carries ETag + TTL).
 const CACHE_KEY = 'panel-latest-release';
-const RELEASES_CACHE_KEY = `github:/repos/${PANEL_REPO}/releases?per_page=1`;
+const RELEASES_CACHE_KEY = `github:/repos/${PANEL_REPO}/releases?per_page=10`;
 
 /** "v1.2.3" or "1.2.3" -> [1,2,3]; anything else (pre-release tags, junk) -> null. */
 function parseVersion(v) {
@@ -53,8 +53,10 @@ async function checkLatest({ refresh = false } = {}) {
     db.run('DELETE FROM api_cache WHERE key IN (?, ?)', CACHE_KEY, RELEASES_CACHE_KEY);
   }
   try {
-    const releases = await githubApi.getReleases(PANEL_REPO, { limit: 1 });
-    const release = releases && releases[0];
+    // Newest STABLE release: a pre-release tag (v0.13.0-rc.1) must never be
+    // offered as "the update" to a panel running the stable line.
+    const releases = await githubApi.getReleases(PANEL_REPO, { limit: 10 });
+    const release = (releases || []).find((r) => !r.prerelease);
     const latest = release
       ? {
           version: String(release.tag).replace(/^v/, ''),

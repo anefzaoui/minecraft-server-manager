@@ -248,7 +248,12 @@ function getDefaults() {
 /** Persist operator-set overrides for some/all default fields. Returns the new effective defaults. */
 function setDefaults(patch) {
   const saved = get(DEFAULTS_KEY, {});
-  set(DEFAULTS_KEY, { ...saved, ...sanitizeDefaults(patch) });
+  const next = { ...saved, ...sanitizeDefaults(patch) };
+  const effective = { ...config.defaults, ...next };
+  if (effective.quotaWarnPct >= effective.quotaCriticalPct) {
+    throw require('../utils/httpError')(400, 'The disk warning threshold must be lower than the critical threshold.');
+  }
+  set(DEFAULTS_KEY, next);
   return getDefaults();
 }
 

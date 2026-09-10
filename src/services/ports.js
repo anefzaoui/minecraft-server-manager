@@ -31,7 +31,19 @@ function probe(port, host = '0.0.0.0', timeoutMs = 2000) {
     const timer = setTimeout(() => finish(false), timeoutMs);
     timer.unref();
     srv.once('error', () => finish(false)); // EADDRINUSE or any bind failure = not free
-    srv.listen({ port, host, exclusive: true }, () => finish(true));
+    srv.listen({ port, host, exclusive: true }, () => {
+      // If the timeout already answered "not free", finish() is a no-op and
+      // would leave this late-but-successful listener holding the port.
+      if (settled) {
+        try {
+          srv.close();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      finish(true);
+    });
   });
 }
 

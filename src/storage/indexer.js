@@ -69,6 +69,10 @@ async function scan() {
     // config, an overwritten log) otherwise churn the whole DELETE+reinsert AND
     // a storage_snapshot row every 15 minutes for zero information.
     if (cachedEqual(results)) {
+      // Still stamp the scan time (the Storage page shows "last scanned") and
+      // keep the usage-history series continuous - one cheap row, not a rewrite.
+      db.run("UPDATE storage_index SET scanned_at = datetime('now')");
+      recordSnapshot(results, total);
       scanThrottle.ok(logger.info, 'The storage index scan recovered.');
       return { totalBytes: total.size, dirs: results.size, ms: Date.now() - started, unchanged: true };
     }
@@ -86,26 +90,28 @@ async function scan() {
       }
     });
 
-    const perServer = {};
-    for (const [rel, v] of results) {
-      const m = /^servers\/([^/]+)$/.exec(rel);
-      if (m) perServer[m[1]] = v.size;
-    }
-    db.run(
-      'INSERT INTO storage_snapshots (total_bytes, per_server_json) VALUES (?, ?)',
-      total.size,
-      JSON.stringify(perServer)
-    );
-    // Retention: keep the last 500 snapshots.
-    db.run(
-      'DELETE FROM storage_snapshots WHERE id NOT IN (SELECT id FROM storage_snapshots ORDER BY id DESC LIMIT 500)'
-    );
+    recordSnapshot(results, total);
 
     scanThrottle.ok(logger.info, 'The storage index scan recovered.');
     return { totalBytes: total.size, dirs: results.size, ms: Date.now() - started };
   } finally {
     scanning = false;
   }
+}
+
+/** Append one usage-history point (total + per-server sizes), keeping the last 500. */
+function recordSnapshot(results, total) {
+  const perServer = {};
+  for (const [rel, v] of results) {
+    const m = /^servers\/([^/]+)$/.exec(rel);
+    if (m) perServer[m[1]] = v.size;
+  }
+  db.run(
+    'INSERT INTO storage_snapshots (total_bytes, per_server_json) VALUES (?, ?)',
+    total.size,
+    JSON.stringify(perServer)
+  );
+  db.run('DELETE FROM storage_snapshots WHERE id NOT IN (SELECT id FROM storage_snapshots ORDER BY id DESC LIMIT 500)');
 }
 
 /** True when the scanned depth ≤ 3 rows exactly match the cache table's. */

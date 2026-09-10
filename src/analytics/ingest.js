@@ -269,8 +269,14 @@ async function backfillFromLogs(serverId, { tail = 5000 } = {}) {
   const newest = db.get('SELECT ts FROM player_events WHERE server_id = ? ORDER BY ts DESC LIMIT 1', serverId);
   // Load the server's existing event keys once so the per-line dedupe check is a
   // Set membership, not a SELECT-per-line across a multi-thousand-line backfill.
+  // Lines older than the newest recorded event are skipped below, so only rows
+  // at or after that timestamp can ever collide - no need to load the whole
+  // retention window (hundreds of thousands of rows on a busy server).
   const seen = new Set(
-    db.all('SELECT ts, raw FROM player_events WHERE server_id = ?', serverId).map((r) => `${r.ts}\u0000${r.raw}`)
+    (newest
+      ? db.all('SELECT ts, raw FROM player_events WHERE server_id = ? AND ts >= ?', serverId, newest.ts)
+      : []
+    ).map((r) => `${r.ts}\u0000${r.raw}`)
   );
   const now = new Date();
   let inserted = 0;

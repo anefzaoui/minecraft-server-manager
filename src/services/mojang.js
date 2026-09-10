@@ -81,7 +81,9 @@ async function getVersionManifest() {
       err: serializeError(err, { includeStack: false }),
       servedStale: Boolean(cached),
     });
-    if (cached) return parseAndMemo(cached.value_json); // stale beats nothing
+    // Stale beats nothing - but do NOT memoize it, or one failed refresh would
+    // pin the stale copy for the whole memo TTL; the next call retries.
+    if (cached) return JSON.parse(cached.value_json);
     throw err;
   }
 }

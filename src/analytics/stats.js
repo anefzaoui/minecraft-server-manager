@@ -277,8 +277,8 @@ function baselineSnapshotsBulk(serverId, uuids, cutoffIso) {
     const sql = `SELECT s.* FROM player_stat_snapshots s
                  JOIN (SELECT uuid, MAX(ts) AS mts FROM player_stat_snapshots
                         WHERE server_id = ? AND uuid IN (${ph}) AND ts <= ? GROUP BY uuid) m
-                   ON s.uuid = m.uuid AND s.ts = m.mts`;
-    for (const r of db.all(sql, serverId, ...chunk, cutoffIso)) out.set(r.uuid, r);
+                   ON s.server_id = ? AND s.uuid = m.uuid AND s.ts = m.mts`;
+    for (const r of db.all(sql, serverId, ...chunk, cutoffIso, serverId)) out.set(r.uuid, r);
   }
   const missing = uuids.filter((uuid) => !out.has(uuid));
   for (let i = 0; i < missing.length; i += CHUNK) {

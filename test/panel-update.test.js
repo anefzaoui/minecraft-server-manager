@@ -37,13 +37,29 @@ test.beforeEach(() => {
   db.run("DELETE FROM api_cache WHERE key = 'panel-latest-release'");
 });
 
-// One minor ahead of package.json's current version (0.12.0).
-const RELEASE = {
-  tag: 'v0.13.0',
-  name: 'v0.13.0',
-  publishedAt: '2026-01-01T00:00:00Z',
-  htmlUrl: 'https://github.com/anefzaoui/minecraft-server-manager/releases/tag/v0.13.0',
+// Derived from package.json so a version bump never breaks this suite:
+// NEWER is one minor ahead of the installed version, OLDER one minor behind.
+const CURRENT = require('../package.json').version;
+const bump = (v, by) => {
+  const [maj, min, pat] = v.split('.').map(Number);
+  return `${maj}.${Math.max(0, min + by)}.${pat}`;
 };
+const NEWER = bump(CURRENT, 1);
+const OLDER = bump(CURRENT, -1);
+const RELEASE = {
+  tag: `v${NEWER}`,
+  name: `v${NEWER}`,
+  publishedAt: '2026-01-01T00:00:00Z',
+  htmlUrl: `https://github.com/anefzaoui/minecraft-server-manager/releases/tag/v${NEWER}`,
+};
+
+test('checkLatest skips pre-releases so an rc tag is never offered as the update', async (t) => {
+  const rc = { ...RELEASE, tag: `v${bump(NEWER, 1)}-rc.1`, prerelease: true };
+  t.mock.method(githubApi, 'getReleases', async () => [rc, RELEASE]);
+  const r = await panelUpdate.checkLatest({ refresh: true });
+  assert.equal(r.latest.version, NEWER);
+  assert.equal(r.isNewer, true);
+});
 
 test('compareVersions decides -1/0/1 for semver and null for unknown shapes', () => {
   assert.equal(panelUpdate.compareVersions('v1.2.3', 'v1.2.2'), 1);
@@ -57,19 +73,19 @@ test('compareVersions decides -1/0/1 for semver and null for unknown shapes', ()
 test('checkLatest reports an update when GitHub has a newer semver tag', async (t) => {
   t.mock.method(githubApi, 'getReleases', async () => [RELEASE]);
   const r = await panelUpdate.checkLatest();
-  assert.equal(r.current, '0.12.0');
+  assert.equal(r.current, CURRENT);
   assert.equal(r.isNewer, true);
-  assert.equal(r.latest.version, '0.13.0');
+  assert.equal(r.latest.version, NEWER);
   assert.equal(r.latest.htmlUrl, RELEASE.htmlUrl);
   assert.equal(r.error, null);
   assert.ok(db.get("SELECT 1 FROM api_cache WHERE key = 'panel-latest-release'"), 'result should be cached');
 });
 
 test('checkLatest reports no update for the same or an older tag, and tolerates non-semver tags', async (t) => {
-  for (const tag of ['v0.12.0', 'v0.10.0']) {
+  for (const tag of [`v${CURRENT}`, `v${OLDER}`]) {
     t.mock.method(githubApi, 'getReleases', async () => [{ ...RELEASE, tag }]);
     const r = await panelUpdate.checkLatest({ refresh: true });
-    assert.equal(r.isNewer, false, `${tag} must not look newer than 0.12.0`);
+    assert.equal(r.isNewer, false, `${tag} must not look newer than ${CURRENT}`);
   }
   t.mock.method(githubApi, 'getReleases', async () => [{ ...RELEASE, tag: 'nightly-2026-01-01' }]);
   const r = await panelUpdate.checkLatest({ refresh: true });
@@ -134,6 +150,6 @@ test('the Settings page renders the control without ever calling GitHub', async 
   const r = await app.req('GET', '/settings', { cookie });
   assert.equal(r.status, 200);
   assert.match(r.text, /id="msm-update-btn"/);
-  assert.match(r.text, /v0\.12\.0/);
+  assert.match(r.text, new RegExp(`v${CURRENT.replace(/\./g, '\\.')}`));
   assert.equal(spy.mock.callCount(), 0, 'page render must not hit the network');
 });

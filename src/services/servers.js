@@ -795,8 +795,9 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBa
     await fsp.rm(dataPath('backups', id), { recursive: true, force: true });
   }
 
-  // Archived logs / event excerpts.
-  await fsp.rm(dataPath('logs', id), { recursive: true, force: true });
+  // Archived logs, event excerpts and inventory snapshots: part of "the
+  // server's files" the dialog promises to keep, so they go only with the world.
+  if (!keepWorld) await fsp.rm(dataPath('logs', id), { recursive: true, force: true });
 
   // All row cleanup + the soft-delete flag run in ONE transaction so a mid-cleanup
   // error can't leave a "live" (deleted_at IS NULL) server whose content/backups
@@ -1008,16 +1009,20 @@ async function refreshStatusesInner({ boot }) {
 // descriptors on huge trees.
 const DIR_SIZE_CONCURRENCY = 32;
 async function dirSize(dir) {
+  // Dirent types come from readdir and never follow symlinks, so a link to a
+  // parent directory cannot recurse forever and a linked file is not counted
+  // twice (lstat below for the same reason).
   const jobs = [];
   for (const entry of await fsp.readdir(dir, { withFileTypes: true })) {
-    jobs.push(path.join(dir, entry.name));
+    if (entry.isSymbolicLink()) continue;
+    if (entry.isDirectory() || entry.isFile()) jobs.push({ p: path.join(dir, entry.name), dir: entry.isDirectory() });
   }
   let i = 0;
-  const push = async (p) => {
+  const push = async ({ p, dir: isDir }) => {
     try {
-      const st = await fsp.stat(p);
-      if (st.isDirectory()) return dirSize(p);
-      return st.size;
+      if (isDir) return await dirSize(p);
+      const st = await fsp.lstat(p);
+      return st.isFile() ? st.size : 0;
     } catch {
       return 0; // transient file
     }

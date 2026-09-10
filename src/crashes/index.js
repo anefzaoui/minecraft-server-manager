@@ -186,8 +186,14 @@ async function listCandidateFiles(serverId) {
 // pays for every server every 30 seconds. A file dropped in the same
 // millisecond a scan stat's the dir is picked up by that very scan (it stats
 // before it lists); any later add bumps the dir mtime above the cached value,
-// so the next tick re-scans. No permanent miss is possible.
+// so the next tick re-scans. The one gap is filesystem timestamp granularity:
+// on a coarse clock (1 s on some network shares and Docker Desktop mounts) a
+// second file landing in the same tick as the scan leaves the mtime equal, and
+// a report still being written when it is listed would be parsed partial. So a
+// dir mtime that is younger than MTIME_SETTLE_MS is never remembered - the
+// next tick always re-scans a directory that was changing while we looked.
 const lastDirMtimes = new Map(); // serverId -> { crash: number|null, root: number|null }
+const MTIME_SETTLE_MS = 2500;
 
 function dirMtimeOrNull(abs) {
   try {
@@ -195,6 +201,12 @@ function dirMtimeOrNull(abs) {
   } catch {
     return null;
   } // dir missing / unreadable
+}
+
+/** The value to remember for a dir: its mtime once it has settled, else undefined (= "check again"). */
+function settledMtime(mtime) {
+  if (mtime == null) return null;
+  return Date.now() - mtime < MTIME_SETTLE_MS ? undefined : mtime;
 }
 
 /** Scan one server for crash files not yet indexed; parse + insert + record event. */
@@ -248,7 +260,7 @@ async function scanServer(serverId) {
     });
     inserted.push(id);
   }
-  lastDirMtimes.set(serverId, dirMtimes);
+  lastDirMtimes.set(serverId, { crash: settledMtime(dirMtimes.crash), root: settledMtime(dirMtimes.root) });
   return inserted;
 }
 

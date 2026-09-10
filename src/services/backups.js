@@ -385,7 +385,14 @@ async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
   if (fs.existsSync(target)) throw httpError(409, `A backup named "${name}" already exists here`);
 
   await fsp.rename(abs, target);
-  db.run('UPDATE backups SET filename = ?, rel_path = ? WHERE id = ?', name, targetRel, backupId);
+  try {
+    db.run('UPDATE backups SET filename = ?, rel_path = ? WHERE id = ?', name, targetRel, backupId);
+  } catch (err) {
+    // Keep the row and the file in agreement: undo the move rather than leave a
+    // row that points at a name that no longer exists.
+    await fsp.rename(target, abs).catch(() => {});
+    throw err;
+  }
   const updated = db.get('SELECT * FROM backups WHERE id = ?', backupId);
   recordEvent({
     serverId: backup.server_id,

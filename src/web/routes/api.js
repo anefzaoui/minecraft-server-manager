@@ -11,6 +11,7 @@ const path = require('node:path');
 const express = require('express');
 const multer = require('multer');
 const { z } = require('zod');
+const { boolish } = require('../../utils/boolish');
 const servers = require('../../services/servers');
 const ports = require('../../services/ports');
 const mojang = require('../../services/mojang');
@@ -512,7 +513,7 @@ router.post(
     const warn = cookieSecureWarning(saved);
     if (warn) {
       logger.warn(
-        'A public host is configured but COOKIE_SECURE is unset, so the session cookie is sent over plain HTTP if the panel is reached that way. Set COOKIE_SECURE=true behind HTTPS, or COOKIE_SECURE=auto in the environment.',
+        'A public host is configured but COOKIE_SECURE is unset, so the session cookie is sent over plain HTTP if the panel is reached that way. Set COOKIE_SECURE=true behind HTTPS, or COOKIE_SECURE=auto together with TRUST_PROXY, in the environment.',
         { publicHost: saved }
       );
     }
@@ -558,7 +559,7 @@ router.get('/api-tokens', requireRoleKeys('admin'), (req, res) => {
 const apiTokenCreateSchema = z
   .object({
     label: z.string().trim().min(1).max(60),
-    scopeAll: z.coerce.boolean().default(false),
+    scopeAll: boolish.default(false),
     serverIds: z
       .array(
         z
@@ -619,7 +620,7 @@ router.post(
   '/settings/public-api',
   requireRoleKeys('admin'),
   asyncHandler((req, res, next) => {
-    const { enabled } = z.object({ enabled: z.coerce.boolean() }).parse(req.body);
+    const { enabled } = z.object({ enabled: boolish }).parse(req.body);
     const now = settingsService.setPublicApiEnabled(enabled);
     eventsService.recordEvent({
       actor: req.user.username,
@@ -1433,6 +1434,11 @@ router.get(
           .map((s) => s.trim())
           .filter(Boolean);
     const asked = rules && rules.length ? rules : null;
+    // An explicit but empty ?rules= means the page has no chips on screen -
+    // answer without a single read rather than treating "nothing" as "everything".
+    if (!all && req.query.rules !== undefined && rules && rules.length === 0) {
+      return res.json({ ok: true, running: WORLD_STATE_LIVE_STATUSES.has(server.status), degraded: false, state: {} });
+    }
 
     // Stopped/crashed: read the last-saved values straight from level.dat so the
     // rail still shows the world clock and gamerule states (read-only - the
@@ -1542,10 +1548,16 @@ router.post(
           await servers.stopServer(server.id, { actor });
         }
         t.step('Scanning region files for rarely-visited chunks…');
-        const result = await worldShrink.shrinkWorld(server.id, shrinkOpts);
-        if (wasRunning) {
-          t.step('Starting the server back up…');
-          await servers.startServer(server.id, { actor });
+        let result;
+        try {
+          result = await worldShrink.shrinkWorld(server.id, shrinkOpts);
+        } finally {
+          // The user asked for a stop-shrink-start round trip: bring the server
+          // back even when the shrink itself failed, never leave it down.
+          if (wasRunning) {
+            t.step('Starting the server back up…');
+            await servers.startServer(server.id, { actor });
+          }
         }
         return { ...result, restarted: wasRunning };
       }
@@ -2231,7 +2243,7 @@ router.post(
       .object({
         username: z.string().trim().min(1).max(64).optional(),
         ip: z.string().trim().max(64).optional(),
-        all: z.coerce.boolean().optional(),
+        all: boolish.optional(),
       })
       .parse(req.body || {});
     if (!all && !username) throw Object.assign(new Error('Pass a username, or all:true'), { status: 400 });
@@ -2610,6 +2622,24 @@ const fromZipSchema = z
       'Container memory limit must be higher than the Java heap, or the server will be stopped for running out of memory.',
   });
 
+// What detectNativeLoader() may hand the create path: plain version tokens only.
+const nativeLoaderSchema = z.object({
+  loader: z
+    .enum([...MOD_LOADERS, 'paper'])
+    .nullable()
+    .optional(),
+  mcVersion: z
+    .string()
+    .regex(/^[A-Za-z0-9][\w.+-]{0,31}$/)
+    .nullable()
+    .optional(),
+  loaderVersion: z
+    .string()
+    .regex(/^[A-Za-z0-9][\w.+-]{0,39}$/)
+    .nullable()
+    .optional(),
+});
+
 // One-shot "create server from an uploaded zip": create (no start) → bulk
 // install the zip's mods → optional overrides → start, all inside ONE task.
 // Same tolerance contract as from-mods: per-mod failures are reported, the
@@ -2636,9 +2666,20 @@ router.post(
     if (input.nativeLoader) {
       const native = await contentZip.detectNativeLoader(zipPath).catch(() => null);
       if (native) {
-        if (native.loader) loader = native.loader;
-        if (native.mcVersion) mcVersion = native.mcVersion;
-        if (native.loaderVersion) loaderVersion = native.loaderVersion;
+        // Detected from zip entry names, so hold them to the same shape the
+        // typed fields get before they reach the env / DB.
+        const detected = nativeLoaderSchema.safeParse(native);
+        if (!detected.success) {
+          throw Object.assign(
+            new Error(
+              'The loader inside this zip could not be read safely. Untick the native-loader option and pick the loader by hand.'
+            ),
+            { status: 422 }
+          );
+        }
+        if (detected.data.loader) loader = detected.data.loader;
+        if (detected.data.mcVersion) mcVersion = detected.data.mcVersion;
+        if (detected.data.loaderVersion) loaderVersion = detected.data.loaderVersion;
       }
     }
     const type = loader.toUpperCase();
