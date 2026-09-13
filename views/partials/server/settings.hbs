@@ -1,4 +1,4 @@
-<div class="grid gap-4 lg:grid-cols-2" data-settings-server="{{server.id}}" data-settings-icon="{{server.icon}}" data-settings-accent="{{server.accent}}" data-settings-tags="{{json server.tags}}" data-settings-env="{{settingsEnv}}" data-settings-docker-name="{{server.containerName}}" data-settings-docker-network="{{server.networkName}}" data-settings-docker-ports="{{json server.extraPorts}}" data-settings-docker-binds="{{json server.extraBinds}}">
+<div class="grid gap-4 lg:grid-cols-2" data-settings-server="{{server.id}}" data-settings-icon="{{server.icon}}" data-settings-accent="{{server.accent}}" data-settings-tags="{{jsonAttr server.tags}}" data-settings-env="{{settingsEnv}}" data-settings-docker-name="{{server.containerName}}" data-settings-docker-network="{{server.networkName}}" data-settings-docker-ports="{{jsonAttr server.extraPorts}}" data-settings-docker-binds="{{jsonAttr server.extraBinds}}">
   <div class="card p-4">
     <h3 class="mb-4 font-semibold">Identity</h3>
     <div class="space-y-4">

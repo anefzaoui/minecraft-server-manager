@@ -3,11 +3,12 @@
 // Regression coverage for issue #37: every JSON value a template embeds for the
 // browser to JSON.parse must survive the trip. Two guards:
 //
-// 1. A static scan of every .hbs file. Inside <script> text the browser does
-//    NOT decode HTML entities, so the `json` helper must be rendered raw
-//    ({{{json x}}}); inside an attribute it must be escaped ({{json x}}) or a
-//    quote ends the attribute. The wrong pairing is a build failure here, not
-//    a dead page in production.
+// 1. A static scan of every .hbs file. The helper name carries the context:
+//    jsonScript belongs inside <script> text (the browser does NOT decode HTML
+//    entities there) and jsonAttr inside an attribute value (a raw quote would
+//    end it). Each helper returns a SafeString, so the brace count is
+//    irrelevant; only the wrong helper in the wrong place can break a page, and
+//    that is a build failure here rather than a dead page in production.
 // 2. Real renders of the pages that embed JSON, with a server name made of
 //    every awkward character, parsed the way the browser would.
 
@@ -40,36 +41,92 @@ function decodeEntities(s) {
     .replace(/&amp;/g, '&');
 }
 
-test('templates pair the json helper with the right brace count for its context', () => {
+// Split a template into <script> bodies and everything else, ignoring
+// Handlebars comments. Case-insensitive; an unterminated <script> runs to EOF.
+function scriptRegions(src) {
+  const regions = [];
+  const open = /<script\b[^>]*>/gi;
+  let last = 0;
+  let m;
+  while ((m = open.exec(src))) {
+    const bodyStart = m.index + m[0].length;
+    const close = /<\/script\s*>/gi;
+    close.lastIndex = bodyStart;
+    const c = close.exec(src);
+    const bodyEnd = c ? c.index : src.length;
+    regions.push({ text: src.slice(last, m.index), offset: last, inScript: false });
+    regions.push({ text: src.slice(bodyStart, bodyEnd), offset: bodyStart, inScript: true });
+    last = c ? c.index + c[0].length : src.length;
+    open.lastIndex = last;
+  }
+  regions.push({ text: src.slice(last), offset: last, inScript: false });
+  return regions;
+}
+
+function stripComments(src) {
+  // Keep the length stable so line numbers still point at the source.
+  return src.replace(/\{\{!--[\s\S]*?--\}\}|\{\{![\s\S]*?\}\}/g, (c) => c.replace(/[^\n]/g, ' '));
+}
+
+function scanTemplate(src, rel) {
+  const problems = [];
+  const clean = stripComments(src);
+  for (const { text, offset, inScript } of scriptRegions(clean)) {
+    // The wrong helper for this context, with any brace count or whitespace.
+    const re = inScript ? /\{\{\{?~?\s*jsonAttr\b/g : /\{\{\{?~?\s*jsonScript\b/g;
+    let hit;
+    while ((hit = re.exec(text))) {
+      const line = clean.slice(0, offset + hit.index).split('\n').length;
+      problems.push(
+        inScript
+          ? `${rel}:${line} uses jsonAttr inside <script>; use jsonScript (entities are not decoded there)`
+          : `${rel}:${line} uses jsonScript outside <script>; use jsonAttr (a raw quote ends the attribute)`
+      );
+    }
+    // The retired ambiguous helper, in either context.
+    const old = /\{\{\{?~?\s*json\b/g;
+    while ((hit = old.exec(text))) {
+      const line = clean.slice(0, offset + hit.index).split('\n').length;
+      problems.push(`${rel}:${line} uses the removed json helper; use jsonScript or jsonAttr`);
+    }
+  }
+  return problems;
+}
+
+test('every template uses jsonScript inside <script> and jsonAttr everywhere else', () => {
   const problems = [];
   for (const file of hbsFiles(VIEWS)) {
-    const src = fs.readFileSync(file, 'utf8');
-    const rel = path.relative(VIEWS, file);
-    // Split the template into <script>…</script> bodies and everything else.
-    const scriptRe = /<script\b[^>]*>([\s\S]*?)<\/script>/g;
-    let last = 0;
-    let m;
-    const check = (chunk, inScript, offset) => {
-      const re = inScript ? /(?<!\{)\{\{json\b/g : /\{\{\{json\b/g;
-      let hit;
-      while ((hit = re.exec(chunk))) {
-        const line = src.slice(0, offset + hit.index).split('\n').length;
-        problems.push(
-          inScript
-            ? `${rel}:${line} uses {{json}} inside <script>; use {{{json}}} (entities are not decoded there)`
-            : `${rel}:${line} uses {{{json}}} outside <script>; use {{json}} (a raw quote ends the attribute)`
-        );
-      }
-    };
-    while ((m = scriptRe.exec(src))) {
-      check(src.slice(last, m.index), false, last);
-      const bodyStart = m.index + m[0].indexOf(m[1]);
-      check(m[1], true, bodyStart);
-      last = m.index + m[0].length;
-    }
-    check(src.slice(last), false, last);
+    problems.push(...scanTemplate(fs.readFileSync(file, 'utf8'), path.relative(VIEWS, file)));
   }
   assert.deepEqual(problems, []);
+});
+
+test('the scan catches the wrong helper in either context, whatever the spelling', () => {
+  const bad = [
+    '<div data-x="{{jsonScript v}}"></div>',
+    '<script type="application/json" id="a">{{jsonAttr v}}</script>',
+    '<script type="application/json" id="a">{{{jsonAttr v}}}</script>',
+    '<SCRIPT nonce="{{n}}">window.X = {{ jsonAttr v }};</SCRIPT >',
+    '<script>\n  var x = {{~jsonAttr v}};\n</script>',
+    '<script type="application/json">{{jsonAttr v}}', // unterminated: still script text
+    '<script>{{json v}}</script>',
+    '<div data-x="{{json v}}"></div>',
+  ];
+  for (const src of bad) assert.equal(scanTemplate(src, 't.hbs').length, 1, `should flag: ${src}`);
+
+  const good = [
+    '<div data-x="{{jsonAttr v}}" data-y=\'{{jsonAttr w}}\'></div>',
+    '<script type="application/json" id="a">{{jsonScript v}}</script>',
+    '<script type="application/json" id="a">{{{jsonScript v}}}</script>',
+    '<SCRIPT nonce="{{n}}">window.X = Object.assign({}, {{jsonScript v}});</SCRIPT>',
+    '<script>{{!-- {{jsonAttr v}} is wrong here --}}{{jsonScript v}}</script>',
+    '<div data-x="{{jsonAttr v}}"></div>\n<script>{{jsonScript v}}</script>\n<div data-y="{{jsonAttr w}}"></div>',
+    '{{! jsonScript in a comment }}<div data-x="{{jsonAttr v}}"></div>',
+  ];
+  for (const src of good) assert.deepEqual(scanTemplate(src, 't.hbs'), [], `should pass: ${src}`);
+
+  // Line numbers point at the offending line.
+  assert.match(scanTemplate('<div></div>\n<div></div>\n<div data-x="{{jsonScript v}}">', 't.hbs')[0], /^t\.hbs:3 /);
 });
 
 let cookie;
@@ -102,10 +159,13 @@ async function page(url) {
 
 // Every <script type="application/json"> island on the page must parse as-is.
 function islands(html) {
-  return [...html.matchAll(/<script type="application\/json" id="([^"]+)">([\s\S]*?)<\/script>/g)].map((m) => ({
-    id: m[1],
-    body: m[2],
-  }));
+  const out = [];
+  for (const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+    if (!/\btype="application\/json"/.test(m[1])) continue;
+    const id = m[1].match(/\bid="([^"]+)"/);
+    out.push({ id: id ? id[1] : '(no id)', body: m[2] });
+  }
+  return out;
 }
 
 // Every data-* attribute on the page whose (entity-decoded) value looks like
