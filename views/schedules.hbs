@@ -10,7 +10,7 @@
     <thead><tr><th>Server</th><th>Task</th><th>Cron</th><th class="text-right">Next Run</th><th>Enabled</th><th class="text-right"></th></tr></thead>
     <tbody>
       {{#each schedules}}
-        <tr data-schedule-row data-schedule-id="{{id}}" data-server-id="{{serverId}}" data-task-type="{{taskType}}" data-task="{{task}}" data-cron="{{cron}}" data-payload="{{json payload}}">
+        <tr data-schedule-row data-schedule-id="{{id}}" data-server-id="{{serverId}}" data-task-type="{{taskType}}" data-task="{{task}}" data-cron="{{cron}}" data-payload="{{jsonAttr payload}}">
           {{! Global rows are faint by the serverId FACT, not by matching the display string. }}
           <td data-th="Server" class="{{#unless serverId}}text-ink-faint{{/unless}}">{{server}}</td>
           <td data-th="Task" class="font-medium">{{task}}</td>
@@ -34,5 +34,5 @@
   {{> empty-state iconName='calendar-clock' title='No Scheduled Tasks Yet' message='Automate restarts, backups, and console commands on a schedule. Use New Task above to create the first one.'}}
 {{/if}}
 
-<div id="msm-schedule-data" hidden data-servers="{{json serverOptions}}" data-task-types="{{json taskTypes}}"></div>
+<div id="msm-schedule-data" hidden data-servers="{{jsonAttr serverOptions}}" data-task-types="{{jsonAttr taskTypes}}"></div>
 <script type="module" src="/js/pages/schedules.js"></script>

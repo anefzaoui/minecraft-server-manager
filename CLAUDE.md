@@ -98,6 +98,8 @@ allocation, disk quotas, at-rest secret encryption), and wire formats are all de
 - `src/web/middleware/asyncHandler.js` — wraps async route handlers so rejections reach the error
   handler; prefer it over hand-written `try/catch → next(err)`.
 - `src/web/middleware/jsonErrorHandler.js` — the standard JSON error handler (redacts 5xx detail).
+- Template helpers for JSON the browser will `JSON.parse`: `{{jsonScript x}}` inside `<script>`
+  text, `{{jsonAttr x}}` inside a `data-*` attribute. Either brace count works; the name is the rule.
 
 ## Logging (ESLint enforces `no-console` under `src/**`)
 

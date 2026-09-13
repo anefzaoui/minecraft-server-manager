@@ -222,9 +222,9 @@
         </table>
       </div>
       <button class="btn btn-primary btn-sm mt-4" id="api-token-add">{{{icon 'plus' 'size-3.5'}}} New Key</button>
-      <script type="application/json" id="api-token-servers">{{json serverOptions}}</script>
+      <script type="application/json" id="api-token-servers">{{jsonScript serverOptions}}</script>
     </div>
   {{/settings/card}}
 </div>
-<script type="application/json" id="settings-self">{{json selfUserId}}</script>
+<script type="application/json" id="settings-self">{{jsonScript selfUserId}}</script>
 <script type="module" src="/js/pages/settings.js"></script>

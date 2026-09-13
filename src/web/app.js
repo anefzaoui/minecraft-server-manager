@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
-const { engine } = require('express-handlebars');
+const { engine, create: createHandlebars } = require('express-handlebars');
 
 const config = require('../config');
 const settings = require('../services/settings');
@@ -78,15 +78,38 @@ function formatBytes(bytes) {
   return `${value >= 100 || i === 0 ? Math.round(value) : value.toFixed(1)} ${units[i]}`;
 }
 
-// Serialize a value for embedding inside a <script> island. JSON.stringify does
-// NOT escape <, >, & or the JS line separators U+2028/U+2029, so a string field
-// containing "</script>" would break out of the tag (stored XSS). Escape those
-// code points to \uXXXX - still valid JSON and valid JS.
-function jsonForScript(v) {
+// Embedding JSON for the browser to JSON.parse. Two destinations with opposite
+// escaping rules, so two helpers, each returning a SafeString: Handlebars
+// emits a SafeString verbatim, so {{helper x}} and {{{helper x}}} render the
+// same and the brace count can no longer break a page (issue #37).
+//
+// JSON.stringify does NOT escape <, >, & or the JS line separators
+// U+2028/U+2029, so a string field containing "</script>" would break out of
+// a tag (stored XSS). Both helpers turn those into \uXXXX first: still valid
+// JSON and valid JS. Quotes stay as they are (JSON's string delimiters).
+function jsonText(v) {
   return (JSON.stringify(v) ?? 'null').replace(
     /[<>&\u2028\u2029]/g,
     (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')
   );
+}
+
+// The engine's Handlebars instance (its types do not surface it, hence the cast).
+const Handlebars = /** @type {typeof import('handlebars')} */ (createHandlebars().handlebars);
+const { SafeString, Utils: HbsUtils } = Handlebars;
+
+// {{jsonScript x}} inside <script> text (an application/json island or an
+// inline object literal). The browser does NOT decode HTML entities there, so
+// the JSON goes out untouched: `&quot;` would reach JSON.parse and throw.
+function jsonScript(v) {
+  return new SafeString(jsonText(v));
+}
+
+// {{jsonAttr x}} inside a quoted data-* attribute. The browser decodes
+// entities before dataset.* is read, so quotes become &quot; here (a raw quote
+// would end the attribute) and JSON.parse still sees clean JSON.
+function jsonAttr(v) {
+  return new SafeString(HbsUtils.escapeExpression(jsonText(v)));
 }
 
 function createApp() {
@@ -118,7 +141,8 @@ function createApp() {
         and: (a, b) => a && b,
         or: (a, b) => a || b,
         not: (a) => !a,
-        json: jsonForScript,
+        jsonScript,
+        jsonAttr,
         urlq: (s) => encodeURIComponent(s ?? ''),
         iconSrc,
         avatarSrc,
@@ -372,4 +396,4 @@ function createApp() {
   return app;
 }
 
-module.exports = { createApp };
+module.exports = { createApp, jsonScript, jsonAttr };
