@@ -78,10 +78,18 @@ function formatBytes(bytes) {
   return `${value >= 100 || i === 0 ? Math.round(value) : value.toFixed(1)} ${units[i]}`;
 }
 
-// Serialize a value for embedding inside a <script> island. JSON.stringify does
+// Serialize a value for a template's JSON.parse consumer. JSON.stringify does
 // NOT escape <, >, & or the JS line separators U+2028/U+2029, so a string field
 // containing "</script>" would break out of the tag (stored XSS). Escape those
-// code points to \uXXXX - still valid JSON and valid JS.
+// code points to \uXXXX - still valid JSON and valid JS. Quotes stay as they are
+// (they are JSON's string delimiters), which fixes the brace count per context:
+//   - <script type="application/json"> / inline JS: {{{json x}}} (raw). The
+//     browser does NOT decode HTML entities inside <script> text, so the
+//     escaped form would hand JSON.parse "&quot;" and throw (issue #37).
+//   - data-* attributes: {{json x}} (escaped). Handlebars turns quotes into
+//     &quot; so the attribute stays intact, and the browser decodes them back
+//     before dataset.* reaches JSON.parse.
+// test/template-json.test.js fails the build on the wrong pairing.
 function jsonForScript(v) {
   return (JSON.stringify(v) ?? 'null').replace(
     /[<>&\u2028\u2029]/g,
@@ -372,4 +380,4 @@ function createApp() {
   return app;
 }
 
-module.exports = { createApp };
+module.exports = { createApp, jsonForScript };

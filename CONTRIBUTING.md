@@ -104,6 +104,10 @@ Prefer the shared helpers over re-implementing patterns:
 - `src/web/middleware/jsonErrorHandler.js`: the standard JSON error handler (redacts 5xx detail).
 - `src/web/middleware/asyncHandler.js`: wraps async route handlers so rejections reach the error
   handler. Prefer it over hand-written `try/catch → next(err)`.
+- The `json` template helper embeds a value for the browser to `JSON.parse`. The brace count
+  depends on where it lands: `{{{json x}}}` (raw) inside `<script>` text, where the browser does not
+  decode HTML entities; `{{json x}}` (escaped) inside a `data-*` attribute, where a raw quote would
+  end the attribute. `test/template-json.test.js` fails the wrong pairing.
 
 ## User-facing copy
 
