@@ -22,7 +22,7 @@ module.exports = [
     key: 'INIT_MEMORY',
     scope: 'env',
     label: 'Initial heap (advanced)',
-    help: 'Sets a smaller starting heap than the maximum, so memory use grows with the world instead of sitting at the full heap from the start. Measured on a 2 GB heap: 512 MB here brought idle use from 2.5 GB down to 1.35 GB. Leave empty to let "RAM (Java heap)" control both, which is what Aikar’s flags recommend for the steadiest performance.',
+    help: 'Sets a smaller starting heap than the maximum, so memory use grows with the world instead of sitting at the full heap from the start. Measured on a 2 GB heap: 512 MB here brought idle use from 2.6 GB down to about 1.3 GB. Leave empty to let "RAM (Java heap)" control both, which is what Aikar’s flags recommend for the steadiest performance.',
     type: 'size-mb',
     unit: 'MB',
     min: 512,

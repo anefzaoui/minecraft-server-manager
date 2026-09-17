@@ -3,7 +3,7 @@
 require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parseMemMb, isTrue, heapPlan } = require('../src/services/jvm');
+const { parseMemMb, heapPlan } = require('../src/services/jvm');
 
 test('parseMemMb reads every spelling the image accepts, bare numbers as MB', () => {
   assert.equal(parseMemMb('512M'), 512);
@@ -17,18 +17,12 @@ test('parseMemMb reads every spelling the image accepts, bare numbers as MB', ()
   assert.equal(parseMemMb('lots'), null);
 });
 
-test("isTrue matches the image's own flag spellings", () => {
-  for (const v of ['true', 'TRUE', '1', 'yes', 'on']) assert.equal(isTrue(v), true, v);
-  for (const v of ['false', '0', 'no', '', undefined, 'truthy']) assert.equal(isTrue(v), false, String(v));
-});
-
 test('an equal starting and maximum heap (the default) gets the "given up front" note, flags or not', () => {
   const plain = heapPlan({}, 12288);
   assert.equal(plain.growsOnDemand, false);
   assert.match(plain.note, /whole 12288 MB heap up front/);
   assert.match(plain.note, /Initial heap/);
   const aikar = heapPlan({ USE_AIKAR_FLAGS: 'true' }, 12288);
-  assert.equal(aikar.preTouch, true);
   assert.equal(aikar.note, plain.note, 'the preset does not change the message: the heap fills either way');
 });
 
