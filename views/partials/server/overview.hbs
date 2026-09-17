@@ -55,7 +55,10 @@
         </div>
         <div>
           <div class="mb-1 flex justify-between text-ink-faint"><span>Memory</span><span data-ov-mem-label>{{server.stats.memUsedMb}} / {{server.resources.containerMemoryMb}} MB</span></div>
-          <div class="meter"><div data-ov-mem-bar class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div></div>
+          {{! The tick marks the Java heap on the container-limit scale: usage
+              parked on the tick is the heap doing what it was told (#25). }}
+          <div class="meter"><div data-ov-mem-bar class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div>{{#if server.memory.heapPct}}<span class="meter-mark" style="left: {{server.memory.heapPct}}%" data-tip="Java heap: {{server.memory.heapMb}} MB"></span>{{/if}}</div>
+          {{#if server.memory.note}}<p class="mt-1 text-ink-faint">{{server.memory.note}}</p>{{/if}}
         </div>
         <div>
           <div class="mb-1 flex justify-between text-ink-faint"><span>Disk quota</span><span>{{bytes server.disk.used}}{{#if server.disk.quota}} / {{bytes server.disk.quota}}{{else}} (no quota){{/if}}</span></div>

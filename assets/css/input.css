@@ -695,7 +695,7 @@
   /* Meters read like the in-game XP bar: blocky, with a beveled trough and a
      glossy top edge on the fill. */
   .meter {
-    @apply h-2.5 w-full overflow-hidden rounded-sm bg-inset;
+    @apply relative h-2.5 w-full overflow-hidden rounded-sm bg-inset;
     box-shadow:
       inset 0 1px 2px rgb(0 0 0 / 0.4),
       inset 0 -1px 0 rgb(255 255 255 / 0.05);
@@ -710,6 +710,17 @@
   }
   /* Indeterminate meter: an honest sliding block (progress unknown), replacing
      fake pulsing bars stuck at an arbitrary percentage. Set the fill to ~25%. */
+  /* A reference tick on a meter (the Java heap on the memory meter). A <span>,
+     not a <div>, so the fill rules above leave it alone. */
+  .meter-mark {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    margin-left: -1px;
+    background: currentColor;
+    opacity: 0.55;
+  }
   .meter-indeterminate > div {
     animation: meter-indeterminate 1.4s ease-in-out infinite;
   }

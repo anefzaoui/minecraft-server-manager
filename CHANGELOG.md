@@ -5,6 +5,41 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.13.1] - 2026-09-17
+
+Two bug-fix rounds: the Settings page's dialogs work again, and the memory meter explains why a
+server "uses" its whole heap with nobody on. Closes #37; #25 stays open for the reporter.
+
+### Fixed
+
+- **Add User, New Key and Sign-in Security work again on Settings** (#37). Two JSON islands on
+  the page were HTML-escaped, so the first `JSON.parse` threw at load and every handler on the
+  page (user edit and delete, the API key dialog, the CurseForge key and localization saves) was
+  never registered. Shipped broken in 0.13.0.
+- **The memory meter explains itself** (#25). "RAM (Java heap)" is handed to Java as both the
+  starting and the maximum heap, and Java fills a heap it was given up front within the first
+  minute of world generation, whether or not Aikar's or MeowIce's flags are on (measured: a 2 GB
+  heap reads 2.6 GB either way; the presets only make it instantaneous). A 12 GB heap therefore
+  reads as 12 GB with nobody playing, which looked like a leak. The Overview and Monitoring meters
+  now mark where the heap sits under the container limit and say what the number means, the
+  server card says it on hover, and the field help for RAM, Initial heap and the two flag presets
+  tells you before you choose. The lever that actually lowers idle memory, a smaller **Initial
+  heap**, is now explained where it lives (512 MB on that 2 GB heap: 1.4 GB idle with Aikar's
+  flags, 1.25 GB without).
+- **Initial heap / Maximum heap actually apply.** Both advanced fields stored the bare number
+  you typed, which Java reads as bytes; `INIT_MEMORY=4096` became `-Xms4096` and the server could
+  not start. Bare numbers in size fields are now sent to the image as megabytes.
+- README and the servers guide carry the measured numbers and the headroom guidance (at least
+  2 GB above the heap for a modpack; hypervisor dashboards can count disk cache and VM overhead,
+  the panel does not).
+
+### Internal
+
+- Template JSON embeds go through two helpers named for their destination, `jsonScript` (inside
+  `<script>` text) and `jsonAttr` (inside a `data-*` attribute), so the brace count can no longer
+  break a page; a test scans every template for a helper in the wrong context and renders the
+  affected pages with awkward server names.
+
 ## [0.13.0] - 2026-09-10
 
 A large community release: a public read-only API, a live monitoring dashboard, world

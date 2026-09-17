@@ -478,8 +478,33 @@ world. Every file operation is contained to this root (path-guard enforced).
 - **Java heap** (`MEMORY`): what Minecraft may use.
 - **Container limit** (Docker `HostConfig.Memory`): the hard cap; hitting it OOM-kills the server.
 
-Keep the container limit 25-50% above the heap. The wizard does this automatically; the Settings
-form validates it.
+Keep the container limit 25-50% above the heap, and at least 2 GB above it for a modpack. The
+wizard does this automatically; the Settings form validates it.
+
+**"Memory used" settles at the heap size. That is not a leak.** The image hands `MEMORY` to Java
+as both the starting and the maximum heap, and Java fills a heap it was given up front within the
+first minute of world generation, whether or not Aikar's or MeowIce's flags are on (they only make
+it instantaneous). Measured on a Paper 1.21.1 server with a 2 GB heap and a fresh world, sampled
+for three minutes after "Done" (each figure moved by under 50 MB in that time):
+
+| Setting                                                       | Memory used |
+| ------------------------------------------------------------- | ----------- |
+| Default (`MEMORY` only), with or without a flag preset        | ~2.6 GB     |
+| Aikar's flags plus `-XX:-AlwaysPreTouch` in Extra JVM options | ~1.95 GB    |
+| Aikar's flags plus `INIT_MEMORY=512M` ("Initial heap")        | ~1.4 GB     |
+| No preset, `INIT_MEMORY=512M`                                 | ~1.25 GB    |
+
+Turning off pre-touch only delays the fill: Java still works through the whole heap over time and
+never hands it back (a Forge 1.20.1 server with a 4 GB heap and no preset read 3.7 GB after a week
+with nobody on). A smaller **Initial heap** is the setting that changes what Java asks for, so that
+is the lever if you want idle memory to follow real use; the trade-off is that Aikar's flags
+recommend equal heaps for the steadiest tick times. Java also needs memory outside the heap: about
+0.5 GB on vanilla, 1.5-2 GB on a large modpack, which is what the headroom above is for.
+
+The panel's meters mark where the heap sits on the container-limit scale and say so. The panel
+subtracts disk cache like `docker stats` does; hypervisor dashboards often do not (Proxmox counts
+the VM's cache as used, and since version 9 the VM's own overhead on the host too), so a VM's
+summary page can read well above the panel for the same server.
 
 ### Java version selection
 
