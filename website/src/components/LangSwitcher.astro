@@ -22,7 +22,7 @@ const current = getLocale(locale);
     <span>{current.label}</span>
   </summary>
   <ul
-    class="card absolute end-0 z-40 mt-2 grid max-h-[70vh] w-64 grid-cols-2 gap-1 overflow-y-auto p-2 shadow-lg"
+    class="card absolute end-0 z-40 mt-2 grid max-h-[70vh] w-72 grid-cols-2 gap-1 overflow-y-auto p-2"
     role="list"
   >
     {LOCALES.map((l) => (
@@ -32,7 +32,7 @@ const current = getLocale(locale);
           hreflang={l.lang || l.code}
           lang={l.lang || l.code}
           dir={l.dir}
-          class:list={['block rounded-sm px-2 py-1.5 text-sm hover:bg-inset', l.code === locale && 'bg-inset font-semibold text-ok']}
+          class:list={['block rounded-lg px-2.5 py-1.5 text-sm hover:bg-inset', l.code === locale && 'bg-inset font-bold text-ok']}
           aria-current={l.code === locale ? 'true' : undefined}
         >
           {l.label}

@@ -14,26 +14,29 @@ const copy = getCopy(locale);
 ---
 
 <Site locale={locale} path="/screenshots/" pageKey="screenshots">
-  <div class="grass-band"></div>
-  <Section title={copy.screenshots.title} intro={copy.screenshots.intro}>
-    <h3 class="mt-10 text-lg font-semibold text-ink">{copy.screenshots.desktop}</h3>
-    <ul class="mt-4 grid gap-6 md:grid-cols-2" role="list">
+  <div class="hero">
+    <Section title={copy.screenshots.title} intro={copy.screenshots.intro} class="pb-4" />
+  </div>
+  <Section class="pt-4">
+    <h3 class="display text-2xl text-ink">{copy.screenshots.desktop}</h3>
+    <ul class="mt-5 grid gap-6 md:grid-cols-2" role="list">
       {DESKTOP.map((s, i) => (
         <li>
-          <figure class="card p-1.5">
-            <Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[480, 800, 1200]} sizes="(min-width: 768px) 50vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} class="rounded-sm" />
-            <figcaption class="px-2 py-2 text-sm text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
+          <figure class="window card-hover">
+            <div class="window-bar"><span></span><span></span><span></span></div>
+            <Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[480, 800, 1200]} sizes="(min-width: 768px) 50vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} />
+            <figcaption class="px-4 py-3 text-sm text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
           </figure>
         </li>
       ))}
     </ul>
-    <h3 class="mt-12 text-lg font-semibold text-ink">{copy.screenshots.mobile}</h3>
-    <ul class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5" role="list">
+    <h3 class="display mt-14 text-2xl text-ink">{copy.screenshots.mobile}</h3>
+    <ul class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5" role="list">
       {MOBILE.map((s) => (
         <li>
-          <figure class="card p-1.5">
-            <Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[240, 480]} sizes="(min-width: 1024px) 20vw, 50vw" class="rounded-sm" />
-            <figcaption class="px-1 py-2 text-xs text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
+          <figure class="window card-hover">
+            <Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[240, 480]} sizes="(min-width: 1024px) 20vw, 50vw" />
+            <figcaption class="px-3 py-2 text-xs text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
           </figure>
         </li>
       ))}

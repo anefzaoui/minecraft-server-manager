@@ -14,10 +14,13 @@ const copy = getCopy(locale);
 ---
 
 <Site locale={locale} path="/changelog/" pageKey="changelog">
-  <div class="grass-band"></div>
-  <Section title={copy.changelog.title} intro={copy.changelog.intro}>
-    <p class="mt-4"><a class="btn" href={`${REPO_URL}/releases`} rel="noopener">{copy.changelog.releases}</a></p>
-    <article class="changelog prose-soft mt-8 max-w-3xl" lang="en" dir="ltr">
+  <div class="hero">
+    <Section title={copy.changelog.title} intro={copy.changelog.intro} class="pb-6">
+      <p class="mt-6"><a class="btn" href={`${REPO_URL}/releases`} rel="noopener">{copy.changelog.releases}</a></p>
+    </Section>
+  </div>
+  <Section class="pt-4">
+    <article class="changelog prose-soft max-w-3xl" lang="en" dir="ltr">
       <Changelog />
     </article>
   </Section>
@@ -25,8 +28,9 @@ const copy = getCopy(locale);
 
 <style is:global>
   .changelog h2 {
-    font-weight: 700;
-    font-size: 1.25rem;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.35rem;
     margin-top: 2.5rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--color-line);

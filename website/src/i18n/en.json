@@ -21,25 +21,29 @@
     "skip": "Skip to content"
   },
   "hero": {
-    "eyebrow": "Open source. Self-hosted. No paid services.",
-    "title": "Your Minecraft servers, one panel, zero bills.",
-    "subtitle": "Minecraft Server Manager runs every server as its own Docker container and gives you a control panel that rivals the paid ones. Modpacks, backups, schedules, live map, player analytics, crash forensics, all in your browser.",
-    "primary": "Install in 3 commands",
-    "secondary": "See the features",
-    "pills": ["MIT licensed", "amd64 + arm64", "Node.js 24+", "Docker"]
+    "eyebrow": "Free and open source. Runs on your own machine.",
+    "title": "Run your Minecraft servers from one friendly panel.",
+    "subtitle": "Minecraft Server Manager turns Docker into a cosy home for your servers: modpacks that stay pinned, one-click backups, schedules, a live map, player stats, and a console that speaks plain English. No bills, no lock-in, your whole panel in one folder.",
+    "primary": "Get started in 3 steps",
+    "secondary": "Explore the features",
+    "pills": ["MIT licensed", "amd64 + arm64", "Zero paid services", "Self-hosted"],
+    "scroll": "See the tutorial"
   },
   "pillars": {
-    "title": "Built for people who run servers, not tickets",
+    "title": "Made for people who run servers, not tickets",
     "items": [
       {
+        "icon": "folder",
         "title": "One folder is your whole panel",
         "body": "Database, worlds, backups, and the shared mod library all live under a single data folder. Copy it and you have migrated."
       },
       {
+        "icon": "box",
         "title": "Every server is a container",
         "body": "Each server runs on the battle-tested itzg image with its own CPU and memory caps, graceful stops over RCON, and crash detection."
       },
       {
+        "icon": "pin",
         "title": "Modpacks stay pinned",
         "body": "Packs are locked to an exact version. Upgrades are explicit, previewed, backed up first, health-checked, and rolled back with one click."
       }
@@ -55,19 +59,23 @@
         "items": [
           {
             "title": "Resource-capped containers",
-            "body": "Create, start, stop, restart, rebuild, and delete servers with graceful RCON stops and automatic crash detection."
+            "body": "Create, start, stop, restart, rebuild, and delete servers with graceful RCON stops and automatic crash detection.",
+            "icon": "server"
           },
           {
             "title": "Guided creation wizard",
-            "body": "Simple or Advanced mode, with every image setting explained in plain English before you pick it."
+            "body": "Simple or Advanced mode, with every image setting explained in plain English before you pick it.",
+            "icon": "wand"
           },
           {
             "title": "Live console",
-            "body": "A WebSocket console with an RCON command bar, log filters, and one-click player actions."
+            "body": "A WebSocket console with an RCON command bar, log filters, and one-click player actions.",
+            "icon": "terminal"
           },
           {
             "title": "Player moderation",
-            "body": "Whitelist, ops, bans, IP bans, and teleports, online through RCON and offline through the JSON files."
+            "body": "Whitelist, ops, bans, IP bans, and teleports, online through RCON and offline through the JSON files.",
+            "icon": "users"
           }
         ]
       },
@@ -76,27 +84,33 @@
         "items": [
           {
             "title": "Five registries in one browser",
-            "body": "Modrinth, CurseForge, Hangar, SpigotMC, and GitHub Releases. Three of them need no API key."
+            "body": "Modrinth, CurseForge, Hangar, SpigotMC, and GitHub Releases. Three of them need no API key.",
+            "icon": "search"
           },
           {
             "title": "Add by link",
-            "body": "Paste a project page, a GitHub repository, a slug, or a direct jar URL. The panel identifies it."
+            "body": "Paste a project page, a GitHub repository, a slug, or a direct jar URL. The panel identifies it.",
+            "icon": "link"
           },
           {
             "title": "Import anything",
-            "body": "Modrinth .mrpack files, CurseForge exports, or your own zip of jars, every jar identified and compatibility-checked."
+            "body": "Modrinth .mrpack files, CurseForge exports, or your own zip of jars, every jar identified and compatibility-checked.",
+            "icon": "upload"
           },
           {
             "title": "Checksum-verified downloads",
-            "body": "sha512, sha256, sha1, or md5 verified before a file reaches the server. A mismatch never ships."
+            "body": "sha512, sha256, sha1, or md5 verified before a file reaches the server. A mismatch never ships.",
+            "icon": "shield"
           },
           {
             "title": "Shared mod library",
-            "body": "Deduplicated by sha256 and hard-linked into servers, so custom mods survive pack updates."
+            "body": "Deduplicated by sha256 and hard-linked into servers, so custom mods survive pack updates.",
+            "icon": "library"
           },
           {
             "title": "Pick-mods-first solver",
-            "body": "Choose the mods you want and get the newest fully compatible loader and Minecraft version."
+            "body": "Choose the mods you want and get the newest fully compatible loader and Minecraft version.",
+            "icon": "sparkles"
           }
         ]
       },
@@ -105,52 +119,65 @@
         "items": [
           {
             "title": "Save-safe backups",
-            "body": "Snapshots with retention classes, restore in place, and optional world shrinking to reclaim disk."
+            "body": "Snapshots with retention classes, restore in place, and optional world shrinking to reclaim disk.",
+            "icon": "archive"
           },
           {
             "title": "Cron schedules",
-            "body": "Restarts, backups, and RCON commands on a schedule, with the next run shown up front."
+            "body": "Restarts, backups, and RCON commands on a schedule, with the next run shown up front.",
+            "icon": "clock"
           },
           {
             "title": "Blueprints",
-            "body": "Export a server as a portable recipe, import it anywhere, and get the same server back."
+            "body": "Export a server as a portable recipe, import it anywhere, and get the same server back.",
+            "icon": "blueprint"
           },
           {
             "title": "Crash forensics",
-            "body": "Crashes are detected, parsed, and suspects named, with one-click mclo.gs sharing and automated insights."
+            "body": "Crashes are detected, parsed, and suspects named, with one-click mclo.gs sharing and automated insights.",
+            "icon": "flame"
           },
           {
             "title": "Update tracking",
-            "body": "New server, pack, image, and mod versions are tracked, with pre-update backups and one-click rollback."
+            "body": "New server, pack, image, and mod versions are tracked, with pre-update backups and one-click rollback.",
+            "icon": "refresh"
           }
         ]
       },
       {
         "title": "Insight and community",
         "items": [
-          { "title": "Live map", "body": "One-click BlueMap, served through the panel's authenticated proxy." },
+          {
+            "title": "Live map",
+            "body": "One-click BlueMap, served through the panel's authenticated proxy.",
+            "icon": "map"
+          },
           {
             "title": "Analytics and storage",
-            "body": "Playtime, deaths, and mining scoreboards, inventory forensics, per-server disk usage, and enforced quotas."
+            "body": "Playtime, deaths, and mining scoreboards, inventory forensics, per-server disk usage, and enforced quotas.",
+            "icon": "chart"
           },
           {
             "title": "Discord and chatbot",
-            "body": "Webhooks with per-event toggles, plus an optional per-server chatbot with constrained in-game powers."
+            "body": "Webhooks with per-event toggles, plus an optional per-server chatbot with constrained in-game powers.",
+            "icon": "message"
           },
           {
             "title": "Public status page and API",
-            "body": "Opt-in status pages, invite blocks, a generated client .mrpack, and a read-only token-authenticated API."
+            "body": "Opt-in status pages, invite blocks, a generated client .mrpack, and a read-only token-authenticated API.",
+            "icon": "globe"
           },
           {
             "title": "Users, roles, and 2FA",
-            "body": "Admin, operator, and viewer roles with TOTP two-factor authentication."
+            "body": "Admin, operator, and viewer roles with TOTP two-factor authentication.",
+            "icon": "lock"
           }
         ]
       }
     ]
   },
   "screenshots": {
-    "title": "See it in action",
+    "title": "A panel that is a pleasure to use",
     "intro": "Desktop and phone. The panel is designed narrow-first, so every page works on a phone.",
     "desktop": "Desktop",
     "mobile": "On a phone",
@@ -169,7 +196,7 @@
   },
   "install": {
     "title": "Install",
-    "intro": "Pick the option that matches your host. Both give you the same panel.",
+    "intro": "Pick the option that matches your host. Every path gives you the same panel.",
     "requirements": "Requirements",
     "reqItems": [
       "Docker Engine (Linux) or Docker Desktop (Windows, macOS).",
@@ -190,7 +217,13 @@
     "next": "Next steps",
     "nextBody": "The getting-started guide covers first-run setup, creating your first server, and where everything lives.",
     "nextCta": "Read getting started",
-    "compose": "Download docker-compose.yml"
+    "compose": "Download docker-compose.yml",
+    "windows": "Windows notes",
+    "windowsItems": [
+      "Docker Desktop must be running before you start or create servers.",
+      "Share your project drive with Docker Desktop (Settings, Resources, File sharing) so bind mounts work.",
+      "The Docker image targets Linux hosts; on Windows and macOS run the panel from source."
+    ]
   },
   "faq": {
     "title": "Frequently asked questions",
@@ -235,7 +268,7 @@
     "releases": "All releases on GitHub"
   },
   "community": {
-    "title": "Join the community",
+    "title": "Come say hi",
     "body": "Report bugs, suggest features, get help from real humans, and show off your servers.",
     "discord": "Join the Discord",
     "github": "Star on GitHub"
@@ -254,7 +287,7 @@
   "meta": {
     "home": {
       "title": "Free self-hosted Minecraft server control panel",
-      "description": "Run vanilla and modded Minecraft servers from your browser. Docker-based, modpacks pinned to exact versions, backups, schedules, live map, player analytics. Free and open source."
+      "description": "Run vanilla and modded Minecraft servers from your browser. Docker-based, modpacks pinned to exact versions, backups, schedules, live map, player analytics. Free, open source, up and running in three steps."
     },
     "features": {
       "title": "Features",
@@ -276,12 +309,97 @@
       "title": "Changelog",
       "description": "Release notes for every version of Minecraft Server Manager."
     },
-    "notFound": { "title": "Page not found", "description": "This page does not exist." }
+    "notFound": {
+      "title": "Page not found",
+      "description": "This page does not exist."
+    }
   },
   "notFound": {
     "title": "This chunk never generated.",
     "body": "The page you asked for does not exist. Try the home page or the documentation.",
     "home": "Go home"
   },
-  "langNotice": "This page is shown in English until its translation lands."
+  "langNotice": "This page is shown in English until its translation lands.",
+  "tutorial": {
+    "title": "Up and running in three steps",
+    "intro": "Pick how you want to run the panel. Fill in the two fields and every command below rewrites itself for your machine.",
+    "dataDir": "Data folder on the host",
+    "dataDirHint": "Absolute path. Worlds, backups, mods and the database all live here.",
+    "host": "Host name or IP",
+    "hostHint": "Where you will open the panel from a browser.",
+    "then": "Then open the panel",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "firstRun": "The first run walks you through a system check, your time zone, and creating the admin account.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Create the data folder",
+            "body": "One folder holds everything the panel owns."
+          },
+          {
+            "title": "Download the compose file and point it at that folder",
+            "body": "DATA_DIR_HOST must be the absolute path on the host, because Docker mounts it from the host's point of view."
+          },
+          {
+            "title": "Start the panel",
+            "body": "The image is multi-arch (amd64 and arm64) and updates on every release."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Create the data folder on the host",
+            "body": "Same folder rule: absolute path, on the machine that runs Docker."
+          },
+          {
+            "title": "Add a stack from the compose file",
+            "body": "Paste the contents of the compose file into a new stack. The raw file is here:"
+          },
+          {
+            "title": "Set the environment variable and deploy",
+            "body": "Add it in the stack's environment section, then deploy."
+          }
+        ]
+      },
+      "source": {
+        "label": "From source",
+        "steps": [
+          {
+            "title": "Check the requirements",
+            "body": "Node.js 24 or newer, pnpm, and Docker running (Docker Desktop on Windows and macOS)."
+          },
+          {
+            "title": "Clone and install",
+            "body": "The install step also builds the panel's CSS. No native modules to compile."
+          },
+          {
+            "title": "Start the panel",
+            "body": "By default it listens on localhost only. Set PANEL_HOST=0.0.0.0 to reach it from other machines on your network."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Start from a source install",
+            "body": "Run this from the cloned folder. PM2 launches apps with the Node version that started its daemon, so pin the interpreter."
+          },
+          {
+            "title": "Save the process list and enable startup",
+            "body": "pm2 startup prints one command to run with sudo; run it once."
+          },
+          {
+            "title": "Prefer systemd?",
+            "body": "A unit that runs node src/server.js from the cloned folder with WorkingDirectory set works the same way. The panel needs no extra flags."
+          }
+        ]
+      }
+    }
+  }
 }

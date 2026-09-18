@@ -4,7 +4,9 @@ import Site from '../../layouts/Site.astro';
 import Section from '../../components/Section.astro';
 import FeatureCard from '../../components/FeatureCard.astro';
 import Community from '../../components/Community.astro';
-import InstallSnippet from '../../components/InstallSnippet.astro';
+import InstallTutorial from '../../components/InstallTutorial.astro';
+import Blocks from '../../components/Blocks.astro';
+import Icon from '../../components/Icon.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { href } from '../../lib/routes.js';
@@ -15,68 +17,75 @@ export function getStaticPaths() {
 }
 const locale = localeFromParams(Astro.params);
 const copy = getCopy(locale);
-const highlights = copy.features.groups.flatMap((g) => g.items).slice(0, 6);
+const highlights = copy.features.groups.flatMap((g) => g.items).filter((f) => ['wand', 'search', 'shield', 'archive', 'map', 'flame'].includes(f.icon));
 const teaser = DESKTOP.slice(1, 4);
+const tones = ['grass', 'sky', 'gold'] as const;
 ---
 
 <Site locale={locale} path="/" pageKey="home">
-  <div class="grass-band"></div>
-  <section class="relative overflow-hidden">
-    <div class="block-grid absolute inset-0 -z-10"></div>
-    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:py-20 lg:grid-cols-2">
-      <div>
-        <p class="badge badge-ok">{copy.hero.eyebrow}</p>
-        <h1 class="pixel mt-5 text-lg leading-relaxed text-ink sm:text-2xl">{copy.hero.title}</h1>
-        <p class="mt-6 max-w-xl text-lg text-ink-soft">{copy.hero.subtitle}</p>
+  <section class="hero relative overflow-hidden">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-12 sm:pt-16 lg:grid-cols-[1.05fr_1fr] lg:pb-24">
+      <div class="relative">
+        <p class="eyebrow"><Icon name="sparkles" size={16} />{copy.hero.eyebrow}</p>
+        <h1 class="display mt-5 text-4xl text-ink sm:text-5xl lg:text-[3.4rem]">{copy.hero.title}</h1>
+        <p class="lead mt-6 max-w-xl">{copy.hero.subtitle}</p>
         <div class="mt-8 flex flex-wrap gap-3">
-          <a class="btn btn-primary" href={href(locale, '/install/')}>{copy.hero.primary}</a>
-          <a class="btn" href={href(locale, '/features/')}>{copy.hero.secondary}</a>
+          <a class="btn btn-primary btn-lg" href="#tutorial"><Icon name="play" size={18} />{copy.hero.primary}</a>
+          <a class="btn btn-lg" href={href(locale, '/features/')}>{copy.hero.secondary}</a>
         </div>
         <ul class="mt-6 flex flex-wrap gap-2" role="list">
-          {copy.hero.pills.map((pill) => <li class="badge">{pill}</li>)}
+          {copy.hero.pills.map((pill) => <li class="chip"><Icon name="check" size={14} />{pill}</li>)}
         </ul>
       </div>
-      <div class="card p-1.5 shadow-2xl">
-        <Image src={HERO} alt={copy.screenshots.items.dashboard} widths={[480, 800, 1200]} sizes="(min-width: 1024px) 560px, 100vw" loading="eager" fetchpriority="high" class="rounded-sm" />
+      <div class="relative">
+        <Blocks size={200} class="absolute -bottom-14 -start-12 z-10 hidden drop-shadow-xl lg:block" />
+        <div class="window relative">
+          <div class="window-bar"><span></span><span></span><span></span></div>
+          <Image src={HERO} alt={copy.screenshots.items.dashboard} widths={[560, 900, 1300]} sizes="(min-width: 1024px) 560px, 100vw" loading="eager" fetchpriority="high" />
+        </div>
       </div>
     </div>
   </section>
 
   <Section title={copy.pillars.title}>
     <ul class="mt-8 grid gap-4 sm:grid-cols-3" role="list">
-      {copy.pillars.items.map((p) => (
-        <li class="card">
-          <h3 class="font-semibold text-ink">{p.title}</h3>
-          <p class="mt-2 text-sm text-ink-soft">{p.body}</p>
+      {copy.pillars.items.map((p, i) => (
+        <li class="card card-hover">
+          <span class:list={['icon-tile', `icon-tile-${tones[i]}`]}><Icon name={p.icon} /></span>
+          <h3 class="display mt-4 text-lg text-ink">{p.title}</h3>
+          <p class="mt-2 text-sm leading-relaxed text-ink-soft">{p.body}</p>
         </li>
       ))}
     </ul>
+  </Section>
+
+  <Section id="tutorial" title={copy.tutorial.title} intro={copy.tutorial.intro} class="scroll-mt-20">
+    <div class="card mt-8 sm:p-8">
+      <InstallTutorial copy={copy} id="home-tutorial" />
+    </div>
+    <p class="mt-4 text-sm text-ink-faint">
+      <a class="text-link underline underline-offset-4" href={href(locale, '/install/')}>{copy.nav.install}</a>
+    </p>
   </Section>
 
   <Section title={copy.features.title} intro={copy.features.intro} class="bg-surface">
     <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
-      {highlights.map((f) => <FeatureCard title={f.title} body={f.body} />)}
+      {highlights.map((f, i) => <FeatureCard title={f.title} body={f.body} icon={f.icon} tone={tones[i % 3]} />)}
     </ul>
-    <p class="mt-8"><a class="btn" href={href(locale, '/features/')}>{copy.hero.secondary}</a></p>
+    <p class="mt-8"><a class="btn" href={href(locale, '/features/')}>{copy.hero.secondary}<Icon name="arrow" size={18} /></a></p>
   </Section>
 
   <Section title={copy.screenshots.title} intro={copy.screenshots.intro}>
-    <ul class="mt-8 grid gap-4 sm:grid-cols-3" role="list">
+    <ul class="mt-8 grid gap-5 sm:grid-cols-3" role="list">
       {teaser.map((s) => (
-        <li class="card p-1.5">
-          <a href={href(locale, '/screenshots/')}>
-            <Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[400, 800]} sizes="(min-width: 640px) 33vw, 100vw" class="rounded-sm" />
+        <li>
+          <a href={href(locale, '/screenshots/')} class="window card-hover block">
+            <div class="window-bar"><span></span><span></span><span></span></div>
+            <Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[400, 800]} sizes="(min-width: 640px) 33vw, 100vw" class="aspect-[16/10] w-full object-cover object-top" />
           </a>
         </li>
       ))}
     </ul>
-  </Section>
-
-  <Section title={copy.install.title} intro={copy.install.docker.body} class="bg-surface">
-    <div class="mt-6 max-w-2xl">
-      <InstallSnippet />
-      <p class="mt-4"><a class="btn btn-primary" href={href(locale, '/install/')}>{copy.hero.primary}</a></p>
-    </div>
   </Section>
 
   <Community copy={copy} />

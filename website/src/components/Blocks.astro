@@ -1,0 +1,67 @@
+---
+// A little isometric pile of blocks drawn in SVG: grass, dirt, stone, and one
+// ore block. Original art in the panel's palette (no Mojang assets).
+interface Props {
+  class?: string;
+  size?: number;
+}
+const { class: cls, size = 320 } = Astro.props;
+
+type Cube = { x: number; y: number; top: string; left: string; right: string; ore?: boolean; grassEdge?: boolean };
+const S = 40; // half-width of a cube face in SVG units
+const cube = (c: Cube) => {
+  const { x, y } = c;
+  const top = `M${x},${y - S / 2} L${x + S},${y} L${x},${y + S / 2} L${x - S},${y} Z`;
+  const left = `M${x - S},${y} L${x},${y + S / 2} L${x},${y + S / 2 + S} L${x - S},${y + S} Z`;
+  const right = `M${x + S},${y} L${x},${y + S / 2} L${x},${y + S / 2 + S} L${x + S},${y + S} Z`;
+  return { top, left, right };
+};
+// Grid positions (column, row, height) → screen coordinates.
+const at = (cx: number, cy: number, h: number) => ({ x: 160 + (cx - cy) * S, y: 150 + (cx + cy) * (S / 2) - h * S });
+const GRASS = { top: '#59c53e', left: '#7a5230', right: '#5b3b21', grassEdge: true };
+const DIRT = { top: '#b07a4c', left: '#7a5230', right: '#5b3b21' };
+const STONE = { top: '#a6adb4', left: '#7d858c', right: '#5a6167' };
+const ORE = { top: '#a6adb4', left: '#7d858c', right: '#5a6167', ore: true };
+const cubes: Cube[] = [
+  { ...at(0, 2, 0), ...STONE },
+  { ...at(1, 2, 0), ...DIRT },
+  { ...at(2, 2, 0), ...GRASS },
+  { ...at(0, 1, 0), ...DIRT },
+  { ...at(1, 1, 0), ...ORE },
+  { ...at(2, 1, 0), ...GRASS },
+  { ...at(0, 0, 0), ...GRASS },
+  { ...at(1, 0, 0), ...GRASS },
+  { ...at(2, 0, 0), ...DIRT },
+  { ...at(0, 1, 1), ...GRASS },
+  { ...at(1, 1, 1), ...GRASS },
+  { ...at(0, 0, 1), ...DIRT },
+  { ...at(0, 0, 2), ...GRASS },
+];
+---
+
+<svg viewBox="0 0 320 300" width={size} height={Math.round(size * 0.9375)} class={cls} aria-hidden="true" role="img">
+  {cubes.map((c) => {
+    const f = cube(c);
+    return (
+      <g>
+        <path d={f.left} fill={c.left} />
+        <path d={f.right} fill={c.right} />
+        {c.grassEdge && (
+          <>
+            <path d={`M${c.x - S},${c.y} L${c.x},${c.y + S / 2} L${c.x},${c.y + S / 2 + 9} L${c.x - S},${c.y + 9} Z`} fill="#3fa62b" />
+            <path d={`M${c.x + S},${c.y} L${c.x},${c.y + S / 2} L${c.x},${c.y + S / 2 + 9} L${c.x + S},${c.y + 9} Z`} fill="#2f8520" />
+          </>
+        )}
+        <path d={f.top} fill={c.top} />
+        {c.ore && (
+          <>
+            <rect x={c.x - 22} y={c.y + 16} width="7" height="7" fill="#3cc5c7" transform={`skewY(26.57) translate(0, ${-(c.x - 22) * 0.5})`} />
+            <rect x={c.x + 12} y={c.y + 20} width="7" height="7" fill="#3cc5c7" transform={`skewY(-26.57) translate(0, ${(c.x + 12) * 0.5})`} />
+            <rect x={c.x - 6} y={c.y - 6} width="8" height="6" fill="#3cc5c7" transform={`skewX(-45) skewY(26.57)`} opacity="0.001" />
+          </>
+        )}
+        <path d={f.top} fill="none" stroke="rgb(0 0 0 / 0.08)" />
+      </g>
+    );
+  })}
+</svg>

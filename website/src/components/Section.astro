@@ -4,12 +4,14 @@ interface Props {
   intro?: string;
   id?: string;
   class?: string;
+  eyebrow?: string;
 }
-const { title, intro, id, class: cls } = Astro.props;
+const { title, intro, id, class: cls, eyebrow } = Astro.props;
 ---
 
-<section id={id} class:list={['mx-auto max-w-6xl px-4 py-12 sm:py-16', cls]}>
-  {title && <h2 class="pixel text-base text-ink sm:text-lg">{title}</h2>}
-  {intro && <p class="mt-3 max-w-2xl text-ink-soft">{intro}</p>}
+<section id={id} class:list={['mx-auto max-w-6xl px-4 py-14 sm:py-20', cls]}>
+  {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+  {title && <h2 class="display mt-3 text-3xl text-ink sm:text-4xl">{title}</h2>}
+  {intro && <p class="lead mt-4 max-w-2xl">{intro}</p>}
   <slot />
 </section>

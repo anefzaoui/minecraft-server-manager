@@ -4,6 +4,7 @@
 
 :root {
   --sl-font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --sl-color-bg-nav: #ffffff;
   --sl-color-accent-low: #1e461b;
   --sl-color-accent: #3fa62b;
   --sl-color-accent-high: #aeea99;
@@ -35,10 +36,10 @@
   --sl-color-bg-sidebar: #fafbfb;
 }
 .site-title-pixel {
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-family: 'Nunito', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: var(--sl-color-white);
   text-decoration: none;
   display: inline-flex;
@@ -50,8 +51,12 @@
   height: 1.6rem;
 }
 /* Blocky corners everywhere Starlight rounds. */
-.sl-markdown-content :is(pre, img, .expressive-code .frame),
-.sl-link-card,
-.card {
-  border-radius: 0.125rem !important;
+.sl-markdown-content :is(h1, h2, h3, h4) {
+  font-family: 'Nunito', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.sl-markdown-content img {
+  border-radius: 0.75rem;
+  border: 1px solid var(--sl-color-gray-5);
 }

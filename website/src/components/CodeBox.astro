@@ -1,0 +1,20 @@
+---
+// A command or URL box with a copy button. `code` may contain {{dataDir}} and
+// {{host}} placeholders; InstallTutorial's script fills them from its inputs.
+interface Props {
+  code: string;
+  kind?: 'command' | 'url';
+  copy: string;
+  copied: string;
+  label?: string;
+}
+const { code, kind = 'command', copy, copied, label } = Astro.props;
+---
+
+<div class:list={['codebox', kind === 'url' && 'codebox-url']}>
+  <pre aria-label={label} tabindex="0"><code data-template={code}>{code}</code></pre>
+  <button type="button" class="copy" data-copy data-copy-label={copy} data-copied-label={copied} aria-label={copy}>
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8h12v12H8zM4 16V4h12"/></svg>
+    <span>{copy}</span>
+  </button>
+</div>

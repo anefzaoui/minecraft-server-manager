@@ -1,0 +1,176 @@
+---
+// The interactive install tutorial: four tabs (radio-driven, so they work with
+// JavaScript off), numbered steps, and two inputs that rewrite every command and
+// the "open the panel" URL live. One small inline script handles the rewrite,
+// the copy buttons, and remembering the inputs per browser.
+import CodeBox from './CodeBox.astro';
+import Icon from './Icon.astro';
+interface Props {
+  copy: any;
+  id?: string;
+}
+const { copy, id = 'tutorial' } = Astro.props;
+const t = copy.tutorial;
+const REPO = 'https://github.com/anefzaoui/minecraft-server-manager';
+const RAW_COMPOSE = 'https://raw.githubusercontent.com/anefzaoui/minecraft-server-manager/main/docker-compose.yml';
+const PANEL_URL = 'http://{{host}}:25564';
+
+const TABS = [
+  {
+    key: 'compose',
+    icon: 'docker',
+    steps: [
+      ['mkdir -p {{dataDir}}'],
+      [`curl -fsSLO ${RAW_COMPOSE}`, 'echo "DATA_DIR_HOST={{dataDir}}" > .env'],
+      ['docker compose up -d'],
+    ],
+    open: PANEL_URL,
+  },
+  {
+    key: 'portainer',
+    icon: 'stack',
+    steps: [['mkdir -p {{dataDir}}'], [{ url: RAW_COMPOSE }], ['DATA_DIR_HOST={{dataDir}}']],
+    open: PANEL_URL,
+  },
+  {
+    key: 'source',
+    icon: 'code',
+    steps: [['node --version   # 24 or newer', 'docker info      # daemon reachable'], [`git clone ${REPO}.git`, 'cd minecraft-server-manager', 'pnpm install'], ['pnpm start']],
+    open: 'http://localhost:25564',
+  },
+  {
+    key: 'pm2',
+    icon: 'play',
+    steps: [
+      ['pm2 start src/server.js --name minecraft-server-manager --interpreter "$(nvm which 24)"'],
+      ['pm2 save', 'pm2 startup'],
+      [{ note: true }],
+    ],
+    open: PANEL_URL,
+  },
+];
+---
+
+<div class="tabs relative" data-tutorial id={id}>
+  {TABS.map((tab, i) => (
+    <input type="radio" name={`${id}-tab`} id={`${id}-tab-${i + 1}`} checked={i === 0} />
+  ))}
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <label class="block">
+      <span class="display block text-sm text-ink">{t.dataDir}</span>
+      <input class="field mt-1.5" type="text" data-input="dataDir" value="/opt/msm/data" spellcheck="false" autocomplete="off" />
+      <span class="mt-1 block text-xs text-ink-faint">{t.dataDirHint}</span>
+    </label>
+    <label class="block">
+      <span class="display block text-sm text-ink">{t.host}</span>
+      <input class="field mt-1.5" type="text" data-input="host" value="your-host" spellcheck="false" autocomplete="off" />
+      <span class="mt-1 block text-xs text-ink-faint">{t.hostHint}</span>
+    </label>
+  </div>
+
+  <div class="tab-list mt-6" role="tablist">
+    {TABS.map((tab, i) => (
+      <label class="tab-label" for={`${id}-tab-${i + 1}`}>
+        <Icon name={tab.icon} size={18} />
+        {t.tabs[tab.key].label}
+      </label>
+    ))}
+  </div>
+
+  <div class="tab-panels mt-6">
+    {TABS.map((tab) => (
+      <section class="tab-panel" aria-label={t.tabs[tab.key].label}>
+        <ol class="grid gap-5">
+          {tab.steps.map((cmds, i) => (
+            <li class="flex gap-4">
+              <span class="step-badge">{i + 1}</span>
+              <div class="min-w-0 flex-1">
+                <h3 class="display text-lg text-ink">{t.tabs[tab.key].steps[i].title}</h3>
+                <p class="mt-1 text-sm text-ink-soft">{t.tabs[tab.key].steps[i].body}</p>
+                {cmds.some((c) => typeof c === 'string') && (
+                  <div class="mt-3">
+                    <CodeBox code={cmds.filter((c) => typeof c === 'string').join('\n')} copy={t.copy} copied={t.copied} />
+                  </div>
+                )}
+                {cmds.map((c) => typeof c === 'object' && 'url' in c && (
+                  <div class="mt-3">
+                    <CodeBox code={c.url} kind="url" copy={t.copy} copied={t.copied} />
+                  </div>
+                ))}
+              </div>
+            </li>
+          ))}
+          <li class="flex gap-4">
+            <span class="step-badge bg-sky-500">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+            </span>
+            <div class="min-w-0 flex-1">
+              <h3 class="display text-lg text-ink">{t.then}</h3>
+              <div class="mt-3"><CodeBox code={tab.open} kind="url" copy={t.copy} copied={t.copied} /></div>
+              <p class="mt-2 text-sm text-ink-soft">{t.firstRun}</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+    ))}
+  </div>
+</div>
+
+<script>
+  // Personalise commands from the two inputs, copy buttons, and remember the
+  // inputs per browser. Everything degrades: without JS the defaults show and
+  // the tabs still switch (they are radios).
+  const roots = document.querySelectorAll<HTMLElement>('[data-tutorial]');
+  const KEY = 'msm-tutorial-inputs';
+  const clean = (v: string, fallback: string) => v.trim().replace(/\s+/g, '') || fallback;
+
+  for (const root of roots) {
+    const inputs = root.querySelectorAll<HTMLInputElement>('[data-input]');
+    const values: Record<string, string> = { dataDir: '/opt/msm/data', host: 'your-host' };
+    try {
+      Object.assign(values, JSON.parse(localStorage.getItem(KEY) || '{}'));
+    } catch {
+      /* no storage, keep defaults */
+    }
+    for (const i of inputs) if (values[i.dataset.input!]) i.value = values[i.dataset.input!];
+
+    const render = () => {
+      for (const i of inputs) values[i.dataset.input!] = clean(i.value, i.dataset.input === 'host' ? 'your-host' : '/opt/msm/data');
+      for (const code of root.querySelectorAll<HTMLElement>('[data-template]')) {
+        code.textContent = code.dataset.template!.replace(/\{\{(\w+)\}\}/g, (_m, k) => values[k] ?? '');
+      }
+      try {
+        localStorage.setItem(KEY, JSON.stringify(values));
+      } catch {
+        /* fine */
+      }
+    };
+    for (const i of inputs) i.addEventListener('input', render);
+    render();
+
+    for (const btn of root.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
+      btn.addEventListener('click', async () => {
+        const code = btn.parentElement?.querySelector('code');
+        const text = code?.textContent || '';
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+        }
+        const label = btn.querySelector('span')!;
+        label.textContent = btn.dataset.copiedLabel!;
+        btn.dataset.copied = 'true';
+        setTimeout(() => {
+          label.textContent = btn.dataset.copyLabel!;
+          delete btn.dataset.copied;
+        }, 1600);
+      });
+    }
+  }
+</script>

@@ -22,13 +22,15 @@ const faqLd = {
 ---
 
 <Site locale={locale} path="/faq/" pageKey="faq" jsonLd={[faqLd]}>
-  <div class="grass-band"></div>
-  <Section title={copy.faq.title}>
-    <dl class="mt-8 grid gap-4 md:grid-cols-2">
+  <div class="hero">
+    <Section title={copy.faq.title} class="pb-4" />
+  </div>
+  <Section class="pt-4">
+    <dl class="grid gap-4 md:grid-cols-2">
       {copy.faq.items.map((f) => (
-        <div class="card">
-          <dt class="font-semibold text-ink">{f.q}</dt>
-          <dd class="mt-2 text-sm text-ink-soft">{f.a}</dd>
+        <div class="card card-hover">
+          <dt class="display text-lg text-ink">{f.q}</dt>
+          <dd class="mt-2 text-sm leading-relaxed text-ink-soft">{f.a}</dd>
         </div>
       ))}
     </dl>

@@ -8,10 +8,9 @@ const copy = getCopy(DEFAULT_LOCALE);
 ---
 
 <Site locale={DEFAULT_LOCALE} path="/" pageKey="notFound" noindex>
-  <div class="grass-band"></div>
-  <section class="mx-auto max-w-6xl px-4 py-24 text-center">
-    <p class="pixel text-4xl text-ok">404</p>
-    <h1 class="pixel mt-6 text-base text-ink">{copy.notFound.title}</h1>
+  <section class="hero px-4 py-24 text-center">
+    <p class="display text-7xl text-ok">404</p>
+    <h1 class="display mt-4 text-3xl text-ink">{copy.notFound.title}</h1>
     <p class="mt-4 text-ink-soft">{copy.notFound.body}</p>
     <div class="mt-8 flex justify-center gap-3">
       <a class="btn btn-primary" href="/">{copy.notFound.home}</a>
