@@ -12,7 +12,7 @@ const { label, ids, size = 'md', notes = {}, class: cls } = Astro.props;
 ---
 
 <div class:list={['flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4', cls]}>
-  {label && <span class="display shrink-0 pt-1.5 text-[1.05rem] text-ink sm:w-36">{label}</span>}
+  {label && <span class="display shrink-0 pt-1.5 text-[1.25rem] text-ink sm:w-36">{label}</span>}
   <ul class="flex flex-wrap gap-2" role="list">
     {ids.map((id) => <Pill id={id} size={size} note={notes[id]} />)}
   </ul>

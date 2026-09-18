@@ -55,6 +55,13 @@ const planks = (x, y) => {
   if (seam) return hex('#6f5232');
   return hex(band % 2 ? '#b08a56' : '#bd955f');
 };
+// Dark planks: the header bar. Low-contrast grain so white text stays readable.
+const darkPlanks = (x, y) => {
+  const band = Math.floor(y / 4);
+  const seam = y % 4 === 3 || (band % 2 === 0 ? x === 7 : x === 15);
+  if (seam) return hex('#22150a');
+  return hex(band % 2 ? '#3d2a16' : '#432e19');
+};
 
 // Cloud sprite: 32×12 blocky puff, white with soft alpha edge (hard pixels).
 const CLOUD = [
@@ -86,6 +93,7 @@ const jobs = [
   ['dark-dirt.png', 16, 16, darkDirt],
   ['deep-stone.png', 16, 16, deepStone],
   ['planks.png', 16, 16, planks],
+  ['dark-planks.png', 16, 16, darkPlanks],
   ['cloud.png', 32, 12, cloud],
   ['heart.png', 9, 8, heart],
 ];

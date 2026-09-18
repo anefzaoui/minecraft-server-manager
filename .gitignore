@@ -1,5 +1,6 @@
-# Application data (worlds, mods, backups, DB, generated secret - everything lives here)
-data/
+# Application data (worlds, mods, backups, DB, generated secret - everything lives here).
+# Anchored to the repo root: website/src/data is source code.
+/data/
 
 node_modules/
 public/css/app.css

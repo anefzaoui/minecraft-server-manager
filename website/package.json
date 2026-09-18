@@ -25,7 +25,6 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.126.0",
     "@astrojs/check": "^0.9.6",
     "simple-icons": "^16.31.0",
     "typescript": "^5.9.3"

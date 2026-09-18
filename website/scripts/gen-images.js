@@ -7,7 +7,7 @@
 // (or files that are missing). Sprites are requested on a flat magenta
 // background and chroma-keyed to transparency here, which works with any model.
 //
-//   node scripts/gen-images.js            # generate what is missing/changed
+//   node scripts/gen-images.js && node scripts/hero-extend.js
 //   node scripts/gen-images.js --force    # regenerate everything
 //   node scripts/gen-images.js --only=hero-day
 //

@@ -15,8 +15,8 @@ import { getCopy } from '../../i18n/index.js';
 import { href } from '../../lib/routes.js';
 import { HERO, DESKTOP } from '../../data/screenshots.js';
 import { art, cardFor } from '../../data/art.js';
-const heroDay = art('hero-day');
-const heroNight = art('hero-night');
+const heroDay = art('hero-day-tall');
+const heroNight = art('hero-night-tall');
 
 export function getStaticPaths() {
   return localePaths();
@@ -29,21 +29,21 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
 ---
 
 <Site locale={locale} path="/" pageKey="home">
-  <section class="sky relative overflow-hidden">
-    <Clouds count={5} />
-    {heroDay && <Image src={heroDay} alt="" widths={[800, 1584]} sizes="100vw" class="hero-panorama hero-day" loading="eager" fetchpriority="high" />}
-    {heroNight && <Image src={heroNight} alt="" widths={[800, 1584]} sizes="100vw" class="hero-panorama hero-night" loading="lazy" />}
-    <div class="relative mx-auto grid max-w-6xl items-start gap-8 px-4 pb-44 pt-10 sm:pb-52 lg:grid-cols-[1fr_1fr] lg:pb-56">
+  <section class="hero relative overflow-hidden">
+    {heroDay && <Image src={heroDay} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-day" loading="eager" fetchpriority="high" />}
+    {heroNight && <Image src={heroNight} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-night" loading="lazy" />}
+    <Clouds count={4} band={30} />
+    <div class="relative mx-auto grid max-w-6xl items-start gap-8 px-4 pb-72 pt-10 sm:pb-80 lg:grid-cols-[1fr_1fr]">
       <div>
         <p class="tag"><Icon name="sparkles" size={16} />{copy.hero.eyebrow}</p>
-        <h1 class="mt-4 text-[2.5rem] leading-[1.05] sm:text-5xl">{copy.hero.title}</h1>
+        <h1 class="mt-4 text-[3rem] leading-[1.02] sm:text-[3.75rem]">{copy.hero.title}</h1>
         <p class="lead mt-4 max-w-xl text-on-sky">{copy.hero.subtitle}</p>
         <div class="mt-6 flex flex-wrap gap-4">
           <a class="btn btn-primary btn-lg" href="#tutorial"><Icon name="play" size={18} />{copy.hero.primary}</a>
           <a class="btn btn-lg" href={href(locale, '/features/')}>{copy.hero.secondary}</a>
         </div>
         <ul class="mt-5 flex flex-wrap gap-2" role="list">
-          {copy.hero.pills.map((pill) => <li class="tag text-[0.9rem]"><Icon name="check" size={14} />{pill}</li>)}
+          {copy.hero.pills.map((pill) => <li class="tag"><Icon name="check" size={14} />{pill}</li>)}
         </ul>
       </div>
       <div class="panel panel-tight">
@@ -111,13 +111,17 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
 </Site>
 
 <style>
-  .hero-panorama {
+  /* One tall image behind the whole hero: flat sky on top (extended from the
+     panorama's own colour), landscape pinned to the bottom. Content is padded so
+     it always sits in the sky part. */
+  .hero {
+    background: var(--color-sky);
+  }
+  .hero-bg {
     position: absolute;
-    inset-inline: 0;
-    bottom: 0;
+    inset: 0;
     width: 100%;
-    height: auto;
-    max-height: 60%;
+    height: 100%;
     object-fit: cover;
     object-position: center bottom;
     pointer-events: none;
@@ -130,5 +134,17 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
   }
   :global(:root[data-theme='dark']) .hero-night {
     display: block;
+  }
+</style>
+
+<style is:global>
+  /* Night: white text over white clouds would vanish, so hero text gets a hard
+     shadow and the clouds go translucent. Global: the clouds live in a child component. */
+  :root[data-theme='dark'] .hero h1,
+  :root[data-theme='dark'] .hero .lead {
+    text-shadow: 2px 2px 0 #050a18;
+  }
+  :root[data-theme='dark'] .hero .cloud {
+    opacity: 0.3;
   }
 </style>
