@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Etkinlik günlüğü",
+    "description": "Etkinlik sayfası tam denetim izidir: panelde olan her şeyin aranabilir, kronolojik kaydı."
+  },
+  "architecture": {
+    "title": "Mimari",
+    "description": "Minecraft Server Manager, tek süreçli, sunucu taraflı oluşturulan bir Node.js uygulamasıdır."
+  },
+  "backups": {
+    "title": "Yedeklemeler",
+    "description": "Yedeklemeler sayfası, boyut, neden ve yaş bilgileriyle birlikte tüm sunucularınızdaki anlık görüntüleri gösterir."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Bir blueprint, bir sunucunun tüm yapılandırmasını (tür, sürüm, kaynaklar, ortam, paket sabitlemesi ve isteğe bağlı olarak yapılandırması ve dünyası) tek bir po"
+  },
+  "chatbot": {
+    "title": "Sunucu başına Minecraft sohbet botu",
+    "description": "Bu çatallanma, yönetilen her Minecraft sunucusuna yönetici tarafından yapılandırılmış bir sohbet botu ekler."
+  },
+  "console-and-chat": {
+    "title": "Konsol ve sohbet komutları",
+    "description": "Konsol sekmesi, sunucu günlüğünü gerçek zamanlı olarak yayınlar ve herhangi bir sunucu komutunu göndermeniz için bir komut kutusu sağlar."
+  },
+  "dashboard": {
+    "title": "Gösterge Paneli",
+    "description": "Gösterge paneli sizin ana üssünüzdür: her sunucu, canlı durumu ve neler olup bittiğine dair güncel bir akış."
+  },
+  "getting-started": {
+    "title": "Başlangıç",
+    "description": "Paneli ilk açtığınızda, bir yönetici hesabı oluşturmanız istenir."
+  },
+  "index": {
+    "title": "Belgeler",
+    "description": "itzg/docker-minecraft-server için eksiksiz, kendi kendine barındırılan kontrol paneli."
+  },
+  "integrations": {
+    "title": "Entegrasyonlar",
+    "description": "Her sunucu, Ayarlar grubu altında entegrasyonlarını taşır: Discord, herkese açık bir Durum Sayfası, tek tıkla Davetler ve isteğe bağlı Sohbet Botu sekmesi."
+  },
+  "modpacks": {
+    "title": "Modpack'ler",
+    "description": "Modpack'ler sayfası (ve oluşturma sihirbazındaki \"Modpack'ten\" sekmesi), bir modpack'i sunucu olarak yükler, her zaman tam bir paket sürümüne sabitlenir, böylece yeniden başlatma"
+  },
+  "public-api": {
+    "title": "Genel API",
+    "description": "Panel dışından sunucu durumunu almak için küçük, salt okunur bir HTTP API: a"
+  },
+  "schedules": {
+    "title": "Zamanlamalar",
+    "description": "Zamanlamalar sayfası, cron ifadeleriyle tekrarlanan görevleri otomatikleştirir."
+  },
+  "servers": {
+    "title": "Sunucu Oluşturma ve Yönetme",
+    "description": "Sihirbazı açmak için (üst çubukta) Sunucu Oluştur'a tıklayın veya Sunucu Oluştur kartını seçin."
+  },
+  "storage": {
+    "title": "Depolama",
+    "description": "Depolama sayfası, sunucu başına kullanım ve zaman içindeki eğilimler dahil olmak üzere diskinizin nereye gittiğini gösterir."
+  },
+  "two-factor-authentication": {
+    "title": "İki faktörlü kimlik doğrulama",
+    "description": "İki faktörlü kimlik doğrulama (2FA), oturum açmaya ikinci bir adım ekler: parolanızdan sonra telefonunuzdaki bir kimlik doğrulama uygulamasından kısa bir kod girersiniz."
+  },
+  "updates": {
+    "title": "Güncellemeler",
+    "description": "Güncellemeler sayfası, filonuzdaki güncel olmayanları tek bir yerde takip eder:"
+  },
+  "users-and-roles": {
+    "title": "Kullanıcılar ve roller",
+    "description": "Panel çok kullanıcılıdır."
+  },
+  "world-shrink": {
+    "title": "Bir dünyayı küçültme",
+    "description": "Zamanla bir dünya yayılır: bir oyuncunun yürüdüğü, uçtuğu veya"
+  },
+  "worlds-and-files": {
+    "title": "Dünyalar ve dosyalar",
+    "description": "Dünyalar sayfası, sunucularınızdaki dünya verilerini yönetir: aktif dünyayı değiştirin, bir dünya yükleyin veya birini indirin."
+  }
+}

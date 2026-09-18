@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Bảng điều khiển miễn phí, tự lưu trữ cho máy chủ Minecraft trên Docker.",
+    "description": "Chạy máy chủ Minecraft mod và vanilla từ trình duyệt của bạn. Các gói mod được ghim vào phiên bản chính xác, sao lưu một cú nhấp chuột, lịch trình, bản đồ trực tiếp, phân tích người chơi. Miễn phí, mã nguồn mở và toàn bộ bảng điều khiển của bạn nằm trong một thư mục."
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "features": "Tính năng",
+    "screenshots": "Ảnh chụp màn hình",
+    "install": "Cài đặt",
+    "docs": "Tài liệu",
+    "faq": "Câu hỏi thường gặp",
+    "changelog": "Nhật ký thay đổi",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Ngôn ngữ",
+    "theme": "Chuyển đổi chủ đề sáng hoặc tối",
+    "skip": "Bỏ qua đến nội dung"
+  },
+  "hero": {
+    "eyebrow": "Miễn phí và mã nguồn mở. Chạy trên máy của bạn.",
+    "title": "Quản lý máy chủ Minecraft của bạn từ một bảng điều khiển thân thiện.",
+    "subtitle": "Minecraft Server Manager biến Docker thành một ngôi nhà ấm cúng cho các máy chủ của bạn: các gói mod được ghim, sao lưu chỉ bằng một cú nhấp chuột, lịch trình, bản đồ trực tiếp, số liệu thống kê người chơi và bảng điều khiển nói tiếng Anh phổ thông. Không hóa đơn, không ràng buộc, toàn bộ bảng điều khiển của bạn trong một thư mục.",
+    "primary": "Bắt đầu trong 3 bước",
+    "secondary": "Khám phá các tính năng",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Xem hướng dẫn"
+  },
+  "pillars": {
+    "title": "Dành cho người quản lý máy chủ, không phải người xử lý yêu cầu",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Một thư mục là toàn bộ bảng điều khiển của bạn",
+        "body": "Cơ sở dữ liệu, thế giới, bản sao lưu và thư viện mod dùng chung đều nằm trong một thư mục dữ liệu duy nhất. Sao chép nó là bạn đã di chuyển thành công."
+      },
+      {
+        "icon": "box",
+        "title": "Mỗi máy chủ là một container",
+        "body": "Mỗi máy chủ chạy trên ảnh itzg đã được kiểm chứng với giới hạn CPU và bộ nhớ riêng, dừng máy chủ một cách êm ái qua RCON và phát hiện sự cố.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpack được ghim cố định",
+        "body": "Các gói mod được khóa với một phiên bản chính xác. Nâng cấp là rõ ràng, được xem trước, sao lưu trước, kiểm tra sức khỏe và hoàn nguyên chỉ bằng một cú nhấp chuột.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Mọi thứ chủ máy chủ cần đến",
+    "intro": "Trải nghiệm đầy đủ tính năng, từ tạo máy chủ đến chia sẻ bản đồ trực tiếp.",
+    "cta": "Đọc tài liệu",
+    "groups": [
+      {
+        "title": "Máy chủ và vòng đời",
+        "items": [
+          {
+            "title": "Container giới hạn tài nguyên",
+            "body": "Tạo, khởi động, dừng, khởi động lại, xây dựng lại và xóa máy chủ với các lệnh RCON dừng gọn gàng và phát hiện sự cố tự động.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Trình hướng dẫn tạo máy chủ",
+            "body": "Chế độ Đơn giản hoặc Nâng cao, với mọi cài đặt hình ảnh được giải thích bằng ngôn ngữ đơn giản trước khi bạn chọn.",
+            "icon": "wand"
+          },
+          {
+            "title": "Bảng điều khiển trực tiếp",
+            "body": "Bảng điều khiển WebSocket với thanh lệnh RCON, bộ lọc nhật ký và hành động người chơi chỉ bằng một cú nhấp chuột.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Quản lý người chơi",
+            "body": "Danh sách trắng, quản trị viên, cấm, cấm IP và dịch chuyển, trực tuyến qua RCON và ngoại tuyến qua các tệp JSON.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mod và modpack",
+        "items": [
+          {
+            "title": "Năm kho lưu trữ trong một trình duyệt",
+            "body": "Tìm kiếm cả năm kho lưu trữ từ một nơi. Ba trong số đó không cần khóa API.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Thêm bằng liên kết",
+            "body": "Dán trang dự án, kho lưu trữ GitHub, slug hoặc URL jar trực tiếp. Bảng điều khiển sẽ nhận diện nó.",
+            "icon": "link"
+          },
+          {
+            "title": "Nhập bất cứ thứ gì",
+            "body": "Mọi jar được nhận diện và kiểm tra tính tương thích khi nhập.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Tải xuống được xác minh checksum",
+            "body": "Được xác minh trước khi tệp được gửi đến máy chủ, với hàm băm mạnh nhất trước. Lỗi không bao giờ được gửi đi.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Thư viện mod chia sẻ",
+            "body": "Được loại bỏ trùng lặp bằng sha256 và liên kết cứng vào các máy chủ, vì vậy các mod tùy chỉnh tồn tại sau các bản cập nhật gói.",
+            "icon": "library"
+          },
+          {
+            "title": "Trình giải chọn mod trước",
+            "body": "Chọn các mod bạn muốn và nhận phiên bản trình tải và Minecraft tương thích đầy đủ mới nhất.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "Bảo vệ và tự động hóa",
+        "items": [
+          {
+            "title": "Sao lưu an toàn",
+            "body": "Ảnh chụp nhanh với các lớp lưu giữ, khôi phục tại chỗ và tùy chọn thu nhỏ thế giới để lấy lại dung lượng đĩa.",
+            "icon": "archive"
+          },
+          {
+            "title": "Lịch Cron",
+            "body": "Khởi động lại, sao lưu và lệnh RCON theo lịch, với lần chạy tiếp theo được hiển thị ở phía trước.",
+            "icon": "clock"
+          },
+          {
+            "title": "Bản thiết kế",
+            "body": "Xuất máy chủ dưới dạng công thức có thể mang đi, nhập nó ở bất kỳ đâu và nhận lại cùng một máy chủ.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Phân tích sự cố",
+            "body": "Các sự cố được phát hiện, phân tích cú pháp và nghi phạm được đặt tên, với chia sẻ bằng một cú nhấp chuột và thông tin chi tiết tự động.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Theo dõi cập nhật",
+            "body": "Các phiên bản máy chủ, gói, hình ảnh và mod mới được theo dõi, với các bản sao lưu trước cập nhật và khả năng hoàn tác bằng một cú nhấp chuột.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Thông tin chi tiết và cộng đồng",
+        "items": [
+          {
+            "title": "Bản đồ trực tiếp",
+            "body": "Một cú nhấp chuột để truy cập bản đồ trực tiếp, được phục vụ thông qua proxy được xác thực của bảng điều khiển.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Phân tích và lưu trữ",
+            "body": "Bảng điểm thời gian chơi, số lần chết và số lần khai thác, phân tích kho đồ, mức sử dụng đĩa trên mỗi máy chủ và hạn ngạch bắt buộc.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord và chatbot",
+            "body": "Webhook với các tùy chọn bật/tắt cho từng sự kiện, cộng với chatbot tùy chọn cho từng máy chủ với quyền hạn trong trò chơi bị giới hạn.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Trang trạng thái công khai và API",
+            "body": "Các trang trạng thái tùy chọn, khối mời, tệp .mrpack máy khách được tạo và API chỉ đọc được xác thực bằng mã thông báo.",
+            "icon": "globe"
+          },
+          {
+            "title": "Người dùng, vai trò và 2FA",
+            "body": "Các vai trò quản trị viên, người điều hành và người xem với xác thực hai yếu tố TOTP.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Giao diện dễ sử dụng",
+    "intro": "Máy tính và điện thoại. Giao diện được thiết kế ưu tiên cho màn hình hẹp, vì vậy mọi trang đều hoạt động tốt trên điện thoại.",
+    "desktop": "Máy tính",
+    "mobile": "Trên điện thoại",
+    "items": {
+      "dashboard": "Bảng điều khiển: hiển thị mọi máy chủ, số lượng người chơi và hoạt động gần đây trong nháy mắt.",
+      "wizard": "Trình hướng dẫn tạo máy chủ giải thích mọi cài đặt trước khi bạn chọn.",
+      "overview": "Tổng quan về máy chủ với các chỉ số tài nguyên và hành động nhanh.",
+      "console": "Bảng điều khiển trực tiếp với thanh lệnh RCON và bộ lọc nhật ký.",
+      "mods": "Các bản mod từ năm kho lưu trữ, được lọc theo trình tải và phiên bản của máy chủ.",
+      "worlds": "Chuyển đổi thế giới và quản lý tệp từ trình duyệt.",
+      "backups": "Sao lưu với các lớp lưu giữ và khôi phục tại chỗ.",
+      "schedules": "Lịch trình Cron cho việc khởi động lại, sao lưu và lệnh.",
+      "blueprints": "Bản thiết kế: công thức máy chủ có thể di chuyển.",
+      "storage": "Phân tích lưu trữ và hạn ngạch bắt buộc."
+    }
+  },
+  "install": {
+    "title": "Cài đặt",
+    "intro": "Chọn tùy chọn phù hợp với máy chủ của bạn. Mọi phương pháp đều cung cấp cùng một bảng điều khiển.",
+    "requirements": "Yêu cầu",
+    "reqItems": [
+      "Docker Engine (Linux) hoặc Docker Desktop (Windows, macOS).",
+      "Node.js 24 trở lên cho cài đặt từ mã nguồn. Hình ảnh Docker đã bao gồm Node.js.",
+      "Vài gigabyte dung lượng đĩa cho các hình ảnh máy chủ và thế giới."
+    ],
+    "docker": {
+      "title": "Tùy chọn 1: Docker",
+      "body": "Một ảnh đa kiến trúc được tạo sẵn được xuất bản lên GHCR mỗi khi có bản phát hành mới. Tải tệp compose, đặt một biến và khởi động.",
+      "after": "Sau đó, truy cập http://your-host:25564. Trong Portainer hoặc Dockge, dán tệp compose dưới dạng một stack và đặt DATA_DIR_HOST trong phần môi trường của stack.",
+      "warning": "Bảng điều khiển điều khiển Docker daemon của máy chủ thông qua socket được gắn kết, tương đương với quyền root trên máy chủ. Hãy đối xử với thông tin đăng nhập quản trị viên tương ứng và không bao giờ để bảng điều khiển hiển thị trực tiếp trên internet."
+    },
+    "source": {
+      "title": "Tùy chọn 2: Từ mã nguồn",
+      "body": "Bất kỳ hệ điều hành nào, bao gồm Windows và macOS với Docker Desktop.",
+      "after": "Truy cập http://localhost:25564. Lần chạy đầu tiên sẽ hướng dẫn bạn kiểm tra hệ thống, múi giờ và tạo tài khoản quản trị viên."
+    },
+    "next": "Các bước tiếp theo",
+    "nextBody": "Hướng dẫn bắt đầu nhanh bao gồm thiết lập lần đầu, tạo máy chủ đầu tiên của bạn và vị trí của mọi thứ.",
+    "nextCta": "Đọc hướng dẫn bắt đầu",
+    "compose": "Tải xuống docker-compose.yml",
+    "windows": "Lưu ý cho Windows",
+    "windowsItems": [
+      "Docker Desktop phải đang chạy trước khi bạn bắt đầu hoặc tạo máy chủ.",
+      "Chia sẻ ổ đĩa dự án của bạn với Docker Desktop (Settings, Resources, File sharing) để các bind mount hoạt động.",
+      "Hình ảnh Docker nhắm mục tiêu máy chủ Linux; trên Windows và macOS, hãy chạy bảng điều khiển từ mã nguồn."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "Câu hỏi thường gặp",
+    "items": [
+      {
+        "q": "Nó có thực sự miễn phí không?",
+        "a": "Có. Bảng điều khiển này được cấp phép MIT và không sử dụng bất kỳ dịch vụ trả phí nào. Mọi thứ đều chạy trên máy của bạn."
+      },
+      {
+        "q": "Nó có hoạt động trên Raspberry Pi hoặc máy ARM khác không?",
+        "a": "Có. Hình ảnh Docker được xuất bản cho cả hai kiến trúc, và cài đặt từ mã nguồn chạy ở bất kỳ đâu có Node.js 24 và Docker.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Những loại máy chủ nào được hỗ trợ?",
+        "a": "Mọi thứ mà hình ảnh itzg hỗ trợ, cộng với các modpack từ bốn nguồn lớn.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Làm cách nào để di chuyển bảng điều khiển của tôi sang một máy mới?",
+        "a": "Sao chép thư mục dữ liệu. Nó chứa cơ sở dữ liệu, thế giới của mọi máy chủ, các bản sao lưu và thư viện mod. Khởi chạy bảng điều khiển trên máy mới, trỏ đến thư mục đó."
+      },
+      {
+        "q": "Nhiều người có thể quản lý máy chủ không?",
+        "a": "Có. Bảng điều khiển có các vai trò quản trị viên, người vận hành và người xem, và mỗi tài khoản có thể bật xác thực hai yếu tố."
+      },
+      {
+        "q": "Nó có cần được truy cập từ internet không?",
+        "a": "Không. Người chơi kết nối với các cổng trò chơi, không phải bảng điều khiển. Giữ bảng điều khiển trên mạng LAN của bạn hoặc phía sau VPN hoặc proxy ngược có xác thực."
+      },
+      {
+        "q": "Còn người chơi Bedrock thì sao?",
+        "a": "Cả hai đều có thể được cài đặt như bất kỳ plugin hoặc mod nào khác, và bảng điều khiển sẽ hiển thị các cài đặt mà họ cần.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Tôi nhận được sự giúp đỡ ở đâu?",
+        "a": "Máy chủ Discord có diễn đàn hỗ trợ và những người thật. Lỗi và yêu cầu tính năng gửi đến GitHub issues."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Nhật ký thay đổi",
+    "intro": "Mỗi bản phát hành, mới nhất trước. Ghi chú phát hành được xuất bản bằng tiếng Anh.",
+    "releases": "Tất cả các bản phát hành trên GitHub"
+  },
+  "community": {
+    "title": "Hãy đến chào hỏi",
+    "body": "Báo cáo lỗi, đề xuất tính năng, nhận trợ giúp từ người thật và khoe máy chủ của bạn.",
+    "discord": "Tham gia Discord",
+    "github": "Đánh dấu sao trên GitHub"
+  },
+  "footer": {
+    "tagline": "Miễn phí và mã nguồn mở theo giấy phép MIT.",
+    "product": "Sản phẩm",
+    "community": "Cộng đồng",
+    "resources": "Tài nguyên",
+    "issues": "Sự cố",
+    "releases": "Bản phát hành",
+    "contributing": "Đóng góp",
+    "license": "Giấy phép",
+    "notAffiliated": "Không phải là sản phẩm chính thức của Minecraft. Không được phê duyệt hoặc liên kết với Mojang hoặc Microsoft."
+  },
+  "meta": {
+    "home": {
+      "title": "Bảng điều khiển máy chủ Minecraft tự lưu trữ miễn phí",
+      "description": "Chạy máy chủ Minecraft gốc và đã cài mod từ trình duyệt của bạn. Dựa trên Docker, các gói mod được ghim vào phiên bản chính xác, sao lưu, lịch trình, bản đồ trực tiếp, phân tích người chơi. Miễn phí, mã nguồn mở, sẵn sàng hoạt động trong ba bước."
+    },
+    "features": {
+      "title": "Tính năng",
+      "description": "Mọi tính năng của Minecraft Server Manager: máy chủ được đóng gói, năm kho mod, tải xuống được xác minh bằng checksum, sao lưu an toàn, lịch trình, bản thiết kế, phân tích sự cố, bản đồ trực tiếp, vai trò và xác thực hai yếu tố."
+    },
+    "screenshots": {
+      "title": "Ảnh chụp màn hình",
+      "description": "Ảnh chụp màn hình của bảng điều khiển Minecraft Server Manager trên máy tính và điện thoại: bảng điều khiển, trình hướng dẫn, bảng điều khiển, mod, thế giới, sao lưu, lịch trình và hơn thế nữa."
+    },
+    "install": {
+      "title": "Cài đặt",
+      "description": "Cài đặt Minecraft Server Manager với Docker bằng ba lệnh, hoặc từ mã nguồn trên Windows, macOS và Linux."
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp",
+      "description": "Câu trả lời về chi phí, các loại máy chủ được hỗ trợ, hỗ trợ ARM, di chuyển, vai trò và việc tiếp xúc với internet."
+    },
+    "changelog": {
+      "title": "Nhật ký thay đổi",
+      "description": "Ghi chú phát hành cho mọi phiên bản của Minecraft Server Manager."
+    },
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "description": "Trang này không tồn tại."
+    }
+  },
+  "notFound": {
+    "title": "Phần này chưa bao giờ được tạo.",
+    "body": "Trang bạn yêu cầu không tồn tại. Hãy thử trang chủ hoặc tài liệu.",
+    "home": "Về trang chủ"
+  },
+  "langNotice": "Trang này đang hiển thị bằng tiếng Anh cho đến khi bản dịch của nó sẵn sàng.",
+  "tutorial": {
+    "title": "Thiết lập trong ba bước",
+    "intro": "Chọn cách bạn muốn chạy bảng điều khiển. Điền vào hai trường và mọi lệnh bên dưới sẽ tự động cập nhật cho máy của bạn.",
+    "dataDir": "Thư mục dữ liệu trên máy chủ",
+    "dataDirHint": "Đường dẫn tuyệt đối. Thế giới, bản sao lưu, mod và cơ sở dữ liệu đều nằm ở đây.",
+    "host": "Tên máy chủ hoặc IP",
+    "hostHint": "Nơi bạn sẽ truy cập bảng điều khiển từ trình duyệt.",
+    "then": "Sau đó mở bảng điều khiển",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép!",
+    "firstRun": "Lần chạy đầu tiên sẽ hướng dẫn bạn kiểm tra hệ thống, múi giờ và tạo tài khoản quản trị viên.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Tạo thư mục dữ liệu",
+            "body": "Một thư mục chứa mọi thứ mà bảng điều khiển sở hữu."
+          },
+          {
+            "title": "Tải xuống tệp compose và trỏ nó vào thư mục đó",
+            "body": "DATA_DIR_HOST phải là đường dẫn tuyệt đối trên máy chủ, vì Docker sẽ gắn nó từ góc nhìn của máy chủ."
+          },
+          {
+            "title": "Khởi chạy bảng điều khiển",
+            "body": "Image hỗ trợ đa kiến trúc (amd64 và arm64) và cập nhật trên mỗi bản phát hành."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Tạo thư mục dữ liệu trên máy chủ",
+            "body": "Quy tắc thư mục tương tự: đường dẫn tuyệt đối, trên máy chạy Docker."
+          },
+          {
+            "title": "Thêm một stack từ tệp compose",
+            "body": "Dán nội dung của tệp compose vào một stack mới. Tệp gốc ở đây:"
+          },
+          {
+            "title": "Đặt biến môi trường và triển khai",
+            "body": "Thêm nó vào phần môi trường của stack, sau đó triển khai."
+          }
+        ]
+      },
+      "source": {
+        "label": "Từ mã nguồn",
+        "steps": [
+          {
+            "title": "Kiểm tra yêu cầu",
+            "body": "Node.js 24 trở lên, pnpm và Docker đang chạy (Docker Desktop trên Windows và macOS)."
+          },
+          {
+            "title": "Clone và cài đặt",
+            "body": "Bước cài đặt cũng xây dựng CSS của bảng điều khiển. Không có module gốc nào để biên dịch."
+          },
+          {
+            "title": "Khởi chạy bảng điều khiển",
+            "body": "Theo mặc định, nó chỉ lắng nghe trên localhost. Đặt PANEL_HOST=0.0.0.0 để truy cập nó từ các máy khác trên mạng của bạn."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Khởi chạy từ cài đặt mã nguồn",
+            "body": "Chạy lệnh này từ thư mục đã clone. PM2 khởi chạy ứng dụng với phiên bản Node đã khởi động daemon của nó, vì vậy hãy ghim trình thông dịch."
+          },
+          {
+            "title": "Lưu danh sách tiến trình và kích hoạt khởi động",
+            "body": "pm2 startup sẽ hiển thị một lệnh để chạy với sudo; chạy lệnh đó một lần."
+          },
+          {
+            "title": "Ưu tiên systemd?",
+            "body": "Một unit chạy node src/server.js từ thư mục đã clone với WorkingDirectory được đặt sẽ hoạt động tương tự. Bảng điều khiển không cần cờ bổ sung."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Hoạt động với mọi thứ bạn đã sử dụng",
+    "registries": "Kho lưu trữ",
+    "loaders": "Loại máy chủ",
+    "packs": "Modpack",
+    "runsOn": "Chạy trên",
+    "formats": "Nhập",
+    "checksums": "Checksum",
+    "integrations": "Tích hợp",
+    "keyless": "không cần khóa"
+  }
+}

@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "適用於 Docker 上 Minecraft 伺服器的免費、自行託管的控制面板。",
+    "description": "透過瀏覽器運行模組化和原版 Minecraft 伺服器。模組包固定到確切版本、一鍵備份、排程、即時地圖、玩家分析。免費、開源，且您的整個面板只是一個資料夾。"
+  },
+  "nav": {
+    "home": "首頁",
+    "features": "功能",
+    "screenshots": "截圖",
+    "install": "安裝",
+    "docs": "文件",
+    "faq": "常見問題",
+    "changelog": "變更日誌",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "選單",
+    "language": "語言",
+    "theme": "切換淺色或深色主題",
+    "skip": "跳至內容"
+  },
+  "hero": {
+    "eyebrow": "免費開源。可在您自己的機器上運行。",
+    "title": "透過一個友善的面板管理您的 Minecraft 伺服器。",
+    "subtitle": "Minecraft Server Manager 將 Docker 變成您伺服器的舒適家園：可釘選的模組包、一鍵備份、排程、即時地圖、玩家統計資料，以及一個能說流暢英文的控制台。沒有帳單，沒有鎖定，整個面板都在一個資料夾中。",
+    "primary": "3 步驟開始",
+    "secondary": "探索功能",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "查看教學"
+  },
+  "pillars": {
+    "title": "專為伺服器管理員打造，而非客服人員",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "一個資料夾即是您的全部面板",
+        "body": "資料庫、世界、備份以及共用的模組庫都位於單一資料夾下。複製它即可完成遷移。"
+      },
+      {
+        "icon": "box",
+        "title": "每個伺服器都是一個容器",
+        "body": "每個伺服器都運行於經過實戰考驗的 itzg 映像檔，擁有獨立的 CPU 和記憶體上限、透過 RCON 的優雅停止機制，以及崩潰偵測功能。",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "模組包版本固定",
+        "body": "模組包會鎖定在確切的版本。升級操作是明確的，會先預覽、備份，然後進行健康檢查，並可一鍵回滾。",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "伺服器擁有者隨手可得的一切",
+    "intro": "從建立伺服器到分享即時地圖，完整的功能導覽。",
+    "cta": "閱讀文件",
+    "groups": [
+      {
+        "title": "伺服器與生命週期",
+        "items": [
+          {
+            "title": "資源限制容器",
+            "body": "透過優雅的 RCON 停止和自動崩潰偵測，建立、啟動、停止、重啟、重建和刪除伺服器。",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "引導式建立精靈",
+            "body": "簡單或進階模式，在您選擇之前，所有映像檔設定都以淺顯易懂的英文說明。",
+            "icon": "wand"
+          },
+          {
+            "title": "即時主控台",
+            "body": "支援 WebSocket 的主控台，附有 RCON 指令列、日誌篩選器和一鍵玩家操作。",
+            "icon": "terminal"
+          },
+          {
+            "title": "玩家管理",
+            "body": "白名單、管理員、封鎖、IP 封鎖和傳送，可透過 RCON 線上操作，也可透過 JSON 檔案離線操作。",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "模組與模組包",
+        "items": [
+          {
+            "title": "五個註冊庫，一個瀏覽器",
+            "body": "從一個地方搜尋所有五個。其中三個無需 API 金鑰。",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "透過連結新增",
+            "body": "貼上專案頁面、GitHub 儲存庫、slug 或直接的 jar URL。面板會識別它。",
+            "icon": "link"
+          },
+          {
+            "title": "匯入任何內容",
+            "body": "所有 jar 在匯入時都會被識別並進行相容性檢查。",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "校驗和驗證下載",
+            "body": "在檔案傳送到伺服器之前進行驗證，優先使用最強的雜湊值。不匹配的檔案絕不會被傳送。",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "共用模組庫",
+            "body": "透過 sha256 去重複並硬連結到伺服器，因此自訂模組可以在模組包更新後保留。",
+            "icon": "library"
+          },
+          {
+            "title": "先選模組的求解器",
+            "body": "選擇您想要的模組，並取得最新且完全相容的載入器和 Minecraft 版本。",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "保護與自動化",
+        "items": [
+          {
+            "title": "安全備份",
+            "body": "具有保留類別的快照，原地還原，以及可選的世界壓縮以回收磁碟空間。",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron 排程",
+            "body": "按排程進行重啟、備份和 RCON 指令，並預先顯示下次執行時間。",
+            "icon": "clock"
+          },
+          {
+            "title": "藍圖",
+            "body": "將伺服器匯出為可攜式配方，在任何地方匯入，並獲得相同的伺服器。",
+            "icon": "blueprint"
+          },
+          {
+            "title": "崩潰偵測",
+            "body": "偵測、解析崩潰並命名嫌疑者，提供一鍵分享和自動化洞察。",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "更新追蹤",
+            "body": "追蹤新的伺服器、模組包、映像檔和模組版本，提供更新前備份和一鍵回滾。",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "洞察與社群",
+        "items": [
+          {
+            "title": "即時地圖",
+            "body": "一鍵即可存取即時地圖，透過面板的驗證代理進行服務。",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "分析與儲存",
+            "body": "遊戲時間、死亡次數和挖礦計分板、物品欄偵測、每個伺服器的磁碟使用量和強制配額。",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord 與聊天機器人",
+            "body": "支援每個事件開關的 Webhook，以及可選的每個伺服器的聊天機器人，具有受限的遊戲內權限。",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "公開狀態頁面與 API",
+            "body": "選擇加入的狀態頁面、邀請區塊、生成的客戶端 .mrpack，以及唯讀的 token 驗證 API。",
+            "icon": "globe"
+          },
+          {
+            "title": "使用者、角色與 2FA",
+            "body": "管理員、操作員和檢視者角色，支援 TOTP 雙因素驗證。",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "令人愉悅的使用介面",
+    "intro": "桌面與手機。此面板採用窄版優先設計，因此每個頁面都能在手機上正常顯示。",
+    "desktop": "桌面",
+    "mobile": "手機上",
+    "items": {
+      "dashboard": "儀表板：一覽所有伺服器、玩家數量與近期活動。",
+      "wizard": "建立精靈會在您選擇設定前解釋所有選項。",
+      "overview": "伺服器概覽，包含資源計量器與快速操作。",
+      "console": "即時主控台，附有 RCON 指令列與日誌篩選器。",
+      "mods": "來自五個登錄庫的模組，可依伺服器的載入器與版本篩選。",
+      "worlds": "從瀏覽器交換世界與管理檔案。",
+      "backups": "備份功能，支援保留類別與就地還原。",
+      "schedules": "用於重啟、備份與執行指令的 Cron 排程。",
+      "blueprints": "藍圖：可攜式伺服器設定檔。",
+      "storage": "儲存空間分析與強制配額。"
+    }
+  },
+  "install": {
+    "title": "安裝",
+    "intro": "選擇符合您主機的選項。所有路徑都會提供相同的面板。",
+    "requirements": "需求",
+    "reqItems": [
+      "Docker Engine (Linux) 或 Docker Desktop (Windows, macOS)。",
+      "從原始碼安裝需要 Node.js 24 或更新版本。Docker 映像檔會內建自己的版本。",
+      "幾 GB 的磁碟空間用於存放伺服器映像檔和世界。"
+    ],
+    "docker": {
+      "title": "選項 1：Docker",
+      "body": "每次發佈時，都會在 GHCR 上發佈預先建置的多架構映像檔。取得 compose 檔案，設定一個變數，然後啟動。",
+      "after": "然後開啟 http://your-host:25564。在 Portainer 或 Dockge 中，將 compose 檔案貼上為堆疊，並在堆疊的環境變數中設定 DATA_DIR_HOST。",
+      "warning": "面板透過掛載的 socket 驅動主機的 Docker daemon，這在主機上等同於 root 權限。請相應地對待管理員登入，切勿將面板直接暴露於網際網路。"
+    },
+    "source": {
+      "title": "選項 2：從原始碼",
+      "body": "任何作業系統，包括使用 Docker Desktop 的 Windows 和 macOS。",
+      "after": "開啟 http://localhost:25564。首次執行會引導您完成系統檢查、設定時區以及建立管理員帳戶。"
+    },
+    "next": "後續步驟",
+    "nextBody": "入門指南涵蓋了首次執行設定、建立您的第一個伺服器以及所有檔案的位置。",
+    "nextCta": "閱讀入門指南",
+    "compose": "下載 docker-compose.yml",
+    "windows": "Windows 注意事項",
+    "windowsItems": [
+      "在啟動或建立伺服器之前，必須執行 Docker Desktop。",
+      "與 Docker Desktop 分享您的專案磁碟機 (設定、資源、檔案共用)，以便 bind mounts 能正常運作。",
+      "Docker 映像檔以 Linux 主機為目標；在 Windows 和 macOS 上，請從原始碼執行面板。"
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "常見問題",
+    "items": [
+      {
+        "q": "真的免費嗎？",
+        "a": "是的。此面板採用 MIT 授權條款，並且不使用任何付費服務。所有內容都在您的機器上運行。"
+      },
+      {
+        "q": "它能在 Raspberry Pi 或其他 ARM 機器上運行嗎？",
+        "a": "是的。Docker 映像檔同時支援這兩種架構，並且從原始碼安裝可以在任何運行 Node.js 24 和 Docker 的地方進行。",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "支援哪些伺服器類型？",
+        "a": "itzg 映像檔支援的所有類型，再加上來自四大來源的模組包。",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "如何將面板轉移到新機器？",
+        "a": "複製資料夾。它包含資料庫、每個伺服器的世界、備份和模組庫。在新機器上啟動面板，並指向該資料夾。"
+      },
+      {
+        "q": "可以有多人管理伺服器嗎？",
+        "a": "是的。面板具有管理員、操作員和檢視者角色，每個帳戶都可以啟用雙重驗證。"
+      },
+      {
+        "q": "需要將它暴露在網際網路上嗎？",
+        "a": "不需要。玩家連接到遊戲埠，而不是面板。將面板保留在您的區域網路 (LAN) 上，或放在具有驗證功能的 VPN 或反向代理之後。"
+      },
+      {
+        "q": "Bedrock 玩家呢？",
+        "a": "兩者都可以像安裝任何其他插件或模組一樣進行安裝，並且面板會公開他們所需的設定。",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "在哪裡可以獲得協助？",
+        "a": "Discord 伺服器設有支援論壇和真人協助。錯誤和功能請求請提交至 GitHub issues。"
+      }
+    ]
+  },
+  "changelog": {
+    "title": "更新日誌",
+    "intro": "每次發布，最新的在前。發布說明以英文發布。",
+    "releases": "GitHub 上的所有發布"
+  },
+  "community": {
+    "title": "來打個招呼",
+    "body": "回報錯誤、建議功能、尋求真人協助，並展示您的伺服器。",
+    "discord": "加入 Discord",
+    "github": "在 GitHub 上按讚"
+  },
+  "footer": {
+    "tagline": "根據 MIT 授權條款提供的免費開源軟體。",
+    "product": "產品",
+    "community": "社群",
+    "resources": "資源",
+    "issues": "問題回報",
+    "releases": "發行版本",
+    "contributing": "貢獻",
+    "license": "授權條款",
+    "notAffiliated": "並非官方 Minecraft 產品。未經 Mojang 或 Microsoft 核准，亦與之無關。"
+  },
+  "meta": {
+    "home": {
+      "title": "免費自架 Minecraft 伺服器控制面板",
+      "description": "透過瀏覽器運行原版和模組化的 Minecraft 伺服器。基於 Docker，模組包固定至精確版本，備份、排程、即時地圖、玩家分析。免費、開源，三步驟即可運行。"
+    },
+    "features": {
+      "title": "功能",
+      "description": "Minecraft Server Manager 的所有功能：容器化伺服器、五個模組註冊中心、校驗和驗證下載、安全備份、排程、藍圖、崩潰偵測、即時地圖、角色權限和雙重驗證。"
+    },
+    "screenshots": {
+      "title": "螢幕截圖",
+      "description": "Minecraft Server Manager 在桌面和手機上的面板截圖：儀表板、設定精靈、主控台、模組、世界、備份、排程等。"
+    },
+    "install": {
+      "title": "安裝",
+      "description": "使用 Docker 指令三步驟安裝 Minecraft Server Manager，或在 Windows、macOS 和 Linux 上從原始碼安裝。"
+    },
+    "faq": {
+      "title": "常見問題",
+      "description": "關於費用、支援的伺服器類型、ARM 支援、遷移、角色權限和網路暴露的解答。"
+    },
+    "changelog": {
+      "title": "更新日誌",
+      "description": "Minecraft Server Manager 各版本的發行說明。"
+    },
+    "notFound": {
+      "title": "找不到頁面",
+      "description": "此頁面不存在。"
+    }
+  },
+  "notFound": {
+    "title": "此區塊從未生成。",
+    "body": "您要求的頁面不存在。請嘗試首頁或說明文件。",
+    "home": "前往首頁"
+  },
+  "langNotice": "此頁面預設以英文顯示，直到翻譯完成。",
+  "tutorial": {
+    "title": "三步驟啟動並執行",
+    "intro": "選擇您想執行面板的方式。填寫兩個欄位，下方所有指令都會為您的機器自動重寫。",
+    "dataDir": "主機上的資料夾",
+    "dataDirHint": "絕對路徑。世界、備份、模組和資料庫都儲存在這裡。",
+    "host": "主機名稱或 IP",
+    "hostHint": "您將從瀏覽器開啟面板的位置。",
+    "then": "然後開啟面板",
+    "copy": "複製",
+    "copied": "已複製！",
+    "firstRun": "首次執行會引導您完成系統檢查、設定時區，以及建立管理員帳戶。",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "建立資料夾",
+            "body": "一個資料夾包含面板擁有的所有內容。"
+          },
+          {
+            "title": "下載 compose 檔案並指向該資料夾",
+            "body": "DATA_DIR_HOST 必須是主機上的絕對路徑，因為 Docker 是從主機的角度掛載它。"
+          },
+          {
+            "title": "啟動面板",
+            "body": "此映像檔支援多架構（amd64 和 arm64），並在每次發佈時更新。"
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "在主機上建立資料夾",
+            "body": "相同的資料夾規則：絕對路徑，位於執行 Docker 的機器上。"
+          },
+          {
+            "title": "從 compose 檔案新增堆疊",
+            "body": "將 compose 檔案的內容貼到新的堆疊中。原始檔案在此處："
+          },
+          {
+            "title": "設定環境變數並部署",
+            "body": "在堆疊的環境區段中新增它，然後部署。"
+          }
+        ]
+      },
+      "source": {
+        "label": "從原始碼",
+        "steps": [
+          {
+            "title": "檢查需求",
+            "body": "Node.js 24 或更新版本、pnpm，以及執行的 Docker（Windows 和 macOS 上的 Docker Desktop）。"
+          },
+          {
+            "title": "複製並安裝",
+            "body": "安裝步驟也會建置面板的 CSS。無需編譯原生模組。"
+          },
+          {
+            "title": "啟動面板",
+            "body": "預設情況下，它只監聽 localhost。設定 PANEL_HOST=0.0.0.0 以便從您網路上的其他機器存取。"
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "從原始碼安裝啟動",
+            "body": "從複製的資料夾執行此操作。PM2 會使用啟動其守護程式的 Node 版本來啟動應用程式，因此請固定解釋器。"
+          },
+          {
+            "title": "儲存程序列表並啟用啟動",
+            "body": "pm2 startup 會列印一個指令，需要使用 sudo 執行；請執行一次。"
+          },
+          {
+            "title": "偏好 systemd？",
+            "body": "一個在複製的資料夾中執行 node src/server.js 的單元，並設定 WorkingDirectory，其運作方式相同。面板不需要額外的旗標。"
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "與您現有的工具完美整合",
+    "registries": "伺服器類型",
+    "loaders": "伺服器核心",
+    "packs": "模組包",
+    "runsOn": "運行於",
+    "formats": "匯入格式",
+    "checksums": "校驗和",
+    "integrations": "整合",
+    "keyless": "無密鑰"
+  }
+}

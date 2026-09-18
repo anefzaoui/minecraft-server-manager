@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Kostenloses, selbst gehostetes Control Panel für Minecraft-Server auf Docker.",
+    "description": "Betreibe gemoddete und Vanilla Minecraft-Server über deinen Browser. Modpacks an exakte Versionen gebunden, Ein-Klick-Backups, Zeitpläne, Live-Karte, Spieleranalysen. Kostenlos, Open Source und dein gesamtes Panel ist ein Ordner."
+  },
+  "nav": {
+    "home": "Startseite",
+    "features": "Funktionen",
+    "screenshots": "Screenshots",
+    "install": "Installation",
+    "docs": "Dokumentation",
+    "faq": "FAQ",
+    "changelog": "Änderungsprotokoll",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menü",
+    "language": "Sprache",
+    "theme": "Helles oder dunkles Theme umschalten",
+    "skip": "Zum Inhalt springen"
+  },
+  "hero": {
+    "eyebrow": "Kostenlos und Open Source. Läuft auf deiner eigenen Maschine.",
+    "title": "Verwalte deine Minecraft-Server von einem einzigen, benutzerfreundlichen Panel aus.",
+    "subtitle": "Minecraft Server Manager verwandelt Docker in ein gemütliches Zuhause für deine Server: Modpacks, die angeheftet bleiben, Ein-Klick-Backups, Zeitpläne, eine Live-Karte, Spielerstatistiken und eine Konsole, die Klartext spricht. Keine Rechnungen, kein Lock-in, dein gesamtes Panel in einem Ordner.",
+    "primary": "In 3 Schritten starten",
+    "secondary": "Funktionen erkunden",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Zum Tutorial"
+  },
+  "pillars": {
+    "title": "Gemacht für Leute, die Server betreiben, nicht Tickets",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Ein Ordner ist Ihr gesamtes Panel",
+        "body": "Datenbank, Welten, Backups und die gemeinsame Mod-Bibliothek leben alle in einem einzigen Datenordner. Kopieren Sie ihn und Sie haben migriert."
+      },
+      {
+        "icon": "box",
+        "title": "Jeder Server ist ein Container",
+        "body": "Jeder Server läuft auf dem bewährten itzg-Image mit eigenen CPU- und Speicherlimits, ordnungsgemäßen Stopps über RCON und Absturzerkennung.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpacks bleiben angeheftet",
+        "body": "Packs sind auf eine exakte Version gesperrt. Upgrades sind explizit, werden zuerst in der Vorschau angezeigt, gesichert, auf Gesundheit geprüft und mit einem Klick zurückgerollt.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Alles, was ein Serverbesitzer braucht",
+    "intro": "Die komplette Feature-Übersicht, von der Erstellung eines Servers bis zur Freigabe seiner Live-Karte.",
+    "cta": "Dokumentation lesen",
+    "groups": [
+      {
+        "title": "Server und Lebenszyklus",
+        "items": [
+          {
+            "title": "Ressourcenbeschränkte Container",
+            "body": "Server erstellen, starten, stoppen, neu starten, neu erstellen und löschen mit ordnungsgemäßen RCON-Stopps und automatischer Absturzerkennung.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Geführter Erstellungsassistent",
+            "body": "Einfacher oder erweiterter Modus, wobei jede Image-Einstellung in einfacher Sprache erklärt wird, bevor Sie sie auswählen.",
+            "icon": "wand"
+          },
+          {
+            "title": "Live-Konsole",
+            "body": "Eine WebSocket-Konsole mit einer RCON-Befehlsleiste, Protokollfiltern und Ein-Klick-Spieleraktionen.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Spielermoderation",
+            "body": "Whitelist, Ops, Bans, IP-Bans und Teleports, online über RCON und offline über die JSON-Dateien.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mods und Modpacks",
+        "items": [
+          {
+            "title": "Fünf Registries in einem Browser",
+            "body": "Durchsuchen Sie alle fünf von einem Ort aus. Drei davon benötigen keinen API-Schlüssel.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Hinzufügen per Link",
+            "body": "Fügen Sie eine Projektseite, ein GitHub-Repository, einen Slug oder eine direkte Jar-URL ein. Das Panel identifiziert es.",
+            "icon": "link"
+          },
+          {
+            "title": "Alles importieren",
+            "body": "Jedes Jar wird beim Import identifiziert und auf Kompatibilität geprüft.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Prüfsummen-verifizierte Downloads",
+            "body": "Vor dem Erreichen des Servers verifiziert, stärkster Hash zuerst. Ein Fehler wird nie ausgeliefert.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Gemeinsame Mod-Bibliothek",
+            "body": "Dedupliziert nach sha256 und als Hardlink in Server integriert, sodass benutzerdefinierte Mods Modpack-Updates überstehen.",
+            "icon": "library"
+          },
+          {
+            "title": "Pick-Mods-First-Solver",
+            "body": "Wählen Sie die gewünschten Mods aus und erhalten Sie die neueste, vollständig kompatible Loader- und Minecraft-Version.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "Schutz und Automatisierung",
+        "items": [
+          {
+            "title": "Sichere Backups",
+            "body": "Snapshots mit Aufbewahrungsklassen, Wiederherstellung vor Ort und optionaler Weltkomprimierung zur Wiederherstellung von Speicherplatz.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron-Zeitpläne",
+            "body": "Neustarts, Backups und RCON-Befehle nach Zeitplan, wobei die nächste Ausführung sofort angezeigt wird.",
+            "icon": "clock"
+          },
+          {
+            "title": "Blaupausen",
+            "body": "Exportieren Sie einen Server als portable Anleitung, importieren Sie ihn überall und erhalten Sie denselben Server zurück.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Absturz-Forensik",
+            "body": "Abstürze werden erkannt, analysiert und Verdächtige benannt, mit Ein-Klick-Freigabe und automatisierten Einblicken.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Update-Tracking",
+            "body": "Neue Server-, Modpack-, Image- und Mod-Versionen werden verfolgt, mit Backups vor dem Update und Ein-Klick-Rollbacks.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Einblick und Community",
+        "items": [
+          {
+            "title": "Live-Karte",
+            "body": "Ein Klick zu einer Live-Karte, bereitgestellt über den authentifizierten Proxy des Panels.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analysen und Speicher",
+            "body": "Spielzeit-, Todesfälle- und Bergbau-Bestenlisten, Inventar-Forensik, pro Server genutzter Speicherplatz und erzwungene Kontingente.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord und Chatbot",
+            "body": "Webhooks mit pro-Ereignis-Umschaltern sowie ein optionaler pro-Server-Chatbot mit eingeschränkten In-Game-Berechtigungen.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Öffentliche Statusseite und API",
+            "body": "Opt-in-Statusseiten, Einladungsblöcke, ein generiertes Client-.mrpack und eine schreibgeschützte, token-authentifizierte API.",
+            "icon": "globe"
+          },
+          {
+            "title": "Benutzer, Rollen und 2FA",
+            "body": "Admin-, Operator- und Viewer-Rollen mit TOTP-Zwei-Faktor-Authentifizierung.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Ein Panel, das Freude macht",
+    "intro": "Desktop und Handy. Das Panel ist schmal-zuerst konzipiert, sodass jede Seite auf einem Handy funktioniert.",
+    "desktop": "Desktop",
+    "mobile": "Auf dem Handy",
+    "items": {
+      "dashboard": "Das Dashboard: Jeder Server, die Spieleranzahl und die letzten Aktivitäten auf einen Blick.",
+      "wizard": "Der Erstellungsassistent erklärt jede Einstellung, bevor Sie sie auswählen.",
+      "overview": "Eine Serverübersicht mit Ressourcenanzeigen und Schnellaktionen.",
+      "console": "Die Live-Konsole mit einer RCON-Befehlsleiste und Protokollfiltern.",
+      "mods": "Mods aus fünf Verzeichnissen, gefiltert nach dem Loader und der Version des Servers.",
+      "worlds": "Welten wechseln und Dateien im Browser verwalten.",
+      "backups": "Backups mit Aufbewahrungsklassen und Wiederherstellung vor Ort.",
+      "schedules": "Cron-Zeitpläne für Neustarts, Backups und Befehle.",
+      "blueprints": "Blueprints: tragbare Server-Rezepte.",
+      "storage": "Speicheranalysen und erzwungene Kontingente."
+    }
+  },
+  "install": {
+    "title": "Installation",
+    "intro": "Wählen Sie die Option, die zu Ihrem Host passt. Jeder Pfad liefert Ihnen dasselbe Panel.",
+    "requirements": "Voraussetzungen",
+    "reqItems": [
+      "Docker Engine (Linux) oder Docker Desktop (Windows, macOS).",
+      "Node.js 24 oder neuer für die Installation aus dem Quellcode. Das Docker-Image bündelt seine eigene Version.",
+      "Ein paar Gigabyte Speicherplatz für Server-Images und Welten."
+    ],
+    "docker": {
+      "title": "Option 1: Docker",
+      "body": "Ein vorkompiliertes Multi-Arch-Image wird bei jeder Veröffentlichung auf GHCR veröffentlicht. Schnappen Sie sich die Compose-Datei, setzen Sie eine Variable und starten Sie.",
+      "after": "Öffnen Sie dann http://your-host:25564. Fügen Sie in Portainer oder Dockge die Compose-Datei als Stack ein und setzen Sie DATA_DIR_HOST in der Umgebung des Stacks.",
+      "warning": "Das Panel steuert den Docker-Daemon des Hosts über den gemounteten Socket, was auf dem Host Root-Rechte hat. Behandeln Sie die Admin-Anmeldung entsprechend und setzen Sie das Panel niemals ungeschützt dem Internet aus."
+    },
+    "source": {
+      "title": "Option 2: Aus dem Quellcode",
+      "body": "Jedes Betriebssystem, einschließlich Windows und macOS mit Docker Desktop.",
+      "after": "Öffnen Sie http://localhost:25564. Der erste Durchlauf führt Sie durch eine Systemprüfung, Ihre Zeitzone und die Erstellung des Admin-Kontos."
+    },
+    "next": "Nächste Schritte",
+    "nextBody": "Die Einrichtungsanleitung behandelt die Ersteinrichtung, die Erstellung Ihres ersten Servers und wo sich alles befindet.",
+    "nextCta": "Einrichtung lesen",
+    "compose": "docker-compose.yml herunterladen",
+    "windows": "Hinweise für Windows",
+    "windowsItems": [
+      "Docker Desktop muss laufen, bevor Sie Server starten oder erstellen.",
+      "Teilen Sie Ihr Projektlaufwerk mit Docker Desktop (Einstellungen, Ressourcen, Dateifreigabe), damit Bind-Mounts funktionieren.",
+      "Das Docker-Image ist für Linux-Hosts gedacht; unter Windows und macOS führen Sie das Panel aus dem Quellcode aus."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "Häufig gestellte Fragen",
+    "items": [
+      {
+        "q": "Ist es wirklich kostenlos?",
+        "a": "Ja. Das Panel steht unter der MIT-Lizenz und verwendet keine kostenpflichtigen Dienste. Alles läuft auf Ihrer Maschine."
+      },
+      {
+        "q": "Funktioniert es auf einem Raspberry Pi oder einer anderen ARM-Maschine?",
+        "a": "Ja. Das Docker-Image wird für beide Architekturen veröffentlicht, und die Installation aus dem Quellcode läuft überall dort, wo Node.js 24 und Docker funktionieren.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Welche Servertypen werden unterstützt?",
+        "a": "Alles, was das itzg-Image unterstützt, plus Modpacks von den vier großen Quellen.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Wie verschiebe ich mein Panel auf eine neue Maschine?",
+        "a": "Kopieren Sie den Datenordner. Er enthält die Datenbank, die Welten jedes Servers, Backups und die Mod-Bibliothek. Starten Sie das Panel auf der neuen Maschine und weisen Sie auf diesen Ordner."
+      },
+      {
+        "q": "Können mehrere Personen Server verwalten?",
+        "a": "Ja. Das Panel verfügt über Administrator-, Operator- und Zuschauerrollen, und jedes Konto kann die Zwei-Faktor-Authentifizierung aktivieren."
+      },
+      {
+        "q": "Muss es dem Internet ausgesetzt sein?",
+        "a": "Nein. Spieler verbinden sich mit den Spielports, nicht mit dem Panel. Behalten Sie das Panel in Ihrem LAN oder hinter einem VPN oder Reverse-Proxy mit Authentifizierung."
+      },
+      {
+        "q": "Was ist mit Bedrock-Spielern?",
+        "a": "Beide können wie jedes andere Plugin oder jeder andere Mod installiert werden, und das Panel stellt die benötigten Einstellungen bereit.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Wo bekomme ich Hilfe?",
+        "a": "Der Discord-Server verfügt über ein Support-Forum und echte Menschen. Fehler und Funktionswünsche gehören zu den GitHub-Issues."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Änderungsprotokoll",
+    "intro": "Jede Veröffentlichung, die neueste zuerst. Die Versionshinweise werden auf Englisch veröffentlicht.",
+    "releases": "Alle Veröffentlichungen auf GitHub"
+  },
+  "community": {
+    "title": "Sag Hallo",
+    "body": "Melde Fehler, schlage Funktionen vor, erhalte Hilfe von echten Menschen und zeige deine Server.",
+    "discord": "Tritt dem Discord bei",
+    "github": "Auf GitHub \"sternen\""
+  },
+  "footer": {
+    "tagline": "Kostenlos und Open Source unter der MIT-Lizenz.",
+    "product": "Produkt",
+    "community": "Community",
+    "resources": "Ressourcen",
+    "issues": "Probleme",
+    "releases": "Releases",
+    "contributing": "Mitwirken",
+    "license": "Lizenz",
+    "notAffiliated": "Kein offizielles Minecraft-Produkt. Nicht von Mojang oder Microsoft genehmigt oder damit verbunden."
+  },
+  "meta": {
+    "home": {
+      "title": "Kostenlose, selbst gehostete Minecraft-Server-Steuerung",
+      "description": "Betreibe Vanilla- und gemoddete Minecraft-Server über deinen Browser. Docker-basiert, Modpacks an exakte Versionen gebunden, Backups, Zeitpläne, Live-Karte, Spieleranalysen. Kostenlos, Open Source, in drei Schritten einsatzbereit."
+    },
+    "features": {
+      "title": "Funktionen",
+      "description": "Jede Funktion von Minecraft Server Manager: containerisierte Server, fünf Mod-Registries, Prüfsummen-verifizierte Downloads, sichere Backups, Zeitpläne, Blueprints, Absturz-Forensik, Live-Karte, Rollen und Zwei-Faktor-Authentifizierung."
+    },
+    "screenshots": {
+      "title": "Screenshots",
+      "description": "Screenshots des Minecraft Server Manager-Panels auf Desktop und Handy: Dashboard, Assistent, Konsole, Mods, Welten, Backups, Zeitpläne und mehr."
+    },
+    "install": {
+      "title": "Installation",
+      "description": "Installiere Minecraft Server Manager mit Docker in drei Befehlen oder aus dem Quellcode unter Windows, macOS und Linux."
+    },
+    "faq": {
+      "title": "FAQ",
+      "description": "Antworten zu Kosten, unterstützten Servertypen, ARM-Unterstützung, Migration, Rollen und Internetzugang."
+    },
+    "changelog": {
+      "title": "Änderungsprotokoll",
+      "description": "Release-Hinweise für jede Version von Minecraft Server Manager."
+    },
+    "notFound": {
+      "title": "Seite nicht gefunden",
+      "description": "Diese Seite existiert nicht."
+    }
+  },
+  "notFound": {
+    "title": "Dieser Abschnitt wurde nie generiert.",
+    "body": "Die von Ihnen angeforderte Seite existiert nicht. Versuchen Sie es mit der Startseite oder der Dokumentation.",
+    "home": "Zur Startseite"
+  },
+  "langNotice": "Diese Seite wird auf Englisch angezeigt, bis ihre Übersetzung verfügbar ist.",
+  "tutorial": {
+    "title": "In drei Schritten einsatzbereit",
+    "intro": "Wählen Sie, wie Sie das Panel ausführen möchten. Füllen Sie die beiden Felder aus und jeder Befehl unten schreibt sich für Ihre Maschine neu.",
+    "dataDir": "Datenordner auf dem Host",
+    "dataDirHint": "Absoluter Pfad. Welten, Backups, Mods und die Datenbank befinden sich hier.",
+    "host": "Hostname oder IP",
+    "hostHint": "Von wo aus Sie das Panel in einem Browser öffnen werden.",
+    "then": "Öffnen Sie dann das Panel",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
+    "firstRun": "Beim ersten Start durchlaufen Sie eine Systemprüfung, wählen Ihre Zeitzone und erstellen das Administratorkonto.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Erstellen Sie den Datenordner",
+            "body": "Ein Ordner enthält alles, was dem Panel gehört."
+          },
+          {
+            "title": "Laden Sie die Compose-Datei herunter und weisen Sie sie diesem Ordner zu",
+            "body": "DATA_DIR_HOST muss der absolute Pfad auf dem Host sein, da Docker ihn aus Sicht des Hosts einbindet."
+          },
+          {
+            "title": "Starten Sie das Panel",
+            "body": "Das Image ist Multi-Arch (amd64 und arm64) und wird bei jeder Veröffentlichung aktualisiert."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Erstellen Sie den Datenordner auf dem Host",
+            "body": "Gleiche Ordnerregel: absoluter Pfad, auf der Maschine, die Docker ausführt."
+          },
+          {
+            "title": "Fügen Sie einen Stack aus der Compose-Datei hinzu",
+            "body": "Fügen Sie den Inhalt der Compose-Datei in einen neuen Stack ein. Die Rohdatei finden Sie hier:"
+          },
+          {
+            "title": "Legen Sie die Umgebungsvariable fest und stellen Sie sie bereit",
+            "body": "Fügen Sie sie im Umgebungsabschnitt des Stacks hinzu und stellen Sie sie dann bereit."
+          }
+        ]
+      },
+      "source": {
+        "label": "Aus Quelle",
+        "steps": [
+          {
+            "title": "Überprüfen Sie die Anforderungen",
+            "body": "Node.js 24 oder neuer, pnpm und Docker laufen (Docker Desktop unter Windows und macOS)."
+          },
+          {
+            "title": "Klonen und installieren",
+            "body": "Der Installationsschritt baut auch das CSS des Panels. Keine nativen Module zu kompilieren."
+          },
+          {
+            "title": "Starten Sie das Panel",
+            "body": "Standardmäßig lauscht es nur auf localhost. Setzen Sie PANEL_HOST=0.0.0.0, um es von anderen Maschinen in Ihrem Netzwerk zu erreichen."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Starten Sie von einer Quellinstallation",
+            "body": "Führen Sie dies vom geklonten Ordner aus. PM2 startet Apps mit der Node-Version, die seinen Daemon gestartet hat, also heften Sie den Interpreter an."
+          },
+          {
+            "title": "Speichern Sie die Prozessliste und aktivieren Sie den Autostart",
+            "body": "pm2 startup gibt einen Befehl aus, der mit sudo ausgeführt werden muss; führen Sie ihn einmal aus."
+          },
+          {
+            "title": "Bevorzugen Sie systemd?",
+            "body": "Eine Unit, die node src/server.js aus dem geklonten Ordner mit gesetztem WorkingDirectory ausführt, funktioniert auf die gleiche Weise. Das Panel benötigt keine zusätzlichen Flags."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Funktioniert mit allem, was Sie bereits verwenden",
+    "registries": "Registries",
+    "loaders": "Servertypen",
+    "packs": "Modpacks",
+    "runsOn": "Läuft auf",
+    "formats": "Importiert",
+    "checksums": "Prüfsummen",
+    "integrations": "Integrationen",
+    "keyless": "schlüssellos"
+  }
+}

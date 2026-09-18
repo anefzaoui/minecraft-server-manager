@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "活動記錄",
+    "description": "活動頁面是完整的稽核記錄：一個可搜尋、按時間順序排列的記錄，包含面板中發生的所有事件。"
+  },
+  "architecture": {
+    "title": "架構",
+    "description": "Minecraft Server Manager 是一個單一處理序、伺服器渲染的 Node.js 應用程式。"
+  },
+  "backups": {
+    "title": "備份",
+    "description": "備份頁面顯示您所有伺服器的快照，包含大小、原因和時間。"
+  },
+  "blueprints": {
+    "title": "藍圖",
+    "description": "藍圖將伺服器的完整設定（類型、版本、資源、環境、套件釘選，以及可選的設定檔和世界）匯總到單一檔案中。"
+  },
+  "chatbot": {
+    "title": "每台伺服器的 Minecraft 聊天機器人",
+    "description": "此分支為每個受管理的 Minecraft 伺服器添加了一個由管理員配置的聊天機器人。"
+  },
+  "console-and-chat": {
+    "title": "主控台與聊天指令",
+    "description": "主控台分頁會即時串流伺服器日誌，並提供一個指令方塊，讓您輸入任何伺服器指令。"
+  },
+  "dashboard": {
+    "title": "儀表板",
+    "description": "儀表板是您的主控中心：顯示所有伺服器、其即時狀態以及正在發生的事件的動態資訊。"
+  },
+  "getting-started": {
+    "title": "開始使用",
+    "description": "首次開啟面板時，系統會要求您建立一個管理員帳戶。"
+  },
+  "index": {
+    "title": "文件",
+    "description": "為 itzg/docker-minecraft-server 提供完整、自行託管的控制面板。"
+  },
+  "integrations": {
+    "title": "整合",
+    "description": "每個伺服器都在「設定」群組下包含其整合：Discord、公開狀態頁面、一鍵邀請，以及可選的聊天機器人分頁。"
+  },
+  "modpacks": {
+    "title": "模組包",
+    "description": "模組包頁面（以及建立精靈中的「從模組包」分頁）會將模組包安裝為伺服器，始終固定到確切的模組包版本，以便重新啟動時"
+  },
+  "public-api": {
+    "title": "公開 API",
+    "description": "一個小型、僅供讀取的 HTTP API，用於從面板外部擷取伺服器狀態：a"
+  },
+  "schedules": {
+    "title": "排程",
+    "description": "排程頁面使用 cron 表達式自動執行重複性任務。"
+  },
+  "servers": {
+    "title": "建立與管理伺服器",
+    "description": "點擊頂端列的「建立伺服器」或「建立伺服器」卡片以開啟精靈。"
+  },
+  "storage": {
+    "title": "儲存空間",
+    "description": "儲存空間頁面顯示您的磁碟使用情況：每個伺服器的用量以及隨時間的趨勢。"
+  },
+  "two-factor-authentication": {
+    "title": "雙重驗證",
+    "description": "雙重驗證 (2FA) 在登入時增加了一個額外的步驟：在輸入密碼後，您需要輸入手機上驗證器應用程式產生的簡短驗證碼。"
+  },
+  "updates": {
+    "title": "更新",
+    "description": "更新頁面可讓您一站式追蹤整個伺服器群組中過時的項目："
+  },
+  "users-and-roles": {
+    "title": "使用者與角色",
+    "description": "此面板支援多使用者功能。"
+  },
+  "world-shrink": {
+    "title": "縮小世界",
+    "description": "隨著時間推移，一個世界會不斷擴張：玩家曾經走過、飛過或"
+  },
+  "worlds-and-files": {
+    "title": "世界與檔案",
+    "description": "「世界」頁面用於管理您伺服器中的世界資料：切換使用中的世界、上傳世界或下載世界。"
+  }
+}

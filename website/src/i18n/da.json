@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Gratis, selv-hostet kontrolpanel til Minecraft-servere på Docker.",
+    "description": "Kør moddede og vanilla Minecraft-servere fra din browser. Modpacks fastgjort til præcise versioner, one-click backups, tidsplaner, live-kort, spilleranalyse. Gratis, open source, og hele dit panel er én mappe."
+  },
+  "nav": {
+    "home": "Hjem",
+    "features": "Funktioner",
+    "screenshots": "Skærmbilleder",
+    "install": "Installation",
+    "docs": "Dokumentation",
+    "faq": "FAQ",
+    "changelog": "Ændringslog",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Sprog",
+    "theme": "Skift mellem lys eller mørk tema",
+    "skip": "Spring til indhold"
+  },
+  "hero": {
+    "eyebrow": "Gratis og open source. Kører på din egen maskine.",
+    "title": "Kør dine Minecraft-servere fra ét brugervenligt panel.",
+    "subtitle": "Minecraft Server Manager forvandler Docker til et hyggeligt hjem for dine servere: modpacks, der forbliver fastgjort, backups med ét klik, tidsplaner, et live-kort, spillerstatistikker og en konsol, der taler almindeligt dansk. Ingen regninger, ingen binding, hele dit panel i én mappe.",
+    "primary": "Kom i gang i 3 trin",
+    "secondary": "Udforsk funktionerne",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Se vejledningen"
+  },
+  "pillars": {
+    "title": "Lavet til folk, der kører servere, ikke billetter",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Én mappe er hele dit kontrolpanel",
+        "body": "Database, verdener, backups og det delte mod-bibliotek lever alle under en enkelt datamappe. Kopier den, og du har migreret."
+      },
+      {
+        "icon": "box",
+        "title": "Hver server er en container",
+        "body": "Hver server kører på det gennemtestede itzg-image med sine egne CPU- og hukommelsesgrænser, yndefulde stop via RCON og crash-detektion.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpacks forbliver fastgjort",
+        "body": "Packs er låst til en præcis version. Opgraderinger er eksplicitte, forhåndsvisning, sikkerhedskopieret først, sundhedstjekket og rullet tilbage med et enkelt klik.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Alt hvad en serverejer rækker ud efter",
+    "intro": "Den komplette funktionsgennemgang, fra oprettelse af en server til deling af dens live-kort.",
+    "cta": "Læs dokumentationen",
+    "groups": [
+      {
+        "title": "Servere og livscyklus",
+        "items": [
+          {
+            "title": "Ressourcebegrænsede containere",
+            "body": "Opret, start, stop, genstart, genbyg og slet servere med yndefulde RCON-stop og automatisk nedbrudsdetektion.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Vejledt oprettelsesguide",
+            "body": "Simpel eller Avanceret tilstand, hvor alle billedindstillinger forklares på almindeligt dansk, før du vælger dem.",
+            "icon": "wand"
+          },
+          {
+            "title": "Live konsol",
+            "body": "En WebSocket-konsol med en RCON-kommandolinje, logfiltre og spillereaktioner med et enkelt klik.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Spillermoderation",
+            "body": "Whitelist, ops, bans, IP-bans og teleporteringer, online via RCON og offline via JSON-filerne.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mods og modpacks",
+        "items": [
+          {
+            "title": "Fem registre i én browser",
+            "body": "Søg i alle fem fra ét sted. Tre af dem kræver ingen API-nøgle.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Tilføj via link",
+            "body": "Indsæt en projektside, et GitHub-repository, et slug eller en direkte jar-URL. Panelet identificerer det.",
+            "icon": "link"
+          },
+          {
+            "title": "Importer alt",
+            "body": "Alle jar-filer identificeres og kompatibilitetstjekkes undervejs.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Checksum-verificerede downloads",
+            "body": "Verificeret, før en fil når serveren, stærkeste hash først. En uoverensstemmelse sendes aldrig.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Delt mod-bibliotek",
+            "body": "Deduplikeret med sha256 og hard-linked ind i servere, så brugerdefinerede mods overlever pakkeopdateringer.",
+            "icon": "library"
+          },
+          {
+            "title": "Vælg-mods-først-løser",
+            "body": "Vælg de mods, du ønsker, og få den nyeste fuldt kompatible loader og Minecraft-version.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "Beskyttelse og automatisering",
+        "items": [
+          {
+            "title": "Sikkerhedskopiering med gem-sikkerhed",
+            "body": "Snapshots med opbevaringsklasser, gendannelse på plads og valgfri verdensformindskelse for at genvinde diskplads.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron-planer",
+            "body": "Genstarter, sikkerhedskopieringer og RCON-kommandoer efter en tidsplan, med næste kørsel vist forrest.",
+            "icon": "clock"
+          },
+          {
+            "title": "Blåtryk",
+            "body": "Eksporter en server som en bærbar opskrift, importer den hvor som helst, og få den samme server tilbage.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Nedbruds-forensik",
+            "body": "Nedbrud detekteres, parses, og mistænkte navngives, med deling med et enkelt klik og automatiserede indsigter.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Opdateringssporing",
+            "body": "Nye server-, pakke-, billed- og mod-versioner spores, med sikkerhedskopieringer før opdatering og tilbageførsel med et enkelt klik.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Indsigt og fællesskab",
+        "items": [
+          {
+            "title": "Live-kort",
+            "body": "Et klik til et live-kort, serveret gennem panelets godkendte proxy.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analyse og lagerplads",
+            "body": "Spilletid, dødsfald og mine-pointtavler, lager-forensik, diskforbrug pr. server og håndhævede kvoter.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord og chatbot",
+            "body": "Webhooks med per-begivenhedskontakter, plus en valgfri per-server chatbot med begrænsede in-game-rettigheder.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Offentlig status-side og API",
+            "body": "Opt-in status-sider, invitationsblokke, en genereret klient .mrpack og en skrivebeskyttet token-godkendt API.",
+            "icon": "globe"
+          },
+          {
+            "title": "Brugere, roller og 2FA",
+            "body": "Admin-, operatør- og seerroller med TOTP to-faktor-godkendelse.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Et panel, der er en fornøjelse at bruge",
+    "intro": "Skrivebord og telefon. Panelet er designet smalt først, så hver side fungerer på en telefon.",
+    "desktop": "Skrivebord",
+    "mobile": "På en telefon",
+    "items": {
+      "dashboard": "Dashboardet: alle servere, antal spillere og nylig aktivitet på et øjeblik.",
+      "wizard": "Oprettelsesguiden forklarer hver indstilling, før du vælger den.",
+      "overview": "En servers oversigt med ressourcemålere og hurtige handlinger.",
+      "console": "Live-konsollen med en RCON-kommandolinje og logfiltre.",
+      "mods": "Mods fra fem registre, filtreret til serverens loader og version.",
+      "worlds": "Skift verdener og administrer filer fra browseren.",
+      "backups": "Backups med opbevaringsklasser og gendannelse på stedet.",
+      "schedules": "Cron-planer for genstarter, backups og kommandoer.",
+      "blueprints": "Blueprints: bærbare serveropskrifter.",
+      "storage": "Lageranalyse og håndhævede kvoter."
+    }
+  },
+  "install": {
+    "title": "Installation",
+    "intro": "Vælg den mulighed, der passer til din vært. Alle stier giver dig det samme panel.",
+    "requirements": "Krav",
+    "reqItems": [
+      "Docker Engine (Linux) eller Docker Desktop (Windows, macOS).",
+      "Node.js 24 eller nyere til installation fra kildekode. Docker-imaget inkluderer sin egen.",
+      "Et par gigabytes diskplads til server-images og verdener."
+    ],
+    "docker": {
+      "title": "Mulighed 1: Docker",
+      "body": "Et præfabrikeret multi-arkitektur image udgives til GHCR ved hver udgivelse. Hent compose-filen, indstil én variabel, og start.",
+      "after": "Åbn derefter http://din-værts-ip:25564. I Portainer eller Dockge, indsæt compose-filen som en stack og indstil DATA_DIR_HOST i stackens miljøvariabler.",
+      "warning": "Panelet styrer værtens Docker-daemon via den monterede socket, hvilket svarer til root-rettigheder på værten. Behandl administratorloginnet derefter, og udsæt aldrig panelet direkte for internettet."
+    },
+    "source": {
+      "title": "Mulighed 2: Fra kildekode",
+      "body": "Ethvert operativsystem, inklusive Windows og macOS med Docker Desktop.",
+      "after": "Åbn http://localhost:25564. Første kørsel guider dig gennem systemtjek, din tidszone og oprettelse af administratorkontoen."
+    },
+    "next": "Næste skridt",
+    "nextBody": "Kom godt i gang-guiden dækker den første opsætning, oprettelse af din første server, og hvor alt befinder sig.",
+    "nextCta": "Læs kom godt i gang-guiden",
+    "compose": "Download docker-compose.yml",
+    "windows": "Bemærkninger til Windows",
+    "windowsItems": [
+      "Docker Desktop skal køre, før du starter eller opretter servere.",
+      "Del dit projekt-drev med Docker Desktop (Indstillinger, Ressourcer, Fildeling), så bind mounts virker.",
+      "Docker-imaget er målrettet Linux-værter; på Windows og macOS skal panelet køres fra kildekode."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "Ofte stillede spørgsmål",
+    "items": [
+      {
+        "q": "Er det virkelig gratis?",
+        "a": "Ja. Panelet er MIT-licenseret og bruger ingen betalte tjenester. Alt kører på din maskine."
+      },
+      {
+        "q": "Virker det på en Raspberry Pi eller en anden ARM-maskine?",
+        "a": "Ja. Docker-imaget er udgivet til begge arkitekturer, og installationen fra kildekode kører overalt, hvor Node.js 24 og Docker gør.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Hvilke servertyper understøttes?",
+        "a": "Alt, hvad itzg-imaget understøtter, plus modpacks fra de fire store kilder.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Hvordan flytter jeg mit panel til en ny maskine?",
+        "a": "Kopier datamappen. Den indeholder databasen, hver servers verden, backups og modbiblioteket. Start panelet på den nye maskine, der peger på den mappe."
+      },
+      {
+        "q": "Kan flere personer administrere servere?",
+        "a": "Ja. Panelet har administrator-, operatør- og seerroller, og hver konto kan aktivere to-faktor-godkendelse."
+      },
+      {
+        "q": "Skal det være tilgængeligt på internettet?",
+        "a": "Nej. Spillere opretter forbindelse til spilporte, ikke panelet. Hold panelet på dit LAN eller bag en VPN eller reverse proxy med godkendelse."
+      },
+      {
+        "q": "Hvad med Bedrock-spillere?",
+        "a": "Begge kan installeres som ethvert andet plugin eller mod, og panelet eksponerer de indstillinger, de har brug for.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Hvor får jeg hjælp?",
+        "a": "Discord-serveren har et supportforum og rigtige mennesker. Fejl og funktionsanmodninger sendes til GitHub-problemer."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Changelog",
+    "intro": "Hver udgivelse, nyeste først. Udsendelsesnoter udgives på engelsk.",
+    "releases": "Alle udgivelser på GitHub"
+  },
+  "community": {
+    "title": "Kom og sig hej",
+    "body": "Rapporter fejl, foreslå funktioner, få hjælp fra rigtige mennesker, og vis dine servere frem.",
+    "discord": "Deltag i Discord",
+    "github": "Stjernemærk på GitHub"
+  },
+  "footer": {
+    "tagline": "Gratis og open source under MIT-licensen.",
+    "product": "Produkt",
+    "community": "Fællesskab",
+    "resources": "Ressourcer",
+    "issues": "Problemer",
+    "releases": "Udgivelser",
+    "contributing": "Bidrag",
+    "license": "Licens",
+    "notAffiliated": "Ikke et officielt Minecraft-produkt. Ikke godkendt af eller associeret med Mojang eller Microsoft."
+  },
+  "meta": {
+    "home": {
+      "title": "Gratis selv-hostet kontrolpanel til Minecraft-servere",
+      "description": "Kør vanilla og moddede Minecraft-servere fra din browser. Docker-baseret, modpacks fastgjort til præcise versioner, backups, tidsplaner, live-kort, spilleranalyse. Gratis, open source, oppe at køre i tre trin."
+    },
+    "features": {
+      "title": "Funktioner",
+      "description": "Alle funktioner i Minecraft Server Manager: containeriserede servere, fem mod-registre, checksum-verificerede downloads, gem-sikre backups, tidsplaner, blueprints, crash-analyse, live-kort, roller og to-faktor-godkendelse."
+    },
+    "screenshots": {
+      "title": "Skærmbilleder",
+      "description": "Skærmbilleder af Minecraft Server Manager-panelet på desktop og telefon: dashboard, guide, konsol, mods, verdener, backups, tidsplaner og mere."
+    },
+    "install": {
+      "title": "Installation",
+      "description": "Installer Minecraft Server Manager med Docker i tre kommandoer, eller fra kildekode på Windows, macOS og Linux."
+    },
+    "faq": {
+      "title": "FAQ",
+      "description": "Svar om omkostninger, understøttede servertyper, ARM-understøttelse, migrering, roller og eksponering for internettet."
+    },
+    "changelog": {
+      "title": "Ændringslog",
+      "description": "Udgivelsesnoter for hver version af Minecraft Server Manager."
+    },
+    "notFound": {
+      "title": "Side ikke fundet",
+      "description": "Denne side eksisterer ikke."
+    }
+  },
+  "notFound": {
+    "title": "Denne sektion blev aldrig genereret.",
+    "body": "Siden du efterspurgte findes ikke. Prøv hjemmesiden eller dokumentationen.",
+    "home": "Gå hjem"
+  },
+  "langNotice": "Denne side vises på engelsk, indtil dens oversættelse er klar.",
+  "tutorial": {
+    "title": "Klar på tre trin",
+    "intro": "Vælg, hvordan du vil køre panelet. Udfyld de to felter, og hver kommando nedenfor omskriver sig selv til din maskine.",
+    "dataDir": "Datamappe på værten",
+    "dataDirHint": "Absolut sti. Verdener, backups, mods og databasen bor alle her.",
+    "host": "Værtsnavn eller IP",
+    "hostHint": "Hvor du vil åbne panelet fra en browser.",
+    "then": "Åbn derefter panelet",
+    "copy": "Kopiér",
+    "copied": "Kopieret!",
+    "firstRun": "Første kørsel guider dig gennem et systemtjek, din tidszone og oprettelse af administratorkontoen.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Opret datamappen",
+            "body": "Én mappe indeholder alt, hvad panelet ejer."
+          },
+          {
+            "title": "Download compose-filen og peg den mod mappen",
+            "body": "DATA_DIR_HOST skal være den absolutte sti på værten, da Docker monterer den fra værtens synspunkt."
+          },
+          {
+            "title": "Start panelet",
+            "body": "Imagets er multi-arch (amd64 og arm64) og opdateres ved hver udgivelse."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Opret datamappen på værten",
+            "body": "Samme mapperegel: absolut sti, på maskinen der kører Docker."
+          },
+          {
+            "title": "Tilføj en stak fra compose-filen",
+            "body": "Indsæt indholdet af compose-filen i en ny stak. Rå fil er her:"
+          },
+          {
+            "title": "Indstil miljøvariablen og implementer",
+            "body": "Tilføj den i stakkens miljøsektion, og implementer derefter."
+          }
+        ]
+      },
+      "source": {
+        "label": "Fra kildekode",
+        "steps": [
+          {
+            "title": "Tjek kravene",
+            "body": "Node.js 24 eller nyere, pnpm og Docker kørende (Docker Desktop på Windows og macOS)."
+          },
+          {
+            "title": "Klon og installer",
+            "body": "Installations-trinnet bygger også panelets CSS. Ingen native moduler at kompilere."
+          },
+          {
+            "title": "Start panelet",
+            "body": "Som standard lytter den kun på localhost. Indstil PANEL_HOST=0.0.0.0 for at tilgå den fra andre maskiner på dit netværk."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Start fra en kildekodeinstallation",
+            "body": "Kør dette fra den klonede mappe. PM2 starter apps med den Node-version, der startede dens daemon, så fastgør fortolkeren."
+          },
+          {
+            "title": "Gem proceslisten og aktiver opstart",
+            "body": "pm2 startup udskriver én kommando, der skal køres med sudo; kør den én gang."
+          },
+          {
+            "title": "Foretrækker du systemd?",
+            "body": "En enhed, der kører node src/server.js fra den klonede mappe med WorkingDirectory sat, fungerer på samme måde. Panelet behøver ingen ekstra flag."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Fungerer med alt, du allerede bruger",
+    "registries": "Registreringer",
+    "loaders": "Servertyper",
+    "packs": "Modpacks",
+    "runsOn": "Kører på",
+    "formats": "Importerer",
+    "checksums": "Kontrolsummer",
+    "integrations": "Integrationer",
+    "keyless": "nøglefri"
+  }
+}

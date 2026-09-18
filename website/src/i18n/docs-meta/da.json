@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Aktivitetslog",
+    "description": "Aktivitetssiden er den komplette revisionsspor: en søgbar, kronologisk oversigt over alt, hvad der er sket i panelet."
+  },
+  "architecture": {
+    "title": "Arkitektur",
+    "description": "Minecraft Server Manager er en single-process, server-rendered Node.js-applikation."
+  },
+  "backups": {
+    "title": "Sikkerhedskopier",
+    "description": "Sikkerhedskopier-siden viser alle snapshots på tværs af din flåde, med størrelse, årsag og alder."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "En blueprint fanger en servers hele konfiguration (type, version, ressourcer, miljø, pack pin og valgfrit dens konfiguration og verden) i en enkelt fil."
+  },
+  "chatbot": {
+    "title": "Chatbot pr. Minecraft-server",
+    "description": "Denne fork tilføjer en admin-konfigureret chatbot til hver administreret Minecraft-server."
+  },
+  "console-and-chat": {
+    "title": "Konsol & chat-kommandoer",
+    "description": "Konsol-fanen streamer serverloggen i realtid og giver dig en kommandoboks til at sende enhver serverkommando."
+  },
+  "dashboard": {
+    "title": "Dashboardet",
+    "description": "Dashboardet er din base: hver server, dens live-status og et løbende feed af, hvad der er sket."
+  },
+  "getting-started": {
+    "title": "Kom godt i gang",
+    "description": "Første gang du åbner panelet, bliver du bedt om at oprette en administratorbruger."
+  },
+  "index": {
+    "title": "Dokumentation",
+    "description": "Et komplet, selv-hostet kontrolpanel til itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrationer",
+    "description": "Hver server har sine integrationer under Indstillinger-gruppen: Discord, en offentlig Status Side, et-klik Invites og den valgfrie Chatbot-fane."
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "Modpacks-siden (og fanen \"Fra modpack\" i oprettelsesguiden) installerer en modpack som en server, altid fastgjort til en præcis pakkeversion, så en genstart kan"
+  },
+  "public-api": {
+    "title": "Offentlig API",
+    "description": "En lille, skrivebeskyttet HTTP API til at hente serverstatus udefra panelet: a"
+  },
+  "schedules": {
+    "title": "Tidsplaner",
+    "description": "Siden Tidsplaner automatiserer tilbagevendende opgaver med cron-udtryk."
+  },
+  "servers": {
+    "title": "Oprettelse & administration af servere",
+    "description": "Klik på Opret en server (øverste bjælke) eller på kortet Opret en server for at åbne guiden."
+  },
+  "storage": {
+    "title": "Lagerplads",
+    "description": "Lagerplads-siden viser, hvor din diskplads bliver brugt: forbrug pr. server og hvordan det udvikler sig over tid."
+  },
+  "two-factor-authentication": {
+    "title": "Tofaktor-godkendelse",
+    "description": "Tofaktor-godkendelse (2FA) tilføjer et andet trin til login: efter din adgangskode indtaster du en kort kode fra en godkendelsesapp på din telefon."
+  },
+  "users-and-roles": {
+    "title": "Brugere & roller",
+    "description": "Panelet er multi-bruger."
+  },
+  "world-shrink": {
+    "title": "Formindskning af en verden",
+    "description": "Over tid spreder en verden sig: ethvert sted, en spiller nogensinde har gået, fløjet eller"
+  },
+  "worlds-and-files": {
+    "title": "Verdener & filer",
+    "description": "Verdenssiden administrerer verdensdata på tværs af dine servere: skift den aktive verden, upload en verden eller download en."
+  },
+  "updates": {
+    "title": "Opdateringer",
+    "description": "Opdateringssiden sporer, hvad der er forældet på tværs af din flåde ét sted:"
+  }
+}

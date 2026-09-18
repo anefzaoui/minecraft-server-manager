@@ -14,7 +14,8 @@
 // same code fences, same link targets) guard every result before it is written.
 //
 // Provider: OpenRouter's OpenAI-compatible chat completions with
-// google/gemini-2.5-flash-lite by default (≈$0.10 / $0.40 per million tokens,
+// google/gemini-2.5-flash-lite by default (≈$0.10 / $0.40 per million tokens; a unit
+// that fails validation or the token cap is retried on the bigger models;
 // the whole site is under a dollar). Key: OPENROUTER_API_KEY in website/.env.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -35,8 +36,11 @@ const i18nDir = join(site, 'src', 'i18n');
 const docsEnDir = join(site, 'src', 'content', 'docs', 'docs');
 const manifestPath = join(i18nDir, 'translation-manifest.json');
 
+// Contributor-facing docs stay English: the wide tables in website.md make every
+// model loop until the token cap, and its readers are maintainers.
+const UNTRANSLATED_DOCS = ['website'];
 const DEFAULT_MODEL = 'google/gemini-2.5-flash-lite';
-const FALLBACK_MODEL = 'google/gemini-2.5-flash';
+const FALLBACK_MODELS = ['google/gemini-2.5-flash', 'google/gemini-3.1-flash-lite'];
 const MAX_TOKENS = 16000;
 const CONCURRENCY = 8;
 // USD per million tokens for the default model, for the dry-run estimate.
@@ -70,6 +74,31 @@ function splitFrontMatter(md) {
   return { meta, body: md.slice(m[0].length), raw: m[1] };
 }
 
+const UNTRANSLATABLE_KEYS = new Set(['pills', 'icon', 'reqPills']);
+
+/** Deep copy without the untranslatable keys. */
+function stripUntranslatable(v) {
+  if (Array.isArray(v)) return v.map(stripUntranslatable);
+  if (v && typeof v === 'object') {
+    const out = {};
+    for (const [k, val] of Object.entries(v)) if (!UNTRANSLATABLE_KEYS.has(k)) out[k] = stripUntranslatable(val);
+    return out;
+  }
+  return v;
+}
+
+/** Put the untranslatable keys from `en` back into the translated `t` (same shape). */
+function restoreUntranslatable(en, t) {
+  if (Array.isArray(en)) return en.map((v, i) => restoreUntranslatable(v, t[i]));
+  if (en && typeof en === 'object') {
+    const out = {};
+    for (const [k, val] of Object.entries(en))
+      out[k] = UNTRANSLATABLE_KEYS.has(k) ? val : restoreUntranslatable(val, t[k]);
+    return out;
+  }
+  return t;
+}
+
 function collectUnits() {
   const units = [];
   if (only === 'all' || only === 'marketing') {
@@ -77,9 +106,10 @@ function collectUnits() {
     for (const [key, value] of Object.entries(en)) {
       if (key === '$comment') continue;
       // A bare string is wrapped so the model always sees (and returns) an object.
-      const wrapped = typeof value === 'string' ? { text: value } : value;
+      const wrapped = typeof value === 'string' ? { text: value } : stripUntranslatable(value);
       units.push({
         id: `marketing:${key}`,
+        full: value,
         kind: 'json',
         source: JSON.stringify(wrapped, null, 2),
         key,
@@ -96,6 +126,7 @@ function collectUnits() {
       .filter((f) => f.endsWith('.md'))
       .sort()) {
       const slug = file.slice(0, -3);
+      if (UNTRANSLATED_DOCS.includes(slug)) continue;
       const { meta, body } = splitFrontMatter(readFileSync(join(docsEnDir, file), 'utf8'));
       // The front matter goes as a tiny JSON unit of its own: sent inline with the
       // markdown, the model rewrites it as a ```json block and breaks the file.
@@ -205,9 +236,18 @@ function validate(unit, text) {
     return { ok: true, value: parsed };
   }
   if (fences(body) !== fences(unit.source)) return { ok: false, reason: 'code fence count differs' };
-  if (linkTargets(body) !== linkTargets(unit.source)) return { ok: false, reason: 'link targets differ' };
+  let repaired = body;
+  if (linkTargets(body) !== linkTargets(unit.source)) {
+    // Same number of links: the model altered targets (anchors, encoding). Put
+    // the source targets back in order; the link text stays translated.
+    const src = unit.source.match(/\]\(([^)\s]+)\)/g) || [];
+    const out = body.match(/\]\(([^)\s]+)\)/g) || [];
+    if (src.length !== out.length) return { ok: false, reason: 'link targets differ' };
+    let i = 0;
+    repaired = body.replace(/\]\(([^)\s]+)\)/g, () => src[i++]);
+  }
   if (headingCount(body) !== headingCount(unit.source)) return { ok: false, reason: 'heading count differs' };
-  return { ok: true, value: `${body.trimEnd()}\n` };
+  return { ok: true, value: `${repaired.trimEnd()}\n` };
 }
 
 // ---------- writing ----------
@@ -226,7 +266,7 @@ function writeResult(unit, locale, value, manifest) {
   if (unit.id.startsWith('marketing:')) {
     const p = join(i18nDir, `${locale}.json`);
     const current = readJson(p, {});
-    current[unit.key] = unit.unwrap ? value.text : value;
+    current[unit.key] = unit.unwrap ? value.text : restoreUntranslatable(unit.full, value);
     const en = readJson(join(i18nDir, 'en.json'));
     const ordered = {};
     for (const k of Object.keys(en)) if (k in current) ordered[k] = current[k];
@@ -291,12 +331,14 @@ async function main() {
     process.exit(1);
   }
   const outcomes = { written: 0, failed: [], cost: 0 };
+  // Returns null on success, else the reason. Writing happens here.
   const handle = (job, text, finish) => {
-    if (finish && finish !== 'stop') return outcomes.failed.push(`${job.custom_id}: finish_reason ${finish}`);
+    if (finish && finish !== 'stop') return `finish_reason ${finish}`;
     const v = validate(job.unit, text);
-    if (!v.ok) return outcomes.failed.push(`${job.custom_id}: ${v.reason}`);
+    if (!v.ok) return v.reason;
     writeResult(job.unit, job.locale, v.value, manifest);
     outcomes.written++;
+    return null;
   };
 
   let next = 0;
@@ -305,14 +347,17 @@ async function main() {
     while (next < jobs.length) {
       const job = jobs[next++];
       try {
-        let res = await complete(requestBody(job.unit, job.locale));
-        outcomes.cost += res.cost;
-        if (res.finish === 'length') {
-          // Flash Lite occasionally loops on table-heavy pages; the bigger model does not.
-          res = await complete({ ...requestBody(job.unit, job.locale), model: FALLBACK_MODEL });
+        // Default model first; any failure (validation or token cap) retries on
+        // the bigger models. A pair that fails the same way every time on Flash
+        // Lite almost always passes on Flash.
+        let reason = null;
+        for (const model of [MODEL, ...FALLBACK_MODELS]) {
+          const res = await complete({ ...requestBody(job.unit, job.locale), model });
           outcomes.cost += res.cost;
+          reason = handle(job, res.text, res.finish);
+          if (!reason) break;
         }
-        handle(job, res.text, res.finish);
+        if (reason) outcomes.failed.push(`${job.custom_id}: ${reason}`);
       } catch (err) {
         outcomes.failed.push(`${job.custom_id}: ${err.message}`);
       }

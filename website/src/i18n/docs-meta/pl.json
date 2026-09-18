@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Dziennik aktywności",
+    "description": "Strona Aktywność to pełny ślad audytu: przeszukiwalny, chronologiczny zapis wszystkiego, co wydarzyło się w panelu."
+  },
+  "architecture": {
+    "title": "Architektura",
+    "description": "Minecraft Server Manager to aplikacja Node.js renderowana po stronie serwera, działająca w jednym procesie."
+  },
+  "backups": {
+    "title": "Kopie zapasowe",
+    "description": "Strona Kopie zapasowe zawiera migawki z całej Twojej floty, wraz z rozmiarem, powodem utworzenia i wiekiem."
+  },
+  "blueprints": {
+    "title": "Schematy",
+    "description": "Schemat przechwytuje całą konfigurację serwera (typ, wersja, zasoby, środowisko, przypięcie paczki oraz opcjonalnie jego konfigurację i świat) w jednym pliku po"
+  },
+  "chatbot": {
+    "title": "Chatbot Minecraft na serwer",
+    "description": "Ten fork dodaje skonfigurowanego przez administratora chatbota do każdego zarządzanego serwera Minecraft."
+  },
+  "console-and-chat": {
+    "title": "Konsola i polecenia czatu",
+    "description": "Zakładka Konsola strumieniuje logi serwera w czasie rzeczywistym i udostępnia pole tekstowe do wysyłania dowolnych poleceń serwera."
+  },
+  "dashboard": {
+    "title": "Panel główny",
+    "description": "Panel główny to Twoja baza wypadowa: każdy serwer, jego status na żywo i bieżący strumień tego, co się dzieje."
+  },
+  "getting-started": {
+    "title": "Pierwsze kroki",
+    "description": "Po pierwszym otwarciu panelu poprosi Cię o utworzenie konta administratora."
+  },
+  "index": {
+    "title": "Dokumentacja",
+    "description": "Kompletny, samodzielnie hostowany panel sterowania dla itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integracje",
+    "description": "Każdy serwer posiada swoje integracje w grupie Ustawienia: Discord, publiczna Strona Statusu, jednoklikowe Zaproszenia oraz opcjonalna zakładka Chatbot."
+  },
+  "modpacks": {
+    "title": "Pakiety modów",
+    "description": "Strona Pakiety modów (oraz zakładka Z pakietu modów w kreatorze tworzenia) instaluje pakiet modów jako serwer, zawsze przypięty do dokładnej wersji pakietu, dzięki czemu restart może"
+  },
+  "public-api": {
+    "title": "Publiczne API",
+    "description": "Niewielkie, tylko do odczytu API HTTP do pobierania statusu serwera spoza panelu: a"
+  },
+  "schedules": {
+    "title": "Harmonogramy",
+    "description": "Strona Harmonogramy automatyzuje powtarzalne zadania za pomocą wyrażeń cron."
+  },
+  "servers": {
+    "title": "Tworzenie i zarządzanie serwerami",
+    "description": "Kliknij Utwórz serwer (górny pasek) lub kartę Utwórz serwer, aby otworzyć kreatora."
+  },
+  "storage": {
+    "title": "Magazyn",
+    "description": "Strona Magazyn pokazuje, gdzie wykorzystywane jest Twoje miejsce na dysku: użycie na serwer i jego trend w czasie."
+  },
+  "two-factor-authentication": {
+    "title": "Uwierzytelnianie dwuskładnikowe",
+    "description": "Uwierzytelnianie dwuskładnikowe (2FA) dodaje drugi krok podczas logowania: po podaniu hasła wprowadzasz krótki kod z aplikacji uwierzytelniającej na swoim telefonie."
+  },
+  "updates": {
+    "title": "Aktualizacje",
+    "description": "Strona Aktualizacje śledzi, co jest nieaktualne we wszystkich Twoich serwerach w jednym miejscu:"
+  },
+  "users-and-roles": {
+    "title": "Użytkownicy i role",
+    "description": "Panel jest wieloużytkownikowy."
+  },
+  "world-shrink": {
+    "title": "Zmniejszanie świata",
+    "description": "Z czasem świat się rozrasta: każde miejsce, w którym gracz kiedykolwiek chodził, latał lub"
+  },
+  "worlds-and-files": {
+    "title": "Światy i pliki",
+    "description": "Strona Światy zarządza danymi świata na Twoich serwerach: przełączaj aktywny świat, przesyłaj lub pobieraj świat."
+  }
+}

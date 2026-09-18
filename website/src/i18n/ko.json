@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Docker 기반 Minecraft 서버를 위한 무료 자체 호스팅 제어판.",
+    "description": "브라우저에서 모드 및 바닐라 Minecraft 서버를 실행하세요. 모드팩을 정확한 버전에 고정하고, 원클릭 백업, 예약, 실시간 지도, 플레이어 분석 기능을 제공합니다. 무료 오픈 소스이며, 전체 패널이 단 하나의 폴더에 있습니다."
+  },
+  "nav": {
+    "home": "홈",
+    "features": "기능",
+    "screenshots": "스크린샷",
+    "install": "설치",
+    "docs": "문서",
+    "faq": "FAQ",
+    "changelog": "변경 기록",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "메뉴",
+    "language": "언어",
+    "theme": "밝거나 어두운 테마 전환",
+    "skip": "콘텐츠로 건너뛰기"
+  },
+  "hero": {
+    "eyebrow": "무료 오픈 소스. 직접 설치하여 실행하세요.",
+    "title": "하나의 편리한 패널에서 Minecraft 서버를 관리하세요.",
+    "subtitle": "Minecraft Server Manager는 Docker를 서버를 위한 아늑한 공간으로 바꿔줍니다. 고정된 모드팩, 원클릭 백업, 예약 작업, 실시간 지도, 플레이어 통계, 그리고 쉬운 영어로 소통하는 콘솔까지 제공합니다. 비용이나 종속성 없이, 전체 패널을 하나의 폴더에서 관리할 수 있습니다.",
+    "primary": "3단계로 시작하기",
+    "secondary": "기능 살펴보기",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "튜토리얼 보기"
+  },
+  "pillars": {
+    "title": "티켓이 아닌 서버 운영자를 위한 솔루션",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "단 하나의 폴더로 모든 것을 관리",
+        "body": "데이터베이스, 월드, 백업, 공유 모드 라이브러리 등이 모두 단일 데이터 폴더에 저장됩니다. 이 폴더만 복사하면 마이그레이션이 완료됩니다."
+      },
+      {
+        "icon": "box",
+        "title": "모든 서버는 컨테이너로 실행",
+        "body": "각 서버는 검증된 itzg 이미지를 기반으로 자체 CPU 및 메모리 제한, RCON을 통한 정상 종료, 충돌 감지 기능을 갖추고 실행됩니다.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "모드팩은 항상 최신 상태로 고정",
+        "body": "모드팩은 정확한 버전에 고정됩니다. 업그레이드는 명시적으로 진행되며, 미리 보기, 백업 우선 수행, 상태 확인, 원클릭 롤백 기능을 제공합니다.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "서버 소유자가 찾는 모든 것",
+    "intro": "서버 생성부터 실시간 지도 공유까지, 모든 기능을 둘러보세요.",
+    "cta": "문서 읽기",
+    "groups": [
+      {
+        "title": "서버 및 라이프사이클",
+        "items": [
+          {
+            "title": "리소스 제한 컨테이너",
+            "body": "정상적인 RCON 종료 및 자동 충돌 감지를 통해 서버를 생성, 시작, 중지, 재시작, 재빌드 및 삭제합니다.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "안내형 생성 마법사",
+            "body": "간단 또는 고급 모드를 제공하며, 선택하기 전에 모든 이미지 설정을 명확하게 설명합니다.",
+            "icon": "wand"
+          },
+          {
+            "title": "실시간 콘솔",
+            "body": "RCON 명령줄, 로그 필터 및 원클릭 플레이어 액션이 있는 WebSocket 콘솔입니다.",
+            "icon": "terminal"
+          },
+          {
+            "title": "플레이어 관리",
+            "body": "화이트리스트, 운영자, 차단, IP 차단 및 순간 이동을 RCON을 통해 온라인으로, JSON 파일을 통해 오프라인으로 관리합니다.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "모드 및 모드팩",
+        "items": [
+          {
+            "title": "하나의 브라우저에서 다섯 개의 레지스트리",
+            "body": "다섯 개의 레지스트리를 한 곳에서 검색합니다. 세 개는 API 키가 필요하지 않습니다.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "링크로 추가",
+            "body": "프로젝트 페이지, GitHub 저장소, 슬러그 또는 직접 jar URL을 붙여넣습니다. 패널이 이를 식별합니다.",
+            "icon": "link"
+          },
+          {
+            "title": "모든 것 가져오기",
+            "body": "모든 jar 파일을 식별하고 가져오는 동안 호환성을 확인합니다.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "체크섬 검증 다운로드",
+            "body": "파일이 서버에 도달하기 전에 검증하며, 가장 강력한 해시를 먼저 사용합니다. 불일치 시 절대 배포되지 않습니다.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "공유 모드 라이브러리",
+            "body": "sha256으로 중복 제거하고 서버에 하드 링크하여 사용자 지정 모드가 팩 업데이트 시에도 유지되도록 합니다.",
+            "icon": "library"
+          },
+          {
+            "title": "모드 우선 선택기",
+            "body": "원하는 모드를 선택하고 최신 호환 로더 및 Minecraft 버전을 얻습니다.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "보호 및 자동화",
+        "items": [
+          {
+            "title": "안전한 백업",
+            "body": "보존 등급이 있는 스냅샷, 제자리 복원 및 디스크 공간 확보를 위한 선택적 월드 축소 기능을 제공합니다.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron 스케줄",
+            "body": "예약된 재시작, 백업 및 RCON 명령을 실행하며, 다음 실행 시간을 미리 보여줍니다.",
+            "icon": "clock"
+          },
+          {
+            "title": "청사진",
+            "body": "서버를 이식 가능한 레시피로 내보내고 어디든 가져와 동일한 서버를 복구합니다.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "충돌 분석",
+            "body": "충돌을 감지, 분석하고 용의자를 지목하며, 원클릭 공유 및 자동화된 인사이트를 제공합니다.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "업데이트 추적",
+            "body": "새로운 서버, 팩, 이미지 및 모드 버전을 추적하며, 업데이트 전 백업 및 원클릭 롤백 기능을 제공합니다.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "인사이트 및 커뮤니티",
+        "items": [
+          {
+            "title": "실시간 지도",
+            "body": "패널의 인증된 프록시를 통해 제공되는 실시간 지도를 원클릭으로 실행합니다.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "분석 및 저장소",
+            "body": "플레이 시간, 사망 횟수, 채광 점수판, 인벤토리 분석, 서버별 디스크 사용량 및 할당량 강제 적용 기능을 제공합니다.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord 및 챗봇",
+            "body": "이벤트별 토글이 있는 웹훅과 제한된 게임 내 권한을 가진 선택적 서버별 챗봇을 제공합니다.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "공개 상태 페이지 및 API",
+            "body": "선택적 상태 페이지, 초대 블록, 생성된 클라이언트 .mrpack 및 읽기 전용 토큰 인증 API를 제공합니다.",
+            "icon": "globe"
+          },
+          {
+            "title": "사용자, 역할 및 2FA",
+            "body": "TOTP 2단계 인증을 갖춘 관리자, 운영자 및 뷰어 역할을 제공합니다.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "사용하기 즐거운 패널",
+    "intro": "데스크톱 및 휴대폰. 패널은 우선적으로 좁은 화면에 맞춰 디자인되었으므로 모든 페이지가 휴대폰에서도 작동합니다.",
+    "desktop": "데스크톱",
+    "mobile": "휴대폰에서",
+    "items": {
+      "dashboard": "대시보드: 모든 서버, 플레이어 수, 최근 활동을 한눈에 볼 수 있습니다.",
+      "wizard": "생성 마법사가 설정을 선택하기 전에 모든 설정을 설명합니다.",
+      "overview": "리소스 미터와 빠른 작업이 포함된 서버 개요입니다.",
+      "console": "RCON 명령 표시줄과 로그 필터가 있는 실시간 콘솔입니다.",
+      "mods": "서버의 로더 및 버전에 맞춰 필터링된 5개의 레지스트리에서 모드를 가져옵니다.",
+      "worlds": "브라우저에서 월드를 전환하고 파일을 관리합니다.",
+      "backups": "보존 등급 및 제자리 복원이 포함된 백업입니다.",
+      "schedules": "다시 시작, 백업 및 명령에 대한 Cron 예약입니다.",
+      "blueprints": "블루프린트: 이식 가능한 서버 레시피입니다.",
+      "storage": "스토리지 분석 및 강제 할당량입니다."
+    }
+  },
+  "install": {
+    "title": "설치",
+    "intro": "호스트에 맞는 옵션을 선택하세요. 모든 경로는 동일한 패널을 제공합니다.",
+    "requirements": "요구 사항",
+    "reqItems": [
+      "Docker Engine (Linux) 또는 Docker Desktop (Windows, macOS).",
+      "소스에서 설치하려면 Node.js 24 이상이 필요합니다. Docker 이미지는 자체적으로 포함합니다.",
+      "서버 이미지 및 월드를 위한 몇 기가바이트의 디스크 공간."
+    ],
+    "docker": {
+      "title": "옵션 1: Docker",
+      "body": "릴리스마다 GHCR에 미리 빌드된 멀티 아키 이미지(multi-arch image)가 게시됩니다. compose 파일을 다운로드하고, 변수 하나를 설정한 다음, 시작하세요.",
+      "after": "그런 다음 http://your-host:25564로 접속하세요. Portainer 또는 Dockge에서 compose 파일을 스택으로 붙여넣고 스택의 환경 변수에서 DATA_DIR_HOST를 설정하세요.",
+      "warning": "패널은 마운트된 소켓을 통해 호스트의 Docker 데몬을 제어하므로, 호스트에서 루트 권한과 동등한 권한을 갖습니다. 관리자 로그인을 이에 맞춰 취급하고 패널을 인터넷에 직접 노출하지 마세요."
+    },
+    "source": {
+      "title": "옵션 2: 소스에서 설치",
+      "body": "Docker Desktop이 설치된 Windows 및 macOS를 포함한 모든 운영 체제.",
+      "after": "http://localhost:25564로 접속하세요. 처음 실행 시 시스템 확인, 시간대 설정, 관리자 계정 생성 과정을 안내합니다."
+    },
+    "next": "다음 단계",
+    "nextBody": "시작하기 가이드에서는 첫 실행 설정, 첫 서버 생성, 파일 위치 등을 다룹니다.",
+    "nextCta": "시작하기 읽기",
+    "compose": "docker-compose.yml 다운로드",
+    "windows": "Windows 참고 사항",
+    "windowsItems": [
+      "서버를 시작하거나 생성하기 전에 Docker Desktop이 실행 중이어야 합니다.",
+      "바인드 마운트(bind mount)가 작동하도록 프로젝트 드라이브를 Docker Desktop과 공유하세요 (설정, 리소스, 파일 공유).",
+      "Docker 이미지는 Linux 호스트를 대상으로 합니다. Windows 및 macOS에서는 소스에서 패널을 실행하세요."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "자주 묻는 질문",
+    "items": [
+      {
+        "q": "정말 무료인가요?",
+        "a": "네. 이 패널은 MIT 라이선스를 따르며 유료 서비스를 사용하지 않습니다. 모든 것은 사용자의 컴퓨터에서 실행됩니다."
+      },
+      {
+        "q": "Raspberry Pi 또는 다른 ARM 기기에서도 작동하나요?",
+        "a": "네. Docker 이미지는 두 아키텍처 모두에 대해 게시되며, 소스에서 직접 설치하는 방식은 Node.js 24와 Docker가 작동하는 모든 곳에서 실행됩니다.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "어떤 종류의 서버를 지원하나요?",
+        "a": "itzg 이미지가 지원하는 모든 서버와 주요 4개 소스의 모드팩을 지원합니다.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "패널을 새 기기로 어떻게 옮기나요?",
+        "a": "데이터 폴더를 복사하세요. 이 폴더에는 데이터베이스, 모든 서버의 월드, 백업, 모드 라이브러리가 포함됩니다. 새 기기에서 해당 폴더를 가리키도록 패널을 시작하세요."
+      },
+      {
+        "q": "여러 사람이 서버를 관리할 수 있나요?",
+        "a": "네. 패널에는 관리자, 운영자, 뷰어 역할이 있으며 각 계정은 2단계 인증을 활성화할 수 있습니다."
+      },
+      {
+        "q": "인터넷에 노출되어야 하나요?",
+        "a": "아니요. 플레이어는 패널이 아닌 게임 포트로 연결합니다. 패널은 LAN 또는 VPN 또는 인증된 리버스 프록시 뒤에 두세요."
+      },
+      {
+        "q": "Bedrock 플레이어는 어떻게 되나요?",
+        "a": "Geyser 및 Floodgate는 다른 플러그인이나 모드처럼 설치할 수 있으며, 패널은 필요한 설정을 제공합니다.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "도움은 어디서 받나요?",
+        "a": "Discord 서버에는 지원 포럼과 실제 사람들이 있습니다. 버그 및 기능 요청은 GitHub 이슈로 보내주세요."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "변경 기록",
+    "intro": "최신 버전부터 순서대로 모든 릴리스입니다. 릴리스 노트는 영어로 게시됩니다.",
+    "releases": "GitHub의 모든 릴리스"
+  },
+  "community": {
+    "title": "인사하러 오세요",
+    "body": "버그를 신고하고, 기능을 제안하고, 실제 사용자에게 도움을 받고, 서버를 자랑하세요.",
+    "discord": "Discord 참여하기",
+    "github": "GitHub에서 별표하기"
+  },
+  "footer": {
+    "tagline": "MIT 라이선스에 따라 무료로 제공되는 오픈 소스입니다.",
+    "product": "제품",
+    "community": "커뮤니티",
+    "resources": "리소스",
+    "issues": "이슈",
+    "releases": "릴리스",
+    "contributing": "기여",
+    "license": "라이선스",
+    "notAffiliated": "공식 Minecraft 제품이 아닙니다. Mojang 또는 Microsoft의 승인을 받거나 관련이 없습니다."
+  },
+  "meta": {
+    "home": {
+      "title": "무료 자체 호스팅 Minecraft 서버 제어판",
+      "description": "브라우저에서 바닐라 및 모드 Minecraft 서버를 실행하세요. Docker 기반, 정확한 버전에 고정된 모드팩, 백업, 예약, 실시간 지도, 플레이어 분석. 무료, 오픈 소스, 세 단계로 실행 가능."
+    },
+    "features": {
+      "title": "기능",
+      "description": "Minecraft Server Manager의 모든 기능: 컨테이너화된 서버, 다섯 가지 모드 레지스트리, 체크섬 검증 다운로드, 안전한 백업, 예약, 청사진, 충돌 분석, 실시간 지도, 역할 및 2단계 인증."
+    },
+    "screenshots": {
+      "title": "스크린샷",
+      "description": "데스크톱 및 휴대폰의 Minecraft Server Manager 패널 스크린샷: 대시보드, 마법사, 콘솔, 모드, 월드, 백업, 예약 등."
+    },
+    "install": {
+      "title": "설치",
+      "description": "세 가지 명령으로 Docker를 사용하여 Minecraft Server Manager를 설치하거나 Windows, macOS 및 Linux에서 소스에서 설치하세요."
+    },
+    "faq": {
+      "title": "자주 묻는 질문",
+      "description": "비용, 지원되는 서버 유형, ARM 지원, 마이그레이션, 역할 및 인터넷 노출에 대한 답변."
+    },
+    "changelog": {
+      "title": "변경 로그",
+      "description": "Minecraft Server Manager의 모든 버전에 대한 릴리스 노트."
+    },
+    "notFound": {
+      "title": "페이지를 찾을 수 없습니다",
+      "description": "이 페이지는 존재하지 않습니다."
+    }
+  },
+  "notFound": {
+    "title": "이 청크는 생성된 적이 없습니다.",
+    "body": "요청하신 페이지를 찾을 수 없습니다. 홈페이지나 문서를 확인해 보세요.",
+    "home": "홈으로 가기"
+  },
+  "langNotice": "이 페이지는 번역이 완료될 때까지 영어로 표시됩니다.",
+  "tutorial": {
+    "title": "세 단계로 시작하기",
+    "intro": "패널을 실행할 방법을 선택하세요. 두 필드를 채우면 아래의 모든 명령이 사용자의 컴퓨터에 맞게 자동으로 변경됩니다.",
+    "dataDir": "호스트의 데이터 폴더",
+    "dataDirHint": "절대 경로. 월드, 백업, 모드 및 데이터베이스가 모두 여기에 저장됩니다.",
+    "host": "호스트 이름 또는 IP",
+    "hostHint": "브라우저에서 패널에 접속할 주소입니다.",
+    "then": "그런 다음 패널 열기",
+    "copy": "복사",
+    "copied": "복사됨!",
+    "firstRun": "첫 실행 시 시스템 확인, 시간대 설정, 관리자 계정 생성을 안내합니다.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "데이터 폴더 생성",
+            "body": "하나의 폴더가 패널 소유의 모든 것을 담습니다."
+          },
+          {
+            "title": "Compose 파일 다운로드 및 해당 폴더 지정",
+            "body": "DATA_DIR_HOST는 Docker가 호스트의 관점에서 마운트하기 때문에 호스트의 절대 경로여야 합니다."
+          },
+          {
+            "title": "패널 시작",
+            "body": "이미지는 멀티 아키텍처(amd64 및 arm64)이며 모든 릴리스마다 업데이트됩니다."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "호스트에 데이터 폴더 생성",
+            "body": "동일한 폴더 규칙: Docker를 실행하는 머신의 절대 경로입니다."
+          },
+          {
+            "title": "Compose 파일에서 스택 추가",
+            "body": "Compose 파일의 내용을 새 스택에 붙여넣으세요. 원본 파일은 여기에서 확인할 수 있습니다:"
+          },
+          {
+            "title": "환경 변수 설정 및 배포",
+            "body": "스택의 환경 섹션에 추가한 다음 배포하세요."
+          }
+        ]
+      },
+      "source": {
+        "label": "소스에서 빌드",
+        "steps": [
+          {
+            "title": "요구 사항 확인",
+            "body": "Node.js 24 이상, pnpm, Docker 실행 중 (Windows 및 macOS의 Docker Desktop)."
+          },
+          {
+            "title": "클론 및 설치",
+            "body": "설치 단계에서 패널의 CSS도 빌드됩니다. 네이티브 모듈 컴파일은 필요 없습니다."
+          },
+          {
+            "title": "패널 시작",
+            "body": "기본적으로 localhost만 수신 대기합니다. 네트워크의 다른 컴퓨터에서 접근하려면 PANEL_HOST=0.0.0.0으로 설정하세요."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "소스 설치에서 시작",
+            "body": "클론된 폴더에서 실행하세요. PM2는 데몬을 시작한 Node 버전을 사용하여 앱을 실행하므로 인터프리터를 고정해야 합니다."
+          },
+          {
+            "title": "프로세스 목록 저장 및 시작 시 자동 실행 활성화",
+            "body": "pm2 startup은 sudo로 실행할 명령 하나를 출력합니다. 한 번 실행하세요."
+          },
+          {
+            "title": "systemd를 선호하시나요?",
+            "body": "클론된 폴더에서 src/server.js를 실행하고 WorkingDirectory를 설정하는 유닛은 동일하게 작동합니다. 패널은 추가 플래그가 필요 없습니다."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "기존에 사용하던 모든 것과 호환됩니다",
+    "registries": "레지스트리",
+    "loaders": "서버 유형",
+    "packs": "모드팩",
+    "runsOn": "실행 환경",
+    "formats": "가져오기",
+    "checksums": "체크섬",
+    "integrations": "통합",
+    "keyless": "키리스"
+  }
+}

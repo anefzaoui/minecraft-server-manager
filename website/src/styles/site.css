@@ -341,12 +341,13 @@
     inset: 5px 0 0 0;
     background-image: repeating-linear-gradient(90deg, #4fae32 0 12px, #2f8520 12px 24px, #27661d 24px 26px);
   }
-  .hearts li {
+  /* Direct children only: a pill row nested inside an item must not get a heart. */
+  .hearts > li {
     padding-inline-start: 1.5rem;
     background: url('/textures/heart.png') no-repeat 0 0.35rem / 18px 16px;
     image-rendering: pixelated;
   }
-  [dir='rtl'] .hearts li {
+  [dir='rtl'] .hearts > li {
     background-position: 100% 0.35rem;
   }
 

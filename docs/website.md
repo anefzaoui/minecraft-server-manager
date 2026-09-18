@@ -64,6 +64,8 @@ needs an API key and every string can be reviewed in a pull request.
   the run; eight requests run in flight.
 - Every result is validated before it is written: identical JSON shape, same code fences, same link
   targets, same headings. A result that fails is reported and skipped; re-run to retry only those.
+- `UNTRANSLATED_DOCS` in the script lists docs that stay English on purpose (today only this
+  page: its wide tables make every model loop, and its readers are maintainers).
 - A locale with no translation yet still renders: marketing pages fall back to English key by key
   and show a one-line notice; Starlight shows its own "not translated yet" notice on docs pages.
 

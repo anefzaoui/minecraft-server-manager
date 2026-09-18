@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Panel kontrol gratis, self-hosted untuk server Minecraft di Docker.",
+    "description": "Jalankan server Minecraft modded dan vanilla dari browser Anda. Modpack disematkan ke versi yang tepat, cadangan sekali klik, jadwal, peta langsung, analitik pemain. Gratis, sumber terbuka, dan seluruh panel Anda adalah satu folder."
+  },
+  "nav": {
+    "home": "Beranda",
+    "features": "Fitur",
+    "screenshots": "Tangkapan Layar",
+    "install": "Instalasi",
+    "docs": "Dokumentasi",
+    "faq": "Tanya Jawab",
+    "changelog": "Catatan Perubahan",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Bahasa",
+    "theme": "Ubah tema terang atau gelap",
+    "skip": "Lewati ke konten"
+  },
+  "hero": {
+    "eyebrow": "Gratis dan sumber terbuka. Berjalan di mesin Anda sendiri.",
+    "title": "Jalankan server Minecraft Anda dari satu panel yang ramah.",
+    "subtitle": "Minecraft Server Manager mengubah Docker menjadi rumah yang nyaman untuk server Anda: modpack yang tetap tersemat, cadangan sekali klik, jadwal, peta langsung, statistik pemain, dan konsol yang berbicara bahasa Inggris biasa. Tanpa tagihan, tanpa penguncian, seluruh panel Anda dalam satu folder.",
+    "primary": "Mulai dalam 3 langkah",
+    "secondary": "Jelajahi fitur-fiturnya",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Lihat tutorialnya"
+  },
+  "pillars": {
+    "title": "Dibuat untuk orang yang menjalankan server, bukan tiket",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Satu folder adalah seluruh panel Anda",
+        "body": "Database, dunia, cadangan, dan pustaka mod bersama semuanya berada di bawah satu folder data. Salin dan Anda telah bermigrasi."
+      },
+      {
+        "icon": "box",
+        "title": "Setiap server adalah kontainer",
+        "body": "Setiap server berjalan pada citra itzg yang telah teruji dengan batas CPU dan memorinya sendiri, penghentian yang anggun melalui RCON, dan deteksi kerusakan.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpack tetap tersemat",
+        "body": "Paket dikunci ke versi yang tepat. Peningkatan eksplisit, dipratinjau, dicadangkan terlebih dahulu, diperiksa kesehatannya, dan dikembalikan dengan satu klik.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Semua yang dibutuhkan pemilik server",
+    "intro": "Tur fitur lengkap, mulai dari membuat server hingga membagikan peta langsungnya.",
+    "cta": "Baca dokumentasi",
+    "groups": [
+      {
+        "title": "Server dan siklus hidup",
+        "items": [
+          {
+            "title": "Kontainer dengan batasan sumber daya",
+            "body": "Buat, mulai, hentikan, mulai ulang, bangun ulang, dan hapus server dengan penghentian RCON yang baik dan deteksi kerusakan otomatis.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Panduan pembuatan terpandu",
+            "body": "Mode Sederhana atau Lanjutan, dengan setiap pengaturan gambar dijelaskan dalam bahasa Inggris sederhana sebelum Anda memilihnya.",
+            "icon": "wand"
+          },
+          {
+            "title": "Konsol langsung",
+            "body": "Konsol WebSocket dengan bilah perintah RCON, filter log, dan tindakan pemain sekali klik.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Moderasi pemain",
+            "body": "Whitelist, ops, larangan, larangan IP, dan teleportasi, online melalui RCON dan offline melalui file JSON.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mod dan modpack",
+        "items": [
+          {
+            "title": "Lima registri dalam satu peramban",
+            "body": "Cari kelima tempat dari satu lokasi. Tiga di antaranya tidak memerlukan kunci API.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Tambah melalui tautan",
+            "body": "Tempel halaman proyek, repositori GitHub, slug, atau URL jar langsung. Panel akan mengidentifikasinya.",
+            "icon": "link"
+          },
+          {
+            "title": "Impor apa saja",
+            "body": "Setiap jar diidentifikasi dan kompatibilitasnya diperiksa saat masuk.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Unduhan terverifikasi checksum",
+            "body": "Diverifikasi sebelum file mencapai server, hash terkuat terlebih dahulu. Ketidakcocokan tidak akan pernah terkirim.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Pustaka mod bersama",
+            "body": "Dideduplikasi berdasarkan sha256 dan ditautkan ke server, sehingga mod kustom bertahan dari pembaruan paket.",
+            "icon": "library"
+          },
+          {
+            "title": "Pemecah pilih-mod-dulu",
+            "body": "Pilih mod yang Anda inginkan dan dapatkan loader dan versi Minecraft terbaru yang sepenuhnya kompatibel.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "Perlindungan dan otomatisasi",
+        "items": [
+          {
+            "title": "Cadangan aman",
+            "body": "Snapshot dengan kelas retensi, pulihkan di tempat, dan pengecilan dunia opsional untuk mengklaim kembali disk.",
+            "icon": "archive"
+          },
+          {
+            "title": "Jadwal Cron",
+            "body": "Mulai ulang, cadangan, dan perintah RCON sesuai jadwal, dengan eksekusi berikutnya ditampilkan di depan.",
+            "icon": "clock"
+          },
+          {
+            "title": "Cetakan Biru",
+            "body": "Ekspor server sebagai resep portabel, impor di mana saja, dan dapatkan kembali server yang sama.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Forensik kerusakan",
+            "body": "Kerusakan terdeteksi, diurai, dan tersangka diberi nama, dengan berbagi sekali klik dan wawasan otomatis.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Pelacakan pembaruan",
+            "body": "Versi server, paket, gambar, dan mod baru dilacak, dengan cadangan pra-pembaruan dan pemulihan sekali klik.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Wawasan dan komunitas",
+        "items": [
+          {
+            "title": "Peta langsung",
+            "body": "Satu klik ke peta langsung, disajikan melalui proksi terautentikasi panel.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analitik dan penyimpanan",
+            "body": "Papan peringkat waktu bermain, kematian, dan penambangan, forensik inventaris, penggunaan disk per server, dan kuota yang diberlakukan.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord dan chatbot",
+            "body": "Webhook dengan pengalih per-acara, ditambah chatbot opsional per-server dengan kekuatan dalam game yang terbatas.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Halaman status publik dan API",
+            "body": "Halaman status opt-in, blok undangan, file .mrpack klien yang dihasilkan, dan API yang hanya dapat dibaca yang diautentikasi token.",
+            "icon": "globe"
+          },
+          {
+            "title": "Pengguna, peran, dan 2FA",
+            "body": "Peran admin, operator, dan penampil dengan otentikasi dua faktor TOTP.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Panel yang menyenangkan untuk digunakan",
+    "intro": "Desktop dan ponsel. Panel ini dirancang agar ramping terlebih dahulu, sehingga setiap halaman berfungsi di ponsel.",
+    "desktop": "Desktop",
+    "mobile": "Di ponsel",
+    "items": {
+      "dashboard": "Dasbor: setiap server, jumlah pemain, dan aktivitas terbaru secara sekilas.",
+      "wizard": "Panduan pembuatan menjelaskan setiap pengaturan sebelum Anda memilihnya.",
+      "overview": "Gambaran umum server dengan meteran sumber daya dan tindakan cepat.",
+      "console": "Konsol langsung dengan bilah perintah RCON dan filter log.",
+      "mods": "Mod dari lima registri, difilter ke pemuat dan versi server.",
+      "worlds": "Tukar dunia dan kelola file dari peramban.",
+      "backups": "Cadangan dengan kelas retensi dan pemulihan di tempat.",
+      "schedules": "Jadwal cron untuk mulai ulang, cadangan, dan perintah.",
+      "blueprints": "Blueprint: resep server portabel.",
+      "storage": "Analitik penyimpanan dan kuota yang diberlakukan."
+    }
+  },
+  "install": {
+    "title": "Instalasi",
+    "intro": "Pilih opsi yang sesuai dengan host Anda. Setiap jalur memberikan panel yang sama.",
+    "requirements": "Persyaratan",
+    "reqItems": [
+      "Docker Engine (Linux) atau Docker Desktop (Windows, macOS).",
+      "Node.js 24 atau yang lebih baru untuk instalasi dari sumber. Image Docker sudah menyertakan miliknya sendiri.",
+      "Beberapa gigabyte ruang disk untuk image server dan dunia."
+    ],
+    "docker": {
+      "title": "Opsi 1: Docker",
+      "body": "Image multi-arsitektur yang sudah dibuat dipublikasikan ke GHCR pada setiap rilis. Ambil file compose, atur satu variabel, dan mulai.",
+      "after": "Kemudian buka http://your-host:25564. Di Portainer atau Dockge, tempelkan file compose sebagai stack dan atur DATA_DIR_HOST di lingkungan stack.",
+      "warning": "Panel mengendalikan daemon Docker host melalui soket yang terpasang, yang setara dengan root di host. Perlakukan login admin dengan sesuai dan jangan pernah mengekspos panel langsung ke internet."
+    },
+    "source": {
+      "title": "Opsi 2: Dari sumber",
+      "body": "Sistem operasi apa pun, termasuk Windows dan macOS dengan Docker Desktop.",
+      "after": "Buka http://localhost:25564. Jalankan pertama kali akan memandu Anda melalui pemeriksaan sistem, zona waktu Anda, dan pembuatan akun admin."
+    },
+    "next": "Langkah selanjutnya",
+    "nextBody": "Panduan memulai mencakup penyiapan pertama kali, pembuatan server pertama Anda, dan di mana semuanya berada.",
+    "nextCta": "Baca panduan memulai",
+    "compose": "Unduh docker-compose.yml",
+    "windows": "Catatan Windows",
+    "windowsItems": [
+      "Docker Desktop harus berjalan sebelum Anda memulai atau membuat server.",
+      "Bagikan drive proyek Anda dengan Docker Desktop (Settings, Resources, File sharing) agar bind mount berfungsi.",
+      "Image Docker menargetkan host Linux; di Windows dan macOS jalankan panel dari sumber."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "Pertanyaan yang sering diajukan",
+    "items": [
+      {
+        "q": "Apakah ini benar-benar gratis?",
+        "a": "Ya. Panel ini berlisensi MIT dan tidak menggunakan layanan berbayar. Semuanya berjalan di mesin Anda."
+      },
+      {
+        "q": "Apakah ini berfungsi di Raspberry Pi atau mesin ARM lainnya?",
+        "a": "Ya. Gambar Docker dipublikasikan untuk kedua arsitektur, dan instalasi dari sumber berjalan di mana saja Node.js 24 dan Docker bisa.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Jenis server apa saja yang didukung?",
+        "a": "Semua yang didukung oleh gambar itzg, ditambah modpack dari empat sumber besar.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Bagaimana cara memindahkan panel saya ke mesin baru?",
+        "a": "Salin folder data. Folder ini berisi database, dunia setiap server, cadangan, dan pustaka mod. Jalankan panel di mesin baru dengan menunjuk ke folder tersebut."
+      },
+      {
+        "q": "Bisakah beberapa orang mengelola server?",
+        "a": "Ya. Panel ini memiliki peran admin, operator, dan penampil, dan setiap akun dapat mengaktifkan otentikasi dua faktor."
+      },
+      {
+        "q": "Apakah perlu diakses dari internet?",
+        "a": "Tidak. Pemain terhubung ke port game, bukan panel. Jaga panel tetap di LAN Anda atau di belakang VPN atau reverse proxy dengan otentikasi."
+      },
+      {
+        "q": "Bagaimana dengan pemain Bedrock?",
+        "a": "Keduanya dapat diinstal seperti plugin atau mod lainnya, dan panel mengekspos pengaturan yang mereka butuhkan.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Di mana saya bisa mendapatkan bantuan?",
+        "a": "Server Discord memiliki forum dukungan dan manusia sungguhan. Bug dan permintaan fitur dikirim ke isu GitHub."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Catatan Perubahan",
+    "intro": "Setiap rilis, terbaru didahulukan. Catatan rilis diterbitkan dalam bahasa Inggris.",
+    "releases": "Semua rilis di GitHub"
+  },
+  "community": {
+    "title": "Ayo sapa kami",
+    "body": "Laporkan bug, sarankan fitur, dapatkan bantuan dari manusia sungguhan, dan pamerkan server Anda.",
+    "discord": "Gabung Discord",
+    "github": "Beri bintang di GitHub"
+  },
+  "footer": {
+    "tagline": "Gratis dan sumber terbuka di bawah lisensi MIT.",
+    "product": "Produk",
+    "community": "Komunitas",
+    "resources": "Sumber Daya",
+    "issues": "Masalah",
+    "releases": "Rilis",
+    "contributing": "Berkontribusi",
+    "license": "Lisensi",
+    "notAffiliated": "Bukan produk resmi Minecraft. Tidak disetujui oleh atau terkait dengan Mojang atau Microsoft."
+  },
+  "meta": {
+    "home": {
+      "title": "Panel kontrol server Minecraft gratis self-hosted",
+      "description": "Jalankan server Minecraft vanilla dan modded dari browser Anda. Berbasis Docker, modpack disematkan ke versi yang tepat, pencadangan, jadwal, peta langsung, analitik pemain. Gratis, sumber terbuka, siap digunakan dalam tiga langkah."
+    },
+    "features": {
+      "title": "Fitur",
+      "description": "Setiap fitur Minecraft Server Manager: server terkontainerisasi, lima registri mod, unduhan terverifikasi checksum, pencadangan aman, jadwal, cetak biru, forensik crash, peta langsung, peran, dan otentikasi dua faktor."
+    },
+    "screenshots": {
+      "title": "Tangkapan Layar",
+      "description": "Tangkapan layar panel Minecraft Server Manager di desktop dan ponsel: dasbor, wizard, konsol, mod, dunia, pencadangan, jadwal, dan lainnya."
+    },
+    "install": {
+      "title": "Instalasi",
+      "description": "Instal Minecraft Server Manager dengan Docker dalam tiga perintah, atau dari sumber di Windows, macOS, dan Linux."
+    },
+    "faq": {
+      "title": "FAQ",
+      "description": "Jawaban tentang biaya, jenis server yang didukung, dukungan ARM, migrasi, peran, dan paparan ke internet."
+    },
+    "changelog": {
+      "title": "Catatan Perubahan",
+      "description": "Catatan rilis untuk setiap versi Minecraft Server Manager."
+    },
+    "notFound": {
+      "title": "Halaman tidak ditemukan",
+      "description": "Halaman ini tidak ada."
+    }
+  },
+  "notFound": {
+    "title": "Bagian ini tidak pernah dibuat.",
+    "body": "Halaman yang Anda minta tidak ada. Coba halaman utama atau dokumentasi.",
+    "home": "Kembali ke beranda"
+  },
+  "langNotice": "Halaman ini ditampilkan dalam bahasa Inggris sampai terjemahannya tersedia.",
+  "tutorial": {
+    "title": "Siap dalam tiga langkah",
+    "intro": "Pilih cara Anda ingin menjalankan panel. Isi dua kolom isian dan setiap perintah di bawah akan menulis ulang dirinya sendiri untuk mesin Anda.",
+    "dataDir": "Folder data di host",
+    "dataDirHint": "Jalur absolut. Dunia, cadangan, mod, dan basis data semuanya ada di sini.",
+    "host": "Nama host atau IP",
+    "hostHint": "Dari mana Anda akan membuka panel dari peramban.",
+    "then": "Kemudian buka panel",
+    "copy": "Salin",
+    "copied": "Tersalin!",
+    "firstRun": "Jalankan pertama kali akan memandu Anda melalui pemeriksaan sistem, zona waktu Anda, dan pembuatan akun admin.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Buat folder data",
+            "body": "Satu folder menampung semua yang dimiliki panel."
+          },
+          {
+            "title": "Unduh file compose dan arahkan ke folder itu",
+            "body": "DATA_DIR_HOST harus berupa jalur absolut di host, karena Docker memasangnya dari sudut pandang host."
+          },
+          {
+            "title": "Mulai panel",
+            "body": "Image ini multi-arsitektur (amd64 dan arm64) dan diperbarui di setiap rilis."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Buat folder data di host",
+            "body": "Aturan folder yang sama: jalur absolut, di mesin yang menjalankan Docker."
+          },
+          {
+            "title": "Tambahkan stack dari file compose",
+            "body": "Tempelkan isi file compose ke dalam stack baru. File mentahnya ada di sini:"
+          },
+          {
+            "title": "Atur variabel lingkungan dan terapkan",
+            "body": "Tambahkan di bagian lingkungan stack, lalu terapkan."
+          }
+        ]
+      },
+      "source": {
+        "label": "Dari sumber",
+        "steps": [
+          {
+            "title": "Periksa persyaratan",
+            "body": "Node.js 24 atau lebih baru, pnpm, dan Docker berjalan (Docker Desktop di Windows dan macOS)."
+          },
+          {
+            "title": "Kloning dan instal",
+            "body": "Langkah instalasi juga membangun CSS panel. Tidak ada modul asli yang perlu dikompilasi."
+          },
+          {
+            "title": "Mulai panel",
+            "body": "Secara default, panel hanya mendengarkan di localhost. Atur PANEL_HOST=0.0.0.0 untuk mengaksesnya dari mesin lain di jaringan Anda."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Mulai dari instalasi sumber",
+            "body": "Jalankan ini dari folder yang dikloning. PM2 meluncurkan aplikasi dengan versi Node yang memulai daemonnya, jadi sematkan interpreter."
+          },
+          {
+            "title": "Simpan daftar proses dan aktifkan startup",
+            "body": "pm2 startup mencetak satu perintah untuk dijalankan dengan sudo; jalankan sekali."
+          },
+          {
+            "title": "Lebih suka systemd?",
+            "body": "Unit yang menjalankan node src/server.js dari folder yang dikloning dengan WorkingDirectory yang diatur bekerja dengan cara yang sama. Panel tidak memerlukan flag tambahan."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Bekerja dengan semua yang sudah Anda gunakan",
+    "registries": "Registri",
+    "loaders": "Jenis server",
+    "packs": "Modpack",
+    "runsOn": "Berjalan di",
+    "formats": "Impor",
+    "checksums": "Checksum",
+    "integrations": "Integrasi",
+    "keyless": "tanpa kunci"
+  }
+}

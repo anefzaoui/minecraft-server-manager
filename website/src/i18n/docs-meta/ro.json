@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Jurnal de activități",
+    "description": "Pagina Activități este jurnalul complet de audit: o înregistrare cronologică, ce poate fi căutată, a tot ce s-a întâmplat în panou."
+  },
+  "architecture": {
+    "title": "Arhitectură",
+    "description": "Minecraft Server Manager este o aplicație Node.js redată pe server, cu un singur proces."
+  },
+  "backups": {
+    "title": "Copii de rezervă",
+    "description": "Pagina Copii de rezervă afișează fiecare instantaneu din flota dvs., cu dimensiunea, motivul și vechimea."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Un blueprint surprinde întreaga configurație a unui server (tip, versiune, resurse, mediu, pin de pachet și, opțional, configurația și lumea sa) într-un singur fișier."
+  },
+  "chatbot": {
+    "title": "Chatbot Minecraft per server",
+    "description": "Questo fork aggiunge una chatbot configurabile dall'amministratore a ciascun server Minecraft gestito."
+  },
+  "console-and-chat": {
+    "title": "Consolă și comenzi de chat",
+    "description": "Tabul Consola transmite jurnalul serverului în timp real și oferă o casetă de comandă pentru a trimite orice comandă a serverului."
+  },
+  "dashboard": {
+    "title": "Panoul de control",
+    "description": "Panoul de control este baza ta: fiecare server, starea sa live și un flux continuu al evenimentelor."
+  },
+  "getting-started": {
+    "title": "Primii pași",
+    "description": "Prima dată când deschideți panoul, acesta vă solicită să creați un cont de administrator."
+  },
+  "index": {
+    "title": "Documentație",
+    "description": "Un panou de control complet, auto-găzduit, pentru itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrări",
+    "description": "Fiecare server își poartă integrările sub grupul Setări: Discord, o Pagină de Stare publică, Invitații cu un singur clic și fila opțională Chatbot."
+  },
+  "modpacks": {
+    "title": "Modpackuri",
+    "description": "Pagina Modpackuri (și fila Din modpack din vrăjitorul de creare) instalează un modpack ca server, întotdeauna fixat la o versiune exactă a pachetului, astfel încât o repornire să poată"
+  },
+  "public-api": {
+    "title": "API Publică",
+    "description": "Un API HTTP mic, doar pentru citire, pentru preluarea stării serverului din afara panoului: a"
+  },
+  "schedules": {
+    "title": "Programări",
+    "description": "Pagina Programări automatizează sarcinile recurente cu expresii cron."
+  },
+  "servers": {
+    "title": "Crearea și gestionarea serverelor",
+    "description": "Apăsați pe Create a Server (bara de sus) sau pe cardul Create a server pentru a deschide expertul."
+  },
+  "storage": {
+    "title": "Stocare",
+    "description": "Pagina Stocare arată unde se duce spațiul dvs. pe disc: utilizarea per server și cum evoluează în timp."
+  },
+  "two-factor-authentication": {
+    "title": "Autentificare în doi pași",
+    "description": "Autentificarea în doi pași (2FA) adaugă un al doilea pas la conectare: după parola dvs., introduceți un cod scurt dintr-o aplicație de autentificare de pe telefon."
+  },
+  "updates": {
+    "title": "Actualizări",
+    "description": "Pagina Actualizări urmărește ce este învechit pe întreaga flotă într-un singur loc:"
+  },
+  "users-and-roles": {
+    "title": "Utilizatori și roluri",
+    "description": "Panoul este multi-utilizator."
+  },
+  "world-shrink": {
+    "title": "Micșorarea unei lumi",
+    "description": "În timp, o lume se extinde: fiecare loc în care un jucător a mers, a zburat sau"
+  },
+  "worlds-and-files": {
+    "title": "Lumile și fișierele",
+    "description": "Pagina Lumile gestionează datele lumilor pe serverele tale: schimbă lumea activă, încarcă o lume sau descarcă una."
+  }
+}

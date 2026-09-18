@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Ilmainen, itse isännöity ohjauspaneeli Docker-pohjaisille Minecraft-palvelimille.",
+    "description": "Pyöritä modattuja ja vanilja-Minecraft-palvelimia selaimestasi. Modpackit kiinnitetty tarkkoihin versioihin, yhden napsautuksen varmuuskopiot, aikataulut, live-kartta, pelaaja-analytiikka. Ilmainen, avoin lähdekoodi, ja koko ohjauspaneelisi on yksi kansio."
+  },
+  "nav": {
+    "home": "Etusivu",
+    "features": "Ominaisuudet",
+    "screenshots": "Kuvakaappaukset",
+    "install": "Asennus",
+    "docs": "Dokumentaatio",
+    "faq": "UKK",
+    "changelog": "Muutosloki",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Valikko",
+    "language": "Kieli",
+    "theme": "Vaihda vaalean tai tumman teeman välillä",
+    "skip": "Siirry sisältöön"
+  },
+  "hero": {
+    "eyebrow": "Ilmainen ja avoimen lähdekoodin. Toimii omalla koneellasi.",
+    "title": "Hallitse Minecraft-palvelimiasi yhdestä käyttäjäystävällisestä paneelista.",
+    "subtitle": "Minecraft Server Manager muuttaa Dockerin viihtyisäksi kodiksi palvelimillesi: modipaketit pysyvät kiinnitettyinä, yhden napsautuksen varmuuskopiot, aikataulut, reaaliaikainen kartta, pelaajatilastot ja konsoli, joka puhuu selkeää englantia. Ei laskuja, ei lukitusta, koko paneelisi yhdessä kansiossa.",
+    "primary": "Aloita 3 vaiheessa",
+    "secondary": "Tutustu ominaisuuksiin",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Katso opas"
+  },
+  "pillars": {
+    "title": "Tehty palvelinten pyörittäjille, ei tikettien ratkojille",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Koko hallintapaneeli yhdessä kansiossa",
+        "body": "Tietokanta, maailmat, varmuuskopiot ja jaettu modikirjasto sijaitsevat kaikki yhden datakansion alla. Kopioi se, niin olet siirtänyt."
+      },
+      {
+        "icon": "box",
+        "title": "Jokainen palvelin on kontti",
+        "body": "Jokainen palvelin pyörii taistelutestatulla itzg-imagella omien CPU- ja muistirajoitustensa, RCONin kautta tapahtuvien sulavien pysäytysten ja kaatumisen tunnistuksen kanssa.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modipaketit pysyvät lukittuina",
+        "body": "Paketit lukitaan tarkkaan versioon. Päivitykset ovat eksplisiittisiä, esikatseltuja, varmuuskopioitu ensin, terveystarkistettuja ja palautettavissa yhdellä napsautuksella.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Kaikki palvelimen omistajan tarvitsema",
+    "intro": "Kattava ominaisuusopas palvelimen luomisesta sen reaaliaikaisen kartan jakamiseen.",
+    "cta": "Lue dokumentaatio",
+    "groups": [
+      {
+        "title": "Palvelimet ja elinkaari",
+        "items": [
+          {
+            "title": "Resurssirajoitetut säiliöt",
+            "body": "Luo, käynnistä, pysäytä, käynnistä uudelleen, rakenna ja poista palvelimia sulavilla RCON-pysäytyksillä ja automaattisella kaatumisen tunnistuksella.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Ohjattu luontitoiminto",
+            "body": "Yksinkertainen tai edistynyt tila, jossa jokainen kuvakeasetus selitetään selkeällä suomen kielellä ennen sen valitsemista.",
+            "icon": "wand"
+          },
+          {
+            "title": "Reaaliaikainen konsoli",
+            "body": "WebSocket-konsoli RCON-komentorivillä, lokisuodattimilla ja yhden napsautuksen pelaajatoiminnoilla.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Pelaajien moderointi",
+            "body": "Valkolista, operaattorit, bannit, IP-bannit ja teleportit, verkossa RCONin kautta ja offline-tilassa JSON-tiedostojen kautta.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Modit ja modipaketit",
+        "items": [
+          {
+            "title": "Viisi rekisteriä yhdessä selaimessa",
+            "body": "Hae kaikista viidestä yhdestä paikasta. Kolme niistä ei vaadi API-avainta.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Lisää linkillä",
+            "body": "Liitä projektisivu, GitHub-arkisto, tunniste tai suora jar-URL. Paneeli tunnistaa sen.",
+            "icon": "link"
+          },
+          {
+            "title": "Tuo mitä tahansa",
+            "body": "Jokainen jar tunnistetaan ja yhteensopivuus tarkistetaan sisään tuotaessa.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Tarkistussummalla varmistetut lataukset",
+            "body": "Varmistettu ennen tiedoston siirtymistä palvelimelle, vahvin tiiviste ensin. Epäjohdonmukaisuus ei koskaan toimiteta.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Jaettu modikirjasto",
+            "body": "Dedupikoitu sha256:lla ja linkitetty kovasti palvelimiin, joten mukautetut modit selviävät pakettipäivityksistä.",
+            "icon": "library"
+          },
+          {
+            "title": "Valitse-modit-ensin -ratkaisija",
+            "body": "Valitse haluamasi modit ja hanki uusin täysin yhteensopiva lataaja ja Minecraft-versio.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "Suojaus ja automaatio",
+        "items": [
+          {
+            "title": "Tallenna-turvalliset varmuuskopiot",
+            "body": "Tilannekuvat säilytysluokilla, palautus paikalleen ja valinnainen maailman kutistaminen levyn vapauttamiseksi.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron-aikataulut",
+            "body": "Uudelleenkäynnistykset, varmuuskopiot ja RCON-komennot aikataulun mukaisesti, seuraava ajo näkyvillä.",
+            "icon": "clock"
+          },
+          {
+            "title": "Sinikopiot",
+            "body": "Vie palvelin siirrettävänä reseptinä, tuo se minne tahansa ja saat saman palvelimen takaisin.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Kaatumisen diagnostiikka",
+            "body": "Kaatumiset tunnistetaan, jäsennetään ja epäillyt nimetään, yhden napsautuksen jakamisella ja automatisoiduilla oivalluksilla.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Päivitysten seuranta",
+            "body": "Uudet palvelin-, paketti-, kuva- ja modiversiot seurataan, päivitystä edeltävillä varmuuskopioilla ja yhden napsautuksen palautuksella.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Oivallukset ja yhteisö",
+        "items": [
+          {
+            "title": "Reaaliaikainen kartta",
+            "body": "Yksi napsautus reaaliaikaiseen karttaan, tarjoiltuna paneelin todennetun välityspalvelimen kautta.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analytiikka ja tallennustila",
+            "body": "Peliaika, kuolemat ja kaivospisteet, inventaarion diagnostiikka, palvelinkohtainen levynkäyttö ja pakolliset kiintiöt.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord ja chatbot",
+            "body": "Webhookit tapahtumakohtaisilla kytkimillä, sekä valinnainen palvelinkohtainen chatbot rajoitetuilla pelinsisäisillä oikeuksilla.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Julkinen tilasivu ja API",
+            "body": "Opt-in tilasivut, kutsublokit, generoitu asiakkaan .mrpack ja vain luku -tilaan todennettu API.",
+            "icon": "globe"
+          },
+          {
+            "title": "Käyttäjät, roolit ja 2FA",
+            "body": "Ylläpitäjä-, operaattori- ja katselija-roolit TOTP-kaksivaiheisella todennuksella.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Paneeli, jota on ilo käyttää",
+    "intro": "Tietokone ja puhelin. Paneeli on suunniteltu ensisijaisesti kapeaksi, joten jokainen sivu toimii puhelimella.",
+    "desktop": "Tietokone",
+    "mobile": "Puhelimella",
+    "items": {
+      "dashboard": "Kojelauta: kaikki palvelimet, pelaajamäärä ja viimeaikainen toiminta yhdellä silmäyksellä.",
+      "wizard": "Luontivelho selittää jokaisen asetuksen ennen sen valitsemista.",
+      "overview": "Palvelimen yleiskatsaus resurssimittareilla ja pikatoiminnoilla.",
+      "console": "Live-konsoli RCON-komentorivillä ja lokisuodattimilla.",
+      "mods": "Modit viidestä rekisteristä, suodatettuna palvelimen lataajalle ja versiolle.",
+      "worlds": "Vaihda maailmoja ja hallitse tiedostoja selaimella.",
+      "backups": "Varmuuskopiot säilytysluokilla ja paikan päällä tapahtuvalla palautuksella.",
+      "schedules": "Cron-aikataulut uudelleenkäynnistyksille, varmuuskopioille ja komennoille.",
+      "blueprints": "Blueprintit: siirrettävät palvelinreseptit.",
+      "storage": "Tallennusanalyysi ja pakolliset kiintiöt."
+    }
+  },
+  "install": {
+    "title": "Asennus",
+    "intro": "Valitse isäntäjärjestelmääsi sopiva vaihtoehto. Jokainen polku antaa saman ohjauspaneelin.",
+    "requirements": "Vaatimukset",
+    "reqItems": [
+      "Docker Engine (Linux) tai Docker Desktop (Windows, macOS).",
+      "Node.js 24 tai uudempi lähdekoodista asennettaessa. Docker-image sisältää oman Node.js-asennuksensa.",
+      "Muutama gigatavu levytilaa palvelinkuvia ja maailmoja varten."
+    ],
+    "docker": {
+      "title": "Vaihtoehto 1: Docker",
+      "body": "Monialustainen valmis image julkaistaan GHCR:ään jokaisen julkaisun yhteydessä. Lataa compose-tiedosto, aseta yksi muuttuja ja käynnistä.",
+      "after": "Avaa sitten http://your-host:25564. Portainerissa tai Dockgessa liitä compose-tiedosto pinona ja aseta DATA_DIR_HOST pinon ympäristömuuttujiin.",
+      "warning": "Ohjauspaneeli ohjaa isäntäjärjestelmän Docker-demonia liitetyn socketin kautta, mikä vastaa isäntäjärjestelmän root-oikeuksia. Kohtele ylläpitäjän kirjautumistietoja vastaavasti äläkä koskaan paljasta ohjauspaneelia suoraan internetiin."
+    },
+    "source": {
+      "title": "Vaihtoehto 2: Lähdekoodista",
+      "body": "Mikä tahansa käyttöjärjestelmä, mukaan lukien Windows ja macOS Docker Desktopilla.",
+      "after": "Avaa http://localhost:25564. Ensimmäinen käynnistys käy läpi järjestelmätarkistuksen, aikavyöhykkeesi ja ylläpitäjätilin luomisen."
+    },
+    "next": "Seuraavat vaiheet",
+    "nextBody": "Aloitusopas kattaa ensimmäisen käynnistyksen asetukset, ensimmäisen palvelimen luomisen ja tiedostojen sijainnit.",
+    "nextCta": "Lue aloitusopas",
+    "compose": "Lataa docker-compose.yml",
+    "windows": "Huomioitavaa Windowsissa",
+    "windowsItems": [
+      "Docker Desktopin on oltava käynnissä ennen palvelinten käynnistämistä tai luomista.",
+      "Jaa projektisi levy Docker Desktopiin (Asetukset, Resurssit, Tiedostojen jakaminen), jotta sidotut liitokset toimivat.",
+      "Docker-image on tarkoitettu Linux-isännille; Windowsissa ja macOS:ssä aja ohjauspaneeli lähdekoodista."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "Usein kysytyt kysymykset",
+    "items": [
+      {
+        "q": "Onko se todella ilmainen?",
+        "a": "Kyllä. Paneeli on MIT-lisensoitu eikä käytä maksullisia palveluita. Kaikki pyörii omalla koneellasi."
+      },
+      {
+        "q": "Toimiiko se Raspberry Pi:llä tai muulla ARM-koneella?",
+        "a": "Kyllä. Docker-kuva on julkaistu molemmille arkkitehtuureille, ja lähdekoodista asennettava versio toimii kaikkialla, missä Node.js 24 ja Docker toimivat.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Mitä palvelintyyppejä tuetaan?",
+        "a": "Kaikki, mitä itzg-kuva tukee, sekä modipaketit neljästä suuresta lähteestä.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Kuinka siirrän paneelin uuteen koneeseen?",
+        "a": "Kopioi data-kansio. Se sisältää tietokannan, jokaisen palvelimen maailman, varmuuskopiot ja modikirjaston. Käynnistä paneeli uudessa koneessa osoittaen kyseiseen kansioon."
+      },
+      {
+        "q": "Voiko palvelimia hallita useampi henkilö?",
+        "a": "Kyllä. Paneelissa on ylläpitäjä-, operaattori- ja katseluroolit, ja jokainen tili voi ottaa käyttöön kaksivaiheisen tunnistautumisen."
+      },
+      {
+        "q": "Tarvitseeko sen olla julkisesti saatavilla internetissä?",
+        "a": "Ei. Pelaajat yhdistävät pelipaikkoihin, eivät paneeliin. Pidä paneeli omassa lähiverkossasi tai VPN:n tai todennetun käänteisen välityspalvelimen takana."
+      },
+      {
+        "q": "Entä Bedrock-pelaajat?",
+        "a": "Molemmat voidaan asentaa kuten mikä tahansa muu lisäosa tai modi, ja paneeli paljastaa tarvittavat asetukset.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Mistä saan apua?",
+        "a": "Discord-palvelimella on tukifoorumi ja oikeita ihmisiä. Virheet ja ominaisuuspyynnöt menevät GitHubin ongelmiin."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Muutosloki",
+    "intro": "Jokainen julkaisu, uusin ensin. Julkaisutiedotteet julkaistaan englanniksi.",
+    "releases": "Kaikki julkaisut GitHubissa"
+  },
+  "community": {
+    "title": "Tule moikkaamaan",
+    "body": "Ilmoita bugeista, ehdota ominaisuuksia, hanki apua oikeilta ihmisiltä ja esittele palvelimiasi.",
+    "discord": "Liity Discordiin",
+    "github": "Tähtää GitHubissa"
+  },
+  "footer": {
+    "tagline": "Ilmainen ja avoimen lähdekoodin MIT-lisenssillä.",
+    "product": "Tuote",
+    "community": "Yhteisö",
+    "resources": "Resurssit",
+    "issues": "Ongelmat",
+    "releases": "Julkaisut",
+    "contributing": "Osallistuminen",
+    "license": "Lisenssi",
+    "notAffiliated": "Ei virallinen Minecraft-tuote. Ei Mojangin tai Microsoftin hyväksymä tai liittymä."
+  },
+  "meta": {
+    "home": {
+      "title": "Ilmainen itse isännöity Minecraft-palvelimen ohjauspaneeli",
+      "description": "Pyöritä vanilla- ja modattuja Minecraft-palvelimia selaimestasi. Docker-pohjainen, modpackit kiinnitetty tarkkoihin versioihin, varmuuskopiot, aikataulut, live-kartta, pelaaja-analytiikka. Ilmainen, avoin lähdekoodi, pystyssä kolmessa vaiheessa."
+    },
+    "features": {
+      "title": "Ominaisuudet",
+      "description": "Kaikki Minecraft Server Managerin ominaisuudet: kontitetut palvelimet, viisi modirekisteriä, tarkistussummalla varmennetut lataukset, tallennusturvalliset varmuuskopiot, aikataulut, blueprintit, kaatumisdiagnostiikka, live-kartta, roolit ja kaksivaiheinen tunnistautuminen."
+    },
+    "screenshots": {
+      "title": "Kuvakaappaukset",
+      "description": "Kuvakaappaukset Minecraft Server Manager -paneelista työpöydällä ja puhelimella: kojelauta, ohjattu toiminto, konsoli, modit, maailmat, varmuuskopiot, aikataulut ja paljon muuta."
+    },
+    "install": {
+      "title": "Asennus",
+      "description": "Asenna Minecraft Server Manager Dockerilla kolmella komennolla tai lähteestä Windowsissa, macOS:ssä ja Linuxissa."
+    },
+    "faq": {
+      "title": "UKK",
+      "description": "Vastauksia koskien kustannuksia, tuettuja palvelintyyppejä, ARM-tukea, siirtoa, rooleja ja altistumista internetille."
+    },
+    "changelog": {
+      "title": "Muutosloki",
+      "description": "Julkaisutiedotteet jokaiselle Minecraft Server Managerin versiolle."
+    },
+    "notFound": {
+      "title": "Sivua ei löydy",
+      "description": "Tätä sivua ei ole olemassa."
+    }
+  },
+  "notFound": {
+    "title": "Tätä osaa ei koskaan luotu.",
+    "body": "Pyytämääsi sivua ei löydy. Kokeile etusivua tai dokumentaatiota.",
+    "home": "Siirry etusivulle"
+  },
+  "langNotice": "Tämä sivu näytetään englanniksi, kunnes sen käännös on valmis.",
+  "tutorial": {
+    "title": "Käyttöönottovalmis kolmessa vaiheessa",
+    "intro": "Valitse, miten haluat suorittaa paneelin. Täytä kaksi kenttää, ja jokainen alla oleva komento kirjoittaa itsensä uudelleen koneellesi.",
+    "dataDir": "Datakansio isäntäkoneella",
+    "dataDirHint": "Absoluuttinen polku. Maailmat, varmuuskopiot, modit ja tietokanta sijaitsevat kaikki täällä.",
+    "host": "Isäntänimi tai IP",
+    "hostHint": "Mistä avaat paneelin selaimella.",
+    "then": "Avaa sitten paneeli",
+    "copy": "Kopioi",
+    "copied": "Kopioitu!",
+    "firstRun": "Ensimmäinen käynnistys käy läpi järjestelmän tarkistuksen, aikavyöhykkeesi ja ylläpitäjätilin luomisen.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Luo datakansio",
+            "body": "Yksi kansio sisältää kaiken, minkä paneeli omistaa."
+          },
+          {
+            "title": "Lataa compose-tiedosto ja osoita se kansioon",
+            "body": "DATA_DIR_HOST on oltava absoluuttinen polku isäntäkoneella, koska Docker liittää sen isäntäkoneen näkökulmasta."
+          },
+          {
+            "title": "Käynnistä paneeli",
+            "body": "Image on moniarkkitehtuurinen (amd64 ja arm64) ja päivittyy jokaisessa julkaisussa."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Luo datakansio isäntäkoneella",
+            "body": "Sama kansiosääntö: absoluuttinen polku, koneella, joka suorittaa Dockeria."
+          },
+          {
+            "title": "Lisää pino compose-tiedostosta",
+            "body": "Liitä compose-tiedoston sisältö uuteen pinoon. Raakatiedosto on täällä:"
+          },
+          {
+            "title": "Aseta ympäristömuuttuja ja ota käyttöön",
+            "body": "Lisää se pinon ympäristöosioon ja ota sitten käyttöön."
+          }
+        ]
+      },
+      "source": {
+        "label": "Lähdekoodista",
+        "steps": [
+          {
+            "title": "Tarkista vaatimukset",
+            "body": "Node.js 24 tai uudempi, pnpm ja Docker käynnissä (Docker Desktop Windowsissa ja macOS:ssä)."
+          },
+          {
+            "title": "Kloonaa ja asenna",
+            "body": "Asennusvaihe rakentaa myös paneelin CSS:n. Ei natiivisia moduuleja käännettäväksi."
+          },
+          {
+            "title": "Käynnistä paneeli",
+            "body": "Oletuksena se kuuntelee vain localhostia. Aseta PANEL_HOST=0.0.0.0, jotta siihen pääsee käsiksi muista verkkosi koneista."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Käynnistä lähdeasennuksesta",
+            "body": "Suorita tämä kloonatusta kansiosta. PM2 käynnistää sovelluksia Node-versiolla, joka käynnisti sen daemonin, joten kiinnitä tulkki."
+          },
+          {
+            "title": "Tallenna prosessilista ja ota käynnistys käyttöön",
+            "body": "pm2 startup tulostaa yhden komennon suoritettavaksi sudo:lla; suorita se kerran."
+          },
+          {
+            "title": "Suositko systemd:tä?",
+            "body": "Yksikkö, joka suorittaa node src/server.js kloonatusta kansiosta WorkingDirectory-asetuksen ollessa määritettynä, toimii samalla tavalla. Paneeli ei tarvitse ylimääräisiä lippuja."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Toimii kaiken jo käyttämäsi kanssa",
+    "registries": "Rekisterit",
+    "loaders": "Palvelintyypit",
+    "packs": "Modpackit",
+    "runsOn": "Toimii alustalla",
+    "formats": "Tuonti",
+    "checksums": "Tarkistussummat",
+    "integrations": "Integraatiot",
+    "keyless": "avaimeton"
+  }
+}

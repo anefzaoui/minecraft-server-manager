@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Registro de atividades",
+    "description": "A página de Atividades é o registro de auditoria completo: um registro cronológico e pesquisável de tudo o que aconteceu no painel."
+  },
+  "architecture": {
+    "title": "Arquitetura",
+    "description": "Minecraft Server Manager é uma aplicação Node.js renderizada no servidor, de processo único."
+  },
+  "backups": {
+    "title": "Backups",
+    "description": "A página de Backups exibe todos os snapshots em sua frota, com tamanho, motivo e idade."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Um blueprint captura toda a configuração de um servidor (tipo, versão, recursos, ambiente, pinagem do pack e, opcionalmente, sua configuração e mundo) em um único po"
+  },
+  "chatbot": {
+    "title": "Chatbot por servidor Minecraft",
+    "description": "Este fork adiciona um chatbot configurado pelo administrador a cada servidor Minecraft gerenciado."
+  },
+  "console-and-chat": {
+    "title": "Comandos do console e chat",
+    "description": "A aba Console exibe o log do servidor em tempo real e fornece uma caixa de comandos para enviar qualquer comando do servidor."
+  },
+  "dashboard": {
+    "title": "O painel",
+    "description": "O painel é sua base principal: cada servidor, seu status em tempo real e um feed contínuo do que tem acontecido."
+  },
+  "getting-started": {
+    "title": "Primeiros passos",
+    "description": "Na primeira vez que você abrir o painel, ele pedirá para criar uma conta de administrador."
+  },
+  "index": {
+    "title": "Documentação",
+    "description": "Um painel de controle completo e auto-hospedado para itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrações",
+    "description": "Cada servidor carrega suas integrações sob o grupo Configurações: Discord, uma Página de Status pública, Convites de um clique e a aba opcional Chatbot."
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "A página Modpacks (e a aba De modpack no assistente de criação) instala um modpack como um servidor, sempre fixado a uma versão exata do pacote para que uma reinicialização possa"
+  },
+  "public-api": {
+    "title": "API Pública",
+    "description": "Uma API HTTP pequena e somente leitura para buscar o status do servidor de fora do painel: a"
+  },
+  "schedules": {
+    "title": "Agendamentos",
+    "description": "A página Agendamentos automatiza tarefas recorrentes com expressões cron."
+  },
+  "servers": {
+    "title": "Criando e gerenciando servidores",
+    "description": "Clique em Criar um Servidor (barra superior) ou no card Criar um servidor para abrir o assistente."
+  },
+  "storage": {
+    "title": "Armazenamento",
+    "description": "A página de Armazenamento mostra para onde seu disco está indo: uso por servidor e como ele está evoluindo ao longo do tempo."
+  },
+  "two-factor-authentication": {
+    "title": "Autenticação de dois fatores",
+    "description": "A autenticação de dois fatores (2FA) adiciona uma segunda etapa ao login: após sua senha, você insere um código curto de um aplicativo autenticador no seu celular."
+  },
+  "updates": {
+    "title": "Atualizações",
+    "description": "A página de Atualizações rastreia o que está desatualizado em toda a sua frota em um só lugar:"
+  },
+  "users-and-roles": {
+    "title": "Usuários e funções",
+    "description": "O painel é multiusuário."
+  },
+  "world-shrink": {
+    "title": "Encolhendo um mundo",
+    "description": "Com o tempo, um mundo se expande: todo lugar que um jogador já andou, voou ou"
+  },
+  "worlds-and-files": {
+    "title": "Mundos e arquivos",
+    "description": "A página Mundos gerencia os dados do mundo em seus servidores: troque o mundo ativo, envie um mundo ou baixe um."
+  }
+}

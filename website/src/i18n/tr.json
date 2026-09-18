@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Docker üzerinde çalışan Minecraft sunucuları için ücretsiz, kendi kendine barındırılan kontrol paneli.",
+    "description": "Tarayıcınızdan modlu ve vanilla Minecraft sunucuları çalıştırın. Mod paketleri tam sürümlere sabitlenmiş, tek tıklamayla yedeklemeler, zamanlamalar, canlı harita, oyuncu analizi. Ücretsiz, açık kaynaklı ve tüm paneliniz tek bir klasörde."
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "features": "Özellikler",
+    "screenshots": "Ekran Görüntüleri",
+    "install": "Kurulum",
+    "docs": "Belgeler",
+    "faq": "SSS",
+    "changelog": "Değişiklik Günlüğü",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menü",
+    "language": "Dil",
+    "theme": "Açık veya koyu temayı değiştir",
+    "skip": "İçeriğe atla"
+  },
+  "hero": {
+    "eyebrow": "Ücretsiz ve açık kaynaklı. Kendi makinenizde çalışır.",
+    "title": "Minecraft sunucularınızı tek bir kullanıcı dostu panelden çalıştırın.",
+    "subtitle": "Minecraft Server Manager, Docker'ı sunucularınız için rahat bir yuva haline getirir: sabitlenmiş mod paketleri, tek tıkla yedeklemeler, zamanlamalar, canlı harita, oyuncu istatistikleri ve anlaşılır bir konsol. Faturalar yok, kilitlenme yok, tüm paneliniz tek bir klasörde.",
+    "primary": "3 adımda başlayın",
+    "secondary": "Özellikleri keşfedin",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Öğreticiyi görün"
+  },
+  "pillars": {
+    "title": "Sunucu çalıştıranlar için, biletler için değil",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Tüm paneliniz tek bir klasörde",
+        "body": "Veritabanı, dünyalar, yedeklemeler ve paylaşılan mod kitaplığı tek bir veri klasörü altında bulunur. Kopyalayın ve taşıma işlemini tamamladınız."
+      },
+      {
+        "icon": "box",
+        "title": "Her sunucu bir konteynerdir",
+        "body": "Her sunucu, kendi CPU ve bellek sınırları, RCON üzerinden nazik duruşlar ve çökme tespiti ile savaşta test edilmiş itzg görüntüsü üzerinde çalışır.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Mod paketleri sabitlenmiş kalır",
+        "body": "Paketler tam bir sürüme kilitlenir. Yükseltmeler açık, önizlenmiş, önce yedeklenmiş, sağlık kontrolünden geçmiş ve tek tıklamayla geri alınabilir.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Bir sunucu sahibinin her zaman elinin altında olması gereken her şey",
+    "intro": "Sunucu oluşturmaktan canlı haritasını paylaşmaya kadar tüm özelliklere göz atın.",
+    "cta": "Belgeleri oku",
+    "groups": [
+      {
+        "title": "Sunucular ve yaşam döngüsü",
+        "items": [
+          {
+            "title": "Kaynak limitli konteynerler",
+            "body": "Düzgün RCON durdurmaları ve otomatik çökme algılama ile sunucuları oluşturun, başlatın, durdurun, yeniden başlatın, yeniden derleyin ve silin.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Rehberli oluşturma sihirbazı",
+            "body": "Basit veya Gelişmiş mod, her resim ayarı seçmeden önce anlaşılır bir dille açıklanır.",
+            "icon": "wand"
+          },
+          {
+            "title": "Canlı konsol",
+            "body": "RCON komut çubuğu, günlük filtreleri ve tek tıklamayla oyuncu eylemleri içeren bir WebSocket konsolu.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Oyuncu moderasyonu",
+            "body": "Beyaz liste, operatörler, yasaklar, IP yasakları ve ışınlamalar, RCON aracılığıyla çevrimiçi ve JSON dosyaları aracılığıyla çevrimdışı.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Modlar ve mod paketleri",
+        "items": [
+          {
+            "title": "Tek tarayıcıda beş kayıt",
+            "body": "Beşini de tek bir yerden arayın. Bunlardan üçü API anahtarı gerektirmez.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Bağlantı ile ekle",
+            "body": "Bir proje sayfası, bir GitHub deposu, bir slug veya doğrudan bir jar URL'si yapıştırın. Panel bunu tanımlar.",
+            "icon": "link"
+          },
+          {
+            "title": "Her şeyi içe aktar",
+            "body": "Her jar, giriş sırasında tanımlanır ve uyumluluk kontrolünden geçirilir.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Sağlama toplamı doğrulanmış indirmeler",
+            "body": "Bir dosya sunucuya ulaşmadan önce doğrulanır, en güçlü karma önce gelir. Bir uyuşmazlık asla gönderilmez.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Paylaşılan mod kütüphanesi",
+            "body": "Sha256 ile tekilleştirilir ve sunuculara sabit bağlantılıdır, böylece özel modlar paket güncellemelerinden sağ çıkar.",
+            "icon": "library"
+          },
+          {
+            "title": "Mod seçme öncelikli çözümleyici",
+            "body": "İstediğiniz modları seçin ve en yeni, tamamen uyumlu yükleyiciyi ve Minecraft sürümünü alın.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "Koruma ve otomasyon",
+        "items": [
+          {
+            "title": "Güvenli yedeklemeler",
+            "body": "Saklama sınıflarına sahip anlık görüntüler, yerinde geri yükleme ve disk alanını geri kazanmak için isteğe bağlı dünya küçültme.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron zamanlamaları",
+            "body": "Zamanlanmış yeniden başlatmalar, yedeklemeler ve RCON komutları, bir sonraki çalıştırma önde gösterilir.",
+            "icon": "clock"
+          },
+          {
+            "title": "Mavi kopyalar",
+            "body": "Bir sunucuyu taşınabilir bir tarif olarak dışa aktarın, her yere içe aktarın ve aynı sunucuyu geri alın.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Çökme adli tıp",
+            "body": "Çökmeler algılanır, ayrıştırılır ve şüpheliler adlandırılır, tek tıklamayla paylaşım ve otomatik içgörülerle.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Güncelleme takibi",
+            "body": "Yeni sunucu, paket, resim ve mod sürümleri takip edilir, güncelleme öncesi yedeklemeler ve tek tıklamayla geri alma ile.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "İçgörü ve topluluk",
+        "items": [
+          {
+            "title": "Canlı harita",
+            "body": "Panelin kimliği doğrulanmış proxy'si aracılığıyla sunulan canlı bir haritaya tek tıklama.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analiz ve depolama",
+            "body": "Oynama süresi, ölümler ve madencilik skor tabloları, envanter adli tıp, sunucu başına disk kullanımı ve zorunlu kotalar.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord ve sohbet botu",
+            "body": "Etkinlik başına geçişli webhook'lar ve sınırlı oyun içi yetkilere sahip isteğe bağlı sunucu başına sohbet botu.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Genel durum sayfası ve API",
+            "body": "İsteğe bağlı durum sayfaları, davet blokları, oluşturulmuş bir istemci .mrpack ve salt okunur belirteç kimlik doğrulamalı bir API.",
+            "icon": "globe"
+          },
+          {
+            "title": "Kullanıcılar, roller ve 2FA",
+            "body": "TOTP iki faktörlü kimlik doğrulama ile yönetici, operatör ve görüntüleyici rolleri.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Kullanımı keyifli bir panel",
+    "intro": "Masaüstü ve telefon. Panel dar öncelikli olarak tasarlandığından, her sayfa telefonda çalışır.",
+    "desktop": "Masaüstü",
+    "mobile": "Telefonda",
+    "items": {
+      "dashboard": "Gösterge paneli: tüm sunucular, oyuncu sayısı ve son etkinlikler bir bakışta.",
+      "wizard": "Oluşturma sihirbazı, her ayarı seçmeden önce açıklar.",
+      "overview": "Kaynak ölçerleri ve hızlı eylemleri olan bir sunucunun genel görünümü.",
+      "console": "RCON komut çubuğu ve günlük filtreleriyle canlı konsol.",
+      "mods": "Beş kayıtlı kaynaktan modlar, sunucunun yükleyicisine ve sürümüne göre filtrelenir.",
+      "worlds": "Dünyaları değiştirin ve dosyaları tarayıcıdan yönetin.",
+      "backups": "Saklama sınıfları ve yerinde geri yüklemeyle yedeklemeler.",
+      "schedules": "Yeniden başlatmalar, yedeklemeler ve komutlar için cron zamanlamaları.",
+      "blueprints": "Şablonlar: taşınabilir sunucu tarifleri.",
+      "storage": "Depolama analizleri ve zorunlu kotalar."
+    }
+  },
+  "install": {
+    "title": "Kurulum",
+    "intro": "Barındırıcınıza uyan seçeneği seçin. Her yol size aynı paneli verir.",
+    "requirements": "Gereksinimler",
+    "reqItems": [
+      "Docker Engine (Linux) veya Docker Desktop (Windows, macOS).",
+      "Kaynak kodundan kurulum için Node.js 24 veya daha yenisi. Docker imajı kendi Node.js'ini içerir.",
+      "Sunucu imajları ve dünyalar için birkaç gigabayt disk alanı."
+    ],
+    "docker": {
+      "title": "Seçenek 1: Docker",
+      "body": "Her sürümde GHCR'ye önceden derlenmiş çoklu mimari bir imaj yayınlanır. Compose dosyasını alın, bir değişken ayarlayın ve başlatın.",
+      "after": "Ardından http://your-host:25564 adresini açın. Portainer veya Dockge'de, compose dosyasını bir yığın olarak yapıştırın ve yığının ortamında DATA_DIR_HOST'u ayarlayın.",
+      "warning": "Panel, barındırıcının Docker demenini bağlanan soket aracılığıyla yönetir, bu da barındırıcıda root eşdeğeridir. Yönetici oturumunu buna göre ele alın ve paneli asla doğrudan internete maruz bırakmayın."
+    },
+    "source": {
+      "title": "Seçenek 2: Kaynak kodundan",
+      "body": "Docker Desktop ile Windows ve macOS dahil herhangi bir işletim sistemi.",
+      "after": "http://localhost:25564 adresini açın. İlk çalıştırma, sistem kontrolü, saat diliminiz ve yönetici hesabının oluşturulması adımlarını size gösterir."
+    },
+    "next": "Sonraki adımlar",
+    "nextBody": "Başlangıç kılavuzu, ilk çalıştırma kurulumunu, ilk sunucunuzu oluşturmayı ve her şeyin nerede bulunduğunu kapsar.",
+    "nextCta": "Başlangıç kılavuzunu oku",
+    "compose": "docker-compose.yml'yi indir",
+    "windows": "Windows notları",
+    "windowsItems": [
+      "Sunucuları başlatmadan veya oluşturmadan önce Docker Desktop çalışıyor olmalıdır.",
+      "Bağlama noktalarının çalışması için proje sürücünüzü Docker Desktop ile paylaşın (Ayarlar, Kaynaklar, Dosya paylaşımı).",
+      "Docker imajı Linux barındırıcılarını hedefler; Windows ve macOS'ta paneli kaynak kodundan çalıştırın."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "Sıkça Sorulan Sorular",
+    "items": [
+      {
+        "q": "Gerçekten ücretsiz mi?",
+        "a": "Evet. Panel MIT lisanslıdır ve ücretli hizmet kullanmaz. Her şey sizin makinenizde çalışır."
+      },
+      {
+        "q": "Raspberry Pi veya başka bir ARM makinede çalışır mı?",
+        "a": "Evet. Docker imajı her iki mimari için de yayınlanmıştır ve kaynaktan kurulum Node.js 24 ve Docker'ın çalıştığı her yerde çalışır.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Hangi sunucu türleri destekleniyor?",
+        "a": "itzg imajının desteklediği her şey, artı büyük dört kaynaktan mod paketleri.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Panelimi yeni bir makineye nasıl taşırım?",
+        "a": "Veri klasörünü kopyalayın. Veritabanını, her sunucunun dünyasını, yedeklerini ve mod kütüphanesini tutar. Paneli yeni makinede o klasörü işaret ederek başlatın."
+      },
+      {
+        "q": "Birden fazla kişi sunucuları yönetebilir mi?",
+        "a": "Evet. Panelde yönetici, operatör ve görüntüleyici rolleri bulunur ve her hesap iki faktörlü kimlik doğrulamayı etkinleştirebilir."
+      },
+      {
+        "q": "İnternete açık olması gerekiyor mu?",
+        "a": "Hayır. Oyuncular panele değil, oyun portlarına bağlanır. Paneli yerel ağınızda veya kimlik doğrulama ile bir VPN veya ters proxy'nin arkasında tutun."
+      },
+      {
+        "q": "Bedrock oyuncuları ne olacak?",
+        "a": "Her ikisi de diğer eklentiler veya modlar gibi kurulabilir ve panel ihtiyaç duydukları ayarları sunar.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Nereden yardım alabilirim?",
+        "a": "Discord sunucusunda bir destek forumu ve gerçek insanlar var. Hatalar ve özellik istekleri GitHub issues'a gider."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Değişiklik Günlüğü",
+    "intro": "Her sürüm, en yenisi önce gelecek şekilde listelenir. Sürüm notları İngilizce olarak yayınlanır.",
+    "releases": "Tüm sürümler GitHub'da"
+  },
+  "community": {
+    "title": "Merhaba deyin",
+    "body": "Hata bildirin, özellik önerin, gerçek insanlardan yardım alın ve sunucularınızı sergileyin.",
+    "discord": "Discord'a Katılın",
+    "github": "GitHub'da Yıldızlayın"
+  },
+  "footer": {
+    "tagline": "MIT lisansı altında ücretsiz ve açık kaynaklıdır.",
+    "product": "Ürün",
+    "community": "Topluluk",
+    "resources": "Kaynaklar",
+    "issues": "Sorunlar",
+    "releases": "Sürümler",
+    "contributing": "Katkıda Bulunma",
+    "license": "Lisans",
+    "notAffiliated": "Resmi bir Minecraft ürünü değildir. Mojang veya Microsoft tarafından onaylanmamıştır veya bunlarla ilişkili değildir."
+  },
+  "meta": {
+    "home": {
+      "title": "Ücretsiz Kendi Kendine Barındırılan Minecraft Sunucu Kontrol Paneli",
+      "description": "Tarayıcınızdan vanilla ve modlu Minecraft sunucuları çalıştırın. Docker tabanlı, mod paketleri tam sürümlere sabitlenmiş, yedeklemeler, zamanlamalar, canlı harita, oyuncu analizi. Ücretsiz, açık kaynaklı, üç adımda çalışır durumda."
+    },
+    "features": {
+      "title": "Özellikler",
+      "description": "Minecraft Server Manager'ın her özelliği: konteynerleştirilmiş sunucular, beş mod kayıt defteri, sağlama toplamı doğrulanmış indirmeler, güvenli yedeklemeler, zamanlamalar, şablonlar, çökme adli tıp, canlı harita, roller ve iki faktörlü kimlik doğrulama."
+    },
+    "screenshots": {
+      "title": "Ekran Görüntüleri",
+      "description": "Minecraft Server Manager panelinin masaüstü ve telefondaki ekran görüntüleri: kontrol paneli, sihirbaz, konsol, modlar, dünyalar, yedeklemeler, zamanlamalar ve daha fazlası."
+    },
+    "install": {
+      "title": "Kurulum",
+      "description": "Minecraft Server Manager'ı üç komutla Docker ile veya Windows, macOS ve Linux'ta kaynaktan kurun."
+    },
+    "faq": {
+      "title": "SSS",
+      "description": "Maliyet, desteklenen sunucu türleri, ARM desteği, geçiş, roller ve internete maruz kalma hakkında yanıtlar."
+    },
+    "changelog": {
+      "title": "Değişiklik Günlüğü",
+      "description": "Minecraft Server Manager'ın her sürümü için sürüm notları."
+    },
+    "notFound": {
+      "title": "Sayfa bulunamadı",
+      "description": "Bu sayfa mevcut değil."
+    }
+  },
+  "notFound": {
+    "title": "Bu bölüm hiç oluşturulmadı.",
+    "body": "İstediğiniz sayfa bulunamadı. Ana sayfayı veya belgeleri deneyin.",
+    "home": "Ana sayfaya git"
+  },
+  "langNotice": "Bu sayfa çevirisi tamamlanana kadar İngilizce gösterilir.",
+  "tutorial": {
+    "title": "Üç adımda kullanıma hazır",
+    "intro": "Paneli nasıl çalıştırmak istediğinizi seçin. İki alanı ve aşağıdaki her komutu doldurun, makineniz için yeniden yazılacaktır.",
+    "dataDir": "Ana makinedeki veri klasörü",
+    "dataDirHint": "Mutlak yol. Dünyalar, yedeklemeler, modlar ve veritabanı burada bulunur.",
+    "host": "Ana makine adı veya IP",
+    "hostHint": "Paneli bir tarayıcıdan buradan açacaksınız.",
+    "then": "Ardından paneli açın",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı!",
+    "firstRun": "İlk çalıştırma, sistem kontrolü, saat diliminiz ve yönetici hesabı oluşturma adımlarını size gösterecektir.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Veri klasörünü oluşturun",
+            "body": "Tek bir klasör, panelin sahip olduğu her şeyi barındırır."
+          },
+          {
+            "title": "Compose dosyasını indirin ve o klasörü işaret edin",
+            "body": "DATA_DIR_HOST, Docker ana makinenin bakış açısından bağladığı için ana makinedeki mutlak yol olmalıdır."
+          },
+          {
+            "title": "Paneli başlatın",
+            "body": "Görüntü çoklu mimarilidir (amd64 ve arm64) ve her sürümde güncellenir."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Ana makinede veri klasörünü oluşturun",
+            "body": "Aynı klasör kuralı: mutlak yol, Docker'ı çalıştıran makinede."
+          },
+          {
+            "title": "Compose dosyasından bir yığın ekleyin",
+            "body": "Compose dosyasının içeriğini yeni bir yığına yapıştırın. Ham dosya burada:"
+          },
+          {
+            "title": "Ortam değişkenini ayarlayın ve dağıtın",
+            "body": "Yığının ortam bölümüne ekleyin, ardından dağıtın."
+          }
+        ]
+      },
+      "source": {
+        "label": "Kaynak kodundan",
+        "steps": [
+          {
+            "title": "Gereksinimleri kontrol edin",
+            "body": "Node.js 24 veya daha yenisi, pnpm ve çalışan Docker (Windows ve macOS'ta Docker Desktop)."
+          },
+          {
+            "title": "Klonlayın ve kurun",
+            "body": "Kurulum adımı ayrıca panelin CSS'ini oluşturur. Derlenecek yerel modül yok."
+          },
+          {
+            "title": "Paneli başlatın",
+            "body": "Varsayılan olarak yalnızca localhost'u dinler. Ağınızdaki diğer makinelerden erişmek için PANEL_HOST=0.0.0.0 olarak ayarlayın."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Kaynak kurulumundan başlatın",
+            "body": "Bunu klonlanmış klasörden çalıştırın. PM2, uygulamaları kendi daemon'unu başlatan Node sürümüyle başlatır, bu nedenle yorumlayıcıyı sabitleyin."
+          },
+          {
+            "title": "İşlem listesini kaydedin ve başlangıcı etkinleştirin",
+            "body": "pm2 startup, sudo ile çalıştırılacak tek bir komut yazdırır; bunu bir kez çalıştırın."
+          },
+          {
+            "title": "systemd'yi mi tercih ediyorsunuz?",
+            "body": "Klonlanmış klasörden node src/server.js çalıştıran ve WorkingDirectory'yi ayarlayan bir birim aynı şekilde çalışır. Panel ek bayrak gerektirmez."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Zaten kullandığınız her şeyle çalışır",
+    "registries": "Kayıt Defterleri",
+    "loaders": "Sunucu Türleri",
+    "packs": "Modpack'ler",
+    "runsOn": "Şunun üzerinde çalışır",
+    "formats": "İçe Aktarmalar",
+    "checksums": "Sağlama Toplamları",
+    "integrations": "Entegrasyonlar",
+    "keyless": "anahtarsız"
+  }
+}

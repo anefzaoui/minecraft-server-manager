@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Panou de control gratuit, auto-găzduit pentru servere Minecraft pe Docker.",
+    "description": "Rulează servere Minecraft modificate și vanilla din browserul tău. Modpack-uri fixate la versiuni exacte, backup-uri cu un singur clic, programări, hartă live, analize ale jucătorilor. Gratuit, open source, iar întregul tău panou este un singur folder."
+  },
+  "nav": {
+    "home": "Acasă",
+    "features": "Funcționalități",
+    "screenshots": "Capturi de ecran",
+    "install": "Instalare",
+    "docs": "Documentație",
+    "faq": "Întrebări frecvente",
+    "changelog": "Jurnal modificări",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Meniu",
+    "language": "Limbă",
+    "theme": "Comută tema pe lumină sau întuneric",
+    "skip": "Treci la conținut"
+  },
+  "hero": {
+    "eyebrow": "Gratuit și open source. Rulează pe propria mașină.",
+    "title": "Rulează serverele tale Minecraft dintr-un singur panou prietenos.",
+    "subtitle": "Minecraft Server Manager transformă Docker într-o casă confortabilă pentru serverele tale: modpack-uri care rămân fixate, backup-uri cu un singur clic, programări, o hartă live, statistici ale jucătorilor și o consolă care vorbește pe înțelesul tuturor. Fără facturi, fără blocaje, tot panoul tău într-un singur folder.",
+    "primary": "Începe în 3 pași",
+    "secondary": "Explorează funcționalitățile",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Vezi tutorialul"
+  },
+  "pillars": {
+    "title": "Creat pentru cei care rulează servere, nu tichete",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Un singur folder este întregul panou",
+        "body": "Baza de date, lumile, backup-urile și biblioteca partajată de moduri se află toate sub un singur folder de date. Copiați-l și ați migrat."
+      },
+      {
+        "icon": "box",
+        "title": "Fiecare server este un container",
+        "body": "Fiecare server rulează pe imaginea itzg testată în luptă, cu propriile limite de CPU și memorie, opriri grațioase prin RCON și detectarea accidentelor.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpack-urile rămân fixate",
+        "body": "Pachetele sunt blocate la o versiune exactă. Actualizările sunt explicite, previzualizate, salvate mai întâi, verificate de sănătate și anulate cu un singur clic.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Totul la îndemâna proprietarului unui server",
+    "intro": "Turul complet al funcționalităților, de la crearea unui server la partajarea hărții sale live.",
+    "cta": "Citește documentația",
+    "groups": [
+      {
+        "title": "Servere și ciclu de viață",
+        "items": [
+          {
+            "title": "Containere cu resurse limitate",
+            "body": "Creează, pornește, oprește, repornește, reconstruiește și șterge servere cu opriri RCON grațioase și detectare automată a blocajelor.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Asistent de creare ghidat",
+            "body": "Mod Simplu sau Avansat, cu fiecare setare a imaginii explicată în limba engleză simplă înainte de a o alege.",
+            "icon": "wand"
+          },
+          {
+            "title": "Consolă live",
+            "body": "O consolă WebSocket cu o bară de comenzi RCON, filtre de loguri și acțiuni pentru jucători cu un singur clic.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Moderare jucători",
+            "body": "Whitelist, ops, banări, banări IP și teleportări, online prin RCON și offline prin fișierele JSON.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Moduri și pachete de moduri",
+        "items": [
+          {
+            "title": "Cinci registre într-un singur browser",
+            "body": "Caută în toate cele cinci dintr-un singur loc. Trei dintre ele nu necesită cheie API.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Adaugă prin link",
+            "body": "Lipește o pagină de proiect, un repository GitHub, un slug sau un URL direct jar. Panoul îl identifică.",
+            "icon": "link"
+          },
+          {
+            "title": "Importă orice",
+            "body": "Fiecare jar este identificat și verificat compatibilitatea la intrare.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Descărcări verificate prin sumă de control",
+            "body": "Verificate înainte ca un fișier să ajungă la server, cu cel mai puternic hash primul. O nepotrivire nu este niciodată livrată.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Bibliotecă de moduri partajată",
+            "body": "Deduplicată prin sha256 și legată simbolic în servere, astfel încât modurile personalizate să supraviețuiască actualizărilor pachetelor.",
+            "icon": "library"
+          },
+          {
+            "title": "Rezolvator „alege modurile mai întâi”",
+            "body": "Alege modurile pe care le dorești și obține cea mai recentă versiune complet compatibilă de loader și Minecraft.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "Protecție și automatizare",
+        "items": [
+          {
+            "title": "Backup-uri sigure",
+            "body": "Snapshot-uri cu clase de retenție, restaurare la fața locului și micșorare opțională a lumii pentru recuperarea spațiului pe disc.",
+            "icon": "archive"
+          },
+          {
+            "title": "Programări Cron",
+            "body": "Reporniri, backup-uri și comenzi RCON programate, cu următoarea execuție afișată în față.",
+            "icon": "clock"
+          },
+          {
+            "title": "Blueprints",
+            "body": "Exportă un server ca o rețetă portabilă, importă-l oriunde și obține același server înapoi.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Diagnosticare blocaje",
+            "body": "Blocajele sunt detectate, analizate și suspecții numiți, cu partajare cu un singur clic și informații automate.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Urmărire actualizări",
+            "body": "Sunt urmărite versiunile noi de server, pachete, imagini și moduri, cu backup-uri pre-actualizare și rollback cu un singur clic.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Informații și comunitate",
+        "items": [
+          {
+            "title": "Hartă live",
+            "body": "Un clic către o hartă live, servită prin proxy-ul autentificat al panoului.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analize și stocare",
+            "body": "Tabele de scor pentru timp de joc, decese și minare, diagnosticare inventar, utilizare disc per server și cote impuse.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord și chatbot",
+            "body": "Webhooks cu comutatoare per eveniment, plus un chatbot opțional per server cu puteri limitate în joc.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Pagină de stare publică și API",
+            "body": "Pagini de stare opționale, blocuri de invitație, un fișier .mrpack generat pentru client și un API doar pentru citire autentificat prin token.",
+            "icon": "globe"
+          },
+          {
+            "title": "Utilizatori, roluri și 2FA",
+            "body": "Roluri de administrator, operator și vizualizator cu autentificare duală TOTP.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Un panou plăcut de utilizat",
+    "intro": "Desktop și telefon. Panoul este proiectat mai întâi pentru spații înguste, astfel încât fiecare pagină funcționează pe telefon.",
+    "desktop": "Desktop",
+    "mobile": "Pe telefon",
+    "items": {
+      "dashboard": "Panoul de bord: fiecare server, numărul de jucători și activitatea recentă dintr-o privire.",
+      "wizard": "Asistentul de creare explică fiecare setare înainte de a o alege.",
+      "overview": "Prezentarea generală a unui server cu contoare de resurse și acțiuni rapide.",
+      "console": "Consola live cu o bară de comenzi RCON și filtre de jurnal.",
+      "mods": "Moduri din cinci registre, filtrate pentru loader-ul și versiunea serverului.",
+      "worlds": "Schimbați lumi și gestionați fișiere din browser.",
+      "backups": "Backup-uri cu clase de retenție și restaurare la fața locului.",
+      "schedules": "Programări cron pentru reporniri, backup-uri și comenzi.",
+      "blueprints": "Scheme: rețete portabile de server.",
+      "storage": "Analiza stocării și cote impuse."
+    }
+  },
+  "install": {
+    "title": "Instalare",
+    "intro": "Alege opțiunea care se potrivește sistemului tău gazdă. Fiecare cale îți oferă același panou.",
+    "requirements": "Cerințe",
+    "reqItems": [
+      "Docker Engine (Linux) sau Docker Desktop (Windows, macOS).",
+      "Node.js 24 sau mai nou pentru instalarea din sursă. Imaginea Docker își include propria versiune.",
+      "Câțiva gigabytes de spațiu pe disc pentru imaginile serverelor și lumile acestora."
+    ],
+    "docker": {
+      "title": "Opțiunea 1: Docker",
+      "body": "O imagine multi-arhitectură precompilată este publicată pe GHCR la fiecare lansare. Descarcă fișierul compose, setează o variabilă și pornește.",
+      "after": "Apoi deschide http://your-host:25564. În Portainer sau Dockge, lipește fișierul compose ca un stack și setează DATA_DIR_HOST în mediul de configurare al stack-ului.",
+      "warning": "Panoul controlează daemon-ul Docker al gazdei prin socket-ul montat, care este echivalent cu root-ul pe gazdă. Tratează autentificarea de administrator în consecință și nu expune niciodată panoul direct pe internet."
+    },
+    "source": {
+      "title": "Opțiunea 2: Din sursă",
+      "body": "Orice sistem de operare, inclusiv Windows și macOS cu Docker Desktop.",
+      "after": "Deschide http://localhost:25564. Prima rulare te ghidează printr-o verificare a sistemului, fusul tău orar și crearea contului de administrator."
+    },
+    "next": "Pașii următori",
+    "nextBody": "Ghidul de pornire acoperă configurarea inițială, crearea primului tău server și unde se găsesc toate fișierele.",
+    "nextCta": "Citește ghidul de pornire",
+    "compose": "Descarcă docker-compose.yml",
+    "windows": "Note pentru Windows",
+    "windowsItems": [
+      "Docker Desktop trebuie să ruleze înainte de a porni sau crea servere.",
+      "Partajează unitatea de proiect cu Docker Desktop (Settings, Resources, File sharing) pentru ca montările de tip bind să funcționeze.",
+      "Imaginea Docker vizează gazde Linux; pe Windows și macOS rulează panoul din sursă."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "Întrebări frecvente",
+    "items": [
+      {
+        "q": "Este cu adevărat gratuit?",
+        "a": "Da. Panoul are licență MIT și nu folosește servicii plătite. Totul rulează pe mașina dumneavoastră."
+      },
+      {
+        "q": "Funcționează pe un Raspberry Pi sau pe altă mașină ARM?",
+        "a": "Da. Imaginea Docker este publicată pentru ambele arhitecturi, iar instalarea din sursă rulează oriunde Node.js 24 și Docker funcționează.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Ce tipuri de servere sunt suportate?",
+        "a": "Tot ce suportă imaginea itzg, plus modpack-uri din cele patru surse mari.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Cum mut panoul pe o mașină nouă?",
+        "a": "Copiați folderul de date. Acesta conține baza de date, lumea fiecărui server, backup-urile și biblioteca de moduri. Porniți panoul pe noua mașină indicând acel folder."
+      },
+      {
+        "q": "Pot mai multe persoane să gestioneze servere?",
+        "a": "Da. Panoul are roluri de administrator, operator și vizualizator, iar fiecare cont poate activa autentificarea în doi factori."
+      },
+      {
+        "q": "Trebuie expus la internet?",
+        "a": "Nu. Jucătorii se conectează la porturile jocului, nu la panou. Păstrați panoul în rețeaua locală (LAN) sau în spatele unui VPN sau proxy invers cu autentificare."
+      },
+      {
+        "q": "Ce se întâmplă cu jucătorii Bedrock?",
+        "a": "Ambele pot fi instalate ca orice alt plugin sau mod, iar panoul expune setările de care au nevoie.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Unde pot obține ajutor?",
+        "a": "Serverul Discord are un forum de suport și oameni reali. Bug-urile și cererile de funcționalități se trimit la problemele de pe GitHub."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Jurnal de modificări",
+    "intro": "Fiecare lansare, cele mai noi primele. Notele de lansare sunt publicate în engleză.",
+    "releases": "Toate lansările pe GitHub"
+  },
+  "community": {
+    "title": "Vino să ne saluți",
+    "body": "Raportează bug-uri, sugerează funcționalități, primește ajutor de la oameni reali și etalează-ți serverele.",
+    "discord": "Alătură-te pe Discord",
+    "github": "Votează pe GitHub"
+  },
+  "footer": {
+    "tagline": "Gratuit și open source sub licența MIT.",
+    "product": "Produs",
+    "community": "Comunitate",
+    "resources": "Resurse",
+    "issues": "Probleme",
+    "releases": "Versiuni",
+    "contributing": "Contribuții",
+    "license": "Licență",
+    "notAffiliated": "Nu este un produs oficial Minecraft. Nu este aprobat de sau asociat cu Mojang sau Microsoft."
+  },
+  "meta": {
+    "home": {
+      "title": "Panou de control gratuit pentru servere Minecraft, auto-găzduit",
+      "description": "Rulează servere Minecraft vanilla și modificate din browserul tău. Bazat pe Docker, modpack-uri fixate la versiuni exacte, backup-uri, programări, hartă live, analize ale jucătorilor. Gratuit, open source, funcțional în trei pași."
+    },
+    "features": {
+      "title": "Funcționalități",
+      "description": "Fiecare funcționalitate a Minecraft Server Manager: servere containerizate, cinci registre de moduri, descărcări verificate prin checksum, backup-uri sigure, programări, blueprint-uri, diagnosticare crash-uri, hartă live, roluri și autentificare în doi factori."
+    },
+    "screenshots": {
+      "title": "Capturi de ecran",
+      "description": "Capturi de ecran ale panoului Minecraft Server Manager pe desktop și telefon: dashboard, wizard, consolă, moduri, lumi, backup-uri, programări și multe altele."
+    },
+    "install": {
+      "title": "Instalare",
+      "description": "Instalează Minecraft Server Manager cu Docker în trei comenzi, sau din sursă pe Windows, macOS și Linux."
+    },
+    "faq": {
+      "title": "Întrebări frecvente",
+      "description": "Răspunsuri despre cost, tipuri de servere suportate, suport ARM, migrare, roluri și expunere la internet."
+    },
+    "changelog": {
+      "title": "Jurnal de modificări",
+      "description": "Note de lansare pentru fiecare versiune a Minecraft Server Manager."
+    },
+    "notFound": {
+      "title": "Pagina nu a fost găsită",
+      "description": "Această pagină nu există."
+    }
+  },
+  "notFound": {
+    "title": "Această secțiune nu a fost generată niciodată.",
+    "body": "Pagina solicitată nu există. Încearcă pagina principală sau documentația.",
+    "home": "Mergi acasă"
+  },
+  "langNotice": "Această pagină este afișată în engleză până la finalizarea traducerii sale.",
+  "tutorial": {
+    "title": "Funcțional în trei pași",
+    "intro": "Alege cum vrei să rulezi panoul. Completează cele două câmpuri și fiecare comandă de mai jos se va rescrie pentru mașina ta.",
+    "dataDir": "Directorul de date pe gazdă",
+    "dataDirHint": "Cale absolută. Lumile, backup-urile, modurile și baza de date se află aici.",
+    "host": "Nume gazdă sau IP",
+    "hostHint": "De unde vei accesa panoul dintr-un browser.",
+    "then": "Apoi deschide panoul",
+    "copy": "Copiază",
+    "copied": "Copiat!",
+    "firstRun": "Prima rulare te ghidează printr-o verificare a sistemului, fusul tău orar și crearea contului de administrator.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Creează directorul de date",
+            "body": "Un singur director deține tot ce aparține panoului."
+          },
+          {
+            "title": "Descarcă fișierul compose și indică-l spre acel director",
+            "body": "DATA_DIR_HOST trebuie să fie calea absolută pe gazdă, deoarece Docker o montează din perspectiva gazdei."
+          },
+          {
+            "title": "Pornește panoul",
+            "body": "Imaginea este multi-arhitectură (amd64 și arm64) și se actualizează la fiecare lansare."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Creează directorul de date pe gazdă",
+            "body": "Aceeași regulă pentru director: cale absolută, pe mașina care rulează Docker."
+          },
+          {
+            "title": "Adaugă un stack din fișierul compose",
+            "body": "Copiază conținutul fișierului compose într-un stack nou. Fișierul brut este aici:"
+          },
+          {
+            "title": "Setează variabila de mediu și implementează",
+            "body": "Adaug-o în secțiunea de mediu a stack-ului, apoi implementează."
+          }
+        ]
+      },
+      "source": {
+        "label": "Din sursă",
+        "steps": [
+          {
+            "title": "Verifică cerințele",
+            "body": "Node.js 24 sau mai nou, pnpm și Docker rulând (Docker Desktop pe Windows și macOS)."
+          },
+          {
+            "title": "Clonează și instalează",
+            "body": "Pasul de instalare construiește și CSS-ul panoului. Nu există module native de compilat."
+          },
+          {
+            "title": "Pornește panoul",
+            "body": "Implicit, ascultă doar pe localhost. Setează PANEL_HOST=0.0.0.0 pentru a-l accesa de pe alte mașini din rețeaua ta."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Pornește dintr-o instalare din sursă",
+            "body": "Rulează aceasta din directorul clonat. PM2 lansează aplicații cu versiunea Node care a pornit daemon-ul său, așa că fixează interpretorul."
+          },
+          {
+            "title": "Salvează lista de procese și activează pornirea automată",
+            "body": "pm2 startup afișează o comandă de rulat cu sudo; ruleaz-o o singură dată."
+          },
+          {
+            "title": "Preferi systemd?",
+            "body": "O unitate care rulează node src/server.js din directorul clonat, cu WorkingDirectory setat, funcționează la fel. Panoul nu necesită flag-uri suplimentare."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Funcționează cu tot ce folosești deja",
+    "registries": "Registre",
+    "loaders": "Tipuri de server",
+    "packs": "Modpack-uri",
+    "runsOn": "Rulează pe",
+    "formats": "Importă",
+    "checksums": "Sumări de verificare",
+    "integrations": "Integrări",
+    "keyless": "fără cheie"
+  }
+}

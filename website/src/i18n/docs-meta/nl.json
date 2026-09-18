@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Activiteitenlogboek",
+    "description": "De Activiteitspagina is het volledige audit trail: een doorzoekbaar, chronologisch overzicht van alles wat er in het paneel is gebeurd."
+  },
+  "architecture": {
+    "title": "Architectuur",
+    "description": "Minecraft Server Manager is een single-process, server-rendered Node.js-applicatie."
+  },
+  "backups": {
+    "title": "Back-ups",
+    "description": "De Back-ups pagina toont elke snapshot van uw vloot, met grootte, reden en leeftijd."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Een blueprint legt de volledige configuratie van een server vast (type, versie, resources, omgeving, pack pin, en optioneel de configuratie en wereld) in één bestand."
+  },
+  "chatbot": {
+    "title": "Minecraft-chatbot per server",
+    "description": "Deze fork voegt een door beheerders geconfigureerde chatbot toe aan elke beheerde Minecraft-server."
+  },
+  "console-and-chat": {
+    "title": "Console & chat-opdrachten",
+    "description": "Het tabblad Console streamt het serverlogboek in realtime en biedt een opdrachtvak om serveropdrachten te verzenden."
+  },
+  "dashboard": {
+    "title": "Het dashboard",
+    "description": "Het dashboard is je thuisbasis: elke server, de live status ervan en een lopende feed van wat er is gebeurd."
+  },
+  "getting-started": {
+    "title": "Aan de slag",
+    "description": "De eerste keer dat je het paneel opent, wordt je gevraagd om een beheerdersaccount aan te maken."
+  },
+  "index": {
+    "title": "Documentatie",
+    "description": "Een compleet, zelf-gehost controlepaneel voor itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integraties",
+    "description": "Elke server heeft zijn integraties onder de groep Instellingen: Discord, een openbare Statuspagina, Eén-klik Uitnodigingen en het optionele Chatbot-tabblad."
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "De Modpacks-pagina (en het tabblad 'Van modpack' in de wizard) installeert een modpack als server, altijd vastgezet op een exacte packversie zodat een herstart kan"
+  },
+  "public-api": {
+    "title": "Openbare API",
+    "description": "Een kleine, alleen-lezen HTTP API voor het ophalen van serverstatus van buiten het paneel: a"
+  },
+  "schedules": {
+    "title": "Schema's",
+    "description": "De pagina Schema's automatiseert terugkerende taken met cron-expressies."
+  },
+  "servers": {
+    "title": "Servers maken en beheren",
+    "description": "Klik op \"Create a Server\" (bovenbalk) of de kaart \"Create a server\" om de wizard te openen."
+  },
+  "storage": {
+    "title": "Opslag",
+    "description": "De Opslag-pagina toont waar je schijfruimte naartoe gaat: gebruik per server en hoe dit zich in de loop van de tijd ontwikkelt."
+  },
+  "two-factor-authentication": {
+    "title": "Twee-factorauthenticatie",
+    "description": "Twee-factorauthenticatie (2FA) voegt een tweede stap toe aan het inloggen: na je wachtwoord voer je een korte code in van een authenticatie-app op je telefoon."
+  },
+  "updates": {
+    "title": "Updates",
+    "description": "De pagina Updates toont in één oogopslag wat er verouderd is binnen uw vloot:"
+  },
+  "users-and-roles": {
+    "title": "Gebruikers & rollen",
+    "description": "Het paneel is multi-user."
+  },
+  "world-shrink": {
+    "title": "Een wereld verkleinen",
+    "description": "Na verloop van tijd breidt een wereld zich uit: elke plek waar een speler ooit heeft gelopen, gevlogen of"
+  },
+  "worlds-and-files": {
+    "title": "Werelden & bestanden",
+    "description": "De pagina Werelden beheert de wereldgegevens van uw servers: wissel de actieve wereld, upload een wereld of download er een."
+  }
+}

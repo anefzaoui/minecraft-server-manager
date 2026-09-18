@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Nhật ký hoạt động",
+    "description": "Trang Hoạt động là nhật ký kiểm toán đầy đủ: một bản ghi có thể tìm kiếm, theo thứ tự thời gian về mọi thứ đã xảy ra trong bảng điều khiển."
+  },
+  "architecture": {
+    "title": "Kiến trúc",
+    "description": "Minecraft Server Manager là một ứng dụng Node.js, render trên máy chủ, chạy đơn tiến trình."
+  },
+  "backups": {
+    "title": "Sao lưu",
+    "description": "Trang Sao lưu hiển thị mọi ảnh chụp nhanh trên toàn bộ hệ thống của bạn, kèm theo kích thước, lý do và thời gian."
+  },
+  "blueprints": {
+    "title": "Bản thiết kế",
+    "description": "Một bản thiết kế ghi lại toàn bộ cấu hình của máy chủ (loại, phiên bản, tài nguyên, môi trường, ghim gói và tùy chọn cấu hình và thế giới của nó) thành một tệp duy nhất"
+  },
+  "chatbot": {
+    "title": "Chatbot Minecraft cho từng máy chủ",
+    "description": "Phiên bản fork này bổ sung một chatbot được cấu hình bởi quản trị viên cho mỗi máy chủ Minecraft được quản lý."
+  },
+  "console-and-chat": {
+    "title": "Bảng điều khiển & lệnh trò chuyện",
+    "description": "Tab Bảng điều khiển truyền nhật ký máy chủ theo thời gian thực và cung cấp cho bạn một hộp lệnh để gửi bất kỳ lệnh nào của máy chủ."
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "description": "Bảng điều khiển là trung tâm của bạn: hiển thị mọi máy chủ, trạng thái trực tiếp của chúng và nguồn cấp dữ liệu hoạt động gần đây."
+  },
+  "getting-started": {
+    "title": "Bắt đầu",
+    "description": "Lần đầu tiên bạn mở bảng điều khiển, nó sẽ yêu cầu bạn tạo một tài khoản quản trị viên."
+  },
+  "index": {
+    "title": "Tài liệu",
+    "description": "Một bảng điều khiển hoàn chỉnh, tự lưu trữ cho itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Tích hợp",
+    "description": "Mỗi máy chủ đều có các tích hợp của riêng mình trong nhóm Cài đặt: Discord, Trang trạng thái công khai, Lời mời một cú nhấp chuột và tab Chatbot tùy chọn."
+  },
+  "modpacks": {
+    "title": "Gói Mod",
+    "description": "Trang Gói Mod (và tab Từ gói mod trong trình hướng dẫn tạo) cài đặt một gói mod làm máy chủ, luôn được ghim vào một phiên bản gói chính xác để có thể khởi động lại"
+  },
+  "public-api": {
+    "title": "API Công khai",
+    "description": "Một API HTTP nhỏ, chỉ đọc để lấy trạng thái máy chủ từ bên ngoài bảng điều khiển: a"
+  },
+  "schedules": {
+    "title": "Lịch trình",
+    "description": "Trang Lịch trình tự động hóa các tác vụ định kỳ bằng biểu thức cron."
+  },
+  "servers": {
+    "title": "Tạo & quản lý máy chủ",
+    "description": "Nhấp vào Tạo máy chủ (thanh trên cùng) hoặc thẻ Tạo máy chủ để mở trình hướng dẫn."
+  },
+  "storage": {
+    "title": "Lưu trữ",
+    "description": "Trang Lưu trữ hiển thị dung lượng ổ đĩa của bạn đang được sử dụng như thế nào: mức sử dụng theo từng máy chủ và xu hướng của nó theo thời gian."
+  },
+  "two-factor-authentication": {
+    "title": "Xác thực hai yếu tố",
+    "description": "Xác thực hai yếu tố (2FA) thêm một bước thứ hai khi đăng nhập: sau mật khẩu của bạn, bạn nhập một mã ngắn từ ứng dụng xác thực trên điện thoại của mình."
+  },
+  "updates": {
+    "title": "Cập nhật",
+    "description": "Trang Cập nhật theo dõi những gì đã lỗi thời trên toàn bộ hệ thống của bạn ở một nơi:"
+  },
+  "users-and-roles": {
+    "title": "Người dùng & vai trò",
+    "description": "Bảng điều khiển hỗ trợ đa người dùng."
+  },
+  "world-shrink": {
+    "title": "Thu nhỏ thế giới",
+    "description": "Theo thời gian, một thế giới sẽ lan rộng ra: mọi nơi người chơi từng đi bộ, bay hoặc"
+  },
+  "worlds-and-files": {
+    "title": "Thế giới & tệp",
+    "description": "Trang Thế giới quản lý dữ liệu thế giới trên các máy chủ của bạn: hoán đổi thế giới đang hoạt động, tải lên hoặc tải xuống một thế giới."
+  }
+}

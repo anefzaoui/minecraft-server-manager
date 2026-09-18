@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Tevékenységnapló",
+    "description": "A Tevékenység oldal a teljes audit trail: minden, ami a panelben történt, kereshető, kronologikus nyilvántartása."
+  },
+  "architecture": {
+    "title": "Architektúra",
+    "description": "A Minecraft Server Manager egy egyszálú, szerveroldalon renderelt Node.js alkalmazás."
+  },
+  "backups": {
+    "title": "Biztonsági mentések",
+    "description": "A Biztonsági mentések oldal az összes pillanatfelvételt mutatja a teljes flottában, mérettel, okkal és korszakkal."
+  },
+  "blueprints": {
+    "title": "Sablonok",
+    "description": "Egy sablon rögzíti egy szerver teljes konfigurációját (típus, verzió, erőforrások, környezet, csomag rögzítése, és opcionálisan a konfigurációja és a világa) egyetlen po"
+  },
+  "chatbot": {
+    "title": "Szerverenkénti Minecraft chatbot",
+    "description": "Ez a fork egy rendszergazda által konfigurálható chatbotot ad minden felügyelt Minecraft szerverhez."
+  },
+  "console-and-chat": {
+    "title": "Konzol és csevegési parancsok",
+    "description": "A Konzol lap valós időben streameli a szervernaplót, és rendelkezik egy parancssori mezővel, amellyel bármilyen szerverparancsot elküldhet."
+  },
+  "dashboard": {
+    "title": "Az irányítópult",
+    "description": "Az irányítópult az otthona: minden szerver, annak élő állapota és egy folyamatosan frissülő napló arról, hogy mi történt."
+  },
+  "getting-started": {
+    "title": "Első lépések",
+    "description": "Amikor először megnyitja a panelt, létre kell hoznia egy rendszergazdai fiókot."
+  },
+  "index": {
+    "title": "Dokumentáció",
+    "description": "Egy teljes körű, önállóan hosztolt vezérlőpanel az itzg/docker-minecraft-server számára."
+  },
+  "modpacks": {
+    "title": "Modpackok",
+    "description": "A Modpackok oldal (és a létrehozási varázsló Modpackból fül) telepít egy modpackot szerverként, mindig egy pontos csomagverzióhoz rögzítve, így egy újraindítás képes"
+  },
+  "public-api": {
+    "title": "Nyilvános API",
+    "description": "Egy kis, csak olvasható HTTP API a szerver állapotának lekérdezéséhez a panelen kívülről: a"
+  },
+  "integrations": {
+    "title": "Integrációk",
+    "description": "Minden szerver a Beállítások csoportban tartja az integrációit: Discord, nyilvános Állapotoldal, egykattintásos Meghívók és az opcionális Chatbot fül."
+  },
+  "schedules": {
+    "title": "Ütemezések",
+    "description": "Az Ütemezések oldal automatizálja az ismétlődő feladatokat cron kifejezésekkel."
+  },
+  "storage": {
+    "title": "Tárhely",
+    "description": "A Tárhely oldal megmutatja, hogyan oszlik el a lemezterületed: kiszolgálónkénti használat és az időbeli trendek."
+  },
+  "servers": {
+    "title": "Szerverek létrehozása és kezelése",
+    "description": "Kattintson a \"Szerver létrehozása\" gombra (felső sáv) vagy a \"Szerver létrehozása\" kártyára a varázsló megnyitásához."
+  },
+  "two-factor-authentication": {
+    "title": "Kétfaktoros hitelesítés",
+    "description": "A kétfaktoros hitelesítés (2FA) egy második lépést ad a bejelentkezéshez: a jelszó megadása után be kell írnia egy rövid kódot a telefonján lévő hitelesítő alkalmazásból."
+  },
+  "updates": {
+    "title": "Frissítések",
+    "description": "A Frissítések oldal egy helyen követi nyomon, hogy mi avult el a flottájában:"
+  },
+  "users-and-roles": {
+    "title": "Felhasználók és szerepkörök",
+    "description": "A panel több felhasználós."
+  },
+  "world-shrink": {
+    "title": "Világ méretének csökkentése",
+    "description": "Idővel egy világ terjeszkedik: minden hely, ahol egy játékos valaha is járt, repült, vagy"
+  },
+  "worlds-and-files": {
+    "title": "Világok és fájlok",
+    "description": "A Világok oldal kezeli a szervereid világadatait: cseréld az aktív világot, tölts fel egy világot, vagy tölts le egyet."
+  }
+}

@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "适用于 Docker 上 Minecraft 服务器的免费自托管控制面板。",
+    "description": "通过浏览器运行原版和已安装 Mod 的 Minecraft 服务器。Modpack 固定到精确版本，一键备份，计划任务，实时地图，玩家分析。免费、开源，并且您的整个面板都在一个文件夹中。"
+  },
+  "nav": {
+    "home": "首页",
+    "features": "功能",
+    "screenshots": "截图",
+    "install": "安装",
+    "docs": "文档",
+    "faq": "常见问题",
+    "changelog": "更新日志",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "菜单",
+    "language": "语言",
+    "theme": "切换浅色或深色主题",
+    "skip": "跳至内容"
+  },
+  "hero": {
+    "eyebrow": "免费且开源。在您自己的机器上运行。",
+    "title": "在一个友好的面板中运行您的 Minecraft 服务器。",
+    "subtitle": "Minecraft Server Manager 将 Docker 变成您服务器的温馨之家：可固定模组包、一键备份、计划任务、实时地图、玩家统计数据以及一个通俗易懂的控制台。无账单，无锁定，整个面板都在一个文件夹中。",
+    "primary": "3步开始",
+    "secondary": "探索功能",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "查看教程"
+  },
+  "pillars": {
+    "title": "专为服务器管理员而非工单系统设计",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "一个文件夹即是全部面板",
+        "body": "数据库、世界、备份以及共享的模组库都位于同一个数据文件夹下。复制它即可完成迁移。"
+      },
+      {
+        "icon": "box",
+        "title": "每个服务器都是一个容器",
+        "body": "每个服务器都运行在经过实战检验的 itzg 镜像上，拥有独立的 CPU 和内存限制、通过 RCON 进行优雅停止以及崩溃检测。",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "模组包版本锁定",
+        "body": "模组包会被锁定到精确的版本。升级是明确的，会先预览、备份，然后进行健康检查，并可一键回滚。",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "服务器所有者触手可及的一切",
+    "intro": "从创建服务器到共享实时地图，全功能导览。",
+    "cta": "阅读文档",
+    "groups": [
+      {
+        "title": "服务器与生命周期",
+        "items": [
+          {
+            "title": "资源限制容器",
+            "body": "通过优雅的 RCON 停止和自动崩溃检测来创建、启动、停止、重启、重建和删除服务器。",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "引导式创建向导",
+            "body": "简单或高级模式，所有镜像设置在您选择之前都用通俗易懂的英语解释。",
+            "icon": "wand"
+          },
+          {
+            "title": "实时控制台",
+            "body": "一个带有 RCON 命令栏、日志过滤器和一键玩家操作的 WebSocket 控制台。",
+            "icon": "terminal"
+          },
+          {
+            "title": "玩家管理",
+            "body": "白名单、管理员、封禁、IP 封禁和传送，通过 RCON 在线管理，通过 JSON 文件离线管理。",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "模组与模组包",
+        "items": [
+          {
+            "title": "一个浏览器，五个注册表",
+            "body": "在一个地方搜索所有五个。其中三个不需要 API 密钥。",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "通过链接添加",
+            "body": "粘贴项目页面、GitHub 仓库、slug 或直接的 jar URL。面板会识别它。",
+            "icon": "link"
+          },
+          {
+            "title": "导入任何内容",
+            "body": "所有 jar 在导入时都会被识别并进行兼容性检查。",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "校验和验证下载",
+            "body": "在文件到达服务器之前进行验证，优先使用最强的哈希。不匹配的文件绝不会被发送。",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "共享模组库",
+            "body": "通过 sha256 去重并硬链接到服务器，因此自定义模组可以承受模组包更新。",
+            "icon": "library"
+          },
+          {
+            "title": "优先选择模组的求解器",
+            "body": "选择您想要的模组，并获取最新完全兼容的加载器和 Minecraft 版本。",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "保护与自动化",
+        "items": [
+          {
+            "title": "安全备份",
+            "body": "带有保留策略的快照，原地恢复，以及可选的世界收缩以回收磁盘空间。",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron 计划",
+            "body": "按计划执行重启、备份和 RCON 命令，并显示下一次运行时间。",
+            "icon": "clock"
+          },
+          {
+            "title": "蓝图",
+            "body": "将服务器导出为可移植的配方，在任何地方导入，并恢复相同的服务器。",
+            "icon": "blueprint"
+          },
+          {
+            "title": "崩溃取证",
+            "body": "检测、解析崩溃，并命名嫌疑者，支持一键共享和自动化洞察。",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "更新跟踪",
+            "body": "跟踪新的服务器、模组包、镜像和模组版本，支持更新前备份和一键回滚。",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "洞察与社区",
+        "items": [
+          {
+            "title": "实时地图",
+            "body": "一键访问实时地图，通过面板的认证代理提供服务。",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "分析与存储",
+            "body": "游戏时间、死亡次数和挖矿记分板，物品栏取证，每个服务器的磁盘使用情况，以及强制配额。",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord 与聊天机器人",
+            "body": "带有每个事件开关的 Webhook，以及一个可选的每个服务器聊天机器人，具有受限的游戏内权限。",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "公共状态页面和 API",
+            "body": "可选的状态页面、邀请块、生成的客户端 .mrpack，以及一个只读的令牌认证 API。",
+            "icon": "globe"
+          },
+          {
+            "title": "用户、角色和 2FA",
+            "body": "管理员、操作员和查看者角色，支持 TOTP 双因素认证。",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "令人愉悦的面板",
+    "intro": "桌面和手机。该面板采用优先窄屏设计，因此每个页面都能在手机上正常显示。",
+    "desktop": "桌面",
+    "mobile": "手机上",
+    "items": {
+      "dashboard": "仪表板：一览所有服务器、玩家数量和近期活动。",
+      "wizard": "创建向导会在您选择设置前解释每一项。",
+      "overview": "服务器概览，包含资源仪表和快捷操作。",
+      "console": "实时控制台，带有 RCON 命令栏和日志过滤器。",
+      "mods": "来自五个注册表的 Mod，根据服务器的加载器和版本进行过滤。",
+      "worlds": "在浏览器中切换世界和管理文件。",
+      "backups": "备份，支持保留策略和就地恢复。",
+      "schedules": "用于重启、备份和命令的 Cron 计划。",
+      "blueprints": "蓝图：可移植的服务器配置。",
+      "storage": "存储分析和强制配额。"
+    }
+  },
+  "install": {
+    "title": "安装",
+    "intro": "选择与您的主机匹配的选项。所有路径都会为您提供相同的面板。",
+    "requirements": "要求",
+    "reqItems": [
+      "Docker Engine (Linux) 或 Docker Desktop (Windows, macOS)。",
+      "从源码安装需要 Node.js 24 或更高版本。Docker 镜像自带。",
+      "几 GB 的磁盘空间用于存放服务器镜像和世界文件。"
+    ],
+    "docker": {
+      "title": "选项 1：Docker",
+      "body": "每个发布版本都会在 GHCR 上发布一个预构建的多架构镜像。获取 compose 文件，设置一个变量，然后启动。",
+      "after": "然后打开 http://your-host:25564。在 Portainer 或 Dockge 中，将 compose 文件作为堆栈粘贴，并在堆栈的环境变量中设置 DATA_DIR_HOST。",
+      "warning": "面板通过挂载的套接字驱动主机的 Docker 守护进程，这在主机上等同于 root 权限。请相应地对待管理员登录，切勿将面板直接暴露给互联网。"
+    },
+    "source": {
+      "title": "选项 2：从源码安装",
+      "body": "任何操作系统，包括带有 Docker Desktop 的 Windows 和 macOS。",
+      "after": "打开 http://localhost:25564。首次运行时，将引导您完成系统检查、设置时区以及创建管理员帐户。"
+    },
+    "next": "后续步骤",
+    "nextBody": "入门指南涵盖了首次运行设置、创建您的第一个服务器以及文件存放位置。",
+    "nextCta": "阅读入门指南",
+    "compose": "下载 docker-compose.yml",
+    "windows": "Windows 注意事项",
+    "windowsItems": [
+      "在启动或创建服务器之前，必须运行 Docker Desktop。",
+      "与 Docker Desktop 共享您的项目驱动器（设置，资源，文件共享），以便绑定挂载正常工作。",
+      "Docker 镜像针对 Linux 主机；在 Windows 和 macOS 上，请从源码运行面板。"
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "常见问题解答",
+    "items": [
+      {
+        "q": "真的免费吗？",
+        "a": "是的。该面板采用 MIT 许可，不使用任何付费服务。所有内容都在您自己的机器上运行。"
+      },
+      {
+        "q": "它能在树莓派或其他 ARM 机器上运行吗？",
+        "a": "是的。Docker 镜像同时支持这两种架构，并且从源码安装可以在任何安装了 Node.js 24 和 Docker 的地方运行。",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "支持哪些类型的服务器？",
+        "a": "itzg 镜像支持的所有类型，以及来自四大来源的 modpack。",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "如何将我的面板迁移到新机器？",
+        "a": "复制数据文件夹。它包含了数据库、每个服务器的世界、备份和模组库。在新机器上启动面板，并指向该文件夹。"
+      },
+      {
+        "q": "可以多人管理服务器吗？",
+        "a": "可以。该面板具有管理员、操作员和查看者角色，并且每个账户都可以启用双因素身份验证。"
+      },
+      {
+        "q": "需要将它暴露到互联网吗？",
+        "a": "不需要。玩家连接的是游戏端口，而不是面板。将面板保留在您的局域网内，或放在带有身份验证的 VPN 或反向代理后面。"
+      },
+      {
+        "q": "那 Bedrock 玩家呢？",
+        "a": "两者都可以像安装其他插件或模组一样进行安装，并且面板会暴露他们需要的设置。",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "在哪里可以获得帮助？",
+        "a": "Discord 服务器有支持论坛和真人提供帮助。Bug 和功能请求请提交到 GitHub issues。"
+      }
+    ]
+  },
+  "changelog": {
+    "title": "更新日志",
+    "intro": "每个版本，最新的在前。发布说明以英文发布。",
+    "releases": "GitHub 上的所有发布"
+  },
+  "community": {
+    "title": "来打个招呼",
+    "body": "报告 Bug、提出功能建议、获得真人帮助，并展示你的服务器。",
+    "discord": "加入 Discord",
+    "github": "在 GitHub 上点星"
+  },
+  "footer": {
+    "tagline": "根据 MIT 许可协议免费提供，开源。",
+    "product": "产品",
+    "community": "社区",
+    "resources": "资源",
+    "issues": "问题",
+    "releases": "发布",
+    "contributing": "贡献",
+    "license": "许可证",
+    "notAffiliated": "非官方 Minecraft 产品。未经 Mojang 或 Microsoft 批准，也未与其关联。"
+  },
+  "meta": {
+    "home": {
+      "title": "免费自托管 Minecraft 服务器控制面板",
+      "description": "通过浏览器运行原版和模组化的 Minecraft 服务器。基于 Docker，模组包固定到精确版本，备份，计划任务，实时地图，玩家分析。免费，开源，三步即可运行。"
+    },
+    "features": {
+      "title": "功能",
+      "description": "Minecraft Server Manager 的所有功能：容器化服务器，五个模组注册表，校验和验证下载，安全保存备份，计划任务，蓝图，崩溃取证，实时地图，角色，以及双因素认证。"
+    },
+    "screenshots": {
+      "title": "截图",
+      "description": "Minecraft Server Manager 在桌面和手机上的面板截图：仪表盘，向导，控制台，模组，世界，备份，计划任务，以及更多。"
+    },
+    "install": {
+      "title": "安装",
+      "description": "使用 Docker 三条命令安装 Minecraft Server Manager，或在 Windows、macOS 和 Linux 上从源码安装。"
+    },
+    "faq": {
+      "title": "常见问题",
+      "description": "关于成本，支持的服务器类型，ARM 支持，迁移，角色，以及暴露于互联网的解答。"
+    },
+    "changelog": {
+      "title": "更新日志",
+      "description": "Minecraft Server Manager 的每个版本的发布说明。"
+    },
+    "notFound": {
+      "title": "页面未找到",
+      "description": "此页面不存在。"
+    }
+  },
+  "notFound": {
+    "title": "此区块从未生成。",
+    "body": "您请求的页面不存在。请尝试首页或文档。",
+    "home": "返回首页"
+  },
+  "langNotice": "此页面将以英文显示，直到其翻译完成。",
+  "tutorial": {
+    "title": "三步即可运行",
+    "intro": "选择您想要运行面板的方式。填写两个字段，下方所有命令都会根据您的机器进行重写。",
+    "dataDir": "宿主机上的数据文件夹",
+    "dataDirHint": "绝对路径。世界、备份、模组和数据库都存放在这里。",
+    "host": "主机名或 IP",
+    "hostHint": "您将从浏览器访问面板的地址。",
+    "then": "然后打开面板",
+    "copy": "复制",
+    "copied": "已复制！",
+    "firstRun": "首次运行时，系统会引导您完成系统检查、设置时区以及创建管理员账户。",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "创建数据文件夹",
+            "body": "一个文件夹包含面板的所有数据。"
+          },
+          {
+            "title": "下载 compose 文件并指向该文件夹",
+            "body": "DATA_DIR_HOST 必须是宿主机上的绝对路径，因为 Docker 是从宿主机的角度挂载它的。"
+          },
+          {
+            "title": "启动面板",
+            "body": "该镜像支持多架构（amd64 和 arm64），并在每次发布时自动更新。"
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "在宿主机上创建数据文件夹",
+            "body": "文件夹规则相同：绝对路径，位于运行 Docker 的机器上。"
+          },
+          {
+            "title": "从 compose 文件添加一个堆栈",
+            "body": "将 compose 文件的内容粘贴到一个新堆栈中。原始文件在此处："
+          },
+          {
+            "title": "设置环境变量并部署",
+            "body": "在堆栈的环境部分添加它，然后部署。"
+          }
+        ]
+      },
+      "source": {
+        "label": "从源码构建",
+        "steps": [
+          {
+            "title": "检查要求",
+            "body": "Node.js 24 或更高版本，pnpm，以及运行中的 Docker（Windows 和 macOS 上的 Docker Desktop）。"
+          },
+          {
+            "title": "克隆并安装",
+            "body": "安装步骤还会构建面板的 CSS。无需编译原生模块。"
+          },
+          {
+            "title": "启动面板",
+            "body": "默认情况下，它只监听 localhost。设置 PANEL_HOST=0.0.0.0 以便从您网络上的其他机器访问它。"
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "从源码安装启动",
+            "body": "从克隆的文件夹中运行此命令。PM2 使用启动其守护进程的 Node 版本来启动应用程序，因此请固定解释器。"
+          },
+          {
+            "title": "保存进程列表并启用启动",
+            "body": "pm2 startup 会打印一个需要用 sudo 运行的命令；只需运行一次。"
+          },
+          {
+            "title": "更喜欢 systemd？",
+            "body": "一个从克隆的文件夹运行 node src/server.js 的单元，并将 WorkingDirectory 设置为相同的方式工作。面板不需要额外的标志。"
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "与您已有的工具完美兼容",
+    "registries": "模组仓库",
+    "loaders": "服务器类型",
+    "packs": "模组包",
+    "runsOn": "运行于",
+    "formats": "导入格式",
+    "checksums": "校验和",
+    "integrations": "集成",
+    "keyless": "无密钥"
+  }
+}

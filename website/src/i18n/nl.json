@@ -1,0 +1,440 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Gratis, zelf-gehost controlepaneel voor Minecraft servers op Docker.",
+    "description": "Draai gemodificeerde en vanilla Minecraft servers vanuit je browser. Modpacks vastgezet op exacte versies, back-ups met één klik, planningen, live kaart, spelersanalyse. Gratis, open source, en je hele paneel is één map."
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Functies",
+    "screenshots": "Screenshots",
+    "install": "Installeren",
+    "docs": "Documentatie",
+    "faq": "Veelgestelde vragen",
+    "changelog": "Wijzigingslogboek",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Taal",
+    "theme": "Licht- of donker thema wisselen",
+    "skip": "Overslaan naar inhoud"
+  },
+  "hero": {
+    "eyebrow": "Gratis en open source. Draait op je eigen machine.",
+    "title": "Beheer je Minecraft servers vanuit één gebruiksvriendelijk paneel.",
+    "subtitle": "Minecraft Server Manager maakt van Docker een gezellig thuis voor je servers: modpacks die vastgepind blijven, back-ups met één klik, planningen, een live kaart, spelersstatistieken en een console die duidelijke taal spreekt. Geen rekeningen, geen lock-in, je hele paneel in één map.",
+    "primary": "Begin in 3 stappen",
+    "secondary": "Ontdek de functies",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Bekijk de tutorial"
+  },
+  "pillars": {
+    "title": "Gemaakt voor mensen die servers draaien, geen tickets",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Eén map is je hele paneel",
+        "body": "Database, werelden, back-ups en de gedeelde mod-bibliotheek bevinden zich allemaal onder één enkele gegevensmap. Kopieer deze en je bent gemigreerd."
+      },
+      {
+        "icon": "box",
+        "title": "Elke server is een container",
+        "body": "Elke server draait op de beproefde itzg-image met zijn eigen CPU- en geheugenlimieten, nette stops via RCON en crashdetectie.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpacks blijven vastgezet",
+        "body": "Packs zijn vergrendeld op een exacte versie. Upgrades zijn expliciet, worden eerst bekeken, eerst geback-upt, gecontroleerd op gezondheid en met één klik teruggedraaid.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Alles wat een serverbeheerder nodig heeft",
+    "intro": "De volledige functieweergave, van het maken van een server tot het delen van de livekaart.",
+    "cta": "Lees de documentatie",
+    "groups": [
+      {
+        "title": "Servers en levenscyclus",
+        "items": [
+          {
+            "title": "Containers met beperkte resources",
+            "body": "Maak, start, stop, herstart, herbouw en verwijder servers met nette RCON-stops en automatische crashdetectie.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Begeleide wizard voor aanmaken",
+            "body": "Eenvoudige of Geavanceerde modus, met elke afbeeldingsinstelling uitgelegd in duidelijke taal voordat u deze kiest.",
+            "icon": "wand"
+          },
+          {
+            "title": "Live console",
+            "body": "Een WebSocket-console met een RCON-commandobalk, logboekfilters en spelersacties met één klik.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Spelermoderatie",
+            "body": "Whitelist, ops, bans, IP-bans en teleports, online via RCON en offline via de JSON-bestanden.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mods en modpacks",
+        "items": [
+          {
+            "title": "Vijf registers in één browser",
+            "body": "Doorzoek ze alle vijf vanaf één plek. Drie daarvan hebben geen API-sleutel nodig.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Toevoegen via link",
+            "body": "Plak een projectpagina, een GitHub-repository, een slug of een directe jar-URL. Het paneel identificeert het.",
+            "icon": "link"
+          },
+          {
+            "title": "Importeer alles",
+            "body": "Elke jar wordt geïdentificeerd en de compatibiliteit wordt gecontroleerd tijdens het importeren.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Checksum-geverifieerde downloads",
+            "body": "Geverifieerd voordat een bestand de server bereikt, met de sterkste hash eerst. Een mismatch wordt nooit verzonden.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Gedeelde mod-bibliotheek",
+            "body": "Gedupliceerd via sha256 en hard-linked in servers, zodat aangepaste mods modpack-updates overleven.",
+            "icon": "library"
+          },
+          {
+            "title": "Pick-mods-first solver",
+            "body": "Kies de mods die u wilt en krijg de nieuwste volledig compatibele loader en Minecraft-versie.",
+            "icon": "sparkles"
+          }
+        ]
+      },
+      {
+        "title": "Beveiliging en automatisering",
+        "items": [
+          {
+            "title": "Veilige back-ups",
+            "body": "Snapshots met retentieklassen, herstel op locatie en optioneel verkleinen van de wereld om schijfruimte terug te winnen.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron-schema's",
+            "body": "Herstarts, back-ups en RCON-commando's volgens een schema, met de volgende uitvoering vooraan getoond.",
+            "icon": "clock"
+          },
+          {
+            "title": "Blueprints",
+            "body": "Exporteer een server als een draagbaar recept, importeer het overal en krijg dezelfde server terug.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Crash-analyse",
+            "body": "Crashes worden gedetecteerd, geparseerd en verdachten benoemd, met delen met één klik en geautomatiseerde inzichten.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Update-tracking",
+            "body": "Nieuwe server-, pack-, image- en mod-versies worden gevolgd, met back-ups vóór updates en terugdraaien met één klik.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Inzicht en community",
+        "items": [
+          {
+            "title": "Livekaart",
+            "body": "Eén klik naar een livekaart, geserveerd via de geauthenticeerde proxy van het paneel.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analyses en opslag",
+            "body": "Speeltijd, sterfgevallen en mijnscoreborden, inventarisanalyses, schijfgebruik per server en afgedwongen quota's.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord en chatbot",
+            "body": "Webhooks met per-gebeurtenis schakelaars, plus een optionele per-server chatbot met beperkte in-game-rechten.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Openbare statuspagina en API",
+            "body": "Optionele statuspagina's, uitnodigingsblokken, een gegenereerd client .mrpack en een alleen-lezen token-geauthenticeerde API.",
+            "icon": "globe"
+          },
+          {
+            "title": "Gebruikers, rollen en 2FA",
+            "body": "Admin-, operator- en kijkersrollen met TOTP tweefactorauthenticatie.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Een paneel dat prettig is in gebruik",
+    "intro": "Desktop en telefoon. Het paneel is ontworpen met een smalle weergave voorop, zodat elke pagina werkt op een telefoon.",
+    "desktop": "Desktop",
+    "mobile": "Op een telefoon",
+    "items": {
+      "dashboard": "Het dashboard: elke server, spelerstal en recente activiteit in één oogopslag.",
+      "wizard": "De wizard voor het aanmaken legt elke instelling uit voordat je deze kiest.",
+      "overview": "Een overzicht van een server met bronnenmeters en snelle acties.",
+      "console": "De live console met een RCON-commandobalk en logboekfilters.",
+      "mods": "Mods uit vijf registers, gefilterd op de loader en versie van de server.",
+      "worlds": "Wissel werelden en beheer bestanden vanuit de browser.",
+      "backups": "Backups met retentieklassen en herstel ter plekke.",
+      "schedules": "Cron-schema's voor herstarts, backups en commando's.",
+      "blueprints": "Blueprints: draagbare serverrecepten.",
+      "storage": "Opslaganalyses en afgedwongen quota's."
+    }
+  },
+  "install": {
+    "title": "Installatie",
+    "intro": "Kies de optie die bij uw host past. Elk pad geeft u hetzelfde paneel.",
+    "requirements": "Vereisten",
+    "reqItems": [
+      "Docker Engine (Linux) of Docker Desktop (Windows, macOS).",
+      "Node.js 24 of nieuwer voor de installatie vanuit broncode. De Docker-image bevat zijn eigen versie.",
+      "Enkele gigabytes schijfruimte voor server-images en werelden."
+    ],
+    "docker": {
+      "title": "Optie 1: Docker",
+      "body": "Een vooraf gebouwde multi-arch image wordt bij elke release gepubliceerd naar GHCR. Download het compose-bestand, stel één variabele in en start.",
+      "after": "Open vervolgens http://uw-host:25564. Plak in Portainer of Dockge het compose-bestand als een stack en stel DATA_DIR_HOST in de omgeving van de stack in.",
+      "warning": "Het paneel stuurt de Docker-daemon van de host aan via de gemounte socket, wat op de host gelijk staat aan root-toegang. Behandel de admin-login dienovereenkomstig en stel het paneel nooit onbeveiligd bloot aan het internet."
+    },
+    "source": {
+      "title": "Optie 2: Vanuit broncode",
+      "body": "Elk besturingssysteem, inclusief Windows en macOS met Docker Desktop.",
+      "after": "Open http://localhost:25564. De eerste keer doorloopt u een systeemcontrole, uw tijdzone en het aanmaken van het admin-account."
+    },
+    "next": "Volgende stappen",
+    "nextBody": "De startgids behandelt de eerste installatie, het aanmaken van uw eerste server en waar alles zich bevindt.",
+    "nextCta": "Lees de startgids",
+    "compose": "Download docker-compose.yml",
+    "windows": "Opmerkingen voor Windows",
+    "windowsItems": [
+      "Docker Desktop moet draaien voordat u servers start of aanmaakt.",
+      "Deel uw projectschijf met Docker Desktop (Instellingen, Bronnen, Bestanddeling) zodat bind mounts werken.",
+      "De Docker-image is gericht op Linux-hosts; op Windows en macOS draait u het paneel vanuit broncode."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+  },
+  "faq": {
+    "title": "Veelgestelde vragen",
+    "items": [
+      {
+        "q": "Is het echt gratis?",
+        "a": "Ja. Het paneel heeft een MIT-licentie en maakt geen gebruik van betaalde diensten. Alles draait op uw machine."
+      },
+      {
+        "q": "Werkt het op een Raspberry Pi of een andere ARM-machine?",
+        "a": "Ja. De Docker-image is gepubliceerd voor beide architecturen, en de installatie vanuit broncode draait overal waar Node.js 24 en Docker werken.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Welke servertypen worden ondersteund?",
+        "a": "Alles wat de itzg-image ondersteunt, plus modpacks van de grote vier bronnen.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Hoe verplaats ik mijn paneel naar een nieuwe machine?",
+        "a": "Kopieer de data-map. Deze bevat de database, de wereld van elke server, back-ups en de mod-bibliotheek. Start het paneel op de nieuwe machine en wijs naar die map."
+      },
+      {
+        "q": "Kunnen meerdere mensen servers beheren?",
+        "a": "Ja. Het paneel heeft rollen voor beheerder, operator en kijker, en elke account kan tweefactorauthenticatie inschakelen."
+      },
+      {
+        "q": "Moet het toegankelijk zijn via internet?",
+        "a": "Nee. Spelers maken verbinding met de gamepoorten, niet met het paneel. Houd het paneel op uw LAN of achter een VPN of reverse proxy met authenticatie."
+      },
+      {
+        "q": "Hoe zit het met Bedrock-spelers?",
+        "a": "Beide kunnen worden geïnstalleerd zoals elke andere plugin of mod, en het paneel biedt de instellingen die ze nodig hebben.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Waar kan ik hulp krijgen?",
+        "a": "De Discord-server heeft een ondersteuningsforum en echte mensen. Bugs en functieaanvragen gaan naar GitHub issues."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Wijzigingslogboek",
+    "intro": "Elke release, de nieuwste eerst. Releaseopmerkingen worden in het Engels gepubliceerd.",
+    "releases": "Alle releases op GitHub"
+  },
+  "community": {
+    "title": "Kom hallo zeggen",
+    "body": "Meld bugs, stel functies voor, krijg hulp van echte mensen en pronk met je servers.",
+    "discord": "Word lid van de Discord",
+    "github": "Ster op GitHub"
+  },
+  "footer": {
+    "tagline": "Gratis en open source onder de MIT-licentie.",
+    "product": "Product",
+    "community": "Community",
+    "resources": "Bronnen",
+    "issues": "Problemen",
+    "releases": "Releases",
+    "contributing": "Bijdragen",
+    "license": "Licentie",
+    "notAffiliated": "Geen officieel Minecraft-product. Niet goedgekeurd door of geassocieerd met Mojang of Microsoft."
+  },
+  "meta": {
+    "home": {
+      "title": "Gratis zelf-gehost controlepaneel voor Minecraft servers",
+      "description": "Draai vanilla en gemodificeerde Minecraft servers vanuit je browser. Docker-gebaseerd, modpacks vastgezet op exacte versies, back-ups, planningen, live map, spelersanalyse. Gratis, open source, en operationeel in drie stappen."
+    },
+    "features": {
+      "title": "Functies",
+      "description": "Elke functie van Minecraft Server Manager: gecontaineriseerde servers, vijf mod-registers, checksum-geverifieerde downloads, save-veilige back-ups, planningen, blueprints, crash-analyse, live map, rollen en tweefactorauthenticatie."
+    },
+    "screenshots": {
+      "title": "Screenshots",
+      "description": "Screenshots van het Minecraft Server Manager paneel op desktop en telefoon: dashboard, wizard, console, mods, werelden, back-ups, planningen en meer."
+    },
+    "install": {
+      "title": "Installatie",
+      "description": "Installeer Minecraft Server Manager met Docker in drie commando's, of vanuit de broncode op Windows, macOS en Linux."
+    },
+    "faq": {
+      "title": "Veelgestelde vragen",
+      "description": "Antwoorden over kosten, ondersteunde servertypen, ARM-ondersteuning, migratie, rollen en blootstelling aan het internet."
+    },
+    "changelog": {
+      "title": "Wijzigingslogboek",
+      "description": "Release notes voor elke versie van Minecraft Server Manager."
+    },
+    "notFound": {
+      "title": "Pagina niet gevonden",
+      "description": "Deze pagina bestaat niet."
+    }
+  },
+  "notFound": {
+    "title": "Deze sectie is nooit gegenereerd.",
+    "body": "De pagina die u heeft aangevraagd, bestaat niet. Probeer de startpagina of de documentatie.",
+    "home": "Ga naar startpagina"
+  },
+  "langNotice": "Deze pagina wordt in het Engels weergegeven totdat de vertaling ervan beschikbaar is.",
+  "tutorial": {
+    "title": "Draai binnen drie stappen",
+    "intro": "Kies hoe je het paneel wilt draaien. Vul de twee velden in en elk commando hieronder herschrijft zichzelf voor jouw machine.",
+    "dataDir": "Datamap op de host",
+    "dataDirHint": "Absoluut pad. Werelden, back-ups, mods en de database staan hier allemaal.",
+    "host": "Hostnaam of IP",
+    "hostHint": "Vanwaar je het paneel in een browser zult openen.",
+    "then": "Open vervolgens het paneel",
+    "copy": "Kopiëren",
+    "copied": "Gekopieerd!",
+    "firstRun": "De eerste keer doorloop je een systeemcontrole, je tijdzone en het aanmaken van het admin-account.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Maak de datamap aan",
+            "body": "Eén map bevat alles wat van het paneel is."
+          },
+          {
+            "title": "Download het compose-bestand en wijs het naar die map",
+            "body": "DATA_DIR_HOST moet het absolute pad op de host zijn, omdat Docker het vanuit het perspectief van de host koppelt."
+          },
+          {
+            "title": "Start het paneel",
+            "body": "De image is multi-arch (amd64 en arm64) en wordt bij elke release bijgewerkt."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Maak de datamap aan op de host",
+            "body": "Zelfde mapregel: absoluut pad, op de machine die Docker draait."
+          },
+          {
+            "title": "Voeg een stack toe vanuit het compose-bestand",
+            "body": "Plak de inhoud van het compose-bestand in een nieuwe stack. Het ruwe bestand is hier:"
+          },
+          {
+            "title": "Stel de omgevingsvariabele in en implementeer",
+            "body": "Voeg het toe in de omgevingssectie van de stack en implementeer vervolgens."
+          }
+        ]
+      },
+      "source": {
+        "label": "Vanuit broncode",
+        "steps": [
+          {
+            "title": "Controleer de vereisten",
+            "body": "Node.js 24 of nieuwer, pnpm en Docker draaiend (Docker Desktop op Windows en macOS)."
+          },
+          {
+            "title": "Kloon en installeer",
+            "body": "De installatiestap bouwt ook de CSS van het paneel. Geen native modules om te compileren."
+          },
+          {
+            "title": "Start het paneel",
+            "body": "Standaard luistert het alleen op localhost. Stel PANEL_HOST=0.0.0.0 in om het vanaf andere machines in je netwerk te bereiken."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Start vanuit een broncode-installatie",
+            "body": "Voer dit uit vanuit de gekloonde map. PM2 start apps met de Node-versie die zijn daemon heeft gestart, dus pin de interpreter."
+          },
+          {
+            "title": "Sla de proceslijst op en schakel opstarten in",
+            "body": "pm2 startup toont één commando om met sudo uit te voeren; voer het één keer uit."
+          },
+          {
+            "title": "Geef je de voorkeur aan systemd?",
+            "body": "Een unit die node src/server.js uitvoert vanuit de gekloonde map met WorkingDirectory ingesteld, werkt op dezelfde manier. Het paneel heeft geen extra vlaggen nodig."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Werkt met alles wat je al gebruikt",
+    "registries": "Registries",
+    "loaders": "Servertypes",
+    "packs": "Modpacks",
+    "runsOn": "Draait op",
+    "formats": "Importeert",
+    "checksums": "Checksums",
+    "integrations": "Integraties",
+    "keyless": "keyless"
+  }
+}

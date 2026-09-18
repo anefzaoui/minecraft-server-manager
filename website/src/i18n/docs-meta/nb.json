@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Aktivitetslogg",
+    "description": "Aktivitetssiden er den komplette revisjonsloggen: en søkbar, kronologisk oversikt over alt som har skjedd i panelet."
+  },
+  "architecture": {
+    "title": "Arkitektur",
+    "description": "Minecraft Server Manager er en enkeltprosess, server-rendret Node.js-applikasjon."
+  },
+  "backups": {
+    "title": "Sikkerhetskopier",
+    "description": "Sikkerhetskopier-siden viser alle øyeblikksbilder på tvers av flåten din, med størrelse, årsak og alder."
+  },
+  "blueprints": {
+    "title": "Blåkopier",
+    "description": "En blå kopi fanger hele konfigurasjonen til en server (type, versjon, ressurser, miljø, pakke-pin, og valgfritt konfigurasjon og verden) inn i én enkelt fil."
+  },
+  "chatbot": {
+    "title": "Chatbot per Minecraft-server",
+    "description": "Denne forken legger til en administrator-konfigurert chatbot til hver administrerte Minecraft-server."
+  },
+  "console-and-chat": {
+    "title": "Konsoll og chat-kommandoer",
+    "description": "Konsollfanen strømmer serverloggen i sanntid og gir deg en kommandoboks for å sende hvilken som helst serverkommando."
+  },
+  "dashboard": {
+    "title": "Kontrollpanelet",
+    "description": "Kontrollpanelet er din base: hver server, dens live status og en løpende strøm av hva som har skjedd."
+  },
+  "getting-started": {
+    "title": "Komme i gang",
+    "description": "Første gang du åpner panelet, blir du bedt om å opprette en administratorkonto."
+  },
+  "index": {
+    "title": "Dokumentasjon",
+    "description": "Et komplett, selv-hostet kontrollpanel for itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrasjoner",
+    "description": "Hver server har sine integrasjoner under Innstillinger-gruppen: Discord, en offentlig Status-side, Invites med ett klikk og den valgfrie Chatbot-fanen."
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "Modpacks-siden (og fanen «Fra modpack» i opprettingsveiviseren) installerer en modpack som en server, alltid festet til en nøyaktig pakkeversjon slik at en omstart kan"
+  },
+  "public-api": {
+    "title": "Offentlig API",
+    "description": "Et lite, skrivebeskyttet HTTP API for å hente serverstatus utenfra panelet: a"
+  },
+  "schedules": {
+    "title": "Tidsplaner",
+    "description": "Siden Tidsplaner automatiserer gjentakende oppgaver med cron-uttrykk."
+  },
+  "servers": {
+    "title": "Opprette og administrere servere",
+    "description": "Klikk på Opprett en server (topplinjen) eller kortet Opprett en server for å åpne veiviseren."
+  },
+  "storage": {
+    "title": "Lagring",
+    "description": "Lagringssiden viser hvor plassen din går: forbruk per server og hvordan det utvikler seg over tid."
+  },
+  "two-factor-authentication": {
+    "title": "Tofaktorautentisering",
+    "description": "Tofaktorautentisering (2FA) legger til et ekstra steg ved innlogging: etter passordet ditt skriver du inn en kort kode fra en autentiseringsapp på telefonen din."
+  },
+  "updates": {
+    "title": "Oppdateringer",
+    "description": "Oppdateringssiden sporer hva som er utdatert på tvers av flåten din på ett sted:"
+  },
+  "users-and-roles": {
+    "title": "Brukere og roller",
+    "description": "Panelet er multi-bruker."
+  },
+  "world-shrink": {
+    "title": "Krympe en verden",
+    "description": "Over tid sprer en verden seg: ethvert sted en spiller noensinne har gått, flydd, eller"
+  },
+  "worlds-and-files": {
+    "title": "Verdener og filer",
+    "description": "Verdenssiden administrerer verdensdataene på tvers av serverne dine: bytt aktiv verden, last opp en verden, eller last ned en."
+  }
+}

@@ -62,9 +62,12 @@ export function toStarlight(md, { slug }) {
 }
 
 function firstSentence(body) {
-  const text = body
-    .split('\n')
-    .find((l) => l.trim() && !l.startsWith('!') && !l.startsWith('<') && !l.startsWith('#') && !l.startsWith('|'));
+  // First real paragraph line: skip images, HTML, headings, tables, and
+  // navigation lines such as "[← Back to docs index](README.md)".
+  const text = body.split('\n').find((l) => {
+    const t = l.trim();
+    return t && !/^[!<#|>-]/.test(t) && !/^\[?[←→]/.test(t) && !/^\[[^\]]*\]\([^)]*\)\s*$/.test(t);
+  });
   const plain = (text || '')
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/[*_`]/g, '')

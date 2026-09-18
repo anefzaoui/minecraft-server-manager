@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Aktivitetslogg",
+    "description": "Aktivitetssidan är den fullständiga granskningsloggen: en sökbar, kronologisk logg över allt som har hänt i panelen."
+  },
+  "architecture": {
+    "title": "Arkitektur",
+    "description": "Minecraft Server Manager är en Node.js-applikation med en enda process, server-renderad."
+  },
+  "backups": {
+    "title": "Säkerhetskopior",
+    "description": "Sidan Säkerhetskopior visar varje ögonblicksbild i hela din flotta, med storlek, orsak och ålder."
+  },
+  "blueprints": {
+    "title": "Ritningar",
+    "description": "En ritning fångar en servers hela konfiguration (typ, version, resurser, miljö, pack-pin och valfritt dess konfiguration och värld) till en enda po"
+  },
+  "chatbot": {
+    "title": "Minecraft-chattbot per server",
+    "description": "Denna fork lägger till en administratörskonfigurerad chattbot till varje hanterad Minecraft-server."
+  },
+  "console-and-chat": {
+    "title": "Konsol & chattkommandon",
+    "description": "Konsolfliken strömmar serverloggen i realtid och ger dig en kommandoruta för att skicka valfria serverkommandon."
+  },
+  "dashboard": {
+    "title": "Instrumentpanelen",
+    "description": "Instrumentpanelen är din hemmabas: varje server, dess live-status och ett löpande flöde av vad som har hänt."
+  },
+  "getting-started": {
+    "title": "Kom igång",
+    "description": "Första gången du öppnar panelen uppmanas du att skapa ett administratörskonto."
+  },
+  "index": {
+    "title": "Dokumentation",
+    "description": "Ett komplett, självhostat kontrollpanel för itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrationer",
+    "description": "Varje server har sina integrationer under gruppen Inställningar: Discord, en publik Status Sida, en-klicks Inbjudningar och den valfria Chattbot-fliken."
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "Modpacks-sidan (och fliken Från modpack i guiden för skapande) installerar ett modpack som en server, alltid låst till en exakt packversion så att en omstart kan"
+  },
+  "public-api": {
+    "title": "Publik API",
+    "description": "En liten, endast läsbar HTTP API för att hämta serverstatus utifrån panelen: a"
+  },
+  "schedules": {
+    "title": "Scheman",
+    "description": "Sidan Scheman automatiserar återkommande uppgifter med cron-uttryck."
+  },
+  "servers": {
+    "title": "Skapa och hantera servrar",
+    "description": "Klicka på Skapa en server (överst i fältet) eller på kortet Skapa en server för att öppna guiden."
+  },
+  "storage": {
+    "title": "Lagring",
+    "description": "Lagringssidan visar vart ditt diskutrymme tar vägen: användning per server och hur den utvecklas över tid."
+  },
+  "two-factor-authentication": {
+    "title": "Tvåfaktorsautentisering",
+    "description": "Tvåfaktorsautentisering (2FA) lägger till ett andra steg vid inloggning: efter ditt lösenord anger du en kort kod från en autentiseringsapp på din telefon."
+  },
+  "updates": {
+    "title": "Uppdateringar",
+    "description": "Sidan Uppdateringar spårar vad som är föråldrat i hela din flotta på ett ställe:"
+  },
+  "users-and-roles": {
+    "title": "Användare och roller",
+    "description": "Panelen är fleranvändarvänlig."
+  },
+  "world-shrink": {
+    "title": "Krympa en värld",
+    "description": "Med tiden sprider sig en värld ut: varje plats en spelare någonsin har gått, flugit eller"
+  },
+  "worlds-and-files": {
+    "title": "Världar & filer",
+    "description": "Sidan Världar hanterar världsinformationen på dina servrar: byt aktiv värld, ladda upp en värld eller ladda ner en."
+  }
+}

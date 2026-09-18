@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Záznam aktivit",
+    "description": "Stránka Aktivita je kompletní auditní záznam: prohledávatelný, chronologický záznam všeho, co se v panelu stalo."
+  },
+  "architecture": {
+    "title": "Architektura",
+    "description": "Minecraft Server Manager je jednoprocesová, serverově renderovaná Node.js aplikace."
+  },
+  "backups": {
+    "title": "Zálohy",
+    "description": "Stránka Zálohy zobrazuje všechny snímky napříč vaší flotilou, s velikostí, důvodem a stářím."
+  },
+  "blueprints": {
+    "title": "Šablony",
+    "description": "Šablona zachycuje celou konfiguraci serveru (typ, verze, zdroje, prostředí, připnutí balíčku a volitelně jeho konfiguraci a svět) do jediného souboru."
+  },
+  "chatbot": {
+    "title": "Chatbot pro Minecraft pro každý server",
+    "description": "Tato verze přidává nakonfigurovaného chatbota pro každý spravovaný server Minecraft."
+  },
+  "console-and-chat": {
+    "title": "Konzole a příkazy chatu",
+    "description": "Karta Konzole streamuje serverový log v reálném čase a poskytuje pole pro zadávání příkazů, kterým můžete odesílat libovolné serverové příkazy."
+  },
+  "dashboard": {
+    "title": "Ovládací panel",
+    "description": "Ovládací panel je vaše základna: každý server, jeho aktuální stav a živý přehled toho, co se děje."
+  },
+  "getting-started": {
+    "title": "Začínáme",
+    "description": "Při prvním otevření panelu vás vyzve k vytvoření účtu správce."
+  },
+  "index": {
+    "title": "Dokumentace",
+    "description": "Kompletní, samoobslužný ovládací panel pro itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrace",
+    "description": "Každý server má své integrace ve skupině Nastavení: Discord, veřejná stránka Stav, pozvánky na jedno kliknutí a volitelná záložka Chatbot."
+  },
+  "modpacks": {
+    "title": "Modpacky",
+    "description": "Stránka Modpacky (a karta Z modpacku v průvodci vytvořením) nainstaluje modpack jako server, vždy připnutý k přesné verzi balíčku, takže restart může"
+  },
+  "public-api": {
+    "title": "Veřejné API",
+    "description": "Malé HTTP API pouze pro čtení pro získávání stavu serveru zvenčí panelu: a"
+  },
+  "schedules": {
+    "title": "Plánované úlohy",
+    "description": "Stránka Plánované úlohy automatizuje opakující se úkoly pomocí cron výrazů."
+  },
+  "servers": {
+    "title": "Vytváření a správa serverů",
+    "description": "Klikněte na Vytvořit server (horní lišta) nebo na kartu Vytvořit server a otevřete průvodce."
+  },
+  "storage": {
+    "title": "Úložiště",
+    "description": "Stránka Úložiště ukazuje, kam se vaše místo na disku ztrácí: využití na server a jeho vývoj v čase."
+  },
+  "two-factor-authentication": {
+    "title": "Dvoufaktorové ověřování",
+    "description": "Dvoufaktorové ověřování (2FA) přidává druhý krok k přihlášení: po zadání hesla zadáte krátký kód z aplikace pro ověřování na vašem telefonu."
+  },
+  "updates": {
+    "title": "Aktualizace",
+    "description": "Stránka Aktualizace sleduje, co je ve vaší flotile zastaralé, na jednom místě:"
+  },
+  "users-and-roles": {
+    "title": "Uživatelé a role",
+    "description": "Panel je víceuživatelský."
+  },
+  "world-shrink": {
+    "title": "Zmenšení světa",
+    "description": "Časem se svět rozrůstá: každé místo, kde hráč kdy chodil, létal nebo"
+  },
+  "worlds-and-files": {
+    "title": "Světové složky a soubory",
+    "description": "Stránka Světové složky spravuje data světů napříč vašimi servery: přepínejte aktivní svět, nahrajte svět nebo si jej stáhněte."
+  }
+}

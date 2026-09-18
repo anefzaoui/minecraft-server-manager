@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Log aktivitas",
+    "description": "Halaman Aktivitas adalah jejak audit lengkap: catatan kronologis yang dapat dicari dari semua yang terjadi di panel."
+  },
+  "architecture": {
+    "title": "Arsitektur",
+    "description": "Minecraft Server Manager adalah aplikasi Node.js yang dirender server, satu proses."
+  },
+  "backups": {
+    "title": "Cadangan",
+    "description": "Halaman Cadangan menampilkan setiap snapshot di seluruh armada Anda, beserta ukuran, alasan, dan usia."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Blueprint menangkap seluruh konfigurasi server (tipe, versi, sumber daya, lingkungan, pin paket, dan opsional konfigurasi serta dunianya) menjadi satu file po"
+  },
+  "chatbot": {
+    "title": "Obrolan bot per server Minecraft",
+    "description": "Cabang ini menambahkan obrolan bot yang dikonfigurasi admin ke setiap server Minecraft yang dikelola."
+  },
+  "console-and-chat": {
+    "title": "Konsol & perintah obrolan",
+    "description": "Tab Konsol menyiarkan log server secara real-time dan memberi Anda kotak perintah untuk mengirim perintah server apa pun."
+  },
+  "dashboard": {
+    "title": "Dasbor",
+    "description": "Dasbor adalah basis utama Anda: setiap server, status langsungnya, dan umpan aktivitas yang sedang berlangsung."
+  },
+  "getting-started": {
+    "title": "Memulai",
+    "description": "Saat pertama kali membuka panel, Anda akan diminta untuk membuat akun administrator."
+  },
+  "index": {
+    "title": "Dokumentasi",
+    "description": "Panel kontrol lengkap yang di-host sendiri untuk itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrasi",
+    "description": "Setiap server memiliki integrasinya di bawah grup Pengaturan: Discord, Halaman Status publik, Undangan sekali klik, dan tab Chatbot opsional."
+  },
+  "modpacks": {
+    "title": "Modpack",
+    "description": "Halaman Modpack (dan tab Dari modpack di wizard pembuatan) menginstal modpack sebagai server, selalu disematkan ke versi pack yang tepat sehingga restart dapat"
+  },
+  "public-api": {
+    "title": "API Publik",
+    "description": "API HTTP kecil yang hanya bisa dibaca untuk mengambil status server dari luar panel: a"
+  },
+  "schedules": {
+    "title": "Jadwal",
+    "description": "Halaman Jadwal mengotomatiskan tugas berulang dengan ekspresi cron."
+  },
+  "servers": {
+    "title": "Membuat & mengelola server",
+    "description": "Klik Buat Server (bilah atas) atau kartu Buat server untuk membuka wizard."
+  },
+  "storage": {
+    "title": "Penyimpanan",
+    "description": "Halaman Penyimpanan menunjukkan ke mana ruang disk Anda digunakan: penggunaan per server dan bagaimana trennya dari waktu ke waktu."
+  },
+  "two-factor-authentication": {
+    "title": "Autentikasi dua faktor",
+    "description": "Autentikasi dua faktor (2FA) menambahkan langkah kedua saat masuk: setelah kata sandi Anda, Anda memasukkan kode singkat dari aplikasi autentikator di ponsel Anda."
+  },
+  "updates": {
+    "title": "Pembaruan",
+    "description": "Halaman Pembaruan melacak apa saja yang sudah usang di seluruh armada Anda di satu tempat:"
+  },
+  "users-and-roles": {
+    "title": "Pengguna & peran",
+    "description": "Panel ini mendukung banyak pengguna."
+  },
+  "world-shrink": {
+    "title": "Mengecilkan dunia",
+    "description": "Seiring waktu sebuah dunia akan meluas: setiap tempat yang pernah dijelajahi pemain, baik berjalan kaki, terbang, atau"
+  },
+  "worlds-and-files": {
+    "title": "Dunia & file",
+    "description": "Halaman Dunia mengelola data dunia di seluruh server Anda: ganti dunia aktif, unggah dunia, atau unduh salah satunya."
+  }
+}

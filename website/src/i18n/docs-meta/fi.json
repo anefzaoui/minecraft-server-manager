@@ -1,0 +1,82 @@
+{
+  "activity": {
+    "title": "Aktiviteettiloki",
+    "description": "Aktiviteettisivu on täydellinen auditointiloki: haettava, kronologinen tallenne kaikesta, mitä paneelissa tapahtui."
+  },
+  "architecture": {
+    "title": "Arkkitehtuuri",
+    "description": "Minecraft Server Manager on yhden prosessin, palvelimella renderöity Node.js-sovellus."
+  },
+  "backups": {
+    "title": "Varmuuskopiot",
+    "description": "Varmuuskopiot-sivu näyttää kaikki tilannekuvat koko laivastostasi, sisältäen koon, syyn ja iän."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Blueprint tallentaa palvelimen koko konfiguraation (tyyppi, versio, resurssit, ympäristö, pack pin ja valinnaisesti sen konfiguraation ja maailman) yhteen tiedostoon."
+  },
+  "chatbot": {
+    "title": "Palvelinkohtainen Minecraft-chatbot",
+    "description": "Tämä haara lisää hallinnoituun Minecraft-palvelimeen ylläpitäjän määrittämän chatbotin."
+  },
+  "console-and-chat": {
+    "title": "Konsoli ja chat-komennot",
+    "description": "Konsoli-välilehti näyttää palvelimen lokin reaaliaikaisesti ja tarjoaa komentoruudun, johon voit lähettää minkä tahansa palvelinkomennon."
+  },
+  "dashboard": {
+    "title": "Kojelauta",
+    "description": "Kojelauta on kotipesäsi: jokainen palvelin, sen reaaliaikainen tila ja käynnissä oleva syöte tapahtumista."
+  },
+  "getting-started": {
+    "title": "Aloitus",
+    "description": "Kun avaat ohjauspaneelin ensimmäistä kertaa, se pyytää sinua luomaan pääkäyttäjätilin."
+  },
+  "index": {
+    "title": "Dokumentaatio",
+    "description": "Täydellinen, itse isännöity ohjauspaneeli itzg/docker-minecraft-serverille."
+  },
+  "integrations": {
+    "title": "Integraatiot",
+    "description": "Jokainen palvelin sisältää integraationsa Asetukset-ryhmän alla: Discord, julkinen tilasivu, kertaklikkauksella luotavat kutsut ja valinnainen chatbot-välilehti."
+  },
+  "modpacks": {
+    "title": "Modpackit",
+    "description": "Modpackit-sivu (ja luontivelhon \"Modpackista\"-välilehti) asentaa modpackin palvelimena, aina kiinnitettynä tarkkaan pack-versioon, jotta uudelleenkäynnistys voi"
+  },
+  "public-api": {
+    "title": "Julkinen API",
+    "description": "Pieni, vain lukuoikeudellinen HTTP API palvelimen tilan hakemiseen paneelin ulkopuolelta: a"
+  },
+  "schedules": {
+    "title": "Aikataulut",
+    "description": "Aikataulut-sivu automatisoi toistuvat tehtävät cron-lausekkeilla."
+  },
+  "servers": {
+    "title": "Palvelinten luominen ja hallinta",
+    "description": "Napsauta Luo palvelin (yläpalkki) tai Luo palvelin -korttia avataksesi ohjatun toiminnon."
+  },
+  "storage": {
+    "title": "Tallennustila",
+    "description": "Tallennustila-sivu näyttää, mihin levytilasi menee: palvelinkohtainen käyttö ja sen kehitys ajan mittaan."
+  },
+  "two-factor-authentication": {
+    "title": "Kaksivaiheinen tunnistautuminen",
+    "description": "Kaksivaiheinen tunnistautuminen (2FA) lisää toisen vaiheen kirjautumiseen: salasanasi jälkeen syötät lyhyen koodin puhelimesi tunnistussovelluksesta."
+  },
+  "updates": {
+    "title": "Päivitykset",
+    "description": "Päivitykset-sivu seuraa yhdessä paikassa, mikä on vanhentunutta palvelinlaivastossasi:"
+  },
+  "users-and-roles": {
+    "title": "Käyttäjät ja roolit",
+    "description": "Paneeli on monen käyttäjän käytettävissä."
+  },
+  "world-shrink": {
+    "title": "Maailman pienentäminen",
+    "description": "Ajan myötä maailma leviää: jokainen paikka, jossa pelaaja on koskaan kävellyt, lentänyt tai"
+  },
+  "worlds-and-files": {
+    "title": "Maailmat ja tiedostot",
+    "description": "Maailmat-sivu hallinnoi palvelimiesi maailmatietoja: vaihda aktiivista maailmaa, lataa maailma tai lataa se alas."
+  }
+}
