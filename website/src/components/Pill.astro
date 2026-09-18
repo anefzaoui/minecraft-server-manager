@@ -22,6 +22,6 @@ const px_size = size === 'lg' ? 40 : size === 'sm' ? 20 : 28;
   )}
   {!si && px && <Image src={px} alt="" width={px_size * 2} class="pixelated pill-icon" style={`width:${px_size}px;height:${px_size}px`} />}
   {!si && !px && <span class="pill-dot" aria-hidden="true"></span>}
-  <span class="pill-label">{b.label}</span>
+  <span class="pill-label" dir="ltr">{b.label}</span>
   {(note || b.note) && <span class="pill-note">{note || b.note}</span>}
 </li>
