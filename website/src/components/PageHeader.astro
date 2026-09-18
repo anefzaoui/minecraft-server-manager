@@ -1,0 +1,25 @@
+---
+// The one page header: flat sky, title, one line of intro, optional sprite on the
+// end side, then the ground strip. Same height on every page.
+import { Image } from 'astro:assets';
+import Clouds from './Clouds.astro';
+interface Props {
+  title: string;
+  intro?: string;
+  sprite?: ImageMetadata;
+  spriteAlt?: string;
+}
+const { title, intro, sprite, spriteAlt = '' } = Astro.props;
+---
+
+<header class="sky relative overflow-hidden">
+  <Clouds count={3} />
+  <div class="relative mx-auto flex max-w-6xl items-end justify-between gap-6 px-4 pb-6 pt-10">
+    <div>
+      <h1>{title}</h1>
+      {intro && <p class="lead mt-2 max-w-2xl text-on-sky">{intro}</p>}
+    </div>
+    {sprite && <Image src={sprite} alt={spriteAlt} width={140} class="pixelated hidden shrink-0 sm:block" style="width:140px;height:auto" />}
+  </div>
+  <div class="ground"></div>
+</header>

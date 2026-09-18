@@ -1,12 +1,17 @@
 ---
 import Site from '../../layouts/Site.astro';
 import Section from '../../components/Section.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import InstallTutorial from '../../components/InstallTutorial.astro';
 import Community from '../../components/Community.astro';
+import Tip from '../../components/Tip.astro';
+import XpDivider from '../../components/XpDivider.astro';
 import Icon from '../../components/Icon.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { href, REPO_URL, SITE_URL } from '../../lib/routes.js';
+import { art } from '../../data/art.js';
+const spriteClock = art('sprite-clock');
 
 export function getStaticPaths() {
   return localePaths();
@@ -31,30 +36,31 @@ const breadcrumb = {
 ---
 
 <Site locale={locale} path="/install/" pageKey="install" jsonLd={[howTo, breadcrumb]}>
-  <div class="hero">
-    <Section title={copy.install.title} intro={copy.install.intro} class="pb-6 sm:pb-8">
-      <ul class="mt-6 grid gap-3 sm:grid-cols-3" role="list">
-        {copy.install.reqItems.map((r) => <li class="card flex items-start gap-3 p-4 text-sm text-ink-soft"><Icon name="check" size={18} class="mt-0.5 shrink-0 text-ok" />{r}</li>)}
-      </ul>
-    </Section>
-  </div>
+  <PageHeader title={copy.install.title} intro={copy.install.intro} sprite={spriteClock} />
 
-  <Section title={copy.tutorial.title} intro={copy.tutorial.intro} class="pt-4 sm:pt-6">
-    <div class="card mt-8 sm:p-8">
+  <Section title={copy.install.requirements}>
+    <ul class="hearts mt-4 grid gap-2 text-ink-soft sm:grid-cols-3" role="list">
+      {copy.install.reqItems.map((r) => <li>{r}</li>)}
+    </ul>
+  </Section>
+
+  <XpDivider />
+
+  <Section title={copy.tutorial.title} intro={copy.tutorial.intro}>
+    <div class="panel mt-6 sm:p-6">
       <InstallTutorial copy={copy} id="install-tutorial" />
     </div>
-    <div class="notice notice-warn mt-6 flex gap-3">
-      <Icon name="shield" size={20} class="mt-0.5 shrink-0 text-warn" />
-      <p>{copy.install.docker.warning}</p>
-    </div>
-    <p class="mt-6 flex flex-wrap gap-3">
+    <Tip class="mt-6" title={copy.install.docker.title}>{copy.install.docker.warning}</Tip>
+    <p class="mt-6 flex flex-wrap gap-4">
       <a class="btn" href={`${REPO_URL}/blob/main/docker-compose.yml`} rel="noopener"><Icon name="docker" size={18} />{copy.install.compose}</a>
       <a class="btn btn-primary" href={href(locale, '/docs/getting-started/')}>{copy.install.nextCta}<Icon name="arrow" size={18} /></a>
     </p>
   </Section>
 
-  <Section title={copy.install.windows} class="pt-0">
-    <ul class="prose-soft mt-4 max-w-2xl list-disc space-y-2 ps-6" role="list">
+  <XpDivider />
+
+  <Section title={copy.install.windows}>
+    <ul class="hearts mt-4 max-w-2xl space-y-2 text-ink-soft" role="list">
       {copy.install.windowsItems.map((r) => <li>{r}</li>)}
     </ul>
   </Section>

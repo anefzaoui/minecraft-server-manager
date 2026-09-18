@@ -58,18 +58,18 @@ const TABS = [
 
   <div class="grid gap-4 sm:grid-cols-2">
     <label class="block">
-      <span class="display block text-sm text-ink">{t.dataDir}</span>
+      <span class="display block text-[1.05rem] text-ink">{t.dataDir}</span>
       <input class="field mt-1.5" type="text" data-input="dataDir" value="/opt/msm/data" spellcheck="false" autocomplete="off" />
       <span class="mt-1 block text-xs text-ink-faint">{t.dataDirHint}</span>
     </label>
     <label class="block">
-      <span class="display block text-sm text-ink">{t.host}</span>
+      <span class="display block text-[1.05rem] text-ink">{t.host}</span>
       <input class="field mt-1.5" type="text" data-input="host" value="your-host" spellcheck="false" autocomplete="off" />
       <span class="mt-1 block text-xs text-ink-faint">{t.hostHint}</span>
     </label>
   </div>
 
-  <div class="tab-list mt-6" role="tablist">
+  <div class="hotbar mt-6" role="tablist">
     {TABS.map((tab, i) => (
       <label class="tab-label" for={`${id}-tab-${i + 1}`}>
         <Icon name={tab.icon} size={18} />
@@ -86,7 +86,7 @@ const TABS = [
             <li class="flex gap-4">
               <span class="step-badge">{i + 1}</span>
               <div class="min-w-0 flex-1">
-                <h3 class="display text-lg text-ink">{t.tabs[tab.key].steps[i].title}</h3>
+                <h3>{t.tabs[tab.key].steps[i].title}</h3>
                 <p class="mt-1 text-sm text-ink-soft">{t.tabs[tab.key].steps[i].body}</p>
                 {cmds.some((c) => typeof c === 'string') && (
                   <div class="mt-3">
@@ -102,11 +102,11 @@ const TABS = [
             </li>
           ))}
           <li class="flex gap-4">
-            <span class="step-badge bg-sky-500">
+            <span class="step-badge">
               <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
             </span>
             <div class="min-w-0 flex-1">
-              <h3 class="display text-lg text-ink">{t.then}</h3>
+              <h3>{t.then}</h3>
               <div class="mt-3"><CodeBox code={tab.open} kind="url" copy={t.copy} copied={t.copied} /></div>
               <p class="mt-2 text-sm text-ink-soft">{t.firstRun}</p>
             </div>

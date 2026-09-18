@@ -1,9 +1,12 @@
 ---
 import Site from '../../layouts/Site.astro';
 import Section from '../../components/Section.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import Community from '../../components/Community.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
+import { art } from '../../data/art.js';
+const spriteShield = art('sprite-shield');
 
 export function getStaticPaths() {
   return localePaths();
@@ -22,14 +25,12 @@ const faqLd = {
 ---
 
 <Site locale={locale} path="/faq/" pageKey="faq" jsonLd={[faqLd]}>
-  <div class="hero">
-    <Section title={copy.faq.title} class="pb-4" />
-  </div>
-  <Section class="pt-4">
+  <PageHeader title={copy.faq.title} sprite={spriteShield} />
+  <Section>
     <dl class="grid gap-4 md:grid-cols-2">
       {copy.faq.items.map((f) => (
-        <div class="card card-hover">
-          <dt class="display text-lg text-ink">{f.q}</dt>
+        <div class="panel">
+          <dt class="display text-[1.15rem] text-ink">{f.q}</dt>
           <dd class="mt-2 text-sm leading-relaxed text-ink-soft">{f.a}</dd>
         </div>
       ))}

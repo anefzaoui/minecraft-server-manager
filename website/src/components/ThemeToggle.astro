@@ -6,7 +6,7 @@ interface Props {
 const { label } = Astro.props;
 ---
 
-<button type="button" class="btn btn-ghost px-3" data-theme-toggle aria-label={label} title={label}>
+<button type="button" class="btn btn-sm btn-icon" data-theme-toggle aria-label={label} title={label}>
   <span class="theme-icon-to-dark"><Icon name="moon" size={20} /></span>
   <span class="theme-icon-to-light"><Icon name="sun" size={20} /></span>
 </button>
@@ -19,7 +19,7 @@ const { label } = Astro.props;
 
 <script>
   // Same storage key as Starlight ('starlight-theme') so the docs and the
-  // marketing pages agree. Light is the default here; 'dark' opts in.
+  // marketing pages agree. Day is the default here; 'dark' opts in.
   document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const root = document.documentElement;

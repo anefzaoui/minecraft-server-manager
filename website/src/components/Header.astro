@@ -13,19 +13,19 @@ const { locale, path, copy, active } = Astro.props;
 const links = PAGES.filter((p) => p.key !== 'home');
 ---
 
-<header class="sticky top-0 z-20 border-b border-line bg-surface/85 backdrop-blur">
-  <div class="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5">
-    <a href={href(locale, '/')} class="display flex items-center gap-2.5 text-[1.05rem] text-ink no-underline" aria-label={copy.site.name}>
-      <img src="/favicon.svg" alt="" width="30" height="30" class="rounded-lg" />
+<header class="sticky top-0 z-20 h-16 border-b-[3px] border-outline bg-panel">
+  <div class="mx-auto flex h-full max-w-6xl items-center gap-2 px-4">
+    <a href={href(locale, '/')} class="display flex items-center gap-2.5 text-[1.25rem] text-ink no-underline" aria-label={copy.site.name}>
+      <img src="/favicon.svg" alt="" width="30" height="30" class="pixelated" />
       <span class="hidden sm:inline">{copy.site.name}</span>
       <span class="sm:hidden">MSM</span>
     </a>
 
-    <nav class="ms-auto hidden items-center gap-0.5 lg:flex" aria-label="Primary">
+    <nav class="ms-auto hidden items-center gap-1 lg:flex" aria-label="Primary">
       {links.map((p) => (
         <a
           href={href(locale, p.path)}
-          class:list={['btn btn-ghost px-3.5 text-[0.9rem]', active === p.key && 'bg-inset text-ok']}
+          class:list={['display px-2.5 py-1.5 text-[1.05rem] text-ink hover:text-ok', active === p.key && 'text-ok underline decoration-2 underline-offset-4']}
           aria-current={active === p.key ? 'page' : undefined}
         >
           {copy.nav[p.key]}
@@ -33,23 +33,23 @@ const links = PAGES.filter((p) => p.key !== 'home');
       ))}
     </nav>
 
-    <div class="ms-auto flex items-center gap-0.5 lg:ms-1">
+    <div class="ms-auto flex items-center gap-2 lg:ms-2">
       <LangSwitcher locale={locale} path={path} label={copy.nav.language} />
       <ThemeToggle label={copy.nav.theme} />
-      <a href={REPO_URL} class="btn btn-ghost hidden px-3 sm:inline-flex" rel="noopener" aria-label={copy.nav.github} title={copy.nav.github}>
+      <a href={REPO_URL} class="btn btn-sm btn-icon hidden sm:inline-flex" rel="noopener" aria-label={copy.nav.github} title={copy.nav.github}>
         <Icon name="github" size={20} />
       </a>
       <details class="relative lg:hidden">
-        <summary class="btn btn-ghost cursor-pointer list-none px-3" aria-label={copy.nav.menu}>
+        <summary class="btn btn-sm btn-icon cursor-pointer list-none" aria-label={copy.nav.menu}>
           <Icon name="menu" size={22} />
         </summary>
-        <nav class="card absolute end-0 z-40 mt-2 flex w-60 flex-col p-2" aria-label="Primary">
+        <nav class="panel panel-tight absolute end-0 z-40 mt-3 flex w-60 flex-col" aria-label="Primary">
           {links.map((p) => (
-            <a href={href(locale, p.path)} class:list={['rounded-lg px-3 py-2.5 font-semibold hover:bg-inset', active === p.key && 'bg-inset text-ok']}>
+            <a href={href(locale, p.path)} class:list={['display px-3 py-2 text-[1.05rem] text-ink hover:text-ok', active === p.key && 'text-ok']}>
               {copy.nav[p.key]}
             </a>
           ))}
-          <a href={REPO_URL} class="rounded-lg px-3 py-2.5 font-semibold hover:bg-inset" rel="noopener">{copy.nav.github}</a>
+          <a href={REPO_URL} class="display px-3 py-2 text-[1.05rem] text-ink hover:text-ok" rel="noopener">{copy.nav.github}</a>
         </nav>
       </details>
     </div>

@@ -1,16 +1,26 @@
 ---
+import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
 import { REPO_URL, DISCORD_URL } from '../lib/routes.js';
+import { art } from '../data/art.js';
+const banner = art('banner-community');
+const mapSprite = art('sprite-map');
 interface Props {
   copy: any;
 }
 const { copy } = Astro.props;
 ---
 
-<section class="mx-auto max-w-6xl px-4 py-10">
-  <div class="card flex flex-col items-start gap-5 bg-accent-soft/60 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-    <div>
-      <h2 class="display text-2xl text-ink">{copy.community.title}</h2>
+<section class="mx-auto max-w-6xl px-4 py-12">
+  {banner && (
+    <div class="panel panel-tight mb-6">
+      <span class="slot block"><Image src={banner} alt="" widths={[720, 1200, 1584]} sizes="(min-width: 1152px) 1120px, 100vw" class="block aspect-[21/6] w-full object-cover object-bottom" /></span>
+    </div>
+  )}
+  <div class="panel flex flex-col gap-5 sm:flex-row sm:items-center">
+    {mapSprite && <Image src={mapSprite} alt="" width={160} class="pixelated hidden shrink-0 sm:block" style="width:160px;height:auto" />}
+    <div class="flex-1">
+      <h2>{copy.community.title}</h2>
       <p class="mt-2 text-ink-soft">{copy.community.body}</p>
     </div>
     <div class="flex flex-wrap gap-3">

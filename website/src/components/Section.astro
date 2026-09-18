@@ -1,17 +1,24 @@
 ---
+// A page section. With `banner`, a full-width illustration strip sits above the
+// title (in the same panel/slot frame as everything else).
+import { Image } from 'astro:assets';
 interface Props {
   title?: string;
   intro?: string;
   id?: string;
   class?: string;
-  eyebrow?: string;
+  banner?: ImageMetadata;
 }
-const { title, intro, id, class: cls, eyebrow } = Astro.props;
+const { title, intro, id, class: cls, banner } = Astro.props;
 ---
 
-<section id={id} class:list={['mx-auto max-w-6xl px-4 py-14 sm:py-20', cls]}>
-  {eyebrow && <p class="eyebrow">{eyebrow}</p>}
-  {title && <h2 class="display mt-3 text-3xl text-ink sm:text-4xl">{title}</h2>}
-  {intro && <p class="lead mt-4 max-w-2xl">{intro}</p>}
+<section id={id} class:list={['mx-auto max-w-6xl px-4 py-12', cls]}>
+  {banner && (
+    <div class="panel panel-tight mb-6">
+      <span class="slot block"><Image src={banner} alt="" widths={[720, 1200, 1584]} sizes="(min-width: 1152px) 1120px, 100vw" class="block aspect-[21/6] w-full object-cover object-bottom" /></span>
+    </div>
+  )}
+  {title && <h2>{title}</h2>}
+  {intro && <p class="lead mt-2 max-w-2xl">{intro}</p>}
   <slot />
 </section>

@@ -15,41 +15,43 @@ const shot = await sharp(join(repoRoot, 'docs', 'screenshots', '01-dashboard.png
   .png()
   .toBuffer();
 const shotB64 = shot.toString('base64');
+const pano = await sharp(join(here, '..', 'src', 'assets', 'gen', 'hero-day.webp'))
+  .resize({ width: 1200, height: 630, fit: 'cover', position: 'bottom' })
+  .png()
+  .toBuffer();
+const panoB64 = pano.toString('base64');
 
-// librsvg (what sharp rasterises with) ignores @font-face, so the title uses a
-// bold system sans; the pixel face is reserved for the live site.
+// librsvg ignores @font-face, so the title uses a bold system sans here; the
+// pixel typeface is for the live site only.
 const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <style>
-      .title { font-family: 'Helvetica Neue', Arial, sans-serif; fill: #1b1f23; font-size: 40px; font-weight: 800; letter-spacing: -0.5px; }
-      .sub { font-family: 'Helvetica Neue', Arial, sans-serif; fill: #464d55; font-size: 25px; }
-      .pill { font-family: 'Helvetica Neue', Arial, sans-serif; fill: #27661d; font-size: 18px; font-weight: 700; }
-      .url { font-family: 'Helvetica Neue', Arial, sans-serif; fill: #6a747f; font-size: 22px; }
+      .title { font-family: 'Helvetica Neue', Arial, sans-serif; fill: #ffffff; font-size: 44px; font-weight: 800; letter-spacing: -0.5px; }
+      .sub { font-family: 'Helvetica Neue', Arial, sans-serif; fill: #ffffff; font-size: 26px; font-weight: 600; }
+      .pill { font-family: 'Helvetica Neue', Arial, sans-serif; fill: #ffffff; font-size: 18px; font-weight: 700; }
+      .url { font-family: 'Helvetica Neue', Arial, sans-serif; fill: #ffffff; font-size: 22px; font-weight: 600; }
     </style>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#c2e6ff"/><stop offset="0.6" stop-color="#eaf7ea"/><stop offset="1" stop-color="#f6f8f3"/>
-    </linearGradient>
-    <clipPath id="shotClip"><rect x="0" y="0" width="520" height="330" rx="10"/></clipPath>
+    <filter id="sh"><feDropShadow dx="3" dy="3" stdDeviation="0" flood-color="#1f1f1f"/></filter>
   </defs>
-  <rect width="1200" height="630" fill="url(#sky)"/>
-  <rect x="64" y="84" width="44" height="44" rx="10" fill="#2f8520"/>
-  <text x="124" y="118" class="title">Minecraft Server Manager</text>
-  <rect x="64" y="166" width="392" height="38" rx="19" fill="#d5f5c9"/>
-  <text x="84" y="192" class="pill">FREE · OPEN SOURCE · SELF-HOSTED</text>
-  <text x="64" y="256" class="sub">Run your Minecraft servers from</text>
-  <text x="64" y="292" class="sub">one friendly panel. Modpacks pinned,</text>
-  <text x="64" y="328" class="sub">backups, schedules, live map, player</text>
-  <text x="64" y="364" class="sub">stats. Your whole panel is one folder.</text>
-  <text x="64" y="470" class="url">minecraft-server-manager.com</text>
-  <g transform="translate(640,180)">
-    <rect x="-10" y="-40" width="540" height="380" rx="14" fill="#ffffff" stroke="#e1e6da" stroke-width="2"/>
-    <circle cx="8" cy="-22" r="5" fill="#f87171"/><circle cx="24" cy="-22" r="5" fill="#f0b42f"/><circle cx="40" cy="-22" r="5" fill="#59c53e"/>
-    <g clip-path="url(#shotClip)"><image href="data:image/png;base64,${shotB64}" width="520"/></g>
-  </g>
-  <g transform="translate(560,470)">
-    <path d="M40,0 L80,20 L40,40 L0,20 Z" fill="#59c53e"/><path d="M0,20 L40,40 L40,80 L0,60 Z" fill="#7a5230"/><path d="M80,20 L40,40 L40,80 L80,60 Z" fill="#5b3b21"/>
-    <path d="M0,20 L40,40 L40,48 L0,28 Z" fill="#3fa62b"/><path d="M80,20 L40,40 L40,48 L80,28 Z" fill="#2f8520"/>
+  <image href="data:image/png;base64,${panoB64}" width="1200" height="630"/>
+  <rect x="0" y="0" width="1200" height="630" fill="#10233a" opacity="0.18"/>
+  <rect x="56" y="64" width="560" height="360" fill="#1b1f23" opacity="0.72"/>
+  <rect x="56" y="64" width="560" height="360" fill="none" stroke="#1f1f1f" stroke-width="4"/>
+  <rect x="76" y="84" width="44" height="44" fill="#2f8520" stroke="#1e461b" stroke-width="3"/>
+  <text x="136" y="118" class="title" filter="url(#sh)">Minecraft Server Manager</text>
+  <rect x="76" y="150" width="380" height="36" fill="#27661d" stroke="#1e461b" stroke-width="3"/>
+  <text x="92" y="175" class="pill">FREE · OPEN SOURCE · SELF-HOSTED</text>
+  <text x="76" y="236" class="sub">Run your Minecraft servers from</text>
+  <text x="76" y="272" class="sub">one friendly panel. Modpacks pinned,</text>
+  <text x="76" y="308" class="sub">backups, schedules, live map, player</text>
+  <text x="76" y="344" class="sub">stats. Your whole panel is one folder.</text>
+  <text x="76" y="400" class="url" fill-opacity="0.85">minecraft-server-manager.com</text>
+  <g transform="translate(650,110)">
+    <rect x="-10" y="-10" width="540" height="350" fill="#d4d4d4" stroke="#1f1f1f" stroke-width="4"/>
+    <rect x="0" y="0" width="520" height="330" fill="#8b8b8b"/>
+    <clipPath id="c"><rect x="0" y="0" width="520" height="330"/></clipPath>
+    <g clip-path="url(#c)"><image href="data:image/png;base64,${shotB64}" width="520"/></g>
   </g>
 </svg>`;
 

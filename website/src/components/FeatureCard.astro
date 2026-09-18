@@ -1,18 +1,28 @@
 ---
+// A feature card: optional full-width illustration in an inset slot on top,
+// then icon, title and body. Same panel everywhere.
+import { Image } from 'astro:assets';
 import Icon from './Icon.astro';
 interface Props {
   title: string;
   body: string;
   icon?: string;
-  tone?: 'grass' | 'sky' | 'gold' | 'stone';
+  image?: ImageMetadata;
 }
-const { title, body, icon = 'sparkles', tone = 'grass' } = Astro.props;
+const { title, body, icon = 'sparkles', image } = Astro.props;
 ---
 
-<li class="card card-hover flex gap-4">
-  <span class:list={['icon-tile', `icon-tile-${tone}`]}><Icon name={icon} /></span>
-  <div>
-    <h3 class="display text-[1.05rem] text-ink">{title}</h3>
-    <p class="mt-1.5 text-sm leading-relaxed text-ink-soft">{body}</p>
+<li class="panel flex flex-col">
+  {image && (
+    <span class="slot mb-4 block">
+      <Image src={image} alt="" widths={[420, 840]} sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw" class="block aspect-[16/9] w-full object-cover" />
+    </span>
+  )}
+  <div class="flex gap-4">
+    <span class="slot slot-icon"><Icon name={icon} /></span>
+    <div>
+      <h3>{title}</h3>
+      <p class="mt-1 text-sm leading-relaxed text-ink-soft">{body}</p>
+    </div>
   </div>
 </li>

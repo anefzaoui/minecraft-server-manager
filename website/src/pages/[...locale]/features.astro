@@ -1,19 +1,23 @@
 ---
 import Site from '../../layouts/Site.astro';
 import Section from '../../components/Section.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import FeatureCard from '../../components/FeatureCard.astro';
 import Community from '../../components/Community.astro';
+import XpDivider from '../../components/XpDivider.astro';
 import Icon from '../../components/Icon.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { href, SITE_URL } from '../../lib/routes.js';
+import { art } from '../../data/art.js';
+const spriteChest = art('sprite-chest');
 
 export function getStaticPaths() {
   return localePaths();
 }
 const locale = localeFromParams(Astro.params);
 const copy = getCopy(locale);
-const tones = ['grass', 'sky', 'gold', 'stone'] as const;
+const GROUP_ART = ['group-servers', 'group-mods', 'group-protection', 'group-insight'];
 const breadcrumb = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -25,19 +29,19 @@ const breadcrumb = {
 ---
 
 <Site locale={locale} path="/features/" pageKey="features" jsonLd={[breadcrumb]}>
-  <div class="hero">
-    <Section title={copy.features.title} intro={copy.features.intro} class="pb-4" />
-  </div>
-  <Section class="pt-4">
-    {copy.features.groups.map((g, gi) => (
-      <div class="mt-10 first:mt-0">
-        <h3 class="display text-2xl text-ink">{g.title}</h3>
+  <PageHeader title={copy.features.title} intro={copy.features.intro} sprite={spriteChest} />
+  {copy.features.groups.map((g, gi) => (
+    <>
+      {gi > 0 && <XpDivider />}
+      <Section title={g.title} banner={art(GROUP_ART[gi])}>
         <ul class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
-          {g.items.map((f) => <FeatureCard title={f.title} body={f.body} icon={f.icon} tone={tones[gi % 4]} />)}
+          {g.items.map((f) => <FeatureCard title={f.title} body={f.body} icon={f.icon} />)}
         </ul>
-      </div>
-    ))}
-    <p class="mt-12"><a class="btn btn-primary btn-lg" href={href(locale, '/docs/')}>{copy.features.cta}<Icon name="arrow" size={18} /></a></p>
+      </Section>
+    </>
+  ))}
+  <Section class="pt-0">
+    <a class="btn btn-primary btn-lg" href={href(locale, '/docs/')}>{copy.features.cta}<Icon name="arrow" size={18} /></a>
   </Section>
   <Community copy={copy} />
 </Site>

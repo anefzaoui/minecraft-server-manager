@@ -1,12 +1,12 @@
-/* Re-skins Starlight's docs shell with the panel's tokens so /docs feels like the
-   rest of the site. Only Starlight's public custom properties are overridden. */
+/* Re-skins Starlight's docs shell to match the marketing pages: pixel headings,
+   the panel's greens, bevelled buttons for the header controls. Only Starlight's
+   public custom properties and a few stable hooks are touched. */
 @import './fonts.css';
 
 :root {
   --sl-font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
-  --sl-color-bg-nav: #ffffff;
   --sl-color-accent-low: #1e461b;
-  --sl-color-accent: #3fa62b;
+  --sl-color-accent: #4fae32;
   --sl-color-accent-high: #aeea99;
   --sl-color-white: #f4f5f6;
   --sl-color-gray-1: #e8eaec;
@@ -15,9 +15,10 @@
   --sl-color-gray-4: #6a747f;
   --sl-color-gray-5: #33383e;
   --sl-color-gray-6: #1b1f23;
-  --sl-color-black: #0e1113;
-  --sl-color-bg-nav: #16191c;
-  --sl-color-bg-sidebar: #16191c;
+  --sl-color-black: #16191c;
+  --sl-color-bg-nav: #1c1f24;
+  --sl-color-bg-sidebar: #1c1f24;
+  --sl-nav-height: 4rem;
 }
 :root[data-theme='light'] {
   --sl-color-accent-low: #d5f5c9;
@@ -33,13 +34,12 @@
   --sl-color-gray-7: #fafbfb;
   --sl-color-black: #ffffff;
   --sl-color-bg-nav: #ffffff;
-  --sl-color-bg-sidebar: #fafbfb;
+  --sl-color-bg-sidebar: #f6f5f0;
 }
 .site-title-pixel {
-  font-family: 'Nunito', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-family: 'Pixelify Sans', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--sl-color-white);
   text-decoration: none;
   display: inline-flex;
@@ -47,16 +47,16 @@
   gap: 0.6rem;
 }
 .site-title-pixel img {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  image-rendering: pixelated;
 }
-/* Blocky corners everywhere Starlight rounds. */
-.sl-markdown-content :is(h1, h2, h3, h4) {
-  font-family: 'Nunito', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+.sl-markdown-content :is(h1, h2, h3, h4),
+h1[data-page-title] {
+  font-family: 'Pixelify Sans', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 .sl-markdown-content img {
-  border-radius: 0.75rem;
-  border: 1px solid var(--sl-color-gray-5);
+  border: 2px solid var(--sl-color-gray-5);
 }

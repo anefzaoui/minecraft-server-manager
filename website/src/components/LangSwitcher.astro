@@ -3,6 +3,7 @@
 // hydration. Every locale links to the same page in that language.
 import { LOCALES, getLocale } from '../i18n/locales.js';
 import { href } from '../lib/routes.js';
+import Icon from './Icon.astro';
 interface Props {
   locale: string;
   path: string;
@@ -13,18 +14,11 @@ const current = getLocale(locale);
 ---
 
 <details class="relative">
-  <summary
-    class="btn btn-ghost cursor-pointer list-none px-3 text-sm"
-    aria-label={label}
-    title={label}
-  >
-    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-    <span>{current.label}</span>
+  <summary class="btn btn-sm cursor-pointer list-none" aria-label={label} title={label}>
+    <Icon name="globe" size={18} />
+    <span class="hidden sm:inline">{current.label}</span>
   </summary>
-  <ul
-    class="card absolute end-0 z-40 mt-2 grid max-h-[70vh] w-72 grid-cols-2 gap-1 overflow-y-auto p-2"
-    role="list"
-  >
+  <ul class="panel panel-tight absolute end-0 z-40 mt-3 grid max-h-[70vh] w-72 grid-cols-2 gap-0.5 overflow-y-auto" role="list">
     {LOCALES.map((l) => (
       <li>
         <a
@@ -32,7 +26,7 @@ const current = getLocale(locale);
           hreflang={l.lang || l.code}
           lang={l.lang || l.code}
           dir={l.dir}
-          class:list={['block rounded-lg px-2.5 py-1.5 text-sm hover:bg-inset', l.code === locale && 'bg-inset font-bold text-ok']}
+          class:list={['block px-2.5 py-1.5 text-sm hover:bg-slot hover:text-white', l.code === locale && 'bg-slot font-bold text-white']}
           aria-current={l.code === locale ? 'true' : undefined}
         >
           {l.label}

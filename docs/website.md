@@ -6,19 +6,20 @@ languages, deployed as static files to GitHub Pages.
 
 ## What it is made of
 
-| Piece                 | Where                                                | Notes                                                                                                                                                                                                                                                                                            |
-| --------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Static site generator | [Astro](https://astro.build) 7                       | Zero client JavaScript by default; images resized to WebP at build time.                                                                                                                                                                                                                         |
-| Docs shell            | [Starlight](https://starlight.astro.build)           | Sidebar, search (Pagefind, offline), per-locale UI strings, RTL support.                                                                                                                                                                                                                         |
-| Styling               | Tailwind v4, `website/src/styles/site.css`           | The panel's palette (stone ramp, grass accent) in a light, rounded, friendly register: Nunito for headings, IBM Plex Sans body. Light default, dark via the toggle (shares the docs' `starlight-theme` key).                                                                                     |
-| Copy                  | `website/src/i18n/en.json`                           | English is the source of truth. Other locales are translations of it, committed next to it.                                                                                                                                                                                                      |
-| Locales               | `website/src/i18n/locales.js`                        | The one list every other piece derives from (routing, sitemap hreflang, language menu, translation script).                                                                                                                                                                                      |
-| Docs pages            | generated from `docs/*.md`                           | `website/scripts/sync-docs.js` copies them on every build, adds front matter, rewrites GitHub-relative links. Never edit the copies.                                                                                                                                                             |
-| Changelog page        | generated from `CHANGELOG.md`                        | Same script. English only.                                                                                                                                                                                                                                                                       |
-| Screenshots           | `docs/screenshots/*.png`, `docs/images/mobile/*.png` | Imported straight from the docs so there is one copy.                                                                                                                                                                                                                                            |
-| Install tutorial      | `website/src/components/InstallTutorial.astro`       | Four tabs (Compose, Portainer/Dockge, source, PM2/systemd), numbered steps, copy buttons. Two inputs (data folder, host) rewrite every command and the panel URL live; tabs are radios so they work without JavaScript. Commands live in the component, the prose in `en.json` under `tutorial`. |
-| Illustration          | `website/src/components/Blocks.astro`                | Original isometric SVG blocks in the palette. No Mojang assets anywhere on the site.                                                                                                                                                                                                             |
-| Hosting               | GitHub Pages                                         | `website/public/CNAME` holds the domain. `.github/workflows/website.yml` builds and deploys on push to `main`.                                                                                                                                                                                   |
+| Piece                 | Where                                                            | Notes                                                                                                                                                                                                                                                                                                                                             |
+| --------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Static site generator | [Astro](https://astro.build) 7                                   | Zero client JavaScript by default; images resized to WebP at build time.                                                                                                                                                                                                                                                                          |
+| Docs shell            | [Starlight](https://starlight.astro.build)                       | Sidebar, search (Pagefind, offline), per-locale UI strings, RTL support.                                                                                                                                                                                                                                                                          |
+| Styling               | Tailwind v4, `website/src/styles/site.css`                       | The game's own UI language, drawn from scratch: bevelled stone buttons, inventory-slot panels, tiled block textures, an XP-bar divider, item-tooltip callouts. Pixelify Sans (OFL) for headings, IBM Plex Sans body. No gradients, no rounded corners. Day is the default; `data-theme="dark"` is night (shares the docs' `starlight-theme` key). |
+| Copy                  | `website/src/i18n/en.json`                                       | English is the source of truth. Other locales are translations of it, committed next to it.                                                                                                                                                                                                                                                       |
+| Locales               | `website/src/i18n/locales.js`                                    | The one list every other piece derives from (routing, sitemap hreflang, language menu, translation script).                                                                                                                                                                                                                                       |
+| Docs pages            | generated from `docs/*.md`                                       | `website/scripts/sync-docs.js` copies them on every build, adds front matter, rewrites GitHub-relative links. Never edit the copies.                                                                                                                                                                                                              |
+| Changelog page        | generated from `CHANGELOG.md`                                    | Same script. English only.                                                                                                                                                                                                                                                                                                                        |
+| Screenshots           | `docs/screenshots/*.png`, `docs/images/mobile/*.png`             | Imported straight from the docs so there is one copy.                                                                                                                                                                                                                                                                                             |
+| Install tutorial      | `website/src/components/InstallTutorial.astro`                   | Four tabs (Compose, Portainer/Dockge, source, PM2/systemd), numbered steps, copy buttons. Two inputs (data folder, host) rewrite every command and the panel URL live; tabs are radios so they work without JavaScript. Commands live in the component, the prose in `en.json` under `tutorial`.                                                  |
+| Illustrations         | `website/src/assets/gen/*.webp`, `website/scripts/gen-images.js` | Original art generated through OpenRouter (see below) and committed as WebP. `website/src/data/art.js` looks them up by id; a missing picture just renders nothing.                                                                                                                                                                               |
+| Textures              | `website/public/textures/*.png`, `website/scripts/textures.js`   | Procedural 16x16 tiles (grass, dirt, stone, planks, cloud, heart) in the palette, byte-identical on every run. No Mojang assets anywhere on the site.                                                                                                                                                                                             |
+| Hosting               | GitHub Pages                                                     | `website/public/CNAME` holds the domain. `.github/workflows/website.yml` builds and deploys on push to `main`.                                                                                                                                                                                                                                    |
 
 ## URL layout
 
@@ -66,6 +67,22 @@ needs an API key and every string can be reviewed in a pull request.
 Workflow after editing English copy or a doc: commit the English change, run
 `pnpm run site:translate`, review the diff, commit the translations.
 
+## Generated illustrations
+
+`website/scripts/gen-images.js` creates every illustration (hero panoramas, card scenes, section
+banners, sprites, the 404 scene) through OpenRouter's image models and writes them to
+`website/src/assets/gen/` as WebP (sprites lossless, scenes at quality 86). The files are
+**committed**, so builds never call the API.
+
+- Key: `OPENROUTER_API_KEY` in `website/.env` (gitignored). Rotate it if it ever leaks.
+- Idempotent: `manifest.json` stores the prompt hash per image; a re-run only regenerates images
+  whose prompt changed or whose file is missing. `--force` redoes everything, `--only=id,id` narrows.
+- Sprites are asked for on a flat magenta background and chroma-keyed to transparency in the
+  script, so any model works.
+- Every prompt insists on original blocky characters and scenery; nothing is a likeness of an
+  existing game character, texture or logo.
+- Cost is printed per image (about $0.07 each at the time of writing).
+
 ## Adding a page, a locale, or a screenshot
 
 - **Marketing page:** add `website/src/pages/[...locale]/<name>.astro` (copy an existing one), the
@@ -75,6 +92,8 @@ Workflow after editing English copy or a doc: commit the English change, run
   out of `PIXEL_TITLE_LOCALES` in `routes.js` so titles fall back to the bold sans.
 - **Screenshot:** drop the PNG in `docs/screenshots/` and register it in
   `website/src/data/screenshots.js` with a caption key in `en.json`.
+- **Illustration:** add an entry to `IMAGES` in `website/scripts/gen-images.js`, run it, reference
+  the id through `art('<id>')`.
 
 ## Hosting checklist (one-time)
 
