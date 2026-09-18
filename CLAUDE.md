@@ -16,6 +16,11 @@ Requires **Node.js 24+** (for the flagless built-in `node:sqlite`). Package mana
 
 ## Commands
 
+The public website (minecraft-server-manager.com) lives in [`website/`](website/) as a second
+pnpm workspace package: Astro + Starlight, static, 30 locales, deployed to GitHub Pages by
+`.github/workflows/website.yml`. Docs pages are generated from `docs/*.md` at build time, so editing
+the docs updates the site. See [`docs/website.md`](docs/website.md) before touching it.
+
 ```bash
 pnpm install
 pnpm run dev            # app with --watch auto-restart + Tailwind CSS watch; serves raw public/js

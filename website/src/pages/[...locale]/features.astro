@@ -1,0 +1,39 @@
+---
+import Site from '../../layouts/Site.astro';
+import Section from '../../components/Section.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import Community from '../../components/Community.astro';
+import { localePaths, localeFromParams } from '../../lib/paths.js';
+import { getCopy } from '../../i18n/index.js';
+import { href, SITE_URL } from '../../lib/routes.js';
+
+export function getStaticPaths() {
+  return localePaths();
+}
+const locale = localeFromParams(Astro.params);
+const copy = getCopy(locale);
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: copy.nav.home, item: new URL(href(locale, '/'), SITE_URL).href },
+    { '@type': 'ListItem', position: 2, name: copy.nav.features, item: new URL(href(locale, '/features/'), SITE_URL).href },
+  ],
+};
+---
+
+<Site locale={locale} path="/features/" pageKey="features" jsonLd={[breadcrumb]}>
+  <div class="grass-band"></div>
+  <Section title={copy.features.title} intro={copy.features.intro}>
+    {copy.features.groups.map((g) => (
+      <div class="mt-10">
+        <h3 class="text-lg font-semibold text-ink">{g.title}</h3>
+        <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+          {g.items.map((f) => <FeatureCard title={f.title} body={f.body} />)}
+        </ul>
+      </div>
+    ))}
+    <p class="mt-10"><a class="btn btn-primary" href={href(locale, '/docs/')}>{copy.features.cta}</a></p>
+  </Section>
+  <Community copy={copy} />
+</Site>

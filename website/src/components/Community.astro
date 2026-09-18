@@ -1,0 +1,20 @@
+---
+import { REPO_URL, DISCORD_URL } from '../lib/routes.js';
+interface Props {
+  copy: any;
+}
+const { copy } = Astro.props;
+---
+
+<section class="mx-auto max-w-6xl px-4 py-12">
+  <div class="card flex flex-col items-start gap-4 border-ok/30 bg-raised sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="pixel text-sm text-ink">{copy.community.title}</h2>
+      <p class="mt-2 text-ink-soft">{copy.community.body}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a class="btn btn-primary" href={DISCORD_URL} rel="noopener">{copy.community.discord}</a>
+      <a class="btn" href={REPO_URL} rel="noopener">{copy.community.github}</a>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,32 @@
+{
+  "name": "minecraft-server-manager-website",
+  "version": "0.1.0",
+  "description": "Marketing and documentation site for minecraft-server-manager.com (Astro + Starlight, static)",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "sync-docs": "node scripts/sync-docs.js",
+    "dev": "pnpm run sync-docs && astro dev",
+    "build": "pnpm run sync-docs && astro build",
+    "preview": "astro preview",
+    "check": "pnpm run sync-docs && astro check",
+    "translate": "node scripts/translate.js",
+    "verify": "node scripts/verify-dist.js"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/starlight": "^0.42.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.3",
+    "sharp": "^0.35.4",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.126.0",
+    "@astrojs/check": "^0.9.6",
+    "typescript": "^5.9.3"
+  }
+}

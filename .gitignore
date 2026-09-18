@@ -19,3 +19,11 @@ public/dist/
 .idea/
 Thumbs.db
 .DS_Store
+
+# Marketing site (website/): build output + Astro cache. Deployed by CI, never committed.
+website/dist/
+website/.astro/
+website/src/content/docs/docs/
+website/public/docs/
+website/src/generated/
+website/.translation-batch.json

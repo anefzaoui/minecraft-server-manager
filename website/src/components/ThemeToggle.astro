@@ -1,0 +1,34 @@
+---
+interface Props {
+  label: string;
+}
+const { label } = Astro.props;
+---
+
+<button type="button" class="btn btn-ghost px-3" data-theme-toggle aria-label={label} title={label}>
+  <svg class="theme-icon-dark" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+  <svg class="theme-icon-light" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+</button>
+
+<style>
+  .theme-icon-light { display: none; }
+  :global(:root[data-theme='light']) .theme-icon-light { display: block; }
+  :global(:root[data-theme='light']) .theme-icon-dark { display: none; }
+</style>
+
+<script>
+  // Same storage key as Starlight ('starlight-theme') so the docs and the
+  // marketing pages agree on the theme.
+  document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const root = document.documentElement;
+      const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem('starlight-theme', next);
+      } catch {
+        /* storage may be unavailable; the choice just won't persist */
+      }
+    });
+  });
+</script>

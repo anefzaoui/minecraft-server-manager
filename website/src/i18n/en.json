@@ -1,0 +1,287 @@
+{
+  "$comment": "English is the source of truth for the marketing copy. Other locales are translations of this file (scripts/translate.js). Keys never change meaning between locales; only values are translated.",
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Free, self-hosted control panel for Minecraft servers on Docker.",
+    "description": "Run modded and vanilla Minecraft servers from your browser. Modpacks pinned to exact versions, one-click backups, schedules, live map, player analytics. Free, open source, and your whole panel is one folder."
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "screenshots": "Screenshots",
+    "install": "Install",
+    "docs": "Docs",
+    "faq": "FAQ",
+    "changelog": "Changelog",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Language",
+    "theme": "Toggle light or dark theme",
+    "skip": "Skip to content"
+  },
+  "hero": {
+    "eyebrow": "Open source. Self-hosted. No paid services.",
+    "title": "Your Minecraft servers, one panel, zero bills.",
+    "subtitle": "Minecraft Server Manager runs every server as its own Docker container and gives you a control panel that rivals the paid ones. Modpacks, backups, schedules, live map, player analytics, crash forensics, all in your browser.",
+    "primary": "Install in 3 commands",
+    "secondary": "See the features",
+    "pills": ["MIT licensed", "amd64 + arm64", "Node.js 24+", "Docker"]
+  },
+  "pillars": {
+    "title": "Built for people who run servers, not tickets",
+    "items": [
+      {
+        "title": "One folder is your whole panel",
+        "body": "Database, worlds, backups, and the shared mod library all live under a single data folder. Copy it and you have migrated."
+      },
+      {
+        "title": "Every server is a container",
+        "body": "Each server runs on the battle-tested itzg image with its own CPU and memory caps, graceful stops over RCON, and crash detection."
+      },
+      {
+        "title": "Modpacks stay pinned",
+        "body": "Packs are locked to an exact version. Upgrades are explicit, previewed, backed up first, health-checked, and rolled back with one click."
+      }
+    ]
+  },
+  "features": {
+    "title": "Everything a server owner reaches for",
+    "intro": "The full feature tour, from creating a server to sharing its live map.",
+    "cta": "Read the documentation",
+    "groups": [
+      {
+        "title": "Servers and lifecycle",
+        "items": [
+          {
+            "title": "Resource-capped containers",
+            "body": "Create, start, stop, restart, rebuild, and delete servers with graceful RCON stops and automatic crash detection."
+          },
+          {
+            "title": "Guided creation wizard",
+            "body": "Simple or Advanced mode, with every image setting explained in plain English before you pick it."
+          },
+          {
+            "title": "Live console",
+            "body": "A WebSocket console with an RCON command bar, log filters, and one-click player actions."
+          },
+          {
+            "title": "Player moderation",
+            "body": "Whitelist, ops, bans, IP bans, and teleports, online through RCON and offline through the JSON files."
+          }
+        ]
+      },
+      {
+        "title": "Mods and modpacks",
+        "items": [
+          {
+            "title": "Five registries in one browser",
+            "body": "Modrinth, CurseForge, Hangar, SpigotMC, and GitHub Releases. Three of them need no API key."
+          },
+          {
+            "title": "Add by link",
+            "body": "Paste a project page, a GitHub repository, a slug, or a direct jar URL. The panel identifies it."
+          },
+          {
+            "title": "Import anything",
+            "body": "Modrinth .mrpack files, CurseForge exports, or your own zip of jars, every jar identified and compatibility-checked."
+          },
+          {
+            "title": "Checksum-verified downloads",
+            "body": "sha512, sha256, sha1, or md5 verified before a file reaches the server. A mismatch never ships."
+          },
+          {
+            "title": "Shared mod library",
+            "body": "Deduplicated by sha256 and hard-linked into servers, so custom mods survive pack updates."
+          },
+          {
+            "title": "Pick-mods-first solver",
+            "body": "Choose the mods you want and get the newest fully compatible loader and Minecraft version."
+          }
+        ]
+      },
+      {
+        "title": "Protection and automation",
+        "items": [
+          {
+            "title": "Save-safe backups",
+            "body": "Snapshots with retention classes, restore in place, and optional world shrinking to reclaim disk."
+          },
+          {
+            "title": "Cron schedules",
+            "body": "Restarts, backups, and RCON commands on a schedule, with the next run shown up front."
+          },
+          {
+            "title": "Blueprints",
+            "body": "Export a server as a portable recipe, import it anywhere, and get the same server back."
+          },
+          {
+            "title": "Crash forensics",
+            "body": "Crashes are detected, parsed, and suspects named, with one-click mclo.gs sharing and automated insights."
+          },
+          {
+            "title": "Update tracking",
+            "body": "New server, pack, image, and mod versions are tracked, with pre-update backups and one-click rollback."
+          }
+        ]
+      },
+      {
+        "title": "Insight and community",
+        "items": [
+          { "title": "Live map", "body": "One-click BlueMap, served through the panel's authenticated proxy." },
+          {
+            "title": "Analytics and storage",
+            "body": "Playtime, deaths, and mining scoreboards, inventory forensics, per-server disk usage, and enforced quotas."
+          },
+          {
+            "title": "Discord and chatbot",
+            "body": "Webhooks with per-event toggles, plus an optional per-server chatbot with constrained in-game powers."
+          },
+          {
+            "title": "Public status page and API",
+            "body": "Opt-in status pages, invite blocks, a generated client .mrpack, and a read-only token-authenticated API."
+          },
+          {
+            "title": "Users, roles, and 2FA",
+            "body": "Admin, operator, and viewer roles with TOTP two-factor authentication."
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "See it in action",
+    "intro": "Desktop and phone. The panel is designed narrow-first, so every page works on a phone.",
+    "desktop": "Desktop",
+    "mobile": "On a phone",
+    "items": {
+      "dashboard": "The dashboard: every server, player count, and recent activity at a glance.",
+      "wizard": "The creation wizard explains every setting before you pick it.",
+      "overview": "A server's overview with resource meters and quick actions.",
+      "console": "The live console with an RCON command bar and log filters.",
+      "mods": "Mods from five registries, filtered to the server's loader and version.",
+      "worlds": "Swap worlds and manage files from the browser.",
+      "backups": "Backups with retention classes and in-place restore.",
+      "schedules": "Cron schedules for restarts, backups, and commands.",
+      "blueprints": "Blueprints: portable server recipes.",
+      "storage": "Storage analytics and enforced quotas."
+    }
+  },
+  "install": {
+    "title": "Install",
+    "intro": "Pick the option that matches your host. Both give you the same panel.",
+    "requirements": "Requirements",
+    "reqItems": [
+      "Docker Engine (Linux) or Docker Desktop (Windows, macOS).",
+      "Node.js 24 or newer for the from-source install. The Docker image bundles its own.",
+      "A few gigabytes of disk for server images and worlds."
+    ],
+    "docker": {
+      "title": "Option 1: Docker",
+      "body": "A pre-built multi-arch image is published to GHCR on every release. Grab the compose file, set one variable, and start.",
+      "after": "Then open http://your-host:25564. In Portainer or Dockge, paste the compose file as a stack and set DATA_DIR_HOST in the stack's environment.",
+      "warning": "The panel drives the host's Docker daemon through the mounted socket, which is root-equivalent on the host. Treat the admin login accordingly and never expose the panel raw to the internet."
+    },
+    "source": {
+      "title": "Option 2: From source",
+      "body": "Any operating system, including Windows and macOS with Docker Desktop.",
+      "after": "Open http://localhost:25564. The first run walks you through a system check, your time zone, and creating the admin account."
+    },
+    "next": "Next steps",
+    "nextBody": "The getting-started guide covers first-run setup, creating your first server, and where everything lives.",
+    "nextCta": "Read getting started",
+    "compose": "Download docker-compose.yml"
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "items": [
+      {
+        "q": "Is it really free?",
+        "a": "Yes. The panel is MIT licensed and uses no paid services. Everything runs on your machine."
+      },
+      {
+        "q": "Does it work on a Raspberry Pi or another ARM machine?",
+        "a": "Yes. The Docker image is published for amd64 and arm64, and the from-source install runs anywhere Node.js 24 and Docker do."
+      },
+      {
+        "q": "Which server types are supported?",
+        "a": "Everything the itzg image supports: Vanilla, Paper, Purpur, Fabric, Forge, NeoForge, Quilt, and modpacks from CurseForge, Modrinth, FTB, and more."
+      },
+      {
+        "q": "How do I move my panel to a new machine?",
+        "a": "Copy the data folder. It holds the database, every server's world, backups, and the mod library. Start the panel on the new machine pointing at that folder."
+      },
+      {
+        "q": "Can several people manage servers?",
+        "a": "Yes. The panel has admin, operator, and viewer roles, and each account can turn on two-factor authentication."
+      },
+      {
+        "q": "Does it need to be exposed to the internet?",
+        "a": "No. Players connect to the game ports, not the panel. Keep the panel on your LAN or behind a VPN or reverse proxy with authentication."
+      },
+      {
+        "q": "What about Bedrock players?",
+        "a": "Geyser and Floodgate can be installed like any other plugin or mod, and the panel exposes the settings they need."
+      },
+      {
+        "q": "Where do I get help?",
+        "a": "The Discord server has a support forum and real humans. Bugs and feature requests go to GitHub issues."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Changelog",
+    "intro": "Every release, newest first. Release notes are published in English.",
+    "releases": "All releases on GitHub"
+  },
+  "community": {
+    "title": "Join the community",
+    "body": "Report bugs, suggest features, get help from real humans, and show off your servers.",
+    "discord": "Join the Discord",
+    "github": "Star on GitHub"
+  },
+  "footer": {
+    "tagline": "Free and open source under the MIT license.",
+    "product": "Product",
+    "community": "Community",
+    "resources": "Resources",
+    "issues": "Issues",
+    "releases": "Releases",
+    "contributing": "Contributing",
+    "license": "License",
+    "notAffiliated": "Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft."
+  },
+  "meta": {
+    "home": {
+      "title": "Free self-hosted Minecraft server control panel",
+      "description": "Run vanilla and modded Minecraft servers from your browser. Docker-based, modpacks pinned to exact versions, backups, schedules, live map, player analytics. Free and open source."
+    },
+    "features": {
+      "title": "Features",
+      "description": "Every feature of Minecraft Server Manager: containerised servers, five mod registries, checksum-verified downloads, save-safe backups, schedules, blueprints, crash forensics, live map, roles, and two-factor auth."
+    },
+    "screenshots": {
+      "title": "Screenshots",
+      "description": "Screenshots of the Minecraft Server Manager panel on desktop and phone: dashboard, wizard, console, mods, worlds, backups, schedules, and more."
+    },
+    "install": {
+      "title": "Install",
+      "description": "Install Minecraft Server Manager with Docker in three commands, or from source on Windows, macOS, and Linux."
+    },
+    "faq": {
+      "title": "FAQ",
+      "description": "Answers about cost, supported server types, ARM support, migration, roles, and exposure to the internet."
+    },
+    "changelog": {
+      "title": "Changelog",
+      "description": "Release notes for every version of Minecraft Server Manager."
+    },
+    "notFound": { "title": "Page not found", "description": "This page does not exist." }
+  },
+  "notFound": {
+    "title": "This chunk never generated.",
+    "body": "The page you asked for does not exist. Try the home page or the documentation.",
+    "home": "Go home"
+  },
+  "langNotice": "This page is shown in English until its translation lands."
+}

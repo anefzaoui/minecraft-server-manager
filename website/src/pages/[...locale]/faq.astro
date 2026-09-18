@@ -1,0 +1,37 @@
+---
+import Site from '../../layouts/Site.astro';
+import Section from '../../components/Section.astro';
+import Community from '../../components/Community.astro';
+import { localePaths, localeFromParams } from '../../lib/paths.js';
+import { getCopy } from '../../i18n/index.js';
+
+export function getStaticPaths() {
+  return localePaths();
+}
+const locale = localeFromParams(Astro.params);
+const copy = getCopy(locale);
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: copy.faq.items.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+---
+
+<Site locale={locale} path="/faq/" pageKey="faq" jsonLd={[faqLd]}>
+  <div class="grass-band"></div>
+  <Section title={copy.faq.title}>
+    <dl class="mt-8 grid gap-4 md:grid-cols-2">
+      {copy.faq.items.map((f) => (
+        <div class="card">
+          <dt class="font-semibold text-ink">{f.q}</dt>
+          <dd class="mt-2 text-sm text-ink-soft">{f.a}</dd>
+        </div>
+      ))}
+    </dl>
+  </Section>
+  <Community copy={copy} />
+</Site>

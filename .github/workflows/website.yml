@@ -1,0 +1,78 @@
+name: Website
+
+# Builds the marketing + docs site in website/ and deploys it to GitHub Pages
+# (custom domain minecraft-server-manager.com, via website/public/CNAME).
+# Pull requests only build and verify; pushes to main also deploy. The docs
+# pages are generated from docs/*.md and the changelog page from CHANGELOG.md,
+# so those paths trigger a rebuild too.
+on:
+  pull_request:
+    paths:
+      - 'website/**'
+      - 'docs/**'
+      - 'CHANGELOG.md'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/website.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - 'docs/**'
+      - 'CHANGELOG.md'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      # The panel's Tailwind postinstall is not needed to build the site.
+      - run: pnpm install --frozen-lockfile
+        env:
+          MSM_SKIP_POSTINSTALL: '1'
+
+      - name: Type-check the site
+        run: pnpm --filter minecraft-server-manager-website run check
+
+      - name: Build the site
+        run: pnpm --filter minecraft-server-manager-website run build
+
+      - name: Verify the build (SEO artefacts, links, sitemap)
+        run: pnpm --filter minecraft-server-manager-website run verify
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: website/dist
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

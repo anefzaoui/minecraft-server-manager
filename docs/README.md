@@ -47,6 +47,7 @@ Not specific to this panel: the questions every Minecraft server owner runs into
 ## Under the hood
 
 - **[Architecture](architecture.md)** - how the panel is put together.
+- **[The website](website.md)** - how minecraft-server-manager.com is built, translated, and deployed from this repo.
 
 ---
 

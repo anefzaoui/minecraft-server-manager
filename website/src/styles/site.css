@@ -1,0 +1,278 @@
+/* Marketing-site stylesheet. Mirrors the panel's design system (assets/css/input.css
+   in the repo root): stone neutral ramp, grass green as the single accent, IBM Plex
+   Sans body, Press Start 2P for display titles, blocky rounded-sm corners, buttons
+   that physically press. Dark is the default theme; light is opt-in via
+   <html data-theme="light">. Only semantic tokens are used at call sites. */
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(:root:not([data-theme='light']) *));
+
+@theme {
+  --color-grass-50: #edfbe8;
+  --color-grass-100: #d5f5c9;
+  --color-grass-200: #aeea99;
+  --color-grass-300: #7fd965;
+  --color-grass-400: #59c53e;
+  --color-grass-500: #3fa62b;
+  --color-grass-600: #2f8520;
+  --color-grass-700: #27661d;
+  --color-grass-800: #22521c;
+  --color-grass-900: #1e461b;
+
+  --color-diamond-400: #3cc5c7;
+  --color-diamond-700: #1a6a6e;
+  --color-gold-400: #f0b42f;
+  --color-gold-700: #ab4f12;
+  --color-redstone-400: #f87171;
+  --color-redstone-700: #b02a2e;
+
+  --color-stone-25: #fafbfb;
+  --color-stone-50: #f4f5f6;
+  --color-stone-100: #e8eaec;
+  --color-stone-200: #d3d7db;
+  --color-stone-300: #b1b8bf;
+  --color-stone-400: #87919b;
+  --color-stone-500: #6a747f;
+  --color-stone-600: #555e68;
+  --color-stone-700: #464d55;
+  --color-stone-800: #33383e;
+  --color-stone-850: #262b30;
+  --color-stone-900: #1b1f23;
+  --color-stone-925: #16191c;
+  --color-stone-950: #0e1113;
+
+  --color-dirt-500: #7a5230;
+  --color-dirt-700: #5b3b21;
+
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-pixel: 'Press Start 2P', 'Courier New', monospace;
+
+  --radius-sm: 0.125rem;
+
+  /* Semantic tokens (dark values are the default). */
+  --color-canvas: var(--color-stone-950);
+  --color-surface: var(--color-stone-925);
+  --color-raised: var(--color-stone-900);
+  --color-inset: var(--color-stone-850);
+  --color-line: var(--color-stone-800);
+  --color-line-strong: var(--color-stone-700);
+  --color-ink: var(--color-stone-50);
+  --color-ink-soft: var(--color-stone-300);
+  --color-ink-faint: var(--color-stone-400);
+  --color-link: var(--color-diamond-400);
+  --color-ok: var(--color-grass-400);
+  --color-warn: var(--color-gold-400);
+  --color-danger: var(--color-redstone-400);
+  --color-accent: var(--color-grass-500);
+  --color-accent-strong: var(--color-grass-600);
+  --color-on-accent: #ffffff;
+}
+
+:root[data-theme='light'] {
+  --color-canvas: var(--color-stone-50);
+  --color-surface: #ffffff;
+  --color-raised: var(--color-stone-25);
+  --color-inset: var(--color-stone-100);
+  --color-line: var(--color-stone-200);
+  --color-line-strong: var(--color-stone-300);
+  --color-ink: var(--color-stone-900);
+  --color-ink-soft: var(--color-stone-700);
+  --color-ink-faint: var(--color-stone-600);
+  --color-link: var(--color-diamond-700);
+  --color-ok: var(--color-grass-700);
+  --color-warn: var(--color-gold-700);
+  --color-danger: var(--color-redstone-700);
+}
+
+@import './fonts.css';
+
+@layer base {
+  html {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-canvas);
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+  /* Grid/flex children default to min-width:auto, which lets an <img> or a <pre>
+     push the layout wider than a phone viewport. Force them shrinkable. */
+  :where(.grid, .flex) > * {
+    min-width: 0;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  ::selection {
+    background: var(--color-grass-600);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Display titles: the pixel face for Latin scripts; other scripts fall back to a
+     heavy sans so RTL/CJK titles stay legible (Press Start 2P has no glyphs for them). */
+  .pixel {
+    font-family: var(--font-pixel);
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  :root:not([data-pixel-titles='true']) .pixel {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.625rem 1.125rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-line-strong);
+    background: var(--color-raised);
+    color: var(--color-ink);
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 3px 0 0 var(--color-line);
+    transition:
+      transform 80ms ease,
+      box-shadow 80ms ease,
+      background-color 120ms ease;
+  }
+  .btn:hover {
+    background: var(--color-inset);
+  }
+  .btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 0 var(--color-line);
+  }
+  .btn-primary {
+    background: var(--color-accent);
+    border-color: var(--color-accent-strong);
+    color: var(--color-on-accent);
+    box-shadow: 0 3px 0 0 var(--color-grass-800);
+  }
+  .btn-primary:hover {
+    background: var(--color-grass-400);
+  }
+  .btn-primary:active {
+    box-shadow: 0 0 0 0 var(--color-grass-800);
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .btn-ghost:hover {
+    background: var(--color-inset);
+  }
+
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-line);
+    background: var(--color-inset);
+    color: var(--color-ink-soft);
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge-ok {
+    color: var(--color-ok);
+    border-color: color-mix(in srgb, var(--color-ok) 40%, transparent);
+    background: color-mix(in srgb, var(--color-ok) 12%, transparent);
+  }
+
+  /* Grass-block hero band: a green top layer over dirt, drawn with hard gradient
+     stops so it reads as pixels rather than a smooth fade. */
+  .grass-band {
+    height: 14px;
+    background:
+      linear-gradient(
+          90deg,
+          var(--color-grass-500) 0 25%,
+          var(--color-grass-600) 25% 50%,
+          var(--color-grass-400) 50% 75%,
+          var(--color-grass-600) 75% 100%
+        )
+        top / 28px 7px repeat-x,
+      linear-gradient(90deg, var(--color-dirt-500) 0 50%, var(--color-dirt-700) 50% 100%) bottom / 28px 7px repeat-x;
+  }
+  .grass-band-flip {
+    transform: scaleY(-1);
+  }
+
+  /* Subtle blocky grid backdrop for the hero. */
+  .block-grid {
+    background-image:
+      linear-gradient(var(--color-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.5), transparent 90%);
+  }
+
+  .prose-soft :where(p, li) {
+    color: var(--color-ink-soft);
+  }
+  .prose-soft :where(a) {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose-soft :where(code) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.9em;
+    background: var(--color-inset);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    padding: 0.05em 0.35em;
+  }
+  .prose-soft :where(pre) {
+    background: var(--color-stone-925);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    overflow-x: auto;
+    direction: ltr;
+    text-align: left;
+  }
+  .prose-soft :where(pre code) {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--color-stone-100);
+  }
+}

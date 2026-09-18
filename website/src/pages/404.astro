@@ -1,0 +1,21 @@
+---
+// GitHub Pages serves /404.html for any unknown path, so this page is not
+// locale-routed. It renders in English and links to the English home and docs.
+import Site from '../layouts/Site.astro';
+import { getCopy } from '../i18n/index.js';
+import { DEFAULT_LOCALE } from '../i18n/locales.js';
+const copy = getCopy(DEFAULT_LOCALE);
+---
+
+<Site locale={DEFAULT_LOCALE} path="/" pageKey="notFound" noindex>
+  <div class="grass-band"></div>
+  <section class="mx-auto max-w-6xl px-4 py-24 text-center">
+    <p class="pixel text-4xl text-ok">404</p>
+    <h1 class="pixel mt-6 text-base text-ink">{copy.notFound.title}</h1>
+    <p class="mt-4 text-ink-soft">{copy.notFound.body}</p>
+    <div class="mt-8 flex justify-center gap-3">
+      <a class="btn btn-primary" href="/">{copy.notFound.home}</a>
+      <a class="btn" href="/docs/">{copy.nav.docs}</a>
+    </div>
+  </section>
+</Site>

@@ -1,0 +1,138 @@
+---
+// Shell for every marketing page: full SEO head (canonical, hreflang for all
+// locales, Open Graph, Twitter card, JSON-LD), lang/dir on <html>, theme init,
+// header and footer. Docs pages use Starlight's own shell instead.
+import '../styles/site.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { LOCALES, DEFAULT_LOCALE, getLocale, langTag } from '../i18n/locales.js';
+import { getCopy, hasTranslation } from '../i18n/index.js';
+import { SITE_URL, REPO_URL, DISCORD_URL, href, usesPixelTitles } from '../lib/routes.js';
+import pkg from '../../../package.json';
+
+interface Props {
+  locale: string;
+  path: string;
+  pageKey: string;
+  title?: string;
+  description?: string;
+  jsonLd?: Record<string, unknown>[];
+  noindex?: boolean;
+}
+const { locale, path, pageKey, jsonLd = [], noindex = false } = Astro.props;
+const copy = getCopy(locale);
+const meta = copy.meta[pageKey] || copy.meta.home;
+const title = Astro.props.title || meta.title;
+const description = Astro.props.description || meta.description;
+const fullTitle = pageKey === 'home' ? `${copy.site.name}: ${title}` : `${title} · ${copy.site.name}`;
+const info = getLocale(locale);
+const canonical = new URL(href(locale, path), SITE_URL).href;
+const ogImage = new URL('/og.png', SITE_URL).href;
+const ogLocale = langTag(locale).replace('-', '_');
+const showLangNotice = locale !== DEFAULT_LOCALE && !hasTranslation(locale);
+
+const baseJsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: copy.site.name,
+    url: SITE_URL,
+    inLanguage: langTag(locale),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: copy.site.name,
+    url: SITE_URL,
+    logo: new URL('/favicon.svg', SITE_URL).href,
+    sameAs: [REPO_URL, DISCORD_URL],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: copy.site.name,
+    description: copy.site.description,
+    url: SITE_URL,
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Linux, Windows, macOS',
+    softwareVersion: pkg.version,
+    license: `${REPO_URL}/blob/main/LICENSE`,
+    downloadUrl: `${REPO_URL}/releases/latest`,
+    codeRepository: REPO_URL,
+    screenshot: ogImage,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    isAccessibleForFree: true,
+  },
+  ...jsonLd,
+];
+---
+
+<!doctype html>
+<html lang={langTag(locale)} dir={info.dir} data-pixel-titles={usesPixelTitles(locale) ? 'true' : 'false'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    {!noindex && <link rel="canonical" href={canonical} />}
+    {!noindex && LOCALES.map((l) => (
+      <link rel="alternate" hreflang={langTag(l.code)} href={new URL(href(l.code, path), SITE_URL).href} />
+    ))}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={new URL(href(DEFAULT_LOCALE, path), SITE_URL).href} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="theme-color" content="#0e1113" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4f5f6" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={copy.site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={copy.site.tagline} />
+    <meta property="og:locale" content={ogLocale} />
+    {LOCALES.filter((l) => l.code !== locale).map((l) => (
+      <meta property="og:locale:alternate" content={langTag(l.code).replace('-', '_')} />
+    ))}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="preload" href="/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    {usesPixelTitles(locale) && <link rel="preload" href="/fonts/PressStart2P-Regular.ttf" as="font" type="font/ttf" crossorigin />}
+
+    {baseJsonLd.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+
+    <script is:inline>
+      // Theme init before first paint. Shares Starlight's storage key so the docs
+      // and marketing pages agree. Dark is the default; light is opt-in.
+      (function () {
+        try {
+          var t = localStorage.getItem('starlight-theme');
+          if (t === 'light') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 btn btn-primary">{copy.nav.skip}</a>
+    <Header locale={locale} path={path} copy={copy} active={pageKey} />
+    {showLangNotice && (
+      <p class="border-b border-line bg-inset px-4 py-2 text-center text-xs text-ink-soft" lang="en" dir="ltr">
+        {copy.langNotice}
+      </p>
+    )}
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+    <Footer locale={locale} copy={copy} />
+  </body>
+</html>

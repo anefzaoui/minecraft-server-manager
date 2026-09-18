@@ -1,3 +1,8 @@
+# The marketing + docs site (website/) is a second workspace package so the
+# repo keeps one lockfile and one `pnpm install`.
+packages:
+  - 'website'
+
 # Native/install-script builds are off by default (pnpm's security posture).
 # None of these are needed: @parcel/watcher only backs Tailwind's --watch mode
 # (falls back to polling); cpu-features/ssh2 only serve dockerode's SSH

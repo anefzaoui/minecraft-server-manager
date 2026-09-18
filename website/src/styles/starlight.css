@@ -1,0 +1,57 @@
+/* Re-skins Starlight's docs shell with the panel's tokens so /docs feels like the
+   rest of the site. Only Starlight's public custom properties are overridden. */
+@import './fonts.css';
+
+:root {
+  --sl-font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --sl-color-accent-low: #1e461b;
+  --sl-color-accent: #3fa62b;
+  --sl-color-accent-high: #aeea99;
+  --sl-color-white: #f4f5f6;
+  --sl-color-gray-1: #e8eaec;
+  --sl-color-gray-2: #d3d7db;
+  --sl-color-gray-3: #b1b8bf;
+  --sl-color-gray-4: #6a747f;
+  --sl-color-gray-5: #33383e;
+  --sl-color-gray-6: #1b1f23;
+  --sl-color-black: #0e1113;
+  --sl-color-bg-nav: #16191c;
+  --sl-color-bg-sidebar: #16191c;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d5f5c9;
+  --sl-color-accent: #27661d;
+  --sl-color-accent-high: #1e461b;
+  --sl-color-white: #1b1f23;
+  --sl-color-gray-1: #33383e;
+  --sl-color-gray-2: #464d55;
+  --sl-color-gray-3: #6a747f;
+  --sl-color-gray-4: #b1b8bf;
+  --sl-color-gray-5: #d3d7db;
+  --sl-color-gray-6: #f4f5f6;
+  --sl-color-gray-7: #fafbfb;
+  --sl-color-black: #ffffff;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #fafbfb;
+}
+.site-title-pixel {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--sl-color-white);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.site-title-pixel img {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+/* Blocky corners everywhere Starlight rounds. */
+.sl-markdown-content :is(pre, img, .expressive-code .frame),
+.sl-link-card,
+.card {
+  border-radius: 0.125rem !important;
+}

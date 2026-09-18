@@ -1,0 +1,42 @@
+---
+import { Image } from 'astro:assets';
+import Site from '../../layouts/Site.astro';
+import Section from '../../components/Section.astro';
+import { localePaths, localeFromParams } from '../../lib/paths.js';
+import { getCopy } from '../../i18n/index.js';
+import { DESKTOP, MOBILE } from '../../data/screenshots.js';
+
+export function getStaticPaths() {
+  return localePaths();
+}
+const locale = localeFromParams(Astro.params);
+const copy = getCopy(locale);
+---
+
+<Site locale={locale} path="/screenshots/" pageKey="screenshots">
+  <div class="grass-band"></div>
+  <Section title={copy.screenshots.title} intro={copy.screenshots.intro}>
+    <h3 class="mt-10 text-lg font-semibold text-ink">{copy.screenshots.desktop}</h3>
+    <ul class="mt-4 grid gap-6 md:grid-cols-2" role="list">
+      {DESKTOP.map((s, i) => (
+        <li>
+          <figure class="card p-1.5">
+            <Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[480, 800, 1200]} sizes="(min-width: 768px) 50vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} class="rounded-sm" />
+            <figcaption class="px-2 py-2 text-sm text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+    <h3 class="mt-12 text-lg font-semibold text-ink">{copy.screenshots.mobile}</h3>
+    <ul class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5" role="list">
+      {MOBILE.map((s) => (
+        <li>
+          <figure class="card p-1.5">
+            <Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[240, 480]} sizes="(min-width: 1024px) 20vw, 50vw" class="rounded-sm" />
+            <figcaption class="px-1 py-2 text-xs text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  </Section>
+</Site>

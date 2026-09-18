@@ -1,0 +1,15 @@
+---
+interface Props {
+  title: string;
+  body: string;
+}
+const { title, body } = Astro.props;
+---
+
+<li class="card flex gap-3">
+  <span aria-hidden="true" class="mt-1 block h-3 w-3 shrink-0 bg-ok shadow-[2px_2px_0_0_var(--color-grass-800)]"></span>
+  <div>
+    <h3 class="font-semibold text-ink">{title}</h3>
+    <p class="mt-1 text-sm text-ink-soft">{body}</p>
+  </div>
+</li>
