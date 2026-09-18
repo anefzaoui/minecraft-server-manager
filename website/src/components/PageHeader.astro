@@ -13,7 +13,7 @@ const { title, intro, sprite, spriteAlt = '' } = Astro.props;
 ---
 
 <header class="sky relative overflow-hidden">
-  <Clouds count={3} />
+  <Clouds count={2} band={22} />
   <div class="relative mx-auto flex max-w-6xl items-end justify-between gap-6 px-4 pb-6 pt-10">
     <div>
       <h1>{title}</h1>

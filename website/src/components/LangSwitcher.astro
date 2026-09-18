@@ -16,7 +16,7 @@ const current = getLocale(locale);
 <details class="relative">
   <summary class="btn btn-sm cursor-pointer list-none" aria-label={label} title={label}>
     <Icon name="globe" size={18} />
-    <span class="hidden sm:inline">{current.label}</span>
+    <span class="hidden sm:inline lg:hidden 2xl:inline">{current.label}</span>
   </summary>
   <ul class="panel panel-tight absolute end-0 z-40 mt-3 grid max-h-[70vh] w-72 grid-cols-2 gap-0.5 overflow-y-auto" role="list">
     {LOCALES.map((l) => (

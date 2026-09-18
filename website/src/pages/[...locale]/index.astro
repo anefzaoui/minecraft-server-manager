@@ -8,6 +8,8 @@ import InstallTutorial from '../../components/InstallTutorial.astro';
 import Clouds from '../../components/Clouds.astro';
 import XpDivider from '../../components/XpDivider.astro';
 import Icon from '../../components/Icon.astro';
+import WorksWith from '../../components/WorksWith.astro';
+import Pill from '../../components/Pill.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { href } from '../../lib/routes.js';
@@ -53,6 +55,8 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
     <div class="ground relative"></div>
   </section>
 
+  <WorksWith copy={copy} />
+
   <Section title={copy.pillars.title}>
     <ul class="mt-6 grid gap-4 sm:grid-cols-3" role="list">
       {copy.pillars.items.map((p, i) => (
@@ -62,6 +66,11 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
           )}
           <h3>{p.title}</h3>
           <p class="mt-1 text-sm leading-relaxed text-ink-soft">{p.body}</p>
+          {p.pills && (
+            <ul class="mt-3 flex flex-wrap gap-2" role="list">
+              {p.pills.map((id) => <Pill id={id} size="sm" />)}
+            </ul>
+          )}
         </li>
       ))}
     </ul>
@@ -79,7 +88,7 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
 
   <Section title={copy.features.title} intro={copy.features.intro}>
     <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
-      {highlights.map((f) => <FeatureCard title={f.title} body={f.body} icon={f.icon} image={cardFor(f.icon)} />)}
+      {highlights.map((f) => <FeatureCard title={f.title} body={f.body} icon={f.icon} image={cardFor(f.icon)} pills={f.pills} />)}
     </ul>
     <p class="mt-6"><a class="btn" href={href(locale, '/features/')}>{copy.hero.secondary}<Icon name="arrow" size={18} /></a></p>
   </Section>

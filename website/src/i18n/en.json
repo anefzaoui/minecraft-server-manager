@@ -26,7 +26,7 @@
     "subtitle": "Minecraft Server Manager turns Docker into a cosy home for your servers: modpacks that stay pinned, one-click backups, schedules, a live map, player stats, and a console that speaks plain English. No bills, no lock-in, your whole panel in one folder.",
     "primary": "Get started in 3 steps",
     "secondary": "Explore the features",
-    "pills": ["MIT licensed", "amd64 + arm64", "Zero paid services", "Self-hosted"],
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
     "scroll": "See the tutorial"
   },
   "pillars": {
@@ -40,12 +40,14 @@
       {
         "icon": "box",
         "title": "Every server is a container",
-        "body": "Each server runs on the battle-tested itzg image with its own CPU and memory caps, graceful stops over RCON, and crash detection."
+        "body": "Each server runs on the battle-tested itzg image with its own CPU and memory caps, graceful stops over RCON, and crash detection.",
+        "pills": ["docker", "amd64", "arm64"]
       },
       {
         "icon": "pin",
         "title": "Modpacks stay pinned",
-        "body": "Packs are locked to an exact version. Upgrades are explicit, previewed, backed up first, health-checked, and rolled back with one click."
+        "body": "Packs are locked to an exact version. Upgrades are explicit, previewed, backed up first, health-checked, and rolled back with one click.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
       }
     ]
   },
@@ -60,7 +62,8 @@
           {
             "title": "Resource-capped containers",
             "body": "Create, start, stop, restart, rebuild, and delete servers with graceful RCON stops and automatic crash detection.",
-            "icon": "server"
+            "icon": "server",
+            "pills": ["docker"]
           },
           {
             "title": "Guided creation wizard",
@@ -84,8 +87,9 @@
         "items": [
           {
             "title": "Five registries in one browser",
-            "body": "Modrinth, CurseForge, Hangar, SpigotMC, and GitHub Releases. Three of them need no API key.",
-            "icon": "search"
+            "body": "Search all five from one place. Three of them need no API key.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
           },
           {
             "title": "Add by link",
@@ -94,13 +98,15 @@
           },
           {
             "title": "Import anything",
-            "body": "Modrinth .mrpack files, CurseForge exports, or your own zip of jars, every jar identified and compatibility-checked.",
-            "icon": "upload"
+            "body": "Every jar identified and compatibility-checked on the way in.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
           },
           {
             "title": "Checksum-verified downloads",
-            "body": "sha512, sha256, sha1, or md5 verified before a file reaches the server. A mismatch never ships.",
-            "icon": "shield"
+            "body": "Verified before a file reaches the server, strongest hash first. A mismatch never ships.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
           },
           {
             "title": "Shared mod library",
@@ -134,8 +140,9 @@
           },
           {
             "title": "Crash forensics",
-            "body": "Crashes are detected, parsed, and suspects named, with one-click mclo.gs sharing and automated insights.",
-            "icon": "flame"
+            "body": "Crashes are detected, parsed, and suspects named, with one-click sharing and automated insights.",
+            "icon": "flame",
+            "pills": ["mclogs"]
           },
           {
             "title": "Update tracking",
@@ -149,8 +156,9 @@
         "items": [
           {
             "title": "Live map",
-            "body": "One-click BlueMap, served through the panel's authenticated proxy.",
-            "icon": "map"
+            "body": "One click to a live map, served through the panel's authenticated proxy.",
+            "icon": "map",
+            "pills": ["bluemap"]
           },
           {
             "title": "Analytics and storage",
@@ -160,7 +168,8 @@
           {
             "title": "Discord and chatbot",
             "body": "Webhooks with per-event toggles, plus an optional per-server chatbot with constrained in-game powers.",
-            "icon": "message"
+            "icon": "message",
+            "pills": ["discord"]
           },
           {
             "title": "Public status page and API",
@@ -223,7 +232,8 @@
       "Docker Desktop must be running before you start or create servers.",
       "Share your project drive with Docker Desktop (Settings, Resources, File sharing) so bind mounts work.",
       "The Docker image targets Linux hosts; on Windows and macOS run the panel from source."
-    ]
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
   },
   "faq": {
     "title": "Frequently asked questions",
@@ -234,11 +244,25 @@
       },
       {
         "q": "Does it work on a Raspberry Pi or another ARM machine?",
-        "a": "Yes. The Docker image is published for amd64 and arm64, and the from-source install runs anywhere Node.js 24 and Docker do."
+        "a": "Yes. The Docker image is published for both architectures, and the from-source install runs anywhere Node.js 24 and Docker do.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
       },
       {
         "q": "Which server types are supported?",
-        "a": "Everything the itzg image supports: Vanilla, Paper, Purpur, Fabric, Forge, NeoForge, Quilt, and modpacks from CurseForge, Modrinth, FTB, and more."
+        "a": "Everything the itzg image supports, plus modpacks from the big four sources.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
       },
       {
         "q": "How do I move my panel to a new machine?",
@@ -254,7 +278,8 @@
       },
       {
         "q": "What about Bedrock players?",
-        "a": "Geyser and Floodgate can be installed like any other plugin or mod, and the panel exposes the settings they need."
+        "a": "Both can be installed like any other plugin or mod, and the panel exposes the settings they need.",
+        "pills": ["geyser", "floodgate"]
       },
       {
         "q": "Where do I get help?",
@@ -401,5 +426,16 @@
         ]
       }
     }
+  },
+  "brands": {
+    "worksWith": "Works with everything you already use",
+    "registries": "Registries",
+    "loaders": "Server types",
+    "packs": "Modpacks",
+    "runsOn": "Runs on",
+    "formats": "Imports",
+    "checksums": "Checksums",
+    "integrations": "Integrations",
+    "keyless": "keyless"
   }
 }

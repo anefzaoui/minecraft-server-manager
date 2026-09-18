@@ -3,6 +3,7 @@ import Site from '../../layouts/Site.astro';
 import Section from '../../components/Section.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import Community from '../../components/Community.astro';
+import Pill from '../../components/Pill.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { art } from '../../data/art.js';
@@ -31,7 +32,14 @@ const faqLd = {
       {copy.faq.items.map((f) => (
         <div class="panel">
           <dt class="display text-[1.15rem] text-ink">{f.q}</dt>
-          <dd class="mt-2 text-sm leading-relaxed text-ink-soft">{f.a}</dd>
+          <dd class="mt-2 text-sm leading-relaxed text-ink-soft">
+            {f.a}
+            {f.pills && (
+              <ul class="mt-3 flex flex-wrap gap-2" role="list">
+                {f.pills.map((id) => <Pill id={id} size="sm" />)}
+              </ul>
+            )}
+          </dd>
         </div>
       ))}
     </dl>

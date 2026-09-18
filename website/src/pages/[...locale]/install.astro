@@ -7,6 +7,7 @@ import Community from '../../components/Community.astro';
 import Tip from '../../components/Tip.astro';
 import XpDivider from '../../components/XpDivider.astro';
 import Icon from '../../components/Icon.astro';
+import Pill from '../../components/Pill.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { href, REPO_URL, SITE_URL } from '../../lib/routes.js';
@@ -39,8 +40,17 @@ const breadcrumb = {
   <PageHeader title={copy.install.title} intro={copy.install.intro} sprite={spriteClock} />
 
   <Section title={copy.install.requirements}>
-    <ul class="hearts mt-4 grid gap-2 text-ink-soft sm:grid-cols-3" role="list">
-      {copy.install.reqItems.map((r) => <li>{r}</li>)}
+    <ul class="hearts mt-4 grid gap-4 text-ink-soft sm:grid-cols-3" role="list">
+      {copy.install.reqItems.map((r, i) => (
+        <li>
+          {r}
+          {copy.install.reqPills[i]?.length > 0 && (
+            <ul class="mt-2 flex flex-wrap gap-2" role="list">
+              {copy.install.reqPills[i].map((id) => <Pill id={id} size="sm" />)}
+            </ul>
+          )}
+        </li>
+      ))}
     </ul>
   </Section>
 

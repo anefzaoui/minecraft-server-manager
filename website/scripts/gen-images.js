@@ -195,6 +195,29 @@ const IMAGES = [
     aspect: '21:9',
     prompt: `${STYLE} ${BANNER} A sunset village silhouette with torches and glowing windows, a river, purple and orange flat sky bands, no characters.`,
   },
+
+  // Item icons for badges of things that have no CC0 logo. Small, single, readable at 32px.
+  ...Object.entries({
+    hangar: 'a small wooden aircraft hangar with a white paper plane in front of it',
+    paper: 'a single sheet of white paper with a folded corner and three grey lines of text',
+    purpur: 'a single purple-and-magenta patterned stone block',
+    fabric: 'a folded square of blue cloth with a needle and thread',
+    forge: 'an iron anvil with a hammer resting on it',
+    neoforge: 'a glowing orange anvil with a single spark above it',
+    quilt: 'a square patchwork quilt in four pastel colours',
+    dockge: 'three stacked shipping containers, blue, green and orange',
+    bluemap: 'a blue folded map with a red location pin',
+    geyser: 'a small geyser of water erupting from a stone ring',
+    ftb: 'a wooden supply crate with a lightning bolt painted on it',
+    windows: 'a wooden window frame with four glass panes and blue sky behind',
+    vanilla: 'a single grass block, green top and dirt sides',
+    gtnh: 'a large bronze gear with a small blue planet in the middle',
+  }).map(([id, what]) => ({
+    id: `icon-${id}`,
+    aspect: '1:1',
+    sprite: true,
+    prompt: `${STYLE} ${SPRITE} A single item icon: ${what}. Chunky, bold silhouette, readable when tiny.`,
+  })),
 ];
 
 const webpOptions = (img) => (img.sprite ? { lossless: true } : { quality: 86, effort: 6 });
@@ -233,10 +256,14 @@ async function chromaKey(buffer) {
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
-    // Magenta-ish: strong red and blue, weak green. Soft edge on near misses.
-    const d = Math.abs(r - 255) + Math.abs(b - 255) + g;
-    if (d < 90) data[i + 3] = 0;
-    else if (d < 160) data[i + 3] = Math.round((255 * (d - 90)) / 70);
+    // Magenta-ish at any brightness: red and blue dominate, green is weak. The
+    // model sometimes darkens the requested #FF00FF, so key on hue, not value.
+    const hi = Math.max(r, b);
+    const lo = Math.min(r, b);
+    const magenta = hi > 90 && lo > hi * 0.55 && g < lo * 0.45;
+    const soft = hi > 90 && lo > hi * 0.5 && g < lo * 0.62;
+    if (magenta) data[i + 3] = 0;
+    else if (soft) data[i + 3] = 128;
   }
   return sharp(data, { raw: info }).png().trim().toBuffer();
 }

@@ -67,6 +67,15 @@ needs an API key and every string can be reviewed in a pull request.
 Workflow after editing English copy or a doc: commit the English change, run
 `pnpm run site:translate`, review the diff, commit the translations.
 
+## Brands and pills (the "boast, don't bury" rule)
+
+Anything the panel works with is never listed inside a sentence. `website/src/data/brands.js` holds
+one entry per registry, server type, modpack source, platform, integration and checksum; `Pill`,
+`PillRow` and the `WorksWith` strip under the hero render from it. Logos come from
+[Simple Icons](https://simpleicons.org) (CC0) where one exists; everything else gets a generated
+pixel item icon (`icon-<id>`). Copy items carry a `pills: [ids]` array instead of naming things in
+their `body`. Brand names are never translated.
+
 ## Generated illustrations
 
 `website/scripts/gen-images.js` creates every illustration (hero panoramas, card scenes, section
