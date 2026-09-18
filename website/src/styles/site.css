@@ -50,6 +50,14 @@
   --color-btn-hi: #b0b0b0;
   --color-btn-lo: #3f3f3f;
   --color-btn-hover: #8b8b8b;
+  --color-well: #2f3237;
+  --color-well-hi: #6b6f75;
+  --color-well-lo: #0e0f11;
+  --color-well-ink: #f4f5f6;
+  --color-sign: #e6d3a3;
+  --color-sign-hi: #f5e9c8;
+  --color-sign-edge: #7a5230;
+  --color-sign-ink: #3b2a14;
 }
 
 :root[data-theme='dark'] {
@@ -74,6 +82,14 @@
   --color-btn-hi: #8a8e94;
   --color-btn-lo: #26282b;
   --color-btn-hover: #6a6e74;
+  --color-well: #17191c;
+  --color-well-hi: #4a4f56;
+  --color-well-lo: #050506;
+  --color-well-ink: #f4f5f6;
+  --color-sign: #c9b581;
+  --color-sign-hi: #dfcf9f;
+  --color-sign-edge: #5b3b21;
+  --color-sign-ink: #2a1c0c;
 }
 
 @layer base {
@@ -529,17 +545,16 @@
 }
 
 @layer components {
-  /* Brand pills: a slot badge with logo/icon + label (+ optional note). */
+  /* Brand pills: an item sitting in an inventory slot. Inset (pressed-in) bevel,
+     dark well, light label. Deliberately the opposite relief of a button. */
   .pill {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: var(--color-slot);
+    background: var(--color-well);
     border: 2px solid;
-    border-color: var(--color-slot-lo) var(--color-slot-hi) var(--color-slot-hi) var(--color-slot-lo);
-    box-shadow: 0 0 0 2px var(--color-outline);
-    color: #ffffff;
-    text-shadow: 1px 1px 0 var(--color-slot-lo);
+    border-color: var(--color-well-lo) var(--color-well-hi) var(--color-well-hi) var(--color-well-lo);
+    color: var(--color-well-ink);
     font-family: var(--font-display);
     font-size: 1rem;
     line-height: 1;
@@ -558,7 +573,6 @@
   }
   .pill-logo {
     flex-shrink: 0;
-    filter: drop-shadow(1px 1px 0 var(--color-slot-lo));
   }
   .pill-icon {
     flex-shrink: 0;
@@ -573,42 +587,83 @@
   }
   .pill-note {
     background: var(--color-grass-600);
-    border: 2px solid;
-    border-color: var(--color-grass-300) var(--color-grass-700) var(--color-grass-700) var(--color-grass-300);
     color: #fff;
     font-size: 0.75em;
-    padding: 0.1rem 0.4rem;
+    padding: 0.15rem 0.4rem;
     margin-inline-start: 0.25rem;
   }
 
-  /* Header navigation: bevelled tabs; the active one is the selected hotbar slot. */
-  .nav-tab {
+  /* Sign label: a small wooden sign with painted text, for hero tags and counts. */
+  .tag {
     display: inline-flex;
     align-items: center;
-    min-height: 2.5rem;
-    padding: 0.375rem 0.75rem;
-    background: var(--color-btn);
-    border: 2px solid;
-    border-color: var(--color-btn-hi) var(--color-btn-lo) var(--color-btn-lo) var(--color-btn-hi);
-    box-shadow: 0 0 0 2px var(--color-outline);
-    color: #ffffff;
-    text-shadow: 1px 1px 0 var(--color-btn-lo);
+    gap: 0.375rem;
+    background: var(--color-sign);
+    border: 2px solid var(--color-sign-edge);
+    box-shadow:
+      inset 0 0 0 2px var(--color-sign-hi),
+      0 0 0 2px var(--color-outline);
+    color: var(--color-sign-ink);
+    padding: 0.3rem 0.625rem;
     font-family: var(--font-display);
     font-size: 0.95rem;
     line-height: 1;
+  }
+
+  /* Header navigation: text on the planks bar. Not a button: nothing to press,
+     just a menu entry with a highlight. Active = green XP-style bar underneath. */
+  .nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 4rem;
+    padding: 0 0.75rem;
+    color: #f4efe2;
+    text-shadow: 2px 2px 0 #2a1a0c;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    line-height: 1;
     text-decoration: none;
-    margin: 0 4px;
   }
-  .nav-tab:hover {
-    background: var(--color-btn-hover);
+  .nav-link:hover {
+    color: var(--color-gold-400);
   }
-  .nav-tab[aria-current='page'] {
-    background: var(--color-grass-600);
-    border-color: var(--color-grass-300) var(--color-grass-700) var(--color-grass-700) var(--color-grass-300);
-    box-shadow:
-      0 0 0 2px var(--color-outline),
-      0 0 0 4px #ffffff,
-      0 0 0 6px var(--color-outline);
-    text-shadow: 1px 1px 0 var(--color-grass-900);
+  .nav-link[aria-current='page'] {
+    color: #ffffff;
+  }
+  .nav-link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0.5rem;
+    bottom: 0;
+    height: 8px;
+    background: var(--color-grass-400);
+    border: 2px solid var(--color-outline);
+    border-bottom: 0;
+    box-shadow: inset 0 3px 0 0 var(--color-grass-300);
+  }
+  .nav-menu .nav-link {
+    height: auto;
+    padding: 0.625rem 0.75rem;
+    color: var(--color-ink);
+    text-shadow: none;
+  }
+  .nav-menu .nav-link[aria-current='page'] {
+    color: var(--color-ok);
+  }
+  .nav-menu .nav-link[aria-current='page']::after {
+    inset-inline: 0;
+    height: 4px;
+    border: 0;
+    box-shadow: none;
+  }
+  .header-bar {
+    background-image: url('/textures/planks.png');
+    background-size: 48px 48px;
+    image-rendering: pixelated;
+  }
+  .brand-lockup {
+    color: #f4efe2;
+    text-shadow: 2px 2px 0 #2a1a0c;
   }
 }
