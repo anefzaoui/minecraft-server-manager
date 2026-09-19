@@ -988,7 +988,7 @@ router.post(
     const taskId = tasks.run(`Creating ${input.name} from a ${input.platform} pack`, { actor }, async (t) => {
       t.step('Resolving pack version (pinned, never "latest")…');
       const resolved = await packs.resolvePack(input.platform, input.ref, { versionId: input.versionId });
-      const type = packs.packEnv(resolved).TYPE;
+      const { TYPE: type, ...pinnedSelectors } = packs.packEnv(resolved);
       t.step('Creating server…');
       const server = await servers.createServer(
         {
@@ -998,7 +998,7 @@ router.post(
           accent: input.accent,
           type,
           mcVersion: resolved.mcVersion || 'LATEST',
-          env: input.env || {},
+          env: { ...(input.env || {}), ...pinnedSelectors },
           heapMb: input.heapMb,
           containerMemoryMb: input.containerMemoryMb,
           diskQuotaGb: input.diskQuotaGb,

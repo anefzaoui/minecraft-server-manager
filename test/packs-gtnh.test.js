@@ -359,3 +359,46 @@ test('resolveImage ignores javaTagHint when the user set an explicit java_tag', 
   db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10', java_tag = 'java8' WHERE id = ?`, id);
   assert.match(serversService.resolveImage(serversService.getServer(id), { javaTagHint: 'java25' }), /:java8$/);
 });
+
+test('creating a GTNH server from a pack pins the version on the create itself', async () => {
+  const restoreIndex = stubIndex();
+  const packPins = require('../src/services/packPins');
+  const realCreate = serversService.createServer;
+  const realStart = serversService.startServer;
+  const realApply = packs.applyPack;
+  let createInput = {};
+  serversService.createServer = async (input) => {
+    createInput = input;
+    packPins.assertPinnedPackEnv(input.type, input.env || {});
+    const id = app.seedServer('srv_gtnhfrompack');
+    db.run(`UPDATE servers SET type = 'GTNH', mc_version = '1.7.10' WHERE id = ?`, id);
+    return serversService.getServer(id);
+  };
+  serversService.startServer = async () => {};
+  packs.applyPack = async () => {};
+  try {
+    await app.start();
+    const cookie = await app.adminCookie();
+    const created = await app.req('POST', '/api/servers/from-pack', {
+      cookie,
+      body: { name: 'GTNH', platform: 'gtnh', ref: 'gtnh', versionId: '2.8.4' },
+    });
+    assert.equal(created.status, 202);
+    let task;
+    for (let i = 0; i < 100; i++) {
+      const r = await app.req('GET', `/api/tasks/${created.json.taskId}`, { cookie });
+      task = r.json.task;
+      if (task.state !== 'running') break;
+      await new Promise((r2) => setTimeout(r2, 20));
+    }
+    assert.equal(task.state, 'done', task.error || '');
+    assert.equal(createInput.type, 'GTNH');
+    assert.equal(createInput.env.GTNH_PACK_VERSION, '2.8.4');
+  } finally {
+    serversService.createServer = realCreate;
+    serversService.startServer = realStart;
+    packs.applyPack = realApply;
+    restoreIndex();
+    await app.stop();
+  }
+});
