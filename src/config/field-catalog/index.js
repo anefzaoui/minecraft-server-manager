@@ -21,6 +21,11 @@
 //   section:  section id (matches SECTIONS below)
 //   danger:   true → red styling + extra warning copy (optional)
 //   requiresRestart: true when a running container must be recreated to apply
+//   prop:     server.properties key this env var maps to (optional). The itzg
+//             image re-asserts env-backed properties on every start, so any
+//             direct server.properties edit of this key un-sets the env var
+//             (see services/servers.js writeServerProperties) - the file then
+//             becomes the source of truth instead of being reverted.
 //   hidden:   true → never rendered (footguns the panel manages itself)
 //   note:     short 'recommended' hint or warning shown as a badge (optional)
 //   conflictsWith: key of another boolean field that must not be on at the
@@ -69,4 +74,26 @@ function getField(scope, key) {
   return byKey.get(`${scope}:${key}`) || null;
 }
 
-module.exports = { SECTIONS, fields, forSection, getField };
+// Env-scope keys the Settings tab intentionally never renders because each has
+// its own channel: PVP/DIFFICULTY (live via World Controls) and MOTD (the
+// dedicated field above). Render-exclusion only - by contract every excluded
+// field is property-backed (`prop`), enforced by test, so whenever the panel
+// edits that property directly the env var is un-set and the edit wins over
+// the image re-asserting it on the next start. They are still fully
+// configurable at creation (the wizard renders them); they are only kept out
+// of the post-create Settings tab, which edits live values.
+const SETTINGS_EXCLUDED_ENV_KEYS = new Set(['DIFFICULTY', 'PVP', 'MOTD']);
+
+// server.properties key → env var name. Built from the catalog fields' `prop`,
+// so every property-backed env var is unlockable without a second hand-maintained
+// map anywhere.
+const propEnvMap = new Map(fields.filter((f) => f.prop).map((f) => [f.prop, f.key]));
+
+module.exports = {
+  SECTIONS,
+  fields,
+  forSection,
+  getField,
+  SETTINGS_EXCLUDED_ENV_KEYS,
+  propEnvMap,
+};

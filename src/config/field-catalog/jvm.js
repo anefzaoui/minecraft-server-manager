@@ -62,6 +62,7 @@ module.exports = [
   {
     key: 'ENABLE_JMX',
     scope: 'env',
+    prop: 'enable-jmx-monitoring',
     label: 'JMX monitoring',
     help: 'Opens a JMX port for attaching Java profilers like VisualVM from another machine. Requires JMX_HOST to be set to the Docker host’s IP.',
     type: 'boolean',

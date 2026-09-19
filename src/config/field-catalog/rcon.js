@@ -42,6 +42,7 @@ module.exports = [
   {
     key: 'BROADCAST_RCON_TO_OPS',
     scope: 'env',
+    prop: 'broadcast-rcon-to-ops',
     label: 'Show RCON output to ops',
     help: 'Broadcasts the output of RCON-issued commands to online operators. With a panel sending frequent commands, leaving this off avoids chat spam for your ops.',
     type: 'boolean',

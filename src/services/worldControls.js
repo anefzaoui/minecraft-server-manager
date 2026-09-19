@@ -11,6 +11,7 @@ const { execCapture } = require('../docker/containers');
 const { cleanText } = require('../utils/ansi');
 const { recordEvent } = require('../events');
 const { dataPath } = require('../storage/pathGuard');
+const servers = require('./servers');
 
 // camelCase (≤1.21) -> snake_case (26.x). Every op tries the snake_case form
 // first and falls back to camelCase, so this map just needs both spellings.
@@ -163,10 +164,13 @@ const QUICK_ACTIONS = {
   // PvP has no gamerule - it's the server.properties `pvp` value (see below).
   'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled. Applies on the next restart.' },
   'pvp-off': { prop: 'pvp', value: false, label: 'PvP disabled. Applies on the next restart.' },
-  'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful' },
-  'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy' },
-  'difficulty-normal': { cmd: ['difficulty', 'normal'], label: 'Difficulty: Normal' },
-  'difficulty-hard': { cmd: ['difficulty', 'hard'], label: 'Difficulty: Hard' },
+  // Difficulty: the live command changes the running world, but a dedicated
+  // server re-applies the server.properties `difficulty` on every boot, so the
+  // property is written too (`persist`), which also un-sets the DIFFICULTY env.
+  'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful', persist: 'difficulty' },
+  'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy', persist: 'difficulty' },
+  'difficulty-normal': { cmd: ['difficulty', 'normal'], label: 'Difficulty: Normal', persist: 'difficulty' },
+  'difficulty-hard': { cmd: ['difficulty', 'hard'], label: 'Difficulty: Hard', persist: 'difficulty' },
   'save-all': { cmd: ['save-all', 'flush'], label: 'World saved' },
 };
 
@@ -294,10 +298,12 @@ async function queryDifficulty(serverId) {
 
 // PvP isn't a gamerule - it's the server.properties `pvp` value, applied at
 // (re)start and then in force for everyone, including players who join later.
-// We edit the file directly (like the whitelist toggle); the itzg image leaves a
-// property alone when its matching env var isn't set, so the edit persists.
-// Vanilla default is on (pvp=true). There is no vanilla live+permanent global
-// switch - that needs a server mod/plugin (e.g. Essential) with engine access.
+// We edit the file through servers.setServerProperty (like the whitelist
+// toggle): the itzg image would re-assert an env-backed PVP on the next start,
+// so the choke point un-sets the env var the first time it toggles and the
+// file edit sticks. Vanilla default is on (pvp=true). There is no vanilla live+
+// permanent global switch - that needs a server mod/plugin (e.g. Essential)
+// with engine access.
 function readPvp(serverId) {
   try {
     const text = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
@@ -308,20 +314,8 @@ function readPvp(serverId) {
   }
 }
 
-function writePvp(serverId, on) {
-  const file = dataPath('servers', serverId, 'server.properties');
-  let text = '';
-  try {
-    text = fs.readFileSync(file, 'utf8');
-  } catch {
-    /* fresh server - create the file */
-  }
-  if (/^pvp=.*$/m.test(text)) text = text.replace(/^pvp=.*$/m, `pvp=${on}`);
-  else text += `${text && !text.endsWith('\n') ? '\n' : ''}pvp=${on}\n`;
-  const tmp = dataPath('servers', serverId, 'server.properties.tmp');
-  fs.mkdirSync(dataPath('servers', serverId), { recursive: true });
-  fs.writeFileSync(tmp, text);
-  fs.renameSync(tmp, file);
+function writePvp(serverId, on, { actor = 'system' } = {}) {
+  servers.setServerProperty(serverId, 'pvp', String(on), { actor });
 }
 
 // A running getState() is ~1 + N sequential `docker exec rcon-cli` round trips
@@ -504,7 +498,6 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
     err.status = 400;
     throw err;
   }
-
   const ok = (out) => {
     recordEvent({
       serverId,
@@ -539,7 +532,7 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
 
   // server.properties edit - not an RCON command, nothing to verify.
   if (quick.prop === 'pvp') {
-    writePvp(serverId, quick.value);
+    writePvp(serverId, quick.value, { actor }); // also un-sets the PVP env var
     return ok('');
   }
 
@@ -562,6 +555,11 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
   // read-back, so fall back to the reply heuristic.
   const out = quick.variants ? await tryVariants(serverId, quick.variants) : await rcon(serverId, quick.cmd);
   if (looksLikeError(out)) return fail(out.split('\n')[0]);
+  // Persist the value to server.properties as well (difficulty actions carry
+  // `persist`): the command only changes the running world, and a dedicated
+  // server re-applies the property on every boot. Writing it through the
+  // choke point also un-sets the env var that would otherwise re-assert it.
+  if (quick.persist) servers.setServerProperty(serverId, quick.persist, quick.cmd[1], { actor });
   return ok(out);
 }
 

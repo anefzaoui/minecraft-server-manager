@@ -47,6 +47,7 @@ module.exports = [
   {
     key: 'ENFORCE_WHITELIST',
     scope: 'env',
+    prop: 'enforce-whitelist',
     label: 'Enforce whitelist changes',
     help: 'Immediately kicks online players who are removed from the whitelist, instead of waiting until they reconnect.',
     type: 'boolean',
@@ -58,6 +59,7 @@ module.exports = [
   {
     key: 'ENABLE_WHITELIST',
     scope: 'env',
+    prop: 'white-list',
     label: 'Whitelist on (manual file)',
     help: 'Turns whitelisting on when you manage the whitelist file yourself. Not needed if you list players above, which enables the whitelist automatically.',
     type: 'boolean',

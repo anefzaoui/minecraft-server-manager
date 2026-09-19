@@ -57,6 +57,7 @@ module.exports = [
   {
     key: 'ENABLE_QUERY',
     scope: 'env',
+    prop: 'enable-query',
     label: 'Query protocol',
     help: 'Enables the GameSpy query protocol so external tools can ask the server for its status and player list. Note: off-box queries hit the game port and will wake an auto-paused server.',
     type: 'boolean',
@@ -81,6 +82,7 @@ module.exports = [
   {
     key: 'PREVENT_PROXY_CONNECTIONS',
     scope: 'env',
+    prop: 'prevent-proxy-connections',
     label: 'Block VPN/proxy players',
     help: 'Kicks players whose connection appears to come through a VPN or proxy.',
     type: 'boolean',
@@ -91,6 +93,7 @@ module.exports = [
   {
     key: 'NETWORK_COMPRESSION_THRESHOLD',
     scope: 'env',
+    prop: 'network-compression-threshold',
     label: 'Packet compression threshold',
     help: 'Packets larger than this many bytes are compressed before sending (vanilla default 256). Use -1 to disable compression or 0 to compress everything. Lower values trade CPU for bandwidth.',
     type: 'number',
@@ -102,6 +105,7 @@ module.exports = [
   {
     key: 'USE_NATIVE_TRANSPORT',
     scope: 'env',
+    prop: 'use-native-transport',
     label: 'Native network transport',
     help: 'Uses Linux-optimized (epoll) networking for better throughput (vanilla default on). Only turn off to troubleshoot networking issues.',
     type: 'boolean',

@@ -3,7 +3,7 @@
 require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { fields, getField, SECTIONS } = require('../src/config/field-catalog');
+const { fields, getField, SECTIONS, SETTINGS_EXCLUDED_ENV_KEYS, propEnvMap } = require('../src/config/field-catalog');
 
 test('every field key is unique within its scope', () => {
   const seen = new Set();
@@ -33,4 +33,76 @@ test('the GTNH pack vars are catalogued and panel-managed', () => {
   assert.equal(skip.hidden, undefined);
   assert.equal(skip.default, false);
   assert.equal(getField('env', 'GTNH_DELETE_BACKUPS').type, 'boolean');
+});
+
+test('every Settings-excluded env field is real, gameplay-scoped, and property-backed', () => {
+  // The Settings tab never renders these keys (routes/index.js), so each one
+  // must have a live/own channel. `prop` is that contract: a direct
+  // server.properties edit of the key must always be able to un-set the env
+  // var, or the itzg image re-asserts the value on every start and the edit
+  // silently reverts (issue #39). This makes hiding an env field WITHOUT an
+  // unlockable property structurally impossible.
+  assert.ok(SETTINGS_EXCLUDED_ENV_KEYS.size >= 3, 'the exclusion set must not slim down without intent');
+  for (const key of SETTINGS_EXCLUDED_ENV_KEYS) {
+    const f = getField('env', key);
+    assert.ok(f, `${key} excluded from Settings but missing from the catalog`);
+    assert.equal(f.section, 'gameplay');
+    assert.ok(f.prop, `${key} is hidden from Settings but has no server.properties prop to unlock`);
+  }
+  // Each excluded key must stay configurable at creation though - the wizard
+  // renders the full catalog, so DIFFICULTY/PVP must not lose their values on
+  // create (they apply once, and un-pin whenever the panel edits them live).
+  for (const key of SETTINGS_EXCLUDED_ENV_KEYS) {
+    assert.equal(getField('env', key).mode, 'simple', `${key} must stay first-class in the wizard`);
+  }
+});
+
+test('the whitelist property maps to the ENABLE_WHITELIST env var', () => {
+  assert.equal(getField('env', 'ENABLE_WHITELIST').prop, 'white-list');
+  assert.equal(propEnvMap.get('white-list'), 'ENABLE_WHITELIST');
+});
+
+test('property-backed env fields have unique kebab-case props that propEnvMap resolves', () => {
+  const seen = new Map();
+  for (const f of fields) {
+    if (f.scope !== 'env' || !f.prop) continue;
+    assert.match(f.prop, /^[a-z0-9-]+$/, `${f.key}: prop "${f.prop}" must be lowercase kebab-case`);
+    assert.equal(seen.has(f.prop), false, `duplicate server.properties prop: ${f.prop}`);
+    seen.set(f.prop, f.key);
+    assert.equal(propEnvMap.get(f.prop), f.key, `propEnvMap misaligned for ${f.prop}`);
+  }
+  assert.ok(seen.has('pvp'), 'PVP must stay property-backed (pvp)');
+  assert.ok(seen.has('difficulty'), 'DIFFICULTY must stay property-backed (difficulty)');
+  assert.ok(seen.has('gamemode'), 'MODE must map to the gamemode property');
+  assert.ok(seen.has('level-name'), 'LEVEL must map to the level-name property');
+});
+
+// Vendored from itzg/docker-minecraft-server files/property-definitions.json
+// (commit a4719f2ba6f5, 2026-05-31). Refresh it when adding a property-backed
+// env field the fixture does not know yet.
+const ITZG_DEFINITIONS = require('./fixtures/itzg-property-definitions.json');
+
+// Env vars the image maps to a property but the panel owns outright: their
+// values come from the server row (ports, RCON) or are forced at assembly
+// time, so a direct file edit must NOT un-set them.
+const PANEL_OWNED_PROPERTY_ENV = new Set(['SERVER_PORT', 'QUERY_PORT', 'ENABLE_RCON', 'RCON_PORT', 'RCON_PASSWORD']);
+
+test("every prop matches the itzg image's own env → property mapping", () => {
+  const itzgPropForEnv = new Map(
+    Object.entries(ITZG_DEFINITIONS)
+      .filter(([, d]) => d.env)
+      .map(([prop, d]) => [d.env, prop])
+  );
+  // white-list is special-cased by the image's shell script (WHITELIST /
+  // WHITELIST_FILE / ENABLE_WHITELIST all feed it), not by the definitions.
+  itzgPropForEnv.set('ENABLE_WHITELIST', 'white-list');
+  for (const f of fields) {
+    if (f.scope !== 'env') continue;
+    const expected = itzgPropForEnv.get(f.key) || null;
+    if (f.prop) {
+      assert.equal(f.prop, expected, `${f.key}: prop "${f.prop}" but the image maps it to "${expected}"`);
+    } else if (expected && !PANEL_OWNED_PROPERTY_ENV.has(f.key)) {
+      assert.fail(`${f.key} maps to "${expected}" in the image but has no prop: a direct file edit would revert`);
+    }
+  }
 });

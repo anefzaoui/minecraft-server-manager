@@ -6,6 +6,7 @@ module.exports = [
   {
     key: 'DIFFICULTY',
     scope: 'env',
+    prop: 'difficulty',
     label: 'Difficulty',
     help: 'How hard the game is: mob damage, hunger, and hostile spawns. Peaceful removes hostile mobs entirely.',
     type: 'enum',
@@ -23,6 +24,7 @@ module.exports = [
   {
     key: 'MODE',
     scope: 'env',
+    prop: 'gamemode',
     label: 'Game mode',
     help: 'The default game mode new players start in. Spectator requires Minecraft 1.8 or newer.',
     type: 'enum',
@@ -40,6 +42,7 @@ module.exports = [
   {
     key: 'MOTD',
     scope: 'env',
+    prop: 'motd',
     label: 'Server list message (MOTD)',
     help: 'The text shown under your server in the multiplayer server list. Supports color/formatting codes via § and multiple lines with \\n; if empty, a default based on server type and version is used.',
     type: 'text',
@@ -50,6 +53,7 @@ module.exports = [
   {
     key: 'MAX_PLAYERS',
     scope: 'env',
+    prop: 'max-players',
     label: 'Max players',
     help: 'Maximum number of players that can be online at once (vanilla default 20).',
     type: 'number',
@@ -62,6 +66,7 @@ module.exports = [
   {
     key: 'PVP',
     scope: 'env',
+    prop: 'pvp',
     label: 'PvP',
     help: 'Lets players damage each other (vanilla default on).',
     type: 'boolean',
@@ -72,6 +77,7 @@ module.exports = [
   {
     key: 'ALLOW_FLIGHT',
     scope: 'env',
+    prop: 'allow-flight',
     label: 'Allow flight',
     help: 'Stops the server kicking players who appear to fly in survival mode. Needed for mods that add flight (jetpacks, etc.); leaving it off also catches some fly-hack cheats.',
     type: 'boolean',
@@ -82,6 +88,7 @@ module.exports = [
   {
     key: 'ONLINE_MODE',
     scope: 'env',
+    prop: 'online-mode',
     label: 'Online mode (Mojang auth)',
     help: 'Verifies every player against Mojang’s authentication servers (vanilla default on). Turning it off lets anyone join with any name, including pirated clients. This is a serious security risk unless you run behind a proxy that handles authentication.',
     type: 'boolean',
@@ -97,6 +104,7 @@ module.exports = [
   {
     key: 'FORCE_GAMEMODE',
     scope: 'env',
+    prop: 'force-gamemode',
     label: 'Force game mode on join',
     help: 'Players are switched back to the server’s default game mode every time they rejoin, instead of keeping whatever mode they had.',
     type: 'boolean',
@@ -107,6 +115,7 @@ module.exports = [
   {
     key: 'PLAYER_IDLE_TIMEOUT',
     scope: 'env',
+    prop: 'player-idle-timeout',
     label: 'Idle kick timeout',
     help: 'Kick players after this many minutes of inactivity (vanilla default 0 = never kick).',
     type: 'number',
@@ -119,6 +128,7 @@ module.exports = [
   {
     key: 'RESOURCE_PACK',
     scope: 'env',
+    prop: 'resource-pack',
     label: 'Resource pack URL',
     help: 'Direct-download URL of a resource pack (.zip) that clients are prompted to use when joining.',
     type: 'text',
@@ -129,6 +139,7 @@ module.exports = [
   {
     key: 'RESOURCE_PACK_SHA1',
     scope: 'env',
+    prop: 'resource-pack-sha1',
     label: 'Resource pack SHA-1',
     help: 'SHA-1 checksum (40 hex characters) of the resource pack so clients can verify and cache it. Update it whenever the pack file changes, or clients keep using the old cached copy.',
     type: 'text',
@@ -139,6 +150,7 @@ module.exports = [
   {
     key: 'RESOURCE_PACK_ENFORCE',
     scope: 'env',
+    prop: 'require-resource-pack',
     label: 'Require resource pack',
     help: 'Players who decline the resource pack are not allowed to join.',
     type: 'boolean',
@@ -150,6 +162,7 @@ module.exports = [
   {
     key: 'OP_PERMISSION_LEVEL',
     scope: 'env',
+    prop: 'op-permission-level',
     label: 'Operator permission level',
     help: 'Default power level granted to operators, 1 (bypass spawn protection) to 4 (all commands including /stop). Vanilla default is 4.',
     type: 'number',
@@ -162,6 +175,7 @@ module.exports = [
   {
     key: 'FUNCTION_PERMISSION_LEVEL',
     scope: 'env',
+    prop: 'function-permission-level',
     label: 'Datapack function permission level',
     help: 'Permission level (1 to 4) that datapack functions run with. Raise it only if a datapack needs privileged commands.',
     type: 'number',

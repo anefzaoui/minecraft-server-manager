@@ -24,6 +24,7 @@ const settings = require('./settings');
 const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
+const { propEnvMap } = require('../config/field-catalog');
 
 function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
@@ -1059,6 +1060,114 @@ function mustGet(id) {
 }
 
 /**
+ * Parse server.properties text into a key→value map. Values may contain `=`,
+ * so the first `=` on a line is the delimiter; blank/comment lines are skipped.
+ */
+function parseProperties(text) {
+  const props = new Map();
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const eq = line.indexOf('=');
+    if (eq <= 0) continue;
+    props.set(line.slice(0, eq).trim(), line.slice(eq + 1).trim());
+  }
+  return props;
+}
+
+/**
+ * Remove specific env vars when the panel takes over the behavior they control
+ * directly (e.g. the whitelist toggle clearing image-managed whitelist
+ * provisioning). Sets pending_recreate when anything was removed, because the
+ * container must be recreated for the env change to take effect.
+ * @returns {{ removed: string[], rebuildNeeded: boolean }}
+ */
+function unsetEnvKeys(serverId, envKeys, { actor = 'system' } = {}) {
+  const server = getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
+  const removed = [];
+  for (const key of envKeys) {
+    if (key && Object.prototype.hasOwnProperty.call(server.env, key)) {
+      delete server.env[key];
+      removed.push(key);
+    }
+  }
+  if (!removed.length) return { removed, rebuildNeeded: false };
+  db.run('UPDATE servers SET env_json = ?, pending_recreate = 1 WHERE id = ?', JSON.stringify(server.env), serverId);
+  recordEvent({
+    serverId,
+    actor,
+    type: 'config-changed',
+    summary: `Removed the ${removed.join(', ')} environment ${removed.length === 1 ? 'variable' : 'variables'} so the server.properties edit sticks. The server rebuilds on the next restart.`,
+    details: { removed, rebuildNeeded: true },
+  });
+  return { removed, rebuildNeeded: true };
+}
+
+/**
+ * Un-set the env var(s) behind the given server.properties key(s) so the on-
+ * disk property - which something just changed directly - wins instead of the
+ * env (the itzg image re-applies env on every start). Sets pending_recreate so
+ * the container is actually rebuilt, which is what drops the env var.
+ * @returns {{ removed: string[], rebuildNeeded: boolean }}
+ */
+function unlockPropertyEnv(serverId, propKeys, { actor = 'system' } = {}) {
+  const envKeys = propKeys.map((prop) => propEnvMap.get(prop)).filter(Boolean);
+  return unsetEnvKeys(serverId, envKeys, { actor });
+}
+
+/**
+ * THE single choke point for writing server.properties: atomically replaces the
+ * file (tmp + rename) and un-sets the env var for every property whose value
+ * changed (see unlockPropertyEnv). Callers that edit properties without this
+ * (difficulty RCON, World Controls, whitelist toggle, Files editor) reintroduce
+ * the revert-on-restart bug.
+ * @returns {{ rebuildNeeded: boolean, unlocked: string[] }}
+ */
+function writeServerProperties(serverId, content, { actor = 'system' } = {}) {
+  if (!getServer(serverId)) throw httpError(404, 'Server not found');
+  let oldText = '';
+  try {
+    oldText = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
+  } catch {
+    /* fresh server - nothing to diff against */
+  }
+  const oldProps = parseProperties(oldText);
+  const newProps = parseProperties(content);
+  const changed = [...newProps.keys()].filter((key) => newProps.get(key) !== oldProps.get(key));
+  fs.mkdirSync(dataPath('servers', serverId), { recursive: true });
+  const tmp = dataPath('servers', serverId, 'server.properties.tmp');
+  fs.writeFileSync(tmp, content);
+  fs.renameSync(tmp, dataPath('servers', serverId, 'server.properties'));
+  const { removed, rebuildNeeded } = unlockPropertyEnv(serverId, changed, { actor });
+  return { rebuildNeeded, unlocked: removed };
+}
+
+/**
+ * Set ONE server.properties key (replace in place, or append when absent) via
+ * writeServerProperties, so single-key writers (World Controls PvP, the
+ * difficulty quick action, the whitelist toggle) share the choke point instead
+ * of each carrying its own read/replace/rename plus a separate env unlock.
+ * `baseText` replaces the on-disk file as the starting point: a caller that
+ * knows the file was just rewritten behind the panel's back (Minecraft saves
+ * server.properties itself on `whitelist on/off`) passes the snapshot it took
+ * beforehand, so the panel's own edits survive and only `key` changes.
+ * @returns {{ rebuildNeeded: boolean, unlocked: string[] }}
+ */
+function setServerProperty(serverId, key, value, { actor = 'system', baseText } = {}) {
+  if (!getServer(serverId)) throw httpError(404, 'Server not found');
+  let text = '';
+  try {
+    text = baseText ?? fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
+  } catch {
+    /* fresh server - create the file */
+  }
+  const line = `${key}=${value}`;
+  const re = new RegExp(`^${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=.*$`, 'm');
+  if (re.test(text)) text = text.replace(re, () => line);
+  else text += `${text && !text.endsWith('\n') ? '\n' : ''}${line}\n`;
+  return writeServerProperties(serverId, text, { actor });
+}
+
+/**
  * Set (or clear, when blank) the per-server console label used to prefix
  * panel-run console actions in-game. Strips control chars and § codes.
  * @returns {string} the sanitized label ('' when cleared)
@@ -1096,4 +1205,9 @@ module.exports = {
   setConsoleLabel,
   previewCreateSpec,
   previewServerSpec,
+  parseProperties,
+  writeServerProperties,
+  setServerProperty,
+  unlockPropertyEnv,
+  unsetEnvKeys,
 };

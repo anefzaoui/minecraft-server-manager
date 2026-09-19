@@ -54,6 +54,7 @@ module.exports = [
   {
     key: 'SNOOPER_ENABLED',
     scope: 'env',
+    prop: 'snooper-enabled',
     label: 'Mojang telemetry (snooper)',
     help: 'Sends usage telemetry to Mojang. This only exists on older Minecraft versions; it was removed in modern ones.',
     type: 'boolean',
