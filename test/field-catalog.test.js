@@ -76,3 +76,33 @@ test('property-backed env fields have unique kebab-case props that propEnvMap re
   assert.ok(seen.has('gamemode'), 'MODE must map to the gamemode property');
   assert.ok(seen.has('level-name'), 'LEVEL must map to the level-name property');
 });
+
+// Vendored from itzg/docker-minecraft-server files/property-definitions.json
+// (commit a4719f2ba6f5, 2026-05-31). Refresh it when adding a property-backed
+// env field the fixture does not know yet.
+const ITZG_DEFINITIONS = require('./fixtures/itzg-property-definitions.json');
+
+// Env vars the image maps to a property but the panel owns outright: their
+// values come from the server row (ports, RCON) or are forced at assembly
+// time, so a direct file edit must NOT un-set them.
+const PANEL_OWNED_PROPERTY_ENV = new Set(['SERVER_PORT', 'QUERY_PORT', 'ENABLE_RCON', 'RCON_PORT', 'RCON_PASSWORD']);
+
+test("every prop matches the itzg image's own env → property mapping", () => {
+  const itzgPropForEnv = new Map(
+    Object.entries(ITZG_DEFINITIONS)
+      .filter(([, d]) => d.env)
+      .map(([prop, d]) => [d.env, prop])
+  );
+  // white-list is special-cased by the image's shell script (WHITELIST /
+  // WHITELIST_FILE / ENABLE_WHITELIST all feed it), not by the definitions.
+  itzgPropForEnv.set('ENABLE_WHITELIST', 'white-list');
+  for (const f of fields) {
+    if (f.scope !== 'env') continue;
+    const expected = itzgPropForEnv.get(f.key) || null;
+    if (f.prop) {
+      assert.equal(f.prop, expected, `${f.key}: prop "${f.prop}" but the image maps it to "${expected}"`);
+    } else if (expected && !PANEL_OWNED_PROPERTY_ENV.has(f.key)) {
+      assert.fail(`${f.key} maps to "${expected}" in the image but has no prop: a direct file edit would revert`);
+    }
+  }
+});

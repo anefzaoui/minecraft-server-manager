@@ -97,12 +97,14 @@ web/routes (HTTP)  →  services (domain logic)  →  docker / db / storage (inf
    hoisting it without checking for the cycle.
 3. **`server.properties` is a single-writer file.** The itzg image re-asserts environment-backed
    properties on every start, so any code that changes a property directly must go through
-   `writeServerProperties()` in `src/services/servers.js` (atomically rewrites the file and un-sets
-   the matching env var) - never a raw `fs.writeFile` plus a separate env edit. World Controls (PvP
-   / difficulty), the whitelist toggle, and the Files editor already use it. Property-backed env
-   fields carry a `prop:` attribute in `src/config/field-catalog/`; a field hidden from the
-   Settings tab without one is a latent revert-on-restart bug, and the field-catalog tests enforce
-   that.
+   `writeServerProperties()` (whole file) or `setServerProperty()` (one key) in
+   `src/services/servers.js`, which atomically rewrite the file and un-set the matching env var.
+   Never a raw `fs.writeFile` plus a separate env edit. World Controls (PvP / difficulty), the
+   whitelist toggle, and the Files editor already use them. Property-backed env fields carry a
+   `prop:` attribute in `src/config/field-catalog/`; the field-catalog tests check every `prop`
+   against a vendored copy of the image's own `property-definitions.json`
+   (`test/fixtures/itzg-property-definitions.json`), so a field the image maps to a property but the
+   catalog does not is a test failure. Refresh the fixture from upstream when adding one.
 
 ## Shared helpers
 

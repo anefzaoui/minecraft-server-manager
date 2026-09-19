@@ -110,9 +110,15 @@ Cross-cutting:
   env-backed property on each start (`OVERRIDE_SERVER_PROPERTIES` defaults true), so a value the
   panel edits directly - World Controls PvP/difficulty, the whitelist toggle, the Files editor -
   would be silently reverted on the next start unless the matching env var is removed and the
-  container recreated. Every direct property write goes through `writeServerProperties()` in
-  `src/services/servers.js`, which atomically rewrites the file, un-sets the env var behind each
-  changed key (via the `prop:` attribute on catalog fields), and flags `pending_recreate`. The env
+  container recreated. Every direct property write goes through `writeServerProperties()` (whole
+  file) or `setServerProperty()` (one key) in `src/services/servers.js`, which atomically rewrite
+  the file, un-set the env var behind each changed key (via the `prop:` attribute on catalog
+  fields, checked in tests against the image's own property definitions), and flag
+  `pending_recreate`. Difficulty is written to the file as well as sent over RCON, because a
+  dedicated server re-applies the `difficulty` property on every boot. Minecraft itself re-saves
+  server.properties from its boot-time values on `whitelist on/off`, which would undo edits made
+  while the server runs, so the running whitelist toggle snapshots the file first and writes it back
+  with only `white-list` changed. The env
   vars stay fully configurable at creation (the wizard renders them and they apply once); they only
   un-pin the first time the panel edits the underlying property. MOTD is the same contract: a direct
   `motd` file edit un-sets it, so the last write wins.

@@ -325,29 +325,29 @@ async function setWhitelisted(serverId, name, on, { running = false, actor = 'sy
 /** Toggle whitelist enforcement: RCON when running, server.properties otherwise. */
 async function setWhitelistEnforced(serverId, on, { running = false, actor = 'system' } = {}) {
   if (running) {
+    // Minecraft's own `whitelist on/off` re-serialises server.properties from
+    // the values it loaded at boot (verified live on Paper 1.21), which silently
+    // undoes every property the panel edited while the server was running
+    // (PvP, difficulty, a Files edit). Snapshot the file first and write it
+    // back with only white-list changed, so the panel's edits survive.
+    let snapshot = null;
+    try {
+      snapshot = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
+    } catch {
+      /* no file yet - nothing to protect */
+    }
     await rcon(serverId, 'whitelist', on ? 'on' : 'off');
-    // The running server persists white-list back to server.properties on save;
-    // un-set the env that would re-assert it (and win) on the next start.
+    servers.setServerProperty(serverId, 'white-list', String(on), { actor, baseText: snapshot ?? undefined });
+    // Also clear every env var that would re-assert whitelisting on the next start.
     servers.unsetEnvKeys(serverId, WHITELIST_PROVISIONING_ENV_KEYS, { actor });
   } else {
     // Write through the single server.properties choke point so any env that
     // would re-assert white-list on the next start is un-set too.
-    let text = '';
-    try {
-      text = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
-    } catch {
-      /* fresh server - create the file */
-    }
-    if (/^white-list=/m.test(text)) {
-      text = text.replace(/^white-list=.*$/m, `white-list=${on}`);
-    } else {
-      text += `${text && !text.endsWith('\n') ? '\n' : ''}white-list=${on}\n`;
-    }
-    servers.writeServerProperties(serverId, text, { actor });
-    // writeServerProperties un-sets ENABLE_WHITELIST (white-list's env),
-    // but whitelisting can also be provisioned via WHITELIST/WHITELIST_FILE,
-    // which the image re-asserts the same way. Clear all of them so the panel
-    // toggle owns enforcement.
+    servers.setServerProperty(serverId, 'white-list', String(on), { actor });
+    // setServerProperty un-sets ENABLE_WHITELIST (white-list's env), but
+    // whitelisting can also be provisioned via WHITELIST/WHITELIST_FILE, which
+    // the image re-asserts the same way. Clear all of them so the panel toggle
+    // owns enforcement.
     servers.unsetEnvKeys(serverId, WHITELIST_PROVISIONING_ENV_KEYS, { actor });
   }
   recordEvent({

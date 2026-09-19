@@ -47,6 +47,7 @@ module.exports = [
   {
     key: 'ENFORCE_WHITELIST',
     scope: 'env',
+    prop: 'enforce-whitelist',
     label: 'Enforce whitelist changes',
     help: 'Immediately kicks online players who are removed from the whitelist, instead of waiting until they reconnect.',
     type: 'boolean',

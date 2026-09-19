@@ -1096,7 +1096,7 @@ function unsetEnvKeys(serverId, envKeys, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'config-changed',
-    summary: `Un-pinned ${removed.join(' and ')} from env so the server.properties edit sticks - the server rebuilds on the next restart.`,
+    summary: `Removed the ${removed.join(', ')} environment ${removed.length === 1 ? 'variable' : 'variables'} so the server.properties edit sticks. The server rebuilds on the next restart.`,
     details: { removed, rebuildNeeded: true },
   });
   return { removed, rebuildNeeded: true };
@@ -1142,6 +1142,32 @@ function writeServerProperties(serverId, content, { actor = 'system' } = {}) {
 }
 
 /**
+ * Set ONE server.properties key (replace in place, or append when absent) via
+ * writeServerProperties, so single-key writers (World Controls PvP, the
+ * difficulty quick action, the whitelist toggle) share the choke point instead
+ * of each carrying its own read/replace/rename plus a separate env unlock.
+ * `baseText` replaces the on-disk file as the starting point: a caller that
+ * knows the file was just rewritten behind the panel's back (Minecraft saves
+ * server.properties itself on `whitelist on/off`) passes the snapshot it took
+ * beforehand, so the panel's own edits survive and only `key` changes.
+ * @returns {{ rebuildNeeded: boolean, unlocked: string[] }}
+ */
+function setServerProperty(serverId, key, value, { actor = 'system', baseText } = {}) {
+  if (!getServer(serverId)) throw httpError(404, 'Server not found');
+  let text = '';
+  try {
+    text = baseText ?? fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
+  } catch {
+    /* fresh server - create the file */
+  }
+  const line = `${key}=${value}`;
+  const re = new RegExp(`^${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=.*$`, 'm');
+  if (re.test(text)) text = text.replace(re, () => line);
+  else text += `${text && !text.endsWith('\n') ? '\n' : ''}${line}\n`;
+  return writeServerProperties(serverId, text, { actor });
+}
+
+/**
  * Set (or clear, when blank) the per-server console label used to prefix
  * panel-run console actions in-game. Strips control chars and § codes.
  * @returns {string} the sanitized label ('' when cleared)
@@ -1181,6 +1207,7 @@ module.exports = {
   previewServerSpec,
   parseProperties,
   writeServerProperties,
+  setServerProperty,
   unlockPropertyEnv,
   unsetEnvKeys,
 };

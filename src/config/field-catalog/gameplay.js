@@ -150,7 +150,7 @@ module.exports = [
   {
     key: 'RESOURCE_PACK_ENFORCE',
     scope: 'env',
-    prop: 'resource-pack-enforce',
+    prop: 'require-resource-pack',
     label: 'Require resource pack',
     help: 'Players who decline the resource pack are not allowed to join.',
     type: 'boolean',

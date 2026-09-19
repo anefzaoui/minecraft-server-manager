@@ -143,7 +143,7 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
       serverId,
       actor,
       type: 'file-written',
-      summary: `File ${existing ? 'saved' : 'created'}: server.properties (${humanBytes(bytes)})`,
+      summary: `File ${existing ? 'saved' : 'created'}: server.properties (${humanBytes(bytes)}).`,
       details: {
         path: rel,
         sizeBytes: bytes,

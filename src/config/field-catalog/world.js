@@ -188,6 +188,7 @@ module.exports = [
   {
     key: 'HARDCORE',
     scope: 'env',
+    prop: 'hardcore',
     label: 'Hardcore mode',
     help: 'On death, players are switched to spectator mode instead of respawning. Difficulty is locked to hard.',
     type: 'boolean',

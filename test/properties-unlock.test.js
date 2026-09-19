@@ -11,6 +11,13 @@ require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+// worldControls destructures execCapture at load, and the app helper below
+// loads it (via the routes) - so the RCON seam is swapped BEFORE that happens.
+const containers = require('../src/docker/containers');
+let execImpl = async () => {
+  throw new Error('unexpected docker exec in a unit test');
+};
+containers.execCapture = (serverId, cmd, opts) => execImpl(serverId, cmd, opts);
 const db = require('../src/db');
 const app = require('./helpers/app'); // runs migrate() at load
 const servers = require('../src/services/servers');
@@ -140,4 +147,76 @@ test('Files editor writes to server.properties go through the choke point', asyn
   assert.equal(plain.unlocked, undefined);
   assert.deepEqual(envOf(), { PVP: 'true' });
   assert.equal(rowPending(), 0);
+});
+
+test('setServerProperty replaces one key in place, appends when absent, and un-sets its env', () => {
+  fs.writeFileSync(dataPath('servers', ID, 'server.properties'), 'pvp=true\nmax-players=20\n');
+  setEnv({ PVP: 'true', DIFFICULTY: 'easy' });
+  let result = servers.setServerProperty(ID, 'pvp', 'false', { actor: 'test' });
+  assert.equal(propertiesText(), 'pvp=false\nmax-players=20\n');
+  assert.deepEqual(result, { rebuildNeeded: true, unlocked: ['PVP'] });
+  result = servers.setServerProperty(ID, 'difficulty', 'hard', { actor: 'test' });
+  assert.equal(propertiesText(), 'pvp=false\nmax-players=20\ndifficulty=hard\n');
+  assert.deepEqual(result, { rebuildNeeded: true, unlocked: ['DIFFICULTY'] });
+  assert.deepEqual(envOf(), {});
+  // Same value again: nothing changed, nothing to unlock.
+  setEnv({ DIFFICULTY: 'hard' });
+  result = servers.setServerProperty(ID, 'difficulty', 'hard', { actor: 'test' });
+  assert.deepEqual(result, { rebuildNeeded: false, unlocked: [] });
+  assert.deepEqual(envOf(), { DIFFICULTY: 'hard' });
+});
+
+test('a difficulty quick action writes the property and un-sets DIFFICULTY (a dedicated server re-applies it on boot)', async () => {
+  const worldControls = require('../src/services/worldControls');
+  fs.writeFileSync(dataPath('servers', ID, 'server.properties'), 'difficulty=easy\npvp=true\n');
+  setEnv({ DIFFICULTY: 'easy', PVP: 'true' });
+  db.run("UPDATE servers SET status = 'running' WHERE id = ?", ID);
+  const calls = [];
+  execImpl = async (id, cmd) => {
+    calls.push(cmd);
+    return 'The difficulty has been set to Hard';
+  };
+  try {
+    await worldControls.runQuick(ID, 'difficulty-hard', { actor: 'test' });
+    assert.ok(calls.length >= 1);
+    assert.equal(propertiesText(), 'difficulty=hard\npvp=true\n');
+    assert.deepEqual(envOf(), { PVP: 'true' });
+    assert.equal(rowPending(), 1);
+    // PvP goes through the same choke point.
+    await worldControls.runQuick(ID, 'pvp-off', { actor: 'test' });
+    assert.equal(propertiesText(), 'difficulty=hard\npvp=false\n');
+    assert.deepEqual(envOf(), {});
+  } finally {
+    execImpl = async () => {
+      throw new Error('unexpected docker exec in a unit test');
+    };
+  }
+});
+
+test("the running whitelist toggle survives Minecraft's own server.properties rewrite", async () => {
+  // Live finding (Paper 1.21): `whitelist on/off` makes the server re-save
+  // server.properties from the values it loaded at boot, undoing PvP /
+  // difficulty / Files edits made while running. The toggle must restore them.
+  const players = require('../src/services/players');
+  const file = dataPath('servers', ID, 'server.properties');
+  fs.writeFileSync(file, 'pvp=true\ndifficulty=hard\nwhite-list=true\nmotd=Hi\n');
+  setEnv({ WHITELIST: 'Notch', MOTD: 'Hi' });
+  const calls = [];
+  execImpl = async (id, cmd) => {
+    calls.push(cmd);
+    // Simulate Minecraft: rewrite the whole file from its boot-time values.
+    fs.writeFileSync(file, 'pvp=false\ndifficulty=easy\nwhite-list=false\nmotd=Hi\n');
+    return 'Whitelist is now turned off';
+  };
+  try {
+    await players.setWhitelistEnforced(ID, false, { running: true, actor: 'test' });
+    assert.deepEqual(calls, [['rcon-cli', '--', 'whitelist', 'off']]);
+    assert.equal(propertiesText(), 'pvp=true\ndifficulty=hard\nwhite-list=false\nmotd=Hi\n');
+    assert.deepEqual(envOf(), { MOTD: 'Hi' });
+    assert.equal(rowPending(), 1);
+  } finally {
+    execImpl = async () => {
+      throw new Error('unexpected docker exec in a unit test');
+    };
+  }
 });

@@ -117,6 +117,7 @@ module.exports = [
   {
     key: 'MAX_TICK_TIME',
     scope: 'env',
+    prop: 'max-tick-time',
     label: 'Max tick time (watchdog)',
     help: 'Milliseconds a single tick may take before the watchdog kills the server (vanilla default 60000). Must be -1 (disabled) for auto-pause, since a paused tick looks endless to the watchdog. It is also common for heavy modpacks.',
     type: 'number',
@@ -192,6 +193,7 @@ module.exports = [
   {
     key: 'PAUSE_WHEN_EMPTY_SECONDS',
     scope: 'env',
+    prop: 'pause-when-empty-seconds',
     label: 'Native pause when empty (1.21.2+)',
     help: 'Minecraft’s built-in pause: the game loop stops after the server has been empty this many seconds. On modern versions this is the recommended, simpler alternative to the container-level auto-pause above.',
     type: 'number',
