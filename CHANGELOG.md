@@ -5,6 +5,41 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [0.13.2] - 2026-09-19
+
+Settings changed in the panel now survive a restart, and creating a server from a modpack works
+again. Closes #39.
+
+### Fixed
+
+- **World Controls, the whitelist toggle and server.properties edits stick across restarts**
+  (#39). The container image re-applies every environment-backed server.properties value on each
+  start, so a PvP or difficulty change, a whitelist toggle, or an edit in the Files editor was
+  silently reverted the next time the server came up. Whenever the panel edits a property directly
+  it now removes the matching environment variable and marks the server for a rebuild, so the
+  on-disk value wins. Values chosen in the wizard still apply at creation. Thanks @doubleangels.
+- **Every property-backed setting is covered**, not only PvP, difficulty and the message of the
+  day: hardcore, whitelist enforcement, query, proxy protection, network compression, native
+  transport, RCON broadcast, the watchdog tick limit, pause-when-empty, snooper and JMX all unlock
+  the same way when edited in the file. The "require resource pack" mapping was also wrong and
+  never unlocked.
+- **Difficulty changes are written to server.properties as well as sent to the game**, so the
+  file stays truthful for servers that read it on boot.
+- **Turning the whitelist off or on while the server runs no longer undoes other edits.**
+  Minecraft itself rewrites server.properties from the values it loaded at boot when the whitelist
+  is toggled, which wiped a PvP or difficulty change made moments earlier. The panel now restores
+  its own edits around that rewrite.
+- **Creating a server from a modpack works again** (#41). The pinned pack version was not handed
+  to the create step, so the pinning safety check rejected the new server before the pack was
+  applied; GTNH always hit it. Thanks @tomas-pecserke.
+
+### Internal
+
+- Single-key server.properties writes (PvP, difficulty, whitelist) share one choke point,
+  `setServerProperty()`, next to the whole-file `writeServerProperties()`.
+- The field catalog's property mappings are checked against a vendored copy of the image's own
+  property definitions, so a wrong or missing mapping fails the test suite.
+
 ## [0.13.1] - 2026-09-17
 
 Two bug-fix rounds: the Settings page's dialogs work again, and the memory meter explains why a
