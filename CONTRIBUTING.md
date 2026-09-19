@@ -95,6 +95,14 @@ web/routes (HTTP)  →  services (domain logic)  →  docker / db / storage (inf
    _inside a function_ rather than at the top of the file to avoid a circular dependency at load
    time. If you see `const x = require('...')` mid-function, that's why; don't "clean it up" by
    hoisting it without checking for the cycle.
+3. **`server.properties` is a single-writer file.** The itzg image re-asserts environment-backed
+   properties on every start, so any code that changes a property directly must go through
+   `writeServerProperties()` in `src/services/servers.js` (atomically rewrites the file and un-sets
+   the matching env var) - never a raw `fs.writeFile` plus a separate env edit. World Controls (PvP
+   / difficulty), the whitelist toggle, and the Files editor already use it. Property-backed env
+   fields carry a `prop:` attribute in `src/config/field-catalog/`; a field hidden from the
+   Settings tab without one is a latent revert-on-restart bug, and the field-catalog tests enforce
+   that.
 
 ## Shared helpers
 

@@ -58,6 +58,8 @@ The **World Controls** rail rides along on every tab: the in-game clock, weather
 
 The **Settings** tab is the full configuration surface: rename, resources, update policy, auto-start / auto-restart, environment variables, and advanced Docker overrides. Fields that change how the container runs are clearly marked as needing a restart.
 
+Direct setting changes always stick across restarts. A PvP or difficulty change made with the **World Controls** tab, a whitelist toggle on the **Players** tab, or a `server.properties` edit in the **Files** editor removes the matching environment variable (if one was set) and marks the server for recreation - so the on-disk value wins instead of being re-asserted by the container image on the next start.
+
 ![Server settings](images/server-settings.png)
 
 **About the memory meter.** "RAM (Java heap)" is handed to Java as both its starting and its maximum heap, and Java fills a heap it was given up front within the first minute, with or without the Aikar / MeowIce flag presets. So the memory meter settles at about the heap size and stays there even when nobody is playing; the tick on the meter marks where the heap sits under the container limit, and the note under it says so. If you would rather see memory follow real use, set a smaller **Initial heap** (advanced): on a 2 GB heap that brought idle use from 2.6 GB to about 1.3 GB in our measurements. Java also needs memory outside the heap (about 0.5 GB on vanilla, 1.5 to 2 GB on a large modpack), which is what the container limit's headroom is for. See the README's "Two memory limits" for the numbers.

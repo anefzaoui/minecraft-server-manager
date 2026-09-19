@@ -12,6 +12,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { execCapture } = require('../docker/containers');
 const mojangProfiles = require('./mojangProfiles');
+const servers = require('./servers');
 const { PLAYER_NAME_RE, isBedrockName } = require('../utils/playerName');
 const { parsePlayerList } = require('../utils/rconList');
 const nodePath = require('node:path');
@@ -321,10 +322,11 @@ async function setWhitelistEnforced(serverId, on, { running = false, actor = 'sy
   if (running) {
     await rcon(serverId, 'whitelist', on ? 'on' : 'off');
   } else {
-    const file = dataPath('servers', serverId, 'server.properties');
+    // Write through the single server.properties choke point so any env that
+    // would re-assert white-list on the next start is un-set too.
     let text = '';
     try {
-      text = fs.readFileSync(file, 'utf8');
+      text = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
     } catch {
       /* fresh server - create the file */
     }
@@ -333,10 +335,7 @@ async function setWhitelistEnforced(serverId, on, { running = false, actor = 'sy
     } else {
       text += `${text && !text.endsWith('\n') ? '\n' : ''}white-list=${on}\n`;
     }
-    const tmp = dataPath('servers', serverId, 'server.properties.tmp');
-    fs.mkdirSync(dataPath('servers', serverId), { recursive: true });
-    fs.writeFileSync(tmp, text);
-    fs.renameSync(tmp, file);
+    servers.writeServerProperties(serverId, text, { actor });
   }
   recordEvent({
     serverId,

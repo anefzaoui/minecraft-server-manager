@@ -15,6 +15,7 @@ const db = require('../db');
 const { safeJoin } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const indexer = require('../storage/indexer');
+const servers = require('./servers');
 
 const MAX_TEXT_BYTES = 8 * 1024 * 1024; // editor cap
 const MAX_TEXT_MB_LABEL = '8 MB';
@@ -131,6 +132,28 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
   if (!pst || !pst.isDirectory()) throw httpError(404, 'Parent folder not found');
   const existing = await fsp.stat(abs).catch(() => null);
   if (existing && existing.isDirectory()) throw httpError(400, 'That path is a folder');
+
+  // server.properties is the one file whose values the itzg image re-asserts
+  // from env on every start. Route those writes through the server.properties
+  // choke point so the matching env vars are un-set and the edit sticks - a
+  // plain write would silently revert on the next restart.
+  if (serverId && rel === 'server.properties' && servers.getServer(serverId)) {
+    const result = servers.writeServerProperties(serverId, content, { actor });
+    recordEvent({
+      serverId,
+      actor,
+      type: 'file-written',
+      summary: `File ${existing ? 'saved' : 'created'}: server.properties (${humanBytes(bytes)})`,
+      details: {
+        path: rel,
+        sizeBytes: bytes,
+        created: !existing,
+        rebuildNeeded: result.rebuildNeeded,
+        unlocked: result.unlocked,
+      },
+    });
+    return { path: rel, size: bytes, rebuildNeeded: result.rebuildNeeded, unlocked: result.unlocked };
+  }
 
   const tmp = path.join(parent, `.msm-write-${Date.now()}.tmp`);
   await fsp.writeFile(tmp, content, 'utf8');

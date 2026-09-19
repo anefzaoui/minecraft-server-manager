@@ -11,6 +11,7 @@ const { execCapture } = require('../docker/containers');
 const { cleanText } = require('../utils/ansi');
 const { recordEvent } = require('../events');
 const { dataPath } = require('../storage/pathGuard');
+const servers = require('./servers');
 
 // camelCase (≤1.21) -> snake_case (26.x). Every op tries the snake_case form
 // first and falls back to camelCase, so this map just needs both spellings.
@@ -161,12 +162,12 @@ const QUICK_ACTIONS = {
   'mobgrief-off': { rule: 'mobGriefing', value: 'false', label: 'Mob griefing OFF (no creeper holes)' },
   'phantoms-off': { rule: 'doInsomnia', value: 'false', label: 'Phantoms OFF (no insomnia)' },
   // PvP has no gamerule - it's the server.properties `pvp` value (see below).
-  'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled. Applies on the next restart.' },
+'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled. Applies on the next restart.' },
   'pvp-off': { prop: 'pvp', value: false, label: 'PvP disabled. Applies on the next restart.' },
-  'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful' },
-  'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy' },
-  'difficulty-normal': { cmd: ['difficulty', 'normal'], label: 'Difficulty: Normal' },
-  'difficulty-hard': { cmd: ['difficulty', 'hard'], label: 'Difficulty: Hard' },
+  'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful', unlock: ['difficulty'] },
+  'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy', unlock: ['difficulty'] },
+  'difficulty-normal': { cmd: ['difficulty', 'normal'], label: 'Difficulty: Normal', unlock: ['difficulty'] },
+  'difficulty-hard': { cmd: ['difficulty', 'hard'], label: 'Difficulty: Hard', unlock: ['difficulty'] },
   'save-all': { cmd: ['save-all', 'flush'], label: 'World saved' },
 };
 
@@ -294,10 +295,12 @@ async function queryDifficulty(serverId) {
 
 // PvP isn't a gamerule - it's the server.properties `pvp` value, applied at
 // (re)start and then in force for everyone, including players who join later.
-// We edit the file directly (like the whitelist toggle); the itzg image leaves a
-// property alone when its matching env var isn't set, so the edit persists.
-// Vanilla default is on (pvp=true). There is no vanilla live+permanent global
-// switch - that needs a server mod/plugin (e.g. Essential) with engine access.
+// We edit the file directly (like the whitelist toggle). The itzg image would
+// re-assert an env-backed PVP on the next start, so the panel un-sets the env
+// var the first time it toggles (see servers.unlockPropertyEnv) and the file
+// edit sticks. Vanilla default is on (pvp=true). There is no vanilla live+
+// permanent global switch - that needs a server mod/plugin (e.g. Essential)
+// with engine access.
 function readPvp(serverId) {
   try {
     const text = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
@@ -504,8 +507,7 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
     err.status = 400;
     throw err;
   }
-
-  const ok = (out) => {
+const ok = (out) => {
     recordEvent({
       serverId,
       actor,
@@ -540,6 +542,8 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
   // server.properties edit - not an RCON command, nothing to verify.
   if (quick.prop === 'pvp') {
     writePvp(serverId, quick.value);
+    // Un-pin the PVP env var or the image re-asserts it on the next start.
+    servers.unlockPropertyEnv(serverId, ['pvp'], { actor });
     return ok('');
   }
 
@@ -562,6 +566,9 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
   // read-back, so fall back to the reply heuristic.
   const out = quick.variants ? await tryVariants(serverId, quick.variants) : await rcon(serverId, quick.cmd);
   if (looksLikeError(out)) return fail(out.split('\n')[0]);
+  // Difficulty lives in level.dat; un-pin the env that would override it on the
+  // next start (difficulty actions carry `unlock`).
+  if (quick.unlock) servers.unlockPropertyEnv(serverId, quick.unlock, { actor });
   return ok(out);
 }
 

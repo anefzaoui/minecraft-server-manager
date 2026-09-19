@@ -24,6 +24,7 @@ const settings = require('./settings');
 const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
+const { LIVE_MANAGED_ENV_KEYS, propEnvMap } = require('../config/field-catalog');
 
 function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
@@ -201,7 +202,7 @@ function mergeExtraPorts(server) {
 function previewCreateSpec(input) {
   const javaTag = input.javaTag || pickJavaTag(input.mcVersion || 'LATEST', input.type || 'VANILLA');
   const image = images.imageRef(javaTag);
-  const defaults = settings.getDefaults();
+const defaults = settings.getDefaults();
   const env = { ...(input.env || {}) };
   env.EULA = 'TRUE';
   env.TYPE = input.type || 'VANILLA';
@@ -344,7 +345,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     input.type,
     input.mcVersion || 'LATEST',
     input.javaTag || '',
-    JSON.stringify(input.env || {}),
+    JSON.stringify(stripLiveManagedEnv(input.env)),
     ports.game,
     ports.rcon,
     input.portQuery || null,
@@ -1059,6 +1060,91 @@ function mustGet(id) {
 }
 
 /**
+ * Parse server.properties text into a key→value map. Values may contain `=`,
+ * so the first `=` on a line is the delimiter; blank/comment lines are skipped.
+ */
+function parseProperties(text) {
+  const props = new Map();
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const eq = line.indexOf('=');
+    if (eq <= 0) continue;
+    props.set(line.slice(0, eq).trim(), line.slice(eq + 1));
+  }
+  return props;
+}
+
+/**
+ * Remove env vars the panel manages directly (see field-catalog
+ * LIVE_MANAGED_ENV_KEYS) from an env object. At creation these must not be
+ * stored, or the image would re-assert them on every start and any later
+ * direct edit (World Controls / file editor) would be silently reverted.
+ */
+function stripLiveManagedEnv(env, { keys = LIVE_MANAGED_ENV_KEYS } = {}) {
+  const rest = {};
+  for (const [key, value] of Object.entries(env || {})) {
+    if (!keys.has(key)) rest[key] = value;
+  }
+  return rest;
+}
+
+/**
+ * Un-set the env var(s) behind the given server.properties key(s) so the on-
+ * disk property - which something just changed directly - wins instead of the
+ * env (the itzg image re-applies env on every start). Sets pending_recreate so
+ * the container is actually rebuilt, which is what drops the env var.
+ * @returns {{ removed: string[], rebuildNeeded: boolean }}
+ */
+function unlockPropertyEnv(serverId, propKeys, { actor = 'system' } = {}) {
+  const server = getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
+  const removed = [];
+  for (const prop of propKeys) {
+    const envKey = propEnvMap.get(prop);
+    if (envKey && Object.prototype.hasOwnProperty.call(server.env, envKey)) {
+      delete server.env[envKey];
+      removed.push(envKey);
+    }
+  }
+  if (!removed.length) return { removed, rebuildNeeded: false };
+  db.run('UPDATE servers SET env_json = ?, pending_recreate = 1 WHERE id = ?', JSON.stringify(server.env), serverId);
+  recordEvent({
+    serverId,
+    actor,
+    type: 'config-changed',
+    summary: `Un-pinned ${removed.join(' and ')} from env so the server.properties edit sticks - the server rebuilds on the next restart.`,
+    details: { removed, rebuildNeeded: true },
+  });
+  return { removed, rebuildNeeded: true };
+}
+
+/**
+ * THE single choke point for writing server.properties: atomically replaces the
+ * file (tmp + rename) and un-sets the env var for every property whose value
+ * changed (see unlockPropertyEnv). Callers that edit properties without this
+ * (difficulty RCON, World Controls, whitelist toggle, Files editor) reintroduce
+ * the revert-on-restart bug.
+ * @returns {{ rebuildNeeded: boolean, unlocked: string[] }}
+ */
+function writeServerProperties(serverId, content, { actor = 'system' } = {}) {
+  if (!getServer(serverId)) throw httpError(404, 'Server not found');
+  let oldText = '';
+  try {
+    oldText = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
+  } catch {
+    /* fresh server - nothing to diff against */
+  }
+  const oldProps = parseProperties(oldText);
+  const newProps = parseProperties(content);
+  const changed = [...newProps.keys()].filter((key) => newProps.get(key) !== oldProps.get(key));
+  fs.mkdirSync(dataPath('servers', serverId), { recursive: true });
+  const tmp = dataPath('servers', serverId, 'server.properties.tmp');
+  fs.writeFileSync(tmp, content);
+  fs.renameSync(tmp, dataPath('servers', serverId, 'server.properties'));
+  const { removed, rebuildNeeded } = unlockPropertyEnv(serverId, changed, { actor });
+  return { rebuildNeeded, unlocked: removed };
+}
+
+/**
  * Set (or clear, when blank) the per-server console label used to prefix
  * panel-run console actions in-game. Strips control chars and § codes.
  * @returns {string} the sanitized label ('' when cleared)
@@ -1096,4 +1182,8 @@ module.exports = {
   setConsoleLabel,
   previewCreateSpec,
   previewServerSpec,
+  parseProperties,
+  stripLiveManagedEnv,
+  writeServerProperties,
+  unlockPropertyEnv,
 };

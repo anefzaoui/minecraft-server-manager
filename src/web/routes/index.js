@@ -645,8 +645,10 @@ router.get(
       const EXCLUDED_SECTIONS = new Set(['identity', 'flavor', 'resources', 'players']);
       // Scoped to 'gameplay' specifically (not a global key blocklist) - a
       // future field in another section coincidentally named e.g. MOTD must
-      // never be silently swallowed by this exclusion.
-      const EXCLUDED_GAMEPLAY_KEYS = new Set(['DIFFICULTY', 'PVP', 'MOTD']);
+      // never be silently swallowed by this exclusion. The excluded keys are
+      // shared with field-catalog and contractually property-backed (`prop`),
+      // so their direct edits are always unlockable (- enforced by test).
+      const EXCLUDED_GAMEPLAY_KEYS = catalog.SETTINGS_EXCLUDED_ENV_KEYS;
       context.advancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
         .map((s) => ({
           ...s,

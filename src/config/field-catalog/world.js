@@ -6,6 +6,7 @@ module.exports = [
   {
     key: 'LEVEL',
     scope: 'env',
+    prop: 'level-name',
     label: 'World save name',
     help: 'Name of the world save directory inside the server folder. Change it to switch between saves. The old world stays on disk under its own name.',
     type: 'text',
@@ -17,6 +18,7 @@ module.exports = [
   {
     key: 'SEED',
     scope: 'env',
+    prop: 'level-seed',
     label: 'World seed',
     help: 'Seed used when generating a new world. Only affects worlds that have not been created yet. It does nothing to an existing world.',
     type: 'text',
@@ -27,6 +29,7 @@ module.exports = [
   {
     key: 'LEVEL_TYPE',
     scope: 'env',
+    prop: 'level-type',
     label: 'World type',
     help: 'World generator preset used when a new world is created. Pair Superflat with generator settings below to customize the layers.',
     type: 'enum',
@@ -43,6 +46,7 @@ module.exports = [
   {
     key: 'GENERATOR_SETTINGS',
     scope: 'env',
+    prop: 'generator-settings',
     label: 'Generator settings (JSON)',
     help: 'JSON options that customize world generation for certain world types. For Superflat, this is the layer list and biome. Layers apply bottom-up from Y=-64.',
     type: 'text',
@@ -75,6 +79,7 @@ module.exports = [
   {
     key: 'SPAWN_PROTECTION',
     scope: 'env',
+    prop: 'spawn-protection',
     label: 'Spawn protection radius',
     help: 'Radius in blocks around spawn that only operators can modify. 0 disables protection; the vanilla default is 16.',
     type: 'number',
@@ -86,6 +91,7 @@ module.exports = [
   {
     key: 'VIEW_DISTANCE',
     scope: 'env',
+    prop: 'view-distance',
     label: 'View distance',
     help: 'How many chunks around each player the server sends to their client (vanilla default 10). One of the biggest levers for RAM, CPU, and bandwidth. Lower it if the server lags.',
     type: 'number',
@@ -99,6 +105,7 @@ module.exports = [
   {
     key: 'SIMULATION_DISTANCE',
     scope: 'env',
+    prop: 'simulation-distance',
     label: 'Simulation distance',
     help: 'How many chunks around each player actually tick: mobs, crops, machines (vanilla default 10). A big performance lever alongside view distance.',
     type: 'number',
@@ -112,6 +119,7 @@ module.exports = [
   {
     key: 'MAX_WORLD_SIZE',
     scope: 'env',
+    prop: 'max-world-size',
     label: 'World border radius',
     help: 'Maximum world border radius in blocks (vanilla default 29,999,984). Useful to cap disk usage from exploration.',
     type: 'number',
@@ -125,6 +133,7 @@ module.exports = [
   {
     key: 'ALLOW_NETHER',
     scope: 'env',
+    prop: 'allow-nether',
     label: 'Allow the Nether',
     help: 'Lets players travel to the Nether dimension through portals.',
     type: 'boolean',
@@ -135,6 +144,7 @@ module.exports = [
   {
     key: 'GENERATE_STRUCTURES',
     scope: 'env',
+    prop: 'generate-structures',
     label: 'Generate structures',
     help: 'Generates villages, strongholds, and other structures in new chunks.',
     type: 'boolean',
@@ -145,6 +155,7 @@ module.exports = [
   {
     key: 'SPAWN_ANIMALS',
     scope: 'env',
+    prop: 'spawn-animals',
     label: 'Spawn animals',
     help: 'Lets passive animals spawn naturally. Recent Minecraft versions moved this to a gamerule and no longer read this property.',
     type: 'boolean',
@@ -155,6 +166,7 @@ module.exports = [
   {
     key: 'SPAWN_MONSTERS',
     scope: 'env',
+    prop: 'spawn-monsters',
     label: 'Spawn monsters',
     help: 'Lets hostile mobs spawn naturally at night and in the dark.',
     type: 'boolean',
@@ -165,6 +177,7 @@ module.exports = [
   {
     key: 'SPAWN_NPCS',
     scope: 'env',
+    prop: 'spawn-npcs',
     label: 'Spawn villagers',
     help: 'Lets villagers spawn. Recent Minecraft versions no longer read this property.',
     type: 'boolean',
@@ -186,6 +199,7 @@ module.exports = [
   {
     key: 'ENABLE_COMMAND_BLOCK',
     scope: 'env',
+    prop: 'enable-command-block',
     label: 'Enable command blocks',
     help: 'Allows command blocks to run their commands. Required by many adventure maps and some datapacks.',
     type: 'boolean',

@@ -106,6 +106,16 @@ Cross-cutting:
   `src/services/secretsMigration.js` re-encrypts those under the dedicated key once on boot.
   A `.secret-key` that exists but doesn't parse is a hard boot error (it is never silently
   regenerated over the top). Blueprints strip all secrets on export.
+- **`server.properties` is panel-owned but env-shadowed.** The itzg image re-asserts every
+  env-backed property on each start (`OVERRIDE_SERVER_PROPERTIES` defaults true), so a value the
+  panel edits directly - World Controls PvP/difficulty, the whitelist toggle, the Files editor -
+  would be silently reverted on the next start unless the matching env var is removed and the
+  container recreated. Every direct property write goes through `writeServerProperties()` in
+  `src/services/servers.js`, which atomically rewrites the file, un-sets the env var behind each
+  changed key (via the `prop:` attribute on catalog fields), and flags `pending_recreate`. PVP and
+  DIFFICULTY are stripped from env at creation entirely (`LIVE_MANAGED_ENV_KEYS` in the catalog).
+  MOTD is the deliberate exception: it has its own Settings field that still writes env, while a
+  direct `motd` file edit un-sets it so the last write wins.
 
 ## Data & wire formats
 
