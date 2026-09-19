@@ -3,14 +3,7 @@
 require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {
-  fields,
-  getField,
-  SECTIONS,
-  LIVE_MANAGED_ENV_KEYS,
-  SETTINGS_EXCLUDED_ENV_KEYS,
-  propEnvMap,
-} = require('../src/config/field-catalog');
+const { fields, getField, SECTIONS, SETTINGS_EXCLUDED_ENV_KEYS, propEnvMap } = require('../src/config/field-catalog');
 
 test('every field key is unique within its scope', () => {
   const seen = new Set();
@@ -56,25 +49,17 @@ test('every Settings-excluded env field is real, gameplay-scoped, and property-b
     assert.equal(f.section, 'gameplay');
     assert.ok(f.prop, `${key} is hidden from Settings but has no server.properties prop to unlock`);
   }
+  // Each excluded key must stay configurable at creation though - the wizard
+  // renders the full catalog, so DIFFICULTY/PVP must not lose their values on
+  // create (they apply once, and un-pin whenever the panel edits them live).
+  for (const key of SETTINGS_EXCLUDED_ENV_KEYS) {
+    assert.equal(getField('env', key).mode, 'simple', `${key} must stay first-class in the wizard`);
+  }
 });
 
-test('live-managed env keys are the gameplay pair, a subset of the excluded set', () => {
-  // These env vars are STRIPPED at creation and un-set on direct edit - the
-  // image would otherwise re-assert them on every start, reverting the panel's
-  // World Controls/file edits.
-  assert.deepEqual([...LIVE_MANAGED_ENV_KEYS].sort(), ['DIFFICULTY', 'PVP']);
-  for (const key of LIVE_MANAGED_ENV_KEYS) {
-    assert.ok(SETTINGS_EXCLUDED_ENV_KEYS.has(key), `${key} is live-managed but not render-excluded`);
-    assert.ok(getField('env', key).prop, `${key} is live-managed but not property-backed`);
-  }
-  // MOTD is the documented exception: render-excluded because it has its own
-  // Settings field that writes env, but NOT live-managed (never stripped at
-  // creation). A direct `motd` file edit still un-sets MOTD via propEnvMap so
-  // the last write wins. Lock it in so nobody sweeps MOTD into the live-managed
-  // set by mistake.
-  assert.equal(SETTINGS_EXCLUDED_ENV_KEYS.has('MOTD'), true);
-  assert.equal(LIVE_MANAGED_ENV_KEYS.has('MOTD'), false);
-  assert.equal(getField('env', 'MOTD').prop, 'motd');
+test('the whitelist property maps to the ENABLE_WHITELIST env var', () => {
+  assert.equal(getField('env', 'ENABLE_WHITELIST').prop, 'white-list');
+  assert.equal(propEnvMap.get('white-list'), 'ENABLE_WHITELIST');
 });
 
 test('property-backed env fields have unique kebab-case props that propEnvMap resolves', () => {

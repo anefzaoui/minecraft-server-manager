@@ -24,7 +24,7 @@ const settings = require('./settings');
 const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
-const { LIVE_MANAGED_ENV_KEYS, propEnvMap } = require('../config/field-catalog');
+const { propEnvMap } = require('../config/field-catalog');
 
 function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
@@ -202,7 +202,7 @@ function mergeExtraPorts(server) {
 function previewCreateSpec(input) {
   const javaTag = input.javaTag || pickJavaTag(input.mcVersion || 'LATEST', input.type || 'VANILLA');
   const image = images.imageRef(javaTag);
-const defaults = settings.getDefaults();
+  const defaults = settings.getDefaults();
   const env = { ...(input.env || {}) };
   env.EULA = 'TRUE';
   env.TYPE = input.type || 'VANILLA';
@@ -345,7 +345,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     input.type,
     input.mcVersion || 'LATEST',
     input.javaTag || '',
-    JSON.stringify(stripLiveManagedEnv(input.env)),
+    JSON.stringify(input.env || {}),
     ports.game,
     ports.rcon,
     input.portQuery || null,
@@ -1068,41 +1068,26 @@ function parseProperties(text) {
   for (const line of String(text || '').split(/\r?\n/)) {
     const eq = line.indexOf('=');
     if (eq <= 0) continue;
-    props.set(line.slice(0, eq).trim(), line.slice(eq + 1));
+    props.set(line.slice(0, eq).trim(), line.slice(eq + 1).trim());
   }
   return props;
 }
 
 /**
- * Remove env vars the panel manages directly (see field-catalog
- * LIVE_MANAGED_ENV_KEYS) from an env object. At creation these must not be
- * stored, or the image would re-assert them on every start and any later
- * direct edit (World Controls / file editor) would be silently reverted.
- */
-function stripLiveManagedEnv(env, { keys = LIVE_MANAGED_ENV_KEYS } = {}) {
-  const rest = {};
-  for (const [key, value] of Object.entries(env || {})) {
-    if (!keys.has(key)) rest[key] = value;
-  }
-  return rest;
-}
-
-/**
- * Un-set the env var(s) behind the given server.properties key(s) so the on-
- * disk property - which something just changed directly - wins instead of the
- * env (the itzg image re-applies env on every start). Sets pending_recreate so
- * the container is actually rebuilt, which is what drops the env var.
+ * Remove specific env vars when the panel takes over the behavior they control
+ * directly (e.g. the whitelist toggle clearing image-managed whitelist
+ * provisioning). Sets pending_recreate when anything was removed, because the
+ * container must be recreated for the env change to take effect.
  * @returns {{ removed: string[], rebuildNeeded: boolean }}
  */
-function unlockPropertyEnv(serverId, propKeys, { actor = 'system' } = {}) {
+function unsetEnvKeys(serverId, envKeys, { actor = 'system' } = {}) {
   const server = getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
   const removed = [];
-  for (const prop of propKeys) {
-    const envKey = propEnvMap.get(prop);
-    if (envKey && Object.prototype.hasOwnProperty.call(server.env, envKey)) {
-      delete server.env[envKey];
-      removed.push(envKey);
+  for (const key of envKeys) {
+    if (key && Object.prototype.hasOwnProperty.call(server.env, key)) {
+      delete server.env[key];
+      removed.push(key);
     }
   }
   if (!removed.length) return { removed, rebuildNeeded: false };
@@ -1115,6 +1100,18 @@ function unlockPropertyEnv(serverId, propKeys, { actor = 'system' } = {}) {
     details: { removed, rebuildNeeded: true },
   });
   return { removed, rebuildNeeded: true };
+}
+
+/**
+ * Un-set the env var(s) behind the given server.properties key(s) so the on-
+ * disk property - which something just changed directly - wins instead of the
+ * env (the itzg image re-applies env on every start). Sets pending_recreate so
+ * the container is actually rebuilt, which is what drops the env var.
+ * @returns {{ removed: string[], rebuildNeeded: boolean }}
+ */
+function unlockPropertyEnv(serverId, propKeys, { actor = 'system' } = {}) {
+  const envKeys = propKeys.map((prop) => propEnvMap.get(prop)).filter(Boolean);
+  return unsetEnvKeys(serverId, envKeys, { actor });
 }
 
 /**
@@ -1183,7 +1180,7 @@ module.exports = {
   previewCreateSpec,
   previewServerSpec,
   parseProperties,
-  stripLiveManagedEnv,
   writeServerProperties,
   unlockPropertyEnv,
+  unsetEnvKeys,
 };

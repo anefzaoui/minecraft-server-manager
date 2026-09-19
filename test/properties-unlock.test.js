@@ -39,13 +39,20 @@ test.before(() => {
   fs.mkdirSync(dataPath('servers', ID), { recursive: true });
 });
 
-test('stripLiveManagedEnv removes exactly the live-managed keys and nothing else', () => {
-  const rest = servers.stripLiveManagedEnv({ PVP: 'true', DIFFICULTY: 'normal', MOTD: 'Hi', MAX_PLAYERS: '12' });
-  assert.deepEqual(rest, { MOTD: 'Hi', MAX_PLAYERS: '12' });
-  // MOTD is render-excluded but env-owned - it must survive the strip.
-  assert.deepEqual(servers.stripLiveManagedEnv({ MOTD: 'Hi' }), { MOTD: 'Hi' });
-  assert.deepEqual(servers.stripLiveManagedEnv({}), {});
-  assert.deepEqual(servers.stripLiveManagedEnv(null), {});
+test("creation keeps PVP/DIFFICULTY so the wizard's choices apply at create", () => {
+  // Regression guard: these fields must NOT be stripped at create - the wizard
+  // renders them (mode: 'simple'), so stripping silently drops the user's
+  // choice. They apply once via env, and un-pin whenever the panel edits the
+  // property directly.
+  const spec = servers.previewCreateSpec({
+    type: 'VANILLA',
+    javaTag: 'java21',
+    env: { PVP: 'false', DIFFICULTY: 'hard', MOTD: 'Hi', MAX_PLAYERS: '10' },
+  });
+  assert.equal(spec.env.PVP, 'false');
+  assert.equal(spec.env.DIFFICULTY, 'hard');
+  assert.equal(spec.env.MOTD, 'Hi');
+  assert.equal(spec.env.MAX_PLAYERS, '10');
 });
 
 test('unlockPropertyEnv drops the env var behind a property and marks the server for recreation', () => {
@@ -85,9 +92,35 @@ test('a direct motd edit un-sets the MOTD env so the last write wins', () => {
   assert.deepEqual(envOf(), {});
 });
 
+test('unsetEnvKeys removes explicit env keys and marks the server for recreation', () => {
+  setEnv({ WHITELIST: 'Notch,Herobrine', ENABLE_WHITELIST: 'true', MOTD: 'Hi' });
+  const result = servers.unsetEnvKeys(ID, ['WHITELIST', 'WHITELIST_FILE', 'ENABLE_WHITELIST'], { actor: 'test' });
+  assert.deepEqual(result, { removed: ['WHITELIST', 'ENABLE_WHITELIST'], rebuildNeeded: true });
+  assert.deepEqual(envOf(), { MOTD: 'Hi' });
+  assert.equal(rowPending(), 1);
+
+  const noop = servers.unsetEnvKeys(ID, ['NOT_SET'], { actor: 'test' });
+  assert.deepEqual(noop, { removed: [], rebuildNeeded: false });
+});
+
+test('the offline whitelist toggle clears every provisioning env var, not just ENABLE_WHITELIST', async () => {
+  const players = require('../src/services/players');
+  setEnv({ WHITELIST: 'Notch', WHITELIST_FILE: '/whitelist.json', ENABLE_WHITELIST: 'true', MAX_PLAYERS: '12' });
+  await players.setWhitelistEnforced(ID, false, { actor: 'test' });
+  // WHITELIST / WHITELIST_FILE also provision whitelisting in the itzg image,
+  // so turning the panel toggle off must clear them or white-list=true is
+  // re-asserted on the next start and the toggle silently reverts.
+  assert.deepEqual(envOf(), { MAX_PLAYERS: '12' });
+  assert.equal(rowPending(), 1);
+  assert.equal(propertiesText().includes('white-list=false'), true);
+  await players.setWhitelistEnforced(ID, true, { actor: 'test' });
+  assert.equal(propertiesText().includes('white-list=true'), true);
+});
+
 test('writeServerProperties and unlockPropertyEnv 404 on an unknown server', () => {
   assert.throws(() => servers.unlockPropertyEnv('srv_nope', ['pvp']), /Server not found/);
   assert.throws(() => servers.writeServerProperties('srv_nope', 'pvp=false\n'), /Server not found/);
+  assert.throws(() => servers.unsetEnvKeys('srv_nope', ['WHITELIST']), /Server not found/);
 });
 
 test('Files editor writes to server.properties go through the choke point', async () => {

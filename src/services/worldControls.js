@@ -162,7 +162,7 @@ const QUICK_ACTIONS = {
   'mobgrief-off': { rule: 'mobGriefing', value: 'false', label: 'Mob griefing OFF (no creeper holes)' },
   'phantoms-off': { rule: 'doInsomnia', value: 'false', label: 'Phantoms OFF (no insomnia)' },
   // PvP has no gamerule - it's the server.properties `pvp` value (see below).
-'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled. Applies on the next restart.' },
+  'pvp-on': { prop: 'pvp', value: true, label: 'PvP enabled. Applies on the next restart.' },
   'pvp-off': { prop: 'pvp', value: false, label: 'PvP disabled. Applies on the next restart.' },
   'difficulty-peaceful': { cmd: ['difficulty', 'peaceful'], label: 'Difficulty: Peaceful', unlock: ['difficulty'] },
   'difficulty-easy': { cmd: ['difficulty', 'easy'], label: 'Difficulty: Easy', unlock: ['difficulty'] },
@@ -507,7 +507,7 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
     err.status = 400;
     throw err;
   }
-const ok = (out) => {
+  const ok = (out) => {
     recordEvent({
       serverId,
       actor,

@@ -13,6 +13,11 @@ const { recordEvent } = require('../events');
 const { execCapture } = require('../docker/containers');
 const mojangProfiles = require('./mojangProfiles');
 const servers = require('./servers');
+
+// Every env var that can make the itzg image provision whitelisting. When the
+// panel's whitelist toggle is used they are all cleared - the image re-asserts
+// them on every start, which would silently undo the toggle (issue #39 class).
+const WHITELIST_PROVISIONING_ENV_KEYS = ['WHITELIST', 'WHITELIST_FILE', 'ENABLE_WHITELIST'];
 const { PLAYER_NAME_RE, isBedrockName } = require('../utils/playerName');
 const { parsePlayerList } = require('../utils/rconList');
 const nodePath = require('node:path');
@@ -321,6 +326,9 @@ async function setWhitelisted(serverId, name, on, { running = false, actor = 'sy
 async function setWhitelistEnforced(serverId, on, { running = false, actor = 'system' } = {}) {
   if (running) {
     await rcon(serverId, 'whitelist', on ? 'on' : 'off');
+    // The running server persists white-list back to server.properties on save;
+    // un-set the env that would re-assert it (and win) on the next start.
+    servers.unsetEnvKeys(serverId, WHITELIST_PROVISIONING_ENV_KEYS, { actor });
   } else {
     // Write through the single server.properties choke point so any env that
     // would re-assert white-list on the next start is un-set too.
@@ -336,6 +344,11 @@ async function setWhitelistEnforced(serverId, on, { running = false, actor = 'sy
       text += `${text && !text.endsWith('\n') ? '\n' : ''}white-list=${on}\n`;
     }
     servers.writeServerProperties(serverId, text, { actor });
+    // writeServerProperties un-sets ENABLE_WHITELIST (white-list's env),
+    // but whitelisting can also be provisioned via WHITELIST/WHITELIST_FILE,
+    // which the image re-asserts the same way. Clear all of them so the panel
+    // toggle owns enforcement.
+    servers.unsetEnvKeys(serverId, WHITELIST_PROVISIONING_ENV_KEYS, { actor });
   }
   recordEvent({
     serverId,

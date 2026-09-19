@@ -74,20 +74,14 @@ function getField(scope, key) {
   return byKey.get(`${scope}:${key}`) || null;
 }
 
-// Settings whose env var would permanently shadow a server.properties value the
-// panel edits directly (World Controls / the file editor). Because the itzg
-// image re-asserts env-backed properties on every start, these are stripped
-// from env at creation, and any direct server.properties edit un-sets them so
-// the file wins. MOTD is deliberately NOT in this set - it has its own field on
-// the Settings tab that still writes env, and a file edit of `motd` un-sets it
-// through the prop map so the last write wins.
-const LIVE_MANAGED_ENV_KEYS = new Set(['PVP', 'DIFFICULTY']);
-
 // Env-scope keys the Settings tab intentionally never renders because each has
 // its own channel: PVP/DIFFICULTY (live via World Controls) and MOTD (the
 // dedicated field above). Render-exclusion only - by contract every excluded
-// field is property-backed (`prop`), enforced by test, so it can always be
-// un-set when edited directly.
+// field is property-backed (`prop`), enforced by test, so whenever the panel
+// edits that property directly the env var is un-set and the edit wins over
+// the image re-asserting it on the next start. They are still fully
+// configurable at creation (the wizard renders them); they are only kept out
+// of the post-create Settings tab, which edits live values.
 const SETTINGS_EXCLUDED_ENV_KEYS = new Set(['DIFFICULTY', 'PVP', 'MOTD']);
 
 // server.properties key → env var name. Built from the catalog fields' `prop`,
@@ -100,7 +94,6 @@ module.exports = {
   fields,
   forSection,
   getField,
-  LIVE_MANAGED_ENV_KEYS,
   SETTINGS_EXCLUDED_ENV_KEYS,
   propEnvMap,
 };
