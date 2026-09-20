@@ -40,6 +40,12 @@ Each cell is a set of permissions:
 
 ![Permission editor](images/permissions-editor.png)
 
+On a phone the grid stacks into one card per user, with a row per server.
+
+<p align="center">
+  <img src="images/mobile/permissions.png" alt="Permissions on a phone" width="180">
+</p>
+
 How the pieces fit together:
 
 - **The role is the default.** An operator starts with every permission on every server; a viewer starts with View only. A cell that says "Role default" has never been changed.

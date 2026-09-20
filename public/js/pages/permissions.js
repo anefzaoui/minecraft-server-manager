@@ -41,7 +41,8 @@ function init() {
     summary.textContent = summarize(effective);
     cell.classList.toggle('text-ink-faint', grant === null);
     cell.classList.toggle('text-danger', grant !== null && grant.length === 0);
-    cell.setAttribute('aria-pressed', grant !== null ? 'true' : 'false');
+    // Custom grants get the pressed (green) border; a hidden cell reads in red on a neutral border instead.
+    cell.setAttribute('aria-pressed', grant !== null && grant.length > 0 ? 'true' : 'false');
     cell.dataset.tip =
       grant === null ? 'Role default. Click to override for this server.' : 'Custom. Click to change or reset.';
   }
