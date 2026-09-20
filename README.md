@@ -53,12 +53,12 @@ copy to migrate.**
 </p>
 
 <p align="center">
-  <sub>Shipped because someone spoke up:
-  <a href="https://github.com/RandomGuy908">RandomGuy908</a>,
-  <a href="https://github.com/kta1kri">kta1kri</a>,
-  <a href="https://github.com/supersynx">supersynx</a>,
-  <a href="https://github.com/tschanlo">tschanlo</a>.
-  A good bug report counts as a contribution here.</sub>
+  <a href="https://github.com/anefzaoui/minecraft-server-manager/issues"><img src="docs/images/contributors-reports.svg" alt="People credited for reports and ideas that shipped" width="374"></a>
+</p>
+
+<p align="center">
+  <sub><b>The row above shipped things without writing code.</b> A sharp bug report or a good idea
+  counts here too.</sub>
 </p>
 
 ## Features

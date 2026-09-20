@@ -200,4 +200,10 @@ a workflow regenerates the strip on the first of each month and opens a PR when 
 can refresh it yourself any time with `pnpm run contributors`.
 
 The avatars are baked into that one file, so the README never asks a third-party image service for
-anything. Reports and ideas that shipped are credited by name in the same block, by hand.
+anything.
+
+Below it sits a second strip, `docs/images/contributors-reports.svg`, for people whose bug report,
+reproduction, or idea shipped without a commit behind it. GitHub's contributor list only counts
+commits and cannot know that, so those logins live in [`docs/credits.json`](docs/credits.json) and
+the same script draws them. Add a login there and run `pnpm run contributors`. Anyone who later
+lands a commit drops out of that strip automatically and turns up in the main one.

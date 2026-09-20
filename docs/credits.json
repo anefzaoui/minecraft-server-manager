@@ -1,0 +1,4 @@
+{
+  "_comment": "People the README credits who have no commits in this repository. GitHub's contributor API only counts commits, so this list is curated by hand: add a login here when someone's bug report, reproduction, or idea shipped as a change. scripts/contributors-svg.js turns it into docs/images/contributors-reports.svg; anyone who later lands a commit is dropped from this strip automatically and appears in the main one.",
+  "reports": ["RandomGuy908", "kta1kri", "supersynx", "tschanlo"]
+}
