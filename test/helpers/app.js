@@ -71,4 +71,9 @@ function seedServer(id = 'srv_test01') {
   return id;
 }
 
-module.exports = { start, stop, req, adminCookie, seedServer };
+/** The underlying http.Server (for tests that attach WebSockets to it). */
+function httpServer() {
+  return server;
+}
+
+module.exports = { start, stop, req, adminCookie, seedServer, httpServer };

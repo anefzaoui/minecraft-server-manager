@@ -92,7 +92,14 @@ function requireRole(...roles) {
 function requireWrite(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
   if (req.user && req.user.role === 'viewer') {
-    if (viewerHoldsServerGrant(req)) return next();
+    const verdict = viewerServerVerdict(req);
+    if (verdict === 'allow') return next();
+    if (verdict === 'hidden') {
+      // The path names a server this viewer may not see: answer exactly like
+      // a missing server so the refusal never confirms it exists.
+      logger.debug('Hid a server the viewer may not view.', { userId: req.user.id, path: req.path });
+      return res.status(404).json({ ok: false, error: 'Server not found' });
+    }
     logger.warn('Blocked a write from a read-only viewer.', {
       userId: req.user.id,
       path: req.path,
@@ -111,7 +118,8 @@ function requireWrite(req, res, next) {
 const SERVER_SCOPED = /^\/api\/servers\/([^/]+)(?:\/|$)/;
 const BACKUP_SCOPED = /^\/api\/backups\/([^/]+)(?:\/|$)/;
 
-function viewerHoldsServerGrant(req) {
+/** 'allow' | 'hidden' | 'deny' for a viewer's write, based on the server in the path. */
+function viewerServerVerdict(req) {
   const permissions = require('../../services/permissions');
   let serverId = null;
   const m = SERVER_SCOPED.exec(req.path);
@@ -120,8 +128,10 @@ function viewerHoldsServerGrant(req) {
     const b = BACKUP_SCOPED.exec(req.path);
     if (b) serverId = require('./serverAccess').backupServerId({ params: { backupId: b[1] } });
   }
-  if (!serverId) return false;
-  return permissions.effective(req.user, serverId).some((c) => c !== 'view');
+  if (!serverId || !require('../../services/servers').getServer(serverId)) return 'deny';
+  const perms = permissions.effective(req.user, serverId);
+  if (!perms.includes('view')) return 'hidden';
+  return perms.some((c) => c !== 'view') ? 'allow' : 'deny';
 }
 
 /** Reject cross-origin state changes (defense in depth next to the SameSite cookie). */
