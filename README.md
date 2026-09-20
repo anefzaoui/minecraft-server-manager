@@ -565,8 +565,8 @@ node scripts/reset-password.js <username>
 - Roles: **admin / operator / viewer**, enforced on every mutating request - including side-effecting
   GETs (event export, world download, `.mrpack`). Per-server permissions refine the role for one
   server (see the [Users & roles guide](docs/users-and-roles.md)); a server a user may not view answers
-  404 everywhere, and a structural test fails the build if a server-scoped write route ships without a
-  permission gate.
+  "not found" on every page, API call, and socket, and a structural test fails the build if a
+  server-scoped route ships without a permission gate.
 - `SameSite=Lax` cookies by default (`COOKIE_SAMESITE` to change) + Origin checks on all
   state-changing requests; with `COOKIE_SAMESITE=none`, writes with no `Origin`/`Referer` are also
   rejected. WebSocket upgrades check `Origin` and authenticate the session cookie. Per-request CSP

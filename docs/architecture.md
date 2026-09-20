@@ -90,9 +90,12 @@ Cross-cutting:
   permissions (`src/services/permissions.js`, nine capabilities stored as a JSON list per
   `(user, server)` in `user_server_permissions`) refine that default for one server; every
   `/api/servers/:id` route, sub-router mount, page, WebSocket, and fleet-wide listing goes through
-  `src/web/middleware/serverAccess.js` (`serverScope` hides a server without `view` as a 404;
-  `requireCap(cap)` names the capability a route needs). `test/permissions-routes.test.js` walks the
-  live router stack and fails if a server-scoped write route has no capability gate.
+  `src/web/middleware/serverAccess.js` (`serverScope`, mounted on the `/servers/:id` prefix of both
+  the API and the page router, hides a server without `view` as a 404; `requireCap(cap)` names the
+  capability a route needs). Writes that name their server in the body (schedules, world extract and
+  install, blueprint export) are opened for viewers by `requireWrite` only for that server, and each
+  such route checks the capability itself. `test/permissions-routes.test.js` walks the live router
+  stacks and fails if a server-scoped write route, mount, or page has no gate.
 
 ## Key domain behaviors
 

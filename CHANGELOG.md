@@ -14,16 +14,17 @@ its own dated entry.
   content, backups, files, settings, delete. A role stays the default everywhere, so a viewer can be
   given power and console on one server while staying read-only on the rest, and an operator can lose
   delete on the server that matters. Turning everything off hides the server from that user
-  completely: it leaves their sidebar, dashboard, backups, worlds, schedules, activity, and live
-  status, and a direct link answers "not found". Existing installations are unchanged until an admin
-  edits a cell. Thanks @RandomGuy908 for the request.
+  completely: it leaves their sidebar, dashboard, backups, schedules, activity, updates, modpacks,
+  live status, tasks, and blueprints, and a direct link, API call, or console socket answers "not
+  found". Existing installations are unchanged until an admin edits a cell. Thanks @RandomGuy908 for
+  the request.
 
 ### Internal
 
 - One module, `services/permissions.js`, answers "may this user do X on server Y" for the API,
-  pages, WebSockets, map proxy, schedules, backups-by-id, and world targets. A structural test walks
-  the live router stack and fails the build if a server-scoped write route ships without a
-  permission gate.
+  pages, WebSockets, map proxy, schedules, backups-by-id, blueprints, tasks, and world targets. A
+  structural test walks the live API and page router stacks and fails the build if a server-scoped
+  write route, sub-router mount, or page ships without a permission gate.
 - The `user_server_permissions` table from the very first migration is now in use; no schema change.
 
 ## [0.13.2] - 2026-09-19
