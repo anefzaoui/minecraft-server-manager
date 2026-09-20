@@ -12,7 +12,7 @@ const discord = require('../../integrations/discord');
 const invites = require('../../integrations/invites');
 const statusPage = require('../../integrations/statusPage');
 const serversService = require('../../services/servers');
-const { requireRole, rejectCrossSiteGet } = require('../middleware/auth');
+const { rejectCrossSiteGet } = require('../middleware/auth');
 const { recordEvent } = require('../../events');
 
 const router = express.Router({ mergeParams: true });
@@ -103,7 +103,7 @@ router.get(
 // it off the viewer role even though it's a GET.
 router.get(
   '/invite/modpack.mrpack',
-  requireRole('admin', 'operator'),
+  require('../middleware/serverAccess').requireCap('content'),
   rejectCrossSiteGet,
   asyncHandler(async (req, res, next) => {
     const server = mustGet(req);

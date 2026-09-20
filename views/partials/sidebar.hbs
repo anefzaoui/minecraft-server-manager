@@ -49,7 +49,12 @@
       {{/if}}
     </nav>
 
-    <div class="border-t border-line p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+    <div class="space-y-0.5 border-t border-line p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+      {{#if (eq user.role 'admin')}}
+        <a href="/settings/permissions" class="nav-item {{#if (eq active 'permissions')}}active{{/if}}">
+          {{{icon 'shield-check' 'size-4'}}} Permissions
+        </a>
+      {{/if}}
       <a href="/settings" class="nav-item {{#if (eq active 'settings')}}active{{/if}}">
         {{{icon 'settings' 'size-4'}}} Settings
       </a>

@@ -16,12 +16,14 @@ const { serializeError } = require('../utils/logSanitize');
 
 const jobs = new Map(); // schedule id -> Cron
 
+// `capability` is the per-server permission a server-scoped task needs
+// (services/permissions.js); panel-global tasks follow the global role.
 const TASK_TYPES = {
-  restart: { label: 'Restart server', serverScoped: true },
-  backup: { label: 'Backup', serverScoped: true },
-  stop: { label: 'Stop server', serverScoped: true },
-  start: { label: 'Start server', serverScoped: true },
-  rcon: { label: 'Run command', serverScoped: true },
+  restart: { label: 'Restart server', serverScoped: true, capability: 'power' },
+  backup: { label: 'Backup', serverScoped: true, capability: 'backups' },
+  stop: { label: 'Stop server', serverScoped: true, capability: 'power' },
+  start: { label: 'Start server', serverScoped: true, capability: 'power' },
+  rcon: { label: 'Run command', serverScoped: true, capability: 'console' },
   'update-check': { label: 'Update check', serverScoped: false },
   'storage-scan': { label: 'Storage re-scan', serverScoped: false },
   'tmp-clean': { label: 'Clear temporary files', serverScoped: false },

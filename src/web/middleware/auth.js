@@ -5,8 +5,11 @@
 // state-changing requests - appropriate for a self-hosted LAN panel).
 
 const authService = require('../../services/auth');
+const permissions = require('../../services/permissions');
+const db = require('../../db');
 const config = require('../../config');
 const logger = require('../../logger')('auth');
+const { backupServerId } = require('./serverAccess');
 
 const PUBLIC_PREFIXES = ['/css/', '/js/', '/fonts/', '/icons/', '/vendor/'];
 const PUBLIC_PATHS = new Set(['/login', '/setup', '/favicon.ico']);
@@ -75,7 +78,9 @@ function requireRole(...roles) {
         path: req.path,
         method: req.method,
       });
-      if (req.path.startsWith('/api/')) return res.status(403).json({ ok: false, error: 'Insufficient permissions' });
+      // originalUrl, not req.path: inside a mounted router req.path is relative to the mount.
+      if (req.originalUrl.startsWith('/api/'))
+        return res.status(403).json({ ok: false, error: 'Insufficient permissions' });
       return res
         .status(403)
         .render('error', { title: 'Forbidden', code: 403, message: 'Your role does not allow this.' });
@@ -92,6 +97,14 @@ function requireRole(...roles) {
 function requireWrite(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
   if (req.user && req.user.role === 'viewer') {
+    const verdict = viewerServerVerdict(req);
+    if (verdict === 'allow') return next();
+    if (verdict === 'hidden') {
+      // The path names a server this viewer may not see: answer exactly like
+      // a missing server so the refusal never confirms it exists.
+      logger.debug('Hid a server the viewer may not view.', { userId: req.user.id, path: req.path });
+      return res.status(404).json({ ok: false, error: 'Server not found' });
+    }
     logger.warn('Blocked a write from a read-only viewer.', {
       userId: req.user.id,
       path: req.path,
@@ -100,6 +113,64 @@ function requireWrite(req, res, next) {
     return res.status(403).json({ ok: false, error: 'Your role (Viewer) is read-only.' });
   }
   next();
+}
+
+// Server-scoped API paths where a viewer may hold a per-server grant. The
+// global gate only opens for the ONE server named in the path, and only when
+// the grant carries a capability beyond `view`; the route's own requireCap()
+// then decides which action is allowed. Every other write stays a 403 for
+// viewers, so panel-wide actions (create server, storage, users) never open up.
+const SERVER_SCOPED = /^\/api\/servers\/([^/]+)(?:\/|$)/;
+const BACKUP_SCOPED = /^\/api\/backups\/([^/]+)(?:\/|$)/;
+
+/** Path segment as Express hands it to routes: percent-decoded, or null when malformed. */
+function decodeSegment(seg) {
+  try {
+    return decodeURIComponent(seg);
+  } catch {
+    return null;
+  }
+}
+// Writes that name their server in the body or via a row lookup rather than the
+// path. Each of these routes carries its own per-server capability check; this
+// list only decides whether a viewer reaches it at all.
+const BODY_SCOPED = [
+  { re: /^\/api\/schedules\/?$/, id: (req) => req.body && req.body.serverId },
+  {
+    re: /^\/api\/schedules\/([^/]+)(?:\/|$)/,
+    id: (req, m) => {
+      const row = db.get('SELECT server_id FROM schedules WHERE id = ?', decodeSegment(m[1]));
+      return row ? row.server_id : null;
+    },
+  },
+  { re: /^\/api\/worlds\/extract\/?$/, id: (req) => req.body && req.body.serverId },
+  { re: /^\/api\/worlds\/[^/]+\/install\/?$/, id: (req) => req.body && req.body.serverId },
+  { re: /^\/api\/blueprints\/export\/?$/, id: (req) => req.body && req.body.serverId },
+  { re: /^\/api\/updates\/ignore\/?$/, id: (req) => req.body && req.body.serverId },
+];
+
+/** 'allow' | 'hidden' | 'deny' for a viewer's write, based on the server in the path or body. */
+function viewerServerVerdict(req) {
+  let serverId = null;
+  const m = SERVER_SCOPED.exec(req.path);
+  if (m) serverId = decodeSegment(m[1]);
+  else {
+    const b = BACKUP_SCOPED.exec(req.path);
+    if (b) serverId = backupServerId({ params: { backupId: decodeSegment(b[1]) } });
+    else {
+      for (const entry of BODY_SCOPED) {
+        const bm = entry.re.exec(req.path);
+        if (!bm) continue;
+        const id = entry.id(req, bm);
+        serverId = typeof id === 'string' && id ? id : null;
+        break;
+      }
+    }
+  }
+  if (!serverId || !db.get('SELECT 1 AS x FROM servers WHERE id = ? AND deleted_at IS NULL', serverId)) return 'deny';
+  const perms = permissions.effective(req.user, serverId);
+  if (!perms.includes('view')) return 'hidden';
+  return perms.some((c) => c !== 'view') ? 'allow' : 'deny';
 }
 
 /** Reject cross-origin state changes (defense in depth next to the SameSite cookie). */
@@ -305,4 +376,6 @@ module.exports = {
   clearLoginFailures,
   listActiveLockouts,
   clearLockouts,
+  // For the structural test only: routes that name their server in the body.
+  BODY_SCOPED,
 };

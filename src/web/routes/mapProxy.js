@@ -29,6 +29,7 @@ const { getDocker } = require('../../docker/connect');
 const containers = require('../../docker/containers');
 const { getMapConfig, BLUEMAP_CONTAINER_PORT } = require('../../services/map');
 const { getServer } = require('../../services/servers');
+const permissions = require('../../services/permissions');
 
 const router = express.Router();
 
@@ -104,8 +105,9 @@ router.use(
       return res.status(405).send('Method not allowed');
     }
     const server = getServer(req.params.id);
-    const cfg = server ? getMapConfig(server.id) : { enabled: false };
-    if (!server || !cfg.enabled || !cfg.hostPort) {
+    const visible = server && permissions.can(req.user, server.id, 'view');
+    const cfg = visible ? getMapConfig(server.id) : { enabled: false };
+    if (!server || !visible || !cfg.enabled || !cfg.hostPort) {
       logger.debug('Rejected a map proxy request for a server without a live map.', { serverId: req.params.id });
       return res.status(404).send('Live map is not enabled for this server');
     }

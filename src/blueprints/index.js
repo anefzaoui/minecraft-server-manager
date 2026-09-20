@@ -33,6 +33,7 @@ function starterResources() {
   };
 }
 const { recordEvent } = require('../events');
+const permissions = require('../services/permissions');
 const servers = require('../services/servers');
 const packs = require('../services/packs');
 const library = require('../services/library');
@@ -168,6 +169,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
   const manifest = {
     msm: 1,
     name: server.display_name,
+    sourceServerId: server.id,
     createdAt: new Date().toISOString(),
     panelVersion: PANEL_VERSION,
     notes: server.notes || '',
@@ -631,6 +633,21 @@ function listBlueprints() {
   return db.all('SELECT * FROM blueprints ORDER BY builtin DESC, created_at DESC').map(decorate);
 }
 
+/**
+ * True when the user may see this blueprint: one exported from a server the
+ * user may not view is hidden (it is named after that server and carries its
+ * files). Blueprints from before the source id was recorded stay visible.
+ */
+function blueprintVisibleTo(user, bp) {
+  const sid = bp && bp.manifest && bp.manifest.sourceServerId;
+  if (!sid) return true;
+  return permissions.can(user, sid, 'view');
+}
+
+function listBlueprintsFor(user) {
+  return listBlueprints().filter((bp) => blueprintVisibleTo(user, bp));
+}
+
 function getBlueprint(id) {
   const row = db.get('SELECT * FROM blueprints WHERE id = ?', id);
   return row ? decorate(row) : null;
@@ -647,7 +664,11 @@ async function deleteBlueprint(id, { actor = 'system' } = {}) {
   if (!row) throw httpError(404, 'Blueprint not found');
   await fsp.rm(dataPath(row.rel_path), { force: true });
   db.run('DELETE FROM blueprints WHERE id = ?', id);
+  // Scoped to the source server (when known) so a user who may not see that
+  // server does not learn its name from the deletion entry.
+  const sourceServerId = decorate(row).manifest.sourceServerId || null;
   recordEvent({
+    serverId: sourceServerId,
     actor,
     type: 'blueprint-deleted',
     summary: `Blueprint deleted: ${row.name} (${(row.size_bytes / 1024 ** 2).toFixed(1)} MB freed).`,
@@ -866,6 +887,8 @@ module.exports = {
   importBlueprint,
   cloneServer,
   listBlueprints,
+  listBlueprintsFor,
+  blueprintVisibleTo,
   getBlueprint,
   getBlueprintPath,
   deleteBlueprint,

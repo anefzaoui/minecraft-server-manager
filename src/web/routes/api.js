@@ -17,6 +17,8 @@ const ports = require('../../services/ports');
 const mojang = require('../../services/mojang');
 const tasks = require('../../services/tasks');
 const db = require('../../db');
+const permissions = require('../../services/permissions');
+const httpError = require('../../utils/httpError');
 const eventsService = require('../../events');
 const { dataPath } = require('../../storage/pathGuard');
 const { checkDocker } = require('../../docker/connect');
@@ -116,9 +118,15 @@ router.post(
   })
 );
 
+// Per-server permissions: resolve once per request, hide unviewable servers,
+// then every route below names the capability it needs (see docs/users-and-roles.md).
+const { serverScope, requireCap, requireCapForWrites, backupServerId } = require('../middleware/serverAccess');
+router.use('/servers/:id', serverScope);
+
 for (const action of ['start', 'stop', 'restart', 'kill', 'recreate']) {
   router.post(
     `/servers/:id/${action}`,
+    requireCap('power'),
     asyncHandler(async (req, res, next) => {
       await servers[`${action}Server`](req.params.id, { actor: req.user.username });
       res.json({ ok: true, server: publicServer(servers.getServer(req.params.id)) });
@@ -128,6 +136,7 @@ for (const action of ['start', 'stop', 'restart', 'kill', 'recreate']) {
 
 router.patch(
   '/servers/:id',
+  requireCap('settings'),
   asyncHandler(async (req, res, next) => {
     const changes = z
       .object({
@@ -236,6 +245,7 @@ router.get(
 
 router.delete(
   '/servers/:id',
+  requireCap('delete'),
   asyncHandler(async (req, res, next) => {
     // Deletion is opt-in: files + backups are KEPT by default, and only
     // removed when the caller explicitly asks via deleteFiles/deleteBackups.
@@ -263,6 +273,7 @@ router.get(
 // Per-server label for panel-run console actions (announced in-game). Empty clears it.
 router.put(
   '/servers/:id/console-label',
+  requireCap('settings'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     const { label } = z.object({ label: z.string().max(48).optional() }).parse(req.body);
@@ -286,7 +297,8 @@ router.get('/servers/live', (req, res) => {
   const db = require('../../db');
   const all = liveCache.getAll();
   const out = {};
-  for (const row of db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL')) {
+  const rows = permissions.filterVisible(req.user, db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL'));
+  for (const row of rows) {
     const e = all[row.id] || {};
     out[row.id] = {
       status: row.status,
@@ -328,9 +340,13 @@ router.get(
       'update-failed',
     ];
 
-    const serverRows = db.all(
-      'SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at'
+    const serverRows = permissions.filterVisible(
+      req.user,
+      db.all('SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at')
     );
+    // Alerts use the full visibility set (deleted servers included) so a
+    // crash on a server removed since is still reported, as before.
+    const visibleIds = permissions.visibleServerIds(req.user);
     const problems = serverRows
       .filter((s) => PROBLEM_STATUSES.has(s.status))
       .map((s) => ({ serverId: s.id, server: s.display_name, kind: s.status }));
@@ -344,6 +360,7 @@ router.get(
           ORDER BY e.id DESC LIMIT 50`,
         ...ALERT_TYPES
       )
+      .filter((r) => !r.server_id || visibleIds.has(r.server_id))
       .map((r) => ({ type: r.type, summary: r.summary, serverId: r.server_id, server: r.server, at: r.created_at }));
 
     const disk = await require('../../storage/indexer')
@@ -660,6 +677,7 @@ router.post(
 
 router.post(
   '/servers/:id/pack',
+  requireCap('content'),
   asyncHandler(async (req, res) => {
     const { platform, ref, versionId, force } = z
       .object({
@@ -703,6 +721,7 @@ const UPGRADE_STEP_LABELS = {
 // {ok:false, error, rollbackAvailable:true} so the client can offer rollback.
 router.post(
   '/servers/:id/pack/upgrade',
+  requireCap('content'),
   asyncHandler((req, res, next) => {
     const { versionId, skipBackup } = z
       .object({
@@ -743,6 +762,7 @@ router.post(
 // recent pre-update backup for this server is restored alongside the re-pin.
 router.post(
   '/servers/:id/pack/rollback',
+  requireCap('content'),
   asyncHandler((req, res, next) => {
     const body = z.object({ backupId: z.string().trim().max(40).optional() }).parse(req.body);
     const server = requireServer(req.params.id);
@@ -882,6 +902,7 @@ router.get(
     let installed = null;
     if (query.serverId) {
       const server = requireServer(query.serverId);
+      if (!permissions.can(req.user, server.id, 'view')) throw httpError(404, 'Server not found');
       const pin = packs.getPack(server.id);
       if (!pin) throw Object.assign(new Error('This server has no managed modpack'), { status: 404 });
       if (pin.platform === 'ftb')
@@ -1062,6 +1083,12 @@ router.post(
       })
       .parse(req.body);
     const actor = req.user.username;
+    // Ignoring an update is a content decision on that server.
+    if (serverId) {
+      const perms = permissions.effective(req.user, serverId);
+      if (!perms.includes('view')) throw httpError(404, 'Server not found');
+      if (!perms.includes('content')) throw httpError(403, "You don't have the content permission on this server.");
+    }
     if (subjectType === 'content') {
       if (!serverId || !contentId) {
         throw Object.assign(new Error('serverId and contentId are required for content'), { status: 400 });
@@ -1081,6 +1108,7 @@ router.post(
 // the task result is scoped to this server's findings.
 router.post(
   '/servers/:id/updates/check',
+  requireCap('content'),
   asyncHandler((req, res, next) => {
     const server = requireServer(req.params.id);
     const actor = req.user.username;
@@ -1103,6 +1131,7 @@ router.post(
 // No pre-update backup: the bind-mounted data dir is untouched by an image swap.
 router.post(
   '/servers/:id/image/upgrade',
+  requireCap('settings'),
   asyncHandler((req, res, next) => {
     const server = requireServer(req.params.id);
     const actor = req.user.username;
@@ -1134,6 +1163,7 @@ const LOADER_BUILD_ENV_KEYS = [
 
 router.post(
   '/servers/:id/mcversion/upgrade',
+  requireCap('settings'),
   asyncHandler((req, res, next) => {
     const { targetVersion, targetLoaderBuild, envKey } = z
       .object({
@@ -1202,23 +1232,48 @@ router.get('/schedules/preview', (req, res) => {
   }
 });
 
+// A server-scoped schedule runs an action on that server, so creating,
+// toggling, or deleting one needs the capability that action needs.
+const TASK_TYPE_KEYS = /** @type {[string, ...string[]]} */ (Object.keys(scheduler.TASK_TYPES));
+function requireScheduleAccess(req, serverId, taskType) {
+  const meta = scheduler.TASK_TYPES[taskType];
+  if (!meta) throw httpError(400, 'Unknown task type.');
+  if (!meta.serverScoped) {
+    // Panel-global work (storage scan, update check, temp cleanup, …) runs
+    // against the whole panel whatever serverId is attached, so it follows the
+    // global role: a viewer never reaches it, even with per-server grants.
+    if (req.user.role === 'viewer') throw httpError(403, 'Your role (Viewer) is read-only.');
+    return;
+  }
+  if (!serverId) return;
+  const cap = meta.capability;
+  const perms = permissions.effective(req.user, serverId);
+  if (!perms.includes('view')) throw httpError(404, 'Server not found');
+  if (!perms.includes(cap)) {
+    const label = permissions.CAPABILITY_INFO[cap].label.toLowerCase();
+    throw httpError(403, `You don't have the ${label} permission on this server.`);
+  }
+}
+
 router.post(
   '/schedules',
   asyncHandler((req, res, next) => {
     const input = z
       .object({
         serverId: z.string().trim().max(40).nullable().optional(),
-        taskType: z.string().trim().min(2).max(30),
+        taskType: z.enum(TASK_TYPE_KEYS),
         cron: z.string().trim().min(5).max(60),
         payload: z.record(z.string(), z.any()).optional(),
         enabled: z.coerce.boolean().optional(),
       })
       .parse(req.body);
+    requireScheduleAccess(req, input.serverId || null, input.taskType);
+    const scoped = scheduler.TASK_TYPES[input.taskType] && scheduler.TASK_TYPES[input.taskType].serverScoped;
     res.status(201).json({
       ok: true,
       schedule: scheduler.createSchedule(
         {
-          serverId: input.serverId || null,
+          serverId: scoped ? input.serverId || null : null,
           taskType: input.taskType,
           cron: input.cron,
           payload: input.payload,
@@ -1234,6 +1289,8 @@ router.post(
   '/schedules/:id/toggle',
   asyncHandler((req, res, next) => {
     const { enabled } = z.object({ enabled: z.boolean() }).parse(req.body);
+    const job = db.get('SELECT server_id, task_type FROM schedules WHERE id = ?', req.params.id);
+    if (job) requireScheduleAccess(req, job.server_id, job.task_type);
     scheduler.setEnabled(req.params.id, enabled, { actor: req.user.username });
     res.json({ ok: true });
   })
@@ -1242,6 +1299,8 @@ router.post(
 router.delete(
   '/schedules/:id',
   asyncHandler((req, res, next) => {
+    const job = db.get('SELECT server_id, task_type FROM schedules WHERE id = ?', req.params.id);
+    if (job) requireScheduleAccess(req, job.server_id, job.task_type);
     scheduler.deleteSchedule(req.params.id, { actor: req.user.username });
     res.json({ ok: true });
   })
@@ -1284,6 +1343,7 @@ router.post(
 // Long operation - returns {ok, taskId}; task result: {id, filename, size}.
 router.post(
   '/servers/:id/backups',
+  requireCap('backups'),
   asyncHandler((req, res, next) => {
     const server = requireServer(req.params.id);
     const actor = req.user.username;
@@ -1302,6 +1362,7 @@ router.post(
 // backup, wipes the dir and extracts the archive.
 router.post(
   '/servers/:id/backups/:backupId/restore',
+  requireCap('backups'),
   asyncHandler((req, res, next) => {
     const server = requireServer(req.params.id);
     const actor = req.user.username;
@@ -1324,7 +1385,7 @@ router.post(
 // read-only viewer must never be able to pull it.
 router.get(
   '/backups/:backupId/download',
-  requireRoleKeys('admin', 'operator'),
+  requireCap('backups', { resolve: backupServerId }),
   asyncHandler((req, res, next) => {
     const backup = db.get('SELECT * FROM backups WHERE id = ?', req.params.backupId);
     if (!backup) throw Object.assign(new Error('Backup not found'), { status: 404 });
@@ -1336,7 +1397,7 @@ router.get(
 
 router.delete(
   '/backups/:backupId',
-  requireRoleKeys('admin', 'operator'),
+  requireCap('backups', { resolve: backupServerId }),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await backups.deleteBackup(req.params.backupId, { actor: req.user.username })) });
   })
@@ -1345,7 +1406,7 @@ router.delete(
 // Rename a backup archive (display + on-disk filename). Admin/operator only.
 router.patch(
   '/backups/:backupId',
-  requireRoleKeys('admin', 'operator'),
+  requireCap('backups', { resolve: backupServerId }),
   asyncHandler(async (req, res, next) => {
     const { filename } = z.object({ filename: z.string().trim().max(120) }).parse(req.body);
     const updated = await backups.renameBackup(req.params.backupId, filename, { actor: req.user.username });
@@ -1482,6 +1543,7 @@ function splitUnsupported(full) {
 
 router.post(
   '/servers/:id/world/quick',
+  requireCap('console'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
     const { action } = z.object({ action: z.enum(Object.keys(worldControls.QUICK_ACTIONS)) }).parse(req.body);
@@ -1498,7 +1560,7 @@ const worldShrink = require('../../services/worldShrink');
 const SHRINK_LIVE_STATUSES = new Set(['running', 'starting', 'unhealthy', 'stalled', 'updating']);
 router.post(
   '/servers/:id/worlds/:world/shrink',
-  requireRoleKeys('admin', 'operator'),
+  requireCap('content'),
   asyncHandler(async (req, res, next) => {
     const server = requireServer(req.params.id);
     const src = { ...req.query, ...req.body };
@@ -1578,6 +1640,7 @@ const chat = require('../../services/chat');
 
 router.post(
   '/servers/:id/chat',
+  requireCap('console'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
     const body = z
@@ -1603,6 +1666,7 @@ const mapService = require('../../services/map');
 
 router.post(
   '/servers/:id/map/enable',
+  requireCap('settings'),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await mapService.enableMap(req.params.id, { actor: req.user.username })) });
   })
@@ -1610,6 +1674,7 @@ router.post(
 
 router.post(
   '/servers/:id/map/disable',
+  requireCap('settings'),
   asyncHandler(async (req, res, next) => {
     await mapService.disableMap(req.params.id, { actor: req.user.username });
     res.json({ ok: true });
@@ -1618,37 +1683,37 @@ router.post(
 
 // ---- Worlds & files ----
 router.use('/worlds', require('./worlds'));
-router.use('/servers/:id/worlds', require('./worlds').serverWorlds);
-// Admin/operator only: read/download expose raw server files (server.properties
-// carries the plaintext rcon.password), so viewers are kept out of the whole tree
+router.use('/servers/:id/worlds', requireCapForWrites('content'), require('./worlds').serverWorlds);
+// `files` capability for the whole tree, reads included: server.properties
+// carries the plaintext rcon.password, so a `view`-only user is kept out
 // rather than relying on requireWrite, which only blocks their non-GET requests.
-router.use('/servers/:id/files', requireRoleKeys('admin', 'operator'), require('./files').serverFiles);
+router.use('/servers/:id/files', requireCap('files'), require('./files').serverFiles);
 router.use('/files', require('../middleware/auth').requireRole('admin'), require('./files').globalFiles);
 
 // ---- Crash reports ----
-router.use('/servers/:id/crashes', require('./crashes'));
+router.use('/servers/:id/crashes', requireCapForWrites('files'), require('./crashes'));
 
 // ---- Player god-mode ----
-router.use('/servers/:id/players', require('./players'));
+router.use('/servers/:id/players', requireCapForWrites('players'), require('./players'));
 
 // ---- Custom chat commands (!rtp2 …) ----
-router.use('/servers/:id/chat-commands', require('./chatCommands'));
+router.use('/servers/:id/chat-commands', requireCapForWrites('console'), require('./chatCommands'));
 
 // ---- Integrations (Discord, invites, status page) ----
-router.use('/servers/:id/integrations', require('./integrations'));
+router.use('/servers/:id/integrations', requireCapForWrites('settings'), require('./integrations'));
 
 // ---- Conversational chatbot (legacy /wizard API; configuration + transcripts are admin-only) ----
 router.use('/servers/:id/wizard', requireRoleKeys('admin'), require('./wizard'));
 
 // ---- Analytics & activity timeline ----
-router.use('/servers/:id/analytics', require('./analytics'));
+router.use('/servers/:id/analytics', requireCapForWrites('players'), require('./analytics'));
 
 // ---- Inventory forensics ----
-router.use('/servers/:id/inventory', require('./inventory'));
+router.use('/servers/:id/inventory', requireCapForWrites('content'), require('./inventory'));
 router.use('/inventory', require('./inventory').globalSearch);
 
 // ---- Item registry (JEI-style browser, built from the server's own jars) ----
-router.use('/servers/:id/items', require('./items'));
+router.use('/servers/:id/items', requireCapForWrites('content'), require('./items'));
 
 // ---- Mods manager ----
 const mods = require('../../services/mods');
@@ -1673,6 +1738,7 @@ router.get(
 
 router.post(
   '/servers/:id/mods',
+  requireCap('content'),
   asyncHandler(async (req, res, next) => {
     const { url, kind, ignoreVersion } = z
       .object({
@@ -1708,6 +1774,7 @@ router.post(
 // the server if it was running so the new jar is actually loaded.
 router.post(
   '/servers/:id/mods/update',
+  requireCap('content'),
   asyncHandler(async (req, res, next) => {
     const { file, contentId } = z
       .object({
@@ -1739,6 +1806,7 @@ router.post(
 // sidebar count; a later, genuinely newer build re-surfaces on its own.
 router.post(
   '/servers/:id/mods/ignore-update',
+  requireCap('content'),
   asyncHandler(async (req, res, next) => {
     const { file, contentId, ignore } = z
       .object({
@@ -1759,6 +1827,7 @@ router.post(
 // result is { updated, failed, restarted }.
 router.post(
   '/servers/:id/mods/update-all',
+  requireCap('content'),
   asyncHandler((req, res, next) => {
     const server = requireServer(req.params.id);
     const actor = req.user.username;
@@ -1797,6 +1866,7 @@ router.post(
 
 router.post(
   '/servers/:id/mods/toggle',
+  requireCap('content'),
   asyncHandler(async (req, res, next) => {
     const { file, enabled } = z.object({ file: z.string().min(1).max(200), enabled: z.boolean() }).parse(req.body);
     res.json({ ok: true, ...(await mods.setEnabled(req.params.id, file, enabled, { actor: req.user.username })) });
@@ -1805,7 +1875,7 @@ router.post(
 
 router.delete(
   '/servers/:id/mods/:file',
-  requireRoleKeys('admin', 'operator'),
+  requireCap('content'),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await mods.removeContent(req.params.id, req.params.file, { actor: req.user.username })) });
   })
@@ -1827,6 +1897,7 @@ router.get(
 
 router.post(
   '/servers/:id/pending-downloads/exclude',
+  requireCap('content'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
     const { filename } = z.object({ filename: z.string().min(1).max(300) }).parse(req.body);
@@ -1839,6 +1910,7 @@ router.post(
 
 router.post(
   '/servers/:id/mods/upload',
+  requireCap('content'),
   modUpload.single('file'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
@@ -1889,6 +1961,7 @@ const zipImportBodySchema = z.object({
 
 router.post(
   '/servers/:id/mods/import-zip/preview',
+  requireCap('content'),
   zipImportUpload.single('file'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
@@ -1906,6 +1979,7 @@ router.post(
 
 router.post(
   '/servers/:id/mods/import-zip',
+  requireCap('content'),
   asyncHandler(async (req, res, next) => {
     const server = requireServer(req.params.id);
     const input = zipImportBodySchema.parse(req.body);
@@ -1941,6 +2015,7 @@ function sendEventExport(req, res, serverId) {
     format: req.query.format,
     q: String(req.query.q || '').trim(),
     type: String(req.query.type || '').trim(),
+    forUser: req.user,
   });
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.type(contentType).send(body);
@@ -1960,7 +2035,7 @@ router.get(
 
 router.get(
   '/servers/:id/events/export',
-  requireRoleKeys('admin', 'operator'),
+  requireCap('files'),
   require('../middleware/auth').rejectCrossSiteGet,
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
@@ -1973,7 +2048,9 @@ router.get(
   '/events/:id/excerpt',
   asyncHandler(async (req, res, next) => {
     const event = eventsService.getEvent(Number(req.params.id));
-    if (!event) throw Object.assign(new Error('Event not found'), { status: 404 });
+    if (!event || (event.server_id && !permissions.can(req.user, event.server_id, 'view'))) {
+      throw Object.assign(new Error('Event not found'), { status: 404 });
+    }
     const text = await eventsService.readExcerpt(event);
     if (text == null) throw Object.assign(new Error('No captured log for this event'), { status: 404 });
     res.type('text/plain').send(text);
@@ -2004,6 +2081,7 @@ const archivedFileSchema = z.string().regex(/^[\w.,()[\]-]+\.log$/, 'Invalid arc
 
 router.get(
   '/servers/:id/logs/archived',
+  requireCap('files'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
     const dir = dataPath('logs', req.params.id, 'events');
@@ -2022,6 +2100,7 @@ router.get(
 
 router.get(
   '/servers/:id/logs/archived/:file',
+  requireCap('files'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     const file = archivedFileSchema.parse(req.params.file);
@@ -2053,6 +2132,7 @@ async function listGameLogs(serverId) {
 
 router.get(
   '/servers/:id/logs/game',
+  requireCap('files'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
     res.json({ ok: true, files: await listGameLogs(req.params.id) });
@@ -2061,6 +2141,7 @@ router.get(
 
 router.get(
   '/servers/:id/logs/game/:file',
+  requireCap('files'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     const file = gameLogFileSchema.parse(req.params.file);
@@ -2075,6 +2156,7 @@ router.get(
 const LOG_BUNDLE_MAX_BYTES = 512 * 1024 * 1024;
 router.get(
   '/servers/:id/logs/bundle.zip',
+  requireCap('files'),
   asyncHandler(async (req, res, next) => {
     const server = requireServer(req.params.id);
     const dir = dataPath('servers', req.params.id, 'logs');
@@ -2110,7 +2192,7 @@ const iconUpload = multer({ dest: dataPath('tmp'), limits: { fileSize: ICON_MAX_
 
 // multipart field: 'icon'. Stores data/library/icons/custom/<serverId><ext>
 // and sets servers.icon = 'custom:<filename>' (render via /api/icons/custom/<file>).
-router.post('/servers/:id/icon', iconUpload.single('icon'), async (req, res, next) => {
+router.post('/servers/:id/icon', requireCap('settings'), iconUpload.single('icon'), async (req, res, next) => {
   let consumed = false;
   try {
     const server = requireServer(req.params.id);
@@ -2234,6 +2316,26 @@ const { requireRole } = require('../middleware/auth');
 router.get('/users', requireRole('admin'), (req, res) => {
   res.json({ ok: true, users: authService.listUsers() });
 });
+
+// ---- Per-server permissions (Settings → Permissions) ----
+router.get('/permissions', requireRole('admin'), (req, res) => {
+  res.json({ ok: true, ...permissions.listMatrix() });
+});
+
+router.put(
+  '/permissions/:userId/:serverId',
+  requireRole('admin'),
+  asyncHandler((req, res, next) => {
+    if (!req.body || !('perms' in req.body)) {
+      throw httpError(400, 'Send a list of permissions, or null to use the role default.');
+    }
+    const { perms } = z.object({ perms: z.array(z.string().max(20)).max(32).nullable() }).parse(req.body);
+    const result = permissions.setGrant(req.params.userId, req.params.serverId, perms, {
+      actor: req.user.username,
+    });
+    res.json({ ok: true, ...result });
+  })
+);
 
 // ---- Sign-in lockouts (in-memory; admin visibility + manual unlock) ----
 const authMw = require('../middleware/auth');

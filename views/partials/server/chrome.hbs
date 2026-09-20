@@ -36,7 +36,10 @@
         {{/if}}
       </div>
     </div>
-    <div class="flex flex-wrap gap-2">
+    {{! Power controls need the `power` permission on this server (perms comes
+        from the page route). Kept in the DOM but hidden so the action
+        handlers in app.js still bind on every other page state. }}
+    <div class="flex flex-wrap gap-2{{#unless perms.power}} hidden{{/unless}}">
       {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}}
         <button class="btn" data-server-action="restart" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'rotate-cw' 'size-4'}}} Restart</button>
         <button class="btn btn-danger" data-server-action="stop" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'square' 'size-4'}}} Stop</button>

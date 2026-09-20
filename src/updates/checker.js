@@ -497,39 +497,54 @@ function listOutdated() {
  * full per-row join-and-materialize listOutdated() does is pure waste when
  * only a number is needed.
  */
-function countOutdatedByKind() {
-  const row = db.get(`
+/**
+ * @param {{ serverIds?: Iterable<string> | null }} [opts] restrict to these
+ *   servers (per-user visibility); omitted = every server
+ */
+function countOutdatedByKind({ serverIds = null } = {}) {
+  const ids = serverIds ? [...serverIds] : null;
+  // Same predicate for everyone; the visibility scope is one extra clause.
+  const scope = ids ? ` AND s.id IN (${ids.length ? ids.map(() => '?').join(',') : 'NULL'})` : '';
+  const scopeParams = ids ? ids : [];
+  const row = db.get(
+    `
     SELECT
       (SELECT COUNT(*) FROM update_checks c
          JOIN server_packs p ON p.server_id = c.subject_id
-         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'${scope}
          WHERE c.subject_type = 'pack' AND c.latest_version IS NOT NULL
            AND p.pinned_version_id != c.latest_version
            AND (c.ignored_version IS NULL OR c.ignored_version != c.latest_version))
       AS packs,
       (SELECT COUNT(*) FROM update_checks c
          JOIN server_content sc ON sc.id = c.subject_id
-         JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
+         JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'${scope}
          WHERE c.subject_type = 'content' AND c.latest_version IS NOT NULL
            AND c.latest_name IS NOT NULL AND c.latest_name != sc.version
            AND (sc.ignored_update_version IS NULL OR sc.ignored_update_version != c.latest_name))
       AS content,
       (SELECT COUNT(*) FROM update_checks c
-         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'${scope}
          WHERE c.subject_type = 'image' AND c.latest_version IS NOT NULL AND s.container_id IS NOT NULL
            AND (c.ignored_version IS NULL OR c.ignored_version != c.latest_version))
       AS images,
       (SELECT COUNT(*) FROM update_checks c
-         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'${scope}
          WHERE c.subject_type = 'mc_version' AND c.latest_version IS NOT NULL AND s.mc_version = c.current_version
            AND (c.ignored_version IS NULL OR c.ignored_version != c.latest_version))
       AS mc,
       (SELECT COUNT(*) FROM update_checks c
-         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
+         JOIN servers s ON s.id = c.subject_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'${scope}
          WHERE c.subject_type = 'loader_build' AND c.latest_version IS NOT NULL
            AND (c.ignored_version IS NULL OR c.ignored_version != c.latest_version))
       AS loader
-  `);
+  `,
+    ...scopeParams,
+    ...scopeParams,
+    ...scopeParams,
+    ...scopeParams,
+    ...scopeParams
+  );
   const packs = row?.packs || 0;
   const content = row?.content || 0;
   const images = row?.images || 0;
@@ -544,8 +559,9 @@ function countOutdatedByKind() {
   };
 }
 
-function countOutdated() {
-  return countOutdatedByKind().all;
+/** @param {{ serverIds?: Iterable<string> | null }} [opts] see countOutdatedByKind */
+function countOutdated(opts) {
+  return countOutdatedByKind(opts).all;
 }
 
 function lastCheckedAt() {

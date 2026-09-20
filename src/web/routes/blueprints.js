@@ -14,6 +14,8 @@ const multer = require('multer');
 const { z } = require('zod');
 const { nanoid } = require('nanoid');
 const blueprints = require('../../blueprints');
+const permissions = require('../../services/permissions');
+const httpError = require('../../utils/httpError');
 const { dataPath } = require('../../storage/pathGuard');
 const { dockerOverridesSchema, requireAdminForOverrides } = require('./dockerOverridesSchema');
 const logger = require('../../logger')('blueprints');
@@ -68,9 +70,26 @@ const overridesSchema = z.object({
 router.get(
   '/',
   asyncHandler((req, res, next) => {
-    res.json({ ok: true, blueprints: blueprints.listBlueprints().map(publicBlueprint) });
+    res.json({ ok: true, blueprints: blueprints.listBlueprintsFor(req.user).map(publicBlueprint) });
   })
 );
+
+// A blueprint addressed by id is "not found" when its source server is hidden
+// from the caller, the same answer the list and download give.
+function requireVisibleBlueprint(req, id) {
+  const row = blueprints.getBlueprint(id);
+  if (row && !blueprints.blueprintVisibleTo(req.user, row)) {
+    throw httpError(404, 'Blueprint not found');
+  }
+}
+
+// Exporting or cloning reads the whole server tree (server.properties included),
+// so it needs the `files` capability on the source; a hidden server reads as missing.
+function requireFilesOn(req, serverId) {
+  const perms = permissions.effective(req.user, serverId);
+  if (!perms.includes('view')) throw httpError(404, 'Server not found');
+  if (!perms.includes('files')) throw httpError(403, "You don't have the files permission on this server.");
+}
 
 router.post(
   '/export',
@@ -83,6 +102,7 @@ router.post(
         includeWorld: z.coerce.boolean().optional(),
       })
       .parse(req.body);
+    requireFilesOn(req, input.serverId);
     const row = await blueprints.exportBlueprint(
       input.serverId,
       { includeConfig: input.includeConfig !== false, embedFiles: input.embedFiles, includeWorld: input.includeWorld },
@@ -108,6 +128,7 @@ router.post(
       return res.json({ ok: true, preview, uploadToken: req.file.filename });
     }
     const { blueprintId } = z.object({ blueprintId: z.string().trim().min(1).max(40) }).parse(req.body || {});
+    requireVisibleBlueprint(req, blueprintId);
     const preview = await blueprints.importPreview(blueprints.getBlueprintPath(blueprintId));
     res.json({ ok: true, preview, blueprintId });
   })
@@ -128,6 +149,7 @@ router.post(
       .parse(req.body);
 
     let zipRef = input.blueprintId;
+    if (input.blueprintId) requireVisibleBlueprint(req, input.blueprintId);
     if (input.uploadToken) {
       zipRef = dataPath('tmp', input.uploadToken);
       if (!fs.existsSync(zipRef)) {
@@ -152,6 +174,7 @@ router.post(
         includeWorld: z.coerce.boolean().optional(),
       })
       .parse(req.body);
+    requireFilesOn(req, input.serverId);
     const { server, report, blueprint } = await blueprints.cloneServer(input.serverId, {
       includeWorld: input.includeWorld,
       actor: req.user.username,
@@ -169,7 +192,9 @@ router.get(
   '/:id/download',
   asyncHandler((req, res, next) => {
     const row = blueprints.getBlueprint(req.params.id);
-    if (!row) return res.status(404).json({ ok: false, error: 'Blueprint not found' });
+    if (!row || !blueprints.blueprintVisibleTo(req.user, row)) {
+      return res.status(404).json({ ok: false, error: 'Blueprint not found' });
+    }
     res.download(dataPath(row.rel_path), row.filename);
   })
 );
@@ -177,6 +202,7 @@ router.get(
 router.delete(
   '/:id',
   asyncHandler(async (req, res, next) => {
+    requireVisibleBlueprint(req, req.params.id);
     res.json({ ok: true, ...(await blueprints.deleteBlueprint(req.params.id, { actor: req.user.username })) });
   })
 );

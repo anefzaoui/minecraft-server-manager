@@ -20,6 +20,8 @@ const {
 const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
+const permissions = require('../../services/permissions');
+const { serverScope } = require('../middleware/serverAccess');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
 const logger = require('../../logger')('pages');
 const { serializeError } = require('../../utils/logSanitize');
@@ -102,7 +104,10 @@ const SUB_LABELS = {
 const ADMIN_ONLY_TABS = new Set(['chatbot']);
 
 /** Build the two-level nav (top groups + contextual sub-nav) for a given active tab. */
-function buildNav(id, tab, server, { isAdmin = false } = {}) {
+// Sub-nav entries that need a per-server capability beyond `view`.
+const CAP_TABS = { files: 'files' };
+
+function buildNav(id, tab, server, { isAdmin = false, perms = null } = {}) {
   const crashes = server && server.crashesUnread;
   const group = TAB_GROUPS.find((g) => g.tabs.includes(tab)) || TAB_GROUPS[0];
   const groups = TAB_GROUPS.map((g) => ({
@@ -112,7 +117,9 @@ function buildNav(id, tab, server, { isAdmin = false } = {}) {
     active: g.key === group.key,
     badge: g.tabs.includes('history') && crashes ? crashes : null,
   }));
-  const visibleSubTabs = group.tabs.filter((t) => isAdmin || !ADMIN_ONLY_TABS.has(t));
+  const visibleSubTabs = group.tabs.filter(
+    (t) => (isAdmin || !ADMIN_ONLY_TABS.has(t)) && (!perms || !CAP_TABS[t] || perms[CAP_TABS[t]])
+  );
   const sub =
     visibleSubTabs.length > 1
       ? visibleSubTabs.map((t) => ({
@@ -129,8 +136,15 @@ function buildNav(id, tab, server, { isAdmin = false } = {}) {
 // per-server pack/update/crash/loader fan-out; see viewModels.sidebarServerVMs).
 router.use(
   asyncHandler(async (req, res, next) => {
-    res.locals.servers = sidebarServerVMs();
-    res.locals.updatesCount = require('../../updates/checker').countOutdated();
+    // Only the servers this user may view - the same filter every fleet-wide page applies.
+    res.locals.visibleServerIds = permissions.visibleServerIds(req.user);
+    res.locals.servers = permissions.filterVisible(req.user, sidebarServerVMs());
+    // The badge counts only visible servers, with the same aggregate query for
+    // everyone; the scope clause is added only for a user with a hidden server.
+    const checker = require('../../updates/checker');
+    res.locals.updatesCount = checker.countOutdated({
+      serverIds: permissions.hidesAnyServer(req.user, res.locals.visibleServerIds) ? res.locals.visibleServerIds : null,
+    });
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
     next();
@@ -257,7 +271,7 @@ function buildDashboardOverview(servers) {
 
 async function renderServerList(req, res, next, { page }) {
   try {
-    const rows = serversService.listServers();
+    const rows = permissions.filterVisible(req.user, serversService.listServers());
     const ctx = buildServerContext(rows); // one batched DB pass for all servers
     const results = await Promise.allSettled(rows.map((s) => serverVM(s, { ctx })));
     const servers = results
@@ -315,7 +329,7 @@ async function renderServerList(req, res, next, { page }) {
     };
     if (page === 'dashboard') {
       const events = eventsService
-        .listEvents({ limit: 20 })
+        .listEvents({ limit: 20, forUser: req.user })
         .filter((e) => !e.type.endsWith('-requested'))
         .slice(0, 6);
       context.activity = eventsVM(events);
@@ -363,7 +377,7 @@ router.get('/servers/new', async (req, res) => {
   res.render('wizard', {
     title: 'Create Server',
     active: 'servers',
-    blueprints: require('../../blueprints').listBlueprints(),
+    blueprints: require('../../blueprints').listBlueprintsFor(req.user),
     versions,
     latestRelease,
     suggestedPort,
@@ -372,6 +386,10 @@ router.get('/servers/new', async (req, res) => {
     defaults: require('../../services/settings').getDefaults(),
   });
 });
+
+// Every server page below inherits the per-server scope: a server the user may
+// not view renders the 404 page, and res.locals.perms carries the capability set.
+router.use('/servers/:id', serverScope);
 
 // Per-player page: opened by clicking a player in the roster. Shows that player's
 // roles/ban/teleport controls and their full inventory (the Players+Inventory merge).
@@ -412,7 +430,8 @@ router.get(
       active: 'servers',
       server,
       tab: 'players',
-      nav: buildNav(row.id, 'players', server, { isAdmin: req.user.role === 'admin' }),
+      nav: buildNav(row.id, 'players', server, { isAdmin: req.user.role === 'admin', perms: res.locals.perms }),
+      perms: res.locals.perms,
       player,
     });
   })
@@ -420,7 +439,8 @@ router.get(
 
 // Back-compat: the old single Integrations tab is now four per-integration
 // pages under Settings. Land on the first one.
-router.get('/servers/:id/integrations', (req, res) => {
+router.get('/servers/:id/integrations', (req, res, next) => {
+  if (!res.locals.perms) return next(); // serverScope sets it only for a visible server
   res.redirect(302, `/servers/${req.params.id}/discord`);
 });
 
@@ -428,7 +448,10 @@ router.get(
   '/servers/:id{/:tab}',
   asyncHandler(async (req, res, next) => {
     const row = serversService.getServer(req.params.id);
-    if (!row) return next();
+    // serverScope (mounted above) resolved the capability set and already
+    // answered 404 for a server the user may not view.
+    const perms = res.locals.perms;
+    if (!row || !perms) return next();
     const tab = req.params.tab || 'overview';
     if (!SERVER_TABS.includes(tab)) return next();
 
@@ -449,7 +472,8 @@ router.get(
       server,
       tab,
       tabs: SERVER_TABS,
-      nav: buildNav(row.id, tab, server, { isAdmin: req.user.role === 'admin' }),
+      nav: buildNav(row.id, tab, server, { isAdmin: req.user.role === 'admin', perms }),
+      perms,
       mods: [],
       backups: [],
       worlds: [],
@@ -479,7 +503,7 @@ router.get(
       // Recent sends (oldest first) so the history pane survives reloads and
       // is shared across admins - chat.js replays them with the live preview.
       context.chatHistory = require('../../events')
-        .listEvents({ serverId: row.id, type: 'chat-sent', limit: 50 })
+        .listEvents({ serverId: row.id, type: 'chat-sent', limit: 50, forUser: req.user })
         .map((e) => ({ ts: e.created_at, actor: e.actor, ...e.details }))
         .reverse();
     } else if (tab === 'mods') {
@@ -497,7 +521,7 @@ router.get(
     } else if (tab === 'worlds') {
       const worldsService = require('../../services/worlds');
       context.worlds = await worldsService.listServerWorlds(row.id).catch(() => []);
-      context.libraryWorlds = worldsService.libraryWorlds();
+      context.libraryWorlds = worldsService.libraryWorlds({ visibleServerIds: res.locals.visibleServerIds });
       // Copy-to target list, serialized in one piece by the json helper - the
       // view used to hand-assemble this JSON attribute field by field.
       context.serverOptions = (res.locals.servers || []).map((s) => ({
@@ -508,11 +532,11 @@ router.get(
       }));
     } else if (tab === 'files') {
       // File browsing exposes raw server files (names/sizes/types/downloads),
-      // so only accounts that can read them via the files API (admin/operator)
-      // get a listing here - the API route sets this same contract explicitly.
+      // so only accounts holding the `files` capability get a listing here -
+      // the API route sets this same contract explicitly.
       const filesService = require('../../services/files');
       const rel = String(req.query.path || '');
-      if (!['admin', 'operator'].includes(req.user.role)) {
+      if (!perms.files) {
         context.files = [];
         context.filePath = rel;
         context.crumbs = rel
@@ -578,7 +602,7 @@ router.get(
         'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
         row.id
       );
-      context.recentEvents = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 8 }));
+      context.recentEvents = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 8, forUser: req.user }));
 
       // --- Per-world / per-dimension sizes + host disk free.
       try {
@@ -624,10 +648,10 @@ router.get(
       // MOTD editing: expose the env for a client-side merge-and-PATCH; the
       // stored §-codes become &-codes for friendly editing.
       // The raw env goes only to accounts that can write it back (the client
-      // merges-and-PATCHes against the API, which `requireWrite` blocks for
-      // viewers, and env_json can carry secrets like RCON_PASSWORD) - same
+      // merges-and-PATCHes against the API, which needs the `settings`
+      // capability, and env_json can carry secrets like RCON_PASSWORD) - same
       // privilege split as the admin-only Docker fields above.
-      if (req.user.role === 'admin' || req.user.role === 'operator') {
+      if (perms.settings) {
         context.settingsEnv = JSON.stringify(row.env);
       }
       context.motd = String(row.env.MOTD || '').replace(/§([0-9a-fk-orA-FK-OR])/g, '&$1');
@@ -701,7 +725,7 @@ router.get(
         lastUsed: c.last_used_at || null,
       }));
       context.chatCommandEvents = eventsService
-        .listEvents({ serverId: row.id, type: 'chat-command', limit: 10 })
+        .listEvents({ serverId: row.id, type: 'chat-command', limit: 10, forUser: req.user })
         .map((e) => ({ ts: e.created_at, summary: e.summary, failed: e.details && e.details.success === false }));
     } else if (tab === 'console') {
       const { stripAnsi } = require('../../utils/ansi');
@@ -715,7 +739,7 @@ router.get(
         });
       context.wsConsole = true;
     } else if (tab === 'history') {
-      context.events = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 100 }));
+      context.events = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 100, forUser: req.user }));
       context.crashReports = db
         .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
         .map(crashVM);
@@ -751,14 +775,18 @@ router.get('/modpacks', async (req, res) => {
   // Own query, not res.locals.servers: the sidebar VMs are deliberately lean and
   // carry no pack info. NB: never pass this list under the `servers` key - that
   // shadows res.locals.servers and silently filters the sidebar's server list.
-  res.render('modpacks', { title: 'Modpacks', active: 'modpacks', packServers: packServerVMs() });
+  res.render('modpacks', {
+    title: 'Modpacks',
+    active: 'modpacks',
+    packServers: permissions.filterVisible(req.user, packServerVMs()),
+  });
 });
 
 router.get('/worlds', (req, res) => {
   res.render('worlds', {
     title: 'Worlds',
     active: 'worlds',
-    worlds: require('../../services/worlds').libraryWorlds(),
+    worlds: require('../../services/worlds').libraryWorlds({ visibleServerIds: res.locals.visibleServerIds }),
     // Install/extract target list - one json call, not hand-assembled JSON.
     serverOptions: (res.locals.servers || []).map((s) => ({
       id: s.id,
@@ -773,7 +801,7 @@ router.get('/blueprints', (req, res) => {
   res.render('blueprints', {
     title: 'Blueprints',
     active: 'blueprints',
-    blueprints: require('../../blueprints').listBlueprints(),
+    blueprints: require('../../blueprints').listBlueprintsFor(req.user),
   });
 });
 
@@ -784,10 +812,13 @@ router.get('/updates', (req, res) => {
     active: 'updates',
     // Changelog URLs come from remote platform APIs - allow only http(s) so a
     // hostile response can never plant a javascript: link.
-    updates: checker.listOutdated().map((u) => ({
-      ...u,
-      changelog: /^https?:\/\//i.test(u.changelog || '') ? u.changelog : null,
-    })),
+    updates: checker
+      .listOutdated()
+      .filter((u) => !u.serverId || res.locals.visibleServerIds.has(u.serverId))
+      .map((u) => ({
+        ...u,
+        changelog: /^https?:\/\//i.test(u.changelog || '') ? u.changelog : null,
+      })),
     lastChecked: checker.lastCheckedAt() || null,
   });
 });
@@ -797,10 +828,17 @@ router.get('/backups', (req, res) => {
   // rendered every backup row the table held and derived the totals from that
   // in-memory array - a fleet with months of retention materialized the whole
   // table on every page load just to show the newest entries.
-  const totals = db.get('SELECT COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS s FROM backups');
+  const visible = [...res.locals.visibleServerIds];
+  const ph = visible.map(() => '?').join(',') || 'NULL';
+  const totals = db.get(
+    `SELECT COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS s FROM backups WHERE server_id IN (${ph})`,
+    ...visible
+  );
   const backups = db
     .all(
-      `SELECT b.*, s.display_name FROM backups b JOIN servers s ON s.id = b.server_id ORDER BY b.created_at DESC LIMIT 200`
+      `SELECT b.*, s.display_name FROM backups b JOIN servers s ON s.id = b.server_id
+        WHERE b.server_id IN (${ph}) ORDER BY b.created_at DESC LIMIT 200`,
+      ...visible
     )
     .map((b) => ({
       id: b.id,
@@ -824,7 +862,7 @@ router.get('/schedules', (req, res) => {
   res.render('schedules', {
     title: 'Schedules',
     active: 'schedules',
-    schedules: scheduler.listSchedules(),
+    schedules: scheduler.listSchedules().filter((j) => !j.serverId || res.locals.visibleServerIds.has(j.serverId)),
     taskTypes: Object.entries(scheduler.TASK_TYPES).map(([value, t]) => ({
       value,
       label: t.label,
@@ -940,6 +978,7 @@ router.get('/activity', (req, res) => {
     where.push('(summary LIKE ? OR actor LIKE ? OR type LIKE ?)');
     params.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
+  eventsService.addUserScope(where, params, req.user);
   const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
   const total = db.get(`SELECT COUNT(*) AS n FROM events ${whereSql}`, ...params)?.n || 0;
@@ -967,7 +1006,7 @@ router.get('/activity', (req, res) => {
     title: 'Activity',
     active: 'activity',
     events,
-    types: eventsService.knownTypes(),
+    types: eventsService.knownTypes().filter((t) => !permissions.hiddenEventTypes(req.user).includes(t)),
     filters: { q, server, type },
     exportQs: filterQs ? `&${filterQs}` : '',
     total,
@@ -1010,6 +1049,14 @@ router.get(
     });
   })
 );
+
+router.get('/settings/permissions', requireRole('admin'), (req, res) => {
+  res.render('permissions', {
+    title: 'Permissions',
+    active: 'permissions',
+    matrix: permissions.listMatrix(),
+  });
+});
 
 router.get('/settings', requireRole('admin'), (req, res) => {
   const apiKeys = require('../../services/apiKeys');

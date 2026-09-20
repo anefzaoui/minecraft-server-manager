@@ -6,7 +6,7 @@
       <option value="">All sources</option><option value="pack">Pack-managed</option><option value="overlay">Custom</option>
     </select>
     {{/if}}
-    <div class="ml-auto flex flex-wrap gap-2">
+    <div class="ml-auto flex flex-wrap gap-2{{#unless perms.content}} hidden{{/unless}}">
       {{#if hasModUpdates}}
       <button class="btn btn-ghost btn-sm text-warn" id="mods-update-all" data-tip="Apply every available update, then restart the server once">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update All</button>
       {{/if}}

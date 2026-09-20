@@ -15,6 +15,7 @@ const { followLogs } = require('../docker/logs');
 const { statsStream } = require('../docker/stats');
 const { execCapture, inspectStatus } = require('../docker/containers');
 const { getServer } = require('../services/servers');
+const permissions = require('../services/permissions');
 const { recordEvent } = require('../events');
 const logger = require('../logger')('ws');
 const { serializeError } = require('../utils/logSanitize');
@@ -51,7 +52,8 @@ function attachWebSockets(httpServer) {
     }
     wss.handleUpgrade(req, socket, head, (ws) => {
       const [, kind, serverId] = match;
-      if (!getServer(serverId)) {
+      // A server the user may not view closes exactly like a missing one.
+      if (!getServer(serverId) || !permissions.can(user, serverId, 'view')) {
         ws.close(4404, 'unknown server');
         return;
       }
@@ -93,9 +95,14 @@ async function handleConsole(ws, serverId, user) {
       return; // intentional: ignore a malformed inbound frame
     }
     if (msg.kind !== 'cmd' || typeof msg.command !== 'string') return;
-    // Viewers may watch logs but never execute commands.
-    if (!['admin', 'operator'].includes(user.role)) {
-      send({ kind: 'cmd-result', command: msg.command, output: '', error: 'Your role (viewer) cannot run commands.' });
+    // Watching logs needs `view`; running commands needs `console` on this server.
+    if (!permissions.can(user, serverId, 'console')) {
+      send({
+        kind: 'cmd-result',
+        command: msg.command,
+        output: '',
+        error: "You don't have the console permission on this server.",
+      });
       return;
     }
     const command = msg.command.trim().replace(/^\//, '').slice(0, 500);
