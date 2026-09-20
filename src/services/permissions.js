@@ -40,29 +40,186 @@ const CAPABILITIES = /** @type {const} */ ([
   'delete',
 ]);
 
-/** Human labels + one-line help for the Permissions page and the docs. */
+/**
+ * The capability catalog: label and one-line `help` (used in the editor and the
+ * docs table), plus the detail the Permissions page explains below the matrix:
+ * `covers` (what a person can do, in plain words), `excludes` (what people
+ * expect but is a different capability), and `reach` (the exact API routes,
+ * sockets, and pages the capability gates). `reach` is checked against the
+ * live router stack by test/permissions-routes.test.js, so this text cannot
+ * drift from what the middleware enforces. Patterns: `METHOD /path`,
+ * `WRITES /prefix/*` (every state-changing method under a mount),
+ * `ALL /prefix/*` (reads too).
+ */
 const CAPABILITY_INFO = {
-  view: { label: 'View', help: 'See the server, its status, console output, players, history, and stats.' },
-  power: { label: 'Power', help: 'Start, stop, restart, kill, and rebuild the server.' },
+  view: {
+    label: 'View',
+    help: 'See the server, its status, console output, players, history, and stats.',
+    covers: [
+      'See the server in the sidebar, dashboard, and every fleet-wide list (backups, worlds, schedules, activity, updates).',
+      'Open every tab: overview, console output, players, mods, worlds, map, backups, history, live stats, settings (read-only).',
+      'Watch the live console and stats over the panel sockets and open the live map.',
+    ],
+    excludes:
+      'Any change. Without View the server does not exist for this user: every page, API call, and socket answers "not found".',
+    reach: [
+      'GET /api/servers/:id/*',
+      'WS /ws/console/:id (watch)',
+      'WS /ws/stats/:id',
+      'GET /map/:id/*',
+      'GET /servers/:id/* (pages)',
+    ],
+  },
+  power: {
+    label: 'Power',
+    help: 'Start, stop, restart, kill, and rebuild the server.',
+    covers: [
+      'Start, stop, restart, and force stop the server from the header buttons.',
+      'Rebuild the container to apply pending settings.',
+      'Create, pause, and delete scheduled starts, stops, and restarts for this server.',
+    ],
+    excludes: 'Running console commands (Console), changing settings (Settings), deleting the server (Delete).',
+    reach: [
+      'POST /api/servers/:id/start',
+      'POST /api/servers/:id/stop',
+      'POST /api/servers/:id/restart',
+      'POST /api/servers/:id/kill',
+      'POST /api/servers/:id/recreate',
+      'POST /api/schedules (restart, stop, start)',
+    ],
+  },
   console: {
     label: 'Console',
     help: 'Run console commands and world quick actions, send chat, and manage chat commands.',
+    covers: [
+      'Type commands into the console and use the quick-command chips.',
+      'Send chat messages to players and use the world quick actions (time, weather, game rules).',
+      'Create and edit custom chat commands.',
+      'Schedule a console command for this server.',
+    ],
+    excludes:
+      'Kicking, banning, and whitelisting through the Players tab (Players), even though the same could be typed as commands.',
+    reach: [
+      'WS /ws/console/:id (send commands)',
+      'POST /api/servers/:id/chat',
+      'POST /api/servers/:id/world/quick',
+      'WRITES /api/servers/:id/chat-commands/*',
+      'POST /api/schedules (rcon)',
+    ],
   },
-  players: { label: 'Players', help: 'Kick, ban, whitelist, op, and edit player notes.' },
+  players: {
+    label: 'Players',
+    help: 'Kick, ban, whitelist, op, and edit player notes.',
+    covers: [
+      'Kick, ban, pardon, whitelist, op, and teleport players from the roster.',
+      'Write and delete notes on a player.',
+      'Refresh player analytics from the logs.',
+    ],
+    excludes: 'Editing inventories (Content) and running arbitrary commands (Console).',
+    reach: ['WRITES /api/servers/:id/players/*', 'WRITES /api/servers/:id/analytics/*'],
+  },
   content: {
     label: 'Content',
     help: 'Install and remove mods, plugins, packs, worlds, datapacks, and edit inventories.',
+    covers: [
+      'Add, update, disable, and remove mods, plugins, and datapacks; import zips; check for updates.',
+      'Install, upgrade, and roll back the managed modpack; export it as an .mrpack.',
+      'Install, copy, download, delete, and shrink worlds on this server, and extract a world from it into the library.',
+      'Edit player inventories and rebuild the item registry.',
+    ],
+    excludes: 'Editing raw files (Files), server settings such as versions and memory (Settings).',
+    reach: [
+      'POST /api/servers/:id/mods',
+      'POST /api/servers/:id/mods/upload',
+      'POST /api/servers/:id/mods/import-zip',
+      'POST /api/servers/:id/mods/import-zip/preview',
+      'POST /api/servers/:id/mods/update',
+      'POST /api/servers/:id/mods/update-all',
+      'POST /api/servers/:id/mods/ignore-update',
+      'POST /api/servers/:id/mods/toggle',
+      'DELETE /api/servers/:id/mods/:file',
+      'POST /api/servers/:id/pack',
+      'POST /api/servers/:id/pack/upgrade',
+      'POST /api/servers/:id/pack/rollback',
+      'POST /api/servers/:id/updates/check',
+      'POST /api/servers/:id/pending-downloads/exclude',
+      'WRITES /api/servers/:id/worlds/*',
+      'GET /api/servers/:id/worlds/:world/download',
+      'POST /api/servers/:id/worlds/:world/shrink',
+      'GET /api/servers/:id/integrations/invite/modpack.mrpack',
+      'WRITES /api/servers/:id/inventory/*',
+      'WRITES /api/servers/:id/items/*',
+      'POST /api/worlds/extract (this server as source)',
+      'POST /api/worlds/:id/install (this server as target)',
+    ],
   },
-  backups: { label: 'Backups', help: 'Create, restore, download, and delete backups.' },
+  backups: {
+    label: 'Backups',
+    help: 'Create, restore, download, and delete backups.',
+    covers: [
+      'Back up now, restore a backup, download, rename, and delete archives of this server.',
+      'Schedule backups for this server.',
+    ],
+    excludes: 'Retention rules, which stay admin-only.',
+    reach: [
+      'POST /api/servers/:id/backups',
+      'POST /api/servers/:id/backups/:backupId/restore',
+      'GET /api/backups/:backupId/download',
+      'PATCH /api/backups/:backupId',
+      'DELETE /api/backups/:backupId',
+      'POST /api/schedules (backup)',
+    ],
+  },
   files: {
     label: 'Files',
     help: 'Browse, edit, upload, and download server files, archived logs, and log bundles; export blueprints.',
+    covers: [
+      'Open the Files tab: browse, read, edit, upload, rename, and delete anything in the server folder, server.properties included.',
+      'Download archived and game logs and the log bundle; export the history as a file.',
+      'Share, delete, and mark crash reports.',
+      'Export this server as a blueprint.',
+    ],
+    excludes: 'The panel-wide data folder (admin-only) and other servers’ files.',
+    reach: [
+      'ALL /api/servers/:id/files/*',
+      'GET /api/servers/:id/logs/archived',
+      'GET /api/servers/:id/logs/archived/:file',
+      'GET /api/servers/:id/logs/game',
+      'GET /api/servers/:id/logs/game/:file',
+      'GET /api/servers/:id/logs/bundle.zip',
+      'GET /api/servers/:id/events/export',
+      'WRITES /api/servers/:id/crashes/*',
+      'POST /api/blueprints/export (this server as source)',
+    ],
   },
   settings: {
     label: 'Settings',
     help: 'Change server settings, properties, integrations, icon, and upgrade versions.',
+    covers: [
+      'Save the Configuration tab: name, description, tags, memory, CPU, quota, update policy, environment, and server.properties.',
+      'Upgrade the Minecraft version or the container image, set the icon and the console label, turn the live map on or off.',
+      'Configure Discord, the public status page, and invites.',
+    ],
+    excludes:
+      'Advanced Docker overrides and the chatbot, which stay admin-only. Rebuilding the container after a change (Power).',
+    reach: [
+      'PATCH /api/servers/:id',
+      'PUT /api/servers/:id/console-label',
+      'POST /api/servers/:id/icon',
+      'POST /api/servers/:id/image/upgrade',
+      'POST /api/servers/:id/mcversion/upgrade',
+      'POST /api/servers/:id/map/enable',
+      'POST /api/servers/:id/map/disable',
+      'WRITES /api/servers/:id/integrations/*',
+    ],
   },
-  delete: { label: 'Delete', help: 'Delete the server.' },
+  delete: {
+    label: 'Delete',
+    help: 'Delete the server.',
+    covers: ['Remove the server from the panel, optionally with its files and backups.'],
+    excludes: 'Creating or cloning servers, which follow the global role.',
+    reach: ['DELETE /api/servers/:id'],
+  },
 };
 
 /** @type {Set<string>} */

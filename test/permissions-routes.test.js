@@ -142,3 +142,43 @@ test('the wizard mount stays admin-only rather than capability-gated', () => {
     'no capability gate (admin gate instead)'
   );
 });
+
+test('the capability catalog names every gated route (the Permissions page cannot drift from enforcement)', () => {
+  const { CAPABILITY_INFO } = require('../src/services/permissions');
+  const gated = [];
+  for (const layer of api.stack) {
+    if (!layer.route) continue;
+    const gate = layer.route.stack.find((l) => typeof l.name === 'string' && l.name.startsWith('requireCap_'));
+    if (!gate) continue;
+    for (const m of Object.keys(layer.route.methods)) {
+      gated.push({ cap: gate.handle.capability, entry: `${m.toUpperCase()} /api${layer.route.path}` });
+    }
+  }
+  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'web', 'routes', 'api.js'), 'utf8');
+  for (const m of src.matchAll(/router\.use\('(\/servers\/:id\/[^']+)', (requireCap\w*)\('(\w+)'\)/g)) {
+    gated.push({ cap: m[3], entry: `${m[2] === 'requireCapForWrites' ? 'WRITES' : 'ALL'} /api${m[1]}/*` });
+  }
+  assert.ok(gated.length >= 50, `found ${gated.length} gated routes`);
+  const missing = [];
+  for (const { cap, entry } of gated) {
+    const reach = CAPABILITY_INFO[cap].reach.map((r) => r.replace(/ \(.*\)$/, ''));
+    if (!reach.includes(entry)) missing.push(`${cap}: ${entry}`);
+  }
+  assert.deepEqual(missing, [], 'gated routes absent from the catalog reach');
+  // And the other way round: every catalogued API route is really gated by that capability.
+  const known = new Set(gated.map((g) => `${g.cap} ${g.entry}`));
+  const stale = [];
+  for (const cap of Object.keys(CAPABILITY_INFO)) {
+    for (const r of CAPABILITY_INFO[cap].reach) {
+      const entry = r.replace(/ \(.*\)$/, '');
+      if (!/^(GET|POST|PUT|PATCH|DELETE|WRITES|ALL) \/api\/servers\/:id/.test(entry)) continue; // ws, map, pages, body-scoped
+      if (entry === 'GET /api/servers/:id/*') continue; // view: everything under serverScope
+      if (
+        /^(GET|POST) \/api\/servers\/:id\/(worlds\/:world\/download|integrations\/invite\/modpack\.mrpack)$/.test(entry)
+      )
+        continue; // gated inside sub-routers
+      if (!known.has(`${cap} ${entry}`)) stale.push(`${cap}: ${entry}`);
+    }
+  }
+  assert.deepEqual(stale, [], 'catalog entries that no route enforces');
+});

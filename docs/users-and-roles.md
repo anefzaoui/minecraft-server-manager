@@ -40,6 +40,10 @@ Each cell is a set of permissions:
 
 ![Permission editor](images/permissions-editor.png)
 
+Below the grid, **What Each Permission Covers** opens each permission into what a person can do, what is not included, and the exact panel routes it unlocks. That last list is checked against the running code by the test suite.
+
+![Permission reference](images/permissions-reference.png)
+
 On a phone the grid stacks into one card per user, with a row per server.
 
 <p align="center">

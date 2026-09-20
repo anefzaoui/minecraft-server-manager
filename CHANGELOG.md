@@ -16,8 +16,9 @@ its own dated entry.
   delete on the server that matters. Turning everything off hides the server from that user
   completely: it leaves their sidebar, dashboard, backups, schedules, activity, updates, modpacks,
   live status, tasks, and blueprints, and a direct link, API call, or console socket answers "not
-  found". Existing installations are unchanged until an admin edits a cell. Thanks @RandomGuy908 for
-  the request.
+  found". A reference below the grid opens each permission into what it allows, what it does not,
+  and the exact routes it unlocks. Existing installations are unchanged until an admin edits a cell.
+  Thanks @RandomGuy908 for the request.
 
 ### Internal
 

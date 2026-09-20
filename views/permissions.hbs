@@ -58,6 +58,41 @@
   {{else}}
     {{> empty-state iconName='users' title='No Operators or Viewers Yet' message='Admins always have every permission. Add an operator or viewer account under Settings to give them access to specific servers.' ctaHref='/settings' ctaLabel='Manage Users'}}
   {{/if}}
+
+  <section class="card p-4 sm:p-5" id="permissions-reference">
+    <h3 class="text-sm font-semibold text-ink">What Each Permission Covers</h3>
+    <p class="mt-1 max-w-prose text-xs leading-relaxed text-ink-faint">Open a permission to see what it lets a person do on a server, what people often expect but is a different permission, and the exact panel routes it unlocks. The last list is checked against the running code by the test suite, so it never drifts.</p>
+    <div class="mt-4 divide-y divide-line">
+      {{#each matrix.capabilities}}
+        <details class="group py-3" id="permission-{{key}}">
+          <summary class="flex cursor-pointer list-none items-start gap-3 [&::-webkit-details-marker]:hidden">
+            <span class="mt-0.5 shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
+            <span class="min-w-0">
+              <span class="block text-sm font-medium text-ink">{{label}}</span>
+              <span class="mt-0.5 block max-w-prose text-xs leading-relaxed text-ink-faint">{{help}}</span>
+            </span>
+          </summary>
+          <div class="mt-3 grid gap-4 pl-7 lg:grid-cols-2">
+            <div>
+              <h4 class="eyebrow">You Can</h4>
+              <ul class="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed text-ink-soft">
+                {{#each covers}}<li>{{this}}</li>{{/each}}
+              </ul>
+              <h4 class="eyebrow mt-3">Not Included</h4>
+              <p class="mt-1.5 max-w-prose text-xs leading-relaxed text-ink-soft">{{excludes}}</p>
+            </div>
+            <div>
+              <h4 class="eyebrow">Technical Reach</h4>
+              <ul class="mt-1.5 space-y-0.5 font-mono text-[11px] leading-relaxed text-ink-faint">
+                {{#each reach}}<li>{{this}}</li>{{/each}}
+              </ul>
+            </div>
+          </div>
+        </details>
+      {{/each}}
+    </div>
+    <p class="help mt-3 max-w-prose">Always admin-only, on every server: the chatbot, backup retention, advanced Docker overrides, the panel-wide data folder, users, and API keys. Creating or cloning a server follows the global role.</p>
+  </section>
 </div>
 <script type="application/json" id="permissions-capabilities">{{jsonScript matrix.capabilities}}</script>
 <script type="module" src="/js/pages/permissions.js"></script>
