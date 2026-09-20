@@ -15,7 +15,7 @@
 // (dormant until this module): PRIMARY KEY (user_id, server_id), user rows
 // cascade on user delete. Server rows are kept across a soft delete on purpose:
 // a server hidden from someone stays hidden in history and kept backups after
-// it is removed. `forgetServer()` exists for a real cleanup.
+// it is removed.
 //
 // Panel-wide actions (creating servers, storage, users, global settings) are
 // NOT covered here - those stay on the global role, see web/middleware/auth.js.
@@ -282,9 +282,16 @@ function hiddenEventTypes(user) {
   return user && user.role === 'admin' ? [] : ['permissions-changed'];
 }
 
-/** Drop every grant row for a server that is being removed for good. */
-function forgetServer(serverId) {
-  db.run('DELETE FROM user_server_permissions WHERE server_id = ?', serverId);
+/**
+ * True when at least one server is hidden from the user. Callers use it to
+ * skip per-row visibility work for the common case where nothing is hidden.
+ * @param {{ id: string, role: string } | null | undefined} user
+ * @param {Set<string>} [visible] a `visibleServerIds(user)` result, if already computed
+ */
+function hidesAnyServer(user, visible = visibleServerIds(user)) {
+  if (!user) return true;
+  if (user.role === 'admin') return false;
+  return visible.size < db.get('SELECT COUNT(*) AS n FROM servers').n;
 }
 
 module.exports = {
@@ -300,5 +307,5 @@ module.exports = {
   listMatrix,
   setGrant,
   hiddenEventTypes,
-  forgetServer,
+  hidesAnyServer,
 };

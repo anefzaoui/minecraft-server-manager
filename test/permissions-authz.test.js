@@ -736,3 +736,77 @@ test('capability mapping: log bundles need files, world quick actions need conso
   assert.equal(installA.status, 403);
   await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: null } });
 });
+
+// ---------------------------------------------------------------------------
+// Second review round.
+
+test('blueprints addressed by id (preview, import, delete) are not found when the source is hidden', async () => {
+  const exported = await app.req('POST', '/api/blueprints/export', { cookie: adminCookie, body: { serverId: A } });
+  assert.equal(exported.status, 201);
+  const bpId = exported.json.blueprint.id;
+  // Operator is hidden on A.
+  assert.equal(
+    (await app.req('POST', '/api/blueprints/import-preview', { cookie: operatorCookie, body: { blueprintId: bpId } }))
+      .status,
+    404
+  );
+  assert.equal(
+    (await app.req('POST', '/api/blueprints/import', { cookie: operatorCookie, body: { blueprintId: bpId } })).status,
+    404
+  );
+  assert.equal((await app.req('DELETE', `/api/blueprints/${bpId}`, { cookie: operatorCookie })).status, 404);
+  assert.ok(db.get('SELECT 1 AS x FROM blueprints WHERE id = ?', bpId), 'still there');
+  const preview = await app.req('POST', '/api/blueprints/import-preview', {
+    cookie: adminCookie,
+    body: { blueprintId: bpId },
+  });
+  assert.equal(preview.status, 200);
+  // Deleting it records an event scoped to the hidden source, so the operator never sees the name.
+  assert.equal((await app.req('DELETE', `/api/blueprints/${bpId}`, { cookie: adminCookie })).status, 200);
+  const ev = db.get("SELECT server_id FROM events WHERE type = 'blueprint-deleted' ORDER BY id DESC LIMIT 1");
+  assert.equal(ev.server_id, A);
+  const opActivity = await app.req('GET', '/activity', { cookie: operatorCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!opActivity.text.includes('Blueprint deleted: Alpha Server'));
+});
+
+test('panel-global schedule types follow the global role even with a serverId attached', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: ['settings'] } });
+  for (const taskType of ['storage-scan', 'update-check', 'tmp-clean']) {
+    const r = await app.req('POST', '/api/schedules', {
+      cookie: viewerCookie,
+      body: { serverId: B, taskType, cron: '0 5 * * *' },
+    });
+    assert.equal(r.status, 403, `${taskType} with a serverId is still panel-global`);
+  }
+  // An operator may create them; the serverId is dropped because the task is not server-scoped.
+  const r = await app.req('POST', '/api/schedules', {
+    cookie: operatorCookie,
+    body: { serverId: B, taskType: 'tmp-clean', cron: '0 5 * * *' },
+  });
+  assert.equal(r.status, 201);
+  assert.equal(r.json.schedule.serverId, null);
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: null } });
+});
+
+test('status summary keeps alerts of a deleted server for anyone whose default sees it', async () => {
+  const D = app.seedServer('srv_perm_d');
+  db.run("UPDATE servers SET display_name = 'Delta Gone' WHERE id = ?", D);
+  recordEvent({ serverId: D, actor: 'test', type: 'crash-report', summary: 'Delta crashed.' });
+  await app.req('PUT', `/api/permissions/${viewerId}/${D}`, { cookie: adminCookie, body: { perms: [] } });
+  db.run("UPDATE servers SET deleted_at = datetime('now') WHERE id = ?", D);
+  for (const cookie of [adminCookie, operatorCookie]) {
+    const s = await app.req('GET', '/api/status/summary', { cookie });
+    assert.ok(
+      s.json.recentAlerts.some((a) => a.serverId === D),
+      'alert kept after the delete'
+    );
+  }
+  const v = await app.req('GET', '/api/status/summary', { cookie: viewerCookie });
+  assert.ok(!v.json.recentAlerts.some((a) => a.serverId === D), 'hidden stays hidden');
+});
+
+test('PUT /api/permissions without a perms field gets a friendly 400', async () => {
+  const r = await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: {} });
+  assert.equal(r.status, 400);
+  assert.match(r.json.error, /Send a list of permissions/);
+});

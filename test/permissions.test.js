@@ -111,7 +111,7 @@ test('setGrant validates the user and the server', () => {
   assert.throws(() => permissions.setGrant(viewer.id, srvA, ['view', 'bogus']), /Unknown permission/);
 });
 
-test('a soft-deleted server stays visible by default, an explicit hide survives it, forgetServer clears rows', () => {
+test('a soft-deleted server stays visible by default and an explicit hide survives it', () => {
   const srvC = seedServer('srv_c');
   permissions.setGrant(viewer.id, srvC, [], { actor: 'test' });
   assert.equal(permissions.visibleServerIds(viewer).has(srvC), false);
@@ -128,8 +128,10 @@ test('a soft-deleted server stays visible by default, an explicit hide survives 
     permissions.listMatrix().servers.some((s) => s.id === srvC),
     false
   );
-  permissions.forgetServer(srvC);
-  assert.equal(db.get('SELECT COUNT(*) AS n FROM user_server_permissions WHERE server_id = ?', srvC).n, 0);
+  assert.equal(permissions.hidesAnyServer(viewer), true);
+  assert.equal(permissions.hidesAnyServer(operator), false);
+  assert.equal(permissions.hidesAnyServer(admin), false);
+  db.run('DELETE FROM user_server_permissions WHERE server_id = ?', srvC);
   assert.equal(permissions.visibleServerIds(viewer).has(srvC), true, 'back to the role default');
 });
 

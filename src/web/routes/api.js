@@ -344,7 +344,9 @@ router.get(
       req.user,
       db.all('SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at')
     );
-    const visibleIds = new Set(serverRows.map((s) => s.id));
+    // Alerts use the full visibility set (deleted servers included) so a
+    // crash on a server removed since is still reported, as before.
+    const visibleIds = permissions.visibleServerIds(req.user);
     const problems = serverRows
       .filter((s) => PROBLEM_STATUSES.has(s.status))
       .map((s) => ({ serverId: s.id, server: s.display_name, kind: s.status }));
@@ -1228,6 +1230,14 @@ router.get('/schedules/preview', (req, res) => {
 // toggling, or deleting one needs the capability that action needs.
 const SCHEDULE_CAP = { restart: 'power', stop: 'power', start: 'power', backup: 'backups', rcon: 'console' };
 function requireScheduleAccess(req, serverId, taskType) {
+  const meta = scheduler.TASK_TYPES[taskType];
+  if (meta && !meta.serverScoped) {
+    // Panel-global work (storage scan, update check, temp cleanup, …) runs
+    // against the whole panel whatever serverId is attached, so it follows the
+    // global role: a viewer never reaches it, even with per-server grants.
+    if (req.user.role === 'viewer') throw httpError(403, 'Your role (Viewer) is read-only.');
+    return;
+  }
   if (!serverId) return;
   const cap = SCHEDULE_CAP[taskType] || 'settings';
   const perms = permissions.effective(req.user, serverId);
@@ -1251,11 +1261,12 @@ router.post(
       })
       .parse(req.body);
     requireScheduleAccess(req, input.serverId || null, input.taskType);
+    const scoped = scheduler.TASK_TYPES[input.taskType] && scheduler.TASK_TYPES[input.taskType].serverScoped;
     res.status(201).json({
       ok: true,
       schedule: scheduler.createSchedule(
         {
-          serverId: input.serverId || null,
+          serverId: scoped ? input.serverId || null : null,
           taskType: input.taskType,
           cron: input.cron,
           payload: input.payload,
@@ -2309,6 +2320,9 @@ router.put(
   '/permissions/:userId/:serverId',
   requireRole('admin'),
   asyncHandler((req, res, next) => {
+    if (!req.body || !('perms' in req.body)) {
+      throw httpError(400, 'Send a list of permissions, or null to use the role default.');
+    }
     const { perms } = z.object({ perms: z.array(z.string().max(20)).max(32).nullable() }).parse(req.body);
     const result = permissions.setGrant(req.params.userId, req.params.serverId, perms, {
       actor: req.user.username,

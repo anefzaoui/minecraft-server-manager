@@ -139,13 +139,14 @@ router.use(
     // Only the servers this user may view - the same filter every fleet-wide page applies.
     res.locals.visibleServerIds = permissions.visibleServerIds(req.user);
     res.locals.servers = permissions.filterVisible(req.user, sidebarServerVMs());
+    // The badge counts only visible servers. The per-row list is materialised
+    // only for a user who actually has a hidden server; everyone else gets the
+    // cheap aggregate count.
     const checker = require('../../updates/checker');
-    res.locals.updatesCount =
-      req.user && req.user.role !== 'admin'
-        ? checker
-            .listOutdated()
-            .filter((u) => (!u.serverId || res.locals.visibleServerIds.has(u.serverId)) && !u.ignored).length
-        : checker.countOutdated();
+    res.locals.updatesCount = permissions.hidesAnyServer(req.user, res.locals.visibleServerIds)
+      ? checker.listOutdated().filter((u) => (!u.serverId || res.locals.visibleServerIds.has(u.serverId)) && !u.ignored)
+          .length
+      : checker.countOutdated();
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
     next();

@@ -663,7 +663,11 @@ async function deleteBlueprint(id, { actor = 'system' } = {}) {
   if (!row) throw httpError(404, 'Blueprint not found');
   await fsp.rm(dataPath(row.rel_path), { force: true });
   db.run('DELETE FROM blueprints WHERE id = ?', id);
+  // Scoped to the source server (when known) so a user who may not see that
+  // server does not learn its name from the deletion entry.
+  const sourceServerId = decorate(row).manifest.sourceServerId || null;
   recordEvent({
+    serverId: sourceServerId,
     actor,
     type: 'blueprint-deleted',
     summary: `Blueprint deleted: ${row.name} (${(row.size_bytes / 1024 ** 2).toFixed(1)} MB freed).`,

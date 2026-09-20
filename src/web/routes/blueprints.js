@@ -72,6 +72,15 @@ router.get(
   })
 );
 
+// A blueprint addressed by id is "not found" when its source server is hidden
+// from the caller, the same answer the list and download give.
+function requireVisibleBlueprint(req, id) {
+  const row = blueprints.getBlueprint(id);
+  if (row && !blueprints.blueprintVisibleTo(req.user, row)) {
+    throw require('../../utils/httpError')(404, 'Blueprint not found');
+  }
+}
+
 // Exporting or cloning reads the whole server tree (server.properties included),
 // so it needs the `files` capability on the source; a hidden server reads as missing.
 function requireFilesOn(req, serverId) {
@@ -119,6 +128,7 @@ router.post(
       return res.json({ ok: true, preview, uploadToken: req.file.filename });
     }
     const { blueprintId } = z.object({ blueprintId: z.string().trim().min(1).max(40) }).parse(req.body || {});
+    requireVisibleBlueprint(req, blueprintId);
     const preview = await blueprints.importPreview(blueprints.getBlueprintPath(blueprintId));
     res.json({ ok: true, preview, blueprintId });
   })
@@ -139,6 +149,7 @@ router.post(
       .parse(req.body);
 
     let zipRef = input.blueprintId;
+    if (input.blueprintId) requireVisibleBlueprint(req, input.blueprintId);
     if (input.uploadToken) {
       zipRef = dataPath('tmp', input.uploadToken);
       if (!fs.existsSync(zipRef)) {
@@ -191,6 +202,7 @@ router.get(
 router.delete(
   '/:id',
   asyncHandler(async (req, res, next) => {
+    requireVisibleBlueprint(req, req.params.id);
     res.json({ ok: true, ...(await blueprints.deleteBlueprint(req.params.id, { actor: req.user.username })) });
   })
 );
