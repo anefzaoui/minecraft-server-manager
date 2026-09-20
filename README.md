@@ -35,6 +35,32 @@ copy to migrate.**
   <a href="https://discord.gg/Ud6TrQkbDZ"><img src="https://img.shields.io/badge/Join%20the%20MSM%20Discord-5865F2?logo=discord&logoColor=white&style=for-the-badge" alt="Join the MSM Discord"></a>
 </p>
 
+<h3 align="center">👥 Built by people who just showed up</h3>
+
+<p align="center">
+  <a href="https://github.com/anefzaoui/minecraft-server-manager/graphs/contributors"><img src="docs/images/contributors.svg" alt="The people who have contributed code to this panel" width="636"></a>
+</p>
+
+<p align="center">
+  <b>More than half the commits in this repo come from people who don't own it.</b><br>
+  Every face above arrived as one bug report or one pull request. Yours is welcome next: fix a typo,
+  send a crash log, or take one of the honest gaps in <a href="#status--areas-that-need-work">areas that need work</a>.
+</p>
+
+<p align="center">
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Start%20here-CONTRIBUTING.md-3fa62b?style=for-the-badge" alt="Start here: CONTRIBUTING.md"></a>
+  <a href="#status--areas-that-need-work"><img src="https://img.shields.io/badge/Pick%20a%20target-areas%20that%20need%20work-24292f?style=for-the-badge" alt="Pick a target: areas that need work"></a>
+</p>
+
+<p align="center">
+  <sub>Shipped because someone spoke up:
+  <a href="https://github.com/RandomGuy908">RandomGuy908</a>,
+  <a href="https://github.com/kta1kri">kta1kri</a>,
+  <a href="https://github.com/supersynx">supersynx</a>,
+  <a href="https://github.com/tschanlo">tschanlo</a>.
+  A good bug report counts as a contribution here.</sub>
+</p>
+
 ## Features
 
 - 🐳 Every server is its own **resource-capped Docker container**: create / start / stop / restart / rebuild / delete with graceful RCON stop and crash detection

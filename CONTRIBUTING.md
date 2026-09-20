@@ -191,3 +191,13 @@ const logger = require('../logger')(require('node:path').basename(__filename));
 
 Open an issue with clear reproduction steps (and your OS + Docker flavor for anything
 environment-specific). Security issues: please report privately rather than in a public issue.
+
+## Getting your face on the README
+
+The avatar strip near the top of the README is `docs/images/contributors.svg`, generated from the
+repository's contributor list by `scripts/contributors-svg.js`. Land one commit and you're in it:
+a workflow regenerates the strip on the first of each month and opens a PR when it changes, and you
+can refresh it yourself any time with `pnpm run contributors`.
+
+The avatars are baked into that one file, so the README never asks a third-party image service for
+anything. Reports and ideas that shipped are credited by name in the same block, by hand.
