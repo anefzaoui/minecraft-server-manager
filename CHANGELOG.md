@@ -5,7 +5,10 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
-## [Unreleased]
+## [0.14.0] - 2026-09-20
+
+Per-server permissions: decide what each operator or viewer may do on each server, or hide a
+server from them entirely. Closes #43.
 
 ### Added
 
