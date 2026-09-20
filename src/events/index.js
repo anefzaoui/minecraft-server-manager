@@ -67,19 +67,19 @@ function recordEvent({ serverId = null, actor = 'system', type, summary, details
 }
 
 /**
- * `serverIds` (a Set or array) restricts the result to panel-global events plus
- * those of the listed servers - the per-user visibility filter for the
- * dashboard and activity pages. `null` means no restriction.
+ * `forUser` scopes the result to what that user may see: panel-global events
+ * plus those of servers they can view, minus the admin-only event types. Pass
+ * it from every request handler; omit it only for internal callers (the
+ * scheduler, the Discord bridge, tests) that act for the panel itself.
  */
-function listEvents({ serverId = null, serverIds = null, type = null, hideTypes = null, limit = 50, offset = 0 } = {}) {
+function listEvents({ serverId = null, forUser = null, type = null, limit = 50, offset = 0 } = {}) {
   const where = [];
   const params = [];
   if (serverId) {
     where.push('server_id = ?');
     params.push(serverId);
   }
-  addServerIdsClause(where, params, serverIds);
-  addHideTypesClause(where, params, hideTypes);
+  addUserScope(where, params, forUser);
   if (type) {
     where.push('type = ?');
     params.push(type);
@@ -87,6 +87,21 @@ function listEvents({ serverId = null, serverIds = null, type = null, hideTypes 
   const sql = `SELECT * FROM events ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
                ORDER BY id DESC LIMIT ? OFFSET ?`;
   return db.all(sql, ...params, limit, offset).map(hydrate);
+}
+
+/**
+ * Append the per-user visibility clauses: server visibility and the admin-only
+ * event types. Always applied, even when the query is pinned to one server,
+ * because that id may come from a query string (activity page, global export)
+ * rather than an authorised route. `user` null = no scoping (internal caller).
+ * Exported for the one raw query on the activity page.
+ */
+function addUserScope(where, params, user) {
+  if (!user) return;
+  // Lazy: services/permissions requires this module for recordEvent().
+  const permissions = require('../services/permissions');
+  if (user.role !== 'admin') addServerIdsClause(where, params, permissions.visibleServerIds(user));
+  addHideTypesClause(where, params, permissions.hiddenEventTypes(user));
 }
 
 /** Append `type NOT IN (…)` for event types the caller must not see. */
@@ -140,7 +155,7 @@ const EXPORT_LIMIT = 10000;
  * Export events as a downloadable JSON or CSV string.
  * @returns {{ filename: string, contentType: string, body: string }}
  */
-function exportEvents(serverId, { format = 'json', q = '', type = '', serverIds = null, hideTypes = null } = {}) {
+function exportEvents(serverId, { format = 'json', q = '', type = '', forUser = null } = {}) {
   const fmt = format === 'csv' ? 'csv' : 'json';
   const where = [];
   const params = [];
@@ -148,8 +163,7 @@ function exportEvents(serverId, { format = 'json', q = '', type = '', serverIds 
     where.push('server_id = ?');
     params.push(serverId);
   }
-  addServerIdsClause(where, params, serverIds);
-  addHideTypesClause(where, params, hideTypes);
+  addUserScope(where, params, forUser);
   if (type) {
     where.push('type = ?');
     params.push(String(type));
@@ -244,8 +258,7 @@ async function pruneEvents(days, { actor = 'system' } = {}) {
 module.exports = {
   recordEvent,
   listEvents,
-  addServerIdsClause,
-  addHideTypesClause,
+  addUserScope,
   getEvent,
   readExcerpt,
   exportEvents,

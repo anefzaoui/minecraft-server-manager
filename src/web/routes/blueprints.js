@@ -14,6 +14,8 @@ const multer = require('multer');
 const { z } = require('zod');
 const { nanoid } = require('nanoid');
 const blueprints = require('../../blueprints');
+const permissions = require('../../services/permissions');
+const httpError = require('../../utils/httpError');
 const { dataPath } = require('../../storage/pathGuard');
 const { dockerOverridesSchema, requireAdminForOverrides } = require('./dockerOverridesSchema');
 const logger = require('../../logger')('blueprints');
@@ -77,15 +79,13 @@ router.get(
 function requireVisibleBlueprint(req, id) {
   const row = blueprints.getBlueprint(id);
   if (row && !blueprints.blueprintVisibleTo(req.user, row)) {
-    throw require('../../utils/httpError')(404, 'Blueprint not found');
+    throw httpError(404, 'Blueprint not found');
   }
 }
 
 // Exporting or cloning reads the whole server tree (server.properties included),
 // so it needs the `files` capability on the source; a hidden server reads as missing.
 function requireFilesOn(req, serverId) {
-  const permissions = require('../../services/permissions');
-  const httpError = require('../../utils/httpError');
   const perms = permissions.effective(req.user, serverId);
   if (!perms.includes('view')) throw httpError(404, 'Server not found');
   if (!perms.includes('files')) throw httpError(403, "You don't have the files permission on this server.");

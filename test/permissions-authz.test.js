@@ -810,3 +810,24 @@ test('PUT /api/permissions without a perms field gets a friendly 400', async () 
   assert.equal(r.status, 400);
   assert.match(r.json.error, /Send a list of permissions/);
 });
+
+test('events scoped by user in one place: query-string server ids cannot bypass visibility', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: [] } });
+  recordEvent({ serverId: A, actor: 'test', type: 'crash-report', summary: 'Alpha query leak probe.' });
+  const activity = await app.req('GET', `/activity?server=${A}`, {
+    cookie: viewerCookie,
+    headers: { Accept: 'text/html' },
+  });
+  assert.equal(activity.status, 200);
+  assert.ok(!activity.text.includes('Alpha query leak probe'));
+  const exp = await app.req('GET', `/api/events/export?format=json&server=${A}`, { cookie: operatorCookie });
+  assert.equal(exp.status, 200);
+  assert.ok(!exp.text.includes('Alpha query leak probe'), 'operator hidden on A: export pinned to A is empty');
+  const adminExp = await app.req('GET', `/api/events/export?format=json&server=${A}`, { cookie: adminCookie });
+  assert.ok(adminExp.text.includes('Alpha query leak probe'));
+  const events = require('../src/events');
+  const viewerUser = { id: viewerId, role: 'viewer' };
+  assert.ok(!events.listEvents({ serverId: A, forUser: viewerUser, limit: 5 }).length, 'service-level scope too');
+  assert.ok(events.listEvents({ serverId: A, limit: 5 }).length, 'internal callers are unscoped');
+  await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: null } });
+});

@@ -5,8 +5,11 @@
 // state-changing requests - appropriate for a self-hosted LAN panel).
 
 const authService = require('../../services/auth');
+const permissions = require('../../services/permissions');
+const db = require('../../db');
 const config = require('../../config');
 const logger = require('../../logger')('auth');
+const { backupServerId } = require('./serverAccess');
 
 const PUBLIC_PREFIXES = ['/css/', '/js/', '/fonts/', '/icons/', '/vendor/'];
 const PUBLIC_PATHS = new Set(['/login', '/setup', '/favicon.ico']);
@@ -125,7 +128,7 @@ const BODY_SCOPED = [
   {
     re: /^\/api\/schedules\/([^/]+)(?:\/|$)/,
     id: (req, m) => {
-      const row = require('../../db').get('SELECT server_id FROM schedules WHERE id = ?', m[1]);
+      const row = db.get('SELECT server_id FROM schedules WHERE id = ?', m[1]);
       return row ? row.server_id : null;
     },
   },
@@ -136,13 +139,12 @@ const BODY_SCOPED = [
 
 /** 'allow' | 'hidden' | 'deny' for a viewer's write, based on the server in the path or body. */
 function viewerServerVerdict(req) {
-  const permissions = require('../../services/permissions');
   let serverId = null;
   const m = SERVER_SCOPED.exec(req.path);
   if (m) serverId = m[1];
   else {
     const b = BACKUP_SCOPED.exec(req.path);
-    if (b) serverId = require('./serverAccess').backupServerId({ params: { backupId: b[1] } });
+    if (b) serverId = backupServerId({ params: { backupId: b[1] } });
     else {
       for (const entry of BODY_SCOPED) {
         const bm = entry.re.exec(req.path);
@@ -153,7 +155,7 @@ function viewerServerVerdict(req) {
       }
     }
   }
-  if (!serverId || !require('../../services/servers').getServer(serverId)) return 'deny';
+  if (!serverId || !db.get('SELECT 1 AS x FROM servers WHERE id = ? AND deleted_at IS NULL', serverId)) return 'deny';
   const perms = permissions.effective(req.user, serverId);
   if (!perms.includes('view')) return 'hidden';
   return perms.some((c) => c !== 'view') ? 'allow' : 'deny';

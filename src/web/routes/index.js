@@ -331,11 +331,7 @@ async function renderServerList(req, res, next, { page }) {
     };
     if (page === 'dashboard') {
       const events = eventsService
-        .listEvents({
-          limit: 20,
-          serverIds: res.locals.visibleServerIds,
-          hideTypes: permissions.hiddenEventTypes(req.user),
-        })
+        .listEvents({ limit: 20, forUser: req.user })
         .filter((e) => !e.type.endsWith('-requested'))
         .slice(0, 6);
       context.activity = eventsVM(events);
@@ -511,7 +507,7 @@ router.get(
       // Recent sends (oldest first) so the history pane survives reloads and
       // is shared across admins - chat.js replays them with the live preview.
       context.chatHistory = require('../../events')
-        .listEvents({ serverId: row.id, type: 'chat-sent', limit: 50 })
+        .listEvents({ serverId: row.id, type: 'chat-sent', limit: 50, forUser: req.user })
         .map((e) => ({ ts: e.created_at, actor: e.actor, ...e.details }))
         .reverse();
     } else if (tab === 'mods') {
@@ -610,9 +606,7 @@ router.get(
         'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
         row.id
       );
-      context.recentEvents = eventsVM(
-        eventsService.listEvents({ serverId: row.id, limit: 8, hideTypes: permissions.hiddenEventTypes(req.user) })
-      );
+      context.recentEvents = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 8, forUser: req.user }));
 
       // --- Per-world / per-dimension sizes + host disk free.
       try {
@@ -735,7 +729,7 @@ router.get(
         lastUsed: c.last_used_at || null,
       }));
       context.chatCommandEvents = eventsService
-        .listEvents({ serverId: row.id, type: 'chat-command', limit: 10 })
+        .listEvents({ serverId: row.id, type: 'chat-command', limit: 10, forUser: req.user })
         .map((e) => ({ ts: e.created_at, summary: e.summary, failed: e.details && e.details.success === false }));
     } else if (tab === 'console') {
       const { stripAnsi } = require('../../utils/ansi');
@@ -749,9 +743,7 @@ router.get(
         });
       context.wsConsole = true;
     } else if (tab === 'history') {
-      context.events = eventsVM(
-        eventsService.listEvents({ serverId: row.id, limit: 100, hideTypes: permissions.hiddenEventTypes(req.user) })
-      );
+      context.events = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 100, forUser: req.user }));
       context.crashReports = db
         .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
         .map(crashVM);
@@ -990,8 +982,7 @@ router.get('/activity', (req, res) => {
     where.push('(summary LIKE ? OR actor LIKE ? OR type LIKE ?)');
     params.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
-  eventsService.addServerIdsClause(where, params, res.locals.visibleServerIds);
-  eventsService.addHideTypesClause(where, params, permissions.hiddenEventTypes(req.user));
+  eventsService.addUserScope(where, params, req.user);
   const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
   const total = db.get(`SELECT COUNT(*) AS n FROM events ${whereSql}`, ...params)?.n || 0;

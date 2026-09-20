@@ -33,6 +33,7 @@ function starterResources() {
   };
 }
 const { recordEvent } = require('../events');
+const permissions = require('../services/permissions');
 const servers = require('../services/servers');
 const packs = require('../services/packs');
 const library = require('../services/library');
@@ -640,7 +641,7 @@ function listBlueprints() {
 function blueprintVisibleTo(user, bp) {
   const sid = bp && bp.manifest && bp.manifest.sourceServerId;
   if (!sid) return true;
-  return require('../services/permissions').can(user, sid, 'view');
+  return permissions.can(user, sid, 'view');
 }
 
 function listBlueprintsFor(user) {

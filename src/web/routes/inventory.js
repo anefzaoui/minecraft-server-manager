@@ -13,6 +13,7 @@ const express = require('express');
 const { z } = require('zod');
 const servers = require('../../services/servers');
 const inventory = require('../../services/inventory');
+const permissions = require('../../services/permissions');
 const { inspectStatus } = require('../../docker/containers');
 const { PLAYER_NAME_RE } = require('../../utils/playerName');
 const itemRegistry = require('../../services/itemRegistry');
@@ -260,7 +261,7 @@ globalSearch.get(
   '/search',
   asyncHandler(async (req, res, next) => {
     const q = querySchema.parse(req.query.q);
-    const visible = require('../../services/permissions').visibleServerIds(req.user);
+    const visible = permissions.visibleServerIds(req.user);
     const results = (await inventory.searchAllServers(q)).filter((r) => visible.has(r.serverId));
     res.json({ ok: true, results });
   })

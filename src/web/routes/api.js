@@ -2008,8 +2008,7 @@ function sendEventExport(req, res, serverId) {
     format: req.query.format,
     q: String(req.query.q || '').trim(),
     type: String(req.query.type || '').trim(),
-    serverIds: req.user.role === 'admin' ? null : permissions.visibleServerIds(req.user),
-    hideTypes: permissions.hiddenEventTypes(req.user),
+    forUser: req.user,
   });
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.type(contentType).send(body);

@@ -18,6 +18,7 @@
 // and fails if any non-GET route under /servers/:id lacks a requireCap layer,
 // so a new endpoint cannot ship unguarded by accident.
 
+const db = require('../../db');
 const permissions = require('../../services/permissions');
 const logger = require('../../logger')('server-access');
 
@@ -65,8 +66,8 @@ function permsObject(list) {
 function serverScope(req, res, next) {
   const serverId = req.params && req.params.id;
   if (!serverId) return next();
-  const { getServer } = require('../../services/servers');
-  if (!getServer(serverId)) return next();
+  // Existence only: the route fetches and parses the row itself.
+  if (!db.get('SELECT 1 AS x FROM servers WHERE id = ? AND deleted_at IS NULL', serverId)) return next();
   const perms = permsFor(req, serverId);
   if (!perms.includes('view')) {
     logger.debug('Hid a server the user may not view.', { userId: req.user && req.user.id, serverId });
@@ -141,7 +142,6 @@ function requireCapForWrites(cap) {
 
 /** Server id behind a backup id, for the `/backups/:backupId` routes. */
 function backupServerId(req) {
-  const db = require('../../db');
   const row = db.get('SELECT server_id FROM backups WHERE id = ?', req.params.backupId);
   return row ? row.server_id : null;
 }
