@@ -85,6 +85,14 @@ Cross-cutting:
   (`RATE_LIMIT_PUBLIC_API_PER_MIN`, default 120), keyed on a hash of the Bearer token with an IP
   fallback. A separate per-account soft counter in
   `src/web/middleware/auth.js` handles the login lockout (per-IP and account-global, decaying).
+- **Authorization** - two layers. The global role (`requireAuth` → `requireRole` / `requireWrite` in
+  `src/web/middleware/auth.js`) gates panel-wide actions and is the default on every server. Per-server
+  permissions (`src/services/permissions.js`, nine capabilities stored as a JSON list per
+  `(user, server)` in `user_server_permissions`) refine that default for one server; every
+  `/api/servers/:id` route, sub-router mount, page, WebSocket, and fleet-wide listing goes through
+  `src/web/middleware/serverAccess.js` (`serverScope` hides a server without `view` as a 404;
+  `requireCap(cap)` names the capability a route needs). `test/permissions-routes.test.js` walks the
+  live router stack and fails if a server-scoped write route has no capability gate.
 
 ## Key domain behaviors
 

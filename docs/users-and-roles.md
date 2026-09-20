@@ -8,13 +8,51 @@ The panel is multi-user. Manage accounts under **Settings → Users**.
 
 ## The three roles
 
-| Role         | Can do                                                                                                           |
+| Role         | Default on every server                                                                                          |
 | ------------ | ---------------------------------------------------------------------------------------------------------------- |
 | **admin**    | Everything: manage users, API keys, global files, advanced Docker overrides, and every server action.            |
 | **operator** | Run and configure servers (start/stop, console, backups, worlds, mods, most settings), but not admin-only areas. |
 | **viewer**   | Read-only. See servers and their status, but make no changes.                                                    |
 
 Every user, including a viewer, can manage their own [two-factor authentication](two-factor-authentication.md), because protecting your own login isn't a server-management action.
+
+A role is the **default** for every server. To give someone different rights on one server, use per-server permissions below.
+
+## Per-server permissions
+
+**Settings → Permissions** shows a grid: every operator and viewer down the side, every server across the top. Click a cell to decide what that user may do on that one server. Admins are not listed because they always have everything.
+
+![Permissions](images/settings-permissions.png)
+
+Each cell is a set of permissions:
+
+| Permission   | What it allows on that server                                                     |
+| ------------ | --------------------------------------------------------------------------------- |
+| **View**     | See the server, its status, console output, players, history, and stats.          |
+| **Power**    | Start, stop, restart, kill, and rebuild the server.                               |
+| **Console**  | Run console commands, send chat, and manage chat commands.                        |
+| **Players**  | Kick, ban, whitelist, op, and edit player notes.                                  |
+| **Content**  | Install and remove mods, plugins, packs, worlds, datapacks, and edit inventories. |
+| **Backups**  | Create, restore, download, and delete backups.                                    |
+| **Files**    | Browse, edit, upload, and download server files and log bundles.                  |
+| **Settings** | Change server settings, properties, integrations, icon, and upgrade versions.     |
+| **Delete**   | Delete the server.                                                                |
+
+![Permission editor](images/permissions-editor.png)
+
+How the pieces fit together:
+
+- **The role is the default.** An operator starts with every permission on every server; a viewer starts with View only. A cell that says "Role default" has never been changed.
+- **A cell overrides the role for that server only.** Give a viewer Power and Console on one server and they can run it, while every other server stays read-only for them. Take Delete away from an operator on your main server and they keep everything else there.
+- **Every permission includes View.** You cannot act on a server you cannot see.
+- **Turn everything off to hide a server.** It disappears from that user's sidebar, dashboard, backups, worlds, schedules, activity, and live status. A direct link answers "not found", the same as a server that does not exist.
+- **Panel-wide actions still follow the role.** Creating servers, storage, users, API keys, global settings, and panel-wide schedules are not per-server, so a viewer with permissions on some servers still cannot do any of those. Operators keep them.
+- **Schedules follow the server.** A scheduled restart, backup, or command on a server needs the matching permission there (Power, Backups, or Console).
+- **Admin-only areas stay admin-only** on every server: the chatbot, backup retention, and advanced Docker overrides.
+
+Every change is written to the activity log with who changed what. Deleting a user or a server removes its rows.
+
+Existing installations keep working unchanged: until an admin edits a cell, every user has exactly what their role gave them before.
 
 ## Admin-only, and why
 

@@ -54,7 +54,7 @@ copy to migrate.**
 - 📈 **Storage analytics & panel-enforced disk quotas**, playtime/deaths/mining **analytics & scoreboard**, **inventory forensics**, advisory x-ray **investigation**
 - 🪄 Optional **per-server chatbot** (local/OpenAI-compatible LLM) with constrained in-game powers ([docs](docs/chatbot.md))
 - 🔔 **Discord webhooks** with per-event toggles and an Alerts category
-- 👥 **Multi-user roles** (admin / operator / viewer) + **TOTP two-factor auth**
+- 👥 **Multi-user roles** (admin / operator / viewer) with **per-server permissions** + **TOTP two-factor auth**
 - 🌐 Optional **public status page**, invite blocks, and generated **client `.mrpack`** with the server pre-added
 - 🧠 **Pick-mods-first solver**: choose mods, get the newest fully-compatible loader + MC version
 
@@ -291,7 +291,10 @@ Not affiliated with any of them.
   player actions, schedules) is a structured event with actor and captured log excerpts. Crash
   reports are auto-detected, parsed (exception + suspected mods), exportable, and shareable to
   mclo.gs with automated insights.
-- **Accounts & two-factor auth**: multi-user with **admin / operator / viewer** roles, plus optional
+- **Accounts & two-factor auth**: multi-user with **admin / operator / viewer** roles, refined per
+  server under **Settings → Permissions** (view, power, console, players, content, backups, files,
+  settings, delete), so a read-only user can still run one server, and a server can be hidden from a
+  user entirely. Plus optional
   **two-factor authentication (TOTP)** for any account. Enroll with any authenticator app (Google
   Authenticator, Authy, 1Password, …), keep one-time backup codes, and reset a locked-out user as an
   admin. See the [2FA guide](docs/two-factor-authentication.md).
@@ -560,8 +563,10 @@ node scripts/reset-password.js <username>
   admin reset path; the login rate-limit is shared across the password and code steps so a correct
   password can't reset the counter before code-guessing.
 - Roles: **admin / operator / viewer**, enforced on every mutating request - including side-effecting
-  GETs (event export, world download, `.mrpack`), which are gated to admin/operator (user management
-  in Settings).
+  GETs (event export, world download, `.mrpack`). Per-server permissions refine the role for one
+  server (see the [Users & roles guide](docs/users-and-roles.md)); a server a user may not view answers
+  404 everywhere, and a structural test fails the build if a server-scoped write route ships without a
+  permission gate.
 - `SameSite=Lax` cookies by default (`COOKIE_SAMESITE` to change) + Origin checks on all
   state-changing requests; with `COOKIE_SAMESITE=none`, writes with no `Origin`/`Referer` are also
   rejected. WebSocket upgrades check `Origin` and authenticate the session cookie. Per-request CSP
