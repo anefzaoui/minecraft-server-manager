@@ -9,10 +9,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   pickContributors,
+  pickCredited,
   labelFor,
   layout,
   renderSvg,
   escapeXml,
+  AVATAR_SMALL,
   PER_ROW,
   MAX_FACES,
 } = require('../scripts/contributors-svg');
@@ -145,4 +147,63 @@ test('the committed strip matches what the generator produces for these people',
     !/https?:\/\//.test(svg.replace(/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/, '')),
     'no network fetch on render'
   );
+});
+
+// ---------------------------------------------------------------------------
+// The second strip: people credited for reports and ideas, from docs/credits.json.
+
+test('pickCredited keeps only logins with no commits, once each', () => {
+  const credits = { reports: ['alice', 'BOB', 'bob', ' carol ', '', null] };
+  const contributors = [{ login: 'Bob' }];
+  assert.deepEqual(pickCredited(credits, contributors), ['alice', 'carol']);
+});
+
+test('pickCredited tolerates a missing or malformed file', () => {
+  assert.deepEqual(pickCredited(null, []), []);
+  assert.deepEqual(pickCredited({}, []), []);
+  assert.deepEqual(pickCredited({ reports: 'alice' }, []), []);
+});
+
+test('renderSvg draws at the size it is given', () => {
+  const person = [{ login: 'alice', dataUri: 'data:image/png;base64,AA' }];
+  const big = renderSvg(person);
+  const small = renderSvg(person, { avatar: AVATAR_SMALL });
+  assert.match(big, /<image [^>]*width="64" height="64"/);
+  assert.match(small, new RegExp(`<image [^>]*width="${AVATAR_SMALL}" height="${AVATAR_SMALL}"`));
+  const heightOf = (svg) => Number(svg.match(/height="(\d+)"/)[1]);
+  assert.ok(heightOf(small) < heightOf(big), 'a smaller avatar makes a shorter strip');
+});
+
+test('renderSvg names the strip for screen readers', () => {
+  const svg = renderSvg([{ login: 'alice', dataUri: 'data:image/png;base64,AA' }], {
+    label: 'Credited for reports and ideas',
+  });
+  assert.match(svg, /aria-label="Credited for reports and ideas: alice"/);
+  assert.match(svg, /<title>Credited for reports and ideas: alice<\/title>/);
+});
+
+test('docs/credits.json is valid and lists no one twice', async () => {
+  const fs = require('node:fs/promises');
+  const path = require('node:path');
+  const credits = JSON.parse(await fs.readFile(path.join(__dirname, '..', 'docs', 'credits.json'), 'utf8'));
+  assert.ok(Array.isArray(credits.reports), 'reports is a list');
+  for (const login of credits.reports) {
+    assert.match(login, /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/, `${login} looks like a GitHub login`);
+  }
+  const lowered = credits.reports.map((l) => l.toLowerCase());
+  assert.equal(new Set(lowered).size, lowered.length, 'no duplicates');
+});
+
+test('the committed reports strip is self-contained and labelled', async () => {
+  const fs = require('node:fs/promises');
+  const path = require('node:path');
+  const svg = await fs.readFile(path.join(__dirname, '..', 'docs', 'images', 'contributors-reports.svg'), 'utf8');
+  assert.match(svg, /<title>Credited for reports and ideas: .+<\/title>/);
+  assert.ok(svg.includes('data:image/'), 'avatars embedded');
+  assert.ok(
+    !/https?:\/\//.test(svg.replace(/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/, '')),
+    'no network fetch on render'
+  );
+  const credits = JSON.parse(await fs.readFile(path.join(__dirname, '..', 'docs', 'credits.json'), 'utf8'));
+  for (const login of credits.reports) assert.ok(svg.includes(login), `${login} is drawn in the strip`);
 });
