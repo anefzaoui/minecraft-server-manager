@@ -37,7 +37,8 @@
     "test:smoke": "node scripts/qa-sweep.js",
     "db:migrate": "node scripts/migrate.js",
     "seed:servers": "node scripts/seed-fake-servers.js",
-    "seed:players": "node scripts/seed-players.js"
+    "seed:players": "node scripts/seed-players.js",
+    "contributors": "node scripts/contributors-svg.js"
   },
   "dependencies": {
     "archiver": "^7.0.1",
