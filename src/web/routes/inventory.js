@@ -260,7 +260,9 @@ globalSearch.get(
   '/search',
   asyncHandler(async (req, res, next) => {
     const q = querySchema.parse(req.query.q);
-    res.json({ ok: true, results: await inventory.searchAllServers(q) });
+    const visible = require('../../services/permissions').visibleServerIds(req.user);
+    const results = (await inventory.searchAllServers(q)).filter((r) => visible.has(r.serverId));
+    res.json({ ok: true, results });
   })
 );
 

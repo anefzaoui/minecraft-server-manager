@@ -66,13 +66,19 @@ function recordEvent({ serverId = null, actor = 'system', type, summary, details
   return Number(result.lastInsertRowid);
 }
 
-function listEvents({ serverId = null, type = null, limit = 50, offset = 0 } = {}) {
+/**
+ * `serverIds` (a Set or array) restricts the result to panel-global events plus
+ * those of the listed servers - the per-user visibility filter for the
+ * dashboard and activity pages. `null` means no restriction.
+ */
+function listEvents({ serverId = null, serverIds = null, type = null, limit = 50, offset = 0 } = {}) {
   const where = [];
   const params = [];
   if (serverId) {
     where.push('server_id = ?');
     params.push(serverId);
   }
+  addServerIdsClause(where, params, serverIds);
   if (type) {
     where.push('type = ?');
     params.push(type);
@@ -80,6 +86,18 @@ function listEvents({ serverId = null, type = null, limit = 50, offset = 0 } = {
   const sql = `SELECT * FROM events ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
                ORDER BY id DESC LIMIT ? OFFSET ?`;
   return db.all(sql, ...params, limit, offset).map(hydrate);
+}
+
+/** Append `(server_id IS NULL OR server_id IN (…))` for a visibility set. */
+function addServerIdsClause(where, params, serverIds) {
+  if (serverIds == null) return;
+  const ids = [...serverIds];
+  if (ids.length === 0) {
+    where.push('server_id IS NULL');
+    return;
+  }
+  where.push(`(server_id IS NULL OR server_id IN (${ids.map(() => '?').join(',')}))`);
+  params.push(...ids);
 }
 
 function getEvent(id) {
@@ -114,7 +132,7 @@ const EXPORT_LIMIT = 10000;
  * Export events as a downloadable JSON or CSV string.
  * @returns {{ filename: string, contentType: string, body: string }}
  */
-function exportEvents(serverId, { format = 'json', q = '', type = '' } = {}) {
+function exportEvents(serverId, { format = 'json', q = '', type = '', serverIds = null } = {}) {
   const fmt = format === 'csv' ? 'csv' : 'json';
   const where = [];
   const params = [];
@@ -122,6 +140,7 @@ function exportEvents(serverId, { format = 'json', q = '', type = '' } = {}) {
     where.push('server_id = ?');
     params.push(serverId);
   }
+  addServerIdsClause(where, params, serverIds);
   if (type) {
     where.push('type = ?');
     params.push(String(type));
@@ -213,4 +232,13 @@ async function pruneEvents(days, { actor = 'system' } = {}) {
   return { removed: removedEvents, excerpts: removedExcerpts };
 }
 
-module.exports = { recordEvent, listEvents, getEvent, readExcerpt, exportEvents, pruneEvents, knownTypes };
+module.exports = {
+  recordEvent,
+  listEvents,
+  addServerIdsClause,
+  getEvent,
+  readExcerpt,
+  exportEvents,
+  pruneEvents,
+  knownTypes,
+};

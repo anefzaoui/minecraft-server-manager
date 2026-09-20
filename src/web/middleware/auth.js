@@ -92,6 +92,7 @@ function requireRole(...roles) {
 function requireWrite(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
   if (req.user && req.user.role === 'viewer') {
+    if (viewerHoldsServerGrant(req)) return next();
     logger.warn('Blocked a write from a read-only viewer.', {
       userId: req.user.id,
       path: req.path,
@@ -100,6 +101,27 @@ function requireWrite(req, res, next) {
     return res.status(403).json({ ok: false, error: 'Your role (Viewer) is read-only.' });
   }
   next();
+}
+
+// Server-scoped API paths where a viewer may hold a per-server grant. The
+// global gate only opens for the ONE server named in the path, and only when
+// the grant carries a capability beyond `view`; the route's own requireCap()
+// then decides which action is allowed. Every other write stays a 403 for
+// viewers, so panel-wide actions (create server, storage, users) never open up.
+const SERVER_SCOPED = /^\/api\/servers\/([^/]+)(?:\/|$)/;
+const BACKUP_SCOPED = /^\/api\/backups\/([^/]+)(?:\/|$)/;
+
+function viewerHoldsServerGrant(req) {
+  const permissions = require('../../services/permissions');
+  let serverId = null;
+  const m = SERVER_SCOPED.exec(req.path);
+  if (m) serverId = m[1];
+  else {
+    const b = BACKUP_SCOPED.exec(req.path);
+    if (b) serverId = require('./serverAccess').backupServerId({ params: { backupId: b[1] } });
+  }
+  if (!serverId) return false;
+  return permissions.effective(req.user, serverId).some((c) => c !== 'view');
 }
 
 /** Reject cross-origin state changes (defense in depth next to the SameSite cookie). */
