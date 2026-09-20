@@ -2293,6 +2293,23 @@ router.get('/users', requireRole('admin'), (req, res) => {
   res.json({ ok: true, users: authService.listUsers() });
 });
 
+// ---- Per-server permissions (Settings → Permissions) ----
+router.get('/permissions', requireRole('admin'), (req, res) => {
+  res.json({ ok: true, ...permissions.listMatrix() });
+});
+
+router.put(
+  '/permissions/:userId/:serverId',
+  requireRole('admin'),
+  asyncHandler((req, res, next) => {
+    const { perms } = z.object({ perms: z.array(z.string().max(20)).max(32).nullable() }).parse(req.body);
+    const result = permissions.setGrant(req.params.userId, req.params.serverId, perms, {
+      actor: req.user.username,
+    });
+    res.json({ ok: true, ...result });
+  })
+);
+
 // ---- Sign-in lockouts (in-memory; admin visibility + manual unlock) ----
 const authMw = require('../middleware/auth');
 

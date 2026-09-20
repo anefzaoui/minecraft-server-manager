@@ -855,9 +855,7 @@ router.get('/schedules', (req, res) => {
   res.render('schedules', {
     title: 'Schedules',
     active: 'schedules',
-    schedules: scheduler
-      .listSchedules()
-      .filter((j) => !j.serverId || res.locals.visibleServerIds.has(j.serverId)),
+    schedules: scheduler.listSchedules().filter((j) => !j.serverId || res.locals.visibleServerIds.has(j.serverId)),
     taskTypes: Object.entries(scheduler.TASK_TYPES).map(([value, t]) => ({
       value,
       label: t.label,
@@ -1044,6 +1042,14 @@ router.get(
     });
   })
 );
+
+router.get('/settings/permissions', requireRole('admin'), (req, res) => {
+  res.render('permissions', {
+    title: 'Permissions',
+    active: 'permissions',
+    matrix: permissions.listMatrix(),
+  });
+});
 
 router.get('/settings', requireRole('admin'), (req, res) => {
   const apiKeys = require('../../services/apiKeys');

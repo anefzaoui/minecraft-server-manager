@@ -834,6 +834,7 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBa
     db.run('DELETE FROM storage_index WHERE rel_path = ? OR rel_path LIKE ?', `servers/${id}`, `servers/${id}/%`);
     // Keep the soft-deleted server row itself (history retains context).
     db.run("UPDATE servers SET deleted_at = datetime('now'), status = 'stopped' WHERE id = ?", id);
+    require('./permissions').forgetServer(id);
   });
   recordEvent({
     serverId: id,

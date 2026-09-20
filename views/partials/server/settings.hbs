@@ -184,11 +184,11 @@
       <div class="flex flex-wrap gap-2">
         <button class="btn" id="st-export-bp">{{{icon 'drafting-compass' 'size-4'}}} Export as Blueprint</button>
         <button class="btn" id="st-clone">{{{icon 'copy' 'size-4'}}} Clone Server</button>
-        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending settings and resource changes">{{{icon 'wrench' 'size-4'}}} Rebuild Container</button>
+        <button class="btn{{#unless perms.power}} hidden{{/unless}}" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending settings and resource changes">{{{icon 'wrench' 'size-4'}}} Rebuild Container</button>
       </div>
       {{! Destruction lives behind its own divider, never one accidental click
           from the safe maintenance actions above. }}
-      <div class="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
+      <div class="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3{{#unless perms.delete}} hidden{{/unless}}">
         <p class="text-xs text-ink-faint">Removes the server from the panel. Files and backups are kept on disk by default; tick &quot;also delete files and backups&quot; in the confirmation to remove them.</p>
         <button class="btn btn-danger shrink-0" data-server-action="delete" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'trash-2' 'size-4'}}} Delete Server</button>
       </div>

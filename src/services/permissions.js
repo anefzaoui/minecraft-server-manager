@@ -45,13 +45,20 @@ const CAPABILITY_INFO = {
   power: { label: 'Power', help: 'Start, stop, restart, kill, and rebuild the server.' },
   console: { label: 'Console', help: 'Run console commands, send chat, and manage chat commands.' },
   players: { label: 'Players', help: 'Kick, ban, whitelist, op, and edit player notes.' },
-  content: { label: 'Content', help: 'Install and remove mods, plugins, packs, worlds, datapacks, and edit inventories.' },
+  content: {
+    label: 'Content',
+    help: 'Install and remove mods, plugins, packs, worlds, datapacks, and edit inventories.',
+  },
   backups: { label: 'Backups', help: 'Create, restore, download, and delete backups.' },
   files: { label: 'Files', help: 'Browse, edit, upload, and download server files and log bundles.' },
-  settings: { label: 'Settings', help: 'Change server settings, properties, integrations, icon, and upgrade versions.' },
+  settings: {
+    label: 'Settings',
+    help: 'Change server settings, properties, integrations, icon, and upgrade versions.',
+  },
   delete: { label: 'Delete', help: 'Delete the server.' },
 };
 
+/** @type {Set<string>} */
 const CAP_SET = new Set(CAPABILITIES);
 const ALL = /** @type {Capability[]} */ ([...CAPABILITIES]);
 
@@ -71,6 +78,7 @@ const ROLE_DEFAULTS = Object.freeze({
  */
 function normalize(input) {
   if (!Array.isArray(input)) throw httpError(400, 'Permissions must be a list of capability names.');
+  /** @type {Set<string>} */
   const set = new Set();
   for (const raw of input) {
     const cap = String(raw);
@@ -106,11 +114,7 @@ function roleDefault(user) {
  * @returns {Capability[] | null}
  */
 function getGrant(userId, serverId) {
-  const row = db.get(
-    'SELECT perms FROM user_server_permissions WHERE user_id = ? AND server_id = ?',
-    userId,
-    serverId
-  );
+  const row = db.get('SELECT perms FROM user_server_permissions WHERE user_id = ? AND server_id = ?', userId, serverId);
   if (!row) return null;
   const parsed = parseStored(row.perms);
   return parsed && parsed.length ? normalize(parsed) : [];
@@ -176,23 +180,6 @@ function filterVisible(user, rows) {
 }
 
 /**
- * True when the user holds at least one capability beyond `view` on ANY live
- * server - i.e. the global write gate must let them through to the per-route
- * checks. Cheap (one indexed query) and only consulted for viewers.
- * @param {{ id: string, role: string } | null | undefined} user
- */
-function hasAnyGrantBeyondView(user) {
-  if (!user) return false;
-  const rows = db.all(
-    `SELECT p.perms FROM user_server_permissions p
-       JOIN servers s ON s.id = p.server_id AND s.deleted_at IS NULL
-      WHERE p.user_id = ?`,
-    user.id
-  );
-  return rows.some((r) => (parseStored(r.perms) || []).some((c) => c !== 'view'));
-}
-
-/**
  * The full matrix for the Permissions page: every non-admin user × every live
  * server, with the explicit grant (or null = role default) and the effective
  * capability list already resolved.
@@ -202,7 +189,9 @@ function listMatrix() {
     .all("SELECT id, username, role FROM users WHERE role != 'admin' ORDER BY username COLLATE NOCASE")
     .map((u) => ({ id: u.id, username: u.username, role: u.role }));
   const servers = db
-    .all('SELECT id, display_name, icon, accent FROM servers WHERE deleted_at IS NULL ORDER BY display_name COLLATE NOCASE')
+    .all(
+      'SELECT id, display_name, icon, accent FROM servers WHERE deleted_at IS NULL ORDER BY display_name COLLATE NOCASE'
+    )
     .map((s) => ({ id: s.id, name: s.display_name, icon: s.icon, accent: s.accent }));
   const grants = new Map(
     db
@@ -288,7 +277,6 @@ module.exports = {
   can,
   visibleServerIds,
   filterVisible,
-  hasAnyGrantBeyondView,
   listMatrix,
   setGrant,
   forgetServer,

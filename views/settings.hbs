@@ -178,8 +178,11 @@
         </tbody>
       </table>
     </div>
-    <button class="btn btn-primary btn-sm mt-4" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add User</button>
-    <p class="help mt-2 max-w-prose">Roles: <b>Admin</b> can do everything. <b>Operator</b> can manage servers, but not storage, users, or update policies. <b>Viewer</b> is read-only.</p>
+    <div class="mt-4 flex flex-wrap gap-2">
+      <button class="btn btn-primary btn-sm" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add User</button>
+      <a class="btn btn-sm" href="/settings/permissions">{{{icon 'shield-check' 'size-3.5'}}} Server Permissions</a>
+    </div>
+    <p class="help mt-2 max-w-prose">Roles: <b>Admin</b> can do everything. <b>Operator</b> can manage servers, but not storage, users, or update policies. <b>Viewer</b> is read-only. Server Permissions lets you change what an operator or viewer may do on each server.</p>
   {{/settings/card}}
 
   {{#> settings/card heading="Sign-in Security" id="lockouts-card" wide=true desc="Accounts and addresses currently blocked from signing in after too many failed attempts. Locks clear on their own after the cooldown; unlock one here to end it early."}}

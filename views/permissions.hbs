@@ -1,0 +1,63 @@
+{{> page-header heading="PERMISSIONS" sub="Decide what each user may do on each server. A role sets the default everywhere; a cell here overrides it for one server."}}
+
+<div class="space-y-5" id="permissions-page">
+  <section class="card p-4 sm:p-5">
+    <h3 class="text-sm font-semibold text-ink">How It Works</h3>
+    <ul class="mt-2 grid gap-1.5 text-xs leading-relaxed text-ink-faint sm:grid-cols-2">
+      <li><b class="text-ink-soft">Admins</b> always have every permission on every server, so they are not listed here.</li>
+      <li><b class="text-ink-soft">Operators</b> start with every permission on every server. <b class="text-ink-soft">Viewers</b> start with view only.</li>
+      <li>Click a cell to pick the permissions that user gets on that server. Every permission includes view.</li>
+      <li>Turn everything off to hide the server from that user completely. It disappears from their sidebar, dashboard, and every list.</li>
+    </ul>
+    <div class="mt-3 flex flex-wrap gap-1.5">
+      {{#each matrix.capabilities}}
+        <span class="chip" data-tip="{{help}}">{{label}}</span>
+      {{/each}}
+    </div>
+  </section>
+
+  {{#if matrix.users.length}}
+    {{#if matrix.servers.length}}
+      <div class="card overflow-x-auto p-0">
+        <table class="table-base table-stack" id="permissions-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              {{#each matrix.servers}}
+                <th>
+                  <span class="inline-flex items-center gap-2">
+                    <img src="{{iconSrc icon}}" alt="" class="size-5 rounded-sm" style="background: {{accent}}" data-fallback-icon="/icons/servers/grass.svg">
+                    <span class="truncate" title="{{name}}">{{name}}</span>
+                  </span>
+                </th>
+              {{/each}}
+            </tr>
+          </thead>
+          <tbody>
+            {{#each matrix.rows}}
+              <tr data-user-id="{{user.id}}" data-username="{{user.username}}" data-role="{{user.role}}">
+                <td data-th="User" class="whitespace-nowrap font-medium">
+                  {{user.username}}
+                  <span class="badge ml-1">{{capitalize user.role}}</span>
+                </td>
+                {{#each servers}}
+                  <td data-th="{{lookup (lookup ../../matrix.servers @index) 'name'}}">
+                    <button type="button" class="chip" data-perm-cell data-server-id="{{serverId}}" data-server-name="{{lookup (lookup ../../matrix.servers @index) 'name'}}" data-grant="{{jsonAttr grant}}" data-effective="{{jsonAttr effective}}" aria-label="Permissions for {{../user.username}} on {{lookup (lookup ../../matrix.servers @index) 'name'}}">
+                      <span data-perm-summary></span>
+                    </button>
+                  </td>
+                {{/each}}
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{else}}
+      {{> empty-state iconName='server' title='No Servers Yet' message='Create a server first. Its column appears here as soon as it exists.' ctaHref='/servers/new' ctaLabel='Create a Server'}}
+    {{/if}}
+  {{else}}
+    {{> empty-state iconName='users' title='No Operators or Viewers Yet' message='Admins always have every permission. Add an operator or viewer account under Settings to give them access to specific servers.' ctaHref='/settings' ctaLabel='Manage Users'}}
+  {{/if}}
+</div>
+<script type="application/json" id="permissions-capabilities">{{jsonScript matrix.capabilities}}</script>
+<script type="module" src="/js/pages/permissions.js"></script>
