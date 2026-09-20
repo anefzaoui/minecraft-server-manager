@@ -21,7 +21,7 @@ const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
 const permissions = require('../../services/permissions');
-const { permsObject, serverScope } = require('../middleware/serverAccess');
+const { serverScope } = require('../middleware/serverAccess');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
 const logger = require('../../logger')('pages');
 const { serializeError } = require('../../utils/logSanitize');
@@ -139,14 +139,12 @@ router.use(
     // Only the servers this user may view - the same filter every fleet-wide page applies.
     res.locals.visibleServerIds = permissions.visibleServerIds(req.user);
     res.locals.servers = permissions.filterVisible(req.user, sidebarServerVMs());
-    // The badge counts only visible servers. The per-row list is materialised
-    // only for a user who actually has a hidden server; everyone else gets the
-    // cheap aggregate count.
+    // The badge counts only visible servers, with the same aggregate query for
+    // everyone; the scope clause is added only for a user with a hidden server.
     const checker = require('../../updates/checker');
-    res.locals.updatesCount = permissions.hidesAnyServer(req.user, res.locals.visibleServerIds)
-      ? checker.listOutdated().filter((u) => (!u.serverId || res.locals.visibleServerIds.has(u.serverId)) && !u.ignored)
-          .length
-      : checker.countOutdated();
+    res.locals.updatesCount = checker.countOutdated({
+      serverIds: permissions.hidesAnyServer(req.user, res.locals.visibleServerIds) ? res.locals.visibleServerIds : null,
+    });
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
     next();
@@ -442,7 +440,7 @@ router.get(
 // Back-compat: the old single Integrations tab is now four per-integration
 // pages under Settings. Land on the first one.
 router.get('/servers/:id/integrations', (req, res, next) => {
-  if (!permissions.can(req.user, req.params.id, 'view')) return next();
+  if (!res.locals.perms) return next(); // serverScope sets it only for a visible server
   res.redirect(302, `/servers/${req.params.id}/discord`);
 });
 
@@ -450,12 +448,10 @@ router.get(
   '/servers/:id{/:tab}',
   asyncHandler(async (req, res, next) => {
     const row = serversService.getServer(req.params.id);
-    if (!row) return next();
-    // A server the user may not view 404s exactly like a missing one.
-    const capList = permissions.effective(req.user, row.id);
-    if (!capList.includes('view')) return next();
-    const perms = permsObject(capList);
-    res.locals.perms = perms;
+    // serverScope (mounted above) resolved the capability set and already
+    // answered 404 for a server the user may not view.
+    const perms = res.locals.perms;
+    if (!row || !perms) return next();
     const tab = req.params.tab || 'overview';
     if (!SERVER_TABS.includes(tab)) return next();
 
@@ -1010,7 +1006,7 @@ router.get('/activity', (req, res) => {
     title: 'Activity',
     active: 'activity',
     events,
-    types: eventsService.knownTypes(),
+    types: eventsService.knownTypes().filter((t) => !permissions.hiddenEventTypes(req.user).includes(t)),
     filters: { q, server, type },
     exportQs: filterQs ? `&${filterQs}` : '',
     total,

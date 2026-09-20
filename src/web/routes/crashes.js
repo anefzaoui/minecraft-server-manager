@@ -14,6 +14,7 @@ const crashes = require('../../crashes');
 const { dataPath } = require('../../storage/pathGuard');
 const logger = require('../../logger')('crashes');
 const { serializeError } = require('../../utils/logSanitize');
+const permissions = require('../../services/permissions');
 
 const router = express.Router({ mergeParams: true });
 
@@ -79,7 +80,9 @@ router.get(
   asyncHandler(async (req, res, next) => {
     const row = ownedCrash(req);
     const text = await crashes.getCrashText(row.server_id, row.filename);
-    crashes.markViewed(row.id); // opening the report counts as reading it
+    // Opening the report counts as reading it, but that is a write to the
+    // report's state, so only someone holding `files` here clears the badge.
+    if (permissions.can(req.user, row.server_id, 'files')) crashes.markViewed(row.id);
     res.type('text/plain').send(text);
   })
 );

@@ -19,6 +19,16 @@ const api = require('../src/web/routes/api');
 const pages = require('../src/web/routes/index');
 
 const WRITE_METHODS = ['post', 'put', 'patch', 'delete'];
+// Express 5 records router.all() as `_all`; treat it as a write.
+const isWrite = (methods) => Object.keys(methods).some((m) => WRITE_METHODS.includes(m) || m === '_all');
+// Any parameter name counts: `/servers/:serverId/x` is as server-scoped as `/servers/:id/x`.
+const SERVER_ROUTE = /^\/servers\/:\w+(\/|\{|$)/;
+const ROUTES_DIR = path.join(__dirname, '..', 'src', 'web', 'routes');
+const routeSources = () =>
+  fs
+    .readdirSync(ROUTES_DIR)
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => ({ file: f, src: fs.readFileSync(path.join(ROUTES_DIR, f), 'utf8') }));
 
 // Admin-only endpoints keep their requireRole('admin') gate instead of a
 // capability. Anything added here must be admin-only by design.
@@ -30,7 +40,7 @@ const hasCap = (stack) => stack.some((l) => typeof l.name === 'string' && l.name
 test('serverScope is mounted on /servers/:id ahead of every per-server route', () => {
   const scopeIndex = api.stack.findIndex((l) => l.name === 'serverScope');
   assert.ok(scopeIndex >= 0, 'serverScope layer present');
-  const firstServerRoute = api.stack.findIndex((l) => l.route && /^\/servers\/:id(\/|$)/.test(l.route.path));
+  const firstServerRoute = api.stack.findIndex((l) => l.route && SERVER_ROUTE.test(l.route.path));
   assert.ok(firstServerRoute > scopeIndex, 'serverScope precedes the first /servers/:id route');
   const scope = api.stack[scopeIndex];
   assert.equal(scope.match('/servers/srv_probe/anything/deeper'), true);
@@ -42,11 +52,10 @@ test('every write route under /servers/:id carries a requireCap layer', () => {
   for (const layer of api.stack) {
     if (!layer.route) continue;
     const p = layer.route.path;
-    if (!/^\/servers\/:id(\/|$)/.test(p)) continue;
-    const methods = Object.keys(layer.route.methods).filter((m) => WRITE_METHODS.includes(m));
-    if (!methods.length) continue;
+    if (!SERVER_ROUTE.test(p)) continue;
+    if (!isWrite(layer.route.methods)) continue;
     if (ADMIN_ONLY_ROUTES.has(p)) continue;
-    if (!hasCap(layer.route.stack)) missing.push(`${methods.join(',').toUpperCase()} ${p}`);
+    if (!hasCap(layer.route.stack)) missing.push(`${Object.keys(layer.route.methods).join(',').toUpperCase()} ${p}`);
   }
   assert.deepEqual(missing, [], 'routes without a capability gate');
 });
@@ -66,13 +75,25 @@ test('side-effecting GETs that used to be admin/operator-only now name a capabil
 });
 
 test('every sub-router mounted under /servers/:id has a mount-level capability gate', () => {
-  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'web', 'routes', 'api.js'), 'utf8');
-  const mounts = [...src.matchAll(/router\.use\(\s*'(\/servers\/:id\/[^']+)'/g)].map((m) => m[1]);
+  // Mount paths come from the source because Express 5 layers keep no path
+  // string. Every routes file is scanned, any quote style, wrapped or not, and
+  // a mount whose path is not a literal fails loudly below.
+  const mounts = [];
+  for (const { file, src } of routeSources()) {
+    for (const m of src.matchAll(/router\.use\(\s*(['"`])(\/servers\/:\w+\/[^'"`]+)\1/g)) mounts.push(m[2]);
+    for (const m of src.matchAll(/router\.use\(\s*([^'"`\s][^,\n]*),/g)) {
+      const arg = m[1].trim();
+      // A non-literal first argument that is not itself a middleware (name
+      // starts with a lower-case identifier followed by "(") is a mount path
+      // we cannot audit.
+      if (/^[A-Za-z_$][\w$]*$/.test(arg) && /servers/i.test(arg)) assert.fail(`${file}: non-literal mount path ${arg}`);
+    }
+  }
   assert.ok(mounts.length >= 9, `found ${mounts.length} server-scoped mounts`);
   const missing = [];
   for (const mountPath of mounts) {
     if (ADMIN_ONLY_MOUNTS.has(mountPath)) continue;
-    const probe = mountPath.replace(':id', 'srv_probe') + '/probe';
+    const probe = mountPath.replace(/:\w+/, 'srv_probe') + '/probe';
     // Layers that match this prefix: the cap gate and the router share it.
     const matching = api.stack.filter((l) => !l.route && l.match(probe));
     const gate = matching.find((l) => typeof l.name === 'string' && l.name.startsWith('requireCap_'));
@@ -100,7 +121,7 @@ test('page router: serverScope is mounted ahead of every /servers/:id page', () 
   assert.ok(scopeIndex >= 0, 'serverScope layer present on the pages router');
   const late = pages.stack
     .map((l, i) => ({ l, i }))
-    .filter(({ l }) => l.route && /^\/servers\/:id(\/|\{|$)/.test(l.route.path))
+    .filter(({ l }) => l.route && SERVER_ROUTE.test(l.route.path))
     .map(({ l, i }) => ({ path: l.route.path, i }));
   assert.ok(late.length >= 3, `found ${late.length} server page routes`);
   const before = late.filter((r) => r.i < scopeIndex).map((r) => r.path);
@@ -154,9 +175,31 @@ test('the capability catalog names every gated route (the Permissions page canno
       gated.push({ cap: gate.handle.capability, entry: `${m.toUpperCase()} /api${layer.route.path}` });
     }
   }
-  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'web', 'routes', 'api.js'), 'utf8');
-  for (const m of src.matchAll(/router\.use\('(\/servers\/:id\/[^']+)', (requireCap\w*)\('(\w+)'\)/g)) {
-    gated.push({ cap: m[3], entry: `${m[2] === 'requireCapForWrites' ? 'WRITES' : 'ALL'} /api${m[1]}/*` });
+  for (const { src } of routeSources()) {
+    for (const m of src.matchAll(
+      /router\.use\(\s*(['"`])(\/servers\/:\w+\/[^'"`]+)\1\s*,\s*(requireCap\w*)\(\s*(['"`])(\w+)\4\s*\)/g
+    )) {
+      gated.push({ cap: m[5], entry: `${m[3] === 'requireCapForWrites' ? 'WRITES' : 'ALL'} /api${m[2]}/*` });
+    }
+  }
+  // Server-scoped schedule task types: the parenthetical on each
+  // `POST /api/schedules (…)` reach line must list exactly the task types whose
+  // `capability` in services/scheduler.js is that capability.
+  const { TASK_TYPES } = require('../src/services/scheduler');
+  for (const cap of Object.keys(CAPABILITY_INFO)) {
+    const line = CAPABILITY_INFO[cap].reach.find((r) => r.startsWith('POST /api/schedules'));
+    const listed = line
+      ? line
+          .replace(/^.*\((.*)\)$/, '$1')
+          .split(',')
+          .map((s) => s.trim())
+          .sort()
+      : [];
+    const actual = Object.entries(TASK_TYPES)
+      .filter(([, t]) => t.serverScoped && t.capability === cap)
+      .map(([k]) => k)
+      .sort();
+    assert.deepEqual(listed, actual, `schedule task types listed for ${cap}`);
   }
   assert.ok(gated.length >= 50, `found ${gated.length} gated routes`);
   const missing = [];
@@ -181,4 +224,73 @@ test('the capability catalog names every gated route (the Permissions page canno
     }
   }
   assert.deepEqual(stale, [], 'catalog entries that no route enforces');
+});
+
+// Sub-router modules whose `router` is mounted under /api/servers/:id (their
+// mount gate covers every write). Kept in step with the mounts in api.js.
+const SERVER_MOUNTED_FILES = new Set([
+  'analytics.js',
+  'chatCommands.js',
+  'crashes.js',
+  'files.js',
+  'integrations.js',
+  'inventory.js',
+  'items.js',
+  'players.js',
+  'wizard.js',
+]);
+
+test('every route that names its server in the body is either under /servers/:id or listed in BODY_SCOPED', () => {
+  const { BODY_SCOPED } = require('../src/web/middleware/auth');
+  const offenders = [];
+  for (const { file, src } of routeSources()) {
+    // Split the source into route blocks: from one `router.<verb>(` to the next.
+    const blocks = src.split(
+      /(?=^(?:router|serverWorlds|globalSearch|serverFiles|globalFiles)\.(?:get|post|put|patch|delete|all|use)\()/m
+    );
+    for (const block of blocks) {
+      const head = block.match(/^(\w+)\.(get|post|put|patch|delete|all|use)\(\s*(['"`])([^'"`]+)\3/);
+      if (!head) continue;
+      const [, routerName, method, , routePath] = head;
+      if (!/\b(?:targetServerId|serverId)\b/.test(block)) continue;
+      if (method === 'get' || method === 'use') continue; // reads and mounts are covered elsewhere
+      const mountedUnderServer =
+        SERVER_ROUTE.test(routePath) ||
+        routerName === 'serverWorlds' ||
+        routerName === 'serverFiles' ||
+        SERVER_MOUNTED_FILES.has(file);
+      if (mountedUnderServer) continue;
+      // A write outside /servers/:id that reads a server id from the body.
+      const full = {
+        'api.js': '/api',
+        'worlds.js': '/api/worlds',
+        'blueprints.js': '/api/blueprints',
+        'inventory.js': '/api/inventory',
+      }[file];
+      if (!full) {
+        offenders.push(`${file}: ${method.toUpperCase()} ${routePath} (unknown mount prefix, add it to this test)`);
+        continue;
+      }
+      const url = (full + routePath).replace(/\/$/, '') || '/';
+      const probe = url.replace(/:\w+/g, 'x');
+      if (!BODY_SCOPED.some((e) => e.re.test(probe))) offenders.push(`${file}: ${method.toUpperCase()} ${url}`);
+    }
+  }
+  // Creating a server (plain, from a pack, zip, mods, blueprint, or clone)
+  // names no existing server and stays on the global role; the permissions
+  // endpoint is admin-only.
+  const allowed = new Set([
+    'api.js: POST /api/servers',
+    'api.js: POST /api/servers/from-pack',
+    'api.js: POST /api/servers/from-zip',
+    'api.js: POST /api/servers/from-mods',
+    'api.js: PUT /api/permissions/:userId/:serverId',
+    'blueprints.js: POST /api/blueprints/clone',
+    'blueprints.js: POST /api/blueprints/import',
+  ]);
+  assert.deepEqual(
+    offenders.filter((o) => !allowed.has(o)),
+    [],
+    'body-addressed writes the viewer gate does not know about'
+  );
 });

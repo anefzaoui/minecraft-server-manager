@@ -121,13 +121,12 @@ router.get(
     const { server, running } = await loadContext(req);
     // ?fresh=1 -> flush live player data to disk first, so the grid shows the
     // CURRENT online state (used by the Reload button and after live edits).
-    // The flush writes files, so it honors the read-only contract the same way
-    // `requireWrite` does for non-GET methods: viewers can't trigger it. The
-    // cross-site guard above stops a third-party site from aiming a plain-GET
-    // navigation at this side-effecting URL.
+    // The flush writes files, so it needs the same capability as an inventory
+    // edit even though it rides on a GET. The cross-site guard above stops a
+    // third-party site from aiming a plain-GET navigation at this URL.
     if (running && req.query.fresh === '1') {
-      if (req.user.role === 'viewer') {
-        return res.status(403).json({ ok: false, error: 'This action requires write access.' });
+      if (!permissions.can(req.user, server.id, 'content')) {
+        return res.status(403).json({ ok: false, error: "You don't have the content permission on this server." });
       }
       await inventory.flushPlayerData(server.id);
     }

@@ -831,3 +831,101 @@ test('events scoped by user in one place: query-string server ids cannot bypass 
   assert.ok(events.listEvents({ serverId: A, limit: 5 }).length, 'internal callers are unscoped');
   await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: null } });
 });
+
+// ---------------------------------------------------------------------------
+// Third review round.
+
+test('requireRole answers JSON to API callers inside the mounted router', async () => {
+  const r = await app.req('PUT', `/api/permissions/${viewerId}/${B}`, {
+    cookie: operatorCookie,
+    body: { perms: ['view'] },
+  });
+  assert.equal(r.status, 403);
+  assert.ok(r.json && r.json.ok === false, `JSON body expected, got: ${r.text.slice(0, 40)}`);
+  const list = await app.req('GET', '/api/permissions', { cookie: viewerCookie });
+  assert.equal(list.status, 403);
+  assert.ok(list.json && list.json.ok === false);
+});
+
+test('the viewer gate decodes the path id and tolerates a trailing slash', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, {
+    cookie: adminCookie,
+    body: { perms: ['power', 'settings'] },
+  });
+  const encoded = B.replace('_', '%5F');
+  const r = await app.req('PUT', `/api/servers/${encoded}/console-label`, {
+    cookie: viewerCookie,
+    body: { label: 'enc' },
+  });
+  assert.equal(r.status, 200, 'percent-encoded id resolves to the same server');
+  const slash = await app.req('POST', '/api/schedules/', {
+    cookie: viewerCookie,
+    body: { serverId: B, taskType: 'restart', cron: '0 6 * * *' },
+  });
+  assert.equal(slash.status, 201);
+  await app.req('DELETE', `/api/schedules/${slash.json.schedule.id}`, { cookie: viewerCookie });
+  const bad = await app.req('POST', '/api/servers/%E0%A4%A/start', { cookie: viewerCookie });
+  assert.equal(bad.status, 403, 'a malformed escape fails closed');
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: null } });
+});
+
+test('schedules: task type is an enum; server-scoped capability comes from the task table', async () => {
+  const unknown = await app.req('POST', '/api/schedules', {
+    cookie: adminCookie,
+    body: { serverId: B, taskType: 'format-disk', cron: '0 6 * * *' },
+  });
+  assert.equal(unknown.status, 400);
+  const { TASK_TYPES } = require('../src/services/scheduler');
+  for (const [type, meta] of Object.entries(TASK_TYPES)) {
+    if (meta.serverScoped) assert.ok(meta.capability, `${type} names its capability`);
+    else assert.equal(meta.capability, undefined, `${type} is panel-global`);
+  }
+});
+
+test('side-effecting GETs: the read stays view; the flush needs content (branch needs Docker, covered live)', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: ['power'] } });
+  const read = await app.req('GET', `/api/servers/${B}/inventory/player/00000000-0000-0000-0000-000000000000?fresh=1`, {
+    cookie: viewerCookie,
+  });
+  // Not running here, so the flush is skipped and the read answers on its own (404: no such player).
+  assert.notEqual(read.status, 403);
+  // The old role check is gone: a viewer with content is not refused by role.
+  const src = require('node:fs').readFileSync(require.resolve('../src/web/routes/inventory.js'), 'utf8');
+  assert.ok(!/req\.user\.role === 'viewer'/.test(src), 'inventory route no longer branches on the role');
+  assert.ok(/permissions\.can\(req\.user, server\.id, 'content'\)/.test(src));
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: null } });
+});
+
+test('update ignore is a content decision on the named server', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: [] } });
+  const hidden = await app.req('POST', '/api/updates/ignore', {
+    cookie: viewerCookie,
+    body: { subjectType: 'pack', serverId: A, ignore: true },
+  });
+  assert.equal(hidden.status, 404);
+  const opHidden = await app.req('POST', '/api/updates/ignore', {
+    cookie: operatorCookie,
+    body: { subjectType: 'pack', serverId: A, ignore: true },
+  });
+  assert.equal(opHidden.status, 404, 'operator hidden on A');
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: ['content'] } });
+  const allowed = await app.req('POST', '/api/updates/ignore', {
+    cookie: viewerCookie,
+    body: { subjectType: 'pack', serverId: B, ignore: true },
+  });
+  assert.ok(![401, 403, 404].includes(allowed.status), `content on B passes the gate, got ${allowed.status}`);
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: null } });
+  await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: null } });
+});
+
+test('updates badge uses one predicate for everyone; activity filter hides admin-only types', async () => {
+  const checker = require('../src/updates/checker');
+  const all = checker.countOutdated();
+  const scopedAll = checker.countOutdated({ serverIds: [A, B] });
+  assert.equal(scopedAll, all, 'scoping to every server equals the unscoped count');
+  assert.equal(checker.countOutdated({ serverIds: [] }), 0);
+  const viewerActivity = await app.req('GET', '/activity', { cookie: viewerCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!viewerActivity.text.includes('permissions-changed'), 'type filter does not offer admin-only types');
+  const adminActivity = await app.req('GET', '/activity', { cookie: adminCookie, headers: { Accept: 'text/html' } });
+  assert.ok(adminActivity.text.includes('permissions-changed'));
+});

@@ -149,6 +149,7 @@ const CAPABILITY_INFO = {
       'GET /api/servers/:id/integrations/invite/modpack.mrpack',
       'WRITES /api/servers/:id/inventory/*',
       'WRITES /api/servers/:id/items/*',
+      'POST /api/updates/ignore (this server)',
       'POST /api/worlds/extract (this server as source)',
       'POST /api/worlds/:id/install (this server as target)',
     ],
@@ -179,7 +180,7 @@ const CAPABILITY_INFO = {
       'Share, delete, and mark crash reports.',
       'Export this server as a blueprint.',
     ],
-    excludes: 'The panel-wide data folder (admin-only) and other servers’ files.',
+    excludes: "The panel-wide data folder (admin-only) and other servers' files.",
     reach: [
       'ALL /api/servers/:id/files/*',
       'GET /api/servers/:id/logs/archived',

@@ -78,7 +78,9 @@ function requireRole(...roles) {
         path: req.path,
         method: req.method,
       });
-      if (req.path.startsWith('/api/')) return res.status(403).json({ ok: false, error: 'Insufficient permissions' });
+      // originalUrl, not req.path: inside a mounted router req.path is relative to the mount.
+      if (req.originalUrl.startsWith('/api/'))
+        return res.status(403).json({ ok: false, error: 'Insufficient permissions' });
       return res
         .status(403)
         .render('error', { title: 'Forbidden', code: 403, message: 'Your role does not allow this.' });
@@ -120,31 +122,41 @@ function requireWrite(req, res, next) {
 // viewers, so panel-wide actions (create server, storage, users) never open up.
 const SERVER_SCOPED = /^\/api\/servers\/([^/]+)(?:\/|$)/;
 const BACKUP_SCOPED = /^\/api\/backups\/([^/]+)(?:\/|$)/;
+
+/** Path segment as Express hands it to routes: percent-decoded, or null when malformed. */
+function decodeSegment(seg) {
+  try {
+    return decodeURIComponent(seg);
+  } catch {
+    return null;
+  }
+}
 // Writes that name their server in the body or via a row lookup rather than the
 // path. Each of these routes carries its own per-server capability check; this
 // list only decides whether a viewer reaches it at all.
 const BODY_SCOPED = [
-  { re: /^\/api\/schedules$/, id: (req) => req.body && req.body.serverId },
+  { re: /^\/api\/schedules\/?$/, id: (req) => req.body && req.body.serverId },
   {
     re: /^\/api\/schedules\/([^/]+)(?:\/|$)/,
     id: (req, m) => {
-      const row = db.get('SELECT server_id FROM schedules WHERE id = ?', m[1]);
+      const row = db.get('SELECT server_id FROM schedules WHERE id = ?', decodeSegment(m[1]));
       return row ? row.server_id : null;
     },
   },
-  { re: /^\/api\/worlds\/extract$/, id: (req) => req.body && req.body.serverId },
-  { re: /^\/api\/worlds\/[^/]+\/install$/, id: (req) => req.body && req.body.serverId },
-  { re: /^\/api\/blueprints\/export$/, id: (req) => req.body && req.body.serverId },
+  { re: /^\/api\/worlds\/extract\/?$/, id: (req) => req.body && req.body.serverId },
+  { re: /^\/api\/worlds\/[^/]+\/install\/?$/, id: (req) => req.body && req.body.serverId },
+  { re: /^\/api\/blueprints\/export\/?$/, id: (req) => req.body && req.body.serverId },
+  { re: /^\/api\/updates\/ignore\/?$/, id: (req) => req.body && req.body.serverId },
 ];
 
 /** 'allow' | 'hidden' | 'deny' for a viewer's write, based on the server in the path or body. */
 function viewerServerVerdict(req) {
   let serverId = null;
   const m = SERVER_SCOPED.exec(req.path);
-  if (m) serverId = m[1];
+  if (m) serverId = decodeSegment(m[1]);
   else {
     const b = BACKUP_SCOPED.exec(req.path);
-    if (b) serverId = backupServerId({ params: { backupId: b[1] } });
+    if (b) serverId = backupServerId({ params: { backupId: decodeSegment(b[1]) } });
     else {
       for (const entry of BODY_SCOPED) {
         const bm = entry.re.exec(req.path);
@@ -364,4 +376,6 @@ module.exports = {
   clearLoginFailures,
   listActiveLockouts,
   clearLockouts,
+  // For the structural test only: routes that name their server in the body.
+  BODY_SCOPED,
 };

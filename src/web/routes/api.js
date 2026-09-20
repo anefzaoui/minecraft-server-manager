@@ -1083,6 +1083,12 @@ router.post(
       })
       .parse(req.body);
     const actor = req.user.username;
+    // Ignoring an update is a content decision on that server.
+    if (serverId) {
+      const perms = permissions.effective(req.user, serverId);
+      if (!perms.includes('view')) throw httpError(404, 'Server not found');
+      if (!perms.includes('content')) throw httpError(403, "You don't have the content permission on this server.");
+    }
     if (subjectType === 'content') {
       if (!serverId || !contentId) {
         throw Object.assign(new Error('serverId and contentId are required for content'), { status: 400 });
@@ -1228,10 +1234,11 @@ router.get('/schedules/preview', (req, res) => {
 
 // A server-scoped schedule runs an action on that server, so creating,
 // toggling, or deleting one needs the capability that action needs.
-const SCHEDULE_CAP = { restart: 'power', stop: 'power', start: 'power', backup: 'backups', rcon: 'console' };
+const TASK_TYPE_KEYS = /** @type {[string, ...string[]]} */ (Object.keys(scheduler.TASK_TYPES));
 function requireScheduleAccess(req, serverId, taskType) {
   const meta = scheduler.TASK_TYPES[taskType];
-  if (meta && !meta.serverScoped) {
+  if (!meta) throw httpError(400, 'Unknown task type.');
+  if (!meta.serverScoped) {
     // Panel-global work (storage scan, update check, temp cleanup, …) runs
     // against the whole panel whatever serverId is attached, so it follows the
     // global role: a viewer never reaches it, even with per-server grants.
@@ -1239,7 +1246,7 @@ function requireScheduleAccess(req, serverId, taskType) {
     return;
   }
   if (!serverId) return;
-  const cap = SCHEDULE_CAP[taskType] || 'settings';
+  const cap = meta.capability;
   const perms = permissions.effective(req.user, serverId);
   if (!perms.includes('view')) throw httpError(404, 'Server not found');
   if (!perms.includes(cap)) {
@@ -1254,7 +1261,7 @@ router.post(
     const input = z
       .object({
         serverId: z.string().trim().max(40).nullable().optional(),
-        taskType: z.string().trim().min(2).max(30),
+        taskType: z.enum(TASK_TYPE_KEYS),
         cron: z.string().trim().min(5).max(60),
         payload: z.record(z.string(), z.any()).optional(),
         enabled: z.coerce.boolean().optional(),
