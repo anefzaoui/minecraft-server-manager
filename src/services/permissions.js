@@ -13,8 +13,9 @@
 //
 // Storage is the `user_server_permissions` table created in migration 001
 // (dormant until this module): PRIMARY KEY (user_id, server_id), user rows
-// cascade on user delete, server rows are filtered through `deleted_at IS NULL`
-// on read and pruned by `forgetServer()` on hard delete.
+// cascade on user delete. Server rows are kept across a soft delete on purpose:
+// a server hidden from someone stays hidden in history and kept backups after
+// it is removed. `forgetServer()` exists for a real cleanup.
 //
 // Panel-wide actions (creating servers, storage, users, global settings) are
 // NOT covered here - those stay on the global role, see web/middleware/auth.js.
@@ -43,14 +44,20 @@ const CAPABILITIES = /** @type {const} */ ([
 const CAPABILITY_INFO = {
   view: { label: 'View', help: 'See the server, its status, console output, players, history, and stats.' },
   power: { label: 'Power', help: 'Start, stop, restart, kill, and rebuild the server.' },
-  console: { label: 'Console', help: 'Run console commands, send chat, and manage chat commands.' },
+  console: {
+    label: 'Console',
+    help: 'Run console commands and world quick actions, send chat, and manage chat commands.',
+  },
   players: { label: 'Players', help: 'Kick, ban, whitelist, op, and edit player notes.' },
   content: {
     label: 'Content',
     help: 'Install and remove mods, plugins, packs, worlds, datapacks, and edit inventories.',
   },
   backups: { label: 'Backups', help: 'Create, restore, download, and delete backups.' },
-  files: { label: 'Files', help: 'Browse, edit, upload, and download server files and log bundles.' },
+  files: {
+    label: 'Files',
+    help: 'Browse, edit, upload, and download server files, archived logs, and log bundles; export blueprints.',
+  },
   settings: {
     label: 'Settings',
     help: 'Change server settings, properties, integrations, icon, and upgrade versions.',
@@ -144,14 +151,16 @@ function can(user, serverId, cap) {
 }
 
 /**
- * Ids of every live server the user may see, as a Set. Admins and users with
- * no grant rows short-circuit to "all" so the fleet-wide pages pay nothing for
- * the common case.
+ * Ids of every server the user may see, as a Set. Soft-deleted servers are
+ * included (their history and kept backups stay visible to anyone whose default
+ * includes view), so the set is safe to apply to events and backups as well as
+ * to live server lists. Admins and users with no grant rows short-circuit to
+ * "all" so the fleet-wide pages pay nothing for the common case.
  * @param {{ id: string, role: string } | null | undefined} user
  * @returns {Set<string>}
  */
 function visibleServerIds(user) {
-  const all = new Set(db.all('SELECT id FROM servers WHERE deleted_at IS NULL').map((r) => r.id));
+  const all = new Set(db.all('SELECT id FROM servers').map((r) => r.id));
   if (!user) return new Set();
   if (user.role === 'admin') return all;
   const rows = db.all('SELECT server_id, perms FROM user_server_permissions WHERE user_id = ?', user.id);
@@ -262,6 +271,17 @@ function setGrant(userId, serverId, perms, { actor = 'system' } = {}) {
   return { grant: list, effective: list };
 }
 
+/**
+ * Event types only admins may read in listings and exports. Grant changes are
+ * recorded against the server they concern, but who may do what is admin
+ * business, not something every viewer of that server should see.
+ * @param {{ id: string, role: string } | null | undefined} user
+ * @returns {string[]}
+ */
+function hiddenEventTypes(user) {
+  return user && user.role === 'admin' ? [] : ['permissions-changed'];
+}
+
 /** Drop every grant row for a server that is being removed for good. */
 function forgetServer(serverId) {
   db.run('DELETE FROM user_server_permissions WHERE server_id = ?', serverId);
@@ -279,5 +299,6 @@ module.exports = {
   filterVisible,
   listMatrix,
   setGrant,
+  hiddenEventTypes,
   forgetServer,
 };

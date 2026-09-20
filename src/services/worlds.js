@@ -841,7 +841,8 @@ async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = 
 // Library listing / delete
 
 /** All library worlds mapped for the UI (friendly source labels, compat info). */
-function libraryWorlds() {
+/** @param {{ visibleServerIds?: Set<string> | null }} [opts] hide source-server names the caller may not see */
+function libraryWorlds({ visibleServerIds = null } = {}) {
   return db.all("SELECT * FROM library_files WHERE category = 'world' ORDER BY created_at DESC").map((row) => {
     let source = 'Imported';
     let sourceKind = 'import';
@@ -851,7 +852,8 @@ function libraryWorlds() {
     } else if (row.world_source && row.world_source.startsWith('extract:')) {
       const sid = row.world_source.slice('extract:'.length);
       const server = db.get('SELECT display_name FROM servers WHERE id = ?', sid);
-      source = `Extracted from ${server ? server.display_name : sid}`;
+      const visible = !visibleServerIds || visibleServerIds.has(sid);
+      source = visible ? `Extracted from ${server ? server.display_name : sid}` : 'Extracted from a server';
       sourceKind = 'extract';
     }
     return {

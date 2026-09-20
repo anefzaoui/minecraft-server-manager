@@ -138,14 +138,36 @@ test('viewer with power+console on B: allowed on B, still refused on A and panel
   assert.equal((await app.req('POST', '/api/servers', { cookie: viewerCookie, body: { name: 'x' } })).status, 403);
   assert.equal((await app.req('POST', '/api/storage/scan', { cookie: viewerCookie })).status, 403);
   assert.equal((await app.req('POST', '/api/users', { cookie: viewerCookie, body: {} })).status, 403);
+  // Server-scoped schedules follow the capability on that server, even for a viewer.
+  const restartB = await app.req('POST', '/api/schedules', {
+    cookie: viewerCookie,
+    body: { serverId: B, taskType: 'restart', cron: '0 4 * * *' },
+  });
+  assert.equal(restartB.status, 201, 'power on B allows a restart schedule on B');
+  const backupB = await app.req('POST', '/api/schedules', {
+    cookie: viewerCookie,
+    body: { serverId: B, taskType: 'backup', cron: '0 4 * * *' },
+  });
+  assert.equal(backupB.status, 403, 'no backups on B');
+  assert.match(backupB.json.error, /backups permission/);
+  const restartA = await app.req('POST', '/api/schedules', {
+    cookie: viewerCookie,
+    body: { serverId: A, taskType: 'restart', cron: '0 4 * * *' },
+  });
+  assert.equal(restartA.status, 403, 'read-only on A');
+  const globalJob = await app.req('POST', '/api/schedules', {
+    cookie: viewerCookie,
+    body: { taskType: 'tmp-clean', cron: '0 5 * * *' },
+  });
+  assert.equal(globalJob.status, 403, 'panel-global schedules stay on the global role');
+  const toggleB = await app.req('POST', `/api/schedules/${restartB.json.schedule.id}/toggle`, {
+    cookie: viewerCookie,
+    body: { enabled: false },
+  });
+  assert.equal(toggleB.status, 200);
   assert.equal(
-    (
-      await app.req('POST', '/api/schedules', {
-        cookie: viewerCookie,
-        body: { serverId: B, taskType: 'restart', cron: '0 4 * * *' },
-      })
-    ).status,
-    403
+    (await app.req('DELETE', `/api/schedules/${restartB.json.schedule.id}`, { cookie: viewerCookie })).status,
+    200
   );
 });
 
@@ -164,7 +186,9 @@ test('server page reflects the grant: power buttons shown on B, hidden on A; fil
     cookie: viewerCookie,
     headers: { Accept: 'text/html' },
   });
-  assert.equal(filesPage.status, 404);
+  // Same as before this feature: the page renders with an empty listing, the API 403s.
+  assert.equal(filesPage.status, 200);
+  assert.equal((await app.req('GET', `/api/servers/${A}/files/list`, { cookie: viewerCookie })).status, 403);
   const opFiles = await app.req('GET', `/servers/${A}/files`, {
     cookie: operatorCookie,
     headers: { Accept: 'text/html' },
@@ -478,16 +502,237 @@ test('PUT /api/permissions validates and resets', async () => {
   );
 });
 
-test('deleting a server removes its grant rows; deleting a user cascades theirs', async () => {
+test('a deleted server keeps its history for admins and operators; an explicit hide survives the delete', async () => {
   const C = app.seedServer('srv_perm_c');
-  await app.req('PUT', `/api/permissions/${viewerId}/${C}`, { cookie: adminCookie, body: { perms: ['power'] } });
-  assert.equal(db.get('SELECT COUNT(*) AS n FROM user_server_permissions WHERE server_id = ?', C).n, 1);
+  db.run("UPDATE servers SET display_name = 'Charlie Gone' WHERE id = ?", C);
+  await app.req('PUT', `/api/permissions/${viewerId}/${C}`, { cookie: adminCookie, body: { perms: [] } });
+  db.run(
+    `INSERT INTO backups (id, server_id, filename, rel_path, size_bytes, reason) VALUES ('bk_charlie', ?, 'charlie.zip', 'backups/charlie.zip', 10, 'manual')`,
+    C
+  );
   // Soft-delete via the service path used by DELETE /api/servers/:id (no container exists; that is tolerated).
   await require('../src/services/servers').deleteServer(C, { actor: 'test', keepWorld: true, keepBackups: true });
-  assert.equal(db.get('SELECT COUNT(*) AS n FROM user_server_permissions WHERE server_id = ?', C).n, 0);
+  assert.equal(
+    db.get('SELECT COUNT(*) AS n FROM user_server_permissions WHERE server_id = ?', C).n,
+    1,
+    'grant row kept'
+  );
+  for (const [who, cookie] of [
+    ['admin', adminCookie],
+    ['operator', operatorCookie],
+  ]) {
+    const activity = await app.req('GET', '/activity', { cookie, headers: { Accept: 'text/html' } });
+    assert.ok(activity.text.includes('Charlie Gone'), `${who} still sees the deleted server's history`);
+    const backupsPage = await app.req('GET', '/backups', { cookie, headers: { Accept: 'text/html' } });
+    assert.ok(backupsPage.text.includes('charlie.zip'), `${who} still sees the kept backup`);
+  }
+  const viewerActivity = await app.req('GET', '/activity', { cookie: viewerCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!viewerActivity.text.includes('Charlie Gone'), 'hidden stays hidden after the delete');
+  assert.equal((await app.req('GET', '/api/backups/bk_charlie/download', { cookie: viewerCookie })).status, 404);
 
   const tmp = await login('tmp_p', 'tmppass12345', 'viewer');
   await app.req('PUT', `/api/permissions/${tmp.id}/${B}`, { cookie: adminCookie, body: { perms: ['power'] } });
   assert.equal((await app.req('DELETE', `/api/users/${tmp.id}`, { cookie: adminCookie })).status, 200);
   assert.equal(db.get('SELECT COUNT(*) AS n FROM user_server_permissions WHERE user_id = ?', tmp.id).n, 0);
+});
+
+// ---------------------------------------------------------------------------
+// Review round: every place a hidden server used to leak, and grant-event privacy.
+
+test('player detail page: hidden server is 404; admin keeps the power row there', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: [] } });
+  const hidden = await app.req('GET', `/servers/${A}/players/Steve`, {
+    cookie: viewerCookie,
+    headers: { Accept: 'text/html' },
+  });
+  assert.equal(hidden.status, 404);
+  assert.ok(!hidden.text.includes('Alpha Server'));
+  const visible = await app.req('GET', `/servers/${B}/players/Steve`, {
+    cookie: viewerCookie,
+    headers: { Accept: 'text/html' },
+  });
+  assert.equal(visible.status, 200);
+  const adminPage = await app.req('GET', `/servers/${A}/players/Steve`, {
+    cookie: adminCookie,
+    headers: { Accept: 'text/html' },
+  });
+  assert.equal(adminPage.status, 200);
+  assert.ok(!/class="flex flex-wrap gap-2 hidden">/.test(adminPage.text), 'power row visible for the admin');
+  await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: null } });
+});
+
+test('blueprints: export and clone need files on the source; hidden reads as missing; its blueprints are hidden', async () => {
+  // Operator: hidden on A (set earlier).
+  const exportHidden = await app.req('POST', '/api/blueprints/export', {
+    cookie: operatorCookie,
+    body: { serverId: A },
+  });
+  assert.equal(exportHidden.status, 404);
+  const cloneHidden = await app.req('POST', '/api/blueprints/clone', { cookie: operatorCookie, body: { serverId: A } });
+  assert.equal(cloneHidden.status, 404);
+  await app.req('PUT', `/api/permissions/${operatorId}/${B}`, { cookie: adminCookie, body: { perms: ['content'] } });
+  const exportNoFiles = await app.req('POST', '/api/blueprints/export', {
+    cookie: operatorCookie,
+    body: { serverId: B },
+  });
+  assert.equal(exportNoFiles.status, 403);
+  assert.match(exportNoFiles.json.error, /files permission/);
+  await app.req('PUT', `/api/permissions/${operatorId}/${B}`, { cookie: adminCookie, body: { perms: null } });
+
+  // Viewer with files on B may export B; still read-only on A; clone stays global.
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: ['files'] } });
+  const viewerExportB = await app.req('POST', '/api/blueprints/export', {
+    cookie: viewerCookie,
+    body: { serverId: B },
+  });
+  assert.ok(
+    ![401, 403, 404].includes(viewerExportB.status),
+    `viewer with files exports B, got ${viewerExportB.status}`
+  );
+  assert.equal(
+    (await app.req('POST', '/api/blueprints/export', { cookie: viewerCookie, body: { serverId: A } })).status,
+    403
+  );
+  assert.equal(
+    (await app.req('POST', '/api/blueprints/clone', { cookie: viewerCookie, body: { serverId: B } })).status,
+    403,
+    'clone creates a server: global role'
+  );
+
+  // A blueprint exported from a hidden server is invisible to that user.
+  const adminExportA = await app.req('POST', '/api/blueprints/export', { cookie: adminCookie, body: { serverId: A } });
+  assert.equal(adminExportA.status, 201);
+  const bpId = adminExportA.json.blueprint.id;
+  const opList = await app.req('GET', '/api/blueprints', { cookie: operatorCookie });
+  assert.ok(!opList.json.blueprints.some((b) => b.id === bpId), 'hidden source: absent from the API list');
+  assert.equal((await app.req('GET', `/api/blueprints/${bpId}/download`, { cookie: operatorCookie })).status, 404);
+  const opPage = await app.req('GET', '/blueprints', { cookie: operatorCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!opPage.text.includes(bpId), 'hidden source: absent from the page');
+  const adminList = await app.req('GET', '/api/blueprints', { cookie: adminCookie });
+  assert.ok(adminList.json.blueprints.some((b) => b.id === bpId));
+  const viewerList = await app.req('GET', '/api/blueprints', { cookie: viewerCookie });
+  assert.ok(
+    viewerList.json.blueprints.some((b) => b.id === bpId),
+    'viewer can view A, so sees it'
+  );
+});
+
+test('tasks, worlds library labels, modpacks, updates badge never name a hidden server', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: [] } });
+  const tasks = require('../src/services/tasks');
+  const t = tasks.createTask('Backing up Alpha Server…', { serverId: A, actor: 'test' });
+  const viewerTasks = await app.req('GET', '/api/tasks', { cookie: viewerCookie });
+  assert.ok(!viewerTasks.json.tasks.some((x) => x.id === t.id), 'hidden server task absent from the list');
+  assert.equal((await app.req('GET', `/api/tasks/${t.id}`, { cookie: viewerCookie })).status, 404);
+  const adminTasks = await app.req('GET', '/api/tasks', { cookie: adminCookie });
+  assert.ok(adminTasks.json.tasks.some((x) => x.id === t.id));
+  t.done({});
+
+  db.run(
+    `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, world_source)
+     VALUES ('lib_world_a', 'world', 'Alpha World', 'alpha-world.zip', 'library/worlds/alpha-world.zip', 'x', 10, ?)`,
+    `extract:${A}`
+  );
+  const viewerWorlds = await app.req('GET', '/api/worlds', { cookie: viewerCookie });
+  const row = viewerWorlds.json.worlds.find((w) => w.id === 'lib_world_a');
+  assert.equal(row.source, 'Extracted from a server');
+  const adminWorlds = await app.req('GET', '/api/worlds', { cookie: adminCookie });
+  assert.equal(adminWorlds.json.worlds.find((w) => w.id === 'lib_world_a').source, 'Extracted from Alpha Server');
+  const worldsPage = await app.req('GET', '/worlds', { cookie: viewerCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!worldsPage.text.includes('Alpha Server'));
+
+  db.run(
+    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
+     VALUES (?, 'modrinth', 'alpha-pack', 'Alpha Pack', 'v1', '1.0')`,
+    A
+  );
+  db.run("UPDATE servers SET update_policy = 'notify' WHERE id = ?", A);
+  db.run(
+    `INSERT INTO update_checks (subject_type, subject_id, current_version, latest_version, latest_name) VALUES ('pack', ?, 'v1', 'v2', '2.0')`,
+    A
+  );
+  const modpacks = await app.req('GET', '/modpacks', { cookie: viewerCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!modpacks.text.includes('Alpha Server') && !modpacks.text.includes('Alpha Pack'));
+  const adminModpacks = await app.req('GET', '/modpacks', { cookie: adminCookie, headers: { Accept: 'text/html' } });
+  assert.ok(adminModpacks.text.includes('Alpha Pack'));
+  const updates = await app.req('GET', '/updates', { cookie: viewerCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!updates.text.includes('Alpha Pack'));
+  assert.ok(!/badge badge-warn ml-auto">/.test(updates.text), 'sidebar badge counts only visible servers');
+  const adminUpdates = await app.req('GET', '/updates', { cookie: adminCookie, headers: { Accept: 'text/html' } });
+  assert.ok(adminUpdates.text.includes('Alpha Pack'));
+  assert.ok(/badge badge-warn ml-auto">1</.test(adminUpdates.text), 'admin badge shows the one outdated pack');
+  assert.equal((await app.req('GET', `/api/packs/details?serverId=${A}`, { cookie: viewerCookie })).status, 404);
+  await app.req('PUT', `/api/permissions/${viewerId}/${A}`, { cookie: adminCookie, body: { perms: null } });
+});
+
+test('grant-change history entries are admin-only in every listing and export', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: ['power'] } });
+  const history = await app.req('GET', `/servers/${B}/history`, {
+    cookie: viewerCookie,
+    headers: { Accept: 'text/html' },
+  });
+  assert.equal(history.status, 200);
+  assert.ok(!history.text.includes('Permissions for'), 'server history hides grant events from non-admins');
+  const overview = await app.req('GET', `/servers/${B}`, { cookie: operatorCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!overview.text.includes('Permissions for'));
+  const activity = await app.req('GET', '/activity', { cookie: operatorCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!activity.text.includes('Permissions for'));
+  const dash = await app.req('GET', '/', { cookie: operatorCookie, headers: { Accept: 'text/html' } });
+  assert.ok(!dash.text.includes('Permissions for'));
+  const opExport = await app.req('GET', '/api/events/export?format=json', { cookie: operatorCookie });
+  assert.ok(!opExport.text.includes('permissions-changed'));
+  const adminHistory = await app.req('GET', `/servers/${B}/history`, {
+    cookie: adminCookie,
+    headers: { Accept: 'text/html' },
+  });
+  assert.ok(adminHistory.text.includes('Permissions for'));
+  const adminExport = await app.req('GET', '/api/events/export?format=json', { cookie: adminCookie });
+  assert.ok(adminExport.text.includes('permissions-changed'));
+});
+
+test('capability mapping: log bundles need files, world quick actions need console, global world routes follow content', async () => {
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: ['power'] } });
+  assert.equal((await app.req('GET', `/api/servers/${B}/logs/bundle.zip`, { cookie: viewerCookie })).status, 403);
+  assert.equal((await app.req('GET', `/api/servers/${B}/logs/game`, { cookie: viewerCookie })).status, 403);
+  assert.equal(
+    (await app.req('GET', `/api/servers/${B}/logs`, { cookie: viewerCookie })).status,
+    200,
+    'live console output is view'
+  );
+  const quickNoConsole = await app.req('POST', `/api/servers/${B}/world/quick`, {
+    cookie: viewerCookie,
+    body: { action: 'day' },
+  });
+  assert.equal(quickNoConsole.status, 403);
+  assert.match(quickNoConsole.json.error, /console permission/);
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, {
+    cookie: adminCookie,
+    body: { perms: ['console', 'files', 'content'] },
+  });
+  assert.notEqual((await app.req('GET', `/api/servers/${B}/logs/game`, { cookie: viewerCookie })).status, 403);
+  const quick = await app.req('POST', `/api/servers/${B}/world/quick`, {
+    cookie: viewerCookie,
+    body: { action: 'day' },
+  });
+  assert.ok(![401, 403, 404].includes(quick.status), `console allows quick actions, got ${quick.status}`);
+  // Global worlds routes name the server in the body: content on B opens them for a viewer.
+  const extractB = await app.req('POST', '/api/worlds/extract', {
+    cookie: viewerCookie,
+    body: { serverId: B, name: 'w' },
+  });
+  // The seeded server has no level.dat, so the world service answers its own
+  // 404; the gate is passed when the error is not the "Server not found" one.
+  assert.ok(![401, 403].includes(extractB.status), `extract from B passes the gate, got ${extractB.status}`);
+  assert.notEqual(extractB.json && extractB.json.error, 'Server not found');
+  assert.match(extractB.json.error, /level\.dat/);
+  assert.equal(
+    (await app.req('POST', '/api/worlds/extract', { cookie: viewerCookie, body: { serverId: A, name: 'w' } })).status,
+    403
+  );
+  const installA = await app.req('POST', '/api/worlds/lib_world_a/install', {
+    cookie: viewerCookie,
+    body: { serverId: A },
+  });
+  assert.equal(installA.status, 403);
+  await app.req('PUT', `/api/permissions/${viewerId}/${B}`, { cookie: adminCookie, body: { perms: null } });
 });

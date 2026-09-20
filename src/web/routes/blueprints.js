@@ -68,9 +68,19 @@ const overridesSchema = z.object({
 router.get(
   '/',
   asyncHandler((req, res, next) => {
-    res.json({ ok: true, blueprints: blueprints.listBlueprints().map(publicBlueprint) });
+    res.json({ ok: true, blueprints: blueprints.listBlueprintsFor(req.user).map(publicBlueprint) });
   })
 );
+
+// Exporting or cloning reads the whole server tree (server.properties included),
+// so it needs the `files` capability on the source; a hidden server reads as missing.
+function requireFilesOn(req, serverId) {
+  const permissions = require('../../services/permissions');
+  const httpError = require('../../utils/httpError');
+  const perms = permissions.effective(req.user, serverId);
+  if (!perms.includes('view')) throw httpError(404, 'Server not found');
+  if (!perms.includes('files')) throw httpError(403, "You don't have the files permission on this server.");
+}
 
 router.post(
   '/export',
@@ -83,6 +93,7 @@ router.post(
         includeWorld: z.coerce.boolean().optional(),
       })
       .parse(req.body);
+    requireFilesOn(req, input.serverId);
     const row = await blueprints.exportBlueprint(
       input.serverId,
       { includeConfig: input.includeConfig !== false, embedFiles: input.embedFiles, includeWorld: input.includeWorld },
@@ -152,6 +163,7 @@ router.post(
         includeWorld: z.coerce.boolean().optional(),
       })
       .parse(req.body);
+    requireFilesOn(req, input.serverId);
     const { server, report, blueprint } = await blueprints.cloneServer(input.serverId, {
       includeWorld: input.includeWorld,
       actor: req.user.username,
@@ -169,7 +181,9 @@ router.get(
   '/:id/download',
   asyncHandler((req, res, next) => {
     const row = blueprints.getBlueprint(req.params.id);
-    if (!row) return res.status(404).json({ ok: false, error: 'Blueprint not found' });
+    if (!row || !blueprints.blueprintVisibleTo(req.user, row)) {
+      return res.status(404).json({ ok: false, error: 'Blueprint not found' });
+    }
     res.download(dataPath(row.rel_path), row.filename);
   })
 );

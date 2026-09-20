@@ -77,7 +77,7 @@ const router = express.Router();
 router.get(
   '/',
   asyncHandler((req, res, next) => {
-    res.json({ ok: true, worlds: worlds.libraryWorlds() });
+    res.json({ ok: true, worlds: worlds.libraryWorlds({ visibleServerIds: permissions.visibleServerIds(req.user) }) });
   })
 );
 

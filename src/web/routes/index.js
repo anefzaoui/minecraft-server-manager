@@ -21,7 +21,7 @@ const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
 const permissions = require('../../services/permissions');
-const { permsObject } = require('../middleware/serverAccess');
+const { permsObject, serverScope } = require('../middleware/serverAccess');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
 const logger = require('../../logger')('pages');
 const { serializeError } = require('../../utils/logSanitize');
@@ -139,7 +139,13 @@ router.use(
     // Only the servers this user may view - the same filter every fleet-wide page applies.
     res.locals.visibleServerIds = permissions.visibleServerIds(req.user);
     res.locals.servers = permissions.filterVisible(req.user, sidebarServerVMs());
-    res.locals.updatesCount = require('../../updates/checker').countOutdated();
+    const checker = require('../../updates/checker');
+    res.locals.updatesCount =
+      req.user && req.user.role !== 'admin'
+        ? checker
+            .listOutdated()
+            .filter((u) => (!u.serverId || res.locals.visibleServerIds.has(u.serverId)) && !u.ignored).length
+        : checker.countOutdated();
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
     next();
@@ -324,7 +330,11 @@ async function renderServerList(req, res, next, { page }) {
     };
     if (page === 'dashboard') {
       const events = eventsService
-        .listEvents({ limit: 20, serverIds: res.locals.visibleServerIds })
+        .listEvents({
+          limit: 20,
+          serverIds: res.locals.visibleServerIds,
+          hideTypes: permissions.hiddenEventTypes(req.user),
+        })
         .filter((e) => !e.type.endsWith('-requested'))
         .slice(0, 6);
       context.activity = eventsVM(events);
@@ -372,7 +382,7 @@ router.get('/servers/new', async (req, res) => {
   res.render('wizard', {
     title: 'Create Server',
     active: 'servers',
-    blueprints: require('../../blueprints').listBlueprints(),
+    blueprints: require('../../blueprints').listBlueprintsFor(req.user),
     versions,
     latestRelease,
     suggestedPort,
@@ -381,6 +391,10 @@ router.get('/servers/new', async (req, res) => {
     defaults: require('../../services/settings').getDefaults(),
   });
 });
+
+// Every server page below inherits the per-server scope: a server the user may
+// not view renders the 404 page, and res.locals.perms carries the capability set.
+router.use('/servers/:id', serverScope);
 
 // Per-player page: opened by clicking a player in the roster. Shows that player's
 // roles/ban/teleport controls and their full inventory (the Players+Inventory merge).
@@ -422,6 +436,7 @@ router.get(
       server,
       tab: 'players',
       nav: buildNav(row.id, 'players', server, { isAdmin: req.user.role === 'admin', perms: res.locals.perms }),
+      perms: res.locals.perms,
       player,
     });
   })
@@ -446,7 +461,6 @@ router.get(
     res.locals.perms = perms;
     const tab = req.params.tab || 'overview';
     if (!SERVER_TABS.includes(tab)) return next();
-    if (tab === 'files' && !perms.files) return next();
 
     const server = await serverVM(row);
     // Docker settings (container name, network, extra ports/binds - including
@@ -514,7 +528,7 @@ router.get(
     } else if (tab === 'worlds') {
       const worldsService = require('../../services/worlds');
       context.worlds = await worldsService.listServerWorlds(row.id).catch(() => []);
-      context.libraryWorlds = worldsService.libraryWorlds();
+      context.libraryWorlds = worldsService.libraryWorlds({ visibleServerIds: res.locals.visibleServerIds });
       // Copy-to target list, serialized in one piece by the json helper - the
       // view used to hand-assemble this JSON attribute field by field.
       context.serverOptions = (res.locals.servers || []).map((s) => ({
@@ -595,7 +609,9 @@ router.get(
         'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
         row.id
       );
-      context.recentEvents = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 8 }));
+      context.recentEvents = eventsVM(
+        eventsService.listEvents({ serverId: row.id, limit: 8, hideTypes: permissions.hiddenEventTypes(req.user) })
+      );
 
       // --- Per-world / per-dimension sizes + host disk free.
       try {
@@ -732,7 +748,9 @@ router.get(
         });
       context.wsConsole = true;
     } else if (tab === 'history') {
-      context.events = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 100 }));
+      context.events = eventsVM(
+        eventsService.listEvents({ serverId: row.id, limit: 100, hideTypes: permissions.hiddenEventTypes(req.user) })
+      );
       context.crashReports = db
         .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
         .map(crashVM);
@@ -779,7 +797,7 @@ router.get('/worlds', (req, res) => {
   res.render('worlds', {
     title: 'Worlds',
     active: 'worlds',
-    worlds: require('../../services/worlds').libraryWorlds(),
+    worlds: require('../../services/worlds').libraryWorlds({ visibleServerIds: res.locals.visibleServerIds }),
     // Install/extract target list - one json call, not hand-assembled JSON.
     serverOptions: (res.locals.servers || []).map((s) => ({
       id: s.id,
@@ -794,7 +812,7 @@ router.get('/blueprints', (req, res) => {
   res.render('blueprints', {
     title: 'Blueprints',
     active: 'blueprints',
-    blueprints: require('../../blueprints').listBlueprints(),
+    blueprints: require('../../blueprints').listBlueprintsFor(req.user),
   });
 });
 
@@ -972,6 +990,7 @@ router.get('/activity', (req, res) => {
     params.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
   eventsService.addServerIdsClause(where, params, res.locals.visibleServerIds);
+  eventsService.addHideTypesClause(where, params, permissions.hiddenEventTypes(req.user));
   const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
   const total = db.get(`SELECT COUNT(*) AS n FROM events ${whereSql}`, ...params)?.n || 0;

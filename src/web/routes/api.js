@@ -900,6 +900,7 @@ router.get(
     let installed = null;
     if (query.serverId) {
       const server = requireServer(query.serverId);
+      if (!permissions.can(req.user, server.id, 'view')) throw httpError(404, 'Server not found');
       const pin = packs.getPack(server.id);
       if (!pin) throw Object.assign(new Error('This server has no managed modpack'), { status: 404 });
       if (pin.platform === 'ftb')
@@ -1524,7 +1525,7 @@ function splitUnsupported(full) {
 
 router.post(
   '/servers/:id/world/quick',
-  requireCap('content'),
+  requireCap('console'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
     const { action } = z.object({ action: z.enum(Object.keys(worldControls.QUICK_ACTIONS)) }).parse(req.body);
@@ -1997,6 +1998,7 @@ function sendEventExport(req, res, serverId) {
     q: String(req.query.q || '').trim(),
     type: String(req.query.type || '').trim(),
     serverIds: req.user.role === 'admin' ? null : permissions.visibleServerIds(req.user),
+    hideTypes: permissions.hiddenEventTypes(req.user),
   });
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.type(contentType).send(body);
@@ -2062,6 +2064,7 @@ const archivedFileSchema = z.string().regex(/^[\w.,()[\]-]+\.log$/, 'Invalid arc
 
 router.get(
   '/servers/:id/logs/archived',
+  requireCap('files'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
     const dir = dataPath('logs', req.params.id, 'events');
@@ -2080,6 +2083,7 @@ router.get(
 
 router.get(
   '/servers/:id/logs/archived/:file',
+  requireCap('files'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     const file = archivedFileSchema.parse(req.params.file);
@@ -2111,6 +2115,7 @@ async function listGameLogs(serverId) {
 
 router.get(
   '/servers/:id/logs/game',
+  requireCap('files'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
     res.json({ ok: true, files: await listGameLogs(req.params.id) });
@@ -2119,6 +2124,7 @@ router.get(
 
 router.get(
   '/servers/:id/logs/game/:file',
+  requireCap('files'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     const file = gameLogFileSchema.parse(req.params.file);
@@ -2133,6 +2139,7 @@ router.get(
 const LOG_BUNDLE_MAX_BYTES = 512 * 1024 * 1024;
 router.get(
   '/servers/:id/logs/bundle.zip',
+  requireCap('files'),
   asyncHandler(async (req, res, next) => {
     const server = requireServer(req.params.id);
     const dir = dataPath('servers', req.params.id, 'logs');

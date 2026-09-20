@@ -168,6 +168,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
   const manifest = {
     msm: 1,
     name: server.display_name,
+    sourceServerId: server.id,
     createdAt: new Date().toISOString(),
     panelVersion: PANEL_VERSION,
     notes: server.notes || '',
@@ -631,6 +632,21 @@ function listBlueprints() {
   return db.all('SELECT * FROM blueprints ORDER BY builtin DESC, created_at DESC').map(decorate);
 }
 
+/**
+ * True when the user may see this blueprint: one exported from a server the
+ * user may not view is hidden (it is named after that server and carries its
+ * files). Blueprints from before the source id was recorded stay visible.
+ */
+function blueprintVisibleTo(user, bp) {
+  const sid = bp && bp.manifest && bp.manifest.sourceServerId;
+  if (!sid) return true;
+  return require('../services/permissions').can(user, sid, 'view');
+}
+
+function listBlueprintsFor(user) {
+  return listBlueprints().filter((bp) => blueprintVisibleTo(user, bp));
+}
+
 function getBlueprint(id) {
   const row = db.get('SELECT * FROM blueprints WHERE id = ?', id);
   return row ? decorate(row) : null;
@@ -866,6 +882,8 @@ module.exports = {
   importBlueprint,
   cloneServer,
   listBlueprints,
+  listBlueprintsFor,
+  blueprintVisibleTo,
   getBlueprint,
   getBlueprintPath,
   deleteBlueprint,

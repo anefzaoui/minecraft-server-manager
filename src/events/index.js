@@ -71,7 +71,7 @@ function recordEvent({ serverId = null, actor = 'system', type, summary, details
  * those of the listed servers - the per-user visibility filter for the
  * dashboard and activity pages. `null` means no restriction.
  */
-function listEvents({ serverId = null, serverIds = null, type = null, limit = 50, offset = 0 } = {}) {
+function listEvents({ serverId = null, serverIds = null, type = null, hideTypes = null, limit = 50, offset = 0 } = {}) {
   const where = [];
   const params = [];
   if (serverId) {
@@ -79,6 +79,7 @@ function listEvents({ serverId = null, serverIds = null, type = null, limit = 50
     params.push(serverId);
   }
   addServerIdsClause(where, params, serverIds);
+  addHideTypesClause(where, params, hideTypes);
   if (type) {
     where.push('type = ?');
     params.push(type);
@@ -86,6 +87,13 @@ function listEvents({ serverId = null, serverIds = null, type = null, limit = 50
   const sql = `SELECT * FROM events ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
                ORDER BY id DESC LIMIT ? OFFSET ?`;
   return db.all(sql, ...params, limit, offset).map(hydrate);
+}
+
+/** Append `type NOT IN (…)` for event types the caller must not see. */
+function addHideTypesClause(where, params, hideTypes) {
+  if (!hideTypes || hideTypes.length === 0) return;
+  where.push(`type NOT IN (${hideTypes.map(() => '?').join(',')})`);
+  params.push(...hideTypes);
 }
 
 /** Append `(server_id IS NULL OR server_id IN (…))` for a visibility set. */
@@ -132,7 +140,7 @@ const EXPORT_LIMIT = 10000;
  * Export events as a downloadable JSON or CSV string.
  * @returns {{ filename: string, contentType: string, body: string }}
  */
-function exportEvents(serverId, { format = 'json', q = '', type = '', serverIds = null } = {}) {
+function exportEvents(serverId, { format = 'json', q = '', type = '', serverIds = null, hideTypes = null } = {}) {
   const fmt = format === 'csv' ? 'csv' : 'json';
   const where = [];
   const params = [];
@@ -141,6 +149,7 @@ function exportEvents(serverId, { format = 'json', q = '', type = '', serverIds 
     params.push(serverId);
   }
   addServerIdsClause(where, params, serverIds);
+  addHideTypesClause(where, params, hideTypes);
   if (type) {
     where.push('type = ?');
     params.push(String(type));
@@ -236,6 +245,7 @@ module.exports = {
   recordEvent,
   listEvents,
   addServerIdsClause,
+  addHideTypesClause,
   getEvent,
   readExcerpt,
   exportEvents,

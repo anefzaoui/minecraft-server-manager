@@ -111,15 +111,33 @@ test('setGrant validates the user and the server', () => {
   assert.throws(() => permissions.setGrant(viewer.id, srvA, ['view', 'bogus']), /Unknown permission/);
 });
 
-test('a soft-deleted server drops out of visibility and its grant rows are forgotten', () => {
+test('a soft-deleted server stays visible by default, an explicit hide survives it, forgetServer clears rows', () => {
   const srvC = seedServer('srv_c');
-  permissions.setGrant(viewer.id, srvC, ['power'], { actor: 'test' });
-  assert.equal(permissions.visibleServerIds(viewer).has(srvC), true);
-  db.run("UPDATE servers SET deleted_at = datetime('now') WHERE id = ?", srvC);
+  permissions.setGrant(viewer.id, srvC, [], { actor: 'test' });
   assert.equal(permissions.visibleServerIds(viewer).has(srvC), false);
+  db.run("UPDATE servers SET deleted_at = datetime('now') WHERE id = ?", srvC);
+  // History and kept backups of a removed server stay visible to anyone whose
+  // default includes view; the explicit hide keeps hiding it.
+  assert.equal(permissions.visibleServerIds(operator).has(srvC), true);
+  assert.equal(permissions.visibleServerIds(admin).has(srvC), true);
+  assert.equal(permissions.visibleServerIds(viewer).has(srvC), false);
+  assert.equal(permissions.effective(viewer, srvC).length, 0);
+  // A removed server is not editable in the matrix any more.
+  assert.throws(() => permissions.setGrant(viewer.id, srvC, ['view']), /server no longer exists/);
+  assert.equal(
+    permissions.listMatrix().servers.some((s) => s.id === srvC),
+    false
+  );
   permissions.forgetServer(srvC);
   assert.equal(db.get('SELECT COUNT(*) AS n FROM user_server_permissions WHERE server_id = ?', srvC).n, 0);
-  assert.throws(() => permissions.setGrant(viewer.id, srvC, ['view']), /server no longer exists/);
+  assert.equal(permissions.visibleServerIds(viewer).has(srvC), true, 'back to the role default');
+});
+
+test('grant-change events are hidden from non-admins', () => {
+  assert.deepEqual(permissions.hiddenEventTypes(admin), []);
+  assert.deepEqual(permissions.hiddenEventTypes(operator), ['permissions-changed']);
+  assert.deepEqual(permissions.hiddenEventTypes(viewer), ['permissions-changed']);
+  assert.deepEqual(permissions.hiddenEventTypes(null), ['permissions-changed']);
 });
 
 test('deleting a user cascades its grant rows (schema contract from migration 001)', () => {
