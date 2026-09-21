@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest something MSM should be able to do
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Good ideas have shipped here from people who never wrote a line of code, so do not talk
+        yourself out of sending one. Describing the problem you ran into is usually more useful than
+        describing the solution you had in mind.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you running into
+      description: The situation that made you want this. Concrete beats abstract.
+      placeholder: >
+        I run four servers for a community and I have to open each one to see whether last night's
+        backup actually ran.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like
+      description: Your idea, even a vague one. Screenshots or sketches are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: workaround
+    attributes:
+      label: How you handle it today
+      description: The workaround you use now, if any, and why it is not enough.
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Optional
+      options:
+        - label: I would be up for trying this myself with some pointers
+          required: false
