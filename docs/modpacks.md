@@ -16,7 +16,7 @@ The **Modpacks** page (and the **From modpack** tab in the [creation wizard](ser
 
 ## How pinning works
 
-When you pick a pack, the panel resolves the exact version, records it, and installs that. On the **Updates** page you'll be told when a newer version is available; upgrading is a deliberate, guarded action with a pre-update backup and rollback. Stable-tracking servers are never offered a beta.
+When you pick a pack, the panel resolves the exact version, records it, and installs that. On the **Updates** page you'll be told when a newer version is available; upgrading is a deliberate, guarded action with a pre-update backup and rollback. Stable-tracking servers are never offered a beta. A server's own **Versions** tab answers the other half of the question: which future Minecraft versions the mods it actually has can follow ([updates](updates.md#minecraft-version-compatibility)).
 
 Servers created on very old panel versions (before 0.9.7) could be left _unpinned_, meaning the container image would quietly install the newest pack version on every start. The panel now repairs these at boot: it locks each one to the version that is actually installed (read from the panel's own records or the image's install manifest, never a freshly resolved "latest") and logs an event. If it can't tell what's installed, the server's Settings page shows a warning asking you to pick the version manually, and any attempt to save an unpinned modpack configuration is rejected outright.
 

@@ -120,6 +120,15 @@ test('a report stops being usable the moment the mods change', () => {
   assert.equal(compat.compatCeiling(id).ceiling, '1.20.4');
 });
 
+test('the stale message says what actually changed, mods included', () => {
+  const id = seedForgeServer('srv_stale_copy', { mods: ['jei.jar'] });
+  storeReport(id, report());
+  fs.writeFileSync(dataPath('servers', id, 'mods', 'extra.jar'), 'not-a-real-jar');
+  const v = compat.upgradeVerdict(id, '1.20.4');
+  assert.equal(v.reason, 'stale');
+  assert.match(v.message, /mods/i, 'a changed mod set must not be reported as a version or loader change');
+});
+
 test('swapping a mod for a different build of the same name is a change too', () => {
   const id = seedForgeServer('srv_mods_swapped', { mods: ['jei.jar'] });
   storeReport(id, report());

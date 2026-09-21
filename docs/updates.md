@@ -24,13 +24,23 @@ A newer Minecraft version is not an upgrade if your mods cannot come with you. E
 - The version the server runs now, and the **highest version every installed mod has a build for**.
 - One collapsible row per future Minecraft version, with how many mods are ready and how many have nothing published yet. Open a row to see which mods would be left behind, and which are fine.
 
+![Version compatibility](images/server-versions.png)
+
 Press **Check Future Versions** to run it. Nothing scans on its own: a check reads every jar in the server's mods folder and asks Modrinth and CurseForge about each one, so it only ever happens when you ask. Progress is saved as it goes, so closing the page, refreshing, or even restarting the panel picks the check up where it left off rather than starting again.
 
+A report only describes the server it was made for. Change the Minecraft version, the loader, or the mods themselves - add one, remove one, update one - and the report is marked out of date and stops being used, until you run the check again.
+
 Mods are identified from the modpack's own file list where there is one, and otherwise by the file's content, the same way a launcher recognises a jar. A file that neither registry recognises - a hand-built jar, a private build - is reported as **unknown**: while one is installed, the panel will not offer a one-click Minecraft version update at all, because it cannot honestly say what would break. Applying a version above what the mods support is refused, and names the mods blocking it.
+
+![A version opened, showing which mods would be left behind](images/server-versions-expanded.png)
+
+Opening a version lists the mods with no build for it first - the ones that decide the answer - and keeps the ready ones behind a click. Big packs load a page of mods at a time, so a 300-mod server opens as fast as a five-mod one.
 
 ## Undoing a mod update
 
 Every build a mod is updated from stays in the shared library, so an update that breaks something is reversible. The mod's row on the **Mods** tab gets a **Revert** button that puts the previous build back - no download, so it works even if the project has since been pulled from its registry. The build you reverted away from stops being offered until a newer one appears.
+
+![Revert a mod to the build it was updated from](images/mods-revert.png)
 
 ## Applying an update
 

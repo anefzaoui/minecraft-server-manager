@@ -251,7 +251,7 @@ pm2 save
   </tr>
   <tr>
     <td><img src="docs/screenshots/13-blueprints.png" alt="Blueprints"><br><sub><b>Blueprints</b>: portable <code>.mcserver.zip</code> recipes; export a server, import it anywhere, get the same server.</sub></td>
-    <td></td>
+    <td><img src="docs/screenshots/16-versions.png" alt="Minecraft version compatibility"><br><sub><b>Version compatibility</b>: which future Minecraft versions your mods actually have builds for, per version, so an upgrade is only ever offered when the mods can follow.</sub></td>
   </tr>
 </table>
 

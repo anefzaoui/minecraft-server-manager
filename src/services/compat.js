@@ -602,8 +602,9 @@ function writeState(serverId, fields) {
 
 /**
  * The stored report plus scan state, as the Updates tab renders it.
- * `stale` means the report was built for a different Minecraft version or
- * loader than the server runs now - it is shown, clearly marked, never used.
+ * `stale` means the report answers for a different server than the one in
+ * front of us - another Minecraft version, another loader, or another set of
+ * mods. It is still shown, clearly marked, but nothing may act on it.
  */
 function getReport(serverId) {
   const serversService = require('./servers');
@@ -688,7 +689,7 @@ function reason(why, state) {
 // Why a version cannot be offered, in words a player can act on.
 const HOLD_REASON = {
   'no-scan': 'This server has mods, but its versions have never been checked. Run a version check first.',
-  stale: 'The last version check was for a different Minecraft version or mod loader. Run it again.',
+  stale: 'The mods, Minecraft version or loader have changed since the last version check. Run it again.',
   incomplete: 'The last version check did not finish. Run it again.',
   'unknown-mods': 'Some mods could not be identified, so there is no way to tell what they support.',
   'no-compatible-version': 'No newer Minecraft version has a build for every mod on this server.',

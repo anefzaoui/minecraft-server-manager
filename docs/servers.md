@@ -38,7 +38,7 @@ Opening a server gives you a tabbed workspace:
 - **Overview** - status, live stats, uptime, and the primary start / stop / restart controls.
 - **Console** - the live log stream and command input, plus in-game chat ([details](console-and-chat.md)).
 - **Players** - who's online, plus inventory, statistics, and [chat commands](console-and-chat.md).
-- **Mods** - the installed mod list, the [mod browser](modpacks.md), and content updates.
+- **Mods** - the installed mod list, the [mod browser](modpacks.md), and content updates. Its **Versions** sub-tab checks which future Minecraft versions your mods have builds for ([updates](updates.md#minecraft-version-compatibility)).
 - **World** - [worlds, the live map, and the file manager](worlds-and-files.md).
 - **Backups** - [snapshots and restore](backups.md) for this server.
 - **Monitoring** - per-server history and live metrics, including crash reports (see below).

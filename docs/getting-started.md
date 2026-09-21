@@ -38,6 +38,7 @@ Every page is laid out for a narrow screen first and widens from there: the side
   <img src="images/mobile/server-overview.png" alt="Server overview on a phone" width="180">
   <img src="images/mobile/server-console.png" alt="Console on a phone" width="180">
   <img src="images/mobile/mods.png" alt="Mods tab on a phone" width="180">
+  <img src="images/mobile/server-versions.png" alt="Version compatibility on a phone" width="180">
   <img src="images/mobile/settings.png" alt="Settings on a phone" width="180">
 </p>
 
