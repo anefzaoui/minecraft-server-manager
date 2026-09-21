@@ -68,6 +68,7 @@
               {{default version '-'}}
               {{#if updateAvailable}}<span class="badge badge-warn ml-1" data-tip="Update available">→ {{updateAvailable}}</span>{{/if}}
               {{#if updateIgnored}}<span class="badge ml-1 text-ink-faint" data-tip="This update is ignored and won't be applied">ignored → {{updateIgnored}}</span>{{/if}}
+              {{#if revertTo}}<div class="mt-1 text-[11px] text-ink-faint">updated from {{revertTo}}</div>{{/if}}
             </td>
             <td data-th="Size" class="text-right text-ink-faint">{{bytes size}}</td>
             <td data-th="Status">
@@ -87,6 +88,9 @@
                 {{/if}}
                 {{#if updateIgnored}}
                   <button class="btn btn-ghost btn-sm" data-mod-unignore-update data-tip="Offer {{updateIgnored}} again">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
+                {{/if}}
+                {{#if revertTo}}
+                  <button class="btn btn-ghost btn-sm" data-mod-revert data-revert-to="{{revertTo}}" data-tip="Put this mod back on {{revertTo}}, then restart the server">{{{icon 'undo-2' 'size-3.5'}}} Revert</button>
                 {{/if}}
                 {{#unless missing}}
                   <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}Pack mods take effect on the next restart.{{else}}Takes effect instantly.{{/if}}">{{#if enabled}}Disable{{else}}Enable{{/if}}</button>

@@ -123,6 +123,7 @@ const CAPABILITY_INFO = {
     help: 'Install and remove mods, plugins, packs, worlds, datapacks, and edit inventories.',
     covers: [
       'Add, update, disable, and remove mods, plugins, and datapacks; import zips; check for updates.',
+      'Put a mod back on the build it was updated from, and check which future Minecraft versions the installed mods support.',
       'Install, upgrade, and roll back the managed modpack; export it as an .mrpack.',
       'Install, copy, download, delete, and shrink worlds on this server, and extract a world from it into the library.',
       'Edit player inventories and rebuild the item registry.',
@@ -135,6 +136,7 @@ const CAPABILITY_INFO = {
       'POST /api/servers/:id/mods/import-zip/preview',
       'POST /api/servers/:id/mods/update',
       'POST /api/servers/:id/mods/update-all',
+      'POST /api/servers/:id/mods/revert',
       'POST /api/servers/:id/mods/ignore-update',
       'POST /api/servers/:id/mods/toggle',
       'DELETE /api/servers/:id/mods/:file',
@@ -142,6 +144,7 @@ const CAPABILITY_INFO = {
       'POST /api/servers/:id/pack/upgrade',
       'POST /api/servers/:id/pack/rollback',
       'POST /api/servers/:id/updates/check',
+      'POST /api/servers/:id/compat/scan',
       'POST /api/servers/:id/pending-downloads/exclude',
       'WRITES /api/servers/:id/worlds/*',
       'GET /api/servers/:id/worlds/:world/download',

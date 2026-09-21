@@ -70,6 +70,24 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         );
         setTimeout(() => location.reload(), 700);
       }
+    } else if (e.target.closest('[data-mod-revert]')) {
+      const btn = e.target.closest('[data-mod-revert]');
+      const to = btn.dataset.revertTo;
+      const ok = await confirmDialog({
+        title: 'Go back to the earlier build?',
+        message: `${row.dataset.name || file} goes back to ${to}, and that build stops being offered as an update until a newer one appears. The server restarts if it is running.`,
+        confirmLabel: 'Revert',
+      });
+      if (!ok) return;
+      const res = await withBusy(btn, 'Reverting…', () => post(`/api/servers/${serverId}/mods/revert`, { file }));
+      if (res) {
+        const inst = res.installed || {};
+        toast(
+          `Reverted to ${inst.name || file}${inst.version ? ` ${inst.version}` : ''}.` +
+            (res.restarted ? ' Restarting the server.' : '')
+        );
+        setTimeout(() => location.reload(), 700);
+      }
     } else if (e.target.closest('[data-mod-ignore-update]')) {
       const btn = e.target.closest('[data-mod-ignore-update]');
       const res = await withBusy(btn, () =>

@@ -218,6 +218,10 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
     confirmLabel: 'Update Now',
   });
   if (!ok) return;
+  await runMcUpgrade(row, { serverId, serverName, targetVersion, targetBuild, envKey });
+}
+
+async function runMcUpgrade(row, { serverId, serverName, targetVersion, targetBuild, envKey, force = false }) {
   try {
     const result = await runTask({
       title: `Updating ${serverName}…`,
@@ -227,6 +231,7 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
             targetVersion: targetVersion || undefined,
             targetLoaderBuild: targetBuild || undefined,
             envKey: targetBuild ? envKey : undefined,
+            force: force || undefined,
           })
         ).taskId,
     });
@@ -234,8 +239,35 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
     dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
+    const compat = err.data && err.data.compat;
+    if (compat && !force) {
+      return offerForce(row, { serverId, serverName, targetVersion, targetBuild, envKey }, compat, err.message);
+    }
     toast(err.message || 'The update could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
   }
+}
+
+/**
+ * The mods can't follow this Minecraft version. Name them, point at the
+ * server's own Versions tab, and let the update through only on a second,
+ * explicit confirmation.
+ */
+async function offerForce(row, ctx, compat, message) {
+  const names = (compat.missing || []).map((m) => m.name || m.file);
+  const shown = names.slice(0, 8).join(', ');
+  const rest = names.length > 8 ? ` and ${names.length - 8} more` : '';
+  const detail = names.length
+    ? `Without a build for ${compat.targetVersion}: ${shown}${rest}.`
+    : "Open the server's Versions tab to run a version check.";
+  const ok = await confirmDialog({
+    title: 'Your mods are not ready for this version.',
+    message: `${message} Updating anyway will start the server without them.`,
+    detail,
+    confirmLabel: 'Update Anyway',
+    danger: true,
+  });
+  if (!ok) return;
+  await runMcUpgrade(row, { ...ctx, force: true });
 }
 
 async function postJSON(url, body) {
@@ -245,6 +277,13 @@ async function postJSON(url, body) {
     body: JSON.stringify(body || {}),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || friendlyError(res, { action: 'start that update' }));
+  if (!res.ok || data.ok === false) {
+    const err = new Error(data.error || friendlyError(res, { action: 'start that update' }));
+    // Structured refusals (e.g. a Minecraft version the mods can't follow)
+    // carry their detail in the body - keep it for the caller to render.
+    err.data = data;
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }

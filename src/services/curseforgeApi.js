@@ -229,6 +229,17 @@ function normalizeMod(m) {
     downloads: m.downloadCount,
     classId: m.classId,
     latestFiles: (m.latestFiles || []).map(normalizeFile),
+    // The (gameVersion, modLoader) matrix across the project's WHOLE history -
+    // one entry per version/loader pair, not just the newest files. This is
+    // what makes a compatibility scan affordable: 200 mods per bulk request
+    // instead of a file-list round trip each (see services/compat.js).
+    latestFilesIndexes: (m.latestFilesIndexes || []).map((i) => ({
+      gameVersion: i.gameVersion,
+      fileId: i.fileId,
+      filename: i.filename,
+      releaseType: { 1: 'release', 2: 'beta', 3: 'alpha' }[i.releaseType] || 'release',
+      modLoader: i.modLoader == null ? null : Number(i.modLoader),
+    })),
   };
 }
 

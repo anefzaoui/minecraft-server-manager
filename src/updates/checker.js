@@ -291,28 +291,55 @@ async function checkStandaloneVersion(server, findings) {
   if (server.mc_version && server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT') {
     const manifest = await mojang.getVersionManifest();
     const latestRelease = manifest.latest && manifest.latest.release;
-    if (latestRelease && latestRelease !== server.mc_version) {
+    // What to OFFER is not simply "the newest release". On a modded server a
+    // Minecraft version only counts as an upgrade when every installed mod has
+    // a build for it, so the offer is capped at the compatibility ceiling from
+    // the server's last version scan - and when that ceiling cannot be
+    // established (no scan, a stale one, an unidentifiable jar), nothing is
+    // offered at all (#52). An unmodded server keeps the plain newest-release
+    // behaviour, because for it there is nothing to be incompatible with.
+    const compat = require('../services/compat');
+    const modded = compat.modCount(server.id) > 0;
+    const ceiling = modded ? compat.compatCeiling(server.id) : null;
+    const target = modded ? ceiling.ceiling : latestRelease;
+    if (target && target !== server.mc_version) {
       const ids = manifest.versions.map((v) => v.id);
       const curIdx = ids.indexOf(server.mc_version);
-      const latestIdx = ids.indexOf(latestRelease);
+      const targetIdx = ids.indexOf(target);
       // Manifest is newest-first - only offer a version strictly newer than the
       // pin. An unrecognized pin (curIdx === -1) can't be verified as older, so
       // it's treated as "offer it" rather than silently never surfacing.
-      const isNew = curIdx === -1 || (latestIdx !== -1 && latestIdx < curIdx);
+      const isNew = curIdx === -1 || (targetIdx !== -1 && targetIdx < curIdx);
       upsertCheck('mc_version', server.id, server.mc_version, {
         isNew,
-        latestId: latestRelease,
-        latestName: latestRelease,
+        latestId: target,
+        latestName: target,
         changelogUrl: null,
       });
-      if (isNew && !isUpdateIgnored('mc_version', server.id, latestRelease))
+      if (isNew && !isUpdateIgnored('mc_version', server.id, target))
         findings.push({
           server: server.display_name,
           kind: 'mc_version',
           subject: 'Minecraft version',
           current: server.mc_version,
-          latest: latestRelease,
+          latest: target,
         });
+    } else {
+      // Held back (or already current): clear any offer a previous run cached,
+      // so a scan that discovers an incompatibility retires yesterday's badge.
+      upsertCheck('mc_version', server.id, server.mc_version, {
+        isNew: false,
+        latestId: null,
+        latestName: null,
+        changelogUrl: null,
+      });
+      if (modded && ceiling.reason !== 'ok' && ceiling.reason !== 'no-compatible-version') {
+        logger.debug('Holding back a Minecraft version offer; compatibility is not established.', {
+          serverId: server.id,
+          reason: ceiling.reason,
+          unknownMods: ceiling.unknownCount,
+        });
+      }
     }
   }
 

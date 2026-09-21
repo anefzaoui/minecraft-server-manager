@@ -47,6 +47,7 @@ const SERVER_TABS = [
   'inventory',
   'analytics',
   'mods',
+  'updates',
   'map',
   'files',
   'worlds',
@@ -70,7 +71,7 @@ const TAB_GROUPS = [
   { key: 'overview', label: 'Overview', icon: 'layout-dashboard', tabs: ['overview'] },
   { key: 'console', label: 'Console', icon: 'terminal', tabs: ['console', 'chat', 'commands'] },
   { key: 'players', label: 'Players', icon: 'users', tabs: ['players', 'inventory', 'analytics'] },
-  { key: 'mods', label: 'Mods', icon: 'puzzle', tabs: ['mods'] },
+  { key: 'mods', label: 'Mods', icon: 'puzzle', tabs: ['mods', 'updates'] },
   { key: 'world', label: 'World', icon: 'earth', tabs: ['worlds', 'map', 'files'] },
   { key: 'backups', label: 'Backups', icon: 'archive', tabs: ['backups'] },
   { key: 'monitoring', label: 'Monitoring', icon: 'activity', tabs: ['history', 'metrics'] },
@@ -90,6 +91,7 @@ const SUB_LABELS = {
   analytics: 'Stats',
   worlds: 'Worlds',
   mods: 'Mods',
+  updates: 'Versions',
   map: 'Map',
   files: 'Files',
   metrics: 'Live',
@@ -518,6 +520,16 @@ router.get(
       } catch {
         context.curseforgeEnabled = false;
       }
+    } else if (tab === 'updates') {
+      // Version compatibility: the stored report only (scans are manual, and
+      // the page fetches one version's mod lists at a time - a 400-mod pack
+      // across 30 candidate versions is far too much to render up front).
+      const compat = require('../../services/compat');
+      const state = compat.getReport(row.id);
+      context.compat = state;
+      context.compatVersions = state.report ? state.report.versions.map(({ ready, missing, ...v }) => v) : [];
+      context.compatUnknown = state.report ? state.report.unknown : [];
+      context.modCount = compat.modCount(row.id);
     } else if (tab === 'worlds') {
       const worldsService = require('../../services/worlds');
       context.worlds = await worldsService.listServerWorlds(row.id).catch(() => []);
