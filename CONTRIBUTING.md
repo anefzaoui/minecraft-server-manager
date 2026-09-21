@@ -187,10 +187,30 @@ const logger = require('../logger')(require('node:path').basename(__filename));
 - High-frequency background loops use `makeFailureThrottle()` from `src/logger.js` so a persistent
   failure logs once, not every tick.
 
+## The installer
+
+`deploy/install.sh` is the one path every host and provider deployment should use, so it has its own
+tests rather than being smoke-tested by hand:
+
+```bash
+node --test test/deploy-install.test.js   # pure helpers, no Docker, runs anywhere
+pnpm run test:deploy                      # install/upgrade/uninstall in a container, docker mocked
+pnpm run test:deploy:real                 # the heavy one: real Docker, real image, real panel
+```
+
+The script keeps its logic in functions and only runs `main` when executed, so the unit test can
+source it and call pieces directly. Anything you add to it wants a scenario in
+`test/deploy/install-scenarios.sh`.
+
 ## Reporting bugs / requesting features
 
 Open an issue with clear reproduction steps (and your OS + Docker flavor for anything
-environment-specific). Security issues: please report privately rather than in a public issue.
+environment-specific); the issue forms ask for the details that save a round trip. Not sure it's a
+bug? [`SUPPORT.md`](SUPPORT.md) covers where to ask.
+
+Security issues go through [private reporting](https://github.com/anefzaoui/minecraft-server-manager/security/advisories/new)
+rather than a public issue. [`SECURITY.md`](SECURITY.md) explains what to include and what happens
+next.
 
 ## Getting your face on the README
 
