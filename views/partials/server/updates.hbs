@@ -19,7 +19,7 @@
             <dd class="font-mono">{{compat.mcVersion}}{{#if compat.loader}} · {{capitalize compat.loader}}{{/if}}</dd>
           </div>
           <div>
-            <dt class="text-xs text-ink-faint">Mods installed</dt>
+            <dt class="text-xs text-ink-faint">Mods enabled</dt>
             <dd class="font-mono">{{modCount}}</dd>
           </div>
           <div>
@@ -59,7 +59,7 @@
   {{#if (eq compat.status 'interrupted')}}
     <div class="notice notice-warn mb-4 text-xs">
       {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0'}}}
-      <div>The last version check stopped before it finished, most likely because the panel restarted. Anything it already worked out is kept, so resuming it picks up where it left off.</div>
+      <div>The last version check stopped before it finished, most likely because the panel restarted. Everything it had already worked out was kept, so running it again does not redo that work.</div>
     </div>
   {{/if}}
 
@@ -81,7 +81,7 @@
     <details class="card group mb-4">
       <summary class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
-        <span class="badge badge-warn">{{compatUnknown.length}}</span>
+        <span class="badge badge-warn">{{compatUnknownTotal}}</span>
         Mods That Could Not Be Identified
       </summary>
       <p class="mt-2 max-w-prose text-xs text-ink-soft">
@@ -94,6 +94,7 @@
           <li class="truncate font-mono text-ink-faint" title="{{file}}">{{file}}</li>
         {{/each}}
       </ul>
+      {{#if compatUnknownMore}}<p class="mt-2 text-xs text-ink-faint">and {{compatUnknownMore}} more.</p>{{/if}}
     </details>
   {{/if}}
 
@@ -101,7 +102,7 @@
     <details class="card group mb-4">
       <summary class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
-        <span class="badge badge-warn">{{compatUnchecked.length}}</span>
+        <span class="badge badge-warn">{{compatUncheckedTotal}}</span>
         Mods That Could Not Be Checked
       </summary>
       <p class="mt-2 max-w-prose text-xs text-ink-soft">
@@ -115,6 +116,7 @@
           <li class="truncate text-ink-faint" title="{{file}}">{{name}}</li>
         {{/each}}
       </ul>
+      {{#if compatUncheckedMore}}<p class="mt-2 text-xs text-ink-faint">and {{compatUncheckedMore}} more.</p>{{/if}}
     </details>
   {{/if}}
 

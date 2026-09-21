@@ -212,6 +212,17 @@ async function listContent(serverId) {
       usageCounts.set(u.library_id, u.n);
     }
   }
+  // Revert is only real when the earlier build is still in the library - rows
+  // can point at a library entry a cleanup has since removed, and offering a
+  // button that can only fail is worse than not offering it.
+  const previousIds = [...new Set(rows.map((r) => r.previous_library_id).filter(Boolean))];
+  const revertableIds = new Set();
+  if (previousIds.length) {
+    const placeholders = previousIds.map(() => '?').join(',');
+    for (const lib of db.all(`SELECT id, rel_path FROM library_files WHERE id IN (${placeholders})`, ...previousIds)) {
+      if (fs.existsSync(dataPath(lib.rel_path))) revertableIds.add(lib.id);
+    }
+  }
   const rowIds = rows.map((r) => r.id);
   const updateChecks = new Map();
   if (rowIds.length) {
@@ -391,8 +402,10 @@ async function listContent(serverId) {
         updateAvailable: updateAvailableFor(row),
         updateIgnored: updateIgnoredFor(row),
         // The build this mod was updated FROM, when the panel did the update -
-        // what a one-click revert would put back.
-        revertTo: (row && row.previous_version) || null,
+        // what a one-click revert would put back, and only while that build is
+        // still on disk.
+        revertTo:
+          row && row.previous_library_id && revertableIds.has(row.previous_library_id) ? row.previous_version : null,
         // Provenance, when known - lets search UIs badge already-installed hits.
         platform: (lib && lib.platform) || null,
         projectId: (lib && lib.project_id) || null,

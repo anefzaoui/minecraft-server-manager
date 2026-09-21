@@ -26,7 +26,7 @@ A newer Minecraft version is not an upgrade if your mods cannot come with you. E
 
 ![Version compatibility](images/server-versions.png)
 
-Press **Check Future Versions** to run it. Nothing scans on its own: a check reads every jar in the server's mods folder and asks Modrinth and CurseForge about each one, so it only ever happens when you ask. Progress is saved as it goes, so closing the page, refreshing, or even restarting the panel picks the check up where it left off rather than starting again.
+Press **Check Future Versions** to run it. Nothing scans on its own: a check reads every jar in the server's mods folder and asks Modrinth and CurseForge about each one, so it only ever happens when you ask. Progress and partial results are written as it goes, so closing the page or refreshing loses nothing, and a check cut short by a panel restart says so and offers to run again. Everything an interrupted check had already worked out is kept, so running it again does not redo that work.
 
 A report only describes the server it was made for. Change the Minecraft version, the loader, or the mods themselves - add one, remove one, update one - and the report is marked out of date and stops being used, until you run the check again.
 

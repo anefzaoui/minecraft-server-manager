@@ -259,9 +259,15 @@ async function offerForce(row, ctx, compat, message) {
   const detail = names.length
     ? `Without a build for ${compat.targetVersion}: ${shown}${rest}.`
     : "Open the server's Versions tab to run a version check.";
+  // Two different situations, and calling them both "your mods are not ready"
+  // would be wrong: one is a known incompatibility, the other is the panel not
+  // knowing yet.
+  const known = compat.reason === 'blocked';
   const ok = await confirmDialog({
-    title: 'Your mods are not ready for this version.',
-    message: `${message} Updating anyway will start the server without them.`,
+    title: known ? 'Your mods are not ready for this version.' : 'This version has not been checked.',
+    message: known
+      ? `${message} Updating anyway will start the server without them.`
+      : `${message} Updating anyway means doing it without knowing what would break.`,
     detail,
     confirmLabel: 'Update Anyway',
     danger: true,

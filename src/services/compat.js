@@ -66,7 +66,11 @@ function isPlainVersion(v) {
  * guess that two files with the same name are the same mod.
  */
 function cachedIdentity(sha256) {
-  return db.get('SELECT * FROM content_identity WHERE sha256 = ?', sha256) || null;
+  const row = db.get('SELECT * FROM content_identity WHERE sha256 = ?', sha256);
+  // A row with no project is not an answer, it is the absence of one, and must
+  // never short-circuit a fresh lookup (see rememberIdentity: only positive
+  // identities are stored, so this only guards rows from an older shape).
+  return row && row.platform && row.project_id ? row : null;
 }
 
 function rememberIdentity(sha256, { filename, size, platform, projectId, name, version }) {
@@ -134,8 +138,6 @@ async function inventory(serverId, { onProgress = () => {} } = {}) {
     const filename = entry.name;
     if (!filename.endsWith('.jar')) continue; // datapacks/resource packs are version-agnostic
     const abs = path.join(dirAbs, entry.name);
-    const stat = await fsp.stat(abs).catch(() => null);
-    const size = stat ? stat.size : 0;
 
     const row = byFilename.get(filename);
     if (row && row.platform && row.project_id) {
@@ -152,6 +154,10 @@ async function inventory(serverId, { onProgress = () => {} } = {}) {
       });
       continue;
     }
+    // Only what is left needs its size: the two lookups above answered without
+    // touching the file at all.
+    const stat = await fsp.stat(abs).catch(() => null);
+    const size = stat ? stat.size : 0;
     if (size > 0 && size <= MAX_JAR_BYTES) needIdentify.push({ filename, abs, size });
     else items.push({ file: filename, name: prettyName(filename), platform: null, projectId: null });
   }
@@ -590,7 +596,7 @@ function stateRow(serverId) {
 // times; reading (and rewriting) a report that can be most of a megabyte on a
 // large pack once per mod is pure churn, so the progress path never touches it.
 const STATE_COLUMNS =
-  'server_id, loader, mc_version, mods_signature, status, phase, done, total, cursor, error, started_at, updated_at, completed_at';
+  'server_id, loader, mc_version, mods_signature, status, phase, done, total, error, started_at, updated_at, completed_at';
 
 /**
  * Merge `fields` into the server's scan state. Omitting payload_json KEEPS the
@@ -607,7 +613,6 @@ function writeState(serverId, fields) {
     phase: null,
     done: 0,
     total: 0,
-    cursor: null,
     error: null,
     payload_json: null,
     started_at: null,
@@ -617,13 +622,12 @@ function writeState(serverId, fields) {
   };
   db.run(
     `INSERT INTO version_compat
-       (server_id, loader, mc_version, mods_signature, status, phase, done, total, cursor, error, payload_json, started_at, updated_at, completed_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
+       (server_id, loader, mc_version, mods_signature, status, phase, done, total, error, payload_json, started_at, updated_at, completed_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
      ON CONFLICT(server_id) DO UPDATE SET
        loader = excluded.loader, mc_version = excluded.mc_version,
        mods_signature = excluded.mods_signature, status = excluded.status,
-       phase = excluded.phase, done = excluded.done, total = excluded.total, cursor = excluded.cursor,
-       error = excluded.error,
+       phase = excluded.phase, done = excluded.done, total = excluded.total, error = excluded.error,
        payload_json = COALESCE(excluded.payload_json, version_compat.payload_json),
        started_at = excluded.started_at, updated_at = excluded.updated_at, completed_at = excluded.completed_at`,
     serverId,
@@ -634,7 +638,6 @@ function writeState(serverId, fields) {
     next.phase,
     next.done,
     next.total,
-    next.cursor,
     next.error,
     next.payload_json,
     next.started_at,
@@ -837,7 +840,6 @@ async function startScan(serverId, { actor = 'system' } = {}) {
     phase: 'identifying',
     done: 0,
     total: 0,
-    cursor: null,
     error: null,
     started_at: new Date().toISOString(),
     completed_at: null,
@@ -880,7 +882,6 @@ async function startScan(serverId, { actor = 'system' } = {}) {
             done,
             total,
             status: 'running',
-            cursor: partial.versions.length ? partial.versions[0].version : null,
             payload_json: JSON.stringify(partial),
           });
         },
@@ -893,7 +894,6 @@ async function startScan(serverId, { actor = 'system' } = {}) {
         phase: null,
         done: matrix.knownCount,
         total: matrix.modCount,
-        cursor: null,
         error: null,
         payload_json: JSON.stringify(matrix),
         completed_at: new Date().toISOString(),

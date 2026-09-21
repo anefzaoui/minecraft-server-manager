@@ -213,6 +213,23 @@ test('installing a build by hand clears the revert pointer', async () => {
   assert.ok(build2);
 });
 
+test('Revert is not offered once the earlier build has left the library', async () => {
+  const id = seedServer('srv_revert_pruned');
+  const oldBuild = seedLibraryFile({ id: 'lib_p_old', filename: 'pmod-1.0.jar', version: '1.0' });
+  const newBuild = seedLibraryFile({ id: 'lib_p_new', filename: 'pmod-2.0.jar', version: '2.0' });
+  fs.copyFileSync(dataPath(newBuild.rel_path), dataPath('servers', id, 'mods', 'pmod-2.0.jar'));
+  db.run(
+    `INSERT INTO server_content (id, server_id, library_id, kind, managed_by, name, filename, version, previous_library_id, previous_version)
+     VALUES ('sc_p', ?, 'lib_p_new', 'mod', 'overlay', 'Test Mod', 'pmod-2.0.jar', '2.0', 'lib_p_old', '1.0')`,
+    id
+  );
+  assert.equal((await mods.listContent(id)).find((m) => m.file === 'pmod-2.0.jar').revertTo, '1.0');
+
+  fs.rmSync(dataPath(oldBuild.rel_path));
+  const after = (await mods.listContent(id)).find((m) => m.file === 'pmod-2.0.jar');
+  assert.equal(after.revertTo, null, 'a button that could only fail must not be offered');
+});
+
 test('a revert makes no network call at all: the library is the source', async () => {
   const id = seedServer('srv_revert_offline');
   const oldBuild = seedLibraryFile({ id: 'lib_off_old', filename: 'off-1.0.jar', version: '1.0' });

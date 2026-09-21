@@ -14,10 +14,14 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
 
-const root = document.querySelector('[data-compat-server]');
-if (root) init(root);
-
 const PAGE = 50; // mod rows rendered per "Show more" click
+
+// Module state is declared before anything can run, and the entry point is the
+// LAST statement in the file: init() starts polling straight away when the page
+// loads mid-scan, and a `let` declared further down would still be in its
+// temporal dead zone at that moment. The bundler turns these into `var` and
+// hides it; a dev run serving the raw source does not.
+let pollTimer = null;
 
 function init(el) {
   const serverId = el.dataset.compatServer;
@@ -50,8 +54,6 @@ function init(el) {
 }
 
 // ---- Polling ----------------------------------------------------------------
-
-let pollTimer = null;
 
 function poll(serverId) {
   clearTimeout(pollTimer);
@@ -220,3 +222,6 @@ function section(title, items, tone, help, { collapsed = false } = {}) {
   }
   return wrap;
 }
+
+const root = document.querySelector('[data-compat-server]');
+if (root) init(root);

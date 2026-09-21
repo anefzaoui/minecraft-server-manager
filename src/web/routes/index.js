@@ -541,8 +541,18 @@ router.get(
       const state = compat.getReport(row.id);
       context.compat = state;
       context.compatVersions = state.report ? state.report.versions.map(({ ready, missing, ...v }) => v) : [];
-      context.compatUnknown = state.report ? state.report.unknown : [];
-      context.compatUnchecked = state.report ? state.report.unchecked || [] : [];
+      // Both lists are per server rather than per version, and normally short.
+      // They are still capped: a pack built entirely from GitHub releases would
+      // otherwise put every one of its mods in the page.
+      const LIST_CAP = 100;
+      const unknown = state.report ? state.report.unknown : [];
+      const unchecked = state.report ? state.report.unchecked || [] : [];
+      context.compatUnknown = unknown.slice(0, LIST_CAP);
+      context.compatUnknownMore = Math.max(0, unknown.length - LIST_CAP);
+      context.compatUnknownTotal = unknown.length;
+      context.compatUnchecked = unchecked.slice(0, LIST_CAP);
+      context.compatUncheckedMore = Math.max(0, unchecked.length - LIST_CAP);
+      context.compatUncheckedTotal = unchecked.length;
       context.modCount = compat.modCount(row.id);
     } else if (tab === 'worlds') {
       const worldsService = require('../../services/worlds');

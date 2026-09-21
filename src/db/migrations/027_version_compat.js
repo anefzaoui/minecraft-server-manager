@@ -34,7 +34,6 @@ function up(db) {
       phase         TEXT,
       done          INTEGER NOT NULL DEFAULT 0,
       total         INTEGER NOT NULL DEFAULT 0,
-      cursor        TEXT,
       error         TEXT,
       payload_json  TEXT,
       started_at    TEXT,

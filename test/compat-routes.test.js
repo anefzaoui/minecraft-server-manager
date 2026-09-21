@@ -276,3 +276,21 @@ test('the Versions tab renders for a server with a stored report', async () => {
   // The mod lists are fetched per version - they must not be in the HTML.
   assert.ok(!/Sodium/.test(r.text), 'per-version mod names must not be server-rendered');
 });
+
+test('the page caps the per-server lists instead of rendering a whole pack', async () => {
+  const id = seedForgeServer('srv_r_bigunknown');
+  const many = Array.from({ length: 150 }, (_, i) => ({
+    file: `mystery-${i}.jar`,
+    name: `mystery-${i}`,
+    platform: null,
+    projectId: null,
+  }));
+  storeReport(id, { ...REPORT, unknownCount: 150, unknown: many });
+  const r = await app.req('GET', `/servers/${id}/updates`, { cookie });
+  assert.equal(r.status, 200);
+  // Each row prints the name once as a title attribute and once as text.
+  const rendered = (r.text.match(/title="mystery-\d+\.jar"/g) || []).length;
+  assert.equal(rendered, 100, 'only a page of names is rendered');
+  assert.match(r.text, /and 50 more\./);
+  assert.match(r.text, />150</, 'the badge still shows the real total');
+});
