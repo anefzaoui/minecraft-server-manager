@@ -290,9 +290,14 @@ Not affiliated with any of them.
   automatic pre-update backup → graceful stop → re-pin → recreate → health monitoring → **one-click
   rollback** if it doesn't come up. The Updates page also checks Docker-image staleness and, for
   servers with no managed pack, explicit Minecraft-version / loader-build pins.
+- **Version compatibility before a version update**: a server's Versions tab checks every installed
+  mod against Modrinth and CurseForge and reports the highest Minecraft version they all have a
+  build for, plus a per-version breakdown of what would be left behind. A newer Minecraft version is
+  only offered once that check backs it, and never while a jar cannot be identified.
 - **Custom-mod overlay**: mods you add yourself are downloaded into a shared, sha256-deduplicated
   library and hard-linked into the server; they survive pack updates. Disabling is class-aware
-  (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism).
+  (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism), and
+  an update that turns out badly can be reverted to the previous build from the library.
 - **Five content sources, one browser**: Modrinth, CurseForge, and (keyless) **Hangar** (PaperMC's
   plugin registry), **SpigotMC** (via Spiget's CDN proxy, which dodges the Cloudflare wall), and
   **GitHub Releases** (stable-release preference, `-sources`/`-javadoc` sidecars skipped, ETag

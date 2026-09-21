@@ -5,6 +5,36 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
+## [Unreleased]
+
+Minecraft version updates now have to be earned: a newer version is only offered when every mod on
+the server has a build for it. Closes #52.
+
+### Added
+
+- **Version compatibility for modded servers** (#52). Each server has a new **Versions** tab under
+  Mods: the version it runs now, the highest version every installed mod has a build for, and a
+  collapsible row per future Minecraft version showing how many mods are ready and how many have
+  nothing published yet. Open a row to see exactly which mods would be left behind. Press **Check
+  Future Versions** to run it. Nothing scans on its own, and a check saves its progress as it goes,
+  so a refresh - or a panel restart - resumes where it stopped instead of starting over. Large packs
+  stay responsive: each version's mod list is fetched when you open it and rendered a page at a
+  time. Thanks @gleep52 for the report.
+- **Undo a mod update.** The build a mod was updated from stays in the shared library, so its row on
+  the Mods tab now offers **Revert**: it puts the previous build back from local files, with no
+  download, and stops offering the build you reverted away from until a newer one appears.
+
+### Fixed
+
+- **A modded server is no longer told to update to a Minecraft version its mods cannot run** (#52).
+  The version check compared a pinned version against the newest release in Mojang's manifest and
+  nothing else, so a 1.20.1 Forge server was offered 26.3 as if it were an upgrade. The offer is now
+  capped at what the server's last version check proved every mod supports, and when compatibility
+  cannot be established at all - no check yet, a check for a different version or loader, one that
+  never finished, or a jar neither Modrinth nor CurseForge recognises - nothing is offered. Applying
+  a version above that ceiling is refused and names the mods blocking it. Servers with no mods are
+  unaffected.
+
 ## [0.14.0] - 2026-09-20
 
 Per-server permissions: decide what each operator or viewer may do on each server, or hide a

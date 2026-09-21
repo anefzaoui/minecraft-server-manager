@@ -7,7 +7,7 @@ The **Updates** page tracks what's out of date across your fleet in one place:
 - **Modpack** versions ([modpacks](modpacks.md)) against Modrinth / CurseForge / the GTNH release index.
 - **Custom content** you added yourself - mods, datapacks, resource packs, plugins - each against its source: Modrinth, CurseForge, Hangar, SpigotMC (Spiget), or GitHub Releases. GitHub lookups use ETag revalidation, so daily checks barely touch its rate limit.
 - **Docker image** staleness: each running container's image ID against a freshly pulled tag (deduplicated across servers on the same tag), offered as a recreate-only upgrade.
-- **Standalone version pins**: for a server with no managed pack, an explicit `mc_version` pin against Mojang's manifest, and an explicit loader-build env var (`PAPER_BUILD`, `FORGE_VERSION`, and the like) against the loader's registry. Paper builds come from PaperMC's current **Fill v3 API** (the legacy v2 endpoint stopped receiving new Minecraft versions).
+- **Standalone version pins**: for a server with no managed pack, an explicit `mc_version` pin against Mojang's manifest, and an explicit loader-build env var (`PAPER_BUILD`, `FORGE_VERSION`, and the like) against the loader's registry. Paper builds come from PaperMC's current **Fill v3 API** (the legacy v2 endpoint stopped receiving new Minecraft versions). On a server with mods, a newer Minecraft version is only offered once a [version check](#minecraft-version-compatibility) has shown that every installed mod has a build for it.
 
 ![Updates](images/updates.png)
 
@@ -16,6 +16,21 @@ The **Updates** page tracks what's out of date across your fleet in one place:
 The panel checks each server's pinned versions against the upstream source and lists anything with a newer release. A matching count also appears on the [dashboard](dashboard.md)'s "Updates available" tile.
 
 Checks run on demand and can be scheduled ([Schedules](schedules.md)). Update **policy** is per-server: you decide whether the panel just notifies you, or leaves everything manual.
+
+## Minecraft version compatibility
+
+A newer Minecraft version is not an upgrade if your mods cannot come with you. Each server has its own **Versions** tab (under Mods) that answers that question:
+
+- The version the server runs now, and the **highest version every installed mod has a build for**.
+- One collapsible row per future Minecraft version, with how many mods are ready and how many have nothing published yet. Open a row to see which mods would be left behind, and which are fine.
+
+Press **Check Future Versions** to run it. Nothing scans on its own: a check reads every jar in the server's mods folder and asks Modrinth and CurseForge about each one, so it only ever happens when you ask. Progress is saved as it goes, so closing the page, refreshing, or even restarting the panel picks the check up where it left off rather than starting again.
+
+Mods are identified from the modpack's own file list where there is one, and otherwise by the file's content, the same way a launcher recognises a jar. A file that neither registry recognises - a hand-built jar, a private build - is reported as **unknown**: while one is installed, the panel will not offer a one-click Minecraft version update at all, because it cannot honestly say what would break. Applying a version above what the mods support is refused, and names the mods blocking it.
+
+## Undoing a mod update
+
+Every build a mod is updated from stays in the shared library, so an update that breaks something is reversible. The mod's row on the **Mods** tab gets a **Revert** button that puts the previous build back - no download, so it works even if the project has since been pulled from its registry. The build you reverted away from stops being offered until a newer one appears.
 
 ## Applying an update
 
