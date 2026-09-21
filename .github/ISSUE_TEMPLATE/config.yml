@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or setup help
+    url: https://github.com/anefzaoui/minecraft-server-manager/discussions
+    about: Not sure whether it is a bug? Ask here and someone will help you narrow it down.
+  - name: Chat on Discord
+    url: https://discord.gg/Ud6TrQkbDZ
+    about: The fastest place for "why is my server doing this?", plus a showcase and a dev corner.
+  - name: Report a security vulnerability
+    url: https://github.com/anefzaoui/minecraft-server-manager/security/advisories/new
+    about: Private reporting, between you and the maintainers until a fix ships.

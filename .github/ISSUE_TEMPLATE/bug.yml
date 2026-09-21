@@ -1,0 +1,79 @@
+name: Bug report
+description: Something in the panel or a server it manages is not working
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. A rough report is far better than no report, so fill in what you
+        can and leave the rest. If it turns out to be a setup question rather than a bug, you will
+        get an answer either way.
+
+        Found a security problem? Please use [private reporting](https://github.com/anefzaoui/minecraft-server-manager/security/advisories/new) instead of this form.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+      placeholder: I clicked Restart on a Fabric server and the panel showed it running while the container had exited.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Even a rough list helps. If it only happens sometimes, say how often.
+      placeholder: |
+        1. Create a Fabric 1.21.8 server
+        2. Start it and wait for the world to generate
+        3. Press Restart
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Panel version
+      description: The version at the bottom of any page, for example 0.14.0.
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you run MSM
+      options:
+        - Docker image (ghcr.io)
+        - From source (pnpm start or pnpm run dev)
+        - Something else, described below
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host
+      description: Operating system and how Docker is installed there.
+      placeholder: Ubuntu 24.04, Docker Engine 27 / macOS 15, Docker Desktop / Windows 11, WSL2
+    validations:
+      required: true
+  - type: input
+    id: server
+    attributes:
+      label: The server involved, if any
+      description: Type, loader, Minecraft version, and the modpack if there is one.
+      placeholder: Paper 1.21.8, or Forge 1.20.1 running GT New Horizons
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: >
+        Panel logs around the failure, or a crash report. The Files tab can download a log bundle.
+        Please redact anything secret, such as an RCON password.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send it
+      options:
+        - label: I had a quick look for an existing issue about this
+          required: false
+        - label: This is not a security vulnerability (those go through private reporting)
+          required: true
