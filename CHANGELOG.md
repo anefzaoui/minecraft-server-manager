@@ -5,7 +5,7 @@ All notable changes to this project are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each push is cut as a new release with
 its own dated entry.
 
-## [Unreleased]
+## [0.14.1] - 2026-09-21
 
 Minecraft version updates now have to be earned: a newer version is only offered when every mod on
 the server has a build for it. Closes #52.
