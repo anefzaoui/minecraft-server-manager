@@ -104,7 +104,20 @@ Cross-cutting:
   explicit orchestrated flow (`updates/`): preview → pre-update backup → graceful stop → re-pin →
   recreate → health-monitor → one-click rollback.
 - **The custom-mod overlay** is panel-managed: user-added mods land in the deduplicated library and
-  are hard-linked into the server so they survive pack updates. Disabling is class-aware.
+  are hard-linked into the server so they survive pack updates. Disabling is class-aware. Because
+  the library keeps every build it has downloaded, an update records the build it replaced
+  (`server_content.previous_*`) and can be reverted from local files alone.
+- **A Minecraft version upgrade has to be earned.** `services/compat.js` scans a server's mods -
+  resolved from panel-installed rows, then the CurseForge pack manifest, then by content hash
+  against Modrinth/CurseForge - and builds a (loader, Minecraft version) support matrix per project
+  out of CurseForge's `latestFilesIndexes` (200 projects per request) and Modrinth's per-project
+  version list (one request per project, which is what keeps loader and version paired). The update
+  checker offers only the newest version EVERY mod supports, and offers nothing at all when the
+  answer cannot be established: no scan, a scan for a different version or loader, one that never
+  finished, or a jar neither registry recognises. Scans are manual only, and their progress and
+  partial results live in `version_compat` (not in the in-memory `services/tasks.js`), so a refresh
+  or a panel restart resumes instead of hanging on a spinner; `reconcileScans()` marks scans
+  orphaned by a shutdown on the next boot.
 - **Ports** are allocated from a base scheme (game from `PORT_GAME_START` upward, RCON = game +
   `PORT_RCON_OFFSET`, Bedrock from `PORT_BEDROCK_START`), probed for availability, and reserved in
   the DB.
@@ -158,7 +171,8 @@ Cross-cutting:
 4. Run DB migrations, then `PRAGMA integrity_check` (logs loudly, points at `data/backups/_panel`
    on failure).
 5. Re-encrypt any legacy `SESSION_SECRET`-keyed secrets under `.secret-key` (`secretsMigration`).
-6. Seed starter blueprints (guarded).
+6. Mark version compatibility scans left running by a previous process as interrupted
+   (`compat.reconcileScans()`), then seed starter blueprints (guarded).
 7. Start the HTTP + WS server. On an exposed bind, print the first-run `/setup` PIN.
 8. Install the post-boot runtime guard (catches uncaught faults; `MSM_EXIT_ON_FATAL=1` makes it
    hard-exit for supervised deployments).

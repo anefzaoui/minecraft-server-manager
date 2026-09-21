@@ -251,7 +251,7 @@ pm2 save
   </tr>
   <tr>
     <td><img src="docs/screenshots/13-blueprints.png" alt="Blueprints"><br><sub><b>Blueprints</b>: portable <code>.mcserver.zip</code> recipes; export a server, import it anywhere, get the same server.</sub></td>
-    <td></td>
+    <td><img src="docs/screenshots/16-versions.png" alt="Minecraft version compatibility"><br><sub><b>Version compatibility</b>: which future Minecraft versions your mods actually have builds for, per version, so an upgrade is only ever offered when the mods can follow.</sub></td>
   </tr>
 </table>
 
@@ -290,9 +290,14 @@ Not affiliated with any of them.
   automatic pre-update backup → graceful stop → re-pin → recreate → health monitoring → **one-click
   rollback** if it doesn't come up. The Updates page also checks Docker-image staleness and, for
   servers with no managed pack, explicit Minecraft-version / loader-build pins.
+- **Version compatibility before a version update**: a server's Versions tab checks every installed
+  mod against Modrinth and CurseForge and reports the highest Minecraft version they all have a
+  build for, plus a per-version breakdown of what would be left behind. A newer Minecraft version is
+  only offered once that check backs it, and never while a jar cannot be identified.
 - **Custom-mod overlay**: mods you add yourself are downloaded into a shared, sha256-deduplicated
   library and hard-linked into the server; they survive pack updates. Disabling is class-aware
-  (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism).
+  (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism), and
+  an update that turns out badly can be reverted to the previous build from the library.
 - **Five content sources, one browser**: Modrinth, CurseForge, and (keyless) **Hangar** (PaperMC's
   plugin registry), **SpigotMC** (via Spiget's CDN proxy, which dodges the Cloudflare wall), and
   **GitHub Releases** (stable-release preference, `-sources`/`-javadoc` sidecars skipped, ETag

@@ -212,6 +212,17 @@ async function listContent(serverId) {
       usageCounts.set(u.library_id, u.n);
     }
   }
+  // Revert is only real when the earlier build is still in the library - rows
+  // can point at a library entry a cleanup has since removed, and offering a
+  // button that can only fail is worse than not offering it.
+  const previousIds = [...new Set(rows.map((r) => r.previous_library_id).filter(Boolean))];
+  const revertableIds = new Set();
+  if (previousIds.length) {
+    const placeholders = previousIds.map(() => '?').join(',');
+    for (const lib of db.all(`SELECT id, rel_path FROM library_files WHERE id IN (${placeholders})`, ...previousIds)) {
+      if (fs.existsSync(dataPath(lib.rel_path))) revertableIds.add(lib.id);
+    }
+  }
   const rowIds = rows.map((r) => r.id);
   const updateChecks = new Map();
   if (rowIds.length) {
@@ -390,6 +401,11 @@ async function listContent(serverId) {
           lib && lib.icon_rel_path ? `/${lib.icon_rel_path}` : (lib && lib.icon_url) || (row && row.icon_url) || null,
         updateAvailable: updateAvailableFor(row),
         updateIgnored: updateIgnoredFor(row),
+        // The build this mod was updated FROM, when the panel did the update -
+        // what a one-click revert would put back, and only while that build is
+        // still on disk.
+        revertTo:
+          row && row.previous_library_id && revertableIds.has(row.previous_library_id) ? row.previous_version : null,
         // Provenance, when known - lets search UIs badge already-installed hits.
         platform: (lib && lib.platform) || null,
         projectId: (lib && lib.project_id) || null,
@@ -781,7 +797,8 @@ async function installResolved(
   db.run(
     `INSERT INTO server_content (id, server_id, library_id, kind, managed_by, name, filename, version, icon_url)
      VALUES (?, ?, ?, ?, 'overlay', ?, ?, ?, ?)
-     ON CONFLICT(server_id, filename) DO UPDATE SET library_id = excluded.library_id, version = excluded.version`,
+     ON CONFLICT(server_id, filename) DO UPDATE SET library_id = excluded.library_id, version = excluded.version,
+       previous_library_id = NULL, previous_version = NULL, previous_at = NULL`,
     id,
     serverId,
     lib.id,
@@ -1001,15 +1018,96 @@ async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'syst
   }
 
   const wasEnabled = Boolean(row.enabled);
+  const fromVersion = row.version || lib.version;
   await removeContent(serverId, row.filename, { actor });
   const result = await installFromUrl(serverId, ref, { actor, kind: row.kind });
   if (!wasEnabled) await setEnabled(serverId, result.filename, false, { actor });
+  // The build we just left. Its library row (and the file behind it) survive -
+  // library rows are only ever deleted explicitly - so this pointer is all a
+  // revert needs when the new build turns out to break the server.
+  db.run(
+    `UPDATE server_content SET previous_library_id = ?, previous_version = ?, previous_at = datetime('now')
+      WHERE server_id = ? AND filename = ?`,
+    lib.id,
+    fromVersion,
+    serverId,
+    result.filename
+  );
   return {
     name: result.library.name,
     filename: result.filename,
     version: result.library.version,
     wasEnabled,
+    revertTo: fromVersion,
   };
+}
+
+/**
+ * Put a mod back on the build it was updated from - the other half of an
+ * update, for when the new build breaks something (#52).
+ *
+ * The file itself never left: the library keeps every build it has downloaded,
+ * so this reinstalls from the library rather than re-downloading, and works
+ * offline and even when the project has been pulled from its registry. The
+ * build being reverted away from is then marked ignored, so the daily check
+ * does not offer the same broken build again the next morning; a genuinely
+ * newer build lapses that on its own, exactly like a manual ignore.
+ */
+async function revertOverlayUpdate(serverId, { file, contentId }, { actor = 'system' } = {}) {
+  const server = serversService.getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
+  const row = overlayRow(serverId, { file, contentId });
+  if (!row.previous_library_id) {
+    throw httpError(409, 'There is no earlier build of this mod on record.');
+  }
+  const prev = db.get('SELECT * FROM library_files WHERE id = ?', row.previous_library_id);
+  if (!prev) {
+    throw httpError(409, 'The earlier build is no longer in the mod library, so it cannot be restored.');
+  }
+  const prevAbs = dataPath(prev.rel_path);
+  if (!fs.existsSync(prevAbs)) {
+    throw httpError(409, 'The earlier build is no longer in the mod library, so it cannot be restored.');
+  }
+
+  const wasEnabled = Boolean(row.enabled);
+  const revertedFrom = row.version;
+  indexer.assertUnderQuota(server, prev.size_bytes || 0);
+
+  const dirRel = contentDir(server, row.kind);
+  await removeContent(serverId, row.filename, { actor });
+  const { filename } = await library.installToServer(prev.id, serverId, dirRel, { filename: prev.filename });
+
+  const id = `sc_${nanoid(8)}`;
+  db.run(
+    `INSERT INTO server_content (id, server_id, library_id, kind, managed_by, name, filename, version, icon_url, ignored_update_version)
+     VALUES (?, ?, ?, ?, 'overlay', ?, ?, ?, ?, ?)
+     ON CONFLICT(server_id, filename) DO UPDATE SET library_id = excluded.library_id, version = excluded.version,
+       ignored_update_version = excluded.ignored_update_version,
+       previous_library_id = NULL, previous_version = NULL, previous_at = NULL`,
+    id,
+    serverId,
+    prev.id,
+    row.kind,
+    prev.name || row.name,
+    filename,
+    prev.version,
+    prev.icon_url,
+    revertedFrom || null
+  );
+  if (!wasEnabled) await setEnabled(serverId, filename, false, { actor });
+
+  recordEvent({
+    serverId,
+    actor,
+    type: 'mod-reverted',
+    summary: `Reverted ${prev.name || row.name} to ${prev.version || 'the earlier build'}${
+      revertedFrom ? ` from ${revertedFrom}` : ''
+    }.`,
+    details: { libraryId: prev.id, filename, revertedFrom },
+  });
+  logger.info('Reverted content to its previous build.', { serverId, actor, filename, revertedFrom });
+  indexer.scan().catch(onRescanFailed);
+  return { name: prev.name || row.name, filename, version: prev.version, revertedFrom, wasEnabled };
 }
 
 /** Re-apply the overlay after a pack install/update (belt-and-braces). */
@@ -1250,7 +1348,9 @@ module.exports = {
   removeContent,
   setIgnoredUpdate,
   applyOverlayUpdate,
+  revertOverlayUpdate,
   reapplyOverlay,
+  packManifestIndex,
   contentDir,
   contentKindOf,
   loaderOf,

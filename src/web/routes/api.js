@@ -1165,7 +1165,7 @@ router.post(
   '/servers/:id/mcversion/upgrade',
   requireCap('settings'),
   asyncHandler((req, res, next) => {
-    const { targetVersion, targetLoaderBuild, envKey } = z
+    const { targetVersion, targetLoaderBuild, envKey, force } = z
       .object({
         targetVersion: z
           .string()
@@ -1178,6 +1178,7 @@ router.post(
           .regex(/^[\w.-]{1,64}$/)
           .optional(),
         envKey: z.enum(LOADER_BUILD_ENV_KEYS).optional(),
+        force: z.boolean().optional().default(false),
       })
       .refine((v) => Boolean(v.targetVersion) || Boolean(v.targetLoaderBuild && v.envKey), {
         message: 'Provide a target version, or a target loader build with its env key.',
@@ -1185,6 +1186,29 @@ router.post(
       .parse(req.body);
     const server = requireServer(req.params.id);
     const actor = req.user.username;
+
+    // A Minecraft version change on a modded server has to be earned: every
+    // installed mod needs a build for the target, established by a version
+    // check (#52). `force` is the deliberate override - it is only ever sent
+    // after the panel has shown which mods would be left behind.
+    if (targetVersion && targetVersion !== server.mc_version && !force) {
+      const verdict = require('../../services/compat').upgradeVerdict(server.id, targetVersion);
+      // Answered here rather than thrown: the client needs the blocking mods
+      // to show, and the shared JSON error handler carries only a message.
+      if (!verdict.allowed) {
+        return res.status(409).json({
+          ok: false,
+          error: verdict.message,
+          compat: {
+            reason: verdict.reason,
+            targetVersion,
+            missing: verdict.missing,
+            missingCount: verdict.missingCount,
+            unknownCount: verdict.unknownCount,
+          },
+        });
+      }
+    }
     const taskId = tasks.run(
       `Updating Minecraft version on ${server.display_name}`,
       { serverId: server.id, actor },
@@ -1801,6 +1825,40 @@ router.post(
   })
 );
 
+// Undo an update: put one overlay mod back on the build it came from. The old
+// build is still in the library, so this is a local reinstall, and the build
+// being left behind is marked ignored so the next daily check does not offer
+// it straight back.
+router.post(
+  '/servers/:id/mods/revert',
+  requireCap('content'),
+  asyncHandler(async (req, res, next) => {
+    const { file, contentId } = z
+      .object({
+        file: z.string().min(1).max(200).optional(),
+        contentId: z.string().trim().max(40).optional(),
+      })
+      .refine((v) => Boolean(v.file) || Boolean(v.contentId), { message: 'Provide either a file or a content ID.' })
+      .parse(req.body);
+    const server = requireServer(req.params.id);
+    const actor = req.user.username;
+
+    const result = await mods.revertOverlayUpdate(server.id, { file, contentId }, { actor });
+    const restarted = await restartAfterModUpdate(server.id, actor);
+    res.json({
+      ok: true,
+      restarted,
+      installed: {
+        name: result.name,
+        filename: result.filename,
+        version: result.version,
+        enabled: result.wasEnabled,
+      },
+      revertedFrom: result.revertedFrom,
+    });
+  })
+);
+
 // Ignore / un-ignore the currently-offered update for one overlay mod. An
 // ignored build stops showing on the mods tab, the Updates page and the
 // sidebar count; a later, genuinely newer build re-surfaces on its own.
@@ -1878,6 +1936,73 @@ router.delete(
   requireCap('content'),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await mods.removeContent(req.params.id, req.params.file, { actor: req.user.username })) });
+  })
+);
+
+// ---- Version compatibility (#52) ----
+// The per-server Updates tab. A scan reads every jar and asks the registries,
+// so it only ever runs when someone asks for it; these routes hand back the
+// stored result and its progress, which outlive both the request and the
+// process that started the scan.
+const compat = require('../../services/compat');
+
+/**
+ * The report WITHOUT the per-version mod lists. A 400-mod pack across 30
+ * candidate versions is 12,000 entries - the page asks for one version's list
+ * at a time instead (route below).
+ */
+function compatSummary(state) {
+  if (!state.report) return state;
+  const { versions, unknown, unchecked, ...rest } = state.report;
+  return {
+    ...state,
+    report: {
+      ...rest,
+      // The unknown / unchecked lists are per server, not per version, and are
+      // the short ones that actually need acting on - they ship whole.
+      unknown,
+      unchecked: unchecked || [],
+      versions: versions.map(({ ready, missing, ...v }) => v),
+    },
+  };
+}
+
+router.get(
+  '/servers/:id/compat',
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    res.json({ ok: true, ...compatSummary(compat.getReport(req.params.id)) });
+  })
+);
+
+router.get(
+  '/servers/:id/compat/versions/:version',
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    const version = z
+      .string()
+      .regex(/^[\w.-]{1,32}$/)
+      .parse(req.params.version);
+    const state = compat.getReport(req.params.id);
+    const entry = state.report && state.report.versions.find((v) => v.version === version);
+    if (!entry) throw httpError(404, 'That Minecraft version was not part of the last version check.');
+    res.json({
+      ok: true,
+      version: entry,
+      unknown: state.report.unknown,
+      unchecked: state.report.unchecked || [],
+      partial: state.report.partial,
+    });
+  })
+);
+
+router.post(
+  '/servers/:id/compat/scan',
+  requireCap('content'),
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    const state = await compat.startScan(req.params.id, { actor: req.user.username });
+    res.status(202).json({ ok: true, ...compatSummary(state) });
   })
 );
 

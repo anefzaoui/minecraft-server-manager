@@ -93,6 +93,16 @@ try {
     logger.error('The unpinned-modpack sweep failed.', { err: serializeError(err) });
   }
 
+  // A version compatibility scan only exists inside the process that runs it,
+  // so anything still marked running belongs to a previous life of the panel.
+  // Marking it once here is what lets the Versions tab offer Resume instead of
+  // showing a scan that will never finish (#52).
+  try {
+    require('./services/compat').reconcileScans();
+  } catch (err) {
+    logger.error('Reconciling interrupted version checks failed.', { err: serializeError(err) });
+  }
+
   require('./blueprints')
     .seedStarters()
     .catch((err) => logger.error('Seeding starter blueprints failed.', { err: serializeError(err) }));

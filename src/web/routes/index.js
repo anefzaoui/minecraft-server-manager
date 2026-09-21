@@ -47,6 +47,7 @@ const SERVER_TABS = [
   'inventory',
   'analytics',
   'mods',
+  'updates',
   'map',
   'files',
   'worlds',
@@ -70,7 +71,7 @@ const TAB_GROUPS = [
   { key: 'overview', label: 'Overview', icon: 'layout-dashboard', tabs: ['overview'] },
   { key: 'console', label: 'Console', icon: 'terminal', tabs: ['console', 'chat', 'commands'] },
   { key: 'players', label: 'Players', icon: 'users', tabs: ['players', 'inventory', 'analytics'] },
-  { key: 'mods', label: 'Mods', icon: 'puzzle', tabs: ['mods'] },
+  { key: 'mods', label: 'Mods', icon: 'puzzle', tabs: ['mods', 'updates'] },
   { key: 'world', label: 'World', icon: 'earth', tabs: ['worlds', 'map', 'files'] },
   { key: 'backups', label: 'Backups', icon: 'archive', tabs: ['backups'] },
   { key: 'monitoring', label: 'Monitoring', icon: 'activity', tabs: ['history', 'metrics'] },
@@ -90,6 +91,7 @@ const SUB_LABELS = {
   analytics: 'Stats',
   worlds: 'Worlds',
   mods: 'Mods',
+  updates: 'Versions',
   map: 'Map',
   files: 'Files',
   metrics: 'Live',
@@ -106,8 +108,11 @@ const ADMIN_ONLY_TABS = new Set(['chatbot']);
 /** Build the two-level nav (top groups + contextual sub-nav) for a given active tab. */
 // Sub-nav entries that need a per-server capability beyond `view`.
 const CAP_TABS = { files: 'files' };
+// Sub-nav entries that only make sense for some servers. Version compatibility
+// is answerable for mod loaders only (see services/compat.js appliesTo).
+const CONDITIONAL_TABS = { updates: (opts) => opts.modServer !== false };
 
-function buildNav(id, tab, server, { isAdmin = false, perms = null } = {}) {
+function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = true } = {}) {
   const crashes = server && server.crashesUnread;
   const group = TAB_GROUPS.find((g) => g.tabs.includes(tab)) || TAB_GROUPS[0];
   const groups = TAB_GROUPS.map((g) => ({
@@ -118,7 +123,10 @@ function buildNav(id, tab, server, { isAdmin = false, perms = null } = {}) {
     badge: g.tabs.includes('history') && crashes ? crashes : null,
   }));
   const visibleSubTabs = group.tabs.filter(
-    (t) => (isAdmin || !ADMIN_ONLY_TABS.has(t)) && (!perms || !CAP_TABS[t] || perms[CAP_TABS[t]])
+    (t) =>
+      (isAdmin || !ADMIN_ONLY_TABS.has(t)) &&
+      (!perms || !CAP_TABS[t] || perms[CAP_TABS[t]]) &&
+      (!CONDITIONAL_TABS[t] || CONDITIONAL_TABS[t]({ modServer }))
   );
   const sub =
     visibleSubTabs.length > 1
@@ -472,7 +480,11 @@ router.get(
       server,
       tab,
       tabs: SERVER_TABS,
-      nav: buildNav(row.id, tab, server, { isAdmin: req.user.role === 'admin', perms }),
+      nav: buildNav(row.id, tab, server, {
+        isAdmin: req.user.role === 'admin',
+        perms,
+        modServer: require('../../services/compat').appliesTo(row.id),
+      }),
       perms,
       mods: [],
       backups: [],
@@ -518,6 +530,30 @@ router.get(
       } catch {
         context.curseforgeEnabled = false;
       }
+    } else if (tab === 'updates') {
+      // Reached directly on a plugin server: there is nothing to show, so send
+      // the person to the tab this one sits beside.
+      if (!require('../../services/compat').appliesTo(row.id)) return res.redirect(`/servers/${row.id}/mods`);
+      // Version compatibility: the stored report only (scans are manual, and
+      // the page fetches one version's mod lists at a time - a 400-mod pack
+      // across 30 candidate versions is far too much to render up front).
+      const compat = require('../../services/compat');
+      const state = compat.getReport(row.id);
+      context.compat = state;
+      context.compatVersions = state.report ? state.report.versions.map(({ ready, missing, ...v }) => v) : [];
+      // Both lists are per server rather than per version, and normally short.
+      // They are still capped: a pack built entirely from GitHub releases would
+      // otherwise put every one of its mods in the page.
+      const LIST_CAP = 100;
+      const unknown = state.report ? state.report.unknown : [];
+      const unchecked = state.report ? state.report.unchecked || [] : [];
+      context.compatUnknown = unknown.slice(0, LIST_CAP);
+      context.compatUnknownMore = Math.max(0, unknown.length - LIST_CAP);
+      context.compatUnknownTotal = unknown.length;
+      context.compatUnchecked = unchecked.slice(0, LIST_CAP);
+      context.compatUncheckedMore = Math.max(0, unchecked.length - LIST_CAP);
+      context.compatUncheckedTotal = unchecked.length;
+      context.modCount = compat.modCount(row.id);
     } else if (tab === 'worlds') {
       const worldsService = require('../../services/worlds');
       context.worlds = await worldsService.listServerWorlds(row.id).catch(() => []);
