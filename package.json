@@ -38,7 +38,9 @@
     "db:migrate": "node scripts/migrate.js",
     "seed:servers": "node scripts/seed-fake-servers.js",
     "seed:players": "node scripts/seed-players.js",
-    "contributors": "node scripts/contributors-svg.js"
+    "contributors": "node scripts/contributors-svg.js",
+    "test:deploy": "docker run --rm -v \"$PWD:/repo\" -w /repo ubuntu:24.04 bash test/deploy/install-scenarios.sh",
+    "test:deploy:real": "bash test/deploy/e2e-real.sh"
   },
   "dependencies": {
     "archiver": "^7.0.1",
