@@ -34,6 +34,16 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 - **[Users & roles](users-and-roles.md)** - admin, operator, and viewer, and what each can do.
 - **[Two-factor authentication](two-factor-authentication.md)** - protect your login with an authenticator app.
 
+## Guides
+
+Not specific to this panel: the questions every Minecraft server owner runs into.
+
+- **[How much RAM does a server need?](guide-server-memory.md)** - the two numbers to set, and why an idle server reads as 12 GB.
+- **[Vanilla, Paper, Fabric, Forge, NeoForge, Quilt](guide-choosing-a-loader.md)** - which to run, and the plugin/mod difference behind the choice.
+- **[Your server will not start](guide-server-wont-start.md)** - reading the log, and the handful of causes behind most failures.
+- **[Backups that actually restore](guide-backups.md)** - consistent copies, what else to keep, and testing one before you need it.
+- **[Moving a server to another host](guide-moving-a-server.md)** - the order that keeps downtime short and inventories intact.
+
 ## Under the hood
 
 - **[Architecture](architecture.md)** - how the panel is put together.
