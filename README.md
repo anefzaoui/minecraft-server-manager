@@ -109,7 +109,20 @@ by host path).
 
 A pre-built multi-arch image (amd64 + arm64) is published to GHCR on every release:
 `ghcr.io/anefzaoui/minecraft-server-manager:latest` (or pin a version tag, e.g. `:v0.11.0`).
-Grab the [docker-compose.yml](docker-compose.yml) from the repo root, set **one** variable, and start:
+
+On a fresh Linux server, the installer does the whole thing: installs Docker if it's missing, writes
+`/opt/msm`, starts the panel, and waits until it answers.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/anefzaoui/minecraft-server-manager/main/deploy/install.sh | sudo bash
+```
+
+Run it again any time to upgrade; it keeps your data, your `.env`, and any edits you made to the
+compose file. `--help` lists the rest: `--dir`, `--port`, `--bind 127.0.0.1` for a reverse-proxy
+setup, `--tag v0.14.0` to pin a version, and `--uninstall`.
+
+Prefer to drive it yourself, or using Portainer/Dockge? Grab the
+[docker-compose.yml](docker-compose.yml) from the repo root, set **one** variable, and start:
 
 ```bash
 mkdir -p /opt/msm/data
