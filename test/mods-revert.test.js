@@ -212,3 +212,33 @@ test('installing a build by hand clears the revert pointer', async () => {
   }
   assert.ok(build2);
 });
+
+test('a revert makes no network call at all: the library is the source', async () => {
+  const id = seedServer('srv_revert_offline');
+  const oldBuild = seedLibraryFile({ id: 'lib_off_old', filename: 'off-1.0.jar', version: '1.0' });
+  const newBuild = seedLibraryFile({ id: 'lib_off_new', filename: 'off-2.0.jar', version: '2.0' });
+  fs.copyFileSync(dataPath(newBuild.rel_path), dataPath('servers', id, 'mods', 'off-2.0.jar'));
+  db.run(
+    `INSERT INTO server_content (id, server_id, library_id, kind, managed_by, name, filename, version, previous_library_id, previous_version)
+     VALUES ('sc_off', ?, 'lib_off_new', 'mod', 'overlay', 'Test Mod', 'off-2.0.jar', '2.0', 'lib_off_old', '1.0')`,
+    id
+  );
+
+  // The project could have been pulled from its registry since - a revert must
+  // not depend on anyone answering.
+  const realFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (...args) => {
+    calls += 1;
+    throw new Error(`a revert must not reach the network (tried ${args[0]})`);
+  };
+  try {
+    const result = await mods.revertOverlayUpdate(id, { contentId: 'sc_off' }, { actor: 'test' });
+    assert.equal(result.version, '1.0');
+    assert.equal(calls, 0, 'no request may be made');
+    assert.ok(fs.existsSync(dataPath('servers', id, 'mods', 'off-1.0.jar')));
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  assert.ok(oldBuild);
+});

@@ -105,6 +105,30 @@ test('the ceiling is the newest ready version even when a later one is blocked',
   assert.equal(matrix.highestCompatible, '1.21.1');
 });
 
+test('a mod no registry answered for is never called incompatible', () => {
+  // Hangar / SpigotMC / GitHub projects, and projects a registry has dropped,
+  // have no per-version build list to read. Reporting "no build for 1.21.1"
+  // about one would be inventing an answer nobody gave - and would block an
+  // upgrade on it.
+  const HANGAR = { file: 'EssentialsX.jar', name: 'EssentialsX', platform: 'hangar', projectId: 'EssentialsX' };
+  const map = support({ 'curseforge:238222': { '1.21.1': ['forge'] } });
+  const matrix = compat.buildMatrix([JEI, HANGAR], map, {
+    loader: 'forge',
+    mcVersion: '1.20.1',
+    candidates: ['1.21.1'],
+  });
+  assert.deepEqual(matrix.versions[0].missing, [], 'nothing may be called missing on no evidence');
+  assert.equal(matrix.versions[0].status, 'unknown');
+  assert.equal(matrix.knownCount, 1, 'only the answered-for mod counts as checked');
+  assert.deepEqual(
+    matrix.unchecked.map((m) => m.name),
+    ['EssentialsX']
+  );
+  assert.deepEqual(matrix.unknown, [], 'it WAS identified - it just could not be checked');
+  assert.equal(matrix.unknownCount, 1, 'the gate counts it the same either way');
+  assert.equal(matrix.highestCompatible, null);
+});
+
 test('a server with no mods has no blockers and no ceiling of its own', () => {
   const matrix = compat.buildMatrix([], new Map(), {
     loader: 'forge',

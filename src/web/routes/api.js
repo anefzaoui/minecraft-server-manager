@@ -1953,14 +1953,15 @@ const compat = require('../../services/compat');
  */
 function compatSummary(state) {
   if (!state.report) return state;
-  const { versions, unknown, ...rest } = state.report;
+  const { versions, unknown, unchecked, ...rest } = state.report;
   return {
     ...state,
     report: {
       ...rest,
-      // The unknown list is per server, not per version, and is the short one
-      // that actually needs acting on - it ships whole.
+      // The unknown / unchecked lists are per server, not per version, and are
+      // the short ones that actually need acting on - they ship whole.
       unknown,
+      unchecked: unchecked || [],
       versions: versions.map(({ ready, missing, ...v }) => v),
     },
   };
@@ -1985,7 +1986,13 @@ router.get(
     const state = compat.getReport(req.params.id);
     const entry = state.report && state.report.versions.find((v) => v.version === version);
     if (!entry) throw httpError(404, 'That Minecraft version was not part of the last version check.');
-    res.json({ ok: true, version: entry, unknown: state.report.unknown, partial: state.report.partial });
+    res.json({
+      ok: true,
+      version: entry,
+      unknown: state.report.unknown,
+      unchecked: state.report.unchecked || [],
+      partial: state.report.partial,
+    });
   })
 );
 

@@ -75,10 +75,34 @@ function report({ highest = '1.20.4', unknownCount = 0, partial = false, version
   };
 }
 
-test('modCount counts jars on disk, disabled ones included', () => {
+test('modCount counts the jars the server loads, and nothing else', () => {
   const id = seedForgeServer('srv_count', { mods: ['a.jar', 'b.jar.disabled', 'notes.txt'] });
-  assert.equal(compat.modCount(id), 2);
+  assert.equal(compat.modCount(id), 1, 'a disabled jar is not loaded; a text file is not a mod');
   assert.equal(compat.modCount('srv_does_not_exist'), 0);
+});
+
+test('a disabled mod has no say: it is not counted, and toggling it re-checks', async () => {
+  const id = seedForgeServer('srv_disabled', { mods: ['jei.jar', 'blocker.jar'] });
+  assert.equal(compat.modCount(id), 2);
+  const before = compat.modsSignature(id);
+
+  // Turn the blocker off, the way the Mods tab does.
+  fs.renameSync(
+    dataPath('servers', id, 'mods', 'blocker.jar'),
+    dataPath('servers', id, 'mods', 'blocker.jar.disabled')
+  );
+
+  assert.equal(compat.modCount(id), 1, 'the server does not load it, so it does not count');
+  assert.notEqual(compat.modsSignature(id), before, 'the report must be re-checked after a toggle');
+  const files = (await compat.inventory(id)).map((i) => i.file);
+  assert.deepEqual(files, ['jei.jar'], 'a disabled jar is never part of the inventory');
+});
+
+test('a server whose mods are all disabled is treated as unmodded', () => {
+  const id = seedForgeServer('srv_all_disabled', { mods: ['only.jar'] });
+  fs.renameSync(dataPath('servers', id, 'mods', 'only.jar'), dataPath('servers', id, 'mods', 'only.jar.disabled'));
+  assert.equal(compat.modCount(id), 0);
+  assert.equal(compat.upgradeVerdict(id, '1.21.1').allowed, true);
 });
 
 test('no scan means no ceiling - a modded server is never offered a version', () => {
@@ -162,6 +186,33 @@ test('a scan left running by a restart reports as interrupted, not running', () 
   storeReport(id, report({ partial: true }), { status: 'running' });
   compat.reconcileScans();
   assert.equal(compat.getReport(id).status, 'interrupted');
+});
+
+test('a plugin server is left alone: version checks are a mods question', () => {
+  // Paper plugins come from Hangar and SpigotMC too, which publish no
+  // per-version build list, so gating a plugin server would mean waiting
+  // forever for an answer nobody can give.
+  port += 2;
+  db.run(
+    `INSERT INTO servers (id, display_name, type, mc_version, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb, status, env_json)
+     VALUES ('srv_paper', 'srv_paper', 'PAPER', '1.20.1', ?, ?, 'x', 1024, 1536, 'stopped', '{}')`,
+    port,
+    port + 1
+  );
+  const dir = dataPath('servers', 'srv_paper', 'plugins');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'EssentialsX.jar'), 'not-a-real-jar');
+
+  assert.equal(compat.appliesTo('srv_paper'), false);
+  assert.equal(compat.modCount('srv_paper'), 1, 'the jars are still counted, the question just does not apply');
+  const v = compat.upgradeVerdict('srv_paper', '1.21.1');
+  assert.equal(v.allowed, true);
+  assert.equal(v.reason, 'not-applicable');
+});
+
+test('a mod-loader server is in scope', () => {
+  const id = seedForgeServer('srv_applies', { mods: ['jei.jar'] });
+  assert.equal(compat.appliesTo(id), true);
 });
 
 test('upgradeVerdict allows anything on a server with no mods', () => {

@@ -79,13 +79,54 @@ function storeReport(serverId, report = REPORT) {
   );
 }
 
+let viewerCookie;
+let operatorCookie;
+
 test.before(async () => {
   await app.start();
   cookie = await app.adminCookie();
+  const authService = require('../src/services/auth');
+  for (const [username, role] of [
+    ['compat_viewer', 'viewer'],
+    ['compat_operator', 'operator'],
+  ]) {
+    await authService.createUser({ username, password: 'passw0rd-12345', role }, { actor: 'test' });
+    const r = await app.req('POST', '/login', { body: { username, password: 'passw0rd-12345' } });
+    const jar = (r.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+    if (role === 'viewer') viewerCookie = jar;
+    else operatorCookie = jar;
+  }
 });
 
 test.after(async () => {
   await app.stop();
+});
+
+test('a viewer can read the report but cannot start a scan', async () => {
+  const id = seedForgeServer('srv_r_viewer');
+  storeReport(id);
+  const read = await app.req('GET', `/api/servers/${id}/compat`, { cookie: viewerCookie });
+  assert.equal(read.status, 200);
+  const scan = await app.req('POST', `/api/servers/${id}/compat/scan`, { cookie: viewerCookie, body: {} });
+  assert.equal(scan.status, 403, 'scanning is a content action');
+  // An operator has content by default.
+  const opScan = await app.req('POST', `/api/servers/${id}/compat/scan`, { cookie: operatorCookie, body: {} });
+  assert.notEqual(opScan.status, 403);
+});
+
+test('a server hidden from a user hides its report too', async () => {
+  const id = seedForgeServer('srv_r_hidden');
+  storeReport(id);
+  const viewer = db.get("SELECT id FROM users WHERE username = 'compat_viewer'");
+  require('../src/services/permissions').setGrant(viewer.id, id, [], { actor: 'test' });
+  try {
+    const read = await app.req('GET', `/api/servers/${id}/compat`, { cookie: viewerCookie });
+    assert.equal(read.status, 404, 'a hidden server must not leak its mod list');
+    const one = await app.req('GET', `/api/servers/${id}/compat/versions/1.20.4`, { cookie: viewerCookie });
+    assert.equal(one.status, 404);
+  } finally {
+    require('../src/services/permissions').setGrant(viewer.id, id, null, { actor: 'test' });
+  }
 });
 
 test('the report ships summaries only, never every mod of every version', async () => {
@@ -202,6 +243,26 @@ test('a scan cannot be started for a server that follows the newest version', as
   const r = await app.req('POST', `/api/servers/${id}/compat/scan`, { cookie, body: {} });
   assert.equal(r.status, 400);
   assert.match(r.json.error, /newest Minecraft version/);
+});
+
+test('a plugin server has no Versions tab, and cannot start a scan', async () => {
+  port += 2;
+  db.run(
+    `INSERT INTO servers (id, display_name, type, mc_version, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb, status, update_policy, env_json)
+     VALUES ('srv_r_paper', 'srv_r_paper', 'PAPER', '1.20.1', ?, ?, 'x', 1024, 1536, 'stopped', 'notify', '{}')`,
+    port,
+    port + 1
+  );
+  const scan = await app.req('POST', '/api/servers/srv_r_paper/compat/scan', { cookie, body: {} });
+  assert.equal(scan.status, 400);
+  assert.match(scan.json.error, /plugins/i);
+
+  const mods = await app.req('GET', '/servers/srv_r_paper/mods', { cookie });
+  assert.ok(!/\/servers\/srv_r_paper\/updates/.test(mods.text), 'the sub-tab must not be offered');
+
+  const direct = await app.req('GET', '/servers/srv_r_paper/updates', { cookie });
+  assert.equal(direct.status, 302, 'reaching it directly goes back to Mods');
+  assert.match(direct.headers.get('location'), /\/servers\/srv_r_paper\/mods$/);
 });
 
 test('the Versions tab renders for a server with a stored report', async () => {

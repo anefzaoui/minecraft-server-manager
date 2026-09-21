@@ -97,6 +97,27 @@
     </details>
   {{/if}}
 
+  {{#if compatUnchecked.length}}
+    <details class="card group mb-4">
+      <summary class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+        <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
+        <span class="badge badge-warn">{{compatUnchecked.length}}</span>
+        Mods That Could Not Be Checked
+      </summary>
+      <p class="mt-2 max-w-prose text-xs text-ink-soft">
+        These are recognised, but they come from a place that publishes no list of which Minecraft
+        versions each build is for: GitHub Releases, Hangar, SpigotMC, or a project that has since been
+        taken down. The panel will not guess on their behalf, so this server is not offered a one-click
+        Minecraft version update while they are installed.
+      </p>
+      <ul class="mt-3 grid gap-1 text-xs sm:grid-cols-2">
+        {{#each compatUnchecked}}
+          <li class="truncate text-ink-faint" title="{{file}}">{{name}}</li>
+        {{/each}}
+      </ul>
+    </details>
+  {{/if}}
+
   {{#if compatVersions.length}}
     <div class="mb-2 flex flex-wrap items-center gap-2">
       <h3 class="text-sm font-semibold">Future Versions</h3>

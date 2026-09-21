@@ -299,7 +299,7 @@ async function checkStandaloneVersion(server, findings) {
     // offered at all (#52). An unmodded server keeps the plain newest-release
     // behaviour, because for it there is nothing to be incompatible with.
     const compat = require('../services/compat');
-    const modded = compat.modCount(server.id) > 0;
+    const modded = compat.appliesTo(server.id) && compat.modCount(server.id) > 0;
     const ceiling = modded ? compat.compatCeiling(server.id) : null;
     const target = modded ? ceiling.ceiling : latestRelease;
     if (target && target !== server.mc_version) {

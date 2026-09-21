@@ -102,7 +102,7 @@ async function onToggle(serverId, e) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false)
       throw new Error(data.error || friendlyError(res, { action: 'load that version' }));
-    render(body, data.version, data.unknown || []);
+    render(body, data.version, data.unknown || [], data.unchecked || []);
   } catch (err) {
     details.dataset.loaded = 'false'; // let a retry re-fetch
     body.innerHTML = '';
@@ -113,7 +113,7 @@ async function onToggle(serverId, e) {
   }
 }
 
-function render(body, version, unknown) {
+function render(body, version, unknown, unchecked) {
   body.innerHTML = '';
   if (version.missingCount) {
     body.append(
@@ -130,10 +130,20 @@ function render(body, version, unknown) {
       )
     );
   }
+  if (unchecked.length) {
+    body.append(
+      section(
+        'Could not be checked',
+        unchecked,
+        'warn',
+        'These come from a source that publishes no per-version build list, so nobody can say either way.'
+      )
+    );
+  }
   if (version.readyCount) {
     body.append(section(`Ready for ${version.version}`, version.ready, 'ok', null, { collapsed: true }));
   }
-  if (!version.missingCount && !version.readyCount && !unknown.length) {
+  if (!version.missingCount && !version.readyCount && !unknown.length && !unchecked.length) {
     const p = document.createElement('p');
     p.className = 'text-xs text-ink-faint';
     p.textContent = 'This server has no mods to check.';

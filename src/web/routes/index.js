@@ -108,8 +108,11 @@ const ADMIN_ONLY_TABS = new Set(['chatbot']);
 /** Build the two-level nav (top groups + contextual sub-nav) for a given active tab. */
 // Sub-nav entries that need a per-server capability beyond `view`.
 const CAP_TABS = { files: 'files' };
+// Sub-nav entries that only make sense for some servers. Version compatibility
+// is answerable for mod loaders only (see services/compat.js appliesTo).
+const CONDITIONAL_TABS = { updates: (opts) => opts.modServer !== false };
 
-function buildNav(id, tab, server, { isAdmin = false, perms = null } = {}) {
+function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = true } = {}) {
   const crashes = server && server.crashesUnread;
   const group = TAB_GROUPS.find((g) => g.tabs.includes(tab)) || TAB_GROUPS[0];
   const groups = TAB_GROUPS.map((g) => ({
@@ -120,7 +123,10 @@ function buildNav(id, tab, server, { isAdmin = false, perms = null } = {}) {
     badge: g.tabs.includes('history') && crashes ? crashes : null,
   }));
   const visibleSubTabs = group.tabs.filter(
-    (t) => (isAdmin || !ADMIN_ONLY_TABS.has(t)) && (!perms || !CAP_TABS[t] || perms[CAP_TABS[t]])
+    (t) =>
+      (isAdmin || !ADMIN_ONLY_TABS.has(t)) &&
+      (!perms || !CAP_TABS[t] || perms[CAP_TABS[t]]) &&
+      (!CONDITIONAL_TABS[t] || CONDITIONAL_TABS[t]({ modServer }))
   );
   const sub =
     visibleSubTabs.length > 1
@@ -474,7 +480,11 @@ router.get(
       server,
       tab,
       tabs: SERVER_TABS,
-      nav: buildNav(row.id, tab, server, { isAdmin: req.user.role === 'admin', perms }),
+      nav: buildNav(row.id, tab, server, {
+        isAdmin: req.user.role === 'admin',
+        perms,
+        modServer: require('../../services/compat').appliesTo(row.id),
+      }),
       perms,
       mods: [],
       backups: [],
@@ -521,6 +531,9 @@ router.get(
         context.curseforgeEnabled = false;
       }
     } else if (tab === 'updates') {
+      // Reached directly on a plugin server: there is nothing to show, so send
+      // the person to the tab this one sits beside.
+      if (!require('../../services/compat').appliesTo(row.id)) return res.redirect(`/servers/${row.id}/mods`);
       // Version compatibility: the stored report only (scans are manual, and
       // the page fetches one version's mod lists at a time - a 400-mod pack
       // across 30 candidate versions is far too much to render up front).
@@ -529,6 +542,7 @@ router.get(
       context.compat = state;
       context.compatVersions = state.report ? state.report.versions.map(({ ready, missing, ...v }) => v) : [];
       context.compatUnknown = state.report ? state.report.unknown : [];
+      context.compatUnchecked = state.report ? state.report.unchecked || [] : [];
       context.modCount = compat.modCount(row.id);
     } else if (tab === 'worlds') {
       const worldsService = require('../../services/worlds');

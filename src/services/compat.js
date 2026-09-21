@@ -126,7 +126,12 @@ async function inventory(serverId, { onProgress = () => {} } = {}) {
   const needIdentify = [];
   for (const entry of entries) {
     if (!entry.isFile()) continue;
-    const filename = entry.name.replace(/\.disabled$/, '');
+    // A disabled jar is not loaded by the server, so it has no say in which
+    // versions the server can move to - and blocking an upgrade on one would
+    // make "turn the blocker off" not work, which is the obvious way out of a
+    // mod that has not caught up yet.
+    if (entry.name.endsWith('.disabled')) continue;
+    const filename = entry.name;
     if (!filename.endsWith('.jar')) continue; // datapacks/resource packs are version-agnostic
     const abs = path.join(dirAbs, entry.name);
     const stat = await fsp.stat(abs).catch(() => null);
@@ -244,16 +249,34 @@ function prettyName(filename) {
 }
 
 /**
- * How many mod/plugin jars the server actually has, without identifying any of
- * them. The update checker needs this to tell a modded server (where a version
- * upgrade has to be earned) from a vanilla one (where the newest release is
- * simply the newest release).
+ * Whether version compatibility is a question this panel can answer for a
+ * server at all. Mod loaders only: a plugin server's content comes from Hangar
+ * and SpigotMC as well, which publish no per-version build list the panel can
+ * query, so every plugin would land in "could not be checked" and the server
+ * would be gated on an answer that never arrives. Paper plugins also declare an
+ * API version rather than a per-version build, so the question is a different
+ * one. Plugin servers keep the plain newest-release behaviour.
+ */
+function appliesTo(serverId) {
+  const serversService = require('./servers');
+  const modsService = require('./mods');
+  const server = serversService.getServer(serverId);
+  if (!server) return false;
+  return modsService.contentKindOf(server) === 'mod';
+}
+
+/**
+ * How many mod/plugin jars the server actually loads, without identifying any
+ * of them. The update checker needs this to tell a modded server (where a
+ * version upgrade has to be earned) from a vanilla one (where the newest
+ * release is simply the newest release). Disabled jars do not count: the
+ * server does not load them, so they cannot break on a new version.
  */
 function modCount(serverId) {
   return modFiles(serverId).length;
 }
 
-/** The server's mod/plugin jars as [{name, size}], sorted, or [] if none. */
+/** The server's ENABLED mod/plugin jars as [{name, size}], sorted, or [] if none. */
 function modFiles(serverId) {
   const serversService = require('./servers');
   const modsService = require('./mods');
@@ -263,7 +286,9 @@ function modFiles(serverId) {
   const dirAbs = dataPath('servers', serverId, modsService.contentDir(server, kind));
   let names;
   try {
-    names = fs.readdirSync(dirAbs).filter((f) => /\.jar(\.disabled)?$/i.test(f));
+    // Enabled jars only - the same set inventory() reads, so the signature
+    // changes when a mod is enabled or disabled and the report re-checks.
+    names = fs.readdirSync(dirAbs).filter((f) => /\.jar$/i.test(f));
   } catch {
     return [];
   }
@@ -465,13 +490,26 @@ function supportsVersion(support, mcVersion, loader) {
  *   `candidates` is newest-LAST (the page and the scan both walk it upward).
  */
 function buildMatrix(items, support, { loader, mcVersion, candidates, partial = false }) {
-  const known = items.filter((i) => i.platform && i.projectId);
-  const unknown = items.filter((i) => !i.platform || !i.projectId);
+  // Three buckets, and the difference between the last two matters:
+  //   checked   - identified AND answered for by its registry.
+  //   unchecked - identified, but nothing answered: a project on a registry
+  //               this scan cannot query (GitHub, Hangar, SpigotMC), or one
+  //               the registry no longer serves. Saying "no build for 1.21.1"
+  //               about these would be inventing an answer nobody gave.
+  //   unknown   - no identity at all (a hand-built or private jar).
+  const checked = [];
+  const unchecked = [];
+  const unknown = [];
+  for (const item of items) {
+    if (!item.platform || !item.projectId) unknown.push(item);
+    else if (support.has(`${item.platform}:${item.projectId}`)) checked.push(item);
+    else unchecked.push(item);
+  }
 
   const versions = candidates.map((version) => {
     const ready = [];
     const missing = [];
-    for (const item of known) {
+    for (const item of checked) {
       const map = support.get(`${item.platform}:${item.projectId}`);
       if (supportsVersion(map, version, loader)) ready.push(item);
       else missing.push(item);
@@ -480,11 +518,12 @@ function buildMatrix(items, support, { loader, mcVersion, candidates, partial = 
       version,
       readyCount: ready.length,
       missingCount: missing.length,
-      unknownCount: unknown.length,
-      // Compatible means: every identified mod has a build AND nothing is
-      // unidentified. One unknown jar is enough to make the whole answer a
-      // guess, and a guess must not drive a one-click upgrade.
-      status: missing.length ? 'blocked' : unknown.length ? 'unknown' : 'ready',
+      unknownCount: unknown.length + unchecked.length,
+      // Ready means: every mod that COULD be checked has a build, and there is
+      // nothing the scan had to leave open. One jar nobody could answer for is
+      // enough to make the whole answer a guess, and a guess must not drive a
+      // one-click upgrade.
+      status: missing.length ? 'blocked' : unknown.length + unchecked.length ? 'unknown' : 'ready',
       ready: ready.map(slim),
       missing: missing.map(slim),
     };
@@ -498,9 +537,13 @@ function buildMatrix(items, support, { loader, mcVersion, candidates, partial = 
     loader: loader || null,
     mcVersion,
     modCount: items.length,
-    knownCount: known.length,
-    unknownCount: unknown.length,
+    knownCount: checked.length,
+    // One number for "the scan could not answer for this jar", because that is
+    // the only distinction the gate makes; the two lists stay separate so the
+    // page can explain WHY for each.
+    unknownCount: unknown.length + unchecked.length,
     unknown: unknown.map(slim),
+    unchecked: unchecked.map(slim),
     highestCompatible: highest,
     partial,
     versions,
@@ -704,6 +747,7 @@ const HOLD_REASON = {
  */
 function upgradeVerdict(serverId, targetVersion) {
   const empty = { missing: [], missingCount: 0, unknownCount: 0 };
+  if (!appliesTo(serverId)) return { allowed: true, reason: 'not-applicable', message: null, ...empty };
   if (modCount(serverId) === 0) return { allowed: true, reason: 'no-mods', message: null, ...empty };
 
   const ceiling = compatCeiling(serverId);
@@ -749,6 +793,12 @@ async function startScan(serverId, { actor = 'system' } = {}) {
   const tasks = require('./tasks');
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
+  if (!appliesTo(serverId)) {
+    throw httpError(
+      400,
+      'Version checks cover mods. This server runs plugins, which publish no per-version build list to check.'
+    );
+  }
   if (running.has(serverId)) throw httpError(409, 'A version check is already running for this server.');
   if (!server.mc_version || ['LATEST', 'SNAPSHOT'].includes(server.mc_version)) {
     throw httpError(400, 'This server follows the newest Minecraft version, so there is nothing ahead to check.');
@@ -858,14 +908,21 @@ async function startScan(serverId, { actor = 'system' } = {}) {
         highestCompatible: matrix.highestCompatible,
       });
     } catch (err) {
-      writeState(serverId, {
-        status: 'failed',
-        phase: null,
-        error: String(err && err.message ? err.message : err).slice(0, 300),
-        completed_at: new Date().toISOString(),
-      });
-      task.fail(err);
       logger.warn('A version compatibility scan failed.', { serverId, err: serializeError(err) });
+      try {
+        writeState(serverId, {
+          status: 'failed',
+          phase: null,
+          error: String(err && err.message ? err.message : err).slice(0, 300),
+          completed_at: new Date().toISOString(),
+        });
+      } catch (writeErr) {
+        // Nothing is left to salvage the state with; the row stays 'running'
+        // and the next boot marks it interrupted. What must NOT happen is an
+        // unhandled rejection out of a fire-and-forget scan.
+        logger.error('Recording a failed version check also failed.', { serverId, err: serializeError(writeErr) });
+      }
+      task.fail(err);
     } finally {
       running.delete(serverId);
     }
@@ -906,6 +963,7 @@ module.exports = {
   isPlainVersion,
   modCount,
   modsSignature,
+  appliesTo,
   getReport,
   upgradeVerdict,
   compatCeiling,
