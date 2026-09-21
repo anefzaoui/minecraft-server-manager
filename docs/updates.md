@@ -30,7 +30,16 @@ Press **Check Future Versions** to run it. Nothing scans on its own: a check rea
 
 A report only describes the server it was made for. Change the Minecraft version, the loader, or the mods themselves - add one, remove one, update one - and the report is marked out of date and stops being used, until you run the check again.
 
-Mods are identified from the modpack's own file list where there is one, and otherwise by the file's content, the same way a launcher recognises a jar. A file that neither registry recognises - a hand-built jar, a private build - is reported as **unknown**: while one is installed, the panel will not offer a one-click Minecraft version update at all, because it cannot honestly say what would break. Applying a version above what the mods support is refused, and names the mods blocking it.
+Mods are identified from the modpack's own file list where there is one, and otherwise by the file's content, the same way a launcher recognises a jar. Two kinds of mod cannot be answered for, and neither is guessed at:
+
+- **Could not be identified** - a hand-built jar or a private build that neither registry recognises.
+- **Could not be checked** - a mod from GitHub Releases, Hangar or SpigotMC, or one whose project has been taken down. These publish no list of which Minecraft version each build is for.
+
+While either is installed, the panel will not offer a one-click Minecraft version update at all, because it cannot honestly say what would break. Applying a version above what the mods support is refused, and names the mods blocking it.
+
+Mods you have **disabled** take no part: the server does not load them, so turning a mod off is a real way past a blocker. Turning one on or off marks the report for re-checking.
+
+This covers servers that run mods - Fabric, Forge, NeoForge and Quilt. Paper-style plugin servers keep the plain newest-release behaviour and have no Versions tab, because two of the registries plugins come from publish nothing a check could read.
 
 ![A version opened, showing which mods would be left behind](images/server-versions-expanded.png)
 

@@ -24,6 +24,12 @@ the server has a build for it. Closes #52.
   the Mods tab now offers **Revert**: it puts the previous build back from local files, with no
   download, and stops offering the build you reverted away from until a newer one appears.
 
+Version checks cover mods, not plugins: Hangar and SpigotMC publish no per-version build list to
+check against, so a Paper server keeps the behaviour it has today and has no Versions tab. A mod
+from GitHub Releases, Hangar or SpigotMC on a modded server is reported as "could not be checked"
+rather than guessed at - which, like an unidentified jar, holds back the one-click update. Disabled
+mods are not loaded by the server, so they never block a version.
+
 ### Fixed
 
 - **A modded server is no longer told to update to a Minecraft version its mods cannot run** (#52).
