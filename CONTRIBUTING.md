@@ -205,7 +205,12 @@ source it and call pieces directly. Anything you add to it wants a scenario in
 ## Reporting bugs / requesting features
 
 Open an issue with clear reproduction steps (and your OS + Docker flavor for anything
-environment-specific). Security issues: please report privately rather than in a public issue.
+environment-specific); the issue forms ask for the details that save a round trip. Not sure it's a
+bug? [`SUPPORT.md`](SUPPORT.md) covers where to ask.
+
+Security issues go through [private reporting](https://github.com/anefzaoui/minecraft-server-manager/security/advisories/new)
+rather than a public issue. [`SECURITY.md`](SECURITY.md) explains what to include and what happens
+next.
 
 ## Getting your face on the README
 

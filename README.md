@@ -35,16 +35,18 @@ copy to migrate.**
   <a href="https://discord.gg/Ud6TrQkbDZ"><img src="https://img.shields.io/badge/Join%20the%20MSM%20Discord-5865F2?logo=discord&logoColor=white&style=for-the-badge" alt="Join the MSM Discord"></a>
 </p>
 
-<h3 align="center">👥 Built by people who just showed up</h3>
+<h3 align="center">👥 The people who build MSM</h3>
 
 <p align="center">
   <a href="https://github.com/anefzaoui/minecraft-server-manager/graphs/contributors"><img src="docs/images/contributors.svg" alt="The people who have contributed code to this panel" width="636"></a>
 </p>
 
 <p align="center">
-  <b>More than half the commits in this repo come from people who don't own it.</b><br>
-  Every face above arrived as one bug report or one pull request. Yours is welcome next: fix a typo,
-  send a crash log, or take one of the honest gaps in <a href="#status--areas-that-need-work">areas that need work</a>.
+  <b>Most of this panel was written by people who showed up and stayed.</b><br>
+  Every one of them started with a single issue or a single pull request, and that is still how it
+  starts. Fix a typo, send a crash log, or pick something from
+  <a href="#status--areas-that-need-work">areas that need work</a>. You will get help along the way,
+  and your face lands here.
 </p>
 
 <p align="center">
@@ -57,8 +59,8 @@ copy to migrate.**
 </p>
 
 <p align="center">
-  <sub><b>The row above shipped things without writing code.</b> A sharp bug report or a good idea
-  counts here too.</sub>
+  <sub><b>These people made MSM better without writing any code.</b> A careful bug report or a good
+  idea is worth just as much here, and it puts you on this page too.</sub>
 </p>
 
 ## Features
@@ -714,6 +716,15 @@ want to help, start here.
 Issues and PRs welcome. Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) first: it covers the layer
 rule, the two non-obvious conventions (path-guarded `./data` access and lazy-requires for cycle
 breaking), and how to run the QA sweep.
+
+Stuck rather than contributing? [`SUPPORT.md`](SUPPORT.md) says where to ask and what to expect.
+Found a security problem? [`SECURITY.md`](SECURITY.md) has a private reporting link, so please don't
+open a public issue for that one.
+
+MSM is free and stays free: every feature lives in the MIT build, and nothing moves behind a payment.
+If it saves you time and you want to chip in towards the domain, the machines it's tested on, and the
+hours behind releases, there's a Sponsor button at the top of this page. It's optional, and it buys
+no priority over anyone else's bug.
 
 ## License
 
