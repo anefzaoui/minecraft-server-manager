@@ -363,7 +363,14 @@ router.put(
 
 router.get(
   '/servers/:id/stats',
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
+    requireServer(req.params.id);
+    const live = require('../../services/liveCache').get(req.params.id);
+    // The brokered docker-stats stream keeps per-tick samples in memory while a
+    // server runs, so a stats read is sub-millisecond instead of a ~2 s Docker
+    // round trip. Only containers with no live feed (stopped, or cache not yet
+    // attached) fall back to a one-shot statsOnce.
+    if (live.stats) return res.json({ ok: true, stats: live.stats });
     res.json({ ok: true, stats: await statsOnce(req.params.id) });
   })
 );
@@ -1508,6 +1515,21 @@ router.post(
   '/storage/scan',
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ...(await indexer.scan()) });
+  })
+);
+
+// Largest files: a bounded filesystem walk, so it runs from an admin-only GET
+// the Storage page fires after render instead of blocking every page load (it
+// used to run four cleanup dry-runs PLUS this scan on each load).
+router.get(
+  '/storage/largest-files',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res) => {
+    const files = (await storageCleanup.largestFiles({ top: 15, maxScan: 3000 }).catch(() => [])).map((f) => ({
+      ...f,
+      link: `/files?path=${encodeURIComponent(f.path.split('/').slice(0, -1).join('/'))}`,
+    }));
+    res.json({ ok: true, files });
   })
 );
 

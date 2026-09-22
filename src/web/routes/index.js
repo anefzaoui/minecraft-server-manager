@@ -955,23 +955,28 @@ router.get(
       blueprints: 'Blueprints',
       tmp: 'Temporary files',
     };
-    const categories = Object.entries(catNames)
-      .map(([rel, name]) => ({
-        name,
+    const catKeys = Object.keys(catNames);
+    const sizes = indexer.sizeOfMany([...catKeys, '', 'library']);
+    // The page used ~15 indexer.sizeOf() reads per load (one db.get each); a
+    // single batched SELECT serves every number the category table and the
+    // breakdown bar show.
+    const categories = catKeys
+      .map((rel) => ({
+        name: catNames[rel],
         path: `${rel}/`,
         link: `/files?path=${encodeURIComponent(rel)}`,
-        size: indexer.sizeOf(rel),
+        size: sizes.get(rel) || 0,
       }))
       .filter((c) => c.size > 0 || ['servers', 'backups', 'tmp'].includes(c.path.replace(/\/$/, '')));
     const snapshots = db.all('SELECT total_bytes FROM storage_snapshots ORDER BY id DESC LIMIT 14').reverse();
     const maxSnap = Math.max(1, ...snapshots.map((s) => s.total_bytes));
 
-    const totalUsed = indexer.sizeOf('');
+    const totalUsed = sizes.get('') || 0;
     // Real category bar: servers / backups / library / other, from the index.
     const segs = [
-      { label: 'Servers', cls: 'bg-grass-600', size: indexer.sizeOf('servers') },
-      { label: 'Backups', cls: 'bg-diamond-500', size: indexer.sizeOf('backups') },
-      { label: 'Library', cls: 'bg-gold-400', size: indexer.sizeOf('library') },
+      { label: 'Servers', cls: 'bg-grass-600', size: sizes.get('servers') || 0 },
+      { label: 'Backups', cls: 'bg-diamond-500', size: sizes.get('backups') || 0 },
+      { label: 'Library', cls: 'bg-gold-400', size: sizes.get('library') || 0 },
     ];
     segs.push({
       label: 'Logs, blueprints, temporary files',
@@ -983,22 +988,16 @@ router.get(
       width: totalUsed ? Math.max(0.5, (s.size / totalUsed) * 100).toFixed(1) : 0,
     }));
 
-    const { runCleanup, largestFiles, DEFAULT_DAYS } = require('./storageCleanup');
-    const preview = async (action, label, olderThanDays) => {
-      const p = await runCleanup(action, { olderThanDays, dryRun: true }).catch(() => ({ freedBytes: 0, removed: 0 }));
-      return { key: action, action: label, frees: p.freedBytes, count: p.removed, days: olderThanDays || null };
-    };
-    const cleanup = await Promise.all([
-      preview('tmp', 'Clear temporary files older than 1 hour'),
-      preview('orphans', 'Remove orphaned library files'),
-      preview('old-logs', `Delete archived logs older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
-      preview('old-crashes', `Delete crash reports older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
-    ]);
-
-    const largest = (await largestFiles({ top: 15, maxScan: 3000 }).catch(() => [])).map((f) => ({
-      ...f,
-      link: `/files?path=${encodeURIComponent(f.path.split('/').slice(0, -1).join('/'))}`,
-    }));
+    // Cleanup rows carry no numbers: previewing is the click job (storage.js
+    // dry-runs the action and the confirm dialog shows what it found). Four
+    // filesystem walks used to run on EVERY page load just to fill these.
+    const { DEFAULT_DAYS } = require('./storageCleanup');
+    const cleanup = [
+      { key: 'tmp', action: 'Clear temporary files older than 1 hour', days: null },
+      { key: 'orphans', action: 'Remove orphaned library files', days: null },
+      { key: 'old-logs', action: `Delete archived logs older than ${DEFAULT_DAYS} days`, days: DEFAULT_DAYS },
+      { key: 'old-crashes', action: `Delete crash reports older than ${DEFAULT_DAYS} days`, days: DEFAULT_DAYS },
+    ];
 
     res.render('storage', {
       title: 'Storage',
@@ -1010,7 +1009,7 @@ router.get(
         lastScan: indexer.lastScan() || 'not yet',
         categories,
         breakdown,
-        largestFiles: largest,
+        largestFiles: [],
         cleanup,
         trend: snapshots.map((s) => Math.max(4, Math.round((s.total_bytes / maxSnap) * 100))),
       },
