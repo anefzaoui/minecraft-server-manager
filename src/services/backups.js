@@ -329,8 +329,17 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
       await renameDir(stagingDir, serverDir);
     } catch (err) {
       // Extraction succeeded but the swap itself failed - put the original back
-      // rather than leaving the server dir missing.
-      if (hadOldDir) await renameDir(oldDir, serverDir).catch(() => {});
+      // rather than leaving the server dir missing. A rollback failure here is
+      // serious (the server dir stays missing until boot recovery fixes it), so
+      // log it instead of swallowing the reason.
+      if (hadOldDir) {
+        await renameDir(oldDir, serverDir).catch((rollbackErr) => {
+          logger.error('Could not put the original world back after the restore swap failed.', {
+            serverId,
+            err: serializeError(rollbackErr),
+          });
+        });
+      }
       throw err;
     }
     if (hadOldDir) await fsp.rm(oldDir, { recursive: true, force: true }).catch(() => {});
