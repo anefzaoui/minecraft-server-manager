@@ -119,6 +119,37 @@ router.post(
   })
 );
 
+// Shared PATCH + changes-preview input. One schema so the "what will change"
+// modal can never drift from what the PATCH accepts (a field accepted in the
+// preview but rejected by the save would be a confusing promise).
+const serverPatchSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80).optional(),
+    description: z.string().max(4000).optional(),
+    icon: z.string().max(64).optional(),
+    accent: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
+    tags: z.array(z.string().trim().min(1).max(24)).max(16).optional(),
+    notes: z.string().max(8000).optional(),
+    mcVersion: z.string().trim().max(32).optional(),
+    javaTag: z.string().max(16).optional(),
+    heapMb: z.coerce.number().int().min(512).max(262144).optional(),
+    containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
+    cpus: optNum0(128),
+    diskQuotaGb: optNum0(16384),
+    quotaStrict: z.coerce.boolean().optional(),
+    updatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
+    autoStart: z.coerce.boolean().optional(),
+    autoRestart: z.coerce.boolean().optional(),
+    env: z.record(z.string(), z.string()).optional(),
+    ...dockerOverridesSchema,
+  })
+  .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
+    message: 'Container memory limit must be higher than the Java heap.',
+  });
+
 // Per-server permissions: resolve once per request, hide unviewable servers,
 // then every route below names the capability it needs (see docs/users-and-roles.md).
 const { serverScope, requireCap, requireCapForWrites, backupServerId } = require('../middleware/serverAccess');
@@ -150,34 +181,7 @@ router.patch(
   '/servers/:id',
   requireCap('settings'),
   asyncHandler(async (req, res, next) => {
-    const changes = z
-      .object({
-        name: z.string().trim().min(1).max(80).optional(),
-        description: z.string().max(4000).optional(),
-        icon: z.string().max(64).optional(),
-        accent: z
-          .string()
-          .regex(/^#[0-9a-fA-F]{6}$/)
-          .optional(),
-        tags: z.array(z.string().trim().min(1).max(24)).max(16).optional(),
-        notes: z.string().max(8000).optional(),
-        mcVersion: z.string().trim().max(32).optional(),
-        javaTag: z.string().max(16).optional(),
-        heapMb: z.coerce.number().int().min(512).max(262144).optional(),
-        containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
-        cpus: optNum0(128),
-        diskQuotaGb: optNum0(16384),
-        quotaStrict: z.coerce.boolean().optional(),
-        updatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
-        autoStart: z.coerce.boolean().optional(),
-        autoRestart: z.coerce.boolean().optional(),
-        env: z.record(z.string(), z.string()).optional(),
-        ...dockerOverridesSchema,
-      })
-      .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
-        message: 'Container memory limit must be higher than the Java heap.',
-      })
-      .parse(req.body);
+    const changes = serverPatchSchema.parse(req.body);
     requireAdminForOverrides(req, changes);
     if (
       changes.containerName !== undefined ||
@@ -198,6 +202,37 @@ router.patch(
     }
     const { server, needsRecreate } = servers.updateServer(req.params.id, changes, { actor: req.user.username });
     res.json({ ok: true, needsRecreate, server: publicServer(server) });
+  })
+);
+
+// What the settings save-confirmation modal shows BEFORE the PATCH runs: the
+// same diff, expanded per-key, without mutating anything. A POST so the
+// method-based requireWrite gate keeps viewers out exactly like the PATCH.
+router.post(
+  '/servers/:id/changes-preview',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    const changes = serverPatchSchema.parse(req.body);
+    requireAdminForOverrides(req, changes);
+    if (
+      changes.containerName !== undefined ||
+      changes.networkName !== undefined ||
+      changes.extraPorts !== undefined ||
+      changes.extraBinds !== undefined
+    ) {
+      const before = requireServer(req.params.id);
+      await dockerSpec.validateOverrides(
+        {
+          containerName: changes.containerName || null,
+          networkName: changes.networkName || null,
+          extraPorts: changes.extraPorts ?? before.extraPorts,
+          extraBinds: changes.extraBinds ?? before.extraBinds,
+        },
+        { previousExtraPorts: before.extraPorts }
+      );
+    }
+    const preview = servers.summarizeServerChanges(req.params.id, changes);
+    res.json({ ok: true, ...preview });
   })
 );
 

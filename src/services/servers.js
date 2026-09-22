@@ -711,8 +711,14 @@ function assertInitHeapFits(env, heapMb) {
   }
 }
 
-/** Update config fields; computes a diff event and flags recreate needs. */
-function updateServer(id, changes, { actor = 'system' } = {}) {
+/**
+ * Build the config-column diff, SET clause, params, and recreate flag for a
+ * config change. PURE: reads, never writes - the settings save-confirmation
+ * preview reuses exactly the decisions the PATCH makes (same env-merge
+ * semantics, quota/pin checks, blank-clears-a-key). updateServer runs the
+ * UPDATE + event on top of this.
+ */
+function computeServerDiff(id, changes) {
   const before = mustGet(id);
   const columns = {
     name: 'display_name',
@@ -803,6 +809,84 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     params.push(changes[flag] ? 1 : 0);
   }
 
+  return { diff, sets, params, needsRecreate };
+}
+
+/**
+ * What the settings save-confirmation modal is going to show: one labelled row
+ * per field that WILL change (friendly label + before → after), expanded
+ * per-key for env so the user sees exactly which variables change. Read-only.
+ */
+function summarizeServerChanges(id, changes) {
+  const before = mustGet(id);
+  const { diff, needsRecreate } = computeServerDiff(id, changes);
+  const { getField } = require('../config/field-catalog');
+  const rows = [];
+
+  const DIRECT_LABELS = {
+    name: 'Display name',
+    description: 'Description',
+    icon: 'Icon',
+    accent: 'Accent color',
+    notes: 'Private notes',
+    mcVersion: 'Minecraft version',
+    javaTag: 'Java version',
+    heapMb: 'Java heap',
+    containerMemoryMb: 'Container memory limit',
+    cpus: 'CPU limit',
+    updatePolicy: 'Update policy',
+    containerName: 'Container name',
+    networkName: 'Docker network',
+    diskQuotaGb: 'Disk quota',
+    autoStart: 'Start on panel boot',
+    autoRestart: 'Auto-restart on crash',
+    quotaStrict: 'Strict quota enforcement',
+    tags: 'Tags',
+    extraPorts: 'Extra port mappings',
+    extraBinds: 'Extra volume binds',
+  };
+  // Mirrors computeServerDiff's RECREATE_FIELDS plus every block that pushes
+  // pending_recreate: which keys need a container rebuild to take effect.
+  const RECREATE_KEYS = new Set([
+    'mcVersion',
+    'javaTag',
+    'heapMb',
+    'containerMemoryMb',
+    'cpus',
+    'env',
+    'containerName',
+    'networkName',
+    'extraPorts',
+    'extraBinds',
+  ]);
+
+  const push = (label, beforeVal, afterVal, requiresRebuild) => {
+    rows.push({ label, before: beforeVal ?? null, after: afterVal ?? null, requiresRebuild: Boolean(requiresRebuild) });
+  };
+
+  for (const [key, [beforeVal, afterVal]] of Object.entries(diff)) {
+    if (key === 'env') {
+      for (const envKey of new Set([...Object.keys(before.env || {}), ...Object.keys(changes.env || {})])) {
+        const b = (before.env || {})[envKey];
+        const a = (changes.env || {})[envKey];
+        if (String(b ?? null) === String(a ?? null)) continue;
+        push(getField('env', envKey)?.label ?? envKey, b, a, true);
+      }
+    } else if (key === 'extraPorts' || key === 'extraBinds') {
+      const beforeList = key === 'extraPorts' ? before.extraPorts : before.extraBinds;
+      push(DIRECT_LABELS[key], String(beforeList.length), String(afterVal.length ?? 0), true);
+    } else {
+      push(DIRECT_LABELS[key] ?? key, beforeVal, afterVal, RECREATE_KEYS.has(key));
+    }
+  }
+  rows.sort((a, b) => Number(b.requiresRebuild) - Number(a.requiresRebuild));
+  return { changes: rows, needsRecreate };
+}
+
+/** Update config fields; computes a diff event and flags recreate needs. */
+function updateServer(id, changes, { actor = 'system' } = {}) {
+  const before = mustGet(id);
+  const { diff, sets, params, needsRecreate } = computeServerDiff(id, changes);
   if (!sets.length) return { server: before, needsRecreate: false };
   if (needsRecreate) sets.push('pending_recreate = 1');
   db.run(`UPDATE servers SET ${sets.join(', ')} WHERE id = ?`, ...params, id);
@@ -1435,6 +1519,7 @@ module.exports = {
   createServer,
   updateServer,
   changeGamePort,
+  summarizeServerChanges,
   deleteServer,
   startServer,
   stopServer,
