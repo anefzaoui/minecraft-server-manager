@@ -384,7 +384,11 @@ router.get('/servers/live', (req, res) => {
   const db = require('../../db');
   const all = liveCache.getAll();
   const out = {};
-  const rows = permissions.filterVisible(req.user, db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL'));
+  const rows = permissions.filterVisible(
+    req.user,
+    db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL'),
+    permissions.visibleServerIds(req.user)
+  );
   for (const row of rows) {
     const e = all[row.id] || {};
     out[row.id] = {
@@ -429,13 +433,15 @@ router.get(
       'update-failed',
     ];
 
+    // Alerts use the full visibility set (deleted servers included) so a
+    // crash on a server removed since is still reported, as before. Built here
+    // and shared with the row filter so the granted set is queried once.
+    const visibleIds = permissions.visibleServerIds(req.user);
     const serverRows = permissions.filterVisible(
       req.user,
-      db.all('SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at')
+      db.all('SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at'),
+      visibleIds
     );
-    // Alerts use the full visibility set (deleted servers included) so a
-    // crash on a server removed since is still reported, as before.
-    const visibleIds = permissions.visibleServerIds(req.user);
     const problems = serverRows
       .filter((s) => PROBLEM_STATUSES.has(s.status))
       .map((s) => ({ serverId: s.id, server: s.display_name, kind: s.status }));
