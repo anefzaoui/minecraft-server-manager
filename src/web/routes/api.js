@@ -183,6 +183,27 @@ router.patch(
   asyncHandler(async (req, res, next) => {
     const changes = serverPatchSchema.parse(req.body);
     requireAdminForOverrides(req, changes);
+    // Plugin-family gate (#53): changing mc_version on a Paper-family server to
+    // a loader-unsupported target is refused up front (cheap when untouched -
+    // the probe only fires when the version actually changes). Registry down →
+    // pass through, exactly like the upgrade route above.
+    if (changes.mcVersion) {
+      const before = requireServer(req.params.id);
+      if (changes.mcVersion !== before.mc_version && require('../../services/mods').loaderOf(before) === 'paper') {
+        const gate = await require('../../services/loaderVersions').mcAvailableOnServerType(
+          before.type,
+          changes.mcVersion,
+          { channel: before.env.PAPER_CHANNEL || 'default' }
+        );
+        if (!gate.supported) {
+          const flavor = require('../../web/viewModels').flavorLabel(before.type);
+          throw httpError(
+            409,
+            `${flavor} has not published a Minecraft ${changes.mcVersion} build yet. Switch this server to the experimental channel to track pre-releases, or pick a released version.`
+          );
+        }
+      }
+    }
     if (
       changes.containerName !== undefined ||
       changes.networkName !== undefined ||
@@ -1286,7 +1307,7 @@ const LOADER_BUILD_ENV_KEYS = [
 router.post(
   '/servers/:id/mcversion/upgrade',
   requireCap('settings'),
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const { targetVersion, targetLoaderBuild, envKey, force } = z
       .object({
         targetVersion: z
@@ -1328,6 +1349,27 @@ router.post(
             missingCount: verdict.missingCount,
             unknownCount: verdict.unknownCount,
           },
+        });
+      }
+    }
+    // Plugin-family gate (#53): Paper & forks ship per-MC builds that lag
+    // Mojang, so an unmodded target the loader has not published is refused
+    // unless explicitly forced - the same override contract as the compat gate.
+    // The probe is authoritative only when it HEARD back; an outage passes.
+    if (
+      targetVersion &&
+      targetVersion !== server.mc_version &&
+      !force &&
+      require('../../services/mods').loaderOf(server) === 'paper'
+    ) {
+      const gate = await require('../../services/loaderVersions').mcAvailableOnServerType(server.type, targetVersion, {
+        channel: server.env.PAPER_CHANNEL || 'default',
+      });
+      if (!gate.supported) {
+        const flavor = require('../../web/viewModels').flavorLabel(server.type);
+        return res.status(409).json({
+          ok: false,
+          error: `${flavor} has not published a Minecraft ${targetVersion} build yet. Switch this server to the experimental channel to track pre-releases, or pick a released version.`,
         });
       }
     }
