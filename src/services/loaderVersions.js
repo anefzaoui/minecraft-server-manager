@@ -14,6 +14,7 @@ const path = require('node:path');
 const db = require('../db');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
+const mojang = require('./mojang');
 
 const TTL_MS = 6 * 60 * 60 * 1000;
 const MAX_BUILDS = 40; // keep the dropdown sane; power users have the advanced env field
@@ -162,4 +163,77 @@ async function getBuilds(loader, mc, { channel } = {}) {
   return { loader: key, envKey: envKeyFor(key), builds: [LATEST, ...builds], default: '' };
 }
 
-module.exports = { getBuilds, envKeyFor };
+// Per-MC-version support probe for the plugin family. 'paper' is the loader for
+// every PLUGIN_TYPES flavor (mods.loaderOf collapses them), but the FLAVOR ships
+// the build: probe Paper's Fill list channel-wise, Purpur's own registry by
+// existence, and the other Paper forks by the Paper bellwether (they cannot ship
+// a Minecraft version Paper has not built). A probe that throws (registry down,
+// nothing cached) is treated as supported so a PaperMC outage never invents a
+// false hold; a present cache entry - even an empty one - is authoritative.
+const BELLWETHER_TYPES = new Set(['PUFFERFISH', 'LEAF', 'FOLIA', 'SPIGOT', 'BUKKIT', 'CANYON']);
+
+/**
+ * @returns {Promise<{supported: boolean, heard: boolean}>} `heard` is false only
+ *   when the registry itself could not be reached (no data at all); callers then
+ *   treat the version as supported rather than inventing a hold.
+ */
+async function mcAvailableOnServerType(type, mc, { channel = 'default' } = {}) {
+  try {
+    if (type === 'PAPER' || BELLWETHER_TYPES.has(type)) {
+      const builds = await paperBuilds(mc, { channel });
+      return { supported: builds.length > 0, heard: true };
+    }
+    if (type === 'PURPUR') {
+      const data = await cachedJson(
+        `loader:purpur:${mc}`,
+        `https://api.purpurmc.org/v2/purpur/${encodeURIComponent(mc)}`
+      );
+      const list = data && data.builds && Array.isArray(data.builds.all) ? data.builds.all : [];
+      return { supported: list.length > 0, heard: true };
+    }
+  } catch {
+    // registry down: never gate on a guess
+  }
+  return { supported: true, heard: false };
+}
+
+// Single-flight + TTL memo of "the newest Minecraft version this server type
+// actually supports" (mirrors mojang.getVersionManifest's memo + singleFlight).
+// A dashboard render of N LATEST-pinned plugin servers performs one flight and
+// every probe after the first is a hot api_cache read; registry-down resolves
+// null and callers fall back to Mojang's latest.release (current behaviour).
+let latestMcMemo = null; // { type, channel, mc, atMs }
+let latestMcInFlight = null;
+
+async function newestMcSupportedByServerType(type, { channel = 'default', maxProbes = 8 } = {}) {
+  if (
+    latestMcMemo &&
+    latestMcMemo.type === type &&
+    latestMcMemo.channel === channel &&
+    Date.now() - latestMcMemo.atMs < TTL_MS
+  ) {
+    return latestMcMemo.mc;
+  }
+  if (latestMcInFlight) return latestMcInFlight;
+  latestMcInFlight = (async () => {
+    const manifest = await mojang.getVersionManifest();
+    let mc = null;
+    let probed = 0;
+    for (const v of manifest.versions) {
+      if (v.type !== 'release') continue;
+      if (probed++ >= maxProbes) break;
+      const ok = await mcAvailableOnServerType(type, v.id, { channel });
+      if (ok.supported) {
+        mc = v.id;
+        break;
+      }
+    }
+    latestMcMemo = { type, channel, mc, atMs: Date.now() };
+    return mc;
+  })().finally(() => {
+    latestMcInFlight = null;
+  });
+  return latestMcInFlight;
+}
+
+module.exports = { getBuilds, envKeyFor, mcAvailableOnServerType, newestMcSupportedByServerType };
