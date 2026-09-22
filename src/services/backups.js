@@ -231,6 +231,10 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   const zipStat = await fsp.stat(zipPath).catch(() => null);
   if (!zipStat) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}`);
   const uncompressedBytes = await zipUncompressedSize(zipPath).catch(() => zipStat.size * 4);
+  // The archive's real entry count, used below to lift the extractor's hard
+  // caps for this archive. Fall back to 0 (defaults apply) if unreadable -
+  // the extraction itself will fail loudly on a truly broken zip.
+  const archiveEntryCount = await zipEntryCount(zipPath).catch(() => 0);
   const safetyBytes = skipSafety ? 0 : indexer.sizeOf(`servers/${serverId}`) || 0;
   const needed = uncompressedBytes + safetyBytes;
   const { free } = await indexer.diskFree();
@@ -290,7 +294,16 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   const releaseReservation = indexer.reserveDiskSpace(uncompressedBytes);
   try {
     try {
-      await extractZip(zipPath, stagingDir);
+      // The panel creates backups with no size/entry caps, so the extractor's
+      // hard defaults would reject a self-made backup whose uncompressed
+      // payload exceeds 50 GiB or 200 k entries. The preflight above already
+      // read the archive's real totals from the central directory (and
+      // reserved exactly that disk), so lift the caps to max(default, actuals)
+      // for this archive rather than permanently blocking the recovery path.
+      await extractZip(zipPath, stagingDir, {
+        maxBytes: Math.max(MAX_EXTRACT_BYTES, uncompressedBytes),
+        maxEntries: Math.max(MAX_EXTRACT_ENTRIES, archiveEntryCount),
+      });
     } catch (err) {
       await fsp.rm(stagingDir, { recursive: true, force: true }).catch(() => {});
       throw err; // original serverDir was never touched
@@ -670,7 +683,7 @@ function zipDirectory(sourceDir, outFile, { onProgress = null } = {}) {
 // Zip-slip-safe extraction + decompression-bomb ceiling: the one shared
 // implementation (src/utils/zip.js), re-exported here because the
 // restore path and its tests have always reached for `backups.extractZip`.
-const { extractZip } = require('../utils/zip');
+const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/zip');
 
 /** Sum of uncompressedSize across every entry in a zip - cheap (reads the
  *  central directory only, no decompression) - used for an accurate restore
