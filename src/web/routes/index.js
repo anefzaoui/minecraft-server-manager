@@ -348,12 +348,20 @@ router.get('/servers', (req, res, next) => renderServerList(req, res, next, { pa
 router.get('/servers/new', async (req, res) => {
   let versions = [];
   let latestRelease = '';
+  let paperLatestRelease = null;
+  let purpurLatestRelease = null;
   try {
     const mojang = require('../../services/mojang');
     // Every channel - releases, snapshots, betas and alphas - so the picker can
     // offer the full history; the template groups them by type.
     versions = await mojang.listVersions({ includeAll: true, limit: 5000 });
     latestRelease = (await mojang.getVersionManifest()).latest.release;
+    // Flavor-aware wizard defaults (#53): Paper (and Purpur) ship per-MC
+    // builds that lag Mojang, so their tiles annotate "the latest version the
+    // loader actually supports" - null degrades to Mojang's newest below.
+    const loaderVersions = require('../../services/loaderVersions');
+    paperLatestRelease = await loaderVersions.newestMcSupportedByServerType('PAPER');
+    purpurLatestRelease = await loaderVersions.newestMcSupportedByServerType('PURPUR');
   } catch (err) {
     pageDegraded('wizard-mojang-versions', err); // offline - manual entry still works
   }
@@ -389,6 +397,8 @@ router.get('/servers/new', async (req, res) => {
     blueprints: require('../../blueprints').listBlueprintsFor(req.user),
     versions,
     latestRelease,
+    paperLatestRelease,
+    purpurLatestRelease,
     suggestedPort,
     advancedSections,
     curseforgeEnabled,

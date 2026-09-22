@@ -43,8 +43,27 @@ function init() {
       btn.style.background = accent;
     });
   }
+  // Flavor-aware version defaults (#53): Paper & Purpur ship per-MC builds
+  // that lag Mojang, so their tiles carry their own <code>data-mc-latest</code>.
+  // Switching flavors re-annotates the LATEST option and, when the current
+  // value is still the previous flavor's default, reseeds it to the newly
+  // chosen latest so the pin never names a version the new loader cannot build.
+  let lastFlavorLatest = null;
   pickGroup('wz-flavors', 'type', (v) => {
     type = v;
+    const tile = document.querySelector(`#wz-flavors [data-type="${v}"]`);
+    const latest = tile?.dataset?.mcLatest;
+    const versionSel = document.getElementById('wz-version');
+    if (!versionSel || !latest) return;
+    for (const opt of versionSel.options) {
+      if (opt.value === 'LATEST') opt.textContent = `LATEST (${latest})`;
+    }
+    const current = versionSel.value;
+    if (current === 'LATEST' || current === lastFlavorLatest) {
+      const match = [...versionSel.options].find((opt) => opt.value === latest);
+      if (match) versionSel.value = latest;
+    }
+    lastFlavorLatest = latest;
   });
 
   // Visual MOTD editor (shared lib: toolbar + presets + live preview)
