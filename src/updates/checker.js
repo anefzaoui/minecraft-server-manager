@@ -276,6 +276,7 @@ function setUpdateIgnored(subjectType, subjectId, { ignore = true, actor = 'syst
     subjectType,
     subjectId
   );
+  invalidateOutdatedCache();
   // Every non-content subject here is keyed by server id.
   recordEvent({
     serverId: subjectId,
@@ -407,6 +408,7 @@ async function checkStandaloneVersion(server, findings) {
  * so `latest_version IS NOT NULL` cleanly means "update available".
  */
 function upsertCheck(subjectType, subjectId, current, { isNew, latestId, latestName, changelogUrl }) {
+  invalidateOutdatedCache();
   db.run(
     `INSERT INTO update_checks (subject_type, subject_id, current_version, latest_version, latest_name, changelog_url, checked_at)
      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
@@ -560,7 +562,19 @@ function listOutdated() {
  * @param {{ serverIds?: Iterable<string> | null }} [opts] restrict to these
  *   servers (per-user visibility); omitted = every server
  */
+// Memoized: the badge middleware runs this on every page render AND the
+// dashboard calls it again seconds later; only upsertCheck/setUpdateIgnored
+// change the result. Keyed by the visibility scope so per-user counts stay
+// correct without cross-user leakage.
+let outdatedCacheKey = null;
+let outdatedCache = null;
+function invalidateOutdatedCache() {
+  outdatedCacheKey = null;
+  outdatedCache = null;
+}
 function countOutdatedByKind({ serverIds = null } = {}) {
+  const scopeKey = serverIds ? [...serverIds].sort().join('|') : '';
+  if (outdatedCache !== null && outdatedCacheKey === scopeKey) return outdatedCache;
   const ids = serverIds ? [...serverIds] : null;
   // Same predicate for everyone; the visibility scope is one extra clause.
   const scope = ids ? ` AND s.id IN (${ids.length ? ids.map(() => '?').join(',') : 'NULL'})` : '';
@@ -609,13 +623,15 @@ function countOutdatedByKind({ serverIds = null } = {}) {
   const images = row?.images || 0;
   const mc = row?.mc || 0;
   const loader = row?.loader || 0;
-  return {
+  outdatedCacheKey = scopeKey;
+  outdatedCache = {
     all: packs + content + images + mc + loader,
     // Mods/plugins/datapacks/resource packs the user installed as content.
     mods: packs + content,
     // Server-level rebuilds: the container image or the Minecraft/loader version.
     server: images + mc + loader,
   };
+  return outdatedCache;
 }
 
 /** @param {{ serverIds?: Iterable<string> | null }} [opts] see countOutdatedByKind */
@@ -628,4 +644,12 @@ function lastCheckedAt() {
   return row ? row.fetched_at : null;
 }
 
-module.exports = { checkAll, listOutdated, countOutdated, countOutdatedByKind, lastCheckedAt, setUpdateIgnored };
+module.exports = {
+  checkAll,
+  listOutdated,
+  countOutdated,
+  countOutdatedByKind,
+  invalidateOutdatedCache,
+  lastCheckedAt,
+  setUpdateIgnored,
+};

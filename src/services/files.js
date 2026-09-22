@@ -60,6 +60,15 @@ async function list(serverId, relPath = '') {
   if (!st.isDirectory()) throw httpError(400, 'Not a folder');
 
   const dirents = await fsp.readdir(abs, { withFileTypes: true });
+  // Batch the indexer lookups: one SELECT for every subdirectory, not a sizeOf()
+  // query per entry (opening a world folder with many dimension trees used to
+  // fan out a query per dir on every listing). mtime still needs a stat per dir.
+  const dirSizes = indexer.sizeOfMany(
+    dirents
+      .filter((e) => e.isDirectory())
+      .filter((e) => !(!serverId && isProtectedGlobal(rel ? `${rel}/${e.name}` : e.name)))
+      .map((e) => path.relative(config.dataDir, path.join(abs, e.name)).split(path.sep).join('/'))
+  );
   const entries = [];
   for (const e of dirents) {
     // Never surface panel-internal files (DB, session secret) in the global manager.
@@ -76,7 +85,7 @@ async function list(serverId, relPath = '') {
         // world used to stat tens of thousands of files. Deep/not-yet-indexed
         // dirs read 0 until the next scan; that's the instant-lookup trade-off.
         const dataRel = path.relative(config.dataDir, childAbs).split(path.sep).join('/');
-        size = indexer.sizeOf(dataRel);
+        size = dirSizes.get(dataRel) || 0;
         mtimeMs = (await fsp.stat(childAbs)).mtimeMs;
       } else {
         const cst = await fsp.stat(childAbs);

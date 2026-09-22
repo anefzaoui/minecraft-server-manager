@@ -653,7 +653,9 @@ router.get(
 
       // --- Per-world / per-dimension sizes + host disk free.
       try {
-        context.worldSizes = await require('../../services/worlds').listServerWorlds(row.id);
+        // Sizes from the storage index (matches the breakdown bar below) - not
+        // a live recursive stat walk of every region file on every render.
+        context.worldSizes = await require('../../services/worlds').listServerWorlds(row.id, { sizesFromIndex: true });
       } catch {
         context.worldSizes = [];
       }

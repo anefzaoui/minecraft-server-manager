@@ -169,6 +169,19 @@ function sizeOf(relPath) {
   return row ? row.size_bytes : 0;
 }
 
+/** Batched size lookups: one SELECT instead of per-path round-trips (listing a
+ *  directory with many subdirs used to issue a query per entry). Missing paths
+ *  resolve to 0, matching sizeOf. */
+function sizeOfMany(relPaths) {
+  const unique = [...new Set(relPaths)].filter(Boolean);
+  if (unique.length === 0) return new Map();
+  const rows = db.all(
+    `SELECT rel_path, size_bytes FROM storage_index WHERE rel_path IN (${unique.map(() => '?').join(',')})`,
+    ...unique
+  );
+  return new Map(rows.map((r) => [r.rel_path, r.size_bytes]));
+}
+
 function lastScan() {
   const row = db.get('SELECT MAX(scanned_at) AS t FROM storage_index');
   return row ? row.t : null;
@@ -250,6 +263,7 @@ module.exports = {
   scheduleScan,
   startIndexer,
   sizeOf,
+  sizeOfMany,
   lastScan,
   diskFree,
   reserveDiskSpace,

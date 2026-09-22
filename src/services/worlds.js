@@ -363,9 +363,12 @@ const extractFromServer = guardOp('extract', extractFromServerImpl);
 /**
  * Scan a server dir for worlds (top-level dirs containing level.dat), grouping
  * Bukkit-split dims under their main world and marking the active one.
+ * By default sizes come from a live recursive walk (for one-off ops like
+ * duplicate/extract); pass `{ sizesFromIndex: true }` on page-render paths so
+ * they reuse the storage index instead of stat-ing every region file.
  * @returns [{name, active, dims:[names], sizeBytes, seed}]
  */
-async function listServerWorlds(serverId) {
+async function listServerWorlds(serverId, { sizesFromIndex = false } = {}) {
   const server = mustServer(serverId);
   const base = dataPath('servers', serverId);
   const level = activeLevelName(server);
@@ -389,7 +392,12 @@ async function listServerWorlds(serverId) {
   const worlds = [];
   for (const main of mains) {
     const dimNames = [main, ...DIM_SUFFIXES.map((s) => main + s).filter((d) => dirNames.has(d))];
-    const sizeBytes = await dirsSize(dimNames.map((d) => path.join(base, d)));
+    // Same measure the storage breakdown bar uses (indexer.sizeOf) on index
+    // renders, so the two numbers can't disagree - only the level.dat probe and
+    // server.properties read stay live there.
+    const sizeBytes = sizesFromIndex
+      ? dimNames.reduce((sum, d) => sum + indexer.sizeOf(`servers/${serverId}/${d}`), 0)
+      : await dirsSize(dimNames.map((d) => path.join(base, d)));
     const active = main === level;
     worlds.push({
       name: main,
@@ -922,7 +930,26 @@ const prepareWorldDownload = guardOp('download', prepareWorldDownloadImpl);
 /** All library worlds mapped for the UI (friendly source labels, compat info). */
 /** @param {{ visibleServerIds?: Set<string> | null }} [opts] hide source-server names the caller may not see */
 function libraryWorlds({ visibleServerIds = null } = {}) {
-  return db.all("SELECT * FROM library_files WHERE category = 'world' ORDER BY created_at DESC").map((row) => {
+  const rows = db.all("SELECT * FROM library_files WHERE category = 'world' ORDER BY created_at DESC");
+  // One lookup per extract-source server, not one per library row (batched).
+  const extractSids = [
+    ...new Set(
+      rows
+        .map((r) => r.world_source)
+        .filter((s) => s && s.startsWith('extract:'))
+        .map((s) => s.slice('extract:'.length))
+    ),
+  ];
+  const names = new Map();
+  if (extractSids.length > 0) {
+    for (const s of db.all(
+      `SELECT id, display_name FROM servers WHERE id IN (${extractSids.map(() => '?').join(',')})`,
+      ...extractSids
+    )) {
+      names.set(s.id, s.display_name);
+    }
+  }
+  return rows.map((row) => {
     let source = 'Imported';
     let sourceKind = 'import';
     if (row.world_source === 'upload') {
@@ -930,9 +957,8 @@ function libraryWorlds({ visibleServerIds = null } = {}) {
       sourceKind = 'upload';
     } else if (row.world_source && row.world_source.startsWith('extract:')) {
       const sid = row.world_source.slice('extract:'.length);
-      const server = db.get('SELECT display_name FROM servers WHERE id = ?', sid);
       const visible = !visibleServerIds || visibleServerIds.has(sid);
-      source = visible ? `Extracted from ${server ? server.display_name : sid}` : 'Extracted from a server';
+      source = visible ? `Extracted from ${names.get(sid) || sid}` : 'Extracted from a server';
       sourceKind = 'extract';
     }
     return {
