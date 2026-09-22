@@ -68,8 +68,8 @@ function init(root) {
     if (on) chip.classList.add(...CHIP_ON[role]);
     if (label) chip.querySelector('[data-chip-label]').textContent = label;
     const tips = {
-      whitelist: on ? 'Remove from whitelist' : 'Add to whitelist',
-      op: on ? 'Remove operator status' : 'Make operator (level 4)',
+      whitelist: on ? 'Remove from whitelist' : 'Add to Whitelist',
+      op: on ? 'Remove operator status' : 'Make Operator (Level 4)',
       ban: on ? 'Pardon this player' : 'Ban this player',
     };
     chip.dataset.tip = tips[role];
@@ -356,7 +356,7 @@ function init(root) {
       <div class="seg w-full" role="tablist">
         <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
         <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="player">To Player</button>
         <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
         <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
       </div>
@@ -399,7 +399,7 @@ function init(root) {
         <select class="input" data-f="structure" data-label="Structure"><option value="">Loading structures…</option></select>
         <div class="grid grid-cols-2 items-end gap-2">
           <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
-          <label class="flex items-center gap-2 pb-2"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise me</label>
+          <label class="flex items-center gap-2 pb-2"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise Me</label>
         </div>
       </div>`;
 

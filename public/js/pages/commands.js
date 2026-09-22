@@ -158,7 +158,7 @@ function init(root) {
         </div>
         <div class="grid grid-cols-2 items-end gap-2">
           <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" min="16" value="${Number(pStruct.maxDistance ?? 5000)}"></div>
-          <label class="flex items-center gap-2 pb-2"><input type="checkbox" class="msm-check" data-f="structRandom" ${pStruct.random === false ? '' : 'checked'}> Surprise me (random one, not nearest)</label>
+          <label class="flex items-center gap-2 pb-2"><input type="checkbox" class="msm-check" data-f="structRandom" ${pStruct.random === false ? '' : 'checked'}> Surprise Me (Random One, Not Nearest)</label>
         </div>
       </div>
 

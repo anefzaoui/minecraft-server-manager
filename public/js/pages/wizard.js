@@ -1152,12 +1152,13 @@ function initZipUpload() {
       pickers.classList.remove('hidden');
       pickers.classList.add('grid');
       const loaders = ['fabric', 'forge', 'neoforge', 'quilt', 'paper'];
+      const loaderLabels = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', quilt: 'Quilt', paper: 'Paper (plugins)' };
       const mcOptions = (p.inferred && p.inferred.mcVersionOptions) || [];
       pickers.innerHTML = `
         <div>
           <label class="label">Mod loader ${state.loader ? '<span class="text-xs font-normal text-ink-faint">(auto-detected)</span>' : ''}</label>
           <select class="input" data-role="loader">
-            ${loaders.map((l) => `<option value="${l}" ${l === state.loader ? 'selected' : ''}>${l === 'paper' ? 'Paper (plugins)' : l}</option>`).join('')}
+            ${loaders.map((l) => `<option value="${l}" ${l === state.loader ? 'selected' : ''}>${loaderLabels[l]}</option>`).join('')}
           </select>
         </div>
         <div>

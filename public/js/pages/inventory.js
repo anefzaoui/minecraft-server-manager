@@ -295,9 +295,9 @@ function init(root) {
       list.appendChild(btn);
     };
 
-    add('Change count', 'hash', () => openCountModal(at, item, nested));
-    add('Replace item', 'replace', () => openPlaceFlow(at, { replacing: item, nested }));
-    if (!nested) add('Move to another slot', 'move', () => openMoveModal(at, item));
+    add('Change Count', 'hash', () => openCountModal(at, item, nested));
+    add('Replace Item', 'replace', () => openPlaceFlow(at, { replacing: item, nested }));
+    if (!nested) add('Move to Another Slot', 'move', () => openMoveModal(at, item));
     if (!nested && item.nested && item.nested.length) {
       for (const sub of item.nested) {
         const filled = sub.items.filter((i) => i.id).length;
@@ -391,7 +391,7 @@ function init(root) {
              <input class="input font-mono" data-f="item" placeholder="minecraft:diamond" maxlength="130" autocomplete="off" spellcheck="false">
            </div>`;
       countDialog({
-        title: replacing ? 'Replace item' : 'Put item here',
+        title: replacing ? 'Replace Item' : 'Put Item Here',
         header,
         value: 1,
         confirmLabel: replacing ? 'Replace' : 'Place',

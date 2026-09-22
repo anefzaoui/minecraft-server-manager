@@ -548,7 +548,7 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
       type: 'stop-failed',
       summary: `The graceful stop did not take effect, and the server is still running. Try Force Stop.`,
     });
-    throw httpError(502, 'The server did not stop. Try Force stop, or check that Docker is running.');
+    throw httpError(502, 'The server did not stop. Try Force Stop, or check that Docker is running.');
   }
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
   const excerpt = await fetchLogs(id, { tail: 100 }).catch(() => '');

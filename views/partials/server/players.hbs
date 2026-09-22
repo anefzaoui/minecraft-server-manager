@@ -4,7 +4,7 @@
     {{#if players.length}}
     <input class="input max-w-xs" placeholder="Search players…" id="players-search">
     <select class="input w-auto" id="players-filter" data-label="Filter players">
-      <option value="all">All players</option>
+      <option value="all">All Players</option>
       <option value="online">Online</option>
       <option value="whitelisted">Whitelisted</option>
       <option value="ops">Ops</option>
@@ -13,7 +13,7 @@
     {{/if}}
     <label class="flex cursor-pointer items-center gap-2 text-sm">
       <span class="msm-toggle"><input type="checkbox" id="players-wl-enforce" {{#if whitelistEnforced}}checked{{/if}}><span></span></span>
-      Whitelist enforced
+      Whitelist Enforced
     </label>
     <div class="ml-auto flex gap-2">
       <button class="btn btn-primary btn-sm" id="players-add">{{{icon 'user-plus' 'size-3.5'}}} Add Player</button>

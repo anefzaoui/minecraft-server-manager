@@ -139,14 +139,14 @@ function init(root) {
     if ('whitelisted' in changes) {
       row.dataset.whitelisted = changes.whitelisted ? '1' : '0';
       setChip(row, 'whitelist', changes.whitelisted, {
-        tip: changes.whitelisted ? 'Remove from whitelist' : 'Add to whitelist',
+        tip: changes.whitelisted ? 'Remove from whitelist' : 'Add to Whitelist',
       });
     }
     if ('op' in changes) {
       row.dataset.op = changes.op ? '1' : '0';
       setChip(row, 'op', changes.op, {
         label: changes.op && changes.opLevel ? `Op L${changes.opLevel}` : 'Op',
-        tip: changes.op ? 'Remove operator status' : 'Make operator (level 4)',
+        tip: changes.op ? 'Remove operator status' : 'Make Operator (Level 4)',
       });
     }
     if ('banned' in changes) {
@@ -614,7 +614,7 @@ function init(root) {
       <div class="seg max-w-full" role="tablist">
         <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
         <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
-        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="player">To Player</button>
         <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
         <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
       </div>
@@ -674,7 +674,7 @@ function init(root) {
         </div>
         <div class="grid grid-cols-2 items-end gap-2">
           <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
-          <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise me (random one, not nearest)</label>
+          <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise Me (Random One, Not Nearest)</label>
         </div>
         <p class="text-xs text-ink-faint">"Surprise me" searches from a random point in the radius, so you get a different result every time. It lands safely on the surface next to the structure.</p>
       </div>`;
