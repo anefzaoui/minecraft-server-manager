@@ -15,6 +15,11 @@ const { serializeError } = require('../utils/logSanitize');
 
 const MAX_RAPID_CRASHES = 3;
 const CRASH_WINDOW_MINUTES = 10;
+// How long a stop/restart/kill request still "explains" a container exit (a slow
+// world save can run well past docker's SIGTERM→SIGKILL grace, and the events
+// stream can deliver events late, so the kill lands outside the old 3-min window;
+// 137 during a stop must never read as an unrequested crash).
+const STOP_REQUESTED_WINDOW_MINUTES = 10;
 
 // Docker streams one event per line and lines are complete frames, but a whole
 // line must still be buffered before it can be parsed. Defense-in-depth cap: a
@@ -117,8 +122,9 @@ async function handleEvent(evt) {
     // mc-health probes fail, so skip the flip/alert if a stop/restart/kill was
     // just requested (same window the die handler below uses).
     const stopRequested = db.get(
-      "SELECT 1 AS x FROM events WHERE server_id = ? AND type IN ('stop-requested','restart-requested','kill-requested') AND created_at > datetime('now', '-3 minutes')",
-      serverId
+      "SELECT 1 AS x FROM events WHERE server_id = ? AND type IN ('stop-requested','restart-requested','kill-requested') AND created_at > datetime('now', ?)",
+      serverId,
+      `-${STOP_REQUESTED_WINDOW_MINUTES} minutes`
     );
     if (!stopRequested && ['running', 'starting', 'stalled'].includes(server.status)) {
       db.run("UPDATE servers SET status = 'unhealthy' WHERE id = ?", serverId);
@@ -155,8 +161,9 @@ async function handleEvent(evt) {
 
   const exitCode = Number(evt.Actor.Attributes.exitCode ?? -1);
   const stopRequested = db.get(
-    "SELECT 1 AS x FROM events WHERE server_id = ? AND type IN ('stop-requested','restart-requested','kill-requested') AND created_at > datetime('now', '-3 minutes')",
-    serverId
+    "SELECT 1 AS x FROM events WHERE server_id = ? AND type IN ('stop-requested','restart-requested','kill-requested') AND created_at > datetime('now', ?)",
+    serverId,
+    `-${STOP_REQUESTED_WINDOW_MINUTES} minutes`
   );
   // Clean exits are judged by the exit code, not just the request window:
   // 0 = normal, 143 = SIGTERM (docker stop), 130 = SIGINT - all intentional.

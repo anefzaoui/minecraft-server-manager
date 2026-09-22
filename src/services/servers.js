@@ -1222,7 +1222,9 @@ async function refreshStatusesInner({ boot }) {
       // 'stopped'. Suppress it when the boot sequence WILL bring it back -
       // either auto_start, or auto_restart on a crashed server - so the alert
       // never contradicts what the panel is about to do.
-      const bootWillStart = server.auto_start || (server.auto_restart && status === 'crashed');
+      const bootWillStart =
+        server.auto_start ||
+        (server.auto_restart && status === 'crashed' && !require('../docker/watcher').inCrashLoopBackoff(server.id));
       if (
         boot &&
         !bootWillStart &&
