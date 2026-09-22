@@ -592,6 +592,13 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   // A stop failure here isn't fatal to a recreate - removeContainer({force}) below
   // tears it down regardless - but log it so a chronically wedged daemon is visible.
   if (wasRunning) {
+    // Emit the same stop-requested marker as stopServerImpl: without it, the
+    // old container's `die` (docker stop escalates to SIGKILL on a slow-saving
+    // world → exit 137) is read by the watcher as an unrequested crash,
+    // recording phantom crash history and clobbering status - worst case it
+    // lands after the new container's `start` and flips the fleet view to
+    // crashed until the next health event.
+    recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Rebuild requested a graceful stop.' });
     await containers.stopContainer(id).catch((err) => {
       logger.warn('A graceful stop failed while recreating a server; forcing removal.', {
         serverId: id,
@@ -990,6 +997,11 @@ async function changeGamePort(id, port, opts = {}) {
  */
 async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBackups = true } = {}) {
   const server = mustGet(id);
+  // Same stop-requested marker as stopServerImpl/recreateServerImpl: the
+  // deleted container's `die` must not be read by the watcher as an
+  // unrequested crash while the row is still live (the delete transaction
+  // below is what tombstones it).
+  recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Delete requested a graceful stop.' });
   await containers.stopContainer(id).catch(() => {});
   await containers.removeContainer(id);
   let freedBytes = 0;

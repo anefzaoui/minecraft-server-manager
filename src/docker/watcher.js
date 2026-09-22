@@ -89,7 +89,9 @@ function retryLater() {
 async function handleEvent(evt) {
   const serverId = evt.Actor && evt.Actor.Attributes && evt.Actor.Attributes[LABEL];
   if (!serverId) return;
-  const server = db.get('SELECT * FROM servers WHERE id = ?', serverId);
+  // Soft-deleted rows are tombstones: die/start events landing after a delete
+  // must not resurrect status or pollute history for a server that is gone.
+  const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
   if (!server) return;
 
   // Docker emits the event kind as both `status` and `Action` (daemons have
