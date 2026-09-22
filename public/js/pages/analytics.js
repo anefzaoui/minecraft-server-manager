@@ -104,9 +104,9 @@ function init(serverId) {
       // disagreed with every other table in the app.
       tr.className = 'cursor-pointer';
       tr.innerHTML = `
-        <td class="text-ink-faint">${esc(row.rank)}</td>
-        <td><span class="inline-flex items-center gap-1.5">${row.crown ? CROWN_SVG : ''}<span class="font-medium" data-name></span></span></td>
-        <td class="text-right" data-value></td>`;
+        <td data-th="#" class="text-ink-faint">${esc(row.rank)}</td>
+        <td data-th="Player"><span class="inline-flex items-center gap-1.5">${row.crown ? CROWN_SVG : ''}<span class="font-medium" data-name></span></span></td>
+        <td data-th="Value" class="text-right" data-value></td>`;
       tr.querySelector('[data-name]').textContent = row.name;
       tr.querySelector('[data-value]').textContent = fmtValue(metric, row.value);
       // Profile fetch happens before the drawer opens - spin the value cell.
