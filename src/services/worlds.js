@@ -288,7 +288,7 @@ async function addZipToLibrary(zipAbs, { name, actor, worldSource, worldFlavor, 
  * Snapshot a server's active world (plus Bukkit-split dims) into the library.
  * Works while the server runs - wraps the copy in save-off/save-all/save-on.
  */
-async function extractFromServer(serverId, { name = '', actor = 'system' } = {}) {
+async function extractFromServerImpl(serverId, { name = '', actor = 'system' } = {}) {
   const server = mustServer(serverId);
   const level = activeLevelName(server);
   const dims = serverWorldDims(serverId, level);
@@ -302,6 +302,7 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
     throw httpError(507, `Not enough disk space to snapshot this world (~${humanBytes(worldBytes * 2.2)} needed)`);
   }
 
+  const releaseReservation = indexer.reserveDiskSpace(worldBytes);
   const running = await isRunning(serverId);
   const tmpDir = dataPath('tmp', `world-snap-${nanoid(6)}`);
   const zipTmp = dataPath('tmp', `world-snap-${nanoid(6)}.zip`);
@@ -345,10 +346,16 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
     });
     return row;
   } finally {
+    releaseReservation();
     await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     await fsp.rm(zipTmp, { force: true }).catch(() => {});
   }
 }
+
+// Guarded under the shared per-server op lock so a snapshot can't interleave
+// with a concurrent restore/install of the same server (the source world is
+// live while `withPausedSaves` runs).
+const extractFromServer = guardOp('extract', extractFromServerImpl);
 
 // ---------------------------------------------------------------------------
 // Per-server world listing
@@ -589,7 +596,7 @@ function copyWarnings(sourceServerId, targetServerId) {
  * Copy the active world from one server to another via the library machinery:
  * snapshot source (works while running) → install into target.
  */
-async function copyBetweenServers(
+async function copyBetweenServersImpl(
   sourceServerId,
   targetServerId,
   { mode = 'replace', newName = '', actor = 'system' } = {}
@@ -599,11 +606,16 @@ async function copyBetweenServers(
   if (sourceServerId === targetServerId)
     throw httpError(400, 'Source and target are the same server - use Duplicate instead');
 
+  // Snapshot the source under its own op lock (the guarded extractFromServer)
+  // so a concurrent restore of the SOURCE can't race the consistent copy...
   const row = await extractFromServer(sourceServerId, {
     name: `${source.display_name} → ${target.display_name} (copy)`,
     actor,
   });
-  const result = await installToServer(row.id, targetServerId, { mode, newName, actor });
+  // ... then install into the target. The guarded installToServer would 409
+  // against our own 'copy' lock on the target, so call the impl directly
+  // (this whole function already holds the target's op lock end-to-end).
+  const result = await installToServerImpl(row.id, targetServerId, { mode, newName, actor });
   recordEvent({
     serverId: targetServerId,
     actor,
@@ -614,11 +626,16 @@ async function copyBetweenServers(
   return { library: row, ...result };
 }
 
+// Guarded on the TARGET server for the whole snapshot+install: a concurrent
+// restore/duplicate of the target can't interleave with the destructive
+// replace-mode swap at the end.
+const copyBetweenServers = guardOp('copy', copyBetweenServersImpl, (_sourceServerId, targetServerId) => targetServerId);
+
 // ---------------------------------------------------------------------------
 // Duplicate / rename / activate / reset / delete
 
 /** Fork a copy of a world within the same server (consistent while running). */
-async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
+async function duplicateWorldImpl(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
   const dims = serverWorldDims(serverId, worldName);
@@ -662,6 +679,10 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
   indexer.scheduleScan();
   return { name: copyName, sizeBytes };
 }
+
+// Guarded so two concurrent duplicates can't both pick the same "-copy" name
+// and fsp.cp into each other, or race a restore of this server.
+const duplicateWorld = guardOp('duplicate', duplicateWorldImpl);
 
 /** Rename a world (server must be stopped); updates level-name/LEVEL when active. */
 async function renameWorldImpl(serverId, worldName, newName, { actor = 'system' } = {}) {
@@ -848,7 +869,7 @@ const deleteServerWorld = guardOp('delete-world', deleteServerWorldImpl);
  * Zip a server world into ./data/tmp for a one-off download (consistent
  * snapshot while running). Caller must delete absPath when done sending.
  */
-async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = {}) {
+async function prepareWorldDownloadImpl(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
   const dims = serverWorldDims(serverId, worldName);
@@ -884,6 +905,10 @@ async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = 
     size,
   };
 }
+
+// Guarded so a download's save-pause/zip can't interleave with a concurrent
+// restore/duplicate of the same world.
+const prepareWorldDownload = guardOp('download', prepareWorldDownloadImpl);
 
 // ---------------------------------------------------------------------------
 // Library listing / delete
