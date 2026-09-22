@@ -288,6 +288,7 @@ function setUpdateIgnored(subjectType, subjectId, { ignore = true, actor = 'syst
 
 /** MC version + loader/Paper build checks for a server with no managed modpack. */
 async function checkStandaloneVersion(server, findings) {
+  const loader = modsService.loaderOf(server);
   if (server.mc_version && server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT') {
     const manifest = await mojang.getVersionManifest();
     const latestRelease = manifest.latest && manifest.latest.release;
@@ -297,7 +298,11 @@ async function checkStandaloneVersion(server, findings) {
     // the server's last version scan - and when that ceiling cannot be
     // established (no scan, a stale one, an unidentifiable jar), nothing is
     // offered at all (#52). An unmodded server keeps the plain newest-release
-    // behaviour, because for it there is nothing to be incompatible with.
+    // behaviour, because for it there is nothing to be incompatible with -
+    // except the plugin family (#53): Paper (and forks) publish per-MC builds
+    // and lag Mojang's releases, so a default-channel Paper server must never
+    // be offered a Minecraft version Paper has not built. The loader's build
+    // probe is authoritative here (a PaperMC outage is treated as supported).
     const compat = require('../services/compat');
     const modded = compat.appliesTo(server.id) && compat.modCount(server.id) > 0;
     const ceiling = modded ? compat.compatCeiling(server.id) : null;
@@ -310,20 +315,48 @@ async function checkStandaloneVersion(server, findings) {
       // pin. An unrecognized pin (curIdx === -1) can't be verified as older, so
       // it's treated as "offer it" rather than silently never surfacing.
       const isNew = curIdx === -1 || (targetIdx !== -1 && targetIdx < curIdx);
-      upsertCheck('mc_version', server.id, server.mc_version, {
-        isNew,
-        latestId: target,
-        latestName: target,
-        changelogUrl: null,
-      });
-      if (isNew && !isUpdateIgnored('mc_version', server.id, target))
-        findings.push({
-          server: server.display_name,
-          kind: 'mc_version',
-          subject: 'Minecraft version',
-          current: server.mc_version,
-          latest: target,
+      // Plugin-family gate (#53): a default-channel Paper server must never be
+      // offered a Minecraft version the loader has not built. The probe is
+      // authoritative only when it HEARD back from the registry - an outage is
+      // treated as supported so it can never invent a hold.
+      let gateHeld = false;
+      if (!modded && loader === 'paper' && isNew) {
+        const channel = server.env.PAPER_CHANNEL || 'default';
+        const gate = await loaderVersions.mcAvailableOnServerType(server.type, target, { channel });
+        if (!gate.supported) {
+          gateHeld = true;
+          // Write the row exactly like the held-back branch below, so a
+          // previously cached phantom 26.3 badge is cleared in the same pass.
+          upsertCheck('mc_version', server.id, server.mc_version, {
+            isNew: false,
+            latestId: null,
+            latestName: null,
+            changelogUrl: null,
+          });
+          logger.debug('Holding back a Minecraft version offer; the loader has no build for it on this channel.', {
+            serverId: server.id,
+            target,
+            channel,
+            type: server.type,
+          });
+        }
+      }
+      if (!gateHeld) {
+        upsertCheck('mc_version', server.id, server.mc_version, {
+          isNew,
+          latestId: target,
+          latestName: target,
+          changelogUrl: null,
         });
+        if (isNew && !isUpdateIgnored('mc_version', server.id, target))
+          findings.push({
+            server: server.display_name,
+            kind: 'mc_version',
+            subject: 'Minecraft version',
+            current: server.mc_version,
+            latest: target,
+          });
+      }
     } else {
       // Held back (or already current): clear any offer a previous run cached,
       // so a scan that discovers an incompatibility retires yesterday's badge.
@@ -343,7 +376,6 @@ async function checkStandaloneVersion(server, findings) {
     }
   }
 
-  const loader = modsService.loaderOf(server);
   const envKey = loader && LOADER_BUILD_ENV_KEY[loader];
   const pinned = envKey && server.env[envKey];
   if (pinned) {
