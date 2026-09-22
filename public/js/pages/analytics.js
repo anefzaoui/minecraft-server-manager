@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { withBusy } from '../lib/loading.js';
+import { escapeHtml as esc } from '../lib/format.js';
 
 const root = document.querySelector('[data-analytics-server]');
 if (root) init(root.dataset.analyticsServer);
@@ -103,7 +104,7 @@ function init(serverId) {
       // disagreed with every other table in the app.
       tr.className = 'cursor-pointer';
       tr.innerHTML = `
-        <td class="text-ink-faint">${row.rank}</td>
+        <td class="text-ink-faint">${esc(row.rank)}</td>
         <td><span class="inline-flex items-center gap-1.5">${row.crown ? CROWN_SVG : ''}<span class="font-medium" data-name></span></span></td>
         <td class="text-right" data-value></td>`;
       tr.querySelector('[data-name]').textContent = row.name;
