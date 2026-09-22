@@ -303,12 +303,16 @@ async function installToServer(libraryId, serverId, destRel, { filename } = {}) 
   const destDir = dataPath('servers', serverId, destRel);
   await fsp.mkdir(destDir, { recursive: true });
   const target = path.join(destDir, sanitizeFilename(filename || lib.filename));
-  await fsp.rm(target, { force: true });
+  // Install via a temp sibling then atomically rename over the target, so a
+  // crash or EPERM mid-link/copy can never leave the configured file missing
+  // (the old code removed it first, then linked).
+  const tmp = path.join(destDir, `.${path.basename(target)}.tmp-${nanoid(6)}`);
   try {
-    await fsp.link(dataPath(lib.rel_path), target);
+    await fsp.link(dataPath(lib.rel_path), tmp);
   } catch {
-    await fsp.copyFile(dataPath(lib.rel_path), target);
+    await fsp.copyFile(dataPath(lib.rel_path), tmp);
   }
+  await fsp.rename(tmp, target);
   return { installedPath: target, filename: path.basename(target) };
 }
 

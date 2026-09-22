@@ -17,6 +17,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const archiver = require('archiver');
+const yauzl = require('yauzl');
 const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/zip');
 const tar = require('tar');
 const { nanoid } = require('nanoid');
@@ -441,11 +442,21 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
   const server = mustServer(serverId);
   const warnings = compatWarnings({ flavor: lib.world_flavor, version: lib.version }, server);
 
-  // Disk-growing op: quota + free space first (extracted ≈ up to ~2x the zip).
-  indexer.assertUnderQuota(server, lib.size_bytes * 2);
+  // Disk-growing op: reserve the archive's REAL uncompressed size, not a guess
+  // from the compressed zip. Minecraft region files compress past 2:1, so
+  // sizing on compressed×2 gave sparse worlds no protection and ENOSPC after
+  // the old dims were removed left the active world partially missing.
+  const libZipPath = dataPath(lib.rel_path);
+  const libZipStat = await fsp.stat(libZipPath).catch(() => null);
+  if (!libZipStat) throw httpError(404, `Library world archive is missing on disk: ${lib.filename}`);
+  const uncompressedBytes = await zipUncompressedBytes(libZipPath).catch(() => libZipStat.size * 4);
+  indexer.assertUnderQuota(server, uncompressedBytes);
   const { free } = await indexer.diskFree();
-  if (free < lib.size_bytes * 2.5) {
-    throw httpError(507, `Not enough disk space to install this world (~${humanBytes(lib.size_bytes * 2.5)} needed)`);
+  if (free < uncompressedBytes * 1.1) {
+    throw httpError(
+      507,
+      `Not enough disk space to install this world (~${humanBytes(uncompressedBytes * 1.1)} needed)`
+    );
   }
 
   let targetLevel;
@@ -477,29 +488,66 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
   // Reserved for the same reason as backups.js's createBackup/restoreBackup:
   // stop a second concurrent disk-growing op from passing its own preflight
   // against the same real free bytes this extraction is about to consume.
-  const releaseReservation = indexer.reserveDiskSpace(lib.size_bytes * 2);
+  const releaseReservation = indexer.reserveDiskSpace(uncompressedBytes);
   try {
-    await extractZip(dataPath(lib.rel_path), tmpDir);
+    await extractZip(libZipPath, tmpDir);
 
     const tops = await fsp.readdir(tmpDir, { withFileTypes: true });
     const dimTops = tops.filter((e) => e.isDirectory() && isDimName(e.name));
     const mainTops = tops.filter((e) => !dimTops.includes(e));
 
     if (mode === 'replace') {
-      for (const dim of serverWorldDims(serverId, targetLevel)) {
-        replacedBytes += await dirsSize([dim]);
-        await fsp.rm(dim, { recursive: true, force: true });
+      // Build the COMPLETE new tree under a staging name inside tmpDir first,
+      // then swap each live dir into place name-by-name: rename the old away
+      // to a tombstone, rename the new in (atomic), and only delete the
+      // tombstones once every target sits. Nothing live is touched before all
+      // of the new world is extracted, so a failure mid-swap rolls the old
+      // dirs straight back - the active world is never left partially missing.
+      const mainStage = path.join(tmpDir, `__main-${nanoid(4)}`);
+      await fsp.mkdir(mainStage, { recursive: true });
+      for (const e of mainTops) await moveEntry(path.join(tmpDir, e.name), path.join(mainStage, e.name));
+      const targets = [{ stage: mainStage, target: dataPath('servers', serverId, targetLevel) }];
+      for (const e of dimTops) {
+        const suffix = e.name.endsWith('_the_end') ? '_the_end' : '_nether';
+        targets.push({ stage: path.join(tmpDir, e.name), target: dataPath('servers', serverId, targetLevel + suffix) });
       }
-    }
-
-    const mainDir = dataPath('servers', serverId, targetLevel);
-    await fsp.mkdir(mainDir, { recursive: true });
-    for (const e of mainTops) {
-      await moveEntry(path.join(tmpDir, e.name), path.join(mainDir, e.name));
-    }
-    for (const e of dimTops) {
-      const suffix = e.name.endsWith('_the_end') ? '_the_end' : '_nether';
-      await moveEntry(path.join(tmpDir, e.name), dataPath('servers', serverId, targetLevel + suffix));
+      const tombstones = [];
+      try {
+        for (const { stage, target } of targets) {
+          if (fs.existsSync(target)) {
+            replacedBytes += await dirSize(target);
+            const tomb = `${target}.old-${Date.now().toString(36)}-${nanoid(4)}`;
+            await fsp.rename(target, tomb);
+            tombstones.push({ tomb, target });
+          }
+          await moveEntry(stage, target);
+        }
+      } catch (err) {
+        // Put every displaced dir back - any target already swapped (even
+        // partially, if a cross-device copy was interrupted) is replaced with
+        // its tombstone so the server is exactly as it was before the install.
+        for (const { tomb, target } of tombstones) {
+          await fsp.rm(target, { recursive: true, force: true }).catch(() => {});
+          await fsp.rename(tomb, target).catch((renameErr) => {
+            logger.error(
+              'Could not roll a previous world back into place after a failed install; its content is preserved under the .old-* tombstone.',
+              { serverId, target, err: serializeError(renameErr, { includeStack: false }) }
+            );
+          });
+        }
+        throw err;
+      }
+      for (const { tomb } of tombstones) await fsp.rm(tomb, { recursive: true, force: true }).catch(() => {});
+    } else {
+      const mainDir = dataPath('servers', serverId, targetLevel);
+      await fsp.mkdir(mainDir, { recursive: true });
+      for (const e of mainTops) {
+        await moveEntry(path.join(tmpDir, e.name), path.join(mainDir, e.name));
+      }
+      for (const e of dimTops) {
+        const suffix = e.name.endsWith('_the_end') ? '_the_end' : '_nether';
+        await moveEntry(path.join(tmpDir, e.name), dataPath('servers', serverId, targetLevel + suffix));
+      }
     }
   } finally {
     releaseReservation();
@@ -1182,6 +1230,29 @@ async function moveEntry(from, to) {
     await fsp.cp(from, to, { recursive: true });
     await fsp.rm(from, { recursive: true, force: true });
   }
+}
+
+/** Sum of every entry's uncompressed size: the real disk cost of installing a
+ *  world archive, which the compressed zip size badly underestimates. */
+function zipUncompressedBytes(zipPath, { maxBytes = MAX_EXTRACT_BYTES } = {}) {
+  return new Promise((resolve, reject) => {
+    yauzl.open(zipPath, { lazyEntries: true }, (openErr, zip) => {
+      if (openErr) return reject(openErr);
+      let total = 0;
+      const fail = (e) => {
+        zip.close();
+        reject(e);
+      };
+      zip.on('error', fail);
+      zip.on('end', () => resolve(total));
+      zip.on('entry', (entry) => {
+        total += entry.uncompressedSize;
+        if (total > maxBytes) return fail(new Error(`World archive expands past ${maxBytes} bytes`));
+        zip.readEntry();
+      });
+      zip.readEntry();
+    });
+  });
 }
 
 /** World dir names: strip path separators & control chars, keep it friendly. */
