@@ -134,9 +134,9 @@ async function createBackupImpl(
   let entryCount;
   try {
     entryCount = await zipEntryCount(absPath);
-  } catch (err) {
+  } catch {
     await fsp.rm(absPath, { force: true }).catch(() => {});
-    throw httpError(500, `Backup archive failed its integrity check and was discarded: ${err.message}`);
+    throw httpError(500, 'Backup archive failed its integrity check and was discarded.');
   }
   const empty = entryCount === 0; // e.g. a server that has never started - nothing on disk yet
 

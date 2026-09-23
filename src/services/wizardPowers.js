@@ -343,7 +343,7 @@ async function fixedRcon(serverId, args, player) {
   const out = cleanText(await execCapture(serverId, ['rcon-cli', ...args])).trim();
   if (/No player was found|No entity was found/i.test(out)) throw httpError(404, `${player} is not online`);
   if (/Unknown or incomplete command|Incorrect argument|Expected |<--\[HERE\]/i.test(out)) {
-    throw httpError(502, `The server rejected the power: ${out.slice(0, 200)}`);
+    throw httpError(502, 'The server rejected that power. Check the console for details.');
   }
   return out;
 }
@@ -359,8 +359,8 @@ async function worldSpawn(serverId) {
     const z = Number(data.SpawnZ);
     if (!Number.isFinite(x) || !Number.isFinite(z)) throw new Error('spawn coordinates are missing');
     return { x, z };
-  } catch (err) {
-    throw httpError(422, `Could not read world spawn: ${err.message}`);
+  } catch {
+    throw httpError(422, 'Could not read the world spawn point. Check the console for details.');
   }
 }
 

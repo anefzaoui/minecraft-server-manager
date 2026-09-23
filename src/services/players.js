@@ -733,7 +733,7 @@ function assertTpOutput(out, player) {
     throw httpError(404, `${player} is not online. Teleport needs a player who is currently connected.`);
   }
   if (/Unknown or incomplete command|Incorrect argument/i.test(out)) {
-    throw httpError(400, `Teleport command rejected by the server: ${out}`);
+    throw httpError(400, 'The server rejected the teleport command. Check the console for details.');
   }
 }
 

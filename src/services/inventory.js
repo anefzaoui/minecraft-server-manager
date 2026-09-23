@@ -551,14 +551,15 @@ async function rcon(serverId, ...args) {
 }
 
 /** Surface the server's own error text on command failures. */
-function assertRconOk(out, playerName) {
-  if (/No player was found|No entity was found/i.test(out)) throw httpError(404, out || `${playerName} is not online`);
+function assertRconOk(out) {
+  if (/No player was found|No entity was found/i.test(out))
+    throw httpError(404, `That slot is no longer there. Reload the page and try again.`);
   if (
     /Unknown item|Unknown slot|Unknown or incomplete command|Incorrect argument|Expected |The target inventory/i.test(
       out
     )
   ) {
-    throw httpError(400, `The server rejected the command: ${out}`);
+    throw httpError(400, 'The server rejected the command. Check the console for details.');
   }
 }
 

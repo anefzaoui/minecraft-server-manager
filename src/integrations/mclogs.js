@@ -29,7 +29,7 @@ async function uploadLog(text) {
   if (!res.ok) throw httpError(502, 'mclo.gs is not responding right now. Please try again shortly.');
   const data = await res.json();
   if (!data.success || !data.id) {
-    throw httpError(502, `mclo.gs rejected the upload${data.error ? `: ${data.error}` : ''}`);
+    throw httpError(502, 'mclo.gs rejected the upload. Check that the log is valid and try again.');
   }
   return { id: data.id, url: data.url, rawUrl: data.raw };
 }
@@ -49,7 +49,7 @@ async function getInsights(pasteId) {
   if (!res.ok) throw httpError(502, 'mclo.gs is not responding right now. Please try again shortly.');
   const data = await res.json();
   if (data.success === false)
-    throw httpError(502, `mclo.gs could not analyze that paste${data.error ? `: ${data.error}` : ''}`);
+    throw httpError(502, 'mclo.gs could not analyze that paste. Check that the log is valid and try again.');
   const analysis = data.analysis || {};
   return {
     title: data.title || data.type || 'Log analysis',

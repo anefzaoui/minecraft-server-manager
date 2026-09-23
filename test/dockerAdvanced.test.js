@@ -39,7 +39,7 @@ test('toYaml/fromYaml round-trips only the 4 editable fields', () => {
 });
 
 test('fromYaml rejects invalid YAML', () => {
-  assert.throws(() => dockerSpec.fromYaml('not: [valid'), /Invalid YAML/);
+  assert.throws(() => dockerSpec.fromYaml('not: [valid'), /isn't valid YAML/);
 });
 
 test('fromYaml rejects a non-mapping document', () => {

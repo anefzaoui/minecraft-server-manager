@@ -27,8 +27,8 @@ function fromYaml(text) {
   let obj;
   try {
     obj = yaml.load(text);
-  } catch (err) {
-    throw httpError(400, `Invalid YAML: ${err.message}`);
+  } catch {
+    throw httpError(400, "That isn't valid YAML. Fix the syntax and try again.");
   }
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
     throw httpError(400, 'Invalid YAML: expected a mapping at the top level.');

@@ -93,7 +93,7 @@ async function sendChat(serverId, opts = {}) {
   for (const command of commands) {
     const out = cleanText(await execCapture(serverId, ['rcon-cli', ...command]));
     if (out.trim() && /Unknown or incomplete|Incorrect argument|Expected|No player was found|<--\[HERE\]/i.test(out)) {
-      throw httpError(502, `The server rejected the message: ${out.split('\n')[0]}`);
+      throw httpError(502, 'The server rejected the message. Check the console for details.');
     }
   }
 
