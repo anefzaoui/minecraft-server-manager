@@ -58,8 +58,13 @@ function init() {
     for (const opt of versionSel.options) {
       if (opt.value === 'LATEST') opt.textContent = `LATEST (${latest})`;
     }
+    // Still on the LATEST sentinel? Leave it alone - the relabel above already
+    // keeps it accurate, and pinning it to a concrete version here would
+    // defeat the auto-tracking pin this feature exists to preserve. Only a
+    // pin that was itself auto-set from the PREVIOUS flavor's latest follows
+    // the new flavor forward.
     const current = versionSel.value;
-    if (current === 'LATEST' || current === lastFlavorLatest) {
+    if (current === lastFlavorLatest) {
       const match = [...versionSel.options].find((opt) => opt.value === latest);
       if (match) versionSel.value = latest;
     }
