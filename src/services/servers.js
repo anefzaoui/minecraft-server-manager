@@ -1169,6 +1169,9 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBa
     // Keep the soft-deleted server row itself (history retains context).
     db.run("UPDATE servers SET deleted_at = datetime('now'), status = 'stopped' WHERE id = ?", id);
   });
+  // The delete just dropped this server's update_checks/server_content/server_packs
+  // rows - the outdated-count badge would otherwise keep counting them.
+  require('../updates/checker').invalidateOutdatedCache();
   recordEvent({
     serverId: id,
     actor,

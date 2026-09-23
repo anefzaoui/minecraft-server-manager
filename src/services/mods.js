@@ -1036,6 +1036,7 @@ async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'syst
     serverId,
     result.filename
   );
+  require('../updates/checker').invalidateOutdatedCache();
   return {
     name: result.library.name,
     filename: result.filename,
@@ -1098,6 +1099,7 @@ async function revertOverlayUpdate(serverId, { file, contentId }, { actor = 'sys
     revertedFrom || null
   );
   if (!wasEnabled) await setEnabled(serverId, filename, false, { actor });
+  require('../updates/checker').invalidateOutdatedCache();
 
   recordEvent({
     serverId,
