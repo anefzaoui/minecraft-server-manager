@@ -8,10 +8,10 @@
     {{/if}}
     <div class="ml-auto flex flex-wrap gap-2{{#unless perms.content}} hidden{{/unless}}">
       {{#if hasModUpdates}}
-      <button class="btn btn-ghost btn-sm text-warn" id="mods-update-all" data-tip="Apply every available update, then restart the server once">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update All</button>
+      <button class="btn btn-ghost btn-sm text-warn" id="mods-update-all" data-tip="Apply every available update, then restart the server once.">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update All</button>
       {{/if}}
       <button class="btn btn-sm" id="mods-search">{{{icon 'search' 'size-3.5'}}} Search Mods</button>
-      <button class="btn btn-sm" id="mods-import-zip" data-tip="Modrinth .mrpack, CurseForge modpack export, or any zip of mod jars">{{{icon 'archive' 'size-3.5'}}} Import Zip</button>
+      <button class="btn btn-sm" id="mods-import-zip" data-tip="Modrinth .mrpack, CurseForge modpack export, or any zip of mod jars.">{{{icon 'archive' 'size-3.5'}}} Import Zip</button>
       <button class="btn btn-primary btn-sm" id="mods-add-url">{{{icon 'plus' 'size-3.5'}}} Add by URL</button>
       {{! button labels kept in sync with the modal titles in mods.js }}
     </div>
@@ -83,14 +83,14 @@
             <td data-th="" class="text-right">
               <div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
                 {{#if updateAvailable}}
-                  <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="Update to {{updateAvailable}}, then restart the server">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
-                  <button class="btn btn-ghost btn-sm" data-mod-ignore-update data-tip="Stop offering {{updateAvailable}}">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>
+                  <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="Update to {{updateAvailable}}, then restart the server.">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-ignore-update data-tip="Stop offering {{updateAvailable}}.">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>
                 {{/if}}
                 {{#if updateIgnored}}
-                  <button class="btn btn-ghost btn-sm" data-mod-unignore-update data-tip="Offer {{updateIgnored}} again">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-unignore-update data-tip="Offer {{updateIgnored}} again.">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
                 {{/if}}
                 {{#if revertTo}}
-                  <button class="btn btn-ghost btn-sm" data-mod-revert data-revert-to="{{revertTo}}" data-tip="Put this mod back on {{revertTo}}, then restart the server">{{{icon 'undo-2' 'size-3.5'}}} Revert</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-revert data-revert-to="{{revertTo}}" data-tip="Put this mod back on {{revertTo}}, then restart the server.">{{{icon 'undo-2' 'size-3.5'}}} Revert</button>
                 {{/if}}
                 {{#unless missing}}
                   <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}Pack mods take effect on the next restart.{{else}}Takes effect instantly.{{/if}}">{{#if enabled}}Disable{{else}}Enable{{/if}}</button>

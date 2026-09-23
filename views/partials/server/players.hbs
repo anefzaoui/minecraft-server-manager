@@ -43,7 +43,7 @@
               data-banned="{{#if banned}}1{{else}}0{{/if}}"
               data-last-seen="{{lastSeen}}">
             <td data-th="">
-              <a href="/servers/{{../server.id}}/players/{{name}}" class="group flex items-center gap-2.5" data-tip="Open {{name}}'s page: roles, teleport, and inventory">
+              <a href="/servers/{{../server.id}}/players/{{name}}" class="group flex items-center gap-2.5" data-tip="Open {{name}}'s page: roles, teleport, and inventory.">
                 <span class="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded bg-inset text-xs font-bold">
                   {{#if bedrock}}{{{icon 'gamepad-2' 'size-4'}}}{{else}}{{name.[0]}}{{/if}}
                   {{#if uuid}}<img class="absolute inset-0 h-full w-full object-cover" data-skin-uuid="{{uuid}}" alt="{{name}}" aria-hidden="true" loading="lazy">{{/if}}
@@ -51,7 +51,7 @@
                 <div class="min-w-0">
                   <div class="flex items-center gap-1.5">
                     <div class="truncate font-medium transition group-hover:text-link">{{name}}</div>
-                    {{#if bedrock}}<span class="chip shrink-0" data-tip="Joined from Bedrock Edition via Geyser/Floodgate">{{{icon 'gamepad-2' 'size-3'}}} Bedrock</span>{{/if}}
+                    {{#if bedrock}}<span class="chip shrink-0" data-tip="Joined from Bedrock Edition via Geyser/Floodgate.">{{{icon 'gamepad-2' 'size-3'}}} Bedrock</span>{{/if}}
                   </div>
                   {{#if uuid}}<div class="max-w-36 truncate font-mono text-[11px] text-ink-faint">{{uuid}}</div>{{/if}}
                 </div>
@@ -72,7 +72,7 @@
                   <div class="mt-0.5 text-[11px] leading-tight text-ink-faint">Not whitelisted</div>
                 {{/if}}
               {{/if}}
-              {{#if lastSeen}}<div class="mt-0.5 text-[11px] leading-tight text-ink-faint" data-tip="The last time this name was seen in the server's cache">seen ~{{lastSeen}}</div>{{/if}}
+              {{#if lastSeen}}<div class="mt-0.5 text-[11px] leading-tight text-ink-faint" data-tip="The last time this name was seen in the server's cache.">seen ~{{lastSeen}}</div>{{/if}}
             </td>
             {{! Off-state chips keep full opacity - dimming reads as disabled,
                 and genuinely disabled composers already use opacity for that. }}
@@ -80,17 +80,17 @@
               <div class="flex flex-wrap gap-1.5">
                 <button class="chip {{#if whitelisted}}border-grass-700 bg-grass-500/15 text-ok{{/if}}"
                         data-role-toggle="whitelist" data-name="{{name}}" data-on="{{#if whitelisted}}1{{else}}0{{/if}}"
-                        data-tip="{{#if whitelisted}}Remove from whitelist{{else}}Add to whitelist{{/if}}">
+                        data-tip="{{#if whitelisted}}Remove from Whitelist{{else}}Add to Whitelist{{/if}}">
                   {{{icon 'shield-check' 'size-3.5'}}} <span data-chip-label>Whitelist</span>
                 </button>
                 <button class="chip {{#if op}}border-diamond-700 bg-diamond-400/15 text-link{{/if}}"
                         data-role-toggle="op" data-name="{{name}}" data-on="{{#if op}}1{{else}}0{{/if}}"
-                        data-tip="{{#if op}}Remove operator status{{else}}Make operator (level 4){{/if}}">
+                        data-tip="{{#if op}}Remove Operator Status{{else}}Make Operator (Level 4){{/if}}">
                   {{{icon 'shield' 'size-3.5'}}} <span data-chip-label>Op{{#if op}} L{{opLevel}}{{/if}}</span>
                 </button>
                 <button class="chip {{#if banned}}border-danger/40 bg-redstone-500/15 text-danger{{/if}}"
                         data-role-toggle="ban" data-name="{{name}}" data-on="{{#if banned}}1{{else}}0{{/if}}"
-                        data-tip="{{#if banned}}Pardon this player{{else}}Ban this player{{/if}}">
+                        data-tip="{{#if banned}}Pardon This Player{{else}}Ban This Player{{/if}}">
                   {{{icon 'ban' 'size-3.5'}}} <span data-chip-label>{{#if banned}}Banned{{else}}Ban{{/if}}</span>
                 </button>
               </div>
@@ -107,14 +107,14 @@
             <td data-th="" class="text-right">
               <div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
                 {{#if online}}
-                  <button class="btn btn-ghost btn-sm" data-act="kick" data-name="{{name}}" data-tip="Kick with a message">{{{icon 'log-out' 'size-3.5'}}}</button>
+                  <button class="btn btn-ghost btn-sm" data-act="kick" data-name="{{name}}" data-tip="Kick with a message.">{{{icon 'log-out' 'size-3.5'}}}</button>
                 {{/if}}
                 {{#if (or (eq ../server.status 'running') (eq ../server.status 'unhealthy'))}}
-                  <button class="btn btn-ghost btn-sm" data-act="teleport" data-name="{{name}}" data-tip="Teleport (coordinates / biome / player)">{{{icon 'compass' 'size-3.5'}}}</button>
+                  <button class="btn btn-ghost btn-sm" data-act="teleport" data-name="{{name}}" data-tip="Teleport by coordinates, biome, or player.">{{{icon 'compass' 'size-3.5'}}}</button>
                 {{else}}
-                  <span data-tip="Start the server to teleport players"><button class="btn btn-ghost btn-sm" data-act="teleport" data-name="{{name}}" disabled>{{{icon 'compass' 'size-3.5'}}}</button></span>
+                  <span data-tip="Start the server to teleport players."><button class="btn btn-ghost btn-sm" data-act="teleport" data-name="{{name}}" disabled>{{{icon 'compass' 'size-3.5'}}}</button></span>
                 {{/if}}
-                <button class="btn btn-ghost btn-sm" data-menu="player-menu-{{@index}}" data-tip="More actions">{{{icon 'ellipsis' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-menu="player-menu-{{@index}}" data-tip="More actions.">{{{icon 'ellipsis' 'size-3.5'}}}</button>
                 <template id="player-menu-{{@index}}">
                   <button data-act="op-level" data-name="{{name}}">{{{icon 'shield' 'size-3.5'}}} Set Operator Level…</button>
                   <button data-act="ban-reason" data-name="{{name}}">{{{icon 'ban' 'size-3.5'}}} Ban with Reason…</button>
@@ -168,7 +168,7 @@
               <td data-th="Date" class="text-xs text-ink-faint">{{default created '-'}}</td>
               <td data-th="Expires" class="text-xs text-ink-faint">{{#if (eq expires 'forever')}}Permanent{{else}}{{expires}}{{/if}}</td>
               <td data-th="" class="text-right">
-                <button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban">{{{icon 'x' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-ip="{{ip}}" data-tip="Remove this IP ban.">{{{icon 'x' 'size-3.5'}}}</button>
               </td>
             </tr>
           {{/each}}

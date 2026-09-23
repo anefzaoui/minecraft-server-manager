@@ -27,7 +27,7 @@
           <span class="label">Icon</span>
           <div class="flex flex-wrap gap-1.5" id="st-icon-picker">
             {{#if (startsWith server.icon 'custom:')}}
-              <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="{{server.icon}}" data-tip="Current custom icon" aria-pressed="true"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" data-fallback-icon="/icons/servers/grass.svg"></button>
+              <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="{{server.icon}}" data-tip="Current custom icon." aria-pressed="true"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" data-fallback-icon="/icons/servers/grass.svg"></button>
             {{/if}}
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="grass" aria-pressed="{{eq server.icon 'grass'}}"><img src="/icons/servers/grass.svg" alt="Grass block" class="size-full rounded-sm"></button>
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="creeper" aria-pressed="{{eq server.icon 'creeper'}}"><img src="/icons/servers/creeper.svg" alt="Creeper" class="size-full rounded-sm"></button>
@@ -165,7 +165,7 @@
       <div class="space-y-2 text-sm">
         <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual Only <span class="text-xs text-ink-faint">(never changes anything, and no update badges for this server)</span></label>
         <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify Me <span class="text-xs text-ink-faint">(show a badge when updates exist; you apply them)</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure, but never across Minecraft versions)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure, but never across Minecraft versions.)</span></label>
       </div>
     </div>
 
@@ -218,7 +218,7 @@
       <div class="flex flex-wrap gap-2">
         <button class="btn" id="st-export-bp">{{{icon 'drafting-compass' 'size-4'}}} Export as Blueprint</button>
         <button class="btn" id="st-clone">{{{icon 'copy' 'size-4'}}} Clone Server</button>
-        <button class="btn{{#unless perms.power}} hidden{{/unless}}" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending settings and resource changes">{{{icon 'wrench' 'size-4'}}} Rebuild Container</button>
+        <button class="btn{{#unless perms.power}} hidden{{/unless}}" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending settings and resource changes.">{{{icon 'wrench' 'size-4'}}} Rebuild Container</button>
       </div>
       {{! Destruction lives behind its own divider, never one accidental click
           from the safe maintenance actions above. }}

@@ -233,7 +233,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       fd.append('file', file);
       const res = await fetch(`/api/servers/${serverId}/mods/import-zip/preview`, { method: 'POST', body: fd });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data.error || `Preview failed (${res.status})`);
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Preview failed.');
       openZipPreview(data.preview, data.uploadToken);
     } catch (err) {
       toast(err.message, { kind: 'error', timeout: 9000 });
@@ -246,12 +246,12 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     if (!v) return '';
     if (v.status === 'ok')
       return v.mcOk === null
-        ? '<span class="badge" data-tip="Loader matches; MC version could not be verified">fits (MC unverified)</span>'
+        ? '<span class="badge" data-tip="Loader matches; MC version could not be verified.">fits (MC unverified)</span>'
         : '<span class="badge badge-ok">fits this server</span>';
     if (v.status === 'wrong-loader') return '<span class="badge badge-warn">wrong loader</span>';
     if (v.status === 'wrong-mc') return '<span class="badge badge-warn">wrong MC version</span>';
     if (v.status === 'wrong-kind') return '<span class="badge badge-warn">wrong content type</span>';
-    return '<span class="badge" data-tip="Not found on Modrinth/CurseForge and no readable metadata">unidentified</span>';
+    return '<span class="badge" data-tip="Not found on Modrinth/CurseForge and no readable metadata.">unidentified</span>';
   };
 
   function openZipPreview(preview, uploadToken) {
@@ -313,7 +313,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       else if (isBlocked)
         badges.insertAdjacentHTML(
           'beforeend',
-          '<span class="badge badge-warn" data-tip="The author disallows automated downloads, so resolve it after import">manual download</span>'
+          '<span class="badge badge-warn" data-tip="The author disallows automated downloads, so resolve it after import.">manual download</span>'
         );
       else badges.insertAdjacentHTML('beforeend', verdictBadge(item.verdict));
       rows.push({ item, row, isBlocked, missing });
@@ -646,7 +646,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         try {
           const res = await fetch(`/api/servers/${serverId}/mods/upload`, { method: 'POST', body: fd });
           const data = await res.json().catch(() => ({}));
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed');
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed.');
           toast(`Uploaded ${fileInput.files[0].name}.`);
           done(data);
         } catch (err) {
@@ -740,7 +740,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
   function openPendingModal(list) {
     const content = document.createElement('div');
     content.innerHTML = `
-      <p class="mb-3 text-sm text-ink-soft">These mods disallow automated download (or were pulled from CurseForge), so the pack can't finish. For each one, <b>Exclude</b> it, install a replacement via <b>search</b>, or <b>upload</b> the jar you downloaded by hand. Changes apply on the next recreate.</p>
+      <p class="mb-3 text-sm text-ink-soft">These mods disallow automated download (or were pulled from CurseForge), so the pack can't finish. For each one, <b>Exclude</b> it, install a replacement via <b>search</b>, or <b>upload</b> the jar you downloaded by hand. Changes apply on the next rebuild.</p>
       <div class="space-y-2" id="pending-list"></div>`;
     openModal({ title: 'Mods That Need Manual Action', content, size: 'lg' });
     const listEl = content.querySelector('#pending-list');
@@ -748,7 +748,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     function render(mods) {
       if (!mods.length) {
         listEl.innerHTML =
-          '<div class="notice notice-ok"><svg class="icon size-4 mt-0.5 shrink-0 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div>All resolved. Recreate the server to apply.</div></div>';
+          '<div class="notice notice-ok"><svg class="icon size-4 mt-0.5 shrink-0 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div>All resolved. Rebuild the server to apply.</div></div>';
         return;
       }
       listEl.innerHTML = '';
@@ -818,7 +818,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
           try {
             const res = await fetch(`/api/servers/${serverId}/mods/upload`, { method: 'POST', body: fd });
             const data = await res.json().catch(() => ({}));
-            if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed');
+            if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed.');
             toast(`Uploaded ${fileInput.files[0].name}.`);
             render(data.mods || []);
             refreshPending();

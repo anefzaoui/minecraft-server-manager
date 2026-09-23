@@ -79,7 +79,7 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
         try {
           const res = await fetch(`/api/servers/${serverId}/mods/upload`, { method: 'POST', body: fd });
           const data = await res.json().catch(() => ({}));
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed');
+          if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed.');
           toast(`Uploaded ${pick.files[0].name}.`);
           row.remove();
         } catch (err) {

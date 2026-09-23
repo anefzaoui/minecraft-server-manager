@@ -13,8 +13,8 @@
   </select>
   <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply Filters</button>
   <div class="ml-auto flex gap-1">
-    <a class="btn btn-sm" href="/api/events/export?format=csv{{exportQs}}" data-tip="Export the filtered events as CSV">{{{icon 'download' 'size-3.5'}}} CSV</a>
-    <a class="btn btn-sm" href="/api/events/export?format=json{{exportQs}}" data-tip="Export the filtered events as JSON">{{{icon 'download' 'size-3.5'}}} JSON</a>
+    <a class="btn btn-sm" href="/api/events/export?format=csv{{exportQs}}" data-tip="Export the filtered events as CSV.">{{{icon 'download' 'size-3.5'}}} CSV</a>
+    <a class="btn btn-sm" href="/api/events/export?format=json{{exportQs}}" data-tip="Export the filtered events as JSON.">{{{icon 'download' 'size-3.5'}}} JSON</a>
   </div>
 </form>
 
@@ -30,7 +30,7 @@
           <span class="shrink-0 text-xs text-ink-faint">{{server}}</span>
         {{/if}}
         <span class="shrink-0 text-xs text-ink-faint">{{actor}} · <span data-ts="{{ts}}">{{ts}}</span></span>
-        {{#if hasLog}}<button class="btn btn-ghost btn-sm shrink-0" data-event-excerpt data-event-id="{{id}}" data-event-type="{{type}}" data-tip="View the captured log">{{{icon 'file-text' 'size-3.5'}}}</button>{{/if}}
+        {{#if hasLog}}<button class="btn btn-ghost btn-sm shrink-0" data-event-excerpt data-event-id="{{id}}" data-event-type="{{type}}" data-tip="View the captured log.">{{{icon 'file-text' 'size-3.5'}}}</button>{{/if}}
       </li>
     {{else}}
       <li class="p-10 text-center text-sm text-ink-faint">No events match these filters.</li>

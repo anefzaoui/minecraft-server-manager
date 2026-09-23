@@ -132,7 +132,7 @@ function init(root) {
       cell.dataset.tip = editable
         ? `Empty ${label || slotName(at.container, at.slot)}. Click to put an item here.`
         : label
-          ? `Empty ${label} slot`
+          ? `Empty ${label} slot.`
           : '';
     } else {
       const named = Boolean(item.displayName);

@@ -111,7 +111,7 @@ function init(root) {
     if (d.lastSeen) {
       const seen = document.createElement('div');
       seen.className = 'mt-0.5 text-[11px] leading-tight text-ink-faint';
-      seen.dataset.tip = "The last time this name was seen in the server's cache";
+      seen.dataset.tip = "The last time this name was seen in the server's cache.";
       seen.textContent = `seen ~${d.lastSeen}`;
       append(seen);
     }
@@ -153,7 +153,7 @@ function init(root) {
       row.dataset.banned = changes.banned ? '1' : '0';
       setChip(row, 'ban', changes.banned, {
         label: changes.banned ? 'Banned' : 'Ban',
-        tip: changes.banned ? 'Pardon this player' : 'Ban this player',
+        tip: changes.banned ? 'Pardon This Player' : 'Ban This Player',
       });
       const details = row.querySelector('[data-ban-details]');
       if (details) {

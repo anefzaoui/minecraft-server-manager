@@ -107,8 +107,8 @@ function init() {
       if (res) {
         toast(
           res.enabled
-            ? 'Outside apps can now read your servers\' status.'
-            : 'Outside apps can no longer read your servers\' status.'
+            ? "Outside apps can now read your servers' status."
+            : "Outside apps can no longer read your servers' status."
         );
       } else {
         el.checked = !enabled; // revert - post() already toasted why
@@ -270,7 +270,7 @@ function init() {
       const ok = await confirmDialog({
         title: `Cancel the key "${label}"?`,
         message:
-          'Any app still using this key stops working right away. You can\'t bring the same key back, so you\'d need to make a new one.',
+          "Any app still using this key stops working right away. You can't bring the same key back, so you'd need to make a new one.",
         confirmLabel: 'Cancel Key',
         danger: true,
       });

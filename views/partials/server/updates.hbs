@@ -37,7 +37,7 @@
         </dl>
       </div>
       <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto{{#unless perms.content}} hidden{{/unless}}">
-        <button class="btn btn-primary" id="compat-scan" data-tip="Ask Modrinth and CurseForge about every installed mod">
+        <button class="btn btn-primary" id="compat-scan" data-tip="Ask Modrinth and CurseForge about every installed mod.">
           {{{icon 'scan-search' 'size-4'}}} <span data-scan-label>{{#if (eq compat.status 'interrupted')}}Resume Version Check{{else}}Check Future Versions{{/if}}</span>
         </button>
       </div>

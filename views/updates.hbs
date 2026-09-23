@@ -34,9 +34,9 @@
           <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
             {{#if changelog}}<a class="btn btn-ghost btn-sm" href="{{changelog}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Changelog</a>{{/if}}
             {{#if ignored}}
-              <button class="btn btn-ghost btn-sm" data-update-unignore data-tip="Offer {{latest}} again">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
+              <button class="btn btn-ghost btn-sm" data-update-unignore data-tip="Offer {{latest}} again.">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
             {{else}}
-              <button class="btn btn-ghost btn-sm" data-update-ignore data-tip="Stop offering {{latest}} for this subject">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>
+              <button class="btn btn-ghost btn-sm" data-update-ignore data-tip="Stop offering {{latest}} for this subject.">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>
               <button class="btn btn-sm" data-update-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
             {{/if}}
           </div></td>

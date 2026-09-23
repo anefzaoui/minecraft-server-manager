@@ -1029,7 +1029,7 @@ function initZipUpload() {
       fd.append('file', file);
       const res = await fetch('/api/mods/zip-preview', { method: 'POST', body: fd });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data.error || `Could not read the zip (${res.status})`);
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not read the zip.');
       state = {
         uploadToken: data.uploadToken,
         preview: data.preview,
@@ -1152,7 +1152,13 @@ function initZipUpload() {
       pickers.classList.remove('hidden');
       pickers.classList.add('grid');
       const loaders = ['fabric', 'forge', 'neoforge', 'quilt', 'paper'];
-      const loaderLabels = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', quilt: 'Quilt', paper: 'Paper (plugins)' };
+      const loaderLabels = {
+        fabric: 'Fabric',
+        forge: 'Forge',
+        neoforge: 'NeoForge',
+        quilt: 'Quilt',
+        paper: 'Paper (plugins)',
+      };
       const mcOptions = (p.inferred && p.inferred.mcVersionOptions) || [];
       pickers.innerHTML = `
         <div>

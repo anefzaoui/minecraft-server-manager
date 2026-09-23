@@ -28,8 +28,8 @@
       </dl>
       <div class="mt-3 flex gap-2">
         <button class="btn btn-sm flex-1" data-bp-create>{{{icon 'pickaxe' 'size-3.5'}}} Create a Server</button>
-        <a class="btn btn-ghost btn-sm" href="/api/blueprints/{{id}}/download" data-tip="Download .zip" aria-label="Download {{name}}">{{{icon 'download' 'size-3.5'}}}</a>
-        {{#unless builtin}}<button class="btn btn-ghost btn-sm text-danger" data-bp-delete data-tip="Delete blueprint ({{bytes size_bytes}})" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>{{/unless}}
+        <a class="btn btn-ghost btn-sm" href="/api/blueprints/{{id}}/download" data-tip="Download the blueprint." aria-label="Download {{name}}">{{{icon 'download' 'size-3.5'}}}</a>
+        {{#unless builtin}}<button class="btn btn-ghost btn-sm text-danger" data-bp-delete data-tip="Delete this blueprint ({{bytes size_bytes}})." aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>{{/unless}}
       </div>
     </div>
   {{/each}}
