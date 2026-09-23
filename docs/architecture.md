@@ -13,7 +13,7 @@ Docker daemon over its API (never by shelling out to the `docker` CLI).
   is hand-written progressive enhancement. An esbuild step (`pnpm run build:js`) bundles and
   minifies it into `public/dist/js/`; the app serves that bundle when it's present and the raw
   source otherwise, so a dev run without a build still works.
-- **`node:sqlite`** (built into Node; the panel requires Node ≥ 24) is the database - synchronous,
+- **`node:sqlite`** (built into Node; the panel requires Node ≥ 24) is the database: synchronous,
   zero native modules, WAL mode. A small versioned-migration runner applies `src/db/migrations/*` on
   boot. Prepared statements are cached in `src/db/index.js` keyed on the SQL text.
 - **`ws`** carries the live console and stats streams. Both are **brokered**: one upstream
@@ -62,7 +62,7 @@ Dependencies flow in one direction:
   Successful responses are cacheable for five seconds (`Cache-Control: private, max-age=5`).
 - **`services/`** - the heart of the app. Each service owns one domain and may depend on
   infrastructure and on other services.
-- **`docker/`** - dockerode wrappers: `connect` (endpoint detection + daemon health), `containers`
+- **`docker/`**: dockerode wrappers: `connect` (endpoint detection + daemon health), `containers`
   (create/start/stop/recreate with bind mounts, memory/CPU limits, and labels), `logs`, `stats`,
   `images`, `networks` (host network discovery), `hostPath` (re-roots bind paths under
   `DATA_DIR_HOST`), and a `watcher` that turns Docker events into history + crash detection.
@@ -72,15 +72,15 @@ Dependencies flow in one direction:
 
 Cross-cutting:
 
-- **`config/`** - environment config plus the **field catalog**: the single source of truth for
+- **`config/`**: environment config plus the **field catalog**: the single source of truth for
   server settings. Every itzg environment variable is catalogued (label, help, type, unit, default,
   validation, section, danger flags). The wizard, settings forms, and zod validation are all derived
   from it, so exposing a new setting is a data change, not new UI plumbing.
-- **`events/`** - `recordEvent()` is the one entry point for the history log; lifecycle events also
+- **`events/`**: `recordEvent()` is the one entry point for the history log; lifecycle events also
   capture container-log excerpts to `data/logs/<id>/events/`.
-- **`ws/`** - authenticated console + stats WebSockets (session cookie verified on upgrade, `Origin`
+- **`ws/`**: authenticated console + stats WebSockets (session cookie verified on upgrade, `Origin`
   checked to block cross-site hijacking), brokered per server (see "Runtime shape").
-- **`logger.js` + `instrument.js`** - `require('./logger')(label)` returns a per-module
+- **`logger.js` + `instrument.js`**: `require('./logger')(label)` returns a per-module
   [Pino](https://getpino.io) logger; level from `LOG_LEVEL`, `makeFailureThrottle()` keeps a
   persistently-failing background loop to one log line plus a "recovered" line.
   `src/utils/logSanitize.js` redacts credential-shaped keys and webhook tokens from the structured
@@ -89,7 +89,7 @@ Cross-cutting:
   `src/server.js`. `src/web/middleware/requestLog.js` writes one access-log line per request
   (skipping `/healthz` and static assets). ESLint enforces `no-console` under `src/**`, with
   `preflight.js`, `instrument.js`, and `config/index.js` exempt (they run before the logger exists).
-- **Rate limiting** - `src/web/middleware/rateLimit.js` puts `express-rate-limit` in front of `/api`
+- **Rate limiting**: `src/web/middleware/rateLimit.js` puts `express-rate-limit` in front of `/api`
   (`RATE_LIMIT_API_PER_MIN`, default 1200) and the login / 2FA / setup POSTs
   (`RATE_LIMIT_AUTH_PER_15MIN`, default 100); `0` disables a limiter. It keys on `req.ip`, so
   `TRUST_PROXY` matters behind a proxy. `/api/v1` has its own limiters: a per-client-IP cap
@@ -119,9 +119,9 @@ Cross-cutting:
   are hard-linked into the server so they survive pack updates. Disabling is class-aware. Because
   the library keeps every build it has downloaded, an update records the build it replaced
   (`server_content.previous_*`) and can be reverted from local files alone.
-- **A Minecraft version upgrade has to be earned.** `services/compat.js` scans a server's mods -
-  resolved from panel-installed rows, then the CurseForge pack manifest, then by content hash
-  against Modrinth/CurseForge - and builds a (loader, Minecraft version) support matrix per project
+- **A Minecraft version upgrade has to be earned.** `services/compat.js` scans a server's mods
+  (resolved from panel-installed rows, then the CurseForge pack manifest, then by content hash
+  against Modrinth/CurseForge) and builds a (loader, Minecraft version) support matrix per project
   out of CurseForge's `latestFilesIndexes` (200 projects per request) and Modrinth's per-project
   version list (one request per project, which is what keeps loader and version paired). The update
   checker offers only the newest version EVERY mod supports, and offers nothing at all when the
@@ -176,7 +176,7 @@ Cross-cutting:
   regenerated over the top). Blueprints strip all secrets on export.
 - **`server.properties` is panel-owned but env-shadowed.** The itzg image re-asserts every
   env-backed property on each start (`OVERRIDE_SERVER_PROPERTIES` defaults true), so a value the
-  panel edits directly - World Controls PvP/difficulty, the whitelist toggle, the Files editor -
+  panel edits directly (World Controls PvP/difficulty, the whitelist toggle, the Files editor)
   would be silently reverted on the next start unless the matching env var is removed and the
   container recreated. Every direct property write goes through `writeServerProperties()` (whole
   file) or `setServerProperty()` (one key) in `src/services/servers.js`, which atomically rewrite
@@ -193,14 +193,14 @@ Cross-cutting:
 
 ## Data & wire formats
 
-- **`data/panel.db`** - the SQLite database. Snapshotted daily via `VACUUM INTO` to
+- **`data/panel.db`**: the SQLite database. Snapshotted daily via `VACUUM INTO` to
   `data/backups/_panel/` (newest 14 kept); `PRAGMA integrity_check` runs on boot.
-- **`data/.session-secret`** - the auto-generated cookie-signing secret, created on first run if
+- **`data/.session-secret`**: the auto-generated cookie-signing secret, created on first run if
   `SESSION_SECRET` is unset. Deleting it rotates the secret (which invalidates sessions).
-- **`data/.secret-key`** - the dedicated 32-byte at-rest encryption key (mode `0600`), auto-created
+- **`data/.secret-key`**: the dedicated 32-byte at-rest encryption key (mode `0600`), auto-created
   on first run. Independent of `SESSION_SECRET`; deleting it makes every stored credential
   undecryptable, so it belongs with your backups.
-- **Blueprints (`.mcserver.zip`)** - a zip with a `manifest.json` describing config, resources, the
+- **Blueprints (`.mcserver.zip`)**: a zip with a `manifest.json` describing config, resources, the
   pinned pack reference, the overlay manifest (source URLs + sha256), chosen config files, and
   optionally a world. Import re-downloads and hash-verifies each mod and assigns fresh ports.
 - **Docker containers** created by the panel are named and labelled so the watcher can find them;
@@ -211,7 +211,7 @@ Cross-cutting:
 1. `require('./instrument')` (the Sentry seam) before anything else, then `require('./preflight')`
    to fail clearly on an unsupported Node version.
 2. Load config; ensure/generate `.session-secret` **and** `.secret-key`.
-3. `ensureDataRoot()` - create the `./data` layout, wipe `tmp/`.
+3. `ensureDataRoot()`: create the `./data` layout, wipe `tmp/`.
 4. Run DB migrations, then `PRAGMA integrity_check` (logs loudly, points at `data/backups/_panel`
    on failure).
 5. Re-encrypt any legacy `SESSION_SECRET`-keyed secrets under `.secret-key` (`secretsMigration`).
