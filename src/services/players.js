@@ -37,7 +37,7 @@ function assertName(name) {
   if (!PLAYER_NAME_RE.test(String(name)))
     throw httpError(
       400,
-      'Invalid player name (letters, digits and _ only, max 16 characters - a leading . or * for Bedrock players is fine)'
+      'Invalid player name (letters, digits and _ only, max 16 characters. A leading . or * for Bedrock players is fine)'
     );
   return String(name);
 }

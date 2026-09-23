@@ -45,7 +45,7 @@ function normalizeTarget(target) {
   const t = String(target || '@a').trim();
   if (['@a', '@p', '@r', '@s'].includes(t)) return t;
   if (PLAYER_NAME_RE.test(t)) return t;
-  throw httpError(400, 'Invalid recipient - pick Everyone or a valid player name');
+  throw httpError(400, 'Invalid recipient. Pick Everyone or a valid player name.');
 }
 
 async function assertRunning(serverId) {

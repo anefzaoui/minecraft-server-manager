@@ -131,7 +131,7 @@ async function readPlayerData(serverId, uuid) {
   try {
     stat = await fsp.stat(file);
   } catch {
-    throw httpError(404, 'No saved data for this player yet - they need to have joined the server at least once');
+    throw httpError(404, 'No saved data for this player yet. They need to have joined the server at least once.');
   }
 
   let data;
@@ -375,7 +375,7 @@ function getSnapshot(serverId, relFile) {
   try {
     raw = fs.readFileSync(dataPath(relFile), 'utf8'); // dataPath re-guards containment
   } catch {
-    throw httpError(404, 'Snapshot not found - it may have been pruned');
+    throw httpError(404, 'Snapshot not found. It may have been pruned.');
   }
   try {
     const parsed = JSON.parse(raw);
@@ -769,7 +769,7 @@ async function editSlotOnline(serverId, ctx, spec, { op, item, count }) {
   // op === 'count' - re-issue the same id with the new count. `item replace`
   // always creates a fresh stack, so custom components are lost; flag it.
   const cur = await readSlotOnline(serverId, ctx, spec);
-  if (!cur.exists) throw httpError(404, `${spec.rconSlot} is empty - nothing to re-count`);
+  if (!cur.exists) throw httpError(404, `${spec.rconSlot} is empty. Nothing to re-count.`);
   const out = await rcon(serverId, 'item', 'replace', 'entity', name, spec.rconSlot, 'with', cur.id, count);
   assertRconOk(out, name);
   return {
@@ -784,7 +784,7 @@ async function editSlotOnline(serverId, ctx, spec, { op, item, count }) {
 async function moveSlotOnline(serverId, ctx, fromSpec, toSpec) {
   const name = ctx.name;
   const src = await readSlotOnline(serverId, ctx, fromSpec);
-  if (!src.exists) throw httpError(404, `${fromSpec.rconSlot} is empty - nothing to move`);
+  if (!src.exists) throw httpError(404, `${fromSpec.rconSlot} is empty. Nothing to move.`);
   const dst = await readSlotOnline(serverId, ctx, toSpec);
   if (dst.exists) {
     throw httpError(
@@ -922,7 +922,7 @@ function applyOfflineSlotEdit(root, spec, { op, item, count }) {
     return { item, count };
   }
   const cur = ref.get();
-  if (!cur) throw httpError(404, `${spec.rconSlot} is empty - nothing to ${op === 'delete' ? 'delete' : 're-count'}`);
+  if (!cur) throw httpError(404, `${spec.rconSlot} is empty. Nothing to ${op === 'delete' ? 'delete' : 're-count'}.`);
   if (op === 'delete') {
     const meta = { item: rawId(cur), count: Number((cur.count || cur.Count || {}).value || 1) };
     ref.remove();
@@ -937,7 +937,7 @@ function applyOfflineMove(root, fromSpec, toSpec) {
   const fromRef = offlineSlotRef(root, fromSpec);
   const toRef = offlineSlotRef(root, toSpec);
   const src = fromRef.get();
-  if (!src) throw httpError(404, `${fromSpec.rconSlot} is empty - nothing to move`);
+  if (!src) throw httpError(404, `${fromSpec.rconSlot} is empty. Nothing to move.`);
   const dst = toRef.get();
   fromRef.remove();
   if (dst) toRef.remove();
@@ -968,15 +968,15 @@ function walkRaw(startTag, pathSegs) {
   for (const seg of pathSegs) {
     if (cur.type === 'compound') {
       if (typeof seg !== 'string' || !cur.value[seg])
-        throw httpError(404, 'That nested inventory no longer exists - reload');
+        throw httpError(404, 'That nested inventory no longer exists. Reload.');
       cur = cur.value[seg];
     } else if (cur.type === 'list') {
       if (!Number.isInteger(seg) || !Array.isArray(cur.value.value) || seg >= cur.value.value.length) {
-        throw httpError(404, 'That nested inventory no longer exists - reload');
+        throw httpError(404, 'That nested inventory no longer exists. Reload.');
       }
       cur = { type: cur.value.type, value: cur.value.value[seg] };
     } else {
-      throw httpError(404, 'That nested inventory no longer exists - reload');
+      throw httpError(404, 'That nested inventory no longer exists. Reload.');
     }
   }
   return cur;
@@ -986,14 +986,14 @@ function walkRaw(startTag, pathSegs) {
 function applyOfflineNestedEdit(root, spec, { path: pathSegs, index, op, item, count }) {
   assertNestedPath(pathSegs);
   const holder = offlineSlotRef(root, spec).get();
-  if (!holder) throw httpError(404, `${spec.rconSlot} is empty - the backpack is gone. Reload.`);
+  if (!holder) throw httpError(404, `${spec.rconSlot} is empty. The backpack is gone. Reload.`);
   const listTag = walkRaw({ type: 'compound', value: holder }, pathSegs);
   if (listTag.type !== 'list' || listTag.value.type !== 'compound' || !Array.isArray(listTag.value.value)) {
     throw httpError(400, 'That path does not point at an item list.');
   }
   const entries = listTag.value.value;
   if (!Number.isInteger(index) || index < 0 || index >= entries.length) {
-    throw httpError(404, 'That nested slot no longer exists - reload');
+    throw httpError(404, 'That nested slot no longer exists. Reload.');
   }
   const el = entries[index];
   // Wrapped shape {slot, item:{...}} vs direct {id, count, Slot?}.
@@ -1072,7 +1072,7 @@ async function withDatFile(serverId, ctx, mutate) {
     try {
       buf = await fsp.readFile(file);
     } catch {
-      throw httpError(404, 'No saved data for this player yet - they need to have joined the server at least once');
+      throw httpError(404, 'No saved data for this player yet. They need to have joined the server at least once.');
     }
     let parsed;
     try {
@@ -1132,7 +1132,7 @@ async function editSlot(
     if (ctx.mechanism === 'rcon') {
       throw httpError(
         409,
-        'Backpack contents can only be edited in the save file - stop the server or kick the player, then try again.'
+        'Backpack contents can only be edited in the save file. Stop the server or kick the player, then try again.'
       );
     }
     result = await withDatFile(serverId, ctx, (root) =>
@@ -1196,7 +1196,7 @@ async function moveItem(serverId, uuid, from, to, { actor = 'system' } = {}) {
     serverId,
     actor,
     type: 'inventory-edit',
-    summary: `${playerLabel}: ${result.item} ${result.swapped ? 'swapped' : 'moved'} ${fromSpec.rconSlot} -> ${toSpec.rconSlot} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'}).`,
+    summary: `${playerLabel}: ${result.item} ${result.swapped ? 'swapped' : 'moved'} ${fromSpec.rconSlot} → ${toSpec.rconSlot} (${ctx.mechanism === 'rcon' ? 'live' : 'file edit'}).`,
     details: {
       player: playerLabel,
       uuid: ctx.uuid,
@@ -1231,7 +1231,7 @@ async function addItem(serverId, uuid, itemId, count = 1, { actor = 'system' } =
         break;
       }
     }
-    if (free === -1) throw httpError(409, 'Their inventory is full - no free slot to add into');
+    if (free === -1) throw httpError(409, 'Their inventory is full. No free slot to add into.');
     entries.push({ ...makeRawItem(item, count), Slot: tag.byte(free) });
     return free;
   });

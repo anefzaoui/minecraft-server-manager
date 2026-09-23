@@ -123,7 +123,7 @@ async function readText(serverId, relPath) {
   }
   const buf = await fsp.readFile(abs);
   if (buf.subarray(0, 8192).includes(0)) {
-    throw httpError(415, 'This looks like a binary file - download it instead of editing');
+    throw httpError(415, 'This looks like a binary file. Download it instead of editing.');
   }
   return { content: buf.toString('utf8'), size: st.size };
 }

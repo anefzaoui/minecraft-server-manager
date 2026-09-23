@@ -68,8 +68,7 @@ async function withPausedSaves(serverId, running, copy, actor = 'system') {
           serverId,
           actor,
           type: 'world-save-warning',
-          summary:
-            'World saves were not re-enabled after a world operation - check the server console and run save-on.',
+          summary: 'World saves were not re-enabled after a world operation. Check the server console and run save-on.',
         });
       }
     }
@@ -192,7 +191,7 @@ async function importArchive(
   { name = '', originalName = '', actor = 'system', flavor = null, source = 'upload', onProgress = () => {} } = {}
 ) {
   const stat = await fsp.stat(uploadPath).catch(() => null);
-  if (!stat || !stat.isFile()) throw httpError(400, 'Upload not found - try again');
+  if (!stat || !stat.isFile()) throw httpError(400, 'Upload not found. Try again.');
 
   // Free-space preflight: extraction + re-zip can need ~3x the archive size.
   const { free } = await indexer.diskFree();
@@ -210,7 +209,7 @@ async function importArchive(
 
     const detected = await detectWorldRoot(tmpDir);
     if (!detected) {
-      throw httpError(400, "No level.dat found - this doesn't look like a Minecraft world");
+      throw httpError(400, "No level.dat found. This doesn't look like a Minecraft world.");
     }
 
     const mcVersion = readLevelVersion(path.join(detected.rootAbs, 'level.dat'));
@@ -293,7 +292,7 @@ async function extractFromServerImpl(serverId, { name = '', actor = 'system' } =
   const level = activeLevelName(server);
   const dims = serverWorldDims(serverId, level);
   if (!fs.existsSync(path.join(dims[0], 'level.dat'))) {
-    throw httpError(404, `World "${level}" has no level.dat yet - start the server once so it generates the world`);
+    throw httpError(404, `World "${level}" has no level.dat yet. Start the server once so it generates the world.`);
   }
 
   const worldBytes = await dirsSize(dims);
@@ -482,7 +481,7 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
     if (await isRunning(serverId)) {
       throw httpError(
         409,
-        'Stop the server before replacing its active world - swapping it while running would corrupt the save'
+        'Stop the server before replacing its active world. Swapping it while running would corrupt the save.'
       );
     }
     targetLevel = activeLevelName(server);
@@ -496,7 +495,7 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
   } else {
     targetLevel = sanitizeWorldName(newName || lib.name);
     if (fs.existsSync(dataPath('servers', serverId, targetLevel))) {
-      throw httpError(409, `A world named "${targetLevel}" already exists on this server - pick another name`);
+      throw httpError(409, `A world named "${targetLevel}" already exists on this server. Pick another name.`);
     }
   }
 
@@ -618,7 +617,7 @@ async function copyBetweenServersImpl(
   const source = mustServer(sourceServerId);
   const target = mustServer(targetServerId);
   if (sourceServerId === targetServerId)
-    throw httpError(400, 'Source and target are the same server - use Duplicate instead');
+    throw httpError(400, 'Source and target are the same server. Use Duplicate instead.');
 
   // Snapshot the source under its own op lock (the guarded extractFromServer)
   // so a concurrent restore of the SOURCE can't race the consistent copy...
@@ -722,7 +721,7 @@ async function renameWorldImpl(serverId, worldName, newName, { actor = 'system' 
     serverId,
     actor,
     type: 'world-renamed',
-    summary: `World "${worldName}" renamed to "${clean}"${wasActive ? ' (active world - level-name updated)' : ''}.`,
+    summary: `World "${worldName}" renamed to "${clean}"${wasActive ? ' (active world, level-name updated)' : ''}.`,
     details: { from: worldName, to: clean, wasActive },
   });
   return { name: clean, wasActive };
@@ -773,7 +772,7 @@ async function resetWorldImpl(
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before resetting the world.');
   const level = activeLevelName(server);
   const dims = serverWorldDims(serverId, level);
-  if (!fs.existsSync(dims[0])) throw httpError(404, `World "${level}" does not exist yet - nothing to reset`);
+  if (!fs.existsSync(dims[0])) throw httpError(404, `World "${level}" does not exist yet. Nothing to reset.`);
 
   // Resolve the seed to apply (null → cleared → Minecraft picks a random one).
   let newSeed = null;
@@ -853,7 +852,7 @@ async function deleteServerWorldImpl(serverId, worldName, { actor = 'system' } =
   const server = mustServer(serverId);
   checkWorldName(worldName);
   if (worldName === activeLevelName(server)) {
-    throw httpError(409, 'This is the active world - activate another world first, or use Reset to regenerate it');
+    throw httpError(409, 'This is the active world. Activate another world first, or use Reset to regenerate it.');
   }
   const dims = serverWorldDims(serverId, worldName);
   if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);

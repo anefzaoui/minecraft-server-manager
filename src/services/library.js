@@ -388,7 +388,7 @@ async function deleteLibraryFile(libraryId, { actor = 'system', force = false } 
   const lib = db.get('SELECT * FROM library_files WHERE id = ?', libraryId);
   if (!lib) return { freedBytes: 0 };
   const used = usageCount(libraryId);
-  if (used > 0 && !force) throw httpError(409, `Still installed on ${used} server(s) - remove it there first`);
+  if (used > 0 && !force) throw httpError(409, `Still installed on ${used} server(s). Remove it there first.`);
   await fsp.rm(dataPath(lib.rel_path), { force: true });
   if (lib.icon_rel_path) await fsp.rm(dataPath(lib.icon_rel_path), { force: true });
   db.run('DELETE FROM library_files WHERE id = ?', libraryId);
