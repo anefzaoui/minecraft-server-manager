@@ -458,12 +458,15 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
   if (!libZipStat) throw httpError(404, `Library world archive is missing on disk: ${lib.filename}`);
   const uncompressedBytes = await zipUncompressedBytes(libZipPath).catch(() => libZipStat.size * 4);
   indexer.assertUnderQuota(server, uncompressedBytes);
+  // 'replace' extracts the complete new world into tmpDir BEFORE touching the
+  // live one (see below) - the old world's bytes are still on disk the whole
+  // time, so the preflight must budget for both copies coexisting, same as
+  // restoreBackupImpl's safetyBytes in backups.js.
+  const existingBytes = mode === 'replace' ? indexer.sizeOf(`servers/${serverId}`) || 0 : 0;
+  const neededBytes = uncompressedBytes + existingBytes;
   const { free } = await indexer.diskFree();
-  if (free < uncompressedBytes * 1.1) {
-    throw httpError(
-      507,
-      `Not enough disk space to install this world (~${humanBytes(uncompressedBytes * 1.1)} needed)`
-    );
+  if (free < neededBytes * 1.1) {
+    throw httpError(507, `Not enough disk space to install this world (~${humanBytes(neededBytes * 1.1)} needed)`);
   }
 
   let targetLevel;
@@ -497,7 +500,10 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
   // against the same real free bytes this extraction is about to consume.
   const releaseReservation = indexer.reserveDiskSpace(uncompressedBytes);
   try {
-    await extractZip(libZipPath, tmpDir);
+    // Lift the extractor's default decompression-bomb cap to the archive's own
+    // real total (already known above) - same reasoning as backups.js's
+    // restoreBackupImpl for a self-generated archive that legitimately exceeds it.
+    await extractZip(libZipPath, tmpDir, { maxBytes: Math.max(MAX_EXTRACT_BYTES, uncompressedBytes) });
 
     const tops = await fsp.readdir(tmpDir, { withFileTypes: true });
     const dimTops = tops.filter((e) => e.isDirectory() && isDimName(e.name));
