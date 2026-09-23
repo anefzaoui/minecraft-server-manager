@@ -132,6 +132,18 @@ test('the resolver memo serves a second call for the same type/channel without a
   assert.equal(requested.length, before, 'the second call is served from the memo');
 });
 
+test('concurrent resolution for different types never shares one flight', async () => {
+  // Paper-family default lanes land on 26.2 (26.3 is ALPHA-only); Purpur
+  // builds 26.3 today. Fired together, each type must get ITS OWN answer - a
+  // shared flight would leak the first caller's result to the second.
+  const [forkMc, purpurMc] = await Promise.all([
+    loaderVersions.newestMcSupportedByServerType('PUFFERFISH'),
+    loaderVersions.newestMcSupportedByServerType('PURPUR'),
+  ]);
+  assert.equal(forkMc, '26.2', 'the Paper-family resolver keeps the stable ceiling');
+  assert.equal(purpurMc, '26.3', 'the Purpur resolver must not inherit the Paper answer');
+});
+
 test('the resolver returns null when nothing on the manifest is supported', async () => {
   // Override the per-MC stub so every probe answers "no builds"; a distinct
   // type key keeps the PAPER memo above from leaking in. The empties land in

@@ -202,38 +202,40 @@ async function mcAvailableOnServerType(type, mc, { channel = 'default' } = {}) {
 // A dashboard render of N LATEST-pinned plugin servers performs one flight and
 // every probe after the first is a hot api_cache read; registry-down resolves
 // null and callers fall back to Mojang's latest.release (current behaviour).
-let latestMcMemo = null; // { type, channel, mc, atMs }
-let latestMcInFlight = null;
+// Flights are keyed per (type, channel): a concurrent call for a *different*
+// server type must never receive the first caller's answer - e.g. Paper and
+// Purpur resolve against different registries and ship on different schedules.
+let latestMcMemo = null; // { key, mc, atMs }
+const latestMcInFlight = new Map(); // key -> Promise
 
 async function newestMcSupportedByServerType(type, { channel = 'default', maxProbes = 8 } = {}) {
-  if (
-    latestMcMemo &&
-    latestMcMemo.type === type &&
-    latestMcMemo.channel === channel &&
-    Date.now() - latestMcMemo.atMs < TTL_MS
-  ) {
+  const key = `${type}:${channel}`;
+  if (latestMcMemo && latestMcMemo.key === key && Date.now() - latestMcMemo.atMs < TTL_MS) {
     return latestMcMemo.mc;
   }
-  if (latestMcInFlight) return latestMcInFlight;
-  latestMcInFlight = (async () => {
-    const manifest = await mojang.getVersionManifest();
-    let mc = null;
-    let probed = 0;
-    for (const v of manifest.versions) {
-      if (v.type !== 'release') continue;
-      if (probed++ >= maxProbes) break;
-      const ok = await mcAvailableOnServerType(type, v.id, { channel });
-      if (ok.supported) {
-        mc = v.id;
-        break;
+  if (latestMcInFlight.has(key)) return latestMcInFlight.get(key);
+  latestMcInFlight.set(
+    key,
+    (async () => {
+      const manifest = await mojang.getVersionManifest();
+      let mc = null;
+      let probed = 0;
+      for (const v of manifest.versions) {
+        if (v.type !== 'release') continue;
+        if (probed++ >= maxProbes) break;
+        const ok = await mcAvailableOnServerType(type, v.id, { channel });
+        if (ok.supported) {
+          mc = v.id;
+          break;
+        }
       }
-    }
-    latestMcMemo = { type, channel, mc, atMs: Date.now() };
-    return mc;
-  })().finally(() => {
-    latestMcInFlight = null;
-  });
-  return latestMcInFlight;
+      latestMcMemo = { key, mc, atMs: Date.now() };
+      return mc;
+    })().finally(() => {
+      latestMcInFlight.delete(key);
+    })
+  );
+  return latestMcInFlight.get(key);
 }
 
 module.exports = { getBuilds, envKeyFor, mcAvailableOnServerType, newestMcSupportedByServerType };
