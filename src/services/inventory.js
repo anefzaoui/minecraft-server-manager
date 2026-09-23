@@ -550,10 +550,11 @@ async function rcon(serverId, ...args) {
     .trim();
 }
 
-/** Surface the server's own error text on command failures. */
-function assertRconOk(out) {
+/** Surface the server's own error text on command failures. `notFoundMessage`
+ *  overrides the 404 text for callers with no slot to talk about (give/clear). */
+function assertRconOk(out, notFoundMessage) {
   if (/No player was found|No entity was found/i.test(out))
-    throw httpError(404, `That slot is no longer there. Reload the page and try again.`);
+    throw httpError(404, notFoundMessage || `That slot is no longer there. Reload the page and try again.`);
   if (
     /Unknown item|Unknown slot|Unknown or incomplete command|Incorrect argument|Expected |The target inventory/i.test(
       out
@@ -570,7 +571,7 @@ async function giveItem(serverId, playerName, itemId, count = 1, { actor = 'syst
   const n = Math.min(6400, Math.max(1, Math.trunc(Number(count) || 1)));
   await assertRunning(serverId, 'give items');
   const out = await rcon(serverId, 'give', playerName, item, n);
-  assertRconOk(out, playerName);
+  assertRconOk(out, `${playerName} is no longer online. Reload the page and try again.`);
   recordEvent({
     serverId,
     actor,
@@ -587,7 +588,7 @@ async function clearItem(serverId, playerName, itemId = null, { actor = 'system'
   const item = itemId ? assertItemId(itemId) : null;
   await assertRunning(serverId, 'clear items');
   const out = await rcon(serverId, ...(item ? ['clear', playerName, item] : ['clear', playerName]));
-  assertRconOk(out, playerName);
+  assertRconOk(out, `${playerName} is no longer online. Reload the page and try again.`);
   const nothing = /No items were found/i.test(out);
   recordEvent({
     serverId,
@@ -759,12 +760,12 @@ async function editSlotOnline(serverId, ctx, spec, { op, item, count }) {
     const prev = await readSlotOnline(serverId, ctx, spec);
     if (!prev.exists) throw httpError(404, `${spec.rconSlot} is already empty.`);
     const out = await rcon(serverId, 'item', 'replace', 'entity', name, spec.rconSlot, 'with', 'minecraft:air');
-    assertRconOk(out, name);
+    assertRconOk(out);
     return { item: prev.id, count: prev.count, note: null };
   }
   if (op === 'set') {
     const out = await rcon(serverId, 'item', 'replace', 'entity', name, spec.rconSlot, 'with', item, count);
-    assertRconOk(out, name);
+    assertRconOk(out);
     return { item, count, note: null };
   }
   // op === 'count' - re-issue the same id with the new count. `item replace`
@@ -772,7 +773,7 @@ async function editSlotOnline(serverId, ctx, spec, { op, item, count }) {
   const cur = await readSlotOnline(serverId, ctx, spec);
   if (!cur.exists) throw httpError(404, `${spec.rconSlot} is empty. Nothing to re-count.`);
   const out = await rcon(serverId, 'item', 'replace', 'entity', name, spec.rconSlot, 'with', cur.id, count);
-  assertRconOk(out, name);
+  assertRconOk(out);
   return {
     item: cur.id,
     count,
@@ -806,9 +807,9 @@ async function moveSlotOnline(serverId, ctx, fromSpec, toSpec) {
     name,
     fromSpec.rconSlot
   );
-  assertRconOk(out, name);
+  assertRconOk(out);
   out = await rcon(serverId, 'item', 'replace', 'entity', name, fromSpec.rconSlot, 'with', 'minecraft:air');
-  assertRconOk(out, name);
+  assertRconOk(out);
   return { item: src.id, count: src.count, swapped: false };
 }
 
