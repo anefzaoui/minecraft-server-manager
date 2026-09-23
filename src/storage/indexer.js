@@ -173,7 +173,9 @@ function sizeOf(relPath) {
  *  directory with many subdirs used to issue a query per entry). Missing paths
  *  resolve to 0, matching sizeOf. */
 function sizeOfMany(relPaths) {
-  const unique = [...new Set(relPaths)].filter(Boolean);
+  // The empty-string rel_path is the index's root-total row (see the scan's
+  // `results.set('', total)`), so only undefined/null are dropped here.
+  const unique = [...new Set(relPaths)].filter((p) => p !== undefined && p !== null);
   if (unique.length === 0) return new Map();
   const rows = db.all(
     `SELECT rel_path, size_bytes FROM storage_index WHERE rel_path IN (${unique.map(() => '?').join(',')})`,
