@@ -177,32 +177,35 @@ for (const action of Object.keys(POWER_TITLES)) {
   );
 }
 
+// Plugin-family gate (#53): changing mc_version on a Paper-family server to a
+// loader-unsupported target is refused up front (cheap when untouched - the
+// probe only fires when the version actually changes). Registry down → pass
+// through, exactly like the upgrade route. Shared by the PATCH and the
+// changes-preview so the confirmation modal can never confirm a save the PATCH
+// would refuse.
+async function assertPluginFamilyMcGate(before, mcVersion) {
+  if (mcVersion !== before.mc_version && require('../../services/mods').loaderOf(before) === 'paper') {
+    const gate = await require('../../services/loaderVersions').mcAvailableOnServerType(before.type, mcVersion, {
+      channel: before.env.PAPER_CHANNEL || 'default',
+    });
+    if (!gate.supported) {
+      const flavor = require('../../web/viewModels').flavorLabel(before.type);
+      throw httpError(
+        409,
+        `${flavor} has not published a Minecraft ${mcVersion} build yet. Switch this server to the experimental channel to track pre-releases, or pick a released version.`
+      );
+    }
+  }
+}
+
 router.patch(
   '/servers/:id',
   requireCap('settings'),
   asyncHandler(async (req, res, next) => {
     const changes = serverPatchSchema.parse(req.body);
     requireAdminForOverrides(req, changes);
-    // Plugin-family gate (#53): changing mc_version on a Paper-family server to
-    // a loader-unsupported target is refused up front (cheap when untouched -
-    // the probe only fires when the version actually changes). Registry down →
-    // pass through, exactly like the upgrade route above.
     if (changes.mcVersion) {
-      const before = requireServer(req.params.id);
-      if (changes.mcVersion !== before.mc_version && require('../../services/mods').loaderOf(before) === 'paper') {
-        const gate = await require('../../services/loaderVersions').mcAvailableOnServerType(
-          before.type,
-          changes.mcVersion,
-          { channel: before.env.PAPER_CHANNEL || 'default' }
-        );
-        if (!gate.supported) {
-          const flavor = require('../../web/viewModels').flavorLabel(before.type);
-          throw httpError(
-            409,
-            `${flavor} has not published a Minecraft ${changes.mcVersion} build yet. Switch this server to the experimental channel to track pre-releases, or pick a released version.`
-          );
-        }
-      }
+      await assertPluginFamilyMcGate(requireServer(req.params.id), changes.mcVersion);
     }
     if (
       changes.containerName !== undefined ||
@@ -235,6 +238,9 @@ router.post(
   asyncHandler(async (req, res, next) => {
     const changes = serverPatchSchema.parse(req.body);
     requireAdminForOverrides(req, changes);
+    if (changes.mcVersion) {
+      await assertPluginFamilyMcGate(requireServer(req.params.id), changes.mcVersion);
+    }
     if (
       changes.containerName !== undefined ||
       changes.networkName !== undefined ||

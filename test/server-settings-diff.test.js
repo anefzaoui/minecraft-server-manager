@@ -105,6 +105,44 @@ test('extra port mappings and volume binds report their real before/after counts
   assert.equal(binds.after, '0', 'clearing the binds reports zero');
 });
 
+test('the preview refuses a loader-unsupported Minecraft version, matching the PATCH', async () => {
+  const realFetch = globalThis.fetch;
+  db.run(
+    `INSERT INTO api_cache (key, value_json, fetched_at) VALUES ('mojang-version-manifest', ?, datetime('now'))`,
+    JSON.stringify({
+      latest: { release: '26.3' },
+      versions: [
+        { id: '26.3', type: 'release' },
+        { id: '26.2', type: 'release' },
+      ],
+    })
+  );
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    if (url.includes('fill.papermc.io')) {
+      return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    return realFetch(input, init);
+  };
+  app.seedServer('diff_gate');
+  db.run("UPDATE servers SET mc_version = '26.2' WHERE id = ?", 'diff_gate');
+  try {
+    const refused = await app.req('POST', '/api/servers/diff_gate/changes-preview', {
+      cookie,
+      body: { mcVersion: '26.3' },
+    });
+    assert.equal(refused.status, 409, 'preview must refuse an unsupported Paper MC version');
+    assert.match(refused.json.error, /has not published a Minecraft 26\.3 build yet/);
+    const allowed = await app.req('POST', '/api/servers/diff_gate/changes-preview', {
+      cookie,
+      body: { mcVersion: '26.2' },
+    });
+    assert.equal(allowed.status, 200, 'a supported version still previews');
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
 test('a pack-pinning conflict throws the same error the PATCH would', async () => {
   app.seedServer('diff_pin');
   db.run("UPDATE servers SET type = 'MODRINTH' WHERE id = ?", 'diff_pin');
