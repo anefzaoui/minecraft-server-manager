@@ -272,7 +272,7 @@ async function fetchJson(url, options = {}) {
   }
   const body = await readJsonCapped(res);
   if (!res.ok) {
-    throw httpError(502, 'The AI server rejected the request. Check its configuration and try again.');
+    throw httpError(502, 'The LLM server rejected the request. Check its configuration and try again.');
   }
   return body;
 }
