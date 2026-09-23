@@ -370,7 +370,7 @@ async function listSnapshots(serverId, uuid) {
 function getSnapshot(serverId, relFile) {
   const m = SNAPSHOT_FILE_RE.exec(String(relFile || ''));
   if (!m) throw httpError(400, 'Invalid snapshot file reference');
-  if (m[1] !== serverId) throw httpError(400, 'Snapshot does not belong to this server');
+  if (m[1] !== serverId) throw httpError(400, 'Snapshot does not belong to this server.');
   let raw;
   try {
     raw = fs.readFileSync(dataPath(relFile), 'utf8'); // dataPath re-guards containment
@@ -381,7 +381,7 @@ function getSnapshot(serverId, relFile) {
     const parsed = JSON.parse(raw);
     return { file: relFile, ts: Number(m[3]), reason: m[4], uuid: m[2], data: parsed.data || parsed };
   } catch {
-    throw httpError(422, 'Snapshot file is corrupt');
+    throw httpError(422, 'Snapshot file is corrupt.');
   }
 }
 
@@ -639,7 +639,7 @@ function resolveSlot(container, slot) {
   if (!def) throw httpError(400, `Unknown container "${container}"`);
   const n = Math.trunc(Number(slot));
   if (!Number.isInteger(n) || n < 0 || n >= def.size) {
-    throw httpError(400, `Slot ${slot} is out of range for ${container} (0-${def.size - 1})`);
+    throw httpError(400, `Slot ${slot} is out of range for ${container} (0-${def.size - 1}).`);
   }
   return {
     container,
@@ -756,7 +756,7 @@ async function editSlotOnline(serverId, ctx, spec, { op, item, count }) {
   const name = ctx.name;
   if (op === 'delete') {
     const prev = await readSlotOnline(serverId, ctx, spec);
-    if (!prev.exists) throw httpError(404, `${spec.rconSlot} is already empty`);
+    if (!prev.exists) throw httpError(404, `${spec.rconSlot} is already empty.`);
     const out = await rcon(serverId, 'item', 'replace', 'entity', name, spec.rconSlot, 'with', 'minecraft:air');
     assertRconOk(out, name);
     return { item: prev.id, count: prev.count, note: null };
@@ -844,12 +844,12 @@ function rawItemList(root, name, { create = false } = {}) {
     if (!create) return null;
     list = root[name] = { type: 'list', value: { type: 'compound', value: [] } };
   }
-  if (list.type !== 'list') throw httpError(422, `${name} in the player file is not a list`);
+  if (list.type !== 'list') throw httpError(422, `${name} in the player file is not a list.`);
   // Empty NBT lists carry element type 'end' - retype on first insert.
   if (list.value.type === 'end' || !Array.isArray(list.value.value)) {
     list.value = { type: 'compound', value: [] };
   } else if (list.value.type !== 'compound') {
-    throw httpError(422, `${name} in the player file has unexpected element type "${list.value.type}"`);
+    throw httpError(422, `${name} in the player file has unexpected element type "${list.value.type}".`);
   }
   return list.value.value;
 }
@@ -989,7 +989,7 @@ function applyOfflineNestedEdit(root, spec, { path: pathSegs, index, op, item, c
   if (!holder) throw httpError(404, `${spec.rconSlot} is empty - the backpack is gone. Reload.`);
   const listTag = walkRaw({ type: 'compound', value: holder }, pathSegs);
   if (listTag.type !== 'list' || listTag.value.type !== 'compound' || !Array.isArray(listTag.value.value)) {
-    throw httpError(400, 'That path does not point at an item list');
+    throw httpError(400, 'That path does not point at an item list.');
   }
   const entries = listTag.value.value;
   if (!Number.isInteger(index) || index < 0 || index >= entries.length) {
@@ -999,7 +999,7 @@ function applyOfflineNestedEdit(root, spec, { path: pathSegs, index, op, item, c
   // Wrapped shape {slot, item:{...}} vs direct {id, count, Slot?}.
   const wrapped = !el.id && el.item && el.item.type === 'compound' && el.item.value.id;
   const inner = wrapped ? el.item.value : el;
-  if (!inner.id) throw httpError(404, 'That nested slot is empty');
+  if (!inner.id) throw httpError(404, 'That nested slot is empty.');
 
   if (op === 'delete') {
     const meta = { item: rawId(inner), count: Number((inner.count || inner.Count || {}).value || 1) };
@@ -1183,7 +1183,7 @@ async function editSlot(
 async function moveItem(serverId, uuid, from, to, { actor = 'system' } = {}) {
   const fromSpec = resolveSlot(from.container, from.slot);
   const toSpec = resolveSlot(to.container, to.slot);
-  if (fromSpec.rconSlot === toSpec.rconSlot) throw httpError(400, 'Source and destination are the same slot');
+  if (fromSpec.rconSlot === toSpec.rconSlot) throw httpError(400, 'Source and destination are the same slot.');
 
   const ctx = await editContext(serverId, uuid);
   const playerLabel = ctx.name || ctx.uuid;

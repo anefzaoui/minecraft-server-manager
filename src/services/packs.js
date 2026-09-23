@@ -80,8 +80,8 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion, include
   }
   if (platform === 'ftb') {
     const id = String(ref).match(/\d+/)?.[0];
-    if (!id) throw httpError(400, 'FTB packs are referenced by numeric modpack ID');
-    if (!versionId) throw httpError(400, 'FTB installs need an explicit version ID (the panel never uses latest)');
+    if (!id) throw httpError(400, 'FTB packs are referenced by numeric modpack ID.');
+    if (!versionId) throw httpError(400, 'FTB installs need an explicit version ID (the panel never uses latest).');
     return {
       platform,
       projectRef: id,
@@ -103,7 +103,7 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion, include
     // orchestrator) must pass it, or a beta-pinned server silently resolves to
     // the newest stable instead of the newest beta.
     const entry = versionId ? await gtnhApi.getVersion(String(versionId)) : gtnhApi.pickLatest(all, { includeBeta });
-    if (!entry) throw httpError(502, 'The GTNH release index returned no installable versions');
+    if (!entry) throw httpError(502, 'The GTNH release index returned no installable versions.');
     return {
       platform,
       projectRef: 'gtnh',

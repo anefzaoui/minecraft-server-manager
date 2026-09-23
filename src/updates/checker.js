@@ -264,7 +264,7 @@ function isUpdateIgnored(subjectType, subjectId, latestId) {
 function setUpdateIgnored(subjectType, subjectId, { ignore = true, actor = 'system' } = {}) {
   if (subjectType === 'content') {
     // Callers should route content through mods.setIgnoredUpdate; guard anyway.
-    throw httpError(400, 'Use the per-mod ignore for overlay content');
+    throw httpError(400, 'Use the per-mod ignore for overlay content.');
   }
   const check = db.get('SELECT * FROM update_checks WHERE subject_type = ? AND subject_id = ?', subjectType, subjectId);
   if (!check || !check.latest_version) {

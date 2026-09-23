@@ -64,7 +64,7 @@ function validateSpec({
   if (!PERMISSIONS.has(permission)) throw httpError(400, 'Unknown permission level');
   const cooldown = Math.floor(Number(cooldownSec));
   if (!Number.isFinite(cooldown) || cooldown < 0 || cooldown > 86400) {
-    throw httpError(400, 'Cooldown must be 0-86400 seconds');
+    throw httpError(400, 'Cooldown must be 0-86400 seconds.');
   }
 
   const p = params && typeof params === 'object' ? params : {};
@@ -72,8 +72,8 @@ function validateSpec({
   if (action === 'rtp') {
     const minDistance = Math.max(0, Math.floor(Number(p.minDistance ?? 500) || 0));
     const maxDistance = Math.max(16, Math.floor(Number(p.maxDistance ?? 5000) || 5000));
-    if (maxDistance <= minDistance) throw httpError(400, 'Max distance must be greater than min distance');
-    if (maxDistance > 1_000_000) throw httpError(400, 'Max distance is capped at 1,000,000');
+    if (maxDistance <= minDistance) throw httpError(400, 'Max distance must be greater than min distance.');
+    if (maxDistance > 1_000_000) throw httpError(400, 'Max distance is capped at 1,000,000.');
     clean = { minDistance, maxDistance, center: p.center === 'origin' ? 'origin' : 'player' };
   } else if (action === 'structure') {
     if (!/^#?[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(p.structure || ''))) {
@@ -96,10 +96,10 @@ function validateSpec({
           )
           .filter(Boolean)
       : [];
-    if (!commands.length) throw httpError(400, 'Add at least one console command');
-    if (commands.length > 10) throw httpError(400, 'Max 10 console commands per trigger');
+    if (!commands.length) throw httpError(400, 'Add at least one console command.');
+    if (commands.length > 10) throw httpError(400, 'Max 10 console commands per trigger.');
     for (const cmd of commands) {
-      if (cmd.length > 200) throw httpError(400, 'Console commands are capped at 200 characters each');
+      if (cmd.length > 200) throw httpError(400, 'Console commands are capped at 200 characters each.');
       if (permission !== 'ops' && DANGEROUS_RE.test(cmd)) {
         throw httpError(400, `"${cmd.split(/\s+/)[0]}" commands are only allowed when permission is set to Ops`);
       }
@@ -225,7 +225,7 @@ function createCommand(serverId, input, { actor = 'system' } = {}) {
     );
   } catch (err) {
     if (/UNIQUE/i.test(err.message)) {
-      throw httpError(409, `A command named "${spec.trigger}" already exists on this server`);
+      throw httpError(409, `A command named "${spec.trigger}" already exists on this server.`);
     }
     throw err;
   }
@@ -290,7 +290,7 @@ function updateCommand(serverId, cmdId, changes, { actor = 'system' } = {}) {
     );
   } catch (err) {
     if (/UNIQUE/i.test(err.message)) {
-      throw httpError(409, `A command named "${spec.trigger}" already exists on this server`);
+      throw httpError(409, `A command named "${spec.trigger}" already exists on this server.`);
     }
     throw err;
   }

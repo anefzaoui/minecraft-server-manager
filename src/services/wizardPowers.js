@@ -37,27 +37,27 @@ function uniqueStrings(value) {
 
 function normalizeTesters(value) {
   const names = uniqueStrings(value);
-  if (names.length > 50) throw httpError(400, 'At most 50 Basic users may be configured');
+  if (names.length > 50) throw httpError(400, 'At most 50 Basic users may be configured.');
   if (names.some((name) => !PLAYER_NAME_RE.test(name))) {
-    throw httpError(400, 'Basic users must be valid Minecraft player names');
+    throw httpError(400, 'Basic users must be valid Minecraft player names.');
   }
   return names;
 }
 
 function normalizeControllers(value) {
   const names = uniqueStrings(value);
-  if (names.length > 50) throw httpError(400, 'At most 50 chatbot power controllers may be configured');
+  if (names.length > 50) throw httpError(400, 'At most 50 chatbot power controllers may be configured.');
   if (names.some((name) => !PLAYER_NAME_RE.test(name))) {
-    throw httpError(400, 'Power controllers must be valid Minecraft player names');
+    throw httpError(400, 'Power controllers must be valid Minecraft player names.');
   }
   return names;
 }
 
 function normalizeGiftItems(value) {
   const items = uniqueStrings(value).map((item) => item.toLowerCase());
-  if (items.length > 100) throw httpError(400, 'At most 100 gift items may be configured');
+  if (items.length > 100) throw httpError(400, 'At most 100 gift items may be configured.');
   if (items.some((item) => !ITEM_RE.test(item))) {
-    throw httpError(400, 'Gift items must be namespaced Minecraft item IDs, such as minecraft:bread');
+    throw httpError(400, 'Gift items must be namespaced Minecraft item IDs, such as minecraft:bread.');
   }
   return items;
 }
@@ -78,9 +78,9 @@ function isController(cfg, player) {
 
 function normalizePowerTarget(value) {
   let target = String(value || '').trim();
-  if (/^@[aeprs]$/i.test(target)) throw httpError(400, 'Minecraft selectors are not valid chatbot targets');
+  if (/^@[aeprs]$/i.test(target)) throw httpError(400, 'Minecraft selectors are not valid chatbot targets.');
   if (target.startsWith('@')) target = target.slice(1);
-  if (!PLAYER_NAME_RE.test(target)) throw httpError(400, 'The chatbot requested an invalid target player');
+  if (!PLAYER_NAME_RE.test(target)) throw httpError(400, 'The chatbot requested an invalid target player.');
   return target;
 }
 
@@ -231,12 +231,12 @@ function parseToolCall(message, cfg, player, prompt = null) {
     const parsed = calls.map((call) => parseToolCall({ tool_calls: [call] }, cfg, player, prompt));
     const signatures = new Set(parsed.map((request) => JSON.stringify([request.name, request.args])));
     if (signatures.size === 1) return parsed[0];
-    throw httpError(400, 'The chatbot requested more than one different power at once');
+    throw httpError(400, 'The chatbot requested more than one different power at once.');
   }
   const call = calls[0];
   const name = String(call?.function?.name || '');
   const allowed = new Set(toolsFor(cfg, player, prompt).map((tool) => tool.function.name));
-  if (!allowed.has(name)) throw httpError(403, 'The chatbot requested a disabled or unavailable power');
+  if (!allowed.has(name)) throw httpError(403, 'The chatbot requested a disabled or unavailable power.');
   let args;
   try {
     args =
@@ -244,20 +244,20 @@ function parseToolCall(message, cfg, player, prompt = null) {
         ? JSON.parse(call.function.arguments || '{}')
         : call.function.arguments || {};
   } catch {
-    throw httpError(400, 'The chatbot returned invalid power arguments');
+    throw httpError(400, 'The chatbot returned invalid power arguments.');
   }
   if (!args || Array.isArray(args) || typeof args !== 'object')
-    throw httpError(400, 'The chatbot returned invalid power arguments');
+    throw httpError(400, 'The chatbot returned invalid power arguments.');
   const keys = Object.keys(args);
   if (['heal_self', 'feed_self', 'teleport_self_to_spawn'].includes(name)) {
-    if (keys.length) throw httpError(400, 'This power does not accept arguments');
+    if (keys.length) throw httpError(400, 'This power does not accept arguments.');
   } else if (name === 'set_time') {
     if (keys.length !== 1 || !['day', 'noon', 'night', 'midnight'].includes(args.value)) {
-      throw httpError(400, 'The chatbot requested an invalid time');
+      throw httpError(400, 'The chatbot requested an invalid time.');
     }
   } else if (name === 'set_weather') {
     if (keys.length !== 1 || !['clear', 'rain', 'thunder'].includes(args.value)) {
-      throw httpError(400, 'The chatbot requested invalid weather');
+      throw httpError(400, 'The chatbot requested invalid weather.');
     }
   } else if (name === 'give_self') {
     const item = String(args.item || '').toLowerCase();
@@ -270,13 +270,13 @@ function parseToolCall(message, cfg, player, prompt = null) {
       count < 1 ||
       count > cfg.giftMaxCount
     ) {
-      throw httpError(400, 'The chatbot requested an item or quantity outside the allowlist');
+      throw httpError(400, 'The chatbot requested an item or quantity outside the allowlist.');
     }
     args = { item, count };
   } else if (['heal_player', 'feed_player', 'teleport_player_to_self', 'teleport_self_to_player'].includes(name)) {
     const target = normalizePowerTarget(args.target);
     if (keys.length !== 1 || keys[0] !== 'target' || target.toLowerCase() === String(player).toLowerCase()) {
-      throw httpError(400, 'A cross-player power requires exactly one other player target');
+      throw httpError(400, 'A cross-player power requires exactly one other player target.');
     }
     args = { target };
   } else if (name === 'give_player') {
@@ -292,7 +292,7 @@ function parseToolCall(message, cfg, player, prompt = null) {
       count < 1 ||
       count > cfg.giftMaxCount
     ) {
-      throw httpError(400, 'The chatbot requested an invalid target, item ID, or quantity');
+      throw httpError(400, 'The chatbot requested an invalid target, item ID, or quantity.');
     }
     args = { target, item, count };
   }
@@ -335,7 +335,7 @@ function recordRejection(serverId, player, reason, request = null) {
 async function assertRunning(serverId) {
   const info = await inspectStatus(serverId).catch(() => null);
   if (!info || !['running', 'unhealthy'].includes(info.status))
-    throw httpError(409, 'The Minecraft server is not running');
+    throw httpError(409, 'The Minecraft server is not running.');
 }
 
 async function fixedRcon(serverId, args, player) {
@@ -366,7 +366,7 @@ async function worldSpawn(serverId) {
 
 async function execute(serverId, player, request, cfg) {
   if (!cfg.powersEnabled || (!isTester(cfg, player) && !isController(cfg, player)))
-    throw httpError(403, 'This player is not allowed to use chatbot powers');
+    throw httpError(403, 'This player is not allowed to use chatbot powers.');
   if (!PLAYER_NAME_RE.test(String(player))) throw httpError(400, 'Invalid Minecraft player name');
   try {
     request = parseToolCall(
@@ -381,7 +381,7 @@ async function execute(serverId, player, request, cfg) {
   const key = `${serverId}:${String(player).toLowerCase()}`;
   const remaining = cfg.powerCooldownSec * 1000 - (Date.now() - (cooldowns.get(key) || 0));
   if (remaining > 0) {
-    const err = httpError(429, `Chatbot powers are recharging for ${Math.ceil(remaining / 1000)} more seconds`);
+    const err = httpError(429, `Chatbot powers are recharging for ${Math.ceil(remaining / 1000)} more seconds.`);
     recordRejection(serverId, player, err.message, request);
     throw err;
   }

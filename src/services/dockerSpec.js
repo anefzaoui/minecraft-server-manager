@@ -31,7 +31,7 @@ function fromYaml(text) {
     throw httpError(400, `Invalid YAML: ${err.message}`);
   }
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-    throw httpError(400, 'Invalid YAML: expected a mapping at the top level');
+    throw httpError(400, 'Invalid YAML: expected a mapping at the top level.');
   }
   return {
     containerName: obj.containerName || null,

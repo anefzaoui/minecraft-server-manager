@@ -2232,7 +2232,7 @@ router.post(
       }
       let restarted = false;
       if (updated.length) {
-        t.step('Restarting server');
+        t.step('Restarting server…');
         restarted = await restartAfterModUpdate(server.id, actor);
       }
       return { updated, failed, restarted };

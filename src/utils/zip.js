@@ -49,7 +49,7 @@ function readZipIndex(zipPath, { textEntry, maxTextBytes = 20 * 1024 * 1024 } = 
       zip.on('entry', (entry) => {
         if (!safeEntryName(entry.fileName)) {
           zip.close();
-          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}`));
+          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}.`));
         }
         entries.push({ name: entry.fileName, size: entry.uncompressedSize });
         const wantText = textEntry && !/\/$/.test(entry.fileName) && textEntry(entry.fileName);
@@ -93,7 +93,7 @@ function readEntryBuffers(zipPath, select, { maxEntryBytes = 512 * 1024 * 1024, 
       zip.on('entry', (entry) => {
         if (!safeEntryName(entry.fileName)) {
           zip.close();
-          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}`));
+          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}.`));
         }
         if (/\/$/.test(entry.fileName) || !select(entry.fileName)) return zip.readEntry();
         zip.openReadStream(entry, (streamErr, readStream) => {
@@ -105,7 +105,7 @@ function readEntryBuffers(zipPath, select, { maxEntryBytes = 512 * 1024 * 1024, 
             total += c.length;
             if (size > maxEntryBytes || total > maxTotalBytes) {
               zip.close();
-              return reject(httpError(413, 'Zip contents exceed the allowed size'));
+              return reject(httpError(413, 'Zip contents exceed the allowed size.'));
             }
             chunks.push(c);
           });
@@ -198,17 +198,17 @@ function extractZipSafe(
         }
 
         if (!safeEntryName(entry.fileName)) {
-          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}.`));
         }
         const isDir = /\/$/.test(entry.fileName);
         const mapped = map ? map(entry.fileName) : entry.fileName;
         if (mapped == null || mapped === '') return zip.readEntry();
         if (!safeEntryName(mapped)) {
-          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}.`));
         }
         const target = path.resolve(root, mapped);
         if (target !== root && !target.startsWith(root + path.sep)) {
-          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}.`));
         }
 
         if (isDir) {
@@ -279,7 +279,7 @@ function forEachEntryBuffer(zipPath, select, fn, { maxEntryBytes = 512 * 1024 * 
           let size = 0;
           readStream.on('data', (c) => {
             size += c.length;
-            if (size > maxEntryBytes) return fail(httpError(413, 'Zip entry exceeds the allowed size'));
+            if (size > maxEntryBytes) return fail(httpError(413, 'Zip entry exceeds the allowed size.'));
             chunks.push(c);
           });
           readStream.on('error', fail);

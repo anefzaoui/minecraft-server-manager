@@ -51,7 +51,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
     headers: { 'User-Agent': 'MinecraftServerManager/0.1' },
     signal: AbortSignal.timeout(10 * 60 * 1000),
   });
-  if (!res.ok) throw httpError(502, `Download failed: HTTP ${res.status} from ${new URL(url).host}`);
+  if (!res.ok) throw httpError(502, `Download failed: HTTP ${res.status} from ${new URL(url).host}.`);
   const totalBytes = Number(res.headers.get('content-length')) || 0;
 
   // Disk preflight when the server declares a size (tmp copy + final copy).
@@ -65,7 +65,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
     const indexer = require('../storage/indexer');
     const { free } = await indexer.diskFree();
     if (free < totalBytes * 1.2) {
-      throw httpError(507, `Not enough disk space for this download (~${humanBytes(totalBytes)} needed)`);
+      throw httpError(507, `Not enough disk space for this download (~${humanBytes(totalBytes)} needed).`);
     }
     // Per-server quota must bite BEFORE any of this lands on disk - the library
     // copy is shared, but it is the server that asked to pull the file in.
@@ -88,7 +88,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
       if (receivedBytes > MAX_DOWNLOAD_BYTES) {
         // Hard abort - content-length can lie or be absent entirely.
         return cb(
-          httpError(413, `Download aborted: stream exceeded the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit`)
+          httpError(413, `Download aborted: stream exceeded the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit.`)
         );
       }
       onProgress({ receivedBytes, totalBytes });

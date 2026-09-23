@@ -122,7 +122,7 @@ async function rconT(serverId, timeoutMs, ...args) {
 const TP_TIMEOUT_MS = 45000;
 
 function assertRunning(running, what) {
-  if (!running) throw httpError(409, `Server must be running to ${what}`);
+  if (!running) throw httpError(409, `Server must be running to ${what}.`);
 }
 
 /**
@@ -206,7 +206,7 @@ async function resolveIdentity(serverId, name) {
       `Could not look up "${name}". The player has never joined this server, and the Mojang API is unreachable. Try again when you are online.`
     );
   }
-  if (!profile || !profile.uuid) throw httpError(404, `No Minecraft account named "${name}" exists`);
+  if (!profile || !profile.uuid) throw httpError(404, `No Minecraft account named "${name}" exists.`);
   return profile;
 }
 
@@ -698,7 +698,7 @@ async function kickPlayer(serverId, name, message, { running = false, actor = 's
   assertRunning(running, 'kick a player');
   message = cleanText(message, 'Kicked by an operator.');
   const out = await rcon(serverId, 'kick', name, message);
-  if (/No player was found/i.test(out)) throw httpError(404, `${name} is not online`);
+  if (/No player was found/i.test(out)) throw httpError(404, `${name} is not online.`);
   recordEvent({
     serverId,
     actor,
@@ -1218,7 +1218,7 @@ async function tpToCoords(
   assertRunning(running, 'teleport a player');
   const hasY = y !== undefined && y !== null && String(y).trim() !== '';
   for (const v of hasY ? [x, y, z] : [x, z]) {
-    if (!Number.isFinite(Number(v))) throw httpError(400, 'Coordinates must be numbers');
+    if (!Number.isFinite(Number(v))) throw httpError(400, 'Coordinates must be numbers.');
   }
   if (dimension && !DIMENSIONS.has(dimension)) throw httpError(400, 'Unknown dimension');
 

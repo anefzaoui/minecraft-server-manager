@@ -136,7 +136,7 @@ function parseHttpUrl(rawUrl) {
     throw httpError(400, 'Invalid URL');
   }
   if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-    throw httpError(400, `Only http(s) URLs are allowed (got ${u.protocol})`);
+    throw httpError(400, `Only http(s) URLs are allowed (got ${u.protocol}).`);
   }
   return { u, host: u.hostname.replace(/^\[|\]$/g, '') };
 }
@@ -153,13 +153,13 @@ async function resolveValidated(host, { allowPrivate = false } = {}) {
   if (net.isIP(host)) {
     addrs = [host];
   } else if (isAmbiguousNumericHost(host)) {
-    throw httpError(400, `Refusing to resolve an ambiguous numeric host (${host})`);
+    throw httpError(400, `Refusing to resolve an ambiguous numeric host (${host}).`);
   } else {
     let results;
     try {
       results = await dns.lookup(host, { all: true });
     } catch {
-      throw httpError(502, `Could not resolve host ${host}`);
+      throw httpError(502, `Could not resolve host ${host}.`);
     }
     addrs = results.map((r) => r.address);
   }

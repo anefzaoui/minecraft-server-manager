@@ -43,7 +43,7 @@ async function createBackupImpl(
   const needed = indexer.sizeOf(`servers/${serverId}`) || 0;
   const { free } = await indexer.diskFree();
   if (needed && free < needed * 1.1) {
-    throw httpError(507, `Not enough disk space for a backup (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
+    throw httpError(507, `Not enough disk space for a backup (~${(needed / 1024 ** 3).toFixed(1)} GB needed).`);
   }
 
   const info = await inspectStatus(serverId).catch(() => ({ exists: false }));
@@ -230,7 +230,7 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   // let this check pass right before the extraction fills the disk).
   const zipPath = dataPath(backup.rel_path);
   const zipStat = await fsp.stat(zipPath).catch(() => null);
-  if (!zipStat) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}`);
+  if (!zipStat) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}.`);
   const uncompressedBytes = await zipUncompressedSize(zipPath).catch(() => zipStat.size * 4);
   // The archive's real entry count, used below to lift the extractor's hard
   // caps for this archive. Fall back to 0 (defaults apply) if unreadable -
@@ -240,7 +240,7 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   const needed = uncompressedBytes + safetyBytes;
   const { free } = await indexer.diskFree();
   if (free < needed * 1.1) {
-    throw httpError(507, `Not enough disk space to restore (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
+    throw httpError(507, `Not enough disk space to restore (~${(needed / 1024 ** 3).toFixed(1)} GB needed).`);
   }
 
   if (task) task.step('Stopping server…');
@@ -432,7 +432,7 @@ async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
   if (!fs.existsSync(abs)) throw httpError(404, 'Backup archive is missing on disk');
   const targetRel = `backups/${backup.server_id}/${name}`;
   const target = dataPath(targetRel);
-  if (fs.existsSync(target)) throw httpError(409, `A backup named "${name}" already exists here`);
+  if (fs.existsSync(target)) throw httpError(409, `A backup named "${name}" already exists here.`);
 
   await fsp.rename(abs, target);
   try {

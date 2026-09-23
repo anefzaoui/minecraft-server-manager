@@ -162,7 +162,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
     for (const d of worldDirs) needed += await servers.dirSize(d.abs);
     const { free } = await indexer.diskFree();
     if (free < needed * 1.1) {
-      throw httpError(507, `Not enough disk space to embed the world (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
+      throw httpError(507, `Not enough disk space to embed the world (~${(needed / 1024 ** 3).toFixed(1)} GB needed).`);
     }
   }
 
@@ -277,13 +277,13 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
 async function importPreview(zipPath) {
   const { entries, texts } = await readZipIndex(zipPath, { textEntry: (n) => n === 'manifest.json' });
   const manifestText = texts.get('manifest.json') || null;
-  if (!manifestText) throw httpError(400, 'Not a Minecraft Server Manager blueprint: manifest.json is missing');
+  if (!manifestText) throw httpError(400, 'Not a Minecraft Server Manager blueprint: manifest.json is missing.');
 
   let raw;
   try {
     raw = JSON.parse(manifestText);
   } catch {
-    throw httpError(400, 'Blueprint manifest is not valid JSON');
+    throw httpError(400, 'Blueprint manifest is not valid JSON.');
   }
   const parsed = manifestSchema.safeParse(raw);
   if (!parsed.success) {
@@ -296,7 +296,7 @@ async function importPreview(zipPath) {
   const manifest = parsed.data;
   for (const rel of manifest.configFiles) {
     if (rel.split('/').includes('..') || path.isAbsolute(rel)) {
-      throw httpError(400, `Blueprint config file path escapes the server directory: ${rel}`);
+      throw httpError(400, `Blueprint config file path escapes the server directory: ${rel}.`);
     }
   }
 

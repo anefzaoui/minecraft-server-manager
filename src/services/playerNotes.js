@@ -22,7 +22,7 @@ function listNotes(serverId, uuid) {
 
 function addNote(serverId, { uuid, name }, note, { actor = 'system' } = {}) {
   note = String(note || '').trim();
-  if (!note) throw httpError(400, 'Note cannot be empty');
+  if (!note) throw httpError(400, 'Note cannot be empty.');
   if (note.length > MAX_NOTE_LENGTH) throw httpError(400, `Note is too long (max ${MAX_NOTE_LENGTH} characters)`);
   const id = `pnote_${nanoid(10)}`;
   db.run(

@@ -530,7 +530,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
   if (source.kind === 'invalid') {
     throw httpError(
       400,
-      'Enter a Modrinth/CurseForge/Hangar/SpigotMC/GitHub URL, a direct download URL, a Modrinth slug, or a GitHub owner/repo'
+      'Enter a Modrinth/CurseForge/Hangar/SpigotMC/GitHub URL, a direct download URL, a Modrinth slug, or a GitHub owner/repo.'
     );
   }
 
@@ -603,7 +603,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
       throw httpError(
         404,
         targetKind === 'plugin'
-          ? `No ${resolved.title} plugin build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`
+          ? `No ${resolved.title} plugin build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}.`
           : isZipOnlyKind(targetKind)
             ? `No ${resolved.title} ${targetKind === 'datapack' ? 'datapack' : 'resource pack'} build matches Minecraft ${mcVersion || 'this version'}.`
             : `No ${resolved.title} build matches ${versionLoader || 'this loader'}${mcVersion ? ` on Minecraft ${mcVersion}` : ''}.`
@@ -689,11 +689,11 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     if (!version) {
       throw httpError(
         404,
-        `No ${resolved.name} build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}`
+        `No ${resolved.name} build matches this server${mcVersion ? ` (Minecraft ${mcVersion})` : ''}.`
       );
     }
     if (!version.downloadUrl)
-      throw httpError(409, `${resolved.name} publishes no downloadable Paper file for this version`);
+      throw httpError(409, `${resolved.name} publishes no downloadable Paper file for this version.`);
     downloadUrl = version.downloadUrl;
     Object.assign(meta, {
       platform: 'hangar',
@@ -709,7 +709,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
   } else if (source.kind === 'spiget') {
     const spiget = require('./spigetApi');
     const ref = spiget.parseResourceRef(source.ref);
-    if (!ref) throw httpError(400, 'Could not read a SpigotMC resource id from that URL');
+    if (!ref) throw httpError(400, 'Could not read a SpigotMC resource id from that URL.');
     const resource = await spiget.getResource(ref.resourceId);
     if (resource.external) {
       throw httpError(
@@ -719,7 +719,7 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     }
     const versions = await spiget.getVersions(ref.resourceId);
     const version = ref.versionId ? versions.find((v) => v.versionId === ref.versionId) : versions[0];
-    if (!version) throw httpError(404, `No downloadable version of ${resource.name} was found`);
+    if (!version) throw httpError(404, `No downloadable version of ${resource.name} was found.`);
     downloadUrl = spiget.downloadUrl(ref.resourceId, version.versionId);
     Object.assign(meta, {
       platform: 'spiget',
@@ -743,11 +743,11 @@ async function installFromUrl(serverId, input, { actor = 'system', kind, onProgr
     if (!release) {
       throw httpError(
         404,
-        ref.tag ? `No release tagged ${ref.tag} in ${ref.repo}` : `No release with jar assets in ${ref.repo}`
+        ref.tag ? `No release tagged ${ref.tag} in ${ref.repo}.` : `No release with jar assets in ${ref.repo}.`
       );
     }
     const asset = github.pickAsset(release.assets, ref.asset);
-    if (!asset) throw httpError(404, `Release ${release.tag} of ${ref.repo} has no jar assets`);
+    if (!asset) throw httpError(404, `Release ${release.tag} of ${ref.repo} has no jar assets.`);
     downloadUrl = asset.downloadUrl;
     Object.assign(meta, {
       platform: 'github',
@@ -997,7 +997,7 @@ async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'syst
 
   const lib = row.library_id ? db.get('SELECT * FROM library_files WHERE id = ?', row.library_id) : null;
   if (!lib || !lib.project_id) {
-    throw httpError(409, 'No update source is known for this mod (installed from a direct URL or upload)');
+    throw httpError(409, 'No update source is known for this mod (installed from a direct URL or upload).');
   }
   const check = db.get("SELECT * FROM update_checks WHERE subject_type = 'content' AND subject_id = ?", row.id);
   if (!check || !check.latest_version) {
@@ -1017,7 +1017,7 @@ async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'syst
   } else if (lib.platform === 'github') {
     ref = `https://github.com/${lib.project_id}/releases/tag/${encodeURIComponent(check.latest_version)}`;
   } else {
-    throw httpError(409, `Cannot auto-update content from platform "${lib.platform}"`);
+    throw httpError(409, `Cannot auto-update content from platform "${lib.platform}".`);
   }
 
   const wasEnabled = Boolean(row.enabled);

@@ -51,7 +51,7 @@ function normalizeTarget(target) {
 async function assertRunning(serverId) {
   const info = await inspectStatus(serverId);
   if (!info.exists || !(info.status === 'running' || info.status === 'unhealthy')) {
-    throw httpError(409, 'Start the server before sending chat');
+    throw httpError(409, 'Start the server before sending chat.');
   }
 }
 
@@ -67,8 +67,8 @@ function deliveryLines(text, separateLines = false) {
 /** Send an admin chat message. Returns the sent message (for the panel's chat log). */
 async function sendChat(serverId, opts = {}) {
   const text = normalizeMessageText(opts.text, opts.preserveNewlines === true);
-  if (!text) throw httpError(400, 'Message text is required');
-  if (text.length > 512) throw httpError(400, 'Message is too long (512 characters max)');
+  if (!text) throw httpError(400, 'Message text is required.');
+  if (text.length > 512) throw httpError(400, 'Message is too long (512 characters max).');
   const mode = opts.mode === 'say' ? 'say' : 'tellraw';
   const actor = opts.actor || 'system';
   await assertRunning(serverId);

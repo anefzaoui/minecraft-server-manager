@@ -49,7 +49,7 @@ function guardProtected(serverId, rel) {
     // Applies to read/download AND write - the DB holds password hashes and the
     // at-rest secret cipher, and .session-secret is that cipher's key, so neither
     // must ever leave (or change) via the file manager.
-    throw httpError(403, 'That panel file is not accessible from the file manager');
+    throw httpError(403, 'That panel file is not accessible from the file manager.');
   }
 }
 
@@ -132,9 +132,9 @@ async function readText(serverId, relPath) {
 async function writeText(serverId, relPath, content, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
-  if (!rel) throw httpError(400, 'Cannot write the root');
+  if (!rel) throw httpError(400, 'Cannot write the root.');
   const bytes = Buffer.byteLength(content, 'utf8');
-  if (bytes > MAX_TEXT_BYTES) throw httpError(413, `Content exceeds the ${MAX_TEXT_MB_LABEL} editor limit`);
+  if (bytes > MAX_TEXT_BYTES) throw httpError(413, `Content exceeds the ${MAX_TEXT_MB_LABEL} editor limit.`);
   assertRoom(serverId, bytes);
 
   const parent = path.dirname(abs);
@@ -181,8 +181,8 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
 
 async function mkdir(serverId, relPath, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
-  if (!rel) throw httpError(400, 'Folder name cannot be empty');
-  if (fs.existsSync(abs)) throw httpError(409, 'That name already exists');
+  if (!rel) throw httpError(400, 'Folder name cannot be empty.');
+  if (fs.existsSync(abs)) throw httpError(409, 'That name already exists.');
   await fsp.mkdir(abs, { recursive: true });
   recordEvent({
     serverId: serverId || null,
@@ -198,14 +198,14 @@ async function mkdir(serverId, relPath, { actor = 'system' } = {}) {
 async function rename(serverId, relPath, newName, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
-  if (!rel) throw httpError(400, 'Cannot rename the root');
+  if (!rel) throw httpError(400, 'Cannot rename the root.');
   const clean = sanitizeName(newName);
   if (!fs.existsSync(abs)) throw httpError(404, 'Not found');
   const target = path.join(path.dirname(abs), clean);
   // Re-check containment (sanitizeName guarantees it, but stay paranoid).
   resolvePath(serverId, path.posix.join(path.posix.dirname(rel), clean));
   if (fs.existsSync(target) && path.resolve(target) !== path.resolve(abs)) {
-    throw httpError(409, `"${clean}" already exists here`);
+    throw httpError(409, `"${clean}" already exists here.`);
   }
   await fsp.rename(abs, target);
   recordEvent({
@@ -222,15 +222,15 @@ async function rename(serverId, relPath, newName, { actor = 'system' } = {}) {
 async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
-  if (!rel) throw httpError(400, 'Cannot move the root');
+  if (!rel) throw httpError(400, 'Cannot move the root.');
   const dest = resolvePath(serverId, destRel);
   const dst = await fsp.stat(dest.abs).catch(() => null);
   if (!fs.existsSync(abs)) throw httpError(404, 'Not found');
   if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found');
-  if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot move a folder into itself');
+  if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot move a folder into itself.');
 
   const target = path.join(dest.abs, path.basename(abs));
-  if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination`);
+  if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination.`);
   await moveEntry(abs, target);
   const toRel = dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs);
   recordEvent({
@@ -246,20 +246,20 @@ async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
 /** Copy into a destination directory (recursive; quota-checked). */
 async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
-  if (!rel) throw httpError(400, 'Cannot copy the root');
+  if (!rel) throw httpError(400, 'Cannot copy the root.');
   const dest = resolvePath(serverId, destRel);
   const st = await fsp.stat(abs).catch(() => null);
   const dst = await fsp.stat(dest.abs).catch(() => null);
   if (!st) throw httpError(404, 'Not found');
   if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found');
-  if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot copy a folder into itself');
+  if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot copy a folder into itself.');
 
   const bytes = st.isDirectory() ? await dirSize(abs) : st.size;
   assertRoom(serverId, bytes);
   await assertDiskFree(bytes);
 
   const target = path.join(dest.abs, path.basename(abs));
-  if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination`);
+  if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination.`);
   await fsp.cp(abs, target, { recursive: true });
   const toRel = dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs);
   recordEvent({
@@ -277,7 +277,7 @@ async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
 async function remove(serverId, relPath, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
-  if (!rel) throw httpError(400, 'Cannot delete the root folder');
+  if (!rel) throw httpError(400, 'Cannot delete the root folder.');
   const st = await fsp.stat(abs).catch(() => null);
   if (!st) throw httpError(404, 'Not found');
   const freedBytes = st.isDirectory() ? await dirSize(abs) : st.size;
@@ -335,7 +335,7 @@ function assertRoom(serverId, aboutToAddBytes) {
 
 async function assertDiskFree(bytes) {
   const { free } = await indexer.diskFree().catch(() => ({ free: Infinity }));
-  if (free < bytes * 1.1) throw httpError(507, `Not enough disk space (~${humanBytes(bytes)} needed)`);
+  if (free < bytes * 1.1) throw httpError(507, `Not enough disk space (~${humanBytes(bytes)} needed).`);
 }
 
 async function dirSize(abs) {
