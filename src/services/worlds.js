@@ -16,7 +16,7 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 const yauzl = require('yauzl');
 const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/zip');
 const tar = require('tar');
@@ -1141,7 +1141,7 @@ function zipWorld(outFile, rootAbs, dimDirs = []) {
       reject(err);
     };
     const output = fs.createWriteStream(outFile);
-    const archive = archiver('zip', { zlib: { level: 6 } });
+    const archive = new ZipArchive({ zlib: { level: 6 } });
     output.on('close', () => {
       done = true;
       resolve();

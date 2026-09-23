@@ -2612,10 +2612,10 @@ router.get(
         status: 413,
       });
     }
-    const archiver = require('archiver');
+    const { ZipArchive } = require('archiver');
     const safeName = String(server.display_name || req.params.id).replace(/[^\w.-]+/g, '_');
     res.attachment(`${safeName}-logs.zip`);
-    const zip = archiver('zip', { zlib: { level: 6 } });
+    const zip = new ZipArchive({ zlib: { level: 6 } });
     zip.on('error', (err) => {
       logger.error('Log bundle stream failed.', { serverId: req.params.id, err: serializeError(err) });
       if (res.headersSent) return res.destroy();

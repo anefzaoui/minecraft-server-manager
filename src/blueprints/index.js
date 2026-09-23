@@ -12,7 +12,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 const { extractZip, readZipIndex } = require('../utils/zip');
 const { nanoid } = require('nanoid');
 const { z } = require('zod');
@@ -227,7 +227,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
 
   await new Promise((resolve, reject) => {
     const output = fs.createWriteStream(absPath);
-    const archive = archiver('zip', { zlib: { level: 6 } });
+    const archive = new ZipArchive({ zlib: { level: 6 } });
     output.on('close', resolve);
     archive.on('error', reject);
     archive.pipe(output);
@@ -799,7 +799,7 @@ async function writeManifestOnlyBlueprint(manifest, { builtin = false } = {}) {
   await fsp.mkdir(path.dirname(absPath), { recursive: true });
   await new Promise((resolve, reject) => {
     const output = fs.createWriteStream(absPath);
-    const archive = archiver('zip', { zlib: { level: 6 } });
+    const archive = new ZipArchive({ zlib: { level: 6 } });
     output.on('close', resolve);
     archive.on('error', reject);
     archive.pipe(output);

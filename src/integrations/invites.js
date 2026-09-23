@@ -13,7 +13,7 @@
 const httpError = require('../utils/httpError');
 const fs = require('node:fs');
 const os = require('node:os');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 const db = require('../db');
 const { dataPath } = require('../storage/pathGuard');
 const serversService = require('../services/servers');
@@ -229,7 +229,7 @@ async function generateMrpack(serverId, { host } = {}) {
 
   await new Promise((resolve, reject) => {
     const out = fs.createWriteStream(absPath);
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
     out.on('close', resolve);
     archive.on('error', reject);
     archive.pipe(out);

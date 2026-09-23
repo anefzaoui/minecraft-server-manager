@@ -8,7 +8,7 @@ const { makeJsonErrorHandler } = require('../middleware/jsonErrorHandler');
 const express = require('express');
 const fs = require('node:fs');
 const path = require('node:path');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 const { z } = require('zod');
 const crashes = require('../../crashes');
 const { dataPath } = require('../../storage/pathGuard');
@@ -48,7 +48,7 @@ router.get(
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="crash-reports-${serverId}.zip"`);
 
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
     archive.on('error', (err) => {
       if (!res.headersSent) return next(err);
       res.destroy();
