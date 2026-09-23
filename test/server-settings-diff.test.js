@@ -80,6 +80,31 @@ test('env differences expand per key, with catalog labels, additions and deletio
   assert.ok(!('MAX_PLAYERS' in byLabel), 'unchanged env keys should not be listed');
 });
 
+test('extra port mappings and volume binds report their real before/after counts', async () => {
+  db.run(
+    'UPDATE servers SET extra_ports_json = ?, extra_binds_json = ? WHERE id = ?',
+    JSON.stringify([{ containerPort: 9000, hostPort: 9100, protocol: 'tcp' }]),
+    JSON.stringify([{ hostPath: '/tmp/a', containerPath: '/b', mode: 'rw' }]),
+    'diff01'
+  );
+  const r = servers.summarizeServerChanges('diff01', {
+    extraPorts: [
+      { containerPort: 9000, hostPort: 9100, protocol: 'tcp' },
+      { containerPort: 9001, hostPort: 9101, protocol: 'tcp' },
+    ],
+    extraBinds: [],
+  });
+  const ports = r.changes.find((c) => c.label === 'Extra port mappings');
+  const binds = r.changes.find((c) => c.label === 'Extra volume binds');
+  assert.ok(ports, 'port row present');
+  assert.ok(binds, 'bind row present');
+  assert.equal(ports.before, '1', 'before count comes from the stored list');
+  assert.equal(ports.after, '2', 'after count comes from the incoming list');
+  assert.equal(ports.requiresRebuild, true);
+  assert.equal(binds.before, '1', 'bind before count comes from the stored list');
+  assert.equal(binds.after, '0', 'clearing the binds reports zero');
+});
+
 test('a pack-pinning conflict throws the same error the PATCH would', async () => {
   app.seedServer('diff_pin');
   db.run("UPDATE servers SET type = 'MODRINTH' WHERE id = ?", 'diff_pin');

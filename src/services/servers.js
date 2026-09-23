@@ -874,7 +874,8 @@ function summarizeServerChanges(id, changes) {
       }
     } else if (key === 'extraPorts' || key === 'extraBinds') {
       const beforeList = key === 'extraPorts' ? before.extraPorts : before.extraBinds;
-      push(DIRECT_LABELS[key], String(beforeList.length), String(afterVal.length ?? 0), true);
+      const afterList = key === 'extraPorts' ? changes.extraPorts : changes.extraBinds;
+      push(DIRECT_LABELS[key], String(beforeList.length), String(afterList.length), true);
     } else {
       push(DIRECT_LABELS[key] ?? key, beforeVal, afterVal, RECREATE_KEYS.has(key));
     }
