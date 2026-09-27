@@ -133,7 +133,7 @@ function parseHttpUrl(rawUrl) {
   try {
     u = new URL(rawUrl);
   } catch {
-    throw httpError(400, 'Invalid URL');
+    throw httpError(400, 'Invalid URL.');
   }
   if (u.protocol !== 'http:' && u.protocol !== 'https:') {
     throw httpError(400, `Only http(s) URLs are allowed (got ${u.protocol}).`);
@@ -167,8 +167,8 @@ async function resolveValidated(host, { allowPrivate = false } = {}) {
     throw httpError(
       400,
       allowPrivate
-        ? `Refusing to reach a link-local, multicast, or unspecified address (${host})`
-        : `Refusing to fetch a private or internal address (${host})`
+        ? `Refusing to reach a link-local, multicast, or unspecified address (${host}).`
+        : `Refusing to fetch a private or internal address (${host}).`
     );
   }
   return addrs;
