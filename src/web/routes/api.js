@@ -99,6 +99,7 @@ const createSchema = z
     cpus: optNum0(128),
     diskQuotaGb: optNum0(16384),
     updatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
+    modUpdatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
     autoStart: z.coerce.boolean().optional(),
     start: z.coerce.boolean().optional(),
     ...dockerOverridesSchema,
@@ -157,6 +158,7 @@ router.patch(
         diskQuotaGb: optNum0(16384),
         quotaStrict: z.coerce.boolean().optional(),
         updatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
+        modUpdatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
         autoStart: z.coerce.boolean().optional(),
         autoRestart: z.coerce.boolean().optional(),
         env: z.record(z.string(), z.string()).optional(),
@@ -877,6 +879,48 @@ router.get(
   })
 );
 
+// Discover feed for the modpacks empty state: trending packs on the platform.
+// Packs span Minecraft versions, so there is no loader/MC narrowing here.
+router.get(
+  '/packs/discover',
+  asyncHandler(async (req, res, next) => {
+    const { platform, limit, offset } = z
+      .object({
+        platform: z.enum(['modrinth', 'curseforge']).default('modrinth'),
+        limit: z.coerce.number().int().min(1).max(12).default(6),
+        offset: z.coerce.number().int().min(0).max(1000).default(0),
+      })
+      .parse({
+        platform: req.query.platform || undefined,
+        limit: req.query.limit || undefined,
+        offset: req.query.offset || undefined,
+      });
+    let results;
+    if (platform === 'modrinth') {
+      results = (await modrinthApi.search({ query: '', kind: 'modpack', limit, offset, index: 'downloads' })).map(
+        (h) => ({
+          platform,
+          ref: h.slug,
+          name: h.title,
+          iconUrl: h.iconUrl,
+          downloads: h.downloads,
+          description: h.description,
+        })
+      );
+    } else {
+      results = (await curseforgeApi.search({ query: '', kind: 'modpack', limit, index: offset })).map((m) => ({
+        platform,
+        ref: m.slug,
+        name: m.name,
+        iconUrl: m.iconUrl,
+        downloads: m.downloads,
+        description: m.summary,
+      }));
+    }
+    res.json({ ok: true, results });
+  })
+);
+
 // Pack details for the shared details modal. Accepts platform+ref OR serverId
 // (installed pack - platform/ref come from the server's pin, and the pinned
 // version is echoed back so the UI can mark it).
@@ -1187,6 +1231,23 @@ router.post(
     const server = requireServer(req.params.id);
     const actor = req.user.username;
 
+    // A downgrade (older DataVersion) does not convert the world down: the
+    // older jar cannot read the newer chunks and regenerates them as empty
+    // void, destroying builds. Refuse it outright unless explicitly forced,
+    // mirroring the mod-compatibility gate below. Answered here rather than
+    // thrown, for the same reason: the client needs the direction to explain.
+    // Runs before the mod gate - a downgrade is refused whatever the mods say.
+    if (targetVersion && targetVersion !== server.mc_version && !force) {
+      const { isDowngrade } = require('../../utils/mcVersion');
+      if (isDowngrade(server.mc_version, targetVersion)) {
+        return res.status(409).json({
+          ok: false,
+          error: `Minecraft ${targetVersion} is older than the running ${server.mc_version}. Downgrading destroys world data: the older server cannot read the newer chunks and regenerates them as empty void.`,
+          downgrade: { from: server.mc_version, to: targetVersion },
+        });
+      }
+    }
+
     // A Minecraft version change on a modded server has to be earned: every
     // installed mod needs a build for the target, established by a version
     // check (#52). `force` is the deliberate override - it is only ever sent
@@ -1233,6 +1294,85 @@ router.post(
         t.step('Recreating container…');
         await servers.recreateServer(server.id, { actor });
         return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
+      }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// Standalone software (server TYPE) change: Vanilla ↔ Paper ↔ Fabric ↔ …,
+// with a pre-change backup and a container rebuild, all inside one task.
+// Pack-managed servers are refused: their TYPE is owned by the installed pack
+// (change or remove the pack on the Versions tab instead). Switching TO a pack
+// type is refused for the same reason - packs are installed through their own
+// flows, which set the TYPE themselves.
+// Loader build pins for the previous software (FABRIC_LOADER_VERSION, …) are
+// dropped so they don't linger on a server that no longer runs that loader;
+// pins for the new software are kept as-is.
+const LOADER_PIN_ENV = {
+  FABRIC: ['FABRIC_LOADER_VERSION', 'FABRIC_LAUNCHER_VERSION'],
+  QUILT: ['QUILT_LOADER_VERSION'],
+  FORGE: ['FORGE_VERSION'],
+  NEOFORGE: ['NEOFORGE_VERSION'],
+  PAPER: ['PAPER_BUILD', 'PAPER_CHANNEL'],
+  PURPUR: ['PURPUR_BUILD'],
+};
+
+router.post(
+  '/servers/:id/type/change',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    const { targetType } = z
+      .object({
+        targetType: z
+          .string()
+          .trim()
+          .min(1)
+          .max(32)
+          .refine((v) => SERVER_TYPES.includes(v), { message: 'Unknown server type.' }),
+      })
+      .parse(req.body);
+    const server = requireServer(req.params.id);
+    const modsService = require('../../services/mods');
+    if (modsService.isPackServer(server)) {
+      throw httpError(
+        400,
+        'This server runs a modpack, which owns its software. Change or remove the pack on the Versions tab instead.'
+      );
+    }
+    if (modsService.isPackServer({ type: targetType })) {
+      throw httpError(
+        400,
+        'Modpack software is installed through the modpack flows, which set the type themselves. Pick a standalone software instead.'
+      );
+    }
+    if (targetType === server.type) {
+      throw httpError(400, `This server already runs on ${targetType}.`);
+    }
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Changing ${server.display_name} to ${targetType}…`,
+      { serverId: server.id, actor },
+      async (t) => {
+        t.step('Creating pre-change backup…');
+        const backup = await backups.createBackup(server.id, {
+          reason: 'pre-update',
+          actor,
+          note: `Before software ${server.type} → ${targetType}`,
+          task: t,
+        });
+        t.step('Applying new software…');
+        const keepPins = new Set(LOADER_PIN_ENV[targetType] || []);
+        const env = { ...server.env };
+        for (const pins of Object.values(LOADER_PIN_ENV)) {
+          for (const key of pins) {
+            if (!keepPins.has(key)) delete env[key];
+          }
+        }
+        servers.updateServer(server.id, { type: targetType, env }, { actor });
+        t.step('Recreating container…');
+        await servers.recreateServer(server.id, { actor });
+        return { ok: true, from: server.type, to: targetType, backupId: backup.id };
       }
     );
     res.status(202).json({ ok: true, taskId });
@@ -1387,14 +1527,29 @@ router.post(
 router.post(
   '/servers/:id/backups/:backupId/restore',
   requireCap('backups'),
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const server = requireServer(req.params.id);
     const actor = req.user.username;
     const backupId = req.params.backupId;
+    const { destinationId } = z.object({ destinationId: z.string().trim().max(40).optional() }).parse(req.body || {});
     const taskId = tasks.run(
       `Restoring backup on ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
+        // Local archives can be gone (deleted for space) while an offsite
+        // copy survives: pull it back into place first, then restore
+        // normally. Orphaned tmp downloads are wiped on boot.
+        const row = db.get('SELECT * FROM backups WHERE id = ?', backupId);
+        if (!row) throw Object.assign(new Error('Backup not found'), { status: 404 });
+        if (!fs.existsSync(dataPath(row.rel_path))) {
+          t.step('Local archive missing - downloading from offsite storage…');
+          const { tmpPath } = await require('../../services/remotes').downloadForRestore(backupId, destinationId, {
+            actor,
+            task: t,
+          });
+          await fsp.mkdir(path.dirname(dataPath(row.rel_path)), { recursive: true });
+          await fsp.rename(tmpPath, dataPath(row.rel_path));
+        }
         t.step('Stopping server & taking a safety backup…');
         await backups.restoreBackup(server.id, backupId, { actor });
         return { ok: true };
@@ -1423,7 +1578,11 @@ router.delete(
   '/backups/:backupId',
   requireCap('backups', { resolve: backupServerId }),
   asyncHandler(async (req, res, next) => {
-    res.json({ ok: true, ...(await backups.deleteBackup(req.params.backupId, { actor: req.user.username })) });
+    // An explicit delete removes offsite copies too; retention pruning leaves them alone.
+    res.json({
+      ok: true,
+      ...(await backups.deleteBackup(req.params.backupId, { actor: req.user.username, remote: 'delete' })),
+    });
   })
 );
 
@@ -1467,9 +1626,134 @@ router.get('/backups/retention', requireRoleKeys('admin'), (req, res) => {
 router.post(
   '/backups/retention',
   requireRoleKeys('admin'),
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const patch = retentionPatchSchema.parse(req.body || {});
     res.json({ ok: true, global: backupRetention.setGlobal(patch) });
+  })
+);
+
+// ---- Offsite backup destinations (Nextcloud / Dropbox / Google Drive) ----
+// Local backups stay the default: these endpoints only configure explicit
+// offsite copies. Management is admin-only; per-archive upload/download rides
+// the backups capability of the archive's server.
+const remotes = require('../../services/remotes');
+
+const remoteBodySchema = z.object({
+  name: z.string().trim().min(1).max(80).optional(),
+  provider: z.enum(['nextcloud', 'dropbox', 'gdrive']).optional(),
+  config: z.record(z.string(), z.string()).optional(),
+  secret: z.record(z.string(), z.string()).optional(),
+  autoUpload: z.coerce.boolean().optional(),
+});
+
+// Upload targets for operators: names only, no secrets or config. The global
+// requireWrite gate already keeps viewers out; the upload itself re-checks
+// the archive's backups capability.
+router.get('/remotes/targets', (req, res) => {
+  res.json({
+    ok: true,
+    destinations: remotes.listDestinations().map((d) => ({ id: d.id, name: d.name, provider: d.providerLabel })),
+  });
+});
+
+router.get('/remotes', requireRoleKeys('admin'), (req, res) => {
+  const destinations = remotes.listDestinations().map((d) => {
+    const counts = db.get(
+      `SELECT SUM(status = 'done') AS done, SUM(status IN ('pending','uploading')) AS pending,
+              SUM(status = 'failed') AS failed
+         FROM remote_backup_files WHERE destination_id = ?`,
+      d.id
+    );
+    return {
+      ...d,
+      counts: { done: counts?.done || 0, pending: counts?.pending || 0, failed: counts?.failed || 0 },
+    };
+  });
+  res.json({ ok: true, destinations });
+});
+
+router.post(
+  '/remotes',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    const input = z
+      .object({
+        name: z.string().trim().min(1).max(80),
+        provider: z.enum(['nextcloud', 'dropbox', 'gdrive']),
+        config: z.record(z.string(), z.string()).default({}),
+        secret: z.record(z.string(), z.string()).optional(),
+        autoUpload: z.coerce.boolean().optional(),
+      })
+      .parse(req.body);
+    const created = remotes.createDestination(input, { actor: req.user.username });
+    if (input.autoUpload) remotes.updateDestination(created.id, { autoUpload: true }, { actor: req.user.username });
+    res.status(201).json({ ok: true, destination: remotes.getDestination(created.id) });
+  })
+);
+
+router.patch(
+  '/remotes/:id',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    res.json({
+      ok: true,
+      destination: remotes.updateDestination(req.params.id, remoteBodySchema.parse(req.body), {
+        actor: req.user.username,
+      }),
+    });
+  })
+);
+
+router.delete(
+  '/remotes/:id',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    res.json({ ok: true, ...remotes.deleteDestination(req.params.id, { actor: req.user.username }) });
+  })
+);
+
+router.post(
+  '/remotes/:id/test',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    res.json({ ok: true, ...(await remotes.testConnection(req.params.id)) });
+  })
+);
+
+// Explicit per-archive upload (works whether or not auto-upload is on).
+// The archive belongs to a server, so this follows its backups capability.
+router.post(
+  '/remotes/:id/upload/:backupId',
+  requireCap('backups', { resolve: backupServerId }),
+  asyncHandler(async (req, res, next) => {
+    const row = db.get('SELECT id FROM backups WHERE id = ?', req.params.backupId);
+    if (!row) throw Object.assign(new Error('Backup not found'), { status: 404 });
+    // backupServerId resolves req.params.backupId for the capability above.
+    const taskId = remotes.startUploadTask(req.params.backupId, req.params.id, { actor: req.user.username });
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// OAuth start for Dropbox / Google Drive: returns the provider URL, the
+// browser navigates there, and the provider calls back below.
+router.post(
+  '/remotes/:id/oauth/start',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    const dest = remotes.getDestination(req.params.id);
+    if (!dest) throw Object.assign(new Error('Destination not found'), { status: 404 });
+    const { state } = remotes.beginOAuth(req.params.id);
+    const redirectUri = `${req.protocol}://${req.get('host')}/remotes/oauth/callback`;
+    res.json({
+      ok: true,
+      url: remotes.oauthAuthorizeUrl(
+        dest.provider,
+        { ...dest, config_json: JSON.stringify(dest.config) },
+        redirectUri,
+        state
+      ),
+      redirectUri,
+    });
   })
 );
 
@@ -1500,7 +1784,7 @@ router.post(
 // ---- Blueprints ----
 router.use('/blueprints', require('./blueprints'));
 
-// ---- World quick controls (Overview tab) - version-tolerant service ----
+// ---- World quick controls (World tab) - version-tolerant service ----
 const worldControls = require('../../services/worldControls');
 
 const WORLD_STATE_LIVE_STATUSES = new Set(['running', 'unhealthy', 'stalled']);
@@ -1570,8 +1854,18 @@ router.post(
   requireCap('console'),
   asyncHandler(async (req, res, next) => {
     requireServer(req.params.id);
-    const { action } = z.object({ action: z.enum(Object.keys(worldControls.QUICK_ACTIONS)) }).parse(req.body);
-    const result = await worldControls.runQuick(req.params.id, action, { actor: req.user.username });
+    // Fixed actions plus parameterized ones (number inputs, border fields);
+    // the service validates every parameter value before touching RCON.
+    const { action, params } = z
+      .object({
+        action: z.enum([...Object.keys(worldControls.QUICK_ACTIONS), ...worldControls.PARAM_ACTIONS]),
+        params: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+      })
+      .parse(req.body);
+    const result = await worldControls.runQuick(req.params.id, action, {
+      actor: req.user.username,
+      params: params || {},
+    });
     res.json({ ok: true, ...result });
   })
 );
@@ -1986,11 +2280,37 @@ router.get(
     const state = compat.getReport(req.params.id);
     const entry = state.report && state.report.versions.find((v) => v.version === version);
     if (!entry) throw httpError(404, 'That Minecraft version was not part of the last version check.');
+    // Card rows want icons + the installed build: both live locally
+    // (server_content + the cached library icons), matched by jar filename
+    // with a name fallback. No registry calls - this stays instant offline.
+    const contentRows = db.all(
+      `SELECT sc.filename, sc.name, sc.version, sc.icon_url AS row_icon,
+              lf.icon_rel_path AS lib_rel, lf.icon_url AS lib_icon
+         FROM server_content sc LEFT JOIN library_files lf ON lf.id = sc.library_id
+        WHERE sc.server_id = ?`,
+      req.params.id
+    );
+    const byFile = new Map(contentRows.map((r) => [String(r.filename).toLowerCase(), r]));
+    const byName = new Map(contentRows.map((r) => [String(r.name).toLowerCase(), r]));
+    const enrich = (items) =>
+      Array.isArray(items)
+        ? items.map((m) => {
+            const hit =
+              byFile.get(String((m && m.file) || '').toLowerCase()) ||
+              byName.get(String((m && m.name) || '').toLowerCase());
+            if (!hit) return m;
+            return {
+              ...m,
+              installedVersion: hit.version || null,
+              iconUrl: (hit.lib_rel ? `/${hit.lib_rel}` : hit.lib_icon || hit.row_icon) || null,
+            };
+          })
+        : items;
     res.json({
       ok: true,
-      version: entry,
-      unknown: state.report.unknown,
-      unchecked: state.report.unchecked || [],
+      version: { ...entry, ready: enrich(entry.ready), missing: enrich(entry.missing) },
+      unknown: enrich(state.report.unknown),
+      unchecked: enrich(state.report.unchecked || []),
       partial: state.report.partial,
     });
   })
@@ -2633,6 +2953,33 @@ router.get(
         mc: req.query.mc || undefined,
       });
     res.json({ ok: true, results: await modBrowser.search({ query: q, platform, kind, loader, mc }) });
+  })
+);
+
+// Discover feed for empty states: trending projects on the platform, narrowed
+// to the server's loader + MC so every recommendation is installable. Cached
+// upstream like search (same api_cache rows live 5 minutes).
+router.get(
+  '/mods/discover',
+  asyncHandler(async (req, res, next) => {
+    const { platform, kind, loader, mc, limit, offset } = z
+      .object({
+        platform: z.enum(['modrinth', 'curseforge']).default('modrinth'),
+        kind: z.enum(CONTENT_KINDS).default('mod'),
+        loader: z.enum(BROWSER_LOADERS).optional(),
+        mc: z.string().trim().max(32).optional(),
+        limit: z.coerce.number().int().min(1).max(12).default(8),
+        offset: z.coerce.number().int().min(0).max(1000).default(0),
+      })
+      .parse({
+        platform: req.query.platform || undefined,
+        kind: req.query.kind || undefined,
+        loader: req.query.loader || undefined,
+        mc: req.query.mc || undefined,
+        limit: req.query.limit || undefined,
+        offset: req.query.offset || undefined,
+      });
+    res.json({ ok: true, results: await modBrowser.discover({ platform, kind, loader, mc, limit, offset }) });
   })
 );
 

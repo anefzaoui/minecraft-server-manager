@@ -143,6 +143,25 @@ test('the report ships summaries only, never every mod of every version', async 
   }
 });
 
+test('version lists carry local icons and installed builds for card rows', async () => {
+  const id = seedForgeServer('srv_r_icons');
+  storeReport(id);
+  db.run(
+    `INSERT INTO server_content (id, server_id, kind, managed_by, name, filename, version, icon_url)
+     VALUES ('sc_ic_1', ?, 'mod', 'overlay', 'JEI', 'jei.jar', '3.1', 'https://cdn/jei.png'),
+            ('sc_ic_2', ?, 'mod', 'overlay', 'Sodium', 'sodium.jar', '2.0', null)`,
+    id,
+    id
+  );
+  const r = await app.req('GET', `/api/servers/${id}/compat/versions/1.21.1`, { cookie });
+  assert.equal(r.status, 200);
+  const byName = new Map([...r.json.version.ready, ...r.json.version.missing].map((m) => [m.name, m]));
+  assert.equal(byName.get('JEI').iconUrl, 'https://cdn/jei.png');
+  assert.equal(byName.get('JEI').installedVersion, '3.1');
+  assert.equal(byName.get('Sodium').installedVersion, '2.0');
+  assert.equal(byName.get('Sodium').iconUrl, null);
+});
+
 test('one version at a time carries its own lists', async () => {
   const id = seedForgeServer('srv_r_one');
   storeReport(id);
@@ -275,6 +294,24 @@ test('the Versions tab renders for a server with a stored report', async () => {
   assert.match(r.text, /data-compat-version="1\.21\.1"/);
   // The mod lists are fetched per version - they must not be in the HTML.
   assert.ok(!/Sodium/.test(r.text), 'per-version mod names must not be server-rendered');
+});
+
+test('version rows carry their status and the page exposes the update context', async () => {
+  const id = seedForgeServer('srv_r_hooks');
+  storeReport(id);
+  const r = await app.req('GET', `/servers/${id}/updates`, { cookie });
+  assert.equal(r.status, 200);
+  // Per-row status for the client, plus the current version, server name and
+  // the settings capability the per-row Update button needs.
+  assert.match(r.text, /data-compat-version="1\.20\.4" data-compat-status="ready"/);
+  assert.match(r.text, /data-compat-current="1\.20\.1"/);
+  assert.match(r.text, /data-compat-can-update="true"/);
+  assert.match(r.text, new RegExp(`data-compat-server-name="${id}"`));
+  // The update action lives in the summary row as an icon-only button with
+  // the version in its accessible name; the per-count text is gone.
+  assert.match(r.text, /data-compat-update="1\.20\.4"[^>]*aria-label="Update to 1\.20\.4"/);
+  assert.match(r.text, /data-compat-update="1\.21\.1"[^>]*aria-label="Update to 1\.21\.1"/);
+  assert.doesNotMatch(r.text, /\d+\/\d+ ready/);
 });
 
 test('the page caps the per-server lists instead of rendering a whole pack', async () => {

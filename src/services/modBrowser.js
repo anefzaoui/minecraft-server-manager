@@ -91,6 +91,41 @@ async function search({ query, platform, kind = 'mod', loader, mc, limit = 20 })
   }));
 }
 
+// ---- Discover ---------------------------------------------------------------
+
+/**
+ * Trending projects for an empty state: most-downloaded (Modrinth) or most
+ * popular (CurseForge) matching the kind/loader/MC filters, same normalized
+ * shape as search() so the UI reuses its install flows. Modpacks go through
+ * the packs discover route instead (no loader/MC narrowing there).
+ */
+async function discover({ platform, kind = 'mod', loader, mc, limit = 8, offset = 0 }) {
+  const mcVersion = normMc(mc);
+  loader = effectiveLoader(kind, loader);
+  if (platform === 'curseforge') {
+    const hits = await curseforge.search({ query: '', kind, loader, mcVersion, limit, index: offset });
+    return hits.map((m) => ({
+      platform: 'curseforge',
+      ref: m.slug,
+      projectId: String(m.modId),
+      name: m.name,
+      description: m.summary || '',
+      iconUrl: m.iconUrl || null,
+      downloads: m.downloads || 0,
+    }));
+  }
+  const hits = await modrinth.search({ query: '', kind, loader, mcVersion, limit, offset, index: 'downloads' });
+  return hits.map((h) => ({
+    platform: 'modrinth',
+    ref: h.slug,
+    projectId: h.projectId,
+    name: h.title,
+    description: h.description || '',
+    iconUrl: h.iconUrl || null,
+    downloads: h.downloads || 0,
+  }));
+}
+
 // ---- Project metadata + versions -------------------------------------------
 
 /** {ref, projectId, name, iconUrl} for a mod given a slug or platform id. */
@@ -262,4 +297,4 @@ async function resolveDependencies({ loader, mc, selection = [] }) {
   return { deps, warnings };
 }
 
-module.exports = { search, versions, resolveDependencies, metaFor };
+module.exports = { search, discover, versions, resolveDependencies, metaFor };

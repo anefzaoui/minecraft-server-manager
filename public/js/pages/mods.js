@@ -107,9 +107,9 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         setTimeout(() => location.reload(), 600);
       }
     } else if (e.target.closest('[data-mod-toggle]')) {
-      const btn = e.target.closest('[data-mod-toggle]');
+      const input = e.target.closest('[data-mod-toggle]');
       const enable = row.dataset.enabled !== 'true';
-      const res = await withBusy(btn, () => post(`/api/servers/${serverId}/mods/toggle`, { file, enabled: enable }));
+      const res = await withBusy(input, () => post(`/api/servers/${serverId}/mods/toggle`, { file, enabled: enable }));
       if (res) {
         toast(
           res.applied === 'instant'
@@ -118,6 +118,10 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
           { kind: 'success' }
         );
         setTimeout(() => location.reload(), 600);
+      } else if (input instanceof HTMLInputElement) {
+        // The switch flips optimistically on click - put it back when the
+        // toggle did not go through, or it lies until the next reload.
+        input.checked = !input.checked;
       }
     } else if (e.target.closest('[data-mod-delete]')) {
       const btn = e.target.closest('[data-mod-delete]');
@@ -836,6 +840,196 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
   }
 
   refreshPending(true);
+  initDiscover();
+
+  // Recommended projects for an empty mod list: trending on the registry for
+  // this server's loader + MC, so every card is installable here. Same install
+  // endpoints as the search modal above.
+  function initDiscover() {
+    const box = document.querySelector('[data-mods-discover]');
+    if (!box) return; // mods installed - the section only renders when empty
+    const resultsEl = box.querySelector('[data-discover-results]');
+    const canInstall = root.dataset.modsCanInstall === '1';
+    const PAGE = 8;
+    let platform = 'modrinth';
+    let offset = 0;
+    const loader =
+      serverLoader || { FABRIC: 'fabric', QUILT: 'quilt', FORGE: 'forge', NEOFORGE: 'neoforge' }[serverType] || '';
+
+    const moreBtn = document.createElement('button');
+    moreBtn.type = 'button';
+    moreBtn.className = 'btn btn-ghost btn-sm mt-3 hidden';
+    moreBtn.textContent = 'Show More';
+    moreBtn.addEventListener('click', () => load(false));
+    resultsEl.after(moreBtn);
+
+    // Already-installed hits get a badge instead of an Install button. Keyed
+    // by platform:projectId - only content installed through a platform can
+    // match. Same source as the search modal above.
+    let installedKeys = new Set();
+    fetch(`/api/servers/${serverId}/mods`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) {
+          installedKeys = new Set(
+            (data.mods || []).filter((m) => m.platform && m.projectId).map((m) => `${m.platform}:${m.projectId}`)
+          );
+        }
+      })
+      .catch(() => {});
+
+    box.querySelectorAll('[data-discover-platform]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.discoverPlatform === platform) return;
+        platform = btn.dataset.discoverPlatform;
+        box.querySelectorAll('[data-discover-platform]').forEach((b) => {
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+        load(true);
+      });
+    });
+
+    let seq = 0;
+    async function load(reset = true) {
+      const my = ++seq;
+      if (reset) {
+        offset = 0;
+        moreBtn.classList.add('hidden');
+        resultsEl.innerHTML = '<p class="p-6 text-center text-sm text-ink-faint">Finding popular projects…</p>';
+      } else {
+        moreBtn.disabled = true;
+      }
+      const params = new URLSearchParams({ platform, kind: contentKind, limit: String(PAGE), offset: String(offset) });
+      if (loader) params.set('loader', loader);
+      if (mc && !mc.startsWith('LATEST')) params.set('mc', mc);
+      let data;
+      try {
+        const res = await fetch(`/api/mods/discover?${params}`);
+        data = await res.json();
+      } catch {
+        data = { ok: false, error: 'Recommendations could not be loaded. Check the connection and try again.' };
+      }
+      if (my !== seq) return;
+      moreBtn.disabled = false;
+      const hits = (data.ok && data.results) || [];
+      if (reset && !hits.length) {
+        const p = document.createElement('p');
+        p.className = 'p-6 text-center text-sm text-ink-faint';
+        p.textContent = data.error || 'Nothing trending right now. Try the search above.';
+        if (platform === 'curseforge' && data.error) {
+          const link = document.createElement('a');
+          link.href = '/settings';
+          link.className = 'text-link hover:underline';
+          link.textContent = ' Check your API keys.';
+          p.append(' ', link);
+        }
+        resultsEl.replaceChildren(p);
+        return;
+      }
+      if (reset) resultsEl.innerHTML = '';
+      if (!data.ok) {
+        toast(data.error || 'More recommendations could not be loaded.', { kind: 'error' });
+        return;
+      }
+      for (const hit of hits) resultsEl.appendChild(card(hit));
+      offset += hits.length;
+      // A short page means the feed is exhausted - more presses would repeat it.
+      moreBtn.classList.toggle('hidden', hits.length < PAGE);
+    }
+
+    function card(hit) {
+      const el = document.createElement('div');
+      el.className = 'card flex flex-col p-4';
+      const top = document.createElement('div');
+      top.className = 'flex items-center gap-3';
+      if (hit.iconUrl) {
+        const img = document.createElement('img');
+        img.src = hit.iconUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.className = 'size-10 shrink-0 rounded bg-inset object-cover';
+        top.appendChild(img);
+      } else {
+        const ph = document.createElement('span');
+        ph.className = 'grid size-10 shrink-0 place-items-center rounded bg-inset text-ink-faint';
+        ph.textContent = '?';
+        top.appendChild(ph);
+      }
+      const mid = document.createElement('div');
+      mid.className = 'min-w-0 flex-1';
+      const name = document.createElement('div');
+      name.className = 'truncate text-sm font-semibold';
+      name.textContent = hit.name;
+      name.title = hit.name;
+      const dl = document.createElement('div');
+      dl.className = 'text-xs text-ink-faint';
+      dl.textContent = `${Number(hit.downloads).toLocaleString()} downloads`;
+      mid.append(name, dl);
+      top.appendChild(mid);
+      if (installedKeys.has(`${hit.platform}:${hit.projectId}`)) {
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-ok shrink-0';
+        badge.textContent = 'Installed';
+        top.appendChild(badge);
+      } else if (canInstall) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-primary btn-sm shrink-0';
+        btn.textContent = 'Install';
+        btn.addEventListener('click', () => install(hit, btn));
+        top.appendChild(btn);
+      }
+      el.appendChild(top);
+      if (hit.description) {
+        const desc = document.createElement('p');
+        desc.className = 'mt-2 line-clamp-2 flex-1 text-xs text-ink-faint';
+        desc.textContent = hit.description;
+        el.appendChild(desc);
+      }
+      return el;
+    }
+
+    async function install(hit, btn) {
+      if (hit.platform === 'curseforge') {
+        // Mirror the search modal: vet the newest matching build first, since
+        // authors can forbid automated downloads, then pin its exact file.
+        const params = new URLSearchParams({ platform: 'curseforge', ref: hit.ref, kind: contentKind });
+        if (loader) params.set('loader', loader);
+        if (mc && !mc.startsWith('LATEST')) params.set('mc', mc);
+        const restore = setBusy(btn, 'Installing…');
+        try {
+          const data = await fetch(`/api/mods/versions?${params}`).then((r) => r.json());
+          if (!data.ok) throw new Error(data.error || 'Version lookup failed');
+          const build = (data.versions || [])[0];
+          if (!build) throw new Error(`No ${hit.name} build matches this server's loader/MC version.`);
+          if (build.downloadable === false) {
+            throw new Error('The author disallows automated downloads. Use Search Mods for the manual path.');
+          }
+          const res2 = await post(`/api/servers/${serverId}/mods`, {
+            url: `https://www.curseforge.com/minecraft/${cfSection}/${encodeURIComponent(hit.ref)}/files/${build.versionId}`,
+          });
+          restore();
+          if (res2) {
+            toast(`Installed ${res2.installed?.name || hit.name}.`);
+            setTimeout(() => location.reload(), 700);
+          }
+        } catch (err) {
+          restore();
+          toast(err.message, { kind: 'error' });
+        }
+        return;
+      }
+      const res2 = await withBusy(btn, 'Installing…', () =>
+        post(`/api/servers/${serverId}/mods`, { url: `https://modrinth.com/mod/${hit.ref}` })
+      );
+      if (res2) {
+        toast(`Installed ${res2.installed?.name || hit.name}.`);
+        setTimeout(() => location.reload(), 700);
+      }
+    }
+
+    load();
+  }
 
   async function post(url, body) {
     try {

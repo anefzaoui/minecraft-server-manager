@@ -81,6 +81,102 @@ router.get(
   })
 );
 
+// Discover feed for the empty world library: popular CurseForge worlds.
+// CurseForge-only (no other registry publishes worlds); needs the stored key.
+router.get(
+  '/discover',
+  asyncHandler(async (req, res, next) => {
+    const { limit, offset } = z
+      .object({
+        limit: z.coerce.number().int().min(1).max(12).default(6),
+        offset: z.coerce.number().int().min(0).max(1000).default(0),
+      })
+      .parse({ limit: req.query.limit ?? undefined, offset: req.query.offset ?? undefined });
+    const curseforge = require('../../services/curseforgeApi');
+    const results = (await curseforge.searchWorlds({ limit, offset })).map((m) => ({
+      platform: 'curseforge',
+      ref: m.slug,
+      modId: m.modId,
+      name: m.name,
+      iconUrl: m.iconUrl,
+      downloads: m.downloads,
+      description: m.summary,
+    }));
+    res.json({ ok: true, results });
+  })
+);
+
+// Worlds get big: same 20 GB ceiling as the archive upload route.
+const MAX_WORLD_DOWNLOAD_BYTES = 20 * 1024 ** 3;
+
+// Save a CurseForge world straight into the library (download + import).
+// Downloading then importing a big archive takes minutes, so this runs as a
+// task like the other world imports. Names no existing world: the result lands
+// in the shared library.
+router.post(
+  '/discover-save',
+  asyncHandler(async (req, res, next) => {
+    const { modId, fileId, name } = z
+      .object({
+        modId: z.coerce.number().int().positive(),
+        fileId: z.coerce.number().int().positive().optional(),
+        name: z.string().trim().max(120).optional(),
+      })
+      .parse(req.body);
+    const actor = actorOf(req);
+    const tasks = require('../../services/tasks');
+    const taskId = tasks.run('Saving a world to the library…', { actor }, async (t) => {
+      const curseforge = require('../../services/curseforgeApi');
+      t.step('Finding the download…');
+      const files = await curseforge.getWorldFiles(modId);
+      const file = fileId ? files.find((f) => f.fileId === fileId) : files[0];
+      if (!file) throw httpError(404, 'No downloadable file found for that world.');
+      if (!file.downloadUrl) throw httpError(409, 'The author disallows automated downloads for that world.');
+      t.step(`Downloading ${file.fileName}…`);
+      const { safeFetch } = require('../../utils/urlGuard');
+      const fs = require('node:fs');
+      const { pipeline } = require('node:stream/promises');
+      const { nanoid } = require('nanoid');
+      const tmp = dataPath('tmp', `world-discover-${nanoid(6)}.zip`);
+      const dl = await safeFetch(file.downloadUrl, {
+        headers: { 'User-Agent': 'MinecraftServerManager/0.1' },
+        signal: AbortSignal.timeout(30 * 60 * 1000),
+      });
+      if (!dl.ok) throw httpError(502, `Download failed: HTTP ${dl.status}.`);
+      const totalBytes = Number(dl.headers.get('content-length')) || 0;
+      if (totalBytes > MAX_WORLD_DOWNLOAD_BYTES) throw httpError(413, 'That world archive is over the 20 GB limit.');
+      if (totalBytes > 0) {
+        const { free } = await require('../../storage/indexer').diskFree();
+        if (free < totalBytes * 1.2) throw httpError(507, 'Not enough disk space for this download.');
+      }
+      let received = 0;
+      const counter = new (require('node:stream').Transform)({
+        transform(chunk, enc, cb) {
+          received += chunk.length;
+          // Hard abort - content-length can lie or be absent entirely.
+          if (received > MAX_WORLD_DOWNLOAD_BYTES)
+            return cb(httpError(413, 'Download aborted: archive over the 20 GB limit.'));
+          cb(null, chunk);
+        },
+      });
+      try {
+        await pipeline(dl.body, counter, fs.createWriteStream(tmp));
+        t.step('Importing into the library…');
+        const row = await worlds.importArchive(tmp, {
+          name: name || '',
+          originalName: file.fileName,
+          actor,
+          source: 'curseforge',
+        });
+        return { ok: true, world: libVM(row) };
+      } finally {
+        await fsp.rm(tmp, { force: true }).catch(onTempCleanupFailed);
+      }
+    });
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
 router.post('/upload', worldUploadPreflight, upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) throw badRequest('Attach a world archive (zip, .mcworld, tar, or tar.gz).');

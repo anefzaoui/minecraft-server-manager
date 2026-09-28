@@ -43,6 +43,13 @@
   </div>
   {{else}}
     {{> empty-state iconName='earth' title='No Worlds in the Library Yet' message='Upload a world archive or save one from a running server with the buttons above. Installs, copies, and downloads all start from here.'}}
+    {{! Popular CurseForge worlds, ready to save straight into the library.
+        CurseForge is the only registry that publishes worlds. }}
+    <div class="mt-8" id="worlds-recommended">
+      <h3 class="mb-1 eyebrow">Recommended</h3>
+      <p class="mb-3 text-xs text-ink-faint">Popular on CurseForge.</p>
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="worlds-recommended-grid"></div>
+    </div>
   {{/if}}
 
   <div id="msm-server-options" hidden data-options="{{jsonAttr serverOptions}}"></div>

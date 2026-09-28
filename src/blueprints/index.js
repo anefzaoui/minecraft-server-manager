@@ -30,6 +30,7 @@ function starterResources() {
     diskQuotaGb: d.diskQuotaGb,
     quotaStrict: false,
     updatePolicy: 'manual',
+    modUpdatePolicy: 'manual',
   };
 }
 const { recordEvent } = require('../events');
@@ -114,6 +115,7 @@ const manifestSchema = z.object({
     diskQuotaGb: z.number().min(0).max(16384),
     quotaStrict: z.boolean().default(false),
     updatePolicy: z.enum(['manual', 'notify', 'auto']).default('manual'),
+    modUpdatePolicy: z.enum(['manual', 'notify', 'auto']).default('manual'),
   }),
   pack: z
     .object({
@@ -193,6 +195,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
       diskQuotaGb: Math.round(server.disk_quota_bytes / 1024 ** 3),
       quotaStrict: Boolean(server.quota_strict),
       updatePolicy: server.update_policy || 'manual',
+      modUpdatePolicy: server.mod_update_policy || 'manual',
     },
     pack: pack
       ? {
@@ -376,6 +379,7 @@ async function importBlueprint(zipRef, overrides = {}, { actor = 'system', onPro
       cpus: o.cpus ?? manifest.resources.cpus,
       diskQuotaGb: o.diskQuotaGb ?? manifest.resources.diskQuotaGb,
       updatePolicy: manifest.resources.updatePolicy,
+      modUpdatePolicy: manifest.resources.modUpdatePolicy,
       containerName: o.containerName,
       networkName: o.networkName,
       extraPorts: o.extraPorts,

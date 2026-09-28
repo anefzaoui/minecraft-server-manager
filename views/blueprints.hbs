@@ -36,6 +36,19 @@
 </div>
 {{else}}
   {{> empty-state iconName='drafting-compass' title='No Blueprints Yet' message="Export one from a server's Settings tab, or import a .mcserver.zip file with the button above. The same recipe then rebuilds the server anywhere."}}
+  {{! Popular packs to start from: create the server, then export it as your
+      own blueprint. Same discover feed and cards as the modpacks page. }}
+  <div class="mt-8" id="bp-recommended">
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <h3 class="eyebrow">Recommended</h3>
+      <div class="seg" role="group" aria-label="Recommendation source">
+        <button type="button" class="seg-btn" aria-pressed="true" data-bp-platform="modrinth">Modrinth</button>
+        {{#if curseforgeEnabled}}<button type="button" class="seg-btn" aria-pressed="false" data-bp-platform="curseforge">CurseForge</button>{{/if}}
+      </div>
+    </div>
+    <p class="mb-3 text-xs text-ink-faint" data-recommended-note></p>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="bp-recommended-grid"></div>
+  </div>
 {{/if}}
 </div>
 <script type="module" src="/js/pages/blueprints.js"></script>

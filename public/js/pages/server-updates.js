@@ -13,6 +13,8 @@
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
+import { confirmDialog } from '../lib/confirm.js';
+import { runTask } from '../lib/progress.js';
 
 const PAGE = 50; // mod rows rendered per "Show more" click
 
@@ -49,6 +51,16 @@ function init(el) {
   );
 
   document.getElementById('compat-versions')?.addEventListener('toggle', onToggle.bind(null, serverId), true);
+
+  // Update buttons live in the summary rows: stop the click from also
+  // toggling the row open.
+  document.getElementById('compat-versions')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-compat-update]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    confirmUpdateTo(btn.dataset.compatUpdate);
+  });
 
   if (el.dataset.compatStatus === 'running') poll(serverId);
 }
@@ -117,33 +129,26 @@ async function onToggle(serverId, e) {
 
 function render(body, version, unknown, unchecked) {
   body.innerHTML = '';
-  if (version.missingCount) {
-    body.append(
-      section(`No build for ${version.version}`, version.missing, 'danger', 'These mods would be left behind.')
-    );
-  }
-  if (unknown.length) {
-    body.append(
-      section(
-        'Could not be identified',
-        unknown,
-        'warn',
-        'Neither registry recognises these files, so what they support is unknown.'
-      )
-    );
-  }
-  if (unchecked.length) {
-    body.append(
-      section(
-        'Could not be checked',
-        unchecked,
-        'warn',
-        'These come from a source that publishes no per-version build list, so nobody can say either way.'
-      )
-    );
-  }
   if (version.readyCount) {
-    body.append(section(`Ready for ${version.version}`, version.ready, 'ok', null, { collapsed: true }));
+    body.append(section(`Ready for ${version.version}`, version.ready, 'ok'));
+  }
+  // One "not ready" list instead of three thin sections: a mod either has no
+  // build for the version or no registry could say - the per-row chip keeps
+  // which is which.
+  const notReady = [
+    ...version.missing.map((m) => ({ ...m, sub: 'No build' })),
+    ...unknown.map((m) => ({ ...m, sub: 'Unknown' })),
+    ...unchecked.map((m) => ({ ...m, sub: 'Unknown' })),
+  ];
+  if (notReady.length) {
+    body.append(
+      section(
+        `Not ready for ${version.version}`,
+        notReady,
+        version.missingCount ? 'danger' : 'warn',
+        'These mods have no build for this version, or no registry could say.'
+      )
+    );
   }
   if (!version.missingCount && !version.readyCount && !unknown.length && !unchecked.length) {
     const p = document.createElement('p');
@@ -153,12 +158,108 @@ function render(body, version, unknown, unchecked) {
   }
 }
 
+async function confirmUpdateTo(target) {
+  const serverId = root.dataset.compatServer;
+  const serverName = root.dataset.compatServerName || 'this server';
+  const current = root.dataset.compatCurrent;
+  const ok = await confirmDialog({
+    title: `Update to Minecraft ${target}?`,
+    message: `${serverName} moves from Minecraft ${current} to ${target}. A backup is taken first, but upgrading the world is permanent.`,
+    detail: 'The server is briefly offline while the container is rebuilt.',
+    confirmLabel: 'Update Now',
+  });
+  if (!ok) return;
+  await runVersionUpgrade(serverId, serverName, target);
+}
+
+async function runVersionUpgrade(serverId, serverName, targetVersion, { force = false } = {}) {
+  try {
+    const result = await runTask({
+      title: `Updating ${serverName}…`,
+      start: async () =>
+        (
+          await postJSON(`/api/servers/${serverId}/mcversion/upgrade`, {
+            targetVersion,
+            force: force || undefined,
+          })
+        ).taskId,
+    });
+    toast(`Updated: ${result.from} → ${result.to}.`);
+    setTimeout(() => location.reload(), 900);
+  } catch (err) {
+    if (err.dismissed) return; // progress hidden - the task tray takes over
+    const downgrade = err.data && err.data.downgrade;
+    if (downgrade && !force) return offerDowngradeForce(serverId, serverName, targetVersion, downgrade, err.message);
+    const compat = err.data && err.data.compat;
+    if (compat && !force) return offerForce(serverId, serverName, targetVersion, compat, err.message);
+    toast(err.message || 'The update could not be completed. Please try again.', {
+      kind: 'error',
+      timeout: 12000,
+    });
+  }
+}
+
+// The mods can't follow this Minecraft version. Name them, and let the update
+// through only on a second, explicit confirmation.
+async function offerForce(serverId, serverName, targetVersion, compat, message) {
+  const names = (compat.missing || []).map((m) => m.name || m.file);
+  const shown = names.slice(0, 8).join(', ');
+  const rest = names.length > 8 ? ` and ${names.length - 8} more` : '';
+  const detail = names.length
+    ? `Without a build for ${compat.targetVersion}: ${shown}${rest}.`
+    : "Open the server's Versions tab to run a version check.";
+  const known = compat.reason === 'blocked';
+  const ok = await confirmDialog({
+    title: known ? 'Your mods are not ready for this version.' : 'This version has not been checked.',
+    message: known
+      ? `${message} Updating anyway will start the server without them.`
+      : `${message} Updating anyway means doing it without knowing what would break.`,
+    detail,
+    confirmLabel: 'Update Anyway',
+    danger: true,
+  });
+  if (!ok) return;
+  await runVersionUpgrade(serverId, serverName, targetVersion, { force: true });
+}
+
+// The target is older than the running version: the older jar cannot read the
+// newer chunks and regenerates them as void.
+async function offerDowngradeForce(serverId, serverName, targetVersion, downgrade, message) {
+  const ok = await confirmDialog({
+    title: 'This is a downgrade and it will destroy the world.',
+    message: `${message} The damage saves over your builds as soon as the older version runs.`,
+    detail:
+      'A backup is taken first, but it holds the newer world: it only helps if you switch back to the newer version afterwards. Only continue if that is what you mean to do.',
+    confirmLabel: 'Downgrade Anyway',
+    danger: true,
+  });
+  if (!ok) return;
+  await runVersionUpgrade(serverId, serverName, targetVersion, { force: true });
+}
+
+async function postJSON(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) {
+    const err = new Error(data.error || friendlyError(res, { action: 'start that update' }));
+    // Structured refusals carry their detail in the body - keep it for the caller.
+    err.data = data;
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
 /**
  * One labelled block of mods. Long lists render `PAGE` at a time behind a
  * "Show more" button - the blocking list is usually short, but the ready list
  * on a large pack is not, and it is the one nobody scrolls.
  */
-function section(title, items, tone, help, { collapsed = false } = {}) {
+function section(title, items, tone, help) {
   const wrap = document.createElement('div');
   wrap.className = 'mb-3 last:mb-0';
 
@@ -181,9 +282,11 @@ function section(title, items, tone, help, { collapsed = false } = {}) {
   }
 
   const list = document.createElement('ul');
-  list.className = 'grid gap-1 text-xs sm:grid-cols-2';
-  if (collapsed) list.classList.add('hidden');
+  list.className = 'grid gap-1.5 text-xs';
   wrap.append(list);
+
+  const PUZZLE =
+    '<svg class="icon size-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></svg>';
 
   let shown = 0;
   const more = document.createElement('button');
@@ -193,9 +296,45 @@ function section(title, items, tone, help, { collapsed = false } = {}) {
     const next = items.slice(shown, shown + PAGE);
     for (const item of next) {
       const li = document.createElement('li');
-      li.className = 'truncate';
-      li.title = item.file;
-      li.textContent = item.name || item.file;
+      li.className = 'flex min-w-0 items-center gap-2.5 rounded-md border border-line bg-raised p-2';
+      li.title = item.file || item.name || '';
+      const iconBox = document.createElement('span');
+      iconBox.className =
+        'relative grid size-9 shrink-0 place-items-center overflow-hidden rounded bg-inset text-ink-faint';
+      if (item.iconUrl) {
+        iconBox.innerHTML = PUZZLE;
+        const img = document.createElement('img');
+        img.src = item.iconUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.className = 'absolute inset-0 h-full w-full object-cover';
+        img.onerror = () => img.remove();
+        iconBox.append(img);
+      } else {
+        iconBox.innerHTML = PUZZLE;
+      }
+      const text = document.createElement('span');
+      text.className = 'min-w-0 flex-1';
+      const name = document.createElement('span');
+      name.className = 'block truncate text-sm font-medium';
+      name.textContent = item.name || item.file;
+      const file = document.createElement('span');
+      file.className = 'block truncate font-mono text-[11px] text-ink-faint';
+      file.textContent = item.file || '';
+      text.append(name, file);
+      li.append(iconBox, text);
+      if (item.sub) {
+        const sub = document.createElement('span');
+        sub.className = 'badge shrink-0';
+        sub.textContent = item.sub;
+        li.append(sub);
+      }
+      if (item.installedVersion) {
+        const ver = document.createElement('span');
+        ver.className = 'shrink-0 font-mono text-[11px] text-ink-faint';
+        ver.textContent = item.installedVersion;
+        li.append(ver);
+      }
       list.append(li);
     }
     shown += next.length;
@@ -204,22 +343,8 @@ function section(title, items, tone, help, { collapsed = false } = {}) {
   };
   more.addEventListener('click', showNext);
 
-  if (collapsed) {
-    const reveal = document.createElement('button');
-    reveal.type = 'button';
-    reveal.className = 'btn btn-ghost btn-sm';
-    reveal.textContent = 'Show These Mods';
-    reveal.addEventListener('click', () => {
-      reveal.remove();
-      list.classList.remove('hidden');
-      showNext();
-      wrap.append(more);
-    });
-    wrap.append(reveal);
-  } else {
-    showNext();
-    wrap.append(more);
-  }
+  showNext();
+  wrap.append(more);
   return wrap;
 }
 

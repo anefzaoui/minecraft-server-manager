@@ -165,6 +165,47 @@ test('the Mods tab marks icon <img>s and ships the puzzle fallback template', as
   assert.match(r.text, /<template id="mod-icon-fallback">.*bg-inset.*<\/template>/s);
 });
 
+test('the Mods tab uses a toggle switch for enable state, with tidy cells', async () => {
+  const fsp = require('node:fs/promises');
+  const path = require('node:path');
+  const { dataPath } = require('../src/storage/pathGuard');
+  const id = app.seedServer('srv_modtoggle'); // PAPER, no pack: plugins live in plugins/
+  const modDir = dataPath('servers', id, 'plugins');
+  await fsp.mkdir(modDir, { recursive: true });
+  await fsp.writeFile(path.join(modDir, 'togglemod.jar'), 'x');
+  db.run(
+    `INSERT INTO server_content (id, server_id, kind, managed_by, name, filename, version)
+     VALUES ('sc_toggle', ?, 'plugin', 'overlay', 'Toggle Mod', 'togglemod.jar', '1.0')`,
+    id
+  );
+  // A second row linked to a Modrinth library entry names its origin.
+  await fsp.writeFile(path.join(modDir, 'libmod.jar'), 'x');
+  db.run(
+    `INSERT INTO library_files (id, category, name, filename, rel_path, sha256, size_bytes, platform, project_id)
+     VALUES ('lib_toggle', 'plugin', 'Lib Mod', 'libmod.jar', 'library/mods/libmod.jar', 'abc', 10, 'modrinth', 'AAAA1111')`
+  );
+  db.run(
+    `INSERT INTO server_content (id, server_id, library_id, kind, managed_by, name, filename, version)
+     VALUES ('sc_toggle_lib', ?, 'lib_toggle', 'plugin', 'overlay', 'Lib Mod', 'libmod.jar', '2.0')`,
+    id
+  );
+  const r = await app.req('GET', `/servers/${id}/mods`, { cookie, headers: { Accept: 'text/html' } });
+  assert.equal(r.status, 200);
+  // Switch in the Status cell, checked while enabled; no text Enable/Disable button.
+  assert.match(r.text, /<input type="checkbox" data-mod-toggle checked/);
+  assert.doesNotMatch(r.text, />Disable<\/button>/);
+  assert.doesNotMatch(r.text, />Enable<\/button>/);
+  // Cells that wrapped: size stays one line, version truncates in a block.
+  assert.match(r.text, /data-th="Size" class="whitespace-nowrap/);
+  assert.match(r.text, /<span class="block truncate">1\.0<\/span>/);
+  // Origin badges: registry installs name the registry, hand-added jars say manual.
+  assert.match(r.text, />Modrinth</);
+  assert.match(r.text, />manual</);
+  // Delete is a proper trash icon button, not a bare cross.
+  assert.match(r.text, /lucide-trash-2/);
+  assert.doesNotMatch(r.text, /lucide-x/);
+});
+
 test('dashboard renders the combined resource overview', async () => {
   app.seedServer('srv_dashcombined');
   const r = await app.req('GET', '/', { cookie, headers: { Accept: 'text/html' } });
@@ -175,7 +216,8 @@ test('dashboard renders the combined resource overview', async () => {
   // The "At a glance" band (memory, storage, health, updates) renders.
   assert.match(r.text, /Memory allotted/);
   assert.match(r.text, /Storage used/);
-  assert.match(r.text, /Servers by Status/);
+  // The redundant Servers-by-Status strip is gone; per-server rows carry status.
+  assert.doesNotMatch(r.text, /Servers by Status/);
   // A stopped server produces no live breakdown, so the fallback copy shows.
   assert.match(r.text, /No servers are running right now\./);
 });

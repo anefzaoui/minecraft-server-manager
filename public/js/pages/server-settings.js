@@ -390,6 +390,7 @@ function init(serverId) {
       cpus: cpuRaw === '' ? undefined : Number(cpuRaw),
       diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),
       updatePolicy: root.querySelector('input[name="up"]:checked')?.value || 'manual',
+      modUpdatePolicy: root.querySelector('input[name="up-mods"]:checked')?.value || 'manual',
       autoStart: document.getElementById('st-autostart')?.checked ?? false,
       autoRestart: document.getElementById('st-autorestart')?.checked ?? true,
     };

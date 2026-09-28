@@ -6,8 +6,12 @@ const assert = require('node:assert/strict');
 const {
   looksLikeError,
   QUICK_ACTIONS,
+  PARAM_ACTIONS,
+  INTEGER_RULES,
   offlineStateFromLevelData,
+  parseBorderDiameter,
   resolveRuleWrite,
+  runQuick,
 } = require('../src/services/worldControls');
 
 test('looksLikeError catches an unknown gamerule reply (so it is not a silent success)', () => {
@@ -126,4 +130,69 @@ test('resolveRuleWrite trusts the read-back value regardless of the reply text',
 test('resolveRuleWrite falls back to the reply only when the rule cannot be read back', () => {
   assert.deepEqual(resolveRuleWrite(null, true, 'Gamerule keepInventory is now true'), { ok: true });
   assert.deepEqual(resolveRuleWrite(null, true, 'No game rule called keepInventory is available'), { ok: false });
+});
+
+test('every integer gamerule has a range, and parameterized actions stay disjoint from fixed ones', () => {
+  for (const [rule, def] of Object.entries(INTEGER_RULES)) {
+    assert.ok(def.snake && def.snake.includes('_'), `${rule} needs its snake_case spelling`);
+    assert.ok(Number.isInteger(def.min) && Number.isInteger(def.max) && def.min < def.max, `${rule} needs a range`);
+    assert.ok(typeof def.label === 'string' && def.label, `${rule} needs a label`);
+  }
+  for (const action of PARAM_ACTIONS) {
+    assert.ok(!QUICK_ACTIONS[action], `${action} must not also be a fixed action`);
+  }
+  for (const rule of ['randomTickSpeed', 'spawnRadius', 'playersSleepingPercentage', 'maxEntityCramming']) {
+    assert.ok(INTEGER_RULES[rule], `${rule} is offered`);
+  }
+});
+
+test('parseBorderDiameter reads the worldborder get reply', () => {
+  assert.equal(parseBorderDiameter('The world border is currently 60000000 blocks wide'), 60000000);
+  assert.equal(parseBorderDiameter('The world border is currently 999.5 blocks wide'), 999.5);
+  assert.equal(parseBorderDiameter('Unknown command'), null);
+  assert.equal(parseBorderDiameter(''), null);
+});
+
+test('parameterized actions validate before touching RCON', async () => {
+  // Each of these must throw a 400 without any server behind it: validation
+  // runs before the first RCON round trip.
+  const cases = [
+    ['gamerule-int', { rule: 'nope', value: 1 }],
+    ['gamerule-int', { rule: 'randomTickSpeed', value: -1 }],
+    ['gamerule-int', { rule: 'playersSleepingPercentage', value: 101 }],
+    ['gamerule-int', { rule: 'randomTickSpeed', value: '' }],
+    ['time-set', { ticks: 24000 }],
+    ['time-set', {}],
+    ['border-set', { diameter: 0 }],
+    ['border-set', { diameter: 60000000 }],
+    ['border-add', { delta: 0 }],
+    ['border-add', {}],
+    ['border-center', { x: 0 }],
+    ['border-center', { x: 0, z: 99999999 }],
+  ];
+  for (const [action, params] of cases) {
+    await assert.rejects(runQuick('srv_wc_nonexistent', action, { actor: 'test', params }), (err) => {
+      assert.equal(err.status, 400, `${action} ${JSON.stringify(params)} was not a 400`);
+      return true;
+    });
+  }
+});
+
+test('offlineStateFromLevelData reads integer gamerules in either casing', () => {
+  const s = offlineStateFromLevelData({
+    GameRules: { randomTickSpeed: '7', spawn_radius: '12', playersSleepingPercentage: '50' },
+  });
+  assert.equal(s.randomTickSpeed, 7);
+  assert.equal(s.spawnRadius, 12);
+  assert.equal(s.playersSleepingPercentage, 50);
+  assert.ok(!('maxEntityCramming' in s), 'absent rules stay absent');
+});
+
+test('offlineStateFromLevelData honours the rules filter for integer rules', () => {
+  const s = offlineStateFromLevelData(
+    { GameRules: { randomTickSpeed: '7', spawnRadius: '12' } },
+    { rules: ['randomTickSpeed', 'keepInventory'] }
+  );
+  assert.equal(s.randomTickSpeed, 7);
+  assert.ok(!('spawnRadius' in s), 'a rule not asked for is not returned');
 });

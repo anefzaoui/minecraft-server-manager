@@ -56,8 +56,10 @@
       {{#each combined.breakdown}}
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 py-2.5" data-combined-row="{{this.id}}" data-row-players="{{this.playersOnline}}" data-row-players-max="{{this.playersMax}}">
           <span class="size-2.5 shrink-0 rounded-full" style="background: {{this.accent}}"></span>
-          <a href="/servers/{{this.id}}" class="min-w-0 font-medium hover:underline">{{this.name}}</a>
-          <span class="ml-auto grid w-full min-w-0 grid-cols-3 gap-3 text-xs tabular-nums sm:w-auto sm:grid-cols-none sm:gap-6 sm:text-right">
+          <a href="/servers/{{this.id}}" class="min-w-0 truncate font-medium hover:underline">{{this.name}}</a>
+          {{! sm+ lays the three stats out in one right-aligned row; grid-cols-none
+              used to stack them into a single column instead. }}
+          <span class="ml-auto grid w-full min-w-0 grid-cols-3 gap-3 text-xs tabular-nums sm:flex sm:w-auto sm:items-baseline sm:justify-end sm:gap-6 sm:text-right">
             <span class="flex items-center justify-between gap-1 sm:block"><span class="text-ink-faint sm:hidden">CPU</span><span class="break-words" data-combined-row-cpu="{{this.id}}">{{this.cpuPct}}%</span></span>
             <span class="flex items-center justify-between gap-1 sm:block"><span class="text-ink-faint sm:hidden">Mem</span><span class="break-words" data-combined-row-mem="{{this.id}}">{{this.memUsedMb}} <span class="text-ink-faint">MB</span></span></span>
             <span class="flex items-center justify-between gap-1 sm:block"><span class="text-ink-faint sm:hidden">Players</span><span class="break-words" data-combined-row-players="{{this.id}}">{{this.playersOnline}}<span class="text-ink-faint">/{{this.playersMax}}</span></span></span>

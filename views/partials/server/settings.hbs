@@ -127,10 +127,19 @@
 
     <div class="card p-4">
       <h3 class="mb-3 font-semibold">Update Policy</h3>
+      <div class="mb-1 text-sm font-medium">Game versions</div>
+      <p class="mb-2 text-xs text-ink-faint">Minecraft and loader versions, the container image, and managed modpacks.</p>
       <div class="space-y-2 text-sm">
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual Only <span class="text-xs text-ink-faint">(never changes anything, and no update badges for this server)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual Only <span class="text-xs text-ink-faint">(never changes anything, and no game update badges for this server)</span></label>
         <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify Me <span class="text-xs text-ink-faint">(show a badge when updates exist; you apply them)</span></label>
         <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure, but never across Minecraft versions)</span></label>
+      </div>
+      <div class="mb-1 mt-4 text-sm font-medium">Mods</div>
+      <p class="mb-2 text-xs text-ink-faint">Overlay mods, plugins, datapacks, and resource packs you added yourself.</p>
+      <div class="space-y-2 text-sm">
+        <label class="flex items-center gap-2.5"><input type="radio" name="up-mods" value="manual" class="msm-radio" {{#if (eq server.modUpdatePolicy 'manual')}}checked{{/if}}> Manual Only <span class="text-xs text-ink-faint">(no mod update badges for this server)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up-mods" value="notify" class="msm-radio" {{#if (eq server.modUpdatePolicy 'notify')}}checked{{/if}}> Notify Me <span class="text-xs text-ink-faint">(show a badge when mod updates exist; you apply them)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up-mods" value="auto" class="msm-radio" {{#if (eq server.modUpdatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(currently the same as Notify Me: mod updates never apply themselves)</span></label>
       </div>
     </div>
 

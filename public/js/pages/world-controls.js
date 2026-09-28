@@ -1,7 +1,8 @@
-// World quick-controls rail (rendered by world-controls.hbs on every server
-// tab): time, weather, gamerules, difficulty, plus a live in-game clock. The
-// clock ticks locally (20 ticks/s) between RCON resyncs so it stays honest
-// even right after a /time set intervention.
+// World quick-controls (rendered by world-controls.hbs on the World tab):
+// time, weather, world border, number gamerules, gamerule toggles,
+// difficulty, plus a live in-game clock. The clock ticks locally
+// (20 ticks/s) between RCON resyncs so it stays honest even right after a
+// /time set intervention.
 import { toast } from '../lib/toast.js';
 import { setBusy } from '../lib/loading.js';
 
@@ -43,9 +44,10 @@ function init(serverId, running) {
     }
   }
 
-  // Only ask the server to read the gamerules whose chips are actually on
-  // screen - the "Show all world rules" section stays unqueried until it is
-  // opened. Each read is an RCON round trip, so this keeps the ~30s poll light.
+  // Only ask the server to read the gamerules whose chips or inputs are
+  // actually on screen - the "Show all world rules" section stays unqueried
+  // until it is opened. Each read is an RCON round trip, so this keeps the
+  // ~30s poll light.
   function visibleRules() {
     const seen = new Set();
     root.querySelectorAll('[data-wc-toggle]').forEach((chip) => {
@@ -55,15 +57,13 @@ function init(serverId, running) {
       if (box && !box.open) return;
       seen.add(rule);
     });
+    root.querySelectorAll('[data-wc-int]').forEach((input) => {
+      if (input.dataset.wcInt) seen.add(input.dataset.wcInt);
+    });
     return [...seen];
   }
 
   async function refreshState() {
-    // Below xl the whole rail is a collapsed <details>; nothing is on screen,
-    // so there is nothing to read (an empty list would otherwise mean "all
-    // ~40 rules", one RCON round trip each, every poll, on every phone).
-    const rail = root.closest('details#wc-rail') || document.getElementById('wc-rail');
-    if (rail && rail.tagName === 'DETAILS' && !rail.open) return;
     try {
       const rules = visibleRules();
       const qs = rules.length ? `?rules=${encodeURIComponent(rules.join(','))}` : '';
@@ -105,12 +105,19 @@ function init(serverId, running) {
       }
       applyChips(s);
       applyDifficulty(s);
-      // Rules this Minecraft version does not have: hide their chips outright
-      // (they are neither on, off, nor unread) so the rail only shows what the
+      applyInts(s);
+      applyBorder(s);
+      // Rules this Minecraft version does not have: hide their rows outright
+      // (they are neither on, off, nor unread) so the card only shows what the
       // server can actually change.
       const unsupported = new Set(Array.isArray(data.unsupported) ? data.unsupported : []);
-      root.querySelectorAll('[data-wc-toggle]').forEach((chip) => {
-        chip.hidden = unsupported.has(chip.dataset.rule);
+      root.querySelectorAll('[data-wc-toggle]').forEach((toggle) => {
+        const row = toggle.closest('[data-wc-row]');
+        if (row) row.classList.toggle('hidden', unsupported.has(toggle.dataset.rule));
+        else toggle.hidden = unsupported.has(toggle.dataset.rule);
+      });
+      root.querySelectorAll('[data-wc-int-row]').forEach((row) => {
+        row.classList.toggle('hidden', unsupported.has(row.dataset.wcIntRow));
       });
       // Some rules could not be read this cycle - say so instead of leaving
       // their chips looking authoritative. This holds on a running server too:
@@ -125,30 +132,32 @@ function init(serverId, running) {
     }
   }
 
-  // Reflect gamerule states on the toggle chips: aria-pressed carries the state
-  // (the CSS chip[aria-pressed] rule styles it), data-tip explains it.
+  // Reflect gamerule states on the toggle switches: the checkbox drives the
+  // visual, data-on remembers the last server-confirmed value (the click
+  // handler sends the opposite), data-tip explains it.
   //
   // A rule missing from `s` was NOT read this cycle (collapsed "all rules"
   // section, a flaked RCON read, or a rule this server version doesn't expose).
-  // Leaving the chip as-is and flagging it "unknown" is honest; forcing it to
-  // look off would both misreport the status and make the next click send the
+  // Leaving the switch as-is and flagging its row "unknown" is honest; forcing
+  // it off would both misreport the status and make the next click send the
   // wrong -on/-off action.
   function applyChips(s, { readonly = false } = {}) {
-    root.querySelectorAll('[data-wc-toggle]').forEach((chip) => {
-      const value = s[chip.dataset.rule];
+    root.querySelectorAll('[data-wc-toggle]').forEach((toggle) => {
+      const value = s[toggle.dataset.rule];
+      const row = toggle.closest('[data-wc-row]');
       if (value === undefined) {
-        if (chip.dataset.on === undefined) chip.dataset.wcUnknown = '1';
+        if (toggle.dataset.on === undefined && row) row.dataset.wcUnknown = '1';
         return;
       }
-      delete chip.dataset.wcUnknown;
-      chip.dataset.on = value ? '1' : '0';
-      chip.setAttribute('aria-pressed', String(value === true));
-      if (chip.dataset.rule === 'pvp') {
-        chip.dataset.tip = value
+      if (row) delete row.dataset.wcUnknown;
+      toggle.dataset.on = value ? '1' : '0';
+      if (toggle instanceof HTMLInputElement) toggle.checked = value === true;
+      if (toggle.dataset.rule === 'pvp') {
+        toggle.dataset.tip = value
           ? 'On. Click to turn off (applies on the next restart).'
           : 'Off. Click to turn on (applies on the next restart).';
       } else {
-        chip.dataset.tip = readonly
+        toggle.dataset.tip = readonly
           ? value
             ? 'On (last saved). Start the server to change it.'
             : 'Off (last saved). Start the server to change it.'
@@ -159,13 +168,27 @@ function init(serverId, running) {
     });
   }
 
-  // Difficulty is a pick-one row of plain [data-wc] buttons (not toggles), so
-  // carry the active one in aria-pressed the same way the chips do.
+  // Difficulty is a select now: reflect the live value as the selected option.
   function applyDifficulty(s) {
     if (!s.difficulty) return;
-    root.querySelectorAll('[data-wc^="difficulty-"]').forEach((btn) => {
-      btn.setAttribute('aria-pressed', String(btn.dataset.wc === `difficulty-${s.difficulty}`));
+    const sel = root.querySelector('[data-wc-select="difficulty"]');
+    if (sel && [...sel.options].some((o) => o.value === s.difficulty)) sel.value = s.difficulty;
+  }
+
+  // Number inputs show the live value. Never stomp what the person is typing:
+  // a poll landing mid-edit would otherwise eat their digits.
+  function applyInts(s) {
+    root.querySelectorAll('[data-wc-int]').forEach((input) => {
+      const value = s[input.dataset.wcInt];
+      if (typeof value !== 'number') return;
+      if (document.activeElement === input) return;
+      if (input.value !== String(value)) input.value = String(value);
     });
+  }
+
+  function applyBorder(s) {
+    const el = root.querySelector('[data-wc-border]');
+    if (el) el.textContent = typeof s.borderDiameter === 'number' ? `${s.borderDiameter} blocks` : 'unknown';
   }
 
   // Stopped server: values came from level.dat. The clock is frozen at whatever
@@ -180,17 +203,18 @@ function init(serverId, running) {
     }
     applyChips(s, { readonly: true });
     applyDifficulty(s);
+    applyInts(s);
     stateLine.classList.remove('hidden');
     stateLine.textContent = 'Server offline, showing the last saved world settings. Start the server to change them.';
   }
 
-  async function quick(action, el) {
+  async function quick(action, el, params) {
     const restore = setBusy(el); // spinner in place of the chip content
     try {
       const res = await fetch(`/api/servers/${serverId}/world/quick`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify(params ? { action, params } : { action }),
       });
       // A proxy 502/504 page or a 413 is not JSON - fall back to a plain message
       // instead of surfacing "Unexpected token '<'" to the user.
@@ -215,10 +239,52 @@ function init(serverId, running) {
     }
   }
 
+  const val = (sel) => root.querySelector(sel)?.value.trim() || '';
+
+  // Time / weather / difficulty selects. Difficulty shows the live value;
+  // weather and time have no readable "current", so they reset to the prompt
+  // after firing instead of pretending a selection is active.
+  root.querySelectorAll('[data-wc-select]').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      if (!sel.value) return;
+      const kind = sel.dataset.wcSelect;
+      if (kind === 'difficulty') quick(`difficulty-${sel.value}`, sel);
+      else {
+        quick(sel.value, sel);
+        sel.value = '';
+      }
+    });
+  });
+
   root.addEventListener('click', (e) => {
     const direct = e.target.closest('[data-wc]');
     if (direct) {
       quick(direct.dataset.wc, direct);
+      return;
+    }
+    const custom = e.target.closest('[data-wc-custom]');
+    if (custom) {
+      if (custom.dataset.wcCustom === 'time-set') quick('time-set', custom, { ticks: val('[data-wc-ticks]') });
+      return;
+    }
+    const intBtn = e.target.closest('[data-wc-int-set]');
+    if (intBtn) {
+      const rule = intBtn.dataset.wcIntSet;
+      quick('gamerule-int', intBtn, { rule, value: val(`[data-wc-int="${rule}"]`) });
+      return;
+    }
+    const borderBtn = e.target.closest('[data-wc-border-set],[data-wc-border-add],[data-wc-border-center]');
+    if (borderBtn) {
+      if (borderBtn.hasAttribute('data-wc-border-set')) {
+        const params = { diameter: val('[data-wc-border-diameter]') };
+        const seconds = val('[data-wc-border-seconds]');
+        if (seconds) params.seconds = seconds;
+        quick('border-set', borderBtn, params);
+      } else if (borderBtn.hasAttribute('data-wc-border-add')) {
+        quick('border-add', borderBtn, { delta: val('[data-wc-border-delta]') });
+      } else {
+        quick('border-center', borderBtn, { x: val('[data-wc-border-x]'), z: val('[data-wc-border-z]') });
+      }
       return;
     }
     const chip = e.target.closest('[data-wc-toggle]');
@@ -235,11 +301,6 @@ function init(serverId, running) {
   });
 
   refreshState();
-  // A collapsed rail (phones, narrow windows) skipped the read above; read
-  // the moment it is opened.
-  document.getElementById('wc-rail')?.addEventListener('toggle', (e) => {
-    if (e.target.open) refreshState();
-  });
   if (running) {
     // Local tick: one real second ≈ 20 game ticks. Resync over RCON every 30s.
     setInterval(() => {

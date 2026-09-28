@@ -1,4 +1,9 @@
 <div data-worlds-server="{{server.id}}" data-worlds-server-name="{{server.name}}" data-worlds-status="{{server.status}}" class="contents">
+  {{! Live world controls (time, weather, border, rules): moved here from the
+      every-tab rail so they live in exactly one place. }}
+  <div class="mb-4">
+    {{> server/world-controls}}
+  </div>
   <div class="mb-4 flex flex-wrap items-center gap-2">
     <h3 class="font-semibold">Worlds on This Server</h3>
     <div class="ml-auto flex gap-2">
@@ -14,12 +19,14 @@
       <tbody>
         {{#each worlds}}
           <tr data-world-row data-world="{{name}}" data-size="{{sizeBytes}}" data-active="{{active}}">
-            <td data-th="" class="sm:w-full sm:max-w-0">
+            {{! Capped (not full-width): the name never needs more than this, and
+                uncapped it starves the other columns of table space. }}
+            <td data-th="" class="sm:w-full sm:max-w-xs">
               <div class="truncate font-medium" title="{{name}}">{{name}}</div>
               {{#if seed}}<div class="text-xs text-ink-faint">seed {{seed}}</div>{{/if}}
             </td>
             <td data-th="Dimensions" class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
-            <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes sizeBytes}}</td>
+            <td data-th="Size" class="text-right whitespace-nowrap text-ink-faint">{{bytes sizeBytes}}</td>
             {{! Status shows STATE only (both branches same height); the
                 Activate control lives with the other actions - mixed badge
                 and button here made row heights visibly alternate. }}
@@ -30,7 +37,10 @@
                 <span class="badge">inactive</span>
               {{/if}}
             </td>
-            <td data-th="" class="text-right"><div class="flex flex-wrap justify-end gap-1">
+            {{! whitespace-nowrap: without it the table sizes this column to its
+                min-content (one icon), and the buttons wrap into a tall
+                single-button-per-line stack that stretches the whole row. }}
+            <td data-th="" class="text-right whitespace-nowrap"><div class="flex flex-wrap justify-end gap-1 md:flex-nowrap">
               {{#unless active}}
                 <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Make this the active world. The server must be stopped.">{{{icon 'play' 'size-3.5'}}} Activate</button>
               {{/unless}}

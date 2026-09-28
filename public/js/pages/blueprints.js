@@ -5,6 +5,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { escapeHtml as esc } from '../lib/format.js';
+import { initPackRecommendations } from './modpacks.js';
 
 const grid = document.querySelector('[data-blueprints-page]');
 if (grid) init();
@@ -39,6 +40,28 @@ function init() {
         }
       });
     }
+  });
+
+  // ---- Recommended packs (only rendered when no blueprints exist yet) ----
+  // Same discover feed and cards as the modpacks page: pick a trending pack,
+  // create the server, then export it as a blueprint of your own.
+  const currentRecPlatform = () => {
+    const pressed = document.querySelector('#bp-recommended [data-bp-platform][aria-pressed="true"]');
+    return pressed ? pressed.dataset.bpPlatform : 'modrinth';
+  };
+  const rec = initPackRecommendations({
+    sectionId: 'bp-recommended',
+    gridId: 'bp-recommended-grid',
+    noteSel: '[data-recommended-note]',
+    getPlatform: currentRecPlatform,
+  });
+  document.getElementById('bp-recommended')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-bp-platform]');
+    if (!btn || btn.dataset.bpPlatform === currentRecPlatform()) return;
+    for (const b of document.querySelectorAll('#bp-recommended [data-bp-platform]')) {
+      b.setAttribute('aria-pressed', String(b === btn));
+    }
+    rec?.reload();
   });
 
   // ---- Upload → preview → import ----

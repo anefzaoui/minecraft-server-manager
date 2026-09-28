@@ -1,13 +1,14 @@
 'use strict';
 
-// Runs automatically after `pnpm install` so a fresh clone is styled without the
-// user having to remember `pnpm run build`. The Tailwind CSS bundle
-// (public/css/app.css) is a build artifact, not committed - missing it renders
-// every page unstyled, which is a classic "works on my machine" trap.
+// Runs automatically after `pnpm install` so a fresh clone - or a `git pull`
+// followed by `pnpm install` on a deployment - is fully built without the user
+// having to remember `pnpm run build`. Both bundles are gitignored build
+// artifacts: missing CSS renders every page unstyled, and a stale JS bundle
+// serves old page logic against new templates, which fails silently.
 //
 // This degrades gracefully: if build tooling isn't present (e.g. a production
 // `pnpm install --prod`), it warns and exits 0 rather than hard-failing the
-// install. The documented `pnpm install` (with dev deps) always produces the CSS.
+// install. The documented `pnpm install` (with dev deps) always produces both.
 
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
@@ -50,5 +51,24 @@ if (res.status !== 0) {
   );
 }
 
-// Never fail the install over the CSS build.
+// Same story for the client-JS bundle (public/dist/js): without it, `pnpm
+// start` serves either no JS or a stale bundle against new templates.
+const root = path.join(__dirname, '..');
+try {
+  require.resolve('esbuild', { paths: [root] });
+  const buildJs = spawnSync(process.execPath, [path.join(__dirname, 'build-js.js')], {
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+  if (buildJs.status !== 0) {
+    console.warn('[postinstall] Could not build the client-JS bundle automatically. Run `pnpm run build`.');
+  }
+} catch {
+  console.warn(
+    '[postinstall] esbuild not found (production/prod-only install?). ' +
+      'Run `pnpm run build` before `pnpm start`, or page scripts may be stale.'
+  );
+}
+
+// Never fail the install over the builds.
 process.exit(0);

@@ -849,6 +849,8 @@ function libraryWorlds({ visibleServerIds = null } = {}) {
     if (row.world_source === 'upload') {
       source = 'Uploaded';
       sourceKind = 'upload';
+    } else if (row.world_source === 'curseforge') {
+      source = 'CurseForge';
     } else if (row.world_source && row.world_source.startsWith('extract:')) {
       const sid = row.world_source.slice('extract:'.length);
       const server = db.get('SELECT display_name FROM servers WHERE id = ?', sid);

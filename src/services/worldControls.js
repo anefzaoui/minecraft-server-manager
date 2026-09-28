@@ -64,6 +64,17 @@ const GAMERULES = {
   logAdminCommands: 'log_admin_commands',
 };
 
+// Integer gamerules need a number input, not a chip: rule -> { snake_case,
+// allowed range, label }. These are the vanilla integer rules the toggle map
+// above cannot express. The input in world-controls.hbs carries
+// data-wc-int="<key>".
+const INTEGER_RULES = {
+  randomTickSpeed: { snake: 'random_tick_speed', min: 0, max: 10000, label: 'Random Tick Speed' },
+  spawnRadius: { snake: 'spawn_radius', min: 0, max: 10000, label: 'Spawn Radius' },
+  playersSleepingPercentage: { snake: 'players_sleeping_percentage', min: 0, max: 100, label: 'Players Sleeping %' },
+  maxEntityCramming: { snake: 'max_entity_cramming', min: 0, max: 10000, label: 'Max Entity Cramming' },
+};
+
 // gamerule toggle -> { slug for the -on/-off QUICK_ACTIONS, on/off toast text }.
 // The chip in world-controls.hbs carries data-wc-toggle="<slug>" data-rule="<key>".
 const RULE_TOGGLES = {
@@ -198,6 +209,13 @@ function parseGameruleBool(out) {
   return m ? m[1].toLowerCase() === 'true' : null;
 }
 
+function parseGameruleInt(out) {
+  const m = /(?:is currently set to|is):?\s*(-?\d+)/i.exec(out) || /\b(-?\d+)\s*$/i.exec(String(out).trim());
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
+}
+
 // spelling: 'snake' | 'camel' to force one form (getState, once it knows the
 // server's era), or undefined to try snake_case then camelCase.
 async function queryGamerule(serverId, rule, spelling) {
@@ -234,6 +252,37 @@ async function setGamerule(serverId, rule, value) {
     ['gamerule', GAMERULES[rule], value],
     ['gamerule', rule, value],
   ]);
+}
+
+async function queryGameruleIntRaw(serverId, rule, spelling) {
+  const def = INTEGER_RULES[rule];
+  const snake = ['gamerule', def.snake];
+  const camel = ['gamerule', rule];
+  const out = spelling
+    ? await rcon(serverId, spelling === 'snake' ? snake : camel)
+    : await tryVariants(serverId, [snake, camel]);
+  return { value: parseGameruleInt(out), rejected: looksLikeError(out) };
+}
+
+async function setGameruleInt(serverId, rule, value) {
+  const def = INTEGER_RULES[rule];
+  return tryVariants(serverId, [
+    ['gamerule', def.snake, String(value)],
+    ['gamerule', rule, String(value)],
+  ]);
+}
+
+/** Pure: pull the border diameter out of a `worldborder get` reply. */
+function parseBorderDiameter(out) {
+  const m = /([\d.]+)\s*blocks?\s*wide/i.exec(String(out || ''));
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function queryBorderDiameter(serverId) {
+  const out = await rcon(serverId, ['worldborder', 'get']).catch(() => '');
+  return parseBorderDiameter(out);
 }
 
 // Decide whether a gamerule write took, from the value read back afterwards
@@ -364,14 +413,24 @@ async function readStateLive(serverId, opts = {}) {
   // ~40 gamerules would be ~80 sequential RCON round trips per poll if every one
   // tried both spellings. Probe the first rule with both, learn the server's era,
   // then fan the rest out concurrently (small pool - don't flood the daemon).
-  const wanted =
-    Array.isArray(opts.rules) && opts.rules.length ? opts.rules.filter((r) => Object.hasOwn(GAMERULES, r)) : null;
-  const rules = wanted && wanted.length ? wanted : Object.keys(GAMERULES);
+  // Integer rules (number inputs, not chips) are filtered and read the same way.
+  const isKnownRule = (r) => Object.hasOwn(GAMERULES, r) || Object.hasOwn(INTEGER_RULES, r);
+  const wanted = Array.isArray(opts.rules) && opts.rules.length ? opts.rules.filter(isKnownRule) : null;
+  const rules = wanted && wanted.length ? wanted.filter((r) => Object.hasOwn(GAMERULES, r)) : Object.keys(GAMERULES);
+  const intRules =
+    wanted && wanted.length ? wanted.filter((r) => Object.hasOwn(INTEGER_RULES, r)) : Object.keys(INTEGER_RULES);
+  const unsupported = [];
+  // No boolean rules asked for (integer-only read): skip the probe, the
+  // integer sweep below tries both spellings on its own.
   const first = rules[0];
-  const firstSnake = await rcon(serverId, ['gamerule', GAMERULES[first]]);
-  const spelling = looksLikeError(firstSnake) ? 'camel' : 'snake';
+  const firstSnake = first ? await rcon(serverId, ['gamerule', GAMERULES[first]]) : '';
+  const spelling = !first || looksLikeError(firstSnake) ? 'camel' : 'snake';
   const other = spelling === 'snake' ? 'camel' : 'snake';
-  const firstVal = spelling === 'snake' ? parseGameruleBool(firstSnake) : await queryGamerule(serverId, first, 'camel');
+  const firstVal = !first
+    ? null
+    : spelling === 'snake'
+      ? parseGameruleBool(firstSnake)
+      : await queryGamerule(serverId, first, 'camel');
   if (firstVal !== null) state[first] = firstVal;
   else if (spelling === 'camel') {
     // The probe already fetched the snake_case reply - reuse it, no extra round trip.
@@ -392,7 +451,6 @@ async function readStateLive(serverId, opts = {}) {
   // otherwise their chips read as "off" when they were only unread. Cost is
   // bounded to the failures, which is normally zero.
   const missed = rules.filter((rule) => !Object.hasOwn(state, rule));
-  const unsupported = [];
   if (missed.length) {
     const retry = await mapLimit(missed, 6, (rule) => queryGameruleRaw(serverId, rule, other));
     missed.forEach((rule, i) => {
@@ -403,9 +461,24 @@ async function readStateLive(serverId, opts = {}) {
       else if (retry[i].rejected && (rejected.has(rule) || rule === first)) unsupported.push(rule);
     });
   }
+  // Integer rules are few, so always try both spellings: no wrong-era
+  // misclassification, at most one extra round trip per rule on old versions.
+  const intValues = await mapLimit(intRules, 6, (rule) => queryGameruleIntRaw(serverId, rule));
+  intRules.forEach((rule, i) => {
+    if (intValues[i].value !== null) state[rule] = intValues[i].value;
+    else if (intValues[i].rejected) unsupported.push(rule);
+  });
   if (unsupported.length) state.unsupported = unsupported;
   const difficulty = await queryDifficulty(serverId).catch(() => null);
   if (difficulty) state.difficulty = difficulty;
+  // The border has no "unsupported" shape - a version without worldborder just
+  // answers an error and the box shows unknown.
+  try {
+    const border = await queryBorderDiameter(serverId);
+    if (border !== null) state.borderDiameter = border;
+  } catch {
+    /* border box stays unknown */
+  }
   state.pvp = readPvp(serverId); // from server.properties - the pending/effective value
   return state;
 }
@@ -462,21 +535,34 @@ function offlineStateFromLevelData(data, opts = {}) {
   if (Number.isFinite(diff) && DIFFICULTIES[diff]) state.difficulty = DIFFICULTIES[diff];
 
   // level.dat GameRules keys are camelCase on <=1.21 and snake_case on 26.x -
-  // GAMERULES maps one to the other, so try both spellings per rule.
+  // GAMERULES maps one to the other, so try both spellings per rule. Values
+  // are strings either way; integer rules parse as numbers.
   const gr = data.GameRules || {};
   const asBool = (raw) => (raw === 'true' ? true : raw === 'false' ? false : null);
+  const asInt = (raw) => {
+    if (typeof raw !== 'string' || !/^-?\d+$/.test(raw.trim())) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  };
+  const isKnownRule = (r) => Object.hasOwn(GAMERULES, r) || Object.hasOwn(INTEGER_RULES, r);
   const wanted =
-    Array.isArray(opts.rules) && opts.rules.length
-      ? opts.rules.filter((r) => Object.hasOwn(GAMERULES, r))
-      : Object.keys(GAMERULES);
+    Array.isArray(opts.rules) && opts.rules.length ? opts.rules.filter(isKnownRule) : Object.keys(GAMERULES);
   for (const rule of wanted) {
     const v = asBool(gr[rule]) ?? asBool(gr[GAMERULES[rule]]);
+    if (v !== null) state[rule] = v;
+  }
+  const intWanted =
+    Array.isArray(opts.rules) && opts.rules.length
+      ? opts.rules.filter((r) => Object.hasOwn(INTEGER_RULES, r))
+      : Object.keys(INTEGER_RULES);
+  for (const rule of intWanted) {
+    const v = asInt(gr[rule]) ?? asInt(gr[INTEGER_RULES[rule].snake]);
     if (v !== null) state[rule] = v;
   }
   // level.dat lists every gamerule the version knows, so a rule absent from a
   // populated GameRules compound is one this version does not have.
   if (Object.keys(gr).length) {
-    const unsupported = wanted.filter((rule) => !Object.hasOwn(state, rule));
+    const unsupported = [...wanted, ...intWanted].filter((rule) => !Object.hasOwn(state, rule));
     if (unsupported.length) state.unsupported = unsupported;
   }
   return state;
@@ -491,25 +577,42 @@ async function getStateOffline(serverId, opts = {}) {
   return { ...offlineStateFromLevelData(data, opts), pvp: readPvp(serverId) };
 }
 
-async function runQuick(serverId, action, { actor = 'system' } = {}) {
-  const quick = QUICK_ACTIONS[action];
-  if (!quick) {
-    const err = new Error(`Unknown quick action: ${action}`);
-    err.status = 400;
-    throw err;
+// Parameterized actions (number inputs, border fields): validated before any
+// RCON round trip, so a bad value is a friendly 400, never a hung command.
+const PARAM_ACTIONS = new Set(['gamerule-int', 'time-set', 'border-set', 'border-add', 'border-center']);
+
+// Vanilla worldborder bounds (blocks; center coordinates likewise).
+const BORDER_LIMIT = { diameter: [1, 59999968], delta: [-59999968, 59999968], coord: [-29999968, 29999968] };
+
+function badParam(message) {
+  const err = new Error(message);
+  err.status = 400;
+  throw err;
+}
+
+function intParam(params, key, { min, max, label }) {
+  const raw = params ? params[key] : undefined;
+  if (raw === undefined || raw === null || raw === '') badParam(`${label} needs a value.`);
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isInteger(n) || n < min || n > max) {
+    badParam(`${label} must be a whole number from ${min} to ${max}.`);
   }
-  const ok = (out) => {
+  return n;
+}
+
+async function runQuick(serverId, action, { actor = 'system', params = {} } = {}) {
+  const ok = (label, out) => {
     recordEvent({
       serverId,
       actor,
       type: 'rcon',
-      summary: `Quick action: ${quick.label}.`,
+      summary: `Quick action: ${label}.`,
       details: { action, output: (out || '').slice(0, 300) },
     });
     invalidateState(serverId); // the next /world/state read must see this change
-    return { label: quick.label, output: (out || '').trim() };
+    return { label, output: (out || '').trim() };
   };
-  const fail = (detail) => {
+  const fail = (label, detail) => {
     // Record the failure too - the History tab is where an operator looks, and
     // "check the logs" was never useful (the log viewer shows the game's own
     // output, not the panel's).
@@ -517,7 +620,7 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
       serverId,
       actor,
       type: 'rcon',
-      summary: `Quick action failed: ${quick.label}.`,
+      summary: `Quick action failed: ${label}.`,
       details: { action, reply: String(detail || '').slice(0, 300) },
     });
     // 4xx, not 5xx: the JSON error handler passes a sub-500 err.message straight
@@ -530,10 +633,19 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
     throw err;
   };
 
+  if (PARAM_ACTIONS.has(action)) return runParamAction(serverId, action, params || {}, { ok, fail });
+
+  const quick = QUICK_ACTIONS[action];
+  if (!quick) {
+    const err = new Error(`Unknown quick action: ${action}`);
+    err.status = 400;
+    throw err;
+  }
+
   // server.properties edit - not an RCON command, nothing to verify.
   if (quick.prop === 'pvp') {
     writePvp(serverId, quick.value, { actor }); // also un-sets the PVP env var
-    return ok('');
+    return ok(quick.label, '');
   }
 
   // Gamerule toggles (the bulk of the actions): don't trust the console reply.
@@ -546,21 +658,70 @@ async function runQuick(serverId, action, { actor = 'system' } = {}) {
     const out = await setGamerule(serverId, quick.rule, quick.value);
     const want = quick.value === 'true';
     const readBack = await queryGamerule(serverId, quick.rule);
-    if (resolveRuleWrite(readBack, want, out).ok) return ok(out);
-    return fail(readBack === null ? out.split('\n')[0] : `read back ${readBack}, expected ${want}`);
+    if (resolveRuleWrite(readBack, want, out).ok) return ok(quick.label, out);
+    return fail(quick.label, readBack === null ? out.split('\n')[0] : `read back ${readBack}, expected ${want}`);
   }
 
   // Remaining actions (time / weather / difficulty / save / daycycle variants)
   // are vanilla commands present on every version; there is no single clean
   // read-back, so fall back to the reply heuristic.
   const out = quick.variants ? await tryVariants(serverId, quick.variants) : await rcon(serverId, quick.cmd);
-  if (looksLikeError(out)) return fail(out.split('\n')[0]);
+  if (looksLikeError(out)) return fail(quick.label, out.split('\n')[0]);
   // Persist the value to server.properties as well (difficulty actions carry
   // `persist`): the command only changes the running world, and a dedicated
   // server re-applies the property on every boot. Writing it through the
   // choke point also un-sets the env var that would otherwise re-assert it.
   if (quick.persist) servers.setServerProperty(serverId, quick.persist, quick.cmd[1], { actor });
-  return ok(out);
+  return ok(quick.label, out);
+}
+
+async function runParamAction(serverId, action, params, { ok, fail }) {
+  const p = params && typeof params === 'object' ? params : {};
+  if (action === 'gamerule-int') {
+    const rule = typeof p.rule === 'string' ? p.rule : '';
+    const def = INTEGER_RULES[rule];
+    if (!def) badParam('Unknown number setting. Pick one of the offered settings.');
+    const value = intParam(p, 'value', def);
+    const out = await setGameruleInt(serverId, rule, value);
+    const readBack = (await queryGameruleIntRaw(serverId, rule)).value;
+    const label = `${def.label} set to ${value}`;
+    if (resolveRuleWrite(readBack, value, out).ok) return ok(label, out);
+    return fail(label, readBack === null ? out.split('\n')[0] : `read back ${readBack}, expected ${value}`);
+  }
+  if (action === 'time-set') {
+    const ticks = intParam(p, 'ticks', { min: 0, max: 23999, label: 'Time' });
+    const out = await rcon(serverId, ['time', 'set', String(ticks)]);
+    const label = `Time set to ${clockFromTicks(ticks)}`;
+    if (looksLikeError(out)) return fail(label, out.split('\n')[0]);
+    return ok(label, out);
+  }
+  if (action === 'border-set' || action === 'border-add') {
+    const isSet = action === 'border-set';
+    const key = isSet ? 'diameter' : 'delta';
+    const [min, max] = isSet ? BORDER_LIMIT.diameter : BORDER_LIMIT.delta;
+    const n = intParam(p, key, { min, max, label: isSet ? 'Border size' : 'Border change' });
+    if (!isSet && n === 0) badParam('Border change cannot be zero. Enter how many blocks to grow or shrink.');
+    const args = isSet ? ['worldborder', 'set', String(n)] : ['worldborder', 'add', String(n)];
+    if (p.seconds !== undefined && p.seconds !== null && p.seconds !== '') {
+      args.push(String(intParam(p, 'seconds', { min: 0, max: 1000000, label: 'Border time' })));
+    }
+    const out = await rcon(serverId, args);
+    const label = isSet
+      ? `World border set to ${n} blocks`
+      : `World border ${n > 0 ? `grown by ${n}` : `shrunk by ${-n}`} blocks`;
+    if (looksLikeError(out)) return fail(label, out.split('\n')[0]);
+    return ok(label, out);
+  }
+  if (action === 'border-center') {
+    const [cmin, cmax] = BORDER_LIMIT.coord;
+    const x = intParam(p, 'x', { min: cmin, max: cmax, label: 'Center X' });
+    const z = intParam(p, 'z', { min: cmin, max: cmax, label: 'Center Z' });
+    const out = await rcon(serverId, ['worldborder', 'center', String(x), String(z)]);
+    const label = `World border centered on ${x}, ${z}`;
+    if (looksLikeError(out)) return fail(label, out.split('\n')[0]);
+    return ok(label, out);
+  }
+  return badParam(`Unknown quick action: ${action}.`);
 }
 
 module.exports = {
@@ -570,6 +731,10 @@ module.exports = {
   runQuick,
   resolveRuleWrite,
   invalidateState,
+  parseBorderDiameter,
   QUICK_ACTIONS,
+  PARAM_ACTIONS,
+  INTEGER_RULES,
+  GAMERULES,
   looksLikeError,
 };

@@ -65,7 +65,11 @@
       <canvas data-chart="memory" height="140"></canvas>
       {{#if server.memory.note}}<p class="mt-2 text-xs text-ink-faint">{{server.memory.note}}</p>{{/if}}
     </div>
-    <div class="card p-4">
+    {{! Full width while the tick-rate card is hidden (servers without TPS
+        reporting) so the row never leaves a void; metrics.js keeps the span
+        in step when tick-rate support changes live. Same perfSupported
+        condition as the tick-rate card below, so the two cannot drift apart. }}
+    <div class="card p-4 {{#unless server.stats.perfSupported}}lg:col-span-2{{/unless}}" data-net-card>
       <h3 class="mb-2 font-semibold">Network</h3>
       <canvas data-chart="network" height="140"></canvas>
     </div>
@@ -126,7 +130,7 @@
   {{! ---- Storage ---- }}
   <div class="mt-4 card p-4">
     <h3 class="mb-3 font-semibold">Storage</h3>
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid items-start gap-6 lg:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
       <div>
         {{#if breakdown}}
           <div class="space-y-2.5 text-xs">
@@ -163,6 +167,37 @@
           <p class="text-sm text-ink-faint">No worlds found yet.</p>
         {{/if}}
       </div>
+      {{! Quota donut: r = 15.9155 makes the circumference exactly 100, so the
+          filled arc is the usage percentage straight from the pct helper. Only
+          rendered with a quota set - without one there is no whole to be a
+          part of. Like the bars above, it shows the last indexed sizes and
+          refreshes on reload. }}
+      {{#if server.disk.quota}}
+        <div class="flex flex-col items-center gap-2 justify-self-center" data-disk-donut>
+          <div class="relative size-36">
+            <svg viewBox="0 0 42 42" class="size-full -rotate-90" role="img" aria-label="Disk usage {{pct server.disk.used server.disk.quota}} percent of quota">
+              <circle cx="21" cy="21" r="15.9155" fill="none" stroke-width="5" class="stroke-line"></circle>
+              <circle
+                cx="21"
+                cy="21"
+                r="15.9155"
+                fill="none"
+                stroke-width="5"
+                stroke-linecap="round"
+                stroke-dasharray="{{pct server.disk.used server.disk.quota}} 100"
+                class="{{donutColor server.disk.used server.disk.quota}}"
+              ></circle>
+            </svg>
+            <div class="absolute inset-0 grid place-items-center">
+              <div class="text-center">
+                <div class="text-xl font-bold tabular-nums">{{pct server.disk.used server.disk.quota}}%</div>
+                <div class="text-[11px] text-ink-faint">used</div>
+              </div>
+            </div>
+          </div>
+          <p class="text-center text-xs text-ink-faint">{{bytes server.disk.used}} of {{bytes server.disk.quota}}</p>
+        </div>
+      {{/if}}
     </div>
   </div>
 

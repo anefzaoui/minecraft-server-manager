@@ -39,7 +39,12 @@ document.getElementById('updates-check-all')?.addEventListener('click', async ()
   }
 });
 
-document.getElementById('updates-table')?.addEventListener('click', async (e) => {
+// Two tables now (server updates, mod updates) - one delegated listener each.
+document.querySelectorAll('[data-updates-table]').forEach((table) => {
+  table.addEventListener('click', onUpdatesTableClick);
+});
+
+async function onUpdatesTableClick(e) {
   const ignoreBtn = e.target.closest('[data-update-ignore], [data-update-unignore]');
   if (ignoreBtn) {
     const row = ignoreBtn.closest('[data-update-row]');
@@ -73,15 +78,14 @@ document.getElementById('updates-table')?.addEventListener('click', async (e) =>
   } else if (targetVersion || targetBuild) {
     await upgradeMcVersion(row, { serverId, serverName, current, latest, targetVersion, targetBuild, envKey });
   }
-});
+}
 
 // Drop a row once its update has been applied - the entry is no longer pending.
-// When it was the last one, reload so the "everything up to date" empty state
-// renders in place of the now-empty table.
+// When it was the last one on the whole page, reload so the "everything up to
+// date" empty state renders in place of the now-empty tables.
 function dropUpdateRow(row) {
-  const tbody = row.closest('tbody');
   row.remove();
-  if (tbody && !tbody.querySelector('[data-update-row]')) setTimeout(() => location.reload(), 900);
+  if (!document.querySelector('[data-update-row]')) setTimeout(() => location.reload(), 900);
 }
 
 // Ignore / un-ignore one row. subjectType tells the API which store to use

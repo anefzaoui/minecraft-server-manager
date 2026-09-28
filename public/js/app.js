@@ -166,21 +166,6 @@ for (const el of document.querySelectorAll('[data-ts], [data-ts-ago]')) {
   });
 })();
 
-// ---- World-controls rail: static open panel at xl, collapsible below ----
-// The <details> ships closed (good on a phone - it's ~70 chips); at xl it must
-// always be open and lose its disclosure row so it reads as the sticky rail it
-// used to be.
-(() => {
-  const rail = document.getElementById('wc-rail');
-  if (!rail || rail.tagName !== 'DETAILS') return;
-  const wide = window.matchMedia('(min-width: 1280px)'); // Tailwind xl
-  const sync = () => {
-    rail.open = wide.matches;
-  };
-  sync();
-  wide.addEventListener('change', sync);
-})();
-
 // ---- Dashboard: live text filter over server cards ----
 (() => {
   const input = document.getElementById('server-filter');
@@ -475,7 +460,7 @@ document.addEventListener('click', async (e) => {
 // ---- Boot-phase hydration: keep status-detail chips live on any page ----
 // Also broadcasts each fetch as `msm:servers-live` so other page scripts
 // (e.g. the dashboard's card stats) can piggyback on this poll instead of
-// running their own redundant interval against the same endpoint.
+// running our own redundant interval against the same endpoint.
 (() => {
   const els = () => document.querySelectorAll('[data-status-detail]');
   if (!els().length) return;
@@ -491,6 +476,14 @@ document.addEventListener('click', async (e) => {
           el.title = phase || ''; // truncated chips stay readable on hover
           el.classList.toggle('hidden', !phase);
         }
+        // The server page header renders its status once: without this a
+        // Starting label sits there until reload. Move its dot + label along
+        // with the same payload (no extra request).
+        const chrome = document.querySelector('[data-chrome-status]');
+        if (chrome) {
+          const live = data.servers[chrome.dataset.chromeStatus];
+          if (live && live.status) paintChromeStatus(chrome, live.status);
+        }
         document.dispatchEvent(new CustomEvent('msm:servers-live', { detail: data }));
       }
     } catch {
@@ -500,3 +493,33 @@ document.addEventListener('click', async (e) => {
   }
   setTimeout(tick, 8000);
 })();
+
+// Client-side mirror of the server's STATUS_META (src/web/app.js) for the
+// chrome header. Full literal classes on purpose: Tailwind only emits
+// utilities it sees verbatim (same reason dashboard.js keeps its own copy).
+const CHROME_STATUS_META = {
+  running: { label: 'Running', dot: 'bg-grass-500', text: 'text-ok', pulse: true },
+  starting: { label: 'Starting', dot: 'bg-gold-500', text: 'text-warn', pulse: true },
+  stalled: { label: 'Stalled', dot: 'bg-redstone-500', text: 'text-danger', pulse: false },
+  unhealthy: { label: 'Unhealthy', dot: 'bg-gold-500', text: 'text-warn', pulse: true },
+  updating: { label: 'Updating', dot: 'bg-diamond-500', text: 'text-link', pulse: true },
+  stopped: { label: 'Stopped', dot: 'bg-stone-500', text: 'text-ink-faint', pulse: false },
+  crashed: { label: 'Crashed', dot: 'bg-redstone-500', text: 'text-danger', pulse: false },
+  'over-quota': { label: 'Over Quota', dot: 'bg-redstone-500', text: 'text-danger', pulse: false },
+};
+
+function paintChromeStatus(el, status) {
+  const meta = CHROME_STATUS_META[status];
+  if (!meta || el.dataset.status === status) return;
+  el.dataset.status = status;
+  el.className = `flex items-center gap-1.5 text-xs font-medium ${meta.text}`;
+  const dot = el.querySelector('.status-dot');
+  if (dot) dot.className = `status-dot relative ${meta.dot} ${meta.pulse ? 'pulse' : ''}`;
+  // The label is the text node after the dot.
+  for (const node of el.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
+      node.nodeValue = ` ${meta.label}`;
+      break;
+    }
+  }
+}

@@ -123,6 +123,7 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     autoRestart: Boolean(s.auto_restart),
     notes: s.notes,
     updatePolicy: s.update_policy,
+    modUpdatePolicy: s.mod_update_policy || 'manual',
     // True only for a server the boot sweep could not repair (no recorded or
     // installed version to pin to) - the settings page warns and asks for a
     // manual version pick (#22).

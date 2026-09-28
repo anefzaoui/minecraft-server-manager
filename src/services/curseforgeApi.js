@@ -81,6 +81,48 @@ async function getMod(modId) {
   return normalizeMod(data.data);
 }
 
+/**
+ * The Minecraft Worlds class id, resolved live from the category list rather
+ * than hardcoded: class ids are stable, but a wrong constant fails silently
+ * (the search just returns another class - e.g. resource packs - instead of
+ * erroring), so trust the registry over memory. Cached for a day; falls back
+ * to the documented id when the lookup itself fails.
+ */
+async function worldsClassId() {
+  try {
+    const data = await cfFetch('/games/432/categories', { ttlMs: 24 * 60 * 60 * 1000 });
+    const hit = (data.data || []).find(
+      (c) => c && (c.isClass === true || c.parentCategoryId == null) && String(c.name || '').toLowerCase() === 'worlds'
+    );
+    const id = hit && (hit.classId || hit.id);
+    if (Number.isInteger(id)) return id;
+  } catch {
+    /* fall through to the fallback below */
+  }
+  return 17;
+}
+
+/** Trending worlds for the world library's discover feed (empty search + popularity sort). */
+async function searchWorlds({ limit = 6, offset = 0 } = {}) {
+  const data = await cfFetch('/mods/search', {
+    search: {
+      gameId: GAME_MINECRAFT,
+      classId: await worldsClassId(),
+      pageSize: limit,
+      index: offset,
+      sortField: 2,
+      sortOrder: 'desc',
+    },
+  });
+  return data.data.map(normalizeMod);
+}
+
+/** A world's files, newest first (same shape as mod files: downloadUrl may be null). */
+async function getWorldFiles(modId, { pageSize = 10 } = {}) {
+  const data = await cfFetch(`/mods/${modId}/files`, { search: { pageSize } });
+  return data.data.map(normalizeFile);
+}
+
 /** Look a project up by slug (search with exact slug filter). */
 async function getModBySlug(slug, { classId = CLASS_MODPACKS } = {}) {
   const data = await cfFetch('/mods/search', { search: { gameId: GAME_MINECRAFT, classId, slug } });
@@ -272,6 +314,8 @@ function loaderTypeIds(loader) {
 
 module.exports = {
   search,
+  searchWorlds,
+  getWorldFiles,
   getMod,
   getModBySlug,
   getFiles,

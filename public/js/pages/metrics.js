@@ -16,6 +16,13 @@ function init(serverId, memLimitMb, cpuLimit) {
   // --- Top stat strip: keep the SSR numbers moving between reloads.
   const metricEl = (name) => root.querySelector(`[data-metric="${name}"]`);
   const tpsCard = root.querySelector('[data-tps-card]');
+  const netCard = root.querySelector('[data-net-card]');
+  // The Network card spans the row while tick-rate is hidden; keep the span
+  // in step here so a perf probe arriving (or failing) mid-view reflows it.
+  // The class literal must stay verbatim for the Tailwind scanner.
+  const syncNetSpan = () => {
+    if (netCard && tpsCard) netCard.classList.toggle('lg:col-span-2', tpsCard.hidden);
+  };
   let perfSupported = root.dataset.metricsPerfSupported === '1';
 
   // Local uptime ticker from the container's start time.
@@ -146,6 +153,7 @@ function init(serverId, memLimitMb, cpuLimit) {
       // Every probe command has been tried and none answered.
       perfSupported = false;
       if (tpsCard) tpsCard.hidden = true;
+      syncNetSpan();
       const tpsEl = metricEl('tps');
       const msptEl = metricEl('mspt');
       if (tpsEl && tpsEl.textContent === '…') tpsEl.textContent = 'n/a';
@@ -155,6 +163,7 @@ function init(serverId, memLimitMb, cpuLimit) {
     if (supported === true && !perfSupported) {
       perfSupported = true;
       if (tpsCard) tpsCard.hidden = false;
+      syncNetSpan();
     }
     if (!perf) return;
     const tpsEl = metricEl('tps');

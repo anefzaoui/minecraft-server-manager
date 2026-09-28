@@ -162,15 +162,17 @@ const CAPABILITY_INFO = {
     help: 'Create, restore, download, and delete backups.',
     covers: [
       'Back up now, restore a backup, download, rename, and delete archives of this server.',
+      'Upload an archive copy to a connected offsite destination.',
       'Schedule backups for this server.',
     ],
-    excludes: 'Retention rules, which stay admin-only.',
+    excludes: 'Retention rules and destination setup, which stay admin-only.',
     reach: [
       'POST /api/servers/:id/backups',
       'POST /api/servers/:id/backups/:backupId/restore',
       'GET /api/backups/:backupId/download',
       'PATCH /api/backups/:backupId',
       'DELETE /api/backups/:backupId',
+      'POST /api/remotes/:id/upload/:backupId',
       'POST /api/schedules (backup)',
     ],
   },
@@ -201,7 +203,7 @@ const CAPABILITY_INFO = {
     help: 'Change server settings, properties, integrations, icon, and upgrade versions.',
     covers: [
       'Save the Configuration tab: name, description, tags, memory, CPU, quota, update policy, environment, and server.properties.',
-      'Upgrade the Minecraft version or the container image, set the icon and the console label, turn the live map on or off.',
+      'Upgrade the Minecraft version or the container image, change the software, set the icon and the console label, turn the live map on or off.',
       'Configure Discord, the public status page, and invites.',
     ],
     excludes:
@@ -212,6 +214,7 @@ const CAPABILITY_INFO = {
       'POST /api/servers/:id/icon',
       'POST /api/servers/:id/image/upgrade',
       'POST /api/servers/:id/mcversion/upgrade',
+      'POST /api/servers/:id/type/change',
       'POST /api/servers/:id/map/enable',
       'POST /api/servers/:id/map/disable',
       'WRITES /api/servers/:id/integrations/*',

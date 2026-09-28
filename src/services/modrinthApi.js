@@ -63,9 +63,10 @@ async function mrFetch(pathname, { ttlMs = 10 * 60 * 1000, search, method = 'GET
 
 /**
  * Search projects. kind: 'mod' | 'plugin' | 'datapack' | 'resourcepack' | 'modpack'
- * loader/mcVersion narrow via facets.
+ * loader/mcVersion narrow via facets. index 'downloads' + an empty query is
+ * the discover feed (most-downloaded matching projects).
  */
-async function search({ query = '', kind = 'mod', loader, mcVersion, limit = 20, offset = 0 }) {
+async function search({ query = '', kind = 'mod', loader, mcVersion, limit = 20, offset = 0, index = 'relevance' }) {
   const facets = [];
   if (kind === 'plugin')
     facets.push(['categories:paper', 'categories:spigot', 'categories:bukkit', 'categories:purpur']);
@@ -74,7 +75,7 @@ async function search({ query = '', kind = 'mod', loader, mcVersion, limit = 20,
   if (loader && kind !== 'plugin') facets.push(compatibleLoaders(loader).map((l) => `categories:${l}`));
   if (mcVersion) facets.push([`versions:${mcVersion}`]);
   const data = await mrFetch('/search', {
-    search: { query, limit: String(limit), offset: String(offset), index: 'relevance', facets: JSON.stringify(facets) },
+    search: { query, limit: String(limit), offset: String(offset), index, facets: JSON.stringify(facets) },
     ttlMs: 5 * 60 * 1000,
   });
   return data.hits.map((h) => ({

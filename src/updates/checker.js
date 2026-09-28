@@ -51,8 +51,11 @@ async function checkAll({ actor = 'scheduler' } = {}) {
     // 'manual' means "leave me alone": the check rows are still refreshed (so
     // flipping the policy later shows current state instantly), but nothing
     // lands in findings - no badge, no "updates available" event, no bridge
-    // notification (#24).
-    const quiet = server.update_policy === 'manual';
+    // notification (#24). Game/server-level findings (packs, image, Minecraft
+    // and loader versions) follow update_policy; overlay content follows the
+    // separate mod_update_policy.
+    const quietServer = server.update_policy === 'manual';
+    const quietMods = (server.mod_update_policy || 'manual') === 'manual';
     // Pack updates
     try {
       const result = await packsService.latestFor(server.id);
@@ -69,7 +72,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
           latestName: result.latest.name,
           changelogUrl: changelog,
         });
-        if (result.updateAvailable && !quiet && !isUpdateIgnored('pack', server.id, result.latest.id))
+        if (result.updateAvailable && !quietServer && !isUpdateIgnored('pack', server.id, result.latest.id))
           findings.push({
             server: server.display_name,
             kind: 'pack',
@@ -146,7 +149,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
           });
           // Cache stays accurate above so "un-ignore" needs no re-check; only
           // keep an ignored build out of the findings notification.
-          if (isNew && !quiet && latest.name !== row.ignored_update_version)
+          if (isNew && !quietMods && latest.name !== row.ignored_update_version)
             findings.push({
               server: server.display_name,
               kind: 'mod',
@@ -182,7 +185,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
         const latestId = imageIdCache.get(ref);
         const isNew = Boolean(latestId) && latestId !== status.imageId;
         upsertCheck('image', server.id, status.imageId, { isNew, latestId, latestName: ref, changelogUrl: null });
-        if (isNew && !quiet && !isUpdateIgnored('image', server.id, latestId))
+        if (isNew && !quietServer && !isUpdateIgnored('image', server.id, latestId))
           findings.push({
             server: server.display_name,
             kind: 'image',
@@ -203,7 +206,7 @@ async function checkAll({ actor = 'scheduler' } = {}) {
     // already resolve to newest on every recreate; nothing to check there).
     if (!packsService.getPack(server.id)) {
       try {
-        await checkStandaloneVersion(server, quiet ? [] : findings);
+        await checkStandaloneVersion(server, quietServer ? [] : findings);
       } catch (err) {
         logger.debug('A standalone version update check failed; keeping the cached result.', {
           serverId: server.id,
@@ -432,8 +435,8 @@ function listOutdated() {
     } else if (c.subject_type === 'content') {
       const row = db.get(
         `SELECT sc.*, s.display_name, s.id AS sid FROM server_content sc
-           JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'
-         WHERE sc.id = ?`,
+           JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.mod_update_policy != 'manual'
+          WHERE sc.id = ?`,
         c.subject_id
       );
       // Name-to-name: skip only rows the user already updated since the last
@@ -545,7 +548,7 @@ function countOutdatedByKind({ serverIds = null } = {}) {
       AS packs,
       (SELECT COUNT(*) FROM update_checks c
          JOIN server_content sc ON sc.id = c.subject_id
-         JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.update_policy != 'manual'${scope}
+         JOIN servers s ON s.id = sc.server_id AND s.deleted_at IS NULL AND s.mod_update_policy != 'manual'${scope}
          WHERE c.subject_type = 'content' AND c.latest_version IS NOT NULL
            AND c.latest_name IS NOT NULL AND c.latest_name != sc.version
            AND (sc.ignored_update_version IS NULL OR sc.ignored_update_version != c.latest_name))

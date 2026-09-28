@@ -22,7 +22,14 @@
   <h3 class="mb-3 mt-6 eyebrow">Installed</h3>
 
   {{#unless packServers.length}}
-    {{> empty-state iconName='package' title='No Modpacks Installed' message='No server is running a managed modpack yet. Search above, then use the create wizard. Every install is version-pinned, so restarts never surprise you.' ctaHref='/servers/new' ctaLabel='Create a Server'}}
+    {{> empty-state iconName='package' title='No Modpacks Installed' message='No server is running a managed modpack yet. Search above, then use the create wizard. Every install is version-pinned, so restarts never surprise you.'}}
+    {{! Trending packs from the active platform's own discover feed, following
+        the Modrinth/CurseForge chips above. Filled in by modpacks.js. }}
+    <div class="mt-8" id="packs-recommended">
+      <h3 class="mb-1 eyebrow">Recommended</h3>
+      <p class="mb-3 text-xs text-ink-faint" data-recommended-note></p>
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" id="packs-recommended-grid"></div>
+    </div>
   {{/unless}}
 
   {{! Same column count as search results - the same card width jumped between

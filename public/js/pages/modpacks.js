@@ -204,6 +204,7 @@ function initPage() {
       b.setAttribute('aria-pressed', String(b === btn));
     }
     if (q.value.trim()) search();
+    else rec?.reload();
   });
 
   let timer;
@@ -355,6 +356,124 @@ function initPage() {
     if (e.target.closest('a')) return;
     showPackDetails({ installedServerId: serverId });
   });
+
+  // Recommended packs when nothing is installed (server-rendered only then).
+  // The host page owns the platform chips; the shared helper below owns the
+  // section. Reload when the chips move while no search is active.
+  const rec = initPackRecommendations({
+    sectionId: 'packs-recommended',
+    gridId: 'packs-recommended-grid',
+    noteSel: '[data-recommended-note]',
+    getPlatform: () => platform,
+  });
+  void rec;
+}
+
+// ---- Shared pack recommendations ------------------------------------------
+// Trending packs for empty states (modpacks page, blueprints page). The host
+// page owns the platform chips and calls reload() when they move; this owns
+// fetching, cards, and the Details / Create actions.
+export function initPackRecommendations({ sectionId, gridId, noteSel, getPlatform }) {
+  const section = document.getElementById(sectionId);
+  if (!section) return null;
+  const grid = document.getElementById(gridId);
+  if (!grid) return null;
+  const note = noteSel ? section.querySelector(noteSel) : null;
+  const PAGE = 6;
+  let packs = [];
+  let offset = 0;
+  let seq = 0;
+
+  const moreBtn = document.createElement('button');
+  moreBtn.type = 'button';
+  moreBtn.className = 'btn btn-ghost btn-sm mt-4 hidden';
+  moreBtn.textContent = 'Show More';
+  moreBtn.addEventListener('click', () => load(false));
+  grid.after(moreBtn);
+
+  function cardHtml(p, i) {
+    return `
+        <div class="card flex flex-col p-4">
+          <div class="flex items-center gap-3">
+            ${packIconHtml(p.iconUrl, 'size-10')}
+            <div class="min-w-0 flex-1">
+              <div class="truncate font-semibold" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
+              <div class="text-xs text-ink-faint">${formatDownloads(p.downloads)} downloads</div>
+            </div>
+          </div>
+          <p class="mt-2 line-clamp-2 flex-1 text-xs text-ink-faint">${escapeHtml(p.description || '')}</p>
+          <div class="mt-3 flex gap-2 border-t border-line pt-3">
+            <button type="button" class="btn btn-ghost btn-sm" data-rec-details="${i}">Details</button>
+            <button type="button" class="btn btn-sm ml-auto" data-rec-create="${i}">Create a Server</button>
+          </div>
+        </div>`;
+  }
+
+  async function load(reset = true) {
+    const my = ++seq;
+    const platform = getPlatform();
+    if (note) note.textContent = platform === 'curseforge' ? 'Popular on CurseForge.' : 'Trending on Modrinth.';
+    if (reset) {
+      offset = 0;
+      packs = [];
+      moreBtn.classList.add('hidden');
+      grid.innerHTML = Array.from(
+        { length: 3 },
+        () =>
+          `<div class="card animate-pulse p-4" aria-hidden="true">
+          <div class="flex items-center gap-3"><div class="size-10 rounded-md bg-inset"></div>
+          <div class="flex-1 space-y-2"><div class="h-3 w-2/3 rounded bg-inset"></div><div class="h-2.5 w-1/2 rounded bg-inset"></div></div></div>
+        </div>`
+      ).join('');
+    } else {
+      moreBtn.disabled = true;
+    }
+    try {
+      const res = await fetch(`/api/packs/discover?platform=${platform}&limit=${PAGE}&offset=${offset}`);
+      const data = await res.json();
+      if (my !== seq) return;
+      if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'load recommendations' }));
+      const hits = data.results || [];
+      if (reset && !hits.length) {
+        grid.innerHTML =
+          '<div class="card p-4 text-sm text-ink-faint">Nothing trending right now. Try the search above.</div>';
+        return;
+      }
+      const base = packs.length;
+      packs.push(...hits);
+      if (reset) grid.innerHTML = '';
+      grid.insertAdjacentHTML('beforeend', hits.map((p, i) => cardHtml(p, base + i)).join(''));
+      offset += hits.length;
+      moreBtn.disabled = false;
+      moreBtn.classList.toggle('hidden', hits.length < PAGE);
+    } catch (err) {
+      if (my !== seq) return;
+      moreBtn.disabled = false;
+      if (reset) {
+        const plat = getPlatform();
+        grid.innerHTML = `<div class="card p-4 text-sm text-danger">${escapeHtml(err.message)}${plat === 'curseforge' ? ' <a href="/settings" class="text-link hover:underline">Check your API keys.</a>' : ''}</div>`;
+      } else {
+        toast(err.message || 'More recommendations could not be loaded.', { kind: 'error' });
+      }
+    }
+  }
+
+  grid.addEventListener('click', (e) => {
+    const detailsBtn = e.target.closest('[data-rec-details]');
+    if (detailsBtn) {
+      const p = packs[Number(detailsBtn.dataset.recDetails)];
+      if (p) showPackDetails({ platform: p.platform, ref: p.ref });
+      return;
+    }
+    const createBtn = e.target.closest('[data-rec-create]');
+    if (createBtn) {
+      const p = packs[Number(createBtn.dataset.recCreate)];
+      if (p) location.href = `/servers/new?pack=${encodeURIComponent(`${p.platform}:${p.ref}`)}`;
+    }
+  });
+
+  load();
+  return { reload: load };
 }
 
 async function postJSON(url, body) {

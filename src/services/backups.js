@@ -199,6 +199,10 @@ async function createBackupImpl(
     });
   });
   indexer.scheduleScan();
+  // Offsite fan-out: local stays the default, this only queues when a
+  // destination is connected with auto-upload on. Never throws (a remote
+  // failure must not fail a backup that already succeeded).
+  require('./remotes').enqueueUpload({ id });
   return db.get('SELECT * FROM backups WHERE id = ?', id);
 }
 
@@ -340,18 +344,39 @@ const restoreBackup = guardOp('restore', restoreBackupImpl);
 // createBackupUnguarded, or the lock would 409 against itself.
 const createBackup = guardOp('backup', createBackupImpl);
 
-async function deleteBackup(backupId, { actor = 'system' } = {}) {
+async function deleteBackup(backupId, { actor = 'system', remote = 'keep' } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
-  if (!backup) return { freedBytes: 0 };
+  if (!backup) return { freedBytes: 0, remoteDeleted: 0 };
+  // An explicit delete removes offsite copies too; retention pruning (the
+  // default 'keep') only ever touches the local archive.
+  let remoteDeleted = 0;
+  if (remote === 'delete') {
+    const copies = require('./remotes').filesForBackup(backupId);
+    for (const copy of copies) {
+      try {
+        await require('./remotes').deleteRemoteFile(copy.destination_id, copy.remote_path);
+        remoteDeleted += 1;
+      } catch (err) {
+        logger.warn('Removing an offsite copy failed; the local delete continues.', {
+          serverId: backup.server_id,
+          backupId,
+          destination: copy.destination_name,
+          err: serializeError(err),
+        });
+      }
+    }
+  }
   db.run('DELETE FROM backups WHERE id = ?', backupId);
   await fsp.rm(dataPath(backup.rel_path), { force: true });
   recordEvent({
     serverId: backup.server_id,
     actor,
     type: 'backup-deleted',
-    summary: `Backup deleted: ${backup.filename} (${(backup.size_bytes / 1024 ** 3).toFixed(2)} GB freed).`,
+    summary:
+      `Backup deleted: ${backup.filename} (${(backup.size_bytes / 1024 ** 3).toFixed(2)} GB freed)` +
+      (remoteDeleted ? `, including ${remoteDeleted} offsite ${remoteDeleted === 1 ? 'copy' : 'copies'}.` : '.'),
   });
-  return { freedBytes: backup.size_bytes };
+  return { freedBytes: backup.size_bytes, remoteDeleted };
 }
 
 /** Accept a friendly display name - flat filename only, no path tricks. */

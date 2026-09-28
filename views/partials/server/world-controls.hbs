@@ -1,7 +1,7 @@
 <div class="card p-4" data-world-controls="{{server.id}}" data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{/if}}">
   <h3 class="mb-1 font-semibold">World Controls</h3>
   <p class="mb-3 text-xs text-ink-faint" data-wc-state>{{#if (eq server.status 'running')}}Loading world state…{{else}}Available while the server runs.{{/if}}</p>
-  <div class="mb-3 hidden items-center justify-between rounded-md border border-line bg-inset px-3 py-2" data-wc-clock-box>
+  <div class="mb-4 hidden max-w-xs items-center justify-between rounded-md border border-line bg-inset px-3 py-2" data-wc-clock-box>
     <div>
       <div class="text-lg font-bold tabular-nums leading-tight" data-wc-clock>--:--</div>
       <div class="text-[11px] text-ink-faint"><span data-wc-phase></span><span data-wc-day-wrap class="hidden"> · Day <span data-wc-day></span></span></div>
@@ -10,71 +10,235 @@
   </div>
   {{! Real fieldset-level disable - pointer-events-none left the buttons in the
       tab order, and Enter/Space fired commands at a stopped server. }}
-  <fieldset class="min-w-0 space-y-3" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
-    <div>
-      <div class="mb-1 eyebrow">Time</div>
-      <div class="flex flex-wrap gap-1.5">
-        <button class="chip" data-wc="time-day">{{{icon 'sun' 'size-3.5'}}} Day</button>
-        <button class="chip" data-wc="time-noon">{{{icon 'sun' 'size-3.5'}}} Noon</button>
-        <button class="chip" data-wc="time-night">{{{icon 'moon' 'size-3.5'}}} Night</button>
-        <button class="chip" data-wc="time-midnight">{{{icon 'moon-star' 'size-3.5'}}} Midnight</button>
+  <fieldset class="min-w-0" {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}disabled{{/unless}}>
+    <div class="grid items-start gap-4 md:grid-cols-2">
+      <div>
+        <div class="mb-1 eyebrow">Time</div>
+        <select class="input" data-wc-select="time" data-label="Time">
+          <option value="">Set time…</option>
+          <option value="time-day">Day</option>
+          <option value="time-noon">Noon</option>
+          <option value="time-night">Night</option>
+          <option value="time-midnight">Midnight</option>
+        </select>
+        <div class="mt-2 flex flex-wrap items-end gap-2">
+          <div>
+            <label class="label" for="wc-ticks">Ticks (0–23999)</label>
+            <input class="input w-28 font-mono" id="wc-ticks" data-wc-ticks inputmode="numeric" placeholder="6000" data-label="Time in ticks">
+          </div>
+          <button class="btn" data-wc-custom="time-set">Set Time</button>
+        </div>
       </div>
-    </div>
-    <div>
-      <div class="mb-1 eyebrow">Weather</div>
-      <div class="flex flex-wrap gap-1.5">
-        <button class="chip" data-wc="weather-clear">{{{icon 'sun' 'size-3.5'}}} Clear</button>
-        <button class="chip" data-wc="weather-rain">{{{icon 'cloud-rain' 'size-3.5'}}} Rain</button>
-        <button class="chip" data-wc="weather-thunder">{{{icon 'cloud-lightning' 'size-3.5'}}} Thunder</button>
+      <div>
+        <div class="mb-1 eyebrow">Weather</div>
+        <select class="input" data-wc-select="weather" data-label="Weather">
+          <option value="">Set weather…</option>
+          <option value="weather-clear">Clear</option>
+          <option value="weather-rain">Rain</option>
+          <option value="weather-thunder">Thunder</option>
+        </select>
       </div>
-    </div>
-    <div>
-      <div class="mb-1 eyebrow">Common Rules</div>
-      <div class="flex flex-wrap gap-1.5">
-        <button class="chip" data-wc-toggle="keepinv" data-rule="keepInventory">Keep Inventory</button>
-        <button class="chip" data-wc-toggle="instantrespawn" data-rule="doImmediateRespawn">Instant Respawn</button>
-        <button class="chip" data-wc-toggle="daycycle" data-rule="doDaylightCycle">Day/Night Cycle</button>
-        <button class="chip" data-wc-toggle="weathercycle" data-rule="doWeatherCycle">Weather Cycle</button>
-        <button class="chip" data-wc-toggle="mobspawn" data-rule="doMobSpawning">Mob Spawning</button>
-        <button class="chip" data-wc-toggle="mobgrief" data-rule="mobGriefing">Mob Griefing</button>
-        <button class="chip" data-wc-toggle="phantoms" data-rule="doInsomnia">Phantoms</button>
-        <button class="chip" data-wc-toggle="naturalregen" data-rule="naturalRegeneration">Natural Regeneration</button>
-        <button class="chip" data-wc-toggle="falldmg" data-rule="fallDamage">Fall Damage</button>
-        <button class="chip" data-wc-toggle="firetick" data-rule="doFireTick">Fire Spread</button>
-        <button class="chip" data-wc-toggle="tntexplodes" data-rule="tntExplodes">TNT Explosions</button>
-        <button class="chip" data-wc-toggle="deathmsg" data-rule="showDeathMessages">Death Messages</button>
-        <button class="chip" data-wc-toggle="advancements" data-rule="announceAdvancements">Advancement Announcements</button>
-        <button class="chip" data-wc-toggle="cmdfeedback" data-rule="sendCommandFeedback">Command Feedback</button>
+      <div>
+        <div class="mb-1 eyebrow">Difficulty &amp; Saving</div>
+        <select class="input" data-wc-select="difficulty" data-label="Difficulty">
+          <option value="peaceful">Peaceful</option>
+          <option value="easy">Easy</option>
+          <option value="normal">Normal</option>
+          <option value="hard">Hard</option>
+        </select>
+        <button class="btn mt-2" data-wc="save-all">{{{icon 'save' 'size-4'}}} Save World</button>
       </div>
-    </div>
-    <div>
-      <div class="mb-1 eyebrow">Combat</div>
-      <div class="flex flex-wrap items-center gap-1.5">
-        {{! Unlike every other chip here, PvP writes server.properties and only
-            takes effect on the next start - the "on restart" tag and the pending
-            badge keep it from reading as an instant toggle like its neighbours. }}
-        <button class="chip" data-wc-toggle="pvp" data-rule="pvp">
-          PvP <span class="text-[10px] font-normal text-ink-faint">· on restart</span>
-        </button>
-        <span class="badge badge-warn hidden" data-wc-pvp-pending>Restart to apply</span>
+      <div>
+        <div class="mb-1 eyebrow">Combat</div>
+        <div class="flex items-center justify-between gap-3 py-1" data-wc-row="pvp">
+          <span class="text-sm" id="wc-label-pvp">PvP <span class="text-[11px] font-normal text-ink-faint">· on restart</span></span>
+          <span class="msm-toggle shrink-0">
+            <input type="checkbox" id="wc-tg-pvp" data-wc-toggle="pvp" data-rule="pvp" data-label="PvP" aria-labelledby="wc-label-pvp">
+            <span></span>
+          </span>
+        </div>
+        <div class="mt-1 flex flex-wrap items-center gap-1.5">
+          <span class="badge badge-warn hidden" data-wc-pvp-pending>Restart to apply</span>
+        </div>
+        <p class="mt-1 text-[11px] text-ink-faint">Changes the PvP setting for the whole server. It takes effect on the next restart.</p>
       </div>
-      <p class="mt-1 text-[11px] text-ink-faint">Changes the PvP setting for the whole server. It takes effect on the next restart.</p>
-    </div>
-    <div>
-      <div class="mb-1 eyebrow">Difficulty &amp; Saving</div>
-      <div class="flex flex-wrap gap-1.5">
-        <button class="chip" data-wc="difficulty-peaceful">Peaceful</button>
-        <button class="chip" data-wc="difficulty-easy">Easy</button>
-        <button class="chip" data-wc="difficulty-normal">Normal</button>
-        <button class="chip" data-wc="difficulty-hard">Hard</button>
-        <button class="chip" data-wc="save-all">{{{icon 'save' 'size-3.5'}}} Save World</button>
+      <div>
+        <div class="mb-1 eyebrow">World Border</div>
+        <p class="mb-2 text-xs text-ink-faint">Now: <b class="font-mono" data-wc-border>unknown</b></p>
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-end gap-2">
+            <div>
+              <label class="label" for="wc-border-diameter">Size (blocks)</label>
+              <input class="input w-28 font-mono" id="wc-border-diameter" data-wc-border-diameter inputmode="numeric" placeholder="60000000" data-label="Border size in blocks">
+            </div>
+            <div>
+              <label class="label" for="wc-border-seconds">Over (sec)</label>
+              <input class="input w-20 font-mono" id="wc-border-seconds" data-wc-border-seconds inputmode="numeric" placeholder="0" data-label="Border resize time in seconds">
+            </div>
+            <button class="btn" data-wc-border-set>Set Size</button>
+          </div>
+          <div class="flex flex-wrap items-end gap-2">
+            <div>
+              <label class="label" for="wc-border-delta">Grow / shrink (blocks)</label>
+              <input class="input w-28 font-mono" id="wc-border-delta" data-wc-border-delta inputmode="numeric" placeholder="+500" data-label="Blocks to grow or shrink">
+            </div>
+            <button class="btn" data-wc-border-add>Apply</button>
+          </div>
+          <div class="flex flex-wrap items-end gap-2">
+            <div>
+              <label class="label" for="wc-border-x">Center X</label>
+              <input class="input w-24 font-mono" id="wc-border-x" data-wc-border-x inputmode="numeric" placeholder="0" data-label="Border center X">
+            </div>
+            <div>
+              <label class="label" for="wc-border-z">Center Z</label>
+              <input class="input w-24 font-mono" id="wc-border-z" data-wc-border-z inputmode="numeric" placeholder="0" data-label="Border center Z">
+            </div>
+            <button class="btn" data-wc-border-center>Set Center</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mb-1 eyebrow">Numbers</div>
+        <div class="space-y-3">
+          <div class="flex flex-wrap items-end gap-2" data-wc-int-row="randomTickSpeed">
+            <div>
+              <label class="label" for="wc-int-randomTickSpeed">Random Tick Speed</label>
+              <input class="input w-28 font-mono" id="wc-int-randomTickSpeed" data-wc-int="randomTickSpeed" inputmode="numeric" data-label="Random tick speed">
+            </div>
+            <button class="btn" data-wc-int-set="randomTickSpeed">Set</button>
+          </div>
+          <div class="flex flex-wrap items-end gap-2" data-wc-int-row="spawnRadius">
+            <div>
+              <label class="label" for="wc-int-spawnRadius">Spawn Radius</label>
+              <input class="input w-28 font-mono" id="wc-int-spawnRadius" data-wc-int="spawnRadius" inputmode="numeric" data-label="Spawn radius">
+            </div>
+            <button class="btn" data-wc-int-set="spawnRadius">Set</button>
+          </div>
+          <div class="flex flex-wrap items-end gap-2" data-wc-int-row="playersSleepingPercentage">
+            <div>
+              <label class="label" for="wc-int-playersSleepingPercentage">Players Sleeping %</label>
+              <input class="input w-28 font-mono" id="wc-int-playersSleepingPercentage" data-wc-int="playersSleepingPercentage" inputmode="numeric" data-label="Players sleeping percentage">
+            </div>
+            <button class="btn" data-wc-int-set="playersSleepingPercentage">Set</button>
+          </div>
+          <div class="flex flex-wrap items-end gap-2" data-wc-int-row="maxEntityCramming">
+            <div>
+              <label class="label" for="wc-int-maxEntityCramming">Max Entity Cramming</label>
+              <input class="input w-28 font-mono" id="wc-int-maxEntityCramming" data-wc-int="maxEntityCramming" inputmode="numeric" data-label="Max entity cramming">
+            </div>
+            <button class="btn" data-wc-int-set="maxEntityCramming">Set</button>
+          </div>
+        </div>
+      </div>
+      <div class="md:col-span-2">
+        <div class="mb-1 eyebrow">Common Rules</div>
+        <div class="grid gap-x-6 sm:grid-cols-2">
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="keepInventory">
+            <label class="cursor-pointer text-sm" for="wc-tg-keepinv">Keep Inventory</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-keepinv" data-wc-toggle="keepinv" data-rule="keepInventory" data-label="Keep Inventory">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doImmediateRespawn">
+            <label class="cursor-pointer text-sm" for="wc-tg-instantrespawn">Instant Respawn</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-instantrespawn" data-wc-toggle="instantrespawn" data-rule="doImmediateRespawn" data-label="Instant Respawn">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doDaylightCycle">
+            <label class="cursor-pointer text-sm" for="wc-tg-daycycle">Day/Night Cycle</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-daycycle" data-wc-toggle="daycycle" data-rule="doDaylightCycle" data-label="Day/Night Cycle">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doWeatherCycle">
+            <label class="cursor-pointer text-sm" for="wc-tg-weathercycle">Weather Cycle</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-weathercycle" data-wc-toggle="weathercycle" data-rule="doWeatherCycle" data-label="Weather Cycle">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doMobSpawning">
+            <label class="cursor-pointer text-sm" for="wc-tg-mobspawn">Mob Spawning</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-mobspawn" data-wc-toggle="mobspawn" data-rule="doMobSpawning" data-label="Mob Spawning">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="mobGriefing">
+            <label class="cursor-pointer text-sm" for="wc-tg-mobgrief">Mob Griefing</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-mobgrief" data-wc-toggle="mobgrief" data-rule="mobGriefing" data-label="Mob Griefing">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doInsomnia">
+            <label class="cursor-pointer text-sm" for="wc-tg-phantoms">Phantoms</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-phantoms" data-wc-toggle="phantoms" data-rule="doInsomnia" data-label="Phantoms">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="naturalRegeneration">
+            <label class="cursor-pointer text-sm" for="wc-tg-naturalregen">Natural Regeneration</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-naturalregen" data-wc-toggle="naturalregen" data-rule="naturalRegeneration" data-label="Natural Regeneration">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="fallDamage">
+            <label class="cursor-pointer text-sm" for="wc-tg-falldmg">Fall Damage</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-falldmg" data-wc-toggle="falldmg" data-rule="fallDamage" data-label="Fall Damage">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doFireTick">
+            <label class="cursor-pointer text-sm" for="wc-tg-firetick">Fire Spread</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-firetick" data-wc-toggle="firetick" data-rule="doFireTick" data-label="Fire Spread">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="tntExplodes">
+            <label class="cursor-pointer text-sm" for="wc-tg-tntexplodes">TNT Explosions</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-tntexplodes" data-wc-toggle="tntexplodes" data-rule="tntExplodes" data-label="TNT Explosions">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="showDeathMessages">
+            <label class="cursor-pointer text-sm" for="wc-tg-deathmsg">Death Messages</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-deathmsg" data-wc-toggle="deathmsg" data-rule="showDeathMessages" data-label="Death Messages">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="announceAdvancements">
+            <label class="cursor-pointer text-sm" for="wc-tg-advancements">Advancement Announcements</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-advancements" data-wc-toggle="advancements" data-rule="announceAdvancements" data-label="Advancement Announcements">
+              <span></span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3 py-1" data-wc-row="sendCommandFeedback">
+            <label class="cursor-pointer text-sm" for="wc-tg-cmdfeedback">Command Feedback</label>
+            <span class="msm-toggle shrink-0">
+              <input type="checkbox" id="wc-tg-cmdfeedback" data-wc-toggle="cmdfeedback" data-rule="sendCommandFeedback" data-label="Command Feedback">
+              <span></span>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
 
     {{! Everything else lives here so the common controls above stay uncluttered.
         The world state poll only reads the rules for chips that are visible, so
         these gamerules aren't queried until this section is opened. }}
-    <details class="group rounded-md border border-line" data-wc-all>
+    <details class="group mt-4 rounded-md border border-line" data-wc-all>
       <summary class="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs font-semibold text-ink-faint marker:content-none">
         {{{icon 'sliders-horizontal' 'size-3.5'}}} Show all world rules
         <span class="ml-auto transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
@@ -82,45 +246,213 @@
       <div class="space-y-3 border-t border-line p-3">
         <div>
           <div class="mb-1 eyebrow">World Rules</div>
-          <div class="flex flex-wrap gap-1.5">
-            <button class="chip" data-wc-toggle="limitedcraft" data-rule="doLimitedCrafting">Limited Crafting</button>
-            <button class="chip" data-wc-toggle="tiledrops" data-rule="doTileDrops">Block Drops</button>
-            <button class="chip" data-wc-toggle="entitydrops" data-rule="doEntityDrops">Entity Drops</button>
-            <button class="chip" data-wc-toggle="firetickaway" data-rule="allowFireTicksAwayFromPlayer">Fire Ticks Away From Players</button>
-            <button class="chip" data-wc-toggle="vinesspread" data-rule="doVinesSpread">Vines Spread</button>
-            <button class="chip" data-wc-toggle="waterconv" data-rule="waterSourceConversion">Water Source Conversion</button>
-            <button class="chip" data-wc-toggle="lavaconv" data-rule="lavaSourceConversion">Lava Source Conversion</button>
-            <button class="chip" data-wc-toggle="projbreak" data-rule="projectilesCanBreakBlocks">Projectiles Break Blocks</button>
-            <button class="chip" data-wc-toggle="blockdropdecay" data-rule="blockExplosionDropDecay">Block-Explosion Drop Decay</button>
-            <button class="chip" data-wc-toggle="mobdropdecay" data-rule="mobExplosionDropDecay">Mob-Explosion Drop Decay</button>
-            <button class="chip" data-wc-toggle="tntdropdecay" data-rule="tntExplosionDropDecay">TNT-Explosion Drop Decay</button>
-            <button class="chip" data-wc-toggle="pearlvanish" data-rule="enderPearlsVanishOnDeath">Ender Pearls Vanish On Death</button>
-            <button class="chip" data-wc-toggle="globalsound" data-rule="globalSoundEvents">Global Sound Events</button>
-            <button class="chip" data-wc-toggle="specchunks" data-rule="spectatorsGenerateChunks">Spectators Generate Chunks</button>
-            <button class="chip" data-wc-toggle="reduceddebug" data-rule="reducedDebugInfo">Reduced Debug Info</button>
-            <button class="chip" data-wc-toggle="noelytracheck" data-rule="disableElytraMovementCheck">Disable Elytra Check</button>
+          <div class="grid gap-x-6 sm:grid-cols-2">
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doLimitedCrafting">
+              <label class="cursor-pointer text-sm" for="wc-tg-limitedcraft">Limited Crafting</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-limitedcraft" data-wc-toggle="limitedcraft" data-rule="doLimitedCrafting" data-label="Limited Crafting">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doTileDrops">
+              <label class="cursor-pointer text-sm" for="wc-tg-tiledrops">Block Drops</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-tiledrops" data-wc-toggle="tiledrops" data-rule="doTileDrops" data-label="Block Drops">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doEntityDrops">
+              <label class="cursor-pointer text-sm" for="wc-tg-entitydrops">Entity Drops</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-entitydrops" data-wc-toggle="entitydrops" data-rule="doEntityDrops" data-label="Entity Drops">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="allowFireTicksAwayFromPlayer">
+              <label class="cursor-pointer text-sm" for="wc-tg-firetickaway">Fire Ticks Away From Players</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-firetickaway" data-wc-toggle="firetickaway" data-rule="allowFireTicksAwayFromPlayer" data-label="Fire Ticks Away From Players">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doVinesSpread">
+              <label class="cursor-pointer text-sm" for="wc-tg-vinesspread">Vines Spread</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-vinesspread" data-wc-toggle="vinesspread" data-rule="doVinesSpread" data-label="Vines Spread">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="waterSourceConversion">
+              <label class="cursor-pointer text-sm" for="wc-tg-waterconv">Water Source Conversion</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-waterconv" data-wc-toggle="waterconv" data-rule="waterSourceConversion" data-label="Water Source Conversion">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="lavaSourceConversion">
+              <label class="cursor-pointer text-sm" for="wc-tg-lavaconv">Lava Source Conversion</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-lavaconv" data-wc-toggle="lavaconv" data-rule="lavaSourceConversion" data-label="Lava Source Conversion">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="projectilesCanBreakBlocks">
+              <label class="cursor-pointer text-sm" for="wc-tg-projbreak">Projectiles Break Blocks</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-projbreak" data-wc-toggle="projbreak" data-rule="projectilesCanBreakBlocks" data-label="Projectiles Break Blocks">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="blockExplosionDropDecay">
+              <label class="cursor-pointer text-sm" for="wc-tg-blockdropdecay">Block-Explosion Drop Decay</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-blockdropdecay" data-wc-toggle="blockdropdecay" data-rule="blockExplosionDropDecay" data-label="Block-Explosion Drop Decay">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="mobExplosionDropDecay">
+              <label class="cursor-pointer text-sm" for="wc-tg-mobdropdecay">Mob-Explosion Drop Decay</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-mobdropdecay" data-wc-toggle="mobdropdecay" data-rule="mobExplosionDropDecay" data-label="Mob-Explosion Drop Decay">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="tntExplosionDropDecay">
+              <label class="cursor-pointer text-sm" for="wc-tg-tntdropdecay">TNT-Explosion Drop Decay</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-tntdropdecay" data-wc-toggle="tntdropdecay" data-rule="tntExplosionDropDecay" data-label="TNT-Explosion Drop Decay">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="enderPearlsVanishOnDeath">
+              <label class="cursor-pointer text-sm" for="wc-tg-pearlvanish">Ender Pearls Vanish On Death</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-pearlvanish" data-wc-toggle="pearlvanish" data-rule="enderPearlsVanishOnDeath" data-label="Ender Pearls Vanish On Death">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="globalSoundEvents">
+              <label class="cursor-pointer text-sm" for="wc-tg-globalsound">Global Sound Events</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-globalsound" data-wc-toggle="globalsound" data-rule="globalSoundEvents" data-label="Global Sound Events">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="specchunks">
+              <label class="cursor-pointer text-sm" for="wc-tg-specchunks">Spectators Generate Chunks</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-specchunks" data-wc-toggle="specchunks" data-rule="spectatorsGenerateChunks" data-label="Spectators Generate Chunks">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="reducedDebugInfo">
+              <label class="cursor-pointer text-sm" for="wc-tg-reduceddebug">Reduced Debug Info</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-reduceddebug" data-wc-toggle="reduceddebug" data-rule="reducedDebugInfo" data-label="Reduced Debug Info">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="noelytracheck">
+              <label class="cursor-pointer text-sm" for="wc-tg-noelytracheck">Disable Elytra Check</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-noelytracheck" data-wc-toggle="noelytracheck" data-rule="disableElytraMovementCheck" data-label="Disable Elytra Check">
+                <span></span>
+              </span>
+            </div>
           </div>
         </div>
         <div>
           <div class="mb-1 eyebrow">Mobs &amp; Damage</div>
-          <div class="flex flex-wrap gap-1.5">
-            <button class="chip" data-wc-toggle="mobloot" data-rule="doMobLoot">Mob Loot</button>
-            <button class="chip" data-wc-toggle="patrols" data-rule="doPatrolSpawning">Pillager Patrols</button>
-            <button class="chip" data-wc-toggle="traders" data-rule="doTraderSpawning">Wandering Traders</button>
-            <button class="chip" data-wc-toggle="wardens" data-rule="doWardenSpawning">Warden Spawning</button>
-            <button class="chip" data-wc-toggle="noraids" data-rule="disableRaids">Disable Raids</button>
-            <button class="chip" data-wc-toggle="forgivedead" data-rule="forgiveDeadPlayers">Forgive Dead Players</button>
-            <button class="chip" data-wc-toggle="universalanger" data-rule="universalAnger">Universal Anger</button>
-            <button class="chip" data-wc-toggle="firedmg" data-rule="fireDamage">Fire Damage</button>
-            <button class="chip" data-wc-toggle="drowndmg" data-rule="drowningDamage">Drowning Damage</button>
-            <button class="chip" data-wc-toggle="freezedmg" data-rule="freezeDamage">Freeze Damage</button>
+          <div class="grid gap-x-6 sm:grid-cols-2">
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doMobLoot">
+              <label class="cursor-pointer text-sm" for="wc-tg-mobloot">Mob Loot</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-mobloot" data-wc-toggle="mobloot" data-rule="doMobLoot" data-label="Mob Loot">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doPatrolSpawning">
+              <label class="cursor-pointer text-sm" for="wc-tg-patrols">Pillager Patrols</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-patrols" data-wc-toggle="patrols" data-rule="doPatrolSpawning" data-label="Pillager Patrols">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doTraderSpawning">
+              <label class="cursor-pointer text-sm" for="wc-tg-traders">Wandering Traders</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-traders" data-wc-toggle="traders" data-rule="doTraderSpawning" data-label="Wandering Traders">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="doWardenSpawning">
+              <label class="cursor-pointer text-sm" for="wc-tg-wardens">Warden Spawning</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-wardens" data-wc-toggle="wardens" data-rule="doWardenSpawning" data-label="Warden Spawning">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="disableRaids">
+              <label class="cursor-pointer text-sm" for="wc-tg-noraids">Disable Raids</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-noraids" data-wc-toggle="noraids" data-rule="disableRaids" data-label="Disable Raids">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="forgiveDeadPlayers">
+              <label class="cursor-pointer text-sm" for="wc-tg-forgivedead">Forgive Dead Players</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-forgivedead" data-wc-toggle="forgivedead" data-rule="forgiveDeadPlayers" data-label="Forgive Dead Players">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="universalAnger">
+              <label class="cursor-pointer text-sm" for="wc-tg-universalanger">Universal Anger</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-universalanger" data-wc-toggle="universalanger" data-rule="universalAnger" data-label="Universal Anger">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="fireDamage">
+              <label class="cursor-pointer text-sm" for="wc-tg-firedmg">Fire Damage</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-firedmg" data-wc-toggle="firedmg" data-rule="fireDamage" data-label="Fire Damage">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="drowningDamage">
+              <label class="cursor-pointer text-sm" for="wc-tg-drowndmg">Drowning Damage</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-drowndmg" data-wc-toggle="drowndmg" data-rule="drowningDamage" data-label="Drowning Damage">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="freezeDamage">
+              <label class="cursor-pointer text-sm" for="wc-tg-freezedmg">Freeze Damage</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-freezedmg" data-wc-toggle="freezedmg" data-rule="freezeDamage" data-label="Freeze Damage">
+                <span></span>
+              </span>
+            </div>
           </div>
         </div>
         <div>
           <div class="mb-1 eyebrow">Chat &amp; Messages</div>
-          <div class="flex flex-wrap gap-1.5">
-            <button class="chip" data-wc-toggle="cmdblockout" data-rule="commandBlockOutput">Command Block Output</button>
-            <button class="chip" data-wc-toggle="logadmin" data-rule="logAdminCommands">Admin Command Logging</button>
+          <div class="grid gap-x-6 sm:grid-cols-2">
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="commandBlockOutput">
+              <label class="cursor-pointer text-sm" for="wc-tg-cmdblockout">Command Block Output</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-cmdblockout" data-wc-toggle="cmdblockout" data-rule="commandBlockOutput" data-label="Command Block Output">
+                <span></span>
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-3 py-1" data-wc-row="logAdminCommands">
+              <label class="cursor-pointer text-sm" for="wc-tg-logadmin">Admin Command Logging</label>
+              <span class="msm-toggle shrink-0">
+                <input type="checkbox" id="wc-tg-logadmin" data-wc-toggle="logadmin" data-rule="logAdminCommands" data-label="Admin Command Logging">
+                <span></span>
+              </span>
+            </div>
           </div>
         </div>
       </div>

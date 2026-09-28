@@ -163,6 +163,15 @@ function createApp() {
           if (p >= d.quotaWarnPct) return 'bg-gold-400';
           return 'bg-grass-500';
         },
+        // Same thresholds for the disk-usage donut's stroke.
+        donutColor: (used, total) => {
+          if (!total) return 'stroke-diamond-400';
+          const d = settings.getDefaults();
+          const p = (used / total) * 100;
+          if (p >= d.quotaCriticalPct) return 'stroke-redstone-500';
+          if (p >= d.quotaWarnPct) return 'stroke-gold-400';
+          return 'stroke-grass-500';
+        },
         capitalize: (s) => (typeof s === 'string' && s ? s[0].toUpperCase() + s.slice(1) : s),
         short: (s, n) => (typeof s === 'string' ? s.replace(/^sha256:/, '').slice(0, Number(n) || 12) : s),
         initial: (s) => (typeof s === 'string' && s ? s[0].toUpperCase() : '?'),
@@ -184,7 +193,17 @@ function createApp() {
         mul: (a, b) => Number(a) * Number(b),
         plural: (n, one, many) => (Number(n) === 1 ? one : many),
         platformName: (p) =>
-          ({ modrinth: 'Modrinth', curseforge: 'CurseForge', gtnh: 'GT New Horizons', ftb: 'FTB' })[p] || p,
+          ({
+            modrinth: 'Modrinth',
+            curseforge: 'CurseForge',
+            hangar: 'Hangar',
+            spiget: 'SpigotMC',
+            github: 'GitHub',
+            url: 'URL',
+            upload: 'Upload',
+            gtnh: 'GT New Horizons',
+            ftb: 'FTB',
+          })[p] || p,
         // Handlebars {{#if}} treats 0 as falsy, which silently drops min="0"
         // attributes and zero defaults - this helper exists for those tests.
         isDefined: (v) => v !== undefined && v !== null && v !== '',
@@ -208,7 +227,7 @@ function createApp() {
   //    9.5 MB) are content-stable - their bytes never change without a new
   //    filename - so cache them hard and skip the conditional-GET storm those
   //    directories otherwise trigger on every page load.
-  //  - app-owned css/js still only gets a 1-hour max-age (not `immutable`), so a
+  //  - app-owned css still only gets a 1-hour max-age (not `immutable`), so a
   //    deploy is picked up within the hour even before the hashed-bundle step.
   const ONE_YEAR = 31536000;
 
@@ -228,7 +247,10 @@ function createApp() {
       fs.access(built, fs.constants.R_OK, (err) => {
         if (err) return next();
         res.type('application/javascript');
-        res.setHeader('Cache-Control', 'public, max-age=3600');
+        // Revalidate, not max-age: entry filenames are stable across builds
+        // while their chunk imports are content-hashed - an hour-old entry
+        // against new chunks is a silently dead page. 304s keep this cheap.
+        res.setHeader('Cache-Control', 'public, no-cache, must-revalidate');
         res.sendFile(built);
       });
     });

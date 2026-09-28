@@ -1,3 +1,37 @@
+{{! Software & version at a glance, with in-place Change actions (the same
+    flows as the Versions tab: version changes are compatibility-gated,
+    software changes take a backup first). Pack-managed servers show a note
+    instead: their software and version belong to the installed pack. }}
+<div class="card mb-4 p-4" data-ov-software data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-type="{{server.type}}" data-mc="{{server.mcVersion}}">
+  <h3 class="mb-3 font-semibold">Software &amp; Version</h3>
+  <div class="grid gap-3 sm:grid-cols-2">
+    <div class="rounded-md border border-line bg-raised p-3">
+      <div class="text-xs text-ink-faint">Software</div>
+      <div class="mt-0.5 flex flex-wrap items-center gap-2">
+        <b>{{server.flavor}}</b>
+        {{#if packManaged}}<span class="chip">modpack</span>{{/if}}
+      </div>
+      {{#if perms.settings}}
+        {{#unless packManaged}}
+          <button class="btn btn-primary btn-sm mt-2" data-ov-change-type>{{{icon 'repeat' 'size-3.5'}}} Change</button>
+        {{/unless}}
+      {{/if}}
+    </div>
+    <div class="rounded-md border border-line bg-raised p-3">
+      <div class="text-xs text-ink-faint">Version</div>
+      <div class="mt-0.5 font-mono"><b>{{server.mcVersion}}</b></div>
+      {{#if perms.settings}}
+        {{#unless packManaged}}
+          <button class="btn btn-primary btn-sm mt-2" data-ov-change-version>{{{icon 'repeat' 'size-3.5'}}} Change</button>
+        {{/unless}}
+      {{/if}}
+    </div>
+  </div>
+  {{#if packManaged}}
+    <p class="help mt-2">{{#if server.pack}}Managed by the {{platformName server.pack.platform}} modpack {{server.pack.name}} (pinned @ {{server.pack.version}}).{{else}}This server runs modpack software, which owns its type and version.{{/if}} Change it on the <a class="text-link" href="/servers/{{server.id}}/updates">Versions tab</a>.</p>
+  {{/if}}
+  <script type="application/json" data-ov-soft-types>{{jsonScript softTypes}}</script>
+</div>
 <div class="grid gap-4 lg:grid-cols-3">
   <div class="card p-4 lg:col-span-2">
     {{#if addresses.length}}
@@ -22,7 +56,8 @@
     <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
       <div><dt class="text-xs text-ink-faint">Created</dt><dd class="font-medium">{{server.created}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Update policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Game updates</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Mod updates</dt><dd class="font-medium">{{capitalize server.modUpdatePolicy}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Start on boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
       <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>

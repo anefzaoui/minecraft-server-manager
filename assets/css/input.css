@@ -589,6 +589,10 @@
   button.chip[data-wc-unknown] {
     @apply border-dashed text-ink-faint;
   }
+  /* Same honesty treatment for the toggle-switch rows that replaced the chips. */
+  [data-wc-row][data-wc-unknown] {
+    @apply opacity-60;
+  }
 
   /* Whole-group disable (composers while the server is stopped): real
      disabled - the old pointer-events-none trick let keyboard events straight

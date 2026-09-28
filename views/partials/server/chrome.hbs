@@ -16,7 +16,7 @@
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="min-w-0 max-w-full break-words text-xl font-bold">{{server.name}}</h2>
-          <span class="flex items-center gap-1.5 text-xs font-medium {{statusText server.status}}">
+          <span class="flex items-center gap-1.5 text-xs font-medium {{statusText server.status}}" data-chrome-status="{{server.id}}" data-status="{{server.status}}">
             <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
             {{statusLabel server.status}}
           </span>

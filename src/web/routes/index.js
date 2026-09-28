@@ -228,23 +228,12 @@ function buildDashboardOverview(servers) {
       ...(since ? [...types, since] : types)
     )?.n || 0;
 
-  const byStatus = {
-    running: 0,
-    starting: 0,
-    stopped: 0,
-    unhealthy: 0,
-    stalled: 0,
-    updating: 0,
-    crashed: 0,
-    'over-quota': 0,
-  };
   let memAllottedMb = 0;
   let memUsedMb = 0;
   let diskUsedBytes = 0;
   let playersOnline = 0;
   let playersMax = 0;
   for (const s of servers) {
-    byStatus[s.status] = (byStatus[s.status] || 0) + 1;
     memAllottedMb += s.resources.containerMemoryMb || 0;
     memUsedMb += s.stats.memUsedMb || 0;
     diskUsedBytes += s.disk.used || 0;
@@ -267,7 +256,6 @@ function buildDashboardOverview(servers) {
   }
 
   return {
-    byStatus,
     mem: { allottedMb: Math.round(memAllottedMb), usedMb: Math.round(memUsedMb) },
     disk: { usedBytes: diskUsedBytes },
     players: { online: playersOnline, max: playersMax },
@@ -308,6 +296,7 @@ async function renderServerList(req, res, next, { page }) {
           autoRestart: Boolean(rows[i].auto_restart),
           notes: rows[i].notes || '',
           updatePolicy: rows[i].update_policy,
+          modUpdatePolicy: rows[i].mod_update_policy || 'manual',
           pendingRecreate: false,
           lastStarted: rows[i].last_started_at || '-',
           created: rows[i].created_at,
@@ -509,6 +498,17 @@ router.get(
       }
       addrs.push(`localhost:${row.port_game}`);
       context.addresses = [...new Set(addrs)];
+      // Standalone software options for the overview's Change button. Pack
+      // types are excluded: a modpack owns its server's TYPE, so those servers
+      // get a "managed by modpack" note instead of the buttons. Type-based
+      // (not pack-row-based) so a pack-typed server without a recorded pack
+      // row is still guarded.
+      const typeField = require('../../config/field-catalog').getField('env', 'TYPE');
+      const modsSvc = require('../../services/mods');
+      context.packManaged = modsSvc.isPackServer(row);
+      context.softTypes = (typeField && typeField.options ? typeField.options : [])
+        .filter((o) => !modsSvc.isPackServer({ type: o.value }))
+        .map((o) => ({ value: o.value, label: o.label, desc: o.desc || '' }));
     } else if (tab === 'chat') {
       const live = require('../../services/liveCache').get(row.id);
       context.onlinePlayers = (live && live.players && live.players.names) || [];
@@ -798,6 +798,24 @@ router.get(
   })
 );
 
+// OAuth callback for offsite backup destinations (Dropbox / Google Drive).
+// Admin-only: completing someone else's flow would attach their storage to
+// this panel. The state token ties the callback to a started flow.
+router.get('/remotes/oauth/callback', requireRole('admin'), async (req, res, next) => {
+  try {
+    const { code, state } = req.query;
+    if (!code || !state) throw Object.assign(new Error('Authorization did not complete.'), { status: 400 });
+    const remotes = require('../../services/remotes');
+    const row = require('../../db').get('SELECT id FROM remote_destinations WHERE oauth_state = ?', state);
+    if (!row) throw Object.assign(new Error('Authorization expired or already used.'), { status: 400 });
+    const redirectUri = `${req.protocol}://${req.get('host')}/remotes/oauth/callback`;
+    await remotes.finishOAuth(row.id, state, String(code), redirectUri);
+    res.redirect(302, '/backups');
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/wizard-transcripts', requireRole('admin'), (req, res) => {
   const wizard = require('../../services/wizard');
   res.render('wizard-transcripts', {
@@ -834,27 +852,38 @@ router.get('/worlds', (req, res) => {
 });
 
 router.get('/blueprints', (req, res) => {
+  // Whether the recommendations below can offer CurseForge packs (needs the key).
+  let curseforgeEnabled = false;
+  try {
+    curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
+  } catch {
+    // No key store yet - stays disabled.
+  }
   res.render('blueprints', {
     title: 'Blueprints',
     active: 'blueprints',
     blueprints: require('../../blueprints').listBlueprintsFor(req.user),
+    curseforgeEnabled,
   });
 });
 
 router.get('/updates', (req, res) => {
   const checker = require('../../updates/checker');
+  // Split to match the two update policies (and the sidebar counts):
+  // pack + overlay content follow the mods policy, image/MC/loader the game one.
+  const isModUpdate = (u) => u.subjectType === 'pack' || u.subjectType === 'content';
+  const clean = (u) => ({
+    ...u,
+    // Changelog URLs come from remote platform APIs - allow only http(s) so a
+    // hostile response can never plant a javascript: link.
+    changelog: /^https?:\/\//i.test(u.changelog || '') ? u.changelog : null,
+  });
+  const visible = checker.listOutdated().filter((u) => !u.serverId || res.locals.visibleServerIds.has(u.serverId));
   res.render('updates', {
     title: 'Updates',
     active: 'updates',
-    // Changelog URLs come from remote platform APIs - allow only http(s) so a
-    // hostile response can never plant a javascript: link.
-    updates: checker
-      .listOutdated()
-      .filter((u) => !u.serverId || res.locals.visibleServerIds.has(u.serverId))
-      .map((u) => ({
-        ...u,
-        changelog: /^https?:\/\//i.test(u.changelog || '') ? u.changelog : null,
-      })),
+    serverUpdates: visible.filter((u) => !isModUpdate(u)).map(clean),
+    modUpdates: visible.filter(isModUpdate).map(clean),
     lastChecked: checker.lastCheckedAt() || null,
   });
 });
@@ -870,26 +899,42 @@ router.get('/backups', (req, res) => {
     `SELECT COUNT(*) AS n, COALESCE(SUM(size_bytes), 0) AS s FROM backups WHERE server_id IN (${ph})`,
     ...visible
   );
-  const backups = db
-    .all(
-      `SELECT b.*, s.display_name FROM backups b JOIN servers s ON s.id = b.server_id
-        WHERE b.server_id IN (${ph}) ORDER BY b.created_at DESC LIMIT 200`,
-      ...visible
-    )
-    .map((b) => ({
-      id: b.id,
-      serverId: b.server_id,
-      server: b.display_name,
-      file: b.filename,
-      size: b.size_bytes,
-      reason: b.reason,
-      ts: b.created_at,
-    }));
+  const backupRows = db.all(
+    `SELECT b.*, s.display_name FROM backups b JOIN servers s ON s.id = b.server_id
+      WHERE b.server_id IN (${ph}) ORDER BY b.created_at DESC LIMIT 200`,
+    ...visible
+  );
+  const { dataPath } = require('../../storage/pathGuard');
+  const fs = require('node:fs');
+  const remoteMap = require('../../services/remotes').filesForBackups(backupRows.map((b) => b.id));
+  const backups = backupRows.map((b) => ({
+    id: b.id,
+    serverId: b.server_id,
+    server: b.display_name,
+    file: b.filename,
+    size: b.size_bytes,
+    reason: b.reason,
+    ts: b.created_at,
+    local: fs.existsSync(dataPath(b.rel_path)),
+    remotes: remoteMap.get(b.id) || [],
+  }));
+  const remotes = require('../../services/remotes');
+  const destinations = remotes.listDestinations().map((d) => {
+    const counts = db.get(
+      `SELECT SUM(status = 'done') AS done, SUM(status IN ('pending','uploading')) AS pending,
+              SUM(status = 'failed') AS failed
+         FROM remote_backup_files WHERE destination_id = ?`,
+      d.id
+    );
+    return { ...d, counts: { done: counts?.done || 0, pending: counts?.pending || 0, failed: counts?.failed || 0 } };
+  });
   res.render('backups', {
     title: 'Backups',
     active: 'backups',
     backups,
     totals: { count: totals.n, bytes: totals.s },
+    destinations,
+    isAdmin: req.user.role === 'admin',
   });
 });
 

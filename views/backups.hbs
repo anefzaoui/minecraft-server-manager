@@ -1,5 +1,41 @@
 {{> page-header heading="BACKUPS" sub="Every archive across all servers, with reason and retention tracking."}}
 
+{{! Offsite destinations (admin only). Local backups stay the default: an
+    archive leaves the machine only with auto-upload on, or per archive below. }}
+{{#if isAdmin}}
+<div class="card mb-4 p-4" data-remotes>
+  <div class="mb-3 flex flex-wrap items-center gap-2">
+    <h3 class="font-semibold">Offsite Destinations</h3>
+    <span class="text-xs text-ink-faint">Nextcloud, Dropbox, or Google Drive for backup copies.</span>
+    <button class="btn btn-sm ml-auto" data-remote-add>{{{icon 'plus' 'size-3.5'}}} Add Destination</button>
+  </div>
+  <div class="grid gap-3 md:grid-cols-2" data-destinations>
+    {{#each destinations}}
+      <div class="rounded-md border border-line bg-raised p-3 text-sm" data-dest-card data-dest-id="{{id}}" data-provider="{{provider}}" data-authorized="{{#if authorized}}1{{/if}}" data-auto="{{#if autoUpload}}1{{/if}}">
+        <div class="flex flex-wrap items-center gap-2">
+          <b class="truncate">{{name}}</b>
+          <span class="badge">{{providerLabel}}</span>
+          {{#if authorized}}<span class="badge badge-ok">connected</span>{{else}}<span class="badge badge-warn">needs setup</span>{{/if}}
+          <span class="ml-auto flex items-center gap-1.5 text-xs text-ink-faint">Auto-upload
+            <label class="msm-toggle"><input type="checkbox" data-remote-auto {{#if autoUpload}}checked{{/if}} aria-label="Auto-upload new backups to {{name}}"><span></span></label>
+          </span>
+        </div>
+        <p class="mt-1 text-xs text-ink-faint">{{counts.done}} uploaded · {{counts.pending}} pending · {{counts.failed}} failed</p>
+        <div class="mt-2 flex flex-wrap gap-1.5">
+          <button class="btn btn-ghost btn-sm" data-remote-test>Test</button>
+          {{#if oauth}}
+            {{#unless authorized}}<button class="btn btn-sm" data-remote-auth>Authorize</button>{{/unless}}
+          {{/if}}
+          <button class="btn btn-ghost btn-sm" data-remote-edit>Edit</button>
+          <button class="btn btn-ghost btn-sm text-danger" data-remote-delete aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+  {{#unless destinations.length}}<p class="text-sm text-ink-faint">No destinations yet. Local backups are unaffected either way.</p>{{/unless}}
+</div>
+{{/if}}
+
 {{#if backups.length}}
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <select class="input w-auto" id="backups-filter-server" data-label="Filter by server">
@@ -18,18 +54,30 @@
 
 <div class="card overflow-x-auto">
   <table class="table-base table-stack" id="backups-table">
-    <thead><tr><th>Server</th><th>Archive</th><th>Reason</th><th class="text-right">Size</th><th class="text-right">Created</th><th class="text-right">Actions</th></tr></thead>
+    <thead><tr><th>Server</th><th>Archive</th><th>Reason</th><th class="text-right">Size</th><th class="text-right">Created</th><th>Offsite</th><th class="text-right">Actions</th></tr></thead>
     <tbody>
       {{#each backups}}
-        <tr data-backup-row data-backup-id="{{id}}" data-server-id="{{serverId}}" data-server-name="{{server}}" data-file="{{file}}" data-size="{{size}}" data-reason="{{reason}}">
+        <tr data-backup-row data-backup-id="{{id}}" data-server-id="{{serverId}}" data-server-name="{{server}}" data-file="{{file}}" data-size="{{size}}" data-reason="{{reason}}" data-local="{{#if local}}1{{/if}}" data-remotes="{{jsonAttr remotes}}">
           <td data-th="Server" class="whitespace-nowrap"><a class="text-link hover:underline" href="/servers/{{serverId}}/backups">{{server}}</a></td>
           {{! w-full + max-w-0 (sm+ only) so long archive names truncate instead of pushing Actions off-screen. }}
           <td data-th="Archive" class="sm:w-full sm:max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
           <td data-th="Reason"><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
           <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
           <td data-th="Created" class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
+          <td data-th="Offsite">
+            {{#if remotes.length}}
+              <span class="flex items-center gap-1">
+                {{#each remotes}}
+                  <span class="status-dot relative {{#if (eq status 'done')}}bg-grass-500{{else if (eq status 'failed')}}bg-redstone-500{{else}}bg-gold-500 pulse{{/if}}" title="{{destinationName}}: {{status}}"></span>
+                {{/each}}
+              </span>
+            {{else}}
+              <span class="text-xs text-ink-faint">local only</span>
+            {{/if}}
+          </td>
           <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
             <button class="btn btn-ghost btn-sm text-warn" data-backup-action="restore" data-tip="Restore (stops the server, safety backup taken first)">{{{icon 'undo-2' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm" data-backup-action="upload" data-tip="Upload a copy to an offsite destination">{{{icon 'cloud-upload' 'size-3.5'}}}</button>
             <button class="btn btn-ghost btn-sm" data-backup-action="download" data-tip="Download archive">{{{icon 'download' 'size-3.5'}}}</button>
             <button class="btn btn-ghost btn-sm" data-backup-action="rename" data-tip="Rename archive" aria-label="Rename {{file}}">{{{icon 'square-pen' 'size-3.5'}}}</button>
             <button class="btn btn-ghost btn-sm text-danger" data-backup-action="delete" data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
