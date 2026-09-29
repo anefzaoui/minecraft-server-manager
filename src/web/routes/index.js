@@ -852,6 +852,11 @@ router.get('/blueprints', (req, res) => {
   });
 });
 
+router.get('/health', (req, res) => {
+  const { counts, alerts } = healthAlerts.list(req.user, res.locals.visibleServerIds);
+  res.render('health', { title: 'Health', active: 'health', counts, alerts });
+});
+
 router.get('/updates', (req, res) => {
   const checker = require('../../updates/checker');
   res.render('updates', {

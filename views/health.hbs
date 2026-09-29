@@ -1,0 +1,54 @@
+{{> page-header heading="HEALTH" sub="Crashes, out-of-memory stops, and auto-restarts from the last 24 hours. Dismissing an alert hides it for you only and keeps it in each server's history."}}
+
+<div id="health-page">
+  {{#if alerts.length}}
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+      <span class="text-sm text-ink-faint" data-health-summary>
+        {{counts.crashes}} {{plural counts.crashes 'crash' 'crashes'}}, {{counts.oom}} out of memory, {{counts.autoRestarted}} {{plural counts.autoRestarted 'auto-restart' 'auto-restarts'}}
+      </span>
+      <button type="button" class="btn btn-danger btn-sm ml-auto" data-clear-all>Clear All</button>
+    </div>
+
+    <ul class="card divide-y divide-line p-0" data-alert-list>
+      {{#each alerts}}
+        <li class="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:p-5" data-alert-id="{{id}}">
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              {{#if (eq type 'crashed')}}<span class="badge badge-danger">Crash</span>
+              {{else if (eq type 'oom')}}<span class="badge badge-danger">Out of Memory</span>
+              {{else}}<span class="badge badge-warn">Auto-Restart</span>{{/if}}
+              {{#if serverId}}<a href="/servers/{{serverId}}" class="truncate font-medium text-link hover:underline">{{server}}</a>{{else}}<span class="truncate font-medium">A removed server</span>{{/if}}
+              <span class="text-xs text-ink-faint" data-ts-ago="{{at}}">{{at}}</span>
+            </div>
+            <p class="mt-1.5 break-words text-sm text-ink-soft">{{summary}}</p>
+            {{#if (eq type 'crashed')}}
+              <dl class="mt-2 grid gap-x-4 gap-y-1 text-xs sm:grid-cols-[auto_1fr]">
+                {{#if exitCode}}<dt class="text-ink-faint">Exit code</dt><dd>{{exitCode}}</dd>{{/if}}
+                <dt class="text-ink-faint">Auto-restart</dt>
+                <dd>{{#if willRestart}}The panel will restart it automatically.{{else}}It will not restart on its own.{{/if}}</dd>
+                {{#if report}}
+                  {{#if report.exception}}<dt class="text-ink-faint">Error</dt><dd class="break-words">{{report.exception}}</dd>{{/if}}
+                  {{#if report.suspects.length}}<dt class="text-ink-faint">Suspected mods</dt><dd class="break-words">{{#each report.suspects}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</dd>{{/if}}
+                  <dt class="text-ink-faint">Crash report</dt><dd class="break-all">{{report.filename}}</dd>
+                {{/if}}
+              </dl>
+            {{/if}}
+            {{#if serverId}}
+              <div class="mt-2 flex flex-wrap gap-3 text-xs">
+                <a class="text-link hover:underline" href="/servers/{{serverId}}/history">Open History</a>
+                {{#if hasLog}}<a class="text-link hover:underline" href="/api/events/{{id}}/excerpt" target="_blank" rel="noopener">View Log</a>{{/if}}
+              </div>
+            {{/if}}
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm shrink-0 self-start" data-dismiss aria-label="Dismiss this alert">Dismiss</button>
+        </li>
+      {{/each}}
+    </ul>
+    {{#if (gt counts.total alerts.length)}}
+      <p class="mt-3 text-xs text-ink-faint">Showing the newest {{alerts.length}} of {{counts.total}} alerts. Dismiss some to see the rest.</p>
+    {{/if}}
+  {{else}}
+    {{> empty-state iconName='activity' title='No Alerts' message='No server has crashed, run out of memory, or needed an automatic restart in the last 24 hours, or you have dismissed them all.'}}
+  {{/if}}
+</div>
+<script type="module" src="/js/pages/health.js"></script>

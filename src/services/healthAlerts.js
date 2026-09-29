@@ -9,7 +9,7 @@ const httpError = require('../utils/httpError');
 
 const HEALTH_TYPES = ['crashed', 'oom', 'auto-restarted'];
 const WINDOW = '-1 day';
-const LIST_LIMIT = 50;
+const LIST_LIMIT = 200;
 // A crash report file is written seconds after the container dies; anything
 // further from the event than this is a different crash.
 const REPORT_MATCH_MS = 5 * 60 * 1000;

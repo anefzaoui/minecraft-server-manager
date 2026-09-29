@@ -135,27 +135,29 @@ test('dismissals go away when history pruning drops the event', () => {
   assert.equal(db.get('SELECT COUNT(*) AS n FROM alert_dismissals').n, 0);
 });
 
-test('the API lists, dismisses, and clears for the signed-in user', async () => {
-  const first = seedEvent('srv_a', 'crashed');
+test('the health page lists alerts, and the API dismisses and clears for the signed-in user', async () => {
+  const first = seedEvent('srv_a', 'crashed', { details: JSON.stringify({ exitCode: 137, armedRestart: false }) });
   seedEvent('srv_a', 'oom');
 
-  let r = await h.req('GET', '/api/alerts', { cookie });
+  let r = await h.req('GET', '/health', { cookie });
   assert.equal(r.status, 200);
-  assert.equal(r.json.counts.total, 2);
-  assert.equal(r.json.alerts.length, 2);
+  assert.match(r.text, /Health · 24h|HEALTH/);
+  assert.match(r.text, new RegExp(`data-alert-id="${first}"`));
+  assert.match(r.text, /Exit code/);
+  assert.match(r.text, /It will not restart on its own\./);
 
   r = await h.req('POST', `/api/alerts/${first}/dismiss`, { cookie });
   assert.equal(r.status, 200);
-  r = await h.req('GET', '/api/alerts', { cookie });
-  assert.equal(r.json.counts.total, 1);
+  r = await h.req('GET', '/health', { cookie });
+  assert.doesNotMatch(r.text, new RegExp(`data-alert-id="${first}"`));
 
   r = await h.req('POST', '/api/alerts/clear', { cookie });
   assert.equal(r.json.cleared, 1);
-  r = await h.req('GET', '/api/alerts', { cookie });
-  assert.equal(r.json.counts.total, 0);
+  r = await h.req('GET', '/health', { cookie });
+  assert.match(r.text, /No Alerts/);
 
   r = await h.req('POST', '/api/alerts/999999/dismiss', { cookie });
   assert.equal(r.status, 404);
-  r = await h.req('GET', '/api/alerts');
+  r = await h.req('GET', '/health');
   assert.equal(r.status === 401 || r.status === 302, true);
 });
