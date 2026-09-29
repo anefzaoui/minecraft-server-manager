@@ -20,6 +20,7 @@ const db = require('../../db');
 const permissions = require('../../services/permissions');
 const httpError = require('../../utils/httpError');
 const eventsService = require('../../events');
+const healthAlerts = require('../../services/healthAlerts');
 const { dataPath } = require('../../storage/pathGuard');
 const { checkDocker } = require('../../docker/connect');
 const { fetchLogs } = require('../../docker/logs');
@@ -439,6 +440,22 @@ router.put(
     res.json({ ok: true, changed, restarted, server: publicServer(server) });
   })
 );
+
+// Dashboard health alerts (crashes, out-of-memory stops, auto-restarts): each
+// user dismisses their own; the history events stay. See services/healthAlerts.js.
+router.get('/alerts', (req, res) => {
+  res.json({ ok: true, ...healthAlerts.list(req.user, permissions.visibleServerIds(req.user)) });
+});
+
+router.post('/alerts/clear', (req, res) => {
+  res.json({ ok: true, cleared: healthAlerts.clearAll(req.user, permissions.visibleServerIds(req.user)) });
+});
+
+router.post('/alerts/:eventId/dismiss', (req, res) => {
+  const eventId = z.coerce.number().int().positive().parse(req.params.eventId);
+  healthAlerts.dismiss(req.user, permissions.visibleServerIds(req.user), eventId);
+  res.json({ ok: true });
+});
 
 // Port picking for new servers: the roles that can create one. Answers name
 // host ports in use, so viewers don't get them.

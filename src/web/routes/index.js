@@ -21,6 +21,7 @@ const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
 const permissions = require('../../services/permissions');
+const healthAlerts = require('../../services/healthAlerts');
 const { serverScope } = require('../middleware/serverAccess');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
 const logger = require('../../logger')('pages');
@@ -221,14 +222,7 @@ function buildCombinedOverview(servers) {
 // Dashboard "At a glance" panel: everything below is aggregated from the
 // server VMs already built above (memory, disk, status counts) plus cheap
 // event/SQLite lookups (24h health, update breakdown). No extra Docker calls.
-function buildDashboardOverview(servers) {
-  const countEvents = (types, since) =>
-    db.get(
-      `SELECT COUNT(*) AS n FROM events WHERE type IN (${types.map(() => '?').join(',')})` +
-        (since ? ` AND created_at >= datetime('now', ?)` : ''),
-      ...(since ? [...types, since] : types)
-    )?.n || 0;
-
+function buildDashboardOverview(servers, { user, visibleIds }) {
   const byStatus = {
     running: 0,
     starting: 0,
@@ -253,12 +247,8 @@ function buildDashboardOverview(servers) {
     playersMax += s.players.max || 0;
   }
 
-  const health = {
-    oom: countEvents(['oom'], '-1 day'),
-    autoRestarted: countEvents(['auto-restarted'], '-1 day'),
-    crashes: countEvents(['crashed'], '-1 day'),
-  };
-  const healthTotal = health.oom + health.autoRestarted + health.crashes;
+  // Per user: alerts they dismissed, or on servers they can't see, don't count.
+  const { total: healthTotal, ...health } = healthAlerts.counts(user, visibleIds);
 
   let updates = { all: 0, mods: 0, server: 0 };
   try {
@@ -342,7 +332,7 @@ async function renderServerList(req, res, next, { page }) {
         .filter((e) => !e.type.endsWith('-requested'))
         .slice(0, 6);
       context.activity = eventsVM(events);
-      context.overview = buildDashboardOverview(servers);
+      context.overview = buildDashboardOverview(servers, { user: req.user, visibleIds: res.locals.visibleServerIds });
     }
     res.render('dashboard', context);
   } catch (err) {
