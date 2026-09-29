@@ -613,7 +613,7 @@ function init() {
     });
     clearAllBtn?.addEventListener('click', async (e) => {
       const ok = await confirmDialog({
-        title: 'Clear All Locks?',
+        title: 'Clear all locks?',
         message: 'Every locked account and address will be able to try signing in again immediately.',
         confirmLabel: 'Clear All Locks',
       });

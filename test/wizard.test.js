@@ -51,7 +51,7 @@ test('chatbot configuration and transcripts are admin-only', async () => {
   assert.match(adminPage.text, /Basic users/);
   assert.match(adminPage.text, /Refresh This Server's Transcripts/);
   assert.match(adminPage.text, /Refresh Power Audit/);
-  assert.match(adminPage.text, /Player outreach/);
+  assert.match(adminPage.text, /Player Outreach/);
   assert.match(adminPage.text, /@wizard chat/);
   assert.match(adminPage.text, /Power controllers/);
   const giftTextarea = /id="ig-wz-gifts">([\s\S]*?)<\/textarea>/.exec(adminPage.text);

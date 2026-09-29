@@ -15,15 +15,15 @@
         </p>
         <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
           <div>
-            <dt class="text-xs text-ink-faint">Running now</dt>
+            <dt class="text-xs text-ink-faint">Running Now</dt>
             <dd class="font-mono">{{compat.mcVersion}}{{#if compat.loader}} · {{capitalize compat.loader}}{{/if}}</dd>
           </div>
           <div>
-            <dt class="text-xs text-ink-faint">Mods enabled</dt>
+            <dt class="text-xs text-ink-faint">Mods Enabled</dt>
             <dd class="font-mono">{{modCount}}</dd>
           </div>
           <div>
-            <dt class="text-xs text-ink-faint">Highest version all mods support</dt>
+            <dt class="text-xs text-ink-faint">Highest Version All Mods Support</dt>
             <dd class="font-mono" id="compat-ceiling">
               {{#if compat.report}}
                 {{#if compat.report.highestCompatible}}<span class="text-ok">{{compat.report.highestCompatible}}</span>{{else}}<span class="text-ink-faint">none yet</span>{{/if}}
@@ -31,7 +31,7 @@
             </dd>
           </div>
           <div>
-            <dt class="text-xs text-ink-faint">Last checked</dt>
+            <dt class="text-xs text-ink-faint">Last Checked</dt>
             <dd>{{#if compat.completedAt}}<span data-ts="{{compat.completedAt}}">{{compat.completedAt}}</span>{{else}}<span class="text-ink-faint">never</span>{{/if}}</dd>
           </div>
         </dl>
