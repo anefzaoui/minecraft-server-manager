@@ -143,7 +143,8 @@ test('the health page lists alerts, and the API dismisses and clears for the sig
   assert.equal(r.status, 200);
   assert.match(r.text, /Health · 24h|HEALTH/);
   assert.match(r.text, new RegExp(`data-alert-id="${first}"`));
-  assert.match(r.text, /Exit code/);
+  assert.match(r.text, /href="\/health"[\s\S]*?badge-danger ml-auto">2</); // sidebar badge
+  assert.match(r.text, /Exit Code/);
   assert.match(r.text, /It will not restart on its own\./);
 
   r = await h.req('POST', `/api/alerts/${first}/dismiss`, { cookie });
@@ -155,6 +156,7 @@ test('the health page lists alerts, and the API dismisses and clears for the sig
   assert.equal(r.json.cleared, 1);
   r = await h.req('GET', '/health', { cookie });
   assert.match(r.text, /No Alerts/);
+  assert.doesNotMatch(r.text, /badge-danger ml-auto/);
 
   r = await h.req('POST', '/api/alerts/999999/dismiss', { cookie });
   assert.equal(r.status, 404);

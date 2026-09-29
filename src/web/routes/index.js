@@ -155,6 +155,8 @@ router.use(
     res.locals.updatesCount = checker.countOutdated({
       serverIds: permissions.hidesAnyServer(req.user, res.locals.visibleServerIds) ? res.locals.visibleServerIds : null,
     });
+    // Undismissed health alerts (last 24h) for the sidebar badge.
+    res.locals.healthCount = healthAlerts.counts(req.user, res.locals.visibleServerIds).total;
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
     next();
