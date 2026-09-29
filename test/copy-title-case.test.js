@@ -32,8 +32,11 @@ const ELEMENT_PATTERNS = [
   /<th\b[^>]*>([\s\S]*?)<\/th>/gi,
   /<dt\b[^>]*>([\s\S]*?)<\/dt>/gi,
   /<(?:div|span)\b[^>]*class="[^"]*\beyebrow\b[^"]*"[^>]*>([\s\S]*?)<\/(?:div|span)>/gi,
-  // The bold label of a settings switch row (settings/toggle-row partial).
-  /\{\{>\s*settings\/toggle-row\b[^}]*?\blabel="([^"]*)"/gi,
+  // A `heading=`/`label=` hash argument on any partial call (e.g. settings/card's
+  // heading, settings/toggle-row's label): static string, rendered as a title or
+  // field label by the partial. page-header's heading is ALL CAPS in every call
+  // site, so it always passes this check trivially.
+  /\{\{[#]?>\s*[\w./-]+\b[^}]*?\b(?:heading|label)="([^"]*)"/g,
 ];
 
 function cleanText(raw) {
