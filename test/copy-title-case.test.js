@@ -32,6 +32,8 @@ const ELEMENT_PATTERNS = [
   /<th\b[^>]*>([\s\S]*?)<\/th>/gi,
   /<dt\b[^>]*>([\s\S]*?)<\/dt>/gi,
   /<(?:div|span)\b[^>]*class="[^"]*\beyebrow\b[^"]*"[^>]*>([\s\S]*?)<\/(?:div|span)>/gi,
+  // The bold label of a settings switch row (settings/toggle-row partial).
+  /\{\{>\s*settings\/toggle-row\b[^}]*?\blabel="([^"]*)"/gi,
 ];
 
 function cleanText(raw) {
