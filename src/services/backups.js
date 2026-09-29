@@ -812,7 +812,87 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms).unref());
 }
 
+// Per-server history events that never touch the server directory. Everything
+// else (file edits, mod/pack/world changes, player data, rebuilds, and any event
+// type added later) counts as a possible change, so a new type errs toward one
+// extra backup rather than a skipped one.
+const NON_DATA_EVENT_TYPES = [
+  'schedule-fired',
+  'schedule-failed',
+  'schedule-created',
+  'schedule-toggled',
+  'schedule-deleted',
+  'backup-created',
+  'backup-warning',
+  'backup-deleted',
+  'backup-renamed',
+  'update-check',
+  'version-check',
+  'storage-scan',
+  'storage-cleanup',
+  'tmp-clean',
+  'events-pruned',
+  'content-meta-backfill',
+  'content-meta-backfilled',
+  'ban-expiry-sweep',
+  'crash-report-deleted',
+  'crash-shared',
+  'mod-update-ignored',
+  'mod-update-unignored',
+];
+
+/**
+ * Whether a scheduled backup would only duplicate an existing one. All must hold:
+ *  - the server is cleanly stopped (Docker's status, not a file comparison);
+ *  - the newest backup is newer than the container's last stop (FinishedAt), so
+ *    nothing was played since;
+ *  - no history event that could have changed the server directory (see
+ *    NON_DATA_EVENT_TYPES) was recorded since that backup, which covers edits
+ *    made while the server is off: file manager, mods, pack apply, worlds, etc.;
+ *  - the history still reaches back to the backup, so pruning can't have hidden
+ *    such an event.
+ * Anything uncertain, including any error, returns false: a backup is never
+ * lost to a bad check.
+ */
+async function isScheduledBackupRedundant(serverId) {
+  try {
+    const info = await inspectStatus(serverId);
+    if (!info.exists || info.status !== 'stopped') return false;
+    const latest = db.get(
+      'SELECT created_at FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT 1',
+      serverId
+    );
+    if (!latest) return false;
+    // SQLite stores UTC as 'YYYY-MM-DD HH:MM:SS'; Docker gives RFC 3339.
+    const backedUpAt = Date.parse(`${latest.created_at.replace(' ', 'T')}Z`);
+    const stoppedAt = Date.parse(info.finishedAt);
+    if (Number.isNaN(backedUpAt) || Number.isNaN(stoppedAt) || backedUpAt <= stoppedAt) return false;
+
+    // Events pruned oldest-first: if one from around the backup survives, none
+    // from after it were dropped. A backup records its own event, so this is
+    // only false once pruning has reached past it.
+    const reachesBack = db.get(
+      "SELECT 1 AS ok FROM events WHERE server_id = ? AND created_at <= datetime(?, '+1 minute') LIMIT 1",
+      serverId,
+      latest.created_at
+    );
+    if (!reachesBack) return false;
+
+    const marks = NON_DATA_EVENT_TYPES.map(() => '?').join(',');
+    const changed = db.get(
+      `SELECT 1 AS dirty FROM events WHERE server_id = ? AND created_at >= ? AND type NOT IN (${marks}) LIMIT 1`,
+      serverId,
+      latest.created_at,
+      ...NON_DATA_EVENT_TYPES
+    );
+    return !changed;
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
+  isScheduledBackupRedundant,
   createBackup,
   createBackupUnguarded: createBackupImpl,
   restoreBackup,

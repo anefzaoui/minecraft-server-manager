@@ -155,6 +155,12 @@ async function runTask(schedule) {
       break;
     case 'backup': {
       const backups = require('./backups');
+      if (await backups.isScheduledBackupRedundant(schedule.server_id)) {
+        logger.info('Skipped a scheduled backup because the server is stopped and already backed up.', {
+          serverId: schedule.server_id,
+        });
+        break;
+      }
       const backup = await backups.createBackup(schedule.server_id, {
         reason: 'scheduled',
         actor,
