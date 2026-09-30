@@ -6,9 +6,11 @@
   <div class="ml-auto flex shrink-0 items-center gap-2">
     <div id="task-tray" class="relative hidden">
       <button class="btn btn-ghost btn-sm relative" aria-label="Background tasks" data-tip="Background tasks">
-        {{! The list icon stays put; the ring around it spins only while something runs. }}
+        {{! The list icon stays put; the round ring around it spins only while something
+            runs (a square ring would swing its corners as it turned). Reduced motion
+            gets a still, full ring instead of a frozen arc. }}
         {{{icon 'list-checks' 'size-4'}}}
-        <span data-task-ring class="pointer-events-none absolute inset-0.5 hidden animate-spin rounded-sm border-2 border-transparent border-t-ok motion-reduce:animate-none"></span>
+        <span data-task-ring class="pointer-events-none absolute inset-0 m-auto hidden size-6 animate-spin rounded-full border-2 border-ok/25 border-t-ok motion-reduce:animate-none motion-reduce:border-ok"></span>
         <span data-task-count class="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-inset px-1 text-[11px] font-bold leading-4">0</span>
       </button>
       {{! No z needed: the sticky header (z-20) already stacks above the page,
