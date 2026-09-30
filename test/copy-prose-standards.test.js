@@ -174,7 +174,7 @@ function sentence(file, line, col, text, { kind = 'sentence', startsDyn = false,
 function progress(file, line, col, text, { title = false, endsDyn = false } = {}) {
   const t = text.trim();
   // A lowercase single word is a step id (e.g. 'applying'), not text a person reads.
-  if (!t || endsDyn || t.endsWith('…') || /^[a-z][a-z0-9_-]*$/.test(t)) return;
+  if (!t || (endsDyn && !title) || t.endsWith('…') || /^[a-z][a-z0-9_-]*$/.test(t)) return;
   const gerund = /^[A-Z][a-z]+ing\b/.test(t);
   if (title || gerund) {
     const shown = t.replace(/[.!?:]+$/, '').replace(/\.{3}$/, '');
@@ -335,6 +335,7 @@ function scanJs(file, { catalog }) {
           emit(args[0], progressOf(false));
           break;
         case 'run':
+        case 'track':
           if (node.callee.type === 'MemberExpression' && node.callee.object.name === 'tasks')
             emit(args[0], progressOf(true));
           break;
