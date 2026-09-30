@@ -153,15 +153,20 @@ async function runTask(schedule) {
     case 'start':
       await servers.startServer(schedule.server_id, { actor });
       break;
-    case 'backup':
-      await require('./backups').createBackup(schedule.server_id, {
+    case 'backup': {
+      const backups = require('./backups');
+      const backup = await backups.createBackup(schedule.server_id, {
         reason: 'scheduled',
         actor,
         // Opt-in per schedule: trim rarely-visited chunks after the archive is
         // written. Only runs when the server is stopped (see createBackupImpl).
         shrinkAfter: Boolean(payload.shrink),
       });
+      // Read the fresh archive back end to end. A damaged one throws, so the
+      // run is marked failed and the operator hears about it now, not at restore time.
+      await backups.verifyBackup(backup.id, { actor });
       break;
+    }
     case 'rcon': {
       const { execCapture } = require('../docker/containers');
       // '--' stops rcon-cli parsing command words that start with '-' as flags.
