@@ -102,6 +102,9 @@ importers:
       eslint:
         specifier: ^10.9.1
         version: 10.9.1(jiti@2.7.0)
+      espree:
+        specifier: 11.2.0
+        version: 11.2.0
       globals:
         specifier: ^17.12.0
         version: 17.12.0
