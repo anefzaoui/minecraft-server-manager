@@ -11,6 +11,7 @@ const { nanoid } = require('nanoid');
 const db = require('../db');
 const { recordEvent, lifecycleActionSince } = require('../events');
 const { getTimezone } = require('./settings');
+const tasks = require('./tasks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 
@@ -52,8 +53,9 @@ const BUSY_MAX_WAIT_MS = 30 * 60_000;
 /**
  * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
  * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
+ * @param {any} [task] the tray task this run reports to, if it is shown there
  */
-async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
+async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}, task = null) {
   const firedAt = Date.now();
   const giveUpAt = firedAt + maxWaitMs;
   let current = job; // re-read before each retry: the schedule may have been edited
@@ -66,7 +68,7 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY
   async function retryLoop() {
     for (let attempt = 0; ; attempt++) {
       try {
-        return await runTask(current);
+        return await runTask(current, task);
       } catch (err) {
         const busy = err && err.code === 'BUSY';
         if (!busy || !RETRY_WHEN_BUSY.has(current.task_type) || Date.now() + retryMs > giveUpAt) throw err;
@@ -79,6 +81,7 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY
         }
         waitingToRetry.add(job.id);
         marked = true;
+        if (task) task.step('Waiting for the server to finish another action…');
         await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
         const still = db.get('SELECT * FROM schedules WHERE id = ?', job.id);
         if (!still || !still.enabled) return; // turned off or deleted while waiting
@@ -122,7 +125,7 @@ async function fireJob(job, retry) {
     serverId: job.server_id || undefined,
   });
   try {
-    await runTaskWithRetry(job, retry);
+    await runTracked(job, retry);
   } catch (err) {
     recordEvent({
       serverId: job.server_id || null,
@@ -139,7 +142,7 @@ async function fireJob(job, retry) {
   }
 }
 
-async function runTask(schedule) {
+async function runTask(schedule, task = null) {
   const payload = JSON.parse(schedule.payload_json || '{}');
   const actor = 'scheduler';
   const servers = require('./servers');
@@ -164,6 +167,7 @@ async function runTask(schedule) {
       const backup = await backups.createBackup(schedule.server_id, {
         reason: 'scheduled',
         actor,
+        task,
         // Opt-in per schedule: trim rarely-visited chunks after the archive is
         // written. Only runs when the server is stopped (see createBackupImpl).
         shrinkAfter: Boolean(payload.shrink),
@@ -191,13 +195,16 @@ async function runTask(schedule) {
       break;
     }
     case 'update-check':
+      if (task) task.step('Checking for updates…');
       await require('../updates/checker').checkAll({ actor });
+      if (task) task.step('Applying automatic updates…');
       // Only the scheduled daily check triggers auto-updates - the manual
       // "check now" buttons never apply anything (#24; the settings-page
       // policy label promises exactly this).
       await require('../updates/upgrade').runAutoUpgrades({ actor });
       break;
     case 'storage-scan':
+      if (task) task.step('Scanning storage…');
       await require('../storage/indexer').scan();
       await require('../storage/indexer').enforceStrictQuotas();
       break;
@@ -216,6 +223,27 @@ async function runTask(schedule) {
     default:
       throw new Error(`Unknown task type ${schedule.task_type}`);
   }
+}
+
+// Scheduled jobs a person would wonder about show in the top-bar task tray. The
+// once-a-minute housekeeping jobs (temp files, ban sweep, metadata backfill,
+// rcon) stay out of it so the tray does not flicker all day.
+const TRAY_VERBS = { restart: 'Restarting', stop: 'Stopping', start: 'Starting', backup: 'Backing up' };
+const TRAY_TITLES = { 'update-check': 'Checking for updates…', 'storage-scan': 'Scanning storage…' };
+
+/**
+ * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
+ * @param {{ retryMs?: number, maxWaitMs?: number }} [retry]
+ */
+function runTracked(job, retry) {
+  const server = job.server_id ? db.get('SELECT display_name FROM servers WHERE id = ?', job.server_id) : null;
+  const verb = TRAY_VERBS[job.task_type];
+  const title = verb && server ? `${verb} ${server.display_name} (scheduled)…` : TRAY_TITLES[job.task_type];
+  if (!title) return runTaskWithRetry(job, retry);
+  // One tray entry covers every busy retry, so waiting does not flash a failure.
+  return tasks.track(title, { serverId: job.server_id || null, actor: 'scheduler' }, (task) =>
+    runTaskWithRetry(job, retry, task)
+  );
 }
 
 function schedule(job) {
