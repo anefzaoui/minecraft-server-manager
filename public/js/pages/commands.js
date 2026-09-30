@@ -58,7 +58,7 @@ function init(root) {
     prefixSave.addEventListener('click', async () => {
       const value = prefixInput.value.trim();
       if (!/^[!.#+?$%&*~^=-]{1,2}$/.test(value)) {
-        toast('The prefix must be one or two characters from ! . # + ? $ % & * ~ ^ = - and cannot be /.', {
+        toast('The prefix must be one or two characters from ! . # + ? $ % & * ~ ^ = or a hyphen, and cannot be /.', {
           kind: 'error',
         });
         return;

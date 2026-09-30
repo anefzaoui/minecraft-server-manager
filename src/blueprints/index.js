@@ -140,7 +140,7 @@ const manifestSchema = z.object({
  */
 async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}) {
   const server = servers.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const includeConfig = options.includeConfig !== false;
   const embedFiles = Boolean(options.embedFiles);
   const includeWorld = Boolean(options.includeWorld);
@@ -350,7 +350,7 @@ async function importBlueprint(zipRef, overrides = {}, { actor = 'system', onPro
   if (/^bp_/.test(zipRef)) {
     zipPath = getBlueprintPath(zipRef);
   }
-  if (!fs.existsSync(zipPath)) throw httpError(404, 'Blueprint archive not found');
+  if (!fs.existsSync(zipPath)) throw httpError(404, 'Blueprint archive not found.');
 
   const { manifest, entries } = await importPreview(zipPath);
   const o = overrides || {};
@@ -466,7 +466,7 @@ async function installOverlayItem(entry, server, tmpDir, { actor }) {
         return {
           name: entry.name,
           status: 'hash-mismatch',
-          error: `Embedded file hash ${sha256.slice(0, 12)}… does not match the manifest`,
+          error: `Embedded file hash ${sha256.slice(0, 12)}… does not match the manifest.`,
         };
       }
       lib = await ingestLocalFile(embedded, entry, sha256);
@@ -481,7 +481,7 @@ async function installOverlayItem(entry, server, tmpDir, { actor }) {
         return {
           name: entry.name,
           status: 'hash-mismatch',
-          error: `Downloaded file hash ${lib.sha256.slice(0, 12)}… does not match the manifest`,
+          error: `Downloaded file hash ${lib.sha256.slice(0, 12)}… does not match the manifest.`,
         };
       }
     }
@@ -616,7 +616,7 @@ async function ingestLocalFile(absFile, entry, sha256) {
 /** One-click duplicate: full export (embedded files) + immediate import. */
 async function cloneServer(serverId, { includeWorld = false, actor = 'system', onProgress = () => {} } = {}) {
   const original = servers.getServer(serverId);
-  if (!original) throw httpError(404, 'Server not found');
+  if (!original) throw httpError(404, 'Server not found.');
   onProgress('Exporting blueprint…');
   const blueprint = await exportBlueprint(serverId, { includeConfig: true, embedFiles: true, includeWorld }, { actor });
   const { server, report } = await importBlueprint(
@@ -655,13 +655,13 @@ function getBlueprint(id) {
 
 function getBlueprintPath(id) {
   const row = db.get('SELECT * FROM blueprints WHERE id = ?', id);
-  if (!row) throw httpError(404, 'Blueprint not found');
+  if (!row) throw httpError(404, 'Blueprint not found.');
   return dataPath(row.rel_path);
 }
 
 async function deleteBlueprint(id, { actor = 'system' } = {}) {
   const row = db.get('SELECT * FROM blueprints WHERE id = ?', id);
-  if (!row) throw httpError(404, 'Blueprint not found');
+  if (!row) throw httpError(404, 'Blueprint not found.');
   await fsp.rm(dataPath(row.rel_path), { force: true });
   db.run('DELETE FROM blueprints WHERE id = ?', id);
   // Scoped to the source server (when known) so a user who may not see that

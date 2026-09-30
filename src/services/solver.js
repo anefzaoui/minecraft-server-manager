@@ -104,7 +104,7 @@ async function solve(projectRefs) {
     refs.push({ platform, ref });
   }
   if (!refs.length) throw httpError(400, 'Pick at least one mod to solve for.');
-  if (refs.length > MAX_PROJECTS) throw httpError(400, `At most ${MAX_PROJECTS} mods per solve`);
+  if (refs.length > MAX_PROJECTS) throw httpError(400, `At most ${MAX_PROJECTS} mods per solve.`);
 
   // Sequential fetches through the cached clients (2 calls/project max).
   const projects = [];

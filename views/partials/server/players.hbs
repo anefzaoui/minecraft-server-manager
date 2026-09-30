@@ -80,17 +80,17 @@
               <div class="flex flex-wrap gap-1.5">
                 <button class="chip {{#if whitelisted}}border-grass-700 bg-grass-500/15 text-ok{{/if}}"
                         data-role-toggle="whitelist" data-name="{{name}}" data-on="{{#if whitelisted}}1{{else}}0{{/if}}"
-                        data-tip="{{#if whitelisted}}Remove from Whitelist{{else}}Add to Whitelist{{/if}}">
+                        data-tip="{{#if whitelisted}}Remove this player from the whitelist.{{else}}Add this player to the whitelist.{{/if}}">
                   {{{icon 'shield-check' 'size-3.5'}}} <span data-chip-label>Whitelist</span>
                 </button>
                 <button class="chip {{#if op}}border-diamond-700 bg-diamond-400/15 text-link{{/if}}"
                         data-role-toggle="op" data-name="{{name}}" data-on="{{#if op}}1{{else}}0{{/if}}"
-                        data-tip="{{#if op}}Remove Operator Status{{else}}Make Operator (Level 4){{/if}}">
+                        data-tip="{{#if op}}Remove operator status from this player.{{else}}Make this player an operator (level 4).{{/if}}">
                   {{{icon 'shield' 'size-3.5'}}} <span data-chip-label>Op{{#if op}} L{{opLevel}}{{/if}}</span>
                 </button>
                 <button class="chip {{#if banned}}border-danger/40 bg-redstone-500/15 text-danger{{/if}}"
                         data-role-toggle="ban" data-name="{{name}}" data-on="{{#if banned}}1{{else}}0{{/if}}"
-                        data-tip="{{#if banned}}Pardon This Player{{else}}Ban This Player{{/if}}">
+                        data-tip="{{#if banned}}Pardon this player.{{else}}Ban this player.{{/if}}">
                   {{{icon 'ban' 'size-3.5'}}} <span data-chip-label>{{#if banned}}Banned{{else}}Ban{{/if}}</span>
                 </button>
               </div>
@@ -146,11 +146,11 @@
         </datalist>
         <select class="input w-auto" id="banip-duration" data-label="Ban duration">
           <option value="">Permanent</option>
-          <option value="3600000">1 hour</option>
-          <option value="86400000">1 day</option>
-          <option value="259200000">3 days</option>
-          <option value="604800000">7 days</option>
-          <option value="2592000000">30 days</option>
+          <option value="3600000">1 Hour</option>
+          <option value="86400000">1 Day</option>
+          <option value="259200000">3 Days</option>
+          <option value="604800000">7 Days</option>
+          <option value="2592000000">30 Days</option>
         </select>
         <button class="btn btn-sm" id="banip-add">{{{icon 'ban' 'size-3.5'}}} Ban IP</button>
       </div>

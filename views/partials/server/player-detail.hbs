@@ -32,7 +32,7 @@
                 data-tip="{{#if player.op}}Remove operator status{{else}}Make operator (level 4){{/if}}">{{{icon 'shield' 'size-3.5'}}} <span data-chip-label>Op{{#if player.op}} L{{player.opLevel}}{{/if}}</span></button>
         <button class="chip {{#if player.banned}}border-danger/40 bg-redstone-500/15 text-danger{{/if}}"
                 data-role-toggle="ban" data-on="{{#if player.banned}}1{{else}}0{{/if}}"
-                data-tip="{{#if player.banned}}Pardon This Player{{else}}Ban This Player{{/if}}">{{{icon 'ban' 'size-3.5'}}} <span data-chip-label>{{#if player.banned}}Banned{{else}}Ban{{/if}}</span></button>
+                data-tip="{{#if player.banned}}Pardon this player.{{else}}Ban this player.{{/if}}">{{{icon 'ban' 'size-3.5'}}} <span data-chip-label>{{#if player.banned}}Banned{{else}}Ban{{/if}}</span></button>
         {{#if player.online}}<button class="btn btn-ghost btn-sm" data-act="kick" data-tip="Kick with a message.">{{{icon 'log-out' 'size-3.5'}}} Kick</button>{{/if}}
         {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
           <button class="btn btn-ghost btn-sm" data-act="teleport" data-tip="Teleport by coordinates, biome, or player.">{{{icon 'compass' 'size-3.5'}}} Teleport</button>

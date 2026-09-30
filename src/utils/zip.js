@@ -41,7 +41,7 @@ function safeEntryName(name) {
 function readZipIndex(zipPath, { textEntry, maxTextBytes = 20 * 1024 * 1024 } = {}) {
   return new Promise((resolve, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(httpError(400, 'Not a valid zip archive'));
+      if (err) return reject(httpError(400, 'Not a valid zip archive.'));
       const entries = [];
       const texts = new Map();
       zip.on('error', (e) => reject(zipFailure(e)));
@@ -85,7 +85,7 @@ function readZipIndex(zipPath, { textEntry, maxTextBytes = 20 * 1024 * 1024 } = 
 function readEntryBuffers(zipPath, select, { maxEntryBytes = 512 * 1024 * 1024, maxTotalBytes = 4 * 1024 ** 3 } = {}) {
   return new Promise((resolve, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(httpError(400, 'Not a valid zip archive'));
+      if (err) return reject(httpError(400, 'Not a valid zip archive.'));
       const out = new Map();
       let total = 0;
       zip.on('error', (e) => reject(zipFailure(e)));
@@ -159,7 +159,7 @@ function extractZipSafe(
   const root = path.resolve(destDir);
   return new Promise((resolve, reject) => {
     yauzl.open(zipFile, { lazyEntries: true }, (openErr, zip) => {
-      if (openErr) return reject(httpError(400, 'Not a valid zip archive'));
+      if (openErr) return reject(httpError(400, 'Not a valid zip archive.'));
       let settled = false;
       let entryCount = 0;
       let declaredBytes = 0;
@@ -259,7 +259,7 @@ function extractZipSafe(
 function forEachEntryBuffer(zipPath, select, fn, { maxEntryBytes = 512 * 1024 * 1024 } = {}) {
   return new Promise((resolve, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(httpError(400, 'Not a valid zip archive'));
+      if (err) return reject(httpError(400, 'Not a valid zip archive.'));
       let done = false;
       const fail = (e) => {
         if (done) return;

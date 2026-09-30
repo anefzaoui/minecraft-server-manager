@@ -80,7 +80,7 @@ router.get(
 function requireVisibleBlueprint(req, id) {
   const row = blueprints.getBlueprint(id);
   if (row && !blueprints.blueprintVisibleTo(req.user, row)) {
-    throw httpError(404, 'Blueprint not found');
+    throw httpError(404, 'Blueprint not found.');
   }
 }
 
@@ -88,7 +88,7 @@ function requireVisibleBlueprint(req, id) {
 // so it needs the `files` capability on the source; a hidden server reads as missing.
 function requireFilesOn(req, serverId) {
   const perms = permissions.effective(req.user, serverId);
-  if (!perms.includes('view')) throw httpError(404, 'Server not found');
+  if (!perms.includes('view')) throw httpError(404, 'Server not found.');
   if (!perms.includes('files')) throw httpError(403, "You don't have the files permission on this server.");
 }
 
@@ -152,7 +152,7 @@ router.post(
         overrides: overridesSchema.optional(),
       })
       .refine((v) => Boolean(v.blueprintId) !== Boolean(v.uploadToken), {
-        message: 'Provide exactly one of blueprintId or uploadToken',
+        message: 'Provide exactly one of blueprintId or uploadToken.',
       })
       .parse(req.body);
 
@@ -202,7 +202,7 @@ router.get(
   asyncHandler((req, res, next) => {
     const row = blueprints.getBlueprint(req.params.id);
     if (!row || !blueprints.blueprintVisibleTo(req.user, row)) {
-      return res.status(404).json({ ok: false, error: 'Blueprint not found' });
+      return res.status(404).json({ ok: false, error: 'Blueprint not found.' });
     }
     res.download(dataPath(row.rel_path), row.filename);
   })

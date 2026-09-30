@@ -652,7 +652,7 @@ async function duplicateWorldImpl(serverId, worldName, { actor = 'system' } = {}
   const server = mustServer(serverId);
   checkWorldName(worldName);
   const dims = serverWorldDims(serverId, worldName);
-  if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
+  if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server.`);
 
   let copyName = `${worldName}-copy`;
   for (let i = 2; fs.existsSync(dataPath('servers', serverId, copyName)); i++) copyName = `${worldName}-copy${i}`;
@@ -704,7 +704,7 @@ async function renameWorldImpl(serverId, worldName, newName, { actor = 'system' 
   const clean = sanitizeWorldName(newName);
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before renaming worlds.');
   const dims = serverWorldDims(serverId, worldName);
-  if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
+  if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server.`);
   if (fs.existsSync(dataPath('servers', serverId, clean))) {
     throw httpError(409, `A world named "${clean}" already exists on this server.`);
   }
@@ -735,7 +735,7 @@ async function activateWorldImpl(serverId, worldName, { actor = 'system' } = {})
   checkWorldName(worldName);
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before switching worlds.');
   if (!fs.existsSync(dataPath('servers', serverId, worldName, 'level.dat'))) {
-    throw httpError(404, `No world named "${worldName}" on this server`);
+    throw httpError(404, `No world named "${worldName}" on this server.`);
   }
   const previous = activeLevelName(server);
   if (previous === worldName) return { active: worldName, changed: false };
@@ -855,7 +855,7 @@ async function deleteServerWorldImpl(serverId, worldName, { actor = 'system' } =
     throw httpError(409, 'This is the active world. Activate another world first, or use Reset to regenerate it.');
   }
   const dims = serverWorldDims(serverId, worldName);
-  if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
+  if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server.`);
   const freedBytes = await dirsSize(dims);
   for (const dim of dims) await fsp.rm(dim, { recursive: true, force: true });
   recordEvent({
@@ -886,7 +886,7 @@ async function prepareWorldDownloadImpl(serverId, worldName, { actor = 'system' 
   const server = mustServer(serverId);
   checkWorldName(worldName);
   const dims = serverWorldDims(serverId, worldName);
-  if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
+  if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server.`);
 
   const sizeBytes = await dirsSize(dims);
   const { free } = await indexer.diskFree();
@@ -1191,7 +1191,7 @@ async function extractArchive(file, destDir, originalName = '') {
     if (tarTotal > MAX_EXTRACT_BYTES) {
       throw httpError(
         413,
-        `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB) - refusing to extract (possible decompression bomb).`
+        `Archive is too large uncompressed (> ${Math.round(MAX_EXTRACT_BYTES / 1024 ** 3)} GB), so it was not extracted (possible decompression bomb).`
       );
     }
     // node-tar sanitizes absolute paths and skips `..` entries by default;
@@ -1325,7 +1325,7 @@ function sanitizeWorldName(name) {
 /** Reject world names that could traverse paths (route params are user input). */
 function checkWorldName(name) {
   if (!name || /[\\/\0]/.test(name) || name === '.' || name === '..' || name.startsWith('.')) {
-    throw httpError(400, 'Invalid world name');
+    throw httpError(400, 'Invalid world name.');
   }
 }
 
@@ -1337,13 +1337,13 @@ function sanitizeFilename(name) {
 
 function mustServer(serverId) {
   const server = require('./servers').getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   return server;
 }
 
 function mustLibWorld(libraryId) {
   const lib = db.get("SELECT * FROM library_files WHERE id = ? AND category = 'world'", libraryId);
-  if (!lib) throw httpError(404, 'World not found in the library');
+  if (!lib) throw httpError(404, 'World not found in the library.');
   return lib;
 }
 

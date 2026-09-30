@@ -25,7 +25,7 @@ const players = require('../services/players');
 
 function mustGet(serverId) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   return server;
 }
 

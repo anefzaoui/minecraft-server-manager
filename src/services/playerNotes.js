@@ -23,7 +23,7 @@ function listNotes(serverId, uuid) {
 function addNote(serverId, { uuid, name }, note, { actor = 'system' } = {}) {
   note = String(note || '').trim();
   if (!note) throw httpError(400, 'Note cannot be empty.');
-  if (note.length > MAX_NOTE_LENGTH) throw httpError(400, `Note is too long (max ${MAX_NOTE_LENGTH} characters)`);
+  if (note.length > MAX_NOTE_LENGTH) throw httpError(400, `Note is too long (max ${MAX_NOTE_LENGTH} characters).`);
   const id = `pnote_${nanoid(10)}`;
   db.run(
     'INSERT INTO player_notes (id, server_id, uuid, name, note, author) VALUES (?, ?, ?, ?, ?, ?)',
@@ -46,7 +46,7 @@ function addNote(serverId, { uuid, name }, note, { actor = 'system' } = {}) {
 
 function deleteNote(serverId, id, { actor = 'system' } = {}) {
   const row = db.get('SELECT * FROM player_notes WHERE id = ? AND server_id = ?', id, serverId);
-  if (!row) throw httpError(404, 'Note not found');
+  if (!row) throw httpError(404, 'Note not found.');
   db.run('DELETE FROM player_notes WHERE id = ?', id);
   recordEvent({
     serverId,

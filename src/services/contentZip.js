@@ -333,7 +333,7 @@ async function inspect(zipPath) {
   if (!jarEntries.length) {
     throw httpError(
       400,
-      'Unrecognized zip: neither a CurseForge modpack export (manifest.json) nor an archive containing mod jars'
+      'Unrecognized zip: neither a CurseForge modpack export (manifest.json) nor an archive containing mod jars.'
     );
   }
   if (jarEntries.length > MAX_JARS) {
@@ -346,7 +346,7 @@ async function inspect(zipPath) {
 
 function serverTarget(serverId) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   return server;
 }
 

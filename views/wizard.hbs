@@ -155,7 +155,7 @@
     <p class="help mb-4">A blueprint sets the server type, Minecraft version, modpack, mods, config, and resources. You choose the name, icon, and color below. The sections a blueprint controls are greyed out.</p>
     <label class="label" for="wz-blueprint">Blueprint</label>
     <select class="input" id="wz-blueprint" data-label="Blueprint">
-      <option value="">Choose a blueprint…</option>
+      <option value="">Choose a Blueprint…</option>
       {{#each blueprints}}<option value="{{id}}" data-desc="{{notes}}">{{name}}</option>{{/each}}
     </select>
     {{#unless blueprints.length}}
@@ -334,7 +334,7 @@
           <div>
             <label class="label" for="wz-docker-name">Container name <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
             <input class="input font-mono" id="wz-docker-name" placeholder="msm-<auto>" autocomplete="off">
-            <p class="help">Letters, digits, and the characters _ . - are allowed. Leave blank for the default.</p>
+            <p class="help">Letters, digits, underscores, periods, and hyphens are allowed. Leave blank for the default.</p>
           </div>
           <div>
             <label class="label" for="wz-docker-network">Docker network <span class="text-xs font-normal text-ink-faint">(optional)</span></label>

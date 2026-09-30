@@ -44,7 +44,7 @@ function normalizeInvocationName(raw) {
   if (!INVOCATION_NAME_RE.test(name)) {
     throw httpError(
       400,
-      'The invocation name must start with a letter and use only letters, numbers, _ or - (32 characters max).'
+      'The invocation name must start with a letter and use only letters, numbers, underscores, or hyphens (32 characters max).'
     );
   }
   return name;

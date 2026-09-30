@@ -89,7 +89,7 @@ function matchOnlineTarget(value, onlineNames) {
   const exact = (Array.isArray(onlineNames) ? onlineNames : []).find(
     (name) => String(name).toLowerCase() === target.toLowerCase()
   );
-  if (!exact) throw httpError(404, `${target} is not online`);
+  if (!exact) throw httpError(404, `${target} is not online.`);
   return exact;
 }
 
@@ -341,7 +341,7 @@ async function assertRunning(serverId) {
 async function fixedRcon(serverId, args, player) {
   await assertRunning(serverId);
   const out = cleanText(await execCapture(serverId, ['rcon-cli', ...args])).trim();
-  if (/No player was found|No entity was found/i.test(out)) throw httpError(404, `${player} is not online`);
+  if (/No player was found|No entity was found/i.test(out)) throw httpError(404, `${player} is not online.`);
   if (/Unknown or incomplete command|Incorrect argument|Expected |<--\[HERE\]/i.test(out)) {
     throw httpError(502, 'The server rejected that power. Check the console for details.');
   }
@@ -350,7 +350,7 @@ async function fixedRcon(serverId, args, player) {
 
 async function worldSpawn(serverId) {
   const server = servers.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const file = dataPath('servers', serverId, worlds.activeLevelName(server), 'level.dat');
   try {
     const { parsed } = await nbt.parse(await fsp.readFile(file));
@@ -367,7 +367,7 @@ async function worldSpawn(serverId) {
 async function execute(serverId, player, request, cfg) {
   if (!cfg.powersEnabled || (!isTester(cfg, player) && !isController(cfg, player)))
     throw httpError(403, 'This player is not allowed to use chatbot powers.');
-  if (!PLAYER_NAME_RE.test(String(player))) throw httpError(400, 'Invalid Minecraft player name');
+  if (!PLAYER_NAME_RE.test(String(player))) throw httpError(400, 'Invalid Minecraft player name.');
   try {
     request = parseToolCall(
       { tool_calls: [{ function: { name: request?.name, arguments: request?.args || {} } }] },

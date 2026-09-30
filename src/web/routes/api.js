@@ -87,7 +87,7 @@ const createSchema = z
       .trim()
       .min(1)
       .max(32)
-      .refine((v) => SERVER_TYPES.includes(v), { message: 'Unknown server type' }),
+      .refine((v) => SERVER_TYPES.includes(v), { message: 'Unknown server type.' }),
     mcVersion: z.string().trim().max(32).optional(),
     javaTag: z.string().max(16).optional(),
     env: z.record(z.string(), z.string()).optional(),
@@ -467,7 +467,7 @@ router.get(
       }))
       .catch(() => ({ freeBytes: null, totalBytes: null, freePct: null }));
     if (disk.freePct != null && disk.freePct < 5) {
-      problems.push({ serverId: null, server: null, kind: 'disk-low', detail: `Only ${disk.freePct}% disk free` });
+      problems.push({ serverId: null, server: null, kind: 'disk-low', detail: `Only ${disk.freePct}% disk free.` });
     }
 
     res.json({
@@ -1064,7 +1064,7 @@ router.get(
     let installed = null;
     if (query.serverId) {
       const server = requireServer(query.serverId);
-      if (!permissions.can(req.user, server.id, 'view')) throw httpError(404, 'Server not found');
+      if (!permissions.can(req.user, server.id, 'view')) throw httpError(404, 'Server not found.');
       const pin = packs.getPack(server.id);
       if (!pin) throw Object.assign(new Error('This server has no managed modpack'), { status: 404 });
       if (pin.platform === 'ftb')
@@ -1168,7 +1168,7 @@ router.post(
     const input = fromPackSchema.parse(req.body);
     requireAdminForOverrides(req, input);
     const actor = req.user.username;
-    const taskId = tasks.run(`Creating ${input.name} from a ${input.platform} pack`, { actor }, async (t) => {
+    const taskId = tasks.run(`Creating ${input.name} from a ${input.platform} pack…`, { actor }, async (t) => {
       t.step('Resolving pack version (pinned, never "latest")…');
       const resolved = await packs.resolvePack(input.platform, input.ref, { versionId: input.versionId });
       const { TYPE: type, ...pinnedSelectors } = packs.packEnv(resolved);
@@ -1217,7 +1217,7 @@ router.post(
   '/updates/check',
   asyncHandler((req, res, next) => {
     const actor = req.user.username;
-    const taskId = tasks.run('Checking for updates', { actor }, async (t) => {
+    const taskId = tasks.run('Checking for updates…', { actor }, async (t) => {
       t.step(
         'Querying Modrinth, CurseForge, Hangar, SpigotMC and GitHub for mods/plugins, plus the Minecraft, loader-build and Docker-image registries…'
       );
@@ -1248,7 +1248,7 @@ router.post(
     // Ignoring an update is a content decision on that server.
     if (serverId) {
       const perms = permissions.effective(req.user, serverId);
-      if (!perms.includes('view')) throw httpError(404, 'Server not found');
+      if (!perms.includes('view')) throw httpError(404, 'Server not found.');
       if (!perms.includes('content')) throw httpError(403, "You don't have the content permission on this server.");
     }
     if (subjectType === 'content') {
@@ -1301,7 +1301,7 @@ router.post(
       `Updating container image on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
-        t.step('Recreating container with the newer image…');
+        t.step('Rebuilding the server with the newer image…');
         await servers.recreateServer(server.id, { actor });
         return { ok: true };
       }
@@ -1413,7 +1413,7 @@ router.post(
         if (versionChanging) changes.mcVersion = targetVersion;
         if (targetLoaderBuild && envKey) changes.env = { ...server.env, [envKey]: targetLoaderBuild };
         servers.updateServer(server.id, changes, { actor });
-        t.step('Recreating container…');
+        t.step('Rebuilding the server…');
         await servers.recreateServer(server.id, { actor });
         return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
       }
@@ -1459,7 +1459,7 @@ function requireScheduleAccess(req, serverId, taskType) {
   if (!serverId) return;
   const cap = meta.capability;
   const perms = permissions.effective(req.user, serverId);
-  if (!perms.includes('view')) throw httpError(404, 'Server not found');
+  if (!perms.includes('view')) throw httpError(404, 'Server not found.');
   if (!perms.includes(cap)) {
     const label = permissions.CAPABILITY_INFO[cap].label.toLowerCase();
     throw httpError(403, `You don't have the ${label} permission on this server.`);
@@ -3047,7 +3047,7 @@ router.post(
     requireAdminForOverrides(req, input);
     const actor = req.user.username;
     const type = input.loader.toUpperCase(); // fabric → FABRIC, etc. (all valid TYPEs)
-    const taskId = tasks.run(`Creating ${input.name} (${input.loader})`, { actor }, async (t) => {
+    const taskId = tasks.run(`Creating ${input.name} (${input.loader})…`, { actor }, async (t) => {
       const env = { ...(input.env || {}) };
       const envKey = loaderVersions.envKeyFor(input.loader);
       if (input.loaderVersion && envKey) env[envKey] = input.loaderVersion;
@@ -3236,7 +3236,7 @@ router.post(
       }
     }
     const type = loader.toUpperCase();
-    const taskId = tasks.run(`Creating ${input.name} from zip`, { actor }, async (t) => {
+    const taskId = tasks.run(`Creating ${input.name} from zip…`, { actor }, async (t) => {
       try {
         const envKey = loader !== 'paper' ? loaderVersions.envKeyFor(loader) : null;
         if (loaderVersion && envKey) env[envKey] = loaderVersion;

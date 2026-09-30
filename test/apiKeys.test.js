@@ -66,7 +66,7 @@ test('maskedKey masks long keys and short keys', () => {
 test('testCurseForgeKey returns friendly error when no key is stored', async () => {
   apiKeys.deleteKey('curseforge');
   const res = await apiKeys.testCurseForgeKey();
-  assert.deepEqual(res, { ok: false, error: 'No key stored' });
+  assert.deepEqual(res, { ok: false, error: 'No key stored.' });
 });
 
 test('importFromEnvOnce is a no-op when no seed key is configured', () => {

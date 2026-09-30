@@ -37,13 +37,13 @@ function assertName(name) {
   if (!PLAYER_NAME_RE.test(String(name)))
     throw httpError(
       400,
-      'Invalid player name (letters, digits and _ only, max 16 characters. A leading . or * for Bedrock players is fine)'
+      'Invalid player name (letters, digits and _ only, max 16 characters. A leading . or * for Bedrock players is fine).'
     );
   return String(name);
 }
 
 function assertIp(ip) {
-  if (!IP_RE.test(String(ip))) throw httpError(400, 'Invalid IP address');
+  if (!IP_RE.test(String(ip))) throw httpError(400, 'Invalid IP address.');
   return String(ip);
 }
 
@@ -1010,7 +1010,7 @@ async function tpToStructure(
 ) {
   assertName(player);
   assertRunning(running, 'teleport a player');
-  if (!/^#?[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(structureRef))) throw httpError(400, 'Invalid structure id');
+  if (!/^#?[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(structureRef))) throw httpError(400, 'Invalid structure id.');
 
   // Search in the structure's HOME dimension - a Village is Overworld even if you
   // ask from the End. Search near the player when they're already there, else from
@@ -1276,7 +1276,7 @@ async function tpToPlayer(serverId, player, target, { running = false, actor = '
 async function tpToBiome(serverId, player, biomeId, { running = false, actor = 'system' } = {}) {
   assertName(player);
   assertRunning(running, 'teleport a player');
-  if (!/^[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(biomeId))) throw httpError(400, 'Invalid biome id');
+  if (!/^[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(biomeId))) throw httpError(400, 'Invalid biome id.');
 
   // Cross-dimension biomes must be located IN their home dimension - running
   // `locate biome minecraft:the_end` from the Overworld fails (sometimes with

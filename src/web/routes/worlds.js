@@ -25,7 +25,7 @@ const httpError = require('../../utils/httpError');
 /** Writing a world into a server needs `content` there; a hidden server reads as missing. */
 function requireContentOn(req, serverId) {
   const perms = permissions.effective(req.user, serverId);
-  if (!perms.includes('view')) throw httpError(404, 'Server not found');
+  if (!perms.includes('view')) throw httpError(404, 'Server not found.');
   if (!perms.includes('content')) throw httpError(403, "You don't have the content permission on this server.");
 }
 const db = require('../../db');

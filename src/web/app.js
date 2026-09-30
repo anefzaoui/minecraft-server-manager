@@ -410,7 +410,7 @@ function createApp() {
     // inside this handler. Hand off to Express's finalizer instead.
     if (res.headersSent) return next(err);
     if (req.path.startsWith('/api/') || req.xhr) {
-      return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large' : 'Request failed' });
+      return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large.' : 'Request failed' });
     }
     res.status(code).render('error', {
       title: code >= 500 ? 'Something broke' : 'Request rejected',

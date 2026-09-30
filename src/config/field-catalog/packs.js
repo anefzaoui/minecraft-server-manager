@@ -145,8 +145,8 @@ module.exports = [
     help: 'Automatically points the server at world data shipped inside the modpack, either a bundled world file or the pack’s overrides folder.',
     type: 'enum',
     options: [
-      { value: 'WORLD_FILE', label: 'Bundled world file' },
-      { value: 'OVERRIDES', label: 'World from overrides' },
+      { value: 'WORLD_FILE', label: 'Bundled World File' },
+      { value: 'OVERRIDES', label: 'World from Overrides' },
     ],
     mode: 'advanced',
     section: 'packs',

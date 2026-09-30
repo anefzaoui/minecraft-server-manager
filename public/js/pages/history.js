@@ -249,7 +249,7 @@ async function showInsights(serverId, crash, card) {
   }
 
   openModal({
-    title: ins.title || 'mclo.gs analysis',
+    title: ins.title || 'mclo.gs Analysis',
     size: 'lg',
     content,
     actions: [

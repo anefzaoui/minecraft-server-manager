@@ -182,7 +182,7 @@ function packEnv(resolved) {
  */
 async function applyPack(serverId, resolved, { actor = 'system', force = false } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
 
   // World-safety guard (learned the hard way): applying a pack that targets a
   // different MC version than the existing world either crashes on boot

@@ -29,7 +29,7 @@
           <td data-th="Subject" class="sm:w-full sm:max-w-0"><span class="block truncate font-medium" title="{{subject}}">{{subject}}</span></td>
           <td data-th="Current" class="truncate font-mono text-xs text-ink-faint sm:max-w-40" title="{{current}}">{{current}}</td>
           <td data-th="Latest" class="truncate font-mono text-xs sm:max-w-40 {{#if ignored}}text-ink-faint{{else}}text-warn{{/if}}" title="{{latest}}">
-            {{latest}}{{#if ignored}} <span class="badge ml-1 text-ink-faint" data-tip="This update is ignored and won't be offered">ignored</span>{{/if}}
+            {{latest}}{{#if ignored}} <span class="badge ml-1 text-ink-faint" data-tip="This update is ignored and won't be offered.">ignored</span>{{/if}}
           </td>
           <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
             {{#if changelog}}<a class="btn btn-ghost btn-sm" href="{{changelog}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Changelog</a>{{/if}}

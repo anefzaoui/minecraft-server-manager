@@ -9,7 +9,7 @@
         <div class="flex items-center gap-2">
           <h3 class="truncate font-semibold group-hover:text-ok">{{name}}</h3>
           {{#if updateAvailable}}<span class="badge badge-warn shrink-0" title="Update available">update</span>{{/if}}
-          {{#if crashesUnread}}<span class="badge badge-danger shrink-0" title="New crash reports">{{crashesUnread}} {{plural crashesUnread 'crash' 'crashes'}}</span>{{/if}}
+          {{#if crashesUnread}}<span class="badge badge-danger shrink-0" title="New crash reports.">{{crashesUnread}} {{plural crashesUnread 'crash' 'crashes'}}</span>{{/if}}
         </div>
         <p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-ink-faint">
           <span class="font-medium text-ink-soft">{{flavor}}</span>

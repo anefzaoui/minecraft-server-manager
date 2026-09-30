@@ -60,7 +60,7 @@ const OFFHAND_SLOT = -106;
 
 function playerdataDir(serverId) {
   const server = require('./servers').getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const level = require('./worlds').activeLevelName(server);
   const modern = dataPath('servers', serverId, level, 'players', 'data');
   const legacy = dataPath('servers', serverId, level, 'playerdata');
@@ -369,7 +369,7 @@ async function listSnapshots(serverId, uuid) {
  *  an arbitrary `?file=` can't read or diff another server's inventory. */
 function getSnapshot(serverId, relFile) {
   const m = SNAPSHOT_FILE_RE.exec(String(relFile || ''));
-  if (!m) throw httpError(400, 'Invalid snapshot file reference');
+  if (!m) throw httpError(400, 'Invalid snapshot file reference.');
   if (m[1] !== serverId) throw httpError(400, 'Snapshot does not belong to this server.');
   let raw;
   try {
@@ -537,7 +537,7 @@ async function assertRunning(serverId, what) {
   if (!info.exists || !RUNNING_STATES.has(info.status)) {
     throw httpError(
       409,
-      `The server must be running to ${what} - item edits on stopped servers are out of scope (offline data is read-only)`
+      `The server must be running to ${what}. Item edits on stopped servers are not supported (offline data is read-only).`
     );
   }
 }
@@ -637,7 +637,7 @@ const SLOT_CONTAINERS = {
 /** Validate container + slot; resolve every addressing scheme at once. */
 function resolveSlot(container, slot) {
   const def = SLOT_CONTAINERS[container];
-  if (!def) throw httpError(400, `Unknown container "${container}"`);
+  if (!def) throw httpError(400, `Unknown container "${container}".`);
   const n = Math.trunc(Number(slot));
   if (!Number.isInteger(n) || n < 0 || n >= def.size) {
     throw httpError(400, `Slot ${slot} is out of range for ${container} (0-${def.size - 1}).`);
@@ -727,7 +727,7 @@ async function readSlotOnline(serverId, ctx, spec) {
   if (/No entity was found|No player was found/i.test(out)) {
     throw httpError(
       409,
-      `${ctx.name} just went offline - reload and try again (the edit will use the save file instead)`
+      `${ctx.name} just went offline. Reload and try again (the edit will use the save file instead).`
     );
   }
   if (/unexpected error/i.test(out)) {
@@ -737,7 +737,7 @@ async function readSlotOnline(serverId, ctx, spec) {
     } catch {
       throw httpError(
         502,
-        'Could not read the live inventory (this server rejects data queries and its save file is unreadable) - try again'
+        'Could not read the live inventory (this server rejects data queries and its save file is unreadable). Try again.'
       );
     }
   }
@@ -790,7 +790,7 @@ async function moveSlotOnline(serverId, ctx, fromSpec, toSpec) {
   if (dst.exists) {
     throw httpError(
       409,
-      `${toSpec.rconSlot} is occupied - live moves need an empty target. Swaps work while the player is offline (kick them first).`
+      `${toSpec.rconSlot} is occupied. Live moves need an empty target. Swaps work while the player is offline (kick them first).`
     );
   }
   // `from entity` copies the stack WITH its components, then the source is aired.
@@ -953,12 +953,12 @@ function applyOfflineMove(root, fromSpec, toSpec) {
 
 function assertNestedPath(pathSegs) {
   if (!Array.isArray(pathSegs) || !pathSegs.length || pathSegs.length > NESTED_MAX_PATH) {
-    throw httpError(400, 'Invalid nested inventory path');
+    throw httpError(400, 'Invalid nested inventory path.');
   }
   for (const seg of pathSegs) {
     const okString = typeof seg === 'string' && NESTED_KEY_RE.test(seg);
     const okIndex = Number.isInteger(seg) && seg >= 0 && seg <= 255;
-    if (!okString && !okIndex) throw httpError(400, 'Invalid nested inventory path');
+    if (!okString && !okIndex) throw httpError(400, 'Invalid nested inventory path.');
   }
   return pathSegs;
 }
@@ -1056,13 +1056,13 @@ async function withDatFile(serverId, ctx, mutate) {
   if (ctx.running && ctx.onlineKnown === false) {
     throw httpError(
       409,
-      `Couldn't confirm ${ctx.name || ctx.uuid} is offline (the server didn't answer) - not risking a file edit while it's running. Retry in a moment.`
+      `Couldn't confirm ${ctx.name || ctx.uuid} is offline (the server didn't answer), so the file edit was not attempted while the server may be running. Retry in a moment.`
     );
   }
   if (ctx.running && ctx.online) {
     throw httpError(
       409,
-      `${ctx.name || ctx.uuid} is online - the server would overwrite file edits. This edit should have gone over RCON; reload and retry.`
+      `${ctx.name || ctx.uuid} is online, so the server would overwrite file edits. This edit should have gone over RCON; reload and retry.`
     );
   }
   const file = path.join(playerdataDir(serverId), `${ctx.uuid}.dat`);
@@ -1122,7 +1122,7 @@ async function editSlot(
   { actor = 'system' } = {}
 ) {
   const spec = resolveSlot(container, slot);
-  if (!['set', 'delete', 'count'].includes(op)) throw httpError(400, `Unknown op "${op}"`);
+  if (!['set', 'delete', 'count'].includes(op)) throw httpError(400, `Unknown op "${op}".`);
   if (op === 'set') item = assertItemId(item);
   count = clampCount(count);
 

@@ -3,11 +3,11 @@
 {{#if backups.length}}
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <select class="input w-auto" id="backups-filter-server" data-label="Filter by server">
-    <option value="">All servers</option>
+    <option value="">All Servers</option>
     {{#each servers}}<option value="{{id}}">{{name}}</option>{{/each}}
   </select>
   <select class="input w-auto" id="backups-filter-reason" data-label="Filter by reason">
-    <option value="">All reasons</option>
+    <option value="">All Reasons</option>
     <option value="manual">Manual</option>
     <option value="scheduled">Scheduled</option>
     <option value="pre-update">Pre-update</option>

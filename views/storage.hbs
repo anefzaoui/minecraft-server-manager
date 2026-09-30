@@ -16,7 +16,7 @@
     {{! meterColor: the headline bar must go gold/red as the drive fills - it
         stayed success-green even at 95%. }}
     <div class="meter mt-3 h-3"><div class="{{meterColor storage.totalUsed storage.diskTotal}}" style="width: {{pct storage.totalUsed storage.diskTotal}}%"></div></div>
-    <div class="mt-4 flex h-6 w-full overflow-hidden rounded-md" title="Breakdown by category">
+    <div class="mt-4 flex h-6 w-full overflow-hidden rounded-md" title="Breakdown by category.">
       {{#each storage.breakdown}}
         <div class="{{cls}}" style="width: {{width}}%" title="{{label}}: {{bytes size}}"></div>
       {{/each}}
@@ -33,7 +33,7 @@
     {{#if storage.trend.length}}
       <div class="flex h-24 items-end gap-1">
         {{#each storage.trend}}
-          <div class="flex-1 rounded-t bg-diamond-500/70" style="height: {{this}}%" title="{{this}}% of the largest scan"></div>
+          <div class="flex-1 rounded-t bg-diamond-500/70" style="height: {{this}}%" title="{{this}}% of the largest scan."></div>
         {{/each}}
       </div>
       <p class="help">GB used over the last scans. Snapshots recorded on every scan.</p>

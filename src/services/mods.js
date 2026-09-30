@@ -106,7 +106,7 @@ function healOverlayRow(serverId, lib, filename, kind) {
 function assertBareContentName(file) {
   const name = String(file || '');
   if (!name || name === '.' || name === '..' || /[\\/\0]/.test(name)) {
-    throw httpError(400, 'Invalid content filename');
+    throw httpError(400, 'Invalid content filename.');
   }
   return name;
 }
@@ -185,7 +185,7 @@ function loaderOf(server) {
 /** List installed content: DB overlay rows + on-disk scan for pack/unknown files. */
 async function listContent(serverId) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const primaryKind = contentKindOf(server);
 
   const rows = db.all('SELECT * FROM server_content WHERE server_id = ?', serverId);
@@ -508,7 +508,7 @@ function pickDownloadFile(version, kind) {
  */
 async function installFromUrl(serverId, input, { actor = 'system', kind, onProgress, ignoreVersion = false } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   let targetKind = kind || contentKindOf(server);
   // ignoreVersion: the user explicitly asked to install a build that isn't
   // listed as compatible with this server - accepting the risk waives BOTH
@@ -850,7 +850,7 @@ async function installResolved(
 async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
   assertBareContentName(file);
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const row = db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', serverId, file);
   const managedBy = row ? row.managed_by : isPackServer(server) ? 'pack' : 'overlay';
 
@@ -904,7 +904,7 @@ async function setEnabled(serverId, file, enabled, { actor = 'system' } = {}) {
 async function removeContent(serverId, file, { actor = 'system' } = {}) {
   assertBareContentName(file);
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const row = db.get('SELECT * FROM server_content WHERE server_id = ? AND filename = ?', serverId, file);
   // Pack-installed files have no server_content row at all (only overlay
   // installs get one), so `row && row.managed_by === 'pack'` never caught
@@ -954,7 +954,7 @@ function overlayRow(serverId, { file, contentId }) {
  */
 function setIgnoredUpdate(serverId, { file, contentId }, { ignore, actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const row = overlayRow(serverId, { file, contentId });
 
   if (ignore) {
@@ -992,7 +992,7 @@ function setIgnoredUpdate(serverId, { file, contentId }, { ignore, actor = 'syst
  */
 async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const row = overlayRow(serverId, { file, contentId });
 
   const lib = row.library_id ? db.get('SELECT * FROM library_files WHERE id = ?', row.library_id) : null;
@@ -1059,7 +1059,7 @@ async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'syst
  */
 async function revertOverlayUpdate(serverId, { file, contentId }, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const row = overlayRow(serverId, { file, contentId });
   if (!row.previous_library_id) {
     throw httpError(409, 'There is no earlier build of this mod on record.');
@@ -1240,8 +1240,8 @@ function clearPendingLine(serverId, filename) {
 /** Add a project slug/ID to the pack's exclusion env var (applies on recreate). */
 function excludePackMod(serverId, token, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
-  if (!token) throw httpError(400, 'Nothing to exclude');
+  if (!server) throw httpError(404, 'Server not found.');
+  if (!token) throw httpError(400, 'Nothing to exclude.');
   const isCF = server.type === 'AUTO_CURSEFORGE';
   const varName = isCF ? 'CF_EXCLUDE_MODS' : 'MODRINTH_EXCLUDE_FILES';
   const env = { ...server.env };
@@ -1294,8 +1294,8 @@ async function installLocalContent(
   { identity = null, excludeToken, actor = 'system' } = {}
 ) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
-  if (!/\.(jar|zip)$/i.test(filename)) throw httpError(400, 'Only .jar or .zip files can be uploaded');
+  if (!server) throw httpError(404, 'Server not found.');
+  if (!/\.(jar|zip)$/i.test(filename)) throw httpError(400, 'Only .jar or .zip files can be uploaded.');
   const targetKind = contentKindOf(server);
 
   const fromRegistry = identity && (identity.platform === 'modrinth' || identity.platform === 'curseforge');

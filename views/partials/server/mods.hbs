@@ -3,7 +3,7 @@
     {{#if mods.length}}
     <input class="input max-w-xs" placeholder="Search installed mods…" id="mods-filter">
     <select class="input w-auto" data-label="Filter by source" id="mods-source">
-      <option value="">All sources</option><option value="pack">Pack-managed</option><option value="overlay">Custom</option>
+      <option value="">All Sources</option><option value="pack">Pack-managed</option><option value="overlay">Custom</option>
     </select>
     {{/if}}
     <div class="ml-auto flex flex-wrap gap-2{{#unless perms.content}} hidden{{/unless}}">

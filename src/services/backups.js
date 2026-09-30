@@ -37,7 +37,7 @@ async function createBackupImpl(
   { reason = 'manual', actor = 'system', note = '', task = null, shrinkAfter = false, shrinkMinTicks } = {}
 ) {
   const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
 
   // Free-space preflight: need roughly the server dir size.
   const needed = indexer.sizeOf(`servers/${serverId}`) || 0;
@@ -222,7 +222,7 @@ async function createBackupImpl(
  */
 async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSafety = false, task = null } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ? AND server_id = ?', backupId, serverId);
-  if (!backup) throw httpError(404, 'Backup not found');
+  if (!backup) throw httpError(404, 'Backup not found.');
 
   // Disk preflight: safety backup (~current world size) + extracted content
   // (its real uncompressed size, not a guess from the compressed zip size -
@@ -424,12 +424,12 @@ function cleanBackupName(raw) {
  */
 async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
-  if (!backup) throw httpError(404, 'Backup not found');
+  if (!backup) throw httpError(404, 'Backup not found.');
   const name = cleanBackupName(newName);
   if (name === backup.filename) return backup;
 
   const abs = dataPath(backup.rel_path);
-  if (!fs.existsSync(abs)) throw httpError(404, 'Backup archive is missing on disk');
+  if (!fs.existsSync(abs)) throw httpError(404, 'Backup archive is missing on disk.');
   const targetRel = `backups/${backup.server_id}/${name}`;
   const target = dataPath(targetRel);
   if (fs.existsSync(target)) throw httpError(409, `A backup named "${name}" already exists here.`);

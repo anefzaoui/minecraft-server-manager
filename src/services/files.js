@@ -57,8 +57,8 @@ function guardProtected(serverId, rel) {
 async function list(serverId, relPath = '') {
   const { abs, rel } = resolvePath(serverId, relPath);
   const st = await fsp.stat(abs).catch(() => null);
-  if (!st) throw httpError(404, 'Folder not found');
-  if (!st.isDirectory()) throw httpError(400, 'Not a folder');
+  if (!st) throw httpError(404, 'Folder not found.');
+  if (!st.isDirectory()) throw httpError(400, 'Not a folder.');
 
   const dirents = await fsp.readdir(abs, { withFileTypes: true });
   // Batch the indexer lookups: one SELECT for every subdirectory, not a sizeOf()
@@ -114,11 +114,11 @@ async function readText(serverId, relPath) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
   const st = await fsp.stat(abs).catch(() => null);
-  if (!st || !st.isFile()) throw httpError(404, 'File not found');
+  if (!st || !st.isFile()) throw httpError(404, 'File not found.');
   if (st.size > MAX_TEXT_BYTES) {
     throw httpError(
       413,
-      `File is too large for the editor (${humanBytes(st.size)} - limit is ${MAX_TEXT_MB_LABEL}). Download it instead.`
+      `File is too large for the editor (${humanBytes(st.size)}, limit ${MAX_TEXT_MB_LABEL}). Download it instead.`
     );
   }
   const buf = await fsp.readFile(abs);
@@ -139,9 +139,9 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
 
   const parent = path.dirname(abs);
   const pst = await fsp.stat(parent).catch(() => null);
-  if (!pst || !pst.isDirectory()) throw httpError(404, 'Parent folder not found');
+  if (!pst || !pst.isDirectory()) throw httpError(404, 'Parent folder not found.');
   const existing = await fsp.stat(abs).catch(() => null);
-  if (existing && existing.isDirectory()) throw httpError(400, 'That path is a folder');
+  if (existing && existing.isDirectory()) throw httpError(400, 'That path is a folder.');
 
   // server.properties is the one file whose values the itzg image re-asserts
   // from env on every start. Route those writes through the server.properties
@@ -226,7 +226,7 @@ async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
   const dest = resolvePath(serverId, destRel);
   const dst = await fsp.stat(dest.abs).catch(() => null);
   if (!fs.existsSync(abs)) throw httpError(404, 'Not found');
-  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found');
+  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found.');
   if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot move a folder into itself.');
 
   const target = path.join(dest.abs, path.basename(abs));
@@ -251,7 +251,7 @@ async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
   const st = await fsp.stat(abs).catch(() => null);
   const dst = await fsp.stat(dest.abs).catch(() => null);
   if (!st) throw httpError(404, 'Not found');
-  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found');
+  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found.');
   if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot copy a folder into itself.');
 
   const bytes = st.isDirectory() ? await dirSize(abs) : st.size;
@@ -297,7 +297,7 @@ async function remove(serverId, relPath, { actor = 'system' } = {}) {
 async function acceptUpload(serverId, destRel, tmpAbs, originalName, { actor = 'system' } = {}) {
   const dest = resolvePath(serverId, destRel);
   const dst = await fsp.stat(dest.abs).catch(() => null);
-  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found');
+  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found.');
   const filename = sanitizeName(originalName || 'upload.bin');
   const size = (await fsp.stat(tmpAbs)).size;
   assertRoom(serverId, size);
@@ -321,7 +321,7 @@ async function statFile(serverId, relPath) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel); // no downloading panel.db either
   const st = await fsp.stat(abs).catch(() => null);
-  if (!st || !st.isFile()) throw httpError(404, 'File not found');
+  if (!st || !st.isFile()) throw httpError(404, 'File not found.');
   return { abs, rel, size: st.size, name: path.basename(abs) };
 }
 
@@ -401,7 +401,7 @@ async function searchFiles(serverId, query, { caseSensitive = false, subdir = ''
   if (needle.length > 200) throw httpError(400, 'Search text is too long.');
   const { abs: rootAbs, rel: rootRel } = resolvePath(serverId, subdir);
   const rootStat = await fsp.stat(rootAbs).catch(() => null);
-  if (!rootStat || !rootStat.isDirectory()) throw httpError(404, 'Folder not found');
+  if (!rootStat || !rootStat.isDirectory()) throw httpError(404, 'Folder not found.');
 
   const hay = caseSensitive ? null : needle.toLowerCase();
   const matches = [];

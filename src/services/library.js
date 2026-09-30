@@ -111,7 +111,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
         502,
         `Download failed integrity check: ${expected.algo} of the received file does not match what ` +
           `${new URL(url).host} published (expected ${expected.hex.slice(0, 12)}…, got ${actual.slice(0, 12)}…). ` +
-          'Nothing was installed - try again.'
+          'Nothing was installed. Try again.'
       );
     }
   }
@@ -302,7 +302,7 @@ async function ensureContentMeta(libRow) {
  */
 async function installToServer(libraryId, serverId, destRel, { filename } = {}) {
   const lib = db.get('SELECT * FROM library_files WHERE id = ?', libraryId);
-  if (!lib) throw httpError(404, 'Library file not found');
+  if (!lib) throw httpError(404, 'Library file not found.');
   // The panel must own the server dir to write into it - a server created before
   // container-runs-as-panel-user has files owned by uid 1000. Lazy require breaks
   // the servers<->library cycle.
@@ -330,7 +330,7 @@ async function installToServer(libraryId, serverId, destRel, { filename } = {}) 
 async function importFile(localPath, meta, { actor = 'system' } = {}) {
   const category = meta.category || 'mod';
   const buf = await fsp.readFile(localPath);
-  if (buf.length > MAX_DOWNLOAD_BYTES) throw httpError(413, 'File is too large');
+  if (buf.length > MAX_DOWNLOAD_BYTES) throw httpError(413, 'File is too large.');
   const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
   const existing = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
   if (existing) {

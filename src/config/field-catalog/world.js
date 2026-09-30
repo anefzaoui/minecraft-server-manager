@@ -36,7 +36,7 @@ module.exports = [
     options: [
       { value: 'DEFAULT', label: 'Default', desc: 'Standard terrain generation.' },
       { value: 'FLAT', label: 'Superflat', desc: 'Flat world; customize layers via generator settings.' },
-      { value: 'LARGEBIOMES', label: 'Large biomes', desc: 'Same terrain, but each biome is much bigger.' },
+      { value: 'LARGEBIOMES', label: 'Large Biomes', desc: 'Same terrain, but each biome is much bigger.' },
       { value: 'AMPLIFIED', label: 'Amplified', desc: 'Extreme mountains; needs a beefy server.' },
     ],
     mode: 'advanced',

@@ -63,7 +63,7 @@ function makeRouter(scope) {
   if (scope === 'server') {
     router.use((req, res, next) => {
       if (!servers.getServer(req.params.id)) {
-        return res.status(404).json({ ok: false, error: 'Server not found' });
+        return res.status(404).json({ ok: false, error: 'Server not found.' });
       }
       next();
     });

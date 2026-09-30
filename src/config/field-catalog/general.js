@@ -67,22 +67,22 @@ module.exports = [
       { value: 'CUSTOM', label: 'Custom JAR', desc: 'Bring your own server jar via the custom server URL/path field.' },
       {
         value: 'AUTO_CURSEFORGE',
-        label: 'CurseForge modpack (auto)',
+        label: 'CurseForge Modpack (auto)',
         desc: 'Fully automated CurseForge modpack install and upgrades; needs a CurseForge API key.',
       },
       {
         value: 'CURSEFORGE',
-        label: 'CurseForge server pack (manual)',
+        label: 'CurseForge Server Pack (manual)',
         desc: 'Legacy. A manual server-pack runner; use the automated CurseForge type instead.',
       },
       {
         value: 'FTBA',
-        label: 'Feed the Beast modpack',
+        label: 'Feed the Beast Modpack',
         desc: 'Installs FTB App modpacks with their matching Forge automatically.',
       },
       {
         value: 'MODRINTH',
-        label: 'Modrinth modpack',
+        label: 'Modrinth Modpack',
         desc: 'Installs Modrinth (.mrpack) modpacks; no API key needed.',
       },
       { value: 'GTNH', label: 'GT New Horizons', desc: 'Dedicated type for the GTNH 1.7.10 modpack; needs 6 GB+ RAM.' },

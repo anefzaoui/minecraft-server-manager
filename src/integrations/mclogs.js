@@ -19,7 +19,7 @@ const MAX_BYTES = 9.5 * 1024 * 1024;
 /** Publish text as a paste. Returns {id, url, rawUrl}. */
 async function uploadLog(text) {
   const content = String(text || '').slice(0, MAX_BYTES);
-  if (!content.trim()) throw httpError(400, 'Nothing to upload');
+  if (!content.trim()) throw httpError(400, 'Nothing to upload.');
   const res = await fetch(`${BASE}/log`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA, Accept: 'application/json' },
@@ -41,7 +41,7 @@ async function uploadLog(text) {
  */
 async function getInsights(pasteId) {
   const id = String(pasteId || '');
-  if (!/^[A-Za-z0-9]{1,32}$/.test(id)) throw httpError(400, 'Invalid mclo.gs paste id');
+  if (!/^[A-Za-z0-9]{1,32}$/.test(id)) throw httpError(400, 'Invalid mclo.gs paste id.');
   const res = await fetch(`${BASE}/insights/${id}`, {
     headers: { 'User-Agent': UA, Accept: 'application/json' },
     signal: AbortSignal.timeout(30000),

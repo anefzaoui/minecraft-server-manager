@@ -349,7 +349,7 @@ function init(serverId, serverName, serverStatus) {
     const customWrap = content.querySelector('#rw-customwrap');
     seedMode.addEventListener('change', () => customWrap.classList.toggle('hidden', seedMode.value !== 'custom'));
     openModal({
-      title: `Reset world "${world}"?`,
+      title: `Reset World "${world}"?`,
       content,
       actions: [
         { label: 'Cancel', kind: 'ghost' },

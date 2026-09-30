@@ -102,7 +102,7 @@ async function inventory(serverId, { onProgress = () => {} } = {}) {
   const serversService = require('./servers');
   const modsService = require('./mods');
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
 
   const kind = modsService.contentKindOf(server); // 'mod' | 'plugin'
   const dirRel = modsService.contentDir(server, kind);
@@ -691,7 +691,7 @@ function getReport(serverId) {
   const serversService = require('./servers');
   const modsService = require('./mods');
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const row = stateRow(serverId);
   const loader = modsService.loaderOf(server) || null;
   const liveHere = running.has(serverId);
@@ -836,7 +836,7 @@ async function startScan(serverId, { actor = 'system' } = {}) {
   const modsService = require('./mods');
   const tasks = require('./tasks');
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   if (!appliesTo(serverId)) {
     throw httpError(
       400,

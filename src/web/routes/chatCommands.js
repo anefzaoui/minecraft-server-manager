@@ -50,7 +50,7 @@ const patchSchema = z
     msgSuccess: messageSchema.optional(),
     msgFailure: messageSchema.optional(),
   })
-  .refine((v) => Object.values(v).some((x) => x !== undefined), { message: 'Nothing to change' });
+  .refine((v) => Object.values(v).some((x) => x !== undefined), { message: 'Nothing to change.' });
 
 function requireServer(id) {
   const server = servers.getServer(id);

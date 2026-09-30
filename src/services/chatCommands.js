@@ -61,7 +61,7 @@ function validateSpec({
     );
   }
   if (!ACTIONS.has(action)) throw httpError(400, 'Unknown action');
-  if (!PERMISSIONS.has(permission)) throw httpError(400, 'Unknown permission level');
+  if (!PERMISSIONS.has(permission)) throw httpError(400, 'Unknown permission level.');
   const cooldown = Math.floor(Number(cooldownSec));
   if (!Number.isFinite(cooldown) || cooldown < 0 || cooldown > 86400) {
     throw httpError(400, 'Cooldown must be 0-86400 seconds.');
@@ -77,13 +77,13 @@ function validateSpec({
     clean = { minDistance, maxDistance, center: p.center === 'origin' ? 'origin' : 'player' };
   } else if (action === 'structure') {
     if (!/^#?[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(p.structure || ''))) {
-      throw httpError(400, 'Pick a valid structure');
+      throw httpError(400, 'Pick a valid structure.');
     }
     const maxDistance = Math.min(1_000_000, Math.max(16, Math.floor(Number(p.maxDistance ?? 5000) || 5000)));
     clean = { structure: String(p.structure), random: p.random !== false, maxDistance };
   } else if (action === 'biome') {
     if (!/^[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(p.biome || ''))) {
-      throw httpError(400, 'Pick a valid biome');
+      throw httpError(400, 'Pick a valid biome.');
     }
     clean = { biome: String(p.biome) };
   } else {
@@ -101,7 +101,7 @@ function validateSpec({
     for (const cmd of commands) {
       if (cmd.length > 200) throw httpError(400, 'Console commands are capped at 200 characters each.');
       if (permission !== 'ops' && DANGEROUS_RE.test(cmd)) {
-        throw httpError(400, `"${cmd.split(/\s+/)[0]}" commands are only allowed when permission is set to Ops`);
+        throw httpError(400, `"${cmd.split(/\s+/)[0]}" commands are only allowed when permission is set to Ops.`);
       }
     }
     clean = { commands: commands.map((c) => c.replace(/^\//, '')) };
@@ -183,7 +183,7 @@ function getPrefix(serverId) {
 function setPrefix(serverId, prefix, { actor = 'system' } = {}) {
   prefix = String(prefix || '').trim();
   if (!PREFIX_RE.test(prefix)) {
-    throw httpError(400, 'Prefix must be 1-2 characters from ! . # + ? $ % & * ~ ^ = - (never /)');
+    throw httpError(400, 'Prefix must be 1-2 characters from ! . # + ? $ % & * ~ ^ = or a hyphen, and never /.');
   }
   db.run(
     `INSERT INTO chat_command_settings (server_id, prefix) VALUES (?, ?)
@@ -242,7 +242,7 @@ function createCommand(serverId, input, { actor = 'system' } = {}) {
 
 function updateCommand(serverId, cmdId, changes, { actor = 'system' } = {}) {
   const existing = getCommand(serverId, cmdId);
-  if (!existing) throw httpError(404, 'Chat command not found');
+  if (!existing) throw httpError(404, 'Chat command not found.');
 
   // Enabled-only toggles skip full re-validation (fast path for the UI toggle).
   const keys = Object.keys(changes).filter((k) => changes[k] !== undefined);
@@ -307,7 +307,7 @@ function updateCommand(serverId, cmdId, changes, { actor = 'system' } = {}) {
 
 function deleteCommand(serverId, cmdId, { actor = 'system' } = {}) {
   const existing = getCommand(serverId, cmdId);
-  if (!existing) throw httpError(404, 'Chat command not found');
+  if (!existing) throw httpError(404, 'Chat command not found.');
   db.run('DELETE FROM chat_commands WHERE id = ?', cmdId);
   cache.delete(serverId);
   recordEvent({
@@ -598,8 +598,8 @@ async function handleChat(serverId, player, message) {
  */
 async function testCommand(serverId, cmdId, player, { actor = 'system' } = {}) {
   const cmd = getCommand(serverId, cmdId);
-  if (!cmd) throw httpError(404, 'Chat command not found');
-  if (!PLAYER_RE.test(String(player))) throw httpError(400, 'Invalid player name');
+  if (!cmd) throw httpError(404, 'Chat command not found.');
+  if (!PLAYER_RE.test(String(player))) throw httpError(400, 'Invalid player name.');
 
   const flightKey = `${serverId}:${String(player).toLowerCase()}`;
   if (inflight.has(flightKey)) throw httpError(429, 'That player already has a command running. Wait a moment.');

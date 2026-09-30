@@ -42,7 +42,7 @@ async function upgradePack(
 ) {
   if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server.');
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const pack = packsService.getPack(serverId);
   if (!pack) throw httpError(400, 'This server has no managed modpack.');
 
