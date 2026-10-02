@@ -60,7 +60,7 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
           <span class="block truncate font-medium" data-role="name"></span>
           <span class="block truncate font-mono text-xs text-ink-faint" data-role="file"></span>
         </span>
-        <a class="btn btn-sm" target="_blank" rel="noopener" data-role="open">Open CF page</a>
+        <a class="btn btn-sm" target="_blank" rel="noopener" data-role="open">Open CF Page</a>
         <button class="btn btn-sm" data-role="upload">Upload Jar</button>
         <input type="file" accept=".jar,.zip" class="hidden" data-role="filepick">`;
       row.querySelector('[data-role="name"]').textContent = b.name;

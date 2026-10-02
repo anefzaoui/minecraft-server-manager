@@ -115,7 +115,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
       <input class="input font-mono" data-sc-cmd placeholder="say Server restarts in 5 minutes" autocomplete="off">
     </div>
     <div class="mt-3 hidden" data-sc-shrinkwrap>
-      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="msm-check" data-sc-shrink> Shrink the world after each backup <span class="text-xs text-ink-faint">(removes rarely-visited chunks; only runs while the server is stopped)</span></label>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="msm-check" data-sc-shrink> Shrink the World After Each Backup <span class="text-xs text-ink-faint">(removes rarely-visited chunks; only runs while the server is stopped)</span></label>
     </div>
     <label class="label mt-3">Cron expression</label>
     <input class="input font-mono" data-sc-cron placeholder="0 4 * * *" autocomplete="off" spellcheck="false">

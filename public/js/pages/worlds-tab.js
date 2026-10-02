@@ -130,8 +130,8 @@ function init(serverId, serverName, serverStatus) {
       </select>
       <label class="label mt-3">Install mode on the target</label>
       <select class="input" data-c-mode data-label="Install mode">
-        <option value="replace" data-desc="Target must be stopped. Its current world is backed up first.">Replace target's world</option>
-        <option value="alongside" data-desc="Adds it next to the target's worlds. Activate it later.">Install alongside</option>
+        <option value="replace" data-desc="Target must be stopped. Its current world is backed up first.">Replace Target's World</option>
+        <option value="alongside" data-desc="Adds it next to the target's worlds. Activate it later.">Install Alongside</option>
       </select>
       <div class="mt-3 hidden" data-c-namewrap>
         <label class="label">World folder name on the target</label>
@@ -320,8 +320,8 @@ function init(serverId, serverName, serverStatus) {
       <div>
         <label class="label" for="rw-seedmode">Seed</label>
         <select class="input" id="rw-seedmode" data-label="Seed">
-          <option value="random" selected>New random seed (re-roll)</option>
-          <option value="keep">Keep the current seed</option>
+          <option value="random" selected>New Random Seed (re-roll)</option>
+          <option value="keep">Keep the Current Seed</option>
           <option value="custom">Custom seed…</option>
         </select>
       </div>
@@ -333,17 +333,17 @@ function init(serverId, serverName, serverStatus) {
       <div>
         <label class="label" for="rw-leveltype">World type</label>
         <select class="input" id="rw-leveltype" data-label="World type">
-          <option value="" selected>Keep current</option>
+          <option value="" selected>Keep Current</option>
           <option value="DEFAULT">Default</option>
           <option value="FLAT">Superflat</option>
-          <option value="LARGEBIOMES">Large biomes</option>
+          <option value="LARGEBIOMES">Large Biomes</option>
           <option value="AMPLIFIED">Amplified</option>
         </select>
         <p class="help">More world-generation options (generator settings, structures, the Nether, and so on) live in Settings → World.</p>
       </div>
       <label class="flex cursor-pointer items-center gap-2">
         <span class="msm-toggle"><input type="checkbox" id="rw-backup" checked><span></span></span>
-        <span>Take a safety backup first</span>
+        <span>Take a Safety Backup First</span>
       </label>`;
     const seedMode = content.querySelector('#rw-seedmode');
     const customWrap = content.querySelector('#rw-customwrap');

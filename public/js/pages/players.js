@@ -350,8 +350,8 @@ function init(root) {
         <input class="input" data-f="name" placeholder="Notch" autocomplete="off" spellcheck="false" maxlength="16">
         <p class="mt-1 text-xs text-ink-faint">The name is looked up with Mojang, so the player never needs to have joined before.</p>
       </div>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> Add to whitelist</label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> Make operator (level 4)</label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> Add to Whitelist</label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> Make Operator (level 4)</label>`;
       openModal({
         title: 'Add Player',
         content,
@@ -629,7 +629,7 @@ function init(root) {
         <div>
           <label class="label">Dimension</label>
           <select class="input" data-f="dimension" data-label="Dimension">
-            <option value="">Current dimension</option>
+            <option value="">Current Dimension</option>
             <option value="minecraft:overworld">Overworld</option>
             <option value="minecraft:the_nether">The Nether</option>
             <option value="minecraft:the_end">The End</option>
@@ -660,8 +660,8 @@ function init(root) {
         <div>
           <label class="label">Around</label>
           <select class="input" data-f="center" data-label="Around">
-            <option value="player">The player's current position</option>
-            <option value="origin">World center (0, 0)</option>
+            <option value="player">The Player's Current Position</option>
+            <option value="origin">World Center (0, 0)</option>
           </select>
         </div>
         <p class="text-xs text-ink-faint">Built-in random teleport that works on any server, version, or modpack. Picks a random spot in the ring and lands on solid ground; ocean picks are retried automatically, up to 10 times.</p>
@@ -702,7 +702,7 @@ function init(root) {
         targetSel.appendChild(opt);
       }
     } else {
-      targetSel.innerHTML = '<option value="">No other players online</option>';
+      targetSel.innerHTML = '<option value="">No Other Players Online</option>';
     }
 
     const modal = openModal({
@@ -874,7 +874,7 @@ function init(root) {
     const actions = document.createElement('td');
     actions.className = 'text-right';
     actions.dataset.th = '';
-    actions.innerHTML = `<button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-tip="Remove this IP ban">
+    actions.innerHTML = `<button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-tip="Remove this IP ban.">
       <svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
     actions.querySelector('button').dataset.ip = ip;
     tr.appendChild(actions);

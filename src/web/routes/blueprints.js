@@ -36,7 +36,7 @@ const upload = multer({
   limits: { fileSize: 8 * 1024 ** 3 },
 });
 
-const uploadTokenSchema = z.string().regex(/^bpup-[A-Za-z0-9_-]{10}\.mcserver\.zip$/, 'Invalid upload token');
+const uploadTokenSchema = z.string().regex(/^bpup-[A-Za-z0-9_-]{10}\.mcserver\.zip$/, 'Invalid upload token.');
 
 // Cleared cpus/diskQuotaGb inputs mean "leave the blueprint's value" rather
 // than a silent 0 (quota off / unlimited cpu). See src/web/routes/api.js.

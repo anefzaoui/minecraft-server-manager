@@ -70,16 +70,14 @@ async function validateOverrides(
 
   if (containerName != null && !NAME_RE.test(containerName)) {
     errors.push(
-      `Container name "${containerName}" is invalid - use letters, digits, "_", ".", "-", starting with a letter or digit, up to 63 characters.`
+      `Container name "${containerName}" is invalid. Use letters, digits, "_", ".", "-", starting with a letter or digit, up to 63 characters.`
     );
   }
   // getContainer() resolves servers WITHOUT a custom name as msm-<id> - a
   // custom name in that namespace could shadow another server's container and
   // route every lifecycle action (stop, kill, exec…) to the wrong instance.
   if (containerName != null && /^msm-/i.test(containerName)) {
-    errors.push(
-      `Container name "${containerName}" is reserved - the "msm-" prefix is used for the panel's own naming.`
-    );
+    errors.push(`Container name "${containerName}" is reserved. The "msm-" prefix is used for the panel's own naming.`);
   }
 
   // A network that does not exist yet is fine: createContainer now creates
@@ -113,7 +111,7 @@ async function validateOverrides(
       continue;
     }
     if (!['tcp', 'udp'].includes(p.protocol)) {
-      errors.push(`Extra port mapping protocol must be "tcp" or "udp", got "${p.protocol}"`);
+      errors.push(`Extra port mapping protocol must be "tcp" or "udp", got "${p.protocol}".`);
       continue;
     }
     if (seenPorts.has(hostPort)) {
@@ -127,7 +125,7 @@ async function validateOverrides(
 
   for (const b of extraBinds || []) {
     if (!b.hostPath || typeof b.hostPath !== 'string' || b.hostPath.includes('\0') || !path.isAbsolute(b.hostPath)) {
-      errors.push(`Extra volume bind has an invalid host path: "${b.hostPath || ''}" - must be an absolute path.`);
+      errors.push(`Extra volume bind has an invalid host path: "${b.hostPath || ''}". It must be an absolute path.`);
     }
     if (
       !b.containerPath ||
@@ -136,11 +134,11 @@ async function validateOverrides(
       !b.containerPath.startsWith('/')
     ) {
       errors.push(
-        `Extra volume bind has an invalid container path: "${b.containerPath || ''}" - must be an absolute path.`
+        `Extra volume bind has an invalid container path: "${b.containerPath || ''}". It must be an absolute path.`
       );
     }
     if (b.mode && !['rw', 'ro'].includes(b.mode)) {
-      errors.push(`Extra volume bind mode must be "rw" or "ro", got "${b.mode}"`);
+      errors.push(`Extra volume bind mode must be "rw" or "ro", got "${b.mode}".`);
     }
   }
 

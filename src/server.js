@@ -330,7 +330,7 @@ function startBackgroundServices(httpServer) {
       // enforces - otherwise every panel restart gives a crash-looping server
       // one more free attempt.
       if (crashRecover && !autoStart && inCrashLoopBackoff(s.id)) {
-        logger.warn('Did not auto-restart a server on boot: it is in crash-loop backoff.', { serverId: s.id });
+        logger.warn('Did not auto-restart a server on boot because it is in crash-loop backoff.', { serverId: s.id });
         continue;
       }
       serversService

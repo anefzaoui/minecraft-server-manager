@@ -39,7 +39,7 @@
           <label class="label" for="ig-wz-key">API key <span class="font-normal text-ink-faint">(optional)</span></label>
           <input class="input font-mono text-xs" type="password" id="ig-wz-key" autocomplete="new-password" placeholder="{{#if integrations.wizard.hasApiKey}}Stored securely, leave blank to keep{{else}}Not required by default Ollama installs{{/if}}">
           {{#if integrations.wizard.hasApiKey}}
-            <label class="mt-2 flex items-center gap-2 text-xs"><input type="checkbox" class="msm-check" id="ig-wz-key-clear"> Remove stored key on save</label>
+            <label class="mt-2 flex items-center gap-2 text-xs"><input type="checkbox" class="msm-check" id="ig-wz-key-clear"> Remove Stored Key on Save</label>
           {{/if}}
         </div>
         <div>
@@ -65,7 +65,7 @@
           <h4 class="font-semibold">Player Outreach</h4>
           <p class="help">Deterministic per-session greetings and check-ins. No LLM call is needed to send them.</p>
         </div>
-        <label class="flex items-center gap-2 text-sm"><span>Greet players on join</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-welcome-enabled" {{#if integrations.wizard.welcomeEnabled}}checked{{/if}}><span></span></span></label>
+        <label class="flex items-center gap-2 text-sm"><span>Greet Players on Join</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-welcome-enabled" {{#if integrations.wizard.welcomeEnabled}}checked{{/if}}><span></span></span></label>
       </div>
       <div class="mt-4 grid gap-4 lg:grid-cols-2">
         <div>
@@ -101,7 +101,7 @@
           <h4 class="font-semibold">Chatbot powers <span class="text-xs font-normal text-warn">Experimental</span></h4>
           <p class="help">Basic users receive self/world powers. Controllers receive separately validated powers that may affect another online player. Everyone else remains conversation-only.</p>
         </div>
-        <label class="flex items-center gap-2 text-sm"><span>Enable powers</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-powers-enabled" {{#if integrations.wizard.powersEnabled}}checked{{/if}}><span></span></span></label>
+        <label class="flex items-center gap-2 text-sm"><span>Enable Powers</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-powers-enabled" {{#if integrations.wizard.powersEnabled}}checked{{/if}}><span></span></span></label>
       </div>
       <div class="mt-4 grid gap-4 lg:grid-cols-4">
         <div>
@@ -120,7 +120,7 @@
           <p class="help">One namespaced item ID per line. Restricts gifts that Basic users give themselves; power controllers may give other players any valid vanilla or modded item.</p>
         </div>
         <div class="space-y-3">
-          <label class="flex items-center gap-2 text-sm"><input class="msm-check" type="checkbox" id="ig-wz-dry-run" {{#if integrations.wizard.powersDryRun}}checked{{/if}}> Dry run (audit only; change nothing)</label>
+          <label class="flex items-center gap-2 text-sm"><input class="msm-check" type="checkbox" id="ig-wz-dry-run" {{#if integrations.wizard.powersDryRun}}checked{{/if}}> Dry Run (audit only; change nothing)</label>
           <div><label class="label" for="ig-wz-gift-max">Maximum gift quantity</label><input class="input w-28" type="number" id="ig-wz-gift-max" min="1" max="16" value="{{integrations.wizard.giftMaxCount}}"></div>
           <div><label class="label" for="ig-wz-power-cooldown">Per-player cooldown</label><div class="flex items-center gap-2"><input class="input w-28" type="number" id="ig-wz-power-cooldown" min="3" max="3600" value="{{integrations.wizard.powerCooldownSec}}"><span class="text-sm text-ink-soft">seconds</span></div></div>
         </div>
@@ -174,11 +174,11 @@
       <div>
         <span class="label">Send notifications for</span>
         <div class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="lifecycle" {{#if integrations.discord.events.lifecycle}}checked{{/if}}> Start / stop</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="lifecycle" {{#if integrations.discord.events.lifecycle}}checked{{/if}}> Start / Stop</label>
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="crashes" {{#if integrations.discord.events.crashes}}checked{{/if}}> Crashes</label>
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="backups" {{#if integrations.discord.events.backups}}checked{{/if}}> Backups</label>
           <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="updates" {{#if integrations.discord.events.updates}}checked{{/if}}> Updates</label>
-          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="players" {{#if integrations.discord.events.players}}checked{{/if}}> Kicks / bans</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="players" {{#if integrations.discord.events.players}}checked{{/if}}> Kicks / Bans</label>
           <label class="flex items-center gap-2" title="Out of memory, stalled boot, failed scheduled task, quota stop, health-check failure."><input type="checkbox" class="msm-check" data-dc-event="alerts" {{#if integrations.discord.events.alerts}}checked{{/if}}> Alerts</label>
         </div>
       </div>

@@ -130,7 +130,7 @@ router.post(
           .trim()
           .regex(
             PLAYER_NAME_RE,
-            'Player names are 1-16 letters, digits or _ (a leading . or * for Bedrock players is fine)'
+            'Player names are 1-16 letters, digits or _ (a leading . or * for Bedrock players is fine).'
           ),
       })
       .parse(req.body);

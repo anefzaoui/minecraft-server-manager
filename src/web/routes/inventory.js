@@ -25,11 +25,11 @@ const RUNNING_STATES = new Set(['running', 'unhealthy']);
 const uuidSchema = z
   .string()
   .trim()
-  .regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Invalid player UUID');
+  .regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/, 'Invalid player UUID.');
 const nameSchema = z
   .string()
   .trim()
-  .regex(PLAYER_NAME_RE, 'Player names are 1-16 letters, digits or _ (a leading . or * for Bedrock players is fine)');
+  .regex(PLAYER_NAME_RE, 'Player names are 1-16 letters, digits or _ (a leading . or * for Bedrock players is fine).');
 const itemSchema = z
   .string()
   .trim()
@@ -57,7 +57,7 @@ const nestedSchema = z.object({
   // path segments into the item's NBT: compound keys (strings) and list indexes (numbers)
   path: z
     .array(
-      z.union([z.string().regex(/^[A-Za-z0-9_:./ -]{1,80}$/, 'Invalid nested path'), z.number().int().min(0).max(255)])
+      z.union([z.string().regex(/^[A-Za-z0-9_:./ -]{1,80}$/, 'Invalid nested path.'), z.number().int().min(0).max(255)])
     )
     .min(1)
     .max(10),

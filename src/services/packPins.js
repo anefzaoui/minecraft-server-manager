@@ -168,7 +168,7 @@ function pinUnpinnedServers() {
       const evidence = findPinEvidence(server, issue);
       if (!evidence) {
         unresolved += 1;
-        logger.warn('A server has an unpinned modpack and no installed version could be read - pin it manually.', {
+        logger.warn('A server has an unpinned modpack and no installed version could be read, so pin it manually.', {
           serverId: server.id,
           platform: issue.platform,
         });

@@ -368,7 +368,7 @@ function init(root) {
         </div>
         <div><label class="label">Dimension</label>
           <select class="input" data-f="dimension" data-label="Dimension">
-            <option value="">Current dimension</option>
+            <option value="">Current Dimension</option>
             <option value="minecraft:overworld">Overworld</option>
             <option value="minecraft:the_nether">The Nether</option>
             <option value="minecraft:the_end">The End</option>
@@ -390,8 +390,8 @@ function init(root) {
         </div>
         <div><label class="label">Around</label>
           <select class="input" data-f="center" data-label="Around">
-            <option value="player">The player's current position</option>
-            <option value="origin">World center (0, 0)</option>
+            <option value="player">The Player's Current Position</option>
+            <option value="origin">World Center (0, 0)</option>
           </select></div>
       </div>
       <div data-tp-panel="structure" class="hidden space-y-3">
@@ -443,7 +443,7 @@ function init(root) {
         const online = list.filter((p) => p.online && p.name !== name);
         sel.innerHTML = online.length
           ? online.map((p) => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('')
-          : '<option value="">No other players online</option>';
+          : '<option value="">No Other Players Online</option>';
         sel.dataset.loaded = '1';
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       });

@@ -430,8 +430,8 @@ async function previewForServer(serverId, zipPath) {
     if (info.manifest.loader && serverLoader && info.manifest.loader !== serverLoader) {
       warnings.push(`Pack targets ${info.manifest.loader}, this server runs ${serverLoader}`);
     }
-    if (clientOnly.length) warnings.push(`${clientOnly.length} client-only file(s) will be skipped`);
-    if (nonMod.length) warnings.push(`${nonMod.length} non-mod file(s) (resource/shader packs) will be skipped`);
+    if (clientOnly.length) warnings.push(`${clientOnly.length} client-only file(s) will be skipped.`);
+    if (nonMod.length) warnings.push(`${nonMod.length} non-mod file(s) (resource/shader packs) will be skipped.`);
     return {
       type: 'mrpack',
       pack: {

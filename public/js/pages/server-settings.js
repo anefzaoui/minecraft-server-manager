@@ -422,9 +422,9 @@ function init(serverId) {
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
       <p class="text-xs text-ink-faint">Saves this server's setup as a reusable blueprint in the library.</p>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include config directories</label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include Config Directories</label>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed custom mod files in the archive <span class="text-xs text-ink-faint">(bigger file, fully portable)</span></label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">(can be large)</span></label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the Active World <span class="text-xs text-ink-faint">(can be large)</span></label>`;
     openModal({
       title: 'Export as Blueprint',
       content,
@@ -474,7 +474,7 @@ function init(serverId) {
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
       <p class="text-xs text-ink-faint">Creates a copy of this server with its own ports. It exports a blueprint and imports it as a new server.</p>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Also copy the active world</label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Also Copy the Active World</label>`;
     openModal({
       title: 'Clone Server',
       content,

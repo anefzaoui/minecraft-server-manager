@@ -102,7 +102,7 @@ async function createBackupImpl(
           try {
             await execCapture(serverId, ['rcon-cli', 'save-on']);
           } catch (err) {
-            logger.error('Re-enabling world saves after a backup failed: the server may still have saves paused.', {
+            logger.error('Re-enabling world saves after a backup failed, so the server may still have saves paused.', {
               serverId,
               err: serializeError(err, { includeStack: false }),
             });

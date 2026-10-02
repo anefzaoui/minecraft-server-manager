@@ -119,7 +119,7 @@ function makeRouter(scope) {
       const { path: rel, content } = z
         .object({
           path: pathSchema,
-          content: z.string().max(8 * 1024 * 1024, 'Content exceeds the 8 MB editor limit'),
+          content: z.string().max(8 * 1024 * 1024, 'Content exceeds the 8 MB editor limit.'),
         })
         .parse(req.body);
       res.json({ ok: true, ...(await files.writeText(sid(req), rel, content, { actor: actorOf(req) })) });

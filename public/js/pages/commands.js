@@ -129,10 +129,10 @@ function init(root) {
       <div>
         <label class="label">Action</label>
         <select class="input" data-f="action" data-label="Action">
-          <option value="rtp">Random teleport (built-in)</option>
-          <option value="structure">Teleport to a structure</option>
-          <option value="biome">Teleport to a biome</option>
-          <option value="console">Run console commands</option>
+          <option value="rtp">Random Teleport (built-in)</option>
+          <option value="structure">Teleport to a Structure</option>
+          <option value="biome">Teleport to a Biome</option>
+          <option value="console">Run Console Commands</option>
         </select>
       </div>
 
@@ -144,8 +144,8 @@ function init(root) {
         <div>
           <label class="label">Around</label>
           <select class="input" data-f="center" data-label="Around">
-            <option value="player">The player's current position</option>
-            <option value="origin">World center (0, 0)</option>
+            <option value="player">The Player's Current Position</option>
+            <option value="origin">World Center (0, 0)</option>
           </select>
         </div>
         <p class="text-xs text-ink-faint">Built-in random teleport. Picks a random point in the ring and lands the player safely on the surface; ocean picks are re-rolled automatically.</p>
@@ -203,14 +203,14 @@ function init(root) {
           <label class="label">Who can use it</label>
           <select class="input" data-f="permission" data-label="Who can use it">
             <option value="everyone">Everyone</option>
-            <option value="whitelist">Whitelisted players</option>
-            <option value="ops">Ops only</option>
+            <option value="whitelist">Whitelisted Players</option>
+            <option value="ops">Ops Only</option>
           </select>
         </div>
         <div>
           <label class="label">Cooldown (seconds per player)</label>
           <input class="input" type="number" data-f="cooldownSec" min="0" max="86400" value="${Number(existing ? existing.cooldown_sec : 30)}">
-          <p class="mt-1 text-xs text-ink-faint">0 = no cooldown</p>
+          <p class="mt-1 text-xs text-ink-faint">Use 0 for no cooldown.</p>
         </div>
       </div>
 

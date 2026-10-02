@@ -61,7 +61,7 @@ async function withPausedSaves(serverId, running, copy, actor = 'system') {
         await execCapture(serverId, ['rcon-cli', 'save-on']);
       } catch (err) {
         logger.error(
-          'Re-enabling world saves after a world operation failed: the server may still have saves paused.',
+          'Re-enabling world saves after a world operation failed, so the server may still have saves paused.',
           { serverId, err: serializeError(err, { includeStack: false }) }
         );
         recordEvent({
@@ -424,16 +424,16 @@ function compatWarnings(world, server) {
   const warnings = [];
   if (world.flavor && familyOf(world.flavor) !== familyOf(server.type)) {
     warnings.push(
-      `This world came from a ${flavorLabel(world.flavor)} server but the target runs ${flavorLabel(server.type)} - ` +
-        'loader- or plugin-specific data (custom dimensions, plugin files) may not load.'
+      `This world came from a ${flavorLabel(world.flavor)} server but the target runs ${flavorLabel(server.type)}. ` +
+        'Loader- or plugin-specific data (custom dimensions, plugin files) may not load.'
     );
   }
   const target = server.mc_version;
   if (world.version && target && target !== 'LATEST' && target !== 'SNAPSHOT' && world.version !== target) {
     if (compareVersions(world.version, target) > 0) {
       warnings.push(
-        `The world was last played on Minecraft ${world.version} but this server runs ${target} - ` +
-          'Minecraft cannot downgrade worlds safely; expect corruption or a refusal to load.'
+        `The world was last played on Minecraft ${world.version} but this server runs ${target}. ` +
+          'Minecraft cannot downgrade worlds safely, so expect corruption or a refusal to load.'
       );
     } else {
       warnings.push(

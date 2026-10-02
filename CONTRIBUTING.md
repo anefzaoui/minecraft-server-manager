@@ -162,6 +162,34 @@ users:
   internally and consistently; leave those as-is. Straight quotes everywhere
   else.
 
+### What the copy check covers
+
+`pnpm run test:prose` enforces all of the above mechanically, and it reads every place text
+reaches a person:
+
+- **Views:** headings, table headers, buttons, options, tabs, legends, captions, chips, checkbox
+  and radio labels, list items, paragraphs, help text, every partial parameter in either quote
+  style (`title=`, `sub=`, `message=`, `ctaLabel=`, …), the attributes a person reads or hears
+  (`title`, `data-tip`, `data-th`, `placeholder`, `aria-label`, `alt`, `data-desc`, …), the quoted
+  arguments of `default` and `plural`, and inline `<script>` blocks.
+- **JavaScript** (`src/` and `public/js/`): toasts, errors, validation messages, progress and
+  history strings, log lines, and the string properties and arrays that carry copy. HTML built in a
+  string or template (`innerHTML`, `insertAdjacentHTML`) is read with the same rules as a view.
+- **Everything else prose-shaped:** a string of four or more words that no context above claims
+  still gets the dash, quote, jargon, and proper-noun rules, and must end in a period if it holds a
+  full stop mid-string. A new property or helper name cannot hide copy from the check.
+- **Docs and other text:** every Markdown file (the newest `CHANGELOG.md` section only, since old
+  release notes are a record of what shipped), `public/manifest.json`, the `package.json`
+  description, and the GitHub issue forms.
+
+A few things are deliberately judged more loosely. Placeholders and screen-reader labels
+(`aria-label`, `alt`) are fragments, so they need a capital letter but no period, and a placeholder
+that is an example (a host name, a URL, anything in a monospace field) is not checked at all. A
+checkbox label longer than six words is a sentence, so it is not forced into Title Case. A disabled
+option or an option that reads as a status line ("Loading biomes…") is a message, not a choice.
+Field-catalog captions are sentence-case captions by design. Prompts sent to a language model
+(`src/services/wizard*.js`) are not user copy.
+
 ## Logging
 
 Server code logs through `src/logger.js`, never `console.*` (ESLint enforces this under `src/`; only

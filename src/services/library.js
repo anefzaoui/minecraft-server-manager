@@ -281,7 +281,7 @@ async function ensureContentMeta(libRow) {
     }
     if (iconUrl && !haveIcon) await cacheIcon(libRow.id, iconUrl);
   } catch (err) {
-    logger.debug('ensureContentMeta could not repair a library row.', {
+    logger.debug('Could not repair the metadata of a library row.', {
       libraryId: libRow.id,
       err: String(err && err.message),
     });

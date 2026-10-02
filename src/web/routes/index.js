@@ -278,7 +278,7 @@ async function renderServerList(req, res, next, { page }) {
     const servers = results
       .map((r, i) => {
         if (r.status === 'fulfilled') return r.value;
-        logger.error('Failed to load server VM', { serverId: rows[i].id, err: serializeError(r.reason) });
+        logger.error('Could not load a server for the page.', { serverId: rows[i].id, err: serializeError(r.reason) });
         return {
           id: rows[i].id,
           name: rows[i].display_name,

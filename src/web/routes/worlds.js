@@ -145,7 +145,7 @@ router.get(
   '/:id/download',
   asyncHandler((req, res, next) => {
     const lib = db.get("SELECT * FROM library_files WHERE id = ? AND category = 'world'", req.params.id);
-    if (!lib) throw notFound('World not found in the library');
+    if (!lib) throw notFound('World not found in the library.');
     res.download(dataPath(lib.rel_path), lib.filename.endsWith('.zip') ? lib.filename : `${lib.filename}.zip`);
   })
 );
@@ -156,7 +156,7 @@ router.patch(
   asyncHandler((req, res, next) => {
     const { name } = z.object({ name: z.string().trim().min(1).max(120) }).parse(req.body);
     const lib = db.get("SELECT * FROM library_files WHERE id = ? AND category = 'world'", req.params.id);
-    if (!lib) throw notFound('World not found in the library');
+    if (!lib) throw notFound('World not found in the library.');
     db.run('UPDATE library_files SET name = ? WHERE id = ?', name, lib.id);
     require('../../events').recordEvent({
       actor: actorOf(req),

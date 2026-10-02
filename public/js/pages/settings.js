@@ -132,8 +132,8 @@ function init() {
         <input class="input" id="at-label" autocomplete="off" placeholder="e.g. Status page">
         <p class="help">Just so you can recognise this key in the list later.</p></div>
       <div><span class="label">What it can see</span>
-        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="all" checked> Every server</label>
-        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="some"> Only the ones I pick</label>
+        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="all" checked> Every Server</label>
+        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="some"> Only the Ones I Pick</label>
       </div>
       <div><label class="label" for="at-servers">Servers</label>
         <select class="input" id="at-servers" multiple size="6" disabled>

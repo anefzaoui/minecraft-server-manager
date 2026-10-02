@@ -169,7 +169,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         <option value="mod">Mod</option>
         <option value="plugin">Plugin</option>
         <option value="datapack">Datapack</option>
-        <option value="resourcepack">Resource pack</option>
+        <option value="resourcepack">Resource Pack</option>
       </select>
       <p class="help">Leave on Auto-detect unless a link installs as the wrong type. Some datapacks are published under a "mod" project.</p>
       ${
@@ -772,7 +772,7 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
             <button class="btn btn-sm" data-act="exclude">Exclude from Pack</button>
             <button class="btn btn-sm" data-act="search">Find Replacement</button>
             <button class="btn btn-sm" data-act="upload">Upload Jar</button>
-            <a class="btn btn-sm" target="_blank" rel="noopener" data-act="open">Open CF page</a>
+            <a class="btn btn-sm" target="_blank" rel="noopener" data-act="open">Open CF Page</a>
           </div>
           <input type="file" accept=".jar,.zip" class="hidden" data-role="file">`;
         row.querySelector('.font-semibold').textContent = m.name || m.filename;

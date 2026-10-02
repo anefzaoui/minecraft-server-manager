@@ -172,7 +172,7 @@ const idParam = z.object({
   id: z
     .string()
     .trim()
-    .regex(/^srv_[A-Za-z0-9_-]{1,40}$/, 'Invalid server id'),
+    .regex(/^srv_[A-Za-z0-9_-]{1,40}$/, 'Invalid server id.'),
 });
 
 /**

@@ -292,7 +292,7 @@ function init(serverId) {
 
     const grid = document.createElement('div');
     grid.innerHTML =
-      '<h4 class="mb-2 text-sm font-semibold">Key stats <span class="font-normal text-ink-faint">(all time / last 7d)</span></h4>';
+      '<h4 class="mb-2 text-sm font-semibold">Key Stats <span class="font-normal text-ink-faint">(all time / last 7d)</span></h4>';
     const cells = document.createElement('div');
     cells.className = 'grid grid-cols-2 gap-2 sm:grid-cols-3';
     const keyStats = [
@@ -323,7 +323,7 @@ function init(serverId) {
     content.appendChild(grid);
 
     const sessions = document.createElement('div');
-    sessions.innerHTML = `<h4 class="mb-2 text-sm font-semibold">Recent sessions <span class="font-normal text-ink-faint">(${p.sessions.count} total)</span></h4>`;
+    sessions.innerHTML = `<h4 class="mb-2 text-sm font-semibold">Recent Sessions <span class="font-normal text-ink-faint">(${p.sessions.count} total)</span></h4>`;
     if (!p.sessions.recent.length) {
       const empty = document.createElement('p');
       empty.className = 'text-xs text-ink-faint';

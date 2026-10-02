@@ -777,7 +777,7 @@ async function editSlotOnline(serverId, ctx, spec, { op, item, count }) {
     item: cur.id,
     count,
     note: cur.hasComponents
-      ? 'This item carried custom data (enchantments, contents, …) which a live count change resets - change counts while the player is offline to keep it.'
+      ? 'This item carried custom data (enchantments, contents, …) which a live count change resets. Change counts while the player is offline to keep it.'
       : null,
   };
 }

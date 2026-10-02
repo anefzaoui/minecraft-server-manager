@@ -187,7 +187,7 @@ async function shareToMclogs(serverId, crash, card) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'share that crash report' }));
     markShared(card, data.url);
-    await copyToClipboard(data.url, `Shared: ${data.url} (copied to clipboard)`);
+    await copyToClipboard(data.url, `Shared: ${data.url} (copied to clipboard).`);
   } catch (err) {
     toast(err.message, { kind: 'error', timeout: 9000 });
   }

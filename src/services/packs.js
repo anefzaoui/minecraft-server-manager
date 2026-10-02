@@ -348,8 +348,8 @@ function worldVersionWarnings(server, resolved) {
           (pv.major === wv.major && (pv.minor < wv.minor || (pv.minor === wv.minor && pv.patch < wv.patch))));
       warnings.push(
         downgrade
-          ? `This pack runs Minecraft ${resolved.mcVersion} but the existing world was generated on ${worldVersion} - Minecraft cannot load newer worlds on older versions and the server will crash. Reset or swap the world first, or confirm to proceed anyway.`
-          : `This pack runs Minecraft ${resolved.mcVersion} but the existing world is from ${worldVersion} - starting will permanently upgrade the world (make a backup first).`
+          ? `This pack runs Minecraft ${resolved.mcVersion} but the existing world was generated on ${worldVersion}. Minecraft cannot load newer worlds on older versions and the server will crash. Reset or swap the world first, or confirm to proceed anyway.`
+          : `This pack runs Minecraft ${resolved.mcVersion} but the existing world is from ${worldVersion}. Starting will permanently upgrade the world (make a backup first).`
       );
     }
   } catch {

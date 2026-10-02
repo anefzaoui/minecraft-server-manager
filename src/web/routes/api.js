@@ -2392,7 +2392,7 @@ const zipImportUpload = multer({
   }),
   limits: { fileSize: 8 * 1024 ** 3, files: 1 },
 });
-const zipTokenSchema = z.string().regex(/^modzip-[A-Za-z0-9_-]{10}\.zip$/, 'Invalid upload token');
+const zipTokenSchema = z.string().regex(/^modzip-[A-Za-z0-9_-]{10}\.zip$/, 'Invalid upload token.');
 const zipImportBodySchema = z.object({
   uploadToken: zipTokenSchema,
   // pack zips select by fileId (number), jar zips by entry name (string)
@@ -2521,7 +2521,7 @@ router.post(
 // top of safeJoin's containment check - require the .log suffix the panel uses
 // and keep the character class tight (word chars, dots, parens/brackets, dashes)
 // while excluding whitespace and anything a path separator could hide behind.
-const archivedFileSchema = z.string().regex(/^[\w.,()[\]-]+\.log$/, 'Invalid archived log name');
+const archivedFileSchema = z.string().regex(/^[\w.,()[\]-]+\.log$/, 'Invalid archived log name.');
 
 router.get(
   '/servers/:id/logs/archived',
@@ -2558,7 +2558,7 @@ router.get(
 // The /logs endpoint above is a small in-memory docker tail (capped 2000 lines);
 // these serve the complete files Minecraft itself rotates: logs/latest.log and
 // the gzipped history next to it.
-const gameLogFileSchema = z.string().regex(/^[\w.-]+\.log(\.gz)?$/, 'Invalid log file name');
+const gameLogFileSchema = z.string().regex(/^[\w.-]+\.log(\.gz)?$/, 'Invalid log file name.');
 
 async function listGameLogs(serverId) {
   const dir = dataPath('servers', serverId, 'logs');
@@ -2716,7 +2716,7 @@ router.get(
   asyncHandler((req, res, next) => {
     const file = z
       .string()
-      .regex(/^srv_[\w-]+\.(png|svg|jpg|webp)$/, 'Invalid icon file')
+      .regex(/^srv_[\w-]+\.(png|svg|jpg|webp)$/, 'Invalid icon file.')
       .parse(req.params.file);
     const abs = dataPath('library', 'icons', 'custom', file);
     if (!fs.existsSync(abs)) throw Object.assign(new Error('Icon not found'), { status: 404 });
@@ -2737,7 +2737,7 @@ router.get(
   asyncHandler((req, res, next) => {
     const file = z
       .string()
-      .regex(/^usr_[\w-]+\.(png|svg|jpg|webp)$/, 'Invalid avatar file')
+      .regex(/^usr_[\w-]+\.(png|svg|jpg|webp)$/, 'Invalid avatar file.')
       .parse(req.params.file);
     const abs = dataPath('library', 'icons', 'users', file);
     if (!fs.existsSync(abs)) throw Object.assign(new Error('Avatar not found'), { status: 404 });

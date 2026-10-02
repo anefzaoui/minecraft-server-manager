@@ -600,7 +600,7 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
     // crashed until the next health event.
     recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Rebuild requested a graceful stop.' });
     await containers.stopContainer(id).catch((err) => {
-      logger.warn('A graceful stop failed while recreating a server; forcing removal.', {
+      logger.warn('A graceful stop failed while rebuilding a server, so removal is being forced.', {
         serverId: id,
         err: serializeError(err, { includeStack: false }),
       });
