@@ -157,6 +157,76 @@ test('GET /api/v1/metrics serves Prometheus text, scoped and token-authed', asyn
   db.run("UPDATE servers SET status = 'stopped' WHERE id = 'srv_v1a'");
 });
 
+test('GET /api/v1/servers/:id/backups lists history newest first without file paths', async () => {
+  for (const [id, at, reason] of [
+    ['bk_old', '2026-01-01 00:00:00', 'scheduled'],
+    ['bk_new', '2026-02-01 00:00:00', 'manual'],
+  ]) {
+    db.run(
+      `INSERT INTO backups (id, server_id, filename, rel_path, size_bytes, reason, note, created_at)
+       VALUES (?, 'srv_v1a', ?, ?, 2048, ?, 'n', ?)`,
+      id,
+      `${id}.zip`,
+      `backups/srv_v1a/${id}.zip`,
+      reason,
+      at
+    );
+  }
+  const r = await app.req('GET', '/api/v1/servers/srv_v1a/backups', auth(tokAll));
+  assert.equal(r.status, 200);
+  assert.deepEqual(
+    r.json.backups.map((b) => b.id),
+    ['bk_new', 'bk_old']
+  );
+  assert.deepEqual(Object.keys(r.json.backups[0]).sort(), [
+    'createdAt',
+    'filename',
+    'id',
+    'note',
+    'reason',
+    'sizeBytes',
+  ]);
+  assert.equal(/rel_path|backups\/srv_v1a/.test(r.text), false);
+
+  const one = await app.req('GET', '/api/v1/servers/srv_v1a/backups?limit=1', auth(tokAll));
+  assert.deepEqual(
+    one.json.backups.map((b) => b.id),
+    ['bk_new']
+  );
+  assert.equal((await app.req('GET', '/api/v1/servers/srv_v1a/backups?limit=0', auth(tokAll))).status, 400);
+  assert.equal((await app.req('GET', '/api/v1/servers/srv_v1a/backups?limit=999', auth(tokAll))).status, 400);
+});
+
+test('GET /api/v1/servers/:id/players reports sessions, and null live data when unknown', async () => {
+  db.run(
+    `INSERT INTO player_sessions (server_id, player, started_at, ended_at) VALUES
+       ('srv_v1a', 'Alex', '2026-03-01T10:00:00.000Z', '2026-03-01T11:00:00.000Z'),
+       ('srv_v1a', 'Steve', '2026-03-02T10:00:00.000Z', NULL)`
+  );
+  const r = await app.req('GET', '/api/v1/servers/srv_v1a/players', auth(tokAll));
+  assert.equal(r.status, 200);
+  // Never started in this test process, so the live cache has no player list.
+  assert.equal(r.json.online, null);
+  assert.equal(r.json.max, null);
+  assert.equal(r.json.names, null);
+  assert.deepEqual(r.json.sessions, [
+    { player: 'Steve', startedAt: '2026-03-02T10:00:00.000Z', endedAt: null, open: true },
+    { player: 'Alex', startedAt: '2026-03-01T10:00:00.000Z', endedAt: '2026-03-01T11:00:00.000Z', open: false },
+  ]);
+  const one = await app.req('GET', '/api/v1/servers/srv_v1a/players?limit=1', auth(tokAll));
+  assert.equal(one.json.sessions.length, 1);
+});
+
+test('the per-server sub-routes honour token scope and id validation', async () => {
+  for (const sub of ['players', 'backups']) {
+    assert.equal((await app.req('GET', `/api/v1/servers/srv_v1a/${sub}`)).status, 401);
+    assert.equal((await app.req('GET', `/api/v1/servers/srv_v1a/${sub}`, auth(tokScoped))).status, 200);
+    assert.equal((await app.req('GET', `/api/v1/servers/srv_v1b/${sub}`, auth(tokScoped))).status, 404);
+    assert.equal((await app.req('GET', `/api/v1/servers/srv_missing/${sub}`, auth(tokAll))).status, 404);
+    assert.equal((await app.req('GET', `/api/v1/servers/not-an-id/${sub}`, auth(tokAll))).status, 400);
+  }
+});
+
 test('the API is read-only: non-GET is 405 with Allow: GET', async () => {
   const post = await app.req('POST', '/api/v1/servers', { ...auth(tokAll), body: {} });
   assert.equal(post.status, 405);

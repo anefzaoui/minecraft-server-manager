@@ -85,6 +85,33 @@ One server, same object under a `server` key. Returns `404` for an unknown id
 **and** for a server the token is not scoped to (no existence oracle), and `400`
 for a malformed id.
 
+### `GET /api/v1/servers/:id/players`
+
+Who is online right now, plus recent play sessions (newest first).
+`?limit=` sets how many sessions come back (1 to 200, default 50).
+
+```json
+{
+  "ok": true,
+  "online": 2,
+  "max": 20,
+  "names": ["Alex", "Steve"],
+  "sessions": [{ "player": "Steve", "startedAt": "2026-03-02T10:00:00.000Z", "endedAt": null, "open": true }]
+}
+```
+
+`online`, `max`, and `names` are `null` until the server has reported a player
+list. Only player names are exposed, never UUIDs or IP addresses.
+
+### `GET /api/v1/servers/:id/backups`
+
+Backup history, newest first, with `id`, `filename`, `sizeBytes`, `reason`
+(`manual`, `scheduled`, `pre-update`, or `pre-restore`), `note`, and `createdAt`.
+`?limit=` works the same as above. File paths and checksums are not exposed.
+
+Both routes return `404` for an unknown id **and** for a server the token is not
+scoped to, and `400` for a malformed id or limit.
+
 ### `GET /api/v1/metrics`
 
 The same live data in Prometheus text format, for Grafana, Uptime Kuma, and

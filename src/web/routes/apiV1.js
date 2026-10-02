@@ -13,6 +13,7 @@ const { bearerAuth, readOnly } = require('../middleware/apiToken');
 const { publicApiIpLimiter, publicApiTokenLimiter } = require('../middleware/rateLimit');
 const settings = require('../../services/settings');
 const servers = require('../../services/servers');
+const db = require('../../db');
 const liveCache = require('../../services/liveCache');
 const { renderMetrics } = require('../../utils/promMetrics');
 
@@ -155,14 +156,76 @@ const idParam = z.object({
     .regex(/^srv_[A-Za-z0-9_-]{1,40}$/, 'Invalid server id'),
 });
 
-router.get('/servers/:id', (req, res) => {
+/**
+ * Resolve :id to a server this token may see, or answer 400/404 and return
+ * null. Same 404 for "unknown" and "out of scope" - no existence oracle.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ */
+function scopedServer(req, res) {
   const { id } = idParam.parse(req.params); // 400 via makeJsonErrorHandler
   const row = servers.getServer(id);
-  // Same 404 for "unknown" and "out of scope" - no existence oracle.
   if (!row || !inScope(req, id)) {
-    return res.status(404).json({ ok: false, error: 'Server not found' });
+    res.status(404).json({ ok: false, error: 'Server not found' });
+    return null;
   }
+  return row;
+}
+
+router.get('/servers/:id', (req, res) => {
+  const row = scopedServer(req, res);
+  if (!row) return;
   res.json({ ok: true, server: serverStatusView(row) });
+});
+
+const limitQuery = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
+// Who is online right now (from the live cache, no RCON call) plus the most
+// recent play sessions. Names only: no UUIDs, IPs, or per-player files.
+router.get('/servers/:id/players', (req, res) => {
+  const row = scopedServer(req, res);
+  if (!row) return;
+  const { limit } = limitQuery.parse(req.query);
+  const live = liveCache.get(row.id).players;
+  const sessions = db
+    .all(
+      'SELECT player, started_at, ended_at FROM player_sessions WHERE server_id = ? ORDER BY started_at DESC LIMIT ?',
+      row.id,
+      limit
+    )
+    .map((s) => ({ player: s.player, startedAt: s.started_at, endedAt: s.ended_at, open: !s.ended_at }));
+  res.json({
+    ok: true,
+    online: live ? live.online : null,
+    max: live ? live.max : null,
+    names: live ? live.names : null,
+    sessions,
+  });
+});
+
+// Backup history, newest first. No file paths or checksums: this is a status
+// feed, not a download surface.
+router.get('/servers/:id/backups', (req, res) => {
+  const row = scopedServer(req, res);
+  if (!row) return;
+  const { limit } = limitQuery.parse(req.query);
+  const backups = db
+    .all(
+      'SELECT id, filename, size_bytes, reason, note, created_at FROM backups WHERE server_id = ? ORDER BY created_at DESC, id DESC LIMIT ?',
+      row.id,
+      limit
+    )
+    .map((b) => ({
+      id: b.id,
+      filename: b.filename,
+      sizeBytes: b.size_bytes,
+      reason: b.reason,
+      note: b.note,
+      createdAt: b.created_at,
+    }));
+  res.json({ ok: true, backups });
 });
 
 // Terminal 404: the surface is self-contained. Without this an unknown path
