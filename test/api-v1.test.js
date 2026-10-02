@@ -1,6 +1,7 @@
 'use strict';
 
 require('./helpers/env');
+const http = require('node:http');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('./helpers/app');
@@ -225,6 +226,62 @@ test('the per-server sub-routes honour token scope and id validation', async () 
     assert.equal((await app.req('GET', `/api/v1/servers/srv_missing/${sub}`, auth(tokAll))).status, 404);
     assert.equal((await app.req('GET', `/api/v1/servers/not-an-id/${sub}`, auth(tokAll))).status, 400);
   }
+});
+
+test('successful live reads are briefly cacheable; errors never are', async () => {
+  const ok = [
+    '/api/v1/servers',
+    '/api/v1/servers/srv_v1a',
+    '/api/v1/servers/srv_v1a/players',
+    '/api/v1/servers/srv_v1a/backups',
+    '/api/v1/metrics',
+  ];
+  for (const path of ok) {
+    const r = await app.req('GET', path, auth(tokAll));
+    assert.equal(r.status, 200, path);
+    assert.equal(r.headers.get('cache-control'), 'private, max-age=5', path);
+    assert.match(r.headers.get('vary') || '', /authorization/i, path);
+  }
+
+  // 401, 400, and 404 keep the panel-wide revalidate-always default.
+  const denied = [
+    ['/api/v1/servers', undefined],
+    ['/api/v1/servers/not-an-id', auth(tokAll)],
+    ['/api/v1/servers/srv_missing', auth(tokAll)],
+    ['/api/v1/servers/srv_v1b/players', auth(tokScoped)],
+    ['/api/v1/nope', auth(tokAll)],
+  ];
+  for (const [path, opts] of denied) {
+    const r = await app.req('GET', path, opts);
+    assert.notEqual(r.status, 200, path);
+    assert.doesNotMatch(r.headers.get('cache-control') || '', /max-age=5/, path);
+  }
+});
+
+test('a conditional GET revalidates to 304 via the ETag', async () => {
+  const first = await app.req('GET', '/api/v1/servers', auth(tokAll));
+  const etag = first.headers.get('etag');
+  assert.ok(etag, 'the response carries an ETag');
+  // node:http, not fetch: undici adds `Cache-Control: no-cache` to any
+  // conditional request, which makes Express skip the 304 by design.
+  const base = new URL(await app.start());
+  const status = await new Promise((resolve, reject) => {
+    http
+      .get(
+        {
+          host: base.hostname,
+          port: base.port,
+          path: '/api/v1/servers',
+          headers: { Authorization: `Bearer ${tokAll}`, 'If-None-Match': etag },
+        },
+        (res) => {
+          res.resume();
+          resolve(res.statusCode);
+        }
+      )
+      .on('error', reject);
+  });
+  assert.equal(status, 304);
 });
 
 test('the API is read-only: non-GET is 405 with Allow: GET', async () => {

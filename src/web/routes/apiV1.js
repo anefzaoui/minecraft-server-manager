@@ -30,6 +30,25 @@ router.use(readOnly); // 405 on non-GET before any token/DB work
 router.use(bearerAuth); // 401 unless a live, unrevoked, unexpired token
 router.use(publicApiTokenLimiter); // the documented per-token budget
 
+// Live data only changes as fast as the live cache refreshes (seconds), so let a
+// client or shared dashboard reuse a 200 briefly instead of spending its rate
+// limit on identical polls. `private` + `Vary: Authorization` keep a shared
+// cache from serving one token's view to another. Applied to the 200 only: a
+// 400/404/429 must never be cached, and the status is not known until the
+// response is written, so the header is set at writeHead time.
+const LIVE_MAX_AGE_S = 5;
+function briefCache(req, res, next) {
+  const writeHead = res.writeHead;
+  res.writeHead = function patchedWriteHead(...args) {
+    if (res.statusCode === 200) {
+      res.setHeader('Cache-Control', `private, max-age=${LIVE_MAX_AGE_S}`);
+      res.vary('Authorization');
+    }
+    return writeHead.apply(this, args);
+  };
+  next();
+}
+
 // Public status vocabulary - a stable v1 contract that insulates callers from
 // internal status churn (e.g. 'unhealthy', 'stalled', 'over-quota').
 const STATE_MAP = {
@@ -72,7 +91,7 @@ function inScope(req, id) {
   return req.apiTokenScope.all || req.apiTokenScope.serverIds.includes(id);
 }
 
-router.get('/servers', (req, res) => {
+router.get('/servers', briefCache, (req, res) => {
   const rows = servers.listServers().filter((s) => inScope(req, s.id));
   const views = rows.map(serverStatusView);
   res.json({
@@ -86,7 +105,7 @@ router.get('/servers', (req, res) => {
 // Prometheus scrape target. Same token auth, scope filtering, and rate limit as
 // the JSON routes (Prometheus: `authorization: { credentials: <token> }`); reads
 // only the in-memory live cache, so a scrape never touches Docker.
-router.get('/metrics', (req, res) => {
+router.get('/metrics', briefCache, (req, res) => {
   const rows = servers.listServers().filter((s) => inScope(req, s.id));
   const per = (pick) =>
     rows.map((row) => ({
@@ -172,7 +191,7 @@ function scopedServer(req, res) {
   return row;
 }
 
-router.get('/servers/:id', (req, res) => {
+router.get('/servers/:id', briefCache, (req, res) => {
   const row = scopedServer(req, res);
   if (!row) return;
   res.json({ ok: true, server: serverStatusView(row) });
@@ -184,7 +203,7 @@ const limitQuery = z.object({
 
 // Who is online right now (from the live cache, no RCON call) plus the most
 // recent play sessions. Names only: no UUIDs, IPs, or per-player files.
-router.get('/servers/:id/players', (req, res) => {
+router.get('/servers/:id/players', briefCache, (req, res) => {
   const row = scopedServer(req, res);
   if (!row) return;
   const { limit } = limitQuery.parse(req.query);
@@ -207,7 +226,7 @@ router.get('/servers/:id/players', (req, res) => {
 
 // Backup history, newest first. No file paths or checksums: this is a status
 // feed, not a download surface.
-router.get('/servers/:id/backups', (req, res) => {
+router.get('/servers/:id/backups', briefCache, (req, res) => {
   const row = scopedServer(req, res);
   if (!row) return;
   const { limit } = limitQuery.parse(req.query);

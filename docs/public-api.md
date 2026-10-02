@@ -52,6 +52,14 @@ before its token is even checked, also counts toward a per-client-IP cap of five
 number, so probing with missing, malformed, revoked, or expired tokens cannot bypass the budget
 by rotating them.
 
+## Caching
+
+Every successful (`200`) response carries `Cache-Control: private, max-age=5` and
+`Vary: Authorization`, and an `ETag`. The data only refreshes every few seconds, so a
+client or dashboard can reuse a response for five seconds, or send `If-None-Match` and
+get a cheap `304`. Errors (`400`, `401`, `404`, `429`) are never cacheable. Polling more
+often than every five seconds gains nothing and spends your rate limit.
+
 ## Endpoints
 
 ### `GET /api/v1/servers`
