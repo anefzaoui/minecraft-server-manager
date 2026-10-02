@@ -1445,6 +1445,10 @@ const TASK_TYPE_KEYS = /** @type {[string, ...string[]]} */ (Object.keys(schedul
 function requireScheduleAccess(req, serverId, taskType) {
   const meta = scheduler.TASK_TYPES[taskType];
   if (!meta) throw httpError(400, 'Unknown task type.');
+  if (meta.adminOnly && req.user.role !== 'admin') {
+    // Fleet tasks (back up / restart every server) outrun any per-server grant.
+    throw httpError(403, 'Only an admin can schedule a task that acts on every server.');
+  }
   if (!meta.serverScoped) {
     // Panel-global work (storage scan, update check, temp cleanup, …) runs
     // against the whole panel whatever serverId is attached, so it follows the

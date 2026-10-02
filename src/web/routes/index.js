@@ -939,11 +939,13 @@ router.get('/schedules', (req, res) => {
     title: 'Schedules',
     active: 'schedules',
     schedules: scheduler.listSchedules().filter((j) => !j.serverId || res.locals.visibleServerIds.has(j.serverId)),
-    taskTypes: Object.entries(scheduler.TASK_TYPES).map(([value, t]) => ({
-      value,
-      label: t.label,
-      serverScoped: t.serverScoped,
-    })),
+    taskTypes: Object.entries(scheduler.TASK_TYPES)
+      .filter(([, t]) => !t.adminOnly || (req.user && req.user.role === 'admin'))
+      .map(([value, t]) => ({
+        value,
+        label: t.label,
+        serverScoped: t.serverScoped,
+      })),
     serverOptions: (res.locals.servers || []).map((s) => ({ id: s.id, name: s.name })),
   });
 });

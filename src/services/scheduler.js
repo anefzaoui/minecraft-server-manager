@@ -25,6 +25,11 @@ const TASK_TYPES = {
   stop: { label: 'Stop server', serverScoped: true, capability: 'power' },
   start: { label: 'Start server', serverScoped: true, capability: 'power' },
   rcon: { label: 'Run command', serverScoped: true, capability: 'console' },
+  // Fleet tasks: act on every server, so they are admin-only (a per-server
+  // grant cannot cover "all"). Each server is handled on its own - one failure
+  // does not stop the rest - and any failure fails the run at the end.
+  'backup-all': { label: 'Back up all servers', serverScoped: false, adminOnly: true },
+  'restart-all': { label: 'Restart all running servers', serverScoped: false, adminOnly: true },
   'update-check': { label: 'Update check', serverScoped: false },
   'storage-scan': { label: 'Storage re-scan', serverScoped: false },
   'tmp-clean': { label: 'Clear temporary files', serverScoped: false },
@@ -142,6 +147,63 @@ async function fireJob(job, retry) {
   }
 }
 
+// Servers a fleet restart acts on. Mid-boot servers (starting, stalled) are left
+// alone: restarting one only restarts the boot it is already in.
+const FLEET_RESTART_STATUSES = new Set(['running', 'unhealthy']);
+
+/**
+ * Run `fn` for each server in turn (backups and restarts are heavy, so never in
+ * parallel), isolating failures. Throws once at the end naming how many failed.
+ * @param {string} verb  past-tense-free label for the error, e.g. "Backup"
+ * @param {Array<{id: string, display_name: string}>} list
+ * @param {(server: any) => Promise<void>} fn
+ * @param {{ step: (label: string) => void } | null} task
+ */
+async function forEachServer(verb, list, fn, task) {
+  const failed = [];
+  for (const server of list) {
+    if (task) task.step(`${verb} ${server.display_name}…`);
+    try {
+      await fn(server);
+    } catch (err) {
+      failed.push(server.display_name);
+      logger.warn('A fleet task failed for one server.', {
+        serverId: server.id,
+        verb,
+        err: serializeError(err, { includeStack: false }),
+      });
+    }
+  }
+  if (failed.length) {
+    throw new Error(`${verb} failed for ${failed.length} of ${list.length} servers: ${failed.join(', ')}.`);
+  }
+}
+
+async function backupAllServers({ actor, task, shrink = false }) {
+  const servers = require('./servers');
+  const backups = require('./backups');
+  await forEachServer(
+    'Backing up',
+    servers.listServers(),
+    async (server) => {
+      if (await backups.isScheduledBackupRedundant(server.id)) return; // stopped and already backed up
+      const backup = await backups.createBackup(server.id, { reason: 'scheduled', actor, task, shrinkAfter: shrink });
+      await backups.verifyBackup(backup.id, { actor, task });
+    },
+    task
+  );
+}
+
+async function restartRunningServers({ actor, task }) {
+  const servers = require('./servers');
+  await forEachServer(
+    'Restarting',
+    servers.listServers().filter((s) => FLEET_RESTART_STATUSES.has(s.status)),
+    (server) => servers.restartServer(server.id, { actor }),
+    task
+  );
+}
+
 async function runTask(schedule, task = null) {
   const payload = JSON.parse(schedule.payload_json || '{}');
   const actor = 'scheduler';
@@ -177,6 +239,12 @@ async function runTask(schedule, task = null) {
       await backups.verifyBackup(backup.id, { actor, task });
       break;
     }
+    case 'backup-all':
+      await backupAllServers({ actor, task, shrink: Boolean(payload.shrink) });
+      break;
+    case 'restart-all':
+      await restartRunningServers({ actor, task });
+      break;
     case 'rcon': {
       const { execCapture } = require('../docker/containers');
       // '--' stops rcon-cli parsing command words that start with '-' as flags.
@@ -229,7 +297,12 @@ async function runTask(schedule, task = null) {
 // once-a-minute housekeeping jobs (temp files, ban sweep, metadata backfill,
 // rcon) stay out of it so the tray does not flicker all day.
 const TRAY_VERBS = { restart: 'Restarting', stop: 'Stopping', start: 'Starting', backup: 'Backing up' };
-const TRAY_TITLES = { 'update-check': 'Checking for updates…', 'storage-scan': 'Scanning storage…' };
+const TRAY_TITLES = {
+  'update-check': 'Checking for updates…',
+  'storage-scan': 'Scanning storage…',
+  'backup-all': 'Backing up all servers (scheduled)…',
+  'restart-all': 'Restarting all running servers (scheduled)…',
+};
 
 /**
  * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
@@ -420,5 +493,6 @@ module.exports = {
   rearmAll,
   runTaskWithRetry,
   fireJob,
+  runTask,
   TASK_TYPES,
 };
