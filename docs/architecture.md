@@ -114,7 +114,7 @@ Cross-cutting:
 - **Modpacks are always pinned.** The image auto-upgrades unpinned packs on every restart, so the
   panel resolves "latest" to a concrete version id at install time and pins it. Upgrades are an
   explicit orchestrated flow (`updates/`): preview → pre-update backup → graceful stop → re-pin →
-  recreate → health-monitor → one-click rollback.
+  rebuild → health-monitor → one-click rollback.
 - **The custom-mod overlay** is panel-managed: user-added mods land in the deduplicated library and
   are hard-linked into the server so they survive pack updates. Disabling is class-aware. Because
   the library keeps every build it has downloaded, an update records the build it replaced
@@ -178,7 +178,7 @@ Cross-cutting:
   env-backed property on each start (`OVERRIDE_SERVER_PROPERTIES` defaults true), so a value the
   panel edits directly (World Controls PvP/difficulty, the whitelist toggle, the Files editor)
   would be silently reverted on the next start unless the matching env var is removed and the
-  container recreated. Every direct property write goes through `writeServerProperties()` (whole
+  container rebuilt. Every direct property write goes through `writeServerProperties()` (whole
   file) or `setServerProperty()` (one key) in `src/services/servers.js`, which atomically rewrite
   the file, un-set the env var behind each changed key (via the `prop:` attribute on catalog
   fields, checked in tests against the image's own property definitions), and flag
