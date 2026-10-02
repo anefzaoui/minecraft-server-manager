@@ -630,20 +630,30 @@ router.get(
       // All-time totals plus a recent window, so the card shows whether trouble
       // is current or ancient history. The events table is the persistence here
       // (pruned at 90 days by the daily maintenance job), indexed on created_at.
-      const countEvents = (type, since) =>
+      // One pass over the server's matching events (idx_events_server_type_id)
+      // with conditional sums, instead of seven separate COUNT queries.
+      const stab =
         db.get(
-          `SELECT COUNT(*) AS n FROM events WHERE server_id = ? AND type = ?` +
-            (since ? ` AND created_at >= datetime('now', ?)` : ''),
-          ...(since ? [row.id, type, since] : [row.id, type])
-        )?.n || 0;
+          `SELECT
+             COALESCE(SUM(type = 'oom'), 0) AS oom,
+             COALESCE(SUM(type = 'oom' AND created_at >= datetime('now', '-1 day')), 0) AS oom24h,
+             COALESCE(SUM(type = 'auto-restarted'), 0) AS restarts,
+             COALESCE(SUM(type = 'auto-restarted' AND created_at >= datetime('now', '-1 day')), 0) AS restarts24h,
+             COALESCE(SUM(type = 'crashed'), 0) AS crashes,
+             COALESCE(SUM(type = 'crashed' AND created_at >= datetime('now', '-1 day')), 0) AS crashes24h,
+             COALESCE(SUM(type = 'crashed' AND created_at >= datetime('now', '-7 days')), 0) AS crashes7d
+           FROM events
+           WHERE server_id = ? AND type IN ('oom', 'auto-restarted', 'crashed')`,
+          row.id
+        ) || {};
       context.stability = {
-        oomKills: countEvents('oom'),
-        oomKills24h: countEvents('oom', '-1 day'),
-        autoRestarts: countEvents('auto-restarted'),
-        autoRestarts24h: countEvents('auto-restarted', '-1 day'),
-        crashes: countEvents('crashed'),
-        crashes24h: countEvents('crashed', '-1 day'),
-        crashes7d: countEvents('crashed', '-7 days'),
+        oomKills: stab.oom || 0,
+        oomKills24h: stab.oom24h || 0,
+        autoRestarts: stab.restarts || 0,
+        autoRestarts24h: stab.restarts24h || 0,
+        crashes: stab.crashes || 0,
+        crashes24h: stab.crashes24h || 0,
+        crashes7d: stab.crashes7d || 0,
       };
       context.lastCrash = db.get(
         'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',

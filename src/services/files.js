@@ -7,6 +7,7 @@
 // escape ./data, and server-scoped calls can't escape their server dir.
 
 const httpError = require('../utils/httpError');
+const { sumFileSizes } = require('../utils/statSizes');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
@@ -345,19 +346,14 @@ async function dirSize(abs) {
   } catch {
     return 0;
   }
+  const files = [];
   for (const e of entries) {
     const child = path.join(abs, e.name);
     if (e.isSymbolicLink()) continue;
     if (e.isDirectory()) total += await dirSize(child);
-    else if (e.isFile()) {
-      try {
-        total += (await fsp.stat(child)).size;
-      } catch {
-        /* transient */
-      }
-    }
+    else if (e.isFile()) files.push(child);
   }
-  return total;
+  return total + (await sumFileSizes(files));
 }
 
 async function moveEntry(from, to) {
