@@ -187,7 +187,7 @@ A few things are deliberately judged more loosely. Placeholders and screen-reade
 that is an example (a host name, a URL, anything in a monospace field) is not checked at all. A
 checkbox label longer than six words is a sentence, so it is not forced into Title Case. A disabled
 option or an option that reads as a status line ("Loading biomes…") is a message, not a choice.
-Field-catalog captions are sentence-case captions by design. Prompts sent to a language model
+A field-catalog switch (a `boolean` field) is a choice, so its label is Title Case; the catalog's other captions stay sentence case. Prompts sent to a language model
 (`src/services/wizard*.js`) are not user copy.
 
 ## Logging

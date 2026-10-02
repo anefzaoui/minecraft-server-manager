@@ -88,7 +88,7 @@ module.exports = [
   {
     key: 'CF_EXCLUDE_ALL_MODS',
     scope: 'env',
-    label: 'Exclude all mods',
+    label: 'Exclude All Mods',
     help: 'Skips installing every mod from the pack; combine with force-include to hand-pick only the mods you want.',
     type: 'boolean',
     mode: 'advanced',
@@ -108,7 +108,7 @@ module.exports = [
   {
     key: 'CF_IGNORE_MISSING_FILES',
     scope: 'env',
-    label: 'Ignore missing pack files',
+    label: 'Ignore Missing Pack Files',
     help: 'Continues the install even when some files listed by the modpack can’t be downloaded, instead of failing the whole startup.',
     type: 'boolean',
     mode: 'advanced',
@@ -118,7 +118,7 @@ module.exports = [
   {
     key: 'CF_FORCE_SYNCHRONIZE',
     scope: 'env',
-    label: 'Re-apply exclude/include rules',
+    label: 'Re-apply Exclude/Include Rules',
     help: 'Forces the exclusion and inclusion rules to be re-evaluated on the next start. Use it after changing the lists above.',
     type: 'boolean',
     default: false,
@@ -216,7 +216,7 @@ module.exports = [
   {
     key: 'MODRINTH_IGNORE_MISSING_FILES',
     scope: 'env',
-    label: 'Ignore missing pack files',
+    label: 'Ignore Missing Pack Files',
     help: 'Continues the install even when some files listed by the pack can’t be downloaded.',
     type: 'boolean',
     mode: 'advanced',
@@ -226,7 +226,7 @@ module.exports = [
   {
     key: 'MODRINTH_FORCE_SYNCHRONIZE',
     scope: 'env',
-    label: 'Re-apply exclude/include rules',
+    label: 'Re-apply Exclude/Include Rules',
     help: 'Forces the Modrinth exclusion and inclusion rules to be re-evaluated on the next start.',
     type: 'boolean',
     mode: 'advanced',
@@ -410,7 +410,7 @@ module.exports = [
   {
     key: 'SKIP_GTNH_UPDATE_CHECK',
     scope: 'env',
-    label: 'Skip the image’s GTNH update check',
+    label: 'Skip the Image’s GTNH Update Check',
     help: 'Stops the container comparing the installed pack against GTNH_PACK_VERSION on boot. Leave off: the check also runs the installer, so skipping it on a server whose pack has not installed yet means the pack never downloads and the server crash-loops on missing files. The pinned version already prevents surprise upgrades.',
     type: 'boolean',
     default: false,
@@ -421,7 +421,7 @@ module.exports = [
   {
     key: 'GTNH_DELETE_BACKUPS',
     scope: 'env',
-    label: 'Delete GTNH’s own backups on update',
+    label: 'Delete GTNH’s Own Backups on Update',
     help: 'Removes the backup copies the GTNH updater leaves behind in the server folder. The panel takes its own backups before any pack upgrade, so this mainly saves disk.',
     type: 'boolean',
     default: false,
@@ -434,7 +434,7 @@ module.exports = [
   {
     key: 'REMOVE_OLD_MODS',
     scope: 'env',
-    label: 'Wipe mods before install',
+    label: 'Wipe Mods Before Install',
     help: 'Deletes the entire mods (or plugins) folder before installing new content. The panel never sets this: it wipes the whole mods folder, including anything added by hand.',
     type: 'boolean',
     mode: 'advanced',

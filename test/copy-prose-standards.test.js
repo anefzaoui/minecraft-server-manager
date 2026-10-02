@@ -709,6 +709,15 @@ function scanJsSource(source, name, { catalog = false, file = name, lineBase = 0
   });
 
   if (catalog) {
+    // A boolean field renders as a switch row, and a switch label is a choice,
+    // so it is Title Case like every other toggle. (Other fields are captions.)
+    visit(ast, (node) => {
+      if (node.type !== 'ObjectExpression') return;
+      const type = objProp(node, 'type');
+      const label = objProp(node, 'label');
+      if (!type || !label || type.value.type !== 'Literal' || type.value.value !== 'boolean') return;
+      for (const r of readings(label.value)) checkTitleCase(name, ...at(r.loc), r.text, 'toggle label');
+    });
     visit(ast, (node) => {
       if (node.type === 'Literal' && typeof node.value === 'string' && /[A-Za-z]'[A-Za-z]/.test(node.value)) {
         add(

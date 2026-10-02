@@ -105,7 +105,7 @@ module.exports = [
   {
     key: 'EULA',
     scope: 'env',
-    label: 'Mojang EULA accepted',
+    label: 'Mojang EULA Accepted',
     help: 'The server refuses to start until Mojang’s End User License Agreement is accepted. The panel sets this automatically after you accept the EULA in the creation wizard.',
     type: 'boolean',
     mode: 'advanced',
@@ -274,7 +274,7 @@ module.exports = [
   {
     key: 'SETUP_ONLY',
     scope: 'env',
-    label: 'Setup only (no launch)',
+    label: 'Setup Only (no launch)',
     help: 'Downloads and installs all server files, then exits without starting the server. Useful for pre-provisioning a data directory; the container stops right after setup.',
     type: 'boolean',
     default: false,
