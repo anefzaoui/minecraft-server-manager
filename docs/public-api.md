@@ -85,6 +85,39 @@ One server, same object under a `server` key. Returns `404` for an unknown id
 **and** for a server the token is not scoped to (no existence oracle), and `400`
 for a malformed id.
 
+### `GET /api/v1/metrics`
+
+The same live data in Prometheus text format, for Grafana, Uptime Kuma, and
+other scrapers. It uses the same token, scope filter, and rate limit as the JSON
+routes, and it never touches Docker. A reading the server has not reported (for
+example TPS on a server type that does not expose it) is left out rather than
+reported as zero.
+
+| Metric                          | Meaning                                                |
+| ------------------------------- | ------------------------------------------------------ |
+| `msm_servers`                   | How many servers are visible to this token.            |
+| `msm_server_up`                 | `1` when the server is running, otherwise `0`.         |
+| `msm_server_cpu_percent`        | Recent CPU use as a percent of one core.               |
+| `msm_server_memory_bytes`       | Memory in use.                                         |
+| `msm_server_memory_limit_bytes` | Configured container memory limit.                     |
+| `msm_server_uptime_seconds`     | Seconds since the container started.                   |
+| `msm_server_players_online`     | Players currently online.                              |
+| `msm_server_players_max`        | Player slots.                                          |
+| `msm_server_tps`                | Ticks per second over the last minute, where reported. |
+| `msm_server_mspt`               | Mean milliseconds per tick, where reported.            |
+
+Per-server metrics carry `server_id` and `name` labels. A Prometheus scrape job:
+
+```yaml
+scrape_configs:
+  - job_name: minecraft
+    metrics_path: /api/v1/metrics
+    authorization:
+      credentials: msm_your_token_here
+    static_configs:
+      - targets: ['panel.example.com']
+```
+
 ## Response fields
 
 | Field           | Meaning                                                                                          |

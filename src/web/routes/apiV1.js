@@ -14,6 +14,7 @@ const { publicApiIpLimiter, publicApiTokenLimiter } = require('../middleware/rat
 const settings = require('../../services/settings');
 const servers = require('../../services/servers');
 const liveCache = require('../../services/liveCache');
+const { renderMetrics } = require('../../utils/promMetrics');
 
 const router = express.Router();
 
@@ -79,6 +80,72 @@ router.get('/servers', (req, res) => {
     online: views.filter((v) => v.state === 'running').length,
     servers: views,
   });
+});
+
+// Prometheus scrape target. Same token auth, scope filtering, and rate limit as
+// the JSON routes (Prometheus: `authorization: { credentials: <token> }`); reads
+// only the in-memory live cache, so a scrape never touches Docker.
+router.get('/metrics', (req, res) => {
+  const rows = servers.listServers().filter((s) => inScope(req, s.id));
+  const per = (pick) =>
+    rows.map((row) => ({
+      labels: { server_id: row.id, name: row.display_name },
+      value: pick(row, serverStatusView(row), liveCache.get(row.id)),
+    }));
+  const MB = 1024 * 1024;
+  const body = renderMetrics([
+    {
+      name: 'msm_servers',
+      help: 'Servers visible to this token.',
+      samples: [{ value: rows.length }],
+    },
+    {
+      name: 'msm_server_up',
+      help: '1 when the server is running, 0 otherwise.',
+      samples: per((row, v) => (v.state === 'running' ? 1 : 0)),
+    },
+    {
+      name: 'msm_server_cpu_percent',
+      help: 'Container CPU use as a percent of one core.',
+      samples: per((row, v) => v.cpuPct),
+    },
+    {
+      name: 'msm_server_memory_bytes',
+      help: 'Container memory in use.',
+      samples: per((row, v) => (v.memoryMb == null ? null : v.memoryMb * MB)),
+    },
+    {
+      name: 'msm_server_memory_limit_bytes',
+      help: 'Container memory limit.',
+      samples: per((row, v) => (v.memoryLimitMb == null ? null : v.memoryLimitMb * MB)),
+    },
+    {
+      name: 'msm_server_uptime_seconds',
+      help: 'Seconds since the server container started.',
+      samples: per((row, v) => v.uptimeSeconds),
+    },
+    {
+      name: 'msm_server_players_online',
+      help: 'Players currently online.',
+      samples: per((row, v) => (v.players ? v.players.online : null)),
+    },
+    {
+      name: 'msm_server_players_max',
+      help: 'Player slots.',
+      samples: per((row, v) => (v.players ? v.players.max : null)),
+    },
+    {
+      name: 'msm_server_tps',
+      help: 'Ticks per second over the last minute, where the server reports it.',
+      samples: per((row, v, live) => (live.perf ? live.perf.tps1 : null)),
+    },
+    {
+      name: 'msm_server_mspt',
+      help: 'Mean milliseconds per tick, where the server reports it.',
+      samples: per((row, v, live) => (live.perf ? live.perf.mspt : null)),
+    },
+  ]);
+  res.type('text/plain; version=0.0.4; charset=utf-8').send(body);
 });
 
 const idParam = z.object({

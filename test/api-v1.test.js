@@ -132,6 +132,31 @@ test('scope filtering: a scoped token sees only its server', async () => {
   assert.equal((await app.req('GET', '/api/v1/servers/srv_missing', auth(tokAll))).status, 404);
 });
 
+test('GET /api/v1/metrics serves Prometheus text, scoped and token-authed', async () => {
+  db.run("UPDATE servers SET status = 'stopped' WHERE id IN ('srv_v1a','srv_v1b')");
+  assert.equal((await app.req('GET', '/api/v1/metrics')).status, 401);
+
+  const all = await app.req('GET', '/api/v1/metrics', auth(tokAll));
+  assert.equal(all.status, 200);
+  assert.match(all.headers.get('content-type'), /^text\/plain;.*version=0\.0\.4/);
+  assert.match(all.text, /^msm_servers 2$/m);
+  assert.match(all.text, /^msm_server_up\{server_id="srv_v1a",name="Test Server"\} 0$/m);
+  assert.match(all.text, /^msm_server_up\{server_id="srv_v1b",name="Test Server"\} 0$/m);
+  // Seeded 1536 MB limit is exported in bytes; unknown live readings are absent.
+  assert.match(all.text, /^msm_server_memory_limit_bytes\{server_id="srv_v1a",[^}]*\} 1610612736$/m);
+  assert.doesNotMatch(all.text, /msm_server_cpu_percent|msm_server_players_online|msm_server_tps/);
+
+  db.run("UPDATE servers SET status = 'running' WHERE id = 'srv_v1a'");
+  const up = await app.req('GET', '/api/v1/metrics', auth(tokAll));
+  assert.match(up.text, /^msm_server_up\{server_id="srv_v1a",[^}]*\} 1$/m);
+
+  const scoped = await app.req('GET', '/api/v1/metrics', auth(tokScoped));
+  assert.match(scoped.text, /^msm_servers 1$/m);
+  assert.doesNotMatch(scoped.text, /srv_v1b/);
+  assert.equal((await app.req('POST', '/api/v1/metrics', auth(tokAll))).status, 405);
+  db.run("UPDATE servers SET status = 'stopped' WHERE id = 'srv_v1a'");
+});
+
 test('the API is read-only: non-GET is 405 with Allow: GET', async () => {
   const post = await app.req('POST', '/api/v1/servers', { ...auth(tokAll), body: {} });
   assert.equal(post.status, 405);
