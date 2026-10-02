@@ -4,6 +4,7 @@
 
 const { getVersionManifest } = require('../services/mojang');
 const db = require('../db');
+const { describeBackupAge } = require('../utils/backupAge');
 
 /**
  * UX rule (user-mandated): LATEST/SNAPSHOT are never shown bare - always
@@ -121,6 +122,9 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
   } else {
     ({ pack, updateAvailable } = packInfo(s.id));
   }
+  const lastBackupFor = ctx
+    ? ctx.lastBackup
+    : (id) => db.get('SELECT MAX(created_at) AS at FROM backups WHERE server_id = ?', id)?.at || null;
   const vm = {
     id: s.id,
     name: s.display_name,
@@ -157,6 +161,7 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     pack,
     updateAvailable,
     crashesUnread: crashesFor(s.id),
+    backup: describeBackupAge(lastBackupFor(s.id), { createdAt: s.created_at }),
     autoStart: Boolean(s.auto_start),
     autoRestart: Boolean(s.auto_restart),
     notes: s.notes,
@@ -243,6 +248,17 @@ function buildServerContext(rows) {
       disk.set(r.rel_path.slice('servers/'.length), r.size_bytes);
   }
 
+  // newest backup per server (idx_backups_server covers the grouped MAX).
+  const lastBackups = new Map();
+  for (const chunk of chunked(ids)) {
+    const ph = chunk.map(() => '?').join(',');
+    for (const r of db.all(
+      `SELECT server_id, MAX(created_at) AS at FROM backups WHERE server_id IN (${ph}) GROUP BY server_id`,
+      ...chunk
+    ))
+      lastBackups.set(r.server_id, r.at);
+  }
+
   // crash-unread counts.
   const crashes = new Map();
   for (const chunk of chunked(ids)) {
@@ -264,6 +280,7 @@ function buildServerContext(rows) {
       return Boolean(c && c.latest_version && c.latest_version !== p.pinned_version_id);
     },
     crashes: (id) => crashes.get(id) || 0,
+    lastBackup: (id) => lastBackups.get(id) || null,
   };
 }
 
