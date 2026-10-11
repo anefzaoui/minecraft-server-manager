@@ -14,6 +14,16 @@ const app = require('./helpers/app');
 const db = require('../src/db');
 const { dataPath } = require('../src/storage/pathGuard');
 
+// An accepted upgrade runs a backup and a rebuild in the background. Both are
+// stubbed: what these tests check is the gate in front of them, and a real
+// rebuild would create containers on a developer's running Docker.
+const backups = require('../src/services/backups');
+const servers = require('../src/services/servers');
+const realCreateBackup = backups.createBackup;
+const realRecreate = servers.recreateServer;
+backups.createBackup = async () => ({ id: 'bkp_stub' });
+servers.recreateServer = async () => {};
+
 let cookie;
 let port = 26500;
 
@@ -99,6 +109,8 @@ test.before(async () => {
 });
 
 test.after(async () => {
+  backups.createBackup = realCreateBackup;
+  servers.recreateServer = realRecreate;
   await app.stop();
 });
 
@@ -213,8 +225,8 @@ test('force is the deliberate way past the gate', async () => {
     cookie,
     body: { targetVersion: '1.21.1', force: true },
   });
-  // Accepted as a task (it fails later without Docker - what matters is that
-  // the compatibility gate let it through).
+  // Accepted as a task (its backup and rebuild are stubbed above - what
+  // matters is that the compatibility gate let it through).
   assert.equal(r.status, 202);
   assert.ok(r.json.taskId);
 });
