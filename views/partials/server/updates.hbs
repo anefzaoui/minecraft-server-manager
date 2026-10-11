@@ -5,7 +5,7 @@
     fetched one version at a time when a row is opened. }}
 <div data-compat-server="{{server.id}}" data-compat-status="{{compat.status}}" data-compat-can-scan="{{#if perms.content}}true{{else}}false{{/if}}">
 
-  <div class="card mb-4">
+  <div class="card mb-4 p-4">
     <div class="flex flex-wrap items-start gap-4">
       <div class="min-w-0 grow">
         <h2 class="mb-1 text-base font-semibold">Minecraft Version Compatibility</h2>
@@ -61,7 +61,7 @@
       published build. The build list is fetched by the page, not rendered. }}
   {{#if loaderPin}}
     {{#with loaderPin}}
-    <div class="card mb-4" id="loader-card" data-loader="{{loader}}" data-loader-name="{{loaderName}}" data-loader-source="{{source}}" data-loader-mc="{{mcVersion}}" data-loader-pinned="{{pinned}}" data-server-id="{{../server.id}}">
+    <div class="card mb-4 p-4" id="loader-card" data-loader="{{loader}}" data-loader-name="{{loaderName}}" data-loader-source="{{source}}" data-loader-mc="{{mcVersion}}" data-loader-pinned="{{pinned}}" data-server-id="{{../server.id}}">
       <h2 class="mb-1 text-base font-semibold">Loader Version</h2>
       <p class="max-w-prose text-xs text-ink-soft">
         {{#if (eq source 'server')}}
@@ -87,6 +87,9 @@
           <dt class="text-xs text-ink-faint">{{#if (eq source 'curseforge')}}Override{{else}}Set to{{/if}}</dt>
           <dd class="font-mono" data-loader-current>
             {{#if pinned}}{{pinned}}{{else}}<span class="text-ink-faint">{{#if (eq source 'curseforge')}}none, the modpack's version{{else}}default{{/if}}</span>{{/if}}
+            {{! The image installs the pinned build when the server starts, so
+                right after a change the two differ until then. }}
+            {{#if (and pinned installed)}}{{#if (ne pinned installed)}}<span class="font-sans text-xs text-ink-faint">(installs on the next start)</span>{{/if}}{{/if}}
           </dd>
         </div>
         {{/if}}
@@ -100,7 +103,7 @@
           </div>
         {{/if}}
         <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div class="sm:w-56">
+          <div class="sm:w-64">
             <label class="label" for="loader-select">New Version</label>
             <select class="input font-mono" id="loader-select">
               <option value="">{{#if (eq source 'curseforge')}}The modpack's version{{else if (eq loader 'forge')}}Default (recommended){{else}}Default (newest){{/if}}</option>
@@ -110,7 +113,7 @@
           </div>
           <div class="hidden sm:w-44" id="loader-custom-wrap">
             <label class="label" for="loader-custom">Build Number</label>
-            <input class="input font-mono" id="loader-custom" placeholder="{{#if (eq loader 'forge')}}47.4.14{{else if (eq loader 'neoforge')}}21.1.200{{else}}0.16.14{{/if}}" autocomplete="off" spellcheck="false">
+            <input class="input font-mono" id="loader-custom" placeholder="{{#if (eq loader 'forge')}}47.4.20{{else if (eq loader 'neoforge')}}21.1.200{{else}}0.16.14{{/if}}" autocomplete="off" spellcheck="false">
           </div>
           <button type="button" class="btn btn-primary" id="loader-apply" disabled>{{{icon 'wrench' 'size-4'}}} Change Version</button>
         </div>
@@ -142,7 +145,7 @@
   {{/if}}
 
   {{#if compatUnknown.length}}
-    <details class="card group mb-4">
+    <details class="card group mb-4 p-4">
       <summary class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
         <span class="badge badge-warn">{{compatUnknownTotal}}</span>
@@ -163,7 +166,7 @@
   {{/if}}
 
   {{#if compatUnchecked.length}}
-    <details class="card group mb-4">
+    <details class="card group mb-4 p-4">
       <summary class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
         <span class="badge badge-warn">{{compatUncheckedTotal}}</span>
@@ -192,7 +195,7 @@
     </div>
     <div class="grid gap-2" id="compat-versions">
       {{#each compatVersions}}
-        <details class="card group" data-compat-version="{{version}}">
+        <details class="card group p-4" data-compat-version="{{version}}">
           <summary class="flex cursor-pointer list-none flex-wrap items-center gap-2 [&::-webkit-details-marker]:hidden">
             <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
             <span class="font-mono text-sm font-semibold">{{version}}</span>

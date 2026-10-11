@@ -35,7 +35,8 @@ ${versions.map((v) => `      <version>${v}</version>`).join('\n')}
 
 const MAVEN_VERSIONS = [
   '1.21-51.0.33',
-  '1.20.1-47.4.14',
+  '1.20.1-47.4.15',
+  '1.20.1-47.4.13',
   '1.20.1-47.4.10',
   '1.20.1-47.4.5',
   '1.20.1-47.3.0',
@@ -80,15 +81,15 @@ test('Forge lists every build for the Minecraft version, newest first, with the 
   assert.equal(builds[0].version, '', 'the "Latest" no-pin option leads');
   assert.deepEqual(
     builds.slice(1).map((b) => b.version),
-    ['47.4.26', '47.4.25', '47.4.14', '47.4.10', '47.4.5', '47.3.0'],
+    ['47.4.26', '47.4.25', '47.4.15', '47.4.13', '47.4.10', '47.4.5', '47.3.0'],
     'numeric order (47.4.26 above 47.4.5), other Minecraft versions left out'
   );
   const byVersion = Object.fromEntries(builds.map((b) => [b.version, b]));
   assert.equal(byVersion['47.4.26'].label, '47.4.26 (latest)');
   assert.equal(byVersion['47.4.10'].label, '47.4.10 (recommended)');
   assert.equal(byVersion['47.4.10'].recommended, true);
-  assert.equal(byVersion['47.4.14'].label, '47.4.14');
-  assert.equal(byVersion['47.4.14'].recommended, undefined);
+  assert.equal(byVersion['47.4.15'].label, '47.4.15');
+  assert.equal(byVersion['47.4.15'].recommended, undefined);
 });
 
 test('an old build that repeats the Minecraft version is listed without the suffix', async () => {
@@ -102,7 +103,7 @@ test('an old build that repeats the Minecraft version is listed without the suff
 test('without the promotions feed the full list still comes through, unlabelled', async () => {
   routes[PROMOS_URL] = () => new Response('down', { status: 503 });
   const { builds } = await loaderVersions.getBuilds('forge', '1.20.1');
-  assert.equal(builds.length, 7);
+  assert.equal(builds.length, 8);
   assert.ok(builds.slice(1).every((b) => b.label === b.version && !b.recommended));
 });
 
@@ -134,7 +135,7 @@ test('the maven list is cached as parsed versions, not raw XML', async () => {
     throw new Error('should not be fetched again');
   };
   const { builds } = await loaderVersions.getBuilds('forge', '1.20.1');
-  assert.equal(builds.length, 7);
+  assert.equal(builds.length, 8);
 });
 
 test('the dropdown is capped, but a typed build is checked against every build', async () => {
@@ -146,14 +147,25 @@ test('the dropdown is capped, but a typed build is checked against every build',
 });
 
 test('isKnownBuild accepts a real Forge build and refuses the rest', async () => {
-  assert.equal(await loaderVersions.isKnownBuild('forge', '1.20.1', '47.4.14'), true);
+  assert.equal(await loaderVersions.isKnownBuild('forge', '1.20.1', '47.4.15'), true);
   assert.equal(await loaderVersions.isKnownBuild('forge', '1.20.1', '47.4.99'), false);
   assert.equal(await loaderVersions.isKnownBuild('forge', '1.20.1', '51.0.33'), false, 'a build for another version');
 });
 
+test('a skipped Forge number names the closest newer build instead', async () => {
+  // Forge never published 47.4.14; a mod asking for "47.4.14 or above" is
+  // satisfied by 47.4.15.
+  assert.deepEqual(await loaderVersions.checkBuild('forge', '1.20.1', '47.4.14'), {
+    known: false,
+    closestNewer: '47.4.15',
+  });
+  assert.deepEqual(await loaderVersions.checkBuild('forge', '1.20.1', '47.4.15'), { known: true, closestNewer: null });
+  assert.deepEqual(await loaderVersions.checkBuild('forge', '1.20.1', '47.4.99'), { known: false, closestNewer: null });
+});
+
 test('isKnownBuild throws when Forge maven is down, rather than trusting the promotions only', async () => {
   routes[MAVEN_URL] = () => new Response('down', { status: 503 });
-  await assert.rejects(loaderVersions.isKnownBuild('forge', '1.20.1', '47.4.14'));
+  await assert.rejects(loaderVersions.isKnownBuild('forge', '1.20.1', '47.4.15'));
 });
 
 test('NeoForge builds are matched for legacy and year-based Minecraft versions', async () => {

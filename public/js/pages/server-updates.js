@@ -282,9 +282,31 @@ async function fillBuilds(select, { loader, mc, pinned }) {
   select.dispatchEvent(new Event('change', { bubbles: true })); // resyncs the enhanced trigger
 }
 
+/** POST the loader change; `dryRun` only checks it. Throws the server's message. */
+async function postLoaderVersion(serverId, body) {
+  const res = await fetch(`/api/servers/${serverId}/loader-version`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) {
+    throw new Error(data.error || friendlyError(res, { action: 'change the loader version' }));
+  }
+  return data;
+}
+
 async function changeLoader({ serverId, name, source, version, pinned }) {
   const fallback = source === 'curseforge' ? `the modpack's ${name} version` : `the default ${name} version`;
   const target = version ? `${name} ${version}` : fallback;
+  // Check the build before asking to back up and rebuild for it: a build that
+  // doesn't exist is refused here, with the closest real one named.
+  try {
+    await postLoaderVersion(serverId, { version, dryRun: true });
+  } catch (err) {
+    toast(err.message, { kind: 'error', timeout: 12000 });
+    return;
+  }
   const ok = await confirmDialog({
     title: `Switch to ${target}?`,
     message: pinned
@@ -297,18 +319,7 @@ async function changeLoader({ serverId, name, source, version, pinned }) {
   try {
     await runTask({
       title: `Changing the ${name} version…`,
-      start: async () => {
-        const res = await fetch(`/api/servers/${serverId}/loader-version`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ version }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || data.ok === false) {
-          throw new Error(data.error || friendlyError(res, { action: 'change the loader version' }));
-        }
-        return data.taskId;
-      },
+      start: async () => (await postLoaderVersion(serverId, { version })).taskId,
     });
     toast(`Switched to ${target}.`);
     setTimeout(() => location.reload(), 900);

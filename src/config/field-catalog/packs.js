@@ -69,7 +69,7 @@ module.exports = [
     key: 'CF_MOD_LOADER_VERSION',
     scope: 'env',
     label: 'Mod loader version override',
-    help: 'Installs this mod loader version instead of the one the modpack declares (e.g. 47.4.14). Only for a pack that lists the wrong version. Managed by the Versions tab.',
+    help: 'Installs this mod loader version instead of the one the modpack declares (e.g. 47.4.20). Only for a pack that lists the wrong version. Managed by the Versions tab.',
     type: 'text',
     mode: 'advanced',
     section: 'packs',

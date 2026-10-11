@@ -1249,24 +1249,28 @@ router.post(
 // Versions tab: pin any published loader build (or '' to go back to the
 // default), on a plain loader server or as a CurseForge pack override. The
 // build is checked against the registry before the task starts, so a typo is
-// a 400 here instead of a server that fails to install.
+// a 400 here instead of a server that fails to install. `dryRun` runs only
+// that check: the page asks it before showing a "back up and rebuild?"
+// confirmation, so a build that can't be used is refused up front.
 const loaderPin = require('../../services/loaderPin');
 
 router.post(
   '/servers/:id/loader-version',
   requireCap('settings'),
   asyncHandler(async (req, res) => {
-    const { version } = z
+    const { version, dryRun } = z
       .object({
         version: z
           .string()
           .trim()
           .regex(/^[\w.+-]{0,64}$/, 'That is not a valid loader version.'),
+        dryRun: z.boolean().optional().default(false),
       })
       .parse(req.body);
     const server = requireServer(req.params.id);
     const info = await loaderPin.assertChangeable(server, version);
     if (version === info.pinned) throw httpError(409, `This server is already set to that ${info.loaderName} version.`);
+    if (dryRun) return res.json({ ok: true });
     const actor = req.user.username;
     const taskId = tasks.run(
       `Changing the ${info.loaderName} version on ${server.display_name}`,

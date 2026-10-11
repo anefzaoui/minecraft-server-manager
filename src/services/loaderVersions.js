@@ -235,11 +235,30 @@ async function getBuilds(loader, mc, { channel } = {}) {
  * unchecked build would only surface as a server that fails to install.
  */
 async function isKnownBuild(loader, mc, version) {
+  return (await checkBuild(loader, mc, version)).known;
+}
+
+/**
+ * isKnownBuild, plus the closest newer build in the same release line when
+ * `version` isn't one. Forge skips numbers (there is no 47.4.14 between
+ * 47.4.13 and 47.4.15), while a mod's "needs 47.4.14 or above" reads like a
+ * build to type - the refusal can then name the build that satisfies it. Only
+ * the same line (47.4.x) counts, so a plain typo gets no misleading hint.
+ * @returns {Promise<{ known: boolean, closestNewer: string|null }>}
+ */
+async function checkBuild(loader, mc, version) {
   // Forge's list straight from maven: forgeBuilds would fall back to the two
   // promoted builds and wrongly reject every other one.
-  if (String(loader).toLowerCase() === 'forge') return (await forgeMavenBuilds(mc)).includes(version);
-  const builds = await allBuilds(loader, mc);
-  return builds.some((b) => b.version === version);
+  const versions =
+    String(loader).toLowerCase() === 'forge'
+      ? await forgeMavenBuilds(mc)
+      : (await allBuilds(loader, mc)).map((b) => b.version);
+  if (versions.includes(version)) return { known: true, closestNewer: null };
+  const line = version.includes('.') ? version.slice(0, version.lastIndexOf('.') + 1) : null;
+  const newer = line
+    ? versions.filter((v) => v.startsWith(line) && compareBuilds(v, version) > 0).sort(compareBuilds)
+    : [];
+  return { known: false, closestNewer: newer[0] || null };
 }
 
 /** >0 when build a is newer than build b. */
@@ -247,4 +266,12 @@ function compareBuilds(a, b) {
   return BUILD_COLLATOR.compare(String(a), String(b));
 }
 
-module.exports = { getBuilds, isKnownBuild, compareBuilds, envKeyFor, neoforgePrefix, parseForgeMaven };
+module.exports = {
+  getBuilds,
+  isKnownBuild,
+  checkBuild,
+  compareBuilds,
+  envKeyFor,
+  neoforgePrefix,
+  parseForgeMaven,
+};

@@ -19,7 +19,7 @@ const PROMOS_URL = 'https://files.minecraftforge.net/net/minecraftforge/forge/pr
 const FABRIC_URL = 'https://meta.fabricmc.net/v2/versions/loader';
 const MOJANG_URL = 'https://launchermeta.mojang.com/mc/game/version_manifest_v2.json';
 
-const FORGE_1201 = ['47.4.26', '47.4.25', '47.4.14', '47.4.10', '47.3.0'];
+const FORGE_1201 = ['47.4.26', '47.4.25', '47.4.15', '47.4.10', '47.3.0'];
 const mavenXml = () =>
   `<metadata><versioning><versions>${FORGE_1201.map((v) => `<version>1.20.1-${v}</version>`).join('')}</versions></versioning></metadata>`;
 
@@ -226,7 +226,7 @@ test('a viewer cannot change the loader version', async () => {
   const id = seed('srv_lp_viewer');
   const r = await app.req('POST', `/api/servers/${id}/loader-version`, {
     cookie: viewerCookie,
-    body: { version: '47.4.14' },
+    body: { version: '47.4.15' },
   });
   assert.equal(r.status, 403);
   assert.deepEqual(envOf(id), {});
@@ -234,7 +234,7 @@ test('a viewer cannot change the loader version', async () => {
 
 test('a malformed version is refused before anything else', async () => {
   const id = seed('srv_lp_bad');
-  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14; rm' } });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15; rm' } });
   assert.equal(r.status, 400);
   assert.match(r.json.error, /not a valid loader version/);
 });
@@ -251,7 +251,7 @@ test('a build that does not exist for this Minecraft version is refused, and not
 test('an unreachable build list is a friendly, retryable refusal', async () => {
   const id = seed('srv_lp_offline');
   routes[MAVEN_URL] = () => new Response('down', { status: 503 });
-  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14' } });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
   assert.equal(r.status, 424);
   assert.match(r.json.error, /Couldn't reach the Forge build list/);
   assert.deepEqual(calls, []);
@@ -263,21 +263,21 @@ test('a Modrinth pack is told to update the pack instead', async () => {
     env: { MODRINTH_MODPACK: 'p', MODRINTH_VERSION: 'v' },
     manifest: { loader: 'forge', body: { forgeVersion: '47.4.10' } },
   });
-  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14' } });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
   assert.equal(r.status, 409);
   assert.match(r.json.error, /Update the modpack/);
 });
 
 test('a server without a mod loader is refused', async () => {
   const id = seed('srv_lp_paper', { type: 'PAPER' });
-  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14' } });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
   assert.equal(r.status, 409);
   assert.match(r.json.error, /no mod loader/);
 });
 
 test('choosing the version already set is a no-op refusal', async () => {
-  const id = seed('srv_lp_same', { env: { FORGE_VERSION: '47.4.14' } });
-  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14' } });
+  const id = seed('srv_lp_same', { env: { FORGE_VERSION: '47.4.15' } });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
   assert.equal(r.status, 409);
   assert.deepEqual(calls, []);
 });
@@ -289,17 +289,17 @@ test('a plain Forge server: backup, then the pin, then the rebuild, then history
     env: { FORGE_VERSION: '47.4.10', MOTD: 'kept' },
     manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
   });
-  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14' } });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
   assert.equal(r.status, 202);
   const task = await settle(r.json.taskId);
   assert.equal(task.state, 'done', task.error);
-  assert.deepEqual(task.result, { from: '47.4.10', to: '47.4.14', backupId: 'bkp_test' });
+  assert.deepEqual(task.result, { from: '47.4.10', to: '47.4.15', backupId: 'bkp_test' });
   assert.deepEqual(calls, [
-    ['backup', id, 'pre-update', 'Before Forge 47.4.10 → 47.4.14'],
-    ['rebuild', id, { FORGE_VERSION: '47.4.14', MOTD: 'kept' }],
+    ['backup', id, 'pre-update', 'Before Forge 47.4.10 → 47.4.15'],
+    ['rebuild', id, { FORGE_VERSION: '47.4.15', MOTD: 'kept' }],
   ]);
   const ev = db.get("SELECT * FROM events WHERE server_id = ? AND type = 'loader-version-changed'", id);
-  assert.equal(ev.summary, 'Forge version changed to 47.4.14.');
+  assert.equal(ev.summary, 'Forge version changed to 47.4.15.');
   assert.equal(JSON.parse(ev.details_json).backupId, 'bkp_test');
 });
 
@@ -312,7 +312,7 @@ test('a build older than the dropdown cap is accepted when typed', async () => {
 });
 
 test('an empty version removes the pin and goes back to the default', async () => {
-  const id = seed('srv_lp_reset', { env: { FORGE_VERSION: '47.4.14' } });
+  const id = seed('srv_lp_reset', { env: { FORGE_VERSION: '47.4.15' } });
   const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '' } });
   assert.equal(r.status, 202);
   assert.equal((await settle(r.json.taskId)).state, 'done');
@@ -327,10 +327,10 @@ test('a CurseForge pack gets CF_MOD_LOADER_VERSION, never FORGE_VERSION, and can
     env: { CF_SLUG: 'somepack', CF_FILE_ID: '123' },
     manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
   });
-  let r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14' } });
+  let r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
   assert.equal(r.status, 202);
   assert.equal((await settle(r.json.taskId)).state, 'done');
-  assert.deepEqual(envOf(id), { CF_SLUG: 'somepack', CF_FILE_ID: '123', CF_MOD_LOADER_VERSION: '47.4.14' });
+  assert.deepEqual(envOf(id), { CF_SLUG: 'somepack', CF_FILE_ID: '123', CF_MOD_LOADER_VERSION: '47.4.15' });
 
   r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '' } });
   assert.equal(r.status, 202);
@@ -359,7 +359,7 @@ test('a failed backup stops the change before the pin is touched', async () => {
   backups.createBackup = async () => {
     throw Object.assign(new Error('Not enough disk space for a backup'), { status: 507 });
   };
-  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14' } });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
   const task = await settle(r.json.taskId);
   assert.equal(task.state, 'failed');
   assert.equal(envOf(id).FORGE_VERSION, '47.4.10');
@@ -383,7 +383,7 @@ test('every step label is an in-progress line ending in an ellipsis', async () =
 test('the Updates page offers the recommended Forge build, and never a step back', async () => {
   const checker = require('../src/updates/checker');
   const behind = seed('srv_lp_chk_behind', { env: { FORGE_VERSION: '47.3.0' } });
-  const ahead = seed('srv_lp_chk_ahead', { env: { FORGE_VERSION: '47.4.14' } });
+  const ahead = seed('srv_lp_chk_ahead', { env: { FORGE_VERSION: '47.4.15' } });
   await checker.checkAll({ actor: 'test' });
   const row = (id) => db.get("SELECT * FROM update_checks WHERE subject_type = 'loader_build' AND subject_id = ?", id);
   assert.equal(row(behind).latest_version, '47.4.10', 'the recommended build, not the newest');
@@ -454,4 +454,54 @@ test('a CurseForge pack gets the override picker with a warning; a Modrinth pack
   assert.match(r.text, /Fabric 0\.16\.14/);
   assert.match(r.text, /has no override/);
   assert.doesNotMatch(r.text, /id="loader-select"/);
+});
+
+test('a build Forge skipped is refused with the closest newer one named', async () => {
+  // Forge never published 47.4.14; "needs 47.4.14 or above" is met by 47.4.15.
+  const id = seed('srv_lp_skipped');
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.14' } });
+  assert.equal(r.status, 400);
+  assert.equal(
+    r.json.error,
+    "Forge 47.4.14 isn't a published build for Minecraft 1.20.1. The closest newer build is 47.4.15."
+  );
+  assert.deepEqual(envOf(id), {});
+});
+
+test('a pin that has not been installed yet says it installs on the next start', async () => {
+  const pending = seed('srv_lp_page_pending', {
+    env: { FORGE_VERSION: '47.4.15' },
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
+  });
+  let r = await app.req('GET', `/servers/${pending}/updates`, { cookie, headers: { Accept: 'text/html' } });
+  assert.match(r.text, /installs on the next start/);
+  const settled = seed('srv_lp_page_settled', {
+    env: { FORGE_VERSION: '47.4.15' },
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.15' } },
+  });
+  r = await app.req('GET', `/servers/${settled}/updates`, { cookie, headers: { Accept: 'text/html' } });
+  assert.doesNotMatch(r.text, /installs on the next start/);
+});
+
+test('a dry run checks the change without starting anything', async () => {
+  const id = seed('srv_lp_dry', { env: { FORGE_VERSION: '47.4.10' } });
+  const ok = await app.req('POST', `/api/servers/${id}/loader-version`, {
+    cookie,
+    body: { version: '47.4.15', dryRun: true },
+  });
+  assert.equal(ok.status, 200);
+  assert.deepEqual(ok.json, { ok: true });
+  assert.deepEqual(calls, []);
+  assert.equal(envOf(id).FORGE_VERSION, '47.4.10');
+  const bad = await app.req('POST', `/api/servers/${id}/loader-version`, {
+    cookie,
+    body: { version: '47.4.14', dryRun: true },
+  });
+  assert.equal(bad.status, 400);
+  assert.match(bad.json.error, /closest newer build is 47\.4\.15/);
+  const viewer = await app.req('POST', `/api/servers/${id}/loader-version`, {
+    cookie: viewerCookie,
+    body: { version: '47.4.15', dryRun: true },
+  });
+  assert.equal(viewer.status, 403, 'a dry run needs the same permission');
 });
