@@ -1235,7 +1235,8 @@ router.post(
         t.step('Applying new version…');
         const changes = {};
         if (versionChanging) changes.mcVersion = targetVersion;
-        if (targetLoaderBuild && envKey) changes.env = { ...server.env, [envKey]: targetLoaderBuild };
+        // Re-read: a settings save made while the backup ran must survive.
+        if (targetLoaderBuild && envKey) changes.env = { ...requireServer(server.id).env, [envKey]: targetLoaderBuild };
         servers.updateServer(server.id, changes, { actor });
         t.step('Rebuilding the server…');
         await servers.recreateServer(server.id, { actor });
@@ -1269,7 +1270,6 @@ router.post(
       .parse(req.body);
     const server = requireServer(req.params.id);
     const info = await loaderPin.assertChangeable(server, version);
-    if (version === info.pinned) throw httpError(409, `This server is already set to that ${info.loaderName} version.`);
     if (dryRun) return res.json({ ok: true });
     const actor = req.user.username;
     const taskId = tasks.run(

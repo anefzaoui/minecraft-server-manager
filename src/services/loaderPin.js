@@ -5,8 +5,11 @@
 // variable (FORGE_VERSION, NEOFORGE_VERSION, FABRIC_LOADER_VERSION,
 // QUILT_LOADER_VERSION). A CurseForge pack installs the version its manifest
 // declares; CF_MOD_LOADER_VERSION overrides that, for the pack that lists the
-// wrong one. Modrinth and FTB packs have no such override in the image, so
-// their loader follows the pack version and is changed by updating the pack.
+// wrong one - but only for Forge and Fabric packs: the image's CurseForge
+// installer hands NeoForge the pack's own loader id and ignores the override.
+// Modrinth and FTB packs have no override at all, so their loader follows the
+// pack version and is changed by updating the pack. A pack update rewrites the
+// pack's CF_ variables, which drops an override along with them.
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -15,6 +18,7 @@ const { serializeError } = require('../utils/logSanitize');
 const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const loaderVersions = require('./loaderVersions');
+const packPins = require('./packPins');
 const mods = require('./mods');
 const servers = require('./servers');
 const backups = require('./backups');
@@ -25,6 +29,10 @@ const LOADER_NAMES = { forge: 'Forge', neoforge: 'NeoForge', fabric: 'Fabric', q
 const PACK_OVERRIDE_KEY = 'CF_MOD_LOADER_VERSION';
 // Pack types whose loader the image takes from the pack, with no override.
 const FIXED_PACK_TYPES = new Set(['MODRINTH', 'FTBA']);
+// Loaders the CurseForge installer applies CF_MOD_LOADER_VERSION to.
+const CF_OVERRIDABLE = new Set(['forge', 'fabric']);
+// The Minecraft-specific loaders: their builds can't be listed without a version.
+const MC_SPECIFIC = new Set(['forge', 'neoforge']);
 
 /**
  * @typedef {object} LoaderVersionInfo
@@ -34,6 +42,7 @@ const FIXED_PACK_TYPES = new Set(['MODRINTH', 'FTBA']);
  * @property {string|null} envKey       the variable that pins it; null when nothing can
  * @property {string} pinned            the pinned build, '' when none
  * @property {string|null} installed    the build the image last installed, when known
+ * @property {boolean} pendingInstall   a pinned build the image has yet to install
  * @property {string|null} mcVersion    the Minecraft version builds are listed for
  * @property {boolean} editable
  */
@@ -89,21 +98,29 @@ function loaderVersionInfo(server) {
   if (!loader) {
     if (server.type !== 'AUTO_CURSEFORGE' && !FIXED_PACK_TYPES.has(server.type)) return null;
     loader = mods.loaderOf(server);
-    if (!loader || !LOADER_NAMES[/** @type {keyof typeof LOADER_NAMES} */ (loader)]) return null;
-    source = server.type === 'AUTO_CURSEFORGE' ? 'curseforge' : 'modpack';
+    if (!loader || !Object.hasOwn(LOADER_NAMES, loader)) return null;
+    // A NeoForge CurseForge pack has no working override (see the top of this
+    // file), so it is shown like any other pack whose loader can't be changed.
+    source = server.type === 'AUTO_CURSEFORGE' && CF_OVERRIDABLE.has(loader) ? 'curseforge' : 'modpack';
   }
   const envKey =
     source === 'server' ? loaderVersions.envKeyFor(loader) : source === 'curseforge' ? PACK_OVERRIDE_KEY : null;
   const installed = readInstalled(server.id, loader);
   const mc = server.mc_version && !/^(LATEST|SNAPSHOT)$/i.test(server.mc_version) ? server.mc_version : null;
+  const pinned = (envKey && server.env[envKey]) || '';
   return {
     loader,
     loaderName: LOADER_NAMES[/** @type {keyof typeof LOADER_NAMES} */ (loader)],
     source,
     envKey,
-    pinned: (envKey && server.env[envKey]) || '',
+    pinned,
     installed: installed.version,
-    mcVersion: installed.mcVersion || mc,
+    // Only a build number can be compared with what is installed: an image
+    // keyword pin ("latest", "recommended") never equals one.
+    pendingInstall: Boolean(pinned && installed.version && /^\d/.test(pinned) && pinned !== installed.version),
+    // The server's own setting first: right after a Minecraft version change,
+    // the manifest still describes the install from before it.
+    mcVersion: mc || installed.mcVersion,
     editable: Boolean(envKey),
   };
 }
@@ -122,11 +139,31 @@ async function assertChangeable(server, version) {
   if (!info.editable) {
     throw httpError(409, 'This modpack sets its own loader version. Update the modpack to change it.');
   }
+  if (version === info.pinned) throw httpError(409, `This server is already set to that ${info.loaderName} version.`);
+  // The env this change would write must pass the same pack-pin guard the
+  // save does, or a legacy unpinned pack would only fail after its backup.
+  const nextEnv = { ...server.env };
+  if (version) nextEnv[/** @type {string} */ (info.envKey)] = version;
+  else delete nextEnv[/** @type {string} */ (info.envKey)];
+  packPins.assertPinnedPackEnv(server.type, nextEnv);
   if (!version) return info;
+  if (MC_SPECIFIC.has(info.loader) && !info.mcVersion) {
+    throw httpError(
+      409,
+      `Set a Minecraft version for this server, or start it once, before choosing a ${info.loaderName} build.`
+    );
+  }
   let check;
   try {
     check = await loaderVersions.checkBuild(info.loader, info.mcVersion, version);
-  } catch {
+  } catch (err) {
+    // The user gets the 424 below; the cause is kept here, because the error
+    // handler only logs a client error's message.
+    logger.debug('Could not check a loader build against its registry.', {
+      serverId: server.id,
+      loader: info.loader,
+      err: serializeError(err, { includeStack: false }),
+    });
     // 424, not 5xx: the API error handler replaces every 5xx message with a
     // generic one, and this one tells the user what to do.
     throw httpError(
@@ -176,7 +213,10 @@ async function applyLoaderVersion(serverId, version, { actor, task }) {
   });
 
   task.step(`Switching to ${target}…`);
-  const env = { ...server.env };
+  // Re-read: a settings save made while the backup ran must survive the pin.
+  const current = servers.getServer(serverId);
+  if (!current) throw httpError(404, 'Server not found');
+  const env = { ...current.env };
   if (version) env[envKey] = version;
   else delete env[envKey];
   servers.updateServer(serverId, { env }, { actor });

@@ -41,12 +41,16 @@ function envKeyFor(loader) {
 /**
  * Fetch through the api_cache. `parse` turns the response into the JSON-able
  * value that gets cached - the default reads JSON; Forge's XML metadata passes
- * its own so the cache holds the extracted list, not 200 KB of XML.
+ * its own so the cache holds the extracted list, not 200 KB of XML. `nonEmpty`
+ * says whether a response holds anything: a registry that answers 200 with an
+ * error page or a truncated body must not be cached as "no builds" for hours,
+ * so an empty one counts as a failure. `fresh` skips a cached copy that is
+ * still in date (a stale copy still beats a failed fetch).
  */
-async function cachedJson(cacheKey, url, { headers, parse = (res) => res.json() } = {}) {
+async function cachedJson(cacheKey, url, { headers, parse = (res) => res.json(), nonEmpty, fresh = false } = {}) {
   const cached = db.get('SELECT value_json, fetched_at FROM api_cache WHERE key = ?', cacheKey);
   // SQLite datetime('now') is space-separated; normalize to ISO before parsing.
-  if (cached && Date.now() - Date.parse(cached.fetched_at.replace(' ', 'T') + 'Z') < TTL_MS) {
+  if (!fresh && cached && Date.now() - Date.parse(cached.fetched_at.replace(' ', 'T') + 'Z') < TTL_MS) {
     return JSON.parse(cached.value_json);
   }
   try {
@@ -56,6 +60,7 @@ async function cachedJson(cacheKey, url, { headers, parse = (res) => res.json() 
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await parse(res);
+    if (nonEmpty && !nonEmpty(data)) throw new Error('The registry answered with an empty list');
     db.run(
       `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))
        ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, fetched_at = excluded.fetched_at`,
@@ -71,17 +76,27 @@ async function cachedJson(cacheKey, url, { headers, parse = (res) => res.json() 
 
 // The builders below return EVERY build they know of, newest first; getBuilds
 // caps the dropdown, while isKnownBuild checks a typed build against the lot.
+// `fresh` bypasses an in-date cache (see checkBuild).
+
+const isNonEmptyArray = (data) => Array.isArray(data) && data.length > 0;
+const hasVersions = (data) => Boolean(data) && Array.isArray(data.versions) && data.versions.length > 0;
 
 // Fabric & Quilt loader versions are independent of the Minecraft version.
-async function fabricBuilds() {
-  const list = await cachedJson('loader:fabric', 'https://meta.fabricmc.net/v2/versions/loader');
+async function fabricBuilds({ fresh } = {}) {
+  const list = await cachedJson('loader:fabric', 'https://meta.fabricmc.net/v2/versions/loader', {
+    nonEmpty: isNonEmptyArray,
+    fresh,
+  });
   return list
     .filter((v) => v && v.version)
     .map((v) => ({ version: v.version, label: v.stable ? `${v.version} (stable)` : v.version }));
 }
 
-async function quiltBuilds() {
-  const list = await cachedJson('loader:quilt', 'https://meta.quiltmc.org/v3/versions/loader');
+async function quiltBuilds({ fresh } = {}) {
+  const list = await cachedJson('loader:quilt', 'https://meta.quiltmc.org/v3/versions/loader', {
+    nonEmpty: isNonEmptyArray,
+    fresh,
+  });
   return list.filter((v) => v && v.version).map((v) => ({ version: v.version, label: v.version }));
 }
 
@@ -97,10 +112,11 @@ function neoforgePrefix(mc) {
   return yearly ? `${yearly[1]}.${yearly[2]}.${yearly[3] || '0'}.` : null;
 }
 
-async function neoforgeBuilds(mc) {
+async function neoforgeBuilds(mc, { fresh } = {}) {
   const data = await cachedJson(
     'loader:neoforge',
-    'https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge'
+    'https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge',
+    { nonEmpty: hasVersions, fresh }
   );
   const all = (data.versions || []).slice().reverse(); // maven returns ascending; newest first
   const prefix = neoforgePrefix(mc);
@@ -117,11 +133,16 @@ function parseForgeMaven(xml) {
 }
 
 /** Every Forge build for one MC version, newest first. */
-async function forgeMavenBuilds(mc) {
+async function forgeMavenBuilds(mc, { fresh } = {}) {
   const data = await cachedJson(
     'loader:forge-maven',
     'https://maven.minecraftforge.net/net/minecraftforge/forge/maven-metadata.xml',
-    { headers: { Accept: 'application/xml' }, parse: async (res) => ({ versions: parseForgeMaven(await res.text()) }) }
+    {
+      headers: { Accept: 'application/xml' },
+      parse: async (res) => ({ versions: parseForgeMaven(await res.text()) }),
+      nonEmpty: hasVersions,
+      fresh,
+    }
   );
   const prefix = `${mc}-`;
   const suffix = `-${mc}`;
@@ -197,11 +218,11 @@ async function paperBuilds(mc, { channel = 'default' } = {}) {
 }
 
 /** Every known build, newest first. Throws when the registry can't be reached. */
-async function allBuilds(loader, mc, { channel } = {}) {
+async function allBuilds(loader, mc, { channel, fresh } = {}) {
   const key = String(loader).toLowerCase();
-  if (key === 'fabric') return fabricBuilds();
-  if (key === 'quilt') return quiltBuilds();
-  if (key === 'neoforge') return neoforgeBuilds(mc);
+  if (key === 'fabric') return fabricBuilds({ fresh });
+  if (key === 'quilt') return quiltBuilds({ fresh });
+  if (key === 'neoforge') return neoforgeBuilds(mc, { fresh });
   if (key === 'forge') return forgeBuilds(mc);
   if (key === 'paper') return paperBuilds(mc, { channel });
   return [];
@@ -216,7 +237,12 @@ async function getBuilds(loader, mc, { channel } = {}) {
   const key = String(loader).toLowerCase();
   let builds;
   try {
-    builds = (await allBuilds(key, mc, { channel })).slice(0, MAX_BUILDS);
+    const all = await allBuilds(key, mc, { channel });
+    builds = all.slice(0, MAX_BUILDS);
+    // The recommended build stays listed even when 40 newer ones push it past
+    // the cap: the update checker offers it, and the picker labels it.
+    const recommended = all.find((b) => b.recommended);
+    if (recommended && !builds.includes(recommended)) builds.push(recommended);
   } catch (err) {
     logger.debug('Fetching loader builds failed; offering the "Latest" option only.', {
       loader: key,
@@ -249,10 +275,14 @@ async function isKnownBuild(loader, mc, version) {
 async function checkBuild(loader, mc, version) {
   // Forge's list straight from maven: forgeBuilds would fall back to the two
   // promoted builds and wrongly reject every other one.
-  const versions =
+  const list = (opts) =>
     String(loader).toLowerCase() === 'forge'
-      ? await forgeMavenBuilds(mc)
-      : (await allBuilds(loader, mc)).map((b) => b.version);
+      ? forgeMavenBuilds(mc, opts)
+      : allBuilds(loader, mc, opts).then((builds) => builds.map((b) => b.version));
+  let versions = await list({});
+  // A miss in a list cached up to 6 hours ago may be a build published since:
+  // check the registry itself once before calling the build unpublished.
+  if (!versions.includes(version)) versions = await list({ fresh: true });
   if (versions.includes(version)) return { known: true, closestNewer: null };
   const line = version.includes('.') ? version.slice(0, version.lastIndexOf('.') + 1) : null;
   const newer = line
