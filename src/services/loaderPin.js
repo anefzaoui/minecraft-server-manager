@@ -123,9 +123,9 @@ async function assertChangeable(server, version) {
     throw httpError(409, 'This modpack sets its own loader version. Update the modpack to change it.');
   }
   if (!version) return info;
-  let known;
+  let check;
   try {
-    known = await loaderVersions.isKnownBuild(info.loader, info.mcVersion, version);
+    check = await loaderVersions.checkBuild(info.loader, info.mcVersion, version);
   } catch {
     // 424, not 5xx: the API error handler replaces every 5xx message with a
     // generic one, and this one tells the user what to do.
@@ -134,12 +134,14 @@ async function assertChangeable(server, version) {
       `Couldn't reach the ${info.loaderName} build list to check that version. Try again in a minute.`
     );
   }
-  if (!known) {
-    throw httpError(
-      400,
+  if (!check.known) {
+    const notPublished =
       info.mcVersion && info.loader !== 'fabric' && info.loader !== 'quilt'
         ? `${info.loaderName} ${version} isn't a published build for Minecraft ${info.mcVersion}.`
-        : `${info.loaderName} ${version} isn't a published build.`
+        : `${info.loaderName} ${version} isn't a published build.`;
+    throw httpError(
+      400,
+      check.closestNewer ? `${notPublished} The closest newer build is ${check.closestNewer}.` : notPublished
     );
   }
   return info;
