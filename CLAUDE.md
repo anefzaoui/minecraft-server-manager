@@ -206,7 +206,7 @@ validation and error messages, and the docs — follows one house style (full de
 `node:test`, fast, no network. Most tests need no Docker, but a few route tests expect a reachable
 daemon that answers "no such container" (CI runners have one), so the suite talks to the local
 Docker when it runs. A test that drives a backup or a rebuild must stub `backups.createBackup` and
-`servers.recreateServer` (see `test/loaderPin.test.js`), or it creates real containers there. In-process integration tests boot the real Express app
+`servers.recreateServer` (see `test/compat-routes.test.js`), or it creates real containers there. In-process integration tests boot the real Express app
 against a throwaway DB via [`test/helpers/app.js`](test/helpers/app.js) (`start`, `req`,
 `adminCookie`, `seedServer`) — `createApp()` wires only routes/middleware, background services live
 in `server.js`, so headless is safe.
