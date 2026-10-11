@@ -1209,18 +1209,34 @@ router.post(
         });
       }
     }
+    const versionChanging = Boolean(targetVersion) && targetVersion !== server.mc_version;
+    const buildChanging = Boolean(targetLoaderBuild && envKey) && server.env[envKey] !== targetLoaderBuild;
+    // A stale row (applied elsewhere since the check) changes nothing: refuse
+    // it rather than rebuild without the backup the Updates page promises.
+    if (!versionChanging && !buildChanging) throw httpError(409, 'This server is already on that version.');
+    // A Forge or NeoForge build exists for one Minecraft version, so a pin
+    // left in place across a version change names a build the image can't
+    // install. It is cleared, unless this request pins the new build itself.
+    // Only a build number is: "latest"/"beta"/"recommended" follow the version.
+    const mcPinKey = { FORGE: 'FORGE_VERSION', NEOFORGE: 'NEOFORGE_VERSION' }[server.type];
+    const clearsPinKey = versionChanging && mcPinKey && !(targetLoaderBuild && envKey === mcPinKey) ? mcPinKey : null;
     const taskId = tasks.run(
-      `Updating Minecraft version on ${server.display_name}`,
+      versionChanging
+        ? `Updating Minecraft version on ${server.display_name}`
+        : `Updating the loader build on ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
-        const versionChanging = targetVersion && targetVersion !== server.mc_version;
+        // A loader build swap reinstalls the server jar just like a Minecraft
+        // version change does, so it gets the same backup first.
         let backupId = null;
-        if (versionChanging) {
+        if (versionChanging || buildChanging) {
           t.step('Creating pre-update backup…');
           const backup = await backups.createBackup(server.id, {
             reason: 'pre-update',
             actor,
-            note: `Before Minecraft ${server.mc_version} → ${targetVersion}`,
+            note: versionChanging
+              ? `Before Minecraft ${server.mc_version} → ${targetVersion}`
+              : `Before loader build ${server.env[envKey] || 'default'} → ${targetLoaderBuild}`,
             task: t,
           });
           backupId = backup.id;
@@ -1228,12 +1244,63 @@ router.post(
         t.step('Applying new version…');
         const changes = {};
         if (versionChanging) changes.mcVersion = targetVersion;
-        if (targetLoaderBuild && envKey) changes.env = { ...server.env, [envKey]: targetLoaderBuild };
+        // Re-read: a settings save made while the backup ran must survive.
+        const env = { ...requireServer(server.id).env };
+        let clearedPin = null;
+        if (clearsPinKey && /^\d/.test(env[clearsPinKey] || '')) {
+          clearedPin = env[clearsPinKey];
+          delete env[clearsPinKey];
+        }
+        if (targetLoaderBuild && envKey) env[envKey] = targetLoaderBuild;
+        if (clearedPin || (targetLoaderBuild && envKey)) changes.env = env;
         servers.updateServer(server.id, changes, { actor });
-        t.step('Recreating container…');
+        t.step('Rebuilding the server…');
         await servers.recreateServer(server.id, { actor });
-        return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
+        // From/to name what actually moved: the Minecraft version, or the build.
+        return versionChanging
+          ? {
+              ok: true,
+              from: server.mc_version,
+              to: targetVersion,
+              clearedPin,
+              backupId,
+            }
+          : { ok: true, from: server.env[envKey] || 'default', to: targetLoaderBuild, backupId };
       }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// Versions tab: pin any published loader build (or '' to go back to the
+// default), on a plain loader server or as a CurseForge pack override. The
+// build is checked against the registry before the task starts, so a typo is
+// a 400 here instead of a server that fails to install. `dryRun` runs only
+// that check: the page asks it before showing a "back up and rebuild?"
+// confirmation, so a build that can't be used is refused up front.
+const loaderPin = require('../../services/loaderPin');
+
+router.post(
+  '/servers/:id/loader-version',
+  requireCap('settings'),
+  asyncHandler(async (req, res) => {
+    const { version, dryRun } = z
+      .object({
+        version: z
+          .string()
+          .trim()
+          .regex(/^[\w.+-]{0,64}$/, 'That is not a valid loader version.'),
+        dryRun: z.boolean().optional().default(false),
+      })
+      .parse(req.body);
+    const server = requireServer(req.params.id);
+    const info = await loaderPin.assertChangeable(server, version);
+    if (dryRun) return res.json({ ok: true });
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Changing the ${info.loaderName} version on ${server.display_name}`,
+      { serverId: server.id, actor },
+      (t) => loaderPin.applyLoaderVersion(server.id, version, { actor, task: t })
     );
     res.status(202).json({ ok: true, taskId });
   })

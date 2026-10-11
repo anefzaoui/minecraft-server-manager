@@ -5,7 +5,7 @@
     fetched one version at a time when a row is opened. }}
 <div data-compat-server="{{server.id}}" data-compat-status="{{compat.status}}" data-compat-can-scan="{{#if perms.content}}true{{else}}false{{/if}}">
 
-  <div class="card mb-4">
+  <div class="card mb-4 p-4">
     <div class="flex flex-wrap items-start gap-4">
       <div class="min-w-0 grow">
         <h2 class="mb-1 text-base font-semibold">Minecraft Version Compatibility</h2>
@@ -56,6 +56,75 @@
     </div>
   </div>
 
+  {{! The mod loader build: what is installed, who decides it (this server or
+      the modpack), and - where the image allows a pin - a picker for any
+      published build. The build list is fetched by the page, not rendered. }}
+  {{#if loaderPin}}
+    {{#with loaderPin}}
+    <div class="card mb-4 p-4" id="loader-card" data-loader="{{loader}}" data-loader-name="{{loaderName}}" data-loader-source="{{source}}" data-loader-mc="{{mcVersion}}" data-loader-pinned="{{pinned}}" data-loader-fixes-mc="{{fixesMcVersion}}" data-server-id="{{../server.id}}">
+      <h2 class="mb-1 text-base font-semibold">Loader Version</h2>
+      <p class="max-w-prose text-xs text-ink-soft">
+        {{#if (eq source 'server')}}
+          The {{loaderName}} build this server runs. Changing it backs the server up first, then rebuilds it
+          with the new build.
+        {{else if (eq source 'curseforge')}}
+          The modpack decides which {{loaderName}} build is installed, so the usual way to change it is to update
+          the modpack on the <a class="text-link hover:underline" href="/updates">Updates</a> page. Only override
+          it here when the pack lists the wrong version.
+        {{else}}
+          The modpack decides which {{loaderName}} build is installed, and the panel can't override it for this
+          modpack. To change it, update the modpack on the <a class="text-link hover:underline" href="/updates">Updates</a>
+          page.
+        {{/if}}
+      </p>
+      <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <div>
+          <dt class="text-xs text-ink-faint">Installed</dt>
+          <dd class="font-mono">{{#if installed}}{{loaderName}} {{installed}}{{else}}<span class="text-ink-faint">not installed yet</span>{{/if}}</dd>
+        </div>
+        {{#if editable}}
+        <div>
+          <dt class="text-xs text-ink-faint">{{#if (eq source 'curseforge')}}Override{{else}}Set to{{/if}}</dt>
+          <dd class="font-mono" data-loader-current>
+            {{#if pinned}}{{pinned}}{{else}}<span class="text-ink-faint">{{#if (eq source 'curseforge')}}none, the modpack's version{{else}}default{{/if}}</span>{{/if}}
+            {{! The image installs the pinned build when the server starts, so
+                right after a change the two differ until then. }}
+            {{#if pendingInstall}}<span class="font-sans text-xs text-ink-faint">(installs on the next start)</span>{{/if}}
+          </dd>
+        </div>
+        {{/if}}
+      </dl>
+
+      {{#if (and editable ../perms.settings)}}
+        {{#if (eq source 'curseforge')}}
+          <div class="notice notice-warn mt-3 text-xs">
+            {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0'}}}
+            <div>A different loader version than the one the modpack was built for can stop it from starting. Use the version the pack's own error message asks for. Updating the modpack removes the override, because the new version declares its own.</div>
+          </div>
+        {{/if}}
+        <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div class="sm:w-64">
+            <label class="label" for="loader-select">New Version</label>
+            <select class="input font-mono" id="loader-select">
+              {{! Title Case choices; the parenthetical qualifiers stay lowercase,
+                  like the build labels beside them ("47.4.10 (recommended)"). }}
+              <option value="">{{#if (eq source 'curseforge')}}The Modpack's Version{{else if (eq loader 'forge')}}Default (recommended){{else}}Default (newest){{/if}}</option>
+              {{#if pinned}}<option value="{{pinned}}" selected>{{pinned}}</option>{{/if}}
+              <option value="__other">Other Build…</option>
+            </select>
+          </div>
+          <div class="hidden sm:w-44" id="loader-custom-wrap">
+            <label class="label" for="loader-custom">Build Number</label>
+            <input class="input font-mono" id="loader-custom" placeholder="{{#if (eq loader 'forge')}}47.4.20{{else if (eq loader 'neoforge')}}21.1.200{{else}}0.16.14{{/if}}" autocomplete="off" spellcheck="false">
+          </div>
+          <button type="button" class="btn btn-primary" id="loader-apply" disabled>{{{icon 'wrench' 'size-4'}}} Change Version</button>
+        </div>
+        <p class="help">The panel checks that the build exists before it changes anything.</p>
+      {{/if}}
+    </div>
+    {{/with}}
+  {{/if}}
+
   {{#if (eq compat.status 'interrupted')}}
     <div class="notice notice-warn mb-4 text-xs">
       {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0'}}}
@@ -78,7 +147,7 @@
   {{/if}}
 
   {{#if compatUnknown.length}}
-    <details class="card group mb-4">
+    <details class="card group mb-4 p-4">
       <summary class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
         <span class="badge badge-warn">{{compatUnknownTotal}}</span>
@@ -99,7 +168,7 @@
   {{/if}}
 
   {{#if compatUnchecked.length}}
-    <details class="card group mb-4">
+    <details class="card group mb-4 p-4">
       <summary class="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
         <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
         <span class="badge badge-warn">{{compatUncheckedTotal}}</span>
@@ -128,7 +197,7 @@
     </div>
     <div class="grid gap-2" id="compat-versions">
       {{#each compatVersions}}
-        <details class="card group" data-compat-version="{{version}}">
+        <details class="card group px-4 py-2.5" data-compat-version="{{version}}">
           <summary class="flex cursor-pointer list-none flex-wrap items-center gap-2 [&::-webkit-details-marker]:hidden">
             <span class="shrink-0 text-ink-faint transition group-open:rotate-90">{{{icon 'chevron-right' 'size-4'}}}</span>
             <span class="font-mono text-sm font-semibold">{{version}}</span>

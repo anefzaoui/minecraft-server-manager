@@ -118,6 +118,16 @@ Cross-cutting:
   partial results live in `version_compat` (not in the in-memory `services/tasks.js`), so a refresh
   or a panel restart resumes instead of hanging on a spinner; `reconcileScans()` marks scans
   orphaned by a shutdown on the next boot.
+- **The mod loader version is a pin, like everything else.** `services/loaderPin.js` reads the
+  installed build from the image's own install manifest (`.forge-manifest.json` and friends) and
+  writes the pin: the loader's itzg variable on a plain server (`FORGE_VERSION`, …), or
+  `CF_MOD_LOADER_VERSION` on a Forge or Fabric CurseForge pack, which overrides the version the
+  pack declares. The image's CurseForge installer ignores that override for NeoForge, and Modrinth
+  and FTB packs have none, so their loader follows the pack. `packs.applyPack` strips every `CF_`
+  variable on a pack update or rollback, which drops an override with the rest. A typed build is
+  checked against the registry's full list first (`services/loaderVersions.js`; Forge's comes from
+  its maven metadata, which skips numbers; a miss is rechecked once against the registry itself),
+  then the change is backup → pin (over the env as it is after the backup) → rebuild.
 - **Ports** are allocated from a base scheme (game from `PORT_GAME_START` upward, RCON = game +
   `PORT_RCON_OFFSET`, Bedrock from `PORT_BEDROCK_START`), probed for availability, and reserved in
   the DB.

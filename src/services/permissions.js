@@ -201,7 +201,7 @@ const CAPABILITY_INFO = {
     help: 'Change server settings, properties, integrations, icon, and upgrade versions.',
     covers: [
       'Save the Configuration tab: name, description, tags, memory, CPU, quota, update policy, environment, and server.properties.',
-      'Upgrade the Minecraft version or the container image, set the icon and the console label, turn the live map on or off.',
+      'Upgrade the Minecraft version or the container image, change the mod loader version, set the icon and the console label, turn the live map on or off.',
       'Configure Discord, the public status page, and invites.',
     ],
     excludes:
@@ -212,6 +212,7 @@ const CAPABILITY_INFO = {
       'POST /api/servers/:id/icon',
       'POST /api/servers/:id/image/upgrade',
       'POST /api/servers/:id/mcversion/upgrade',
+      'POST /api/servers/:id/loader-version',
       'POST /api/servers/:id/map/enable',
       'POST /api/servers/:id/map/disable',
       'WRITES /api/servers/:id/integrations/*',

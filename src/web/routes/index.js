@@ -554,6 +554,9 @@ router.get(
       context.compatUncheckedMore = Math.max(0, unchecked.length - LIST_CAP);
       context.compatUncheckedTotal = unchecked.length;
       context.modCount = compat.modCount(row.id);
+      // The loader card: which build runs and who decides it. The build list
+      // itself is fetched by the page, so a slow registry never delays it.
+      context.loaderPin = require('../../services/loaderPin').loaderVersionInfo(row);
     } else if (tab === 'worlds') {
       const worldsService = require('../../services/worlds');
       context.worlds = await worldsService.listServerWorlds(row.id).catch(() => []);
