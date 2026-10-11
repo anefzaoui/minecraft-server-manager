@@ -1217,11 +1217,9 @@ router.post(
     // A Forge or NeoForge build exists for one Minecraft version, so a pin
     // left in place across a version change names a build the image can't
     // install. It is cleared, unless this request pins the new build itself.
+    // Only a build number is: "latest"/"beta"/"recommended" follow the version.
     const mcPinKey = { FORGE: 'FORGE_VERSION', NEOFORGE: 'NEOFORGE_VERSION' }[server.type];
-    const clearsPin =
-      versionChanging && mcPinKey && server.env[mcPinKey] && !(targetLoaderBuild && envKey === mcPinKey)
-        ? mcPinKey
-        : null;
+    const clearsPinKey = versionChanging && mcPinKey && !(targetLoaderBuild && envKey === mcPinKey) ? mcPinKey : null;
     const taskId = tasks.run(
       versionChanging
         ? `Updating Minecraft version on ${server.display_name}`
@@ -1247,10 +1245,14 @@ router.post(
         const changes = {};
         if (versionChanging) changes.mcVersion = targetVersion;
         // Re-read: a settings save made while the backup ran must survive.
-        const latestEnv = requireServer(server.id).env;
-        if (targetLoaderBuild && envKey) changes.env = { ...latestEnv, [envKey]: targetLoaderBuild };
-        else if (clearsPin)
-          changes.env = Object.fromEntries(Object.entries(latestEnv).filter(([k]) => k !== clearsPin));
+        const env = { ...requireServer(server.id).env };
+        let clearedPin = null;
+        if (clearsPinKey && /^\d/.test(env[clearsPinKey] || '')) {
+          clearedPin = env[clearsPinKey];
+          delete env[clearsPinKey];
+        }
+        if (targetLoaderBuild && envKey) env[envKey] = targetLoaderBuild;
+        if (clearedPin || (targetLoaderBuild && envKey)) changes.env = env;
         servers.updateServer(server.id, changes, { actor });
         t.step('Rebuilding the server…');
         await servers.recreateServer(server.id, { actor });
@@ -1260,7 +1262,7 @@ router.post(
               ok: true,
               from: server.mc_version,
               to: targetVersion,
-              clearedPin: clearsPin ? server.env[clearsPin] : null,
+              clearedPin,
               backupId,
             }
           : { ok: true, from: server.env[envKey] || 'default', to: targetLoaderBuild, backupId };

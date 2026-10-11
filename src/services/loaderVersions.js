@@ -108,7 +108,11 @@ async function quiltBuilds({ fresh } = {}) {
     nonEmpty: isNonEmptyArray,
     fresh,
   });
-  return list.filter((v) => v && v.version).map((v) => ({ version: v.version, label: v.version }));
+  // Quilt's list is in publish order (0.19.4 above 0.20.0-beta.14): sort it.
+  return list
+    .filter((v) => v && v.version)
+    .map((v) => ({ version: v.version, label: v.version }))
+    .sort((a, b) => byBuildDesc(a.version, b.version));
 }
 
 /**
@@ -131,11 +135,12 @@ async function neoforgeBuilds(mc, { fresh } = {}) {
   );
   // Builds for Minecraft snapshots and pre-releases ("26.1.0.0-alpha.1+snapshot-1",
   // "…+pre-3") share the release's prefix; a release server must not be
-  // offered them. The API's order is lexicographic in places (alpha.9 above
-  // alpha.15), so sort rather than trust it.
-  const all = (data.versions || []).filter((v) => !v.includes('+')).sort(byBuildDesc);
+  // offered them. A server on a snapshot (no release prefix) keeps them: they
+  // are its only builds. The API's order is lexicographic in places (alpha.9
+  // above alpha.15), so sort rather than trust it.
+  const all = (data.versions || []).slice().sort(byBuildDesc);
   const prefix = neoforgePrefix(mc);
-  const matched = prefix ? all.filter((v) => v.startsWith(prefix)) : all;
+  const matched = prefix ? all.filter((v) => v.startsWith(prefix) && !v.includes('+')) : all;
   return matched.map((v) => ({ version: v, label: /-beta$/i.test(v) ? `${v} (beta)` : v }));
 }
 

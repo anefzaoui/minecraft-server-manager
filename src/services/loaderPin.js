@@ -226,7 +226,10 @@ async function applyLoaderVersion(serverId, version, { actor, task }) {
   const env = { ...current.env };
   if (version) env[envKey] = version;
   else delete env[envKey];
-  const fixedMc = version && info.fixesMcVersion ? info.fixesMcVersion : null;
+  // Decided again on the re-read server: a Minecraft version set while the
+  // backup ran wins over the one the install recorded.
+  const stillFollowsLatest = !current.mc_version || /^(LATEST|SNAPSHOT)$/i.test(current.mc_version);
+  const fixedMc = version && info.fixesMcVersion && stillFollowsLatest ? info.fixesMcVersion : null;
   servers.updateServer(serverId, fixedMc ? { env, mcVersion: fixedMc } : { env }, { actor });
 
   task.step('Rebuilding the server…');

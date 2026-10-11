@@ -255,3 +255,20 @@ test('the Forge build list and the promotions feed are fetched at the same time'
   await loaderVersions.getBuilds('forge', '1.20.1');
   assert.ok(events.indexOf('maven-start') < events.indexOf('promos-end'), events.join(' → '));
 });
+
+test('a NeoForge server on a Minecraft snapshot keeps the snapshot builds, which are its only ones', async () => {
+  routes[NEOFORGE_URL] = () =>
+    Response.json({ versions: ['26.1.0.0-alpha.9+snapshot-5', '26.1.0.0-alpha.15+snapshot-9', '21.1.200'] });
+  assert.equal(await loaderVersions.isKnownBuild('neoforge', '26.1-snapshot-9', '26.1.0.0-alpha.15+snapshot-9'), true);
+  assert.equal(await loaderVersions.isKnownBuild('neoforge', '26.1', '26.1.0.0-alpha.15+snapshot-9'), false);
+});
+
+test('Quilt builds come back newest first, not in publish order', async () => {
+  routes['https://meta.quiltmc.org/v3/versions/loader'] = () =>
+    Response.json([{ version: '0.19.4' }, { version: '0.20.0-beta.14' }, { version: '0.20.0' }]);
+  const { builds } = await loaderVersions.getBuilds('quilt');
+  assert.deepEqual(
+    builds.slice(1).map((b) => b.version),
+    ['0.20.0', '0.20.0-beta.14', '0.19.4']
+  );
+});

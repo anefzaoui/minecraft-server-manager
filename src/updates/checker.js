@@ -351,7 +351,12 @@ async function checkStandaloneVersion(server, findings) {
     const { builds } = await loaderVersions.getBuilds(loader, server.mc_version, { channel });
     // Forge marks a recommended build, and that is what gets offered; elsewhere
     // the newest. Skip the "Latest (recommended)" no-pin sentinel either way.
-    const newest = builds.find((b) => b.recommended) || builds.find((b) => b.version);
+    // A pre-release ("-beta.4") is only offered to a server already on one: a
+    // server pinned to a release is never pushed onto a beta.
+    const onPreRelease = String(pinned).includes('-');
+    const newest =
+      builds.find((b) => b.recommended) ||
+      builds.find((b) => b.version && (onPreRelease || !String(b.version).includes('-')));
     // Only ever an upgrade: a server pinned past the recommended build (the
     // Versions tab allows any build) must not be offered a step back.
     const isNew = Boolean(newest) && loaderVersions.compareBuilds(newest.version, pinned) > 0;
