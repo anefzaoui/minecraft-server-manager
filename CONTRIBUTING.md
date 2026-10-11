@@ -138,7 +138,8 @@ users:
   not.
 - **History summaries:** every `recordEvent({ summary })` string ends in a
   period, including the terse `Label: detail` lines ("Folder created:
-  plugins/x.jar.", "Server restarted.").
+  plugins/x.jar.", "Server restarted."). `pnpm run lint` enforces it
+  (`msm/event-summary-punctuation`) wherever it can see how the summary ends.
 - **In-progress status lines end in `…`, never a period** — `runTask` /
   progress modal titles and every `task.step(...)` / `onProgress(...)` /
   `onStep(...)` label, as sentence-case gerunds ("Creating backup…",

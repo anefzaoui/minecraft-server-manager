@@ -741,7 +741,7 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     serverId: id,
     actor,
     type: 'config-changed',
-    summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (rebuild required)' : ''}`,
+    summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (rebuild required)' : ''}.`,
     details: { diff, needsRecreate },
   });
   return { server: getServer(id), needsRecreate };

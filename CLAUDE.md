@@ -181,7 +181,8 @@ validation and error messages, and the docs — follows one house style (full de
 - Every sentence-shaped string ends in `.`, `!`, or `?`. Bare fragments, single-word labels, and
   short example placeholders do not.
 - **`recordEvent({ summary })` history summaries always end in a period** — including the terse
-  `Label: detail` lines ("Folder created: plugins/x.jar.", "Server restarted.").
+  `Label: detail` lines ("Folder created: plugins/x.jar.", "Server restarted."). ESLint enforces
+  it (`msm/event-summary-punctuation`, in `scripts/eslint-rules/`).
 - **In-progress status lines end in `…`, never a period.** This covers `runTask` / progress modal
   titles _and_ every `task.step(...)` / `onProgress(...)` / `onStep(...)` label — sentence-case
   gerunds ("Creating backup…", "Querying Modrinth, CurseForge, …"). A step that reports an outcome
@@ -202,7 +203,10 @@ validation and error messages, and the docs — follows one house style (full de
 
 ## Tests
 
-`node:test`, fast, no Docker or network. In-process integration tests boot the real Express app
+`node:test`, fast, no network. Most tests need no Docker, but a few route tests expect a reachable
+daemon that answers "no such container" (CI runners have one), so the suite talks to the local
+Docker when it runs. A test that drives a backup or a rebuild must stub `backups.createBackup` and
+`servers.recreateServer` (see `test/loaderPin.test.js`), or it creates real containers there. In-process integration tests boot the real Express app
 against a throwaway DB via [`test/helpers/app.js`](test/helpers/app.js) (`start`, `req`,
 `adminCookie`, `seedServer`) — `createApp()` wires only routes/middleware, background services live
 in `server.js`, so headless is safe.
