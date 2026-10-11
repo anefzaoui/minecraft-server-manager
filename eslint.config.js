@@ -33,9 +33,14 @@ module.exports = [
   {
     // Shipped server code must go through src/logger.js - no stray console.* in
     // request/boot/background paths where it would bypass structured logging.
+    // History summaries are user-facing sentences and end in punctuation.
     files: ['src/**/*.js'],
+    plugins: {
+      msm: { rules: { 'event-summary-punctuation': require('./scripts/eslint-rules/event-summary-punctuation') } },
+    },
     rules: {
       'no-console': 'error',
+      'msm/event-summary-punctuation': 'error',
     },
   },
   {
