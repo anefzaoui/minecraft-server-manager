@@ -668,3 +668,63 @@ test('a server pinned to a pre-release is offered the release it leads to', asyn
   const row = db.get("SELECT * FROM update_checks WHERE subject_type = 'loader_build' AND subject_id = ?", id);
   assert.equal(row.latest_version, '0.30.1');
 });
+
+// ---- Re-check follow-ups ----------------------------------------------------
+
+test('a keyword pin survives a Minecraft upgrade: it follows the version by itself', async () => {
+  const id = seed('srv_lp_kw_up', { env: { FORGE_VERSION: 'latest' } });
+  const r = await app.req('POST', `/api/servers/${id}/mcversion/upgrade`, {
+    cookie,
+    body: { targetVersion: '1.20.2', force: true },
+  });
+  const task = await settle(r.json.taskId);
+  assert.equal(task.state, 'done', task.error);
+  assert.equal(envOf(id).FORGE_VERSION, 'latest');
+  assert.equal(task.result.clearedPin, null);
+});
+
+test('the cleared pin is reported only when it really was removed', async () => {
+  // A request that moves the version and pins a different loader variable:
+  // the stale Forge pin still goes, and is reported because it went.
+  const id = seed('srv_lp_clear_both', { env: { FORGE_VERSION: '47.4.10' } });
+  const r = await app.req('POST', `/api/servers/${id}/mcversion/upgrade`, {
+    cookie,
+    body: { targetVersion: '1.20.2', force: true, targetLoaderBuild: '0.16.14', envKey: 'FABRIC_LOADER_VERSION' },
+  });
+  const task = await settle(r.json.taskId);
+  assert.equal(task.state, 'done', task.error);
+  assert.equal(envOf(id).FORGE_VERSION, undefined);
+  assert.equal(task.result.clearedPin, '47.4.10');
+});
+
+test('a Minecraft version set while the backup runs is not overwritten by the installed one', async () => {
+  const id = seed('srv_lp_latest_race', {
+    mc: 'LATEST',
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
+  });
+  backups.createBackup = async (serverId) => {
+    servers.updateServer(serverId, { mcVersion: '1.20.4' }, { actor: 'other' });
+    return { id: 'bkp_test' };
+  };
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
+  assert.equal((await settle(r.json.taskId)).state, 'done');
+  assert.equal(db.get('SELECT mc_version FROM servers WHERE id = ?', id).mc_version, '1.20.4');
+});
+
+test('Quilt offers follow the real list order: a release pin gets a release, a beta pin may get a newer beta', async () => {
+  const checker = require('../src/updates/checker');
+  // Quilt's meta lists by publish time, so a newer beta tops the list.
+  routes['https://meta.quiltmc.org/v3/versions/loader'] = () =>
+    Response.json([
+      { version: '0.31.0-beta.4' },
+      { version: '0.30.1' },
+      { version: '0.30.1-beta.4' },
+      { version: '0.30.0' },
+    ]);
+  const release = seed('srv_lp_chk_q_rel', { type: 'QUILT', env: { QUILT_LOADER_VERSION: '0.30.0' } });
+  const beta = seed('srv_lp_chk_q_beta', { type: 'QUILT', env: { QUILT_LOADER_VERSION: '0.30.1-beta.4' } });
+  await checker.checkAll({ actor: 'test' });
+  const row = (id) => db.get("SELECT * FROM update_checks WHERE subject_type = 'loader_build' AND subject_id = ?", id);
+  assert.equal(row(release).latest_version, '0.30.1', 'never pushed onto a beta');
+  assert.equal(row(beta).latest_version, '0.31.0-beta.4');
+});
