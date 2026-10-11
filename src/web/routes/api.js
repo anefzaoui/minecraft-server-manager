@@ -1209,18 +1209,25 @@ router.post(
         });
       }
     }
+    const versionChanging = Boolean(targetVersion) && targetVersion !== server.mc_version;
+    const buildChanging = Boolean(targetLoaderBuild && envKey) && server.env[envKey] !== targetLoaderBuild;
     const taskId = tasks.run(
-      `Updating Minecraft version on ${server.display_name}`,
+      versionChanging
+        ? `Updating Minecraft version on ${server.display_name}`
+        : `Updating the loader build on ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
-        const versionChanging = targetVersion && targetVersion !== server.mc_version;
+        // A loader build swap reinstalls the server jar just like a Minecraft
+        // version change does, so it gets the same backup first.
         let backupId = null;
-        if (versionChanging) {
+        if (versionChanging || buildChanging) {
           t.step('Creating pre-update backup…');
           const backup = await backups.createBackup(server.id, {
             reason: 'pre-update',
             actor,
-            note: `Before Minecraft ${server.mc_version} → ${targetVersion}`,
+            note: versionChanging
+              ? `Before Minecraft ${server.mc_version} → ${targetVersion}`
+              : `Before loader build ${server.env[envKey] || 'default'} → ${targetLoaderBuild}`,
             task: t,
           });
           backupId = backup.id;
@@ -1230,10 +1237,41 @@ router.post(
         if (versionChanging) changes.mcVersion = targetVersion;
         if (targetLoaderBuild && envKey) changes.env = { ...server.env, [envKey]: targetLoaderBuild };
         servers.updateServer(server.id, changes, { actor });
-        t.step('Recreating container…');
+        t.step('Rebuilding the server…');
         await servers.recreateServer(server.id, { actor });
         return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
       }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// Versions tab: pin any published loader build (or '' to go back to the
+// default), on a plain loader server or as a CurseForge pack override. The
+// build is checked against the registry before the task starts, so a typo is
+// a 400 here instead of a server that fails to install.
+const loaderPin = require('../../services/loaderPin');
+
+router.post(
+  '/servers/:id/loader-version',
+  requireCap('settings'),
+  asyncHandler(async (req, res) => {
+    const { version } = z
+      .object({
+        version: z
+          .string()
+          .trim()
+          .regex(/^[\w.+-]{0,64}$/, 'That is not a valid loader version.'),
+      })
+      .parse(req.body);
+    const server = requireServer(req.params.id);
+    const info = await loaderPin.assertChangeable(server, version);
+    if (version === info.pinned) throw httpError(409, `This server is already set to that ${info.loaderName} version.`);
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Changing the ${info.loaderName} version on ${server.display_name}`,
+      { serverId: server.id, actor },
+      (t) => loaderPin.applyLoaderVersion(server.id, version, { actor, task: t })
     );
     res.status(202).json({ ok: true, taskId });
   })
