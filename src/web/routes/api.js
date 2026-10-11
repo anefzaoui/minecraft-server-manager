@@ -1211,6 +1211,17 @@ router.post(
     }
     const versionChanging = Boolean(targetVersion) && targetVersion !== server.mc_version;
     const buildChanging = Boolean(targetLoaderBuild && envKey) && server.env[envKey] !== targetLoaderBuild;
+    // A stale row (applied elsewhere since the check) changes nothing: refuse
+    // it rather than rebuild without the backup the Updates page promises.
+    if (!versionChanging && !buildChanging) throw httpError(409, 'This server is already on that version.');
+    // A Forge or NeoForge build exists for one Minecraft version, so a pin
+    // left in place across a version change names a build the image can't
+    // install. It is cleared, unless this request pins the new build itself.
+    const mcPinKey = { FORGE: 'FORGE_VERSION', NEOFORGE: 'NEOFORGE_VERSION' }[server.type];
+    const clearsPin =
+      versionChanging && mcPinKey && server.env[mcPinKey] && !(targetLoaderBuild && envKey === mcPinKey)
+        ? mcPinKey
+        : null;
     const taskId = tasks.run(
       versionChanging
         ? `Updating Minecraft version on ${server.display_name}`
@@ -1236,11 +1247,23 @@ router.post(
         const changes = {};
         if (versionChanging) changes.mcVersion = targetVersion;
         // Re-read: a settings save made while the backup ran must survive.
-        if (targetLoaderBuild && envKey) changes.env = { ...requireServer(server.id).env, [envKey]: targetLoaderBuild };
+        const latestEnv = requireServer(server.id).env;
+        if (targetLoaderBuild && envKey) changes.env = { ...latestEnv, [envKey]: targetLoaderBuild };
+        else if (clearsPin)
+          changes.env = Object.fromEntries(Object.entries(latestEnv).filter(([k]) => k !== clearsPin));
         servers.updateServer(server.id, changes, { actor });
         t.step('Rebuilding the server…');
         await servers.recreateServer(server.id, { actor });
-        return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
+        // From/to name what actually moved: the Minecraft version, or the build.
+        return versionChanging
+          ? {
+              ok: true,
+              from: server.mc_version,
+              to: targetVersion,
+              clearedPin: clearsPin ? server.env[clearsPin] : null,
+              backupId,
+            }
+          : { ok: true, from: server.env[envKey] || 'default', to: targetLoaderBuild, backupId };
       }
     );
     res.status(202).json({ ok: true, taskId });

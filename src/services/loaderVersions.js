@@ -21,9 +21,20 @@ const MAX_BUILDS = 40; // keep the dropdown sane; the picker also takes a typed 
 const LATEST = { version: '', label: 'Latest (recommended)' };
 // Registries don't all list builds in order (Forge's maven metadata doesn't), and
 // a plain string sort puts 47.4.5 above 47.4.26. Numeric collation compares the
-// digit runs as numbers.
+// digit runs as numbers. A pre-release sorts below its own release, as in
+// semver: the part before the first "-" decides first, so 0.30.1 is newer than
+// 0.30.1-beta.4 (collation alone would put the longer string after it).
 const BUILD_COLLATOR = new Intl.Collator('en', { numeric: true });
-const byBuildDesc = (a, b) => BUILD_COLLATOR.compare(b, a);
+/** >0 when build a is newer than build b. */
+function compareBuilds(a, b) {
+  const [coreA, ...preA] = String(a).split('-');
+  const [coreB, ...preB] = String(b).split('-');
+  const byCore = BUILD_COLLATOR.compare(coreA, coreB);
+  if (byCore !== 0) return byCore;
+  if (!preA.length || !preB.length) return preB.length - preA.length; // a release beats its pre-release
+  return BUILD_COLLATOR.compare(preA.join('-'), preB.join('-'));
+}
+const byBuildDesc = (a, b) => compareBuilds(b, a);
 
 const ENV_KEY = {
   fabric: 'FABRIC_LOADER_VERSION',
@@ -118,7 +129,11 @@ async function neoforgeBuilds(mc, { fresh } = {}) {
     'https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge',
     { nonEmpty: hasVersions, fresh }
   );
-  const all = (data.versions || []).slice().reverse(); // maven returns ascending; newest first
+  // Builds for Minecraft snapshots and pre-releases ("26.1.0.0-alpha.1+snapshot-1",
+  // "…+pre-3") share the release's prefix; a release server must not be
+  // offered them. The API's order is lexicographic in places (alpha.9 above
+  // alpha.15), so sort rather than trust it.
+  const all = (data.versions || []).filter((v) => !v.includes('+')).sort(byBuildDesc);
   const prefix = neoforgePrefix(mc);
   const matched = prefix ? all.filter((v) => v.startsWith(prefix)) : all;
   return matched.map((v) => ({ version: v, label: /-beta$/i.test(v) ? `${v} (beta)` : v }));
@@ -156,29 +171,31 @@ async function forgeMavenBuilds(mc, { fresh } = {}) {
 // The promotions feed names the recommended + latest build per MC, which label
 // the full maven list. Either source alone still yields a usable list.
 async function forgeBuilds(mc) {
+  // Both sources at once: one after the other, two slow hosts would make the
+  // wizard wait out both timeouts before it falls back.
+  const [promosResult, mavenResult] = await Promise.allSettled([
+    cachedJson('loader:forge', 'https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json'),
+    forgeMavenBuilds(mc),
+  ]);
   let promos = {};
-  try {
-    const data = await cachedJson(
-      'loader:forge',
-      'https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json'
-    );
-    promos = data.promos || {};
-  } catch (err) {
+  if (promosResult.status === 'fulfilled') {
+    promos = promosResult.value.promos || {};
+  } else {
     logger.debug('Fetching the Forge promotions feed failed; listing builds without labels.', {
       mc,
-      err: serializeError(err, { includeStack: false }),
+      err: serializeError(promosResult.reason, { includeStack: false }),
     });
   }
   const recommended = promos[`${mc}-recommended`];
   const latest = promos[`${mc}-latest`];
   let versions;
-  try {
-    versions = await forgeMavenBuilds(mc);
-  } catch (err) {
-    if (!recommended && !latest) throw err;
+  if (mavenResult.status === 'fulfilled') {
+    versions = mavenResult.value;
+  } else {
+    if (!recommended && !latest) throw mavenResult.reason;
     logger.debug('Fetching the Forge build list failed; offering the promoted builds only.', {
       mc,
-      err: serializeError(err, { includeStack: false }),
+      err: serializeError(mavenResult.reason, { includeStack: false }),
     });
     versions = [...new Set([latest, recommended].filter(Boolean))];
   }
@@ -289,11 +306,6 @@ async function checkBuild(loader, mc, version) {
     ? versions.filter((v) => v.startsWith(line) && compareBuilds(v, version) > 0).sort(compareBuilds)
     : [];
   return { known: false, closestNewer: newer[0] || null };
-}
-
-/** >0 when build a is newer than build b. */
-function compareBuilds(a, b) {
-  return BUILD_COLLATOR.compare(String(a), String(b));
 }
 
 module.exports = {

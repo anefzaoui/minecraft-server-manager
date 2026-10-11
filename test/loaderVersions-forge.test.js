@@ -213,3 +213,45 @@ test('the recommended build stays in the list when 40 newer ones push it past th
   assert.equal(recommended.version, '47.2.3');
   assert.equal(builds.length, 42, 'Latest + 40 newest + the recommended one');
 });
+
+test('a pre-release sorts below its release', () => {
+  assert.ok(loaderVersions.compareBuilds('0.30.1', '0.30.1-beta.4') > 0);
+  assert.ok(loaderVersions.compareBuilds('0.30.1-beta.4', '0.30.1-beta.3') > 0);
+  assert.ok(loaderVersions.compareBuilds('0.31.0-beta.1', '0.30.1') > 0);
+  assert.ok(loaderVersions.compareBuilds('21.1.200', '21.1.200-beta') > 0);
+});
+
+test('NeoForge leaves out snapshot builds and sorts the rest itself', async () => {
+  routes[NEOFORGE_URL] = () =>
+    Response.json({
+      versions: [
+        '26.1.0.0-alpha.15+snapshot-9',
+        '26.1.0.0-alpha.9+snapshot-5',
+        '26.1.0.10',
+        '26.1.0.3-beta',
+        '26.1.0.3',
+        '26.1.0.2+pre-3',
+      ],
+    });
+  const { builds } = await loaderVersions.getBuilds('neoforge', '26.1');
+  assert.deepEqual(
+    builds.slice(1).map((b) => b.version),
+    ['26.1.0.10', '26.1.0.3', '26.1.0.3-beta']
+  );
+});
+
+test('the Forge build list and the promotions feed are fetched at the same time', async () => {
+  const events = [];
+  routes[PROMOS_URL] = async () => {
+    events.push('promos-start');
+    await new Promise((r) => setTimeout(r, 50));
+    events.push('promos-end');
+    return Response.json(PROMOS);
+  };
+  routes[MAVEN_URL] = () => {
+    events.push('maven-start');
+    return new Response(mavenXml(MAVEN_VERSIONS), { status: 200 });
+  };
+  await loaderVersions.getBuilds('forge', '1.20.1');
+  assert.ok(events.indexOf('maven-start') < events.indexOf('promos-end'), events.join(' → '));
+});

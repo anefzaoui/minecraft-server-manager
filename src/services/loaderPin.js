@@ -44,6 +44,8 @@ const MC_SPECIFIC = new Set(['forge', 'neoforge']);
  * @property {string|null} installed    the build the image last installed, when known
  * @property {boolean} pendingInstall   a pinned build the image has yet to install
  * @property {string|null} mcVersion    the Minecraft version builds are listed for
+ * @property {string|null} fixesMcVersion  a server that follows the newest Minecraft is
+ *   fixed to this installed version when a Forge/NeoForge build is pinned (see below)
  * @property {boolean} editable
  */
 
@@ -121,6 +123,11 @@ function loaderVersionInfo(server) {
     // The server's own setting first: right after a Minecraft version change,
     // the manifest still describes the install from before it.
     mcVersion: mc || installed.mcVersion,
+    // A Forge or NeoForge build exists for one Minecraft version, but a server
+    // on LATEST is re-resolved by the image to the newest version every start:
+    // the pin would break the day a newer one ships. Pinning one therefore
+    // also fixes the server to the version it has installed.
+    fixesMcVersion: source === 'server' && MC_SPECIFIC.has(loader) && !mc ? installed.mcVersion : null,
     editable: Boolean(envKey),
   };
 }
@@ -150,7 +157,7 @@ async function assertChangeable(server, version) {
   if (MC_SPECIFIC.has(info.loader) && !info.mcVersion) {
     throw httpError(
       409,
-      `Set a Minecraft version for this server, or start it once, before choosing a ${info.loaderName} build.`
+      `Start this server once, so the panel knows its Minecraft version, then choose a ${info.loaderName} build.`
     );
   }
   let check;
@@ -191,7 +198,7 @@ async function assertChangeable(server, version) {
  * @param {string} serverId
  * @param {string} version
  * @param {{ actor: string, task: { step: (label: string) => void } }} opts
- * @returns {Promise<{ from: string, to: string, backupId: string }>}
+ * @returns {Promise<{ from: string, to: string, mcVersion: string|null, backupId: string }>}
  */
 async function applyLoaderVersion(serverId, version, { actor, task }) {
   const server = servers.getServer(serverId);
@@ -219,7 +226,8 @@ async function applyLoaderVersion(serverId, version, { actor, task }) {
   const env = { ...current.env };
   if (version) env[envKey] = version;
   else delete env[envKey];
-  servers.updateServer(serverId, { env }, { actor });
+  const fixedMc = version && info.fixesMcVersion ? info.fixesMcVersion : null;
+  servers.updateServer(serverId, fixedMc ? { env, mcVersion: fixedMc } : { env }, { actor });
 
   task.step('Rebuilding the server…');
   await servers.recreateServer(serverId, { actor });
@@ -228,12 +236,12 @@ async function applyLoaderVersion(serverId, version, { actor, task }) {
     actor,
     type: 'loader-version-changed',
     summary: version
-      ? `${info.loaderName} version changed to ${version}.`
+      ? `${info.loaderName} version changed to ${version}${fixedMc ? `, with the server fixed to Minecraft ${fixedMc}` : ''}.`
       : `${info.loaderName} version reset to ${fallback}.`,
-    details: { loader: info.loader, envKey, from, to: version, backupId: backup.id },
+    details: { loader: info.loader, envKey, from, to: version, mcVersion: fixedMc, backupId: backup.id },
   });
   logger.info('Changed a server loader version.', { serverId, loader: info.loader, from, to: version, actor });
-  return { from, to: version, backupId: backup.id };
+  return { from, to: version, mcVersion: fixedMc, backupId: backup.id };
 }
 
 module.exports = { loaderVersionInfo, assertChangeable, applyLoaderVersion, readInstalled, PACK_OVERRIDE_KEY };
