@@ -7,7 +7,7 @@ The **Updates** page tracks what's out of date across your fleet in one place:
 - **Modpack** versions ([modpacks](modpacks.md)) against Modrinth / CurseForge / the GTNH release index.
 - **Custom content** you added yourself - mods, datapacks, resource packs, plugins - each against its source: Modrinth, CurseForge, Hangar, SpigotMC (Spiget), or GitHub Releases. GitHub lookups use ETag revalidation, so daily checks barely touch its rate limit.
 - **Docker image** staleness: each running container's image ID against a freshly pulled tag (deduplicated across servers on the same tag), offered as a recreate-only upgrade.
-- **Standalone version pins**: for a server with no managed pack, an explicit `mc_version` pin against Mojang's manifest, and an explicit loader-build env var (`PAPER_BUILD`, `FORGE_VERSION`, and the like) against the loader's registry. Paper builds come from PaperMC's current **Fill v3 API** (the legacy v2 endpoint stopped receiving new Minecraft versions). On a server with mods, a newer Minecraft version is only offered once a [version check](#minecraft-version-compatibility) has shown that every installed mod has a build for it.
+- **Standalone version pins**: for a server with no managed pack, an explicit `mc_version` pin against Mojang's manifest, and an explicit loader-build env var (`PAPER_BUILD`, `FORGE_VERSION`, and the like) against the loader's registry. Paper builds come from PaperMC's current **Fill v3 API** (the legacy v2 endpoint stopped receiving new Minecraft versions). On a server with mods, a newer Minecraft version is only offered once a [version check](#minecraft-version-compatibility) has shown that every installed mod has a build for it. A pinned Forge server is offered Forge's recommended build, never a build older than the one it is pinned to, and applying a loader build takes a pre-update backup first. To pick a specific build yourself, see [changing the mod loader version](#changing-the-mod-loader-version).
 
 ![Updates](images/updates.png)
 
@@ -44,6 +44,16 @@ This covers servers that run mods - Fabric, Forge, NeoForge and Quilt. Paper-sty
 ![A version opened, showing which mods would be left behind](images/server-versions-expanded.png)
 
 Opening a version lists the mods with no build for it first - the ones that decide the answer - and keeps the ready ones behind a click. Big packs load a page of mods at a time, so a 300-mod server opens as fast as a five-mod one.
+
+## Changing the mod loader version
+
+The **Versions** tab also has a **Loader Version** card. It shows which Forge, NeoForge, Fabric or Quilt build the server has installed and, where it can be changed, a picker to switch to another one.
+
+- **A Forge, NeoForge, Fabric or Quilt server** can run any published build. The picker lists the recent builds for the server's Minecraft version, with Forge's recommended and latest builds labelled. **Other build…** takes any older one by its number, and **Default** goes back to letting the server pick.
+- **A CurseForge modpack** installs the loader version its own manifest declares, so the usual way to change it is to update the pack. When the pack itself lists the wrong version (a mod inside it asks for a newer Forge than the pack installs), the card can override it. **The modpack's version** removes the override again. An override stays in place across pack updates until you remove it, so take it off once the pack is fixed.
+- **A Modrinth or FTB modpack** cannot be overridden: its loader follows the pack version, so update the pack instead.
+
+The panel checks that the build exists before it asks you anything. Forge skips build numbers (there is no 47.4.14 between 47.4.13 and 47.4.15), so a mod that "requires 47.4.14 or above" is satisfied by the next build up, and the refusal names it. A change takes a pre-update backup, then rebuilds the server. The new build is installed the next time the server starts, and the card says so until then.
 
 ## Undoing a mod update
 

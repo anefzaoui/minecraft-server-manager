@@ -69,6 +69,18 @@ Fabric mods overwhelmingly need the Fabric API as a separate file. Forge and Neo
 dependencies in the error itself. Install the named version, not the newest one: "requires 0.91.x"
 means that line, and 0.92 will fail the same check.
 
+Sometimes the missing dependency is the loader itself:
+
+```
+Mod X requires forge 47.4.14 or above
+Mod ID: 'forge', Requested by: 'x', Expected range: '[47.4.14,)', Actual version: '47.4.10'
+```
+
+The fix is a newer loader build, not a different mod. "47.4.14 or above" means any build from there
+up, and Forge does not publish every number, so the build to install may be the next one along. On a
+modpack, update the pack first: a pack whose own loader version is too old for its mods is a bug for
+its author to fix.
+
 ## 6. A mod is for the wrong loader or version
 
 A jar for a different loader does not fail politely. Expect a mixin error, a `NoClassDefFoundError`,
@@ -115,6 +127,9 @@ as suspects.
 Any report can be shared to mclo.gs in one click when you need help, and the panel keeps the log
 bundle so "post the whole log" is a download rather than an archaeology project. An out-of-memory
 kill is recorded as an out-of-memory kill, which saves the usual hour of blaming a mod.
+
+A loader that is too old is changed from the server's **Versions** tab, which checks the build exists
+and takes a backup before it rebuilds the server ([changing the mod loader version](updates.md#changing-the-mod-loader-version)).
 
 Related: [how much RAM a server needs](guide-server-memory.md), [choosing a loader](guide-choosing-a-loader.md),
 [creating and managing servers](servers.md).
