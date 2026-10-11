@@ -270,15 +270,17 @@ async function fillBuilds(select, { loader, mc, pinned }) {
     // The registry's "Latest" entry is '' - the card's own first option covers it.
     if (res.ok && data.ok) builds = (data.builds || []).filter((b) => b.version);
   } catch {
-    // Registry unreachable: the default, the current pin and "Other build…" still work.
+    // Registry unreachable: the default, the current pin and "Other Build…" still work.
   }
   if (!builds.length) return;
+  // A choice made while the list was loading wins over the pin.
+  const chosen = select.value;
   const other = select.querySelector(`option[value="${OTHER}"]`);
   for (const opt of [...select.options]) if (opt.value && opt.value !== OTHER) opt.remove();
   // A pin older than the list's cap stays selectable, at the top.
   if (pinned && !builds.some((b) => b.version === pinned)) builds.unshift({ version: pinned, label: pinned });
   for (const b of builds) select.insertBefore(new Option(b.label, b.version), other);
-  select.value = pinned || '';
+  select.value = chosen;
   select.dispatchEvent(new Event('change', { bubbles: true })); // resyncs the enhanced trigger
 }
 
@@ -312,7 +314,7 @@ async function changeLoader({ serverId, name, source, version, pinned }) {
     message: pinned
       ? `This server moves from ${name} ${pinned} to ${target}. A backup is taken first, then the server is rebuilt with it.`
       : `A backup is taken first, then the server is rebuilt with ${target}.`,
-    detail: 'The server is briefly offline while it is rebuilt.',
+    detail: 'If the server is running, it is briefly offline while it is rebuilt.',
     confirmLabel: 'Change Version',
   });
   if (!ok) return;

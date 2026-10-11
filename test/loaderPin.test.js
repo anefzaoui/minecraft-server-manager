@@ -144,6 +144,7 @@ test('a plain Forge server: the pin, and the installed build from the image mani
     envKey: 'FORGE_VERSION',
     pinned: '47.4.10',
     installed: '47.4.10',
+    pendingInstall: false,
     mcVersion: '1.20.1',
     editable: true,
   });
@@ -367,13 +368,14 @@ test('a failed backup stops the change before the pin is touched', async () => {
 
 test('every step label is an in-progress line ending in an ellipsis', async () => {
   const { applyLoaderVersion } = require('../src/services/loaderPin');
-  const id = seed('srv_lp_steps', { type: 'AUTO_CURSEFORGE', env: { CF_SLUG: 'p', CF_FILE_ID: '1' } });
-  fs.writeFileSync(dataPath('servers', id, '.forge-manifest.json'), JSON.stringify({ forgeVersion: '47.4.10' }));
+  const id = seed('srv_lp_steps', {
+    type: 'AUTO_CURSEFORGE',
+    env: { CF_SLUG: 'p', CF_FILE_ID: '1', CF_MOD_LOADER_VERSION: '47.4.15' },
+  });
+  fs.writeFileSync(dataPath('servers', id, '.forge-manifest.json'), JSON.stringify({ forgeVersion: '47.4.15' }));
   const steps = [];
-  await applyLoaderVersion(id, '', { actor: 'test', task: { step: (s) => steps.push(s) } }).catch(() => {});
-  // '' on an unpinned pack is accepted by the service (the route refuses it as
-  // a no-op first); what matters here is the wording of every step.
-  assert.ok(steps.length >= 3);
+  await applyLoaderVersion(id, '', { actor: 'test', task: { step: (s) => steps.push(s) } });
+  assert.equal(steps.length, 3);
   for (const s of steps) assert.match(s, /…$/, s);
   assert.ok(steps.includes("Switching to the modpack's version of Forge…"));
 });
@@ -441,7 +443,7 @@ test('a CurseForge pack gets the override picker with a warning; a Modrinth pack
   let r = await app.req('GET', `/servers/${cf}/updates`, { cookie, headers: { Accept: 'text/html' } });
   assert.equal(r.status, 200);
   assert.match(r.text, /id="loader-select"/);
-  assert.match(r.text, /The modpack&#x27;s version|The modpack's version/);
+  assert.match(r.text, /The Modpack&#x27;s Version|The Modpack's Version/);
   assert.match(r.text, /modpack was built for/);
 
   const mr = seed('srv_lp_page_mr', {
@@ -452,7 +454,7 @@ test('a CurseForge pack gets the override picker with a warning; a Modrinth pack
   r = await app.req('GET', `/servers/${mr}/updates`, { cookie, headers: { Accept: 'text/html' } });
   assert.equal(r.status, 200);
   assert.match(r.text, /Fabric 0\.16\.14/);
-  assert.match(r.text, /has no override/);
+  assert.match(r.text, /can&#x27;t override it for this|can't override it for this/);
   assert.doesNotMatch(r.text, /id="loader-select"/);
 });
 
@@ -504,4 +506,105 @@ test('a dry run checks the change without starting anything', async () => {
     body: { version: '47.4.15', dryRun: true },
   });
   assert.equal(viewer.status, 403, 'a dry run needs the same permission');
+});
+
+// ---- Review follow-ups ----------------------------------------------------
+
+test('a NeoForge CurseForge pack cannot be overridden: the image ignores the override for NeoForge', async () => {
+  const { loaderVersionInfo } = require('../src/services/loaderPin');
+  const id = seed('srv_lp_cf_neo', {
+    type: 'AUTO_CURSEFORGE',
+    mc: '1.21.1',
+    env: { CF_SLUG: 'p', CF_FILE_ID: '1' },
+    manifest: { loader: 'neoforge', body: { minecraftVersion: '1.21.1', forgeVersion: '21.1.200' } },
+  });
+  const info = loaderVersionInfo(servers.getServer(id));
+  assert.equal(info.loader, 'neoforge');
+  assert.equal(info.source, 'modpack');
+  assert.equal(info.envKey, null);
+  assert.equal(info.editable, false);
+  assert.equal(info.installed, '21.1.200');
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '21.1.201' } });
+  assert.equal(r.status, 409);
+  assert.deepEqual(calls, []);
+});
+
+test("builds are listed for the server's own Minecraft version, not a stale install's", () => {
+  const { loaderVersionInfo } = require('../src/services/loaderPin');
+  // Moved to 1.21.1 while stopped: the manifest still describes the 1.20.1 install.
+  const id = seed('srv_lp_mc_moved', {
+    mc: '1.21.1',
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
+  });
+  assert.equal(loaderVersionInfo(servers.getServer(id)).mcVersion, '1.21.1');
+  // A server that follows LATEST falls back to what the image installed.
+  const latest = seed('srv_lp_mc_latest', {
+    mc: 'LATEST',
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
+  });
+  assert.equal(loaderVersionInfo(servers.getServer(latest)).mcVersion, '1.20.1');
+});
+
+test('a Forge server with no Minecraft version yet is told to set one, not that the build is unpublished', async () => {
+  const id = seed('srv_lp_no_mc', { mc: 'LATEST' });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
+  assert.equal(r.status, 409);
+  assert.equal(
+    r.json.error,
+    'Set a Minecraft version for this server, or start it once, before choosing a Forge build.'
+  );
+});
+
+test('an unpinned CurseForge pack is refused before any backup is taken', async () => {
+  const id = seed('srv_lp_cf_unpinned', {
+    type: 'AUTO_CURSEFORGE',
+    env: { CF_SLUG: 'somepack' }, // no CF_FILE_ID: a legacy, unpinned pack
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
+  });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, {
+    cookie,
+    body: { version: '47.4.15', dryRun: true },
+  });
+  assert.equal(r.status, 400);
+  assert.match(r.json.error, /CF_FILE_ID/);
+  assert.deepEqual(calls, []);
+});
+
+test('a settings save made while the backup runs survives the pin', async () => {
+  const id = seed('srv_lp_concurrent', { env: { FORGE_VERSION: '47.4.10' } });
+  backups.createBackup = async (serverId) => {
+    // Someone saves the Configuration tab mid-backup.
+    servers.updateServer(serverId, { env: { ...envOf(serverId), MOTD: 'saved meanwhile' } }, { actor: 'other' });
+    return { id: 'bkp_test' };
+  };
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
+  assert.equal((await settle(r.json.taskId)).state, 'done');
+  assert.deepEqual(envOf(id), { FORGE_VERSION: '47.4.15', MOTD: 'saved meanwhile' });
+});
+
+test('a keyword pin is never shown as waiting to install', () => {
+  const { loaderVersionInfo } = require('../src/services/loaderPin');
+  const id = seed('srv_lp_keyword', {
+    env: { FORGE_VERSION: 'latest' },
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.26' } },
+  });
+  assert.equal(loaderVersionInfo(servers.getServer(id)).pendingInstall, false);
+  const waiting = seed('srv_lp_waiting', {
+    env: { FORGE_VERSION: '47.4.15' },
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
+  });
+  assert.equal(loaderVersionInfo(servers.getServer(waiting)).pendingInstall, true);
+});
+
+test('a build published since the list was cached is accepted after one fresh look', async () => {
+  const id = seed('srv_lp_fresh');
+  // Warm the cache with a list that predates 47.4.27.
+  await require('../src/services/loaderVersions').getBuilds('forge', '1.20.1');
+  const later = `<metadata><versioning><versions>${['47.4.27', ...FORGE_1201].map((v) => `<version>1.20.1-${v}</version>`).join('')}</versions></versioning></metadata>`;
+  routes[MAVEN_URL] = () => new Response(later, { status: 200 });
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, {
+    cookie,
+    body: { version: '47.4.27', dryRun: true },
+  });
+  assert.equal(r.status, 200);
 });

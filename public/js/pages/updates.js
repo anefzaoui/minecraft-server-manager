@@ -214,7 +214,7 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
   const ok = await confirmDialog({
     title: targetVersion ? 'Update the Minecraft version?' : 'Update the loader build?',
     message,
-    detail: 'The server is briefly offline while it is rebuilt.',
+    detail: 'If the server is running, it is briefly offline while it is rebuilt.',
     confirmLabel: 'Update Now',
   });
   if (!ok) return;

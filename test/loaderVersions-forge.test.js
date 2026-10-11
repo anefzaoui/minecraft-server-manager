@@ -189,3 +189,27 @@ test('compareBuilds orders builds numerically', () => {
   assert.ok(loaderVersions.compareBuilds('47.4.10', '47.4.14') < 0);
   assert.equal(loaderVersions.compareBuilds('47.4.14', '47.4.14'), 0);
 });
+
+test('a 200 with no versions in it is a failure, not a cached "no builds"', async () => {
+  routes[MAVEN_URL] = () => new Response('<html>maintenance</html>', { status: 200 });
+  // The picker falls back to the promoted builds instead of showing nothing.
+  const { builds } = await loaderVersions.getBuilds('forge', '1.20.1');
+  assert.deepEqual(
+    builds.map((b) => b.version),
+    ['', '47.4.26', '47.4.10']
+  );
+  assert.equal(db.get("SELECT 1 FROM api_cache WHERE key = 'loader:forge-maven'"), undefined, 'nothing cached');
+  // A typed build can't be checked against nothing: that is an outage, not a refusal.
+  await assert.rejects(loaderVersions.checkBuild('forge', '1.20.1', '47.4.15'));
+});
+
+test('the recommended build stays in the list when 40 newer ones push it past the cap', async () => {
+  const many = Array.from({ length: 60 }, (_, i) => `1.20.1-47.2.${i}`);
+  routes[MAVEN_URL] = () => new Response(mavenXml(many), { status: 200 });
+  routes[PROMOS_URL] = () => Response.json({ promos: { '1.20.1-recommended': '47.2.3', '1.20.1-latest': '47.2.59' } });
+  const { builds } = await loaderVersions.getBuilds('forge', '1.20.1');
+  const recommended = builds.find((b) => b.recommended);
+  assert.ok(recommended, 'the recommended build is still offered');
+  assert.equal(recommended.version, '47.2.3');
+  assert.equal(builds.length, 42, 'Latest + 40 newest + the recommended one');
+});
