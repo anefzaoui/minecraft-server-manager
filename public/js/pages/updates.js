@@ -210,11 +210,11 @@ async function upgradeImage(row, { serverId, serverName, current, latest }) {
 async function upgradeMcVersion(row, { serverId, serverName, current, latest, targetVersion, targetBuild, envKey }) {
   const message = targetVersion
     ? `${serverName} moves from Minecraft ${current} to ${latest}. A backup is taken first, but upgrading the world is permanent.`
-    : `${serverName} moves from ${current} to ${latest}. The panel rebuilds the container with the new build.`;
+    : `${serverName} moves from ${current} to ${latest}. A backup is taken first, then the server is rebuilt with the new build.`;
   const ok = await confirmDialog({
     title: targetVersion ? 'Update the Minecraft version?' : 'Update the loader build?',
     message,
-    detail: 'The server is briefly offline while the container is rebuilt.',
+    detail: 'The server is briefly offline while it is rebuilt.',
     confirmLabel: 'Update Now',
   });
   if (!ok) return;

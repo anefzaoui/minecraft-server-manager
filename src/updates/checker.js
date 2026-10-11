@@ -349,8 +349,12 @@ async function checkStandaloneVersion(server, findings) {
   if (pinned) {
     const channel = loader === 'paper' ? server.env.PAPER_CHANNEL || 'default' : undefined;
     const { builds } = await loaderVersions.getBuilds(loader, server.mc_version, { channel });
-    const newest = builds.find((b) => b.version); // skip the "Latest (recommended)" no-pin sentinel
-    const isNew = Boolean(newest) && newest.version !== pinned;
+    // Forge marks a recommended build, and that is what gets offered; elsewhere
+    // the newest. Skip the "Latest (recommended)" no-pin sentinel either way.
+    const newest = builds.find((b) => b.recommended) || builds.find((b) => b.version);
+    // Only ever an upgrade: a server pinned past the recommended build (the
+    // Versions tab allows any build) must not be offered a step back.
+    const isNew = Boolean(newest) && loaderVersions.compareBuilds(newest.version, pinned) > 0;
     upsertCheck('loader_build', server.id, pinned, {
       isNew,
       latestId: newest ? newest.version : null,

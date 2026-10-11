@@ -13,8 +13,11 @@
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
+import { confirmDialog } from '../lib/confirm.js';
+import { runTask } from '../lib/progress.js';
 
 const PAGE = 50; // mod rows rendered per "Show more" click
+const OTHER = '__other'; // the loader picker's "Other build…" option
 
 // Module state is declared before anything can run, and the entry point is the
 // LAST statement in the file: init() starts polling straight away when the page
@@ -223,5 +226,102 @@ function section(title, items, tone, help, { collapsed = false } = {}) {
   return wrap;
 }
 
+// ---- Loader version ---------------------------------------------------------
+
+/**
+ * The Loader Version card: fill the picker from the registry's build list,
+ * show the build-number box for "Other build…", and apply the choice as a
+ * task (backup, then rebuild). The server checks that a typed build exists.
+ */
+function initLoaderCard(card) {
+  const select = document.getElementById('loader-select');
+  const customWrap = document.getElementById('loader-custom-wrap');
+  const custom = document.getElementById('loader-custom');
+  const apply = document.getElementById('loader-apply');
+  if (!select || !apply) return; // no permission to change it: the card is read-only
+  const { serverId, loader, loaderName, loaderSource, loaderMc: mc, loaderPinned: pinned } = card.dataset;
+
+  const chosen = () => (select.value === OTHER ? custom.value.trim() : select.value);
+  const sync = () => {
+    customWrap.classList.toggle('hidden', select.value !== OTHER);
+    apply.disabled = select.value === OTHER ? !custom.value.trim() : chosen() === pinned;
+  };
+  select.addEventListener('change', () => {
+    sync();
+    if (select.value === OTHER) custom.focus();
+  });
+  custom.addEventListener('input', sync);
+  custom.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !apply.disabled) apply.click();
+  });
+  apply.addEventListener('click', () =>
+    withBusy(apply, () => changeLoader({ serverId, name: loaderName, source: loaderSource, version: chosen(), pinned }))
+  );
+  fillBuilds(select, { loader, mc, pinned });
+  sync();
+}
+
+async function fillBuilds(select, { loader, mc, pinned }) {
+  let builds = [];
+  try {
+    const qs = new URLSearchParams({ loader, ...(mc ? { mc } : {}) });
+    const res = await fetch(`/api/loaders/versions?${qs}`);
+    const data = await res.json();
+    // The registry's "Latest" entry is '' - the card's own first option covers it.
+    if (res.ok && data.ok) builds = (data.builds || []).filter((b) => b.version);
+  } catch {
+    // Registry unreachable: the default, the current pin and "Other build…" still work.
+  }
+  if (!builds.length) return;
+  const other = select.querySelector(`option[value="${OTHER}"]`);
+  for (const opt of [...select.options]) if (opt.value && opt.value !== OTHER) opt.remove();
+  // A pin older than the list's cap stays selectable, at the top.
+  if (pinned && !builds.some((b) => b.version === pinned)) builds.unshift({ version: pinned, label: pinned });
+  for (const b of builds) select.insertBefore(new Option(b.label, b.version), other);
+  select.value = pinned || '';
+  select.dispatchEvent(new Event('change', { bubbles: true })); // resyncs the enhanced trigger
+}
+
+async function changeLoader({ serverId, name, source, version, pinned }) {
+  const fallback = source === 'curseforge' ? `the modpack's ${name} version` : `the default ${name} version`;
+  const target = version ? `${name} ${version}` : fallback;
+  const ok = await confirmDialog({
+    title: `Switch to ${target}?`,
+    message: pinned
+      ? `This server moves from ${name} ${pinned} to ${target}. A backup is taken first, then the server is rebuilt with it.`
+      : `A backup is taken first, then the server is rebuilt with ${target}.`,
+    detail: 'The server is briefly offline while it is rebuilt.',
+    confirmLabel: 'Change Version',
+  });
+  if (!ok) return;
+  try {
+    await runTask({
+      title: `Changing the ${name} version…`,
+      start: async () => {
+        const res = await fetch(`/api/servers/${serverId}/loader-version`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ version }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.error || friendlyError(res, { action: 'change the loader version' }));
+        }
+        return data.taskId;
+      },
+    });
+    toast(`Switched to ${target}.`);
+    setTimeout(() => location.reload(), 900);
+  } catch (err) {
+    if (err.dismissed) return; // progress hidden - the task tray takes over
+    toast(err.message || friendlyError(err, { action: 'change the loader version' }), {
+      kind: 'error',
+      timeout: 12000,
+    });
+  }
+}
+
 const root = document.querySelector('[data-compat-server]');
 if (root) init(root);
+const loaderCard = document.getElementById('loader-card');
+if (loaderCard) initLoaderCard(loaderCard);
