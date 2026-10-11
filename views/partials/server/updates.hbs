@@ -61,7 +61,7 @@
       published build. The build list is fetched by the page, not rendered. }}
   {{#if loaderPin}}
     {{#with loaderPin}}
-    <div class="card mb-4 p-4" id="loader-card" data-loader="{{loader}}" data-loader-name="{{loaderName}}" data-loader-source="{{source}}" data-loader-mc="{{mcVersion}}" data-loader-pinned="{{pinned}}" data-server-id="{{../server.id}}">
+    <div class="card mb-4 p-4" id="loader-card" data-loader="{{loader}}" data-loader-name="{{loaderName}}" data-loader-source="{{source}}" data-loader-mc="{{mcVersion}}" data-loader-pinned="{{pinned}}" data-loader-fixes-mc="{{fixesMcVersion}}" data-server-id="{{../server.id}}">
       <h2 class="mb-1 text-base font-semibold">Loader Version</h2>
       <p class="max-w-prose text-xs text-ink-soft">
         {{#if (eq source 'server')}}

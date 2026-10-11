@@ -146,6 +146,7 @@ test('a plain Forge server: the pin, and the installed build from the image mani
     installed: '47.4.10',
     pendingInstall: false,
     mcVersion: '1.20.1',
+    fixesMcVersion: null,
     editable: true,
   });
 });
@@ -294,7 +295,7 @@ test('a plain Forge server: backup, then the pin, then the rebuild, then history
   assert.equal(r.status, 202);
   const task = await settle(r.json.taskId);
   assert.equal(task.state, 'done', task.error);
-  assert.deepEqual(task.result, { from: '47.4.10', to: '47.4.15', backupId: 'bkp_test' });
+  assert.deepEqual(task.result, { from: '47.4.10', to: '47.4.15', mcVersion: null, backupId: 'bkp_test' });
   assert.deepEqual(calls, [
     ['backup', id, 'pre-update', 'Before Forge 47.4.10 → 47.4.15'],
     ['rebuild', id, { FORGE_VERSION: '47.4.15', MOTD: 'kept' }],
@@ -403,6 +404,9 @@ test('the upgrade route now backs up before a loader-build swap', async () => {
   assert.equal(task.state, 'done', task.error);
   assert.deepEqual(calls[0], ['backup', id, 'pre-update', 'Before loader build 47.3.0 → 47.4.10']);
   assert.equal(envOf(id).FORGE_VERSION, '47.4.10');
+  // The toast names what moved: the build, not an unchanged Minecraft version.
+  assert.equal(task.result.from, '47.3.0');
+  assert.equal(task.result.to, '47.4.10');
 });
 
 // ---- The card on the Versions tab -------------------------------------------
@@ -545,13 +549,13 @@ test("builds are listed for the server's own Minecraft version, not a stale inst
   assert.equal(loaderVersionInfo(servers.getServer(latest)).mcVersion, '1.20.1');
 });
 
-test('a Forge server with no Minecraft version yet is told to set one, not that the build is unpublished', async () => {
+test('a Forge server that follows the newest Minecraft and never started is told to start it once', async () => {
   const id = seed('srv_lp_no_mc', { mc: 'LATEST' });
   const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
   assert.equal(r.status, 409);
   assert.equal(
     r.json.error,
-    'Set a Minecraft version for this server, or start it once, before choosing a Forge build.'
+    'Start this server once, so the panel knows its Minecraft version, then choose a Forge build.'
   );
 });
 
@@ -607,4 +611,60 @@ test('a build published since the list was cached is accepted after one fresh lo
     body: { version: '47.4.27', dryRun: true },
   });
   assert.equal(r.status, 200);
+});
+
+// ---- Third-pass follow-ups --------------------------------------------------
+
+test('pinning a build on a server that follows the newest Minecraft also fixes it to the installed version', async () => {
+  const { loaderVersionInfo } = require('../src/services/loaderPin');
+  const id = seed('srv_lp_latest_pin', {
+    mc: 'LATEST',
+    manifest: { loader: 'forge', body: { minecraftVersion: '1.20.1', forgeVersion: '47.4.10' } },
+  });
+  assert.equal(loaderVersionInfo(servers.getServer(id)).fixesMcVersion, '1.20.1');
+  const page = await app.req('GET', `/servers/${id}/updates`, { cookie, headers: { Accept: 'text/html' } });
+  assert.match(page.text, /data-loader-fixes-mc="1\.20\.1"/);
+
+  const r = await app.req('POST', `/api/servers/${id}/loader-version`, { cookie, body: { version: '47.4.15' } });
+  assert.equal(r.status, 202);
+  const task = await settle(r.json.taskId);
+  assert.equal(task.state, 'done', task.error);
+  assert.equal(db.get('SELECT mc_version FROM servers WHERE id = ?', id).mc_version, '1.20.1');
+  assert.equal(envOf(id).FORGE_VERSION, '47.4.15');
+  const ev = db.get("SELECT summary FROM events WHERE server_id = ? AND type = 'loader-version-changed'", id);
+  assert.equal(ev.summary, 'Forge version changed to 47.4.15, with the server fixed to Minecraft 1.20.1.');
+});
+
+test('a Minecraft version upgrade clears a Forge pin made for the old version', async () => {
+  const id = seed('srv_lp_mc_up', { env: { FORGE_VERSION: '47.4.10', MOTD: 'kept' } });
+  const r = await app.req('POST', `/api/servers/${id}/mcversion/upgrade`, {
+    cookie,
+    body: { targetVersion: '1.20.2', force: true },
+  });
+  assert.equal(r.status, 202);
+  const task = await settle(r.json.taskId);
+  assert.equal(task.state, 'done', task.error);
+  assert.deepEqual(envOf(id), { MOTD: 'kept' });
+  assert.equal(task.result.clearedPin, '47.4.10');
+  assert.equal(task.result.to, '1.20.2');
+});
+
+test('an upgrade that changes nothing is refused instead of rebuilding without a backup', async () => {
+  const id = seed('srv_lp_noop', { env: { FORGE_VERSION: '47.4.10' } });
+  const r = await app.req('POST', `/api/servers/${id}/mcversion/upgrade`, {
+    cookie,
+    body: { targetLoaderBuild: '47.4.10', envKey: 'FORGE_VERSION' },
+  });
+  assert.equal(r.status, 409);
+  assert.deepEqual(calls, []);
+});
+
+test('a server pinned to a pre-release is offered the release it leads to', async () => {
+  const checker = require('../src/updates/checker');
+  routes['https://meta.quiltmc.org/v3/versions/loader'] = () =>
+    Response.json([{ version: '0.30.1' }, { version: '0.30.1-beta.4' }, { version: '0.30.0' }]);
+  const id = seed('srv_lp_chk_beta', { type: 'QUILT', env: { QUILT_LOADER_VERSION: '0.30.1-beta.4' } });
+  await checker.checkAll({ actor: 'test' });
+  const row = db.get("SELECT * FROM update_checks WHERE subject_type = 'loader_build' AND subject_id = ?", id);
+  assert.equal(row.latest_version, '0.30.1');
 });

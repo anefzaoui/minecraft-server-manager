@@ -239,7 +239,15 @@ function initLoaderCard(card) {
   const custom = document.getElementById('loader-custom');
   const apply = document.getElementById('loader-apply');
   if (!select || !apply) return; // no permission to change it: the card is read-only
-  const { serverId, loader, loaderName, loaderSource, loaderMc: mc, loaderPinned: pinned } = card.dataset;
+  const {
+    serverId,
+    loader,
+    loaderName,
+    loaderSource,
+    loaderMc: mc,
+    loaderPinned: pinned,
+    loaderFixesMc: fixesMc,
+  } = card.dataset;
 
   const chosen = () => (select.value === OTHER ? custom.value.trim() : select.value);
   const sync = () => {
@@ -255,7 +263,9 @@ function initLoaderCard(card) {
     if (e.key === 'Enter' && !apply.disabled) apply.click();
   });
   apply.addEventListener('click', () =>
-    withBusy(apply, () => changeLoader({ serverId, name: loaderName, source: loaderSource, version: chosen(), pinned }))
+    withBusy(apply, () =>
+      changeLoader({ serverId, name: loaderName, source: loaderSource, version: chosen(), pinned, fixesMc })
+    )
   );
   fillBuilds(select, { loader, mc, pinned });
   sync();
@@ -298,7 +308,7 @@ async function postLoaderVersion(serverId, body) {
   return data;
 }
 
-async function changeLoader({ serverId, name, source, version, pinned }) {
+async function changeLoader({ serverId, name, source, version, pinned, fixesMc }) {
   const fallback = source === 'curseforge' ? `the modpack's ${name} version` : `the default ${name} version`;
   const target = version ? `${name} ${version}` : fallback;
   // Check the build before asking to back up and rebuild for it: a build that
@@ -309,11 +319,18 @@ async function changeLoader({ serverId, name, source, version, pinned }) {
     toast(err.message, { kind: 'error', timeout: 12000 });
     return;
   }
+  // A server on the newest Minecraft is fixed to the version it runs: a
+  // pinned build only exists for that one version.
+  const fixes =
+    version && fixesMc
+      ? ` This also keeps the server on Minecraft ${fixesMc}, because a ${name} build is made for one Minecraft version.`
+      : '';
   const ok = await confirmDialog({
     title: `Switch to ${target}?`,
-    message: pinned
-      ? `This server moves from ${name} ${pinned} to ${target}. A backup is taken first, then the server is rebuilt with it.`
-      : `A backup is taken first, then the server is rebuilt with ${target}.`,
+    message:
+      (pinned
+        ? `This server moves from ${name} ${pinned} to ${target}. A backup is taken first, then the server is rebuilt with it.`
+        : `A backup is taken first, then the server is rebuilt with ${target}.`) + fixes,
     detail: 'If the server is running, it is briefly offline while it is rebuilt.',
     confirmLabel: 'Change Version',
   });

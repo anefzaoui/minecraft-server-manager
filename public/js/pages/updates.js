@@ -235,7 +235,12 @@ async function runMcUpgrade(row, { serverId, serverName, targetVersion, targetBu
           })
         ).taskId,
     });
-    toast(`Updated: ${result.from} → ${result.to}.`);
+    toast(
+      `Updated: ${result.from} → ${result.to}.` +
+        (result.clearedPin
+          ? ` The pinned loader build ${result.clearedPin} was cleared, because it was made for the old Minecraft version.`
+          : '')
+    );
     dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
