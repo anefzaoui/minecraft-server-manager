@@ -1,6 +1,6 @@
 {{> page-header heading="UPDATES" sub="Everything out of date across your servers. Nothing updates itself: every upgrade is deliberate, backed up, and reversible."}}
 
-<div class="mb-4 flex flex-wrap items-center gap-2">
+<div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
   <span class="text-sm text-ink-faint">Last checked: {{#if lastChecked}}<span data-ts="{{lastChecked}}">{{lastChecked}}</span>{{else}}never{{/if}}</span>
   <button class="btn btn-sm ml-auto" id="updates-check-all">{{{icon 'rotate-cw' 'size-3.5'}}} Check All Now</button>
 </div>

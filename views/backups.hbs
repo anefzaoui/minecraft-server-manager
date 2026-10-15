@@ -1,7 +1,7 @@
 {{> page-header heading="BACKUPS" sub="Every archive across all servers, with reason and retention tracking."}}
 
 {{#if backups.length}}
-<div class="mb-4 flex flex-wrap items-center gap-2">
+<div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
   <select class="input w-auto" id="backups-filter-server" data-label="Filter by server">
     <option value="">All Servers</option>
     {{#each servers}}<option value="{{id}}">{{name}}</option>{{/each}}

@@ -32,10 +32,10 @@
           <span class="size-4 animate-spin rounded-full border-2 border-line border-t-grass-500"></span> Running checks…
         </div>
       </div>
-      <div class="mt-6 flex items-center gap-2">
+      <div class="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
         <button class="btn btn-ghost" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
         <button class="btn btn-ghost" data-recheck>{{{icon 'rotate-cw' 'size-4'}}} Re-check</button>
-        <button class="btn btn-primary ml-auto" data-next>Continue {{{icon 'arrow-right' 'size-4'}}}</button>
+        <button class="btn btn-primary sm:ml-auto" data-next>Continue {{{icon 'arrow-right' 'size-4'}}}</button>
       </div>
     </section>
 
@@ -61,9 +61,9 @@
           <p class="help">This panel is reachable beyond this machine, so first-run setup is PIN-gated. The 6-digit PIN was printed to the panel's console/log on startup.</p>
         </div>
         {{/if}}
-        <div class="flex items-center gap-2">
+        <div class="flex flex-col-reverse sm:flex-row sm:items-center gap-3 mt-4">
           <button class="btn btn-ghost" type="button" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
-          <button class="btn btn-primary ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} Create Admin</button>
+          <button class="btn btn-primary sm:ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} Create Admin</button>
         </div>
       </form>
     </section>
@@ -78,7 +78,7 @@
 
       <div class="mt-5">
         <label class="label" for="su-domain">Public domain <span class="text-ink-faint">(optional)</span></label>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-col sm:flex-row flex-wrap gap-2">
           <input class="input min-w-0 flex-1" id="su-domain" placeholder="mc.example.com" autocomplete="off" spellcheck="false">
           <button class="btn shrink-0" type="button" id="su-domain-save">Save Domain</button>
         </div>
@@ -87,7 +87,7 @@
 
       <div class="mt-5">
         <label class="label" for="su-cf">CurseForge API key <span class="text-ink-faint">(optional)</span></label>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-col sm:flex-row flex-wrap gap-2">
           <input class="input min-w-0 flex-1" id="su-cf" type="password" placeholder="$2a$10$…" autocomplete="off" spellcheck="false">
           <button class="btn shrink-0" type="button" id="su-cf-save">Test &amp; Save</button>
         </div>
@@ -106,8 +106,8 @@
         <button class="btn mt-2" type="button" id="su-loc-save">Save Time Zone</button>
       </div>
 
-      <div class="mt-6 flex items-center">
-        <button class="btn btn-primary ml-auto" data-next>Continue {{{icon 'arrow-right' 'size-4'}}}</button>
+      <div class="mt-6 flex flex-col sm:flex-row sm:items-center">
+        <button class="btn btn-primary sm:ml-auto" data-next>Continue {{{icon 'arrow-right' 'size-4'}}}</button>
       </div>
     </section>
 

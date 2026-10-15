@@ -1,12 +1,12 @@
 <div data-mods-server="{{server.id}}" data-mods-type="{{server.type}}" data-mods-loader="{{server.loader}}" data-mods-mc="{{server.mcVersion}}" data-mods-cf="{{#if curseforgeEnabled}}true{{else}}false{{/if}}">
-  <div class="mb-4 flex flex-wrap items-center gap-2">
+  <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
     {{#if mods.length}}
     <input class="input max-w-xs" placeholder="Search installed mods…" id="mods-filter">
     <select class="input w-auto" data-label="Filter by source" id="mods-source">
       <option value="">All Sources</option><option value="pack">Pack-managed</option><option value="overlay">Custom</option>
     </select>
     {{/if}}
-    <div class="ml-auto flex flex-wrap gap-2{{#unless perms.content}} hidden{{/unless}}">
+    <div class="sm:ml-auto flex flex-col sm:flex-row sm:flex-wrap gap-2{{#unless perms.content}} hidden{{/unless}}">
       {{#if hasModUpdates}}
       <button class="btn btn-ghost btn-sm text-warn" id="mods-update-all" data-tip="Apply every available update, then restart the server once.">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update All</button>
       {{/if}}

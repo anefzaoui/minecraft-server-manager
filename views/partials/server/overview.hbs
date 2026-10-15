@@ -3,7 +3,7 @@
     {{#if addresses.length}}
       <div class="mb-4 border-b border-line pb-4">
         <label class="label" for="ov-address">Server address <span class="text-xs font-normal text-ink-faint">(share this with players on your network)</span></label>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
           {{#if (gt addresses.length 1)}}
             <select class="input w-auto font-mono" id="ov-address" data-label="Server address">
               {{#each addresses}}<option value="{{this}}">{{this}}</option>{{/each}}
@@ -29,7 +29,7 @@
     </dl>
     {{#if server.pack}}
       <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
           <span class="badge badge-info">{{platformName server.pack.platform}}</span>
           <b>{{server.pack.name}}</b>
           <span class="chip">pinned @ {{server.pack.version}}</span>

@@ -9,7 +9,7 @@
         {{#if player.bedrock}}{{{icon 'gamepad-2' 'size-6'}}}{{else}}{{player.name.[0]}}{{/if}}
       </span>
       <div class="min-w-0 flex-1">
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
           <h2 class="text-lg font-bold">{{player.name}}</h2>
           {{#if player.bedrock}}<span class="chip shrink-0" data-tip="Joined from Bedrock Edition via Geyser/Floodgate.">{{{icon 'gamepad-2' 'size-3'}}} Bedrock</span>{{/if}}
           <span data-player-status>

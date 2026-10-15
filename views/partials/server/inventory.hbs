@@ -2,7 +2,7 @@
      data-fixed-uuid="{{#if fixedPlayer}}{{fixedPlayer.uuid}}{{/if}}" data-fixed-name="{{#if fixedPlayer}}{{fixedPlayer.name}}{{/if}}"
      data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{else}}0{{/if}}">
 
-  <div class="mb-4 flex flex-wrap items-end gap-3">
+  <div class="mb-4 flex flex-col sm:flex-row sm:items-end sm:flex-wrap gap-3">
     <div class="w-72 max-w-full{{#if fixedPlayer}} hidden{{/if}}">
       <label class="label" for="inv-player">Player</label>
       <select class="input" id="inv-player" data-label="Player">
@@ -69,10 +69,10 @@
 
   {{#unless fixedPlayer}}
   <div class="card mt-6 p-4">
-    <div class="mb-3 flex flex-wrap items-center gap-2">
+    <div class="mb-3 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
       <h3 class="flex items-center gap-2 font-semibold">{{{icon 'search' 'size-4'}}} Item Search</h3>
       <span class="text-xs text-ink-faint">Searches every player's inventory, armor, and ender chest on this server.</span>
-      <div class="ml-auto flex flex-wrap justify-end gap-2">
+      <div class="sm:ml-auto flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2">
         <input class="input w-64 max-w-full" id="inv-search-q" placeholder="e.g. diamond, netherite_sword, Excalibur" maxlength="100">
         <button class="btn btn-sm" id="inv-search-go">{{{icon 'search' 'size-3.5'}}} Search</button>
       </div>
@@ -83,7 +83,7 @@
   {{/unless}}
 
   <div class="card mt-6 p-4">
-    <div class="mb-3 flex flex-wrap items-center gap-2">
+    <div class="mb-3 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
       <h3 class="flex items-center gap-2 font-semibold">{{{icon 'history' 'size-4'}}} Snapshots</h3>
       <span class="text-xs text-ink-faint">Pick two to compare.</span>
       <span class="ml-auto" data-tip="Select exactly two snapshots to compare them."><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} Compare Selected</button></span>

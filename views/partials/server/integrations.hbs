@@ -135,7 +135,7 @@
       </div>
     </div>
 
-    <div class="mt-4 flex flex-wrap items-center gap-2">
+    <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
       <button class="btn btn-primary" id="ig-wz-save">Save Chatbot</button>
       <button class="btn" id="ig-wz-test">Test Connection</button>
       <button class="btn" id="ig-wz-transcripts">Refresh This Server's Transcripts</button>
@@ -213,7 +213,7 @@
         </div>
         <p class="help">Anyone with the link sees the name, MOTD, version, player count, and uptime, and nothing else. There is no way into the panel from it. Off by default.</p>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
         <button class="btn btn-primary" id="ig-sp-save">Save</button>
         {{#if (and integrations.statusPage.enabled integrations.statusPage.path)}}
           <a class="btn" href="{{integrations.statusPage.path}}" target="_blank" rel="noopener" id="ig-sp-link">{{{icon 'link' 'size-4'}}} Open Page</a>
@@ -247,7 +247,7 @@
           <span class="label">Invite text</span>
           <pre class="max-h-44 overflow-auto whitespace-pre-wrap rounded-md border border-line bg-inset p-3 font-mono text-xs text-ink-soft" id="ig-invite-text">{{integrations.invite.inviteText}}</pre>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
           <button class="btn btn-primary" id="ig-copy-invite">{{{icon 'copy' 'size-4'}}} Copy Invite Text</button>
           {{#if integrations.invite.modded}}
             <button class="btn" id="ig-mrpack">{{{icon 'download' 'size-4'}}} Download Client Modpack (.mrpack)</button>

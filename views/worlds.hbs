@@ -1,7 +1,7 @@
 {{> page-header heading="WORLD LIBRARY" sub="Every saved world in one place. Upload archives, snapshot them from servers, install them anywhere, and copy them between servers."}}
 
 <div data-worlds-page class="contents">
-  <div class="mb-4 flex flex-wrap items-center gap-2">
+  <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
     <button class="btn btn-primary" id="world-upload" data-tip="Any .zip or .tar archive. The world root is found automatically (level.dat anywhere, .mcworld, or Bukkit split folders).">{{{icon 'upload' 'size-4'}}} Upload World</button>
     {{! button labels kept in sync with the per-server Worlds tab }}
     <button class="btn" id="world-extract" data-tip="Save a server's live world into the library.">{{{icon 'camera' 'size-4'}}} Save to Library</button>
