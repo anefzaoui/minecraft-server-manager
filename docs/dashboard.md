@@ -21,6 +21,8 @@ A second row adds **Memory allotted** (and how much is in use), **Storage used**
 
 Each server shows as a card with its status (Running, Starting, Stopped, Crashed, and in-between states such as Unhealthy or Stalled), the type and Minecraft version, its game port, and its tags. Every card shows **players** and **disk** use against the quota; running servers also show live **CPU** and **memory**, updated continuously.
 
+Every card also shows a **Last Backup** line ("3 days ago"). It switches to the warning color when the newest backup is more than 7 days old, or when a server more than a day old has never been backed up, so a server that is silently missing its backups stands out. A brand-new server gets a day of grace before it counts as never backed up.
+
 Click a card to open that server. The empty **Create a Server** card and the top-bar **Create a Server** button both start the [creation wizard](servers.md).
 
 You can search your servers (by name, type, version, or tag), sort them by status, name, size, last started, or created, and switch between grid and list layouts with the toggle on the right.

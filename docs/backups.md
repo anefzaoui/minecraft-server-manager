@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-The **Backups** page is every snapshot across your fleet, with size, reason, and age, filterable by server and by reason.
+The **Backups** page is every snapshot across your fleet, with size, reason, and age, filterable by server and by reason. Each server's card on the [dashboard](dashboard.md) also shows when it was last backed up, and warns once that is over 7 days ago.
 
 ![Backups](images/backups.png)
 
