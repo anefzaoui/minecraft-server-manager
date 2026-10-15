@@ -56,7 +56,10 @@ Dependencies flow in one direction:
   or render a view. Business logic does not belong here. Two routers are mounted in the **public
   zone**, before `requireAuth`: `routes/status.js` (opt-in per-server HTML status pages) and
   `routes/apiV1.js` (`/api/v1`, a read-only JSON API authenticated by an admin-minted Bearer token
-  from `services/apiTokens.js`, off unless enabled in Settings; see `docs/public-api.md`).
+  from `services/apiTokens.js`, off unless enabled in Settings; see `docs/public-api.md`). It
+  serves server status, per-server players and backup history, and a Prometheus `/metrics` scrape
+  target, all from the in-memory live cache and the database (never a Docker call per request).
+  Successful responses are cacheable for five seconds (`Cache-Control: private, max-age=5`).
 - **`services/`** - the heart of the app. Each service owns one domain and may depend on
   infrastructure and on other services.
 - **`docker/`** - dockerode wrappers: `connect` (endpoint detection + daemon health), `containers`
