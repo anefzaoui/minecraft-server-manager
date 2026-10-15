@@ -174,7 +174,7 @@ async function runTask(schedule, task = null) {
       });
       // Read the fresh archive back end to end. A damaged one throws, so the
       // run is marked failed and the operator hears about it now, not at restore time.
-      await backups.verifyBackup(backup.id, { actor });
+      await backups.verifyBackup(backup.id, { actor, task });
       break;
     }
     case 'rcon': {

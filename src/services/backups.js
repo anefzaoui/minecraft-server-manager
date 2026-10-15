@@ -736,7 +736,7 @@ function zipEntryCount(zipFile) {
 /** Fully read every entry of a zip and check its CRC-32 - the same bytes a
  *  restore would extract, without writing anything. Resolves { entries, bytes };
  *  rejects on the first unreadable or corrupt entry. */
-function zipVerify(zipFile) {
+function zipVerify(zipFile, onBytes = null) {
   return new Promise((resolve, reject) => {
     yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
       if (err) return reject(err);
@@ -753,6 +753,7 @@ function zipVerify(zipFile) {
           stream.on('data', (chunk) => {
             crc = zlib.crc32(chunk, crc);
             bytes += chunk.length;
+            if (onBytes) onBytes(bytes);
           });
           stream.on('error', reject);
           stream.on('end', () => {
@@ -771,13 +772,15 @@ function zipVerify(zipFile) {
  * (no extraction, no server stop), so it is safe on a running server.
  * ponytail: CRC check only, not a file-by-file diff against the live world.
  */
-async function verifyBackup(backupId, { actor = 'system' } = {}) {
+async function verifyBackupImpl(backupId, { actor = 'system', task = null } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
   if (!backup) throw httpError(404, 'Backup not found.');
   const zipPath = dataPath(backup.rel_path);
   if (!fs.existsSync(zipPath)) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}.`);
   try {
-    const result = await zipVerify(zipPath);
+    if (task) task.step('Reading backup contents…');
+    const total = task ? await zipUncompressedSize(zipPath).catch(() => 0) : 0;
+    const result = await zipVerify(zipPath, task ? (read) => task.progress(read, total) : null);
     recordEvent({
       serverId: backup.server_id,
       actor,
@@ -795,6 +798,18 @@ async function verifyBackup(backupId, { actor = 'system' } = {}) {
     });
     throw httpError(422, 'This backup is damaged and may not restore correctly. Take a fresh backup.');
   }
+}
+
+/** Callers without a task of their own (the route) get one in the top-bar tray. */
+async function verifyBackup(backupId, opts = {}) {
+  if (opts.task) return verifyBackupImpl(backupId, opts);
+  const backup = db.get('SELECT server_id, filename FROM backups WHERE id = ?', backupId);
+  if (!backup) throw httpError(404, 'Backup not found.');
+  return require('./tasks').track(
+    `Verifying ${backup.filename}…`,
+    { serverId: backup.server_id, actor: opts.actor },
+    (task) => verifyBackupImpl(backupId, { ...opts, task })
+  );
 }
 
 /** Rename a directory, falling back to copy+remove across devices (EXDEV). */

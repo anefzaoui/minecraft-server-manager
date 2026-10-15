@@ -9,6 +9,7 @@ const app = require('./helpers/app');
 const db = require('../src/db');
 const { dataPath } = require('../src/storage/pathGuard');
 const { zipDirectory } = require('../src/services/backups');
+const { listTasks } = require('../src/services/tasks');
 
 let cookie;
 let viewerCookie;
@@ -52,4 +53,8 @@ test('verify: healthy archive is ok, damaged is 422, unknown is 404, viewer is r
 
   fs.writeFileSync(dataPath(rel), 'garbage');
   assert.equal((await app.req('POST', url, { cookie })).status, 422);
+
+  // Both runs show up in the top-bar task tray, the second as failed.
+  const shown = listTasks().filter((t) => t.title === 'Verifying t.zip…');
+  assert.deepEqual(shown.map((t) => t.state).sort(), ['done', 'failed']);
 });
