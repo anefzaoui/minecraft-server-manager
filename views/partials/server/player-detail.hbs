@@ -26,10 +26,10 @@
       <div class="flex flex-wrap items-center gap-1.5">
         <button class="chip {{#if player.whitelisted}}border-grass-700 bg-grass-500/15 text-ok{{/if}}"
                 data-role-toggle="whitelist" data-on="{{#if player.whitelisted}}1{{else}}0{{/if}}"
-                data-tip="{{#if player.whitelisted}}Remove from whitelist{{else}}Add to whitelist{{/if}}">{{{icon 'shield-check' 'size-3.5'}}} <span data-chip-label>Whitelist</span></button>
+                data-tip="{{#if player.whitelisted}}Remove from whitelist.{{else}}Add to whitelist.{{/if}}">{{{icon 'shield-check' 'size-3.5'}}} <span data-chip-label>Whitelist</span></button>
         <button class="chip {{#if player.op}}border-diamond-700 bg-diamond-400/15 text-link{{/if}}"
                 data-role-toggle="op" data-on="{{#if player.op}}1{{else}}0{{/if}}"
-                data-tip="{{#if player.op}}Remove operator status{{else}}Make operator (level 4){{/if}}">{{{icon 'shield' 'size-3.5'}}} <span data-chip-label>Op{{#if player.op}} L{{player.opLevel}}{{/if}}</span></button>
+                data-tip="{{#if player.op}}Remove operator status.{{else}}Make operator (level 4).{{/if}}">{{{icon 'shield' 'size-3.5'}}} <span data-chip-label>Op{{#if player.op}} L{{player.opLevel}}{{/if}}</span></button>
         <button class="chip {{#if player.banned}}border-danger/40 bg-redstone-500/15 text-danger{{/if}}"
                 data-role-toggle="ban" data-on="{{#if player.banned}}1{{else}}0{{/if}}"
                 data-tip="{{#if player.banned}}Pardon this player.{{else}}Ban this player.{{/if}}">{{{icon 'ban' 'size-3.5'}}} <span data-chip-label>{{#if player.banned}}Banned{{else}}Ban{{/if}}</span></button>

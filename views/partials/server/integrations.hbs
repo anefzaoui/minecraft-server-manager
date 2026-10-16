@@ -98,7 +98,7 @@
     <div class="mt-5 rounded-md border border-line bg-inset p-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h4 class="font-semibold">Chatbot powers <span class="text-xs font-normal text-warn">Experimental</span></h4>
+          <h4 class="font-semibold">Chatbot Powers <span class="text-xs font-normal text-warn">Experimental</span></h4>
           <p class="help">Basic users receive self/world powers. Controllers receive separately validated powers that may affect another online player. Everyone else remains conversation-only.</p>
         </div>
         <label class="flex items-center gap-2 text-sm"><span>Enable Powers</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-powers-enabled" {{#if integrations.wizard.powersEnabled}}checked{{/if}}><span></span></span></label>
@@ -257,7 +257,7 @@
       <div class="space-y-3 text-sm">
         {{#if integrations.invite.modded}}
           <div class="rounded-md border border-line bg-raised p-3">
-            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
+            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need.</p>
             <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App. It installs the right Minecraft version and the mods, and adds this server to their multiplayer list.</p>
             {{#if integrations.invite.manualMods.length}}
               <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="code-inline">mods</code> folder themselves:</p>
@@ -268,7 +268,7 @@
           </div>
         {{else}}
           <div class="rounded-md border border-line bg-raised p-3">
-            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
+            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need.</p>
             <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}}. No mods are needed on the client.</p>
           </div>
         {{/if}}

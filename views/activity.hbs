@@ -4,11 +4,11 @@
 <form class="mb-4 flex flex-wrap items-center gap-2" method="get" action="/activity" id="activity-filters">
   <input class="input max-w-xs" name="q" value="{{filters.q}}" placeholder="Search events…" autocomplete="off">
   <select class="input w-auto" name="server" data-label="Filter by server">
-    <option value="">All servers</option>
+    <option value="">All Servers</option>
     {{#each servers}}<option value="{{id}}" {{#if (eq id ../filters.server)}}selected{{/if}}>{{name}}</option>{{/each}}
   </select>
   <select class="input w-auto" name="type" data-label="Filter by type">
-    <option value="">All types</option>
+    <option value="">All Types</option>
     {{#each types}}<option value="{{this}}" {{#if (eq this ../filters.type)}}selected{{/if}}>{{this}}</option>{{/each}}
   </select>
   <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply Filters</button>
