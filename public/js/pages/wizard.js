@@ -45,7 +45,38 @@ function init() {
   }
   pickGroup('wz-flavors', 'type', (v) => {
     type = v;
+    refreshRuntimeFlavor();
   });
+
+  const versionSelect = document.getElementById('wz-version');
+  const javaVersionOptions = versionSelect?.innerHTML || '';
+  function isBedrock() {
+    return type === 'BEDROCK';
+  }
+  function bedrockVersion() {
+    const selected = versionSelect?.value || 'LATEST';
+    return selected === 'PINNED' ? document.getElementById('wz-bedrock-version')?.value.trim() || '' : selected;
+  }
+  function refreshRuntimeFlavor() {
+    const bedrock = isBedrock();
+    const pinnedWrap = document.getElementById('wz-bedrock-version-wrap');
+    const eulaWrap = document.getElementById('wz-bedrock-eula-wrap');
+    if (versionSelect) {
+      const needsBedrockOptions = bedrock && versionSelect.dataset.runtime !== 'bedrock';
+      const needsJavaOptions = !bedrock && versionSelect.dataset.runtime === 'bedrock';
+      if (needsBedrockOptions) {
+        versionSelect.innerHTML =
+          '<option value="LATEST">Latest</option><option value="PREVIEW">Preview</option><option value="PINNED">Pinned version</option>';
+        versionSelect.dataset.runtime = 'bedrock';
+      } else if (needsJavaOptions) {
+        versionSelect.innerHTML = javaVersionOptions;
+        delete versionSelect.dataset.runtime;
+      }
+    }
+    pinnedWrap?.classList.toggle('hidden', !bedrock || versionSelect?.value !== 'PINNED');
+    eulaWrap?.classList.toggle('hidden', !bedrock);
+  }
+  versionSelect?.addEventListener('change', refreshRuntimeFlavor);
 
   // Visual MOTD editor (shared lib: toolbar + presets + live preview)
   const motd = document.getElementById('wz-motd');
@@ -248,7 +279,8 @@ function init() {
     const r = resources();
     const body = {
       type,
-      mcVersion: document.getElementById('wz-version')?.value,
+      mcVersion: isBedrock() ? bedrockVersion() : document.getElementById('wz-version')?.value,
+      runtime: isBedrock() ? 'bedrock' : 'java',
       heapMb: r.heapMb,
       containerMemoryMb: r.containerMemoryMb,
       portGame: r.portGame,
@@ -521,13 +553,24 @@ function init() {
 
   // ---- Create: vanilla / plugin server (no mods) ----
   async function createVanilla(name) {
+    if (isBedrock() && !document.getElementById('wz-bedrock-eula')?.checked) {
+      toast('Accept the Minecraft EULA before creating a Native Bedrock server.', { kind: 'error' });
+      return;
+    }
+    const mcVersion = isBedrock() ? bedrockVersion() : document.getElementById('wz-version').value;
+    if (!mcVersion) {
+      toast('Enter a Bedrock version, or choose Latest or Preview.', { kind: 'error' });
+      return;
+    }
     const body = {
       name,
       description: document.getElementById('wz-desc').value.trim(),
       icon,
       accent,
       type,
-      mcVersion: document.getElementById('wz-version').value,
+      mcVersion,
+      runtime: isBedrock() ? 'bedrock' : 'java',
+      ...(isBedrock() ? { eulaAccepted: true } : {}),
       ...resources(),
       env: collectSimpleEnv(),
       ...collectDockerOverrides(),

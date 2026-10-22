@@ -25,6 +25,7 @@ const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 const { propEnvMap } = require('../config/field-catalog');
+const serverRuntime = require('./serverRuntime');
 
 function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
@@ -81,6 +82,21 @@ const SIZE_MB_ENV_KEYS = require('../config/field-catalog')
 function assembleEnv(server) {
   const env = { ...server.env };
   env.EULA = 'TRUE';
+  if (serverRuntime.supports(server, 'nativeBedrock')) {
+    env.VERSION = server.mc_version || 'LATEST';
+    delete env.TYPE;
+    delete env.MEMORY;
+    delete env.ENABLE_RCON;
+    delete env.RCON_PASSWORD;
+    delete env.STOP_DURATION;
+    const ids = panelUidGid();
+    if (ids) {
+      env.UID = String(ids.uid);
+      env.GID = String(ids.gid);
+    }
+    env.TZ = env.TZ || settings.getTimezone();
+    return env;
+  }
   env.TYPE = server.type;
   if (server.mc_version && server.mc_version !== 'LATEST') env.VERSION = server.mc_version;
   for (const key of SIZE_MB_ENV_KEYS) {
@@ -165,6 +181,7 @@ function assembleEnv(server) {
  * overrode auto" and must keep winning).
  */
 function resolveImage(server, { javaTagHint } = {}) {
+  if (serverRuntime.supports(server, 'nativeBedrock')) return images.bedrockImageRef();
   // GTNH's Java support is a property of the pinned pack version, not of the
   // Minecraft version. Read it straight from the pin: packs.js requires this
   // module, so requiring it back would need a lazy-require cycle-breaker that a
@@ -200,6 +217,22 @@ function mergeExtraPorts(server) {
  * Feeds the wizard's "Advanced Docker Settings" YAML preview.
  */
 function previewCreateSpec(input) {
+  if (input.runtime === serverRuntime.BEDROCK) {
+    const defaults = settings.getDefaults();
+    return {
+      containerName: input.containerName || null,
+      network: input.networkName || null,
+      image: images.bedrockImageRef(),
+      resources: {
+        memoryMb: input.containerMemoryMb ?? defaults.containerMemoryMb,
+        swapMb: input.containerSwapMb ?? 0,
+        cpus: input.cpus ?? defaults.cpus,
+      },
+      ports: { game: input.portGame || '(auto-assigned)', rcon: null, bedrock: null, extra: input.extraPorts || [] },
+      volumes: { data: '<panel data dir>/servers/<server id> -> /data', extra: input.extraBinds || [] },
+      env: { ...(input.env || {}), EULA: 'TRUE', VERSION: input.mcVersion || 'LATEST' },
+    };
+  }
   const javaTag = input.javaTag || pickJavaTag(input.mcVersion || 'LATEST', input.type || 'VANILLA');
   const image = images.imageRef(javaTag);
   const defaults = settings.getDefaults();
@@ -281,6 +314,10 @@ function createServer(input, opts = {}) {
  * are rolled back so no ghost server holds ports.
  */
 async function createServerImpl(input, { actor = 'system', start = false, onProgress = () => {}, javaTagHint } = {}) {
+  const runtime = input.runtime === serverRuntime.BEDROCK ? serverRuntime.BEDROCK : serverRuntime.JAVA;
+  if (runtime === serverRuntime.BEDROCK && input.eulaAccepted !== true) {
+    throw httpError(400, 'Accept the Minecraft EULA before creating a Native Bedrock server.');
+  }
   // Fail fast instead of shipping a crash-looping container: anything
   // CurseForge needs the API key present in the panel's store.
   const inputEnv = input.env || {};
@@ -307,16 +344,23 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   if (input.portGame) {
     // The RCON port is derived when not given explicitly - validate the
     // DERIVED value too, or an explicit game port skips collision checks.
-    const rcon = input.portRcon || input.portGame + config.ports.rconOffset;
-    const toCheck = [input.portGame, rcon];
-    if (input.portBedrock) toCheck.push(input.portBedrock);
+    // `port_rcon` predates runtimes and remains NOT NULL. Native Bedrock stores
+    // its inert sentinel there; it never becomes a Docker binding or RCON call.
+    const rcon = runtime === serverRuntime.BEDROCK ? 0 : input.portRcon || input.portGame + config.ports.rconOffset;
+    const toCheck = [input.portGame, ...(runtime === serverRuntime.JAVA ? [rcon] : [])];
+    if (runtime !== serverRuntime.BEDROCK && input.portBedrock) toCheck.push(input.portBedrock);
     if (input.portQuery) toCheck.push(input.portQuery);
     for (const p of toCheck) {
       if (!(await isPortFree(p))) throw httpError(400, `Port ${p} is already in use or invalid`);
     }
-    ports = { game: input.portGame, rcon, bedrock: input.portBedrock || null };
+    ports = {
+      game: input.portGame,
+      rcon,
+      bedrock: runtime === serverRuntime.BEDROCK ? null : input.portBedrock || null,
+    };
   } else {
     ports = await suggestPorts({ withBedrock: Boolean(input.withBedrock) });
+    if (runtime === serverRuntime.BEDROCK) ports = { game: ports.game, rcon: 0, bedrock: null };
   }
 
   await dockerSpec.validateOverrides({
@@ -331,25 +375,28 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 
   db.run(
     `INSERT INTO servers (id, display_name, description, icon, accent, tags_json, type, mc_version,
-       java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, rcon_password_cipher,
+       runtime, java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, rcon_password_cipher,
        heap_mb, container_memory_mb, container_swap_mb, cpus, disk_quota_bytes, quota_strict,
        update_policy, auto_start, auto_restart, status, container_name, network_name,
        extra_ports_json, extra_binds_json)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
     id,
     input.name,
     input.description || '',
     input.icon || 'grass',
     input.accent || '#3fa62b',
     JSON.stringify(input.tags || []),
-    input.type,
+    runtime === serverRuntime.BEDROCK ? 'BEDROCK' : input.type,
     input.mcVersion || 'LATEST',
+    runtime,
     input.javaTag || '',
     JSON.stringify(input.env || {}),
     ports.game,
     ports.rcon,
     input.portQuery || null,
     ports.bedrock,
+    // This legacy column is NOT NULL. Retain an encrypted unused value so
+    // Native Bedrock has no RCON dependency while old schemas remain valid.
     secrets.encrypt(rconPassword),
     input.heapMb ?? defaults.heapMb,
     input.containerMemoryMb ?? defaults.containerMemoryMb,
@@ -381,6 +428,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     onProgress('Creating container…');
     const containerId = await containers.createContainer({
       serverId: id,
+      runtime: serverRuntime.runtimeFor(server),
       image,
       env: assembleEnv(server),
       dataDir: dataPath('servers', id),
@@ -502,7 +550,7 @@ async function startServerImpl(id, { actor = 'system' } = {}) {
 }
 
 async function stopServerImpl(id, { actor = 'system' } = {}) {
-  mustGet(id);
+  const server = mustGet(id);
   recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Graceful stop requested.' });
   // A graceful stop triggers the game's own shutdown-time world save (rcon
   // `stop`, or docker's SIGTERM if that doesn't finish in time). Sharing the
@@ -510,7 +558,7 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
   // for the backup's save-off/copy/save-on section to finish instead of
   // racing its own save against the archiver's mid-read of the same files.
   try {
-    await withSaveLock(id, () => containers.stopContainer(id));
+    await withSaveLock(id, () => containers.stopContainer(id, { skipRcon: !serverRuntime.supports(server, 'rcon') }));
   } catch {
     // stopContainer only throws when the container is verifiably STILL running -
     // never claim a graceful stop that didn't happen.
@@ -564,7 +612,7 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   // A stop failure here isn't fatal to a recreate - removeContainer({force}) below
   // tears it down regardless - but log it so a chronically wedged daemon is visible.
   if (wasRunning) {
-    await containers.stopContainer(id).catch((err) => {
+    await containers.stopContainer(id, { skipRcon: !serverRuntime.supports(server, 'rcon') }).catch((err) => {
       logger.warn('A graceful stop failed while recreating a server; forcing removal.', {
         serverId: id,
         err: serializeError(err, { includeStack: false }),
@@ -577,6 +625,7 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   await images.ensureImage(image);
   const containerSpec = {
     serverId: id,
+    runtime: serverRuntime.runtimeFor(server),
     image,
     env: assembleEnv(server),
     dataDir: dataPath('servers', id),
