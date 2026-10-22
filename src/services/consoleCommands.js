@@ -19,7 +19,11 @@ const BEDROCK_QUEUED_OUTPUT = 'Command sent to the Bedrock console. Its result w
  * @returns {Promise<{source: 'rcon'|'bedrock-console', output: string}>}
  */
 async function sendConsoleCommand(server, serverId, command) {
-  const words = command.split(/\s+/);
+  return sendConsoleCommandParts(server, serverId, command.split(/\s+/));
+}
+
+/** Send pre-tokenized console words, preserving player names with spaces. */
+async function sendConsoleCommandParts(server, serverId, words) {
   if (serverRuntime.supports(server, 'bedrockConsole')) {
     const { stdout, exitCode } = await execCaptureChecked(serverId, ['send-command', ...words]);
     if (exitCode !== 0) {
@@ -33,4 +37,4 @@ async function sendConsoleCommand(server, serverId, command) {
   return { source: 'rcon', output: stripAnsi(raw).trim() };
 }
 
-module.exports = { BEDROCK_QUEUED_OUTPUT, sendConsoleCommand };
+module.exports = { BEDROCK_QUEUED_OUTPUT, sendConsoleCommand, sendConsoleCommandParts };

@@ -9,6 +9,7 @@ const express = require('express');
 const { z } = require('zod');
 const servers = require('../../services/servers');
 const players = require('../../services/players');
+const bedrockPermissions = require('../../services/bedrockPlayerPermissions');
 const playerNotes = require('../../services/playerNotes');
 const { resolveSkin, getSkinImage } = require('../../services/skins');
 const { inspectStatus } = require('../../docker/containers');
@@ -40,6 +41,12 @@ const durationSchema = z.coerce
 
 const whitelistSchema = z.object({ name: nameSchema, on: z.coerce.boolean() });
 const enforceSchema = z.object({ on: z.coerce.boolean() });
+const bedrockIdentitySchema = z.string().trim().min(1).max(20);
+const bedrockAllowlistSchema = z.object({ identity: bedrockIdentitySchema, on: z.coerce.boolean() });
+const bedrockPermissionSchema = z.object({
+  identity: bedrockIdentitySchema,
+  permission: z.enum(['visitor', 'member', 'operator']),
+});
 const opSchema = z.object({
   name: nameSchema,
   on: z.coerce.boolean(),
@@ -278,6 +285,24 @@ router.post(
     const { on } = enforceSchema.parse(req.body);
     const { server, ctx } = await loadContext(req);
     res.json({ ok: true, result: await players.setWhitelistEnforced(server.id, on, ctx) });
+  })
+);
+
+router.post(
+  '/bedrock-allowlist',
+  asyncHandler(async (req, res, next) => {
+    const { identity, on } = bedrockAllowlistSchema.parse(req.body);
+    const { server } = await loadContext(req);
+    res.json({ ok: true, result: await bedrockPermissions.setAllowlisted(server, server.id, identity, on) });
+  })
+);
+
+router.post(
+  '/bedrock-permission',
+  asyncHandler(async (req, res, next) => {
+    const { identity, permission } = bedrockPermissionSchema.parse(req.body);
+    const { server } = await loadContext(req);
+    res.json({ ok: true, result: await bedrockPermissions.setPermission(server, server.id, identity, permission) });
   })
 );
 
