@@ -206,3 +206,13 @@ validation and error messages, and the docs — follows one house style (full de
 against a throwaway DB via [`test/helpers/app.js`](test/helpers/app.js) (`start`, `req`,
 `adminCookie`, `seedServer`) — `createApp()` wires only routes/middleware, background services live
 in `server.js`, so headless is safe.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as local Markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+This is a single-context repository. See `docs/agents/domain.md`.
