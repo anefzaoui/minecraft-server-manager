@@ -1417,7 +1417,7 @@ router.post(
       { serverId: server.id, actor },
       async (t) => {
         t.step('Stopping server & taking a safety backup…');
-        await backups.restoreBackup(server.id, backupId, { actor });
+        await backups.restoreBackup(server.id, backupId, { actor, task: t });
         return { ok: true };
       }
     );
