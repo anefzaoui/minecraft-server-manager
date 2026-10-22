@@ -111,21 +111,38 @@ const CAP_TABS = { files: 'files' };
 // Sub-nav entries that only make sense for some servers. Version compatibility
 // is answerable for mod loaders only (see services/compat.js appliesTo).
 const CONDITIONAL_TABS = { updates: (opts) => opts.modServer !== false };
+// Native Bedrock has dedicated packs, permissions, worlds and console support,
+// but no Java map, inventory/NBT, analytics, chat automation, RCON commands,
+// or Java world analysis controls.
+const BEDROCK_HIDDEN_TABS = new Set([
+  'chat',
+  'commands',
+  'inventory',
+  'analytics',
+  'updates',
+  'map',
+  'metrics',
+  'chatbot',
+]);
 
 function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = true } = {}) {
   const crashes = server && server.crashesUnread;
   const group = TAB_GROUPS.find((g) => g.tabs.includes(tab)) || TAB_GROUPS[0];
   const isBedrock = server && server.runtime === 'bedrock';
-  const groups = TAB_GROUPS.map((g) => ({
-    label: isBedrock && g.key === 'mods' ? 'Packs' : g.label,
-    icon: g.icon,
-    href: `/servers/${id}/${g.tabs[0]}`,
-    active: g.key === group.key,
-    badge: g.tabs.includes('history') && crashes ? crashes : null,
-  }));
+  const groups = TAB_GROUPS.filter((g) => !isBedrock || g.tabs.some((t) => !BEDROCK_HIDDEN_TABS.has(t))).map((g) => {
+    const first = g.tabs.find((t) => !isBedrock || !BEDROCK_HIDDEN_TABS.has(t));
+    return {
+      label: isBedrock && g.key === 'mods' ? 'Packs' : g.label,
+      icon: g.icon,
+      href: `/servers/${id}/${first}`,
+      active: g.key === group.key,
+      badge: g.tabs.includes('history') && crashes ? crashes : null,
+    };
+  });
   const visibleSubTabs = group.tabs.filter(
     (t) =>
       (isAdmin || !ADMIN_ONLY_TABS.has(t)) &&
+      (!isBedrock || !BEDROCK_HIDDEN_TABS.has(t)) &&
       (!perms || !CAP_TABS[t] || perms[CAP_TABS[t]]) &&
       (!CONDITIONAL_TABS[t] || CONDITIONAL_TABS[t]({ modServer }))
   );
