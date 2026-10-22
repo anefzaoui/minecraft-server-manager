@@ -19,6 +19,7 @@ const { execCapture, inspectStatus } = require('../docker/containers');
 const indexer = require('../storage/indexer');
 const { withSaveLock } = require('./serverLocks');
 const { guardOp } = require('./opLock');
+const serverRuntime = require('./serverRuntime');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 
@@ -30,6 +31,38 @@ const { serializeError } = require('../utils/logSanitize');
 // snapshots get their OWN bucket ('pre-restore') so they can't silently evict
 // backups a user deliberately created and kept (reason 'manual').
 const backupRetention = require('./backupRetention');
+
+/**
+ * Bedrock's `save hold` flushes the world and prevents further disk writes
+ * until `save resume`. Keep both commands around the archive in one helper so
+ * manual, scheduled, and safety backups share the exact same consistency rule.
+ */
+async function withBedrockSnapshot(server, serverId, archive, { actor = 'system', task = null } = {}) {
+  const { sendConsoleCommandParts } = require('./consoleCommands');
+  if (task) task.step('Holding Bedrock world saves…');
+  await sendConsoleCommandParts(server, serverId, ['save', 'hold']);
+  try {
+    await archive();
+  } finally {
+    if (task) task.step('Resuming Bedrock world saves…');
+    try {
+      await sendConsoleCommandParts(server, serverId, ['save', 'resume']);
+    } catch (err) {
+      logger.error('Resuming Bedrock world saves after a backup failed.', {
+        serverId,
+        err: serializeError(err, { includeStack: false }),
+      });
+      recordEvent({
+        serverId,
+        actor,
+        type: 'backup-warning',
+        summary:
+          'Bedrock world saves were not resumed after this backup. Check the server console and run save resume.',
+      });
+      throw err;
+    }
+  }
+}
 
 async function createBackupImpl(
   serverId,
@@ -70,7 +103,9 @@ async function createBackupImpl(
   // its own preflight check against the same real free bytes.
   const releaseReservation = indexer.reserveDiskSpace(needed);
   try {
-    if (running) {
+    if (running && serverRuntime.supports(server, 'nativeBedrock')) {
+      await withSaveLock(serverId, () => withBedrockSnapshot(server, serverId, archive, { actor, task }));
+    } else if (running) {
       // Serialize the pause-saves/copy/resume-saves section per server so a
       // concurrent backup or world export can't re-enable writes mid-copy.
       await withSaveLock(serverId, async () => {
@@ -598,4 +633,5 @@ module.exports = {
   pruneRetention,
   extractZip,
   zipDirectory,
+  withBedrockSnapshot,
 };
