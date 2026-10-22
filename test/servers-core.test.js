@@ -148,6 +148,43 @@ test('previewCreateSpec applies defaults and supports overrides', () => {
   assert.equal(over.ports.extra.length, 1);
 });
 
+test('createServer persists a Native Bedrock runtime and uses its container contract', async (t) => {
+  const images = require('../src/docker/images');
+  const containers = require('../src/docker/containers');
+  let created;
+  t.mock.method(images, 'ensureImage', async () => {});
+  t.mock.method(containers, 'createContainer', async (spec) => {
+    created = spec;
+    return 'bedrock-container-id';
+  });
+
+  const server = await servers.createServer(
+    {
+      name: 'Bedrock test',
+      runtime: 'bedrock',
+      type: 'BEDROCK',
+      mcVersion: 'PREVIEW',
+      eulaAccepted: true,
+      portGame: 45211,
+      autoBackup: false,
+    },
+    { start: false }
+  );
+
+  assert.equal(server.runtime, 'bedrock');
+  assert.equal(server.type, 'BEDROCK');
+  assert.equal(server.port_rcon, 0);
+  assert.equal(created.runtime, 'bedrock');
+  assert.equal(created.image, 'itzg/minecraft-bedrock-server:latest');
+  assert.equal(created.env.EULA, 'TRUE');
+  assert.equal(created.env.VERSION, 'PREVIEW');
+  assert.equal(created.env.TYPE, undefined);
+  assert.equal(created.env.ENABLE_RCON, undefined);
+  assert.equal(created.env.RCON_PASSWORD, undefined);
+  assert.equal(created.ports.game, 45211);
+  assert.equal(created.ports.rcon, 0);
+});
+
 test('dirSize sums file sizes including nested subdirectories', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-dirsize-'));
   try {

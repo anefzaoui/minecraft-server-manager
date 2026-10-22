@@ -282,6 +282,7 @@ const config = {
   // Docker image repository for Minecraft servers. Override for a private mirror
   // or air-gapped registry; the panel is otherwise an itzg/minecraft-server front-end.
   mcImageRepo: (process.env.MC_IMAGE_REPO || 'itzg/minecraft-server').trim(),
+  bedrockImageRepo: (process.env.BEDROCK_IMAGE_REPO || 'itzg/minecraft-bedrock-server').trim(),
 
   // Port allocation scheme: game ports first-free from PORT_GAME_START,
   // RCON host port = game + PORT_RCON_OFFSET, Bedrock/Geyser UDP from PORT_BEDROCK_START.

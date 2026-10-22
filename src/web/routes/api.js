@@ -41,7 +41,8 @@ const router = express.Router();
 // at start with no useful feedback.
 const SERVER_TYPES = require('../../config/field-catalog/general')
   .find((f) => f.key === 'TYPE')
-  .options.map((o) => o.value);
+  .options.map((o) => o.value)
+  .concat('BEDROCK');
 
 /** Load a server row or throw a JSON-friendly 404. */
 function requireServer(id) {
@@ -87,6 +88,8 @@ const createSchema = z
       .min(1)
       .max(32)
       .refine((v) => SERVER_TYPES.includes(v), { message: 'Unknown server type' }),
+    runtime: z.enum(['java', 'bedrock']).optional(),
+    eulaAccepted: z.coerce.boolean().optional(),
     mcVersion: z.string().trim().max(32).optional(),
     javaTag: z.string().max(16).optional(),
     env: z.record(z.string(), z.string()).optional(),
@@ -106,6 +109,9 @@ const createSchema = z
   .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
     message:
       'Container memory limit must be higher than the Java heap, or the server will be stopped for running out of memory.',
+  })
+  .refine((v) => v.runtime !== 'bedrock' || (v.type === 'BEDROCK' && v.eulaAccepted === true), {
+    message: 'Accept the Minecraft EULA before creating a Native Bedrock server.',
   });
 
 router.post(
@@ -202,6 +208,7 @@ router.get(
 
 const previewSchema = z.object({
   type: z.string().trim().max(32).optional(),
+  runtime: z.enum(['java', 'bedrock']).optional(),
   mcVersion: z.string().trim().max(32).optional(),
   javaTag: z.string().max(16).optional(),
   env: z.record(z.string(), z.string()).optional(),
