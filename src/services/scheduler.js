@@ -55,19 +55,16 @@ async function runTask(schedule) {
       });
       break;
     case 'rcon': {
-      const { execCapture } = require('../docker/containers');
-      // '--' stops rcon-cli parsing command words that start with '-' as flags.
-      const out = await execCapture(schedule.server_id, [
-        'rcon-cli',
-        '--',
-        ...String(payload.command || 'list').split(/\s+/),
-      ]);
+      const server = servers.getServer(schedule.server_id);
+      const { sendConsoleCommand } = require('./consoleCommands');
+      const command = String(payload.command || 'list');
+      const result = await sendConsoleCommand(server, schedule.server_id, command);
       recordEvent({
         serverId: schedule.server_id,
         actor,
-        type: 'rcon',
-        summary: `Scheduled RCON: ${payload.command}.`,
-        details: { output: out.slice(0, 1000) },
+        type: result.source,
+        summary: `Scheduled ${result.source === 'rcon' ? 'RCON' : 'Bedrock console'}: ${command}.`,
+        details: { output: result.output.slice(0, 1000) },
       });
       break;
     }
