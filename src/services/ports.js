@@ -136,4 +136,27 @@ async function suggestNetherNetPorts({ capacity = 16, signalingPort } = {}) {
   throw httpError(409, 'No free contiguous NetherNet UDP range is available.');
 }
 
-module.exports = { isPortFree, suggestPorts, suggestNetherNetPorts, probe, dbPortsInUse };
+/** Allocate RakNet's fixed IPv4 and IPv6 UDP host-port pair. */
+async function suggestRakNetPorts({ ipv4Port, ipv6Port } = {}) {
+  if ((ipv4Port == null) !== (ipv6Port == null)) {
+    throw httpError(400, 'Set both RakNet IPv4 and IPv6 UDP ports, or leave both automatic.');
+  }
+  if (ipv4Port != null) {
+    if (ipv4Port === ipv6Port || !(await isPortFree(ipv4Port)) || !(await isPortFree(ipv6Port))) {
+      throw httpError(400, 'RakNet IPv4 and IPv6 UDP ports must be distinct free valid ports.');
+    }
+    return { game: ipv4Port, rcon: 0, bedrock: ipv6Port, nethernetUdpStart: null, nethernetUdpEnd: null };
+  }
+
+  let ipv4 = config.ports.bedrockStart;
+  while (ipv4 < 65535) {
+    const ipv6 = ipv4 + 1;
+    if ((await isPortFree(ipv4)) && (await isPortFree(ipv6))) {
+      return { game: ipv4, rcon: 0, bedrock: ipv6, nethernetUdpStart: null, nethernetUdpEnd: null };
+    }
+    ipv4 += 1;
+  }
+  throw httpError(409, 'No free RakNet IPv4 and IPv6 UDP port pair is available.');
+}
+
+module.exports = { isPortFree, suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, probe, dbPortsInUse };

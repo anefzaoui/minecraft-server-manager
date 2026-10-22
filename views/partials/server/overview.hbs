@@ -24,9 +24,23 @@
       <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Update policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Start on boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
+      {{#if (eq server.runtime 'bedrock')}}
+        <div><dt class="text-xs text-ink-faint">Transport</dt><dd class="font-medium">{{#if (eq server.ports.transport 'raknet')}}RakNet (legacy){{else}}NetherNet{{/if}}</dd></div>
+        {{#if (eq server.ports.transport 'raknet')}}
+          <div><dt class="text-xs text-ink-faint">RakNet IPv4 UDP port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">RakNet IPv6 UDP port</dt><dd class="font-medium">{{server.ports.bedrock}}</dd></div>
+        {{else}}
+          <div><dt class="text-xs text-ink-faint">NetherNet TCP signaling port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">NetherNet UDP range</dt><dd class="font-medium">{{server.ports.nethernetUdpStart}}-{{server.ports.nethernetUdpEnd}}</dd></div>
+        {{/if}}
+      {{else}}
+        <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
+      {{/if}}
     </dl>
+    {{#if (and (eq server.runtime 'bedrock') (eq server.ports.transport 'raknet'))}}
+      <p class="notice notice-info mt-4 text-sm">RakNet is a legacy compatibility transport. Players connect to the server address above with UDP {{server.ports.game}} for IPv4 or UDP {{server.ports.bedrock}} for IPv6. Allow both UDP ports through every firewall and port forward.</p>
+    {{/if}}
     {{#if server.pack}}
       <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">
         <div class="flex flex-wrap items-center gap-2">
@@ -87,4 +101,3 @@
   </div>
 </div>
 <script type="module" src="/js/pages/overview.js"></script>
-

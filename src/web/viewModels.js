@@ -108,7 +108,14 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     mcVersion: await displayVersion(s.mc_version),
     javaTag: s.java_tag || 'auto',
     status: s.status,
-    ports: { game: s.port_game, rcon: s.port_rcon, bedrock: s.port_bedrock },
+    ports: {
+      game: s.port_game,
+      rcon: s.port_rcon,
+      bedrock: s.port_bedrock,
+      transport: s.bedrock_transport || 'nethernet',
+      nethernetUdpStart: s.nethernet_udp_start,
+      nethernetUdpEnd: s.nethernet_udp_end,
+    },
     resources: { heapMb: s.heap_mb, containerMemoryMb: s.container_memory_mb, cpus: s.cpus },
     // What the memory meter is going to show and why (#25): a heap given to
     // Java up front reads as fully used from the first minute, so the meters

@@ -230,10 +230,23 @@
           <input class="input" id="wz-bedrock-version" placeholder="For example, 1.26.60.23">
           <p class="help">Use Latest, Preview, or enter a specific Bedrock Dedicated Server version.</p>
         </div>
+        <div id="wz-bedrock-transport-wrap" class="mt-3 hidden">
+          <label class="label" for="wz-bedrock-transport">Transport</label>
+          <select class="input" id="wz-bedrock-transport" data-label="Bedrock transport">
+            <option value="nethernet">NetherNet (recommended)</option>
+            <option value="raknet" disabled>RakNet (legacy compatibility)</option>
+          </select>
+          <p class="help" id="wz-raknet-help">RakNet is available only for a compatible pinned Bedrock version.</p>
+          <div id="wz-raknet-port-wrap" class="mt-3 hidden">
+            <label class="label" for="wz-raknet-ipv6-port">RakNet IPv6 UDP port</label>
+            <input class="input max-w-48 font-mono" id="wz-raknet-ipv6-port" inputmode="numeric">
+            <p class="help">RakNet is legacy. It requires UDP ports for IPv4 and IPv6. Allow both through your firewall and port forward.</p>
+          </div>
+        </div>
         <label id="wz-bedrock-eula-wrap" class="mt-3 flex items-start gap-2 hidden"><input id="wz-bedrock-eula" type="checkbox" class="mt-1"><span class="text-sm text-ink-soft">I accept the Minecraft End User License Agreement for this Native Bedrock server.</span></label>
       </div>
       <div>
-        <label class="label" for="wz-port">Game port</label>
+        <label class="label" for="wz-port" id="wz-port-label">Game port</label>
         <input class="input max-w-48 font-mono" id="wz-port" value="{{suggestedPort}}" inputmode="numeric">
         <p class="help" id="wz-port-help">A free port, suggested automatically. The panel's remote console (RCON) runs on the port 1000 higher than this one.</p>
       </div>

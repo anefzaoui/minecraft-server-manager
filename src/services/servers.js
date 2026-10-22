@@ -15,7 +15,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const secrets = require('./secrets');
 const { pickJavaTag } = require('./javaMatrix');
-const { suggestPorts, suggestNetherNetPorts, isPortFree } = require('./ports');
+const { suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, isPortFree } = require('./ports');
 const containers = require('../docker/containers');
 const images = require('../docker/images');
 const { fetchLogs } = require('../docker/logs');
@@ -26,6 +26,21 @@ const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 const { propEnvMap } = require('../config/field-catalog');
 const serverRuntime = require('./serverRuntime');
+
+// BDS 1.26.51 removed RakNet support. Latest and Preview deliberately do not
+// qualify: their transport support can change between container restarts.
+const RAKNET_LAST_SUPPORTED = [1, 26, 50];
+
+function supportsRakNetVersion(version) {
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:\.\d+)?$/.exec(String(version || '').trim());
+  if (!match) return false;
+  const parts = match.slice(1, 4).map(Number);
+  return parts[0] < RAKNET_LAST_SUPPORTED[0]
+    || (parts[0] === RAKNET_LAST_SUPPORTED[0] && parts[1] < RAKNET_LAST_SUPPORTED[1])
+    || (parts[0] === RAKNET_LAST_SUPPORTED[0]
+      && parts[1] === RAKNET_LAST_SUPPORTED[1]
+      && parts[2] <= RAKNET_LAST_SUPPORTED[2]);
+}
 
 function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
@@ -85,8 +100,17 @@ function assembleEnv(server) {
   if (serverRuntime.supports(server, 'nativeBedrock')) {
     env.MAX_PLAYERS = env.MAX_PLAYERS || '16';
     env.SERVER_PORT = '19132';
-    const udpCount = server.nethernet_udp_end - server.nethernet_udp_start + 1;
-    env.SERVER_UDP_PORTS = `19140-${19140 + udpCount - 1}`;
+    if (server.bedrock_transport === 'raknet') {
+      env.TRANSPORT = 'raknet';
+      env.SERVER_PORT = '19132';
+      env.SERVER_PORT_V6 = '19133';
+      delete env.SERVER_UDP_PORTS;
+    } else {
+      const udpCount = server.nethernet_udp_end - server.nethernet_udp_start + 1;
+      env.TRANSPORT = 'nethernet';
+      env.SERVER_UDP_PORTS = `19140-${19140 + udpCount - 1}`;
+      delete env.SERVER_PORT_V6;
+    }
     env.VERSION = server.mc_version || 'LATEST';
     delete env.TYPE;
     delete env.MEMORY;
@@ -223,6 +247,7 @@ function mergeExtraPorts(server) {
 function previewCreateSpec(input) {
   if (input.runtime === serverRuntime.BEDROCK) {
     const defaults = settings.getDefaults();
+    const raknet = input.bedrockTransport === 'raknet';
     return {
       containerName: input.containerName || null,
       network: input.networkName || null,
@@ -235,13 +260,23 @@ function previewCreateSpec(input) {
       ports: {
         game: input.portGame || '(auto-assigned)',
         rcon: null,
-        bedrock: null,
-        nethernetUdpStart: input.netherNetUdpStart || '(auto-assigned)',
-        nethernetUdpEnd: input.netherNetUdpStart ? input.netherNetUdpStart + (Number(input.maxPlayers || input.env?.MAX_PLAYERS || 16) - 1) : '(auto-assigned)',
+        bedrock: raknet ? input.portBedrock || '(auto-assigned)' : null,
+        nethernetUdpStart: raknet ? null : input.netherNetUdpStart || '(auto-assigned)',
+        nethernetUdpEnd: raknet
+          ? null
+          : input.netherNetUdpStart
+            ? input.netherNetUdpStart + (Number(input.maxPlayers || input.env?.MAX_PLAYERS || 16) - 1)
+            : '(auto-assigned)',
         extra: input.extraPorts || [],
       },
       volumes: { data: '<panel data dir>/servers/<server id> -> /data', extra: input.extraBinds || [] },
-      env: { ...(input.env || {}), EULA: 'TRUE', VERSION: input.mcVersion || 'LATEST' },
+      env: {
+        ...(input.env || {}),
+        EULA: 'TRUE',
+        VERSION: input.mcVersion || 'LATEST',
+        TRANSPORT: raknet ? 'raknet' : 'nethernet',
+        ...(raknet ? { SERVER_PORT: '19132', SERVER_PORT_V6: '19133' } : {}),
+      },
     };
   }
   const javaTag = input.javaTag || pickJavaTag(input.mcVersion || 'LATEST', input.type || 'VANILLA');
@@ -331,6 +366,17 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   if (runtime === serverRuntime.BEDROCK && input.eulaAccepted !== true) {
     throw httpError(400, 'Accept the Minecraft EULA before creating a Native Bedrock server.');
   }
+  const bedrockTransport = input.bedrockTransport || 'nethernet';
+  if (runtime === serverRuntime.BEDROCK && !['nethernet', 'raknet'].includes(bedrockTransport)) {
+    throw httpError(400, 'Choose NetherNet or RakNet for a Native Bedrock server.');
+  }
+  if (
+    runtime === serverRuntime.BEDROCK &&
+    bedrockTransport === 'raknet' &&
+    !supportsRakNetVersion(input.mcVersion)
+  ) {
+    throw httpError(400, 'RakNet is only available for compatible pinned Bedrock versions.');
+  }
   // Fail fast instead of shipping a crash-looping container: anything
   // CurseForge needs the API key present in the panel's store.
   const inputEnv = input.env || {};
@@ -359,7 +405,9 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 
   // Ports: honor explicit choices (validated), else auto-suggest.
   let ports;
-  if (runtime === serverRuntime.BEDROCK) {
+  if (runtime === serverRuntime.BEDROCK && bedrockTransport === 'raknet') {
+    ports = await suggestRakNetPorts({ ipv4Port: input.portGame, ipv6Port: input.portBedrock });
+  } else if (runtime === serverRuntime.BEDROCK) {
     const udpStart = input.netherNetUdpStart;
     if (input.portGame && udpStart) {
       const udpEnd = udpStart + netherNetCapacity - 1;
@@ -400,7 +448,9 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 
   const reservedPorts = new Set([
     ports.game,
-    ...(runtime === serverRuntime.BEDROCK
+    ...(runtime === serverRuntime.BEDROCK && bedrockTransport === 'raknet'
+      ? [ports.bedrock]
+      : runtime === serverRuntime.BEDROCK
       ? Array.from({ length: ports.nethernetUdpEnd - ports.nethernetUdpStart + 1 }, (_, i) => ports.nethernetUdpStart + i)
       : []),
   ]);
@@ -440,9 +490,9 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     ports.rcon,
     input.portQuery || null,
     ports.bedrock,
-    runtime === serverRuntime.BEDROCK ? 'nethernet' : 'nethernet',
-    runtime === serverRuntime.BEDROCK ? ports.nethernetUdpStart : null,
-    runtime === serverRuntime.BEDROCK ? ports.nethernetUdpEnd : null,
+    runtime === serverRuntime.BEDROCK ? bedrockTransport : 'nethernet',
+    runtime === serverRuntime.BEDROCK && bedrockTransport === 'nethernet' ? ports.nethernetUdpStart : null,
+    runtime === serverRuntime.BEDROCK && bedrockTransport === 'nethernet' ? ports.nethernetUdpEnd : null,
     // This legacy column is NOT NULL. Retain an encrypted unused value so
     // Native Bedrock has no RCON dependency while old schemas remain valid.
     secrets.encrypt(rconPassword),
@@ -487,6 +537,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
         nethernetUdpStart: server.nethernet_udp_start,
         nethernetUdpEnd: server.nethernet_udp_end,
       },
+      bedrockTransport: server.bedrock_transport,
       extraPorts: mergeExtraPorts(server),
       resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
       containerName: server.containerName,
@@ -690,6 +741,7 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
       nethernetUdpStart: server.nethernet_udp_start,
       nethernetUdpEnd: server.nethernet_udp_end,
     },
+    bedrockTransport: server.bedrock_transport,
     extraPorts: mergeExtraPorts(server),
     resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
     containerName: server.containerName,
@@ -1308,6 +1360,7 @@ module.exports = {
   stopServerUnguarded: stopServerImpl,
   refreshStatuses,
   assembleEnv,
+  supportsRakNetVersion,
   resolveImage,
   ensureOwnership,
   dirSize,
