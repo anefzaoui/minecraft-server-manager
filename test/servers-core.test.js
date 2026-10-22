@@ -216,6 +216,81 @@ test('createServer reserves NetherNet signaling and a player-sized UDP range by 
   assert.equal(created.env.SERVER_UDP_PORTS, '19140-19142');
 });
 
+test('createServer uses the legacy RakNet IPv4 and IPv6 UDP contract for a compatible pinned version', async (t) => {
+  const images = require('../src/docker/images');
+  const containers = require('../src/docker/containers');
+  let created;
+  t.mock.method(images, 'ensureImage', async () => {});
+  t.mock.method(containers, 'createContainer', async (spec) => {
+    created = spec;
+    return 'raknet-container-id';
+  });
+
+  const server = await servers.createServer(
+    {
+      name: 'Legacy RakNet',
+      runtime: 'bedrock',
+      type: 'BEDROCK',
+      mcVersion: '1.26.50',
+      bedrockTransport: 'raknet',
+      eulaAccepted: true,
+      portGame: 45300,
+      portBedrock: 45301,
+    },
+    { start: false }
+  );
+
+  assert.equal(server.bedrock_transport, 'raknet');
+  assert.equal(server.port_game, 45300);
+  assert.equal(server.port_bedrock, 45301);
+  assert.equal(server.nethernet_udp_start, null);
+  assert.equal(server.nethernet_udp_end, null);
+  assert.deepEqual(created.ports, {
+    game: 45300,
+    rcon: 0,
+    bedrock: 45301,
+    nethernetUdpStart: null,
+    nethernetUdpEnd: null,
+  });
+  assert.equal(created.env.TRANSPORT, 'raknet');
+  assert.equal(created.env.SERVER_PORT, '19132');
+  assert.equal(created.env.SERVER_PORT_V6, '19133');
+  assert.equal(created.env.SERVER_UDP_PORTS, undefined);
+
+  const page = await app.req('GET', `/servers/${server.id}`, { cookie: await app.adminCookie() });
+  assert.equal(page.status, 200);
+  assert.match(page.text, /RakNet \(legacy\)/);
+  assert.match(page.text, /RakNet IPv4 UDP port/);
+  assert.match(page.text, /RakNet IPv6 UDP port/);
+  assert.match(page.text, /Allow both UDP ports through every firewall and port forward/);
+
+  const wizard = await app.req('GET', '/servers/new', { cookie: await app.adminCookie() });
+  assert.equal(wizard.status, 200);
+  assert.match(wizard.text, /RakNet \(legacy compatibility\)/);
+  assert.match(wizard.text, /RakNet is available only for a compatible pinned Bedrock version/);
+});
+
+test('createServer rejects RakNet for Latest, Preview, and versions that only support NetherNet', async () => {
+  for (const mcVersion of ['LATEST', 'PREVIEW', '1.26.51']) {
+    await assert.rejects(
+      servers.createServer(
+        {
+          name: `Unsupported RakNet ${mcVersion}`,
+          runtime: 'bedrock',
+          type: 'BEDROCK',
+          mcVersion,
+          bedrockTransport: 'raknet',
+          eulaAccepted: true,
+          portGame: 45310,
+          portBedrock: 45311,
+        },
+        { start: false }
+      ),
+      /RakNet is only available for compatible pinned Bedrock versions/i
+    );
+  }
+});
+
 test('createServer rejects an advanced mapping that overlaps a NetherNet UDP range', async () => {
   await assert.rejects(
     servers.createServer(

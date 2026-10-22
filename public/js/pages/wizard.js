@@ -57,6 +57,43 @@ function init() {
     const selected = versionSelect?.value || 'LATEST';
     return selected === 'PINNED' ? document.getElementById('wz-bedrock-version')?.value.trim() || '' : selected;
   }
+  function supportsRakNet(version) {
+    const match = /^(\d+)\.(\d+)\.(\d+)(?:\.\d+)?$/.exec(String(version || '').trim());
+    if (!match) return false;
+    const [major, minor, patch] = match.slice(1).map(Number);
+    return major < 1 || (major === 1 && (minor < 26 || (minor === 26 && patch <= 50)));
+  }
+  function refreshRakNetAvailability() {
+    const transport = document.getElementById('wz-bedrock-transport');
+    const option = transport?.querySelector('option[value="raknet"]');
+    const help = document.getElementById('wz-raknet-help');
+    const portWrap = document.getElementById('wz-raknet-port-wrap');
+    const available = isBedrock() && versionSelect?.value === 'PINNED' && supportsRakNet(bedrockVersion());
+    if (option) option.disabled = !available;
+    if (!available && transport) transport.value = 'nethernet';
+    if (help) {
+      help.textContent = available
+        ? 'RakNet is a legacy compatibility mode. It requires separate IPv4 and IPv6 UDP ports.'
+        : 'RakNet is unavailable for Latest, Preview, and Bedrock 1.26.51 or newer. Choose a compatible pinned version to enable it.';
+    }
+    const selected = available && transport?.value === 'raknet';
+    portWrap?.classList.toggle('hidden', !selected);
+    const portLabel = document.getElementById('wz-port-label');
+    const portHelp = document.getElementById('wz-port-help');
+    if (portLabel) portLabel.textContent = selected ? 'RakNet IPv4 UDP port' : 'Game port';
+    if (portHelp) {
+      portHelp.textContent = selected
+        ? 'RakNet uses this IPv4 UDP port and the separate IPv6 UDP port below.'
+        : isBedrock()
+          ? 'A free TCP signaling port for NetherNet, suggested automatically.'
+          : "A free port, suggested automatically. The panel's remote console (RCON) runs on the port 1000 higher than this one.";
+    }
+    const ipv6 = document.getElementById('wz-raknet-ipv6-port');
+    if (selected && ipv6 && !ipv6.value) {
+      const ipv4 = Number(document.getElementById('wz-port')?.value);
+      if (Number.isInteger(ipv4) && ipv4 < 65535) ipv6.value = String(ipv4 + 1);
+    }
+  }
   function refreshRuntimeFlavor() {
     const bedrock = isBedrock();
     const pinnedWrap = document.getElementById('wz-bedrock-version-wrap');
@@ -74,11 +111,15 @@ function init() {
       }
     }
     pinnedWrap?.classList.toggle('hidden', !bedrock || versionSelect?.value !== 'PINNED');
+    document.getElementById('wz-bedrock-transport-wrap')?.classList.toggle('hidden', !bedrock);
     eulaWrap?.classList.toggle('hidden', !bedrock);
     const maxPlayers = document.getElementById('wz-maxplayers');
     if (maxPlayers) maxPlayers.value = bedrock ? '16' : '10';
+    refreshRakNetAvailability();
   }
   versionSelect?.addEventListener('change', refreshRuntimeFlavor);
+  document.getElementById('wz-bedrock-version')?.addEventListener('input', refreshRakNetAvailability);
+  document.getElementById('wz-bedrock-transport')?.addEventListener('change', refreshRakNetAvailability);
 
   // Visual MOTD editor (shared lib: toolbar + presets + live preview)
   const motd = document.getElementById('wz-motd');
@@ -284,6 +325,12 @@ function init() {
       type,
       mcVersion: isBedrock() ? bedrockVersion() : document.getElementById('wz-version')?.value,
       runtime: isBedrock() ? 'bedrock' : 'java',
+      ...(isBedrock()
+        ? { bedrockTransport: document.getElementById('wz-bedrock-transport')?.value || 'nethernet' }
+        : {}),
+      ...(isBedrock() && document.getElementById('wz-bedrock-transport')?.value === 'raknet'
+        ? { portBedrock: Number(document.getElementById('wz-raknet-ipv6-port')?.value) || undefined }
+        : {}),
       maxPlayers: Number(document.getElementById('wz-maxplayers').value) || (isBedrock() ? 16 : 10),
       heapMb: r.heapMb,
       containerMemoryMb: r.containerMemoryMb,
@@ -574,6 +621,12 @@ function init() {
       type,
       mcVersion,
       runtime: isBedrock() ? 'bedrock' : 'java',
+      ...(isBedrock()
+        ? { bedrockTransport: document.getElementById('wz-bedrock-transport')?.value || 'nethernet' }
+        : {}),
+      ...(isBedrock() && document.getElementById('wz-bedrock-transport')?.value === 'raknet'
+        ? { portBedrock: Number(document.getElementById('wz-raknet-ipv6-port')?.value) || undefined }
+        : {}),
       ...(isBedrock() ? { eulaAccepted: true } : {}),
       ...resources(),
       env: collectSimpleEnv(),

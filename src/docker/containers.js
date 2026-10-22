@@ -27,7 +27,8 @@ function containerName(serverId) {
  * @param {object} spec.env              flat { KEY: 'value' }
  * @param {string} spec.dataDir          absolute panel-local data dir, re-rooted to the host and bind-mounted to /data
  * @param {'java'|'bedrock'} [spec.runtime] Server runtime; Java is the legacy default
- * @param {object} spec.ports            Java: { game, rcon, bedrock? }; Native Bedrock: { game }
+ * @param {object} spec.ports            Java: { game, rcon, bedrock? }; Native Bedrock: transport-specific ports
+ * @param {'nethernet'|'raknet'} [spec.bedrockTransport] Native Bedrock transport
  * @param {object} spec.resources        { memoryMb, swapMb, cpus }
  * @param {string} [spec.containerName]  Docker container name override; default `msm-<serverId>`
  * @param {string} [spec.networkName]    existing host Docker network to attach to; default bridge
@@ -36,11 +37,19 @@ function containerName(serverId) {
 async function createContainer(spec) {
   const docker = getDocker();
   const nativeBedrock = spec.runtime === 'bedrock';
+  const raknet = nativeBedrock && spec.bedrockTransport === 'raknet';
   const exposed = nativeBedrock
-    ? { [`${BEDROCK_PORT}/tcp`]: {} }
+    ? raknet
+      ? { [`${BEDROCK_PORT}/udp`]: {}, [`${Number(BEDROCK_PORT) + 1}/udp`]: {} }
+      : { [`${BEDROCK_PORT}/tcp`]: {} }
     : { [`${GAME_PORT}/tcp`]: {}, [`${GAME_PORT}/udp`]: {}, [`${RCON_PORT}/tcp`]: {} };
   const bindings = nativeBedrock
-    ? { [`${BEDROCK_PORT}/tcp`]: [{ HostPort: String(spec.ports.game) }] }
+    ? raknet
+      ? {
+          [`${BEDROCK_PORT}/udp`]: [{ HostPort: String(spec.ports.game) }],
+          [`${Number(BEDROCK_PORT) + 1}/udp`]: [{ HostPort: String(spec.ports.bedrock) }],
+        }
+      : { [`${BEDROCK_PORT}/tcp`]: [{ HostPort: String(spec.ports.game) }] }
     : {
         [`${GAME_PORT}/tcp`]: [{ HostPort: String(spec.ports.game) }],
         [`${GAME_PORT}/udp`]: [{ HostPort: String(spec.ports.game) }],
@@ -50,7 +59,7 @@ async function createContainer(spec) {
     exposed[`${BEDROCK_PORT}/udp`] = {};
     bindings[`${BEDROCK_PORT}/udp`] = [{ HostPort: String(spec.ports.bedrock) }];
   }
-  if (nativeBedrock) {
+  if (nativeBedrock && !raknet) {
     const count = spec.ports.nethernetUdpEnd - spec.ports.nethernetUdpStart + 1;
     for (let i = 0; i < count; i += 1) {
       exposed[`${NETHERNET_UDP_START + i}/udp`] = {};

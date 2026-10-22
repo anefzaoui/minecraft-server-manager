@@ -89,6 +89,7 @@ const createSchema = z
       .max(32)
       .refine((v) => SERVER_TYPES.includes(v), { message: 'Unknown server type' }),
     runtime: z.enum(['java', 'bedrock']).optional(),
+    bedrockTransport: z.enum(['nethernet', 'raknet']).optional(),
     eulaAccepted: z.coerce.boolean().optional(),
     mcVersion: z.string().trim().max(32).optional(),
     javaTag: z.string().max(16).optional(),
@@ -219,6 +220,7 @@ router.get(
 const previewSchema = z.object({
   type: z.string().trim().max(32).optional(),
   runtime: z.enum(['java', 'bedrock']).optional(),
+  bedrockTransport: z.enum(['nethernet', 'raknet']).optional(),
   mcVersion: z.string().trim().max(32).optional(),
   javaTag: z.string().max(16).optional(),
   env: z.record(z.string(), z.string()).optional(),
