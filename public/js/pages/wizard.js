@@ -98,6 +98,7 @@ function init() {
     const bedrock = isBedrock();
     const pinnedWrap = document.getElementById('wz-bedrock-version-wrap');
     const eulaWrap = document.getElementById('wz-bedrock-eula-wrap');
+    const addressWrap = document.getElementById('wz-bedrock-address-wrap');
     if (versionSelect) {
       const needsBedrockOptions = bedrock && versionSelect.dataset.runtime !== 'bedrock';
       const needsJavaOptions = !bedrock && versionSelect.dataset.runtime === 'bedrock';
@@ -113,6 +114,7 @@ function init() {
     pinnedWrap?.classList.toggle('hidden', !bedrock || versionSelect?.value !== 'PINNED');
     document.getElementById('wz-bedrock-transport-wrap')?.classList.toggle('hidden', !bedrock);
     eulaWrap?.classList.toggle('hidden', !bedrock);
+    addressWrap?.classList.toggle('hidden', !bedrock);
     const maxPlayers = document.getElementById('wz-maxplayers');
     if (maxPlayers) maxPlayers.value = bedrock ? '16' : '10';
     refreshRakNetAvailability();
@@ -326,7 +328,10 @@ function init() {
       mcVersion: isBedrock() ? bedrockVersion() : document.getElementById('wz-version')?.value,
       runtime: isBedrock() ? 'bedrock' : 'java',
       ...(isBedrock()
-        ? { bedrockTransport: document.getElementById('wz-bedrock-transport')?.value || 'nethernet' }
+        ? {
+            bedrockTransport: document.getElementById('wz-bedrock-transport')?.value || 'nethernet',
+            advertisedAddress: document.getElementById('wz-bedrock-address')?.value.trim(),
+          }
         : {}),
       ...(isBedrock() && document.getElementById('wz-bedrock-transport')?.value === 'raknet'
         ? { portBedrock: Number(document.getElementById('wz-raknet-ipv6-port')?.value) || undefined }
@@ -628,6 +633,7 @@ function init() {
         ? { portBedrock: Number(document.getElementById('wz-raknet-ipv6-port')?.value) || undefined }
         : {}),
       ...(isBedrock() ? { eulaAccepted: true } : {}),
+      ...(isBedrock() ? { advertisedAddress: document.getElementById('wz-bedrock-address')?.value.trim() } : {}),
       ...resources(),
       env: collectSimpleEnv(),
       ...collectDockerOverrides(),

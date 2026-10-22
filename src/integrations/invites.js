@@ -22,6 +22,7 @@ const modrinth = require('../services/modrinthApi');
 const { getVersionManifest } = require('../services/mojang');
 const { displayVersion, flavorLabel } = require('../web/viewModels');
 const players = require('../services/players');
+const bedrockConnection = require('../services/bedrockConnection');
 
 function mustGet(serverId) {
   const server = serversService.getServer(serverId);
@@ -75,6 +76,8 @@ function portForwardGuidance(port) {
 
 async function inviteInfo(serverId) {
   const server = mustGet(serverId);
+  const netherNet = bedrockConnection.netherNetDetails(server);
+  if (netherNet) return bedrockInviteInfo(server, netherNet);
   const port = server.port_game;
   const candidates = localIPv4s().map((ip) => `${ip}:${port}`);
 
@@ -117,6 +120,34 @@ async function inviteInfo(serverId) {
     manualMods: manual.map((m) => ({ name: m.name, filename: m.filename })),
     inviteText: lines.join('\n'),
     modded: activeMods.length > 0 && !isPluginFlavor(server.type),
+  };
+}
+
+function bedrockInviteInfo(server, netherNet) {
+  const host = netherNet.address || '<configure the advertised address>';
+  const lines = [
+    `You're invited to "${server.display_name}"!`,
+    `Address: ${host}`,
+    `NetherNet signaling: TCP ${netherNet.signalingPort}.`,
+    `NetherNet gameplay: UDP ${netherNet.udpStart}-${netherNet.udpEnd}.`,
+    `Firewall: allow ${netherNet.firewallRules.join(', ')}.`,
+  ];
+  return {
+    serverId: server.id,
+    name: server.display_name,
+    port: netherNet.signalingPort,
+    candidates: netherNet.address ? [netherNet.address] : [],
+    publicIp: null,
+    publicAddress: null,
+    portForwardGuidance: `Allow inbound ${netherNet.firewallRules.join(', ')} on the host firewall and any router or network firewall between players and the server.`,
+    mcVersion: server.mc_version,
+    flavor: 'Native Bedrock',
+    whitelistEnforced: players.getWhitelistEnforced(server.id),
+    modCount: 0,
+    manualMods: [],
+    inviteText: lines.join('\n'),
+    modded: false,
+    netherNet,
   };
 }
 

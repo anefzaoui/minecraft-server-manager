@@ -251,6 +251,11 @@
         <p class="help" id="wz-port-help">A free port, suggested automatically. The panel's remote console (RCON) runs on the port 1000 higher than this one.</p>
       </div>
     </div>
+    <div id="wz-bedrock-address-wrap" class="mt-4 hidden">
+      <label class="label" for="wz-bedrock-address">NetherNet advertised address</label>
+      <input class="input max-w-xl font-mono" id="wz-bedrock-address" value="{{suggestedBedrockAddress}}" placeholder="192.168.1.10" autocomplete="off" spellcheck="false">
+      <p class="help">The reachable IPv4 or IPv6 address of this host. Use <code class="code-inline">&lt;public_ip&gt;</code> to resolve a dynamic public address when the server starts. Hostnames are not supported by NetherNet.</p>
+    </div>
   </div>
 
   <div class="card mt-4 p-5" id="wz-card-world">

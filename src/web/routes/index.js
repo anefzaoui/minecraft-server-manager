@@ -393,6 +393,7 @@ router.get('/servers/new', async (req, res) => {
     advancedSections,
     curseforgeEnabled,
     defaults: require('../../services/settings').getDefaults(),
+    suggestedBedrockAddress: require('../../services/bedrockConnection').suggestedAdvertisedAddress(),
   });
 });
 
@@ -510,6 +511,7 @@ router.get(
       }
       addrs.push(`localhost:${row.port_game}`);
       context.addresses = [...new Set(addrs)];
+      context.netherNet = require('../../services/bedrockConnection').netherNetDetails(row);
     } else if (tab === 'chat') {
       const live = require('../../services/liveCache').get(row.id);
       context.onlinePlayers = (live && live.players && live.players.names) || [];
@@ -522,7 +524,9 @@ router.get(
     } else if (tab === 'mods') {
       if (require('../../services/serverRuntime').supports(row, 'bedrockPacks')) {
         context.bedrockPacksExperience = true;
-        context.bedrockPacks = await require('../../services/bedrockPacks').list(row.id).catch(() => []);
+        context.bedrockPacks = await require('../../services/bedrockPacks')
+          .list(row.id)
+          .catch(() => []);
       } else {
         context.mods = await require('../../services/mods')
           .listContent(row.id)

@@ -98,6 +98,7 @@ const createSchema = z
     portRcon: z.coerce.number().int().min(1024).max(65535).optional(),
     portBedrock: z.coerce.number().int().min(1024).max(65535).optional(),
     netherNetUdpStart: z.coerce.number().int().min(1024).max(65535).optional(),
+    advertisedAddress: z.string().trim().max(64).optional(),
     maxPlayers: z.coerce.number().int().min(1).max(1000).optional(),
     withBedrock: z.coerce.boolean().optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
@@ -169,6 +170,7 @@ router.patch(
         autoStart: z.coerce.boolean().optional(),
         autoRestart: z.coerce.boolean().optional(),
         env: z.record(z.string(), z.string()).optional(),
+        advertisedAddress: z.string().trim().max(64).optional(),
         ...dockerOverridesSchema,
       })
       .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {

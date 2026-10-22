@@ -26,6 +26,7 @@ const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 const { propEnvMap } = require('../config/field-catalog');
 const serverRuntime = require('./serverRuntime');
+const bedrockConnection = require('./bedrockConnection');
 
 // BDS 1.26.51 removed RakNet support. Latest and Preview deliberately do not
 // qualify: their transport support can change between container restarts.
@@ -106,9 +107,8 @@ function assembleEnv(server) {
       env.SERVER_PORT_V6 = '19133';
       delete env.SERVER_UDP_PORTS;
     } else {
-      const udpCount = server.nethernet_udp_end - server.nethernet_udp_start + 1;
       env.TRANSPORT = 'nethernet';
-      env.SERVER_UDP_PORTS = `19140-${19140 + udpCount - 1}`;
+      env.SERVER_UDP_PORTS = bedrockConnection.netherNetUdpPorts(server);
       delete env.SERVER_PORT_V6;
     }
     env.VERSION = server.mc_version || 'LATEST';
@@ -470,11 +470,11 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 
   db.run(
     `INSERT INTO servers (id, display_name, description, icon, accent, tags_json, type, mc_version,
-       runtime, java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, bedrock_transport, nethernet_udp_start, nethernet_udp_end, rcon_password_cipher,
+       runtime, java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, bedrock_transport, nethernet_udp_start, nethernet_udp_end, advertised_address, rcon_password_cipher,
        heap_mb, container_memory_mb, container_swap_mb, cpus, disk_quota_bytes, quota_strict,
        update_policy, auto_start, auto_restart, status, container_name, network_name,
        extra_ports_json, extra_binds_json)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
     id,
     input.name,
     input.description || '',
@@ -493,6 +493,9 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     runtime === serverRuntime.BEDROCK ? bedrockTransport : 'nethernet',
     runtime === serverRuntime.BEDROCK && bedrockTransport === 'nethernet' ? ports.nethernetUdpStart : null,
     runtime === serverRuntime.BEDROCK && bedrockTransport === 'nethernet' ? ports.nethernetUdpEnd : null,
+    runtime === serverRuntime.BEDROCK && bedrockTransport === 'nethernet'
+      ? bedrockConnection.normalizeAdvertisedAddress(input.advertisedAddress)
+      : '',
     // This legacy column is NOT NULL. Retain an encrypted unused value so
     // Native Bedrock has no RCON dependency while old schemas remain valid.
     secrets.encrypt(rconPassword),
@@ -821,20 +824,23 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     containerMemoryMb: 'container_memory_mb',
     cpus: 'cpus',
     updatePolicy: 'update_policy',
+    advertisedAddress: 'advertised_address',
   };
   const diff = {};
   const sets = [];
   const params = [];
-  const RECREATE_FIELDS = new Set(['mcVersion', 'javaTag', 'heapMb', 'containerMemoryMb', 'cpus']);
+  const RECREATE_FIELDS = new Set(['mcVersion', 'javaTag', 'heapMb', 'containerMemoryMb', 'cpus', 'advertisedAddress']);
   let needsRecreate = false;
 
   for (const [key, col] of Object.entries(columns)) {
     if (changes[key] === undefined) continue;
+    const value =
+      key === 'advertisedAddress' ? bedrockConnection.normalizeAdvertisedAddress(changes[key]) : changes[key];
     const beforeVal = key === 'name' ? before.display_name : before[col];
-    if (String(beforeVal) === String(changes[key])) continue;
-    diff[key] = [beforeVal, changes[key]];
+    if (String(beforeVal) === String(value)) continue;
+    diff[key] = [beforeVal, value];
     sets.push(`${col} = ?`);
-    params.push(changes[key]);
+    params.push(value);
     if (RECREATE_FIELDS.has(key)) needsRecreate = true;
   }
   if (changes.tags) {

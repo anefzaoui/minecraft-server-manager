@@ -203,6 +203,7 @@ test('createServer reserves NetherNet signaling and a player-sized UDP range by 
       eulaAccepted: true,
       portGame: 45212,
       netherNetUdpStart: 45220,
+      advertisedAddress: '192.168.1.42',
       maxPlayers: 3,
     },
     { start: false }
@@ -211,9 +212,15 @@ test('createServer reserves NetherNet signaling and a player-sized UDP range by 
   assert.equal(server.bedrock_transport, 'nethernet');
   assert.equal(server.nethernet_udp_start, 45220);
   assert.equal(server.nethernet_udp_end, 45222);
-  assert.deepEqual(created.ports, { game: 45212, rcon: 0, bedrock: null, nethernetUdpStart: 45220, nethernetUdpEnd: 45222 });
+  assert.deepEqual(created.ports, {
+    game: 45212,
+    rcon: 0,
+    bedrock: null,
+    nethernetUdpStart: 45220,
+    nethernetUdpEnd: 45222,
+  });
   assert.equal(created.env.MAX_PLAYERS, '3');
-  assert.equal(created.env.SERVER_UDP_PORTS, '19140-19142');
+  assert.equal(created.env.SERVER_UDP_PORTS, '192.168.1.42:45220-45222:19140-19142');
 });
 
 test('createServer uses the legacy RakNet IPv4 and IPv6 UDP contract for a compatible pinned version', async (t) => {
