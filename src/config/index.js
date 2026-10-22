@@ -290,6 +290,7 @@ const config = {
     gameStart: numFromEnv('PORT_GAME_START', 25565, { min: 1, max: 65535 }),
     rconOffset: numFromEnv('PORT_RCON_OFFSET', 1000, { min: 1, max: 64000 }),
     bedrockStart: numFromEnv('PORT_BEDROCK_START', 19132, { min: 1, max: 65535 }),
+    nethernetUdpStart: numFromEnv('PORT_NETHERNET_UDP_START', 19140, { min: 1024, max: 65535 }),
   },
 
   // Default per-instance resources (host-aware unless overridden via env).

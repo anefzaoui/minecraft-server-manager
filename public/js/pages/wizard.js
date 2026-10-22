@@ -75,6 +75,8 @@ function init() {
     }
     pinnedWrap?.classList.toggle('hidden', !bedrock || versionSelect?.value !== 'PINNED');
     eulaWrap?.classList.toggle('hidden', !bedrock);
+    const maxPlayers = document.getElementById('wz-maxplayers');
+    if (maxPlayers) maxPlayers.value = bedrock ? '16' : '10';
   }
   versionSelect?.addEventListener('change', refreshRuntimeFlavor);
 
@@ -244,7 +246,7 @@ function init() {
       DIFFICULTY: document.getElementById('wz-difficulty').value,
       MODE: document.getElementById('wz-mode').value,
       PVP: document.getElementById('wz-pvp').value,
-      MAX_PLAYERS: String(Number(document.getElementById('wz-maxplayers').value) || 10),
+      MAX_PLAYERS: String(Number(document.getElementById('wz-maxplayers').value) || (isBedrock() ? 16 : 10)),
       ...(document.getElementById('wz-seed').value.trim()
         ? { SEED: document.getElementById('wz-seed').value.trim() }
         : {}),
@@ -262,6 +264,7 @@ function init() {
       // quota off) - an empty field must never silently flip the quota off.
       diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),
       portGame: Number(document.getElementById('wz-port').value) || undefined,
+      maxPlayers: Number(document.getElementById('wz-maxplayers').value) || (isBedrock() ? 16 : 10),
     };
   }
 
@@ -281,6 +284,7 @@ function init() {
       type,
       mcVersion: isBedrock() ? bedrockVersion() : document.getElementById('wz-version')?.value,
       runtime: isBedrock() ? 'bedrock' : 'java',
+      maxPlayers: Number(document.getElementById('wz-maxplayers').value) || (isBedrock() ? 16 : 10),
       heapMb: r.heapMb,
       containerMemoryMb: r.containerMemoryMb,
       portGame: r.portGame,

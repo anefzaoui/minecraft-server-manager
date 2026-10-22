@@ -185,6 +185,56 @@ test('createServer persists a Native Bedrock runtime and uses its container cont
   assert.equal(created.ports.rcon, 0);
 });
 
+test('createServer reserves NetherNet signaling and a player-sized UDP range by default', async (t) => {
+  const images = require('../src/docker/images');
+  const containers = require('../src/docker/containers');
+  let created;
+  t.mock.method(images, 'ensureImage', async () => {});
+  t.mock.method(containers, 'createContainer', async (spec) => {
+    created = spec;
+    return 'nethernet-container-id';
+  });
+
+  const server = await servers.createServer(
+    {
+      name: 'NetherNet test',
+      runtime: 'bedrock',
+      type: 'BEDROCK',
+      eulaAccepted: true,
+      portGame: 45212,
+      netherNetUdpStart: 45220,
+      maxPlayers: 3,
+    },
+    { start: false }
+  );
+
+  assert.equal(server.bedrock_transport, 'nethernet');
+  assert.equal(server.nethernet_udp_start, 45220);
+  assert.equal(server.nethernet_udp_end, 45222);
+  assert.deepEqual(created.ports, { game: 45212, rcon: 0, bedrock: null, nethernetUdpStart: 45220, nethernetUdpEnd: 45222 });
+  assert.equal(created.env.MAX_PLAYERS, '3');
+  assert.equal(created.env.SERVER_UDP_PORTS, '19140-19142');
+});
+
+test('createServer rejects an advanced mapping that overlaps a NetherNet UDP range', async () => {
+  await assert.rejects(
+    servers.createServer(
+      {
+        name: 'Conflicting NetherNet ports',
+        runtime: 'bedrock',
+        type: 'BEDROCK',
+        eulaAccepted: true,
+        portGame: 45240,
+        netherNetUdpStart: 45250,
+        maxPlayers: 2,
+        extraPorts: [{ hostPort: 45251, containerPort: 8080, protocol: 'tcp' }],
+      },
+      { start: false }
+    ),
+    /advanced port mapping conflicts/i
+  );
+});
+
 test('dirSize sums file sizes including nested subdirectories', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-dirsize-'));
   try {

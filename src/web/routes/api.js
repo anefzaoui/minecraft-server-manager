@@ -96,6 +96,8 @@ const createSchema = z
     portGame: z.coerce.number().int().min(1024).max(65535).optional(),
     portRcon: z.coerce.number().int().min(1024).max(65535).optional(),
     portBedrock: z.coerce.number().int().min(1024).max(65535).optional(),
+    netherNetUdpStart: z.coerce.number().int().min(1024).max(65535).optional(),
+    maxPlayers: z.coerce.number().int().min(1).max(1000).optional(),
     withBedrock: z.coerce.boolean().optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
@@ -227,6 +229,8 @@ const previewSchema = z.object({
   portGame: z.coerce.number().int().min(1024).max(65535).optional(),
   portRcon: z.coerce.number().int().min(1024).max(65535).optional(),
   portBedrock: z.coerce.number().int().min(1024).max(65535).optional(),
+  netherNetUdpStart: z.coerce.number().int().min(1024).max(65535).optional(),
+  maxPlayers: z.coerce.number().int().min(1).max(1000).optional(),
   withBedrock: z.coerce.boolean().optional(),
   ...dockerOverridesSchema,
 });

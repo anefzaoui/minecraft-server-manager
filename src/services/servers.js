@@ -15,7 +15,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const secrets = require('./secrets');
 const { pickJavaTag } = require('./javaMatrix');
-const { suggestPorts, isPortFree } = require('./ports');
+const { suggestPorts, suggestNetherNetPorts, isPortFree } = require('./ports');
 const containers = require('../docker/containers');
 const images = require('../docker/images');
 const { fetchLogs } = require('../docker/logs');
@@ -83,6 +83,10 @@ function assembleEnv(server) {
   const env = { ...server.env };
   env.EULA = 'TRUE';
   if (serverRuntime.supports(server, 'nativeBedrock')) {
+    env.MAX_PLAYERS = env.MAX_PLAYERS || '16';
+    env.SERVER_PORT = '19132';
+    const udpCount = server.nethernet_udp_end - server.nethernet_udp_start + 1;
+    env.SERVER_UDP_PORTS = `19140-${19140 + udpCount - 1}`;
     env.VERSION = server.mc_version || 'LATEST';
     delete env.TYPE;
     delete env.MEMORY;
@@ -228,7 +232,14 @@ function previewCreateSpec(input) {
         swapMb: input.containerSwapMb ?? 0,
         cpus: input.cpus ?? defaults.cpus,
       },
-      ports: { game: input.portGame || '(auto-assigned)', rcon: null, bedrock: null, extra: input.extraPorts || [] },
+      ports: {
+        game: input.portGame || '(auto-assigned)',
+        rcon: null,
+        bedrock: null,
+        nethernetUdpStart: input.netherNetUdpStart || '(auto-assigned)',
+        nethernetUdpEnd: input.netherNetUdpStart ? input.netherNetUdpStart + (Number(input.maxPlayers || input.env?.MAX_PLAYERS || 16) - 1) : '(auto-assigned)',
+        extra: input.extraPorts || [],
+      },
       volumes: { data: '<panel data dir>/servers/<server id> -> /data', extra: input.extraBinds || [] },
       env: { ...(input.env || {}), EULA: 'TRUE', VERSION: input.mcVersion || 'LATEST' },
     };
@@ -281,6 +292,8 @@ function previewServerSpec(id) {
       game: server.port_game,
       rcon: server.port_rcon,
       bedrock: server.port_bedrock,
+      nethernetUdpStart: server.nethernet_udp_start,
+      nethernetUdpEnd: server.nethernet_udp_end,
       extra: server.extraPorts,
     },
     volumes: {
@@ -338,10 +351,32 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   require('./packPins').assertPinnedPackEnv(input.type, inputEnv);
 
   const id = `srv_${nanoid(8)}`;
+  const netherNetCapacity = Math.max(1, Math.min(1000, Number(input.maxPlayers || inputEnv.MAX_PLAYERS || 16)));
+  const persistedEnv = {
+    ...inputEnv,
+    ...(runtime === serverRuntime.BEDROCK ? { MAX_PLAYERS: String(netherNetCapacity) } : {}),
+  };
 
   // Ports: honor explicit choices (validated), else auto-suggest.
   let ports;
-  if (input.portGame) {
+  if (runtime === serverRuntime.BEDROCK) {
+    const udpStart = input.netherNetUdpStart;
+    if (input.portGame && udpStart) {
+      const udpEnd = udpStart + netherNetCapacity - 1;
+      const candidates = [input.portGame, ...Array.from({ length: netherNetCapacity }, (_, i) => udpStart + i)];
+      if (udpEnd > 65535 || new Set(candidates).size !== candidates.length) {
+        throw httpError(400, 'NetherNet signaling port and UDP range must be distinct valid ports.');
+      }
+      for (const port of candidates) {
+        if (!(await isPortFree(port))) throw httpError(400, `Port ${port} is already in use or invalid`);
+      }
+      ports = { game: input.portGame, rcon: 0, bedrock: null, nethernetUdpStart: udpStart, nethernetUdpEnd: udpEnd };
+    } else if (!udpStart) {
+      ports = await suggestNetherNetPorts({ capacity: netherNetCapacity, signalingPort: input.portGame });
+    } else {
+      throw httpError(400, 'Set both the NetherNet signaling port and UDP range start, or leave both automatic.');
+    }
+  } else if (input.portGame) {
     // The RCON port is derived when not given explicitly - validate the
     // DERIVED value too, or an explicit game port skips collision checks.
     // `port_rcon` predates runtimes and remains NOT NULL. Native Bedrock stores
@@ -363,6 +398,16 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     if (runtime === serverRuntime.BEDROCK) ports = { game: ports.game, rcon: 0, bedrock: null };
   }
 
+  const reservedPorts = new Set([
+    ports.game,
+    ...(runtime === serverRuntime.BEDROCK
+      ? Array.from({ length: ports.nethernetUdpEnd - ports.nethernetUdpStart + 1 }, (_, i) => ports.nethernetUdpStart + i)
+      : []),
+  ]);
+  if ((input.extraPorts || []).some((p) => reservedPorts.has(Number(p.hostPort)))) {
+    throw httpError(400, 'An advanced port mapping conflicts with a managed server port.');
+  }
+
   await dockerSpec.validateOverrides({
     containerName: input.containerName,
     networkName: input.networkName,
@@ -375,11 +420,11 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 
   db.run(
     `INSERT INTO servers (id, display_name, description, icon, accent, tags_json, type, mc_version,
-       runtime, java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, rcon_password_cipher,
+       runtime, java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, bedrock_transport, nethernet_udp_start, nethernet_udp_end, rcon_password_cipher,
        heap_mb, container_memory_mb, container_swap_mb, cpus, disk_quota_bytes, quota_strict,
        update_policy, auto_start, auto_restart, status, container_name, network_name,
        extra_ports_json, extra_binds_json)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
     id,
     input.name,
     input.description || '',
@@ -390,11 +435,14 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     input.mcVersion || 'LATEST',
     runtime,
     input.javaTag || '',
-    JSON.stringify(input.env || {}),
+    JSON.stringify(persistedEnv),
     ports.game,
     ports.rcon,
     input.portQuery || null,
     ports.bedrock,
+    runtime === serverRuntime.BEDROCK ? 'nethernet' : 'nethernet',
+    runtime === serverRuntime.BEDROCK ? ports.nethernetUdpStart : null,
+    runtime === serverRuntime.BEDROCK ? ports.nethernetUdpEnd : null,
     // This legacy column is NOT NULL. Retain an encrypted unused value so
     // Native Bedrock has no RCON dependency while old schemas remain valid.
     secrets.encrypt(rconPassword),
@@ -432,7 +480,13 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
       image,
       env: assembleEnv(server),
       dataDir: dataPath('servers', id),
-      ports: { game: server.port_game, rcon: server.port_rcon, bedrock: server.port_bedrock },
+      ports: {
+        game: server.port_game,
+        rcon: server.port_rcon,
+        bedrock: server.port_bedrock,
+        nethernetUdpStart: server.nethernet_udp_start,
+        nethernetUdpEnd: server.nethernet_udp_end,
+      },
       extraPorts: mergeExtraPorts(server),
       resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
       containerName: server.containerName,
@@ -629,7 +683,13 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
     image,
     env: assembleEnv(server),
     dataDir: dataPath('servers', id),
-    ports: { game: server.port_game, rcon: server.port_rcon, bedrock: server.port_bedrock },
+    ports: {
+      game: server.port_game,
+      rcon: server.port_rcon,
+      bedrock: server.port_bedrock,
+      nethernetUdpStart: server.nethernet_udp_start,
+      nethernetUdpEnd: server.nethernet_udp_end,
+    },
     extraPorts: mergeExtraPorts(server),
     resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
     containerName: server.containerName,

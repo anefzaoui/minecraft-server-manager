@@ -110,4 +110,30 @@ async function suggestPorts({ withBedrock = false } = {}) {
   return result;
 }
 
-module.exports = { isPortFree, suggestPorts, probe, dbPortsInUse };
+/** Allocate NetherNet's TCP signaling endpoint plus a contiguous UDP range. */
+async function suggestNetherNetPorts({ capacity = 16, signalingPort } = {}) {
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 1000) {
+    throw httpError(400, 'NetherNet player capacity must be between 1 and 1000.');
+  }
+  const signal = signalingPort ? { game: signalingPort, rcon: 0 } : await suggestPorts();
+  if (signalingPort && !(await isPortFree(signalingPort))) {
+    throw httpError(400, `Port ${signalingPort} is already in use or invalid`);
+  }
+  const used = dbPortsInUse();
+  used.add(signal.game);
+  let start = config.ports.nethernetUdpStart;
+  const maxStart = 65535 - capacity + 1;
+  while (start <= maxStart) {
+    const range = Array.from({ length: capacity }, (_, i) => start + i);
+    if (range.every((port) => !used.has(port) && port !== signal.rcon && port !== signal.game)) {
+      const free = await Promise.all(range.map((port) => probe(port)));
+      if (free.every(Boolean)) {
+        return { game: signal.game, rcon: 0, bedrock: null, nethernetUdpStart: start, nethernetUdpEnd: start + capacity - 1 };
+      }
+    }
+    start += 1;
+  }
+  throw httpError(409, 'No free contiguous NetherNet UDP range is available.');
+}
+
+module.exports = { isPortFree, suggestPorts, suggestNetherNetPorts, probe, dbPortsInUse };

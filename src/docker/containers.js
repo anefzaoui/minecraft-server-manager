@@ -13,6 +13,7 @@ const LABEL = 'msm.id';
 const GAME_PORT = '25565';
 const RCON_PORT = '25575';
 const BEDROCK_PORT = '19132';
+const NETHERNET_UDP_START = 19140;
 
 function containerName(serverId) {
   return `msm-${serverId}`;
@@ -36,10 +37,10 @@ async function createContainer(spec) {
   const docker = getDocker();
   const nativeBedrock = spec.runtime === 'bedrock';
   const exposed = nativeBedrock
-    ? { [`${BEDROCK_PORT}/udp`]: {} }
+    ? { [`${BEDROCK_PORT}/tcp`]: {} }
     : { [`${GAME_PORT}/tcp`]: {}, [`${GAME_PORT}/udp`]: {}, [`${RCON_PORT}/tcp`]: {} };
   const bindings = nativeBedrock
-    ? { [`${BEDROCK_PORT}/udp`]: [{ HostPort: String(spec.ports.game) }] }
+    ? { [`${BEDROCK_PORT}/tcp`]: [{ HostPort: String(spec.ports.game) }] }
     : {
         [`${GAME_PORT}/tcp`]: [{ HostPort: String(spec.ports.game) }],
         [`${GAME_PORT}/udp`]: [{ HostPort: String(spec.ports.game) }],
@@ -48,6 +49,13 @@ async function createContainer(spec) {
   if (!nativeBedrock && spec.ports.bedrock) {
     exposed[`${BEDROCK_PORT}/udp`] = {};
     bindings[`${BEDROCK_PORT}/udp`] = [{ HostPort: String(spec.ports.bedrock) }];
+  }
+  if (nativeBedrock) {
+    const count = spec.ports.nethernetUdpEnd - spec.ports.nethernetUdpStart + 1;
+    for (let i = 0; i < count; i += 1) {
+      exposed[`${NETHERNET_UDP_START + i}/udp`] = {};
+      bindings[`${NETHERNET_UDP_START + i}/udp`] = [{ HostPort: String(spec.ports.nethernetUdpStart + i) }];
+    }
   }
   // Feature ports (e.g. BlueMap's web server) + user-defined extras - [{container: '8100/tcp', host: 8123}]
   for (const extra of spec.extraPorts || []) {
