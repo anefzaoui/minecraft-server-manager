@@ -3022,7 +3022,11 @@ router.post(
 function publicServer(s) {
   if (!s) return null;
   const { rcon_password_cipher, env_json, notes, env, ...rest } = s;
-  return rest;
+  return {
+    ...rest,
+    runtime: require('../../services/serverRuntime').runtimeFor(s),
+    capabilities: require('../../services/serverRuntime').resolve(s).capabilities,
+  };
 }
 
 router.use(makeJsonErrorHandler('api', { fileTooLarge: 'That image is too large (max 16 MB).' }));
