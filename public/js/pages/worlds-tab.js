@@ -18,9 +18,10 @@ import {
 } from './worlds.js';
 
 const root = document.querySelector('[data-worlds-server]');
-if (root) init(root.dataset.worldsServer, root.dataset.worldsServerName, root.dataset.worldsStatus);
+if (root)
+  init(root.dataset.worldsServer, root.dataset.worldsServerName, root.dataset.worldsStatus, root.dataset.worldsRuntime);
 
-function init(serverId, serverName, serverStatus) {
+function init(serverId, serverName, serverStatus, runtime) {
   const base = `/api/servers/${serverId}/worlds`;
   const reload = () => setTimeout(() => location.reload(), 700);
   const isRunning = ['running', 'starting', 'unhealthy', 'stalled'].includes(serverStatus);
@@ -30,7 +31,7 @@ function init(serverId, serverName, serverStatus) {
     extractWorldModal({ serverId, onDone: reload });
   });
   document.getElementById('worlds-upload')?.addEventListener('click', () => {
-    uploadWorldModal({ onDone: reload });
+    uploadWorldModal({ runtime, onDone: reload });
   });
 
   // ---- Library section: install here ----

@@ -84,11 +84,14 @@ router.get(
 router.post('/upload', worldUploadPreflight, upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) throw badRequest('Attach a world archive (zip, .mcworld, tar, or tar.gz).');
-    const { name } = z.object({ name: z.string().trim().max(120).optional() }).parse(req.body || {});
+    const { name, runtime } = z
+      .object({ name: z.string().trim().max(120).optional(), runtime: z.enum(['java', 'bedrock']).optional() })
+      .parse(req.body || {});
     const row = await worlds.importArchive(req.file.path, {
       name,
       originalName: req.file.originalname,
       actor: actorOf(req),
+      runtime,
     });
     res.status(201).json({ ok: true, world: libVM(row) });
   } catch (err) {

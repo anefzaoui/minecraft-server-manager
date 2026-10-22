@@ -30,6 +30,7 @@ const library = require('./library');
 const { withSaveLock } = require('./serverLocks');
 const { guardOp } = require('./opLock');
 const logger = require('../logger')(path.basename(__filename));
+const serverRuntime = require('./serverRuntime');
 
 // Run the save-off/flush → copy → save-on dance under the shared per-server save
 // lock when the server is running, so it can't overlap a concurrent backup or
@@ -178,6 +179,30 @@ async function detectWorldRoot(extractedDir) {
   return { rootAbs: found, split, dims };
 }
 
+/** Find a Bedrock world without parsing Java NBT or requiring Anvil regions. */
+async function detectBedrockWorldRoot(extractedDir) {
+  let queue = [path.resolve(extractedDir)];
+  while (queue.length) {
+    const next = [];
+    for (const dir of queue) {
+      const hasLevelDb = await fsp
+        .stat(path.join(dir, 'db'))
+        .then((entry) => entry.isDirectory())
+        .catch(() => false);
+      const hasName = await fsp
+        .stat(path.join(dir, 'levelname.txt'))
+        .then((entry) => entry.isFile())
+        .catch(() => false);
+      if (hasLevelDb && hasName) return { rootAbs: dir, split: false, dims: [dir] };
+      const entries = await fsp.readdir(dir, { withFileTypes: true }).catch(() => []);
+      for (const entry of entries)
+        if (entry.isDirectory() && !entry.isSymbolicLink()) next.push(path.join(dir, entry.name));
+    }
+    queue = next;
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Import (upload) into the library
 
@@ -188,7 +213,15 @@ async function detectWorldRoot(extractedDir) {
  */
 async function importArchive(
   uploadPath,
-  { name = '', originalName = '', actor = 'system', flavor = null, source = 'upload', onProgress = () => {} } = {}
+  {
+    name = '',
+    originalName = '',
+    actor = 'system',
+    flavor = null,
+    runtime = 'java',
+    source = 'upload',
+    onProgress = () => {},
+  } = {}
 ) {
   const stat = await fsp.stat(uploadPath).catch(() => null);
   if (!stat || !stat.isFile()) throw httpError(400, 'Upload not found - try again');
@@ -207,12 +240,19 @@ async function importArchive(
     onProgress({ stage: 'extract' });
     await extractArchive(uploadPath, tmpDir, originalName);
 
-    const detected = await detectWorldRoot(tmpDir);
+    const detected =
+      runtime === serverRuntime.BEDROCK ? await detectBedrockWorldRoot(tmpDir) : await detectWorldRoot(tmpDir);
     if (!detected) {
-      throw httpError(400, "No level.dat found - this doesn't look like a Minecraft world");
+      throw httpError(
+        400,
+        runtime === serverRuntime.BEDROCK
+          ? "No Bedrock level database and levelname.txt found - this doesn't look like a Bedrock world"
+          : "No level.dat found - this doesn't look like a Minecraft world"
+      );
     }
 
-    const mcVersion = readLevelVersion(path.join(detected.rootAbs, 'level.dat'));
+    const mcVersion =
+      runtime === serverRuntime.BEDROCK ? null : readLevelVersion(path.join(detected.rootAbs, 'level.dat'));
 
     onProgress({ stage: 'pack' });
     await zipWorld(zipTmp, detected.rootAbs, detected.dims.slice(1));
@@ -227,7 +267,7 @@ async function importArchive(
       name: worldName,
       actor,
       worldSource: source,
-      worldFlavor: flavor,
+      worldFlavor: flavor || (runtime === serverRuntime.BEDROCK ? 'BEDROCK' : null),
       mcVersion,
       split: detected.split,
     });
@@ -370,7 +410,12 @@ async function listServerWorlds(serverId) {
     return [];
   }
   const dirNames = new Set(entries.filter((e) => e.isDirectory()).map((e) => e.name));
-  const withLevelDat = [...dirNames].filter((n) => fs.existsSync(path.join(base, n, 'level.dat')));
+  const isBedrock = serverRuntime.supports(server, 'nativeBedrock');
+  const withLevelDat = [...dirNames].filter((n) =>
+    isBedrock
+      ? fs.existsSync(path.join(base, n, 'db')) && fs.existsSync(path.join(base, n, 'levelname.txt'))
+      : fs.existsSync(path.join(base, n, 'level.dat'))
+  );
 
   // A dir is a split dim (not its own world) when its base world also exists.
   const mains = withLevelDat.filter((n) => {
@@ -388,7 +433,7 @@ async function listServerWorlds(serverId) {
       active,
       dims: dimNames,
       sizeBytes,
-      seed: active ? props.get('level-seed') || null : null,
+      seed: isBedrock ? null : active ? props.get('level-seed') || null : null,
     });
   }
   worlds.sort((a, b) => b.active - a.active || a.name.localeCompare(b.name));
@@ -1251,6 +1296,7 @@ module.exports = {
   isDimName,
   readLevelSpawn,
   detectWorldRoot,
+  detectBedrockWorldRoot,
   importArchive,
   extractFromServer,
   listServerWorlds,

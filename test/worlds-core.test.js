@@ -10,6 +10,7 @@ const app = require('./helpers/app');
 const db = require('../src/db');
 const { dataPath } = require('../src/storage/pathGuard');
 const env = require('./helpers/env');
+const archiver = require('archiver');
 
 test.before(async () => {
   await app.start();
@@ -60,6 +61,39 @@ test('detectWorldRoot handles a top-level world directly', async () => {
   assert.equal(result.rootAbs, path.resolve(root));
   assert.equal(result.dims.length, 1);
   assert.equal(result.split, false);
+});
+
+test('Bedrock worlds import and list without Java level.dat or Anvil regions', async () => {
+  const archive = path.join(env.dir, 'bedrock.mcworld');
+  await new Promise((resolve, reject) => {
+    const out = fs.createWriteStream(archive);
+    const zip = archiver('zip');
+    out.on('close', resolve);
+    out.on('error', reject);
+    zip.on('error', reject);
+    zip.pipe(out);
+    zip.append('Bedrock world', { name: 'wrapped/levelname.txt' });
+    zip.append('MANIFEST-000001', { name: 'wrapped/db/CURRENT' });
+    zip.finalize();
+  });
+  const imported = await worlds.importArchive(archive, { originalName: 'bedrock.mcworld', runtime: 'bedrock' });
+  assert.equal(imported.world_flavor, 'BEDROCK');
+
+  const id = 'bedrock_world_list';
+  db.run(
+    `INSERT INTO servers (id, display_name, type, runtime, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb)
+     VALUES (?, 'Bedrock worlds', 'BEDROCK', 'bedrock', 19132, 0, '', 1024, 1536)`,
+    id
+  );
+  const root = dataPath('servers', id, 'Bedrock level');
+  fs.mkdirSync(path.join(root, 'db'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'levelname.txt'), 'Bedrock level');
+  fs.writeFileSync(path.join(root, 'db', 'CURRENT'), 'MANIFEST-000001');
+  const listed = await worlds.listServerWorlds(id);
+  assert.equal(listed.length, 1);
+  assert.equal(listed[0].name, 'Bedrock level');
+  await worlds.deleteLibraryWorld(imported.id);
+  db.run('DELETE FROM servers WHERE id = ?', id);
 });
 
 test('readLevelVersion parses the NBT Name tag and returns null on junk', () => {
