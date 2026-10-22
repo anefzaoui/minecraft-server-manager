@@ -697,7 +697,11 @@ async function activateWorldImpl(serverId, worldName, { actor = 'system' } = {})
   const server = mustServer(serverId);
   checkWorldName(worldName);
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before switching worlds');
-  if (!fs.existsSync(dataPath('servers', serverId, worldName, 'level.dat'))) {
+  const worldDir = dataPath('servers', serverId, worldName);
+  const exists = serverRuntime.supports(server, 'nativeBedrock')
+    ? fs.existsSync(path.join(worldDir, 'db')) && fs.existsSync(path.join(worldDir, 'levelname.txt'))
+    : fs.existsSync(path.join(worldDir, 'level.dat'));
+  if (!exists) {
     throw httpError(404, `No world named "${worldName}" on this server`);
   }
   const previous = activeLevelName(server);
@@ -738,9 +742,12 @@ async function resetWorldImpl(
   if (!fs.existsSync(dims[0])) throw httpError(404, `World "${level}" does not exist yet - nothing to reset`);
 
   // Resolve the seed to apply (null → cleared → Minecraft picks a random one).
+  const bedrock = serverRuntime.supports(server, 'nativeBedrock');
   let newSeed = null;
   if (seedMode === 'keep') {
-    newSeed = readProps(serverId).get('level-seed') || readLevelSeed(path.join(dims[0], 'level.dat')) || null;
+    newSeed = bedrock
+      ? server.env.LEVEL_SEED || null
+      : readProps(serverId).get('level-seed') || readLevelSeed(path.join(dims[0], 'level.dat')) || null;
   } else if (seedMode === 'custom') {
     newSeed = String(seed || '').trim() || null;
   }
@@ -762,14 +769,17 @@ async function resetWorldImpl(
   // Persist the seed in server.properties + the SEED env var (itzg applies SEED
   // to level-seed on start); world type rides on the LEVEL_TYPE env the same way.
   const env = { ...server.env };
-  if (newSeed) {
+  if (bedrock) {
+    if (newSeed) env.LEVEL_SEED = String(newSeed);
+    else delete env.LEVEL_SEED;
+  } else if (newSeed) {
     setProp(serverId, 'level-seed', String(newSeed));
     env.SEED = String(newSeed);
   } else {
     setProp(serverId, 'level-seed', '');
     delete env.SEED;
   }
-  if (applyType) env.LEVEL_TYPE = applyType;
+  if (applyType && !bedrock) env.LEVEL_TYPE = applyType;
   if (JSON.stringify(env) !== JSON.stringify(server.env)) {
     require('./servers').updateServer(serverId, { env }, { actor });
   }
@@ -933,6 +943,7 @@ async function deleteLibraryWorld(id, { actor = 'system' } = {}) {
 
 /** Active level name: LEVEL env wins, then server.properties, then 'world'. */
 function activeLevelName(server) {
+  if (serverRuntime.supports(server, 'nativeBedrock')) return (server.env && server.env.LEVEL_NAME) || 'Bedrock level';
   return (server.env && server.env.LEVEL) || readProps(server.id).get('level-name') || 'world';
 }
 
@@ -972,6 +983,10 @@ function setProp(serverId, key, value) {
 
 /** Point the server at a new level: property always, LEVEL env when present. */
 function setActiveLevel(server, levelName, { actor }) {
+  if (serverRuntime.supports(server, 'nativeBedrock')) {
+    require('./servers').updateServer(server.id, { env: { ...server.env, LEVEL_NAME: levelName } }, { actor });
+    return;
+  }
   setProp(server.id, 'level-name', levelName);
   if (server.env && server.env.LEVEL !== undefined) {
     require('./servers').updateServer(server.id, { env: { ...server.env, LEVEL: levelName } }, { actor });

@@ -162,6 +162,28 @@ test('activeLevelName prefers LEVEL env, then server.properties, then world', ()
   assert.equal(worlds.activeLevelName({ id: sid, env: { LEVEL: 'myworld' } }), 'myworld');
 });
 
+test('Native Bedrock activates LevelDB worlds through LEVEL_NAME and resets without Java properties', async () => {
+  const sid = 'bedrock_activation';
+  db.run(
+    `INSERT INTO servers (id, display_name, type, runtime, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb, env_json)
+     VALUES (?, 'Bedrock activation', 'BEDROCK', 'bedrock', 19132, 0, '', 1024, 1536, ?)`,
+    sid,
+    JSON.stringify({ LEVEL_NAME: 'Old world', LEVEL_SEED: '123' })
+  );
+  for (const name of ['Old world', 'New world']) {
+    fs.mkdirSync(path.join(dataPath('servers', sid, name, 'db')), { recursive: true });
+    fs.writeFileSync(path.join(dataPath('servers', sid, name), 'levelname.txt'), name);
+  }
+  const activated = await worlds.activateWorld(sid, 'New world');
+  assert.equal(activated.active, 'New world');
+  assert.equal(JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', sid).env_json).LEVEL_NAME, 'New world');
+  await worlds.resetWorld(sid, { backup: false, seedMode: 'random' });
+  const envAfter = JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', sid).env_json);
+  assert.equal(envAfter.LEVEL_SEED, undefined);
+  assert.equal(fs.existsSync(path.join(dataPath('servers', sid, 'New world'))), false);
+  db.run('DELETE FROM servers WHERE id = ?', sid);
+});
+
 test('listServerWorlds marks active world, sizes dims, and reads seed', async () => {
   const sid = app.seedServer('wworlds');
   const base = dataPath('servers', sid);
