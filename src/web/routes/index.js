@@ -692,31 +692,35 @@ router.get(
       }
       context.motd = String(row.env.MOTD || '').replace(/§([0-9a-fk-orA-FK-OR])/g, '&$1');
 
-      // Every catalog field configurable at creation, minus what's covered
-      // elsewhere on this tab: identity/flavor/resources (their own cards
-      // above - flavor/version changes go through the Updates page, which
-      // handles the migration safely), players (live via whitelist/ops
-      // files on the Players tab, no restart needed), and gameplay's
-      // DIFFICULTY/PVP (live via World Controls) + MOTD (the field above) -
-      // exposing those here too would just drift out of sync with the
-      // RCON-set values. Same catalog + same field-level filter the wizard
-      // itself uses, so nothing new is exposed beyond what's already safe there.
-      const catalog = require('../../config/field-catalog');
-      const EXCLUDED_SECTIONS = new Set(['identity', 'flavor', 'resources', 'players']);
-      // Scoped to 'gameplay' specifically (not a global key blocklist) - a
-      // future field in another section coincidentally named e.g. MOTD must
-      // never be silently swallowed by this exclusion. The excluded keys are
-      // shared with field-catalog and contractually property-backed (`prop`),
-      // so their direct edits are always unlockable (- enforced by test).
-      const EXCLUDED_GAMEPLAY_KEYS = catalog.SETTINGS_EXCLUDED_ENV_KEYS;
-      context.advancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
-        .map((s) => ({
-          ...s,
-          fields: catalog
-            .forSection(s.id, 'advanced')
-            .filter((f) => f.scope === 'env' && !(s.id === 'gameplay' && EXCLUDED_GAMEPLAY_KEYS.has(f.key))),
-        }))
-        .filter((s) => s.fields.length);
+      if (require('../../services/serverRuntime').supports(row, 'bedrockProperties')) {
+        context.advancedSections = require('../../config/bedrock-properties').sectionsForSettings();
+      } else {
+        // Every catalog field configurable at creation, minus what's covered
+        // elsewhere on this tab: identity/flavor/resources (their own cards
+        // above - flavor/version changes go through the Updates page, which
+        // handles the migration safely), players (live via whitelist/ops
+        // files on the Players tab, no restart needed), and gameplay's
+        // DIFFICULTY/PVP (live via World Controls) + MOTD (the field above) -
+        // exposing those here too would just drift out of sync with the
+        // RCON-set values. Same catalog + same field-level filter the wizard
+        // itself uses, so nothing new is exposed beyond what's already safe there.
+        const catalog = require('../../config/field-catalog');
+        const EXCLUDED_SECTIONS = new Set(['identity', 'flavor', 'resources', 'players']);
+        // Scoped to 'gameplay' specifically (not a global key blocklist) - a
+        // future field in another section coincidentally named e.g. MOTD must
+        // never be silently swallowed by this exclusion. The excluded keys are
+        // shared with field-catalog and contractually property-backed (`prop`),
+        // so their direct edits are always unlockable (- enforced by test).
+        const EXCLUDED_GAMEPLAY_KEYS = catalog.SETTINGS_EXCLUDED_ENV_KEYS;
+        context.advancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
+          .map((s) => ({
+            ...s,
+            fields: catalog
+              .forSection(s.id, 'advanced')
+              .filter((f) => f.scope === 'env' && !(s.id === 'gameplay' && EXCLUDED_GAMEPLAY_KEYS.has(f.key))),
+          }))
+          .filter((s) => s.fields.length);
+      }
     } else if (tab === 'discord' || tab === 'status-page' || tab === 'invites' || tab === 'chatbot') {
       // Each integration is its own page now; hydrate only the slice it needs.
       // integrations.hbs switches on `sub` and renders exactly one card.

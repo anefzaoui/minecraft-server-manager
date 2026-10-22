@@ -190,6 +190,14 @@ router.patch(
         { previousExtraPorts: before.extraPorts }
       );
     }
+    const existing = requireServer(req.params.id);
+    if (changes.env && require('../../services/serverRuntime').supports(existing, 'bedrockProperties')) {
+      try {
+        require('../../config/bedrock-properties').validateEnv(changes.env);
+      } catch (err) {
+        throw httpError(400, err.message);
+      }
+    }
     const { server, needsRecreate } = servers.updateServer(req.params.id, changes, { actor: req.user.username });
     res.json({ ok: true, needsRecreate, server: publicServer(server) });
   })

@@ -102,6 +102,7 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     accent: s.accent,
     tags: s.tags,
     type: s.type,
+    runtime: require('../services/serverRuntime').runtimeFor(s),
     flavor: flavorLabel(s.type),
     loader: require('../services/mods').loaderOf(s), // resolved loader (detects the pack's for modpacks)
     mcVersion: await displayVersion(s.mc_version),
