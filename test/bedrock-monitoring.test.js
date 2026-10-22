@@ -29,8 +29,13 @@ test('Native Bedrock monitoring retains container metrics and logs without Java 
     assert.match(metrics.text, new RegExp(label), `${label} remains available for Native Bedrock`);
   }
   assert.doesNotMatch(metrics.text, /\bTPS\b|Tick Rate|ms\/tick|Java heap|Java:|Crash Reports/i);
+  assert.match(metrics.text, /href="\/servers\/srv_bedrock_monitor\/metrics"/, 'Monitoring navigation keeps Live metrics reachable');
 
   const consolePage = await app.req('GET', '/servers/srv_bedrock_monitor/console', { cookie });
   assert.equal(consolePage.status, 200);
   assert.match(consolePage.text, /Console/i);
+
+  const overview = await app.req('GET', '/servers/srv_bedrock_monitor', { cookie });
+  assert.equal(overview.status, 200);
+  assert.doesNotMatch(overview.text, /World Controls/);
 });

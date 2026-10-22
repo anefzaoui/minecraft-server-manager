@@ -76,6 +76,26 @@ async function withPausedSaves(serverId, running, copy, actor = 'system') {
   });
 }
 
+/** Keep a running Native Bedrock LevelDB world stable without Java RCON. */
+async function withBedrockSaves(server, serverId, running, copy) {
+  if (!running) return copy();
+  const { sendConsoleCommandParts } = require('./consoleCommands');
+  return withSaveLock(serverId, async () => {
+    await sendConsoleCommandParts(server, serverId, ['save', 'hold']);
+    try {
+      return await copy();
+    } finally {
+      await sendConsoleCommandParts(server, serverId, ['save', 'resume']);
+    }
+  });
+}
+
+function withConsistentWorldSaves(server, serverId, running, copy, actor = 'system') {
+  return serverRuntime.supports(server, 'nativeBedrock')
+    ? withBedrockSaves(server, serverId, running, copy)
+    : withPausedSaves(serverId, running, copy, actor);
+}
+
 const DIM_SUFFIXES = ['_nether', '_the_end'];
 
 const FLAVOR_LABEL = {
@@ -331,8 +351,17 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
   const server = mustServer(serverId);
   const level = activeLevelName(server);
   const dims = serverWorldDims(serverId, level);
-  if (!fs.existsSync(path.join(dims[0], 'level.dat'))) {
-    throw httpError(404, `World "${level}" has no level.dat yet - start the server once so it generates the world`);
+  const bedrock = serverRuntime.supports(server, 'nativeBedrock');
+  const worldExists = bedrock
+    ? fs.existsSync(path.join(dims[0], 'db')) && fs.existsSync(path.join(dims[0], 'levelname.txt'))
+    : fs.existsSync(path.join(dims[0], 'level.dat'));
+  if (!worldExists) {
+    throw httpError(
+      404,
+      bedrock
+        ? `World "${level}" has no LevelDB data yet - start the server once so it generates the world`
+        : `World "${level}" has no level.dat yet - start the server once so it generates the world`
+    );
   }
 
   const worldBytes = await dirsSize(dims);
@@ -348,7 +377,8 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
 
   try {
     // Consistent copy: pause saves, flush, copy to tmp, resume - then zip at leisure.
-    await withPausedSaves(
+    await withConsistentWorldSaves(
+      server,
       serverId,
       running,
       async () => {
@@ -363,15 +393,16 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
     const dimCopies = dims.slice(1).map((d) => path.join(tmpDir, path.basename(d)));
     await zipWorld(zipTmp, mainCopy, dimCopies);
 
-    const mcVersion =
-      readLevelVersion(path.join(mainCopy, 'level.dat')) ||
-      (server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT' ? server.mc_version : null);
+    const mcVersion = bedrock
+      ? null
+      : readLevelVersion(path.join(mainCopy, 'level.dat')) ||
+        (server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT' ? server.mc_version : null);
 
     const row = await addZipToLibrary(zipTmp, {
       name: (name || '').trim() || `${server.display_name} - ${level}`,
       actor,
       worldSource: `extract:${serverId}`,
-      worldFlavor: server.type,
+      worldFlavor: bedrock ? 'BEDROCK' : server.type,
       mcVersion,
       split: dims.length > 1,
     });
@@ -869,7 +900,8 @@ async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = 
   const active = worldName === activeLevelName(server);
   const running = active && (await isRunning(serverId));
   const zipAbs = dataPath('tmp', `world-dl-${nanoid(6)}.zip`);
-  await withPausedSaves(
+  await withConsistentWorldSaves(
+    server,
     serverId,
     running,
     async () => {

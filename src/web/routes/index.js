@@ -121,7 +121,6 @@ const BEDROCK_HIDDEN_TABS = new Set([
   'analytics',
   'updates',
   'map',
-  'metrics',
   'chatbot',
 ]);
 

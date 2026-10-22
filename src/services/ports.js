@@ -49,13 +49,17 @@ function probe(port, host = '0.0.0.0', timeoutMs = 2000) {
 
 function dbPortsInUse() {
   const rows = db.all(
-    'SELECT port_game, port_rcon, port_bedrock, extra_ports_json FROM servers WHERE deleted_at IS NULL'
+    `SELECT port_game, port_rcon, port_bedrock, nethernet_udp_start, nethernet_udp_end, extra_ports_json
+       FROM servers WHERE deleted_at IS NULL`
   );
   const used = new Set();
   for (const r of rows) {
     used.add(r.port_game);
     used.add(r.port_rcon);
     if (r.port_bedrock) used.add(r.port_bedrock);
+    if (Number.isInteger(r.nethernet_udp_start) && Number.isInteger(r.nethernet_udp_end)) {
+      for (let port = r.nethernet_udp_start; port <= r.nethernet_udp_end; port += 1) used.add(port);
+    }
     for (const p of JSON.parse(r.extra_ports_json || '[]')) {
       if (p && p.hostPort) used.add(p.hostPort);
     }
