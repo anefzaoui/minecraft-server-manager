@@ -272,6 +272,7 @@ async function scanAll() {
   try {
     const { listServers } = require('../services/servers'); // lazy: avoid require cycles
     for (const server of listServers()) {
+      if (!require('../services/serverRuntime').supports(server, 'java')) continue;
       try {
         await scanServer(server.id);
       } catch (err) {

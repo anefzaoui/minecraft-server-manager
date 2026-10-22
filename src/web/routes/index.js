@@ -661,10 +661,12 @@ router.get(
         crashes24h: countEvents('crashed', '-1 day'),
         crashes7d: countEvents('crashed', '-7 days'),
       };
-      context.lastCrash = db.get(
-        'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
-        row.id
-      );
+      if (require('../../services/serverRuntime').supports(row, 'java')) {
+        context.lastCrash = db.get(
+          'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
+          row.id
+        );
+      }
       context.recentEvents = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 8, forUser: req.user }));
 
       // --- Per-world / per-dimension sizes + host disk free.
@@ -807,9 +809,11 @@ router.get(
       context.wsConsole = true;
     } else if (tab === 'history') {
       context.events = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 100, forUser: req.user }));
-      context.crashReports = db
-        .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
-        .map(crashVM);
+      if (require('../../services/serverRuntime').supports(row, 'java')) {
+        context.crashReports = db
+          .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
+          .map(crashVM);
+      }
     } else if (tab === 'backups') {
       context.backups = db
         .all('SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT 50', row.id)
