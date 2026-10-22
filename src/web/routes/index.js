@@ -115,8 +115,9 @@ const CONDITIONAL_TABS = { updates: (opts) => opts.modServer !== false };
 function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = true } = {}) {
   const crashes = server && server.crashesUnread;
   const group = TAB_GROUPS.find((g) => g.tabs.includes(tab)) || TAB_GROUPS[0];
+  const isBedrock = server && server.runtime === 'bedrock';
   const groups = TAB_GROUPS.map((g) => ({
-    label: g.label,
+    label: isBedrock && g.key === 'mods' ? 'Packs' : g.label,
     icon: g.icon,
     href: `/servers/${id}/${g.tabs[0]}`,
     active: g.key === group.key,
@@ -131,7 +132,7 @@ function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = 
   const sub =
     visibleSubTabs.length > 1
       ? visibleSubTabs.map((t) => ({
-          label: SUB_LABELS[t] || t,
+          label: isBedrock && t === 'mods' ? 'Bedrock Packs' : SUB_LABELS[t] || t,
           href: `/servers/${id}/${t}`,
           active: t === tab,
           badge: t === 'history' && crashes ? crashes : null,
@@ -519,16 +520,21 @@ router.get(
         .map((e) => ({ ts: e.created_at, actor: e.actor, ...e.details }))
         .reverse();
     } else if (tab === 'mods') {
-      context.mods = await require('../../services/mods')
-        .listContent(row.id)
-        .catch(() => []);
-      // Toggles the "Update all" toolbar button (ignored updates don't count).
-      context.hasModUpdates = context.mods.some((m) => m.updateAvailable);
-      // Same gate as the wizard: CurseForge search/import needs the stored key.
-      try {
-        context.curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
-      } catch {
-        context.curseforgeEnabled = false;
+      if (require('../../services/serverRuntime').supports(row, 'bedrockPacks')) {
+        context.bedrockPacksExperience = true;
+        context.bedrockPacks = await require('../../services/bedrockPacks').list(row.id).catch(() => []);
+      } else {
+        context.mods = await require('../../services/mods')
+          .listContent(row.id)
+          .catch(() => []);
+        // Toggles the "Update all" toolbar button (ignored updates don't count).
+        context.hasModUpdates = context.mods.some((m) => m.updateAvailable);
+        // Same gate as the wizard: CurseForge search/import needs the stored key.
+        try {
+          context.curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
+        } catch {
+          context.curseforgeEnabled = false;
+        }
       }
     } else if (tab === 'updates') {
       // Reached directly on a plugin server: there is nothing to show, so send

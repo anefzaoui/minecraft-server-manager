@@ -2027,6 +2027,42 @@ router.post(
 // one-click Exclude / Modrinth-install / manual-jar upload.
 const modUpload = multer({ dest: dataPath('tmp'), limits: { fileSize: 250 * 1024 * 1024, files: 1 } });
 
+// Native Bedrock packs have a manifest and must be unpacked into the BDS pack
+// directories. Keep this separate from the Java Mods APIs and content library.
+const bedrockPackUpload = multer({ dest: dataPath('tmp'), limits: { fileSize: 2 * 1024 ** 3, files: 1 } });
+const bedrockPacks = require('../../services/bedrockPacks');
+
+router.get(
+  '/servers/:id/bedrock-packs',
+  asyncHandler(async (req, res) => {
+    res.json({ ok: true, packs: await bedrockPacks.list(req.params.id) });
+  })
+);
+
+router.post(
+  '/servers/:id/bedrock-packs',
+  requireCap('content'),
+  bedrockPackUpload.single('file'),
+  asyncHandler(async (req, res) => {
+    if (!req.file) throw httpError(400, 'No pack archive uploaded.');
+    try {
+      const pack = await bedrockPacks.installUpload(req.params.id, String(req.body?.kind || ''), req.file.path);
+      res.status(201).json({ ok: true, pack });
+    } finally {
+      fsp.rm(req.file.path, { force: true }).catch(() => {});
+    }
+  })
+);
+
+router.delete(
+  '/servers/:id/bedrock-packs/:kind/:packId',
+  requireCap('content'),
+  asyncHandler(async (req, res) => {
+    await bedrockPacks.remove(req.params.id, req.params.kind, req.params.packId);
+    res.json({ ok: true });
+  })
+);
+
 router.get(
   '/servers/:id/pending-downloads',
   asyncHandler(async (req, res, next) => {
