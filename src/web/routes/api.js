@@ -1395,8 +1395,8 @@ router.post(
     const note = String(req.body?.note || '');
     const shrinkAfter = Boolean(req.body?.shrink);
     const taskId = tasks.run(`Backing up ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
-      t.step('Snapshotting server directory (save-off → save-all → zip → save-on)…');
-      const backup = await backups.createBackup(server.id, { reason: 'manual', actor, note, shrinkAfter });
+      t.step('Preparing a consistent backup…');
+      const backup = await backups.createBackup(server.id, { reason: 'manual', actor, note, shrinkAfter, task: t });
       return { id: backup.id, filename: backup.filename, size: backup.size_bytes };
     });
     res.status(202).json({ ok: true, taskId });
