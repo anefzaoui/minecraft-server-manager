@@ -178,6 +178,7 @@ test('createServer persists a Native Bedrock runtime and uses its container cont
   assert.equal(created.image, 'itzg/minecraft-bedrock-server:latest');
   assert.equal(created.env.EULA, 'TRUE');
   assert.equal(created.env.VERSION, 'PREVIEW');
+  assert.equal(created.env.ALLOW_LIST, 'false');
   assert.equal(created.env.TYPE, undefined);
   assert.equal(created.env.ENABLE_RCON, undefined);
   assert.equal(created.env.RCON_PASSWORD, undefined);

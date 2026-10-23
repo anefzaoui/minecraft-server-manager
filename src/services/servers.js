@@ -102,6 +102,10 @@ function assembleEnv(server) {
   env.EULA = 'TRUE';
   if (serverRuntime.supports(server, 'nativeBedrock')) {
     env.MAX_PLAYERS = env.MAX_PLAYERS || '16';
+    // The Bedrock image enables its allow list unless this is explicitly set.
+    // The wizard represents its default "Off" state by omitting the variable,
+    // so preserve that UI contract at the container boundary.
+    env.ALLOW_LIST = env.ALLOW_LIST || 'false';
     env.SERVER_PORT = '19132';
     if (server.bedrock_transport === 'raknet') {
       env.TRANSPORT = 'raknet';
