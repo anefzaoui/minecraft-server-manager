@@ -3,8 +3,8 @@
     <div class="flex items-start gap-3">
       <span class="grid size-9 shrink-0 place-items-center rounded bg-inset text-link">{{{icon 'gamepad-2' 'size-5'}}}</span>
       <div>
-        <h3 class="font-semibold">Bedrock player permissions</h3>
-        <p class="mt-1 max-w-prose text-sm text-ink-soft">Manage the Native Bedrock allowlist and each player’s permission through the Bedrock console. Use an Xbox gamertag or XUID; Java UUID profiles and inventory controls do not apply here.</p>
+        <h3 class="font-semibold">Bedrock Player Permissions</h3>
+        <p class="mt-1 max-w-prose text-sm text-ink-soft">Manage the Native Bedrock allowlist and each player's permission through the Bedrock console. Use an Xbox gamertag or XUID. Java UUID profiles and inventory controls do not apply here.</p>
       </div>
     </div>
 
@@ -13,7 +13,7 @@
         <label class="label" for="bedrock-allowlist-identity">Gamertag or XUID</label>
         <input class="input" id="bedrock-allowlist-identity" name="identity" maxlength="20" autocomplete="off" placeholder="Alex or 2533274790123456" required>
       </div>
-      <button class="btn btn-primary self-end" name="on" value="true" type="submit">Add to allowlist</button>
+      <button class="btn btn-primary self-end" name="on" value="true" type="submit">Add to Allowlist</button>
       <button class="btn self-end" name="on" value="false" type="submit">Remove</button>
     </form>
 
@@ -26,11 +26,11 @@
         <label class="label" for="bedrock-permission-level">Permission</label>
         <select class="input" id="bedrock-permission-level" name="permission">
           <option value="visitor">Visitor</option>
-          <option value="member" selected>Member — remove elevated permission</option>
+          <option value="member" selected>Member: Remove Elevated Permission</option>
           <option value="operator">Operator</option>
         </select>
       </div>
-      <button class="btn btn-primary self-end" type="submit">Set permission</button>
+      <button class="btn btn-primary self-end" type="submit">Set Permission</button>
     </form>
   </div>
 </div>

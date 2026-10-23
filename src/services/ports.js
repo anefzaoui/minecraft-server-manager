@@ -83,6 +83,13 @@ async function isPortFree(port) {
   return probe(port);
 }
 
+/** Validate a group of explicit ports against one consistent reservation view. */
+async function arePortsFree(ports) {
+  const used = dbPortsInUse();
+  if (ports.some((port) => !Number.isInteger(port) || port < 1024 || port > 65535 || used.has(port))) return false;
+  return (await Promise.all(ports.map((port) => probe(port)))).every(Boolean);
+}
+
 /** Suggest a { game, rcon } pair (and bedrock when requested). */
 async function suggestPorts({ withBedrock = false } = {}) {
   const used = dbPortsInUse();
@@ -163,4 +170,4 @@ async function suggestRakNetPorts({ ipv4Port, ipv6Port } = {}) {
   throw httpError(409, 'No free RakNet IPv4 and IPv6 UDP port pair is available.');
 }
 
-module.exports = { isPortFree, suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, probe, dbPortsInUse };
+module.exports = { arePortsFree, isPortFree, suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, probe, dbPortsInUse };

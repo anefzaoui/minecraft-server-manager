@@ -35,7 +35,7 @@ test('runtime capabilities distinguish Native Bedrock from Java server type', ()
   assert.equal(runtime.resolve({ runtime: runtime.BEDROCK, type: 'PAPER' }).supports('java'), false);
 });
 
-test('persisted NetherNet UDP ranges are treated as reserved ports', () => {
+test('persisted NetherNet UDP ranges are treated as reserved ports', async () => {
   const id = 'srv_runtime_nethernet';
   db.run(
     `INSERT INTO servers (id, display_name, type, runtime, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb,
@@ -48,6 +48,7 @@ test('persisted NetherNet UDP ranges are treated as reserved ports', () => {
     assert.equal(used.has(40100), true);
     assert.equal(used.has(40101), true);
     assert.equal(used.has(40102), true);
+    assert.equal(await ports.arePortsFree([40100, 40101, 40102]), false);
   } finally {
     db.run('DELETE FROM servers WHERE id = ?', id);
   }

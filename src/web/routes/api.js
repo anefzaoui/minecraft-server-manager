@@ -200,7 +200,8 @@ router.patch(
       try {
         require('../../config/bedrock-properties').validateEnv(changes.env);
       } catch (err) {
-        throw httpError(400, err.message);
+        logger.debug('Rejected invalid Bedrock settings.', { reason: err.message });
+        throw httpError(400, 'Invalid Bedrock settings.');
       }
     }
     const { server, needsRecreate } = servers.updateServer(req.params.id, changes, { actor: req.user.username });

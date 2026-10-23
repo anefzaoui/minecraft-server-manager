@@ -63,12 +63,15 @@ test('saving a running Native Bedrock world to the library uses save hold/resume
     id,
     JSON.stringify({ LEVEL_NAME: 'Bedrock level' })
   );
-  const world = dataPath('servers', id, 'Bedrock level');
+  const world = dataPath('servers', id, 'worlds', 'Bedrock level');
   fs.mkdirSync(path.join(world, 'db'), { recursive: true });
   fs.writeFileSync(path.join(world, 'levelname.txt'), 'Bedrock level');
   fs.writeFileSync(path.join(world, 'db', 'CURRENT'), 'MANIFEST-000001');
 
   try {
+    assert.deepEqual(await worlds.listServerWorlds(id), [
+      { name: 'Bedrock level', active: true, dims: ['Bedrock level'], sizeBytes: 28, seed: null },
+    ]);
     const saved = await worlds.extractFromServer(id, { actor: 'test' });
     assert.equal(saved.world_flavor, 'BEDROCK');
     assert.deepEqual(commands, [
