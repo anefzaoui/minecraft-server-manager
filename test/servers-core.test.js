@@ -278,6 +278,9 @@ test('createServer uses the legacy RakNet IPv4 and IPv6 UDP contract for a compa
   assert.equal(wizard.status, 200);
   assert.match(wizard.text, /RakNet \(legacy compatibility\)/);
   assert.match(wizard.text, /RakNet is available only for a compatible pinned Bedrock version/);
+  assert.match(wizard.text, /data-advanced-runtime="bedrock"/);
+  assert.match(wizard.text, /Default player permission/);
+  assert.match(wizard.text, /Compression threshold/);
 });
 
 test('createServer rejects RakNet for Latest, Preview, and versions that only support NetherNet', async () => {

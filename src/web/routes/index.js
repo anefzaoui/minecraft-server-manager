@@ -391,6 +391,7 @@ router.get('/servers/new', async (req, res) => {
   const advancedSections = catalog.SECTIONS.filter((s) => !SIMPLE_SECTIONS.has(s.id))
     .map((s) => ({ ...s, fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env') }))
     .filter((s) => s.fields.length);
+  const bedrockAdvancedSections = require('../../config/bedrock-properties').sectionsForSettings();
   res.render('wizard', {
     title: 'Create Server',
     active: 'servers',
@@ -399,6 +400,7 @@ router.get('/servers/new', async (req, res) => {
     latestRelease,
     suggestedPort,
     advancedSections,
+    bedrockAdvancedSections,
     curseforgeEnabled,
     defaults: require('../../services/settings').getDefaults(),
     suggestedBedrockAddress: require('../../services/bedrockConnection').suggestedAdvertisedAddress(),

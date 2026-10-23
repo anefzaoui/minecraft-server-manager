@@ -117,7 +117,20 @@ function init() {
     addressWrap?.classList.toggle('hidden', !bedrock);
     const maxPlayers = document.getElementById('wz-maxplayers');
     if (maxPlayers) maxPlayers.value = bedrock ? '16' : '10';
+    refreshAdvancedRuntime();
     refreshRakNetAvailability();
+  }
+
+  /** Only the selected runtime's supported settings may be edited or submitted. */
+  function refreshAdvancedRuntime() {
+    const runtime = isBedrock() ? 'bedrock' : 'java';
+    advPanel?.querySelectorAll('[data-advanced-runtime]').forEach((section) => {
+      const active = section.dataset.advancedRuntime === runtime;
+      section.classList.toggle('hidden', !active);
+      section.querySelectorAll('input, select, textarea, button').forEach((control) => {
+        control.disabled = !active;
+      });
+    });
   }
   versionSelect?.addEventListener('change', refreshRuntimeFlavor);
   document.getElementById('wz-bedrock-version')?.addEventListener('input', refreshRakNetAvailability);

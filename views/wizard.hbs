@@ -321,20 +321,38 @@
       <div>Every environment variable the server image supports, taken straight from its documentation. Leave a field empty to use that variable's default;
       only values you change are applied. The Simple-mode choices above (version, port, world rules, resources) still apply.</div>
     </div>
-    {{#each advancedSections}}
-      <details class="card group">
-        <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
-          {{{icon icon 'size-4 text-ink-faint'}}} {{label}}
-          <span class="badge ml-1">{{fields.length}}</span>
-          <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
-        </summary>
-        <div class="divide-y divide-line/60 border-t border-line px-4 pb-4">
-          {{#each fields}}
-            {{> catalog-field}}
-          {{/each}}
-        </div>
-      </details>
-    {{/each}}
+    <div data-advanced-runtime="java" class="space-y-3">
+      {{#each advancedSections}}
+        <details class="card group">
+          <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
+            {{{icon icon 'size-4 text-ink-faint'}}} {{label}}
+            <span class="badge ml-1">{{fields.length}}</span>
+            <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
+          </summary>
+          <div class="divide-y divide-line/60 border-t border-line px-4 pb-4">
+            {{#each fields}}
+              {{> catalog-field}}
+            {{/each}}
+          </div>
+        </details>
+      {{/each}}
+    </div>
+    <div data-advanced-runtime="bedrock" class="hidden space-y-3">
+      {{#each bedrockAdvancedSections}}
+        <details class="card group">
+          <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
+            {{{icon icon 'size-4 text-ink-faint'}}} {{label}}
+            <span class="badge ml-1">{{fields.length}}</span>
+            <span class="ml-auto text-ink-faint transition group-open:rotate-180">{{{icon 'chevron-down' 'size-4'}}}</span>
+          </summary>
+          <div class="divide-y divide-line/60 border-t border-line px-4 pb-4">
+            {{#each fields}}
+              {{> catalog-field}}
+            {{/each}}
+          </div>
+        </details>
+      {{/each}}
+    </div>
     <details class="card group">
       <summary class="flex cursor-pointer items-center gap-2.5 p-4 font-semibold marker:content-none">
         {{{icon 'terminal' 'size-4 text-ink-faint'}}} Extra Environment Variables
