@@ -205,6 +205,7 @@ test('createServer reserves NetherNet signaling and a player-sized UDP range by 
       netherNetUdpStart: 45220,
       advertisedAddress: '192.168.1.42',
       maxPlayers: 3,
+      autoBackup: false,
     },
     { start: false }
   );
@@ -243,6 +244,7 @@ test('createServer uses the legacy RakNet IPv4 and IPv6 UDP contract for a compa
       eulaAccepted: true,
       portGame: 45300,
       portBedrock: 45301,
+      autoBackup: false,
     },
     { start: false }
   );

@@ -45,7 +45,9 @@ test.after(async () => {
 });
 
 test('an operator restoring a Native Bedrock backup receives live recovery progress', async () => {
-  const response = await app.req('POST', '/api/servers/srv_bedrock_restore/backups/bk_bedrock_restore/restore', { cookie });
+  const response = await app.req('POST', '/api/servers/srv_bedrock_restore/backups/bk_bedrock_restore/restore', {
+    cookie,
+  });
 
   assert.equal(response.status, 202);
   for (let i = 0; i < 20 && !restoreCall; i += 1) await new Promise((resolve) => setTimeout(resolve, 10));

@@ -121,7 +121,10 @@ async function suggestPorts({ withBedrock = false } = {}) {
   return result;
 }
 
-/** Allocate NetherNet's TCP signaling endpoint plus a contiguous UDP range. */
+/**
+ * Allocate NetherNet's TCP signaling endpoint plus a contiguous UDP range.
+ * @param {{ capacity?: number, signalingPort?: number }} [opts]
+ */
 async function suggestNetherNetPorts({ capacity = 16, signalingPort } = {}) {
   if (!Number.isInteger(capacity) || capacity < 1 || capacity > 1000) {
     throw httpError(400, 'NetherNet player capacity must be between 1 and 1000.');
@@ -139,7 +142,13 @@ async function suggestNetherNetPorts({ capacity = 16, signalingPort } = {}) {
     if (range.every((port) => !used.has(port) && port !== signal.rcon && port !== signal.game)) {
       const free = await Promise.all(range.map((port) => probe(port)));
       if (free.every(Boolean)) {
-        return { game: signal.game, rcon: 0, bedrock: null, nethernetUdpStart: start, nethernetUdpEnd: start + capacity - 1 };
+        return {
+          game: signal.game,
+          rcon: 0,
+          bedrock: null,
+          nethernetUdpStart: start,
+          nethernetUdpEnd: start + capacity - 1,
+        };
       }
     }
     start += 1;
@@ -147,7 +156,10 @@ async function suggestNetherNetPorts({ capacity = 16, signalingPort } = {}) {
   throw httpError(409, 'No free contiguous NetherNet UDP range is available.');
 }
 
-/** Allocate RakNet's fixed IPv4 and IPv6 UDP host-port pair. */
+/**
+ * Allocate RakNet's fixed IPv4 and IPv6 UDP host-port pair.
+ * @param {{ ipv4Port?: number, ipv6Port?: number }} [opts]
+ */
 async function suggestRakNetPorts({ ipv4Port, ipv6Port } = {}) {
   if ((ipv4Port == null) !== (ipv6Port == null)) {
     throw httpError(400, 'Set both RakNet IPv4 and IPv6 UDP ports, or leave both automatic.');
@@ -170,4 +182,12 @@ async function suggestRakNetPorts({ ipv4Port, ipv6Port } = {}) {
   throw httpError(409, 'No free RakNet IPv4 and IPv6 UDP port pair is available.');
 }
 
-module.exports = { arePortsFree, isPortFree, suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, probe, dbPortsInUse };
+module.exports = {
+  arePortsFree,
+  isPortFree,
+  suggestPorts,
+  suggestNetherNetPorts,
+  suggestRakNetPorts,
+  probe,
+  dbPortsInUse,
+};

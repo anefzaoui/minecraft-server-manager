@@ -22,7 +22,13 @@ async function sendConsoleCommand(server, serverId, command) {
   return sendConsoleCommandParts(server, serverId, command.split(/\s+/));
 }
 
-/** Send pre-tokenized console words, preserving player names with spaces. */
+/**
+ * Send pre-tokenized console words, preserving player names with spaces.
+ * @param {{runtime?: unknown}} server
+ * @param {string} serverId
+ * @param {string[]} words
+ * @returns {Promise<{source: 'rcon'|'bedrock-console', output: string}>}
+ */
 async function sendConsoleCommandParts(server, serverId, words) {
   if (serverRuntime.supports(server, 'bedrockConsole')) {
     const { stdout, exitCode } = await execCaptureChecked(serverId, ['send-command', ...words]);

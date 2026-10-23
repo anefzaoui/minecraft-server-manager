@@ -114,15 +114,7 @@ const CONDITIONAL_TABS = { updates: (opts) => opts.modServer !== false };
 // Native Bedrock has dedicated packs, permissions, worlds and console support,
 // but no Java map, inventory/NBT, analytics, chat automation, RCON commands,
 // or Java world analysis controls.
-const BEDROCK_HIDDEN_TABS = new Set([
-  'chat',
-  'commands',
-  'inventory',
-  'analytics',
-  'updates',
-  'map',
-  'chatbot',
-]);
+const BEDROCK_HIDDEN_TABS = new Set(['chat', 'commands', 'inventory', 'analytics', 'updates', 'map', 'chatbot']);
 
 function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = true } = {}) {
   const crashes = server && server.crashesUnread;

@@ -22,7 +22,8 @@ const PACK_TYPES = new Map([
 function requireBedrockServer(serverId) {
   const server = servers.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  if (!runtime.supports(server, 'bedrockPacks')) throw httpError(400, 'Bedrock packs are only available for Native Bedrock servers.');
+  if (!runtime.supports(server, 'bedrockPacks'))
+    throw httpError(400, 'Bedrock packs are only available for Native Bedrock servers.');
   return server;
 }
 
@@ -42,7 +43,12 @@ function parseManifest(text, kind) {
   const config = packConfig(kind);
   const name = typeof manifest?.header?.name === 'string' ? manifest.header.name.trim() : '';
   const uuid = typeof manifest?.header?.uuid === 'string' ? manifest.header.uuid.trim() : '';
-  if (!name || !uuid || !Array.isArray(manifest.modules) || !manifest.modules.some((m) => m && m.type === config.moduleType)) {
+  if (
+    !name ||
+    !uuid ||
+    !Array.isArray(manifest.modules) ||
+    !manifest.modules.some((m) => m && m.type === config.moduleType)
+  ) {
     throw httpError(400, `This is not a valid Bedrock ${kind} pack.`);
   }
   return { name: name.slice(0, 120), uuid };
@@ -89,7 +95,8 @@ async function installUpload(serverId, kind, uploadPath) {
     maxTextBytes: 1024 * 1024,
   });
   const manifests = [...texts.entries()].filter(([name]) => /^(?:[^/]+\/)?manifest\.json$/i.test(name));
-  if (manifests.length !== 1) throw httpError(400, 'A Bedrock pack archive must contain exactly one manifest.json at its root.');
+  if (manifests.length !== 1)
+    throw httpError(400, 'A Bedrock pack archive must contain exactly one manifest.json at its root.');
   const [manifestPath, manifestText] = manifests[0];
   const manifest = parseManifest(manifestText, kind);
   const prefix = manifestPath === 'manifest.json' ? '' : manifestPath.slice(0, -'manifest.json'.length);

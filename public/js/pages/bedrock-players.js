@@ -15,7 +15,8 @@ function init(root) {
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'update Bedrock permissions' }));
+    if (!res.ok || !data.ok)
+      throw new Error(data.error || friendlyError(res, { action: 'update Bedrock permissions' }));
     return data.result;
   }
 
@@ -39,7 +40,10 @@ function init(root) {
     const button = event.submitter;
     try {
       const result = await withBusy(button, () =>
-        send('/bedrock-permission', { identity: form.elements.identity.value.trim(), permission: form.elements.permission.value })
+        send('/bedrock-permission', {
+          identity: form.elements.identity.value.trim(),
+          permission: form.elements.permission.value,
+        })
       );
       toast(`${result.identity} is now a Bedrock ${result.permission}.`);
     } catch (err) {

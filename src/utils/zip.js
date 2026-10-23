@@ -150,6 +150,10 @@ const MAX_EXTRACT_ENTRIES = 200_000;
  * Thrown errors carry `.status` (400 containment, 413 size/count) so the JSON
  * error handlers surface them as client errors rather than a bare 500.
  * `destDir` must already exist.
+ *
+ * @param {string} zipFile
+ * @param {string} destDir
+ * @param {{ map?: (entry: string) => string | null | undefined, maxBytes?: number, maxEntries?: number }} [opts]
  */
 function extractZipSafe(
   zipFile,

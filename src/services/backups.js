@@ -59,7 +59,6 @@ async function withBedrockSnapshot(server, serverId, archive, { actor = 'system'
         summary:
           'Bedrock world saves were not resumed after this backup. Check the server console and run save resume.',
       });
-      throw err;
     }
   }
 }

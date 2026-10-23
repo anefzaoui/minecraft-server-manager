@@ -85,7 +85,7 @@ test('Bedrock worlds import and list without Java level.dat or Anvil regions', a
      VALUES (?, 'Bedrock worlds', 'BEDROCK', 'bedrock', 19132, 0, '', 1024, 1536)`,
     id
   );
-  const root = dataPath('servers', id, 'Bedrock level');
+  const root = dataPath('servers', id, 'worlds', 'Bedrock level');
   fs.mkdirSync(path.join(root, 'db'), { recursive: true });
   fs.writeFileSync(path.join(root, 'levelname.txt'), 'Bedrock level');
   fs.writeFileSync(path.join(root, 'db', 'CURRENT'), 'MANIFEST-000001');
@@ -171,8 +171,8 @@ test('Native Bedrock activates LevelDB worlds through LEVEL_NAME and resets with
     JSON.stringify({ LEVEL_NAME: 'Old world', LEVEL_SEED: '123' })
   );
   for (const name of ['Old world', 'New world']) {
-    fs.mkdirSync(path.join(dataPath('servers', sid, name, 'db')), { recursive: true });
-    fs.writeFileSync(path.join(dataPath('servers', sid, name), 'levelname.txt'), name);
+    fs.mkdirSync(path.join(dataPath('servers', sid, 'worlds', name, 'db')), { recursive: true });
+    fs.writeFileSync(path.join(dataPath('servers', sid, 'worlds', name), 'levelname.txt'), name);
   }
   const activated = await worlds.activateWorld(sid, 'New world');
   assert.equal(activated.active, 'New world');
@@ -180,7 +180,7 @@ test('Native Bedrock activates LevelDB worlds through LEVEL_NAME and resets with
   await worlds.resetWorld(sid, { backup: false, seedMode: 'random' });
   const envAfter = JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', sid).env_json);
   assert.equal(envAfter.LEVEL_SEED, undefined);
-  assert.equal(fs.existsSync(path.join(dataPath('servers', sid, 'New world'))), false);
+  assert.equal(fs.existsSync(path.join(dataPath('servers', sid, 'worlds', 'New world'))), false);
   db.run('DELETE FROM servers WHERE id = ?', sid);
 });
 

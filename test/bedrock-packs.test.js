@@ -58,7 +58,9 @@ test('a valid behavior pack uploads, lists, and removes through the Bedrock pack
   assert.equal(listed.status, 200);
   assert.ok(listed.json.packs.some((pack) => pack.id === uploaded.json.pack.id));
 
-  const removed = await app.req('DELETE', `/api/servers/${id}/bedrock-packs/behavior/${uploaded.json.pack.id}`, { cookie });
+  const removed = await app.req('DELETE', `/api/servers/${id}/bedrock-packs/behavior/${uploaded.json.pack.id}`, {
+    cookie,
+  });
   assert.equal(removed.status, 200);
   await fsp.rm(archivePath, { force: true });
 });

@@ -36,11 +36,13 @@ function supportsRakNetVersion(version) {
   const match = /^(\d+)\.(\d+)\.(\d+)(?:\.\d+)?$/.exec(String(version || '').trim());
   if (!match) return false;
   const parts = match.slice(1, 4).map(Number);
-  return parts[0] < RAKNET_LAST_SUPPORTED[0]
-    || (parts[0] === RAKNET_LAST_SUPPORTED[0] && parts[1] < RAKNET_LAST_SUPPORTED[1])
-    || (parts[0] === RAKNET_LAST_SUPPORTED[0]
-      && parts[1] === RAKNET_LAST_SUPPORTED[1]
-      && parts[2] <= RAKNET_LAST_SUPPORTED[2]);
+  return (
+    parts[0] < RAKNET_LAST_SUPPORTED[0] ||
+    (parts[0] === RAKNET_LAST_SUPPORTED[0] && parts[1] < RAKNET_LAST_SUPPORTED[1]) ||
+    (parts[0] === RAKNET_LAST_SUPPORTED[0] &&
+      parts[1] === RAKNET_LAST_SUPPORTED[1] &&
+      parts[2] <= RAKNET_LAST_SUPPORTED[2])
+  );
 }
 
 function rowToServer(row, { parseOverrides = true } = {}) {
@@ -370,11 +372,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   if (runtime === serverRuntime.BEDROCK && !['nethernet', 'raknet'].includes(bedrockTransport)) {
     throw httpError(400, 'Choose NetherNet or RakNet for a Native Bedrock server.');
   }
-  if (
-    runtime === serverRuntime.BEDROCK &&
-    bedrockTransport === 'raknet' &&
-    !supportsRakNetVersion(input.mcVersion)
-  ) {
+  if (runtime === serverRuntime.BEDROCK && bedrockTransport === 'raknet' && !supportsRakNetVersion(input.mcVersion)) {
     throw httpError(400, 'RakNet is only available for compatible pinned Bedrock versions.');
   }
   // Fail fast instead of shipping a crash-looping container: anything
@@ -451,8 +449,11 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     ...(runtime === serverRuntime.BEDROCK && bedrockTransport === 'raknet'
       ? [ports.bedrock]
       : runtime === serverRuntime.BEDROCK
-      ? Array.from({ length: ports.nethernetUdpEnd - ports.nethernetUdpStart + 1 }, (_, i) => ports.nethernetUdpStart + i)
-      : []),
+        ? Array.from(
+            { length: ports.nethernetUdpEnd - ports.nethernetUdpStart + 1 },
+            (_, i) => ports.nethernetUdpStart + i
+          )
+        : []),
   ]);
   if ((input.extraPorts || []).some((p) => reservedPorts.has(Number(p.hostPort)))) {
     throw httpError(400, 'An advanced port mapping conflicts with a managed server port.');
