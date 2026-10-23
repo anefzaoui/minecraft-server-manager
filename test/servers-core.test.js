@@ -264,14 +264,15 @@ test('createServer uses the legacy RakNet IPv4 and IPv6 UDP contract for a compa
   assert.equal(created.env.SERVER_PORT_V6, '19133');
   assert.equal(created.env.SERVER_UDP_PORTS, undefined);
 
-  const page = await app.req('GET', `/servers/${server.id}`, { cookie: await app.adminCookie() });
+  const cookie = await app.adminCookie();
+  const page = await app.req('GET', `/servers/${server.id}`, { cookie });
   assert.equal(page.status, 200);
   assert.match(page.text, /RakNet \(legacy\)/);
   assert.match(page.text, /RakNet IPv4 UDP port/);
   assert.match(page.text, /RakNet IPv6 UDP port/);
   assert.match(page.text, /Allow both UDP ports through every firewall and port forward/);
 
-  const wizard = await app.req('GET', '/servers/new', { cookie: await app.adminCookie() });
+  const wizard = await app.req('GET', '/servers/new', { cookie });
   assert.equal(wizard.status, 200);
   assert.match(wizard.text, /RakNet \(legacy compatibility\)/);
   assert.match(wizard.text, /RakNet is available only for a compatible pinned Bedrock version/);
