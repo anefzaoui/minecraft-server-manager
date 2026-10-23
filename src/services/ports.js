@@ -49,13 +49,17 @@ function probe(port, host = '0.0.0.0', timeoutMs = 2000) {
 
 function dbPortsInUse() {
   const rows = db.all(
-    'SELECT port_game, port_rcon, port_bedrock, extra_ports_json FROM servers WHERE deleted_at IS NULL'
+    `SELECT port_game, port_rcon, port_bedrock, nethernet_udp_start, nethernet_udp_end, extra_ports_json
+       FROM servers WHERE deleted_at IS NULL`
   );
   const used = new Set();
   for (const r of rows) {
     used.add(r.port_game);
     used.add(r.port_rcon);
     if (r.port_bedrock) used.add(r.port_bedrock);
+    if (Number.isInteger(r.nethernet_udp_start) && Number.isInteger(r.nethernet_udp_end)) {
+      for (let port = r.nethernet_udp_start; port <= r.nethernet_udp_end; port += 1) used.add(port);
+    }
     for (const p of JSON.parse(r.extra_ports_json || '[]')) {
       if (p && p.hostPort) used.add(p.hostPort);
     }
@@ -77,6 +81,13 @@ async function isPortFree(port) {
   if (port < 1024 || port > 65535) return false;
   if (dbPortsInUse().has(port)) return false;
   return probe(port);
+}
+
+/** Validate a group of explicit ports against one consistent reservation view. */
+async function arePortsFree(ports) {
+  const used = dbPortsInUse();
+  if (ports.some((port) => !Number.isInteger(port) || port < 1024 || port > 65535 || used.has(port))) return false;
+  return (await Promise.all(ports.map((port) => probe(port)))).every(Boolean);
 }
 
 /** Suggest a { game, rcon } pair (and bedrock when requested). */
@@ -159,4 +170,4 @@ async function suggestRakNetPorts({ ipv4Port, ipv6Port } = {}) {
   throw httpError(409, 'No free RakNet IPv4 and IPv6 UDP port pair is available.');
 }
 
-module.exports = { isPortFree, suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, probe, dbPortsInUse };
+module.exports = { arePortsFree, isPortFree, suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, probe, dbPortsInUse };

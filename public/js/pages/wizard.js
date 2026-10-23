@@ -284,14 +284,22 @@ function init() {
 
   /** Simple-mode world/rules env, shared by the vanilla, modpack and mods paths. */
   function collectSimpleEnv() {
+    const bedrock = isBedrock();
     return {
       MOTD: toSectionCodes(motd.value), // vanilla renders § codes only
       DIFFICULTY: document.getElementById('wz-difficulty').value,
-      MODE: document.getElementById('wz-mode').value,
-      PVP: document.getElementById('wz-pvp').value,
+      ...(bedrock
+        ? {
+            GAMEMODE: document.getElementById('wz-mode').value,
+            ALLOW_CHEATS: document.getElementById('wz-pvp').value,
+          }
+        : {
+            MODE: document.getElementById('wz-mode').value,
+            PVP: document.getElementById('wz-pvp').value,
+          }),
       MAX_PLAYERS: String(Number(document.getElementById('wz-maxplayers').value) || (isBedrock() ? 16 : 10)),
       ...(document.getElementById('wz-seed').value.trim()
-        ? { SEED: document.getElementById('wz-seed').value.trim() }
+        ? { [bedrock ? 'LEVEL_SEED' : 'SEED']: document.getElementById('wz-seed').value.trim() }
         : {}),
       ...collectAdvancedEnv(),
     };

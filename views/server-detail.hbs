@@ -2,7 +2,7 @@
 
 {{! World controls ride along on every tab as a right rail (stacks below on
     smaller screens) - always within reach while managing players/files/etc. }}
-<div class="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+<div class="grid items-start gap-4 {{#if (eq server.runtime 'bedrock')}}xl:grid-cols-1{{else}}xl:grid-cols-[minmax(0,1fr)_300px]{{/if}}">
   <div class="min-w-0">
     {{#if bedrockPacksExperience}}
       {{> server/bedrock-packs}}
@@ -12,7 +12,9 @@
       {{> (concat 'server/' tab)}}
     {{/if}}
   </div>
-  <aside>
-    {{> server/world-controls-rail}}
-  </aside>
+  {{#unless (eq server.runtime 'bedrock')}}
+    <aside>
+      {{> server/world-controls-rail}}
+    </aside>
+  {{/unless}}
 </div>

@@ -76,6 +76,26 @@ async function withPausedSaves(serverId, running, copy, actor = 'system') {
   });
 }
 
+/** Keep a running Native Bedrock LevelDB world stable without Java RCON. */
+async function withBedrockSaves(server, serverId, running, copy) {
+  if (!running) return copy();
+  const { sendConsoleCommandParts } = require('./consoleCommands');
+  return withSaveLock(serverId, async () => {
+    await sendConsoleCommandParts(server, serverId, ['save', 'hold']);
+    try {
+      return await copy();
+    } finally {
+      await sendConsoleCommandParts(server, serverId, ['save', 'resume']);
+    }
+  });
+}
+
+function withConsistentWorldSaves(server, serverId, running, copy, actor = 'system') {
+  return serverRuntime.supports(server, 'nativeBedrock')
+    ? withBedrockSaves(server, serverId, running, copy)
+    : withPausedSaves(serverId, running, copy, actor);
+}
+
 const DIM_SUFFIXES = ['_nether', '_the_end'];
 
 const FLAVOR_LABEL = {
@@ -330,9 +350,18 @@ async function addZipToLibrary(zipAbs, { name, actor, worldSource, worldFlavor, 
 async function extractFromServer(serverId, { name = '', actor = 'system' } = {}) {
   const server = mustServer(serverId);
   const level = activeLevelName(server);
-  const dims = serverWorldDims(serverId, level);
-  if (!fs.existsSync(path.join(dims[0], 'level.dat'))) {
-    throw httpError(404, `World "${level}" has no level.dat yet - start the server once so it generates the world`);
+  const dims = serverWorldDims(serverId, level, server);
+  const bedrock = serverRuntime.supports(server, 'nativeBedrock');
+  const worldExists = bedrock
+    ? fs.existsSync(path.join(dims[0], 'db')) && fs.existsSync(path.join(dims[0], 'levelname.txt'))
+    : fs.existsSync(path.join(dims[0], 'level.dat'));
+  if (!worldExists) {
+    throw httpError(
+      404,
+      bedrock
+        ? `World "${level}" has no LevelDB data yet - start the server once so it generates the world`
+        : `World "${level}" has no level.dat yet - start the server once so it generates the world`
+    );
   }
 
   const worldBytes = await dirsSize(dims);
@@ -348,7 +377,8 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
 
   try {
     // Consistent copy: pause saves, flush, copy to tmp, resume - then zip at leisure.
-    await withPausedSaves(
+    await withConsistentWorldSaves(
+      server,
       serverId,
       running,
       async () => {
@@ -363,15 +393,16 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
     const dimCopies = dims.slice(1).map((d) => path.join(tmpDir, path.basename(d)));
     await zipWorld(zipTmp, mainCopy, dimCopies);
 
-    const mcVersion =
-      readLevelVersion(path.join(mainCopy, 'level.dat')) ||
-      (server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT' ? server.mc_version : null);
+    const mcVersion = bedrock
+      ? null
+      : readLevelVersion(path.join(mainCopy, 'level.dat')) ||
+        (server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT' ? server.mc_version : null);
 
     const row = await addZipToLibrary(zipTmp, {
       name: (name || '').trim() || `${server.display_name} - ${level}`,
       actor,
       worldSource: `extract:${serverId}`,
-      worldFlavor: server.type,
+      worldFlavor: bedrock ? 'BEDROCK' : server.type,
       mcVersion,
       split: dims.length > 1,
     });
@@ -399,7 +430,7 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
  */
 async function listServerWorlds(serverId) {
   const server = mustServer(serverId);
-  const base = dataPath('servers', serverId);
+  const base = serverWorldRoot(server);
   const level = activeLevelName(server);
   const props = readProps(serverId);
 
@@ -511,7 +542,7 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
     });
   } else {
     targetLevel = sanitizeWorldName(newName || lib.name);
-    if (fs.existsSync(dataPath('servers', serverId, targetLevel))) {
+    if (fs.existsSync(path.join(serverWorldRoot(server), targetLevel))) {
       throw httpError(409, `A world named "${targetLevel}" already exists on this server - pick another name`);
     }
   }
@@ -531,27 +562,27 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
     const mainTops = tops.filter((e) => !dimTops.includes(e));
 
     if (mode === 'replace') {
-      for (const dim of serverWorldDims(serverId, targetLevel)) {
+      for (const dim of serverWorldDims(serverId, targetLevel, server)) {
         replacedBytes += await dirsSize([dim]);
         await fsp.rm(dim, { recursive: true, force: true });
       }
     }
 
-    const mainDir = dataPath('servers', serverId, targetLevel);
+    const mainDir = path.join(serverWorldRoot(server), targetLevel);
     await fsp.mkdir(mainDir, { recursive: true });
     for (const e of mainTops) {
       await moveEntry(path.join(tmpDir, e.name), path.join(mainDir, e.name));
     }
     for (const e of dimTops) {
       const suffix = e.name.endsWith('_the_end') ? '_the_end' : '_nether';
-      await moveEntry(path.join(tmpDir, e.name), dataPath('servers', serverId, targetLevel + suffix));
+      await moveEntry(path.join(tmpDir, e.name), path.join(serverWorldRoot(server), targetLevel + suffix));
     }
   } finally {
     releaseReservation();
     await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
 
-  const sizeBytes = await dirsSize(serverWorldDims(serverId, targetLevel));
+  const sizeBytes = await dirsSize(serverWorldDims(serverId, targetLevel, server));
   recordEvent({
     serverId,
     actor,
@@ -577,7 +608,9 @@ function copyWarnings(sourceServerId, targetServerId) {
   const target = mustServer(targetServerId);
   const level = activeLevelName(source);
   const version =
-    readLevelVersion(dataPath('servers', sourceServerId, level, 'level.dat')) ||
+    (serverRuntime.supports(source, 'nativeBedrock')
+      ? null
+      : readLevelVersion(path.join(serverWorldRoot(source), level, 'level.dat'))) ||
     (source.mc_version !== 'LATEST' && source.mc_version !== 'SNAPSHOT' ? source.mc_version : null);
   return compatWarnings({ flavor: source.type, version }, target);
 }
@@ -618,11 +651,11 @@ async function copyBetweenServers(
 async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
-  const dims = serverWorldDims(serverId, worldName);
+  const dims = serverWorldDims(serverId, worldName, server);
   if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
 
   let copyName = `${worldName}-copy`;
-  for (let i = 2; fs.existsSync(dataPath('servers', serverId, copyName)); i++) copyName = `${worldName}-copy${i}`;
+  for (let i = 2; fs.existsSync(path.join(serverWorldRoot(server), copyName)); i++) copyName = `${worldName}-copy${i}`;
 
   const sizeBytes = await dirsSize(dims);
   indexer.assertUnderQuota(server, sizeBytes);
@@ -634,13 +667,14 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
   const running = active && (await isRunning(serverId));
   const releaseReservation = indexer.reserveDiskSpace(sizeBytes);
   try {
-    await withPausedSaves(
+    await withConsistentWorldSaves(
+      server,
       serverId,
       running,
       async () => {
         for (const dim of dims) {
           const suffix = path.basename(dim).slice(worldName.length);
-          await fsp.cp(dim, dataPath('servers', serverId, copyName + suffix), { recursive: true });
+          await fsp.cp(dim, path.join(serverWorldRoot(server), copyName + suffix), { recursive: true });
         }
       },
       actor
@@ -666,15 +700,15 @@ async function renameWorldImpl(serverId, worldName, newName, { actor = 'system' 
   checkWorldName(worldName);
   const clean = sanitizeWorldName(newName);
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before renaming worlds');
-  const dims = serverWorldDims(serverId, worldName);
+  const dims = serverWorldDims(serverId, worldName, server);
   if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
-  if (fs.existsSync(dataPath('servers', serverId, clean))) {
+  if (fs.existsSync(path.join(serverWorldRoot(server), clean))) {
     throw httpError(409, `A world named "${clean}" already exists on this server`);
   }
 
   for (const dim of dims) {
     const suffix = path.basename(dim).slice(worldName.length);
-    await moveEntry(dim, dataPath('servers', serverId, clean + suffix));
+    await moveEntry(dim, path.join(serverWorldRoot(server), clean + suffix));
   }
 
   const wasActive = worldName === activeLevelName(server);
@@ -697,7 +731,7 @@ async function activateWorldImpl(serverId, worldName, { actor = 'system' } = {})
   const server = mustServer(serverId);
   checkWorldName(worldName);
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before switching worlds');
-  const worldDir = dataPath('servers', serverId, worldName);
+  const worldDir = path.join(serverWorldRoot(server), worldName);
   const exists = serverRuntime.supports(server, 'nativeBedrock')
     ? fs.existsSync(path.join(worldDir, 'db')) && fs.existsSync(path.join(worldDir, 'levelname.txt'))
     : fs.existsSync(path.join(worldDir, 'level.dat'));
@@ -738,7 +772,7 @@ async function resetWorldImpl(
   const server = mustServer(serverId);
   if (await isRunning(serverId)) throw httpError(409, 'Stop the server before resetting the world');
   const level = activeLevelName(server);
-  const dims = serverWorldDims(serverId, level);
+  const dims = serverWorldDims(serverId, level, server);
   if (!fs.existsSync(dims[0])) throw httpError(404, `World "${level}" does not exist yet - nothing to reset`);
 
   // Resolve the seed to apply (null → cleared → Minecraft picks a random one).
@@ -827,7 +861,7 @@ async function deleteServerWorldImpl(serverId, worldName, { actor = 'system' } =
   if (worldName === activeLevelName(server)) {
     throw httpError(409, 'This is the active world - activate another world first, or use Reset to regenerate it');
   }
-  const dims = serverWorldDims(serverId, worldName);
+  const dims = serverWorldDims(serverId, worldName, server);
   if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
   const freedBytes = await dirsSize(dims);
   for (const dim of dims) await fsp.rm(dim, { recursive: true, force: true });
@@ -858,7 +892,7 @@ const deleteServerWorld = guardOp('delete-world', deleteServerWorldImpl);
 async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
-  const dims = serverWorldDims(serverId, worldName);
+  const dims = serverWorldDims(serverId, worldName, server);
   if (!fs.existsSync(dims[0])) throw httpError(404, `No world named "${worldName}" on this server`);
 
   const sizeBytes = await dirsSize(dims);
@@ -869,7 +903,8 @@ async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = 
   const active = worldName === activeLevelName(server);
   const running = active && (await isRunning(serverId));
   const zipAbs = dataPath('tmp', `world-dl-${nanoid(6)}.zip`);
-  await withPausedSaves(
+  await withConsistentWorldSaves(
+    server,
     serverId,
     running,
     async () => {
@@ -998,11 +1033,17 @@ function setActiveLevel(server, levelName, { actor }) {
 }
 
 /** Existing dim dirs for a world: [main, main_nether?, main_the_end?] (absolute). */
-function serverWorldDims(serverId, worldName) {
-  const main = dataPath('servers', serverId, worldName);
+function serverWorldRoot(server) {
+  return serverRuntime.supports(server, 'nativeBedrock')
+    ? dataPath('servers', server.id, 'worlds')
+    : dataPath('servers', server.id);
+}
+
+function serverWorldDims(serverId, worldName, server = mustServer(serverId)) {
+  const main = path.join(serverWorldRoot(server), worldName);
   const dims = [main];
   for (const suffix of DIM_SUFFIXES) {
-    const sibling = dataPath('servers', serverId, worldName + suffix);
+    const sibling = path.join(serverWorldRoot(server), worldName + suffix);
     if (fs.existsSync(sibling)) dims.push(sibling);
   }
   return dims;

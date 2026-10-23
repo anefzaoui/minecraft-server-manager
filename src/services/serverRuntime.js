@@ -7,8 +7,6 @@
 const JAVA = 'java';
 const BEDROCK = 'bedrock';
 
-const RUNTIMES = /** @type {const} */ ([JAVA, BEDROCK]);
-
 /**
  * Capability definitions are the single boundary for runtime-specific
  * behavior. Consumers must ask this service instead of deriving behavior from
@@ -96,4 +94,4 @@ function resolve(server) {
   });
 }
 
-module.exports = { JAVA, BEDROCK, RUNTIMES, CAPABILITIES, runtimeFor, supports, resolve };
+module.exports = { JAVA, BEDROCK, CAPABILITIES, runtimeFor, supports, resolve };

@@ -15,7 +15,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const secrets = require('./secrets');
 const { pickJavaTag } = require('./javaMatrix');
-const { suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, isPortFree } = require('./ports');
+const { suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, arePortsFree, isPortFree } = require('./ports');
 const containers = require('../docker/containers');
 const images = require('../docker/images');
 const { fetchLogs } = require('../docker/logs');
@@ -415,8 +415,8 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
       if (udpEnd > 65535 || new Set(candidates).size !== candidates.length) {
         throw httpError(400, 'NetherNet signaling port and UDP range must be distinct valid ports.');
       }
-      for (const port of candidates) {
-        if (!(await isPortFree(port))) throw httpError(400, `Port ${port} is already in use or invalid`);
+      if (!(await arePortsFree(candidates))) {
+        throw httpError(400, 'A NetherNet signaling port or UDP gameplay port is already in use or invalid.');
       }
       ports = { game: input.portGame, rcon: 0, bedrock: null, nethernetUdpStart: udpStart, nethernetUdpEnd: udpEnd };
     } else if (!udpStart) {
