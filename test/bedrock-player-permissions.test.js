@@ -1,7 +1,10 @@
 'use strict';
 
+require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const { dataPath } = require('../src/storage/pathGuard');
 
 const commandsPath = require.resolve('../src/services/consoleCommands');
 const permissionsPath = require.resolve('../src/services/bedrockPlayerPermissions');
@@ -25,16 +28,39 @@ test('Native Bedrock permission changes use supported allowlist and permission c
     { sendConsoleCommandParts: async (_server, _serverId, command) => commands.push(command) },
     async ({ setAllowlisted, setPermission }) => {
       await setAllowlisted({ runtime: 'bedrock' }, 'srv_bedrock', 'Alex', true);
-      await setAllowlisted({ runtime: 'bedrock' }, 'srv_bedrock', '2533274790123456', false);
       await setPermission({ runtime: 'bedrock' }, 'srv_bedrock', 'Alex One', 'visitor');
-      await setPermission({ runtime: 'bedrock' }, 'srv_bedrock', '2533274790123456', 'operator');
     }
   );
   assert.deepEqual(commands, [
     ['allowlist', 'add', 'Alex'],
-    ['allowlist', 'remove', '2533274790123456'],
     ['permission', 'set', 'Alex One', 'visitor'],
-    ['permission', 'set', '2533274790123456', 'operator'],
+  ]);
+});
+
+test('Native Bedrock XUID changes update the dedicated-server files and reload them', async () => {
+  const serverId = 'srv_xuid_permissions';
+  const serverDir = dataPath('servers', serverId);
+  await fs.rm(serverDir, { recursive: true, force: true });
+  await fs.mkdir(serverDir, { recursive: true });
+  const commands = [];
+
+  await withConsole(
+    { sendConsoleCommandParts: async (_server, _serverId, command) => commands.push(command) },
+    async ({ setAllowlisted, setPermission }) => {
+      await setAllowlisted({ runtime: 'bedrock' }, serverId, '2533274790123456', true);
+      await setPermission({ runtime: 'bedrock' }, serverId, '2533274790123456', 'operator');
+    }
+  );
+
+  assert.deepEqual(JSON.parse(await fs.readFile(dataPath('servers', serverId, 'allowlist.json'), 'utf8')), [
+    { ignoresPlayerLimit: false, name: '2533274790123456', xuid: '2533274790123456' },
+  ]);
+  assert.deepEqual(JSON.parse(await fs.readFile(dataPath('servers', serverId, 'permissions.json'), 'utf8')), [
+    { permission: 'operator', xuid: '2533274790123456' },
+  ]);
+  assert.deepEqual(commands, [
+    ['allowlist', 'reload'],
+    ['permission', 'reload'],
   ]);
 });
 
