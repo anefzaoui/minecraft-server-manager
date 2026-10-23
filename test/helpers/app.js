@@ -24,7 +24,10 @@ async function start() {
 }
 
 async function stop() {
-  if (server) await new Promise((r) => server.close(r));
+  if (server) {
+    if (typeof server.closeAllConnections === 'function') server.closeAllConnections();
+    await new Promise((r) => server.close(r));
+  }
   server = null;
 }
 

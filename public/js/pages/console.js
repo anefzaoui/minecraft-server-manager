@@ -1,4 +1,4 @@
-// Live console: WebSocket log stream + RCON command bar with history.
+// Live console: WebSocket log stream + runtime-aware command bar with history.
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { setBusy, withBusy } from '../lib/loading.js';
@@ -264,8 +264,13 @@ function init(serverId) {
       } else if (msg.kind === 'cmd-result') {
         ackPending();
         if (msg.error) appendLine(`[panel/ERROR]: ${msg.error}`);
-        else if (msg.output) for (const line of msg.output.split(/\r?\n/)) appendLine(`[rcon]: ${line}`);
-        else appendLine(`[rcon]: (no output) /${msg.command}`);
+        else if (msg.output) {
+          const source = msg.source === 'bedrock-console' ? 'bedrock-console' : 'rcon';
+          for (const line of msg.output.split(/\r?\n/)) appendLine(`[${source}]: ${line}`);
+        } else {
+          const source = msg.source === 'bedrock-console' ? 'bedrock-console' : 'rcon';
+          appendLine(`[${source}]: (no output) /${msg.command}`);
+        }
       } else if (msg.kind === 'error') {
         ackPending();
         appendLine(`[panel/WARN]: ${msg.message}`);
@@ -334,7 +339,7 @@ function init(serverId) {
   // run one pass now so a stored "hide" preference applies before any WS line.
   refilter();
 
-  // The send control stays busy until the RCON response (cmd-result/error) or
+  // The send control stays busy until the runtime command response (cmd-result/error) or
   // ws ack arrives. Entries self-remove; a failsafe timeout catches lost acks.
   const pendingAcks = [];
   function ackPending() {

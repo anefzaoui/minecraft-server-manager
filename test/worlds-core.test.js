@@ -10,6 +10,7 @@ const app = require('./helpers/app');
 const db = require('../src/db');
 const { dataPath } = require('../src/storage/pathGuard');
 const env = require('./helpers/env');
+const archiver = require('archiver');
 
 test.before(async () => {
   await app.start();
@@ -60,6 +61,39 @@ test('detectWorldRoot handles a top-level world directly', async () => {
   assert.equal(result.rootAbs, path.resolve(root));
   assert.equal(result.dims.length, 1);
   assert.equal(result.split, false);
+});
+
+test('Bedrock worlds import and list without Java level.dat or Anvil regions', async () => {
+  const archive = path.join(env.dir, 'bedrock.mcworld');
+  await new Promise((resolve, reject) => {
+    const out = fs.createWriteStream(archive);
+    const zip = archiver('zip');
+    out.on('close', resolve);
+    out.on('error', reject);
+    zip.on('error', reject);
+    zip.pipe(out);
+    zip.append('Bedrock world', { name: 'wrapped/levelname.txt' });
+    zip.append('MANIFEST-000001', { name: 'wrapped/db/CURRENT' });
+    zip.finalize();
+  });
+  const imported = await worlds.importArchive(archive, { originalName: 'bedrock.mcworld', runtime: 'bedrock' });
+  assert.equal(imported.world_flavor, 'BEDROCK');
+
+  const id = 'bedrock_world_list';
+  db.run(
+    `INSERT INTO servers (id, display_name, type, runtime, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb)
+     VALUES (?, 'Bedrock worlds', 'BEDROCK', 'bedrock', 19132, 0, '', 1024, 1536)`,
+    id
+  );
+  const root = dataPath('servers', id, 'worlds', 'Bedrock level');
+  fs.mkdirSync(path.join(root, 'db'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'levelname.txt'), 'Bedrock level');
+  fs.writeFileSync(path.join(root, 'db', 'CURRENT'), 'MANIFEST-000001');
+  const listed = await worlds.listServerWorlds(id);
+  assert.equal(listed.length, 1);
+  assert.equal(listed[0].name, 'Bedrock level');
+  await worlds.deleteLibraryWorld(imported.id);
+  db.run('DELETE FROM servers WHERE id = ?', id);
 });
 
 test('readLevelVersion parses the NBT Name tag and returns null on junk', () => {
@@ -126,6 +160,28 @@ test('activeLevelName prefers LEVEL env, then server.properties, then world', ()
 
   // with LEVEL env
   assert.equal(worlds.activeLevelName({ id: sid, env: { LEVEL: 'myworld' } }), 'myworld');
+});
+
+test('Native Bedrock activates LevelDB worlds through LEVEL_NAME and resets without Java properties', async () => {
+  const sid = 'bedrock_activation';
+  db.run(
+    `INSERT INTO servers (id, display_name, type, runtime, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb, env_json)
+     VALUES (?, 'Bedrock activation', 'BEDROCK', 'bedrock', 19132, 0, '', 1024, 1536, ?)`,
+    sid,
+    JSON.stringify({ LEVEL_NAME: 'Old world', LEVEL_SEED: '123' })
+  );
+  for (const name of ['Old world', 'New world']) {
+    fs.mkdirSync(path.join(dataPath('servers', sid, 'worlds', name, 'db')), { recursive: true });
+    fs.writeFileSync(path.join(dataPath('servers', sid, 'worlds', name), 'levelname.txt'), name);
+  }
+  const activated = await worlds.activateWorld(sid, 'New world');
+  assert.equal(activated.active, 'New world');
+  assert.equal(JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', sid).env_json).LEVEL_NAME, 'New world');
+  await worlds.resetWorld(sid, { backup: false, seedMode: 'random' });
+  const envAfter = JSON.parse(db.get('SELECT env_json FROM servers WHERE id = ?', sid).env_json);
+  assert.equal(envAfter.LEVEL_SEED, undefined);
+  assert.equal(fs.existsSync(path.join(dataPath('servers', sid, 'worlds', 'New world'))), false);
+  db.run('DELETE FROM servers WHERE id = ?', sid);
 });
 
 test('listServerWorlds marks active world, sizes dims, and reads seed', async () => {

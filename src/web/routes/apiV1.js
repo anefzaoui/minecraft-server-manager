@@ -14,6 +14,7 @@ const { publicApiIpLimiter, publicApiTokenLimiter } = require('../middleware/rat
 const settings = require('../../services/settings');
 const servers = require('../../services/servers');
 const liveCache = require('../../services/liveCache');
+const serverRuntime = require('../../services/serverRuntime');
 
 const router = express.Router();
 
@@ -52,6 +53,8 @@ function serverStatusView(row) {
     id: row.id,
     name: row.display_name,
     type: row.type,
+    runtime: serverRuntime.runtimeFor(row),
+    capabilities: serverRuntime.resolve(row).capabilities,
     state: STATE_MAP[row.status] || 'stopped',
     cpuPct: live.stats ? live.stats.cpuPct : null,
     memoryMb: live.stats ? Math.round((live.stats.memUsedBytes || 0) / 1024 / 1024) : null,

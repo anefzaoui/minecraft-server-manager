@@ -148,6 +148,182 @@ test('previewCreateSpec applies defaults and supports overrides', () => {
   assert.equal(over.ports.extra.length, 1);
 });
 
+test('createServer persists a Native Bedrock runtime and uses its container contract', async (t) => {
+  const images = require('../src/docker/images');
+  const containers = require('../src/docker/containers');
+  let created;
+  t.mock.method(images, 'ensureImage', async () => {});
+  t.mock.method(containers, 'createContainer', async (spec) => {
+    created = spec;
+    return 'bedrock-container-id';
+  });
+
+  const server = await servers.createServer(
+    {
+      name: 'Bedrock test',
+      runtime: 'bedrock',
+      type: 'BEDROCK',
+      mcVersion: 'PREVIEW',
+      eulaAccepted: true,
+      portGame: 45211,
+      autoBackup: false,
+    },
+    { start: false }
+  );
+
+  assert.equal(server.runtime, 'bedrock');
+  assert.equal(server.type, 'BEDROCK');
+  assert.equal(server.port_rcon, 0);
+  assert.equal(created.runtime, 'bedrock');
+  assert.equal(created.image, 'itzg/minecraft-bedrock-server:latest');
+  assert.equal(created.env.EULA, 'TRUE');
+  assert.equal(created.env.VERSION, 'PREVIEW');
+  assert.equal(created.env.ALLOW_LIST, 'false');
+  assert.equal(created.env.TYPE, undefined);
+  assert.equal(created.env.ENABLE_RCON, undefined);
+  assert.equal(created.env.RCON_PASSWORD, undefined);
+  assert.equal(created.ports.game, 45211);
+  assert.equal(created.ports.rcon, 0);
+});
+
+test('createServer reserves NetherNet signaling and a player-sized UDP range by default', async (t) => {
+  const images = require('../src/docker/images');
+  const containers = require('../src/docker/containers');
+  let created;
+  t.mock.method(images, 'ensureImage', async () => {});
+  t.mock.method(containers, 'createContainer', async (spec) => {
+    created = spec;
+    return 'nethernet-container-id';
+  });
+
+  const server = await servers.createServer(
+    {
+      name: 'NetherNet test',
+      runtime: 'bedrock',
+      type: 'BEDROCK',
+      eulaAccepted: true,
+      portGame: 45212,
+      netherNetUdpStart: 45220,
+      advertisedAddress: '192.168.1.42',
+      maxPlayers: 3,
+      autoBackup: false,
+    },
+    { start: false }
+  );
+
+  assert.equal(server.bedrock_transport, 'nethernet');
+  assert.equal(server.nethernet_udp_start, 45220);
+  assert.equal(server.nethernet_udp_end, 45222);
+  assert.deepEqual(created.ports, {
+    game: 45212,
+    rcon: 0,
+    bedrock: null,
+    nethernetUdpStart: 45220,
+    nethernetUdpEnd: 45222,
+  });
+  assert.equal(created.env.MAX_PLAYERS, '3');
+  assert.equal(created.env.SERVER_UDP_PORTS, '192.168.1.42:45220-45222:19140-19142');
+});
+
+test('createServer uses the legacy RakNet IPv4 and IPv6 UDP contract for a compatible pinned version', async (t) => {
+  const images = require('../src/docker/images');
+  const containers = require('../src/docker/containers');
+  let created;
+  t.mock.method(images, 'ensureImage', async () => {});
+  t.mock.method(containers, 'createContainer', async (spec) => {
+    created = spec;
+    return 'raknet-container-id';
+  });
+
+  const server = await servers.createServer(
+    {
+      name: 'Legacy RakNet',
+      runtime: 'bedrock',
+      type: 'BEDROCK',
+      mcVersion: '1.26.50',
+      bedrockTransport: 'raknet',
+      eulaAccepted: true,
+      portGame: 45300,
+      portBedrock: 45301,
+      autoBackup: false,
+    },
+    { start: false }
+  );
+
+  assert.equal(server.bedrock_transport, 'raknet');
+  assert.equal(server.port_game, 45300);
+  assert.equal(server.port_bedrock, 45301);
+  assert.equal(server.nethernet_udp_start, null);
+  assert.equal(server.nethernet_udp_end, null);
+  assert.deepEqual(created.ports, {
+    game: 45300,
+    rcon: 0,
+    bedrock: 45301,
+    nethernetUdpStart: null,
+    nethernetUdpEnd: null,
+  });
+  assert.equal(created.env.TRANSPORT, 'raknet');
+  assert.equal(created.env.SERVER_PORT, '19132');
+  assert.equal(created.env.SERVER_PORT_V6, '19133');
+  assert.equal(created.env.SERVER_UDP_PORTS, undefined);
+
+  const cookie = await app.adminCookie();
+  const page = await app.req('GET', `/servers/${server.id}`, { cookie });
+  assert.equal(page.status, 200);
+  assert.match(page.text, /RakNet \(legacy\)/);
+  assert.match(page.text, /RakNet IPv4 UDP port/);
+  assert.match(page.text, /RakNet IPv6 UDP port/);
+  assert.match(page.text, /Allow both UDP ports through every firewall and port forward/);
+
+  const wizard = await app.req('GET', '/servers/new', { cookie });
+  assert.equal(wizard.status, 200);
+  assert.match(wizard.text, /RakNet \(legacy compatibility\)/);
+  assert.match(wizard.text, /RakNet is available only for a compatible pinned Bedrock version/);
+  assert.match(wizard.text, /data-advanced-runtime="bedrock"/);
+  assert.match(wizard.text, /Default player permission/);
+  assert.match(wizard.text, /Compression threshold/);
+});
+
+test('createServer rejects RakNet for Latest, Preview, and versions that only support NetherNet', async () => {
+  for (const mcVersion of ['LATEST', 'PREVIEW', '1.26.51']) {
+    await assert.rejects(
+      servers.createServer(
+        {
+          name: `Unsupported RakNet ${mcVersion}`,
+          runtime: 'bedrock',
+          type: 'BEDROCK',
+          mcVersion,
+          bedrockTransport: 'raknet',
+          eulaAccepted: true,
+          portGame: 45310,
+          portBedrock: 45311,
+        },
+        { start: false }
+      ),
+      /RakNet is only available for compatible pinned Bedrock versions/i
+    );
+  }
+});
+
+test('createServer rejects an advanced mapping that overlaps a NetherNet UDP range', async () => {
+  await assert.rejects(
+    servers.createServer(
+      {
+        name: 'Conflicting NetherNet ports',
+        runtime: 'bedrock',
+        type: 'BEDROCK',
+        eulaAccepted: true,
+        portGame: 45240,
+        netherNetUdpStart: 45250,
+        maxPlayers: 2,
+        extraPorts: [{ hostPort: 45251, containerPort: 8080, protocol: 'tcp' }],
+      },
+      { start: false }
+    ),
+    /advanced port mapping conflicts/i
+  );
+});
+
 test('dirSize sums file sizes including nested subdirectories', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-dirsize-'));
   try {

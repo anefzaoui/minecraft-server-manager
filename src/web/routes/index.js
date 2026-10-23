@@ -111,27 +111,36 @@ const CAP_TABS = { files: 'files' };
 // Sub-nav entries that only make sense for some servers. Version compatibility
 // is answerable for mod loaders only (see services/compat.js appliesTo).
 const CONDITIONAL_TABS = { updates: (opts) => opts.modServer !== false };
+// Native Bedrock has dedicated packs, permissions, worlds and console support,
+// but no Java map, inventory/NBT, analytics, chat automation, RCON commands,
+// or Java world analysis controls.
+const BEDROCK_HIDDEN_TABS = new Set(['chat', 'commands', 'inventory', 'analytics', 'updates', 'map', 'chatbot']);
 
 function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = true } = {}) {
   const crashes = server && server.crashesUnread;
   const group = TAB_GROUPS.find((g) => g.tabs.includes(tab)) || TAB_GROUPS[0];
-  const groups = TAB_GROUPS.map((g) => ({
-    label: g.label,
-    icon: g.icon,
-    href: `/servers/${id}/${g.tabs[0]}`,
-    active: g.key === group.key,
-    badge: g.tabs.includes('history') && crashes ? crashes : null,
-  }));
+  const isBedrock = server && server.runtime === 'bedrock';
+  const groups = TAB_GROUPS.filter((g) => !isBedrock || g.tabs.some((t) => !BEDROCK_HIDDEN_TABS.has(t))).map((g) => {
+    const first = g.tabs.find((t) => !isBedrock || !BEDROCK_HIDDEN_TABS.has(t));
+    return {
+      label: isBedrock && g.key === 'mods' ? 'Packs' : g.label,
+      icon: g.icon,
+      href: `/servers/${id}/${first}`,
+      active: g.key === group.key,
+      badge: g.tabs.includes('history') && crashes ? crashes : null,
+    };
+  });
   const visibleSubTabs = group.tabs.filter(
     (t) =>
       (isAdmin || !ADMIN_ONLY_TABS.has(t)) &&
+      (!isBedrock || !BEDROCK_HIDDEN_TABS.has(t)) &&
       (!perms || !CAP_TABS[t] || perms[CAP_TABS[t]]) &&
       (!CONDITIONAL_TABS[t] || CONDITIONAL_TABS[t]({ modServer }))
   );
   const sub =
     visibleSubTabs.length > 1
       ? visibleSubTabs.map((t) => ({
-          label: SUB_LABELS[t] || t,
+          label: isBedrock && t === 'mods' ? 'Bedrock Packs' : SUB_LABELS[t] || t,
           href: `/servers/${id}/${t}`,
           active: t === tab,
           badge: t === 'history' && crashes ? crashes : null,
@@ -382,6 +391,7 @@ router.get('/servers/new', async (req, res) => {
   const advancedSections = catalog.SECTIONS.filter((s) => !SIMPLE_SECTIONS.has(s.id))
     .map((s) => ({ ...s, fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env') }))
     .filter((s) => s.fields.length);
+  const bedrockAdvancedSections = require('../../config/bedrock-properties').sectionsForSettings();
   res.render('wizard', {
     title: 'Create Server',
     active: 'servers',
@@ -390,8 +400,10 @@ router.get('/servers/new', async (req, res) => {
     latestRelease,
     suggestedPort,
     advancedSections,
+    bedrockAdvancedSections,
     curseforgeEnabled,
     defaults: require('../../services/settings').getDefaults(),
+    suggestedBedrockAddress: require('../../services/bedrockConnection').suggestedAdvertisedAddress(),
   });
 });
 
@@ -509,6 +521,7 @@ router.get(
       }
       addrs.push(`localhost:${row.port_game}`);
       context.addresses = [...new Set(addrs)];
+      context.netherNet = require('../../services/bedrockConnection').netherNetDetails(row);
     } else if (tab === 'chat') {
       const live = require('../../services/liveCache').get(row.id);
       context.onlinePlayers = (live && live.players && live.players.names) || [];
@@ -519,16 +532,23 @@ router.get(
         .map((e) => ({ ts: e.created_at, actor: e.actor, ...e.details }))
         .reverse();
     } else if (tab === 'mods') {
-      context.mods = await require('../../services/mods')
-        .listContent(row.id)
-        .catch(() => []);
-      // Toggles the "Update all" toolbar button (ignored updates don't count).
-      context.hasModUpdates = context.mods.some((m) => m.updateAvailable);
-      // Same gate as the wizard: CurseForge search/import needs the stored key.
-      try {
-        context.curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
-      } catch {
-        context.curseforgeEnabled = false;
+      if (require('../../services/serverRuntime').supports(row, 'bedrockPacks')) {
+        context.bedrockPacksExperience = true;
+        context.bedrockPacks = await require('../../services/bedrockPacks')
+          .list(row.id)
+          .catch(() => []);
+      } else {
+        context.mods = await require('../../services/mods')
+          .listContent(row.id)
+          .catch(() => []);
+        // Toggles the "Update all" toolbar button (ignored updates don't count).
+        context.hasModUpdates = context.mods.some((m) => m.updateAvailable);
+        // Same gate as the wizard: CurseForge search/import needs the stored key.
+        try {
+          context.curseforgeEnabled = Boolean(require('../../services/apiKeys').getKey('curseforge'));
+        } catch {
+          context.curseforgeEnabled = false;
+        }
       }
     } else if (tab === 'updates') {
       // Reached directly on a plugin server: there is nothing to show, so send
@@ -634,10 +654,12 @@ router.get(
         crashes24h: countEvents('crashed', '-1 day'),
         crashes7d: countEvents('crashed', '-7 days'),
       };
-      context.lastCrash = db.get(
-        'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
-        row.id
-      );
+      if (require('../../services/serverRuntime').supports(row, 'java')) {
+        context.lastCrash = db.get(
+          'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
+          row.id
+        );
+      }
       context.recentEvents = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 8, forUser: req.user }));
 
       // --- Per-world / per-dimension sizes + host disk free.
@@ -692,31 +714,35 @@ router.get(
       }
       context.motd = String(row.env.MOTD || '').replace(/§([0-9a-fk-orA-FK-OR])/g, '&$1');
 
-      // Every catalog field configurable at creation, minus what's covered
-      // elsewhere on this tab: identity/flavor/resources (their own cards
-      // above - flavor/version changes go through the Updates page, which
-      // handles the migration safely), players (live via whitelist/ops
-      // files on the Players tab, no restart needed), and gameplay's
-      // DIFFICULTY/PVP (live via World Controls) + MOTD (the field above) -
-      // exposing those here too would just drift out of sync with the
-      // RCON-set values. Same catalog + same field-level filter the wizard
-      // itself uses, so nothing new is exposed beyond what's already safe there.
-      const catalog = require('../../config/field-catalog');
-      const EXCLUDED_SECTIONS = new Set(['identity', 'flavor', 'resources', 'players']);
-      // Scoped to 'gameplay' specifically (not a global key blocklist) - a
-      // future field in another section coincidentally named e.g. MOTD must
-      // never be silently swallowed by this exclusion. The excluded keys are
-      // shared with field-catalog and contractually property-backed (`prop`),
-      // so their direct edits are always unlockable (- enforced by test).
-      const EXCLUDED_GAMEPLAY_KEYS = catalog.SETTINGS_EXCLUDED_ENV_KEYS;
-      context.advancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
-        .map((s) => ({
-          ...s,
-          fields: catalog
-            .forSection(s.id, 'advanced')
-            .filter((f) => f.scope === 'env' && !(s.id === 'gameplay' && EXCLUDED_GAMEPLAY_KEYS.has(f.key))),
-        }))
-        .filter((s) => s.fields.length);
+      if (require('../../services/serverRuntime').supports(row, 'bedrockProperties')) {
+        context.advancedSections = require('../../config/bedrock-properties').sectionsForSettings();
+      } else {
+        // Every catalog field configurable at creation, minus what's covered
+        // elsewhere on this tab: identity/flavor/resources (their own cards
+        // above - flavor/version changes go through the Updates page, which
+        // handles the migration safely), players (live via whitelist/ops
+        // files on the Players tab, no restart needed), and gameplay's
+        // DIFFICULTY/PVP (live via World Controls) + MOTD (the field above) -
+        // exposing those here too would just drift out of sync with the
+        // RCON-set values. Same catalog + same field-level filter the wizard
+        // itself uses, so nothing new is exposed beyond what's already safe there.
+        const catalog = require('../../config/field-catalog');
+        const EXCLUDED_SECTIONS = new Set(['identity', 'flavor', 'resources', 'players']);
+        // Scoped to 'gameplay' specifically (not a global key blocklist) - a
+        // future field in another section coincidentally named e.g. MOTD must
+        // never be silently swallowed by this exclusion. The excluded keys are
+        // shared with field-catalog and contractually property-backed (`prop`),
+        // so their direct edits are always unlockable (- enforced by test).
+        const EXCLUDED_GAMEPLAY_KEYS = catalog.SETTINGS_EXCLUDED_ENV_KEYS;
+        context.advancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
+          .map((s) => ({
+            ...s,
+            fields: catalog
+              .forSection(s.id, 'advanced')
+              .filter((f) => f.scope === 'env' && !(s.id === 'gameplay' && EXCLUDED_GAMEPLAY_KEYS.has(f.key))),
+          }))
+          .filter((s) => s.fields.length);
+      }
     } else if (tab === 'discord' || tab === 'status-page' || tab === 'invites' || tab === 'chatbot') {
       // Each integration is its own page now; hydrate only the slice it needs.
       // integrations.hbs switches on `sub` and renders exactly one card.
@@ -776,9 +802,11 @@ router.get(
       context.wsConsole = true;
     } else if (tab === 'history') {
       context.events = eventsVM(eventsService.listEvents({ serverId: row.id, limit: 100, forUser: req.user }));
-      context.crashReports = db
-        .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
-        .map(crashVM);
+      if (require('../../services/serverRuntime').supports(row, 'java')) {
+        context.crashReports = db
+          .all('SELECT * FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 50', row.id)
+          .map(crashVM);
+      }
     } else if (tab === 'backups') {
       context.backups = db
         .all('SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT 50', row.id)

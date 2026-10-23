@@ -1,0 +1,37 @@
+<div data-bedrock-players data-server-id="{{server.id}}">
+  <div class="card p-4 sm:p-5">
+    <div class="flex items-start gap-3">
+      <span class="grid size-9 shrink-0 place-items-center rounded bg-inset text-link">{{{icon 'gamepad-2' 'size-5'}}}</span>
+      <div>
+        <h3 class="font-semibold">Bedrock Player Permissions</h3>
+        <p class="mt-1 max-w-prose text-sm text-ink-soft">Manage the Native Bedrock allowlist and each player's permission through the Bedrock console. Use an Xbox gamertag or XUID. Java UUID profiles and inventory controls do not apply here.</p>
+      </div>
+    </div>
+
+    <form class="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]" data-bedrock-allowlist>
+      <div>
+        <label class="label" for="bedrock-allowlist-identity">Gamertag or XUID</label>
+        <input class="input" id="bedrock-allowlist-identity" name="identity" maxlength="20" autocomplete="off" placeholder="Alex or 2533274790123456" required>
+      </div>
+      <button class="btn btn-primary self-end" name="on" value="true" type="submit">Add to Allowlist</button>
+      <button class="btn self-end" name="on" value="false" type="submit">Remove</button>
+    </form>
+
+    <form class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_11rem_auto]" data-bedrock-permission>
+      <div>
+        <label class="label" for="bedrock-permission-identity">Gamertag or XUID</label>
+        <input class="input" id="bedrock-permission-identity" name="identity" maxlength="20" autocomplete="off" placeholder="Alex or 2533274790123456" required>
+      </div>
+      <div>
+        <label class="label" for="bedrock-permission-level">Permission</label>
+        <select class="input" id="bedrock-permission-level" name="permission">
+          <option value="visitor">Visitor</option>
+          <option value="member" selected>Member: Remove Elevated Permission</option>
+          <option value="operator">Operator</option>
+        </select>
+      </div>
+      <button class="btn btn-primary self-end" type="submit">Set Permission</button>
+    </form>
+  </div>
+</div>
+<script type="module" src="/js/pages/bedrock-players.js"></script>

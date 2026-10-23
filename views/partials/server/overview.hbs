@@ -1,6 +1,17 @@
 <div class="grid gap-4 lg:grid-cols-3">
   <div class="card p-4 lg:col-span-2">
-    {{#if addresses.length}}
+    {{#if netherNet}}
+      <div class="mb-4 border-b border-line pb-4">
+        <h3 class="mb-3 font-semibold">NetherNet Connection</h3>
+        <dl class="grid gap-3 text-sm sm:grid-cols-2">
+          <div><dt class="text-xs text-ink-faint">Host</dt><dd class="font-mono font-medium">{{netherNet.host}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">TCP signaling port</dt><dd class="font-mono font-medium">{{netherNet.signalingPort}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">UDP gameplay ports</dt><dd class="font-mono font-medium">{{netherNet.udpStart}}-{{netherNet.udpEnd}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">Firewall rules</dt><dd class="font-mono font-medium">{{#each netherNet.firewallRules}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</dd></div>
+        </dl>
+        <p class="help mt-3">Players join with <code class="code-inline">{{netherNet.address}}</code>. The firewall must allow the TCP signaling port and the entire UDP gameplay range.</p>
+      </div>
+    {{else if addresses.length}}
       <div class="mb-4 border-b border-line pb-4">
         <label class="label" for="ov-address">Server address <span class="text-xs font-normal text-ink-faint">(share this with players on your network)</span></label>
         <div class="flex flex-wrap items-center gap-2">
@@ -24,9 +35,23 @@
       <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Update policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Start on boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
+      {{#if (eq server.runtime 'bedrock')}}
+        <div><dt class="text-xs text-ink-faint">Transport</dt><dd class="font-medium">{{#if (eq server.ports.transport 'raknet')}}RakNet (legacy){{else}}NetherNet{{/if}}</dd></div>
+        {{#if (eq server.ports.transport 'raknet')}}
+          <div><dt class="text-xs text-ink-faint">RakNet IPv4 UDP port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">RakNet IPv6 UDP port</dt><dd class="font-medium">{{server.ports.bedrock}}</dd></div>
+        {{else}}
+          <div><dt class="text-xs text-ink-faint">NetherNet TCP signaling port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">NetherNet UDP range</dt><dd class="font-medium">{{server.ports.nethernetUdpStart}}-{{server.ports.nethernetUdpEnd}}</dd></div>
+        {{/if}}
+      {{else}}
+        <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+        <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
+      {{/if}}
     </dl>
+    {{#if (and (eq server.runtime 'bedrock') (eq server.ports.transport 'raknet'))}}
+      <p class="notice notice-info mt-4 text-sm">RakNet is a legacy compatibility transport. Players connect to the server address above with UDP {{server.ports.game}} for IPv4 or UDP {{server.ports.bedrock}} for IPv6. Allow both UDP ports through every firewall and port forward.</p>
+    {{/if}}
     {{#if server.pack}}
       <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">
         <div class="flex flex-wrap items-center gap-2">
@@ -87,4 +112,3 @@
   </div>
 </div>
 <script type="module" src="/js/pages/overview.js"></script>
-

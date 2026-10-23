@@ -41,7 +41,7 @@ export async function postJSON(url, body) {
 }
 
 /** Upload a world archive into the library (XHR for real progress). */
-export function uploadWorldModal({ onDone } = {}) {
+export function uploadWorldModal({ onDone, runtime } = {}) {
   const content = document.createElement('div');
   content.innerHTML = `
     <label class="label">World name</label>
@@ -94,6 +94,7 @@ export function uploadWorldModal({ onDone } = {}) {
           form.append('file', file.files[0]);
           const name = content.querySelector('[data-w-name]').value.trim();
           if (name) form.append('name', name);
+          if (runtime) form.append('runtime', runtime);
 
           return new Promise((resolve) => {
             const xhr = new XMLHttpRequest();

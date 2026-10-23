@@ -12,6 +12,7 @@ const { execCaptureChecked, inspectStatus } = require('../docker/containers');
 const { fetchLogs } = require('../docker/logs');
 const { parsePlayerList } = require('../utils/rconList');
 const { parseTps } = require('../utils/rconTps');
+const serverRuntime = require('./serverRuntime');
 const { cleanText } = require('../utils/ansi');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
@@ -130,8 +131,9 @@ function statusDetail(live) {
   return null;
 }
 
-async function attach(serverId, containerId = null) {
+async function attach(serverId, containerId = null, server = null) {
   if (entries.has(serverId)) return;
+  const hasRcon = serverRuntime.supports(server, 'rcon');
   const entry = {
     stats: null,
     players: null,
@@ -141,7 +143,7 @@ async function attach(serverId, containerId = null) {
     playerTimer: null,
     perf: null,
     perfCmd: null, // array once a probe works, false once all have been tried
-    perfSupported: true,
+    perfSupported: hasRcon,
     perfTimer: null,
     containerId,
   };
@@ -284,14 +286,19 @@ async function attach(serverId, containerId = null) {
     }
   };
 
-  refreshPlayers();
-  refreshPhase();
-  entry.playerTimer = setInterval(refreshPlayers, 20000);
-  entry.playerTimer.unref();
-  entry.phaseTimer = setInterval(refreshPhase, 8000);
-  entry.phaseTimer.unref();
-  entry.perfTimer = setInterval(refreshPerf, 10000);
-  entry.perfTimer.unref();
+  // Native Bedrock has no Java RCON protocol or TPS command. Docker's stats
+  // stream above still supplies CPU, memory and network data; the Console tab
+  // remains the source of its logs and lifecycle detail.
+  if (hasRcon) {
+    refreshPlayers();
+    refreshPhase();
+    entry.playerTimer = setInterval(refreshPlayers, 20000);
+    entry.playerTimer.unref();
+    entry.phaseTimer = setInterval(refreshPhase, 8000);
+    entry.phaseTimer.unref();
+    entry.perfTimer = setInterval(refreshPerf, 10000);
+    entry.perfTimer.unref();
+  }
 }
 
 function detach(serverId) {
@@ -315,7 +322,7 @@ async function sync() {
   if (syncing) return;
   syncing = true;
   try {
-    const rows = db.all('SELECT id, status, container_id FROM servers WHERE deleted_at IS NULL');
+    const rows = db.all('SELECT id, status, container_id, runtime FROM servers WHERE deleted_at IS NULL');
     const byId = new Map(rows.map((r) => [r.id, r]));
     const running = new Set(
       // 'stalled' (starting far longer than expected, no 'Done (' yet) is still
@@ -335,7 +342,7 @@ async function sync() {
       if (existing && existing.containerId && row.container_id && existing.containerId !== row.container_id) {
         detach(id);
       }
-      if (!entries.has(id)) await attach(id, row.container_id || null);
+      if (!entries.has(id)) await attach(id, row.container_id || null, row);
     }
     for (const id of [...entries.keys()]) if (!running.has(id)) detach(id);
     syncThrottle.ok(logger.info, 'The live-cache reconcile recovered.');

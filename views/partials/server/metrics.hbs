@@ -29,19 +29,18 @@
       <div class="eyebrow">Players</div>
       <div class="mt-1 text-lg font-bold tabular-nums" data-metric="players">{{server.players.online}}/{{server.players.max}}</div>
     </div>
-    <div class="card p-3">
-      <div class="eyebrow">TPS</div>
-      {{#if server.stats.perf}}
-        <div class="mt-1 text-lg font-bold tabular-nums" data-metric="tps">{{server.stats.perf.tps1}}</div>
-        <div class="text-xs text-ink-faint" data-metric="mspt">{{#if server.stats.perf.mspt}}{{server.stats.perf.mspt}} ms/tick{{else}}last 1&nbsp;min{{/if}}</div>
-      {{else if server.stats.perfSupported}}
-        <div class="mt-1 text-lg font-bold tabular-nums text-ink-faint" data-metric="tps">…</div>
-        <div class="text-xs text-ink-faint">reading…</div>
-      {{else}}
-        <div class="mt-1 text-sm font-semibold text-ink-faint" data-metric="tps">Not reported</div>
-        <div class="text-xs text-ink-faint">needs Paper, Spark, or Forge</div>
-      {{/if}}
-    </div>
+    {{#if server.stats.perfSupported}}
+      <div class="card p-3">
+        <div class="eyebrow">TPS</div>
+        {{#if server.stats.perf}}
+          <div class="mt-1 text-lg font-bold tabular-nums" data-metric="tps">{{server.stats.perf.tps1}}</div>
+          <div class="text-xs text-ink-faint" data-metric="mspt">{{#if server.stats.perf.mspt}}{{server.stats.perf.mspt}} ms/tick{{else}}last 1&nbsp;min{{/if}}</div>
+        {{else}}
+          <div class="mt-1 text-lg font-bold tabular-nums text-ink-faint" data-metric="tps">…</div>
+          <div class="text-xs text-ink-faint">reading…</div>
+        {{/if}}
+      </div>
+    {{/if}}
     <div class="card p-3">
       <div class="eyebrow">CPU</div>
       <div class="mt-1 text-lg font-bold tabular-nums" data-metric="cpu">{{server.stats.cpuPct}}%</div>
@@ -69,11 +68,13 @@
       <h3 class="mb-2 font-semibold">Network</h3>
       <canvas data-chart="network" height="140"></canvas>
     </div>
-    <div class="card p-4" data-tps-card {{#unless server.stats.perfSupported}}hidden{{/unless}}>
-      <h3 class="mb-2 font-semibold">Tick Rate <span class="text-xs font-normal text-ink-faint">TPS &amp; ms per tick</span></h3>
-      <canvas data-chart="tps" height="140"></canvas>
-      <p class="help">20 TPS is a healthy server. A lasting drop means the server can't keep up with what's happening in the world.</p>
-    </div>
+    {{#if server.stats.perfSupported}}
+      <div class="card p-4" data-tps-card>
+        <h3 class="mb-2 font-semibold">Tick Rate <span class="text-xs font-normal text-ink-faint">TPS &amp; ms per tick</span></h3>
+        <canvas data-chart="tps" height="140"></canvas>
+        <p class="help">20 TPS is a healthy server. A lasting drop means the server can't keep up with what's happening in the world.</p>
+      </div>
+    {{/if}}
   </div>
 
   {{! ---- Health & stability ---- }}

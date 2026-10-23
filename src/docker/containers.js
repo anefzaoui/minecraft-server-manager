@@ -13,6 +13,7 @@ const LABEL = 'msm.id';
 const GAME_PORT = '25565';
 const RCON_PORT = '25575';
 const BEDROCK_PORT = '19132';
+const NETHERNET_UDP_START = 19140;
 
 function containerName(serverId) {
   return `msm-${serverId}`;
@@ -25,7 +26,9 @@ function containerName(serverId) {
  * @param {string} spec.image            e.g. itzg/minecraft-server:java21
  * @param {object} spec.env              flat { KEY: 'value' }
  * @param {string} spec.dataDir          absolute panel-local data dir, re-rooted to the host and bind-mounted to /data
- * @param {object} spec.ports            { game, rcon, bedrock? } host ports
+ * @param {'java'|'bedrock'} [spec.runtime] Server runtime; Java is the legacy default
+ * @param {object} spec.ports            Java: { game, rcon, bedrock? }; Native Bedrock: transport-specific ports
+ * @param {'nethernet'|'raknet'} [spec.bedrockTransport] Native Bedrock transport
  * @param {object} spec.resources        { memoryMb, swapMb, cpus }
  * @param {string} [spec.containerName]  Docker container name override; default `msm-<serverId>`
  * @param {string} [spec.networkName]    existing host Docker network to attach to; default bridge
@@ -33,19 +36,35 @@ function containerName(serverId) {
  */
 async function createContainer(spec) {
   const docker = getDocker();
-  const exposed = {
-    [`${GAME_PORT}/tcp`]: {},
-    [`${GAME_PORT}/udp`]: {}, // query protocol shares the game port
-    [`${RCON_PORT}/tcp`]: {},
-  };
-  const bindings = {
-    [`${GAME_PORT}/tcp`]: [{ HostPort: String(spec.ports.game) }],
-    [`${GAME_PORT}/udp`]: [{ HostPort: String(spec.ports.game) }],
-    [`${RCON_PORT}/tcp`]: [{ HostPort: String(spec.ports.rcon) }],
-  };
-  if (spec.ports.bedrock) {
+  const nativeBedrock = spec.runtime === 'bedrock';
+  const raknet = nativeBedrock && spec.bedrockTransport === 'raknet';
+  const exposed = nativeBedrock
+    ? raknet
+      ? { [`${BEDROCK_PORT}/udp`]: {}, [`${Number(BEDROCK_PORT) + 1}/udp`]: {} }
+      : { [`${BEDROCK_PORT}/tcp`]: {} }
+    : { [`${GAME_PORT}/tcp`]: {}, [`${GAME_PORT}/udp`]: {}, [`${RCON_PORT}/tcp`]: {} };
+  const bindings = nativeBedrock
+    ? raknet
+      ? {
+          [`${BEDROCK_PORT}/udp`]: [{ HostPort: String(spec.ports.game) }],
+          [`${Number(BEDROCK_PORT) + 1}/udp`]: [{ HostPort: String(spec.ports.bedrock) }],
+        }
+      : { [`${BEDROCK_PORT}/tcp`]: [{ HostPort: String(spec.ports.game) }] }
+    : {
+        [`${GAME_PORT}/tcp`]: [{ HostPort: String(spec.ports.game) }],
+        [`${GAME_PORT}/udp`]: [{ HostPort: String(spec.ports.game) }],
+        [`${RCON_PORT}/tcp`]: [{ HostPort: String(spec.ports.rcon) }],
+      };
+  if (!nativeBedrock && spec.ports.bedrock) {
     exposed[`${BEDROCK_PORT}/udp`] = {};
     bindings[`${BEDROCK_PORT}/udp`] = [{ HostPort: String(spec.ports.bedrock) }];
+  }
+  if (nativeBedrock && !raknet) {
+    const count = spec.ports.nethernetUdpEnd - spec.ports.nethernetUdpStart + 1;
+    for (let i = 0; i < count; i += 1) {
+      exposed[`${NETHERNET_UDP_START + i}/udp`] = {};
+      bindings[`${NETHERNET_UDP_START + i}/udp`] = [{ HostPort: String(spec.ports.nethernetUdpStart + i) }];
+    }
   }
   // Feature ports (e.g. BlueMap's web server) + user-defined extras - [{container: '8100/tcp', host: 8123}]
   for (const extra of spec.extraPorts || []) {
@@ -82,7 +101,7 @@ async function createContainer(spec) {
     ExposedPorts: exposed,
     Tty: false,
     OpenStdin: false,
-    Healthcheck: healthcheckSpec(),
+    ...(nativeBedrock ? {} : { Healthcheck: healthcheckSpec() }),
     HostConfig: hostConfig,
   });
   return container.id;
@@ -206,12 +225,12 @@ async function startContainer(serverId) {
  * needed via exec), then wait; fall back to docker stop with a generous grace
  * period so the world always saves.
  */
-async function stopContainer(serverId, { graceSeconds = 90 } = {}) {
+async function stopContainer(serverId, { graceSeconds = 90, skipRcon = false } = {}) {
   const container = getContainer(serverId);
   try {
     // Send the in-game `stop` (saves the world). execCapture reads + destroys the
     // exec stream and has a timeout, so we don't leak a hijacked connection here.
-    await execCapture(serverId, ['rcon-cli', 'stop'], { timeoutMs: 15000 }).catch(() => {});
+    if (!skipRcon) await execCapture(serverId, ['rcon-cli', 'stop'], { timeoutMs: 15000 }).catch(() => {});
     // Wait for the container to exit on its own after the stop command.
     await Promise.race([container.wait(), new Promise((resolve) => setTimeout(resolve, graceSeconds * 1000).unref())]);
   } catch {

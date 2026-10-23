@@ -1,4 +1,4 @@
-<div data-worlds-server="{{server.id}}" data-worlds-server-name="{{server.name}}" data-worlds-status="{{server.status}}" class="contents">
+<div data-worlds-server="{{server.id}}" data-worlds-server-name="{{server.name}}" data-worlds-status="{{server.status}}" data-worlds-runtime="{{server.runtime}}" class="contents">
   <div class="mb-4 flex flex-wrap items-center gap-2">
     <h3 class="font-semibold">Worlds on This Server</h3>
     <div class="ml-auto flex gap-2">
@@ -38,7 +38,7 @@
               <button class="btn btn-ghost btn-sm" data-world-duplicate data-tip="Make a copy of this world on this server">{{{icon 'copy' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-copy data-tip="Copy to another server. A compatibility check and a safety backup run first.">{{{icon 'arrow-right' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-rename data-tip="Rename this world. The server must be stopped.">{{{icon 'pencil' 'size-3.5'}}}</button>
-              <button class="btn btn-ghost btn-sm" data-world-shrink data-tip="Shrink this world on disk by removing chunks no player has spent 30+ seconds in. The server must be stopped; back up first.">{{{icon 'shrink' 'size-3.5'}}}</button>
+              {{#unless (eq ../server.runtime 'bedrock')}}<button class="btn btn-ghost btn-sm" data-world-shrink data-tip="Shrink this world on disk by removing chunks no player has spent 30+ seconds in. The server must be stopped; back up first.">{{{icon 'shrink' 'size-3.5'}}}</button>{{/unless}}
               {{#if active}}
                 {{! refresh-ccw, not undo-2 - this DELETES the world; undo-2 is
                     what the (recovering) backup Restore uses. }}

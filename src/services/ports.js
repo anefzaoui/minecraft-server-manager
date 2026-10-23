@@ -49,13 +49,17 @@ function probe(port, host = '0.0.0.0', timeoutMs = 2000) {
 
 function dbPortsInUse() {
   const rows = db.all(
-    'SELECT port_game, port_rcon, port_bedrock, extra_ports_json FROM servers WHERE deleted_at IS NULL'
+    `SELECT port_game, port_rcon, port_bedrock, nethernet_udp_start, nethernet_udp_end, extra_ports_json
+       FROM servers WHERE deleted_at IS NULL`
   );
   const used = new Set();
   for (const r of rows) {
     used.add(r.port_game);
     used.add(r.port_rcon);
     if (r.port_bedrock) used.add(r.port_bedrock);
+    if (Number.isInteger(r.nethernet_udp_start) && Number.isInteger(r.nethernet_udp_end)) {
+      for (let port = r.nethernet_udp_start; port <= r.nethernet_udp_end; port += 1) used.add(port);
+    }
     for (const p of JSON.parse(r.extra_ports_json || '[]')) {
       if (p && p.hostPort) used.add(p.hostPort);
     }
@@ -77,6 +81,13 @@ async function isPortFree(port) {
   if (port < 1024 || port > 65535) return false;
   if (dbPortsInUse().has(port)) return false;
   return probe(port);
+}
+
+/** Validate a group of explicit ports against one consistent reservation view. */
+async function arePortsFree(ports) {
+  const used = dbPortsInUse();
+  if (ports.some((port) => !Number.isInteger(port) || port < 1024 || port > 65535 || used.has(port))) return false;
+  return (await Promise.all(ports.map((port) => probe(port)))).every(Boolean);
 }
 
 /** Suggest a { game, rcon } pair (and bedrock when requested). */
@@ -110,4 +121,73 @@ async function suggestPorts({ withBedrock = false } = {}) {
   return result;
 }
 
-module.exports = { isPortFree, suggestPorts, probe, dbPortsInUse };
+/**
+ * Allocate NetherNet's TCP signaling endpoint plus a contiguous UDP range.
+ * @param {{ capacity?: number, signalingPort?: number }} [opts]
+ */
+async function suggestNetherNetPorts({ capacity = 16, signalingPort } = {}) {
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 1000) {
+    throw httpError(400, 'NetherNet player capacity must be between 1 and 1000.');
+  }
+  const signal = signalingPort ? { game: signalingPort, rcon: 0 } : await suggestPorts();
+  if (signalingPort && !(await isPortFree(signalingPort))) {
+    throw httpError(400, `Port ${signalingPort} is already in use or invalid`);
+  }
+  const used = dbPortsInUse();
+  used.add(signal.game);
+  let start = config.ports.nethernetUdpStart;
+  const maxStart = 65535 - capacity + 1;
+  while (start <= maxStart) {
+    const range = Array.from({ length: capacity }, (_, i) => start + i);
+    if (range.every((port) => !used.has(port) && port !== signal.rcon && port !== signal.game)) {
+      const free = await Promise.all(range.map((port) => probe(port)));
+      if (free.every(Boolean)) {
+        return {
+          game: signal.game,
+          rcon: 0,
+          bedrock: null,
+          nethernetUdpStart: start,
+          nethernetUdpEnd: start + capacity - 1,
+        };
+      }
+    }
+    start += 1;
+  }
+  throw httpError(409, 'No free contiguous NetherNet UDP range is available.');
+}
+
+/**
+ * Allocate RakNet's fixed IPv4 and IPv6 UDP host-port pair.
+ * @param {{ ipv4Port?: number, ipv6Port?: number }} [opts]
+ */
+async function suggestRakNetPorts({ ipv4Port, ipv6Port } = {}) {
+  if ((ipv4Port == null) !== (ipv6Port == null)) {
+    throw httpError(400, 'Set both RakNet IPv4 and IPv6 UDP ports, or leave both automatic.');
+  }
+  if (ipv4Port != null) {
+    if (ipv4Port === ipv6Port || !(await isPortFree(ipv4Port)) || !(await isPortFree(ipv6Port))) {
+      throw httpError(400, 'RakNet IPv4 and IPv6 UDP ports must be distinct free valid ports.');
+    }
+    return { game: ipv4Port, rcon: 0, bedrock: ipv6Port, nethernetUdpStart: null, nethernetUdpEnd: null };
+  }
+
+  let ipv4 = config.ports.bedrockStart;
+  while (ipv4 < 65535) {
+    const ipv6 = ipv4 + 1;
+    if ((await isPortFree(ipv4)) && (await isPortFree(ipv6))) {
+      return { game: ipv4, rcon: 0, bedrock: ipv6, nethernetUdpStart: null, nethernetUdpEnd: null };
+    }
+    ipv4 += 1;
+  }
+  throw httpError(409, 'No free RakNet IPv4 and IPv6 UDP port pair is available.');
+}
+
+module.exports = {
+  arePortsFree,
+  isPortFree,
+  suggestPorts,
+  suggestNetherNetPorts,
+  suggestRakNetPorts,
+  probe,
+  dbPortsInUse,
+};

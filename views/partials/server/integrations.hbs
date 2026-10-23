@@ -275,6 +275,9 @@
         {{#if integrations.invite.whitelistEnforced}}
           <div class="notice notice-warn text-xs">{{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-warn'}}}<div>The whitelist is enforced. Add each friend on the Players tab before they join.</div></div>
         {{/if}}
+        {{#if integrations.invite.netherNet}}
+          <div class="notice notice-info text-xs"><div><p class="font-medium">NetherNet connection</p><p class="mt-1">Host: <code class="code-inline">{{integrations.invite.netherNet.host}}</code>. TCP signaling port: <code class="code-inline">{{integrations.invite.netherNet.signalingPort}}</code>. UDP gameplay ports: <code class="code-inline">{{integrations.invite.netherNet.udpStart}}-{{integrations.invite.netherNet.udpEnd}}</code>.</p><p class="mt-1">Firewall: {{#each integrations.invite.netherNet.firewallRules}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}.</p></div></div>
+        {{/if}}
         <details class="rounded-md border border-line bg-raised p-3 text-xs">
           <summary class="cursor-pointer font-medium text-sm">Playing over the internet (port forwarding)</summary>
           <p class="mt-2 text-ink-soft">{{integrations.invite.portForwardGuidance}}</p>

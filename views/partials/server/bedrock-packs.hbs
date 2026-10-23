@@ -1,0 +1,19 @@
+<div data-bedrock-packs-server="{{server.id}}">
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h3 class="text-lg font-semibold">Bedrock Packs</h3>
+      <p class="text-sm text-ink-faint">Install Behavior Packs and Resource Packs for this Native Bedrock server. Restart after changing packs.</p>
+    </div>
+    <button class="btn btn-primary{{#unless perms.content}} hidden{{/unless}}" data-bedrock-pack-upload>{{{icon 'upload' 'size-4'}}} Upload Pack</button>
+  </div>
+  {{#each bedrockPacks}}
+    {{#if @first}}<div class="grid gap-4 lg:grid-cols-2">{{/if}}
+    <div class="card p-4" data-bedrock-pack data-pack-id="{{id}}" data-pack-kind="{{kind}}">
+      <div class="flex items-start justify-between gap-3"><div><span class="badge">{{kind}} pack</span><h4 class="mt-2 font-medium">{{name}}</h4><p class="mt-1 break-all font-mono text-xs text-ink-faint">{{uuid}}</p></div><button class="btn btn-ghost btn-sm text-danger{{#unless ../perms.content}} hidden{{/unless}}" data-bedrock-pack-remove>Remove</button></div>
+    </div>
+    {{#if @last}}</div>{{/if}}
+  {{else}}
+    {{> empty-state iconName='package' title='No Bedrock Packs Installed Yet' message='Upload a valid .mcpack or .zip behavior or resource pack to install it.'}}
+  {{/each}}
+</div>
+<script type="module" src="/js/pages/bedrock-packs.js"></script>

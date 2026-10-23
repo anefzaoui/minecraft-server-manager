@@ -120,9 +120,10 @@ const CAPABILITY_INFO = {
   },
   content: {
     label: 'Content',
-    help: 'Install and remove mods, plugins, packs, worlds, datapacks, and edit inventories.',
+    help: 'Install and remove mods, plugins, Bedrock packs, worlds, datapacks, and edit inventories.',
     covers: [
       'Add, update, disable, and remove mods, plugins, and datapacks; import zips; check for updates.',
+      'Upload and remove Native Bedrock behavior and resource packs.',
       'Put a mod back on the build it was updated from, and check which future Minecraft versions the installed mods support.',
       'Install, upgrade, and roll back the managed modpack; export it as an .mrpack.',
       'Install, copy, download, delete, and shrink worlds on this server, and extract a world from it into the library.',
@@ -140,6 +141,8 @@ const CAPABILITY_INFO = {
       'POST /api/servers/:id/mods/ignore-update',
       'POST /api/servers/:id/mods/toggle',
       'DELETE /api/servers/:id/mods/:file',
+      'POST /api/servers/:id/bedrock-packs',
+      'DELETE /api/servers/:id/bedrock-packs/:kind/:packId',
       'POST /api/servers/:id/pack',
       'POST /api/servers/:id/pack/upgrade',
       'POST /api/servers/:id/pack/rollback',

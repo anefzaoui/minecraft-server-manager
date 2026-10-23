@@ -41,7 +41,8 @@ const router = express.Router();
 // at start with no useful feedback.
 const SERVER_TYPES = require('../../config/field-catalog/general')
   .find((f) => f.key === 'TYPE')
-  .options.map((o) => o.value);
+  .options.map((o) => o.value)
+  .concat('BEDROCK');
 
 /** Load a server row or throw a JSON-friendly 404. */
 function requireServer(id) {
@@ -87,12 +88,18 @@ const createSchema = z
       .min(1)
       .max(32)
       .refine((v) => SERVER_TYPES.includes(v), { message: 'Unknown server type' }),
+    runtime: z.enum(['java', 'bedrock']).optional(),
+    bedrockTransport: z.enum(['nethernet', 'raknet']).optional(),
+    eulaAccepted: z.coerce.boolean().optional(),
     mcVersion: z.string().trim().max(32).optional(),
     javaTag: z.string().max(16).optional(),
     env: z.record(z.string(), z.string()).optional(),
     portGame: z.coerce.number().int().min(1024).max(65535).optional(),
     portRcon: z.coerce.number().int().min(1024).max(65535).optional(),
     portBedrock: z.coerce.number().int().min(1024).max(65535).optional(),
+    netherNetUdpStart: z.coerce.number().int().min(1024).max(65535).optional(),
+    advertisedAddress: z.string().trim().max(64).optional(),
+    maxPlayers: z.coerce.number().int().min(1).max(1000).optional(),
     withBedrock: z.coerce.boolean().optional(),
     heapMb: z.coerce.number().int().min(512).max(262144).optional(),
     containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
@@ -106,6 +113,9 @@ const createSchema = z
   .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
     message:
       'Container memory limit must be higher than the Java heap, or the server will be stopped for running out of memory.',
+  })
+  .refine((v) => v.runtime !== 'bedrock' || (v.type === 'BEDROCK' && v.eulaAccepted === true), {
+    message: 'Accept the Minecraft EULA before creating a Native Bedrock server.',
   });
 
 router.post(
@@ -160,6 +170,7 @@ router.patch(
         autoStart: z.coerce.boolean().optional(),
         autoRestart: z.coerce.boolean().optional(),
         env: z.record(z.string(), z.string()).optional(),
+        advertisedAddress: z.string().trim().max(64).optional(),
         ...dockerOverridesSchema,
       })
       .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
@@ -184,6 +195,15 @@ router.patch(
         { previousExtraPorts: before.extraPorts }
       );
     }
+    const existing = requireServer(req.params.id);
+    if (changes.env && require('../../services/serverRuntime').supports(existing, 'bedrockProperties')) {
+      try {
+        require('../../config/bedrock-properties').validateEnv(changes.env);
+      } catch (err) {
+        logger.debug('Rejected invalid Bedrock settings.', { reason: err.message });
+        throw httpError(400, 'Invalid Bedrock settings.');
+      }
+    }
     const { server, needsRecreate } = servers.updateServer(req.params.id, changes, { actor: req.user.username });
     res.json({ ok: true, needsRecreate, server: publicServer(server) });
   })
@@ -202,6 +222,8 @@ router.get(
 
 const previewSchema = z.object({
   type: z.string().trim().max(32).optional(),
+  runtime: z.enum(['java', 'bedrock']).optional(),
+  bedrockTransport: z.enum(['nethernet', 'raknet']).optional(),
   mcVersion: z.string().trim().max(32).optional(),
   javaTag: z.string().max(16).optional(),
   env: z.record(z.string(), z.string()).optional(),
@@ -212,6 +234,8 @@ const previewSchema = z.object({
   portGame: z.coerce.number().int().min(1024).max(65535).optional(),
   portRcon: z.coerce.number().int().min(1024).max(65535).optional(),
   portBedrock: z.coerce.number().int().min(1024).max(65535).optional(),
+  netherNetUdpStart: z.coerce.number().int().min(1024).max(65535).optional(),
+  maxPlayers: z.coerce.number().int().min(1).max(1000).optional(),
   withBedrock: z.coerce.boolean().optional(),
   ...dockerOverridesSchema,
 });
@@ -1374,8 +1398,8 @@ router.post(
     const note = String(req.body?.note || '');
     const shrinkAfter = Boolean(req.body?.shrink);
     const taskId = tasks.run(`Backing up ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
-      t.step('Snapshotting server directory (save-off → save-all → zip → save-on)…');
-      const backup = await backups.createBackup(server.id, { reason: 'manual', actor, note, shrinkAfter });
+      t.step('Preparing a consistent backup…');
+      const backup = await backups.createBackup(server.id, { reason: 'manual', actor, note, shrinkAfter, task: t });
       return { id: backup.id, filename: backup.filename, size: backup.size_bytes };
     });
     res.status(202).json({ ok: true, taskId });
@@ -1396,7 +1420,7 @@ router.post(
       { serverId: server.id, actor },
       async (t) => {
         t.step('Stopping server & taking a safety backup…');
-        await backups.restoreBackup(server.id, backupId, { actor });
+        await backups.restoreBackup(server.id, backupId, { actor, task: t });
         return { ok: true };
       }
     );
@@ -2011,6 +2035,42 @@ router.post(
 // MODS_NEED_DOWNLOAD.txt and the install fails. These endpoints turn that into
 // one-click Exclude / Modrinth-install / manual-jar upload.
 const modUpload = multer({ dest: dataPath('tmp'), limits: { fileSize: 250 * 1024 * 1024, files: 1 } });
+
+// Native Bedrock packs have a manifest and must be unpacked into the BDS pack
+// directories. Keep this separate from the Java Mods APIs and content library.
+const bedrockPackUpload = multer({ dest: dataPath('tmp'), limits: { fileSize: 2 * 1024 ** 3, files: 1 } });
+const bedrockPacks = require('../../services/bedrockPacks');
+
+router.get(
+  '/servers/:id/bedrock-packs',
+  asyncHandler(async (req, res) => {
+    res.json({ ok: true, packs: await bedrockPacks.list(req.params.id) });
+  })
+);
+
+router.post(
+  '/servers/:id/bedrock-packs',
+  requireCap('content'),
+  bedrockPackUpload.single('file'),
+  asyncHandler(async (req, res) => {
+    if (!req.file) throw httpError(400, 'No pack archive uploaded.');
+    try {
+      const pack = await bedrockPacks.installUpload(req.params.id, String(req.body?.kind || ''), req.file.path);
+      res.status(201).json({ ok: true, pack });
+    } finally {
+      fsp.rm(req.file.path, { force: true }).catch(() => {});
+    }
+  })
+);
+
+router.delete(
+  '/servers/:id/bedrock-packs/:kind/:packId',
+  requireCap('content'),
+  asyncHandler(async (req, res) => {
+    await bedrockPacks.remove(req.params.id, req.params.kind, req.params.packId);
+    res.json({ ok: true });
+  })
+);
 
 router.get(
   '/servers/:id/pending-downloads',
@@ -2963,7 +3023,11 @@ router.post(
 function publicServer(s) {
   if (!s) return null;
   const { rcon_password_cipher, env_json, notes, env, ...rest } = s;
-  return rest;
+  return {
+    ...rest,
+    runtime: require('../../services/serverRuntime').runtimeFor(s),
+    capabilities: require('../../services/serverRuntime').resolve(s).capabilities,
+  };
 }
 
 router.use(makeJsonErrorHandler('api', { fileTooLarge: 'That image is too large (max 16 MB).' }));

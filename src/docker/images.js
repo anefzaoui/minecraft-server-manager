@@ -14,6 +14,10 @@ function imageRef(javaTag) {
   return javaTag ? `${IMAGE_REPO}:${javaTag}` : `${IMAGE_REPO}:latest`;
 }
 
+function bedrockImageRef() {
+  return `${config.bedrockImageRepo}:latest`;
+}
+
 async function imageExists(ref) {
   try {
     await getDocker().getImage(ref).inspect();
@@ -72,4 +76,4 @@ async function imageId(ref) {
   }
 }
 
-module.exports = { IMAGE_REPO, imageRef, imageExists, pullImage, ensureImage, imageId };
+module.exports = { IMAGE_REPO, imageRef, bedrockImageRef, imageExists, pullImage, ensureImage, imageId };

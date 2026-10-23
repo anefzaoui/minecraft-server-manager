@@ -1,7 +1,7 @@
 'use strict';
 
 // WebSocket endpoints:
-//   /ws/console/<serverId>  - live log stream down, RCON commands up
+//   /ws/console/<serverId>  - live log stream down, runtime console commands up
 //   /ws/stats/<serverId>    - normalized stats samples every 2s
 // Messages are JSON: {kind: 'log'|'stats'|'cmd'|'cmd-result'|'error'|'log-end', ...}
 // 'log-end' marks the end of one console log stream (server stopped/restarted);
@@ -15,6 +15,7 @@ const { followLogs } = require('../docker/logs');
 const { statsStream } = require('../docker/stats');
 const { execCapture, inspectStatus } = require('../docker/containers');
 const { getServer } = require('../services/servers');
+const { sendConsoleCommand } = require('../services/consoleCommands');
 const permissions = require('../services/permissions');
 const { recordEvent } = require('../events');
 const logger = require('../logger')('ws');
@@ -126,21 +127,21 @@ async function handleConsole(ws, serverId, user) {
           summary: `Stop requested from the console (${words[0].toLowerCase()}).`,
         });
       }
-      const raw = await execCapture(serverId, ['rcon-cli', '--', ...words]);
-      const output = require('../utils/ansi').stripAnsi(raw);
-      send({ kind: 'cmd-result', command, output: output.trim() });
+      const server = getServer(serverId);
+      const result = await sendConsoleCommand(server, serverId, command);
+      send({ kind: 'cmd-result', command, output: result.output, source: result.source });
       // Optional in-game attribution: the vanilla "Rcon" sender can't be renamed,
       // so if this server has a console label we announce the action ourselves.
-      announceConsoleAction(serverId, command);
+      if (result.source === 'rcon') announceConsoleAction(serverId, command);
       recordEvent({
         serverId,
         actor: user.username,
-        type: 'rcon',
-        summary: `RCON: ${redact(command)}.`,
-        details: { output: output.trim().slice(0, 2000) },
+        type: result.source === 'rcon' ? 'rcon' : 'bedrock-console',
+        summary: `${result.source === 'rcon' ? 'RCON' : 'Bedrock console'}: ${redact(command)}.`,
+        details: { output: result.output.slice(0, 2000) },
       });
     } catch (err) {
-      logger.debug('An RCON command from the console socket failed.', {
+      logger.debug('A console command from the console socket failed.', {
         serverId,
         err: serializeError(err, { includeStack: false }),
       });

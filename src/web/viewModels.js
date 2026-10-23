@@ -94,6 +94,8 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
   const crashesFor = ctx
     ? ctx.crashes
     : (id) => db.get('SELECT COUNT(*) AS n FROM crash_reports WHERE server_id = ? AND viewed = 0', id)?.n || 0;
+  const runtime = require('../services/serverRuntime');
+  const hasJavaRuntime = runtime.supports(s, 'java');
   const vm = {
     id: s.id,
     name: s.display_name,
@@ -102,23 +104,31 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     accent: s.accent,
     tags: s.tags,
     type: s.type,
+    runtime: runtime.runtimeFor(s),
     flavor: flavorLabel(s.type),
     loader: require('../services/mods').loaderOf(s), // resolved loader (detects the pack's for modpacks)
     mcVersion: await displayVersion(s.mc_version),
-    javaTag: s.java_tag || 'auto',
+    javaTag: hasJavaRuntime ? s.java_tag || 'auto' : null,
     status: s.status,
-    ports: { game: s.port_game, rcon: s.port_rcon, bedrock: s.port_bedrock },
+    ports: {
+      game: s.port_game,
+      rcon: s.port_rcon,
+      bedrock: s.port_bedrock,
+      transport: s.bedrock_transport || 'nethernet',
+      nethernetUdpStart: s.nethernet_udp_start,
+      nethernetUdpEnd: s.nethernet_udp_end,
+    },
     resources: { heapMb: s.heap_mb, containerMemoryMb: s.container_memory_mb, cpus: s.cpus },
     // What the memory meter is going to show and why (#25): a heap given to
     // Java up front reads as fully used from the first minute, so the meters
     // say so and where the heap sits relative to the container limit.
-    memory: memoryVM(s),
-    stats: { cpuPct: 0, memUsedMb: 0, uptime: null, perf: null, perfSupported: true },
+    memory: hasJavaRuntime ? memoryVM(s) : {},
+    stats: { cpuPct: 0, memUsedMb: 0, uptime: null, perf: null, perfSupported: hasJavaRuntime },
     players: { online: 0, max: Number(s.env.MAX_PLAYERS) || 20, names: [] },
     disk: { used: diskUsedFor(s.id), quota: s.disk_quota_bytes },
     pack: packFor(s.id),
     updateAvailable: updateFor(s.id),
-    crashesUnread: crashesFor(s.id),
+    crashesUnread: hasJavaRuntime ? crashesFor(s.id) : 0,
     autoStart: Boolean(s.auto_start),
     autoRestart: Boolean(s.auto_restart),
     notes: s.notes,
@@ -149,8 +159,8 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
       vm.stats.uptime = formatUptime(Date.now() - Date.parse(live.startedAt));
       vm.stats.startedAt = live.startedAt;
     }
-    vm.stats.perf = live.perf || null;
-    vm.stats.perfSupported = live.perfSupported !== false;
+    vm.stats.perf = hasJavaRuntime ? live.perf || null : null;
+    vm.stats.perfSupported = hasJavaRuntime && live.perfSupported !== false;
     if (live.players) vm.players = { ...vm.players, ...live.players };
     // Boot-phase detail ("Downloading mods…", "Generating world") or the
     // latched "Player count unavailable" state - one shared derivation with

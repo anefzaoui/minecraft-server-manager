@@ -26,7 +26,7 @@
         </div>
         <p class="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-faint">
           <span><b class="font-semibold text-ink-soft">{{server.flavor}}</b> {{server.mcVersion}}</span>
-          <span>Java: {{server.javaTag}}</span>
+          {{#if server.javaTag}}<span>Java: {{server.javaTag}}</span>{{/if}}
           <span>Port {{server.ports.game}}</span>
           {{#if server.pack}}<span>{{platformName server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
           {{#if server.stats.uptime}}<span>Up {{server.stats.uptime}}</span>{{/if}}

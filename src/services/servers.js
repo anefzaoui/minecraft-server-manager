@@ -15,7 +15,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const secrets = require('./secrets');
 const { pickJavaTag } = require('./javaMatrix');
-const { suggestPorts, isPortFree } = require('./ports');
+const { suggestPorts, suggestNetherNetPorts, suggestRakNetPorts, arePortsFree, isPortFree } = require('./ports');
 const containers = require('../docker/containers');
 const images = require('../docker/images');
 const { fetchLogs } = require('../docker/logs');
@@ -25,6 +25,25 @@ const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 const { propEnvMap } = require('../config/field-catalog');
+const serverRuntime = require('./serverRuntime');
+const bedrockConnection = require('./bedrockConnection');
+
+// BDS 1.26.51 removed RakNet support. Latest and Preview deliberately do not
+// qualify: their transport support can change between container restarts.
+const RAKNET_LAST_SUPPORTED = [1, 26, 50];
+
+function supportsRakNetVersion(version) {
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:\.\d+)?$/.exec(String(version || '').trim());
+  if (!match) return false;
+  const parts = match.slice(1, 4).map(Number);
+  return (
+    parts[0] < RAKNET_LAST_SUPPORTED[0] ||
+    (parts[0] === RAKNET_LAST_SUPPORTED[0] && parts[1] < RAKNET_LAST_SUPPORTED[1]) ||
+    (parts[0] === RAKNET_LAST_SUPPORTED[0] &&
+      parts[1] === RAKNET_LAST_SUPPORTED[1] &&
+      parts[2] <= RAKNET_LAST_SUPPORTED[2])
+  );
+}
 
 function rowToServer(row, { parseOverrides = true } = {}) {
   if (!row) return null;
@@ -81,6 +100,37 @@ const SIZE_MB_ENV_KEYS = require('../config/field-catalog')
 function assembleEnv(server) {
   const env = { ...server.env };
   env.EULA = 'TRUE';
+  if (serverRuntime.supports(server, 'nativeBedrock')) {
+    env.MAX_PLAYERS = env.MAX_PLAYERS || '16';
+    // The Bedrock image enables its allow list unless this is explicitly set.
+    // The wizard represents its default "Off" state by omitting the variable,
+    // so preserve that UI contract at the container boundary.
+    env.ALLOW_LIST = env.ALLOW_LIST || 'false';
+    env.SERVER_PORT = '19132';
+    if (server.bedrock_transport === 'raknet') {
+      env.TRANSPORT = 'raknet';
+      env.SERVER_PORT = '19132';
+      env.SERVER_PORT_V6 = '19133';
+      delete env.SERVER_UDP_PORTS;
+    } else {
+      env.TRANSPORT = 'nethernet';
+      env.SERVER_UDP_PORTS = bedrockConnection.netherNetUdpPorts(server);
+      delete env.SERVER_PORT_V6;
+    }
+    env.VERSION = server.mc_version || 'LATEST';
+    delete env.TYPE;
+    delete env.MEMORY;
+    delete env.ENABLE_RCON;
+    delete env.RCON_PASSWORD;
+    delete env.STOP_DURATION;
+    const ids = panelUidGid();
+    if (ids) {
+      env.UID = String(ids.uid);
+      env.GID = String(ids.gid);
+    }
+    env.TZ = env.TZ || settings.getTimezone();
+    return env;
+  }
   env.TYPE = server.type;
   if (server.mc_version && server.mc_version !== 'LATEST') env.VERSION = server.mc_version;
   for (const key of SIZE_MB_ENV_KEYS) {
@@ -165,6 +215,7 @@ function assembleEnv(server) {
  * overrode auto" and must keep winning).
  */
 function resolveImage(server, { javaTagHint } = {}) {
+  if (serverRuntime.supports(server, 'nativeBedrock')) return images.bedrockImageRef();
   // GTNH's Java support is a property of the pinned pack version, not of the
   // Minecraft version. Read it straight from the pin: packs.js requires this
   // module, so requiring it back would need a lazy-require cycle-breaker that a
@@ -200,6 +251,40 @@ function mergeExtraPorts(server) {
  * Feeds the wizard's "Advanced Docker Settings" YAML preview.
  */
 function previewCreateSpec(input) {
+  if (input.runtime === serverRuntime.BEDROCK) {
+    const defaults = settings.getDefaults();
+    const raknet = input.bedrockTransport === 'raknet';
+    return {
+      containerName: input.containerName || null,
+      network: input.networkName || null,
+      image: images.bedrockImageRef(),
+      resources: {
+        memoryMb: input.containerMemoryMb ?? defaults.containerMemoryMb,
+        swapMb: input.containerSwapMb ?? 0,
+        cpus: input.cpus ?? defaults.cpus,
+      },
+      ports: {
+        game: input.portGame || '(auto-assigned)',
+        rcon: null,
+        bedrock: raknet ? input.portBedrock || '(auto-assigned)' : null,
+        nethernetUdpStart: raknet ? null : input.netherNetUdpStart || '(auto-assigned)',
+        nethernetUdpEnd: raknet
+          ? null
+          : input.netherNetUdpStart
+            ? input.netherNetUdpStart + (Number(input.maxPlayers || input.env?.MAX_PLAYERS || 16) - 1)
+            : '(auto-assigned)',
+        extra: input.extraPorts || [],
+      },
+      volumes: { data: '<panel data dir>/servers/<server id> -> /data', extra: input.extraBinds || [] },
+      env: {
+        ...(input.env || {}),
+        EULA: 'TRUE',
+        VERSION: input.mcVersion || 'LATEST',
+        TRANSPORT: raknet ? 'raknet' : 'nethernet',
+        ...(raknet ? { SERVER_PORT: '19132', SERVER_PORT_V6: '19133' } : {}),
+      },
+    };
+  }
   const javaTag = input.javaTag || pickJavaTag(input.mcVersion || 'LATEST', input.type || 'VANILLA');
   const image = images.imageRef(javaTag);
   const defaults = settings.getDefaults();
@@ -248,6 +333,8 @@ function previewServerSpec(id) {
       game: server.port_game,
       rcon: server.port_rcon,
       bedrock: server.port_bedrock,
+      nethernetUdpStart: server.nethernet_udp_start,
+      nethernetUdpEnd: server.nethernet_udp_end,
       extra: server.extraPorts,
     },
     volumes: {
@@ -281,6 +368,17 @@ function createServer(input, opts = {}) {
  * are rolled back so no ghost server holds ports.
  */
 async function createServerImpl(input, { actor = 'system', start = false, onProgress = () => {}, javaTagHint } = {}) {
+  const runtime = input.runtime === serverRuntime.BEDROCK ? serverRuntime.BEDROCK : serverRuntime.JAVA;
+  if (runtime === serverRuntime.BEDROCK && input.eulaAccepted !== true) {
+    throw httpError(400, 'Accept the Minecraft EULA before creating a Native Bedrock server.');
+  }
+  const bedrockTransport = input.bedrockTransport || 'nethernet';
+  if (runtime === serverRuntime.BEDROCK && !['nethernet', 'raknet'].includes(bedrockTransport)) {
+    throw httpError(400, 'Choose NetherNet or RakNet for a Native Bedrock server.');
+  }
+  if (runtime === serverRuntime.BEDROCK && bedrockTransport === 'raknet' && !supportsRakNetVersion(input.mcVersion)) {
+    throw httpError(400, 'RakNet is only available for compatible pinned Bedrock versions.');
+  }
   // Fail fast instead of shipping a crash-looping container: anything
   // CurseForge needs the API key present in the panel's store.
   const inputEnv = input.env || {};
@@ -301,22 +399,68 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   require('./packPins').assertPinnedPackEnv(input.type, inputEnv);
 
   const id = `srv_${nanoid(8)}`;
+  const netherNetCapacity = Math.max(1, Math.min(1000, Number(input.maxPlayers || inputEnv.MAX_PLAYERS || 16)));
+  const persistedEnv = {
+    ...inputEnv,
+    ...(runtime === serverRuntime.BEDROCK ? { MAX_PLAYERS: String(netherNetCapacity) } : {}),
+  };
 
   // Ports: honor explicit choices (validated), else auto-suggest.
   let ports;
-  if (input.portGame) {
+  if (runtime === serverRuntime.BEDROCK && bedrockTransport === 'raknet') {
+    ports = await suggestRakNetPorts({ ipv4Port: input.portGame, ipv6Port: input.portBedrock });
+  } else if (runtime === serverRuntime.BEDROCK) {
+    const udpStart = input.netherNetUdpStart;
+    if (input.portGame && udpStart) {
+      const udpEnd = udpStart + netherNetCapacity - 1;
+      const candidates = [input.portGame, ...Array.from({ length: netherNetCapacity }, (_, i) => udpStart + i)];
+      if (udpEnd > 65535 || new Set(candidates).size !== candidates.length) {
+        throw httpError(400, 'NetherNet signaling port and UDP range must be distinct valid ports.');
+      }
+      if (!(await arePortsFree(candidates))) {
+        throw httpError(400, 'A NetherNet signaling port or UDP gameplay port is already in use or invalid.');
+      }
+      ports = { game: input.portGame, rcon: 0, bedrock: null, nethernetUdpStart: udpStart, nethernetUdpEnd: udpEnd };
+    } else if (!udpStart) {
+      ports = await suggestNetherNetPorts({ capacity: netherNetCapacity, signalingPort: input.portGame });
+    } else {
+      throw httpError(400, 'Set both the NetherNet signaling port and UDP range start, or leave both automatic.');
+    }
+  } else if (input.portGame) {
     // The RCON port is derived when not given explicitly - validate the
     // DERIVED value too, or an explicit game port skips collision checks.
-    const rcon = input.portRcon || input.portGame + config.ports.rconOffset;
-    const toCheck = [input.portGame, rcon];
-    if (input.portBedrock) toCheck.push(input.portBedrock);
+    // `port_rcon` predates runtimes and remains NOT NULL. Native Bedrock stores
+    // its inert sentinel there; it never becomes a Docker binding or RCON call.
+    const rcon = runtime === serverRuntime.BEDROCK ? 0 : input.portRcon || input.portGame + config.ports.rconOffset;
+    const toCheck = [input.portGame, ...(runtime === serverRuntime.JAVA ? [rcon] : [])];
+    if (runtime !== serverRuntime.BEDROCK && input.portBedrock) toCheck.push(input.portBedrock);
     if (input.portQuery) toCheck.push(input.portQuery);
     for (const p of toCheck) {
       if (!(await isPortFree(p))) throw httpError(400, `Port ${p} is already in use or invalid`);
     }
-    ports = { game: input.portGame, rcon, bedrock: input.portBedrock || null };
+    ports = {
+      game: input.portGame,
+      rcon,
+      bedrock: runtime === serverRuntime.BEDROCK ? null : input.portBedrock || null,
+    };
   } else {
     ports = await suggestPorts({ withBedrock: Boolean(input.withBedrock) });
+    if (runtime === serverRuntime.BEDROCK) ports = { game: ports.game, rcon: 0, bedrock: null };
+  }
+
+  const reservedPorts = new Set([
+    ports.game,
+    ...(runtime === serverRuntime.BEDROCK && bedrockTransport === 'raknet'
+      ? [ports.bedrock]
+      : runtime === serverRuntime.BEDROCK
+        ? Array.from(
+            { length: ports.nethernetUdpEnd - ports.nethernetUdpStart + 1 },
+            (_, i) => ports.nethernetUdpStart + i
+          )
+        : []),
+  ]);
+  if ((input.extraPorts || []).some((p) => reservedPorts.has(Number(p.hostPort)))) {
+    throw httpError(400, 'An advanced port mapping conflicts with a managed server port.');
   }
 
   await dockerSpec.validateOverrides({
@@ -331,25 +475,34 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 
   db.run(
     `INSERT INTO servers (id, display_name, description, icon, accent, tags_json, type, mc_version,
-       java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, rcon_password_cipher,
+       runtime, java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, bedrock_transport, nethernet_udp_start, nethernet_udp_end, advertised_address, rcon_password_cipher,
        heap_mb, container_memory_mb, container_swap_mb, cpus, disk_quota_bytes, quota_strict,
        update_policy, auto_start, auto_restart, status, container_name, network_name,
        extra_ports_json, extra_binds_json)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
     id,
     input.name,
     input.description || '',
     input.icon || 'grass',
     input.accent || '#3fa62b',
     JSON.stringify(input.tags || []),
-    input.type,
+    runtime === serverRuntime.BEDROCK ? 'BEDROCK' : input.type,
     input.mcVersion || 'LATEST',
+    runtime,
     input.javaTag || '',
-    JSON.stringify(input.env || {}),
+    JSON.stringify(persistedEnv),
     ports.game,
     ports.rcon,
     input.portQuery || null,
     ports.bedrock,
+    runtime === serverRuntime.BEDROCK ? bedrockTransport : 'nethernet',
+    runtime === serverRuntime.BEDROCK && bedrockTransport === 'nethernet' ? ports.nethernetUdpStart : null,
+    runtime === serverRuntime.BEDROCK && bedrockTransport === 'nethernet' ? ports.nethernetUdpEnd : null,
+    runtime === serverRuntime.BEDROCK && bedrockTransport === 'nethernet'
+      ? bedrockConnection.normalizeAdvertisedAddress(input.advertisedAddress)
+      : '',
+    // This legacy column is NOT NULL. Retain an encrypted unused value so
+    // Native Bedrock has no RCON dependency while old schemas remain valid.
     secrets.encrypt(rconPassword),
     input.heapMb ?? defaults.heapMb,
     input.containerMemoryMb ?? defaults.containerMemoryMb,
@@ -381,10 +534,18 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     onProgress('Creating container…');
     const containerId = await containers.createContainer({
       serverId: id,
+      runtime: serverRuntime.runtimeFor(server),
       image,
       env: assembleEnv(server),
       dataDir: dataPath('servers', id),
-      ports: { game: server.port_game, rcon: server.port_rcon, bedrock: server.port_bedrock },
+      ports: {
+        game: server.port_game,
+        rcon: server.port_rcon,
+        bedrock: server.port_bedrock,
+        nethernetUdpStart: server.nethernet_udp_start,
+        nethernetUdpEnd: server.nethernet_udp_end,
+      },
+      bedrockTransport: server.bedrock_transport,
       extraPorts: mergeExtraPorts(server),
       resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
       containerName: server.containerName,
@@ -502,7 +663,7 @@ async function startServerImpl(id, { actor = 'system' } = {}) {
 }
 
 async function stopServerImpl(id, { actor = 'system' } = {}) {
-  mustGet(id);
+  const server = mustGet(id);
   recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Graceful stop requested.' });
   // A graceful stop triggers the game's own shutdown-time world save (rcon
   // `stop`, or docker's SIGTERM if that doesn't finish in time). Sharing the
@@ -510,7 +671,7 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
   // for the backup's save-off/copy/save-on section to finish instead of
   // racing its own save against the archiver's mid-read of the same files.
   try {
-    await withSaveLock(id, () => containers.stopContainer(id));
+    await withSaveLock(id, () => containers.stopContainer(id, { skipRcon: !serverRuntime.supports(server, 'rcon') }));
   } catch {
     // stopContainer only throws when the container is verifiably STILL running -
     // never claim a graceful stop that didn't happen.
@@ -564,7 +725,7 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   // A stop failure here isn't fatal to a recreate - removeContainer({force}) below
   // tears it down regardless - but log it so a chronically wedged daemon is visible.
   if (wasRunning) {
-    await containers.stopContainer(id).catch((err) => {
+    await containers.stopContainer(id, { skipRcon: !serverRuntime.supports(server, 'rcon') }).catch((err) => {
       logger.warn('A graceful stop failed while recreating a server; forcing removal.', {
         serverId: id,
         err: serializeError(err, { includeStack: false }),
@@ -577,10 +738,18 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   await images.ensureImage(image);
   const containerSpec = {
     serverId: id,
+    runtime: serverRuntime.runtimeFor(server),
     image,
     env: assembleEnv(server),
     dataDir: dataPath('servers', id),
-    ports: { game: server.port_game, rcon: server.port_rcon, bedrock: server.port_bedrock },
+    ports: {
+      game: server.port_game,
+      rcon: server.port_rcon,
+      bedrock: server.port_bedrock,
+      nethernetUdpStart: server.nethernet_udp_start,
+      nethernetUdpEnd: server.nethernet_udp_end,
+    },
+    bedrockTransport: server.bedrock_transport,
     extraPorts: mergeExtraPorts(server),
     resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
     containerName: server.containerName,
@@ -660,20 +829,23 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     containerMemoryMb: 'container_memory_mb',
     cpus: 'cpus',
     updatePolicy: 'update_policy',
+    advertisedAddress: 'advertised_address',
   };
   const diff = {};
   const sets = [];
   const params = [];
-  const RECREATE_FIELDS = new Set(['mcVersion', 'javaTag', 'heapMb', 'containerMemoryMb', 'cpus']);
+  const RECREATE_FIELDS = new Set(['mcVersion', 'javaTag', 'heapMb', 'containerMemoryMb', 'cpus', 'advertisedAddress']);
   let needsRecreate = false;
 
   for (const [key, col] of Object.entries(columns)) {
     if (changes[key] === undefined) continue;
+    const value =
+      key === 'advertisedAddress' ? bedrockConnection.normalizeAdvertisedAddress(changes[key]) : changes[key];
     const beforeVal = key === 'name' ? before.display_name : before[col];
-    if (String(beforeVal) === String(changes[key])) continue;
-    diff[key] = [beforeVal, changes[key]];
+    if (String(beforeVal) === String(value)) continue;
+    diff[key] = [beforeVal, value];
     sets.push(`${col} = ?`);
-    params.push(changes[key]);
+    params.push(value);
     if (RECREATE_FIELDS.has(key)) needsRecreate = true;
   }
   if (changes.tags) {
@@ -1199,6 +1371,7 @@ module.exports = {
   stopServerUnguarded: stopServerImpl,
   refreshStatuses,
   assembleEnv,
+  supportsRakNetVersion,
   resolveImage,
   ensureOwnership,
   dirSize,

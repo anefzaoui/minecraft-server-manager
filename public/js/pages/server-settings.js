@@ -373,7 +373,8 @@ function init(serverId) {
 
   document.getElementById('st-save')?.addEventListener('click', async (e) => {
     const saveBtn = e.currentTarget; // capture before await - currentTarget is null afterwards
-    const heapMb = Number(document.getElementById('st-heap').value);
+    const heapInput = document.getElementById('st-heap');
+    const heapMb = heapInput ? Number(heapInput.value) : undefined;
     // Blank cpus/disk-quota = leave the current value untouched, not a hard 0
     // (which for a quota means "off"). An explicit "0" still round-trips.
     const cpuRaw = document.getElementById('st-cpu').value.trim();
@@ -385,7 +386,7 @@ function init(serverId) {
       icon,
       accent,
       tags: [...tags],
-      heapMb,
+      ...(heapMb === undefined ? {} : { heapMb }),
       containerMemoryMb: Number(document.getElementById('st-cmem').value),
       cpus: cpuRaw === '' ? undefined : Number(cpuRaw),
       diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),
