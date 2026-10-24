@@ -60,7 +60,8 @@ test('chatbot configuration and transcripts are admin-only', async () => {
     'minecraft:torch',
     'minecraft:arrow',
   ]);
-  assert.doesNotMatch(operatorPage.text, /Chatbot Settings/);
+  assert.equal(operatorPage.status, 404);
+  assert.doesNotMatch(operatorPage.text, /<h3[^>]*>[\s\S]*Chatbot Settings/);
 });
 
 test('per-server config encrypts the API key and defaults retention to seven days', async () => {
