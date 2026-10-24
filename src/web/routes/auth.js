@@ -80,7 +80,12 @@ async function buildSetupChecks() {
 
 router.get('/setup', (req, res) => {
   if (!authService.firstRunNeeded()) return res.redirect('/login');
-  res.render('setup', { title: 'Welcome', layout: 'bare', needsPin: require('../../services/setupGate').required() });
+  res.render('setup', {
+    title: 'Welcome',
+    titleKey: 'auth.setup_title',
+    layout: 'bare',
+    needsPin: require('../../services/setupGate').required(),
+  });
 });
 
 // First-run only, so it can't be used to fingerprint the host after setup.
@@ -125,30 +130,48 @@ router.post(
       // On an exposed bind, the admin claim needs the PIN printed to the console.
       const setupGate = require('../../services/setupGate');
       if (setupGate.isLocked(req.ip)) {
-        const msg = 'Too many wrong PIN attempts. Wait a moment and try again (or restart the panel to unlock early).';
+        const msg = req.t
+          ? req.t('auth.pin_locked')
+          : 'Too many wrong PIN attempts. Wait a moment and try again (or restart the panel to unlock early).';
         return wantsJson
           ? res.status(429).json({ ok: false, error: msg })
-          : res.status(429).render('setup', { title: 'Welcome', layout: 'bare', needsPin: true, error: msg });
+          : res.status(429).render('setup', {
+              title: 'Welcome',
+              titleKey: 'auth.setup_title',
+              layout: 'bare',
+              needsPin: true,
+              error: msg,
+            });
       }
       if (!setupGate.check(pin, req.ip)) {
-        const msg = "That setup PIN is wrong. Check the panel's console output for the 6-digit PIN.";
+        const msg = req.t
+          ? req.t('auth.pin_wrong')
+          : "That setup PIN is wrong. Check the panel's console output for the 6-digit PIN.";
         return wantsJson
           ? res.status(403).json({ ok: false, error: msg })
-          : res.status(403).render('setup', { title: 'Welcome', layout: 'bare', needsPin: true, error: msg });
+          : res.status(403).render('setup', {
+              title: 'Welcome',
+              titleKey: 'auth.setup_title',
+              layout: 'bare',
+              needsPin: true,
+              error: msg,
+            });
       }
       const user = await authService.createUser({ username, password, role: 'admin' }, { actor: 'setup' });
       // Rotate the session id on privilege establishment (anti-fixation), matching login.
       req.session.regenerate((err) => {
         if (err) {
           logger.error('Session regeneration failed during first-run setup.', { err: serializeError(err) });
+          const sessionErr = req.t
+            ? req.t('auth.session_error')
+            : 'Something went wrong starting your session. Please try again.';
           return wantsJson
-            ? res
-                .status(500)
-                .json({ ok: false, error: 'Something went wrong starting your session. Please try again.' })
+            ? res.status(500).json({ ok: false, error: sessionErr })
             : res.status(500).render('setup', {
                 title: 'Welcome',
+                titleKey: 'auth.setup_title',
                 layout: 'bare',
-                error: 'Something went wrong starting your session. Please try again.',
+                error: sessionErr,
               });
         }
         req.session.userId = user.id;
@@ -190,7 +213,12 @@ router.get('/login', (req, res) => {
     delete req.session.pendingTotpNext;
     delete req.session.pendingRemember;
   }
-  res.render('login', { title: 'Sign In', layout: 'bare', next: safeNext(req.query.next) });
+  res.render('login', {
+    title: 'Sign In',
+    titleKey: 'auth.login_title',
+    layout: 'bare',
+    next: safeNext(req.query.next),
+  });
 });
 
 router.post(
@@ -223,8 +251,9 @@ router.post(
         logger.warn('Rejected a login with a bad username or password.', { username, ip: req.ip });
         return res.status(401).render('login', {
           title: 'Sign In',
+          titleKey: 'auth.login_title',
           layout: 'bare',
-          error: 'Wrong username or password.',
+          error: req.t ? req.t('auth.wrong_credentials') : 'Wrong username or password.',
           next: safeNext(next),
         });
       }
@@ -247,8 +276,11 @@ router.post(
           logger.error('Session regeneration failed during login.', { username, err: serializeError(err) });
           return res.status(500).render('login', {
             title: 'Sign In',
+            titleKey: 'auth.login_title',
             layout: 'bare',
-            error: 'Something went wrong starting your session. Please try again.',
+            error: req.t
+              ? req.t('auth.session_error')
+              : 'Something went wrong starting your session. Please try again.',
           });
         }
         req.session.userId = user.id;
@@ -264,14 +296,16 @@ router.post(
       });
     } catch (err) {
       logger.warn('A login request was rejected.', { status: err.status || 400, ip: req.ip });
-      res.status(err.status || 400).render('login', { title: 'Sign In', layout: 'bare', error: firstIssue(err) });
+      res
+        .status(err.status || 400)
+        .render('login', { title: 'Sign In', titleKey: 'auth.login_title', layout: 'bare', error: firstIssue(err) });
     }
   })
 );
 
 router.get('/login/2fa', (req, res) => {
   if (!req.session || !req.session.pendingTotpUserId) return res.redirect('/login');
-  res.render('login-2fa', { title: "Verify It's You", layout: 'bare' });
+  res.render('login-2fa', { title: "Verify It's You", titleKey: 'auth.two_factor_title', layout: 'bare' });
 });
 
 router.post(
@@ -298,9 +332,12 @@ router.post(
           });
         }
         logger.warn('Rejected a login with a bad two-factor code.', { username: pendingUsername, ip: req.ip });
-        return res
-          .status(401)
-          .render('login-2fa', { title: "Verify It's You", layout: 'bare', error: 'Incorrect code.' });
+        return res.status(401).render('login-2fa', {
+          title: "Verify It's You",
+          titleKey: 'auth.two_factor_title',
+          layout: 'bare',
+          error: req.t ? req.t('auth.incorrect_code') : 'Incorrect code.',
+        });
       }
       clearLoginFailures(pendingUsername, req.ip);
       const next = req.session.pendingTotpNext;
@@ -317,8 +354,11 @@ router.post(
           });
           return res.status(500).render('login-2fa', {
             title: "Verify It's You",
+            titleKey: 'auth.two_factor_title',
             layout: 'bare',
-            error: 'Something went wrong starting your session. Please try again.',
+            error: req.t
+              ? req.t('auth.session_error')
+              : 'Something went wrong starting your session. Please try again.',
           });
         }
         req.session.userId = pendingId;
@@ -343,9 +383,12 @@ router.post(
         status: err.status || 400,
         ip: req.ip,
       });
-      res
-        .status(err.status || 400)
-        .render('login-2fa', { title: "Verify It's You", layout: 'bare', error: firstIssue(err) });
+      res.status(err.status || 400).render('login-2fa', {
+        title: "Verify It's You",
+        titleKey: 'auth.two_factor_title',
+        layout: 'bare',
+        error: firstIssue(err),
+      });
     }
   })
 );

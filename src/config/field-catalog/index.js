@@ -89,6 +89,59 @@ const SETTINGS_EXCLUDED_ENV_KEYS = new Set(['DIFFICULTY', 'PVP', 'MOTD']);
 // map anywhere.
 const propEnvMap = new Map(fields.filter((f) => f.prop).map((f) => [f.prop, f.key]));
 
+const i18n = require('../../services/i18n');
+
+function localizeField(field, locale) {
+  if (!locale || locale === 'en' || !field || !field.key) return field;
+
+  const keyPrefix = `catalog_fields.${field.key}`;
+
+  const labelKey = `${keyPrefix}.label`;
+  const label = i18n.has(locale, labelKey) ? i18n.t(locale, labelKey) : field.label;
+
+  const helpKey = `${keyPrefix}.help`;
+  const help = i18n.has(locale, helpKey) ? i18n.t(locale, helpKey) : field.help;
+
+  const noteKey = `${keyPrefix}.note`;
+  const note = i18n.has(locale, noteKey) ? i18n.t(locale, noteKey) : field.note;
+
+  let options = field.options;
+  if (Array.isArray(options)) {
+    options = options.map((opt) => {
+      const optKey = `${keyPrefix}.options.${opt.value}`;
+      return {
+        ...opt,
+        label: i18n.has(locale, optKey) ? i18n.t(locale, optKey) : opt.label,
+      };
+    });
+  }
+
+  return {
+    ...field,
+    label,
+    help,
+    note,
+    options,
+  };
+}
+
+function localizeSection(section, locale) {
+  if (!locale || locale === 'en' || !section) return section;
+  const locSectionKey = `catalog_sections.${section.id}`;
+  const translatedLabel = i18n.has(locale, locSectionKey) ? i18n.t(locale, locSectionKey) : section.label;
+
+  return {
+    ...section,
+    label: translatedLabel,
+    fields: (section.fields || []).map((f) => localizeField(f, locale)),
+  };
+}
+
+function localizeSections(sections, locale) {
+  if (!Array.isArray(sections)) return sections;
+  return sections.map((s) => localizeSection(s, locale));
+}
+
 module.exports = {
   SECTIONS,
   fields,
@@ -96,4 +149,7 @@ module.exports = {
   getField,
   SETTINGS_EXCLUDED_ENV_KEYS,
   propEnvMap,
+  localizeField,
+  localizeSection,
+  localizeSections,
 };

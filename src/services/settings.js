@@ -202,9 +202,20 @@ function localization() {
   };
 }
 
-/** Slim object exposed to the browser (window.MSM) for client-side formatting. */
-function clientLocalization() {
-  return { timezone: getTimezone(), locale: resolveLocale() };
+/** Slim object exposed to the browser (window.MSM) for client-side formatting and localization. */
+function clientLocalization(locale) {
+  const i18n = require('./i18n');
+  const loc =
+    locale && i18n.isValidLocale(locale)
+      ? locale
+      : i18n.isValidLocale(resolveLocale())
+        ? resolveLocale()
+        : i18n.DEFAULT_LOCALE;
+  return {
+    timezone: getTimezone(),
+    locale: loc,
+    translations: i18n.getClientTranslations(loc),
+  };
 }
 
 // ---------------------------------------------------------------------------

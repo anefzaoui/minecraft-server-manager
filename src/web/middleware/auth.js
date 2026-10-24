@@ -41,6 +41,17 @@ function globalKey(username) {
   return (username || '').toLowerCase();
 }
 
+function hydrateSessionUser(req, res, next) {
+  if (req.session && req.session.userId) {
+    const user = authService.getUser(req.session.userId);
+    if (user) {
+      req.user = user;
+      res.locals.user = user;
+    }
+  }
+  next();
+}
+
 function requireAuth(req, res, next) {
   const path = req.path;
   if (PUBLIC_PATHS.has(path) || PUBLIC_PREFIXES.some((p) => path.startsWith(p))) return next();
@@ -52,13 +63,10 @@ function requireAuth(req, res, next) {
     }
     return res.redirect('/setup');
   }
+  if (req.user) {
+    return next();
+  }
   if (req.session && req.session.userId) {
-    const user = authService.getUser(req.session.userId);
-    if (user) {
-      req.user = user;
-      res.locals.user = user;
-      return next();
-    }
     logger.warn('Ignored a session whose user no longer exists.', { userId: req.session.userId });
   }
   if (path.startsWith('/api/') || path.startsWith('/ws/')) {
@@ -97,6 +105,8 @@ function requireRole(...roles) {
 function requireWrite(req, res, next) {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
   if (req.user && req.user.role === 'viewer') {
+    // User self-service actions (like language preference) are allowed for all roles including viewers
+    if (req.path === '/api/settings/language' || req.path === '/settings/language') return next();
     const verdict = viewerServerVerdict(req);
     if (verdict === 'allow') return next();
     if (verdict === 'hidden') {
@@ -366,6 +376,7 @@ function rejectCrossSiteGet(req, res, next) {
 }
 
 module.exports = {
+  hydrateSessionUser,
   requireAuth,
   requireRole,
   requireWrite,

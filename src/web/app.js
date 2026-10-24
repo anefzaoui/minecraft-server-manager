@@ -7,6 +7,7 @@ const { engine, create: createHandlebars } = require('express-handlebars');
 
 const config = require('../config');
 const settings = require('../services/settings');
+const i18n = require('../services/i18n');
 const routes = require('./routes');
 const { icon } = require('./icons');
 const { avatarSrc } = require('../config/avatars');
@@ -134,6 +135,16 @@ function createApp() {
       helpers: {
         icon,
         markdown,
+        t: function (key, options) {
+          const rawParams = options && options.hash ? options.hash : {};
+          const root = (options && options.data && options.data.root) || {};
+          const locale = root.currentLocale || i18n.DEFAULT_LOCALE;
+          const escapedParams = {};
+          for (const [k, v] of Object.entries(rawParams)) {
+            escapedParams[k] = typeof v === 'string' ? HbsUtils.escapeExpression(v) : v;
+          }
+          return new SafeString(i18n.t(locale, key, escapedParams));
+        },
         eq: (a, b) => a === b,
         startsWith: (s, p) => typeof s === 'string' && s.startsWith(p),
         ne: (a, b) => a !== b,
@@ -148,7 +159,15 @@ function createApp() {
         avatarSrc,
         bytes: formatBytes,
         pct: (used, total) => (total ? Math.min(100, Math.round((used / total) * 100)) : 0),
-        statusLabel: (s) => (STATUS_META[s] || STATUS_META.stopped).label,
+        statusLabel: function (s, options) {
+          const root = (options && options.data && options.data.root) || {};
+          const locale = root.currentLocale || i18n.DEFAULT_LOCALE;
+          const key = s === 'over-quota' ? 'status.over_quota' : `status.${s}`;
+          if (i18n.has(locale, key)) {
+            return i18n.t(locale, key);
+          }
+          return (STATUS_META[s] || STATUS_META.stopped).label;
+        },
         statusDot: (s) => STATUS_DOT[(STATUS_META[s] || STATUS_META.stopped).color],
         statusPulse: (s) => (STATUS_META[s] || STATUS_META.stopped).pulse,
         // Status *text* goes through the theme-aware semantic tokens (the raw
@@ -286,7 +305,7 @@ function createApp() {
 
   const session = require('express-session');
   const { SqliteSessionStore } = require('./sessionStore');
-  const { requireAuth, originGuard, requireWrite } = require('./middleware/auth');
+  const { hydrateSessionUser, requireAuth, originGuard, requireWrite } = require('./middleware/auth');
   const sessionMiddleware = session({
     store: new SqliteSessionStore(),
     secret: config.sessionSecret,
@@ -309,6 +328,10 @@ function createApp() {
   app.use(sessionMiddleware);
   app.set('sessionMiddleware', sessionMiddleware);
   app.use(originGuard);
+  app.use(hydrateSessionUser);
+
+  const { i18nMiddleware } = require('./middleware/i18n');
+  app.use(i18nMiddleware);
 
   const { apiLimiter, authLimiter } = require('./middleware/rateLimit');
   app.use(['/login', '/login/2fa', '/setup'], authLimiter);

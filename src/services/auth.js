@@ -151,7 +151,18 @@ function publicUser(u) {
     createdAt: u.created_at,
     totpEnabled: Boolean(u.totp_enabled),
     avatar: u.avatar || null,
+    language: u.language || null,
   };
+}
+
+function setUserLanguage(id, language) {
+  const clean = language && language !== 'auto' ? String(language).toLowerCase().trim() : null;
+  const i18n = require('./i18n');
+  if (clean && !i18n.isValidLocale(clean)) {
+    throw httpError(400, `Unsupported language: ${clean}`);
+  }
+  db.run('UPDATE users SET language = ? WHERE id = ?', clean, id);
+  return clean;
 }
 
 // ---------------------------------------------------------------------------
@@ -363,4 +374,5 @@ module.exports = {
   setAvatarPreset,
   setAvatarCustom,
   clearAvatar,
+  setUserLanguage,
 };
