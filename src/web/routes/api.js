@@ -564,6 +564,41 @@ router.post(
   })
 );
 
+// ---- Language settings (per-user preference or auto browser detection) ----
+router.get('/settings/language', (req, res) => {
+  const i18n = require('../../services/i18n');
+  res.json({
+    ok: true,
+    language: req.user?.language || 'auto',
+    detectedLocale: req.locale,
+    supportedLanguages: i18n.getSupportedLanguages(),
+  });
+});
+
+router.post(
+  '/settings/language',
+  asyncHandler((req, res) => {
+    const { language } = z
+      .object({
+        language: z.string().max(16),
+      })
+      .parse(req.body);
+
+    const authService = require('../../services/auth');
+    const cleanLang = language === 'auto' ? null : language.toLowerCase();
+    authService.setUserLanguage(req.user.id, cleanLang);
+    if (req.session) {
+      req.session.language = language;
+    }
+    res.cookie('msm_lang', language, {
+      maxAge: 365 * 24 * 3600 * 1000,
+      httpOnly: false,
+      sameSite: 'lax',
+    });
+    res.json({ ok: true, language });
+  })
+);
+
 // ---- Public read-only API tokens (Settings page) - admin only ----
 // These manage credentials for GET /api/v1 (see routes/apiV1.js). The tokens
 // themselves are Bearer-only and never touch a session.
@@ -2444,7 +2479,7 @@ router.get('/users', requireRole('admin'), (req, res) => {
 
 // ---- Per-server permissions (Settings → Permissions) ----
 router.get('/permissions', requireRole('admin'), (req, res) => {
-  res.json({ ok: true, ...permissions.listMatrix() });
+  res.json({ ok: true, ...permissions.listMatrix(req.locale) });
 });
 
 router.put(
