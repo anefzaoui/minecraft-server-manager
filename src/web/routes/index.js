@@ -116,6 +116,7 @@ function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = 
   const crashes = server && server.crashesUnread;
   const group = TAB_GROUPS.find((g) => g.tabs.includes(tab)) || TAB_GROUPS[0];
   const groups = TAB_GROUPS.map((g) => ({
+    key: g.key,
     label: g.label,
     icon: g.icon,
     href: `/servers/${id}/${g.tabs[0]}`,
@@ -131,6 +132,16 @@ function buildNav(id, tab, server, { isAdmin = false, perms = null, modServer = 
   const sub =
     visibleSubTabs.length > 1
       ? visibleSubTabs.map((t) => ({
+          key:
+            t === 'settings'
+              ? 'configuration'
+              : t === 'players'
+                ? 'roster'
+                : t === 'analytics'
+                  ? 'analytics'
+                  : t === 'status-page'
+                    ? 'status_page'
+                    : t,
           label: SUB_LABELS[t] || t,
           href: `/servers/${id}/${t}`,
           active: t === tab,
@@ -320,6 +331,7 @@ async function renderServerList(req, res, next, { page }) {
     servers.sort(DASH_SORTS[sort]);
     const context = {
       title: page === 'servers' ? 'Servers' : 'Dashboard',
+      titleKey: page === 'servers' ? 'nav.servers' : 'nav.dashboard',
       active: page,
       serversOnly: page === 'servers', // hides the stat row + activity feed
       servers,
@@ -379,11 +391,16 @@ router.get('/servers/new', async (req, res) => {
   }
   const catalog = require('../../config/field-catalog');
   const SIMPLE_SECTIONS = new Set(['identity', 'flavor', 'resources']); // covered by the Simple UI
-  const advancedSections = catalog.SECTIONS.filter((s) => !SIMPLE_SECTIONS.has(s.id))
-    .map((s) => ({ ...s, fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env') }))
-    .filter((s) => s.fields.length);
+  const activeLocale = res.locals.currentLocale;
+  const advancedSections = catalog.localizeSections(
+    catalog.SECTIONS.filter((s) => !SIMPLE_SECTIONS.has(s.id))
+      .map((s) => ({ ...s, fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env') }))
+      .filter((s) => s.fields.length),
+    activeLocale
+  );
   res.render('wizard', {
     title: 'Create Server',
+    titleKey: 'topbar.create_server',
     active: 'servers',
     blueprints: require('../../blueprints').listBlueprintsFor(req.user),
     versions,
@@ -709,7 +726,7 @@ router.get(
       // shared with field-catalog and contractually property-backed (`prop`),
       // so their direct edits are always unlockable (- enforced by test).
       const EXCLUDED_GAMEPLAY_KEYS = catalog.SETTINGS_EXCLUDED_ENV_KEYS;
-      context.advancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
+      const rawAdvancedSections = catalog.SECTIONS.filter((s) => !EXCLUDED_SECTIONS.has(s.id))
         .map((s) => ({
           ...s,
           fields: catalog
@@ -717,6 +734,8 @@ router.get(
             .filter((f) => f.scope === 'env' && !(s.id === 'gameplay' && EXCLUDED_GAMEPLAY_KEYS.has(f.key))),
         }))
         .filter((s) => s.fields.length);
+      const activeLocale = res.locals.currentLocale;
+      context.advancedSections = catalog.localizeSections(rawAdvancedSections, activeLocale);
     } else if (tab === 'discord' || tab === 'status-page' || tab === 'invites' || tab === 'chatbot') {
       // Each integration is its own page now; hydrate only the slice it needs.
       // integrations.hbs switches on `sub` and renders exactly one card.
@@ -802,6 +821,7 @@ router.get('/wizard-transcripts', requireRole('admin'), (req, res) => {
   const wizard = require('../../services/wizard');
   res.render('wizard-transcripts', {
     title: 'Chatbot transcripts',
+    titleKey: 'wizard_transcripts.heading',
     active: 'activity',
     transcripts: wizard.listTranscripts({ limit: 1000 }),
   });
@@ -813,6 +833,7 @@ router.get('/modpacks', async (req, res) => {
   // shadows res.locals.servers and silently filters the sidebar's server list.
   res.render('modpacks', {
     title: 'Modpacks',
+    titleKey: 'nav.modpacks',
     active: 'modpacks',
     packServers: permissions.filterVisible(req.user, packServerVMs()),
   });
@@ -821,6 +842,7 @@ router.get('/modpacks', async (req, res) => {
 router.get('/worlds', (req, res) => {
   res.render('worlds', {
     title: 'Worlds',
+    titleKey: 'nav.worlds',
     active: 'worlds',
     worlds: require('../../services/worlds').libraryWorlds({ visibleServerIds: res.locals.visibleServerIds }),
     // Install/extract target list - one json call, not hand-assembled JSON.
@@ -836,6 +858,7 @@ router.get('/worlds', (req, res) => {
 router.get('/blueprints', (req, res) => {
   res.render('blueprints', {
     title: 'Blueprints',
+    titleKey: 'nav.blueprints',
     active: 'blueprints',
     blueprints: require('../../blueprints').listBlueprintsFor(req.user),
   });
@@ -845,6 +868,7 @@ router.get('/updates', (req, res) => {
   const checker = require('../../updates/checker');
   res.render('updates', {
     title: 'Updates',
+    titleKey: 'nav.updates',
     active: 'updates',
     // Changelog URLs come from remote platform APIs - allow only http(s) so a
     // hostile response can never plant a javascript: link.
@@ -887,6 +911,7 @@ router.get('/backups', (req, res) => {
     }));
   res.render('backups', {
     title: 'Backups',
+    titleKey: 'nav.backups',
     active: 'backups',
     backups,
     totals: { count: totals.n, bytes: totals.s },
@@ -897,11 +922,14 @@ router.get('/schedules', (req, res) => {
   const scheduler = require('../../services/scheduler');
   res.render('schedules', {
     title: 'Schedules',
+    titleKey: 'nav.schedules',
     active: 'schedules',
-    schedules: scheduler.listSchedules().filter((j) => !j.serverId || res.locals.visibleServerIds.has(j.serverId)),
+    schedules: scheduler
+      .listSchedules(req.locale)
+      .filter((j) => !j.serverId || res.locals.visibleServerIds.has(j.serverId)),
     taskTypes: Object.entries(scheduler.TASK_TYPES).map(([value, t]) => ({
       value,
-      label: t.label,
+      label: scheduler.localizeTaskType(value, req.locale),
       serverScoped: t.serverScoped,
     })),
     serverOptions: (res.locals.servers || []).map((s) => ({ id: s.id, name: s.name })),
@@ -915,15 +943,15 @@ router.get(
     const indexer = require('../../storage/indexer');
     const { free, total } = await indexer.diskFree().catch(() => ({ free: 0, total: 0 }));
     const catNames = {
-      servers: 'Servers',
-      backups: 'Backups',
-      'library/worlds': 'Worlds library',
-      'library/mods': 'Mods and content library',
-      'library/modpacks': 'Modpacks library',
-      'library/icons': 'Icons library',
-      logs: 'Logs and event captures',
-      blueprints: 'Blueprints',
-      tmp: 'Temporary files',
+      servers: req.t('storage_page.cat_servers'),
+      backups: req.t('storage_page.cat_backups'),
+      'library/worlds': req.t('storage_page.cat_library_worlds'),
+      'library/mods': req.t('storage_page.cat_library_mods'),
+      'library/modpacks': req.t('storage_page.cat_library_modpacks'),
+      'library/icons': req.t('storage_page.cat_library_icons'),
+      logs: req.t('storage_page.cat_logs'),
+      blueprints: req.t('storage_page.cat_blueprints'),
+      tmp: req.t('storage_page.cat_tmp'),
     };
     const categories = Object.entries(catNames)
       .map(([rel, name]) => ({
@@ -939,12 +967,12 @@ router.get(
     const totalUsed = indexer.sizeOf('');
     // Real category bar: servers / backups / library / other, from the index.
     const segs = [
-      { label: 'Servers', cls: 'bg-grass-600', size: indexer.sizeOf('servers') },
-      { label: 'Backups', cls: 'bg-diamond-500', size: indexer.sizeOf('backups') },
-      { label: 'Library', cls: 'bg-gold-400', size: indexer.sizeOf('library') },
+      { label: req.t('storage_page.seg_servers'), cls: 'bg-grass-600', size: indexer.sizeOf('servers') },
+      { label: req.t('storage_page.seg_backups'), cls: 'bg-diamond-500', size: indexer.sizeOf('backups') },
+      { label: req.t('storage_page.seg_library'), cls: 'bg-gold-400', size: indexer.sizeOf('library') },
     ];
     segs.push({
-      label: 'Logs, blueprints, temporary files',
+      label: req.t('storage_page.seg_other'),
       cls: 'bg-stone-500',
       size: Math.max(0, totalUsed - segs.reduce((n, s) => n + s.size, 0)),
     });
@@ -959,10 +987,10 @@ router.get(
       return { key: action, action: label, frees: p.freedBytes, count: p.removed, days: olderThanDays || null };
     };
     const cleanup = await Promise.all([
-      preview('tmp', 'Clear temporary files older than 1 hour'),
-      preview('orphans', 'Remove orphaned library files'),
-      preview('old-logs', `Delete archived logs older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
-      preview('old-crashes', `Delete crash reports older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
+      preview('tmp', req.t('storage_page.cleanup_tmp')),
+      preview('orphans', req.t('storage_page.cleanup_orphans')),
+      preview('old-logs', req.t('storage_page.cleanup_old_logs', { days: DEFAULT_DAYS }), DEFAULT_DAYS),
+      preview('old-crashes', req.t('storage_page.cleanup_old_crashes', { days: DEFAULT_DAYS }), DEFAULT_DAYS),
     ]);
 
     const largest = (await largestFiles({ top: 15, maxScan: 3000 }).catch(() => [])).map((f) => ({
@@ -972,12 +1000,13 @@ router.get(
 
     res.render('storage', {
       title: 'Storage',
+      titleKey: 'nav.storage',
       active: 'storage',
       storage: {
         totalUsed,
         diskFree: free,
         diskTotal: total,
-        lastScan: indexer.lastScan() || 'not yet',
+        lastScan: indexer.lastScan() || req.t('storage_page.not_yet'),
         categories,
         breakdown,
         largestFiles: largest,
@@ -1040,6 +1069,7 @@ router.get('/activity', (req, res) => {
 
   res.render('activity', {
     title: 'Activity',
+    titleKey: 'nav.activity',
     active: 'activity',
     events,
     types: eventsService.knownTypes().filter((t) => !permissions.hiddenEventTypes(req.user).includes(t)),
@@ -1077,6 +1107,7 @@ router.get(
       : [];
     res.render('files-global', {
       title: 'File Manager',
+      titleKey: 'global_files_page.heading',
       active: 'storage',
       files: listing.entries.map((e) => ({ ...e, enc: encodeURIComponent(e.path) })),
       filePath: listing.path,
@@ -1089,8 +1120,9 @@ router.get(
 router.get('/settings/permissions', requireRole('admin'), (req, res) => {
   res.render('permissions', {
     title: 'Permissions',
+    titleKey: 'nav.permissions',
     active: 'permissions',
-    matrix: permissions.listMatrix(),
+    matrix: permissions.listMatrix(req.locale),
   });
 });
 
@@ -1101,6 +1133,7 @@ router.get('/settings', requireRole('admin'), (req, res) => {
   const publicHost = settings.getPublicHost();
   res.render('settings', {
     title: 'Settings',
+    titleKey: 'nav.settings',
     active: 'settings',
     cfKeyMasked: apiKeys.maskedKey('curseforge'),
     publicHost,
@@ -1123,7 +1156,7 @@ router.get('/settings', requireRole('admin'), (req, res) => {
 });
 
 router.get('/login', (req, res) => {
-  res.render('login', { title: 'Sign In', layout: 'bare' });
+  res.render('login', { title: 'Sign In', titleKey: 'auth.login_title', layout: 'bare' });
 });
 
 module.exports = router;
