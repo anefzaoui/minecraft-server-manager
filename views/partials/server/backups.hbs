@@ -1,37 +1,35 @@
 <div data-backups-server="{{server.id}}" class="contents">
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <p class="text-sm text-ink-faint">
-    Retention for this server: {{retention.keepScheduled}} scheduled, {{retention.keepPreUpdate}} pre-update,
-    {{retention.keepManual}} manual, {{retention.keepPreRestore}} pre-restore. The newest in each group are kept; older ones
-    are pruned automatically.{{#if retention.maxAgeDays}} Anything older than {{retention.maxAgeDays}} days is also removed.{{/if}}{{#if retention.maxTotalGb}} Total backups are capped at {{retention.maxTotalGb}} GB (oldest are removed first).{{/if}}
+    {{t 'backups_page.retention_summary' scheduled=retention.keepScheduled preUpdate=retention.keepPreUpdate manual=retention.keepManual preRestore=retention.keepPreRestore}}{{#if retention.maxAgeDays}}{{t 'backups_page.retention_max_age' days=retention.maxAgeDays}}{{/if}}{{#if retention.maxTotalGb}}{{t 'backups_page.retention_max_total' gb=retention.maxTotalGb}}{{/if}}
   </p>
   <div class="ml-auto flex flex-wrap items-center gap-3">
-    <label class="flex items-center gap-2 text-xs text-ink-faint" data-tip="After the backup is saved, remove chunks no player has spent 30+ seconds in to shrink the world. Only runs while the server is stopped.">
-      <input type="checkbox" class="msm-check" id="bk-shrink"> Also shrink the world afterwards.
+    <label class="flex items-center gap-2 text-xs text-ink-faint" data-tip="{{t 'backups_page.shrink_tip'}}">
+      <input type="checkbox" class="msm-check" id="bk-shrink"> {{t 'backups_page.shrink_afterwards'}}
     </label>
-    <button class="btn btn-primary btn-sm{{#unless perms.backups}} hidden{{/unless}}" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back Up Now</button>
+    <button class="btn btn-primary btn-sm{{#unless perms.backups}} hidden{{/unless}}" id="bk-now">{{{icon 'save' 'size-3.5'}}} {{t 'backups_page.back_up_now'}}</button>
   </div>
 </div>
 {{#if backups.length}}
 <div class="card overflow-x-auto">
   <table class="table-base table-stack" id="bk-table">
-    <thead><tr><th>Archive</th><th>Reason</th><th class="text-right">Size</th><th class="text-right">Created</th><th class="text-right">Actions</th></tr></thead>
+    <thead><tr><th>{{t 'backups_page.th_archive'}}</th><th>{{t 'backups_page.th_reason'}}</th><th class="text-right">{{t 'backups_page.th_size'}}</th><th class="text-right">{{t 'backups_page.th_created'}}</th><th class="text-right">{{t 'backups_page.th_actions'}}</th></tr></thead>
     <tbody>
       {{#each backups}}
         <tr data-backup-row data-backup-id="{{id}}" data-file="{{file}}" data-size="{{size}}">
           {{! w-full + max-w-0 (sm+ only) so long archive names truncate instead of pushing
               the Actions column into horizontal scroll. }}
-          <td data-th="Archive" class="sm:w-full sm:max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
-          <td data-th="Reason"><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
-          <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
-          <td data-th="Created" class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
+          <td data-th="{{t 'backups_page.th_archive'}}" class="sm:w-full sm:max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
+          <td data-th="{{t 'backups_page.th_reason'}}"><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
+          <td data-th="{{t 'backups_page.th_size'}}" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
+          <td data-th="{{t 'backups_page.th_created'}}" class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
           <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
             {{! Restore stops the server and replaces its data - it must not scan
                 identically to the harmless Download beside it. }}
-            <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="Stops the server, restores this archive, then starts it again">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
-            <a class="btn btn-ghost btn-sm" href="/api/backups/{{id}}/download" data-tip="Download archive" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</a>
-            <button class="btn btn-ghost btn-sm" data-backup-rename data-tip="Rename archive" aria-label="Rename {{file}}">{{{icon 'square-pen' 'size-3.5'}}}</button>
-            <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="{{t 'backups_page.restore_tip'}}">{{{icon 'undo-2' 'size-3.5'}}} {{t 'backups_page.restore'}}</button>
+            <a class="btn btn-ghost btn-sm" href="/api/backups/{{id}}/download" data-tip="{{t 'backups_page.download_archive'}}" aria-label="{{t 'backups_page.download_file_aria' file=file}}">{{{icon 'download' 'size-3.5'}}}</a>
+            <button class="btn btn-ghost btn-sm" data-backup-rename data-tip="{{t 'backups_page.rename_archive'}}" aria-label="{{t 'backups_page.rename_file_aria' file=file}}">{{{icon 'square-pen' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="{{t 'backups_page.delete_freed_tip' size=(bytes size)}}" aria-label="{{t 'backups_page.delete_file_aria' file=file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
           </div></td>
         </tr>
       {{/each}}
@@ -39,7 +37,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='archive' title='No Backups Yet' message='Use Back Up Now for the first one. Scheduled and pre-update backups also collect here automatically.'}}
+  {{> empty-state iconName='archive' title=(t 'backups_page.no_backups_title') message=(t 'backups_page.no_backups_message')}}
 {{/if}}
 </div>
 <script type="module" src="/js/pages/server-backups.js"></script>

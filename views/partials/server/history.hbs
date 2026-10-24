@@ -1,42 +1,42 @@
 <div data-history-server="{{server.id}}" class="contents">
 {{#if events.length}}
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <input class="input max-w-xs" id="hist-search" placeholder="Search events…">
-  <select class="input w-auto" id="hist-type" data-label="Filter by type"><option value="">All types</option></select>
-  <select class="input w-auto" id="hist-actor" data-label="Filter by actor"><option value="">All actors</option></select>
-  <button class="btn btn-sm ml-auto" data-menu="hist-export-menu">{{{icon 'download' 'size-3.5'}}} Export</button>
+  <input class="input max-w-xs" id="hist-search" placeholder="{{t 'history_tab.search_placeholder'}}">
+  <select class="input w-auto" id="hist-type" data-label="{{t 'history_tab.filter_type'}}"><option value="">{{t 'history_tab.all_types'}}</option></select>
+  <select class="input w-auto" id="hist-actor" data-label="{{t 'history_tab.filter_actor'}}"><option value="">{{t 'history_tab.all_actors'}}</option></select>
+  <button class="btn btn-sm ml-auto" data-menu="hist-export-menu">{{{icon 'download' 'size-3.5'}}} {{t 'history_tab.export'}}</button>
   <template id="hist-export-menu">
-    <a href="/api/servers/{{server.id}}/events/export?format=json" target="_blank" rel="noopener">{{{icon 'file-text' 'size-3.5'}}} Export as JSON</a>
-    <a href="/api/servers/{{server.id}}/events/export?format=csv" target="_blank" rel="noopener">{{{icon 'download' 'size-3.5'}}} Export as CSV</a>
+    <a href="/api/servers/{{server.id}}/events/export?format=json" target="_blank" rel="noopener">{{{icon 'file-text' 'size-3.5'}}} {{t 'history_tab.export_json'}}</a>
+    <a href="/api/servers/{{server.id}}/events/export?format=csv" target="_blank" rel="noopener">{{{icon 'download' 'size-3.5'}}} {{t 'history_tab.export_csv'}}</a>
   </template>
 </div>
 {{/if}}
 
 {{#if crashReports.length}}
   <div class="card mb-4 border-danger/40">
-    <div class="border-b border-line p-3 font-semibold text-danger">{{{icon 'flame' 'size-4'}}} Crash Reports</div>
+    <div class="border-b border-line p-3 font-semibold text-danger">{{{icon 'flame' 'size-4'}}} {{t 'history_tab.crash_reports'}}</div>
     <div class="divide-y divide-line">
       {{#each crashReports}}
         <div class="p-3" data-crash-card data-crash-id="{{id}}" data-crash-file="{{file}}" {{#if mclogsUrl}}data-crash-mclogs="{{mclogsUrl}}"{{/if}}>
           <div class="flex flex-wrap items-center gap-2 text-sm">
-            {{#unless viewed}}<span class="badge badge-danger">new</span>{{/unless}}
+            {{#unless viewed}}<span class="badge badge-danger">{{../t 'history_tab.badge_new'}}</span>{{/unless}}
             <span class="font-mono text-xs text-ink-faint">{{file}}</span>
             <span class="ml-auto text-xs tabular-nums text-ink-faint"><span data-ts="{{ts}}">{{ts}}</span> · {{bytes size}}</span>
           </div>
           <p class="mt-1.5 font-mono text-xs text-ink-soft">{{summary}}</p>
           <div class="mt-2 flex flex-wrap items-center gap-2">
             {{#each suspected}}
-              <span class="badge badge-warn" title="Suspected from stack trace">suspect: {{this}}</span>
+              <span class="badge badge-warn" title="{{../../t 'history_tab.suspected_tip'}}">{{../../t 'history_tab.suspect_label' suspect=this}}</span>
             {{/each}}
             {{! One treatment (icon + label) for all three sibling actions. }}
-            <button class="btn btn-ghost btn-sm" data-crash-action="view">{{{icon 'file-search' 'size-3.5'}}} Open Viewer</button>
-            <button class="btn btn-ghost btn-sm" data-crash-action="copy">{{{icon 'clipboard-copy' 'size-3.5'}}} Copy Stack Trace</button>
-            <button class="btn btn-ghost btn-sm" data-crash-action="download">{{{icon 'download' 'size-3.5'}}} Download</button>
-            <button class="btn btn-ghost btn-sm" data-crash-action="insights" data-tip="Automated analysis by mclo.gs: known problems with suggested fixes. Publishes the report as a public paste first.">{{{icon 'sparkles' 'size-3.5'}}} Analyze</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="view">{{{icon 'file-search' 'size-3.5'}}} {{../t 'history_tab.open_viewer'}}</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="copy">{{{icon 'clipboard-copy' 'size-3.5'}}} {{../t 'history_tab.copy_stack_trace'}}</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="download">{{{icon 'download' 'size-3.5'}}} {{../t 'history_tab.download'}}</button>
+            <button class="btn btn-ghost btn-sm" data-crash-action="insights" data-tip="{{../t 'history_tab.analyze_tip'}}">{{{icon 'sparkles' 'size-3.5'}}} {{../t 'history_tab.analyze'}}</button>
             {{#if mclogsUrl}}
-              <a class="btn btn-ghost btn-sm" data-role="mclogs-link" href="{{mclogsUrl}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} mclo.gs Paste</a>
+              <a class="btn btn-ghost btn-sm" data-role="mclogs-link" href="{{mclogsUrl}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} {{../t 'history_tab.mclogs_paste'}}</a>
             {{else}}
-              <button class="btn btn-ghost btn-sm" data-crash-action="share" data-tip="Publish this report as a public mclo.gs paste, a link anyone can open (mod authors usually ask for one).">{{{icon 'share-2' 'size-3.5'}}} Share to mclo.gs</button>
+              <button class="btn btn-ghost btn-sm" data-crash-action="share" data-tip="{{../t 'history_tab.share_mclogs_tip'}}">{{{icon 'share-2' 'size-3.5'}}} {{../t 'history_tab.share_mclogs'}}</button>
             {{/if}}
           </div>
         </div>
@@ -62,15 +62,15 @@
           </div>
         {{/if}}
         {{#if hasLog}}
-          <button class="btn btn-ghost btn-sm mt-1.5" data-event-log data-event-id="{{id}}">{{{icon 'file-text' 'size-3.5'}}} View Captured Log</button>
+          <button class="btn btn-ghost btn-sm mt-1.5" data-event-log data-event-id="{{id}}">{{{icon 'file-text' 'size-3.5'}}} {{../t 'history_tab.view_log'}}</button>
         {{/if}}
       </li>
     {{/each}}
   </ol>
-  <div class="hidden p-8 text-center text-sm text-ink-faint" id="hist-no-match">No events match these filters.</div>
+  <div class="hidden p-8 text-center text-sm text-ink-faint" id="hist-no-match">{{t 'history_tab.no_match'}}</div>
 </div>
 {{else}}
-  {{> empty-state iconName='history' title='No Events Recorded Yet' message='Everything that happens to this server (starts, stops, setting changes, backups, and crashes) is logged here, with who did it and when.'}}
+  {{> empty-state iconName='history' title=(t 'history_tab.empty_title') message=(t 'history_tab.empty_message')}}
 {{/if}}
 </div>
 <script type="module" src="/js/pages/history.js"></script>
