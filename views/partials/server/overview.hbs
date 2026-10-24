@@ -2,39 +2,39 @@
   <div class="card p-4 lg:col-span-2">
     {{#if addresses.length}}
       <div class="mb-4 border-b border-line pb-4">
-        <label class="label" for="ov-address">Server address <span class="text-xs font-normal text-ink-faint">(share this with players on your network)</span></label>
+        <label class="label" for="ov-address">{{t 'server_overview.address_label'}} <span class="text-xs font-normal text-ink-faint">{{t 'server_overview.address_help'}}</span></label>
         <div class="flex flex-wrap items-center gap-2">
           {{#if (gt addresses.length 1)}}
-            <select class="input w-auto font-mono" id="ov-address" data-label="Server address">
+            <select class="input w-auto font-mono" id="ov-address" data-label="{{t 'server_overview.address_label'}}">
               {{#each addresses}}<option value="{{this}}">{{this}}</option>{{/each}}
             </select>
           {{else}}
             {{! size attr: the field grows with the address instead of clipping long LAN hostnames. }}
             <input class="input w-auto font-mono" id="ov-address" value="{{addresses.[0]}}" size="{{addresses.[0].length}}" readonly>
           {{/if}}
-          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} Copy Address</button>
+          <button class="btn" data-copy-from="#ov-address">{{{icon 'copy' 'size-4'}}} {{t 'server_overview.copy_address'}}</button>
         </div>
-        <p class="help">Playing from the internet? Set up port forwarding or grab the full invite from the Invites tab (under Settings).</p>
+        <p class="help">{{t 'server_overview.internet_help'}}</p>
       </div>
     {{/if}}
-    <h3 class="mb-3 font-semibold">About</h3>
+    <h3 class="mb-3 font-semibold">{{t 'server_overview.about'}}</h3>
     <div class="prose-sm max-w-prose text-sm text-ink-soft [&_a]:text-link [&_code]:rounded [&_code]:bg-inset [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.9em] [&_code]:text-ink-soft">{{{markdown server.description}}}</div>
     <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-      <div><dt class="text-xs text-ink-faint">Created</dt><dd class="font-medium">{{server.created}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Update policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Start on boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">{{t 'server_overview.created'}}</dt><dd class="font-medium">{{server.created}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">{{t 'server_overview.last_started'}}</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">{{t 'server_overview.update_policy'}}</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">{{t 'server_overview.start_on_boot'}}</dt><dd class="font-medium">{{#if server.autoStart}}{{t 'common.yes'}}{{else}}{{t 'common.no'}}{{/if}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">{{t 'server_overview.game_port'}}</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">{{t 'server_overview.rcon_port'}}</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
     </dl>
     {{#if server.pack}}
       <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">
         <div class="flex flex-wrap items-center gap-2">
           <span class="badge badge-info">{{platformName server.pack.platform}}</span>
           <b>{{server.pack.name}}</b>
-          <span class="chip">pinned @ {{server.pack.version}}</span>
+          <span class="chip">{{t 'server_overview.pinned_at'}} {{server.pack.version}}</span>
           {{#if server.updateAvailable}}
-            <a class="btn btn-sm ml-auto" href="/updates">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{server.pack.latest}} available</a>
+            <a class="btn btn-sm ml-auto" href="/updates">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{server.pack.latest}} {{t 'server_overview.available'}}</a>
           {{/if}}
         </div>
       </div>
@@ -45,30 +45,30 @@
     <div class="card p-4" data-ov-live="{{server.id}}"
          data-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{/if}}"
          data-mem-limit="{{server.resources.containerMemoryMb}}" data-cpus="{{server.resources.cpus}}">
-      <h3 class="mb-3 font-semibold">Live Usage</h3>
+      <h3 class="mb-3 font-semibold">{{t 'server_overview.live_usage'}}</h3>
       <div class="space-y-3 text-xs tabular-nums">
         <div>
           {{! CPU normalized against the core limit and clamped via pct - the raw
               value exceeds 100% on multi-core servers and clipped misleadingly. }}
-          <div class="mb-1 flex justify-between text-ink-faint"><span>CPU</span><span data-ov-cpu-label>{{server.stats.cpuPct}}% {{#if server.resources.cpus}}of {{server.resources.cpus}} cores{{/if}}</span></div>
+          <div class="mb-1 flex justify-between text-ink-faint"><span>CPU</span><span data-ov-cpu-label>{{server.stats.cpuPct}}% {{#if server.resources.cpus}}{{t 'server_overview.of_cores' count=server.resources.cpus}}{{/if}}</span></div>
           <div class="meter"><div data-ov-cpu-bar class="{{#if server.resources.cpus}}{{meterColor server.stats.cpuPct (mul server.resources.cpus 100)}}{{else}}{{meterColor server.stats.cpuPct 100}}{{/if}}" style="width: {{#if server.resources.cpus}}{{pct server.stats.cpuPct (mul server.resources.cpus 100)}}{{else}}{{pct server.stats.cpuPct 100}}{{/if}}%"></div></div>
         </div>
         <div>
-          <div class="mb-1 flex justify-between text-ink-faint"><span>Memory</span><span data-ov-mem-label>{{server.stats.memUsedMb}} / {{server.resources.containerMemoryMb}} MB</span></div>
+          <div class="mb-1 flex justify-between text-ink-faint"><span>{{t 'server_overview.memory'}}</span><span data-ov-mem-label>{{server.stats.memUsedMb}} / {{server.resources.containerMemoryMb}} MB</span></div>
           {{! The tick marks the Java heap on the container-limit scale: usage
               parked on the tick is the heap doing what it was told (#25). }}
-          <div class="meter"><div data-ov-mem-bar class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div>{{#if server.memory.heapPct}}<span class="meter-mark" style="left: {{server.memory.heapPct}}%" data-tip="Java heap: {{server.memory.heapMb}} MB"></span>{{/if}}</div>
+          <div class="meter"><div data-ov-mem-bar class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div>{{#if server.memory.heapPct}}<span class="meter-mark" style="left: {{server.memory.heapPct}}%" data-tip="{{t 'server_overview.java_heap'}}: {{server.memory.heapMb}} MB"></span>{{/if}}</div>
           {{#if server.memory.note}}<p class="mt-1 text-ink-faint">{{server.memory.note}}</p>{{/if}}
         </div>
         <div>
-          <div class="mb-1 flex justify-between text-ink-faint"><span>Disk quota</span><span>{{bytes server.disk.used}}{{#if server.disk.quota}} / {{bytes server.disk.quota}}{{else}} (no quota){{/if}}</span></div>
+          <div class="mb-1 flex justify-between text-ink-faint"><span>{{t 'server_overview.disk_quota'}}</span><span>{{bytes server.disk.used}}{{#if server.disk.quota}} / {{bytes server.disk.quota}}{{else}} ({{t 'server_overview.no_quota'}}){{/if}}</span></div>
           <div class="meter"><div class="{{meterColor server.disk.used server.disk.quota}}" style="width: {{pct server.disk.used server.disk.quota}}%"></div></div>
         </div>
       </div>
     </div>
 
     <div class="card p-4">
-      <h3 class="mb-3 font-semibold">Players <span class="text-sm font-normal text-ink-faint">{{server.players.online}}/{{server.players.max}}</span></h3>
+      <h3 class="mb-3 font-semibold">{{t 'server_overview.players'}} <span class="text-sm font-normal text-ink-faint">{{server.players.online}}/{{server.players.max}}</span></h3>
       {{#if server.players.names.length}}
         <ul class="space-y-1.5 text-sm">
           {{#each server.players.names}}
@@ -76,12 +76,12 @@
               <span class="grid size-6 place-items-center rounded bg-inset text-[11px] font-bold">{{this.[0]}}</span>
               <span class="flex-1 truncate">{{this}}</span>
               {{! arrow, not "⋯" - the ellipsis glyph means "menu" everywhere else, this navigates. }}
-              <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="Manage on the Players tab" aria-label="Manage {{this}}">{{{icon 'arrow-right' 'size-3.5'}}}</a>
+              <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="{{t 'server_overview.manage_players_tip'}}" aria-label="Manage {{this}}">{{{icon 'arrow-right' 'size-3.5'}}}</a>
             </li>
           {{/each}}
         </ul>
       {{else}}
-        <p class="text-sm text-ink-faint">No players online.</p>
+        <p class="text-sm text-ink-faint">{{t 'server_overview.no_players'}}</p>
       {{/if}}
     </div>
   </div>
