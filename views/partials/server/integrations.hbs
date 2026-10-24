@@ -5,8 +5,8 @@
   <div class="card p-4 lg:col-span-2" id="ig-wizard">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'sparkles' 'size-4 text-link'}}} Chatbot Settings</h3>
-        <p class="mt-1 text-xs text-ink-faint">Players invoke this chatbot with <code class="code-inline">@{{integrations.wizard.invocationName}}</code>. Configuration and transcripts are visible only to admins.</p>
+        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'sparkles' 'size-4 text-link'}}} {{t 'integrations_tab.chatbot_settings'}}</h3>
+        <p class="mt-1 text-xs text-ink-faint">{{t 'integrations_tab.players_invoke_with'}} <code class="code-inline">@{{integrations.wizard.invocationName}}</code>. {{t 'integrations_tab.config_admin_only'}}</p>
       </div>
       <span class="msm-toggle"><input type="checkbox" id="ig-wz-enabled" {{#if integrations.wizard.enabled}}checked{{/if}}><span></span></span>
     </div>
@@ -14,141 +14,141 @@
     <div class="grid gap-4 lg:grid-cols-2">
       <div class="space-y-4">
         <div>
-          <label class="label" for="ig-wz-name">Invocation name</label>
+          <label class="label" for="ig-wz-name">{{t 'integrations_tab.invocation_name'}}</label>
           <div class="flex items-center gap-1">
             <span class="font-mono text-sm text-ink-faint">@</span>
             <input class="input font-mono text-xs" id="ig-wz-name" maxlength="32" pattern="[A-Za-z][A-Za-z0-9_-]{0,31}" value="{{integrations.wizard.invocationName}}" placeholder="wizard">
           </div>
-          <p class="help">Players call the chatbot with this name, for example <code class="code-inline">@bubba</code>. It also becomes the chatbot's chat and transcript label.</p>
+          <p class="help">{{t 'integrations_tab.invocation_help'}}</p>
         </div>
         <div>
-          <label class="label" for="ig-wz-url">OpenAI-compatible base URL</label>
+          <label class="label" for="ig-wz-url">{{t 'integrations_tab.base_url'}}</label>
           <input class="input font-mono text-xs" id="ig-wz-url" value="{{integrations.wizard.baseUrl}}" placeholder="http://192.168.1.50:11434">
-          <p class="help">Ollama works with its host and port; <code class="code-inline">/v1</code> is added automatically. LAN/private addresses are supported.</p>
+          <p class="help">{{t 'integrations_tab.ollama_help'}}</p>
         </div>
         <div>
-          <label class="label" for="ig-wz-model">Model</label>
+          <label class="label" for="ig-wz-model">{{t 'integrations_tab.model'}}</label>
           <div class="flex gap-2">
             <input class="input min-w-0 flex-1 font-mono text-xs" id="ig-wz-model" list="ig-wz-models" value="{{integrations.wizard.model}}" placeholder="llama3.2:latest">
             <datalist id="ig-wz-models"></datalist>
-            <button class="btn shrink-0" id="ig-wz-models-load">Discover</button>
+            <button class="btn shrink-0" id="ig-wz-models-load">{{t 'integrations_tab.discover'}}</button>
           </div>
-          <p class="help">Discovery fills suggestions; free text always remains available.</p>
+          <p class="help">{{t 'integrations_tab.discovery_help'}}</p>
         </div>
         <div>
-          <label class="label" for="ig-wz-key">API key <span class="font-normal text-ink-faint">(optional)</span></label>
-          <input class="input font-mono text-xs" type="password" id="ig-wz-key" autocomplete="new-password" placeholder="{{#if integrations.wizard.hasApiKey}}Stored securely, leave blank to keep{{else}}Not required by default Ollama installs{{/if}}">
+          <label class="label" for="ig-wz-key">{{t 'integrations_tab.api_key'}}</label>
+          <input class="input font-mono text-xs" type="password" id="ig-wz-key" autocomplete="new-password" placeholder="{{#if integrations.wizard.hasApiKey}}{{t 'integrations_tab.stored_securely_placeholder'}}{{else}}{{t 'integrations_tab.not_required_placeholder'}}{{/if}}">
           {{#if integrations.wizard.hasApiKey}}
-            <label class="mt-2 flex items-center gap-2 text-xs"><input type="checkbox" class="msm-check" id="ig-wz-key-clear"> Remove stored key on save</label>
+            <label class="mt-2 flex items-center gap-2 text-xs"><input type="checkbox" class="msm-check" id="ig-wz-key-clear"> {{t 'integrations_tab.remove_stored_key'}}</label>
           {{/if}}
         </div>
         <div>
-          <label class="label" for="ig-wz-retention">Transcript retention</label>
+          <label class="label" for="ig-wz-retention">{{t 'integrations_tab.transcript_retention'}}</label>
           <div class="flex items-center gap-2">
             <input class="input w-28" type="number" id="ig-wz-retention" min="0" max="3650" value="{{integrations.wizard.retentionDays}}">
-            <span class="text-sm text-ink-soft">days</span>
+            <span class="text-sm text-ink-soft">{{t 'integrations_tab.retention_days'}}</span>
           </div>
-          <p class="help">Default 7. Set 0 to store no transcripts. Existing transcripts remain associated with deleted servers until this period expires.</p>
+          <p class="help">{{t 'integrations_tab.retention_help'}}</p>
         </div>
       </div>
 
       <div>
-        <label class="label" for="ig-wz-prompt">Chatbot persona and system prompt</label>
+        <label class="label" for="ig-wz-prompt">{{t 'integrations_tab.persona_and_prompt'}}</label>
         <textarea class="input min-h-72 max-h-[60vh] resize-y font-mono text-xs leading-5" id="ig-wz-prompt" maxlength="12000">{{integrations.wizard.systemPrompt}}</textarea>
-        <p class="help">This is sent as the system message for this server. Powers are exposed as fixed, validated tools, never raw console commands.</p>
+        <p class="help">{{t 'integrations_tab.persona_help'}}</p>
       </div>
     </div>
 
     <div class="mt-5 rounded-md border border-line bg-inset p-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h4 class="font-semibold">Player outreach</h4>
-          <p class="help">Deterministic per-session greetings and check-ins. No LLM call is needed to send them.</p>
+          <h4 class="font-semibold">{{t 'integrations_tab.player_outreach'}}</h4>
+          <p class="help">{{t 'integrations_tab.outreach_help'}}</p>
         </div>
-        <label class="flex items-center gap-2 text-sm"><span>Greet players on join</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-welcome-enabled" {{#if integrations.wizard.welcomeEnabled}}checked{{/if}}><span></span></span></label>
+        <label class="flex items-center gap-2 text-sm"><span>{{t 'integrations_tab.greet_on_join'}}</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-welcome-enabled" {{#if integrations.wizard.welcomeEnabled}}checked{{/if}}><span></span></span></label>
       </div>
       <div class="mt-4 grid gap-4 lg:grid-cols-2">
         <div>
-          <label class="label" for="ig-wz-welcome-message">Join greeting</label>
+          <label class="label" for="ig-wz-welcome-message">{{t 'integrations_tab.join_greeting'}}</label>
           <textarea class="input min-h-24 max-h-72 resize-y text-xs" id="ig-wz-welcome-message" maxlength="400">{{integrations.wizard.welcomeMessage}}</textarea>
-          <p class="help">Broadcast once when a player joins. Variables: <code class="code-inline">{player}</code>, <code class="code-inline">{chatbot}</code>, and <code class="code-inline">{mention}</code>. The older <code class="code-inline">{wizard}</code> variable remains supported.</p>
+          <p class="help">{{t 'integrations_tab.join_greeting_help'}}</p>
         </div>
         <div>
-          <label class="label" for="ig-wz-checkin-message">Playtime check-in</label>
+          <label class="label" for="ig-wz-checkin-message">{{t 'integrations_tab.playtime_checkin'}}</label>
           <textarea class="input min-h-24 max-h-72 resize-y text-xs" id="ig-wz-checkin-message" maxlength="400">{{integrations.wizard.checkinMessage}}</textarea>
           <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-            <span>Send privately after</span>
+            <span>{{t 'integrations_tab.send_privately_after'}}</span>
             <input class="input w-24" type="number" id="ig-wz-checkin-minutes" min="0" max="1440" value="{{integrations.wizard.checkinMinutes}}">
-            <span class="text-ink-soft">minutes online</span>
+            <span class="text-ink-soft">{{t 'integrations_tab.minutes_online'}}</span>
           </div>
-          <p class="help">Sent once per play session. Set 0 to disable. The message may also use <code class="code-inline">{minutes}</code>.</p>
+          <p class="help">{{t 'integrations_tab.checkin_help'}}</p>
         </div>
       </div>
       <div class="mt-4">
-        <label class="label" for="ig-wz-conversation-minutes">Opt-in conversation mode</label>
+        <label class="label" for="ig-wz-conversation-minutes">{{t 'integrations_tab.opt_in_conversation'}}</label>
         <div class="flex flex-wrap items-center gap-2 text-sm">
-          <span>Keep listening for</span>
+          <span>{{t 'integrations_tab.keep_listening_for'}}</span>
           <input class="input w-24" type="number" id="ig-wz-conversation-minutes" min="0" max="60" value="{{integrations.wizard.conversationMinutes}}">
-          <span class="text-ink-soft">minutes after a player says <code class="code-inline">@{{integrations.wizard.invocationName}} chat</code></span>
+          <span class="text-ink-soft">{{t 'integrations_tab.minutes_after_player'}} <code class="code-inline">@{{integrations.wizard.invocationName}} chat</code></span>
         </div>
-        <p class="help">During this explicitly opened window, that player can reply without repeating the mention. <code class="code-inline">@{{integrations.wizard.invocationName}} bye</code>, leaving the server, or the timeout closes it. Messages beginning with <code class="code-inline">!</code>, <code class="code-inline">/</code>, or another <code class="code-inline">@</code> are ignored. Set 0 to disable.</p>
+        <p class="help">{{t 'integrations_tab.conversation_help'}}</p>
       </div>
     </div>
 
     <div class="mt-5 rounded-md border border-line bg-inset p-4">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h4 class="font-semibold">Chatbot powers <span class="text-xs font-normal text-warn">Experimental</span></h4>
-          <p class="help">Basic users receive self/world powers. Controllers receive separately validated powers that may affect another online player. Everyone else remains conversation-only.</p>
+          <h4 class="font-semibold">{{t 'integrations_tab.powers_title'}} <span class="text-xs font-normal text-warn">{{t 'integrations_tab.powers_experimental'}}</span></h4>
+          <p class="help">{{t 'integrations_tab.powers_help'}}</p>
         </div>
-        <label class="flex items-center gap-2 text-sm"><span>Enable powers</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-powers-enabled" {{#if integrations.wizard.powersEnabled}}checked{{/if}}><span></span></span></label>
+        <label class="flex items-center gap-2 text-sm"><span>{{t 'integrations_tab.enable_powers'}}</span><span class="msm-toggle"><input type="checkbox" id="ig-wz-powers-enabled" {{#if integrations.wizard.powersEnabled}}checked{{/if}}><span></span></span></label>
       </div>
       <div class="mt-4 grid gap-4 lg:grid-cols-4">
         <div>
-          <label class="label" for="ig-wz-testers">Basic users</label>
+          <label class="label" for="ig-wz-testers">{{t 'integrations_tab.basic_users'}}</label>
           <textarea class="input min-h-28 max-h-72 resize-y font-mono text-xs" id="ig-wz-testers" placeholder="Gleep52&#10;PlayerA">{{{joinLines integrations.wizard.powerTesters}}}</textarea>
-          <p class="help">One exact player name per line. Maximum 50.</p>
+          <p class="help">{{t 'integrations_tab.basic_users_help'}}</p>
         </div>
         <div>
-          <label class="label" for="ig-wz-controllers">Power controllers</label>
+          <label class="label" for="ig-wz-controllers">{{t 'integrations_tab.power_controllers'}}</label>
           <textarea class="input min-h-28 max-h-72 resize-y font-mono text-xs" id="ig-wz-controllers" placeholder="Gleep52">{{{joinLines integrations.wizard.powerControllers}}}</textarea>
-          <p class="help">Only these exact players may affect another online player. Their gifts may use any valid item ID, but still obey the quantity limit. Add them to Basic users too if they should retain self/world powers.</p>
+          <p class="help">{{t 'integrations_tab.controllers_help'}}</p>
         </div>
         <div>
-          <label class="label" for="ig-wz-gifts">Allowed gifts</label>
+          <label class="label" for="ig-wz-gifts">{{t 'integrations_tab.allowed_gifts'}}</label>
           <textarea class="input min-h-28 max-h-72 resize-y font-mono text-xs" id="ig-wz-gifts">{{{joinLines integrations.wizard.giftItems}}}</textarea>
-          <p class="help">One namespaced item ID per line. Restricts gifts that Basic users give themselves; power controllers may give other players any valid vanilla or modded item.</p>
+          <p class="help">{{t 'integrations_tab.gifts_help'}}</p>
         </div>
         <div class="space-y-3">
-          <label class="flex items-center gap-2 text-sm"><input class="msm-check" type="checkbox" id="ig-wz-dry-run" {{#if integrations.wizard.powersDryRun}}checked{{/if}}> Dry run (audit only; change nothing)</label>
-          <div><label class="label" for="ig-wz-gift-max">Maximum gift quantity</label><input class="input w-28" type="number" id="ig-wz-gift-max" min="1" max="16" value="{{integrations.wizard.giftMaxCount}}"></div>
-          <div><label class="label" for="ig-wz-power-cooldown">Per-player cooldown</label><div class="flex items-center gap-2"><input class="input w-28" type="number" id="ig-wz-power-cooldown" min="3" max="3600" value="{{integrations.wizard.powerCooldownSec}}"><span class="text-sm text-ink-soft">seconds</span></div></div>
+          <label class="flex items-center gap-2 text-sm"><input class="msm-check" type="checkbox" id="ig-wz-dry-run" {{#if integrations.wizard.powersDryRun}}checked{{/if}}> {{t 'integrations_tab.dry_run'}}</label>
+          <div><label class="label" for="ig-wz-gift-max">{{t 'integrations_tab.max_gift_quantity'}}</label><input class="input w-28" type="number" id="ig-wz-gift-max" min="1" max="16" value="{{integrations.wizard.giftMaxCount}}"></div>
+          <div><label class="label" for="ig-wz-power-cooldown">{{t 'integrations_tab.power_cooldown'}}</label><div class="flex items-center gap-2"><input class="input w-28" type="number" id="ig-wz-power-cooldown" min="3" max="3600" value="{{integrations.wizard.powerCooldownSec}}"><span class="text-sm text-ink-soft">{{t 'integrations_tab.cooldown_seconds'}}</span></div></div>
         </div>
       </div>
       <div class="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-3 lg:grid-cols-6">
-        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="heal" {{#if integrations.wizard.powerFlags.heal}}checked{{/if}}> Healing</label>
-        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="feed" {{#if integrations.wizard.powerFlags.feed}}checked{{/if}}> Feeding</label>
-        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="spawn" {{#if integrations.wizard.powerFlags.spawn}}checked{{/if}}> Teleports</label>
-        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="time" {{#if integrations.wizard.powerFlags.time}}checked{{/if}}> Time</label>
-        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="weather" {{#if integrations.wizard.powerFlags.weather}}checked{{/if}}> Weather</label>
-        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="gift" {{#if integrations.wizard.powerFlags.gift}}checked{{/if}}> Gifts</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="heal" {{#if integrations.wizard.powerFlags.heal}}checked{{/if}}> {{t 'integrations_tab.power_healing'}}</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="feed" {{#if integrations.wizard.powerFlags.feed}}checked{{/if}}> {{t 'integrations_tab.power_feeding'}}</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="spawn" {{#if integrations.wizard.powerFlags.spawn}}checked{{/if}}> {{t 'integrations_tab.power_teleports'}}</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="time" {{#if integrations.wizard.powerFlags.time}}checked{{/if}}> {{t 'integrations_tab.power_time'}}</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="weather" {{#if integrations.wizard.powerFlags.weather}}checked{{/if}}> {{t 'integrations_tab.power_weather'}}</label>
+        <label class="flex items-center gap-2"><input class="msm-check" type="checkbox" data-wz-power="gift" {{#if integrations.wizard.powerFlags.gift}}checked{{/if}}> {{t 'integrations_tab.power_gifts'}}</label>
       </div>
     </div>
 
     <div class="mt-4 flex flex-wrap items-center gap-2">
-      <button class="btn btn-primary" id="ig-wz-save">Save Chatbot</button>
-      <button class="btn" id="ig-wz-test">Test Connection</button>
-      <button class="btn" id="ig-wz-transcripts">Refresh This Server's Transcripts</button>
-      <button class="btn" id="ig-wz-power-audit">Refresh Power Audit</button>
-      <a class="btn btn-ghost" href="/wizard-transcripts">All Transcript Archives</a>
-      <span class="hidden text-xs text-warn" data-ig-dirty="wz">Unsaved changes</span>
+      <button class="btn btn-primary" id="ig-wz-save">{{t 'integrations_tab.save_chatbot'}}</button>
+      <button class="btn" id="ig-wz-test">{{t 'integrations_tab.test_connection'}}</button>
+      <button class="btn" id="ig-wz-transcripts">{{t 'integrations_tab.refresh_transcripts'}}</button>
+      <button class="btn" id="ig-wz-power-audit">{{t 'integrations_tab.refresh_power_audit'}}</button>
+      <a class="btn btn-ghost" href="/wizard-transcripts">{{t 'integrations_tab.all_archives'}}</a>
+      <span class="hidden text-xs text-warn" data-ig-dirty="wz">{{t 'integrations_tab.unsaved_changes'}}</span>
     </div>
     <div class="mt-4 hidden max-h-80 overflow-auto rounded-md border border-line bg-inset p-3 text-xs" id="ig-wz-transcript-list"></div>
     <div class="mt-4 hidden max-h-80 overflow-auto rounded-md border border-line bg-inset p-3 text-xs" id="ig-wz-power-audit-list"></div>
   </div>
   {{else}}
   <div class="card p-6 text-center text-sm text-ink-faint lg:col-span-2">
-    Chatbot configuration is visible only to admins.
+    {{t 'integrations_tab.config_admin_only'}}
   </div>
   {{/if}}
   {{/if}}
@@ -156,41 +156,41 @@
   {{#if (eq sub 'discord')}}
   <div class="card p-4 lg:col-span-2">
     <div class="mb-4 flex items-center justify-between gap-3">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-link'}}} Discord Notifications</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'webhook' 'size-4 text-link'}}} {{t 'integrations_tab.discord_notifications'}}</h3>
       <span class="msm-toggle"><input type="checkbox" id="ig-dc-enabled" {{#if integrations.discord.enabled}}checked{{/if}}><span></span></span>
     </div>
     <div class="space-y-4">
       <div>
-        <label class="label" for="ig-dc-url">Webhook URL</label>
+        <label class="label" for="ig-dc-url">{{t 'integrations_tab.webhook_url'}}</label>
         <input class="input font-mono text-xs" type="password" id="ig-dc-url" autocomplete="off" placeholder="https://discord.com/api/webhooks/…">
         {{! The stored webhook is shown as a fact, not a placeholder - a
             placeholder disappears on focus and reads as example text. }}
         {{#if integrations.discord.hasWebhook}}
-          <p class="help">Stored: <code class="code-inline">{{integrations.discord.webhookMasked}}</code>. Leave blank to keep it, or paste a new URL to replace it.</p>
+          <p class="help">{{t 'integrations_tab.discord_stored_webhook' url=integrations.discord.webhookMasked}}</p>
         {{else}}
-          <p class="help">Create a webhook in your Discord server under Server Settings → Integrations → Webhooks, then paste its URL here. It is stored encrypted.</p>
+          <p class="help">{{t 'integrations_tab.discord_create_webhook_help'}}</p>
         {{/if}}
       </div>
       <div>
-        <span class="label">Send notifications for</span>
+        <span class="label">{{t 'integrations_tab.send_notifications_for'}}</span>
         <div class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="lifecycle" {{#if integrations.discord.events.lifecycle}}checked{{/if}}> Start / stop</label>
-          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="crashes" {{#if integrations.discord.events.crashes}}checked{{/if}}> Crashes</label>
-          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="backups" {{#if integrations.discord.events.backups}}checked{{/if}}> Backups</label>
-          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="updates" {{#if integrations.discord.events.updates}}checked{{/if}}> Updates</label>
-          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="players" {{#if integrations.discord.events.players}}checked{{/if}}> Kicks / bans</label>
-          <label class="flex items-center gap-2" title="Out of memory, stalled boot, failed scheduled task, quota stop, health-check failure"><input type="checkbox" class="msm-check" data-dc-event="alerts" {{#if integrations.discord.events.alerts}}checked{{/if}}> Alerts</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="lifecycle" {{#if integrations.discord.events.lifecycle}}checked{{/if}}> {{t 'integrations_tab.ev_start_stop'}}</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="crashes" {{#if integrations.discord.events.crashes}}checked{{/if}}> {{t 'integrations_tab.ev_crashes'}}</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="backups" {{#if integrations.discord.events.backups}}checked{{/if}}> {{t 'integrations_tab.ev_backups'}}</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="updates" {{#if integrations.discord.events.updates}}checked{{/if}}> {{t 'integrations_tab.ev_updates'}}</label>
+          <label class="flex items-center gap-2"><input type="checkbox" class="msm-check" data-dc-event="players" {{#if integrations.discord.events.players}}checked{{/if}}> {{t 'integrations_tab.ev_kicks_bans'}}</label>
+          <label class="flex items-center gap-2" title="{{t 'integrations_tab.ev_alerts_tip'}}"><input class="msm-check" data-dc-event="alerts" {{#if integrations.discord.events.alerts}}checked{{/if}}> {{t 'integrations_tab.ev_alerts'}}</label>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button class="btn btn-primary" id="ig-dc-save">Save</button>
+        <button class="btn btn-primary" id="ig-dc-save">{{t 'integrations_tab.save'}}</button>
         {{#if integrations.discord.hasWebhook}}
-          <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} Send Test</button>
+          <button class="btn" id="ig-dc-test">{{{icon 'send' 'size-4'}}} {{t 'integrations_tab.send_test'}}</button>
         {{else}}
           {{! Disabled controls swallow hover - the wrapper carries the "why". }}
-          <span data-tip="Save a webhook URL first"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} Send Test</button></span>
+          <span data-tip="{{t 'integrations_tab.save_webhook_first'}}"><button class="btn" id="ig-dc-test" disabled>{{{icon 'send' 'size-4'}}} {{t 'integrations_tab.send_test'}}</button></span>
         {{/if}}
-        <span class="hidden text-xs text-warn" data-ig-dirty="dc">Unsaved changes</span>
+        <span class="hidden text-xs text-warn" data-ig-dirty="dc">{{t 'integrations_tab.unsaved_changes'}}</span>
       </div>
     </div>
   </div>
@@ -199,27 +199,27 @@
   {{#if (eq sub 'status-page')}}
   <div class="card p-4 lg:col-span-2">
     <div class="mb-4 flex items-center justify-between gap-3">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'globe' 'size-4 text-ok'}}} Public Status Page</h3>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'globe' 'size-4 text-ok'}}} {{t 'integrations_tab.public_status_page'}}</h3>
       <span class="msm-toggle"><input type="checkbox" id="ig-sp-enabled" {{#if integrations.statusPage.enabled}}checked{{/if}}><span></span></span>
     </div>
     <div class="space-y-4">
       <div>
-        <label class="label" for="ig-sp-slug">Page address</label>
+        <label class="label" for="ig-sp-slug">{{t 'integrations_tab.page_address'}}</label>
         <div class="flex items-center gap-2">
           <span class="shrink-0 font-mono text-xs text-ink-faint">/status/</span>
           {{! min-w-0: see settings.hbs - an unconstrained flex-1 input refuses to
               shrink below its intrinsic width and pushes the page wider on mobile. }}
           <input class="input min-w-0 flex-1 font-mono text-xs" id="ig-sp-slug" placeholder="my-server" value="{{integrations.statusPage.slug}}">
         </div>
-        <p class="help">Anyone with the link sees the name, MOTD, version, player count, and uptime, and nothing else. There is no way into the panel from it. Off by default.</p>
+        <p class="help">{{t 'integrations_tab.status_page_help'}}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <button class="btn btn-primary" id="ig-sp-save">Save</button>
+        <button class="btn btn-primary" id="ig-sp-save">{{t 'integrations_tab.save'}}</button>
         {{#if (and integrations.statusPage.enabled integrations.statusPage.path)}}
-          <a class="btn" href="{{integrations.statusPage.path}}" target="_blank" rel="noopener" id="ig-sp-link">{{{icon 'link' 'size-4'}}} Open Page</a>
-          <button class="btn btn-ghost" id="ig-sp-copy">{{{icon 'copy' 'size-4'}}} Copy Link</button>
+          <a class="btn" href="{{integrations.statusPage.path}}" target="_blank" rel="noopener" id="ig-sp-link">{{{icon 'link' 'size-4'}}} {{t 'integrations_tab.open_page'}}</a>
+          <button class="btn btn-ghost" id="ig-sp-copy">{{{icon 'copy' 'size-4'}}} {{t 'integrations_tab.copy_link'}}</button>
         {{/if}}
-        <span class="hidden text-xs text-warn" data-ig-dirty="sp">Unsaved changes</span>
+        <span class="hidden text-xs text-warn" data-ig-dirty="sp">{{t 'integrations_tab.unsaved_changes'}}</span>
       </div>
     </div>
   </div>
@@ -227,40 +227,40 @@
 
   {{#if (eq sub 'invites')}}
   <div class="card p-4 lg:col-span-2">
-    <h3 class="mb-4 flex items-center gap-2 font-semibold">{{{icon 'send' 'size-4 text-warn'}}} Invite Friends</h3>
+    <h3 class="mb-4 flex items-center gap-2 font-semibold">{{{icon 'send' 'size-4 text-warn'}}} {{t 'integrations_tab.invite_friends'}}</h3>
     <div class="grid gap-4 lg:grid-cols-2">
       <div class="space-y-4">
         <div>
-          <label class="label" for="ig-addr">Address to share</label>
-          <select class="input" id="ig-addr" data-label="Address to share">
+          <label class="label" for="ig-addr">{{t 'integrations_tab.address_to_share'}}</label>
+          <select class="input" id="ig-addr" data-label="{{t 'integrations_tab.address_to_share'}}">
             {{#each integrations.invite.candidates}}
-              <option value="{{this}}" data-desc="Local network (LAN)">{{this}}</option>
+              <option value="{{this}}" data-desc="{{../t 'integrations_tab.addr_lan_desc'}}">{{this}}</option>
             {{/each}}
             {{#if integrations.invite.publicAddress}}
-              <option value="{{integrations.invite.publicAddress}}" data-desc="Public IP address (needs port forwarding)">{{integrations.invite.publicAddress}}</option>
+              <option value="{{integrations.invite.publicAddress}}" data-desc="{{t 'integrations_tab.addr_public_ip_desc'}}">{{integrations.invite.publicAddress}}</option>
             {{/if}}
-            <option value="__custom" data-desc="Domain or address you set up yourself">Custom address…</option>
+            <option value="__custom" data-desc="{{t 'integrations_tab.addr_custom_desc'}}">{{t 'integrations_tab.custom_address_opt'}}</option>
           </select>
           <input class="input mt-2 hidden font-mono text-xs" id="ig-host" placeholder="play.example.com:{{integrations.invite.port}}">
         </div>
         <div>
-          <span class="label">Invite text</span>
+          <span class="label">{{t 'integrations_tab.invite_text'}}</span>
           <pre class="max-h-44 overflow-auto whitespace-pre-wrap rounded-md border border-line bg-inset p-3 font-mono text-xs text-ink-soft" id="ig-invite-text">{{integrations.invite.inviteText}}</pre>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button class="btn btn-primary" id="ig-copy-invite">{{{icon 'copy' 'size-4'}}} Copy Invite Text</button>
+          <button class="btn btn-primary" id="ig-copy-invite">{{{icon 'copy' 'size-4'}}} {{t 'integrations_tab.copy_invite'}}</button>
           {{#if integrations.invite.modded}}
-            <button class="btn" id="ig-mrpack">{{{icon 'download' 'size-4'}}} Download Client Modpack (.mrpack)</button>
+            <button class="btn" id="ig-mrpack">{{{icon 'download' 'size-4'}}} {{t 'integrations_tab.download_modpack'}}</button>
           {{/if}}
         </div>
       </div>
       <div class="space-y-3 text-sm">
         {{#if integrations.invite.modded}}
           <div class="rounded-md border border-line bg-raised p-3">
-            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
-            <p class="mt-1 text-xs text-ink-soft">Import the .mrpack into Prism Launcher or the Modrinth App. It installs the right Minecraft version and the mods, and adds this server to their multiplayer list.</p>
+            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} {{t 'integrations_tab.what_friends_need'}}</p>
+            <p class="mt-1 text-xs text-ink-soft">{{t 'integrations_tab.friends_need_modpack'}}</p>
             {{#if integrations.invite.manualMods.length}}
-              <p class="mt-2 text-xs text-warn">These mods are not on Modrinth, so friends must add the files to their <code class="code-inline">mods</code> folder themselves:</p>
+              <p class="mt-2 text-xs text-warn">{{t 'integrations_tab.manual_mods_notice'}}</p>
               <ul class="mt-1 list-inside list-disc text-xs text-ink-soft">
                 {{#each integrations.invite.manualMods}}<li>{{name}} <span class="font-mono text-ink-faint">({{filename}})</span></li>{{/each}}
               </ul>
@@ -268,20 +268,20 @@
           </div>
         {{else}}
           <div class="rounded-md border border-line bg-raised p-3">
-            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} What friends need</p>
-            <p class="mt-1 text-xs text-ink-soft">Just vanilla Minecraft {{integrations.invite.mcVersion}}. No mods are needed on the client.</p>
+            <p class="font-medium">{{{icon 'shield' 'size-3.5'}}} {{t 'integrations_tab.what_friends_need'}}</p>
+            <p class="mt-1 text-xs text-ink-soft">{{t 'integrations_tab.friends_need_vanilla' version=integrations.invite.mcVersion}}</p>
           </div>
         {{/if}}
         {{#if integrations.invite.whitelistEnforced}}
-          <div class="notice notice-warn text-xs">{{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-warn'}}}<div>The whitelist is enforced. Add each friend on the Players tab before they join.</div></div>
+          <div class="notice notice-warn text-xs">{{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-warn'}}}<div>{{t 'integrations_tab.whitelist_enforced_invite'}}</div></div>
         {{/if}}
         <details class="rounded-md border border-line bg-raised p-3 text-xs">
-          <summary class="cursor-pointer font-medium text-sm">Playing over the internet (port forwarding)</summary>
+          <summary class="cursor-pointer font-medium text-sm">{{t 'integrations_tab.playing_internet'}}</summary>
           <p class="mt-2 text-ink-soft">{{integrations.invite.portForwardGuidance}}</p>
           {{#if integrations.invite.publicIp}}
-            <p class="mt-2">Detected public IP: <code class="code-inline">{{integrations.invite.publicIp}}</code></p>
+            <p class="mt-2">{{t 'integrations_tab.detected_public_ip'}} <code class="code-inline">{{integrations.invite.publicIp}}</code></p>
           {{else}}
-            <p class="mt-2 text-ink-faint">Your public IP address could not be detected right now. The panel may be offline.</p>
+            <p class="mt-2 text-ink-faint">{{t 'integrations_tab.ip_detect_failed'}}</p>
           {{/if}}
         </details>
       </div>
