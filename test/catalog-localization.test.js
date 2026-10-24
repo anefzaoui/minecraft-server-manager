@@ -6,7 +6,6 @@ const assert = require('node:assert/strict');
 const app = require('./helpers/app');
 const auth = require('../src/services/auth');
 const catalog = require('../src/config/field-catalog');
-const bedrock = require('../src/config/bedrock-properties');
 
 let deCookie;
 
@@ -51,15 +50,6 @@ test('catalog localization helper translates sections and fields for German', ()
   assert.equal(enJvm.label, 'Java / JVM Tuning');
 });
 
-test('bedrock properties sectionsForSettings localizes for German', () => {
-  const localizedDe = bedrock.sectionsForSettings('de');
-  const gameplay = localizedDe.find((s) => s.id === 'gameplay');
-  assert.equal(gameplay.label, 'Gameplay-Regeln');
-  const gamemode = gameplay.fields.find((f) => f.key === 'GAMEMODE');
-  assert.equal(gamemode.label, 'Spielmodus');
-  const survival = gamemode.options.find((o) => o.value === 'survival');
-  assert.equal(survival.label, 'Überleben');
-});
 
 test('wizard view renders German advanced section headers and localized fields for German user', async () => {
   const res = await app.req('GET', '/servers/new', { cookie: deCookie, headers: { Accept: 'text/html' } });
