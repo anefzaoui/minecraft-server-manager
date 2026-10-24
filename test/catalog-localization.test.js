@@ -50,7 +50,6 @@ test('catalog localization helper translates sections and fields for German', ()
   assert.equal(enJvm.label, 'Java / JVM Tuning');
 });
 
-
 test('wizard view renders German advanced section headers and localized fields for German user', async () => {
   const res = await app.req('GET', '/servers/new', { cookie: deCookie, headers: { Accept: 'text/html' } });
   assert.equal(res.status, 200);
