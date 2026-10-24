@@ -13,6 +13,7 @@
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
+import { t } from '../lib/i18n.js';
 
 const PAGE = 50; // mod rows rendered per "Show more" click
 
@@ -37,13 +38,13 @@ function init(el) {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false) {
-          throw new Error(data.error || friendlyError(res, { action: 'start the version check' }));
+          throw new Error(data.error || friendlyError(res, { action: t('server_updates.action_check') }));
         }
-        toast('Checking which Minecraft versions your mods support…');
+        toast(t('server_updates.checking_toast'));
         apply(data);
         poll(serverId);
       } catch (err) {
-        toast(err.message || friendlyError(err, { action: 'start the version check' }), { kind: 'error' });
+        toast(err.message || friendlyError(err, { action: t('server_updates.action_check') }), { kind: 'error' });
       }
     })
   );
@@ -86,7 +87,7 @@ function apply(state) {
   const running = state.status === 'running';
   box.classList.toggle('hidden', !running);
   if (!running) return;
-  if (phase) phase.textContent = state.phaseLabel || 'Starting…';
+  if (phase) phase.textContent = state.phaseLabel || t('common.starting');
   if (count) count.textContent = `${state.done || 0}/${state.total || 0}`;
   if (bar) bar.style.width = state.total ? `${Math.round(((state.done || 0) / state.total) * 100)}%` : '0%';
 }
@@ -199,7 +200,7 @@ function section(title, items, tone, help, { collapsed = false } = {}) {
       list.append(li);
     }
     shown += next.length;
-    more.textContent = `Show More (${items.length - shown} left)`;
+    more.textContent = t('server_updates.show_more', { count: items.length - shown });
     more.classList.toggle('hidden', shown >= items.length);
   };
   more.addEventListener('click', showNext);
@@ -208,7 +209,7 @@ function section(title, items, tone, help, { collapsed = false } = {}) {
     const reveal = document.createElement('button');
     reveal.type = 'button';
     reveal.className = 'btn btn-ghost btn-sm';
-    reveal.textContent = 'Show These Mods';
+    reveal.textContent = t('server_updates.show_these_mods');
     reveal.addEventListener('click', () => {
       reveal.remove();
       list.classList.remove('hidden');

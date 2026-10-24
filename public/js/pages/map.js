@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy } from '../lib/loading.js';
+import { t } from '../lib/i18n.js';
 
 // ---- Probe the map endpoint; swap in the styled placeholder while it's down ----
 (() => {
@@ -49,13 +50,13 @@ document.addEventListener('click', async (e) => {
   const id = (enableBtn || disableBtn).dataset.serverId;
 
   if (enableBtn) {
-    const restore = setBusy(enableBtn, 'Installing…');
-    toast('Installing BlueMap and allocating the map port…', { kind: 'info' });
+    const restore = setBusy(enableBtn, t('common.installing') || 'Installing…');
+    toast(t('map_tab.installing_toast'), { kind: 'info' });
     try {
       const res = await fetch(`/api/servers/${id}/map/enable`, { method: 'POST' });
       const data = await res.json();
       if (data.ok) {
-        toast('Live map enabled. Restart the server to bring it up.');
+        toast(t('map_tab.enabled_toast'));
         setTimeout(() => location.reload(), 900);
       } else {
         toast(data.error || friendlyError(res, { action: 'enable the live map' }), { kind: 'error', timeout: 9000 });
@@ -65,18 +66,18 @@ document.addEventListener('click', async (e) => {
     }
   } else {
     const ok = await confirmDialog({
-      title: 'Disable the live map?',
-      message: 'Removes BlueMap from this server. Rendered map tiles stay on disk until you delete them from Files.',
-      confirmLabel: 'Disable',
+      title: t('map_tab.disable_confirm_title'),
+      message: t('map_tab.disable_confirm_msg'),
+      confirmLabel: t('map_tab.disable_confirm_btn'),
       danger: true,
     });
     if (!ok) return;
-    const restore = setBusy(disableBtn, 'Disabling…');
+    const restore = setBusy(disableBtn, t('common.loading'));
     try {
       const res = await fetch(`/api/servers/${id}/map/disable`, { method: 'POST' });
       const data = await res.json();
       if (data.ok) {
-        toast('Live map disabled. Applies on the next restart.');
+        toast(t('map_tab.disabled_toast'));
         setTimeout(() => location.reload(), 900);
       } else {
         toast(data.error || friendlyError(res, { action: 'disable the live map' }), { kind: 'error' });

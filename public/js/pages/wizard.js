@@ -18,6 +18,7 @@ import { initDockerSettings } from '../lib/dockerSettings.js';
 import { wireCatalogConflicts } from '../lib/catalogConflicts.js';
 import { escapeHtml } from '../lib/format.js';
 import { showZipImportReport } from '../lib/zipImport.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.getElementById('wizard');
 if (root) init();
@@ -45,7 +46,96 @@ function init() {
   }
   pickGroup('wz-flavors', 'type', (v) => {
     type = v;
+    refreshRuntimeFlavor();
   });
+
+  const versionSelect = document.getElementById('wz-version');
+  const javaVersionOptions = versionSelect?.innerHTML || '';
+  function isBedrock() {
+    return type === 'BEDROCK';
+  }
+  function bedrockVersion() {
+    const selected = versionSelect?.value || 'LATEST';
+    return selected === 'PINNED' ? document.getElementById('wz-bedrock-version')?.value.trim() || '' : selected;
+  }
+  function supportsRakNet(version) {
+    const match = /^(\d+)\.(\d+)\.(\d+)(?:\.\d+)?$/.exec(String(version || '').trim());
+    if (!match) return false;
+    const [major, minor, patch] = match.slice(1).map(Number);
+    return major < 1 || (major === 1 && (minor < 26 || (minor === 26 && patch <= 50)));
+  }
+  function refreshRakNetAvailability() {
+    const transport = document.getElementById('wz-bedrock-transport');
+    const option = transport?.querySelector('option[value="raknet"]');
+    const help = document.getElementById('wz-raknet-help');
+    const portWrap = document.getElementById('wz-raknet-port-wrap');
+    const available = isBedrock() && versionSelect?.value === 'PINNED' && supportsRakNet(bedrockVersion());
+    if (option) option.disabled = !available;
+    if (!available && transport) transport.value = 'nethernet';
+    if (help) {
+      help.textContent = available
+        ? 'RakNet is a legacy compatibility mode. It requires separate IPv4 and IPv6 UDP ports.'
+        : 'RakNet is unavailable for Latest, Preview, and Bedrock 1.26.51 or newer. Choose a compatible pinned version to enable it.';
+    }
+    const selected = available && transport?.value === 'raknet';
+    portWrap?.classList.toggle('hidden', !selected);
+    const portLabel = document.getElementById('wz-port-label');
+    const portHelp = document.getElementById('wz-port-help');
+    if (portLabel) portLabel.textContent = selected ? 'RakNet IPv4 UDP port' : 'Game port';
+    if (portHelp) {
+      portHelp.textContent = selected
+        ? 'RakNet uses this IPv4 UDP port and the separate IPv6 UDP port below.'
+        : isBedrock()
+          ? 'A free TCP signaling port for NetherNet, suggested automatically.'
+          : "A free port, suggested automatically. The panel's remote console (RCON) runs on the port 1000 higher than this one.";
+    }
+    const ipv6 = document.getElementById('wz-raknet-ipv6-port');
+    if (selected && ipv6 && !ipv6.value) {
+      const ipv4 = Number(document.getElementById('wz-port')?.value);
+      if (Number.isInteger(ipv4) && ipv4 < 65535) ipv6.value = String(ipv4 + 1);
+    }
+  }
+  function refreshRuntimeFlavor() {
+    const bedrock = isBedrock();
+    const pinnedWrap = document.getElementById('wz-bedrock-version-wrap');
+    const eulaWrap = document.getElementById('wz-bedrock-eula-wrap');
+    const addressWrap = document.getElementById('wz-bedrock-address-wrap');
+    if (versionSelect) {
+      const needsBedrockOptions = bedrock && versionSelect.dataset.runtime !== 'bedrock';
+      const needsJavaOptions = !bedrock && versionSelect.dataset.runtime === 'bedrock';
+      if (needsBedrockOptions) {
+        versionSelect.innerHTML =
+          '<option value="LATEST">Latest</option><option value="PREVIEW">Preview</option><option value="PINNED">Pinned version</option>';
+        versionSelect.dataset.runtime = 'bedrock';
+      } else if (needsJavaOptions) {
+        versionSelect.innerHTML = javaVersionOptions;
+        delete versionSelect.dataset.runtime;
+      }
+    }
+    pinnedWrap?.classList.toggle('hidden', !bedrock || versionSelect?.value !== 'PINNED');
+    document.getElementById('wz-bedrock-transport-wrap')?.classList.toggle('hidden', !bedrock);
+    eulaWrap?.classList.toggle('hidden', !bedrock);
+    addressWrap?.classList.toggle('hidden', !bedrock);
+    const maxPlayers = document.getElementById('wz-maxplayers');
+    if (maxPlayers) maxPlayers.value = bedrock ? '16' : '10';
+    refreshAdvancedRuntime();
+    refreshRakNetAvailability();
+  }
+
+  /** Only the selected runtime's supported settings may be edited or submitted. */
+  function refreshAdvancedRuntime() {
+    const runtime = isBedrock() ? 'bedrock' : 'java';
+    advPanel?.querySelectorAll('[data-advanced-runtime]').forEach((section) => {
+      const active = section.dataset.advancedRuntime === runtime;
+      section.classList.toggle('hidden', !active);
+      section.querySelectorAll('input, select, textarea, button').forEach((control) => {
+        control.disabled = !active;
+      });
+    });
+  }
+  versionSelect?.addEventListener('change', refreshRuntimeFlavor);
+  document.getElementById('wz-bedrock-version')?.addEventListener('input', refreshRakNetAvailability);
+  document.getElementById('wz-bedrock-transport')?.addEventListener('change', refreshRakNetAvailability);
 
   // Visual MOTD editor (shared lib: toolbar + presets + live preview)
   const motd = document.getElementById('wz-motd');
@@ -208,14 +298,22 @@ function init() {
 
   /** Simple-mode world/rules env, shared by the vanilla, modpack and mods paths. */
   function collectSimpleEnv() {
+    const bedrock = isBedrock();
     return {
       MOTD: toSectionCodes(motd.value), // vanilla renders § codes only
       DIFFICULTY: document.getElementById('wz-difficulty').value,
-      MODE: document.getElementById('wz-mode').value,
-      PVP: document.getElementById('wz-pvp').value,
-      MAX_PLAYERS: String(Number(document.getElementById('wz-maxplayers').value) || 10),
+      ...(bedrock
+        ? {
+            GAMEMODE: document.getElementById('wz-mode').value,
+            ALLOW_CHEATS: document.getElementById('wz-pvp').value,
+          }
+        : {
+            MODE: document.getElementById('wz-mode').value,
+            PVP: document.getElementById('wz-pvp').value,
+          }),
+      MAX_PLAYERS: String(Number(document.getElementById('wz-maxplayers').value) || (isBedrock() ? 16 : 10)),
       ...(document.getElementById('wz-seed').value.trim()
-        ? { SEED: document.getElementById('wz-seed').value.trim() }
+        ? { [bedrock ? 'LEVEL_SEED' : 'SEED']: document.getElementById('wz-seed').value.trim() }
         : {}),
       ...collectAdvancedEnv(),
     };
@@ -231,6 +329,7 @@ function init() {
       // quota off) - an empty field must never silently flip the quota off.
       diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),
       portGame: Number(document.getElementById('wz-port').value) || undefined,
+      maxPlayers: Number(document.getElementById('wz-maxplayers').value) || (isBedrock() ? 16 : 10),
     };
   }
 
@@ -248,7 +347,18 @@ function init() {
     const r = resources();
     const body = {
       type,
-      mcVersion: document.getElementById('wz-version')?.value,
+      mcVersion: isBedrock() ? bedrockVersion() : document.getElementById('wz-version')?.value,
+      runtime: isBedrock() ? 'bedrock' : 'java',
+      ...(isBedrock()
+        ? {
+            bedrockTransport: document.getElementById('wz-bedrock-transport')?.value || 'nethernet',
+            advertisedAddress: document.getElementById('wz-bedrock-address')?.value.trim(),
+          }
+        : {}),
+      ...(isBedrock() && document.getElementById('wz-bedrock-transport')?.value === 'raknet'
+        ? { portBedrock: Number(document.getElementById('wz-raknet-ipv6-port')?.value) || undefined }
+        : {}),
+      maxPlayers: Number(document.getElementById('wz-maxplayers').value) || (isBedrock() ? 16 : 10),
       heapMb: r.heapMb,
       containerMemoryMb: r.containerMemoryMb,
       portGame: r.portGame,
@@ -301,10 +411,9 @@ function init() {
       return;
     }
     const modal = openModal({
-      title: `Creating ${name} from a blueprint…`,
+      title: t('wizard.bp_import_title', { name }),
       size: 'sm',
-      content:
-        '<div class="space-y-3 text-sm"><p>Installing the blueprint: the pinned pack, custom mods (each hash-verified), and config files.</p><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div><p class="text-xs text-ink-faint">Closing this window doesn\'t cancel the import. It keeps running in the background.</p></div>',
+      content: `<div class="space-y-3 text-sm"><p>${t('wizard.bp_import_p1')}</p><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div><p class="text-xs text-ink-faint">${t('wizard.bp_import_p2')}</p></div>`,
     });
     try {
       const res = await fetch('/api/blueprints/import', {
@@ -363,7 +472,7 @@ function init() {
     };
     try {
       const result = await runTask({
-        title: `Creating ${name}: ${selection.resolved.projectName}…`,
+        title: t('wizard.create_pack_title', { name, project: selection.resolved.projectName }),
         start: async () => {
           const res = await fetch('/api/servers/from-pack', {
             method: 'POST',
@@ -420,7 +529,7 @@ function init() {
     };
     try {
       const result = await runTask({
-        title: `Creating ${name} from zip…`,
+        title: t('wizard.create_zip_title', { name }),
         start: async () => {
           const res = await fetch('/api/servers/from-zip', {
             method: 'POST',
@@ -487,7 +596,7 @@ function init() {
     };
     try {
       const result = await runTask({
-        title: `Creating ${name} (${capitalize(loader)})…`,
+        title: t('wizard.create_mods_title', { name, loader: capitalize(loader) }),
         start: async () => {
           const res = await fetch('/api/servers/from-mods', {
             method: 'POST',
@@ -521,13 +630,31 @@ function init() {
 
   // ---- Create: vanilla / plugin server (no mods) ----
   async function createVanilla(name) {
+    if (isBedrock() && !document.getElementById('wz-bedrock-eula')?.checked) {
+      toast('Accept the Minecraft EULA before creating a Native Bedrock server.', { kind: 'error' });
+      return;
+    }
+    const mcVersion = isBedrock() ? bedrockVersion() : document.getElementById('wz-version').value;
+    if (!mcVersion) {
+      toast('Enter a Bedrock version, or choose Latest or Preview.', { kind: 'error' });
+      return;
+    }
     const body = {
       name,
       description: document.getElementById('wz-desc').value.trim(),
       icon,
       accent,
       type,
-      mcVersion: document.getElementById('wz-version').value,
+      mcVersion,
+      runtime: isBedrock() ? 'bedrock' : 'java',
+      ...(isBedrock()
+        ? { bedrockTransport: document.getElementById('wz-bedrock-transport')?.value || 'nethernet' }
+        : {}),
+      ...(isBedrock() && document.getElementById('wz-bedrock-transport')?.value === 'raknet'
+        ? { portBedrock: Number(document.getElementById('wz-raknet-ipv6-port')?.value) || undefined }
+        : {}),
+      ...(isBedrock() ? { eulaAccepted: true } : {}),
+      ...(isBedrock() ? { advertisedAddress: document.getElementById('wz-bedrock-address')?.value.trim() } : {}),
       ...resources(),
       env: collectSimpleEnv(),
       ...collectDockerOverrides(),
@@ -535,12 +662,12 @@ function init() {
     };
 
     const modal = openModal({
-      title: `Creating ${name}…`,
+      title: t('wizard.container_create_title', { name }),
       size: 'sm',
       content: `<div class="space-y-3 text-sm">
-        <p>Downloading the server image if needed (the first time can take a few minutes), creating the container, and starting it.</p>
+        <p>${t('wizard.container_create_p1')}</p>
         <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
-        <p class="text-xs text-ink-faint">Closing this window doesn't cancel the creation. It keeps running in the background.</p>
+        <p class="text-xs text-ink-faint">${t('wizard.container_create_p2')}</p>
       </div>`,
     });
 
@@ -820,7 +947,7 @@ function initModBrowser() {
       renderSelected();
       return;
     }
-    if (depHintEl) depHintEl.textContent = 'Resolving dependencies…';
+    if (depHintEl) depHintEl.textContent = t('wizard.resolving_dependencies');
     try {
       const res = await fetch('/api/mods/deps', {
         method: 'POST',
@@ -1606,7 +1733,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       alts.className = 'mt-2 flex flex-wrap items-center gap-1.5';
       const label = document.createElement('span');
       label.className = 'text-xs text-ink-faint';
-      label.textContent = 'Also works:';
+      label.textContent = t('wizard.also_works');
       alts.appendChild(label);
       if (!chosenIsBest && solveData.best) {
         alts.appendChild(altButton(-1, solveData.best, false));
@@ -1622,7 +1749,7 @@ function initSolver({ onApplied = () => {} } = {}) {
       const warn = document.createElement('div');
       warn.className = 'notice notice-warn mt-3 block';
       warn.innerHTML =
-        `<p class="mb-1.5 font-semibold text-warn">These mods would be left out:</p>` +
+        `<p class="mb-1.5 font-semibold text-warn">${escapeHtml(t('wizard.left_out_notice'))}</p>` +
         solveData.partial.dropped
           .map(
             (d) => `

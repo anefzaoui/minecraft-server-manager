@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { withBusy } from '../lib/loading.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-analytics-server]');
 if (root) init(root.dataset.analyticsServer);
@@ -172,11 +173,13 @@ function init(serverId) {
         message.appendChild(pvp);
       }
     } else if (evt.type === 'join') {
-      message.textContent = 'joined the game';
+      message.textContent = t('analytics_tab.joined_game');
     } else if (evt.type === 'leave') {
-      message.textContent = evt.message ? `left (${evt.message})` : 'left the game';
+      message.textContent = evt.message
+        ? t('analytics_tab.left_game_reason', { reason: evt.message })
+        : t('analytics_tab.left_game');
     } else if (evt.type === 'advancement') {
-      message.textContent = `made the advancement [${evt.message}]`;
+      message.textContent = t('analytics_tab.made_advancement', { advancement: evt.message });
     } else {
       message.textContent = evt.message;
     }
@@ -196,7 +199,7 @@ function init(serverId) {
       list.innerHTML = '';
       const li = document.createElement('li');
       li.className = 'p-6 text-center text-ink-faint';
-      li.textContent = 'No event types selected. Tick at least one filter above.';
+      li.textContent = t('analytics_tab.no_filters_selected');
       list.appendChild(li);
       state.nextBefore = null;
       olderBtn.classList.add('hidden');
@@ -214,9 +217,7 @@ function init(serverId) {
     if (!data.events.length && !list.children.length) {
       const li = document.createElement('li');
       li.className = 'p-6 text-center text-ink-faint';
-      li.textContent = q
-        ? 'No events match this search.'
-        : 'No activity captured yet. Events are recorded live while the server runs.';
+      li.textContent = q ? t('analytics_tab.no_events_match') : t('analytics_tab.no_activity_yet');
       list.appendChild(li);
     }
     for (const evt of data.events) list.appendChild(renderEvent(evt));
@@ -271,7 +272,7 @@ function init(serverId) {
     content.className = 'space-y-4';
 
     const style = document.createElement('div');
-    style.innerHTML = '<h4 class="mb-2 text-sm font-semibold">Playstyle</h4>';
+    style.innerHTML = `<h4 class="mb-2 text-sm font-semibold">${t('analytics_tab.playstyle')}</h4>`;
     const styleColors = {
       miner: 'bg-diamond-400',
       fighter: 'bg-redstone-500',
@@ -290,24 +291,43 @@ function init(serverId) {
     content.appendChild(style);
 
     const grid = document.createElement('div');
-    grid.innerHTML =
-      '<h4 class="mb-2 text-sm font-semibold">Key stats <span class="font-normal text-ink-faint">(all time / last 7d)</span></h4>';
+    grid.innerHTML = `<h4 class="mb-2 text-sm font-semibold">${t('analytics_tab.key_stats')} <span class="font-normal text-ink-faint">${t('analytics_tab.key_stats_sub')}</span></h4>`;
     const cells = document.createElement('div');
     cells.className = 'grid grid-cols-2 gap-2 sm:grid-cols-3';
     const keyStats = [
-      ['Playtime', fmtDuration(p.stats.playtimeTicks / 20), fmtDuration(p.deltas['7d'].playtimeTicks / 20)],
-      ['Deaths', p.stats.deaths.toLocaleString(), p.deltas['7d'].deaths.toLocaleString()],
-      ['Mob kills', p.stats.mobKills.toLocaleString(), p.deltas['7d'].mobKills.toLocaleString()],
-      ['Player kills', p.stats.playerKills.toLocaleString(), p.deltas['7d'].playerKills.toLocaleString()],
-      ['Blocks mined', p.stats.blocksMinedTotal.toLocaleString(), p.deltas['7d'].blocksMinedTotal.toLocaleString()],
-      ['Diamonds', p.stats.diamondsMined.toLocaleString(), p.deltas['7d'].diamondsMined.toLocaleString()],
-      ['Distance', fmtValue('distanceCm', p.stats.distanceCm), fmtValue('distanceCm', p.deltas['7d'].distanceCm)],
       [
-        'Damage dealt',
+        t('analytics_tab.stat_playtime'),
+        fmtDuration(p.stats.playtimeTicks / 20),
+        fmtDuration(p.deltas['7d'].playtimeTicks / 20),
+      ],
+      [t('analytics_tab.stat_deaths'), p.stats.deaths.toLocaleString(), p.deltas['7d'].deaths.toLocaleString()],
+      [t('analytics_tab.stat_mob_kills'), p.stats.mobKills.toLocaleString(), p.deltas['7d'].mobKills.toLocaleString()],
+      [
+        t('analytics_tab.stat_player_kills'),
+        p.stats.playerKills.toLocaleString(),
+        p.deltas['7d'].playerKills.toLocaleString(),
+      ],
+      [
+        t('analytics_tab.stat_blocks_mined'),
+        p.stats.blocksMinedTotal.toLocaleString(),
+        p.deltas['7d'].blocksMinedTotal.toLocaleString(),
+      ],
+      [
+        t('analytics_tab.stat_diamonds'),
+        p.stats.diamondsMined.toLocaleString(),
+        p.deltas['7d'].diamondsMined.toLocaleString(),
+      ],
+      [
+        t('analytics_tab.stat_distance'),
+        fmtValue('distanceCm', p.stats.distanceCm),
+        fmtValue('distanceCm', p.deltas['7d'].distanceCm),
+      ],
+      [
+        t('analytics_tab.stat_damage_dealt'),
         fmtValue('damageDealt', p.stats.damageDealt),
         fmtValue('damageDealt', p.deltas['7d'].damageDealt),
       ],
-      ['Jumps', p.stats.jumps.toLocaleString(), p.deltas['7d'].jumps.toLocaleString()],
+      [t('analytics_tab.stat_jumps'), p.stats.jumps.toLocaleString(), p.deltas['7d'].jumps.toLocaleString()],
     ];
     for (const [label, total, week] of keyStats) {
       const cell = document.createElement('div');
@@ -315,19 +335,18 @@ function init(serverId) {
       cell.innerHTML = `<div class="text-xs text-ink-faint"></div><div class="mt-0.5 text-sm font-semibold"></div><div class="text-[11px] text-ink-faint"></div>`;
       cell.children[0].textContent = label;
       cell.children[1].textContent = total;
-      cell.children[2].textContent = `+${week} this week`;
+      cell.children[2].textContent = t('analytics_tab.this_week', { count: week });
       cells.appendChild(cell);
     }
     grid.appendChild(cells);
     content.appendChild(grid);
 
     const sessions = document.createElement('div');
-    sessions.innerHTML = `<h4 class="mb-2 text-sm font-semibold">Recent sessions <span class="font-normal text-ink-faint">(${p.sessions.count} total)</span></h4>`;
+    sessions.innerHTML = `<h4 class="mb-2 text-sm font-semibold">${t('analytics_tab.recent_sessions')} <span class="font-normal text-ink-faint">${t('analytics_tab.recent_sessions_total', { count: p.sessions.count })}</span></h4>`;
     if (!p.sessions.recent.length) {
       const empty = document.createElement('p');
       empty.className = 'text-xs text-ink-faint';
-      empty.textContent =
-        'No sessions recorded yet. Sessions are tracked from join and leave events while the panel runs.';
+      empty.textContent = t('analytics_tab.no_sessions_yet');
       sessions.appendChild(empty);
     } else {
       const ol = document.createElement('ol');
@@ -337,7 +356,9 @@ function init(serverId) {
         li.className = 'flex items-center justify-between gap-2 p-2 text-xs';
         li.innerHTML = `<span data-when></span><span class="text-ink-faint" data-len></span>`;
         li.querySelector('[data-when]').textContent = fmtTime(s.startedAt);
-        li.querySelector('[data-len]').textContent = s.open ? 'online now' : fmtDuration(s.durationSec);
+        li.querySelector('[data-len]').textContent = s.open
+          ? t('analytics_tab.online_now')
+          : fmtDuration(s.durationSec);
         ol.appendChild(li);
       }
       sessions.appendChild(ol);
@@ -345,10 +366,10 @@ function init(serverId) {
     content.appendChild(sessions);
 
     openModal({
-      title: `${p.name || name}: Player Profile`,
+      title: t('analytics_tab.profile_title', { name: p.name || name }),
       content,
       size: 'lg',
-      actions: [{ label: 'Close', kind: 'ghost' }],
+      actions: [{ label: t('common.close'), kind: 'ghost' }],
     });
   }
 

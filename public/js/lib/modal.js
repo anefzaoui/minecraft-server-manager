@@ -9,6 +9,7 @@
 
 import { enhanceAll } from './select.js'; // circular with select.js - safe: both only call at runtime
 import { setBusy } from './loading.js';
+import { t } from './i18n.js';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -38,7 +39,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
   panel.innerHTML = `
     <div class="flex items-center gap-3 border-b border-line py-3 pl-5 pr-3">
       <h3 class="min-w-0 flex-1 truncate font-semibold"></h3>
-      <button data-modal-x class="icon-btn" aria-label="Close">
+      <button data-modal-x class="icon-btn" aria-label="${t('common.close')}">
         <svg class="icon size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>

@@ -4,6 +4,8 @@
 // doesn't stop anyone from checking both - this auto-unchecks the other
 // side and says why, in both the wizard's advanced mode and the
 // post-creation Settings tab (same catalog-field markup, same behavior).
+import { t } from './i18n.js';
+
 export function wireCatalogConflicts(root, { toast, reconcileSilently = false } = {}) {
   function resolve(el, { announce }) {
     if (!el.checked) return;
@@ -14,7 +16,7 @@ export function wireCatalogConflicts(root, { toast, reconcileSilently = false } 
     if (announce) {
       const otherLabel = other.dataset.label || other.dataset.catalogKey;
       const thisLabel = el.dataset.label || el.dataset.catalogKey;
-      toast?.(`Turned off "${otherLabel}". It can't be on at the same time as "${thisLabel}".`);
+      toast?.(t('catalog.conflict_toast', { other: otherLabel, current: thisLabel }));
     }
   }
 

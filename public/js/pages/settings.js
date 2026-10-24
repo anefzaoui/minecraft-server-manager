@@ -5,6 +5,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { fillTimezoneSelect, fillCountrySelect } from '../lib/tzPicker.js';
+import { t } from '../lib/i18n.js';
 
 const page = document.getElementById('settings-page');
 const selfEl = document.getElementById('settings-self');
@@ -17,13 +18,13 @@ function init() {
     const btn = e.currentTarget; // capture before await - currentTarget is null afterwards
     const key = document.getElementById('set-cf-key').value.trim();
     if (!key) {
-      toast('Paste a key first.', { kind: 'error' });
+      toast(t('setup_wizard.cf_key_prompt'), { kind: 'error' });
       return;
     }
-    await withBusy(btn, 'Saving…', async () => {
+    await withBusy(btn, t('common.saving'), async () => {
       const res = await post('/api/keys/curseforge', { key });
       if (res) {
-        toast('Key verified with CurseForge and saved (encrypted).');
+        toast(t('setup_wizard.cf_key_saved'));
         document.getElementById('set-cf-key').value = '';
       }
     });
@@ -32,11 +33,13 @@ function init() {
   document.getElementById('set-domain-save')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const publicHost = document.getElementById('set-domain').value.trim();
-    await withBusy(btn, 'Saving…', async () => {
+    await withBusy(btn, t('common.saving'), async () => {
       const res = await post('/api/settings', { publicHost });
       if (res) {
         document.getElementById('set-domain').value = res.publicHost || '';
-        toast(res.publicHost ? `Public domain set to ${res.publicHost}.` : 'Public domain cleared.');
+        toast(
+          res.publicHost ? t('setup_wizard.domain_saved', { domain: res.publicHost }) : t('setup_wizard.domain_cleared')
+        );
         if (res.cookieSecureWarning) {
           toast(
             'This panel is reachable over plain HTTP, so the login cookie can be read in transit. Put it behind HTTPS ' +
@@ -76,12 +79,25 @@ function init() {
 
     document.getElementById('set-loc-save')?.addEventListener('click', async (e) => {
       const btn = e.currentTarget;
-      await withBusy(btn, 'Saving…', async () => {
+      await withBusy(btn, t('common.saving'), async () => {
         const res = await post('/api/settings/localization', { timezone: tzSel.value, country: ccSel.value });
         if (res) {
           if (locNote)
             locNote.textContent = `Currently: ${res.localization.timezone} · ${res.localization.locale || ''}`;
-          toast(`Time zone set to ${res.localization.timezone}. Refresh to apply everywhere.`);
+          toast(t('settings.tz_saved', { tz: res.localization.timezone }));
+        }
+      });
+    });
+
+    document.getElementById('set-lang-save')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const langSel = document.getElementById('set-lang');
+      if (!langSel) return;
+      await withBusy(btn, t('common.saving'), async () => {
+        const res = await post('/api/account/language', { language: langSel.value });
+        if (res) {
+          toast(t('settings.language.saved'));
+          window.location.reload();
         }
       });
     });
@@ -89,10 +105,10 @@ function init() {
 
   document.getElementById('set-cf-test')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
-    await withBusy(btn, 'Checking…', async () => {
+    await withBusy(btn, t('common.checking'), async () => {
       // post() returns null (and toasts) on any failure - success is the only branch left.
       const res = await post('/api/keys/curseforge/test', {});
-      if (res) toast('Stored key is valid.');
+      if (res) toast(t('settings.stored_key_valid'));
     });
   });
 
@@ -104,11 +120,7 @@ function init() {
     try {
       const res = await post('/api/settings/public-api', { enabled });
       if (res) {
-        toast(
-          res.enabled
-            ? 'Outside apps can now read your servers’ status.'
-            : 'Outside apps can no longer read your servers’ status.'
-        );
+        toast(res.enabled ? t('settings.public_api_enabled') : t('settings.public_api_disabled'));
       } else {
         el.checked = !enabled; // revert - post() already toasted why
       }
@@ -127,21 +139,21 @@ function init() {
     const content = document.createElement('div');
     content.className = 'space-y-3';
     content.innerHTML = `
-      <div><label class="label" for="at-label">Name</label>
-        <input class="input" id="at-label" autocomplete="off" placeholder="e.g. Status page">
-        <p class="help">Just so you can recognise this key in the list later.</p></div>
-      <div><span class="label">What it can see</span>
-        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="all" checked> Every server</label>
-        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="some"> Only the ones I pick</label>
+      <div><label class="label" for="at-label">${escapeHtml(t('settings.token_modal.name_label'))}</label>
+        <input class="input" id="at-label" autocomplete="off" placeholder="${escapeHtml(t('settings.token_modal.name_placeholder'))}">
+        <p class="help">${escapeHtml(t('settings.token_modal.name_help'))}</p></div>
+      <div><span class="label">${escapeHtml(t('settings.token_modal.scope_label'))}</span>
+        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="all" checked> ${escapeHtml(t('settings.token_modal.scope_all'))}</label>
+        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="some"> ${escapeHtml(t('settings.token_modal.scope_some'))}</label>
       </div>
-      <div><label class="label" for="at-servers">Servers</label>
+      <div><label class="label" for="at-servers">${escapeHtml(t('settings.token_modal.servers_label'))}</label>
         <select class="input" id="at-servers" multiple size="6" disabled>
           ${servers.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('')}
         </select>
       </div>
-      <div><label class="label" for="at-expires">Stop working on (optional)</label>
+      <div><label class="label" for="at-expires">${escapeHtml(t('settings.token_modal.expires_label'))}</label>
         <input class="input" id="at-expires" type="datetime-local">
-        <p class="help">Leave blank and the key works until you cancel it.</p></div>`;
+        <p class="help">${escapeHtml(t('settings.token_modal.expires_help'))}</p></div>`;
     const scopeRadios = content.querySelectorAll('input[name="at-scope"]');
     const serverSel = content.querySelector('#at-servers');
     scopeRadios.forEach((r) =>
@@ -150,14 +162,14 @@ function init() {
       })
     );
     openModal({
-      title: 'New Access Key',
+      title: t('settings.token_modal.new_key_title'),
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Create',
+          label: t('common.create'),
           kind: 'primary',
-          busyLabel: 'Creating…',
+          busyLabel: t('common.creating'),
           onClick: async () => {
             const scopeAll = content.querySelector('input[name="at-scope"]:checked').value === 'all';
             const serverIds = scopeAll ? [] : [...serverSel.selectedOptions].map((o) => o.value);
@@ -191,16 +203,16 @@ function init() {
     const copyBtn = document.createElement('button');
     copyBtn.type = 'button';
     copyBtn.className = 'btn';
-    copyBtn.textContent = 'Copy';
+    copyBtn.textContent = t('common.copy');
     copyBtn.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(token);
-        copyBtn.textContent = 'Copied';
-        toast('Key copied to the clipboard.');
-        setTimeout(() => (copyBtn.textContent = 'Copy'), 1500);
+        copyBtn.textContent = t('common.copied');
+        toast(t('settings.token_modal.copied_toast'));
+        setTimeout(() => (copyBtn.textContent = t('common.copy')), 1500);
       } catch {
         field.focus();
-        toast('Press Ctrl+C to copy.', { kind: 'error' });
+        toast(t('settings.token_modal.copy_fail_toast'), { kind: 'error' });
       }
     });
     row.append(field, copyBtn);
@@ -208,13 +220,13 @@ function init() {
 
     content.insertAdjacentHTML(
       'beforeend',
-      '<p class="notice notice-danger">You’ll only see this key once, so copy it somewhere safe now. For security, the panel doesn’t store a copy it can show you later.</p>'
+      `<p class="notice notice-danger">${escapeHtml(t('settings.token_modal.reveal_notice'))}</p>`
     );
     openModal({
-      title: 'Copy Your Access Key Now',
+      title: t('settings.token_modal.reveal_title'),
       size: 'sm',
       content,
-      actions: [{ label: 'Done', kind: 'primary', onClick: () => setTimeout(() => location.reload(), 300) }],
+      actions: [{ label: t('common.done'), kind: 'primary', onClick: () => setTimeout(() => location.reload(), 300) }],
     });
   }
 
@@ -267,10 +279,9 @@ function init() {
     if (tokenRevokeBtn) {
       const { tokenId, label } = tokenRevokeBtn.dataset;
       const ok = await confirmDialog({
-        title: `Cancel the key "${label}"?`,
-        message:
-          'Any app still using this key stops working right away. You can’t bring the same key back, so you’d need to make a new one.',
-        confirmLabel: 'Cancel Key',
+        title: t('settings.confirm_cancel_key_title', { label }),
+        message: t('settings.confirm_cancel_key_msg'),
+        confirmLabel: t('settings.cancel_key'),
         danger: true,
       });
       if (!ok) return;
@@ -278,7 +289,7 @@ function init() {
         const res = await fetch(`/api/api-tokens/${tokenId}`, { method: 'DELETE' });
         const data = await res.json().catch(() => ({}));
         if (data.ok) {
-          toast('Key cancelled.');
+          toast(t('settings.key_cancelled'));
           document.querySelector(`#api-tokens-table tr[data-token-id="${CSS.escape(tokenId)}"]`)?.remove();
         } else {
           toast(data.error || friendlyError(res, { action: 'cancel that key' }), { kind: 'error' });
@@ -291,26 +302,25 @@ function init() {
     } else if (totpResetBtn) {
       const { userId, username } = totpResetBtn.dataset;
       const ok = await confirmDialog({
-        title: `Reset two-factor auth for ${username}?`,
-        message:
-          'Any in-progress sign-in is cancelled, and they must set up a new authenticator app the next time they sign in.',
-        confirmLabel: 'Reset',
+        title: t('settings.confirm_reset_2fa_title', { username }),
+        message: t('settings.confirm_reset_2fa_msg'),
+        confirmLabel: t('settings.reset_2fa'),
         danger: true,
       });
       if (!ok) return;
       await withBusy(menuTriggerFor(userId), async () => {
         const res = await post(`/api/users/${userId}/totp/disable`, {});
         if (res) {
-          toast('Two-factor authentication reset.');
+          toast(t('settings.two_factor_reset'));
           setTimeout(() => location.reload(), 600);
         }
       });
     } else if (delBtn) {
       const { userId, username } = delBtn.dataset;
       const ok = await confirmDialog({
-        title: `Delete user ${username}?`,
-        message: 'They will be signed out and lose all access.',
-        confirmLabel: 'Delete User',
+        title: t('settings.confirm_delete_user_title', { username }),
+        message: t('settings.confirm_delete_user_msg'),
+        confirmLabel: t('settings.delete_user'),
         danger: true,
       });
       if (!ok) return;
@@ -318,7 +328,7 @@ function init() {
         const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
         const data = await res.json().catch(() => ({}));
         if (data.ok) {
-          toast('User deleted.');
+          toast(t('settings.user_deleted'));
           document.querySelector(`[data-user-id="${CSS.escape(userId)}"]`)?.remove();
         } else {
           toast(data.error || friendlyError(res, { action: 'delete that user' }), { kind: 'error' });
@@ -331,24 +341,24 @@ function init() {
     const content = document.createElement('div');
     content.className = 'space-y-3';
     content.innerHTML = `
-      <div><label class="label">Username</label><input class="input" id="nu-name" autocomplete="off"></div>
-      <div><label class="label">Password</label><input class="input" id="nu-pass" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p></div>
-      <div><label class="label">Role</label>
-        <select class="input" id="nu-role" data-label="Role">
-          <option value="viewer">Viewer (read-only)</option>
-          <option value="operator">Operator (manage servers)</option>
-          <option value="admin">Admin (full access)</option>
+      <div><label class="label">${escapeHtml(t('settings.user_modal.username_label'))}</label><input class="input" id="nu-name" autocomplete="off"></div>
+      <div><label class="label">${escapeHtml(t('settings.user_modal.password_label'))}</label><input class="input" id="nu-pass" type="password" autocomplete="new-password"><p class="help">${escapeHtml(t('settings.user_modal.password_min_len'))}</p></div>
+      <div><label class="label">${escapeHtml(t('settings.user_modal.role_label'))}</label>
+        <select class="input" id="nu-role" data-label="${escapeHtml(t('settings.user_modal.role_label'))}">
+          <option value="viewer">${escapeHtml(t('settings.user_modal.role_viewer'))}</option>
+          <option value="operator">${escapeHtml(t('settings.user_modal.role_operator'))}</option>
+          <option value="admin">${escapeHtml(t('settings.user_modal.role_admin'))}</option>
         </select>
       </div>`;
     openModal({
-      title: 'Add User',
+      title: t('settings.user_modal.add_modal_title'),
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Create User',
+          label: t('settings.user_modal.create_user_btn'),
           kind: 'primary',
-          busyLabel: 'Creating…',
+          busyLabel: t('common.creating'),
           onClick: async () => {
             const body = {
               username: content.querySelector('#nu-name').value.trim(),
@@ -357,7 +367,7 @@ function init() {
             };
             const res = await post('/api/users', body);
             if (!res) return false;
-            toast(`User ${body.username} created.`);
+            toast(t('settings.user_created', { username: body.username }));
             setTimeout(() => location.reload(), 600);
           },
         },
@@ -371,33 +381,37 @@ function init() {
     const label = document.createElement('label');
     label.className = 'label';
     const isSelf = userId === selfUserId;
-    label.textContent = isSelf ? 'Set your new password' : `New password for ${username}`;
+    label.textContent = isSelf
+      ? t('settings.user_modal.set_own_password_label')
+      : t('settings.user_modal.set_user_password_label', { username });
     content.appendChild(label);
     content.insertAdjacentHTML(
       'beforeend',
-      '<input class="input" id="pw-new" type="password" autocomplete="new-password"><p class="help">At least 8 characters.</p>'
+      `<input class="input" id="pw-new" type="password" autocomplete="new-password"><p class="help">${escapeHtml(t('settings.user_modal.password_min_len'))}</p>`
     );
     // Re-verify the acting admin's own password before any password mutation
     // (mirrors the account 2FA routes) - a hijacked-but-live admin session can't
     // silently take over accounts / itself without knowing the real password.
     const curLabel = document.createElement('label');
     curLabel.className = 'label mt-3';
-    curLabel.textContent = 'Confirm with your current password';
+    curLabel.textContent = t('settings.user_modal.confirm_current_password');
     content.appendChild(curLabel);
     content.insertAdjacentHTML(
       'beforeend',
       '<input class="input" id="pw-current" type="password" autocomplete="current-password">'
     );
     openModal({
-      title: isSelf ? 'Change Your Password' : 'Set Password',
+      title: isSelf
+        ? t('settings.user_modal.change_own_password_title')
+        : t('settings.user_modal.set_user_password_title'),
       size: 'sm',
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: isSelf ? 'Change Password' : 'Set Password',
+          label: isSelf ? t('settings.user_modal.change_password_btn') : t('settings.user_modal.set_password_btn'),
           kind: 'primary',
-          busyLabel: 'Saving…',
+          busyLabel: t('common.saving'),
           onClick: async () => {
             const res = await post(`/api/users/${userId}/password`, {
               password: content.querySelector('#pw-new').value,
@@ -405,12 +419,12 @@ function init() {
             });
             if (!res) return false;
             if (res.signedOutAll) {
-              toast('Password updated. Sign in again with your new password.', { timeout: 4000 });
+              toast(t('settings.password_updated_sign_in'), { timeout: 4000 });
               setTimeout(() => {
                 location.href = '/login';
               }, 800);
             } else {
-              toast('Password updated.');
+              toast(t('settings.password_updated'));
             }
             return false;
           },
@@ -511,29 +525,29 @@ function init() {
     };
     dfltSave.addEventListener('click', async (e) => {
       const btn = e.currentTarget;
-      await withBusy(btn, 'Saving…', async () => {
+      await withBusy(btn, t('common.saving'), async () => {
         const body = Object.fromEntries(FIELDS.map(([, key]) => [key, inputs[key].value]));
         const res = await post('/api/settings/defaults', body);
         if (res) {
           apply(res);
-          toast('Defaults for new servers saved.');
+          toast(t('settings.defaults_saved'));
         }
       });
     });
     document.getElementById('dflt-restore').addEventListener('click', async (e) => {
       const btn = e.currentTarget;
       const ok = await confirmDialog({
-        title: 'Restore built-in defaults?',
-        message: 'Your custom values are discarded. Every field goes back to the .env / machine-detected default.',
-        confirmLabel: 'Restore',
+        title: t('settings.confirm_restore_defaults_title'),
+        message: t('settings.confirm_restore_defaults_msg'),
+        confirmLabel: t('settings.restore_defaults'),
         danger: true,
       });
       if (!ok) return;
-      await withBusy(btn, 'Restoring…', async () => {
+      await withBusy(btn, t('common.saving'), async () => {
         const res = await post('/api/settings/defaults', { reset: true });
         if (res) {
           apply(res);
-          toast('Defaults reset to the built-in values.');
+          toast(t('settings.defaults_restored'));
         }
       });
     });
@@ -591,12 +605,12 @@ function init() {
     });
     clearAllBtn?.addEventListener('click', async (e) => {
       const ok = await confirmDialog({
-        title: 'Clear All Locks?',
-        message: 'Every locked account and address will be able to try signing in again immediately.',
-        confirmLabel: 'Clear All Locks',
+        title: t('settings.confirm_clear_locks_title'),
+        message: t('settings.confirm_clear_locks_msg'),
+        confirmLabel: t('settings.clear_all_locks'),
       });
       if (!ok) return;
-      await withBusy(e.currentTarget, 'Clearing…', async () => {
+      await withBusy(e.currentTarget, t('common.saving'), async () => {
         const res = await post('/api/auth/lockouts/clear', { all: true });
         if (res) {
           toast(`Cleared ${res.removed} lock${res.removed === 1 ? '' : 's'}.`);

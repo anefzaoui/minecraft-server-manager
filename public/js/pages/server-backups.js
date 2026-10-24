@@ -7,6 +7,7 @@ import { openModal } from '../lib/modal.js';
 import { runTask } from '../lib/progress.js';
 import { setBusy } from '../lib/loading.js';
 import { fmtBytes } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-backups-server]');
 if (root) init(root.dataset.backupsServer);
@@ -22,7 +23,7 @@ function init(serverId) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false)
-      throw new Error(data.error || friendlyError(res, { action: 'run that backup action' }));
+      throw new Error(data.error || friendlyError(res, { action: t('backups_page.action_run') }));
     return data;
   }
 
@@ -31,14 +32,14 @@ function init(serverId) {
     const shrink = document.getElementById('bk-shrink')?.checked || false;
     try {
       await runTask({
-        title: shrink ? 'Backing up, then shrinking the world…' : 'Creating backup…',
+        title: shrink ? t('backups_page.backing_up_shrink_title') : t('backups_page.backing_up_simple_title'),
         start: () => postJson(`/api/servers/${serverId}/backups`, shrink ? { shrink: true } : undefined),
       });
-      toast(shrink ? 'Backup created. World shrink ran if the server was stopped.' : 'Backup created.');
+      toast(shrink ? t('backups_page.created_shrink_toast') : t('backups_page.created_simple_toast'));
       reload();
     } catch (err) {
       if (err.dismissed) return; // progress hidden - the task tray takes over
-      toast(err.message || 'That backup could not be created. Please try again.', { kind: 'error', timeout: 9000 });
+      toast(err.message || t('backups_page.create_failed_toast'), { kind: 'error', timeout: 9000 });
     }
   });
 
@@ -52,23 +53,23 @@ function init(serverId) {
 
     if (e.target.closest('[data-backup-restore]')) {
       const ok = await confirmDialog({
-        title: `Restore ${file}?`,
-        message: 'The server is stopped, its current data replaced with this archive, then started again.',
-        detail: 'A running server goes offline during the restore. This cannot be undone unless you back up first.',
-        confirmLabel: 'Restore',
+        title: t('backups_page.restore_server_title', { file }),
+        message: t('backups_page.restore_server_msg'),
+        detail: t('backups_page.restore_server_detail'),
+        confirmLabel: t('backups_page.restore'),
         danger: true,
       });
       if (!ok) return;
       try {
         await runTask({
-          title: `Restoring ${file}…`,
+          title: t('backups_page.restoring_title', { file }),
           start: () => postJson(`/api/servers/${serverId}/backups/${encodeURIComponent(backupId)}/restore`),
         });
-        toast('Backup restored.');
+        toast(t('backups_page.restored_toast'));
         reload();
       } catch (err) {
         if (err.dismissed) return; // progress hidden - the task tray takes over
-        toast(err.message || 'That backup could not be restored. Please try again.', {
+        toast(err.message || t('backups_page.restore_failed_toast'), {
           kind: 'error',
           timeout: 9000,
         });
@@ -78,7 +79,7 @@ function init(serverId) {
       const label = document.createElement('label');
       label.className = 'label';
       label.setAttribute('for', 'bk-rename-name');
-      label.textContent = 'Archive name';
+      label.textContent = t('backups_page.archive_name');
       const input = document.createElement('input');
       input.className = 'input font-mono';
       input.id = 'bk-rename-name';
@@ -86,21 +87,21 @@ function init(serverId) {
       input.value = file;
       const help = document.createElement('p');
       help.className = 'help';
-      help.textContent = 'Changes the displayed name and the file you download. Restore and retention are unaffected.';
+      help.textContent = t('backups_page.rename_help');
       content.append(label, input, help);
       openModal({
-        title: 'Rename Backup',
+        title: t('backups_page.rename_title'),
         content,
         actions: [
-          { label: 'Cancel', kind: 'ghost' },
+          { label: t('common.cancel'), kind: 'ghost' },
           {
-            label: 'Rename',
+            label: t('backups_page.rename_btn'),
             kind: 'primary',
-            busyLabel: 'Renaming…',
+            busyLabel: t('backups_page.renaming_btn'),
             onClick: async () => {
               const name = input.value.trim();
               if (!name) {
-                toast('Enter a name first.', { kind: 'error' });
+                toast(t('backups_page.enter_name_toast'), { kind: 'error' });
                 return false;
               }
               try {
@@ -111,16 +112,16 @@ function init(serverId) {
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || data.ok === false)
-                  throw new Error(data.error || friendlyError(res, { action: 'rename that backup' }));
+                  throw new Error(data.error || friendlyError(res, { action: t('backups_page.rename_archive') }));
                 row.dataset.file = data.backup.filename;
                 const text = row.querySelector('.truncate.font-mono');
                 if (text) {
                   text.textContent = data.backup.filename;
                   text.title = data.backup.filename;
                 }
-                toast('Backup renamed.');
+                toast(t('backups_page.renamed_toast'));
               } catch (err) {
-                toast(err.message || 'That backup could not be renamed.', { kind: 'error', timeout: 8000 });
+                toast(err.message || t('backups_page.rename_fail_toast'), { kind: 'error', timeout: 8000 });
                 return false;
               }
             },
@@ -130,10 +131,10 @@ function init(serverId) {
     } else if (e.target.closest('[data-backup-delete]')) {
       const btn = e.target.closest('[data-backup-delete]');
       const ok = await confirmDialog({
-        title: `Delete ${file}?`,
-        message: 'Removes the backup archive permanently.',
-        detail: `${fmtBytes(size)} will be freed.`,
-        confirmLabel: 'Delete',
+        title: t('backups_page.delete_server_title', { file }),
+        message: t('backups_page.delete_confirm_msg'),
+        detail: t('backups_page.delete_server_detail', { size: fmtBytes(size) }),
+        confirmLabel: t('common.delete'),
         danger: true,
       });
       if (!ok) return;
@@ -142,15 +143,15 @@ function init(serverId) {
         const res = await fetch(`/api/backups/${encodeURIComponent(backupId)}`, { method: 'DELETE' });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false)
-          throw new Error(data.error || friendlyError(res, { action: 'delete that backup' }));
-        toast(`${file} deleted (${fmtBytes(size)} freed).`);
+          throw new Error(data.error || friendlyError(res, { action: t('backups_page.action_delete') }));
+        toast(t('backups_page.deleted_file_freed_toast', { file, size: fmtBytes(size) }));
         const tbody = row.closest('tbody');
         row.remove();
         // Last one gone → re-render for the proper empty state instead of a
         // header-only table.
         if (tbody && !tbody.querySelector('[data-backup-row]')) reload();
       } catch (err) {
-        toast(err.message || 'That backup could not be deleted. Please try again.', { kind: 'error' });
+        toast(err.message || t('backups_page.delete_fail_toast'), { kind: 'error' });
       } finally {
         restore();
       }

@@ -7,7 +7,8 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
-import { escapeHtml as esc } from '../lib/format.js';
+import { escapeHtml, escapeHtml as esc } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-commands-root]');
 if (root) init(root);
@@ -127,12 +128,12 @@ function init(root) {
       </div>
 
       <div>
-        <label class="label">Action</label>
-        <select class="input" data-f="action" data-label="Action">
-          <option value="rtp">Random teleport (built-in)</option>
-          <option value="structure">Teleport to a structure</option>
-          <option value="biome">Teleport to a biome</option>
-          <option value="console">Run console commands</option>
+        <label class="label">${esc(t('commands_page.action_label'))}</label>
+        <select class="input" data-f="action" data-label="${esc(t('commands_page.action_label'))}">
+          <option value="rtp">${esc(t('commands_page.action_rtp'))}</option>
+          <option value="structure">${esc(t('commands_page.action_structure'))}</option>
+          <option value="biome">${esc(t('commands_page.action_biome'))}</option>
+          <option value="console">${esc(t('commands_page.action_console'))}</option>
         </select>
       </div>
 
@@ -202,9 +203,9 @@ function init(root) {
         <div>
           <label class="label">Who can use it</label>
           <select class="input" data-f="permission" data-label="Who can use it">
-            <option value="everyone">Everyone</option>
-            <option value="whitelist">Whitelisted players</option>
-            <option value="ops">Ops only</option>
+            <option value="everyone">${esc(t('commands_page.permission_everyone'))}</option>
+            <option value="whitelist">${esc(t('commands_page.permission_whitelist'))}</option>
+            <option value="ops">${esc(t('commands_page.permission_ops'))}</option>
           </select>
         </div>
         <div>
@@ -351,22 +352,28 @@ function init(root) {
     }
 
     openModal({
-      title: existing ? `Edit ${prefix}${existing.trigger}` : 'Add Chat Command',
+      title: existing
+        ? t('commands_page.edit_title', { trigger: `${prefix}${existing.trigger}` })
+        : t('commands_page.add_title'),
       content,
       size: 'lg',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: existing ? 'Save' : 'Create',
+          label: existing ? t('common.save') : t('common.create'),
           kind: 'primary',
-          busyLabel: 'Saving…',
+          busyLabel: t('common.saving'),
           onClick: async () => {
             const body = collect();
             if (!body) return false;
             try {
               if (existing) await api('PATCH', `/${existing.id}`, body);
               else await api('POST', '/', body);
-              refresh(`${prefix}${body.trigger} ${existing ? 'saved' : 'created'}.`);
+              refresh(
+                existing
+                  ? t('commands_page.saved_toast', { trigger: `${prefix}${body.trigger}` })
+                  : t('commands_page.created_toast', { trigger: `${prefix}${body.trigger}` })
+              );
             } catch (err) {
               fail(err);
               return false;
@@ -395,18 +402,19 @@ function init(root) {
       commandModal(cmd);
     } else if (e.target.closest('[data-cc-delete]')) {
       const ok = await confirmDialog({
-        title: `Delete ${prefix}${cmd.trigger}?`,
-        message: 'Players will no longer be able to use it. This cannot be undone.',
-        confirmLabel: 'Delete',
+        title: t('commands_page.delete_title', { trigger: `${prefix}${cmd.trigger}` }),
+        message: t('commands_page.delete_msg'),
+        confirmLabel: t('commands_page.delete_btn'),
       });
       if (!ok) return;
       try {
         await withBusy(e.target.closest('[data-cc-delete]'), async () => {
           await api('DELETE', `/${cmd.id}`);
           commands = commands.filter((c) => c.id !== cmd.id);
-          if (!commands.length) return refresh(`${prefix}${cmd.trigger} deleted.`); // re-render shows the empty state
+          if (!commands.length)
+            return refresh(t('commands_page.deleted_toast', { trigger: `${prefix}${cmd.trigger}` })); // re-render shows the empty state
           row.remove();
-          toast(`${prefix}${cmd.trigger} deleted.`);
+          toast(t('commands_page.deleted_toast', { trigger: `${prefix}${cmd.trigger}` }));
         });
       } catch (err) {
         fail(err);
@@ -446,20 +454,20 @@ function init(root) {
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
       <div>
-        <label class="label">Run as player (must be online for teleports)</label>
+        <label class="label">${escapeHtml(t('commands_page.test_player_label'))}</label>
         <input class="input" data-f="player" maxlength="16" autocomplete="off" spellcheck="false" placeholder="AverageLupo" value="${esc(localStorage.getItem('cc-test-player') || '')}">
       </div>
-      <p class="text-xs text-ink-faint">Runs <code class="font-mono">${esc(prefix + cmd.trigger)}</code> right now. Permission and cooldown checks are skipped, and the result is whispered to the player in-game.</p>`;
+      <p class="text-xs text-ink-faint">${escapeHtml(t('commands_page.test_player_help', { trigger: prefix + cmd.trigger }))}</p>`;
     openModal({
-      title: `Test ${prefix}${cmd.trigger}`,
+      title: t('commands_page.test_title', { trigger: `${prefix}${cmd.trigger}` }),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Run Now',
+          label: t('commands_page.run_now_btn'),
           kind: 'primary',
-          busyLabel: 'Running…',
+          busyLabel: t('commands_page.running_btn'),
           onClick: async ({ body }) => {
             const player = body.querySelector('[data-f="player"]').value.trim();
             if (!PLAYER_NAME_RE.test(player)) {

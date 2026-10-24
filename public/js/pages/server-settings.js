@@ -9,6 +9,7 @@ import { setBusy } from '../lib/loading.js';
 import { initDockerSettings } from '../lib/dockerSettings.js';
 import { wireCatalogConflicts } from '../lib/catalogConflicts.js';
 import { escapeHtml } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-settings-server]');
 if (root) init(root.dataset.settingsServer);
@@ -238,20 +239,20 @@ function init(serverId) {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
-      <p class="text-xs text-ink-faint">Saves this server's setup as a reusable blueprint in the library.</p>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include config directories</label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed custom mod files in the archive <span class="text-xs text-ink-faint">(bigger file, fully portable)</span></label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">(can be large)</span></label>`;
+      <p class="text-xs text-ink-faint">${escapeHtml(t('server_settings.export_bp_intro'))}</p>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> ${escapeHtml(t('server_settings.export_bp_config'))}</label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> ${escapeHtml(t('server_settings.export_bp_embed'))}</label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> ${escapeHtml(t('server_settings.export_bp_world'))}</label>`;
     openModal({
-      title: 'Export as Blueprint',
+      title: t('server_settings.export_bp_title'),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Export Blueprint',
+          label: t('server_settings.export_bp_btn'),
           kind: 'primary',
-          busyLabel: 'Exporting…',
+          busyLabel: t('server_settings.exporting_bp_btn'),
           onClick: async ({ body }) => {
             const checked = (k) => body.querySelector(`[data-f="${k}"]`).checked;
             try {
@@ -277,12 +278,16 @@ function init(serverId) {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
-      <p>Blueprint <b data-bp-name></b> saved to the library.</p>
-      <a class="btn btn-primary" data-bp-dl>Download .zip</a>
-      <p class="text-xs text-ink-faint">Also available any time on the <a class="text-link hover:underline" href="/blueprints">Blueprints page</a>.</p>`;
-    content.querySelector('[data-bp-name]').textContent = bp.name || 'exported';
+      <p>${t('server_settings.bp_exported_msg', { name: escapeHtml(bp.name || 'exported') })}</p>
+      <a class="btn btn-primary" data-bp-dl>${escapeHtml(t('server_settings.bp_download_btn'))}</a>
+      <p class="text-xs text-ink-faint">${t('server_settings.bp_page_link')}</p>`;
     content.querySelector('[data-bp-dl]').href = `/api/blueprints/${encodeURIComponent(bp.id)}/download`;
-    openModal({ title: 'Blueprint Exported', content, size: 'sm', actions: [{ label: 'Done', kind: 'ghost' }] });
+    openModal({
+      title: t('server_settings.bp_exported_title'),
+      content,
+      size: 'sm',
+      actions: [{ label: t('common.done', { defaultValue: 'Done' }), kind: 'ghost' }],
+    });
   }
 
   // ------------------------------------------------------------------ clone
@@ -290,16 +295,16 @@ function init(serverId) {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
-      <p class="text-xs text-ink-faint">Creates a copy of this server with its own ports. It exports a blueprint and imports it as a new server.</p>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Also copy the active world</label>`;
+      <p class="text-xs text-ink-faint">${escapeHtml(t('server_settings.clone_intro'))}</p>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> ${escapeHtml(t('server_settings.clone_include_world'))}</label>`;
     openModal({
-      title: 'Clone Server',
+      title: t('server_settings.clone_title'),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Clone',
+          label: t('server_settings.clone_btn'),
           kind: 'primary',
           onClick: ({ body }) => {
             cloneServer(body.querySelector('[data-f="world"]').checked);
@@ -315,7 +320,7 @@ function init(serverId) {
     const DIRECT = Symbol('direct');
     let direct = null;
     runTask({
-      title: 'Cloning server…',
+      title: t('server_settings.cloning_task'),
       start: async () => {
         const data = await postJson('/api/blueprints/clone', { serverId, includeWorld });
         if (data.taskId) return data.taskId;
@@ -337,7 +342,7 @@ function init(serverId) {
   }
 
   function finishClone(newId) {
-    toast('Server cloned.');
+    toast(t('server_settings.cloned_toast'));
     setTimeout(() => {
       location.href = newId ? `/servers/${newId}` : '/';
     }, 700);
@@ -348,9 +353,9 @@ function init(serverId) {
     if (dirty) {
       const { confirmDialog } = await import('../lib/confirm.js');
       const ok = await confirmDialog({
-        title: 'Discard changes?',
-        message: 'Everything you have edited on this tab since the last save will be lost.',
-        confirmLabel: 'Discard',
+        title: t('server_settings.discard_title'),
+        message: t('server_settings.discard_msg'),
+        confirmLabel: t('server_settings.discard_btn'),
         danger: true,
       });
       if (!ok) return;
@@ -373,7 +378,8 @@ function init(serverId) {
 
   document.getElementById('st-save')?.addEventListener('click', async (e) => {
     const saveBtn = e.currentTarget; // capture before await - currentTarget is null afterwards
-    const heapMb = Number(document.getElementById('st-heap').value);
+    const heapInput = document.getElementById('st-heap');
+    const heapMb = heapInput ? Number(heapInput.value) : undefined;
     // Blank cpus/disk-quota = leave the current value untouched, not a hard 0
     // (which for a quota means "off"). An explicit "0" still round-trips.
     const cpuRaw = document.getElementById('st-cpu').value.trim();
@@ -385,7 +391,7 @@ function init(serverId) {
       icon,
       accent,
       tags: [...tags],
-      heapMb,
+      ...(heapMb === undefined ? {} : { heapMb }),
       containerMemoryMb: Number(document.getElementById('st-cmem').value),
       cpus: cpuRaw === '' ? undefined : Number(cpuRaw),
       diskQuotaGb: quotaRaw === '' ? undefined : Number(quotaRaw),

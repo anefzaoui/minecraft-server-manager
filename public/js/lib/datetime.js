@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 // Shared date/time formatting that honors the panel's configured timezone +
 // locale (window.MSM, injected by the layout), falling back to the browser's
 // own settings when absent. Use these instead of raw toLocaleString() so every
@@ -48,10 +50,13 @@ export function timeAgo(v) {
   if (isNaN(d.getTime())) return '';
   const secs = Math.round((Date.now() - d.getTime()) / 1000);
   if (secs < 0) return formatDateTime(d); // future timestamp - not "just now"
-  if (secs < 45) return 'just now';
-  if (secs < 3600) return `${Math.round(secs / 60)}m ago`;
-  if (secs < 86400) return `${Math.round(secs / 3600)}h ago`;
-  if (secs < 7 * 86400) return `${Math.round(secs / 86400)}d ago`;
+  if (secs < 45) return t('datetime.just_now') || 'just now';
+  if (secs < 3600)
+    return t('datetime.minutes_ago', { count: Math.round(secs / 60) }) || `${Math.round(secs / 60)}m ago`;
+  if (secs < 86400)
+    return t('datetime.hours_ago', { count: Math.round(secs / 3600) }) || `${Math.round(secs / 3600)}h ago`;
+  if (secs < 7 * 86400)
+    return t('datetime.days_ago', { count: Math.round(secs / 86400) }) || `${Math.round(secs / 86400)}d ago`;
   return formatDate(d);
 }
 

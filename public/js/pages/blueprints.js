@@ -4,7 +4,8 @@ import { toast } from '../lib/toast.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
-import { escapeHtml as esc } from '../lib/format.js';
+import { escapeHtml, escapeHtml as esc } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const grid = document.querySelector('[data-blueprints-page]');
 if (grid) init();
@@ -21,10 +22,9 @@ function init() {
       createFrom({ blueprintId: id }, name);
     } else if (delBtn) {
       const ok = await confirmDialog({
-        title: `Delete blueprint "${name}"?`,
-        message:
-          'This removes the .mcserver.zip file from the library. Servers already created from it are not affected.',
-        confirmLabel: 'Delete',
+        title: t('blueprints_modal.delete_title', { name }),
+        message: t('blueprints_modal.delete_msg'),
+        confirmLabel: t('blueprints_modal.delete_btn'),
         danger: true,
       });
       if (!ok) return;
@@ -32,7 +32,7 @@ function init() {
         const res = await fetch(`/api/blueprints/${encodeURIComponent(id)}`, { method: 'DELETE' });
         const data = await res.json().catch(() => ({}));
         if (data.ok) {
-          toast(`Blueprint "${name}" deleted.`);
+          toast(t('blueprints_modal.deleted_toast', { name }));
           card.remove();
         } else {
           toast(data.error || 'That blueprint could not be deleted. Please try again.', { kind: 'error' });
@@ -50,7 +50,7 @@ function init() {
     if (!file) return;
     const form = new FormData();
     form.append('file', file);
-    const progress = openProgress('Uploading and validating blueprint…');
+    const progress = openProgress(t('blueprints_modal.uploading_validating'));
     let data;
     try {
       const res = await fetch('/api/blueprints/import-preview', { method: 'POST', body: form });
@@ -82,16 +82,16 @@ function showPreview(preview, importBody) {
 
   content.innerHTML = `
     <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-      <div><dt class="text-ink-faint">Server type</dt><dd class="mt-0.5 font-medium">${esc(m.config.type)} · MC ${esc(m.config.mcVersion)}</dd></div>
-      <div><dt class="text-ink-faint">Modpack</dt><dd class="mt-0.5 font-medium">${m.pack ? esc(`${m.pack.projectName || m.pack.projectRef} @ ${m.pack.versionName || m.pack.versionId}`) : 'None'}</dd></div>
-      <div><dt class="text-ink-faint">Resources</dt><dd class="mt-0.5 font-medium">${esc(m.resources.heapMb)} MB heap · ${esc(m.resources.containerMemoryMb)} MB limit · ${esc(m.resources.cpus || 'unlimited')} CPU · ${esc(m.resources.diskQuotaGb)} GB quota</dd></div>
-      <div><dt class="text-ink-faint">Includes</dt><dd class="mt-0.5 font-medium">${m.configFiles.length} config file${m.configFiles.length === 1 ? '' : 's'} · ${m.world ? 'world included' : 'no world'} · ${m.embedFiles ? 'files embedded' : 'manifest-only'}</dd></div>
+      <div><dt class="text-ink-faint">${escapeHtml(t('blueprints_modal.server_type'))}</dt><dd class="mt-0.5 font-medium">${esc(m.config.type)} · MC ${esc(m.config.mcVersion)}</dd></div>
+      <div><dt class="text-ink-faint">${escapeHtml(t('blueprints_modal.modpack'))}</dt><dd class="mt-0.5 font-medium">${m.pack ? esc(`${m.pack.projectName || m.pack.projectRef} @ ${m.pack.versionName || m.pack.versionId}`) : 'None'}</dd></div>
+      <div><dt class="text-ink-faint">${escapeHtml(t('blueprints_modal.resources'))}</dt><dd class="mt-0.5 font-medium">${esc(m.resources.heapMb)} MB heap · ${esc(m.resources.containerMemoryMb)} MB limit · ${esc(m.resources.cpus || 'unlimited')} CPU · ${esc(m.resources.diskQuotaGb)} GB quota</dd></div>
+      <div><dt class="text-ink-faint">${escapeHtml(t('blueprints_modal.includes'))}</dt><dd class="mt-0.5 font-medium">${m.configFiles.length} config file${m.configFiles.length === 1 ? '' : 's'} · ${m.world ? 'world included' : 'no world'} · ${m.embedFiles ? 'files embedded' : 'manifest-only'}</dd></div>
     </dl>
     ${
       m.overlay.length
         ? `
       <div>
-        <div class="mb-1 text-xs font-medium text-ink-faint">Custom mods (${m.overlay.length})</div>
+        <div class="mb-1 text-xs font-medium text-ink-faint">${escapeHtml(t('blueprints_modal.custom_mods', { count: m.overlay.length }))}</div>
         <ul class="max-h-48 space-y-1 overflow-y-auto rounded-md border border-line bg-raised p-2.5 text-xs">${overlayRows}</ul>
       </div>`
         : ''
@@ -100,21 +100,21 @@ function showPreview(preview, importBody) {
       preview.warnings.length
         ? `
       <div class="rounded-md border border-gold-400/40 bg-gold-400/10 p-2.5 text-xs">
-        <div class="mb-1 font-medium text-warn">Warnings</div>
+        <div class="mb-1 font-medium text-warn">${escapeHtml(t('blueprints_modal.warnings'))}</div>
         <ul class="list-inside list-disc space-y-0.5 text-ink-soft">${preview.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
       </div>`
         : ''
     }
-    <p class="text-xs text-ink-faint">A new server will be created with fresh ports and a fresh RCON password. Nothing existing is touched.</p>`;
+    <p class="text-xs text-ink-faint">${escapeHtml(t('blueprints_modal.import_note'))}</p>`;
 
   openModal({
-    title: `Import "${m.name}"`,
+    title: t('blueprints_modal.import_preview_title', { name: m.name }),
     content,
     size: 'lg',
     actions: [
-      { label: 'Cancel', kind: 'ghost' },
+      { label: t('common.cancel'), kind: 'ghost' },
       {
-        label: 'Create a Server',
+        label: t('blueprints_modal.create_server_btn'),
         kind: 'primary',
         onClick: () => {
           // Kick off after this modal closes so the progress modal is on top.
@@ -129,13 +129,11 @@ let importInFlight = false; // dismissing the progress modal must not allow a se
 
 async function createFrom(body, name) {
   if (importInFlight) {
-    toast('A server is already being created from a blueprint. Please wait for it to finish.', { kind: 'info' });
+    toast(t('blueprints_modal.import_in_flight'), { kind: 'info' });
     return;
   }
   importInFlight = true;
-  const progress = openProgress(
-    `Creating a server from "${name}". This downloads the server image and installs the pack and mods, so it can take a few minutes…`
-  );
+  const progress = openProgress(t('blueprints_modal.creating_server_progress', { name }));
   let data;
   try {
     const res = await fetch('/api/blueprints/import', {
@@ -157,7 +155,7 @@ async function createFrom(body, name) {
       timeout: 9000,
     });
   if (!data.report || !data.report.length) {
-    toast(`Server "${data.server.name}" created.`);
+    toast(t('blueprints_modal.server_created_toast', { name: data.server.name }));
     setTimeout(() => {
       location.href = `/servers/${data.server.id}`;
     }, 600);
@@ -175,7 +173,7 @@ function showReport(server, report) {
   const content = document.createElement('div');
   content.className = 'space-y-3 text-sm';
   content.innerHTML = `
-    <p>Server <b>${esc(server.name)}</b> was created on port ${server.portGame}. Install report:</p>
+    <p>${t('blueprints_modal.install_report_header', { name: esc(server.name), port: server.portGame })}</p>
     <ul class="max-h-64 space-y-1.5 overflow-y-auto rounded-md border border-line bg-raised p-2.5 text-xs">
       ${report
         .map(
@@ -190,14 +188,14 @@ function showReport(server, report) {
         )
         .join('')}
     </ul>
-    ${report.some((r) => r.status !== 'ok') ? '<p class="text-xs text-ink-faint">Failed items can be added later from the server\'s Mods tab.</p>' : ''}`;
+    ${report.some((r) => r.status !== 'ok') ? `<p class="text-xs text-ink-faint">${escapeHtml(t('blueprints_modal.finished_note'))}</p>` : ''}`;
   openModal({
-    title: 'Blueprint Import Finished',
+    title: t('blueprints_modal.finished_title'),
     content,
     actions: [
-      { label: 'Stay Here', kind: 'ghost' },
+      { label: t('blueprints_modal.stay_here_btn'), kind: 'ghost' },
       {
-        label: 'Open Server',
+        label: t('blueprints_modal.open_server_btn'),
         kind: 'primary',
         onClick: () => {
           location.href = `/servers/${server.id}`;
@@ -213,9 +211,9 @@ function openProgress(text) {
   content.innerHTML = `
     <p></p>
     <div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div>
-    <p class="text-xs text-ink-faint">Closing this window doesn't cancel the import. It keeps running in the background.</p>`;
+    <p class="text-xs text-ink-faint">${escapeHtml(t('blueprints_modal.progress_note'))}</p>`;
   content.querySelector('p').textContent = text;
-  return openModal({ title: 'Importing…', content, actions: [] });
+  return openModal({ title: t('blueprints_modal.progress_title'), content, actions: [] });
 }
 
 function sourceLabel(entry) {

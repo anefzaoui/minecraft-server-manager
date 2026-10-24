@@ -13,6 +13,7 @@
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
 import { clampBox, resizeBox, pickExport, MIN_CROP_PX, OUTPUT_MAX_PX } from './cropMath.js';
+import { t } from './i18n.js';
 
 const RASTER_MAX = 2048; // long-edge px cap for the crop source (SVG raster + oversized photos)
 const SERVER_MAX_BYTES = 16 * 1024 * 1024; // must match the multer limit in routes/account.js
@@ -38,25 +39,25 @@ export function openCropModal(file) {
         wrap.className = 'space-y-3';
         const hint = document.createElement('p');
         hint.className = 'text-xs text-ink-faint';
-        hint.textContent = 'Drag to move, drag a corner to resize. The square becomes your picture.';
+        hint.textContent = t('avatar.crop_hint');
         wrap.append(ui.root, hint);
 
         openModal({
-          title: 'Crop Profile Picture',
+          title: t('avatar.crop_title'),
           size: 'lg',
           content: wrap,
           actions: [
-            { label: 'Cancel', kind: 'ghost' },
+            { label: t('common.cancel'), kind: 'ghost' },
             {
-              label: 'Use Photo',
+              label: t('avatar.use_photo'),
               kind: 'primary',
-              busyLabel: 'Processing…',
+              busyLabel: t('avatar.processing'),
               onClick: async () => {
                 try {
                   const result = await exportSquare(img, ui.getBox(), ui.getScale(), sourceType);
                   settle(result); // returning undefined lets modal.js close the modal
                 } catch (err) {
-                  toast(err.message || 'Could not process that image.', { kind: 'error' });
+                  toast(err.message || t('avatar.err_process'), { kind: 'error' });
                   return false; // keep the modal open so the user can adjust
                 }
               },
@@ -68,7 +69,7 @@ export function openCropModal(file) {
         ui.init(); // openModal appended synchronously, so the <img> is measurable now
       })
       .catch(() => {
-        toast('That image could not be opened.', { kind: 'error' });
+        toast(t('avatar.err_open'), { kind: 'error' });
         settle(null);
       });
   });
@@ -275,7 +276,7 @@ async function exportSquare(img, box, scale, sourceType) {
   const sy = Math.round(box.y * scale);
   let sSize = Math.round(box.size * scale);
   sSize = Math.min(sSize, img.naturalWidth - sx, img.naturalHeight - sy);
-  if (sSize < 1) throw new Error('Pick a larger area to crop.');
+  if (sSize < 1) throw new Error(t('avatar.err_larger_area'));
 
   const out = Math.min(OUTPUT_MAX_PX, sSize);
   const canvas = document.createElement('canvas');
@@ -314,7 +315,7 @@ async function exportSquare(img, box, scale, sourceType) {
   }
 
   if (blob.size > SERVER_MAX_BYTES) {
-    throw new Error('The cropped image is still too large. Try selecting a smaller area.');
+    throw new Error(t('avatar.err_too_large'));
   }
   return { blob, filename };
 }

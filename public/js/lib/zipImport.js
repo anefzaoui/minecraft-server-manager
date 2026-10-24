@@ -5,6 +5,7 @@
 import { toast } from './toast.js';
 import { openModal } from './modal.js';
 import { setBusy } from './loading.js';
+import { t } from './i18n.js';
 
 /**
  * Show the outcome of a zip import. `onDone` runs when the user is finished
@@ -14,14 +15,14 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
   const blocked = (report && report.blocked && report.blocked.length ? report.blocked : blockedFallback) || [];
   const failed = (report && report.failed) || [];
   const installedCount = (report && report.installed && report.installed.length) || 0;
-  const parts = [`${installedCount} installed`];
-  if (failed.length) parts.push(`${failed.length} failed`);
-  if (blocked.length) parts.push(`${blocked.length} need manual download`);
+  const parts = [t('zip_import.installed_count', { count: installedCount })];
+  if (failed.length) parts.push(t('zip_import.failed_count', { count: failed.length }));
+  if (blocked.length) parts.push(t('zip_import.manual_count', { count: blocked.length }));
   if (report && report.overrides && report.overrides.applied)
-    parts.push(`${report.overrides.applied} override files applied`);
+    parts.push(t('zip_import.overrides_count', { count: report.overrides.applied }));
 
   if (!blocked.length && !failed.length) {
-    toast(`Zip import done: ${parts.join(', ')}.`, { kind: 'success' });
+    toast(t('zip_import.done_toast', { summary: parts.join(', ') }), { kind: 'success' });
     onDone();
     return;
   }
@@ -29,7 +30,7 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
   const content = document.createElement('div');
   const summary = document.createElement('p');
   summary.className = 'mb-3 text-sm text-ink-soft';
-  summary.textContent = `Import finished: ${parts.join(', ')}.`;
+  summary.textContent = t('zip_import.finished_summary', { summary: parts.join(', ') });
   content.appendChild(summary);
 
   if (failed.length) {
@@ -47,8 +48,7 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
   if (blocked.length) {
     const intro = document.createElement('p');
     intro.className = 'mb-2 text-xs text-ink-soft';
-    intro.textContent =
-      'These mods disallow automated downloads. Open each CurseForge page, download the exact file in your browser, then upload it here.';
+    intro.textContent = t('zip_import.blocked_intro');
     content.appendChild(intro);
     const box = document.createElement('div');
     box.className = 'space-y-2';
@@ -60,27 +60,30 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
           <span class="block truncate font-medium" data-role="name"></span>
           <span class="block truncate font-mono text-xs text-ink-faint" data-role="file"></span>
         </span>
-        <a class="btn btn-sm" target="_blank" rel="noopener" data-role="open">Open CF page</a>
-        <button class="btn btn-sm" data-role="upload">Upload Jar</button>
+        <a class="btn btn-sm" target="_blank" rel="noopener" data-role="open"></a>
+        <button class="btn btn-sm" data-role="upload"></button>
         <input type="file" accept=".jar,.zip" class="hidden" data-role="filepick">`;
       row.querySelector('[data-role="name"]').textContent = b.name;
       row.querySelector('[data-role="file"]').textContent = b.fileName || '';
       const link = row.querySelector('[data-role="open"]');
+      link.textContent = t('zip_import.open_cf_btn');
+      const uploadBtn = row.querySelector('[data-role="upload"]');
+      uploadBtn.textContent = t('zip_import.upload_jar_btn');
       // Pack-manifest / registry URL is third-party data — allow only http(s).
       if (/^https?:\/\//i.test(b.url || '')) link.href = b.url;
       else link.remove();
       const pick = row.querySelector('[data-role="filepick"]');
-      row.querySelector('[data-role="upload"]').addEventListener('click', () => pick.click());
+      uploadBtn.addEventListener('click', () => pick.click());
       pick.addEventListener('change', async () => {
         if (!pick.files.length) return;
         const fd = new FormData();
         fd.append('file', pick.files[0]);
-        const restore = setBusy(row.querySelector('[data-role="upload"]'));
+        const restore = setBusy(uploadBtn);
         try {
           const res = await fetch(`/api/servers/${serverId}/mods/upload`, { method: 'POST', body: fd });
           const data = await res.json().catch(() => ({}));
-          if (!res.ok || !data.ok) throw new Error(data.error || 'Upload failed');
-          toast(`Uploaded ${pick.files[0].name}.`);
+          if (!res.ok || !data.ok) throw new Error(data.error || t('zip_import.upload_failed'));
+          toast(t('zip_import.uploaded_toast', { file: pick.files[0].name }));
           row.remove();
         } catch (err) {
           toast(err.message, { kind: 'error' });
@@ -94,9 +97,9 @@ export function showZipImportReport({ serverId, report, blockedFallback = [], on
   }
 
   openModal({
-    title: 'Zip Import Report',
+    title: t('zip_import.modal_title'),
     content,
     size: 'lg',
-    actions: [{ label: 'Done', kind: 'primary', onClick: () => onDone() }],
+    actions: [{ label: t('common.done'), kind: 'primary', onClick: () => onDone() }],
   });
 }

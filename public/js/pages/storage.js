@@ -7,19 +7,21 @@ import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 import { fmtBytes } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 document.getElementById('storage-rescan')?.addEventListener('click', async (e) => {
   const btn = e.currentTarget;
-  const restore = setBusy(btn, 'Scanning…');
-  toast('Re-scanning the data folder…', { kind: 'info' });
+  const restore = setBusy(btn, t('storage_page.scanning_btn'));
+  toast(t('storage_page.rescan_toast'), { kind: 'info' });
   try {
     const res = await fetch('/api/storage/scan', { method: 'POST' });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || data.ok === false) throw new Error(data.error || friendlyError(res, { action: 'start the scan' }));
+    if (!res.ok || data.ok === false)
+      throw new Error(data.error || friendlyError(res, { action: t('storage_page.action_scan') }));
     toast(
       data.skipped
-        ? 'A scan is already running.'
-        : `Scan complete: ${fmtBytes(data.totalBytes)} across ${data.dirs} folders (${data.ms} ms).`
+        ? t('storage_page.scan_already_running')
+        : t('storage_page.scan_complete', { size: fmtBytes(data.totalBytes), dirs: data.dirs, ms: data.ms })
     );
     if (!data.skipped) setTimeout(() => location.reload(), 800);
   } catch (err) {
@@ -38,7 +40,7 @@ document.addEventListener('click', async (e) => {
 
   let preview;
   try {
-    preview = await withBusy(btn, 'Checking…', () =>
+    preview = await withBusy(btn, t('common.checking'), () =>
       postJSON('/api/storage/cleanup', { action, olderThanDays: days, dryRun: true })
     );
   } catch (err) {
@@ -46,27 +48,25 @@ document.addEventListener('click', async (e) => {
   }
 
   if (!preview.removed) {
-    return toast('Nothing to clean up for this action right now.', { kind: 'info' });
+    return toast(t('storage_page.nothing_to_clean'), { kind: 'info' });
   }
   const ok = await confirmDialog({
     title: label,
-    message: `This permanently removes ${preview.removed} item${preview.removed === 1 ? '' : 's'} and frees ${fmtBytes(preview.freedBytes)}.`,
+    message: t('storage_page.confirm_message', { count: preview.removed, size: fmtBytes(preview.freedBytes) }),
     detail: days
-      ? `Only items older than ${days} days are touched.`
+      ? t('storage_page.confirm_detail_days', { days })
       : action === 'tmp'
-        ? 'Only temporary files older than 1 hour are removed, so downloads in progress are safe.'
+        ? t('storage_page.confirm_detail_tmp')
         : '',
-    confirmLabel: `Free ${fmtBytes(preview.freedBytes)}`,
+    confirmLabel: t('storage_page.free_btn', { size: fmtBytes(preview.freedBytes) }),
     danger: true,
   });
   if (!ok) return;
   try {
-    const result = await withBusy(btn, 'Cleaning…', () =>
+    const result = await withBusy(btn, t('storage_page.cleaning_btn'), () =>
       postJSON('/api/storage/cleanup', { action, olderThanDays: days })
     );
-    toast(
-      `Cleanup done: ${result.removed} item${result.removed === 1 ? '' : 's'} removed, ${fmtBytes(result.freedBytes)} freed.`
-    );
+    toast(t('storage_page.cleanup_done', { count: result.removed, size: fmtBytes(result.freedBytes) }));
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     toast(err.message, { kind: 'error', timeout: 9000 });
@@ -80,6 +80,7 @@ async function postJSON(url, body) {
     body: JSON.stringify(body || {}),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || friendlyError(res, { action: 'run that cleanup' }));
+  if (!res.ok || data.ok === false)
+    throw new Error(data.error || friendlyError(res, { action: t('storage_page.action_cleanup') }));
   return data;
 }

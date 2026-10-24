@@ -16,23 +16,20 @@ import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { runTask } from '../lib/progress.js';
 import { withBusy } from '../lib/loading.js';
+import { t } from '../lib/i18n.js';
 
 document.getElementById('updates-check-all')?.addEventListener('click', async () => {
   try {
     const result = await runTask({
-      title: 'Checking for updates…',
+      title: t('updates_page.checking_title'),
       start: async () => (await postJSON('/api/updates/check', {})).taskId,
     });
     const n = result && result.findings ? result.findings.length : 0;
-    toast(
-      n
-        ? `Update check finished: ${n} ${n === 1 ? 'update' : 'updates'} available.`
-        : 'Update check finished: everything up to date.'
-    );
+    toast(n ? t('updates_page.check_finished_count', { count: n }) : t('updates_page.check_finished_none'));
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'The update check could not be completed. Please try again.', {
+    toast(err.message || t('updates_page.check_failed_toast'), {
       kind: 'error',
       timeout: 9000,
     });
@@ -89,7 +86,7 @@ function dropUpdateRow(row) {
 async function toggleIgnore(row, btn, ignore) {
   const { serverId, subjectType, contentId, subject, latest } = row.dataset;
   try {
-    await withBusy(btn, ignore ? 'Ignoring…' : 'Un-ignoring…', () =>
+    await withBusy(btn, ignore ? t('updates_page.ignoring_btn') : t('updates_page.unignoring_btn'), () =>
       postJSON('/api/updates/ignore', {
         subjectType: subjectType || (contentId ? 'content' : ''),
         serverId,
@@ -98,109 +95,108 @@ async function toggleIgnore(row, btn, ignore) {
       })
     );
     toast(
-      ignore
-        ? `Now ignoring ${latest} for ${subject}. It won't be offered until a newer build appears.`
-        : `${subject} updates are offered again.`,
+      ignore ? t('updates_page.ignore_toast', { latest, subject }) : t('updates_page.unignore_toast', { subject }),
       { kind: 'success' }
     );
     setTimeout(() => location.reload(), 700);
   } catch (err) {
-    toast(err.message || 'That could not be changed. Please try again.', { kind: 'error', timeout: 9000 });
+    toast(err.message || friendlyError(err), { kind: 'error', timeout: 9000 });
   }
 }
 
 async function upgradePack(row, { serverId, serverName, subject, current, latest, versionId }) {
   const ok = await confirmDialog({
-    title: `Upgrade ${subject}?`,
-    message: `${serverName} moves from ${current} to ${latest}. The panel takes an automatic backup first, applies the new version, and starts the server back up, watching that it comes back healthy.`,
-    detail:
-      'Your custom mods are preserved, and you can roll back with one click if it does not come up. The server is briefly offline during the swap.',
-    confirmLabel: 'Upgrade Now',
+    title: t('updates_page.upgrade_pack_title', { subject }),
+    message: t('updates_page.upgrade_pack_msg', { server: serverName, current, latest }),
+    detail: t('updates_page.upgrade_pack_detail'),
+    confirmLabel: t('updates_page.upgrade_now_btn'),
   });
   if (!ok) return;
   try {
     const result = await runTask({
-      title: `Upgrading ${subject} on ${serverName}…`,
+      title: t('updates_page.upgrading_pack_title', { subject, server: serverName }),
       start: async () => (await postJSON(`/api/servers/${serverId}/pack/upgrade`, { versionId })).taskId,
     });
     if (result && result.ok === false) {
       await offerRollback(serverId, serverName, result.error);
       return;
     }
-    toast(`Upgraded: ${result.from} → ${result.to}.`);
+    toast(t('updates_page.upgraded_toast', { from: result.from, to: result.to }));
     dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'The upgrade could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
+    toast(err.message || t('updates_page.upgrade_failed_toast'), { kind: 'error', timeout: 12000 });
   }
 }
 
 async function offerRollback(serverId, serverName, errorMessage) {
   const ok = await confirmDialog({
-    title: 'Upgrade failed. Roll back?',
-    message: errorMessage || 'The server did not come back healthy after the upgrade.',
-    detail: 'Rolling back restores the automatic pre-update backup and pins the previous pack version.',
-    confirmLabel: 'Roll Back',
+    title: t('updates_page.rollback_title'),
+    message: errorMessage || t('updates_page.rollback_default_msg'),
+    detail: t('updates_page.rollback_detail'),
+    confirmLabel: t('updates_page.rollback_btn'),
     danger: true,
   });
   if (!ok) return;
   try {
     const result = await runTask({
-      title: `Rolling back ${serverName}…`,
+      title: t('updates_page.rolling_back_title', { server: serverName }),
       start: async () => (await postJSON(`/api/servers/${serverId}/pack/rollback`, {})).taskId,
     });
-    toast(`Rolled back to ${result && result.version ? result.version : 'the previous version'}.`);
+    toast(t('updates_page.rolled_back_toast', { version: (result && result.version) || 'the previous version' }));
     setTimeout(() => location.reload(), 900);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'The rollback could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
+    toast(err.message || t('updates_page.rollback_failed_toast'), { kind: 'error', timeout: 12000 });
   }
 }
 
 async function upgradeMod(row, btn, { serverId, subject, current, latest, contentId }) {
   const ok = await confirmDialog({
-    title: `Update ${subject}?`,
-    message: `${current} → ${latest}. The old file is replaced, and the enabled or disabled state is kept.`,
-    confirmLabel: 'Update Mod',
+    title: t('updates_page.update_mod_title', { subject }),
+    message: t('updates_page.update_mod_msg', { current, latest }),
+    confirmLabel: t('updates_page.update_mod_btn'),
   });
   if (!ok) return;
-  toast(`Updating ${subject}…`, { kind: 'info' });
+  toast(t('updates_page.updating_mod_toast', { subject }), { kind: 'info' });
   try {
-    await withBusy(btn, 'Updating…', async () => {
+    await withBusy(btn, t('common.loading'), async () => {
       const data = await postJSON(`/api/servers/${serverId}/mods/update`, { contentId });
-      toast(`${data.installed.name} updated to ${data.installed.version || latest}.`);
+      toast(
+        t('updates_page.mod_updated_toast', { name: data.installed.name, version: data.installed.version || latest })
+      );
       dropUpdateRow(row);
     });
   } catch (err) {
-    toast(err.message || 'That mod could not be updated. Please try again.', { kind: 'error', timeout: 9000 });
+    toast(err.message || t('updates_page.mod_update_failed_toast'), { kind: 'error', timeout: 9000 });
   }
 }
 
 async function upgradeImage(row, { serverId, serverName, current, latest }) {
   const ok = await confirmDialog({
-    title: 'Update the server image?',
-    message: `${serverName} moves from ${current} to ${latest}. The panel rebuilds the container on the newer image.`,
-    detail: 'Your world and files are untouched; only the container is replaced. The server is briefly offline.',
-    confirmLabel: 'Update Now',
+    title: t('updates_page.update_image_title'),
+    message: t('updates_page.update_image_msg', { server: serverName, current, latest }),
+    detail: t('updates_page.update_image_detail'),
+    confirmLabel: t('updates_page.upgrade_now_btn'),
   });
   if (!ok) return;
   try {
     const result = await runTask({
-      title: `Updating the server image on ${serverName}…`,
+      title: t('updates_page.updating_image_title', { server: serverName }),
       start: async () => (await postJSON(`/api/servers/${serverId}/image/upgrade`, {})).taskId,
     });
     if (result && result.ok === false) {
-      toast(result.error || 'The image update could not be completed. Please try again.', {
+      toast(result.error || t('updates_page.image_update_failed_toast'), {
         kind: 'error',
         timeout: 12000,
       });
       return;
     }
-    toast('Server image updated.');
+    toast(t('updates_page.image_updated_toast'));
     dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'The image update could not be completed. Please try again.', {
+    toast(err.message || t('updates_page.image_update_failed_toast'), {
       kind: 'error',
       timeout: 12000,
     });
@@ -209,13 +205,13 @@ async function upgradeImage(row, { serverId, serverName, current, latest }) {
 
 async function upgradeMcVersion(row, { serverId, serverName, current, latest, targetVersion, targetBuild, envKey }) {
   const message = targetVersion
-    ? `${serverName} moves from Minecraft ${current} to ${latest}. A backup is taken first, but upgrading the world is permanent.`
-    : `${serverName} moves from ${current} to ${latest}. The panel rebuilds the container with the new build.`;
+    ? t('updates_page.update_mc_msg', { server: serverName, current, latest })
+    : t('updates_page.update_loader_msg', { server: serverName, current, latest });
   const ok = await confirmDialog({
-    title: targetVersion ? 'Update the Minecraft version?' : 'Update the loader build?',
+    title: targetVersion ? t('updates_page.update_mc_title') : t('updates_page.update_loader_title'),
     message,
-    detail: 'The server is briefly offline while the container is rebuilt.',
-    confirmLabel: 'Update Now',
+    detail: t('updates_page.update_rebuild_detail'),
+    confirmLabel: t('updates_page.upgrade_now_btn'),
   });
   if (!ok) return;
   await runMcUpgrade(row, { serverId, serverName, targetVersion, targetBuild, envKey });
@@ -224,7 +220,7 @@ async function upgradeMcVersion(row, { serverId, serverName, current, latest, ta
 async function runMcUpgrade(row, { serverId, serverName, targetVersion, targetBuild, envKey, force = false }) {
   try {
     const result = await runTask({
-      title: `Updating ${serverName}…`,
+      title: t('updates_page.updating_server_title', { server: serverName }),
       start: async () =>
         (
           await postJSON(`/api/servers/${serverId}/mcversion/upgrade`, {
@@ -235,7 +231,7 @@ async function runMcUpgrade(row, { serverId, serverName, targetVersion, targetBu
           })
         ).taskId,
     });
-    toast(`Updated: ${result.from} → ${result.to}.`);
+    toast(t('updates_page.server_updated_toast', { from: result.from, to: result.to }));
     dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
@@ -243,7 +239,7 @@ async function runMcUpgrade(row, { serverId, serverName, targetVersion, targetBu
     if (compat && !force) {
       return offerForce(row, { serverId, serverName, targetVersion, targetBuild, envKey }, compat, err.message);
     }
-    toast(err.message || 'The update could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
+    toast(err.message || t('updates_page.image_update_failed_toast'), { kind: 'error', timeout: 12000 });
   }
 }
 
@@ -257,19 +253,17 @@ async function offerForce(row, ctx, compat, message) {
   const shown = names.slice(0, 8).join(', ');
   const rest = names.length > 8 ? ` and ${names.length - 8} more` : '';
   const detail = names.length
-    ? `Without a build for ${compat.targetVersion}: ${shown}${rest}.`
-    : "Open the server's Versions tab to run a version check.";
+    ? t('updates_page.force_missing_detail', { target: compat.targetVersion, mods: `${shown}${rest}` })
+    : t('updates_page.force_check_versions_detail');
   // Two different situations, and calling them both "your mods are not ready"
   // would be wrong: one is a known incompatibility, the other is the panel not
   // knowing yet.
   const known = compat.reason === 'blocked';
   const ok = await confirmDialog({
-    title: known ? 'Your mods are not ready for this version.' : 'This version has not been checked.',
-    message: known
-      ? `${message} Updating anyway will start the server without them.`
-      : `${message} Updating anyway means doing it without knowing what would break.`,
+    title: known ? t('updates_page.force_mods_title') : t('updates_page.force_uncheck_title'),
+    message: known ? t('updates_page.force_mods_msg', { message }) : t('updates_page.force_uncheck_msg', { message }),
     detail,
-    confirmLabel: 'Update Anyway',
+    confirmLabel: t('updates_page.update_anyway_btn'),
     danger: true,
   });
   if (!ok) return;
@@ -284,7 +278,7 @@ async function postJSON(url, body) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || data.ok === false) {
-    const err = new Error(data.error || friendlyError(res, { action: 'start that update' }));
+    const err = new Error(data.error || friendlyError(res, { action: t('updates_page.action_update') }));
     // Structured refusals (e.g. a Minecraft version the mods can't follow)
     // carry their detail in the body - keep it for the caller to render.
     err.data = data;

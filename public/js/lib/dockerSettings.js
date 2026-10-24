@@ -6,6 +6,8 @@
 import { toast } from './toast.js';
 import { openModal } from './modal.js';
 import { enhanceSelect, syncSelectTrigger } from './select.js';
+import { escapeHtml } from './format.js';
+import { t } from './i18n.js';
 
 const REMOVE_ICON_SVG =
   '<svg class="icon size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
@@ -48,12 +50,12 @@ export function initDockerSettings(ids) {
     row.className = 'flex flex-wrap items-center gap-2';
     row.dataset.portRow = '';
     row.innerHTML = `
-      <input class="input w-28 font-mono" type="number" min="1024" max="65535" placeholder="Host port" data-port-host>
+      <input class="input w-28 font-mono" type="number" min="1024" max="65535" placeholder="${escapeHtml(t('docker_settings.host_port'))}" data-port-host>
       <span class="text-ink-faint">&rarr;</span>
-      <input class="input w-28 font-mono" type="number" min="1" max="65535" placeholder="Container port" data-port-container>
+      <input class="input w-28 font-mono" type="number" min="1" max="65535" placeholder="${escapeHtml(t('docker_settings.container_port'))}" data-port-container>
       <select class="input w-24" data-port-proto><option value="tcp">TCP</option><option value="udp">UDP</option></select>
-      <input class="input min-w-32 flex-1" placeholder="Label (optional)" data-port-label>
-      <button type="button" class="icon-btn shrink-0 hover:text-danger" aria-label="Remove port mapping">${REMOVE_ICON_SVG}</button>`;
+      <input class="input min-w-32 flex-1" placeholder="${escapeHtml(t('docker_settings.label_optional'))}" data-port-label>
+      <button type="button" class="icon-btn shrink-0 hover:text-danger" aria-label="${escapeHtml(t('docker_settings.remove_port'))}">${REMOVE_ICON_SVG}</button>`;
     row.querySelector('[data-port-host]').value = value.hostPort || '';
     row.querySelector('[data-port-container]').value = value.containerPort || '';
     row.querySelector('[data-port-proto]').value = value.protocol || 'tcp';
@@ -68,11 +70,11 @@ export function initDockerSettings(ids) {
     row.className = 'flex flex-wrap items-center gap-2';
     row.dataset.bindRow = '';
     row.innerHTML = `
-      <input class="input min-w-40 flex-1 font-mono text-xs" placeholder="Host path (e.g. /opt/msm/extra/geyser)" data-bind-host>
+      <input class="input min-w-40 flex-1 font-mono text-xs" placeholder="${escapeHtml(t('docker_settings.host_path'))}" data-bind-host>
       <span class="text-ink-faint">&rarr;</span>
-      <input class="input min-w-32 flex-1 font-mono text-xs" placeholder="Container path" data-bind-container>
+      <input class="input min-w-32 flex-1 font-mono text-xs" placeholder="${escapeHtml(t('docker_settings.container_path'))}" data-bind-container>
       <select class="input w-20" data-bind-mode><option value="rw">RW</option><option value="ro">RO</option></select>
-      <button type="button" class="icon-btn shrink-0 hover:text-danger" aria-label="Remove volume bind">${REMOVE_ICON_SVG}</button>`;
+      <button type="button" class="icon-btn shrink-0 hover:text-danger" aria-label="${escapeHtml(t('docker_settings.remove_bind'))}">${REMOVE_ICON_SVG}</button>`;
     row.querySelector('[data-bind-host]').value = value.hostPath || '';
     row.querySelector('[data-bind-container]').value = value.containerPath || '';
     row.querySelector('[data-bind-mode]').value = value.mode || 'rw';
@@ -161,13 +163,13 @@ export function initDockerSettings(ids) {
       const textarea = content.querySelector('textarea');
       textarea.value = yamlText;
       openModal({
-        title: 'Advanced Docker Settings Preview',
+        title: t('docker_settings.preview_title'),
         content,
         size: 'lg',
         actions: [
-          { label: 'Cancel', kind: 'ghost' },
+          { label: t('common.cancel'), kind: 'ghost' },
           {
-            label: 'Apply',
+            label: t('docker_settings.apply_btn'),
             kind: 'primary',
             onClick: async () => {
               const res = await fetch('/api/docker/preview/parse', {
@@ -177,14 +179,14 @@ export function initDockerSettings(ids) {
               });
               const data = await res.json();
               if (!res.ok || !data.ok) {
-                toast(data.error || "That YAML couldn't be read. Check the syntax and try again.", {
+                toast(data.error || t('docker_settings.syntax_error'), {
                   kind: 'error',
                   timeout: 9000,
                 });
                 return false;
               }
               seed(data.spec);
-              toast('Docker settings updated from the preview.');
+              toast(t('docker_settings.updated_toast'));
             },
           },
         ],
