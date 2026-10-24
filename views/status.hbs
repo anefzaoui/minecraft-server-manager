@@ -1,8 +1,8 @@
 {{#if notFound}}
   <div class="card w-full max-w-sm p-8 text-center">
     <div class="pixel text-4xl text-danger">404</div>
-    <h1 class="mt-4 text-lg font-semibold">Status Page Not Found</h1>
-    <p class="mt-1 text-sm text-ink-faint">This status page does not exist, or the server owner has turned it off.</p>
+    <h1 class="mt-4 text-lg font-semibold">{{t 'status_page_view.not_found_title'}}</h1>
+    <p class="mt-1 text-sm text-ink-faint">{{t 'status_page_view.not_found_desc'}}</p>
   </div>
 {{else}}
   <div class="card w-full max-w-md overflow-hidden" style="border-top: 3px solid {{page.accent}}">
@@ -17,19 +17,19 @@
     </div>
     <dl class="grid grid-cols-3 gap-px border-t border-line bg-line text-center tabular-nums">
       <div class="bg-raised p-3">
-        <dt class="eyebrow">Version</dt>
+        <dt class="eyebrow">{{t 'status_page_view.version'}}</dt>
         <dd class="mt-0.5 text-sm font-semibold">{{page.flavor}} {{page.mcVersion}}</dd>
       </div>
       <div class="bg-raised p-3">
-        <dt class="eyebrow">Players</dt>
+        <dt class="eyebrow">{{t 'status_page_view.players'}}</dt>
         <dd class="mt-0.5 text-sm font-semibold">{{page.online}} / {{page.max}}</dd>
       </div>
       <div class="bg-raised p-3">
-        <dt class="eyebrow">Uptime</dt>
-        <dd class="mt-0.5 text-sm font-semibold">{{#if page.uptime}}{{page.uptime}}{{else}}Unknown{{/if}}</dd>
+        <dt class="eyebrow">{{t 'status_page_view.uptime'}}</dt>
+        <dd class="mt-0.5 text-sm font-semibold">{{#if page.uptime}}{{page.uptime}}{{else}}{{t 'status_page_view.unknown'}}{{/if}}</dd>
       </div>
     </dl>
-    <p class="border-t border-line p-2.5 text-center text-[11px] text-ink-faint">Powered by Minecraft Server Manager</p>
+    <p class="border-t border-line p-2.5 text-center text-[11px] text-ink-faint">{{t 'status_page_view.powered_by'}}</p>
   </div>
   {{! A public status page that renders once goes stale in minutes - a plain
       meta refresh keeps it honest with zero JS on an anonymous page. }}

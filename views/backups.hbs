@@ -1,46 +1,45 @@
-{{> page-header heading="BACKUPS" sub="Every archive across all servers, with reason and retention tracking."}}
+{{> page-header headingKey="backups_page.heading" subKey="backups_page.sub"}}
 
 {{#if backups.length}}
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <select class="input w-auto" id="backups-filter-server" data-label="Filter by server">
-    <option value="">All servers</option>
+  <select class="input w-auto" id="backups-filter-server" data-label="{{t 'backups_page.filter_server'}}">
+    <option value="">{{t 'backups_page.all_servers'}}</option>
     {{#each servers}}<option value="{{id}}">{{name}}</option>{{/each}}
   </select>
-  <select class="input w-auto" id="backups-filter-reason" data-label="Filter by reason">
-    <option value="">All reasons</option>
-    <option value="manual">Manual</option>
-    <option value="scheduled">Scheduled</option>
-    <option value="pre-update">Pre-update</option>
-    <option value="pre-restore">Pre-restore</option>
+  <select class="input w-auto" id="backups-filter-reason" data-label="{{t 'backups_page.filter_reason'}}">
+    <option value="">{{t 'backups_page.all_reasons'}}</option>
+    <option value="manual">{{t 'backups_page.reason_manual'}}</option>
+    <option value="scheduled">{{t 'backups_page.reason_scheduled'}}</option>
+    <option value="pre-update">{{t 'backups_page.reason_pre_update'}}</option>
+    <option value="pre-restore">{{t 'backups_page.reason_pre_restore'}}</option>
   </select>
-  <span class="ml-auto text-sm text-ink-faint" id="backups-total" data-count="{{totals.count}}" data-bytes="{{totals.bytes}}">Total: {{bytes totals.bytes}} in {{totals.count}} archive{{#if (ne totals.count 1)}}s{{/if}}</span>
+  <span class="ml-auto text-sm text-ink-faint" id="backups-total" data-count="{{totals.count}}" data-bytes="{{totals.bytes}}">{{t 'backups_page.total_summary' size=(bytes totals.bytes) count=totals.count}}</span>
 </div>
 
 <div class="card overflow-x-auto">
   <table class="table-base table-stack" id="backups-table">
-    <thead><tr><th>Server</th><th>Archive</th><th>Reason</th><th class="text-right">Size</th><th class="text-right">Created</th><th class="text-right">Actions</th></tr></thead>
+    <thead><tr><th>{{t 'backups_page.th_server'}}</th><th>{{t 'backups_page.th_archive'}}</th><th>{{t 'backups_page.th_reason'}}</th><th class="text-right">{{t 'backups_page.th_size'}}</th><th class="text-right">{{t 'backups_page.th_created'}}</th><th class="text-right">{{t 'backups_page.th_actions'}}</th></tr></thead>
     <tbody>
       {{#each backups}}
         <tr data-backup-row data-backup-id="{{id}}" data-server-id="{{serverId}}" data-server-name="{{server}}" data-file="{{file}}" data-size="{{size}}" data-reason="{{reason}}">
-          <td data-th="Server" class="whitespace-nowrap"><a class="text-link hover:underline" href="/servers/{{serverId}}/backups">{{server}}</a></td>
-          {{! w-full + max-w-0 (sm+ only) so long archive names truncate instead of pushing Actions off-screen. }}
-          <td data-th="Archive" class="sm:w-full sm:max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
-          <td data-th="Reason"><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
-          <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
-          <td data-th="Created" class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
+          <td data-th="{{t 'backups_page.th_server'}}" class="whitespace-nowrap"><a class="text-link hover:underline" href="/servers/{{serverId}}/backups">{{server}}</a></td>
+          <td data-th="{{t 'backups_page.th_archive'}}" class="sm:w-full sm:max-w-0"><span class="block truncate font-mono text-xs" title="{{file}}">{{file}}</span></td>
+          <td data-th="{{t 'backups_page.th_reason'}}"><span class="badge {{#if (eq reason 'pre-update')}}badge-warn{{/if}}">{{reason}}</span></td>
+          <td data-th="{{t 'backups_page.th_size'}}" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
+          <td data-th="{{t 'backups_page.th_created'}}" class="whitespace-nowrap text-right text-ink-faint" data-ts="{{ts}}">{{ts}}</td>
           <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
-            <button class="btn btn-ghost btn-sm text-warn" data-backup-action="restore" data-tip="Restore (stops the server, safety backup taken first)">{{{icon 'undo-2' 'size-3.5'}}}</button>
-            <button class="btn btn-ghost btn-sm" data-backup-action="download" data-tip="Download archive">{{{icon 'download' 'size-3.5'}}}</button>
-            <button class="btn btn-ghost btn-sm" data-backup-action="rename" data-tip="Rename archive" aria-label="Rename {{file}}">{{{icon 'square-pen' 'size-3.5'}}}</button>
-            <button class="btn btn-ghost btn-sm text-danger" data-backup-action="delete" data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-warn" data-backup-action="restore" data-tip="{{t 'backups_page.restore_action_tip'}}">{{{icon 'undo-2' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm" data-backup-action="download" data-tip="{{t 'backups_page.download_archive'}}">{{{icon 'download' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm" data-backup-action="rename" data-tip="{{t 'backups_page.rename_action_tip'}}" aria-label="{{t 'backups_page.rename_file_aria' file=file}}">{{{icon 'square-pen' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-danger" data-backup-action="delete" data-tip="{{t 'backups_page.delete_action_tip' size=(bytes size)}}" aria-label="{{t 'backups_page.delete_file_aria' file=file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
           </div></td>
         </tr>
       {{/each}}
     </tbody>
   </table>
-  <div class="hidden p-8 text-center text-sm text-ink-faint" id="backups-no-match">No backups match these filters.</div>
+  <div class="hidden p-8 text-center text-sm text-ink-faint" id="backups-no-match">{{t 'backups_page.no_match'}}</div>
 </div>
 {{else}}
-  {{> empty-state iconName='archive' title='No Backups Yet' message="Create one from a server's Backups tab. Scheduled and pre-update backups also collect here, with their reason and retention tracked."}}
+  {{> empty-state iconName='archive' titleKey='backups_page.empty_title' messageKey='backups_page.empty_message'}}
 {{/if}}
 <script type="module" src="/js/pages/backups.js"></script>

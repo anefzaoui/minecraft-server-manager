@@ -1,11 +1,11 @@
 <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-canvas/90 px-4 py-3 backdrop-blur sm:px-6">
-  <button id="sidebar-toggle" class="btn btn-ghost btn-sm lg:hidden" aria-label="Toggle navigation">{{{icon 'menu' 'size-4'}}}</button>
+  <button id="sidebar-toggle" class="btn btn-ghost btn-sm lg:hidden" aria-label="{{t 'topbar.toggle_navigation'}}">{{{icon 'menu' 'size-4'}}}</button>
   {{! min-w-0: a flex child won't shrink below its intrinsic width, so without
       it `truncate` never engages and a long title pushes the actions off-screen. }}
-  <h1 class="min-w-0 flex-1 truncate text-lg font-semibold">{{title}}</h1>
+  <h1 class="min-w-0 flex-1 truncate text-lg font-semibold">{{#if titleKey}}{{t titleKey}}{{else}}{{title}}{{/if}}</h1>
   <div class="ml-auto flex shrink-0 items-center gap-2">
     <div id="task-tray" class="relative hidden">
-      <button class="btn btn-ghost btn-sm relative" aria-label="Background tasks" data-tip="Background tasks">
+      <button class="btn btn-ghost btn-sm relative" aria-label="{{t 'topbar.background_tasks'}}" data-tip="{{t 'topbar.background_tasks'}}">
         {{{icon 'loader-circle' 'size-4'}}}
         <span data-task-count class="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-inset text-[11px] font-bold">0</span>
       </button>
@@ -16,21 +16,21 @@
           fixed panel, so inset-x-2 spans the viewport (minus a gutter) as a
           drop sheet; at sm+ it's the anchored w-80 dropdown. }}
       <div data-task-panel class="card hidden origin-top-right shadow-overlay animate-[menu-in_.12s_ease-out] max-sm:fixed max-sm:inset-x-2 max-sm:top-[calc(100%+0.5rem)] sm:absolute sm:right-0 sm:top-10 sm:w-80">
-        <div class="border-b border-line px-3 py-2 eyebrow">Background tasks</div>
+        <div class="border-b border-line px-3 py-2 eyebrow">{{t 'topbar.background_tasks'}}</div>
         <div data-task-list class="max-h-96 overflow-y-auto"></div>
       </div>
     </div>
     {{! Label hides below sm: (icon-only) - the topbar is already tight on a
         phone (hamburger + title + this + theme + avatar); aria-label keeps it
         announced to screen readers regardless of which span is visible. }}
-    <a href="/servers/new" class="btn btn-primary btn-sm" aria-label="Create a Server" data-tip="Create a Server">{{{icon 'plus' 'size-3.5'}}} <span class="hidden sm:inline">Create a Server</span></a>
-    <button id="theme-toggle" class="btn btn-ghost btn-sm" aria-label="Toggle theme" data-tip="Switch theme">
+    <a href="/servers/new" class="btn btn-primary btn-sm" aria-label="{{t 'topbar.create_server'}}" data-tip="{{t 'topbar.create_server'}}">{{{icon 'plus' 'size-3.5'}}} <span class="hidden sm:inline">{{t 'topbar.create_server'}}</span></a>
+    <button id="theme-toggle" class="btn btn-ghost btn-sm" aria-label="{{t 'topbar.switch_theme'}}" data-tip="{{t 'topbar.switch_theme'}}">
       <span data-theme-icon="dark">{{{icon 'moon' 'size-4'}}}</span><span data-theme-icon="light" class="hidden">{{{icon 'sun' 'size-4'}}}</span>
     </button>
     {{! rounded-md, not a circle - the only fully-round control would break the
         blocky register. Diamond is identity color here (decorative, not meaning),
         used only as the fallback initial-letter background. }}
-    <button class="grid size-8 place-items-center overflow-hidden rounded-md bg-diamond-700 text-xs font-bold text-white [@media(pointer:coarse)]:size-11" data-menu="user-menu" data-tip="{{user.username}} ({{capitalize user.role}})" data-user-totp-enabled="{{#if user.totpEnabled}}1{{/if}}" data-user-avatar="{{user.avatar}}">
+    <button class="grid size-8 place-items-center overflow-hidden rounded-md bg-diamond-700 text-xs font-bold text-white [@media(pointer:coarse)]:size-11" data-menu="user-menu" data-tip="{{user.username}} ({{t (concat 'roles.' user.role)}})" data-user-totp-enabled="{{#if user.totpEnabled}}1{{/if}}" data-user-avatar="{{user.avatar}}" data-user-language="{{userLanguage}}">
       {{#if (avatarSrc user.avatar)}}
         <img src="{{avatarSrc user.avatar}}" alt="" class="size-full object-contain">
       {{else}}
@@ -38,10 +38,11 @@
       {{/if}}
     </button>
     <template id="user-menu">
-      <div class="px-3 py-2 text-xs text-ink-faint">{{user.username}} · {{capitalize user.role}}</div>
-      <button type="button" class="w-full text-left" data-open-avatar-picker>Profile Picture</button>
-      <button type="button" class="w-full text-left" data-open-2fa>2FA</button>
-      <form method="post" action="/logout"><button type="submit" class="w-full text-left">Sign Out</button></form>
+      <div class="px-3 py-2 text-xs text-ink-faint">{{user.username}} · {{t (concat 'roles.' user.role)}}</div>
+      <button type="button" class="w-full text-left" data-open-avatar-picker>{{t 'topbar.profile_picture'}}</button>
+      <button type="button" class="w-full text-left" data-open-2fa>{{t 'topbar.two_factor_auth'}}</button>
+      <button type="button" class="w-full text-left" data-open-language-picker>{{t 'settings.language.label'}}</button>
+      <form method="post" action="/logout"><button type="submit" class="w-full text-left">{{t 'topbar.sign_out'}}</button></form>
     </template>
   </div>
 </header>

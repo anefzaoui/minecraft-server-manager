@@ -1,22 +1,20 @@
-{{> page-header heading="STORAGE" sub="A full view of the panel's data folder. Every byte is accounted for, and every cleanup is previewed first."}}
+{{> page-header headingKey="storage_page.heading" subKey="storage_page.sub"}}
 
 <div class="mb-6 grid gap-4 lg:grid-cols-3">
   <div class="card p-4 lg:col-span-2">
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <h3 class="font-semibold">Disk Usage</h3>
+      <h3 class="font-semibold">{{t 'storage_page.disk_usage'}}</h3>
       <div class="flex items-center gap-2 text-xs text-ink-faint">
-        <span>Last scanned <span data-ts="{{storage.lastScan}}">{{storage.lastScan}}</span></span>
-        <button class="btn btn-sm" id="storage-rescan">{{{icon 'refresh-cw' 'size-3.5'}}} Re-Scan Now</button>
+        <span>{{t 'storage_page.last_scanned' time=storage.lastScan}}</span>
+        <button class="btn btn-sm" id="storage-rescan">{{{icon 'refresh-cw' 'size-3.5'}}} {{t 'storage_page.rescan_now'}}</button>
       </div>
     </div>
     <div class="mt-3 flex items-end gap-2">
       <span class="text-3xl font-bold tabular-nums">{{bytes storage.totalUsed}}</span>
-      <span class="pb-1 text-sm text-ink-faint">panel data · {{bytes storage.diskFree}} free of {{bytes storage.diskTotal}} on drive</span>
+      <span class="pb-1 text-sm text-ink-faint">{{t 'storage_page.panel_data_summary' free=(bytes storage.diskFree) total=(bytes storage.diskTotal)}}</span>
     </div>
-    {{! meterColor: the headline bar must go gold/red as the drive fills - it
-        stayed success-green even at 95%. }}
     <div class="meter mt-3 h-3"><div class="{{meterColor storage.totalUsed storage.diskTotal}}" style="width: {{pct storage.totalUsed storage.diskTotal}}%"></div></div>
-    <div class="mt-4 flex h-6 w-full overflow-hidden rounded-md" title="Breakdown by category">
+    <div class="mt-4 flex h-6 w-full overflow-hidden rounded-md" title="{{t 'storage_page.breakdown_by_category'}}">
       {{#each storage.breakdown}}
         <div class="{{cls}}" style="width: {{width}}%" title="{{label}}: {{bytes size}}"></div>
       {{/each}}
@@ -29,23 +27,23 @@
   </div>
 
   <div class="card p-4">
-    <h3 class="mb-2 font-semibold">Growth Trend</h3>
+    <h3 class="mb-2 font-semibold">{{t 'storage_page.growth_trend'}}</h3>
     {{#if storage.trend.length}}
       <div class="flex h-24 items-end gap-1">
         {{#each storage.trend}}
-          <div class="flex-1 rounded-t bg-diamond-500/70" style="height: {{this}}%" title="{{this}}% of the largest scan"></div>
+          <div class="flex-1 rounded-t bg-diamond-500/70" style="height: {{this}}%" title="{{t 'storage_page.trend_bar_tip' pct=this}}"></div>
         {{/each}}
       </div>
-      <p class="help">GB used over the last scans. Snapshots recorded on every scan.</p>
+      <p class="help">{{t 'storage_page.trend_help'}}</p>
     {{else}}
-      <p class="grid h-24 place-items-center text-sm text-ink-faint">No scans recorded yet. Run one to start the trend.</p>
+      <p class="grid h-24 place-items-center text-sm text-ink-faint">{{t 'storage_page.trend_empty'}}</p>
     {{/if}}
   </div>
 </div>
 
 <div class="grid gap-4 lg:grid-cols-2">
   <div class="card">
-    <div class="border-b border-line p-3 font-semibold">By Category</div>
+    <div class="border-b border-line p-3 font-semibold">{{t 'storage_page.by_category'}}</div>
     <div class="overflow-x-auto">
       <table class="table-base table-stack">
         <tbody>
@@ -54,7 +52,7 @@
               <td data-th=""><div class="font-medium">{{name}}</div><div class="break-all font-mono text-xs text-ink-faint">{{path}}</div></td>
               <td data-th="" class="sm:w-40"><div class="meter"><div class="bg-diamond-400" style="width: {{pct size ../storage.totalUsed}}%"></div></div></td>
               <td data-th="" class="text-ink-faint sm:w-24 sm:text-right">{{bytes size}}</td>
-              <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open in the global file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
+              <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="{{t 'storage_page.open_in_files'}}">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
             </tr>
           {{/each}}
         </tbody>
@@ -64,20 +62,20 @@
 
   <div class="space-y-4">
     <div class="card">
-      <div class="border-b border-line p-3 font-semibold">One-Click Cleanup</div>
+      <div class="border-b border-line p-3 font-semibold">{{t 'storage_page.one_click_cleanup'}}</div>
       <div class="divide-y divide-line">
         {{#each storage.cleanup}}
           <div class="flex items-center gap-3 p-3 text-sm">
-            <span class="flex-1">{{action}}{{#if count}} <span class="text-xs text-ink-faint">({{count}} item{{#if (ne count 1)}}s{{/if}})</span>{{/if}}</span>
-            <span class="text-xs text-ok">frees {{bytes frees}}</span>
-            <button class="btn btn-sm" data-cleanup-action="{{key}}" data-cleanup-label="{{action}}" {{#if days}}data-cleanup-days="{{days}}"{{/if}}>Preview…</button>
+            <span class="flex-1">{{action}}{{#if count}} <span class="text-xs text-ink-faint">({{t 'storage_page.cleanup_count' count=count}})</span>{{/if}}</span>
+            <span class="text-xs text-ok">{{t 'storage_page.frees' size=(bytes frees)}}</span>
+            <button class="btn btn-sm" data-cleanup-action="{{key}}" data-cleanup-label="{{action}}" {{#if days}}data-cleanup-days="{{days}}"{{/if}}>{{t 'storage_page.preview'}}</button>
           </div>
         {{/each}}
       </div>
     </div>
 
     <div class="card">
-      <div class="border-b border-line p-3 font-semibold">Quota Status (All Servers)</div>
+      <div class="border-b border-line p-3 font-semibold">{{t 'storage_page.quota_status'}}</div>
       <div class="overflow-x-auto">
         <table class="table-base table-stack">
           <tbody>
@@ -85,10 +83,10 @@
               <tr>
                 <td data-th=""><a class="font-medium text-link hover:underline" href="/servers/{{id}}">{{name}}</a></td>
                 <td data-th="" class="sm:w-40"><div class="meter"><div class="{{meterColor disk.used disk.quota}}" style="width: {{pct disk.used disk.quota}}%"></div></div></td>
-                <td data-th="" class="text-xs text-ink-faint sm:w-32 sm:text-right">{{bytes disk.used}}{{#if disk.quota}} / {{bytes disk.quota}}{{else}} (no quota){{/if}}</td>
+                <td data-th="" class="text-xs text-ink-faint sm:w-32 sm:text-right">{{bytes disk.used}}{{#if disk.quota}} / {{bytes disk.quota}}{{else}} {{t 'storage_page.no_quota'}}{{/if}}</td>
               </tr>
             {{else}}
-              <tr><td data-th="" class="p-6 text-center text-ink-faint">No servers yet. Per-server quotas appear here once you create one.</td></tr>
+              <tr><td data-th="" class="p-6 text-center text-ink-faint">{{t 'storage_page.no_servers'}}</td></tr>
             {{/each}}
           </tbody>
         </table>
@@ -99,7 +97,7 @@
 
 {{#if storage.largestFiles.length}}
 <div class="card mt-6">
-  <div class="border-b border-line p-3 font-semibold">Largest Files</div>
+  <div class="border-b border-line p-3 font-semibold">{{t 'storage_page.largest_files'}}</div>
   <div class="overflow-x-auto">
     <table class="table-base table-stack">
       <tbody>
@@ -107,7 +105,7 @@
           <tr>
             <td data-th="" class="break-all font-mono text-xs">{{path}}</td>
             <td data-th="" class="text-ink-faint sm:w-24 sm:text-right">{{bytes size}}</td>
-            <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open containing folder in the file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
+            <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="{{t 'storage_page.open_folder'}}">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
           </tr>
         {{/each}}
       </tbody>
@@ -116,7 +114,7 @@
 </div>
 {{else}}
 <div class="mt-6">
-  {{> empty-state iconName='file-search' title='Nothing Indexed Yet' message='Run a re-scan from the Disk Usage card above to index the largest files in the panel data folder.'}}
+  {{> empty-state iconName='file-search' titleKey='storage_page.nothing_indexed' messageKey='storage_page.nothing_indexed_message'}}
 </div>
 {{/if}}
 <script type="module" src="/js/pages/storage.js"></script>
