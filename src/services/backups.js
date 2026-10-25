@@ -219,7 +219,7 @@ async function createBackupImpl(
  * original world is untouched, and the only at-risk window is the two rename
  * syscalls themselves (near-instant, not proportional to world size).
  */
-async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSafety = false, task = null } = {}) {
+async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSafety = false, task = null } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ? AND server_id = ?', backupId, serverId);
   if (!backup) throw httpError(404, 'Backup not found');
 
@@ -330,6 +330,22 @@ async function restoreBackupImpl(serverId, backupId, { actor = 'system', skipSaf
   return { ok: true };
 }
 
+// Backups retention must not delete while they are in use (see planPrune).
+// Today that is the archive a restore is reading: the restore's own safety
+// backup runs a retention pass before the archive is extracted, and an old
+// backup - the usual thing to restore - is exactly what retention removes.
+/** @type {Set<string>} */
+const protectedFromPrune = new Set();
+
+async function restoreBackupImpl(serverId, backupId, opts = {}) {
+  protectedFromPrune.add(backupId);
+  try {
+    return await restoreBackupCore(serverId, backupId, opts);
+  } finally {
+    protectedFromPrune.delete(backupId);
+  }
+}
+
 const restoreBackup = guardOp('restore', restoreBackupImpl);
 
 // Backups read the live server dir; a concurrent recreate/delete/restore could
@@ -410,8 +426,11 @@ async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
  * (restore/world-reset safety snapshots) has its own small bucket so it can't
  * evict user-created 'manual' backups. The three passes run against an
  * in-memory copy of the server's rows so each pass sees what the previous one
- * removed, exactly as the real deletes leave the table. The settings preview
- * and pruneRetention both use it, so a preview can't drift from what happens.
+ * removed. A planned row counts as gone even if its delete later fails (the
+ * failure is logged; the next prune retries it), so one stuck file never makes
+ * a pass delete extra backups to compensate. Backups in use (protectedFromPrune)
+ * are never planned. The settings preview and pruneRetention both use this, so
+ * a preview can't drift from what happens.
  * @param {string} serverId
  * @param {{ keepScheduled: number, keepPreUpdate: number, keepManual: number, keepPreRestore: number, maxAgeDays: number, maxTotalGb: number }} cfg
  * @returns {{ id: number, sizeBytes: number }[]}
@@ -429,6 +448,7 @@ function planPrune(serverId, cfg) {
   );
   const doomed = [];
   const drop = (r) => {
+    if (protectedFromPrune.has(r.id)) return; // in use - stays, and keeps counting
     doomed.push({ id: r.id, sizeBytes: r.size_bytes || 0 });
     rows = rows.filter((x) => x.id !== r.id);
   };
@@ -465,7 +485,7 @@ function planPrune(serverId, cfg) {
     const order = [...rows].reverse().sort((a, b) => rank(a) - rank(b));
     for (const r of order) {
       if (total <= capBytes) break;
-      if (r.id === keepId) continue;
+      if (r.id === keepId || protectedFromPrune.has(r.id)) continue;
       drop(r);
       total -= r.size_bytes || 0;
     }
