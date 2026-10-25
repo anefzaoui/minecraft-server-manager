@@ -102,3 +102,31 @@ test('the size pass never deletes other backups to make room around the archive 
   assert.ok(!ids().includes('bk_0'));
   for (const id of ['bk_1', 'bk_2', 'bk_3', 'bk_4', 'bk_5']) assert.ok(ids().includes(id), id);
 });
+
+test('deleting a backup by hand is refused while it is being restored', async () => {
+  await seed({ count: 3 });
+  // Hold the restore at its stop step: the archive is protected from here on.
+  let release;
+  const gate = new Promise((r) => (release = r));
+  let reached;
+  const atStop = new Promise((r) => (reached = r));
+  const realStop = servers.stopServerUnguarded;
+  servers.stopServerUnguarded = async () => {
+    reached();
+    await gate;
+  };
+  try {
+    const restoring = backups.restoreBackup(SID, 'bk_0', { actor: 'admin' });
+    await atStop;
+    await assert.rejects(backups.deleteBackupByUser('bk_0', { actor: 'admin' }), (err) => err.status === 409);
+    await backups.deleteBackupByUser('bk_1', { actor: 'admin' }); // any other backup still goes
+    assert.ok(!ids().includes('bk_1'));
+    release();
+    await restoring;
+    assert.equal(world(), 'world-0');
+    await backups.deleteBackupByUser('bk_0', { actor: 'admin' }); // allowed once the restore is done
+    assert.ok(!ids().includes('bk_0'));
+  } finally {
+    servers.stopServerUnguarded = realStop;
+  }
+});

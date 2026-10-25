@@ -211,5 +211,32 @@ test('the Backups tab shows the retention form to admins only', async () => {
   const op = await app.req('GET', '/servers/srv_a/backups', { cookie: opCookie, headers: { Accept: 'text/html' } });
   assert.equal(op.status, 200);
   assert.doesNotMatch(op.text, /id="bk-retention"/);
-  assert.match(op.text, /This server uses the panel default\./);
+  assert.match(op.text, /This server uses the panel-wide limits\./);
+});
+
+test('Remove Now deletes only what its preview listed, even if more is over the limit by then', async () => {
+  const preview = await post('/api/backups/retention/preview', { keepScheduled: 5 });
+  assert.equal(preview.json.ids.length, 6);
+  await post('/api/backups/retention', { keepScheduled: 5 });
+  // A scheduled backup lands between the preview and the click: srv_a is now 4 over, not 3.
+  db.run(
+    `INSERT INTO backups (id, server_id, filename, rel_path, size_bytes, reason, created_at)
+     VALUES ('bk_srv_a_late', 'srv_a', 'late.zip', 'backups/srv_a/late.zip', 1024, 'scheduled', datetime('2026-02-01'))`
+  );
+  const r = await post('/api/backups/retention/apply', { ids: preview.json.ids });
+  assert.equal(r.json.deleted, 6);
+  assert.equal(count('srv_a'), 6); // 9 - 3: the 4th oldest waits for the next trim
+  assert.ok(db.get("SELECT 1 AS x FROM backups WHERE id = 'bk_srv_a_scheduled_003'"));
+});
+
+test('panel-wide values cannot be blank, and reset:false on a server is just a patch', async () => {
+  for (const path of ['/api/backups/retention', '/api/backups/retention/preview']) {
+    const r = await post(path, { maxAgeDays: null });
+    assert.equal(r.status, 400, path);
+    assert.match(r.json.error, /cannot be blank/);
+  }
+  const r = await post('/api/servers/srv_a/backups/retention', { reset: false, keepManual: 4 });
+  assert.equal(r.status, 200, r.text);
+  const get = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
+  assert.deepEqual(get.json.override, { keepManual: 4 });
 });
