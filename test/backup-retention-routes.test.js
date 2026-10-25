@@ -256,3 +256,20 @@ test('the preview breaks it down per server and flags excess that was there befo
   const fresh = await post('/api/backups/retention/preview', { keepScheduled: 5 });
   assert.ok(fresh.json.byServer.every((s) => s.alreadyOver === false));
 });
+
+test('reset accepts the forms scripts and form posts send, and refuses nonsense', async () => {
+  for (const reset of [true, 'true', 1, '1']) {
+    await post('/api/servers/srv_a/backups/retention', { keepManual: 3 });
+    const r = await post('/api/servers/srv_a/backups/retention', { reset });
+    assert.equal(r.status, 200, `reset ${JSON.stringify(reset)}`);
+    const get = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
+    assert.equal(get.json.override, null, `reset ${JSON.stringify(reset)} cleared it`);
+  }
+  const form = await app.req('POST', '/api/servers/srv_a/backups/retention', {
+    cookie,
+    form: 'reset=true', // raw body: the helper JSON-encodes `body`
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  assert.equal(form.status, 200, form.text);
+  assert.equal((await post('/api/servers/srv_a/backups/retention', { reset: 'yes' })).status, 400);
+});

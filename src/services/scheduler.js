@@ -31,6 +31,35 @@ const TASK_TYPES = {
   'content-meta-backfill': { label: 'Content metadata backfill', serverScoped: false },
 };
 
+// A task refused only because another action holds its server (a restore, a
+// backup cleanup, someone's restart) retries a few times instead of losing this
+// run outright. Any other failure fails at once, as before.
+const BUSY_RETRIES = 3;
+const BUSY_RETRY_MS = 60_000;
+
+/**
+ * @param {object} job a schedules row
+ * @param {{ retryMs?: number }} [opts]
+ */
+async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await runTask(job);
+    } catch (err) {
+      const busy = err && err.status === 409 && /operation is already in progress/.test(err.message || '');
+      if (!busy || attempt >= BUSY_RETRIES) throw err;
+      if (attempt === 0) {
+        logger.info('A scheduled task found its server busy and will retry.', {
+          scheduleId: job.id,
+          taskType: job.task_type,
+          serverId: job.server_id || undefined,
+        });
+      }
+      await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
+    }
+  }
+}
+
 async function runTask(schedule) {
   const payload = JSON.parse(schedule.payload_json || '{}');
   const actor = 'scheduler';
@@ -122,7 +151,7 @@ function schedule(job) {
         serverId: job.server_id || undefined,
       });
       try {
-        await runTask(job);
+        await runTaskWithRetry(job);
       } catch (err) {
         recordEvent({
           serverId: job.server_id || null,
@@ -283,4 +312,13 @@ function listSchedules() {
   });
 }
 
-module.exports = { startScheduler, createSchedule, setEnabled, deleteSchedule, listSchedules, rearmAll, TASK_TYPES };
+module.exports = {
+  startScheduler,
+  createSchedule,
+  setEnabled,
+  deleteSchedule,
+  listSchedules,
+  rearmAll,
+  runTaskWithRetry,
+  TASK_TYPES,
+};

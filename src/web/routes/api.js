@@ -1528,7 +1528,12 @@ function parseGlobalRetention(body = {}) {
 // ({ reset: false } is just a patch with nothing to reset).
 function parseServerRetention(body = {}) {
   const { reset, ...patch } = body;
-  return reset === true ? null : retentionServerPatchSchema.parse(patch);
+  // Form posts and older scripts send "true" / 1; all of them mean reset.
+  if ([true, 'true', 1, '1'].includes(reset)) return null;
+  if (![undefined, false, 'false', 0, '0'].includes(reset)) {
+    throw httpError(400, 'Send reset as true or false.');
+  }
+  return retentionServerPatchSchema.parse(patch);
 }
 
 // "Remove now" sends back the ids its preview showed; nothing else is deleted.
