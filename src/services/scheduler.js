@@ -31,9 +31,13 @@ const TASK_TYPES = {
   'content-meta-backfill': { label: 'Content metadata backfill', serverScoped: false },
 };
 
-// A task refused only because another action holds its server (a restore, a
-// backup cleanup, someone's restart) retries a few times instead of losing this
-// run outright. Any other failure fails at once, as before.
+// A scheduled BACKUP refused only because another action holds its server (a
+// restore, a backup cleanup, someone's restart) retries a few times instead of
+// losing this run. Start/stop/restart don't: a restart that collided with
+// someone's restart has effectively happened, and repeating it would kick
+// players twice. Before each retry the schedule must still exist and be on.
+// Any other failure fails at once, as before.
+const RETRY_WHEN_BUSY = new Set(['backup']);
 const BUSY_RETRIES = 3;
 const BUSY_RETRY_MS = 60_000;
 
@@ -47,7 +51,7 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS } = {}) {
       return await runTask(job);
     } catch (err) {
       const busy = err && err.status === 409 && /operation is already in progress/.test(err.message || '');
-      if (!busy || attempt >= BUSY_RETRIES) throw err;
+      if (!busy || !RETRY_WHEN_BUSY.has(job.task_type) || attempt >= BUSY_RETRIES) throw err;
       if (attempt === 0) {
         logger.info('A scheduled task found its server busy and will retry.', {
           scheduleId: job.id,
@@ -56,6 +60,8 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS } = {}) {
         });
       }
       await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
+      const still = db.get('SELECT enabled FROM schedules WHERE id = ?', job.id);
+      if (!still || !still.enabled) return; // turned off or deleted while waiting
     }
   }
 }

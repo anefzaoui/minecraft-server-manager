@@ -1,21 +1,34 @@
 'use strict';
 
-// A scheduled task refused only because its server is busy with another
-// action retries instead of losing the run; any other failure is final.
+// A scheduled backup refused only because its server is busy with another
+// action retries instead of losing the run; lifecycle tasks don't retry (a
+// collided restart has effectively happened); a schedule turned off while
+// waiting stops retrying; any other failure is final.
 
 require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { migrate } = require('../src/db/migrate');
 migrate();
+const db = require('../src/db');
 const backups = require('../src/services/backups');
+const servers = require('../src/services/servers');
 const httpError = require('../src/utils/httpError');
 const { runTaskWithRetry } = require('../src/services/scheduler');
 
-const job = { id: 'sch_test', server_id: 'srv_x', task_type: 'backup', payload_json: '{}' };
 const busy = () => httpError(409, 'Cannot backup: a backup cleanup operation is already in progress for this server');
 
-test('a task refused because the server is busy retries, then runs', async (t) => {
+function schedule(taskType) {
+  db.run('DELETE FROM schedules');
+  db.run(
+    "INSERT INTO schedules (id, server_id, task_type, cron, payload_json, enabled) VALUES ('sch_test', NULL, ?, '0 3 * * *', '{}', 1)",
+    taskType
+  );
+  return { id: 'sch_test', server_id: 'srv_x', task_type: taskType, payload_json: '{}' };
+}
+
+test('a backup refused because the server is busy retries, then runs', async (t) => {
+  const job = schedule('backup');
   let calls = 0;
   t.mock.method(backups, 'createBackup', async () => {
     calls++;
@@ -26,6 +39,7 @@ test('a task refused because the server is busy retries, then runs', async (t) =
 });
 
 test('a server that stays busy fails after the last retry', async (t) => {
+  const job = schedule('backup');
   const spy = t.mock.method(backups, 'createBackup', async () => {
     throw busy();
   });
@@ -33,7 +47,27 @@ test('a server that stays busy fails after the last retry', async (t) => {
   assert.equal(spy.mock.callCount(), 4); // the run and 3 retries
 });
 
+test('a scheduled restart that collides does not run again later', async (t) => {
+  const job = schedule('restart');
+  const spy = t.mock.method(servers, 'restartServer', async () => {
+    throw httpError(409, 'Cannot restart: a restart operation is already in progress for this server');
+  });
+  await assert.rejects(runTaskWithRetry(job, { retryMs: 1 }), /already in progress/);
+  assert.equal(spy.mock.callCount(), 1);
+});
+
+test('a schedule turned off while waiting stops retrying', async (t) => {
+  const job = schedule('backup');
+  const spy = t.mock.method(backups, 'createBackup', async () => {
+    db.run("UPDATE schedules SET enabled = 0 WHERE id = 'sch_test'"); // someone disables it meanwhile
+    throw busy();
+  });
+  await runTaskWithRetry(job, { retryMs: 1 });
+  assert.equal(spy.mock.callCount(), 1);
+});
+
 test('any other failure is final at once', async (t) => {
+  const job = schedule('backup');
   const spy = t.mock.method(backups, 'createBackup', async () => {
     throw httpError(507, 'Not enough disk space');
   });

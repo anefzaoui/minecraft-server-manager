@@ -131,3 +131,31 @@ test('a non-zero exit inside a stop/restart window is still recorded as a crash 
   assert.equal(JSON.parse(crash.details_json).armedRestart, false);
   assert.equal(JSON.parse(crash.details_json).duringStopWindow, true);
 });
+
+test('a crash restart that finds the server busy retries instead of leaving it down', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' }; // the watcher reads this file's inspectStatus stub
+  let calls = 0;
+  t.mock.method(serversService, 'startServer', async () => {
+    calls++;
+    if (calls < 3) {
+      throw Object.assign(new Error('Cannot start: a port change operation is already in progress for this server'), {
+        status: 409,
+      });
+    }
+  });
+  const started = await watcher.restartAfterCrash('srv_busy', 1, { retryMs: 1 });
+  assert.equal(started, true);
+  assert.equal(calls, 3);
+});
+
+test('a crash restart stops retrying once someone else started the server', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' };
+  const spy = t.mock.method(serversService, 'startServer', async () => {
+    inspectResult = { exists: true, status: 'running' }; // a person started it while we waited
+    throw Object.assign(new Error('Cannot start: a start operation is already in progress for this server'), {
+      status: 409,
+    });
+  });
+  assert.equal(await watcher.restartAfterCrash('srv_busy', 1, { retryMs: 1 }), false);
+  assert.equal(spy.mock.callCount(), 1);
+});
