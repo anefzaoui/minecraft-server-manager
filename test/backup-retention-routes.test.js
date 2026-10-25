@@ -1,0 +1,164 @@
+'use strict';
+
+// The retention settings UI's routes: preview what a change would remove (and
+// remove nothing), save, then optionally apply now. Admin-only, like the
+// policy routes they sit beside.
+
+const app = require('./helpers/app');
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const db = require('../src/db');
+const settings = require('../src/services/settings');
+const { guardOp } = require('../src/services/opLock');
+
+let cookie;
+let opCookie;
+let viewerCookie;
+
+async function login(username, password, role) {
+  await require('../src/services/auth').createUser({ username, password, role }, { actor: 'test' });
+  const r = await app.req('POST', '/login', { body: { username, password } });
+  return (r.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+}
+
+function seedServer(id, port) {
+  db.run(
+    `INSERT INTO servers (id, display_name, type, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb)
+     VALUES (?, ?, 'PAPER', ?, ?, 'x', 1024, 1536)`,
+    id,
+    id,
+    port,
+    port + 1000
+  );
+}
+
+// created_at grows with i, so higher i == newer == kept.
+function seedBackups(serverId, reason, count) {
+  for (let i = 0; i < count; i++) {
+    const n = String(i).padStart(3, '0');
+    db.run(
+      `INSERT INTO backups (id, server_id, filename, rel_path, size_bytes, reason, created_at)
+       VALUES (?, ?, ?, ?, 1024, ?, datetime('2026-01-01 00:00:00', '+' || ? || ' minutes'))`,
+      `bk_${serverId}_${reason}_${n}`,
+      serverId,
+      `${serverId}-${reason}-${n}.zip`,
+      `backups/${serverId}/${serverId}-${reason}-${n}.zip`,
+      reason,
+      i
+    );
+  }
+}
+
+const count = (serverId) => db.get('SELECT COUNT(*) AS n FROM backups WHERE server_id = ?', serverId).n;
+const post = (path, body, who = cookie) => app.req('POST', path, { cookie: who, body });
+
+test.before(async () => {
+  await app.start();
+  cookie = await app.adminCookie();
+  opCookie = await login('retop', 'operatorpass123', 'operator');
+  viewerCookie = await login('retviewer', 'viewerpass123', 'viewer');
+});
+test.after(app.stop);
+test.beforeEach(() => {
+  settings.remove('backup_retention');
+  db.run('DELETE FROM backups');
+  db.run('DELETE FROM servers');
+  seedServer('srv_a', 47300);
+  seedServer('srv_b', 47310);
+  seedBackups('srv_a', 'scheduled', 8);
+  seedBackups('srv_b', 'scheduled', 8);
+});
+
+test('a global preview counts every affected server and deletes nothing', async () => {
+  const r = await post('/api/backups/retention/preview', { keepScheduled: 5 });
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual([r.json.backups, r.json.bytes, r.json.servers], [6, 6 * 1024, 2]);
+  assert.equal(count('srv_a') + count('srv_b'), 16);
+});
+
+test('a global change reaches a server whose override does not set that key', async () => {
+  await post('/api/servers/srv_b/backups/retention', { keepManual: 3 }); // partial override
+  const r = await post('/api/backups/retention/preview', { keepScheduled: 5 });
+  assert.equal(r.json.servers, 2);
+  await post('/api/servers/srv_b/backups/retention', { keepScheduled: 8 }); // now it pins scheduled too
+  const pinned = await post('/api/backups/retention/preview', { keepScheduled: 5 });
+  assert.deepEqual([pinned.json.backups, pinned.json.servers], [3, 1]);
+});
+
+test('From Next Backup: saving alone removes nothing', async () => {
+  const r = await post('/api/backups/retention', { keepScheduled: 5 });
+  assert.equal(r.status, 200, r.text);
+  assert.equal(count('srv_a'), 8);
+});
+
+test('Remove Now: save then apply trims every server to the saved policy and records it', async () => {
+  await post('/api/backups/retention', { keepScheduled: 5 });
+  const r = await post('/api/backups/retention/apply', {});
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual([r.json.deleted, r.json.skipped], [6, 0]);
+  assert.deepEqual([count('srv_a'), count('srv_b')], [5, 5]);
+  assert.ok(db.get("SELECT 1 AS x FROM backups WHERE id = 'bk_srv_a_scheduled_007'"), 'the newest stay');
+  const events = db.get("SELECT COUNT(*) AS n FROM events WHERE type = 'backup-deleted' AND actor = 'admin'").n;
+  assert.equal(events, 6);
+});
+
+test('a server busy with another action is skipped by the global apply, never interrupted', async () => {
+  await post('/api/backups/retention', { keepScheduled: 5 });
+  let release;
+  const held = guardOp('restore', () => new Promise((r) => (release = r)))('srv_a');
+  const r = await post('/api/backups/retention/apply', {});
+  assert.deepEqual([r.json.deleted, r.json.skipped], [3, 1]);
+  assert.equal(count('srv_a'), 8);
+  const one = await post('/api/servers/srv_a/backups/retention/apply', {});
+  assert.equal(one.status, 409);
+  release();
+  await held;
+});
+
+test('a per-server preview, save and apply touch only that server', async () => {
+  const preview = await post('/api/servers/srv_a/backups/retention/preview', {
+    keepScheduled: 2,
+    keepPreUpdate: 10,
+    keepManual: 20,
+    keepPreRestore: 5,
+    maxAgeDays: 0,
+    maxTotalGb: 0,
+  });
+  assert.deepEqual([preview.json.backups, preview.json.servers], [6, 1]);
+  await post('/api/servers/srv_a/backups/retention', { keepScheduled: 2 });
+  const r = await post('/api/servers/srv_a/backups/retention/apply', {});
+  assert.equal(r.json.deleted, 6);
+  assert.deepEqual([count('srv_a'), count('srv_b')], [2, 8]);
+  const get = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
+  assert.deepEqual(get.json.override, { keepScheduled: 2 });
+});
+
+test('previewing a reset shows what following the panel default would remove', async () => {
+  await post('/api/backups/retention', { keepScheduled: 4 });
+  await post('/api/servers/srv_a/backups/retention', { keepScheduled: 8 });
+  const r = await post('/api/servers/srv_a/backups/retention/preview', { reset: true });
+  assert.deepEqual([r.json.backups, r.json.servers], [4, 1]);
+  await post('/api/servers/srv_a/backups/retention', { reset: true });
+  const get = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
+  assert.equal(get.json.override, null);
+});
+
+test('out-of-range values are refused before anything is previewed or saved', async () => {
+  assert.equal((await post('/api/backups/retention/preview', { keepScheduled: 0 })).status, 400);
+  assert.equal((await post('/api/backups/retention/preview', { bogus: 1 })).status, 400);
+});
+
+test('only admins can preview or apply retention', async () => {
+  for (const who of [opCookie, viewerCookie]) {
+    for (const path of [
+      '/api/backups/retention/preview',
+      '/api/backups/retention/apply',
+      '/api/servers/srv_a/backups/retention/preview',
+      '/api/servers/srv_a/backups/retention/apply',
+    ]) {
+      const r = await post(path, { keepScheduled: 1 }, who);
+      assert.equal(r.status, 403, `${path} answered ${r.status}`);
+    }
+  }
+  assert.equal(count('srv_a'), 8);
+});

@@ -38,7 +38,18 @@ Retention is capped **per server, per reason**: the newest in each group are kep
 
 `pre-restore` has its own small bucket precisely so an automatic safety backup can never evict a `manual` backup you deliberately kept.
 
-Two optional ceilings apply on top of the per-reason counts, both off by default: a **maximum age** (backups older than N days are pruned, whatever their reason) and a **maximum total size** per server (the oldest backups are pruned until the total fits, `pre-restore` ones first). The newest backup of a server is never pruned by either ceiling. All of these can be changed globally on the Settings page, and overridden per server on its Backups tab.
+Two optional ceilings apply on top of the per-reason counts, both off by default: a **maximum age** (backups older than N days are pruned, whatever their reason) and a **maximum total size** per server (the oldest backups are pruned until the total fits, `pre-restore` ones first). The newest backup of a server is never pruned by either ceiling.
+
+### Changing it
+
+Admins set the panel-wide policy in the **Backup Retention** card on the **Settings** page. A server can have its own limits instead: open its **Backups** tab, expand **Retention for This Server** and turn on **Use its own limits**. Turning that off puts the server back on the panel-wide policy. A server's limits are per field: a value it doesn't set follows the panel-wide one.
+
+Saving never deletes anything by itself. If the new limits would leave existing backups over the limit, the panel says how many (and how much space) and asks how to apply them:
+
+- **Remove Now** deletes them right away. A server busy with another action (a restore, a backup, an update) is skipped and trims after its next backup instead.
+- **From Next Backup** keeps them for now; each server trims its backups the next time it makes one, as it always has.
+
+The same settings are available to scripts as admin API endpoints: `GET`/`POST /api/backups/retention` and `/api/servers/:id/backups/retention` (send `{ "reset": true }` to clear a server's limits), plus a `/preview` (`POST`: what a change would remove, without removing it) and an `/apply` (`POST`: apply the saved policy now) under each of those two paths.
 
 Backups can be **renamed** from the backup list (the rename button on each row). The archive on disk and the panel's record move together, so download, restore, and retention keep working with the new name.
 

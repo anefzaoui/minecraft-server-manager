@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 const { migrate } = require('../src/db/migrate');
 migrate();
 const db = require('../src/db');
-const { pruneRetention } = require('../src/services/backups');
+const { pruneRetention, planPrune, previewRetention } = require('../src/services/backups');
 const backupRetention = require('../src/services/backupRetention');
 const settings = require('../src/services/settings');
 
@@ -158,4 +158,46 @@ test('the size ceiling sacrifices pre-restore safety snapshots before user backu
   // The pre-restore snapshot is dropped first; both user backups survive.
   assert.equal(countByReason(id, 'pre-restore'), 0);
   assert.equal(countByReason(id, 'manual'), 2);
+});
+
+test('planPrune names exactly what pruneRetention then deletes, across all three passes', async () => {
+  seedServer('srv_plan');
+  seedBackups('srv_plan', 'scheduled', 14);
+  seedBackups('srv_plan', 'manual', 6);
+  seedBackups('srv_plan', 'pre-restore', 7);
+  // Big old manual backups so the size pass has work after the count caps.
+  db.run("UPDATE backups SET size_bytes = 3 * 1024 * 1024 * 1024 WHERE id IN ('bk_manual_000', 'bk_manual_001')");
+  backupRetention.setServer('srv_plan', { keepScheduled: 4, keepPreRestore: 2, maxTotalGb: 4 });
+
+  const plan = planPrune('srv_plan', backupRetention.effective('srv_plan'));
+  const ids = () => new Set(db.all("SELECT id FROM backups WHERE server_id = 'srv_plan'").map((r) => r.id));
+  const before = ids();
+  const deleted = await pruneRetention('srv_plan');
+  const after = ids();
+  const gone = [...before].filter((id) => !after.has(id)).sort();
+
+  assert.equal(deleted, plan.length);
+  assert.deepEqual(plan.map((b) => b.id).sort(), gone);
+  assert.ok(gone.includes('bk_manual_000'), 'the size pass ran');
+  assert.ok(after.has('bk_scheduled_013') && after.has('bk_manual_005'), 'the newest stay');
+});
+
+test('previewRetention totals a candidate policy without deleting anything', () => {
+  seedServer('srv_prev');
+  seedBackups('srv_prev', 'scheduled', 12);
+  const preview = previewRetention(['srv_prev'], (id) =>
+    backupRetention.effectiveIf(id, { global: { keepScheduled: 5 } })
+  );
+  assert.deepEqual(preview, { backups: 7, bytes: 7 * 1024, servers: 1 });
+  assert.equal(countByReason('srv_prev', 'scheduled'), 12);
+});
+
+test('effectiveIf applies a candidate global under a partial override, and null drops the override', () => {
+  backupRetention.setServer('srv_x', { keepManual: 3 });
+  const withGlobal = backupRetention.effectiveIf('srv_x', { global: { keepScheduled: 2, keepManual: 50 } });
+  assert.equal(withGlobal.keepScheduled, 2); // not overridden: follows the candidate global
+  assert.equal(withGlobal.keepManual, 3); // overridden: the override still wins
+  assert.equal(backupRetention.effectiveIf('srv_x', { server: null }).keepManual, 20);
+  assert.deepEqual(backupRetention.overrideFor('srv_x'), { keepManual: 3 });
+  assert.equal(backupRetention.overrideFor('srv_none'), null);
 });
