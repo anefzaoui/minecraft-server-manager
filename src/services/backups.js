@@ -438,8 +438,9 @@ async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
  * evict user-created 'manual' backups. The three passes run against an
  * in-memory copy of the server's rows so each pass sees what the previous one
  * removed. A planned row counts as gone even if its delete later fails (the
- * failure is logged; the next prune retries it), so one stuck file never makes
- * a pass delete extra backups to compensate. Backups in use (protectedFromPrune)
+ * failure is logged), so one stuck file never makes a pass delete extra
+ * backups to compensate. deleteBackup drops the row before the file, so a file
+ * left behind that way is an orphan for the storage cleanup, not a retry. Backups in use (protectedFromPrune)
  * are never planned. The settings preview and pruneRetention both use this, so
  * a preview can't drift from what happens.
  * @param {string} serverId

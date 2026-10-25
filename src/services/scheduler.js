@@ -38,7 +38,7 @@ const BUSY_RETRIES = 3;
 const BUSY_RETRY_MS = 60_000;
 
 /**
- * @param {object} job a schedules row
+ * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
  * @param {{ retryMs?: number }} [opts]
  */
 async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS } = {}) {

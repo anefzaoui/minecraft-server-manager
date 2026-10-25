@@ -553,7 +553,9 @@ function init() {
     builtins?.addEventListener('click', () => {
       const values = JSON.parse(builtins.dataset.values || '{}');
       for (const el of retentionForm.querySelectorAll('[data-retention-key]')) {
-        if (values[el.dataset.retentionKey] !== undefined) el.value = values[el.dataset.retentionKey];
+        if (values[el.dataset.retentionKey] === undefined) continue;
+        el.value = values[el.dataset.retentionKey];
+        el.dispatchEvent(new Event('input', { bubbles: true })); // counts as an edit
       }
       toast('Built-in values filled in. Save to use them.', { kind: 'info' });
     });

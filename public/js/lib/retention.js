@@ -10,8 +10,10 @@
 //          with data-inherit (a server's own limits) may be left blank: it then
 //          follows the panel-wide value and is sent as null.
 //   scope: 'panel' (default) or 'server', for the dialog's wording.
-// Only fields changed since the page loaded are sent, so a stale tab never
-// rewrites values someone else saved meanwhile.
+// Only fields the person actually edited are sent, so a stale tab never
+// rewrites values someone else saved meanwhile, and retyping a value still
+// counts. On a server, Save also refreshes the "Panel: N" placeholders.
+//   currentUrl: optional GET returning { global } for those placeholders.
 
 import { toast } from './toast.js';
 import { friendlyError } from './errors.js';
@@ -81,16 +83,37 @@ function breakdownList(byServer = []) {
   return list;
 }
 
-export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, scope = 'panel', onSaved = () => {} }) {
+export function initRetentionForm(
+  form,
+  { previewUrl, saveUrl, applyUrl, currentUrl = null, scope = 'panel', onSaved = () => {} }
+) {
   const saveBtn = form.querySelector('[data-retention-save]');
   const inputs = [...form.querySelectorAll('[data-retention-key]')];
   const onServer = scope === 'server';
 
-  // What the page rendered (or last saved): only fields that differ are sent.
+  // Edited since the page loaded (or since the last save): only these are sent.
   const snapshot = () => {
-    for (const el of inputs) el.dataset.saved = el.value.trim();
+    for (const el of inputs) delete el.dataset.edited;
   };
-  snapshot();
+  for (const el of inputs) {
+    el.addEventListener('input', () => {
+      el.dataset.edited = '1';
+    });
+  }
+
+  async function refreshPlaceholders() {
+    if (!currentUrl) return;
+    try {
+      const res = await fetch(currentUrl, { headers: { Accept: 'application/json' } });
+      const data = await res.json();
+      if (!res.ok || !data.global) return;
+      for (const el of inputs) {
+        if ('inherit' in el.dataset) el.placeholder = `Panel: ${data.global[el.dataset.retentionKey]}`;
+      }
+    } catch {
+      /* the old placeholders stay; nothing depends on them */
+    }
+  }
 
   // Save stays disabled while the dialog is open AND while one of its actions
   // runs - closing the dialog mid-delete must not re-enable it.
@@ -124,7 +147,7 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, scope =
         return null;
       }
       const raw = el.value.trim();
-      if (raw === el.dataset.saved) continue;
+      if (!el.dataset.edited) continue;
       const key = el.dataset.retentionKey;
       if (raw === '' && canBlank) {
         body[key] = null; // follow the panel-wide value
@@ -151,9 +174,10 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, scope =
     const body = collect();
     if (!body) return;
     if (!Object.keys(body).length) {
-      toast('Nothing to save. These are already the saved values.', { kind: 'info' });
+      toast('Nothing to save. Change a value first.', { kind: 'info' });
       return;
     }
+    refreshPlaceholders();
     const restore = setBusy(saveBtn, 'Checking…');
     let preview;
     try {

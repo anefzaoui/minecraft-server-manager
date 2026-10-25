@@ -22,6 +22,7 @@ function init(serverId) {
       previewUrl: `/api/servers/${serverId}/backups/retention/preview`,
       saveUrl: `/api/servers/${serverId}/backups/retention`,
       applyUrl: `/api/servers/${serverId}/backups/retention/apply`,
+      currentUrl: `/api/servers/${serverId}/backups/retention`,
       scope: 'server',
       onSaved: reload,
     });
