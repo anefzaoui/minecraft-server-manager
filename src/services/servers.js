@@ -15,7 +15,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const secrets = require('./secrets');
 const { pickJavaTag } = require('./javaMatrix');
-const { suggestPorts, isPortFree } = require('./ports');
+const { suggestPorts, assertPortsFree } = require('./ports');
 const containers = require('../docker/containers');
 const images = require('../docker/images');
 const { fetchLogs } = require('../docker/logs');
@@ -258,20 +258,23 @@ function previewServerSpec(id) {
   };
 }
 
-// Creates are serialized through this chain so two concurrent creates can't both
-// probe the same free port before either has inserted its row (port-allocation
-// TOCTOU → duplicate host ports → one un-startable server). Creates are rare, so
-// running them one-at-a-time is cheap insurance.
-let createChain = Promise.resolve();
+// Creates and port changes are serialized through this chain so two of them
+// can't both probe the same free port before either has written its row
+// (port-allocation TOCTOU → duplicate host ports → one un-startable server).
+// Both are rare, so running them one-at-a-time is cheap insurance.
+let portChain = Promise.resolve();
 
-function createServer(input, opts = {}) {
-  const run = () => createServerImpl(input, opts);
-  const result = createChain.then(run, run);
-  createChain = result.then(
+function withPortLock(run) {
+  const result = portChain.then(run, run);
+  portChain = result.then(
     () => {},
     () => {}
-  ); // a failed create must not break the chain
+  ); // a failed run must not break the chain
   return result;
+}
+
+function createServer(input, opts = {}) {
+  return withPortLock(() => createServerImpl(input, opts));
 }
 
 /**
@@ -311,9 +314,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
     const toCheck = [input.portGame, rcon];
     if (input.portBedrock) toCheck.push(input.portBedrock);
     if (input.portQuery) toCheck.push(input.portQuery);
-    for (const p of toCheck) {
-      if (!(await isPortFree(p))) throw httpError(400, `Port ${p} is already in use or invalid`);
-    }
+    await assertPortsFree(toCheck);
     ports = { game: input.portGame, rcon, bedrock: input.portBedrock || null };
   } else {
     ports = await suggestPorts({ withBedrock: Boolean(input.withBedrock) });
@@ -620,7 +621,8 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
        AND container_name IS ? AND network_name IS ?
        AND mc_version IS ? AND java_tag IS ?
        AND heap_mb IS ? AND container_memory_mb IS ? AND cpus IS ?
-       AND extra_ports_json IS ? AND extra_binds_json IS ? AND env_json IS ?`,
+       AND extra_ports_json IS ? AND extra_binds_json IS ? AND env_json IS ?
+       AND port_game IS ? AND port_rcon IS ?`,
     id,
     server.container_name,
     server.network_name,
@@ -631,7 +633,9 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
     server.cpus,
     server.extra_ports_json,
     server.extra_binds_json,
-    server.env_json
+    server.env_json,
+    server.port_game,
+    server.port_rcon
   );
   if (!quiet)
     recordEvent({
@@ -745,6 +749,44 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     details: { diff, needsRecreate },
   });
   return { server: getServer(id), needsRecreate };
+}
+
+/**
+ * Move a server to a new host game port (RCON follows at game + offset). Docker
+ * fixes port bindings at container creation, so this flags pending_recreate:
+ * a stopped server picks the change up on its next start, a running one when
+ * the caller restarts it through recreateServer. Serialized with creates so a
+ * concurrent create can't claim the same port.
+ * @returns {Promise<{ server: object, changed: boolean, running: boolean }>}
+ */
+function changeGamePort(id, port, { actor = 'system' } = {}) {
+  return withPortLock(async () => {
+    const before = mustGet(id);
+    const rcon = port + config.ports.rconOffset;
+    const changed = before.port_game !== port || before.port_rcon !== rcon;
+    if (changed) {
+      if (rcon > 65535) {
+        throw httpError(400, `Port ${port} is too high to leave room for its RCON port. Pick a lower game port.`);
+      }
+      await assertPortsFree([port, rcon], { exceptServerId: id });
+      db.run('UPDATE servers SET port_game = ?, port_rcon = ?, pending_recreate = 1 WHERE id = ?', port, rcon, id);
+      recordEvent({
+        serverId: id,
+        actor,
+        type: 'config-changed',
+        summary: `Game port changed from ${before.port_game} to ${port}.`,
+        details: {
+          diff: { portGame: [before.port_game, port], portRcon: [before.port_rcon, rcon] },
+          needsRecreate: true,
+        },
+      });
+      logger.info('Changed a server game port.', { serverId: id, actor, from: before.port_game, to: port });
+    }
+    const UP = ['running', 'starting', 'unhealthy'];
+    const info = await containers.inspectStatus(id).catch(() => null);
+    const running = info ? Boolean(info.exists) && UP.includes(info.status) : UP.includes(before.status);
+    return { server: getServer(id), changed, running };
+  });
 }
 
 /**
@@ -1186,6 +1228,7 @@ module.exports = {
   getServer,
   createServer,
   updateServer,
+  changeGamePort,
   deleteServer,
   startServer,
   stopServer,

@@ -387,6 +387,42 @@ router.get(
   })
 );
 
+// Changing an existing server's game port. Server-scoped twins of the
+// /ports/* routes below: same checks, except the server's own current ports
+// count as free for it.
+router.get(
+  '/servers/:id/port/check',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    const port = Number(req.query.port);
+    if (!Number.isInteger(port)) return res.status(400).json({ ok: false, error: 'A port number is required.' });
+    const free =
+      (await ports.isPortFree(port, { exceptServerId: req.params.id })) &&
+      (await ports.isPortFree(port + panelConfig.ports.rconOffset, { exceptServerId: req.params.id }));
+    res.json({ ok: true, port, rcon: port + panelConfig.ports.rconOffset, free });
+  })
+);
+
+router.get(
+  '/servers/:id/port/suggest',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    res.json({ ok: true, ports: await ports.suggestPorts({ exceptServerId: req.params.id }) });
+  })
+);
+
+router.put(
+  '/servers/:id/port',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    const { port } = z.object({ port: z.coerce.number().int().min(1024).max(65535) }).parse(req.body);
+    const { server, changed, running } = await servers.changeGamePort(req.params.id, port, {
+      actor: req.user.username,
+    });
+    res.json({ ok: true, changed, running, server: publicServer(server) });
+  })
+);
+
 router.get(
   '/ports/check',
   asyncHandler(async (req, res, next) => {

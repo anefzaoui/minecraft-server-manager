@@ -199,6 +199,142 @@ function init(serverId) {
   cmemEl?.addEventListener('input', updateHeadroom);
   updateHeadroom();
 
+  // -------------------------------------------------------------- game port
+  // Self-contained (own check, "next free" and Save), and kept out of the
+  // tab-wide dirty tracking. Docker fixes a container's ports when it is
+  // created, so the server API flags a rebuild that any start or restart
+  // applies: a stopped server moves on its next start, a running one when
+  // restarted.
+  const portCard = root.querySelector('[data-port-card]');
+  if (portCard) initPortCard(portCard);
+
+  function initPortCard(card) {
+    const input = document.getElementById('st-port');
+    const help = document.getElementById('st-port-help');
+    const nextBtn = document.getElementById('st-port-next');
+    const saveBtn = document.getElementById('st-port-save');
+    const current = Number(card.dataset.portCurrent);
+    const defaultHelp = help.textContent;
+    const setHelp = (text, cls = '') => {
+      help.textContent = text;
+      help.className = `help ${cls}`;
+    };
+    const validPort = (port) => Number.isInteger(port) && port >= 1024 && port <= 65535;
+    for (const type of ['input', 'change']) card.addEventListener(type, (e) => e.stopPropagation());
+
+    let timer;
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(check, 400);
+    });
+    async function check() {
+      const port = Number(input.value);
+      if (port === current) return setHelp(defaultHelp);
+      if (!validPort(port)) return setHelp('Enter a port between 1024 and 65535.', 'text-danger');
+      try {
+        const res = await fetch(`/api/servers/${serverId}/port/check?port=${port}`);
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error);
+        if (Number(input.value) !== port) return; // user kept typing - stale
+        if (data.free) setHelp(`Port ${port} is free. RCON will use ${data.rcon}.`, 'text-ok');
+        else setHelp(`Port ${port} or its RCON port ${data.rcon} is already in use. Pick another.`, 'text-danger');
+      } catch {
+        setHelp('Could not check the port right now.', 'text-ink-faint');
+      }
+    }
+
+    nextBtn.addEventListener('click', async () => {
+      const restore = setBusy(nextBtn, 'Finding…');
+      try {
+        const res = await fetch(`/api/servers/${serverId}/port/suggest`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          toast(data.error || friendlyError(res, { action: 'find a free port' }), { kind: 'error', timeout: 8000 });
+          return;
+        }
+        clearTimeout(timer);
+        input.value = String(data.ports.game);
+        if (data.ports.game === current)
+          setHelp(`This server already uses the lowest free port, ${current}.`, 'text-ok');
+        else setHelp(`Port ${data.ports.game} is free. RCON will use ${data.ports.rcon}. Save to switch.`, 'text-ok');
+      } catch {
+        toast(friendlyError(null, { action: 'find a free port' }), { kind: 'error' });
+      } finally {
+        restore();
+      }
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const port = Number(input.value);
+      if (port === current) {
+        toast(`The server already uses port ${port}.`, { kind: 'info' });
+        return;
+      }
+      if (!validPort(port)) {
+        setHelp('Enter a port between 1024 and 65535.', 'text-danger');
+        return;
+      }
+      const restore = setBusy(saveBtn, 'Saving…');
+      let data;
+      try {
+        const res = await fetch(`/api/servers/${serverId}/port`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ port }),
+        });
+        data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          toast(data.error || friendlyError(res, { action: 'change the port' }), { kind: 'error', timeout: 8000 });
+          return;
+        }
+      } catch {
+        toast(friendlyError(null, { action: 'change the port' }), { kind: 'error' });
+        return;
+      } finally {
+        restore();
+      }
+      const reload = () => setTimeout(() => location.reload(), 900);
+      if (!data.running) {
+        toast(`Port changed to ${port}. It takes effect the next time you start the server.`);
+        reload();
+        return;
+      }
+      if (!('portCanRestart' in card.dataset)) {
+        // No power permission here: the restart is someone else's call.
+        toast(`Port saved. The server moves to ${port} the next time it restarts.`, { kind: 'info' });
+        reload();
+        return;
+      }
+      const { confirmDialog } = await import('../lib/confirm.js');
+      const now = await confirmDialog({
+        title: `Restart now to move players to port ${port}?`,
+        message:
+          'The world is saved first. Anyone online is disconnected and can rejoin on the new port once the server is back up. Choose Later to keep it running on the old port until its next restart.',
+        confirmLabel: 'Restart Now',
+        cancelLabel: 'Later',
+      });
+      if (!now) {
+        toast(`Port saved. The server moves to ${port} the next time it restarts.`, { kind: 'info' });
+        reload();
+        return;
+      }
+      setBusy(saveBtn, 'Restarting…');
+      nextBtn.disabled = true;
+      try {
+        const res = await fetch(`/api/servers/${serverId}/restart`, { method: 'POST' });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok || out.ok === false) {
+          toast(out.error || friendlyError(res, { action: 'restart the server' }), { kind: 'error', timeout: 9000 });
+        } else {
+          toast(`Restarted on port ${port}.`);
+        }
+      } catch {
+        toast(friendlyError(null, { action: 'restart the server' }), { kind: 'error' });
+      }
+      reload();
+    });
+  }
+
   // ------------------------------------------------------------ icon upload
   const iconUploadBtn = document.getElementById('st-icon-upload');
   iconUploadBtn?.addEventListener('click', () => {

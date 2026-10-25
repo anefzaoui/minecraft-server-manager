@@ -428,8 +428,44 @@ async function chownDataDir(dir, image, uid, gid) {
   }
 }
 
+/**
+ * Host ports published by any container on the daemon, managed or not, except
+ * `exceptServerId`'s own. When the panel itself runs in a container, an OS bind
+ * probe only sees the panel's own network namespace, so this is its one view of
+ * ports held by sibling containers. Running containers report live bindings; a
+ * stopped container reports none, so unmanaged stopped ones are inspected for
+ * the bindings they will claim on start (managed ones are already in the DB).
+ * @param {{ exceptServerId?: string }} [opts]
+ * @returns {Promise<Set<number>>}
+ */
+async function publishedHostPorts({ exceptServerId } = {}) {
+  const docker = getDocker();
+  const used = new Set();
+  const stopped = [];
+  for (const c of await docker.listContainers({ all: true })) {
+    const owner = c.Labels && c.Labels[LABEL];
+    if (exceptServerId && owner === exceptServerId) continue;
+    for (const p of c.Ports || []) if (p.PublicPort) used.add(p.PublicPort);
+    if (c.State !== 'running' && !owner) stopped.push(c.Id);
+  }
+  for (const id of stopped) {
+    const info = await docker
+      .getContainer(id)
+      .inspect()
+      .catch(() => null);
+    for (const binds of Object.values(info?.HostConfig?.PortBindings || {})) {
+      for (const b of binds || []) {
+        const port = Number(b.HostPort);
+        if (Number.isInteger(port) && port > 0) used.add(port);
+      }
+    }
+  }
+  return used;
+}
+
 module.exports = {
   LABEL,
+  publishedHostPorts,
   containerName,
   containerRef,
   createContainer,
