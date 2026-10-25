@@ -13,14 +13,16 @@ const { migrate } = require('../src/db/migrate');
 migrate();
 const db = require('../src/db');
 const containers = require('../src/docker/containers');
+// No Docker: stubbed BEFORE backups.js loads, since it takes inspectStatus at
+// load time - a later patch would never reach it.
+containers.inspectStatus = async () => ({ exists: false });
 const servers = require('../src/services/servers');
 const settings = require('../src/services/settings');
 const { dataPath } = require('../src/storage/pathGuard');
 const backups = require('../src/services/backups');
 const backupRetention = require('../src/services/backupRetention');
 
-// No Docker: the server is "stopped" and stays so.
-containers.inspectStatus = async () => ({ exists: false });
+// The server is "stopped" and stays so (looked up at call time, so patching here works).
 servers.stopServerUnguarded = async () => {};
 
 const SID = 'srv_restore';
