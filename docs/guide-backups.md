@@ -82,8 +82,9 @@ mods, configuration and player data travel with the world.
 
 Backups can run on a schedule alongside restarts and commands. Retention counts each kind separately,
 so the ten scheduled copies that pile up on their own cannot push out the one you took by hand before
-a risky change, and age and size caps apply on top. Admins change all of it on the Settings page, or per server on its Backups tab. Restoring takes a fresh backup first, so a restore
-to the wrong point in time is itself undoable. A world can be shrunk on its own or as part of a backup, which is the lever
+a risky change, and age and size caps apply on top. Admins change all of it on the Settings page, or
+per server on its Backups tab. Restoring takes a fresh backup first, so a restore to the wrong point
+in time is itself undoable. A world can be shrunk on its own or as part of a backup, which is the lever
 that matters most for size.
 
 The whole panel, including every backup, lives under one directory. Copying that directory elsewhere

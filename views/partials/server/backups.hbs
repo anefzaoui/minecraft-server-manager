@@ -3,7 +3,7 @@
   <p class="text-sm text-ink-faint">
     Keeps the newest {{retention.keepScheduled}} scheduled, {{retention.keepManual}} manual, {{retention.keepPreUpdate}} pre-update
     and {{retention.keepPreRestore}} safety backups, and trims older ones after each new backup.{{#if retention.maxAgeDays}} Backups older than {{retention.maxAgeDays}} days are removed too.{{/if}}{{#if retention.maxTotalGb}} The total is capped at {{retention.maxTotalGb}} GB, oldest first.{{/if}}
-    {{#if retentionOverride}}Some of these limits are set for this server; the rest follow the panel default.{{else}}This server uses the panel default.{{/if}}
+    {{#if retentionOwnAll}}All of these limits are set for this server.{{else if retentionOverride}}Some of these limits are set for this server; the rest are panel-wide.{{else}}This server uses the panel-wide limits.{{/if}}
   </p>
   <div class="ml-auto flex flex-wrap items-center gap-3">
     <label class="flex items-center gap-2 text-xs text-ink-faint" data-tip="After the backup is saved, remove chunks no player has spent 30+ seconds in to shrink the world. Only runs while the server is stopped.">

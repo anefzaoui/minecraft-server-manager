@@ -42,14 +42,14 @@ Two optional ceilings apply on top of the per-reason counts, both off by default
 
 ### Changing it
 
-Admins set the panel-wide policy in the **Backup Retention** card on the **Settings** page. A server can differ on any of the six values: open its **Backups** tab and expand **Retention for This Server**. Each field there is blank unless that server sets it, and a blank field follows the panel-wide value (shown inside it). So a server can, for example, keep 3 scheduled backups and follow the panel on everything else; clearing a field puts it back on the panel value.
+Admins set the panel-wide policy in the **Backup Retention** card on the **Settings** page. A server can differ on any of the six values: open its **Backups** tab and expand **Retention for This Server**. Each field there is blank unless that server sets it, and a blank field follows the panel-wide value (shown inside it). So a server can, for example, keep 3 scheduled backups and use the panel-wide values for everything else; clearing a field puts it back on the panel-wide value.
 
 Saving never deletes anything by itself. If the new limits would leave existing backups over the limit, the panel says how many (and how much space) and asks how to apply them:
 
-- **Remove Now** deletes them right away. From the Settings page, a server in the middle of a restore, backup or similar action is skipped and trims after its next backup; on a server's own Backups tab you are asked to try again once that action finishes.
+- **Remove Now** deletes exactly the backups it just listed, nothing more: a backup made in the meantime waits for the next trim. From the Settings page, a server in the middle of a restore, backup or similar action is skipped and trims after its next backup; on a server's own Backups tab you are asked to try again once that action finishes. While a server's old backups are being deleted (usually seconds), other actions on that server, such as a scheduled backup or a restart, are refused until it finishes.
 - **From Next Backup** keeps them for now; each server trims its backups the next time it makes one, as it always has.
 
-A backup that is being restored is never removed while the restore runs, even though the restore's own safety backup triggers a retention pass.
+A backup that is being restored is never removed while the restore runs: retention leaves it alone (and does not delete other backups to make room for it), and deleting it by hand is refused until the restore finishes.
 
 The same settings are available to scripts as admin API endpoints: `GET`/`POST /api/backups/retention` and `/api/servers/:id/backups/retention`. For a server, a value of `null` removes that one key and `{ "reset": true }` removes them all. Under each of those two paths, `POST …/preview` reports what a change would remove without removing it, and `POST …/apply` applies the saved policy now.
 

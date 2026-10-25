@@ -801,6 +801,8 @@ router.get(
       const backupRetention = require('../../services/backupRetention');
       const own = backupRetention.overrideFor(row.id);
       context.retentionOverride = Boolean(own);
+      context.retentionOwnAll =
+        Boolean(own) && Object.keys(own).length === Object.keys(backupRetention.DEFAULTS).length;
       context.retentionOwn = own || {};
       context.retentionGlobal = backupRetention.globalConfig();
     }

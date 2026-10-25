@@ -121,7 +121,7 @@
     </div>
   {{/settings/card}}
 
-  {{#> settings/card heading="Backup Retention" id="retention-card" desc="How many backups each server keeps, per kind. A server trims its older backups each time it makes a new one. A server can override any of this on its Backups tab."}}
+  {{#> settings/card heading="Backup Retention" id="retention-card" desc="How many backups each server keeps of each kind, plus optional age and size limits. A server trims its older backups each time it makes a new one, and can set any of these differently on its Backups tab."}}
     <div data-retention-form>
       <div data-retention-fields>
         {{> backups/retention-fields prefix="ret" values=retention}}
