@@ -21,7 +21,7 @@ module.exports = [
     key: 'portGame',
     scope: 'panel',
     label: 'Game port (on this machine)',
-    help: 'The host port players connect to; the panel maps it to the container’s internal game port (25565). A free port is suggested automatically, each server needs its own, and you can change it later in the server’s Settings tab.',
+    help: 'The host port players connect to; the panel maps it to the container’s internal game port (25565). A free port is suggested automatically, each server needs its own, and you can change it later on the server’s Configuration tab.',
     type: 'number',
     min: 1024,
     max: 65535,
