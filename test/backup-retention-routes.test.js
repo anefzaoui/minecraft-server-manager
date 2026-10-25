@@ -162,3 +162,54 @@ test('only admins can preview or apply retention', async () => {
   }
   assert.equal(count('srv_a'), 8);
 });
+
+test("a server's limits are per field: null removes one key, the rest stay", async () => {
+  await post('/api/servers/srv_a/backups/retention', { keepScheduled: 3, maxTotalGb: 50 });
+  const r = await post('/api/servers/srv_a/backups/retention', { keepScheduled: null });
+  assert.equal(r.status, 200, r.text);
+  const get = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
+  assert.deepEqual(get.json.override, { maxTotalGb: 50 });
+  assert.equal(get.json.effective.keepScheduled, 10); // back on the panel value
+  await post('/api/servers/srv_a/backups/retention', { maxTotalGb: null });
+  const cleared = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
+  assert.equal(cleared.json.override, null); // no keys left: no override at all
+});
+
+test('a per-server preview mixes set fields with blank (null) ones', async () => {
+  await post('/api/backups/retention', { keepScheduled: 6 });
+  const r = await post('/api/servers/srv_a/backups/retention/preview', { keepScheduled: null, keepManual: 4 });
+  assert.deepEqual([r.json.backups, r.json.servers], [2, 1]); // scheduled follows the panel's 6
+});
+
+test('a panel-wide apply never locks a server that has nothing to delete', async () => {
+  await post('/api/backups/retention', { keepScheduled: 5 });
+  await post('/api/servers/srv_b/backups/retention', { keepScheduled: 8 }); // srv_b: nothing over
+  let release;
+  const held = guardOp('restore', () => new Promise((r) => (release = r)))('srv_b');
+  const r = await post('/api/backups/retention/apply', {});
+  assert.deepEqual([r.json.deleted, r.json.skipped], [3, 0]);
+  release();
+  await held;
+});
+
+test('deleted servers are left out of previews and applies', async () => {
+  seedServer('srv_gone', 47320);
+  seedBackups('srv_gone', 'scheduled', 8);
+  db.run("UPDATE servers SET deleted_at = datetime('now') WHERE id = 'srv_gone'");
+  const preview = await post('/api/backups/retention/preview', { keepScheduled: 5 });
+  assert.equal(preview.json.servers, 2);
+  await post('/api/backups/retention', { keepScheduled: 5 });
+  await post('/api/backups/retention/apply', {});
+  assert.equal(count('srv_gone'), 8);
+});
+
+test('the Backups tab shows the retention form to admins only', async () => {
+  const admin = await app.req('GET', '/servers/srv_a/backups', { cookie, headers: { Accept: 'text/html' } });
+  assert.equal(admin.status, 200);
+  assert.match(admin.text, /id="bk-retention"/);
+  assert.match(admin.text, /placeholder="Panel: 10"/);
+  const op = await app.req('GET', '/servers/srv_a/backups', { cookie: opCookie, headers: { Accept: 'text/html' } });
+  assert.equal(op.status, 200);
+  assert.doesNotMatch(op.text, /id="bk-retention"/);
+  assert.match(op.text, /This server uses the panel default\./);
+});
