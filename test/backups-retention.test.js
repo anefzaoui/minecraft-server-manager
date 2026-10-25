@@ -188,7 +188,12 @@ test('previewRetention totals a candidate policy without deleting anything', () 
   const preview = previewRetention(['srv_prev'], (id) =>
     backupRetention.effectiveIf(id, { global: { keepScheduled: 5 } })
   );
-  assert.deepEqual(preview, { backups: 7, bytes: 7 * 1024, servers: 1 });
+  assert.deepEqual([preview.backups, preview.bytes, preview.servers], [7, 7 * 1024, 1]);
+  // The ids Remove Now sends back: the 7 oldest.
+  assert.deepEqual(
+    preview.ids.sort(),
+    ['000', '001', '002', '003', '004', '005', '006'].map((n) => `bk_scheduled_${n}`)
+  );
   assert.equal(countByReason('srv_prev', 'scheduled'), 12);
 });
 

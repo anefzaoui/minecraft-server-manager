@@ -1467,7 +1467,7 @@ router.delete(
   '/backups/:backupId',
   requireCap('backups', { resolve: backupServerId }),
   asyncHandler(async (req, res, next) => {
-    res.json({ ok: true, ...(await backups.deleteBackup(req.params.backupId, { actor: req.user.username })) });
+    res.json({ ok: true, ...(await backups.deleteBackupByUser(req.params.backupId, { actor: req.user.username })) });
   })
 );
 
@@ -1515,11 +1515,34 @@ router.get('/backups/retention', requireRoleKeys('admin'), (req, res) => {
   res.json({ ok: true, defaults: backupRetention.DEFAULTS, global: backupRetention.globalConfig() });
 });
 
+// The panel-wide policy has no blank: z.coerce would quietly turn null into 0
+// ("no age limit"), so say so instead.
+function parseGlobalRetention(body = {}) {
+  if (Object.values(body).some((v) => v === null)) {
+    throw httpError(400, 'Panel-wide retention values cannot be blank. Use 0 for no age or size limit.');
+  }
+  return retentionPatchSchema.parse(body);
+}
+
+// A server's body: { reset: true } clears its limits, anything else is a patch
+// ({ reset: false } is just a patch with nothing to reset).
+function parseServerRetention(body = {}) {
+  const { reset, ...patch } = body;
+  return reset === true ? null : retentionServerPatchSchema.parse(patch);
+}
+
+// "Remove now" sends back the ids its preview showed; nothing else is deleted.
+const applySchema = z.object({ ids: z.array(z.string().max(64)).max(10000).optional() }).strict();
+const onlyIdsFrom = (body) => {
+  const { ids } = applySchema.parse(body || {});
+  return ids ? new Set(ids) : null;
+};
+
 router.post(
   '/backups/retention',
   requireRoleKeys('admin'),
   asyncHandler((req, res, next) => {
-    const patch = retentionPatchSchema.parse(req.body || {});
+    const patch = parseGlobalRetention(req.body || {});
     res.json({ ok: true, global: backupRetention.setGlobal(patch) });
   })
 );
@@ -1534,7 +1557,7 @@ router.post(
   '/backups/retention/preview',
   requireRoleKeys('admin'),
   asyncHandler((req, res, next) => {
-    const patch = retentionPatchSchema.parse(req.body || {});
+    const patch = parseGlobalRetention(req.body || {});
     res.json({
       ok: true,
       ...backups.previewRetention(liveServerIds(), (id) => backupRetention.effectiveIf(id, { global: patch })),
@@ -1543,13 +1566,15 @@ router.post(
 );
 
 // Apply the saved policy now on every server instead of after each one's next
-// backup. Servers busy with another action are skipped and counted.
+// backup, limited to the previewed ids when given. Servers busy with another
+// action are skipped and counted.
 router.post(
   '/backups/retention/apply',
   requireRoleKeys('admin'),
   asyncHandler(async (req, res, next) => {
     const { deleted, skipped } = await backups.applyRetention(liveServerIds(), {
       actor: req.user.username,
+      onlyIds: onlyIdsFrom(req.body),
     });
     res.json({ ok: true, deleted, skipped: skipped.length });
   })
@@ -1571,8 +1596,7 @@ router.post(
   requireRoleKeys('admin'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
-    const body = req.body || {};
-    const server = body.reset ? null : retentionServerPatchSchema.parse(body);
+    const server = parseServerRetention(req.body || {});
     res.json({
       ok: true,
       ...backups.previewRetention([req.params.id], (id) => backupRetention.effectiveIf(id, { server })),
@@ -1587,6 +1611,7 @@ router.post(
     requireServer(req.params.id);
     const { deleted, skipped } = await backups.applyRetention([req.params.id], {
       actor: req.user.username,
+      onlyIds: onlyIdsFrom(req.body),
     });
     if (skipped.length) {
       throw httpError(409, 'Another action is running on this server. Try again when it finishes.');
@@ -1600,11 +1625,7 @@ router.post(
   requireRoleKeys('admin'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
-    // { reset: true } clears the per-server override; otherwise merge the patch.
-    const body = req.body || {};
-    const effective = body.reset
-      ? backupRetention.setServer(req.params.id, null)
-      : backupRetention.setServer(req.params.id, retentionServerPatchSchema.parse(body));
+    const effective = backupRetention.setServer(req.params.id, parseServerRetention(req.body || {}));
     res.json({ ok: true, effective });
   })
 );

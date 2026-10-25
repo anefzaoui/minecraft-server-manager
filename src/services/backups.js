@@ -330,7 +330,7 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   return { ok: true };
 }
 
-// Backups retention must not delete while they are in use (see planPrune).
+// Backups that retention must not delete because they are in use (see planPrune).
 // Today that is the archive a restore is reading: the restore's own safety
 // backup runs a retention pass before the archive is extracted, and an old
 // backup - the usual thing to restore - is exactly what retention removes.
@@ -368,6 +368,17 @@ async function deleteBackup(backupId, { actor = 'system' } = {}) {
     summary: `Backup deleted: ${backup.filename} (${(backup.size_bytes / 1024 ** 3).toFixed(2)} GB freed).`,
   });
   return { freedBytes: backup.size_bytes };
+}
+
+/**
+ * A person deleting a backup by hand: refused while it is being restored (the
+ * restore would fail at extraction). Retention never plans such a backup.
+ */
+async function deleteBackupByUser(backupId, opts = {}) {
+  if (protectedFromPrune.has(backupId)) {
+    throw httpError(409, 'This backup is being restored. Delete it after the restore finishes.');
+  }
+  return deleteBackup(backupId, opts);
 }
 
 /** Accept a friendly display name - flat filename only, no path tricks. */
@@ -433,7 +444,7 @@ async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
  * a preview can't drift from what happens.
  * @param {string} serverId
  * @param {{ keepScheduled: number, keepPreUpdate: number, keepManual: number, keepPreRestore: number, maxAgeDays: number, maxTotalGb: number }} cfg
- * @returns {{ id: number, sizeBytes: number }[]}
+ * @returns {{ id: string, sizeBytes: number }[]}
  */
 function planPrune(serverId, cfg) {
   // id DESC as a tiebreaker: created_at has 1-second resolution and a safety
@@ -511,9 +522,10 @@ function planPrune(serverId, cfg) {
  * (letting old backups accumulate and eventually cause a REAL failure via
  * the free-space preflight).
  */
-async function pruneRetention(serverId, { actor = 'system' } = {}) {
+async function pruneRetention(serverId, { actor = 'system', onlyIds = null } = {}) {
   let deleted = 0;
   for (const b of planPrune(serverId, backupRetention.effective(serverId))) {
+    if (onlyIds && !onlyIds.has(b.id)) continue; // never more than a preview showed
     try {
       await deleteBackup(b.id, { actor });
       deleted++;
@@ -534,14 +546,17 @@ function previewRetention(serverIds, cfgFor) {
   let backups = 0;
   let bytes = 0;
   let servers = 0;
+  const ids = [];
   for (const id of serverIds) {
     const plan = planPrune(id, cfgFor(id));
     if (!plan.length) continue;
     servers++;
     backups += plan.length;
     bytes += plan.reduce((sum, b) => sum + b.sizeBytes, 0);
+    for (const b of plan) ids.push(b.id);
   }
-  return { backups, bytes, servers };
+  // ids go back with "Remove now", which then deletes nothing outside them.
+  return { backups, bytes, servers, ids };
 }
 
 // "Remove now" from the retention settings runs under the per-server op lock,
@@ -554,19 +569,22 @@ const pruneRetentionGuarded = guardOp('backup cleanup', pruneRetention);
  * Apply each server's current retention policy now instead of after its next
  * backup. A server busy with another action is skipped (it prunes after its
  * next backup as usual) and reported, never waited on or failed.
+ * With `onlyIds` (the ids a preview showed), deletes only backups that are
+ * both in that list and still over the limit - never more than was shown.
  * @param {string[]} serverIds
- * @param {{ actor?: string }} [opts]
+ * @param {{ actor?: string, onlyIds?: Set<string> | null }} [opts]
  * @returns {Promise<{ deleted: number, skipped: string[] }>}
  */
-async function applyRetention(serverIds, { actor = 'system' } = {}) {
+async function applyRetention(serverIds, { actor = 'system', onlyIds = null } = {}) {
   let deleted = 0;
   const skipped = [];
   for (const id of serverIds) {
     // Only servers with something to delete take the lock, so a panel-wide apply
     // never makes an idle server's scheduled backup or Start answer 409.
-    if (!planPrune(id, backupRetention.effective(id)).length) continue;
+    const plan = planPrune(id, backupRetention.effective(id)).filter((b) => !onlyIds || onlyIds.has(b.id));
+    if (!plan.length) continue;
     try {
-      deleted += await pruneRetentionGuarded(id, { actor });
+      deleted += await pruneRetentionGuarded(id, { actor, onlyIds });
     } catch (err) {
       if (err && err.status === 409) skipped.push(id);
       else throw err;
@@ -673,6 +691,7 @@ module.exports = {
   createBackupUnguarded: createBackupImpl,
   restoreBackup,
   deleteBackup,
+  deleteBackupByUser,
   renameBackup,
   pruneRetention,
   planPrune,
