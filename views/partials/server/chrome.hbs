@@ -49,7 +49,7 @@
         {{#if (eq server.status 'crashed')}}<a class="btn" href="/servers/{{server.id}}/history">{{{icon 'flame' 'size-4'}}} Latest Crash</a>{{/if}}
       {{/if}}
       {{#if server.pendingRecreate}}
-        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}"{{#if server.ports.pendingActive}}{{#if (or (or (eq server.status 'running') (eq server.status 'starting')) (or (eq server.status 'unhealthy') (eq server.status 'stalled')))}} data-pending-port="{{server.ports.pendingActive}}"{{/if}}{{/if}} data-tip="Settings changed. Rebuild the container to apply them.{{#if server.ports.pendingActive}} This also moves players to port {{server.ports.pendingActive}}.{{/if}}">{{{icon 'wrench' 'size-4'}}} Apply Changes</button>
+        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}"{{#if server.ports.pendingActive}}{{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}} data-pending-port="{{server.ports.pendingActive}}"{{/if}}{{/if}} data-tip="Settings changed. Rebuild the container to apply them.{{#if server.ports.pendingActive}} This also moves players to port {{server.ports.pendingActive}}.{{/if}}">{{{icon 'wrench' 'size-4'}}} Apply Changes</button>
       {{/if}}
     </div>
   </div>
