@@ -433,8 +433,9 @@ async function chownDataDir(dir, image, uid, gid) {
  * `exceptServerId`'s own. When the panel itself runs in a container, an OS bind
  * probe only sees the panel's own network namespace, so this is its one view of
  * ports held by sibling containers. Running containers report live bindings; a
- * stopped container reports none, so unmanaged stopped ones are inspected for
- * the bindings they will claim on start (managed ones are already in the DB).
+ * stopped one reports none, so each is inspected for the bindings it will claim
+ * on start. Managed ones are inspected too: an `msm.id` label alone doesn't mean
+ * THIS panel's DB knows the server (another install, a restored DB).
  * @param {{ exceptServerId?: string }} [opts]
  * @returns {Promise<Set<number>>}
  */
@@ -446,7 +447,7 @@ async function publishedHostPorts({ exceptServerId } = {}) {
     const owner = c.Labels && c.Labels[LABEL];
     if (exceptServerId && owner === exceptServerId) continue;
     for (const p of c.Ports || []) if (p.PublicPort) used.add(p.PublicPort);
-    if (c.State !== 'running' && !owner) stopped.push(c.Id);
+    if (c.State !== 'running') stopped.push(c.Id);
   }
   for (const id of stopped) {
     const info = await docker

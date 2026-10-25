@@ -139,5 +139,5 @@ test('publishedHostPorts reads live and stopped bindings, skipping the server it
   // The real function (beforeEach mocks it), over a stubbed Docker client.
   const used = await realPublishedHostPorts({ exceptServerId: 'srv_a' });
   assert.deepEqual([...used].sort(), [47120, 47130]);
-  assert.deepEqual(inspected, ['outside']); // managed stopped servers are already in the DB
+  assert.deepEqual(inspected, ['outside', 'managed-stopped']); // never the server itself
 });
