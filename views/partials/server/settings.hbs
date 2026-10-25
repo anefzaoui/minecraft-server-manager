@@ -126,7 +126,7 @@
       <div class="space-y-3">
         {{#if server.ports.pendingPaused}}
         <div class="notice notice-warn text-sm">
-          <p>The move to port <b>{{server.ports.pendingGame}}</b> is paused: that port was in use when the server last started, so it stayed on <b>{{server.ports.game}}</b>. Save it again to retry, or pick another port.</p>
+          <p>The move to port <b>{{server.ports.pendingGame}}</b> is paused: {{#if (eq server.ports.pendingPaused 'start-failed')}}the server could not start on it{{else}}that port was in use when the server last started{{/if}}, so it stayed on <b>{{server.ports.game}}</b>. Save it again to retry, or pick another port.</p>
           <button type="button" class="btn btn-sm mt-2" id="st-port-cancel" data-port="{{server.ports.game}}">Keep {{server.ports.game}}</button>
         </div>
         {{else if server.ports.pendingGame}}

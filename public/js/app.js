@@ -270,7 +270,7 @@ document.addEventListener('click', async (e) => {
     const ok = await confirmDialog({
       title: `Restart and move players to port ${btn.dataset.pendingPort}?`,
       message: `This server has a port change waiting. Restarting applies it: anyone online reconnects on port ${btn.dataset.pendingPort}. To stay on the current port, use Keep on its Configuration tab first.`,
-      confirmLabel: 'Restart',
+      confirmLabel: action === 'recreate' ? 'Apply Changes' : 'Restart',
     });
     if (!ok) return;
   }

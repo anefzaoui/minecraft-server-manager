@@ -280,3 +280,9 @@ test('a blank ("") per-server value follows the panel-wide one, like null', asyn
   const get = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
   assert.deepEqual(get.json.override, { keepManual: 4 });
 });
+
+test('a blank ("") panel-wide value is refused like null, not read as 0', async () => {
+  const r = await post('/api/backups/retention', { maxAgeDays: '' });
+  assert.equal(r.status, 400);
+  assert.match(r.json.error, /cannot be blank/);
+});

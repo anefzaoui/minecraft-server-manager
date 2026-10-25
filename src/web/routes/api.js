@@ -1523,7 +1523,7 @@ router.get('/backups/retention', requireRoleKeys('admin'), (req, res) => {
 // The panel-wide policy has no blank: z.coerce would quietly turn null into 0
 // ("no age limit"), so say so instead.
 function parseGlobalRetention(body = {}) {
-  if (Object.values(body).some((v) => v === null)) {
+  if (Object.values(body).some((v) => v === null || v === '')) {
     throw httpError(400, 'Panel-wide retention values cannot be blank. Use 0 for no age or size limit.');
   }
   return retentionPatchSchema.parse(body);

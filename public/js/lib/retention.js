@@ -165,9 +165,10 @@ export function initRetentionForm(
     return body;
   }
 
+  // The edited flags are cleared only once a choice has fully gone through, so
+  // a Remove Now that fails (e.g. the server was busy) can be retried with Save.
   async function save(body) {
     await postJson(saveUrl, body, 'save the retention settings');
-    snapshot();
   }
 
   saveBtn.addEventListener('click', async () => {
@@ -184,6 +185,7 @@ export function initRetentionForm(
       preview = await postJson(previewUrl, body, 'check the retention settings');
       if (!preview.backups) {
         await save(body);
+        snapshot();
         toast('Retention saved. No existing backups are over the new limits.');
         onSaved();
         return;
@@ -247,6 +249,7 @@ export function initRetentionForm(
               toast(err.message, { kind: 'error', timeout: 9000 });
               return false;
             }
+            snapshot();
             toast(nextTime);
             onSaved();
           }),
@@ -268,6 +271,7 @@ export function initRetentionForm(
               const busy = out.skipped
                 ? ` ${plural(out.skipped, 'server was', 'servers were')} busy and will trim after the next backup.`
                 : '';
+              snapshot();
               toast(`Retention saved. ${plural(out.deleted, 'backup', 'backups')} removed.${busy}`);
               onSaved();
             } catch (err) {
