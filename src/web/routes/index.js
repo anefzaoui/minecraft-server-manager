@@ -796,8 +796,13 @@ router.get(
         maxAgeDays: rc.maxAgeDays,
         maxTotalGb: rc.maxTotalGb,
       };
-      // Admins can edit it here; whether this server overrides the panel default.
-      context.retentionOverride = Boolean(require('../../services/backupRetention').overrideFor(row.id));
+      // Admins edit it here per field: the keys this server sets, and the
+      // panel-wide values its blank fields follow.
+      const backupRetention = require('../../services/backupRetention');
+      const own = backupRetention.overrideFor(row.id);
+      context.retentionOverride = Boolean(own);
+      context.retentionOwn = own || {};
+      context.retentionGlobal = backupRetention.globalConfig();
     }
 
     res.render('server-detail', context);

@@ -15,14 +15,14 @@ if (root) init(root.dataset.backupsServer);
 function init(serverId) {
   const reload = () => setTimeout(() => location.reload(), 700);
 
-  // Admin-only retention override (the form only renders for admins).
+  // Admin-only: this server's own retention limits (the form only renders for admins).
   const retentionForm = document.querySelector('#bk-retention [data-retention-form]');
   if (retentionForm) {
     initRetentionForm(retentionForm, {
       previewUrl: `/api/servers/${serverId}/backups/retention/preview`,
       saveUrl: `/api/servers/${serverId}/backups/retention`,
       applyUrl: `/api/servers/${serverId}/backups/retention/apply`,
-      override: document.getElementById('bk-ret-override'),
+      scope: 'server',
       onSaved: reload,
     });
   }

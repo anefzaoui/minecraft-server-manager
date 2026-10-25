@@ -1,14 +1,15 @@
 // Backup retention form, shared by the Settings page card (panel-wide policy)
-// and a server's Backups tab (its override). Save previews what the new limits
+// and a server's Backups tab (its own limits). Save previews what the new limits
 // would remove right now; when that's anything, the admin picks: remove those
-// backups now, or keep them until each server's next backup trims them as
-// usual. Nothing is deleted before that choice.
+// backups now, or keep them until the next backup trims them as usual. Nothing
+// is deleted before that choice.
 //
-// initRetentionForm(form, { previewUrl, saveUrl, applyUrl, override, onSaved })
-//   form: element holding the [data-retention-key] inputs inside [data-retention-fields],
-//         a [data-retention-save] button and an optional [data-retention-inherit] note.
-//   override: on a server, its "own limits" checkbox (unchecked = follow the
-//         panel default, sent as { reset: true }).
+// initRetentionForm(form, { previewUrl, saveUrl, applyUrl, scope, onSaved })
+//   form:  element holding the [data-retention-key] inputs and a
+//          [data-retention-save] button. An input with data-inherit (a server's
+//          own limits) may be left blank: it then follows the panel-wide value
+//          and is sent as null.
+//   scope: 'panel' (default) or 'server', for the dialog's wording.
 
 import { toast } from './toast.js';
 import { friendlyError } from './errors.js';
@@ -35,40 +36,32 @@ async function postJson(url, body, action) {
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
-export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, override = null, onSaved = () => {} }) {
+export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, scope = 'panel', onSaved = () => {} }) {
   const saveBtn = form.querySelector('[data-retention-save]');
-  const fields = form.querySelector('[data-retention-fields]');
-  const inherit = form.querySelector('[data-retention-inherit]');
-
-  const syncOverride = () => {
-    if (!override) return;
-    fields?.toggleAttribute('hidden', !override.checked);
-    inherit?.toggleAttribute('hidden', override.checked);
-  };
-  override?.addEventListener('change', syncOverride);
-  syncOverride();
+  const onServer = scope === 'server';
 
   /** The request body, or null (after saying why) when a field is out of range. */
   function collect() {
-    if (override && !override.checked) return { reset: true };
     const body = {};
     for (const el of form.querySelectorAll('[data-retention-key]')) {
+      const key = el.dataset.retentionKey;
+      if (el.value.trim() === '' && 'inherit' in el.dataset) {
+        body[key] = null; // follow the panel-wide value
+        continue;
+      }
       const n = Number(el.value);
       const min = Number(el.dataset.min);
       const max = Number(el.dataset.max);
       if (el.value.trim() === '' || !Number.isInteger(n) || n < min || n > max) {
         const label = form.querySelector(`label[for="${el.id}"]`)?.textContent || 'This field';
-        toast(`${label} must be a whole number from ${min} to ${max}.`, { kind: 'error', timeout: 8000 });
+        const blank = 'inherit' in el.dataset ? ', or blank to use the panel value' : '';
+        toast(`${label} must be a whole number from ${min} to ${max}${blank}.`, { kind: 'error', timeout: 8000 });
         el.focus();
         return null;
       }
-      body[el.dataset.retentionKey] = n;
+      body[key] = n;
     }
     return body;
-  }
-
-  async function save(body) {
-    await postJson(saveUrl, body, 'save the retention settings');
   }
 
   saveBtn.addEventListener('click', async () => {
@@ -79,7 +72,7 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, overrid
     try {
       preview = await postJson(previewUrl, body, 'check the retention settings');
       if (!preview.backups) {
-        await save(body);
+        await postJson(saveUrl, body, 'save the retention settings');
         toast('Retention saved. No existing backups are over the new limits.');
         onSaved();
         return;
@@ -90,10 +83,14 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, overrid
     } finally {
       restore();
     }
-    askHowToApply(body, preview);
+    // Disabled until the dialog closes, so a second click can't stack another.
+    saveBtn.disabled = true;
+    askHowToApply(body, preview, () => {
+      saveBtn.disabled = false;
+    });
   });
 
-  function askHowToApply(body, preview) {
+  function askHowToApply(body, preview, onClose) {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     const lead = document.createElement('p');
@@ -101,13 +98,19 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, overrid
     lead.textContent = `With these limits, ${plural(preview.backups, 'existing backup is', 'existing backups are')} over the limit${where} (${fmtBytes(preview.bytes)}).`;
     const how = document.createElement('p');
     how.className = 'text-ink-soft';
-    how.textContent =
-      'Remove Now deletes them right away. From Next Backup keeps them for now, and each server trims its backups the next time it makes one, as it always has.';
+    how.textContent = onServer
+      ? 'Remove Now deletes them right away. From Next Backup keeps them for now, and this server trims its backups the next time it makes one, as it always has.'
+      : 'Remove Now deletes them right away. From Next Backup keeps them for now, and each server trims its backups the next time it makes one, as it always has.';
     content.append(lead, how);
+    const nextTime = onServer
+      ? "Retention saved. Older backups are trimmed after this server's next backup."
+      : "Retention saved. Older backups are trimmed after each server's next backup.";
+
     openModal({
       title: 'Remove old backups now?',
       content,
       size: 'md', // three actions: sm wraps them onto two rows
+      onClose,
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
@@ -115,12 +118,12 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, overrid
           busyLabel: 'Saving…',
           onClick: async () => {
             try {
-              await save(body);
+              await postJson(saveUrl, body, 'save the retention settings');
             } catch (err) {
               toast(err.message, { kind: 'error', timeout: 9000 });
               return false;
             }
-            toast("Retention saved. Older backups are trimmed after each server's next backup.");
+            toast(nextTime);
             onSaved();
           },
         },
@@ -130,7 +133,7 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, overrid
           busyLabel: 'Removing…',
           onClick: async () => {
             try {
-              await save(body);
+              await postJson(saveUrl, body, 'save the retention settings');
             } catch (err) {
               toast(err.message, { kind: 'error', timeout: 9000 });
               return false;
@@ -141,14 +144,15 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, overrid
                 ? ` ${plural(out.skipped, 'server was', 'servers were')} busy and will trim after the next backup.`
                 : '';
               toast(`Retention saved. ${plural(out.deleted, 'backup', 'backups')} removed.${busy}`);
+              onSaved();
             } catch (err) {
-              // Saved either way; only the immediate cleanup didn't happen.
+              // Saved either way; only the immediate cleanup didn't happen. No
+              // onSaved (it may reload the page) so this stays readable.
               toast(`Retention saved, but the old backups were not removed yet. ${err.message}`, {
                 kind: 'error',
                 timeout: 12000,
               });
             }
-            onSaved();
           },
         },
       ],

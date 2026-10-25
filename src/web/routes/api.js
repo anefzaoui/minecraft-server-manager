@@ -1503,6 +1503,13 @@ const retentionPatchSchema = z
     maxTotalGb: z.coerce.number().int().min(0).max(100000).optional(),
   })
   .strict();
+// A server's override is per key: null removes that key, so it follows the
+// panel-wide value again.
+const retentionServerPatchSchema = z
+  .object(
+    Object.fromEntries(Object.entries(retentionPatchSchema.shape).map(([key, schema]) => [key, schema.nullable()]))
+  )
+  .strict();
 
 router.get('/backups/retention', requireRoleKeys('admin'), (req, res) => {
   res.json({ ok: true, defaults: backupRetention.DEFAULTS, global: backupRetention.globalConfig() });
@@ -1565,7 +1572,7 @@ router.post(
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
     const body = req.body || {};
-    const server = body.reset ? null : retentionPatchSchema.parse(body);
+    const server = body.reset ? null : retentionServerPatchSchema.parse(body);
     res.json({
       ok: true,
       ...backups.previewRetention([req.params.id], (id) => backupRetention.effectiveIf(id, { server })),
@@ -1597,7 +1604,7 @@ router.post(
     const body = req.body || {};
     const effective = body.reset
       ? backupRetention.setServer(req.params.id, null)
-      : backupRetention.setServer(req.params.id, retentionPatchSchema.parse(body));
+      : backupRetention.setServer(req.params.id, retentionServerPatchSchema.parse(body));
     res.json({ ok: true, effective });
   })
 );

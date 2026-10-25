@@ -9,6 +9,9 @@
 //     maxAgeDays,        // 0 = no age limit (default - never surprise-delete)
 //     maxTotalGb,        // 0 = no size limit
 //     perServer: { <serverId>: { <any of the above> } } }
+//
+// A server's override is per key: a key it doesn't set follows the panel-wide
+// policy, and setting a key to null removes it again.
 
 const settings = require('./settings');
 
@@ -80,8 +83,15 @@ function effectiveIf(serverId, { global, server } = {}) {
     ...DEFAULTS,
     ...sanitize(stored),
     ...sanitize(global),
-    ...(server === null ? {} : { ...sanitize(own), ...sanitize(server) }),
+    ...(server === null ? {} : mergeOverride(own, server)),
   };
+}
+
+/** An override with `patch` merged in: numbers set a key, null removes it. */
+function mergeOverride(own, patch = {}) {
+  const next = { ...sanitize(own), ...sanitize(patch) };
+  for (const k of NUMERIC) if (patch && patch[k] === null) delete next[k];
+  return next;
 }
 
 /** A server's own override (only the keys it sets), or null when it has none. */
@@ -98,17 +108,16 @@ function setGlobal(patch) {
 }
 
 /**
- * Set (patch) or clear (pass null) one server's override.
+ * Patch one server's override (a number sets a key, null removes it) or clear
+ * it entirely (pass null). An override left with no keys is dropped.
  * Returns that server's effective policy.
  */
 function setServer(serverId, patch) {
   const stored = raw();
   const perServer = { ...(stored.perServer || {}) };
-  if (patch === null) {
-    delete perServer[serverId];
-  } else {
-    perServer[serverId] = { ...(perServer[serverId] || {}), ...sanitize(patch) };
-  }
+  const next = patch === null ? {} : mergeOverride(perServer[serverId], patch);
+  if (Object.keys(next).length) perServer[serverId] = next;
+  else delete perServer[serverId];
   settings.set(KEY, { ...stored, perServer });
   return effective(serverId);
 }
