@@ -439,3 +439,43 @@ test('a pending port taken by something else by start time: the server starts on
   );
   assert.ok(!db.get("SELECT 1 AS x FROM events WHERE server_id = 'srv_a' AND summary LIKE 'Game port moved%'"));
 });
+
+test('publishedHostPorts cancels its Docker request at the deadline', async (t) => {
+  const docker = require('../src/docker/connect').getDocker();
+  let signal;
+  t.mock.method(docker, 'listContainers', (opts) => {
+    signal = opts.abortSignal;
+    return new Promise(() => {});
+  });
+  await assert.rejects(realPublishedHostPorts({ deadlineMs: 50 }), /did not list/);
+  assert.equal(signal.aborted, true);
+});
+
+test('a Docker failure is cached briefly, so checks do not each wait it out again', async (t) => {
+  const spy = t.mock.method(containers, 'publishedHostPorts', async () => {
+    throw new Error('Docker did not list its containers in time.');
+  });
+  await ports.isPortFree(47100);
+  await ports.isPortFree(47101);
+  assert.equal(spy.mock.callCount(), 1);
+});
+
+test('a port held by a host program reads as a friendly error', async () => {
+  const { makeJsonErrorHandler } = require('../src/web/middleware/jsonErrorHandler');
+  const handler = makeJsonErrorHandler('test');
+  let body;
+  const res = {
+    headersSent: false,
+    status() {
+      return this;
+    },
+    json(b) {
+      body = b;
+    },
+  };
+  const err = new Error(
+    'driver failed programming external connectivity: listen tcp4 0.0.0.0:47150: bind: address already in use'
+  );
+  handler(err, { method: 'POST', originalUrl: '/x', path: '/x' }, res, () => {});
+  assert.equal(body.error, 'That port is already in use by another program on this machine.');
+});

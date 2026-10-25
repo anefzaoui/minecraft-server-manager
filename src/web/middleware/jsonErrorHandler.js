@@ -20,6 +20,8 @@ function friendlyError(err) {
     return 'Docker is not reachable. Is Docker running?';
   }
   if (/port is already allocated/i.test(msg)) return 'That port is already taken by another container.';
+  // A host process (not a container) holding the port, as Docker reports it.
+  if (/address already in use/i.test(msg)) return 'That port is already in use by another program on this machine.';
   if (/No such image/i.test(msg))
     return 'The server image is missing. It will be downloaded automatically on the next start.';
   return null;

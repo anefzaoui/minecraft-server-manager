@@ -116,7 +116,11 @@ async function dockerPortsInUse(exceptServerId) {
     dockerThrottle.fail(logger.warn, 'Skipped the Docker published-port check because Docker did not answer.', {
       err: err.message,
     });
-    return new Set();
+    // Cached too: with a wedged daemon, every keystroke check would otherwise
+    // wait out the full deadline again.
+    const none = new Set();
+    dockerCache.set(key, { at: Date.now(), ports: none });
+    return none;
   }
 }
 
