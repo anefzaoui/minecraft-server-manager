@@ -410,8 +410,9 @@ port change when it builds a fresh container, so the move waits for the next one
 offers to restart right away, and until the move happens players keep connecting on the old port,
 which the panel keeps showing with a "moves to" note. **Keep** (choosing the old port again) cancels
 the move. If the new port has been taken by the time the server rebuilds, or the server fails to
-start on it, the server stays on its old port, the move stays pending, and the server's history says
-why.
+start on it, the server comes up on its old port instead and the move is **paused**: no later start,
+crash restart or scheduled restart tries it again until you save a port again on the Game Port card
+(saving the same port retries it). The card, the Overview and the server's history say why.
 
 Admins may pick any port from 1024 up; other users pick from `PORT_GAME_START` upward. RCON sits 1000
 above the game port, so as long as the game range you open to players is narrower than 1000 ports,

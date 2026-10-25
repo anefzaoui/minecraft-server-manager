@@ -133,11 +133,18 @@ Cross-cutting:
   because Docker fixes port bindings at container creation; `recreateServerImpl` promotes the
   pair when it builds the next container, whatever triggered it (start, restart, crash restart,
   scheduled restart, update, Apply Changes), so `port_game` / `port_rcon` always mean "live".
-  Before promoting it re-checks the pair (`ports.pairFreeFor`); if it was taken meanwhile the
-  container is built on the live pair and the move stays pending (`port-move-blocked` event). If
-  the new container then fails to build or start, `revertPortMove` restores the live pair and
-  re-flags the rebuild. `changeGamePort` runs under the server's op lock; choosing the live game
-  port again cancels a pending move. Non-admins may only pick from `PORT_GAME_START` up.
+  Before promoting it re-checks the pair (`ports.pairFreeFor`, where the server's own live ports
+  count as free); if it was taken meanwhile the container is built on the live pair and the move
+  is paused (`port_move_paused`, migration 030, `port-move-blocked` event). If the new container
+  then fails to start, `recoverFromFailedMove` pauses the move, rebuilds on the live pair and starts
+  it in the same operation, so a start never ends with the server down over a port. A paused move
+  is skipped by every rebuild and does not keep `pending_recreate` set; any port save (including
+  the same one) un-pauses it. A running server's rebuild starts the container it just built
+  (`startServerImpl(..., { rebuilt: true })`). `changeGamePort` runs under the server's op lock;
+  choosing the live game port again cancels a pending move. Non-admins may only pick from
+  `PORT_GAME_START` up. A crash auto-restart (`watcher.restartAfterCrash`) and a scheduled backup
+  (`scheduler.runTaskWithRetry`) retry a few times when another action holds the server; other
+  scheduled tasks do not.
 - **Disk quotas** are enforced by the panel because Docker can't cap bind-mount usage: the indexer
   caches per-directory sizes and disk-growing operations are gated on them.
 - **Secrets** (RCON passwords, API keys, TOTP secrets, the Discord webhook URL) are encrypted at
