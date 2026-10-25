@@ -405,36 +405,35 @@ async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
 }
 
 /**
- * Keep the newest KEEP_* per reason (see the constants at the top); older ones
- * in each bucket are pruned. 'pre-restore' (restore/world-reset safety
- * snapshots) has its own small bucket so it can't evict user-created 'manual'
- * backups, which otherwise pile up one-per-restore forever.
- *
- * Delete backups past the retention limit. Each deletion is isolated (one
- * failure - a transient DB busy error, an EACCES on the file - must not stop
- * the rest from being pruned) and the whole function never throws: it's
- * always called right after a backup has already been successfully created
- * and recorded, so a pruning failure here must not surface as "backup
- * failed" (misleading the operator) or silently abort retention entirely
- * (letting old backups accumulate and eventually cause a REAL failure via
- * the free-space preflight).
+ * Which backups retention would delete for one server under `cfg`, in order,
+ * without deleting anything. Keeps the newest N per reason; 'pre-restore'
+ * (restore/world-reset safety snapshots) has its own small bucket so it can't
+ * evict user-created 'manual' backups. The three passes run against an
+ * in-memory copy of the server's rows so each pass sees what the previous one
+ * removed, exactly as the real deletes leave the table. The settings preview
+ * and pruneRetention both use it, so a preview can't drift from what happens.
+ * @param {string} serverId
+ * @param {{ keepScheduled: number, keepPreUpdate: number, keepManual: number, keepPreRestore: number, maxAgeDays: number, maxTotalGb: number }} cfg
+ * @returns {{ id: number, sizeBytes: number }[]}
  */
-async function pruneRetention(serverId, { actor = 'system' } = {}) {
-  const cfg = backupRetention.effective(serverId);
-  let deleted = 0;
-
-  const drop = async (id) => {
-    try {
-      await deleteBackup(id, { actor });
-      deleted++;
-    } catch (err) {
-      logger.error('Retention could not delete an old backup.', { serverId, backupId: id, err: serializeError(err) });
-    }
+function planPrune(serverId, cfg) {
+  // id DESC as a tiebreaker: created_at has 1-second resolution and a safety
+  // backup often lands in the same second as another, so "the Nth oldest" must
+  // not be left to insertion-order luck. `old` is computed by SQLite so the age
+  // pass compares timestamps exactly as it always has.
+  let rows = db.all(
+    `SELECT id, reason, size_bytes, (created_at < datetime('now', ?)) AS old
+       FROM backups WHERE server_id = ? ORDER BY created_at DESC, id DESC`,
+    `-${cfg.maxAgeDays || 0} days`,
+    serverId
+  );
+  const doomed = [];
+  const drop = (r) => {
+    doomed.push({ id: r.id, sizeBytes: r.size_bytes || 0 });
+    rows = rows.filter((x) => x.id !== r.id);
   };
 
-  // 1) Per-reason count caps. id DESC as a tiebreaker: created_at has 1-second
-  // resolution and a safety backup often lands in the same second as another, so
-  // "the Nth oldest" must not be left to insertion-order luck.
+  // 1) Per-reason count caps.
   const buckets = [
     ['scheduled', cfg.keepScheduled],
     ['pre-update', cfg.keepPreUpdate],
@@ -442,35 +441,17 @@ async function pruneRetention(serverId, { actor = 'system' } = {}) {
     ['pre-restore', cfg.keepPreRestore], // restore / world-reset safety snapshots
   ];
   for (const [reason, keep] of buckets) {
-    const stale = db.all(
-      `SELECT id FROM backups WHERE server_id = ? AND reason = ?
-       ORDER BY created_at DESC, id DESC LIMIT -1 OFFSET ?`,
-      serverId,
-      reason,
-      keep
-    );
-    for (const b of stale) await drop(b.id);
+    for (const r of rows.filter((x) => x.reason === reason).slice(keep)) drop(r);
   }
 
   // The newest backup overall is never removed by the age or size passes below -
   // a server must not be left with zero backups just because it went quiet or
   // its worlds grew.
-  const newest = db.get(
-    'SELECT id FROM backups WHERE server_id = ? ORDER BY created_at DESC, id DESC LIMIT 1',
-    serverId
-  );
-  const keepId = newest?.id;
+  const keepId = rows[0]?.id;
 
   // 2) Age ceiling (opt-in; 0 = off).
   if (cfg.maxAgeDays > 0) {
-    const old = db.all(
-      `SELECT id FROM backups
-       WHERE server_id = ? AND id <> ? AND created_at < datetime('now', ?)`,
-      serverId,
-      keepId ?? -1,
-      `-${cfg.maxAgeDays} days`
-    );
-    for (const b of old) await drop(b.id);
+    for (const r of rows.filter((x) => x.id !== keepId && x.old)) drop(r);
   }
 
   // 3) Total-size ceiling (opt-in; 0 = off). Delete oldest-first until under the
@@ -478,24 +459,90 @@ async function pruneRetention(serverId, { actor = 'system' } = {}) {
   // backup a person asked for.
   if (cfg.maxTotalGb > 0) {
     const capBytes = cfg.maxTotalGb * 1024 ** 3;
-    const rows = db.all(
-      `SELECT id, size_bytes, reason FROM backups WHERE server_id = ? ORDER BY created_at ASC, id ASC`,
-      serverId
-    );
     let total = rows.reduce((sum, r) => sum + (r.size_bytes || 0), 0);
-    const order = [...rows].sort((a, b) => {
-      const rank = (r) => (r.reason === 'pre-restore' ? 0 : r.reason === 'scheduled' ? 1 : 2);
-      return rank(a) - rank(b); // stable: preserves the created_at ASC order within a rank
-    });
+    const rank = (r) => (r.reason === 'pre-restore' ? 0 : r.reason === 'scheduled' ? 1 : 2);
+    // Oldest first, then stable-sorted by rank (keeps oldest-first within a rank).
+    const order = [...rows].reverse().sort((a, b) => rank(a) - rank(b));
     for (const r of order) {
       if (total <= capBytes) break;
       if (r.id === keepId) continue;
-      await drop(r.id);
+      drop(r);
       total -= r.size_bytes || 0;
     }
   }
 
+  return doomed;
+}
+
+/**
+ * Delete backups past the retention limit. Each deletion is isolated (one
+ * failure - a transient DB busy error, an EACCES on the file - must not stop
+ * the rest from being pruned) and the whole function never throws: it's
+ * usually called right after a backup has already been successfully created
+ * and recorded, so a pruning failure here must not surface as "backup
+ * failed" (misleading the operator) or silently abort retention entirely
+ * (letting old backups accumulate and eventually cause a REAL failure via
+ * the free-space preflight).
+ */
+async function pruneRetention(serverId, { actor = 'system' } = {}) {
+  let deleted = 0;
+  for (const b of planPrune(serverId, backupRetention.effective(serverId))) {
+    try {
+      await deleteBackup(b.id, { actor });
+      deleted++;
+    } catch (err) {
+      logger.error('Retention could not delete an old backup.', { serverId, backupId: b.id, err: serializeError(err) });
+    }
+  }
   return deleted;
+}
+
+/**
+ * What a retention change would remove right now, across `serverIds`, if each
+ * server ran under `cfgFor(serverId)`. Nothing is deleted.
+ * @param {string[]} serverIds
+ * @param {(serverId: string) => Parameters<typeof planPrune>[1]} cfgFor
+ */
+function previewRetention(serverIds, cfgFor) {
+  let backups = 0;
+  let bytes = 0;
+  let servers = 0;
+  for (const id of serverIds) {
+    const plan = planPrune(id, cfgFor(id));
+    if (!plan.length) continue;
+    servers++;
+    backups += plan.length;
+    bytes += plan.reduce((sum, b) => sum + b.sizeBytes, 0);
+  }
+  return { backups, bytes, servers };
+}
+
+// "Remove now" from the retention settings runs under the per-server op lock,
+// so it never deletes an archive a restore, world reset or backup is using.
+const pruneRetentionGuarded = guardOp('retention', pruneRetention);
+
+/**
+ * Apply each server's current retention policy now instead of after its next
+ * backup. A server busy with another action is skipped (it prunes after its
+ * next backup as usual) and reported, never waited on or failed.
+ * @param {string[]} serverIds
+ * @param {{ actor?: string }} [opts]
+ * @returns {Promise<{ deleted: number, skipped: string[] }>}
+ */
+async function applyRetention(serverIds, { actor = 'system' } = {}) {
+  let deleted = 0;
+  const skipped = [];
+  for (const id of serverIds) {
+    try {
+      deleted += await pruneRetentionGuarded(id, { actor });
+    } catch (err) {
+      if (err && err.status === 409) skipped.push(id);
+      else throw err;
+    }
+  }
+  if (deleted || skipped.length)
+    logger.info('Applied backup retention now.', { actor, deleted, skipped: skipped.length });
+  return { deleted, skipped };
 }
 
 // Compression runs in a worker thread (src/services/backupZipWorker.js) so the
@@ -596,6 +643,9 @@ module.exports = {
   deleteBackup,
   renameBackup,
   pruneRetention,
+  planPrune,
+  previewRetention,
+  applyRetention,
   extractZip,
   zipDirectory,
 };

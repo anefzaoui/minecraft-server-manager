@@ -64,6 +64,32 @@ function effective(serverId) {
   return { ...DEFAULTS, ...sanitize(stored), ...sanitize(perServer) };
 }
 
+/**
+ * The policy one server WOULD run under if `global` were merged into the
+ * panel-wide policy and/or `server` into its override (`server: null` = its
+ * override removed), for previews. Overrides are partial: a key a server
+ * doesn't override follows the global policy, so a global change can reach a
+ * server that has an override too.
+ * @param {string} serverId
+ * @param {{ global?: object, server?: object | null }} [candidate]
+ */
+function effectiveIf(serverId, { global, server } = {}) {
+  const stored = raw();
+  const own = (stored.perServer && stored.perServer[serverId]) || {};
+  return {
+    ...DEFAULTS,
+    ...sanitize(stored),
+    ...sanitize(global),
+    ...(server === null ? {} : { ...sanitize(own), ...sanitize(server) }),
+  };
+}
+
+/** A server's own override (only the keys it sets), or null when it has none. */
+function overrideFor(serverId) {
+  const own = raw().perServer?.[serverId];
+  return own && Object.keys(sanitize(own)).length ? sanitize(own) : null;
+}
+
 /** Merge a patch into the panel-wide policy. Returns the new global config. */
 function setGlobal(patch) {
   const stored = raw();
@@ -87,4 +113,4 @@ function setServer(serverId, patch) {
   return effective(serverId);
 }
 
-module.exports = { DEFAULTS, globalConfig, effective, setGlobal, setServer };
+module.exports = { DEFAULTS, globalConfig, effective, effectiveIf, overrideFor, setGlobal, setServer };

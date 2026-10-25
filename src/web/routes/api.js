@@ -1517,6 +1517,37 @@ router.post(
   })
 );
 
+// What a retention change would remove right now, before it is saved, so the
+// settings UI can offer "remove now" or "from the next backup". Nothing is
+// deleted. A global change is previewed on every server: overrides are
+// partial, so it reaches servers with an override for the keys they don't set.
+const liveServerIds = () => db.all('SELECT id FROM servers WHERE deleted_at IS NULL').map((r) => r.id);
+
+router.post(
+  '/backups/retention/preview',
+  requireRoleKeys('admin'),
+  asyncHandler((req, res, next) => {
+    const patch = retentionPatchSchema.parse(req.body || {});
+    res.json({
+      ok: true,
+      ...backups.previewRetention(liveServerIds(), (id) => backupRetention.effectiveIf(id, { global: patch })),
+    });
+  })
+);
+
+// Apply the saved policy now on every server instead of after each one's next
+// backup. Servers busy with another action are skipped and counted.
+router.post(
+  '/backups/retention/apply',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    const { deleted, skipped } = await backups.applyRetention(liveServerIds(), {
+      actor: req.user.username,
+    });
+    res.json({ ok: true, deleted, skipped: skipped.length });
+  })
+);
+
 router.get('/servers/:id/backups/retention', requireRoleKeys('admin'), (req, res) => {
   requireServer(req.params.id);
   res.json({
@@ -1524,8 +1555,38 @@ router.get('/servers/:id/backups/retention', requireRoleKeys('admin'), (req, res
     defaults: backupRetention.DEFAULTS,
     global: backupRetention.globalConfig(),
     effective: backupRetention.effective(req.params.id),
+    override: backupRetention.overrideFor(req.params.id),
   });
 });
+
+router.post(
+  '/servers/:id/backups/retention/preview',
+  requireRoleKeys('admin'),
+  asyncHandler((req, res, next) => {
+    requireServer(req.params.id);
+    const body = req.body || {};
+    const server = body.reset ? null : retentionPatchSchema.parse(body);
+    res.json({
+      ok: true,
+      ...backups.previewRetention([req.params.id], (id) => backupRetention.effectiveIf(id, { server })),
+    });
+  })
+);
+
+router.post(
+  '/servers/:id/backups/retention/apply',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    const { deleted, skipped } = await backups.applyRetention([req.params.id], {
+      actor: req.user.username,
+    });
+    if (skipped.length) {
+      throw httpError(409, 'Another action is running on this server. Try again when it finishes.');
+    }
+    res.json({ ok: true, deleted });
+  })
+);
 
 router.post(
   '/servers/:id/backups/retention',
