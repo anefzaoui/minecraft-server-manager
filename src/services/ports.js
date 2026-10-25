@@ -160,6 +160,23 @@ async function isPortFree(port, opts = {}) {
 }
 
 /**
+ * Whether `serverId` can move onto `list` right now. Unlike portChecker, its own
+ * pending pair is NOT taken on trust: this is asked just before a rebuild binds
+ * it, and something else may have claimed it since the move was saved.
+ * @param {string} serverId
+ * @param {number[]} list
+ */
+async function pairFreeFor(serverId, list) {
+  const used = dbPortsInUse({ exceptServerId: serverId });
+  for (const p of await dockerPortsInUse(serverId)) used.add(p);
+  for (const p of list) {
+    if (!Number.isInteger(p) || p < 1024 || p > 65535 || used.has(p)) return false;
+    if (!(await probe(p))) return false;
+  }
+  return true;
+}
+
+/**
  * Throw a friendly 400 naming the first taken port in `list`. Used by create
  * for an explicitly chosen set of ports.
  * @param {number[]} list
@@ -264,6 +281,7 @@ module.exports = {
   assertPortsFree,
   checkGamePort,
   assertGamePortFree,
+  pairFreeFor,
   gamePortRange,
   suggestPorts,
   probe,

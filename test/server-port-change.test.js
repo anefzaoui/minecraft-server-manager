@@ -59,6 +59,7 @@ test.before(async () => {
 test.after(app.stop);
 test.beforeEach((t) => {
   db.run('DELETE FROM servers');
+  db.run('DELETE FROM events'); // event assertions must see only this test's history
   ports.clearPortCache();
   t.mock.method(containers, 'inspectStatus', async () => ({ exists: true, status: 'stopped' }));
 });
@@ -348,4 +349,93 @@ test('publishedHostPorts throws when the list itself never answers', async (t) =
   const docker = require('../src/docker/connect').getDocker();
   t.mock.method(docker, 'listContainers', () => new Promise(() => {}));
   await assert.rejects(realPublishedHostPorts({ deadlineMs: 50 }), /did not list/);
+});
+
+// ---- applying it through start / restart, and when it can't --------------------
+
+function mockLifecycle(t, { startFails = false } = {}) {
+  const specs = mockRebuild(t);
+  let running = false;
+  t.mock.method(containers, 'inspectStatus', async () => ({ exists: true, status: running ? 'running' : 'stopped' }));
+  t.mock.method(containers, 'startContainer', async () => {
+    if (startFails) throw Object.assign(new Error('port is already allocated'), { statusCode: 500 });
+    running = true;
+  });
+  t.mock.method(containers, 'stopContainer', async () => {
+    running = false;
+  });
+  return specs;
+}
+test('Keep (the live game port) cancels a move even when RCON was set by hand', async () => {
+  seed('srv_a', 47100, { rcon: 47999 });
+  await putPort('srv_a', 47150);
+  const r = await putPort('srv_a', 47100);
+  assert.equal(r.status, 200, r.text);
+  assert.equal(r.json.cancelled, true);
+  assert.deepEqual([row('srv_a').port_game_pending, row('srv_a').port_rcon], [null, 47999]);
+});
+
+test('a start applies a pending move', async (t) => {
+  const specs = mockLifecycle(t);
+  seed('srv_a', 47100);
+  await putPort('srv_a', 47150);
+  await servers.startServer('srv_a', { actor: 'test' });
+  assert.equal(specs.at(-1).ports.game, 47150);
+  assert.deepEqual(
+    [row('srv_a').port_game, row('srv_a').port_game_pending, row('srv_a').pending_recreate],
+    [47150, null, 0]
+  );
+});
+
+test('a restart of a running server applies a pending move', async (t) => {
+  const specs = mockLifecycle(t);
+  seed('srv_a', 47100);
+  await servers.startServer('srv_a', { actor: 'test' });
+  await putPort('srv_a', 47150);
+  await servers.restartServer('srv_a', { actor: 'test' });
+  assert.equal(specs.at(-1).ports.game, 47150);
+  assert.equal(row('srv_a').port_game, 47150);
+});
+
+test('a start that fails on the new port puts the old one back and keeps the move pending', async (t) => {
+  mockLifecycle(t, { startFails: true });
+  seed('srv_a', 47100);
+  await putPort('srv_a', 47150);
+  await assert.rejects(servers.startServer('srv_a', { actor: 'test' }));
+  assert.deepEqual(row('srv_a'), {
+    port_game: 47100,
+    port_rcon: 48100,
+    port_game_pending: 47150,
+    port_rcon_pending: 48150,
+    pending_recreate: 1,
+  });
+  assert.equal(
+    db.get(
+      "SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id DESC LIMIT 1"
+    ).summary,
+    'The server could not start on port 47150, so it stays on 47100. The move is still pending.'
+  );
+});
+
+test('a pending port taken by something else by start time: the server starts on its old port', async (t) => {
+  const specs = mockLifecycle(t);
+  seed('srv_a', 47100);
+  await putPort('srv_a', 47150);
+  const blocker = require('node:net').createServer();
+  await new Promise((resolve) => blocker.listen(47150, '0.0.0.0', resolve));
+  try {
+    await servers.startServer('srv_a', { actor: 'test' });
+  } finally {
+    await new Promise((resolve) => blocker.close(resolve));
+  }
+  assert.equal(specs.at(-1).ports.game, 47100); // up, on the old port
+  const r = row('srv_a');
+  assert.deepEqual([r.port_game, r.port_game_pending, r.pending_recreate], [47100, 47150, 1]); // tried again next start
+  assert.match(
+    db.get(
+      "SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id DESC LIMIT 1"
+    ).summary,
+    /in use by something else, so the server stayed on 47100/
+  );
+  assert.ok(!db.get("SELECT 1 AS x FROM events WHERE server_id = 'srv_a' AND summary LIKE 'Game port moved%'"));
 });

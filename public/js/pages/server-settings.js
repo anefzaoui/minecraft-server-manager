@@ -361,7 +361,17 @@ function init(serverId) {
         const res = await fetch(`/api/servers/${serverId}/restart`, { method: 'POST' });
         const out = await res.json().catch(() => ({}));
         if (res.ok && out.ok !== false) {
-          toast(`Restarted on port ${port}.`);
+          // The server re-checks the port as it rebuilds; if something took it
+          // meanwhile it comes up on the old one and the move stays pending.
+          const live = out.server && out.server.port_game;
+          if (live && live !== port) {
+            toast(`Restarted, but port ${port} is in use by something else, so the server stayed on ${live}.`, {
+              kind: 'error',
+              timeout: 12000,
+            });
+          } else {
+            toast(`Restarted on port ${port}.`);
+          }
           reload();
           return;
         }
@@ -369,12 +379,13 @@ function init(serverId) {
       } catch {
         toast(friendlyError(null, { action: 'restart the server' }), { kind: 'error', timeout: 12000 });
       }
-      // The port is saved either way; only the restart failed. Stay on the page
-      // so the error stays readable, and say where things stand.
+      // The move is saved either way and stays pending; only the restart failed,
+      // and the server may now be stopped. Stay on the page so the error stays
+      // readable, and don't claim any port is live.
       restoreRestart();
       nextBtn.disabled = false;
       setHelp(
-        `Saved, but the restart did not finish, so players still use port ${current}. Restart the server to move it to ${port}.`,
+        `Saved, but the restart did not finish. The move to port ${port} is still pending; the server's History tab says what went wrong.`,
         'text-warn'
       );
     }
