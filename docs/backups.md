@@ -42,14 +42,16 @@ Two optional ceilings apply on top of the per-reason counts, both off by default
 
 ### Changing it
 
-Admins set the panel-wide policy in the **Backup Retention** card on the **Settings** page. A server can have its own limits instead: open its **Backups** tab, expand **Retention for This Server** and turn on **Use its own limits**. Turning that off puts the server back on the panel-wide policy. A server's limits are per field: a value it doesn't set follows the panel-wide one.
+Admins set the panel-wide policy in the **Backup Retention** card on the **Settings** page. A server can differ on any of the six values: open its **Backups** tab and expand **Retention for This Server**. Each field there is blank unless that server sets it, and a blank field follows the panel-wide value (shown inside it). So a server can, for example, keep 3 scheduled backups and follow the panel on everything else; clearing a field puts it back on the panel value.
 
 Saving never deletes anything by itself. If the new limits would leave existing backups over the limit, the panel says how many (and how much space) and asks how to apply them:
 
-- **Remove Now** deletes them right away. A server busy with another action (a restore, a backup, an update) is skipped and trims after its next backup instead.
+- **Remove Now** deletes them right away. From the Settings page, a server in the middle of a restore, backup or similar action is skipped and trims after its next backup; on a server's own Backups tab you are asked to try again once that action finishes.
 - **From Next Backup** keeps them for now; each server trims its backups the next time it makes one, as it always has.
 
-The same settings are available to scripts as admin API endpoints: `GET`/`POST /api/backups/retention` and `/api/servers/:id/backups/retention` (send `{ "reset": true }` to clear a server's limits), plus a `/preview` (`POST`: what a change would remove, without removing it) and an `/apply` (`POST`: apply the saved policy now) under each of those two paths.
+A backup that is being restored is never removed while the restore runs, even though the restore's own safety backup triggers a retention pass.
+
+The same settings are available to scripts as admin API endpoints: `GET`/`POST /api/backups/retention` and `/api/servers/:id/backups/retention`. For a server, a value of `null` removes that one key and `{ "reset": true }` removes them all. Under each of those two paths, `POST …/preview` reports what a change would remove without removing it, and `POST …/apply` applies the saved policy now.
 
 Backups can be **renamed** from the backup list (the rename button on each row). The archive on disk and the panel's record move together, so download, restore, and retention keep working with the new name.
 

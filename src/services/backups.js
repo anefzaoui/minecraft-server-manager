@@ -539,7 +539,9 @@ function previewRetention(serverIds, cfgFor) {
 
 // "Remove now" from the retention settings runs under the per-server op lock,
 // so it never deletes an archive a restore, world reset or backup is using.
-const pruneRetentionGuarded = guardOp('retention', pruneRetention);
+// The op name shows in the 409 another action gets meanwhile ("a backup cleanup
+// operation is already in progress"), so it is worded for people.
+const pruneRetentionGuarded = guardOp('backup cleanup', pruneRetention);
 
 /**
  * Apply each server's current retention policy now instead of after its next
@@ -553,6 +555,9 @@ async function applyRetention(serverIds, { actor = 'system' } = {}) {
   let deleted = 0;
   const skipped = [];
   for (const id of serverIds) {
+    // Only servers with something to delete take the lock, so a panel-wide apply
+    // never makes an idle server's scheduled backup or Start answer 409.
+    if (!planPrune(id, backupRetention.effective(id)).length) continue;
     try {
       deleted += await pruneRetentionGuarded(id, { actor });
     } catch (err) {
