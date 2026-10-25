@@ -116,6 +116,8 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
       pendingRcon: s.port_rcon_pending || null,
       // Set when that move could not go live; it waits for someone to save a port again.
       pendingPaused: s.port_game_pending ? s.port_move_paused || null : null,
+      // The move the next start or restart will make (pending and not paused).
+      pendingActive: s.port_game_pending && !s.port_move_paused ? s.port_game_pending : null,
     },
     resources: { heapMb: s.heap_mb, containerMemoryMb: s.container_memory_mb, cpus: s.cpus },
     // What the memory meter is going to show and why (#25): a heap given to

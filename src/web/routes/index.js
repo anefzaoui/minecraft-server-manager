@@ -25,6 +25,7 @@ const { serverScope } = require('../middleware/serverAccess');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
 const logger = require('../../logger')('pages');
 const { serializeError } = require('../../utils/logSanitize');
+const backupRetention = require('../../services/backupRetention');
 
 // Page renders degrade gracefully when optional/remote data is unavailable
 // (Docker down, no network, no API key). Record it at debug so "why is this
@@ -787,7 +788,7 @@ router.get(
       context.backups = db
         .all('SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT 50', row.id)
         .map((b) => ({ id: b.id, file: b.filename, size: b.size_bytes, reason: b.reason, ts: b.created_at }));
-      const rc = require('../../services/backupRetention').effective(row.id);
+      const rc = backupRetention.effective(row.id);
       context.retention = {
         keepScheduled: rc.keepScheduled,
         keepPreUpdate: rc.keepPreUpdate,
@@ -798,7 +799,6 @@ router.get(
       };
       // Admins edit it here per field: the keys this server sets, and the
       // panel-wide values its blank fields follow.
-      const backupRetention = require('../../services/backupRetention');
       const own = backupRetention.overrideFor(row.id);
       context.retentionOverride = Boolean(own);
       context.retentionOwnAll =
@@ -1127,8 +1127,8 @@ router.get('/settings', requireRole('admin'), (req, res) => {
     },
     defaults: settings.getDefaults(),
     defaultsBase: config.defaults,
-    retention: require('../../services/backupRetention').globalConfig(),
-    retentionDefaults: require('../../services/backupRetention').DEFAULTS,
+    retention: backupRetention.globalConfig(),
+    retentionDefaults: backupRetention.DEFAULTS,
     publicApiEnabled: settings.isPublicApiEnabled(),
     apiTokens: require('../../services/apiTokens').listTokens(),
     serverOptions: require('../../services/servers')

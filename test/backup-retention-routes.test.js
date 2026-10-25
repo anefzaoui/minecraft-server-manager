@@ -273,3 +273,10 @@ test('reset accepts the forms scripts and form posts send, and refuses nonsense'
   assert.equal(form.status, 200, form.text);
   assert.equal((await post('/api/servers/srv_a/backups/retention', { reset: 'yes' })).status, 400);
 });
+
+test('a blank ("") per-server value follows the panel-wide one, like null', async () => {
+  await post('/api/servers/srv_a/backups/retention', { maxAgeDays: 30, keepManual: 4 });
+  await post('/api/servers/srv_a/backups/retention', { maxAgeDays: '' });
+  const get = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
+  assert.deepEqual(get.json.override, { keepManual: 4 });
+});

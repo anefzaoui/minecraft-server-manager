@@ -121,10 +121,15 @@
         along with the tab-wide Save. A saved change waits as "pending" until
         the next start or restart rebuilds the container on the new port. }}
     {{#if perms.settings}}
-    <div class="card scroll-mt-20 p-4" id="port" data-port-card data-port-current="{{server.ports.game}}" data-port-pending="{{server.ports.pendingGame}}"{{#if perms.power}} data-port-can-restart{{/if}}>
+    <div class="card scroll-mt-20 p-4" id="port" data-port-card data-port-current="{{server.ports.game}}" data-port-pending="{{server.ports.pendingGame}}"{{#if server.ports.pendingPaused}} data-port-paused{{/if}}{{#if perms.power}} data-port-can-restart{{/if}}>
       <h3 class="mb-4 font-semibold">Game Port</h3>
       <div class="space-y-3">
-        {{#if server.ports.pendingGame}}
+        {{#if server.ports.pendingPaused}}
+        <div class="notice notice-warn text-sm">
+          <p>The move to port <b>{{server.ports.pendingGame}}</b> is paused: that port was in use when the server last started, so it stayed on <b>{{server.ports.game}}</b>. Save it again to retry, or pick another port.</p>
+          <button type="button" class="btn btn-sm mt-2" id="st-port-cancel" data-port="{{server.ports.game}}">Keep {{server.ports.game}}</button>
+        </div>
+        {{else if server.ports.pendingGame}}
         <div class="notice notice-info text-sm">
           <p>Players still connect on port <b>{{server.ports.game}}</b>. The server moves to <b>{{server.ports.pendingGame}}</b> the next time it starts or restarts.</p>
           <button type="button" class="btn btn-sm mt-2" id="st-port-cancel" data-port="{{server.ports.game}}">Keep {{server.ports.game}}</button>

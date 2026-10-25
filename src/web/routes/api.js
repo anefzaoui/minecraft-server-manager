@@ -1503,11 +1503,16 @@ const retentionPatchSchema = z
     maxTotalGb: z.coerce.number().int().min(0).max(100000).optional(),
   })
   .strict();
-// A server's override is per key: null removes that key, so it follows the
-// panel-wide value again.
+// A server's override is per key: null (or "", a blank form field) removes that
+// key, so it follows the panel-wide value again.
 const retentionServerPatchSchema = z
   .object(
-    Object.fromEntries(Object.entries(retentionPatchSchema.shape).map(([key, schema]) => [key, schema.nullable()]))
+    Object.fromEntries(
+      Object.entries(retentionPatchSchema.shape).map(([key, schema]) => [
+        key,
+        z.preprocess((v) => (v === '' ? null : v), schema.nullable()),
+      ])
+    )
   )
   .strict();
 

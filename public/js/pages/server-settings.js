@@ -215,6 +215,7 @@ function init(serverId) {
     const saveBtn = document.getElementById('st-port-save');
     const current = Number(card.dataset.portCurrent); // live: what players reach now
     const pending = Number(card.dataset.portPending) || null; // saved, applies on next start
+    const paused = 'portPaused' in card.dataset; // that move couldn't go live; saving it again retries
     const target = pending || current;
     const defaultHelp = help.textContent;
     const setHelp = (text, cls = '') => {
@@ -297,7 +298,7 @@ function init(serverId) {
 
     async function save(port, btn) {
       cancelChecks();
-      if (port === target) {
+      if (port === target && !paused) {
         toast(pending ? `The server is already set to move to ${port}.` : `The server already uses port ${port}.`, {
           kind: 'info',
         });
