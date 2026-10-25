@@ -121,6 +121,18 @@
     </div>
   {{/settings/card}}
 
+  {{#> settings/card heading="Backup Retention" id="retention-card" desc="How many backups each server keeps, per kind. A server trims its older backups each time it makes a new one. A server can override any of this on its Backups tab."}}
+    <div data-retention-form>
+      <div data-retention-fields>
+        {{> backups/retention-fields prefix="ret" values=retention}}
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <button class="btn" data-retention-save>Save Retention</button>
+        <button class="btn btn-ghost" id="ret-builtins" data-values="{{jsonAttr retentionDefaults}}">Fill In Built-ins</button>
+      </div>
+    </div>
+  {{/settings/card}}
+
   {{#> settings/card heading="Users" wide=true}}
     <div class="overflow-x-auto">
       <table class="table-base table-stack" id="users-table">

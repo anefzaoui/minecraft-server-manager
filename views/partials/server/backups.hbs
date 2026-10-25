@@ -1,9 +1,9 @@
 <div data-backups-server="{{server.id}}" class="contents">
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <p class="text-sm text-ink-faint">
-    Retention for this server: {{retention.keepScheduled}} scheduled, {{retention.keepPreUpdate}} pre-update,
-    {{retention.keepManual}} manual, {{retention.keepPreRestore}} pre-restore. The newest in each group are kept; older ones
-    are pruned automatically.{{#if retention.maxAgeDays}} Anything older than {{retention.maxAgeDays}} days is also removed.{{/if}}{{#if retention.maxTotalGb}} Total backups are capped at {{retention.maxTotalGb}} GB (oldest are removed first).{{/if}}
+    Keeps the newest {{retention.keepScheduled}} scheduled, {{retention.keepManual}} manual, {{retention.keepPreUpdate}} pre-update
+    and {{retention.keepPreRestore}} safety backups, and trims older ones after each new backup.{{#if retention.maxAgeDays}} Backups older than {{retention.maxAgeDays}} days are removed too.{{/if}}{{#if retention.maxTotalGb}} The total is capped at {{retention.maxTotalGb}} GB, oldest first.{{/if}}
+    {{#if retentionOverride}}This server has its own limits.{{else}}This server uses the panel default.{{/if}}
   </p>
   <div class="ml-auto flex flex-wrap items-center gap-3">
     <label class="flex items-center gap-2 text-xs text-ink-faint" data-tip="After the backup is saved, remove chunks no player has spent 30+ seconds in to shrink the world. Only runs while the server is stopped.">
@@ -12,6 +12,23 @@
     <button class="btn btn-primary btn-sm{{#unless perms.backups}} hidden{{/unless}}" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back Up Now</button>
   </div>
 </div>
+{{! Admin-only, like the API behind it. Unchecked override = follow the panel
+    default from Settings (saved as a reset). }}
+{{#if (eq user.role 'admin')}}
+<details class="card mb-4 p-4" id="bk-retention"{{#if retentionOverride}} open{{/if}}>
+  <summary class="cursor-pointer text-sm font-semibold">Retention for This Server</summary>
+  <div class="mt-3 space-y-3" data-retention-form>
+    {{> settings/toggle-row label="Use its own limits" help="Off means it follows the panel-wide Backup Retention on the Settings page." inputId="bk-ret-override" checked=retentionOverride}}
+    <div data-retention-fields>
+      {{> backups/retention-fields prefix="bk-ret" values=retention}}
+    </div>
+    <p class="help" data-retention-inherit>This server follows the <a class="text-link hover:underline" href="/settings#retention-card">panel-wide policy</a>.</p>
+    <div class="flex justify-end">
+      <button class="btn" data-retention-save>Save Retention</button>
+    </div>
+  </div>
+</details>
+{{/if}}
 {{#if backups.length}}
 <div class="card overflow-x-auto">
   <table class="table-base table-stack" id="bk-table">

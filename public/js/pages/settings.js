@@ -1,10 +1,11 @@
-// Settings page: API key save/test + localization + users CRUD.
+// Settings page: API key save/test + localization + users CRUD + backup retention.
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { fillTimezoneSelect, fillCountrySelect } from '../lib/tzPicker.js';
+import { initRetentionForm } from '../lib/retention.js';
 
 const page = document.getElementById('settings-page');
 const selfEl = document.getElementById('settings-self');
@@ -536,6 +537,25 @@ function init() {
           toast('Defaults reset to the built-in values.');
         }
       });
+    });
+  }
+
+  // ---- Backup retention (panel-wide policy) ----
+  const retentionForm = document.querySelector('#retention-card [data-retention-form]');
+  if (retentionForm) {
+    initRetentionForm(retentionForm, {
+      previewUrl: '/api/backups/retention/preview',
+      saveUrl: '/api/backups/retention',
+      applyUrl: '/api/backups/retention/apply',
+    });
+    // Fills the fields only; Save still previews before anything changes.
+    const builtins = document.getElementById('ret-builtins');
+    builtins?.addEventListener('click', () => {
+      const values = JSON.parse(builtins.dataset.values || '{}');
+      for (const el of retentionForm.querySelectorAll('[data-retention-key]')) {
+        if (values[el.dataset.retentionKey] !== undefined) el.value = values[el.dataset.retentionKey];
+      }
+      toast('Built-in values filled in. Save to use them.', { kind: 'info' });
     });
   }
 

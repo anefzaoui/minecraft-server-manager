@@ -7,12 +7,25 @@ import { openModal } from '../lib/modal.js';
 import { runTask } from '../lib/progress.js';
 import { setBusy } from '../lib/loading.js';
 import { fmtBytes } from '../lib/format.js';
+import { initRetentionForm } from '../lib/retention.js';
 
 const root = document.querySelector('[data-backups-server]');
 if (root) init(root.dataset.backupsServer);
 
 function init(serverId) {
   const reload = () => setTimeout(() => location.reload(), 700);
+
+  // Admin-only retention override (the form only renders for admins).
+  const retentionForm = document.querySelector('#bk-retention [data-retention-form]');
+  if (retentionForm) {
+    initRetentionForm(retentionForm, {
+      previewUrl: `/api/servers/${serverId}/backups/retention/preview`,
+      saveUrl: `/api/servers/${serverId}/backups/retention`,
+      applyUrl: `/api/servers/${serverId}/backups/retention/apply`,
+      override: document.getElementById('bk-ret-override'),
+      onSaved: reload,
+    });
+  }
 
   async function postJson(url, body) {
     const res = await fetch(url, {

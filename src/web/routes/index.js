@@ -796,6 +796,8 @@ router.get(
         maxAgeDays: rc.maxAgeDays,
         maxTotalGb: rc.maxTotalGb,
       };
+      // Admins can edit it here; whether this server overrides the panel default.
+      context.retentionOverride = Boolean(require('../../services/backupRetention').overrideFor(row.id));
     }
 
     res.render('server-detail', context);
@@ -1118,6 +1120,8 @@ router.get('/settings', requireRole('admin'), (req, res) => {
     },
     defaults: settings.getDefaults(),
     defaultsBase: config.defaults,
+    retention: require('../../services/backupRetention').globalConfig(),
+    retentionDefaults: require('../../services/backupRetention').DEFAULTS,
     publicApiEnabled: settings.isPublicApiEnabled(),
     apiTokens: require('../../services/apiTokens').listTokens(),
     serverOptions: require('../../services/servers')
