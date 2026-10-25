@@ -261,27 +261,22 @@ function armRestart(serverId) {
   }, delayMs).unref();
 }
 
-/**
- * True when a server is currently held back by crash-loop protection - either an
- * explicit 'crash-loop' suspension event, or enough recent restart-arming
- * crashes to have tripped MAX_RAPID_CRASHES. The boot-time crash recovery checks
- * this so a panel restart mid-loop doesn't start the server one more time.
- */
-// Another action holding the server (a port change, a backup or its cleanup)
-// answers a start with 409. A crashed server must not stay down over that, so
-// wait and try again a few times.
-const BUSY_RETRIES = 3;
+// Another action holding the server (a port change, a backup or its cleanup, a
+// restore) answers a start with 409. A crashed server must not stay down over
+// that: try again every 20 s until the action is done, for up to 30 minutes.
 const BUSY_RETRY_MS = 20_000;
+const BUSY_MAX_WAIT_MS = 30 * 60_000;
 
 /**
  * Start a crashed server, unless something else already dealt with it.
  * @param {string} serverId
  * @param {number} attemptNo which rapid-crash attempt this is (for history)
- * @param {{ retryMs?: number }} [opts]
+ * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
  * @returns {Promise<boolean>} whether it was started
  */
-async function restartAfterCrash(serverId, attemptNo, { retryMs = BUSY_RETRY_MS } = {}) {
-  for (let attempt = 0; ; attempt++) {
+async function restartAfterCrash(serverId, attemptNo, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
+  const giveUpAt = Date.now() + maxWaitMs;
+  for (;;) {
     // Re-check it is still crashed before every try so this can't race a user
     // start/stop/recreate/delete that happened during a delay.
     const info = await inspectStatus(serverId);
@@ -293,7 +288,7 @@ async function restartAfterCrash(serverId, attemptNo, { retryMs = BUSY_RETRY_MS 
       await require('../services/servers').startServer(serverId, { actor: 'watcher' });
     } catch (err) {
       const busy = err && err.status === 409 && /operation is already in progress/.test(err.message || '');
-      if (!busy || attempt >= BUSY_RETRIES) throw err;
+      if (!busy || Date.now() + retryMs > giveUpAt) throw err;
       await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
       continue;
     }
@@ -306,6 +301,12 @@ async function restartAfterCrash(serverId, attemptNo, { retryMs = BUSY_RETRY_MS 
   }
 }
 
+/**
+ * True when a server is currently held back by crash-loop protection - either an
+ * explicit 'crash-loop' suspension event, or enough recent restart-arming
+ * crashes to have tripped MAX_RAPID_CRASHES. The boot-time crash recovery checks
+ * this so a panel restart mid-loop doesn't start the server one more time.
+ */
 function inCrashLoopBackoff(serverId) {
   const suspended = db.get(
     `SELECT 1 AS x FROM events WHERE server_id = ? AND type = 'crash-loop'

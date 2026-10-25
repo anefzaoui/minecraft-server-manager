@@ -143,7 +143,7 @@ test('a crash restart that finds the server busy retries instead of leaving it d
       });
     }
   });
-  const started = await watcher.restartAfterCrash('srv_busy', 1, { retryMs: 1 });
+  const started = await watcher.restartAfterCrash('srv_busy', 1, { retryMs: 1, maxWaitMs: 50 });
   assert.equal(started, true);
   assert.equal(calls, 3);
 });
@@ -152,10 +152,10 @@ test('a crash restart stops retrying once someone else started the server', asyn
   inspectResult = { exists: true, status: 'crashed' };
   const spy = t.mock.method(serversService, 'startServer', async () => {
     inspectResult = { exists: true, status: 'running' }; // a person started it while we waited
-    throw Object.assign(new Error('Cannot start: a start operation is already in progress for this server'), {
+    throw Object.assign(new Error('Cannot start: a backup operation is already in progress for this server'), {
       status: 409,
     });
   });
-  assert.equal(await watcher.restartAfterCrash('srv_busy', 1, { retryMs: 1 }), false);
+  assert.equal(await watcher.restartAfterCrash('srv_busy', 1, { retryMs: 1, maxWaitMs: 50 }), false);
   assert.equal(spy.mock.callCount(), 1);
 });

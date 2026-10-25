@@ -34,17 +34,29 @@ test('a backup refused because the server is busy retries, then runs', async (t)
     calls++;
     if (calls < 3) throw busy();
   });
-  await runTaskWithRetry(job, { retryMs: 1 });
+  await runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 });
   assert.equal(calls, 3);
 });
 
-test('a server that stays busy fails after the last retry', async (t) => {
+test('a server that stays busy fails once the wait runs out', async (t) => {
   const job = schedule('backup');
   const spy = t.mock.method(backups, 'createBackup', async () => {
     throw busy();
   });
-  await assert.rejects(runTaskWithRetry(job, { retryMs: 1 }), /already in progress/);
-  assert.equal(spy.mock.callCount(), 4); // the run and 3 retries
+  await assert.rejects(runTaskWithRetry(job, { retryMs: 5, maxWaitMs: 40 }), /already in progress/);
+  assert.ok(spy.mock.callCount() > 1, `${spy.mock.callCount()} tries`); // retried, then gave up
+});
+
+test('a scheduled start that finds the server busy retries too (a start is safe to repeat)', async (t) => {
+  const job = schedule('start');
+  let calls = 0;
+  t.mock.method(servers, 'startServer', async () => {
+    calls++;
+    if (calls < 2)
+      throw httpError(409, 'Cannot start: a backup cleanup operation is already in progress for this server');
+  });
+  await runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 });
+  assert.equal(calls, 2);
 });
 
 test('a scheduled restart that collides does not run again later', async (t) => {
@@ -52,7 +64,7 @@ test('a scheduled restart that collides does not run again later', async (t) => 
   const spy = t.mock.method(servers, 'restartServer', async () => {
     throw httpError(409, 'Cannot restart: a restart operation is already in progress for this server');
   });
-  await assert.rejects(runTaskWithRetry(job, { retryMs: 1 }), /already in progress/);
+  await assert.rejects(runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 }), /already in progress/);
   assert.equal(spy.mock.callCount(), 1);
 });
 
@@ -62,7 +74,7 @@ test('a schedule turned off while waiting stops retrying', async (t) => {
     db.run("UPDATE schedules SET enabled = 0 WHERE id = 'sch_test'"); // someone disables it meanwhile
     throw busy();
   });
-  await runTaskWithRetry(job, { retryMs: 1 });
+  await runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 });
   assert.equal(spy.mock.callCount(), 1);
 });
 
@@ -71,6 +83,6 @@ test('any other failure is final at once', async (t) => {
   const spy = t.mock.method(backups, 'createBackup', async () => {
     throw httpError(507, 'Not enough disk space');
   });
-  await assert.rejects(runTaskWithRetry(job, { retryMs: 1 }), /disk space/);
+  await assert.rejects(runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 }), /disk space/);
   assert.equal(spy.mock.callCount(), 1);
 });

@@ -31,27 +31,29 @@ const TASK_TYPES = {
   'content-meta-backfill': { label: 'Content metadata backfill', serverScoped: false },
 };
 
-// A scheduled BACKUP refused only because another action holds its server (a
-// restore, a backup cleanup, someone's restart) retries a few times instead of
-// losing this run. Start/stop/restart don't: a restart that collided with
-// someone's restart has effectively happened, and repeating it would kick
+// A scheduled backup or start refused only because another action holds its
+// server (a restore, a backup cleanup, a port change) tries again every minute
+// until that action is done, for up to 30 minutes, instead of losing this run.
+// Both are safe to repeat. Restart and stop are not retried: one that collided
+// with someone's restart has effectively happened, and repeating it would kick
 // players twice. Before each retry the schedule must still exist and be on.
 // Any other failure fails at once, as before.
-const RETRY_WHEN_BUSY = new Set(['backup']);
-const BUSY_RETRIES = 3;
+const RETRY_WHEN_BUSY = new Set(['backup', 'start']);
 const BUSY_RETRY_MS = 60_000;
+const BUSY_MAX_WAIT_MS = 30 * 60_000;
 
 /**
  * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
- * @param {{ retryMs?: number }} [opts]
+ * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
  */
-async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS } = {}) {
+async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
+  const giveUpAt = Date.now() + maxWaitMs;
   for (let attempt = 0; ; attempt++) {
     try {
       return await runTask(job);
     } catch (err) {
       const busy = err && err.status === 409 && /operation is already in progress/.test(err.message || '');
-      if (!busy || !RETRY_WHEN_BUSY.has(job.task_type) || attempt >= BUSY_RETRIES) throw err;
+      if (!busy || !RETRY_WHEN_BUSY.has(job.task_type) || Date.now() + retryMs > giveUpAt) throw err;
       if (attempt === 0) {
         logger.info('A scheduled task found its server busy and will retry.', {
           scheduleId: job.id,
