@@ -46,7 +46,7 @@ async function seed({ count = 6, sizeBytes = 100 } = {}) {
       SID,
       `${SID}-scheduled-${i}.zip`,
       rel,
-      sizeBytes,
+      typeof sizeBytes === 'function' ? sizeBytes(i) : sizeBytes,
       `-${(count - i) * 2} days`
     );
   }
@@ -70,9 +70,12 @@ const total = () => db.get('SELECT SUM(size_bytes) AS n FROM backups WHERE serve
 for (const [name, policy, sizeBytes, afterwards] of [
   ['a lowered count limit', { keepScheduled: 2 }, 100, () => assert.ok(!ids().includes('bk_0'))],
   ['the age limit', { maxAgeDays: 3 }, 100, () => assert.ok(!ids().includes('bk_0'))],
-  // The size pass already fit the set under the cap around the protected archive
-  // (newer ones went instead), so it may stay; the cap must hold either way.
-  ['the size limit', { maxTotalGb: 1 }, 0.4 * 1024 ** 3, () => assert.ok(total() <= 1024 ** 3)],
+  [
+    'the size limit',
+    { maxTotalGb: 1 },
+    0.4 * 1024 ** 3,
+    () => assert.ok(!ids().includes('bk_0') && total() <= 1024 ** 3),
+  ],
 ]) {
   test(`restoring an old backup over ${name} restores it, and keeps it until the restore is done`, async () => {
     await seed({ sizeBytes });
@@ -85,3 +88,17 @@ for (const [name, policy, sizeBytes, afterwards] of [
     afterwards();
   });
 }
+
+test('the size pass never deletes other backups to make room around the archive being restored', async () => {
+  // One big old archive and five small newer ones, 13 GB against a 10 GB cap.
+  await seed({ sizeBytes: (i) => (i === 0 ? 8 : 1) * 1024 ** 3 });
+  backupRetention.setGlobal({ maxTotalGb: 10 });
+  await backups.restoreBackup(SID, 'bk_0', { actor: 'admin' });
+  assert.equal(world(), 'world-0');
+  // bk_0 counts as on its way out, so nothing else had to go.
+  for (const id of ['bk_0', 'bk_1', 'bk_2', 'bk_3', 'bk_4', 'bk_5']) assert.ok(ids().includes(id), id);
+  // Once the restore is done, the next prune removes the big archive and only it.
+  await backups.pruneRetention(SID);
+  assert.ok(!ids().includes('bk_0'));
+  for (const id of ['bk_1', 'bk_2', 'bk_3', 'bk_4', 'bk_5']) assert.ok(ids().includes(id), id);
+});

@@ -485,7 +485,14 @@ function planPrune(serverId, cfg) {
     const order = [...rows].reverse().sort((a, b) => rank(a) - rank(b));
     for (const r of order) {
       if (total <= capBytes) break;
-      if (r.id === keepId || protectedFromPrune.has(r.id)) continue;
+      if (r.id === keepId) continue;
+      if (protectedFromPrune.has(r.id)) {
+        // In use, so it stays for now - but count it as on its way out. Deleting
+        // other backups to make room around it would lose them for an archive
+        // the next prune removes anyway.
+        total -= r.size_bytes || 0;
+        continue;
+      }
       drop(r);
       total -= r.size_bytes || 0;
     }
