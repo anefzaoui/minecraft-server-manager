@@ -24,7 +24,7 @@
       <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Update policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
       <div><dt class="text-xs text-ink-faint">Start on boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}{{#if perms.settings}} <a class="ml-1 text-xs font-normal text-link hover:underline" href="/servers/{{server.id}}/settings#port">Change</a>{{/if}}{{#if server.ports.pendingGame}}<span class="block text-xs font-normal text-ink-faint">Moves to {{server.ports.pendingGame}} on the next start or restart.</span>{{/if}}</dd></div>
       <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
     </dl>
     {{#if server.pack}}

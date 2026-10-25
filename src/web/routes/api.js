@@ -387,8 +387,51 @@ router.get(
   })
 );
 
+// Changing an existing server's game port. Server-scoped twins of the
+// /ports/* routes below: same checks, except the server's own live and pending
+// ports count as free for it, and non-admins stay inside the game port range.
+router.get(
+  '/servers/:id/port/check',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    const port = Number(req.query.port);
+    if (!Number.isInteger(port)) return res.status(400).json({ ok: false, error: 'A port number is required.' });
+    const result = await ports.checkGamePort(port, {
+      exceptServerId: req.params.id,
+      isAdmin: req.user.role === 'admin',
+    });
+    res.json({ ok: true, ...result });
+  })
+);
+
+router.get(
+  '/servers/:id/port/suggest',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    res.json({ ok: true, ports: await ports.suggestPorts({ exceptServerId: req.params.id }) });
+  })
+);
+
+router.put(
+  '/servers/:id/port',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    // Range is the service's call (it differs by role and names the range in
+    // its message); this only rejects a non-number.
+    const { port } = z.object({ port: z.coerce.number().int() }).parse(req.body);
+    const { server, changed, cancelled, running } = await servers.changeGamePort(req.params.id, port, {
+      actor: req.user.username,
+      isAdmin: req.user.role === 'admin',
+    });
+    res.json({ ok: true, changed, cancelled, running, server: publicServer(server) });
+  })
+);
+
+// Port picking for new servers: the roles that can create one. Answers name
+// host ports in use, so viewers don't get them.
 router.get(
   '/ports/check',
+  require('../middleware/auth').requireRole('admin', 'operator'),
   asyncHandler(async (req, res, next) => {
     const port = Number(req.query.port);
     if (!Number.isInteger(port)) return res.status(400).json({ ok: false, error: 'A port number is required.' });
@@ -398,6 +441,7 @@ router.get(
 
 router.get(
   '/ports/suggest',
+  require('../middleware/auth').requireRole('admin', 'operator'),
   asyncHandler(async (req, res, next) => {
     res.json({ ok: true, ports: await ports.suggestPorts({ withBedrock: req.query.bedrock === 'true' }) });
   })

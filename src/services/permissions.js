@@ -201,6 +201,7 @@ const CAPABILITY_INFO = {
     help: 'Change server settings, properties, integrations, icon, and upgrade versions.',
     covers: [
       'Save the Configuration tab: name, description, tags, memory, CPU, quota, update policy, environment, and server.properties.',
+      'Change the game port players connect to.',
       'Upgrade the Minecraft version or the container image, set the icon and the console label, turn the live map on or off.',
       'Configure Discord, the public status page, and invites.',
     ],
@@ -209,6 +210,9 @@ const CAPABILITY_INFO = {
     reach: [
       'PATCH /api/servers/:id',
       'PUT /api/servers/:id/console-label',
+      'PUT /api/servers/:id/port',
+      'GET /api/servers/:id/port/check',
+      'GET /api/servers/:id/port/suggest',
       'POST /api/servers/:id/icon',
       'POST /api/servers/:id/image/upgrade',
       'POST /api/servers/:id/mcversion/upgrade',

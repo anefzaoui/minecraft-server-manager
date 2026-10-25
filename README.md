@@ -396,6 +396,17 @@ one game + RCON pair per server. Ten servers therefore occupy game `25565-25574`
 deliberate: it keeps RCON in a separate block so you can open a contiguous **game** range without ever
 exposing RCON.
 
+A port counts as taken if another server in the panel uses it (or is about to move to it), any
+Docker container on the host publishes it (even one the panel didn't create, running or stopped), or
+the operating system reports it in use. To move a server later, open its **Configuration** tab and
+use the **Game Port** card: type a port, or press **Use Next Free Port**. RCON always moves with it,
+to the port 1000 higher. Docker only applies a port change when it builds a fresh container, so the
+move waits until the next start or restart: a running server offers to restart right away, and until
+then players keep connecting on the old port, which the panel keeps showing with a "moves to" note.
+Choosing the old port again cancels the move. Admins may pick any port; other users pick from
+`PORT_GAME_START` upward, so RCON can never land inside the game range you opened to players. The
+world and everything else in the data folder are untouched.
+
 > **Why RCON must stay closed:** RCON is a plaintext remote-admin protocol guarded only by a password.
 > The panel reaches it via `docker exec` _inside_ the container, so the host RCON port is never needed
 > from outside. Leave `26565+` blocked at the firewall.

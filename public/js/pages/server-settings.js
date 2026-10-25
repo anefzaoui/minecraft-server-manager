@@ -199,6 +199,187 @@ function init(serverId) {
   cmemEl?.addEventListener('input', updateHeadroom);
   updateHeadroom();
 
+  // -------------------------------------------------------------- game port
+  // Self-contained (own check, "next free" and Save), and kept out of the
+  // tab-wide dirty tracking. Docker fixes a container's ports when it is
+  // created, so the server API flags a rebuild that any start or restart
+  // applies: a stopped server moves on its next start, a running one when
+  // restarted.
+  const portCard = root.querySelector('[data-port-card]');
+  if (portCard) initPortCard(portCard);
+
+  function initPortCard(card) {
+    const input = document.getElementById('st-port');
+    const help = document.getElementById('st-port-help');
+    const nextBtn = document.getElementById('st-port-next');
+    const saveBtn = document.getElementById('st-port-save');
+    const current = Number(card.dataset.portCurrent); // live: what players reach now
+    const pending = Number(card.dataset.portPending) || null; // saved, applies on next start
+    const target = pending || current;
+    const defaultHelp = help.textContent;
+    const setHelp = (text, cls = '') => {
+      help.textContent = text;
+      help.className = `help ${cls}`;
+    };
+    let leaving = false; // a save is reloading the page: don't warn
+    for (const type of ['input', 'change']) card.addEventListener(type, (e) => e.stopPropagation());
+    window.addEventListener('beforeunload', (e) => {
+      if (!leaving && input.value.trim() !== String(target)) e.preventDefault();
+    });
+    const reload = () => {
+      leaving = true;
+      setTimeout(() => location.reload(), 900);
+    };
+
+    // A check answers only if nothing newer (more typing, Next Free, a save)
+    // has spoken since it started - a late one must not overwrite a save's
+    // outcome on the help line.
+    let timer;
+    let checkSeq = 0;
+    const cancelChecks = () => {
+      clearTimeout(timer);
+      checkSeq += 1;
+    };
+    input.addEventListener('input', () => {
+      cancelChecks();
+      timer = setTimeout(check, 400);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveBtn.click();
+      }
+    });
+    async function check() {
+      const seq = checkSeq;
+      const port = Number(input.value);
+      if (port === target) return setHelp(defaultHelp);
+      if (!Number.isInteger(port)) return setHelp('Enter a whole number.', 'text-danger');
+      try {
+        const res = await fetch(`/api/servers/${serverId}/port/check?port=${port}`);
+        const data = await res.json();
+        if (seq !== checkSeq) return; // superseded - stale
+        if (!res.ok || !data.ok) throw new Error(data.error);
+        if (data.free) setHelp(`Port ${port} is free. RCON will use ${data.rcon}.`, 'text-ok');
+        else if (data.reason === 'range') setHelp(`Pick a game port from ${data.min} to ${data.max}.`, 'text-danger');
+        else setHelp(`Port ${port} or its RCON port ${data.rcon} is already in use. Pick another.`, 'text-danger');
+      } catch {
+        if (seq !== checkSeq) return;
+        setHelp('Could not check the port right now.', 'text-ink-faint');
+      }
+    }
+
+    nextBtn.addEventListener('click', async () => {
+      const restore = setBusy(nextBtn, 'Finding…');
+      try {
+        const res = await fetch(`/api/servers/${serverId}/port/suggest`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          toast(data.error || friendlyError(res, { action: 'find a free port' }), { kind: 'error', timeout: 8000 });
+          return;
+        }
+        cancelChecks();
+        const next = data.ports.game;
+        input.value = String(next);
+        if (next === current) setHelp(`This server already uses the lowest free port, ${current}.`, 'text-ok');
+        else if (next === pending) setHelp(`This server is already set to move to ${next}.`, 'text-ok');
+        else setHelp(`Port ${next} is free. RCON will use ${data.ports.rcon}. Save to switch.`, 'text-ok');
+      } catch {
+        toast(friendlyError(null, { action: 'find a free port' }), { kind: 'error' });
+      } finally {
+        restore();
+      }
+    });
+
+    saveBtn.addEventListener('click', () => save(Number(input.value), saveBtn));
+    const cancelBtn = document.getElementById('st-port-cancel');
+    cancelBtn?.addEventListener('click', () => save(Number(cancelBtn.dataset.port), cancelBtn));
+
+    async function save(port, btn) {
+      cancelChecks();
+      if (port === target) {
+        toast(pending ? `The server is already set to move to ${port}.` : `The server already uses port ${port}.`, {
+          kind: 'info',
+        });
+        return;
+      }
+      if (!Number.isInteger(port)) {
+        setHelp('Enter a whole number.', 'text-danger');
+        return;
+      }
+      const restore = setBusy(btn, 'Saving…');
+      let data;
+      try {
+        const res = await fetch(`/api/servers/${serverId}/port`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ port }),
+        });
+        data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          toast(data.error || friendlyError(res, { action: 'change the port' }), { kind: 'error', timeout: 9000 });
+          return;
+        }
+      } catch {
+        toast(friendlyError(null, { action: 'change the port' }), { kind: 'error' });
+        return;
+      } finally {
+        restore();
+      }
+      if (data.cancelled) {
+        toast(`Move cancelled. The server stays on port ${port}.`);
+        reload();
+        return;
+      }
+      if (!data.running) {
+        toast(`Saved. The server moves to port ${port} the next time it starts.`);
+        reload();
+        return;
+      }
+      if (!('portCanRestart' in card.dataset)) {
+        // No power permission here: the restart is someone else's call.
+        toast(`Saved. Players keep using port ${current} until the server restarts.`, { kind: 'info' });
+        reload();
+        return;
+      }
+      const { confirmDialog } = await import('../lib/confirm.js');
+      const now = await confirmDialog({
+        title: `Restart now to move players to port ${port}?`,
+        message:
+          'The world is saved first. Anyone online is disconnected and can rejoin on the new port once the server is back up. Choose Later to keep it running on the old port until its next restart.',
+        confirmLabel: 'Restart Now',
+        cancelLabel: 'Later',
+      });
+      if (!now) {
+        toast(`Saved. Players keep using port ${current} until the next restart.`, { kind: 'info' });
+        reload();
+        return;
+      }
+      const restoreRestart = setBusy(saveBtn, 'Restarting…');
+      nextBtn.disabled = true;
+      try {
+        const res = await fetch(`/api/servers/${serverId}/restart`, { method: 'POST' });
+        const out = await res.json().catch(() => ({}));
+        if (res.ok && out.ok !== false) {
+          toast(`Restarted on port ${port}.`);
+          reload();
+          return;
+        }
+        toast(out.error || friendlyError(res, { action: 'restart the server' }), { kind: 'error', timeout: 12000 });
+      } catch {
+        toast(friendlyError(null, { action: 'restart the server' }), { kind: 'error', timeout: 12000 });
+      }
+      // The port is saved either way; only the restart failed. Stay on the page
+      // so the error stays readable, and say where things stand.
+      restoreRestart();
+      nextBtn.disabled = false;
+      setHelp(
+        `Saved, but the restart did not finish, so players still use port ${current}. Restart the server to move it to ${port}.`,
+        'text-warn'
+      );
+    }
+  }
+
   // ------------------------------------------------------------ icon upload
   const iconUploadBtn = document.getElementById('st-icon-upload');
   iconUploadBtn?.addEventListener('click', () => {

@@ -117,6 +117,37 @@
       </div>
     </div>
 
+    {{! Its own Save: a port change may restart the server, so it never rides
+        along with the tab-wide Save. A saved change waits as "pending" until
+        the next start or restart rebuilds the container on the new port. }}
+    {{#if perms.settings}}
+    <div class="card scroll-mt-20 p-4" id="port" data-port-card data-port-current="{{server.ports.game}}" data-port-pending="{{server.ports.pendingGame}}"{{#if perms.power}} data-port-can-restart{{/if}}>
+      <h3 class="mb-4 font-semibold">Game Port</h3>
+      <div class="space-y-3">
+        {{#if server.ports.pendingGame}}
+        <div class="notice notice-info text-sm">
+          <p>Players still connect on port <b>{{server.ports.game}}</b>. The server moves to <b>{{server.ports.pendingGame}}</b> the next time it starts or restarts.</p>
+          <button type="button" class="btn btn-sm mt-2" id="st-port-cancel" data-port="{{server.ports.game}}">Keep {{server.ports.game}}</button>
+        </div>
+        {{/if}}
+        <div>
+          <label class="label" for="st-port">Port players connect to</label>
+          <div class="flex flex-wrap items-center gap-2">
+            <input class="input w-32 font-mono" id="st-port" value="{{#if server.ports.pendingGame}}{{server.ports.pendingGame}}{{else}}{{server.ports.game}}{{/if}}" inputmode="numeric" autocomplete="off" aria-describedby="st-port-help{{#if portRconCustom}} st-port-rcon{{/if}}">
+            <button type="button" class="btn" id="st-port-next">{{{icon 'sparkles' 'size-4'}}} Use Next Free Port</button>
+          </div>
+          <p class="help" id="st-port-help" aria-live="polite">Each server needs its own port. The remote console (RCON) uses the port {{rconOffset}} higher, currently {{server.ports.rcon}}.</p>
+          {{#if portRconCustom}}
+          <p class="help text-warn" id="st-port-rcon">This server's RCON port was set by hand. A new game port puts RCON back at {{rconOffset}} above it.</p>
+          {{/if}}
+        </div>
+        <div class="flex justify-end">
+          <button type="button" class="btn btn-primary" id="st-port-save">{{{icon 'save' 'size-4'}}} Save Port</button>
+        </div>
+      </div>
+    </div>
+    {{/if}}
+
     {{#if server.packUnpinned}}
     <div class="notice notice-warn max-w-prose text-sm">
       <b>This modpack has no pinned version.</b> The container downloads the newest pack version every time it
