@@ -231,9 +231,17 @@ function init(serverId) {
       setTimeout(() => location.reload(), 900);
     };
 
+    // A check answers only if nothing newer (more typing, Next Free, a save)
+    // has spoken since it started - a late one must not overwrite a save's
+    // outcome on the help line.
     let timer;
-    input.addEventListener('input', () => {
+    let checkSeq = 0;
+    const cancelChecks = () => {
       clearTimeout(timer);
+      checkSeq += 1;
+    };
+    input.addEventListener('input', () => {
+      cancelChecks();
       timer = setTimeout(check, 400);
     });
     input.addEventListener('keydown', (e) => {
@@ -243,19 +251,20 @@ function init(serverId) {
       }
     });
     async function check() {
+      const seq = checkSeq;
       const port = Number(input.value);
       if (port === target) return setHelp(defaultHelp);
       if (!Number.isInteger(port)) return setHelp('Enter a whole number.', 'text-danger');
       try {
         const res = await fetch(`/api/servers/${serverId}/port/check?port=${port}`);
         const data = await res.json();
-        if (Number(input.value) !== port) return; // user kept typing - stale
+        if (seq !== checkSeq) return; // superseded - stale
         if (!res.ok || !data.ok) throw new Error(data.error);
         if (data.free) setHelp(`Port ${port} is free. RCON will use ${data.rcon}.`, 'text-ok');
         else if (data.reason === 'range') setHelp(`Pick a game port from ${data.min} to ${data.max}.`, 'text-danger');
         else setHelp(`Port ${port} or its RCON port ${data.rcon} is already in use. Pick another.`, 'text-danger');
       } catch {
-        if (Number(input.value) !== port) return;
+        if (seq !== checkSeq) return;
         setHelp('Could not check the port right now.', 'text-ink-faint');
       }
     }
@@ -269,7 +278,7 @@ function init(serverId) {
           toast(data.error || friendlyError(res, { action: 'find a free port' }), { kind: 'error', timeout: 8000 });
           return;
         }
-        clearTimeout(timer);
+        cancelChecks();
         const next = data.ports.game;
         input.value = String(next);
         if (next === current) setHelp(`This server already uses the lowest free port, ${current}.`, 'text-ok');
@@ -287,6 +296,7 @@ function init(serverId) {
     cancelBtn?.addEventListener('click', () => save(Number(cancelBtn.dataset.port), cancelBtn));
 
     async function save(port, btn) {
+      cancelChecks();
       if (port === target) {
         toast(pending ? `The server is already set to move to ${port}.` : `The server already uses port ${port}.`, {
           kind: 'info',
