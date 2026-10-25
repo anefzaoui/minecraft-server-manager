@@ -107,7 +107,7 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, overrid
     openModal({
       title: 'Remove old backups now?',
       content,
-      size: 'sm',
+      size: 'md', // three actions: sm wraps them onto two rows
       actions: [
         { label: 'Cancel', kind: 'ghost' },
         {
