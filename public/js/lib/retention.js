@@ -18,6 +18,7 @@ import { friendlyError } from './errors.js';
 import { openModal } from './modal.js';
 import { setBusy } from './loading.js';
 import { fmtBytes } from './format.js';
+import { formatDate } from './datetime.js';
 
 async function postJson(url, body, action) {
   let res;
@@ -37,6 +38,48 @@ async function postJson(url, body, action) {
 }
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+// Words for each backup reason, in the order a person cares about them.
+const REASONS = [
+  ['scheduled', 'scheduled'],
+  ['manual', 'manual'],
+  ['pre-update', 'pre-update'],
+  ['pre-restore', 'safety'],
+];
+const SHOWN_SERVERS = 8;
+
+/** One line per affected server: what would go, how big, how old, and whether it was over already. */
+function breakdownList(byServer = []) {
+  const list = document.createElement('ul');
+  list.className = 'space-y-1.5 rounded-sm border border-line bg-inset p-2.5 text-xs';
+  for (const srv of byServer.slice(0, SHOWN_SERVERS)) {
+    const li = document.createElement('li');
+    const name = document.createElement('span');
+    name.className = 'font-semibold text-ink';
+    name.textContent = srv.name;
+    const kinds = REASONS.filter(([r]) => srv.byReason[r])
+      .map(([r, word]) => `${srv.byReason[r]} ${word}`)
+      .join(', ');
+    const detail = document.createElement('span');
+    detail.className = 'text-ink-soft';
+    detail.textContent = `: ${kinds}, ${fmtBytes(srv.bytes)}, oldest from ${formatDate(srv.oldest)}.`;
+    li.append(name, detail);
+    if (srv.alreadyOver) {
+      const note = document.createElement('span');
+      note.className = 'block text-ink-faint';
+      note.textContent = 'Some of these were already over the limit before this change.';
+      li.append(note);
+    }
+    list.append(li);
+  }
+  if (byServer.length > SHOWN_SERVERS) {
+    const more = document.createElement('li');
+    more.className = 'text-ink-faint';
+    more.textContent = `And ${plural(byServer.length - SHOWN_SERVERS, 'more server', 'more servers')}.`;
+    list.append(more);
+  }
+  return list;
+}
 
 export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, scope = 'panel', onSaved = () => {} }) {
   const saveBtn = form.querySelector('[data-retention-save]');
@@ -141,7 +184,7 @@ export function initRetentionForm(form, { previewUrl, saveUrl, applyUrl, scope =
     how.textContent = onServer
       ? 'Remove Now deletes those backups right away. From Next Backup keeps them for now, and this server trims its backups the next time it makes one, as it always has.'
       : 'Remove Now deletes those backups right away. From Next Backup keeps them for now, and each server trims its backups the next time it makes one, as it always has.';
-    content.append(lead, how);
+    content.append(lead, breakdownList(preview.byServer), how);
     const nextTime = onServer
       ? "Retention saved. Older backups are trimmed after this server's next backup."
       : "Retention saved. Older backups are trimmed after each server's next backup.";

@@ -444,7 +444,7 @@ async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
  * a preview can't drift from what happens.
  * @param {string} serverId
  * @param {{ keepScheduled: number, keepPreUpdate: number, keepManual: number, keepPreRestore: number, maxAgeDays: number, maxTotalGb: number }} cfg
- * @returns {{ id: string, sizeBytes: number }[]}
+ * @returns {{ id: string, sizeBytes: number, reason: string, createdAt: string }[]}
  */
 function planPrune(serverId, cfg) {
   // id DESC as a tiebreaker: created_at has 1-second resolution and a safety
@@ -452,7 +452,7 @@ function planPrune(serverId, cfg) {
   // not be left to insertion-order luck. `old` is computed by SQLite so the age
   // pass compares timestamps exactly as it always has.
   let rows = db.all(
-    `SELECT id, reason, size_bytes, (created_at < datetime('now', ?)) AS old
+    `SELECT id, reason, size_bytes, created_at, (created_at < datetime('now', ?)) AS old
        FROM backups WHERE server_id = ? ORDER BY created_at DESC, id DESC`,
     `-${cfg.maxAgeDays || 0} days`,
     serverId
@@ -460,7 +460,7 @@ function planPrune(serverId, cfg) {
   const doomed = [];
   const drop = (r) => {
     if (protectedFromPrune.has(r.id)) return; // in use - stays, and keeps counting
-    doomed.push({ id: r.id, sizeBytes: r.size_bytes || 0 });
+    doomed.push({ id: r.id, sizeBytes: r.size_bytes || 0, reason: r.reason, createdAt: r.created_at });
     rows = rows.filter((x) => x.id !== r.id);
   };
 
@@ -545,18 +545,31 @@ async function pruneRetention(serverId, { actor = 'system', onlyIds = null } = {
 function previewRetention(serverIds, cfgFor) {
   let backups = 0;
   let bytes = 0;
-  let servers = 0;
   const ids = [];
+  const byServer = [];
   for (const id of serverIds) {
     const plan = planPrune(id, cfgFor(id));
     if (!plan.length) continue;
-    servers++;
+    const serverBytes = plan.reduce((sum, b) => sum + b.sizeBytes, 0);
+    const byReason = {};
+    for (const b of plan) byReason[b.reason] = (byReason[b.reason] || 0) + 1;
+    byServer.push({
+      id,
+      name: db.get('SELECT display_name FROM servers WHERE id = ?', id)?.display_name || id,
+      backups: plan.length,
+      bytes: serverBytes,
+      byReason,
+      oldest: plan.reduce((min, b) => (b.createdAt < min ? b.createdAt : min), plan[0].createdAt),
+      // Over its limits already under the SAVED policy: an earlier "from the
+      // next backup" left these, and this change isn't what removes them.
+      alreadyOver: planPrune(id, backupRetention.effective(id)).length > 0,
+    });
     backups += plan.length;
-    bytes += plan.reduce((sum, b) => sum + b.sizeBytes, 0);
+    bytes += serverBytes;
     for (const b of plan) ids.push(b.id);
   }
   // ids go back with "Remove now", which then deletes nothing outside them.
-  return { backups, bytes, servers, ids };
+  return { backups, bytes, servers: byServer.length, ids, byServer };
 }
 
 // "Remove now" from the retention settings runs under the per-server op lock,

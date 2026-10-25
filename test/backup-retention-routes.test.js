@@ -240,3 +240,19 @@ test('panel-wide values cannot be blank, and reset:false on a server is just a p
   const get = await app.req('GET', '/api/servers/srv_a/backups/retention', { cookie });
   assert.deepEqual(get.json.override, { keepManual: 4 });
 });
+
+test('the preview breaks it down per server and flags excess that was there before this change', async () => {
+  // srv_a was left over its own limit by an earlier "from the next backup".
+  await post('/api/servers/srv_a/backups/retention', { keepScheduled: 2 });
+  // An unrelated panel-wide edit still lists srv_a's old excess - and says so.
+  const r = await post('/api/backups/retention/preview', { keepManual: 19 });
+  assert.equal(r.json.byServer.length, 1);
+  const [a] = r.json.byServer;
+  assert.deepEqual([a.id, a.name, a.backups, a.alreadyOver], ['srv_a', 'srv_a', 6, true]);
+  assert.deepEqual(a.byReason, { scheduled: 6 });
+  assert.equal(a.oldest, '2026-01-01 00:00:00');
+  // A change that alone causes the excess is not flagged.
+  await post('/api/servers/srv_a/backups/retention', { reset: true });
+  const fresh = await post('/api/backups/retention/preview', { keepScheduled: 5 });
+  assert.ok(fresh.json.byServer.every((s) => s.alreadyOver === false));
+});
