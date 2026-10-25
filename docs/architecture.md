@@ -120,7 +120,13 @@ Cross-cutting:
   orphaned by a shutdown on the next boot.
 - **Ports** are allocated from a base scheme (game from `PORT_GAME_START` upward, RCON = game +
   `PORT_RCON_OFFSET`, Bedrock from `PORT_BEDROCK_START`), probed for availability, and reserved in
-  the DB.
+  the DB. "Taken" is the union of the DB's claims, every host port any Docker container publishes
+  (`containers.publishedHostPorts`, because an OS bind probe from inside the panel's own container
+  sees only that container's network namespace), and the OS probe. A Docker daemon that doesn't
+  answer within 3 s drops only the Docker part. `servers.changeGamePort` moves an existing server
+  (RCON follows), with the server's own current pair counting as free for it. It shares the create
+  path's serialization chain (no two allocations race) and sets `pending_recreate`, because Docker
+  fixes port bindings at container creation. The next start or restart rebuilds the container.
 - **Disk quotas** are enforced by the panel because Docker can't cap bind-mount usage: the indexer
   caches per-directory sizes and disk-growing operations are gated on them.
 - **Secrets** (RCON passwords, API keys, TOTP secrets, the Discord webhook URL) are encrypted at
