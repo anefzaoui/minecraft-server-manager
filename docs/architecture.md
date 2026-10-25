@@ -131,9 +131,13 @@ Cross-cutting:
   not consult Docker. A port change on an existing server is stored as `port_game_pending` /
   `port_rcon_pending` (RCON always game + `PORT_RCON_OFFSET`) and sets `pending_recreate`,
   because Docker fixes port bindings at container creation; `recreateServerImpl` promotes the
-  pair when it builds the next container (any start or restart), so `port_game` / `port_rcon`
-  always mean "live". Choosing the live port again cancels a pending move. Non-admins may only
-  pick from `PORT_GAME_START` up, so RCON can't land inside the range opened to players.
+  pair when it builds the next container, whatever triggered it (start, restart, crash restart,
+  scheduled restart, update, Apply Changes), so `port_game` / `port_rcon` always mean "live".
+  Before promoting it re-checks the pair (`ports.pairFreeFor`); if it was taken meanwhile the
+  container is built on the live pair and the move stays pending (`port-move-blocked` event). If
+  the new container then fails to build or start, `revertPortMove` restores the live pair and
+  re-flags the rebuild. `changeGamePort` runs under the server's op lock; choosing the live game
+  port again cancels a pending move. Non-admins may only pick from `PORT_GAME_START` up.
 - **Disk quotas** are enforced by the panel because Docker can't cap bind-mount usage: the indexer
   caches per-directory sizes and disk-growing operations are gated on them.
 - **Secrets** (RCON passwords, API keys, TOTP secrets, the Discord webhook URL) are encrypted at

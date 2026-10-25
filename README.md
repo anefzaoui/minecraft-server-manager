@@ -398,14 +398,24 @@ exposing RCON.
 
 A port counts as taken if another server in the panel uses it (or is about to move to it), any
 Docker container on the host publishes it (even one the panel didn't create, running or stopped), or
-the operating system reports it in use. To move a server later, open its **Configuration** tab and
-use the **Game Port** card: type a port, or press **Use Next Free Port**. RCON always moves with it,
-to the port 1000 higher. Docker only applies a port change when it builds a fresh container, so the
-move waits until the next start or restart: a running server offers to restart right away, and until
-then players keep connecting on the old port, which the panel keeps showing with a "moves to" note.
-Choosing the old port again cancels the move. Admins may pick any port; other users pick from
-`PORT_GAME_START` upward, so RCON can never land inside the game range you opened to players. The
-world and everything else in the data folder are untouched.
+the operating system reports it in use. When the panel itself runs in Docker, that last check only
+sees the panel's own container, so a program running directly on the host, or a container using host
+networking, can still hold a port the panel thinks is free; the server then reports the port as in
+use when it starts.
+
+To move a server later, open its **Configuration** tab and use the **Game Port** card: type a port,
+or press **Use Next Free Port**. RCON moves with it, to the port 1000 higher. Docker only applies a
+port change when it builds a fresh container, so the move waits for the next one: a start, a restart
+(including a crash restart or a scheduled one), an update, or **Apply Changes**. A running server
+offers to restart right away, and until the move happens players keep connecting on the old port,
+which the panel keeps showing with a "moves to" note. **Keep** (choosing the old port again) cancels
+the move. If the new port has been taken by the time the server rebuilds, or the server fails to
+start on it, the server stays on its old port, the move stays pending, and the server's history says
+why.
+
+Admins may pick any port from 1024 up; other users pick from `PORT_GAME_START` upward. RCON sits 1000
+above the game port, so as long as the game range you open to players is narrower than 1000 ports,
+RCON never lands inside it. The world and everything else in the data folder are untouched.
 
 > **Why RCON must stay closed:** RCON is a plaintext remote-admin protocol guarded only by a password.
 > The panel reaches it via `docker exec` _inside_ the container, so the host RCON port is never needed
