@@ -478,6 +478,9 @@ async function publishedHostPorts({ exceptServerId, deadlineMs = 2500 } = {}) {
     return await collectPublishedPorts(docker, { exceptServerId, deadline, abortSignal: abort.signal });
   } finally {
     clearTimeout(timer);
+    // Whatever is still in flight when we return - including when the wait gave
+    // up a moment before the timer - is cancelled, never left hanging.
+    abort.abort();
   }
 }
 

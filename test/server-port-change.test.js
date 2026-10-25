@@ -353,12 +353,15 @@ test('publishedHostPorts throws when the list itself never answers', async (t) =
 
 // ---- applying it through start / restart, and when it can't --------------------
 
-function mockLifecycle(t, { startFails = false } = {}) {
-  const specs = mockRebuild(t);
+function mockLifecycle(t, { startFails = false, failOnPort = null, onCreate } = {}) {
+  const specs = mockRebuild(t, onCreate);
   let running = false;
   t.mock.method(containers, 'inspectStatus', async () => ({ exists: true, status: running ? 'running' : 'stopped' }));
   t.mock.method(containers, 'startContainer', async () => {
-    if (startFails) throw Object.assign(new Error('port is already allocated'), { statusCode: 500 });
+    // Like Docker: the container built last is the one that starts.
+    if (startFails || specs.at(-1)?.ports.game === failOnPort) {
+      throw Object.assign(new Error('port is already allocated'), { statusCode: 500 });
+    }
     running = true;
   });
   t.mock.method(containers, 'stopContainer', async () => {
@@ -395,49 +398,6 @@ test('a restart of a running server applies a pending move', async (t) => {
   await servers.restartServer('srv_a', { actor: 'test' });
   assert.equal(specs.at(-1).ports.game, 47150);
   assert.equal(row('srv_a').port_game, 47150);
-});
-
-test('a start that fails on the new port puts the old one back and keeps the move pending', async (t) => {
-  mockLifecycle(t, { startFails: true });
-  seed('srv_a', 47100);
-  await putPort('srv_a', 47150);
-  await assert.rejects(servers.startServer('srv_a', { actor: 'test' }));
-  assert.deepEqual(row('srv_a'), {
-    port_game: 47100,
-    port_rcon: 48100,
-    port_game_pending: 47150,
-    port_rcon_pending: 48150,
-    pending_recreate: 1,
-  });
-  assert.equal(
-    db.get(
-      "SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id DESC LIMIT 1"
-    ).summary,
-    'The server could not start on port 47150, so it stays on 47100. The move is still pending.'
-  );
-});
-
-test('a pending port taken by something else by start time: the server starts on its old port', async (t) => {
-  const specs = mockLifecycle(t);
-  seed('srv_a', 47100);
-  await putPort('srv_a', 47150);
-  const blocker = require('node:net').createServer();
-  await new Promise((resolve) => blocker.listen(47150, '0.0.0.0', resolve));
-  try {
-    await servers.startServer('srv_a', { actor: 'test' });
-  } finally {
-    await new Promise((resolve) => blocker.close(resolve));
-  }
-  assert.equal(specs.at(-1).ports.game, 47100); // up, on the old port
-  const r = row('srv_a');
-  assert.deepEqual([r.port_game, r.port_game_pending, r.pending_recreate], [47100, 47150, 1]); // tried again next start
-  assert.match(
-    db.get(
-      "SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id DESC LIMIT 1"
-    ).summary,
-    /in use by something else, so the server stayed on 47100/
-  );
-  assert.ok(!db.get("SELECT 1 AS x FROM events WHERE server_id = 'srv_a' AND summary LIKE 'Game port moved%'"));
 });
 
 test('publishedHostPorts cancels its Docker request at the deadline', async (t) => {
@@ -478,4 +438,158 @@ test('a port held by a host program reads as a friendly error', async () => {
   );
   handler(err, { method: 'POST', originalUrl: '/x', path: '/x' }, res, () => {});
   assert.equal(body.error, 'That port is already in use by another program on this machine.');
+});
+
+test('a start that fails on the new port comes back up on the old one and pauses the move', async (t) => {
+  const specs = mockLifecycle(t, { failOnPort: 47150 });
+  seed('srv_a', 47100);
+  await putPort('srv_a', 47150);
+  await servers.startServer('srv_a', { actor: 'test' }); // succeeds: recovered
+  assert.equal(specs.at(-1).ports.game, 47100);
+  assert.deepEqual(row('srv_a'), {
+    port_game: 47100,
+    port_rcon: 48100,
+    port_game_pending: 47150,
+    port_rcon_pending: 48150,
+    pending_recreate: 0,
+  });
+  assert.equal(db.get("SELECT port_move_paused AS p FROM servers WHERE id = 'srv_a'").p, 'start-failed');
+  assert.deepEqual(
+    db
+      .all("SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id")
+      .map((e) => e.summary),
+    ['The server could not start on port 47150. It is back on 47100, and the move is paused.']
+  );
+});
+
+test('a paused move is not retried by later starts or restarts (no loop)', async (t) => {
+  const specs = mockLifecycle(t, { failOnPort: 47150 });
+  seed('srv_a', 47100);
+  await putPort('srv_a', 47150);
+  await servers.startServer('srv_a', { actor: 'test' });
+  const builds = specs.length;
+  await servers.restartServer('srv_a', { actor: 'test' });
+  await servers.stopServer('srv_a', { actor: 'test' });
+  await servers.startServer('srv_a', { actor: 'test' });
+  assert.equal(specs.length, builds, 'no rebuild while only a paused move is pending');
+  assert.equal(
+    db.all("SELECT summary FROM events WHERE server_id = 'srv_a' AND summary LIKE 'Game port moved%'").length,
+    1
+  ); // the one real attempt
+  assert.equal(
+    db
+      .all("SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id")
+      .map((e) => e.summary).length,
+    1
+  );
+});
+
+test('saving the paused port again resumes the move', async (t) => {
+  const specs = mockLifecycle(t, { failOnPort: 47150 });
+  seed('srv_a', 47100);
+  await putPort('srv_a', 47150);
+  await servers.startServer('srv_a', { actor: 'test' });
+  await servers.stopServer('srv_a', { actor: 'test' });
+  const r = await putPort('srv_a', 47150);
+  assert.equal(r.json.changed, true);
+  assert.equal(db.get("SELECT port_move_paused AS p FROM servers WHERE id = 'srv_a'").p, null);
+  assert.equal(lastSummary('srv_a'), 'Game port move to 47150 resumed. It applies on the next start or restart.');
+  t.mock.restoreAll();
+  const later = mockLifecycle(t); // the port is free now
+  await servers.startServer('srv_a', { actor: 'test' });
+  assert.equal(later.at(-1).ports.game, 47150);
+  assert.equal(row('srv_a').port_game, 47150);
+  assert.ok(specs.length > 0);
+});
+
+test('a pending port taken by start time: the server starts on its old port and the move pauses', async (t) => {
+  const specs = mockLifecycle(t);
+  seed('srv_a', 47100);
+  await putPort('srv_a', 47150);
+  const blocker = require('node:net').createServer();
+  await new Promise((resolve) => blocker.listen(47150, '0.0.0.0', resolve));
+  try {
+    await servers.startServer('srv_a', { actor: 'test' });
+    const builds = specs.length;
+    await servers.restartServer('srv_a', { actor: 'test' }); // paused: no rebuild, no new warning
+    assert.equal(specs.length, builds);
+  } finally {
+    await new Promise((resolve) => blocker.close(resolve));
+  }
+  assert.equal(specs.at(-1).ports.game, 47100);
+  const r = row('srv_a');
+  assert.deepEqual([r.port_game, r.port_game_pending, r.pending_recreate], [47100, 47150, 0]);
+  assert.deepEqual(
+    db
+      .all("SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id")
+      .map((e) => e.summary),
+    [
+      'Port 47150 is in use by something else, so the server stayed on 47100. The move is paused: save a port again on the Configuration tab to retry.',
+    ]
+  );
+  assert.equal(
+    db.all("SELECT summary FROM events WHERE server_id = 'srv_a' AND summary LIKE 'Game port moved%'").length,
+    0
+  );
+});
+
+test('Apply Changes on a running server with a blocked move builds once', async (t) => {
+  const specs = mockLifecycle(t);
+  seed('srv_a', 47100);
+  await servers.startServer('srv_a', { actor: 'test' });
+  await putPort('srv_a', 47150);
+  const blocker = require('node:net').createServer();
+  await new Promise((resolve) => blocker.listen(47150, '0.0.0.0', resolve));
+  const before = specs.length;
+  try {
+    await servers.recreateServer('srv_a', { actor: 'test' });
+  } finally {
+    await new Promise((resolve) => blocker.close(resolve));
+  }
+  assert.equal(specs.length - before, 1);
+  assert.equal(
+    db
+      .all("SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id")
+      .map((e) => e.summary).length,
+    1
+  );
+});
+
+test("moving onto the server's own current RCON port works", async (t) => {
+  const specs = mockLifecycle(t);
+  seed('srv_a', 47200); // RCON 48200
+  await servers.startServer('srv_a', { actor: 'test' });
+  // Its own running container holds 48200; claim it on the OS like Docker would.
+  const holder = require('node:net').createServer();
+  await new Promise((resolve) => holder.listen(48200, '0.0.0.0', resolve));
+  try {
+    assert.equal((await putPort('srv_a', 48200)).status, 200);
+    await servers.recreateServer('srv_a', { actor: 'test' });
+  } finally {
+    await new Promise((resolve) => holder.close(resolve));
+  }
+  assert.equal(specs.at(-1).ports.game, 48200);
+  assert.equal(row('srv_a').port_game, 48200);
+  assert.equal(
+    db
+      .all("SELECT summary FROM events WHERE server_id = 'srv_a' AND type = 'port-move-blocked' ORDER BY id")
+      .map((e) => e.summary).length,
+    0
+  );
+});
+
+test('rebuilding a running server starts what it just built, even if a setting changed mid-way', async (t) => {
+  let creates = 0;
+  const specs = mockLifecycle(t, {
+    // The rebuild below is the first build here (the mocked start reuses its container); a settings save lands mid-way.
+    onCreate: () => {
+      if (++creates === 1) db.run("UPDATE servers SET heap_mb = 2048, pending_recreate = 1 WHERE id = 'srv_a'");
+    },
+  });
+  seed('srv_a', 47100);
+  await servers.startServer('srv_a', { actor: 'test' });
+  const before = specs.length;
+  await servers.recreateServer('srv_a', { actor: 'test' });
+  assert.equal(specs.length - before, 1, 'one build, not a second one for the mid-way change');
+  assert.equal(row('srv_a').pending_recreate, 1); // that change still waits for the next rebuild
 });

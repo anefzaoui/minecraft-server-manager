@@ -166,16 +166,20 @@ async function isPortFree(port, opts = {}) {
 /**
  * Whether `serverId` can move onto `list` right now. Unlike portChecker, its own
  * pending pair is NOT taken on trust: this is asked just before a rebuild binds
- * it, and something else may have claimed it since the move was saved.
+ * it, and something else may have claimed it since the move was saved. Its
+ * own LIVE pair is free for it without a probe: its running container holds
+ * those, and they are released when that container stops for the rebuild.
  * @param {string} serverId
  * @param {number[]} list
  */
 async function pairFreeFor(serverId, list) {
   const used = dbPortsInUse({ exceptServerId: serverId });
   for (const p of await dockerPortsInUse(serverId)) used.add(p);
+  const live = db.get('SELECT port_game, port_rcon FROM servers WHERE id = ?', serverId);
+  const own = new Set(live ? [live.port_game, live.port_rcon] : []);
   for (const p of list) {
     if (!Number.isInteger(p) || p < 1024 || p > 65535 || used.has(p)) return false;
-    if (!(await probe(p))) return false;
+    if (!own.has(p) && !(await probe(p))) return false;
   }
   return true;
 }
