@@ -15,7 +15,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const secrets = require('./secrets');
 const { pickJavaTag } = require('./javaMatrix');
-const { suggestPorts, assertPortsFree } = require('./ports');
+const { suggestPorts, assertPortsFree, assertGamePortFree } = require('./ports');
 const containers = require('../docker/containers');
 const images = require('../docker/images');
 const { fetchLogs } = require('../docker/logs');
@@ -258,10 +258,11 @@ function previewServerSpec(id) {
   };
 }
 
-// Creates and port changes are serialized through this chain so two of them
-// can't both probe the same free port before either has written its row
-// (port-allocation TOCTOU → duplicate host ports → one un-startable server).
-// Both are rare, so running them one-at-a-time is cheap insurance.
+// Port picks are serialized through this chain so two of them can't both probe
+// the same free port before either has written its row (port-allocation TOCTOU
+// → duplicate host ports → one un-startable server). Only the pick-and-write
+// runs inside it - never an image pull, a container build or a start - so a
+// port change never waits on someone else's slow create.
 let portChain = Promise.resolve();
 
 function withPortLock(run) {
@@ -274,7 +275,7 @@ function withPortLock(run) {
 }
 
 function createServer(input, opts = {}) {
-  return withPortLock(() => createServerImpl(input, opts));
+  return createServerImpl(input, opts);
 }
 
 /**
@@ -305,67 +306,70 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 
   const id = `srv_${nanoid(8)}`;
 
-  // Ports: honor explicit choices (validated), else auto-suggest.
+  // Ports: honor explicit choices (validated), else auto-suggest. The row
+  // written at the end of this locked section is what reserves them.
   let ports;
-  if (input.portGame) {
-    // The RCON port is derived when not given explicitly - validate the
-    // DERIVED value too, or an explicit game port skips collision checks.
-    const rcon = input.portRcon || input.portGame + config.ports.rconOffset;
-    const toCheck = [input.portGame, rcon];
-    if (input.portBedrock) toCheck.push(input.portBedrock);
-    if (input.portQuery) toCheck.push(input.portQuery);
-    await assertPortsFree(toCheck);
-    ports = { game: input.portGame, rcon, bedrock: input.portBedrock || null };
-  } else {
-    ports = await suggestPorts({ withBedrock: Boolean(input.withBedrock) });
-  }
+  await withPortLock(async () => {
+    if (input.portGame) {
+      // The RCON port is derived when not given explicitly - validate the
+      // DERIVED value too, or an explicit game port skips collision checks.
+      const rcon = input.portRcon || input.portGame + config.ports.rconOffset;
+      const toCheck = [input.portGame, rcon];
+      if (input.portBedrock) toCheck.push(input.portBedrock);
+      if (input.portQuery) toCheck.push(input.portQuery);
+      await assertPortsFree(toCheck);
+      ports = { game: input.portGame, rcon, bedrock: input.portBedrock || null };
+    } else {
+      ports = await suggestPorts({ withBedrock: Boolean(input.withBedrock) });
+    }
 
-  await dockerSpec.validateOverrides({
-    containerName: input.containerName,
-    networkName: input.networkName,
-    extraPorts: input.extraPorts,
-    extraBinds: input.extraBinds,
-  });
+    await dockerSpec.validateOverrides({
+      containerName: input.containerName,
+      networkName: input.networkName,
+      extraPorts: input.extraPorts,
+      extraBinds: input.extraBinds,
+    });
 
-  const rconPassword = secrets.generatePassword();
-  const defaults = settings.getDefaults();
+    const rconPassword = secrets.generatePassword();
+    const defaults = settings.getDefaults();
 
-  db.run(
-    `INSERT INTO servers (id, display_name, description, icon, accent, tags_json, type, mc_version,
+    db.run(
+      `INSERT INTO servers (id, display_name, description, icon, accent, tags_json, type, mc_version,
        java_tag, env_json, port_game, port_rcon, port_query, port_bedrock, rcon_password_cipher,
        heap_mb, container_memory_mb, container_swap_mb, cpus, disk_quota_bytes, quota_strict,
        update_policy, auto_start, auto_restart, status, container_name, network_name,
        extra_ports_json, extra_binds_json)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'stopped', ?, ?, ?, ?)`,
-    id,
-    input.name,
-    input.description || '',
-    input.icon || 'grass',
-    input.accent || '#3fa62b',
-    JSON.stringify(input.tags || []),
-    input.type,
-    input.mcVersion || 'LATEST',
-    input.javaTag || '',
-    JSON.stringify(input.env || {}),
-    ports.game,
-    ports.rcon,
-    input.portQuery || null,
-    ports.bedrock,
-    secrets.encrypt(rconPassword),
-    input.heapMb ?? defaults.heapMb,
-    input.containerMemoryMb ?? defaults.containerMemoryMb,
-    input.containerSwapMb ?? 0,
-    input.cpus ?? defaults.cpus,
-    (input.diskQuotaGb ?? defaults.diskQuotaGb) * 1024 ** 3,
-    input.quotaStrict ? 1 : 0,
-    input.updatePolicy || 'manual',
-    input.autoStart ? 1 : 0,
-    input.autoRestart === false ? 0 : 1,
-    input.containerName || null,
-    input.networkName || null,
-    JSON.stringify(input.extraPorts || []),
-    JSON.stringify(input.extraBinds || [])
-  );
+      id,
+      input.name,
+      input.description || '',
+      input.icon || 'grass',
+      input.accent || '#3fa62b',
+      JSON.stringify(input.tags || []),
+      input.type,
+      input.mcVersion || 'LATEST',
+      input.javaTag || '',
+      JSON.stringify(input.env || {}),
+      ports.game,
+      ports.rcon,
+      input.portQuery || null,
+      ports.bedrock,
+      secrets.encrypt(rconPassword),
+      input.heapMb ?? defaults.heapMb,
+      input.containerMemoryMb ?? defaults.containerMemoryMb,
+      input.containerSwapMb ?? 0,
+      input.cpus ?? defaults.cpus,
+      (input.diskQuotaGb ?? defaults.diskQuotaGb) * 1024 ** 3,
+      input.quotaStrict ? 1 : 0,
+      input.updatePolicy || 'manual',
+      input.autoStart ? 1 : 0,
+      input.autoRestart === false ? 0 : 1,
+      input.containerName || null,
+      input.networkName || null,
+      JSON.stringify(input.extraPorts || []),
+      JSON.stringify(input.extraBinds || [])
+    );
+  });
 
   const server = getServer(id);
 
@@ -467,7 +471,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
 // instead of racing into container-name collisions and half-recreated/
 // half-restored states.
 
-const { guardOp } = require('./opLock');
+const { guardOp, isBusy } = require('./opLock');
 
 /**
  * Ensure a server's data dir is owned by the panel user so we can manage its
@@ -574,6 +578,27 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   }
   await containers.removeContainer(id);
 
+  // A pending game port change goes live with this fresh container (Docker
+  // fixes bindings at creation), so promote it now that the old one is gone.
+  if (server.port_game_pending) {
+    db.run(
+      `UPDATE servers SET port_game = port_game_pending, port_rcon = port_rcon_pending,
+         port_game_pending = NULL, port_rcon_pending = NULL WHERE id = ? AND port_game_pending IS NOT NULL`,
+      id
+    );
+    recordEvent({
+      serverId: id,
+      actor,
+      type: 'config-changed',
+      summary: `Game port moved from ${server.port_game} to ${server.port_game_pending}.`,
+      details: { diff: { portGame: [server.port_game, server.port_game_pending] } },
+    });
+    Object.assign(
+      server,
+      db.get('SELECT port_game, port_rcon, port_game_pending, port_rcon_pending FROM servers WHERE id = ?', id)
+    );
+  }
+
   const image = resolveImage(server);
   await images.ensureImage(image);
   const containerSpec = {
@@ -622,7 +647,7 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
        AND mc_version IS ? AND java_tag IS ?
        AND heap_mb IS ? AND container_memory_mb IS ? AND cpus IS ?
        AND extra_ports_json IS ? AND extra_binds_json IS ? AND env_json IS ?
-       AND port_game IS ? AND port_rcon IS ?`,
+       AND port_game_pending IS ? AND port_rcon_pending IS ?`,
     id,
     server.container_name,
     server.network_name,
@@ -634,8 +659,8 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
     server.extra_ports_json,
     server.extra_binds_json,
     server.env_json,
-    server.port_game,
-    server.port_rcon
+    server.port_game_pending,
+    server.port_rcon_pending
   );
   if (!quiet)
     recordEvent({
@@ -753,40 +778,65 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
 
 /**
  * Move a server to a new host game port (RCON follows at game + offset). Docker
- * fixes port bindings at container creation, so this flags pending_recreate:
- * a stopped server picks the change up on its next start, a running one when
- * the caller restarts it through recreateServer. Serialized with creates so a
- * concurrent create can't claim the same port.
- * @returns {Promise<{ server: object, changed: boolean, running: boolean }>}
+ * fixes port bindings at container creation, so the new pair is stored as
+ * PENDING and flags pending_recreate; recreateServerImpl promotes it when it
+ * builds the next container (any start or restart). Until then port_game and
+ * port_rcon stay the live pair, so every address the panel shows still works.
+ * Asking for the live port again cancels a pending move. The pick runs under
+ * the port lock so a concurrent create can't claim the same port.
+ * @param {string} id
+ * @param {number} port
+ * @param {{ actor?: string, isAdmin?: boolean }} [opts]
+ * @returns {Promise<{ server: object, changed: boolean, cancelled: boolean, running: boolean }>}
  */
-function changeGamePort(id, port, { actor = 'system' } = {}) {
-  return withPortLock(async () => {
+async function changeGamePort(id, port, { actor = 'system', isAdmin = false } = {}) {
+  mustGet(id);
+  // A rebuild, upgrade or restart in flight would apply (or race) the change
+  // mid-way, and its outcome couldn't be described honestly. Ask for a retry.
+  if (isBusy(id)) throw httpError(409, 'Another action is running on this server. Try again when it finishes.');
+  const rcon = port + config.ports.rconOffset;
+  const outcome = await withPortLock(async () => {
     const before = mustGet(id);
-    const rcon = port + config.ports.rconOffset;
-    const changed = before.port_game !== port || before.port_rcon !== rcon;
-    if (changed) {
-      if (rcon > 65535) {
-        throw httpError(400, `Port ${port} is too high to leave room for its RCON port. Pick a lower game port.`);
-      }
-      await assertPortsFree([port, rcon], { exceptServerId: id });
-      db.run('UPDATE servers SET port_game = ?, port_rcon = ?, pending_recreate = 1 WHERE id = ?', port, rcon, id);
+    if (before.port_game === port && before.port_rcon === rcon) {
+      if (!before.port_game_pending) return { changed: false, cancelled: false };
+      db.run('UPDATE servers SET port_game_pending = NULL, port_rcon_pending = NULL WHERE id = ?', id);
       recordEvent({
         serverId: id,
         actor,
         type: 'config-changed',
-        summary: `Game port changed from ${before.port_game} to ${port}.`,
-        details: {
-          diff: { portGame: [before.port_game, port], portRcon: [before.port_rcon, rcon] },
-          needsRecreate: true,
-        },
+        summary: `Game port move to ${before.port_game_pending} cancelled. It stays on ${port}.`,
+        details: { diff: { portGamePending: [before.port_game_pending, null] } },
       });
-      logger.info('Changed a server game port.', { serverId: id, actor, from: before.port_game, to: port });
+      logger.info('Cancelled a pending game port change.', { serverId: id, actor, port });
+      return { changed: true, cancelled: true };
     }
-    const UP = ['running', 'starting', 'unhealthy'];
-    const info = await containers.inspectStatus(id).catch(() => null);
-    const running = info ? Boolean(info.exists) && UP.includes(info.status) : UP.includes(before.status);
-    return { server: getServer(id), changed, running };
+    if (before.port_game_pending === port && before.port_rcon_pending === rcon) {
+      return { changed: false, cancelled: false };
+    }
+    await assertGamePortFree(port, { exceptServerId: id, isAdmin });
+    db.run(
+      'UPDATE servers SET port_game_pending = ?, port_rcon_pending = ?, pending_recreate = 1 WHERE id = ?',
+      port,
+      rcon,
+      id
+    );
+    recordEvent({
+      serverId: id,
+      actor,
+      type: 'config-changed',
+      summary: `Game port set to move from ${before.port_game} to ${port} on the next start or restart.`,
+      details: {
+        diff: { portGame: [before.port_game, port], portRcon: [before.port_rcon, rcon] },
+        needsRecreate: true,
+      },
+    });
+    logger.info('Requested a game port change.', { serverId: id, actor, from: before.port_game, to: port });
+    return { changed: true, cancelled: false };
   });
+  const UP = ['running', 'starting', 'unhealthy'];
+  const info = await containers.inspectStatus(id).catch(() => null);
+  const running = info ? Boolean(info.exists) && UP.includes(info.status) : false;
+  return { server: getServer(id), ...outcome, running };
 }
 
 /**

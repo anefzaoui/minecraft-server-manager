@@ -428,39 +428,70 @@ async function chownDataDir(dir, image, uid, gid) {
   }
 }
 
+/** Stopped containers are inspected this many at a time. */
+const INSPECT_CONCURRENCY = 8;
+
+/** `promise`'s value, or `fallback` once `ms` passes (or on rejection). */
+function within(promise, ms, fallback) {
+  let timer;
+  const late = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(fallback), ms);
+    timer.unref();
+  });
+  return Promise.race([promise.catch(() => fallback), late]).finally(() => clearTimeout(timer));
+}
+
+/** Host ports in a binding's HostPort: "25565", or a "25565-25570" range. */
+function hostPortsOf(binding) {
+  const m = /^(\d+)(?:-(\d+))?$/.exec(String((binding && binding.HostPort) || ''));
+  if (!m) return [];
+  const from = Number(m[1]);
+  const to = Math.min(Number(m[2] || m[1]), from + 1024); // a sane cap on a giant range
+  const out = [];
+  for (let p = from; p <= to; p++) if (p > 0 && p <= 65535) out.push(p);
+  return out;
+}
+
 /**
  * Host ports published by any container on the daemon, managed or not, except
  * `exceptServerId`'s own. When the panel itself runs in a container, an OS bind
  * probe only sees the panel's own network namespace, so this is its one view of
- * ports held by sibling containers. Running containers report live bindings; a
- * stopped one reports none, so each is inspected for the bindings it will claim
- * on start. Managed ones are inspected too: an `msm.id` label alone doesn't mean
- * THIS panel's DB knows the server (another install, a restored DB).
- * @param {{ exceptServerId?: string }} [opts]
+ * ports held by sibling containers. Running containers report live bindings in
+ * the list itself; a stopped one reports none, so each is inspected for the
+ * bindings it will claim on start. Managed ones are inspected too: an `msm.id`
+ * label alone doesn't mean THIS panel's DB knows the server (another install, a
+ * restored DB). Throws only when the list itself fails or misses the deadline;
+ * inspections are best-effort within what is left of it, so a slow one costs
+ * its own ports, never the running containers' ones already collected.
+ * @param {{ exceptServerId?: string, deadlineMs?: number }} [opts]
  * @returns {Promise<Set<number>>}
  */
-async function publishedHostPorts({ exceptServerId } = {}) {
+async function publishedHostPorts({ exceptServerId, deadlineMs = 2500 } = {}) {
   const docker = getDocker();
+  const deadline = Date.now() + deadlineMs;
+  const list = await within(docker.listContainers({ all: true }), deadlineMs, null);
+  if (!list) throw new Error('Docker did not list its containers in time.');
   const used = new Set();
   const stopped = [];
-  for (const c of await docker.listContainers({ all: true })) {
+  for (const c of list) {
     const owner = c.Labels && c.Labels[LABEL];
     if (exceptServerId && owner === exceptServerId) continue;
     for (const p of c.Ports || []) if (p.PublicPort) used.add(p.PublicPort);
     if (c.State !== 'running') stopped.push(c.Id);
   }
-  for (const id of stopped) {
-    const info = await docker
-      .getContainer(id)
-      .inspect()
-      .catch(() => null);
-    for (const binds of Object.values(info?.HostConfig?.PortBindings || {})) {
-      for (const b of binds || []) {
-        const port = Number(b.HostPort);
-        if (Number.isInteger(port) && port > 0) used.add(port);
+  let next = 0;
+  const worker = async () => {
+    while (next < stopped.length) {
+      const id = stopped[next++];
+      const left = deadline - Date.now();
+      if (left <= 0) return;
+      const info = await within(docker.getContainer(id).inspect(), left, null);
+      for (const binds of Object.values((info && info.HostConfig && info.HostConfig.PortBindings) || {})) {
+        for (const b of binds || []) for (const p of hostPortsOf(b)) used.add(p);
       }
     }
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(INSPECT_CONCURRENCY, stopped.length) }, worker));
   return used;
 }
 

@@ -691,7 +691,10 @@ router.get(
         context.settingsEnv = JSON.stringify(row.env);
       }
       context.motd = String(row.env.MOTD || '').replace(/§([0-9a-fk-orA-FK-OR])/g, '&$1');
-      context.rconOffset = require('../../config').ports.rconOffset; // the Game Port card's RCON hint
+      // The Game Port card's RCON hint, and its warning that a hand-set RCON
+      // port (API create only) goes back to game + offset on a move.
+      context.rconOffset = require('../../config').ports.rconOffset;
+      context.portRconCustom = row.port_rcon !== row.port_game + context.rconOffset;
 
       // Every catalog field configurable at creation, minus what's covered
       // elsewhere on this tab: identity/flavor/resources (their own cards

@@ -13,6 +13,7 @@ const db = require('../db');
 const config = require('../config');
 const containers = require('../docker/containers');
 const logger = require('../logger')(path.basename(__filename));
+const { makeFailureThrottle } = require('../logger');
 
 /** OS availability probe. Bounded by a timeout so a wedged bind/close can't
  *  leave the caller (and a server create) hanging forever. */
@@ -52,20 +53,21 @@ function probe(port, host = '0.0.0.0', timeoutMs = 2000) {
 }
 
 /**
- * Every host port a panel server or integration claims. `exceptServerId`'s own
- * game + RCON ports are left out (they are the ones it is moving off); its
+ * Every host port a panel server or integration claims, including a server's
+ * pending (not yet live) game + RCON pair. `exceptServerId`'s own live and
+ * pending game + RCON pairs are left out (it may move between them); its
  * Bedrock, extra and BlueMap ports still count, since it keeps holding those.
  * @param {{ exceptServerId?: string }} [opts]
  */
 function dbPortsInUse({ exceptServerId } = {}) {
   const rows = db.all(
-    'SELECT id, port_game, port_rcon, port_bedrock, extra_ports_json FROM servers WHERE deleted_at IS NULL'
+    `SELECT id, port_game, port_rcon, port_game_pending, port_rcon_pending, port_bedrock, extra_ports_json
+       FROM servers WHERE deleted_at IS NULL`
   );
   const used = new Set();
   for (const r of rows) {
     if (r.id !== exceptServerId) {
-      used.add(r.port_game);
-      used.add(r.port_rcon);
+      for (const p of [r.port_game, r.port_rcon, r.port_game_pending, r.port_rcon_pending]) if (p) used.add(p);
     }
     if (r.port_bedrock) used.add(r.port_bedrock);
     for (const p of JSON.parse(r.extra_ports_json || '[]')) {
@@ -82,37 +84,47 @@ function dbPortsInUse({ exceptServerId } = {}) {
   return used;
 }
 
-/** Bounded so a wedged daemon degrades to "no extra ports known", never a hang. */
-const DOCKER_LIST_TIMEOUT_MS = 3000;
+// Docker's view is cached briefly: the wizard and the Game Port card check on
+// every pause in typing, and other containers' ports rarely change within
+// seconds. Panel servers' own ports always come fresh from the DB.
+const DOCKER_CACHE_MS = 3000;
+/** @type {Map<string, { at: number, ports: Set<number> }>} */
+const dockerCache = new Map();
+const dockerThrottle = makeFailureThrottle();
+
+/** Drop the cached Docker snapshot (tests, and anything that just changed containers). */
+function clearPortCache() {
+  dockerCache.clear();
+}
 
 /**
- * Host ports other containers publish. Unreachable Docker = empty set: the DB
- * and OS checks still apply, exactly as before this check existed.
+ * Host ports other containers publish. Unreachable or slow Docker = empty set:
+ * the DB and OS checks still apply, exactly as before this check existed.
  * @param {string} [exceptServerId]
  * @returns {Promise<Set<number>>}
  */
 async function dockerPortsInUse(exceptServerId) {
-  let timer;
+  const key = exceptServerId || '';
+  const hit = dockerCache.get(key);
+  if (hit && Date.now() - hit.at < DOCKER_CACHE_MS) return hit.ports;
   try {
-    return await Promise.race([
-      containers.publishedHostPorts({ exceptServerId }),
-      new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error('Docker container list timed out')), DOCKER_LIST_TIMEOUT_MS);
-        timer.unref();
-      }),
-    ]);
+    const ports = await containers.publishedHostPorts({ exceptServerId });
+    dockerThrottle.ok(logger.info, 'The Docker published-port check works again.');
+    dockerCache.set(key, { at: Date.now(), ports });
+    return ports;
   } catch (err) {
-    logger.debug('Skipped the Docker published-port check.', { err: err.message });
+    dockerThrottle.fail(logger.warn, 'Skipped the Docker published-port check because Docker did not answer.', {
+      err: err.message,
+    });
     return new Set();
-  } finally {
-    clearTimeout(timer);
   }
 }
 
 /**
- * One snapshot of every taken port plus a check against it. A server's own
- * current game + RCON ports count as free FOR IT without an OS probe: while it
- * runs, Docker holds them, and moving back onto them must not read as a clash.
+ * One snapshot of every taken port plus a check against it. A server's own live
+ * and pending game + RCON ports count as free FOR IT without an OS probe: while
+ * it runs, Docker holds the live pair, and moving back onto it must not read as
+ * a clash.
  * @param {{ exceptServerId?: string }} [opts]
  */
 async function portChecker({ exceptServerId } = {}) {
@@ -120,8 +132,11 @@ async function portChecker({ exceptServerId } = {}) {
   for (const p of await dockerPortsInUse(exceptServerId)) used.add(p);
   const own = new Set();
   if (exceptServerId) {
-    const row = db.get('SELECT port_game, port_rcon FROM servers WHERE id = ?', exceptServerId);
-    if (row) own.add(row.port_game).add(row.port_rcon);
+    const row = db.get(
+      'SELECT port_game, port_rcon, port_game_pending, port_rcon_pending FROM servers WHERE id = ?',
+      exceptServerId
+    );
+    if (row) for (const p of Object.values(row)) if (p) own.add(p);
   }
   /** @param {number} port */
   return async (port) => {
@@ -145,8 +160,8 @@ async function isPortFree(port, opts = {}) {
 }
 
 /**
- * Throw a friendly 400 naming the first taken port in `list`. Shared by create
- * and the port change so both enforce the same rules.
+ * Throw a friendly 400 naming the first taken port in `list`. Used by create
+ * for an explicitly chosen set of ports.
  * @param {number[]} list
  * @param {{ exceptServerId?: string }} [opts]
  */
@@ -160,6 +175,53 @@ async function assertPortsFree(list, opts = {}) {
       throw httpError(400, `Port ${p} is already in use or not allowed. Pick another, or use the next free port.`);
     }
   }
+}
+
+/**
+ * The game ports a user may move a server to. RCON lands at game + offset, so
+ * non-admins stay inside the game runway: a game port below it could drop RCON
+ * into the range an admin opened to the internet for players.
+ * @param {{ isAdmin?: boolean }} [opts]
+ */
+function gamePortRange({ isAdmin = false } = {}) {
+  return { min: isAdmin ? 1024 : config.ports.gameStart, max: 65535 - config.ports.rconOffset };
+}
+
+/**
+ * Check a game port for an existing server: the range rule, then its derived
+ * RCON port, then both against everything taken. `reason` says why it isn't
+ * usable so the UI can say something precise.
+ * @param {number} port
+ * @param {{ exceptServerId?: string, isAdmin?: boolean }} [opts]
+ * @returns {Promise<{ port: number, rcon: number, free: boolean, reason: null | 'range' | 'taken', min: number, max: number }>}
+ */
+async function checkGamePort(port, { exceptServerId, isAdmin = false } = {}) {
+  const { min, max } = gamePortRange({ isAdmin });
+  const rcon = port + config.ports.rconOffset;
+  const base = { port, rcon, min, max };
+  if (!Number.isInteger(port) || port < min || port > max) return { ...base, free: false, reason: 'range' };
+  const isFree = await portChecker({ exceptServerId });
+  const free = (await isFree(port)) && (await isFree(rcon));
+  return { ...base, free, reason: free ? null : 'taken' };
+}
+
+/**
+ * Throw the friendly 400 matching checkGamePort's verdict.
+ * @param {number} port
+ * @param {{ exceptServerId?: string, isAdmin?: boolean }} [opts]
+ */
+async function assertGamePortFree(port, opts = {}) {
+  const r = await checkGamePort(port, opts);
+  if (r.reason === 'range') {
+    throw httpError(400, `Pick a game port from ${r.min} to ${r.max}.`);
+  }
+  if (r.reason === 'taken') {
+    throw httpError(
+      400,
+      `Port ${port} or its RCON port ${r.rcon} is already in use. Pick another, or use the next free port.`
+    );
+  }
+  return r;
 }
 
 /**
@@ -197,4 +259,14 @@ async function suggestPorts({ withBedrock = false, exceptServerId } = {}) {
   return result;
 }
 
-module.exports = { isPortFree, assertPortsFree, suggestPorts, probe, dbPortsInUse };
+module.exports = {
+  isPortFree,
+  assertPortsFree,
+  checkGamePort,
+  assertGamePortFree,
+  gamePortRange,
+  suggestPorts,
+  probe,
+  dbPortsInUse,
+  clearPortCache,
+};
