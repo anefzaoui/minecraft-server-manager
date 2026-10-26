@@ -121,7 +121,7 @@
         along with the tab-wide Save. It applies at once: a running server is
         restarted on the new port, a stopped one gets a new container on it. }}
     {{#if perms.settings}}
-    <div class="card scroll-mt-20 p-4" id="port" data-port-card data-port-current="{{server.ports.game}}"{{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}} data-port-running{{/if}}{{#if perms.power}} data-port-can-restart{{/if}}>
+    <div class="card scroll-mt-20 p-4" id="port" data-port-card data-port-current="{{server.ports.game}}"{{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}} data-port-running{{/if}}>
       <h3 class="mb-4 font-semibold">Game Port</h3>
       <div class="space-y-3">
         <div>

@@ -290,15 +290,8 @@ function init(serverId) {
 
     saveBtn.addEventListener('click', () => save(Number(input.value)));
 
-    /** Ask before a restart; false when the person can't restart or says no. */
+    /** Ask before a restart; false when the person says no. */
     async function confirmRestart(port) {
-      if (!('portCanRestart' in card.dataset)) {
-        toast('Changing the port of a running server restarts it, which needs the Power permission.', {
-          kind: 'error',
-          timeout: 9000,
-        });
-        return false;
-      }
       const { confirmDialog } = await import('../lib/confirm.js');
       return confirmDialog({
         title: `Restart now to move players to port ${port}?`,
@@ -362,9 +355,11 @@ function init(serverId) {
       // if the restart failed). Stay on the page so the reason stays readable.
       restore();
       nextBtn.disabled = false;
-      if (!res || res.status >= 500 || !('ok' in data)) {
-        // No clear answer (a proxy timing out on this long request, say): the
-        // change may still have gone through, so show where the server really is.
+      if (!res || !('ok' in data)) {
+        // No answer from the panel itself (a proxy timing out on this long
+        // request, say): the change may still have gone through, so show where
+        // the server really is. Any panel answer - 5xx included, like "that port
+        // is already in use" - is definite and shown below.
         toast("Couldn't confirm the result. Reloading to show where the server is now.", { kind: 'error' });
         reload();
         return;

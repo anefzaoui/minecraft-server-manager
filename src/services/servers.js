@@ -502,6 +502,16 @@ async function startServerImpl(id, { actor = 'system', rebuilt = false } = {}) {
   const server = mustGet(id);
   await ensureOwnership(id);
   const info = await containers.inspectStatus(id);
+  // Already up (a start that waited out someone else's restart, say): nothing to
+  // do. Starting it again would fail with "container already started".
+  if (
+    !rebuilt &&
+    info.exists &&
+    ['running', 'starting', 'unhealthy'].includes(info.status) &&
+    !server.pending_recreate
+  ) {
+    return;
+  }
   if (!rebuilt && (!info.exists || server.pending_recreate)) {
     // Rebuilding a running server starts it again itself; starting it a second
     // time here would fail with "container already started".
@@ -786,24 +796,20 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
  * Move a server to a new host game port (RCON follows at game + offset), now.
  * Docker fixes port bindings when a container is created, so the container is
  * rebuilt on the new pair: a running server is restarted on it (the caller
- * must say `restart: true`), a stopped one just gets the new container. The
- * rebuild applies any other pending setting changes too, as Apply Changes
- * would, so their image is pulled and the container name checked BEFORE the
- * server is touched. The new pair is written first (with pending_recreate, so
- * a panel crash mid-change leaves an honest "rebuild pending", not a row that
- * disagrees with the container); if anything fails after the stop, the old
- * pair is written back and the server rebuilt (and restarted, if it was
- * running) on it. Both pairs are reserved meanwhile.
+ * must say `restart: true`), a stopped one just gets the new container. It is
+ * refused while other settings wait for a rebuild (Apply Changes first), so it
+ * only ever rebuilds a container that already ran. The image and a custom
+ * container name are checked before anything is touched; the new pair is
+ * written once the server has stopped (with pending_recreate, so a panel crash
+ * from there leaves an honest "rebuild pending"). If any step after the stop
+ * fails, the old pair is written back and the server rebuilt (and restarted,
+ * if it was running) on it. Both pairs are reserved meanwhile.
  * @param {string} id
  * @param {number} port
- * @param {{ actor?: string, isAdmin?: boolean, canRestart?: boolean, restart?: boolean }} [opts]
+ * @param {{ actor?: string, isAdmin?: boolean, restart?: boolean }} [opts]
  * @returns {Promise<{ server: object, changed: boolean, restarted: boolean }>}
  */
-async function changeGamePortImpl(
-  id,
-  port,
-  { actor = 'system', isAdmin = false, canRestart = true, restart = false } = {}
-) {
+async function changeGamePortImpl(id, port, { actor = 'system', isAdmin = false, restart = false } = {}) {
   const before = mustGet(id);
   if (before.port_game === port) return { server: before, changed: false, restarted: false };
   // Other settings waiting for a rebuild would ride along with this one - and
@@ -821,9 +827,6 @@ async function changeGamePortImpl(
   const rcon = port + config.ports.rconOffset;
   const info = await containers.inspectStatus(id);
   const running = info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
-  if (running && !canRestart) {
-    throw httpError(403, 'Changing the port of a running server restarts it, which needs the Power permission.');
-  }
   if (running && !restart) {
     const err = httpError(409, 'This server is running. Changing its port restarts it.');
     err.code = 'NEEDS_CONFIRM';
@@ -839,7 +842,7 @@ async function changeGamePortImpl(
     await ensureOwnership(id);
     await images.ensureImage(resolveImage(before));
     if (before.containerName && (await containers.nameTakenByOther(before.containerName, id))) {
-      throw httpError(409, `Container name "${before.containerName}" is already in use by another Docker container`);
+      throw httpError(409, `Container name "${before.containerName}" is already in use by another Docker container.`);
     }
 
     if (running) {
@@ -850,7 +853,7 @@ async function changeGamePortImpl(
         recordEvent({
           serverId: id,
           actor,
-          type: 'port-change-failed',
+          type: 'port-change-reverted',
           summary: `Game port change to ${port} failed because the server could not be stopped. It is still on ${before.port_game}.`,
           details: { error: String(err && err.message) },
         });
@@ -937,7 +940,7 @@ async function putBackOnOldPort(before, { running, port, actor, err, step }) {
   recordEvent({
     serverId: id,
     actor,
-    type: 'port-change-failed',
+    type: 'port-change-reverted',
     summary: `Game port change to ${port} failed while ${step}, so the server is back on ${before.port_game}.`,
     details: { error: String(err && err.message) },
   });

@@ -240,15 +240,13 @@ test('a failed image pull changes nothing and claims no change', async (t) => {
   assert.ok(!summaries('srv_a').some((s) => s.startsWith('Game port changed')));
 });
 
-test('changing the port of a running server needs the Power permission', async (t) => {
-  mockDocker(t, { running: true });
+test("anyone who may edit a server's settings can change its port, running server included", async (t) => {
+  const docker = mockDocker(t, { running: true });
   seed('srv_a', P(0));
-  await assert.rejects(servers.changeGamePort('srv_a', P(50), { canRestart: false }), (err) => {
-    assert.equal(err.status, 403);
-    assert.equal(err.message, 'Changing the port of a running server restarts it, which needs the Power permission.');
-    return true;
-  });
-  assert.equal(row('srv_a').port_game, P(0));
+  const r = await putPort('srv_a', P(50), opCookie);
+  assert.equal(r.status, 200, r.text);
+  assert.equal(r.json.restarted, true);
+  assert.ok(docker.isUp());
 });
 
 test('while a change restarts the server, neither its old nor its new port can be handed out', async (t) => {
@@ -664,4 +662,11 @@ test('retryWhileBusy waits out BUSY, gives up in time, and passes anything else 
     /disk full/
   );
   assert.equal(m, 1);
+});
+
+test('starting a server that is already running does nothing', async (t) => {
+  const docker = mockDocker(t, { running: true });
+  seed('srv_a', P(0));
+  await servers.startServer('srv_a', { actor: 'test' });
+  assert.deepEqual([docker.built.length, docker.calls.start], [0, 0]);
 });

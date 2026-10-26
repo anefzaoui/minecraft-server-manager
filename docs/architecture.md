@@ -140,8 +140,8 @@ Cross-cutting:
   "rebuild pending"), the container removed, rebuilt on the new pair and started. If any step
   after the stop fails, `putBackOnOldPort` writes the old pair back, rebuilds (and restarts, if it
   was running) on it and records which step failed; history and alerts say if even that failed,
-  which leaves the server stopped until someone starts it. Changing a running server's port needs
-  the `power` capability as well as `settings`. Non-admins may only pick from `PORT_GAME_START` up.
+  which leaves the server stopped until someone starts it. The `settings` capability is enough,
+  running server included. Non-admins may only pick from `PORT_GAME_START` up.
   (The `port_*_pending` columns from migration 029 belong to an earlier, unreleased design and are
   unused; 031 clears them.) A lock collision answers 409 with `code: 'BUSY'`, which the retrying
   callers below check rather than the wording. A crash auto-restart

@@ -8,7 +8,7 @@ const path = require('node:path');
 const { getDocker } = require('./connect');
 const { LABEL, inspectStatus } = require('./containers');
 const { fetchLogs } = require('./logs');
-const { recordEvent } = require('../events');
+const { recordEvent, lifecycleActionSince } = require('../events');
 const db = require('../db');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
@@ -276,7 +276,7 @@ const BUSY_MAX_WAIT_MS = 30 * 60_000;
 function stillWantsAutoRestart(serverId, since) {
   const row = db.get('SELECT auto_restart FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
   if (!row || !row.auto_restart) return false;
-  return !require('../events').lifecycleActionSince(serverId, since);
+  return !lifecycleActionSince(serverId, since);
 }
 
 /**

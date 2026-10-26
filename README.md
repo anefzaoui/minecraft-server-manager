@@ -406,8 +406,7 @@ use when it starts.
 To move a server later, open its **Configuration** tab and use the **Game Port** card: type a port,
 or press **Use Next Free Port**, then **Save Port**. RCON moves with it, to the port 1000 higher. The
 change applies right away. A running server asks first, then restarts on the new port (the world is
-saved first, and players reconnect on the new port); changing a running server's port needs the
-**Power** permission. A stopped server simply gets its new port, used from its next start. If the
+saved first, and players reconnect on the new port). A stopped server simply gets its new port, used from its next start. If the
 server has other setting changes still waiting for **Apply Changes**, apply those first: the port
 change only rebuilds what already ran, so it can always put the server back. If the running server
 can't start on the new port (something took it in the meantime), the panel starts it again on its

@@ -155,3 +155,31 @@ test('a scheduled start that waited is dropped if someone stopped the server mea
   await runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 });
   assert.equal(calls, 1, 'not retried after the Stop');
 });
+
+test('a Stop pressed just before a scheduled start fires still counts', async (t) => {
+  db.run('DELETE FROM schedules');
+  db.run(
+    "INSERT OR IGNORE INTO servers (id, display_name, type, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb) VALUES ('srv_sched2', 's', 'PAPER', 47910, 48910, 'x', 1024, 1536)"
+  );
+  db.run(
+    "INSERT INTO schedules (id, server_id, task_type, cron, payload_json, enabled) VALUES ('sch_start2', 'srv_sched2', 'start', '0 3 * * *', '{}', 1)"
+  );
+  // Stop pressed 2 s before the firing; its graceful stop is still running.
+  db.run(
+    "INSERT INTO events (server_id, actor, type, summary, created_at) VALUES ('srv_sched2', 'admin', 'stop-requested', 'Graceful stop requested.', datetime('now', '-2 seconds'))"
+  );
+  const job = { id: 'sch_start2', server_id: 'srv_sched2', task_type: 'start', payload_json: '{}' };
+  let calls = 0;
+  t.mock.method(servers, 'startServer', async () => {
+    calls++;
+    // The stop finishes after the firing.
+    require('../src/events').recordEvent({
+      serverId: 'srv_sched2',
+      type: 'stopped',
+      summary: 'Server stopped gracefully.',
+    });
+    throw busyErr('Cannot start: a stop operation is already in progress for this server');
+  });
+  await runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 });
+  assert.equal(calls, 1, 'not started again after the Stop');
+});

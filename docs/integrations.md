@@ -44,6 +44,8 @@ Notifications are grouped into toggleable categories. All are on by default.
 | `schedule-failed`       | A scheduled restart / backup / command failed.                                                                 |
 | `quota-exceeded`        | Strict-mode disk quota tripped and the server was stopped.                                                     |
 | `offline-after-restart` | The server was up before the panel restarted, isn't now, and won't be auto-started.                            |
+| `port-change-failed`    | A port change failed and the server could not be put back on its old port, so it is down.                      |
+| `auto-restart-gave-up`  | A crashed server was not restarted because another action kept it busy for too long.                           |
 | `crash-report`          | A new crash report was captured and parsed.                                                                    |
 | `update-failed`         | A guarded upgrade did not come up healthy.                                                                     |
 

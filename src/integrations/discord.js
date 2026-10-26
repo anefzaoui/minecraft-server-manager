@@ -62,7 +62,9 @@ const EVENT_MAP = {
   'schedule-failed': ['alert', 'alerts'],
   'quota-exceeded': ['alert', 'alerts'],
   'offline-after-restart': ['alert', 'alerts'],
-  // A port change or a crash restart that ended with the server down.
+  // A port change that could not even put the server back, and a crash restart
+  // that gave up: both leave the server down. (A port change the server was
+  // put back from is 'port-change-reverted': not an alert.)
   'port-change-failed': ['alert', 'alerts'],
   'auto-restart-gave-up': ['alert', 'alerts'],
   'crash-report': ['crash', 'crashes'],
@@ -381,6 +383,8 @@ function titleFor(type) {
     'schedule-failed': 'Scheduled task failed',
     'quota-exceeded': 'Disk quota exceeded',
     'offline-after-restart': 'Offline after panel restart',
+    'port-change-failed': 'Port change left the server down',
+    'auto-restart-gave-up': 'Gave up restarting after a crash',
     'crash-report': 'New crash report',
   };
   return map[type] || type;
