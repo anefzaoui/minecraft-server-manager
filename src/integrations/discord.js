@@ -62,6 +62,9 @@ const EVENT_MAP = {
   'schedule-failed': ['alert', 'alerts'],
   'quota-exceeded': ['alert', 'alerts'],
   'offline-after-restart': ['alert', 'alerts'],
+  // A port change or a crash restart that ended with the server down.
+  'port-change-failed': ['alert', 'alerts'],
+  'auto-restart-gave-up': ['alert', 'alerts'],
   'crash-report': ['crash', 'crashes'],
 };
 
@@ -391,6 +394,7 @@ module.exports = {
   startEventBridge,
   stopEventBridge,
   WEBHOOK_RE,
+  EVENT_MAP, // exported for tests
   // Exported for tests: drive one poll cycle / resolve the boot mark deterministically.
   _pollOnce: pollOnce,
   _initialMark: initialMark,

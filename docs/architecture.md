@@ -132,22 +132,25 @@ Cross-cutting:
   server's op lock) is applied at once, because Docker fixes port bindings at container creation:
   the new pair (RCON always game + `PORT_RCON_OFFSET`) is checked and reserved in memory
   (`ports.reserve`, both the old and the new pair, honored by every other pick) under the port
-  lock. A running server is only changed when the request says `restart: true` (otherwise 409
-  `NEEDS_CONFIRM`). Before anything is touched, the image is pulled and a custom container name
-  checked, since the rebuild also applies other pending settings. The new pair is then written with
-  `pending_recreate = 1` (a panel crash mid-change leaves an honest "rebuild pending"), a running
-  server stopped, the container removed, rebuilt on the new pair and started. If anything after
-  the stop fails, `putBackOnOldPort` writes the old pair back, rebuilds (and restarts, if it was
-  running) on it and records which step failed, so a change never leaves a server down or the row
-  describing a port its container doesn't use. Changing a running server's port needs
+  lock. It is refused (409 `PENDING_CHANGES`) while other settings wait for a rebuild, so it only
+  ever rebuilds a container that already ran, on a new port; and a running server is only changed
+  when the request says `restart: true` (otherwise 409 `NEEDS_CONFIRM`). The image is pulled and a
+  custom container name checked before anything is touched. A running server is stopped; then the
+  new pair is written with `pending_recreate = 1` (so a panel crash from there leaves an honest
+  "rebuild pending"), the container removed, rebuilt on the new pair and started. If any step
+  after the stop fails, `putBackOnOldPort` writes the old pair back, rebuilds (and restarts, if it
+  was running) on it and records which step failed; history and alerts say if even that failed,
+  which leaves the server stopped until someone starts it. Changing a running server's port needs
   the `power` capability as well as `settings`. Non-admins may only pick from `PORT_GAME_START` up.
   (The `port_*_pending` columns from migration 029 belong to an earlier, unreleased design and are
   unused; 031 clears them.) A lock collision answers 409 with `code: 'BUSY'`, which the retrying
   callers below check rather than the wording. A crash auto-restart
   (`watcher.restartAfterCrash`) and a scheduled backup or start (`scheduler.runTaskWithRetry`)
-  that find the server busy with another action try again every 20 s / 60 s for up to 30 minutes;
-  the crash restart gives up once auto-restart is off, the server is gone, or someone has stopped
-  or started it since. Scheduled restarts and stops are not retried, and a schedule whose last
+  that find the server busy with another action try again every 20 s / 60 s for up to 30 minutes,
+  and a pack update or rollback retries its locked steps the same way (`opLock.retryWhileBusy`);
+  a crash restart or a waiting scheduled start gives up once someone has stopped, killed or
+  started the server since (`events.lifecycleActionSince`), and the crash restart also when
+  auto-restart is off or the server is gone. Scheduled restarts and stops are not retried, and a schedule whose last
   run is still waiting skips its next firing.
 - **Disk quotas** are enforced by the panel because Docker can't cap bind-mount usage: the indexer
   caches per-directory sizes and disk-growing operations are gated on them.

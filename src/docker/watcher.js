@@ -276,13 +276,7 @@ const BUSY_MAX_WAIT_MS = 30 * 60_000;
 function stillWantsAutoRestart(serverId, since) {
   const row = db.get('SELECT auto_restart FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
   if (!row || !row.auto_restart) return false;
-  const touched = db.get(
-    `SELECT 1 AS x FROM events WHERE server_id = ? AND type IN ('stop-requested', 'kill-requested', 'started')
-       AND created_at >= datetime(?, 'unixepoch')`,
-    serverId,
-    Math.floor(since / 1000)
-  );
-  return !touched;
+  return !require('../events').lifecycleActionSince(serverId, since);
 }
 
 /**

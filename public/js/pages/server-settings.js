@@ -354,7 +354,7 @@ function init(serverId) {
         ({ res, data } = await putPort(port, true));
       }
       if (res && res.ok && data.ok) {
-        toast(data.restarted ? `Restarted on port ${port}.` : `Port changed to ${port}.`);
+        toast(data.restarted ? `Restarted on port ${port}.` : `Port changed to ${port}. The server stays stopped.`);
         reload();
         return;
       }
@@ -362,8 +362,20 @@ function init(serverId) {
       // if the restart failed). Stay on the page so the reason stays readable.
       restore();
       nextBtn.disabled = false;
+      if (!res || res.status >= 500 || !('ok' in data)) {
+        // No clear answer (a proxy timing out on this long request, say): the
+        // change may still have gone through, so show where the server really is.
+        toast("Couldn't confirm the result. Reloading to show where the server is now.", { kind: 'error' });
+        reload();
+        return;
+      }
       toast(data.error || friendlyError(res, { action: 'change the port' }), { kind: 'error', timeout: 12000 });
-      setHelp(`The server is still on port ${current}.`, 'text-warn');
+      setHelp(
+        data.code === 'PENDING_CHANGES'
+          ? 'Use Apply Changes at the top of the page first, then save the port again.'
+          : `The server is still on port ${current}.`,
+        'text-warn'
+      );
     }
   }
 

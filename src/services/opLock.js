@@ -49,4 +49,27 @@ function guardOp(op, fn, getId = (id) => id) {
   };
 }
 
-module.exports = { guardOp };
+/**
+ * Run `fn` (a guarded operation); while another action holds the server (409
+ * BUSY), wait `retryMs` and try again, for up to `maxWaitMs`. Multi-step flows
+ * whose steps are locked one at a time (a pack update: stop, rebuild, start)
+ * use it so a short action landing between steps - a port change, a backup
+ * cleanup - delays them instead of breaking them halfway.
+ * @template T
+ * @param {() => Promise<T>} fn
+ * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
+ * @returns {Promise<T>}
+ */
+async function retryWhileBusy(fn, { retryMs = 20_000, maxWaitMs = 30 * 60_000 } = {}) {
+  const giveUpAt = Date.now() + maxWaitMs;
+  for (;;) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (!err || err.code !== 'BUSY' || Date.now() + retryMs > giveUpAt) throw err;
+      await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
+    }
+  }
+}
+
+module.exports = { guardOp, retryWhileBusy };

@@ -131,3 +131,27 @@ test("another run finishing does not clear a waiting run's flag", async (t) => {
   assert.equal(calls, before, 'skipped');
   await b;
 });
+
+test('a scheduled start that waited is dropped if someone stopped the server meanwhile', async (t) => {
+  db.run('DELETE FROM schedules');
+  db.run(
+    "INSERT OR IGNORE INTO servers (id, display_name, type, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb) VALUES ('srv_sched', 's', 'PAPER', 47900, 48900, 'x', 1024, 1536)"
+  );
+  db.run(
+    "INSERT INTO schedules (id, server_id, task_type, cron, payload_json, enabled) VALUES ('sch_start', 'srv_sched', 'start', '0 3 * * *', '{}', 1)"
+  );
+  const job = { id: 'sch_start', server_id: 'srv_sched', task_type: 'start', payload_json: '{}' };
+  let calls = 0;
+  t.mock.method(servers, 'startServer', async () => {
+    calls++;
+    // A person presses Stop while the backup that blocks this start runs.
+    require('../src/events').recordEvent({
+      serverId: 'srv_sched',
+      type: 'stop-requested',
+      summary: 'Graceful stop requested.',
+    });
+    throw busyErr('Cannot start: a backup operation is already in progress for this server');
+  });
+  await runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 });
+  assert.equal(calls, 1, 'not retried after the Stop');
+});

@@ -329,6 +329,8 @@ router.get(
     // Keep in sync with the alert event types forwarded in integrations/discord.js.
     const ALERT_TYPES = [
       'oom',
+      'port-change-failed',
+      'auto-restart-gave-up',
       'unhealthy',
       'startup-stalled',
       'stop-failed',
@@ -419,7 +421,15 @@ router.put(
     // Range is the service's call (it differs by role and names the range in
     // its message); this only rejects a non-number.
     const { port, restart } = z
-      .object({ port: z.coerce.number().int(), restart: z.boolean().optional() })
+      .object({
+        port: z.coerce.number().int(),
+        restart: z
+          .preprocess(
+            (v) => (v === 'true' ? true : v === 'false' ? false : v),
+            z.boolean({ message: 'Send restart as true or false.' })
+          )
+          .optional(),
+      })
       .parse(req.body);
     // A running server is restarted on the new port, which is the Power permission's call.
     const { server, changed, restarted } = await servers.changeGamePort(req.params.id, port, {

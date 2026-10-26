@@ -33,6 +33,9 @@ function friendlyError(err) {
  * infrastructure errors to friendly text, and - crucially - never leaks raw
  * internal error text (SQLite messages, absolute paths) on an unexpected 5xx.
  */
+// Error codes the panel's own clients act on (see changeGamePort, guardOp).
+const CLIENT_CODES = new Set(['BUSY', 'NEEDS_CONFIRM', 'PENDING_CHANGES']);
+
 function makeJsonErrorHandler(tag, { fileTooLarge = 'File too large' } = {}) {
   const log = getLogger(tag);
   // Express recognizes an error handler by its 4-arg signature (next unused).
@@ -70,10 +73,9 @@ function makeJsonErrorHandler(tag, { fileTooLarge = 'File too large' } = {}) {
     // If a streaming route already sent headers, we can't send an error body;
     // hand off to Express's finalizer rather than throw ERR_HTTP_HEADERS_SENT.
     if (res.headersSent) return next(err);
-    // A panel error code (BUSY, NEEDS_CONFIRM, ...) on a client error lets the UI
-    // react to the case rather than parse the wording. System codes (ENOENT, ...)
-    // are never passed on.
-    const code = status < 500 && typeof err.code === 'string' && /^[A-Z][A-Z_]+$/.test(err.code) ? err.code : undefined;
+    // A panel error code on a client error lets the UI react to the case rather
+    // than parse the wording. An allow-list: system codes (ENOENT, ...) never pass.
+    const code = status < 500 && CLIENT_CODES.has(err.code) ? err.code : undefined;
     const friendly = friendlyError(err);
     if (friendly) return res.status(status).json({ ok: false, error: friendly, code });
     if (status >= 500)

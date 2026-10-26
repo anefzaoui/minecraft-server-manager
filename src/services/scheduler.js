@@ -9,7 +9,7 @@ const httpError = require('../utils/httpError');
 const { Cron } = require('croner');
 const { nanoid } = require('nanoid');
 const db = require('../db');
-const { recordEvent } = require('../events');
+const { recordEvent, lifecycleActionSince } = require('../events');
 const { getTimezone } = require('./settings');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
@@ -54,7 +54,9 @@ const BUSY_MAX_WAIT_MS = 30 * 60_000;
  * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
  */
 async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
-  const giveUpAt = Date.now() + maxWaitMs;
+  const firedAt = Date.now();
+  const giveUpAt = firedAt + maxWaitMs;
+  let current = job; // re-read before each retry: the schedule may have been edited
   let marked = false; // only the run that marked the schedule as waiting clears it
   try {
     return await retryLoop();
@@ -64,10 +66,10 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY
   async function retryLoop() {
     for (let attempt = 0; ; attempt++) {
       try {
-        return await runTask(job);
+        return await runTask(current);
       } catch (err) {
         const busy = err && err.code === 'BUSY';
-        if (!busy || !RETRY_WHEN_BUSY.has(job.task_type) || Date.now() + retryMs > giveUpAt) throw err;
+        if (!busy || !RETRY_WHEN_BUSY.has(current.task_type) || Date.now() + retryMs > giveUpAt) throw err;
         if (attempt === 0) {
           logger.info('A scheduled task found its server busy and will retry.', {
             scheduleId: job.id,
@@ -78,8 +80,18 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY
         waitingToRetry.add(job.id);
         marked = true;
         await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
-        const still = db.get('SELECT enabled FROM schedules WHERE id = ?', job.id);
+        const still = db.get('SELECT * FROM schedules WHERE id = ?', job.id);
         if (!still || !still.enabled) return; // turned off or deleted while waiting
+        current = still;
+        // A start that waited must not undo what a person did meanwhile (a Stop
+        // pressed while the backup that blocked it was running, say).
+        if (current.task_type === 'start' && current.server_id && lifecycleActionSince(current.server_id, firedAt)) {
+          logger.debug('Dropped a scheduled start because the server was stopped or started meanwhile.', {
+            scheduleId: job.id,
+            serverId: current.server_id,
+          });
+          return;
+        }
       }
     }
   }

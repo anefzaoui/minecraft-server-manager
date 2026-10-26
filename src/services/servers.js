@@ -806,6 +806,18 @@ async function changeGamePortImpl(
 ) {
   const before = mustGet(id);
   if (before.port_game === port) return { server: before, changed: false, restarted: false };
+  // Other settings waiting for a rebuild would ride along with this one - and
+  // if one of them breaks the build, putting the server back on its old port
+  // would fail the same way. So those go first, through Apply Changes; this
+  // rebuild then only ever changes the port of a container that already ran.
+  if (before.pending_recreate) {
+    const err = httpError(
+      409,
+      'This server has other changes waiting. Apply them first with Apply Changes, then change the port.'
+    );
+    err.code = 'PENDING_CHANGES';
+    throw err;
+  }
   const rcon = port + config.ports.rconOffset;
   const info = await containers.inspectStatus(id);
   const running = info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
@@ -830,12 +842,11 @@ async function changeGamePortImpl(
       throw httpError(409, `Container name "${before.containerName}" is already in use by another Docker container`);
     }
 
-    db.run('UPDATE servers SET port_game = ?, port_rcon = ?, pending_recreate = 1 WHERE id = ?', port, rcon, id);
     if (running) {
       try {
         await stopServerImpl(id, { actor });
       } catch (err) {
-        restoreOldPair(before); // still running on it: nothing else to undo
+        // Still running on its old port, and nothing was written: nothing to undo.
         recordEvent({
           serverId: id,
           actor,
@@ -846,6 +857,11 @@ async function changeGamePortImpl(
         throw err;
       }
     }
+    // The server is down now: the row takes the new pair (with a pending rebuild,
+    // so a panel crash from here leaves an honest state) before the container
+    // is replaced. Written only now so no page shows the new port while players
+    // are still on the old one.
+    db.run('UPDATE servers SET port_game = ?, port_rcon = ?, pending_recreate = 1 WHERE id = ?', port, rcon, id);
     let step = 'removing the old container';
     try {
       await containers.removeContainer(id);
@@ -877,15 +893,13 @@ async function changeGamePortImpl(
   }
 }
 
-/** Write the server's old game + RCON pair (and its rebuild flag) back. */
+/**
+ * Write the server's old game + RCON pair back. The rebuild flag is left as it
+ * is: only a successful rebuild may clear it (clearPendingRecreate, which also
+ * keeps it for a settings change saved meanwhile).
+ */
 function restoreOldPair(before) {
-  db.run(
-    'UPDATE servers SET port_game = ?, port_rcon = ?, pending_recreate = ? WHERE id = ?',
-    before.port_game,
-    before.port_rcon,
-    before.pending_recreate ? 1 : 0,
-    before.id
-  );
+  db.run('UPDATE servers SET port_game = ?, port_rcon = ? WHERE id = ?', before.port_game, before.port_rcon, before.id);
 }
 
 /**
@@ -900,6 +914,7 @@ async function putBackOnOldPort(before, { running, port, actor, err, step }) {
   try {
     await containers.removeContainer(id).catch(() => {});
     await buildContainer(before, { game: before.port_game, rcon: before.port_rcon });
+    clearPendingRecreate(before); // the container matches the row again
     if (running) {
       await containers.startContainer(id);
       markStarted(id, actor);

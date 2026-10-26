@@ -15,6 +15,7 @@ const packsService = require('../services/packs');
 const backupsService = require('../services/backups');
 const { fetchLogs } = require('../docker/logs');
 const { inspectStatus } = require('../docker/containers');
+const { retryWhileBusy } = require('../services/opLock');
 
 const activeUpgrades = new Map(); // serverId -> {step, startedAt}
 
@@ -123,8 +124,10 @@ async function upgradePack(
     const { previous } = await packsService.applyPack(serverId, resolved, { actor, force: true });
 
     step('recreating');
-    await serversService.recreateServer(serverId, { actor, quiet: true });
-    await serversService.startServer(serverId, { actor });
+    // Each step is locked on its own; a short action landing between them
+    // (a port change, a backup cleanup) must delay this, not break it halfway.
+    await retryWhileBusy(() => serversService.recreateServer(serverId, { actor, quiet: true }));
+    await retryWhileBusy(() => serversService.startServer(serverId, { actor }));
 
     step('monitoring');
     // CF/Modrinth installs download the whole pack on first boot - give them
@@ -279,14 +282,18 @@ async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
         err: serializeError(err, { includeStack: false }),
       });
     });
-    if (backupId) await backupsService.restoreBackup(serverId, backupId, { actor, skipSafety: true });
+    if (backupId) {
+      await retryWhileBusy(() => backupsService.restoreBackup(serverId, backupId, { actor, skipSafety: true }));
+    }
 
     const resolved = await packsService.resolvePack(pack.platform, pack.project_ref, {
       versionId: pack.previous_version_id,
     });
     await packsService.applyPack(serverId, resolved, { actor, force: true }); // backup restore precedes this
-    await serversService.recreateServer(serverId, { actor, quiet: true });
-    await serversService.startServer(serverId, { actor });
+    // Each step is locked on its own; a short action landing between them
+    // (a port change, a backup cleanup) must delay this, not break it halfway.
+    await retryWhileBusy(() => serversService.recreateServer(serverId, { actor, quiet: true }));
+    await retryWhileBusy(() => serversService.startServer(serverId, { actor }));
 
     recordEvent({
       serverId,

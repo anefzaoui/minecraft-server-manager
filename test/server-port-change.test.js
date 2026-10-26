@@ -499,18 +499,17 @@ test('removing the old container failing after the stop still puts the server ba
   );
 });
 
-test("a pending setting whose image can't be pulled stops the change before the server is touched", async (t) => {
+test("an image that can't be pulled stops the change before the server is touched", async (t) => {
   const docker = mockDocker(t, { running: true });
   t.mock.method(images, 'ensureImage', async () => {
-    throw new Error('manifest for itzg/minecraft-server:java99 not found');
+    throw new Error('getaddrinfo ENOTFOUND registry-1.docker.io');
   });
   seed('srv_a', P(0));
-  db.run("UPDATE servers SET java_tag = 'java99', pending_recreate = 1 WHERE id = 'srv_a'");
   const r = await putPort('srv_a', P(50));
   assert.notEqual(r.status, 200);
   assert.equal(docker.calls.stop, 0, 'never stopped');
   assert.ok(docker.isUp());
-  assert.deepEqual([row('srv_a').port_game, row('srv_a').pending_recreate], [P(0), 1]);
+  assert.equal(row('srv_a').port_game, P(0));
 });
 
 test('a custom container name taken by another container stops the change before the server is touched', async (t) => {
@@ -548,4 +547,121 @@ test('a lock collision carries code BUSY', async () => {
   );
   release();
   await held;
+});
+
+// ---- round 9: other changes waiting, the rebuild flag, timing of the write -------
+
+test('a port change is refused while other changes wait for Apply Changes, nothing touched', async (t) => {
+  const docker = mockDocker(t, { running: true });
+  seed('srv_a', P(0));
+  db.run("UPDATE servers SET heap_mb = 2048, pending_recreate = 1 WHERE id = 'srv_a'");
+  const r = await putPort('srv_a', P(50));
+  assert.equal(r.status, 409);
+  assert.equal(r.json.code, 'PENDING_CHANGES');
+  assert.equal(
+    r.json.error,
+    'This server has other changes waiting. Apply them first with Apply Changes, then change the port.'
+  );
+  assert.equal(docker.calls.stop, 0);
+  assert.deepEqual([row('srv_a').port_game, row('srv_a').pending_recreate], [P(0), 1]);
+});
+
+test('a settings change saved during a failed port change keeps its rebuild flag', async (t) => {
+  const docker = mockDocker(t, {
+    running: true,
+    failOn: (built) => (built.game === P(50) ? 'port is already allocated' : null),
+  });
+  const realCreate = containers.createContainer;
+  t.mock.method(containers, 'createContainer', async (spec) => {
+    if (spec.ports.game === P(50)) db.run("UPDATE servers SET heap_mb = 2048, pending_recreate = 1 WHERE id = 'srv_a'");
+    return realCreate(spec);
+  });
+  seed('srv_a', P(0));
+  const r = await putPort('srv_a', P(50));
+  assert.notEqual(r.status, 200);
+  assert.ok(docker.isUp(), 'back up on the old port');
+  const after = db.get("SELECT port_game, heap_mb, pending_recreate FROM servers WHERE id = 'srv_a'");
+  assert.deepEqual({ ...after }, { port_game: P(0), heap_mb: 2048, pending_recreate: 1 });
+});
+
+test('the row keeps the old port until the server has stopped', async (t) => {
+  const docker = mockDocker(t, { running: true });
+  let duringStop;
+  t.mock.method(containers, 'stopContainer', async () => {
+    duringStop = row('srv_a').port_game;
+    docker.calls.stop++;
+  });
+  t.mock.method(containers, 'inspectStatus', async () => ({
+    exists: true,
+    status: docker.calls.stop ? 'stopped' : 'running',
+  }));
+  seed('srv_a', P(0));
+  await putPort('srv_a', P(50));
+  assert.equal(duringStop, P(0));
+});
+
+test('a stop that fails leaves the server running on its old port, row untouched', async (t) => {
+  const docker = mockDocker(t, { running: true });
+  t.mock.method(containers, 'stopContainer', async () => {
+    throw new Error('the container did not stop');
+  });
+  seed('srv_a', P(0));
+  const r = await putPort('srv_a', P(50));
+  assert.notEqual(r.status, 200);
+  assert.ok(docker.isUp());
+  assert.deepEqual([row('srv_a').port_game, row('srv_a').pending_recreate], [P(0), 0]);
+});
+
+test('restart may be sent as the string "true"; anything else is refused in words', async (t) => {
+  mockDocker(t, { running: true });
+  seed('srv_a', P(0));
+  assert.equal((await putPort('srv_a', P(50), cookie, { restart: 'true' })).status, 200);
+  const bad = await putPort('srv_a', P(60), cookie, { restart: 'yes' });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.json.error, 'Send restart as true or false.');
+});
+
+test('only panel error codes reach the client', async () => {
+  const { makeJsonErrorHandler } = require('../src/web/middleware/jsonErrorHandler');
+  const handler = makeJsonErrorHandler('test');
+  const send = (err) => {
+    let body;
+    const res = { headersSent: false, status: () => res, json: (b) => (body = b) };
+    handler(err, { method: 'GET', originalUrl: '/x', path: '/x' }, res, () => {});
+    return body;
+  };
+  assert.equal(send(Object.assign(new Error('Busy.'), { status: 409, code: 'BUSY' })).code, 'BUSY');
+  assert.equal(send(Object.assign(new Error('Not found.'), { status: 404, code: 'ENOENT' })).code, undefined);
+});
+
+test('a failed port change and a crash restart that gave up are alerts', () => {
+  const { EVENT_MAP } = require('../src/integrations/discord');
+  assert.deepEqual(EVENT_MAP['port-change-failed'], ['alert', 'alerts']);
+  assert.deepEqual(EVENT_MAP['auto-restart-gave-up'], ['alert', 'alerts']);
+});
+
+test('retryWhileBusy waits out BUSY, gives up in time, and passes anything else straight on', async () => {
+  const { retryWhileBusy } = require('../src/services/opLock');
+  const busyErr = () => Object.assign(new Error('busy'), { code: 'BUSY', status: 409 });
+  let n = 0;
+  assert.equal(
+    await retryWhileBusy(async () => (++n < 3 ? Promise.reject(busyErr()) : 'done'), { retryMs: 1, maxWaitMs: 100 }),
+    'done'
+  );
+  await assert.rejects(
+    retryWhileBusy(async () => Promise.reject(busyErr()), { retryMs: 5, maxWaitMs: 20 }),
+    /busy/
+  );
+  let m = 0;
+  await assert.rejects(
+    retryWhileBusy(
+      async () => {
+        m++;
+        throw new Error('disk full');
+      },
+      { retryMs: 1, maxWaitMs: 100 }
+    ),
+    /disk full/
+  );
+  assert.equal(m, 1);
 });
