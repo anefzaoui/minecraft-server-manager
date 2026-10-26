@@ -52,22 +52,41 @@ function probe(port, host = '0.0.0.0', timeoutMs = 2000) {
   });
 }
 
+// Ports a server is moving onto right now (its port change is restarting it):
+// claimed against everyone else until the change finishes either way, so no
+// create or other port change can take them mid-restart. serverId -> ports.
+/** @type {Map<string, number[]>} */
+const reservations = new Map();
+
 /**
- * Every host port a panel server or integration claims, including a server's
- * pending (not yet live) game + RCON pair. `exceptServerId`'s own live and
- * pending game + RCON pairs are left out (it may move between them); its
- * Bedrock, extra and BlueMap ports still count, since it keeps holding those.
+ * Claim `list` for `serverId` until the returned release() is called.
+ * @param {string} serverId
+ * @param {number[]} list
+ */
+function reserve(serverId, list) {
+  reservations.set(serverId, list);
+  return () => {
+    if (reservations.get(serverId) === list) reservations.delete(serverId);
+  };
+}
+
+/**
+ * Every host port a panel server or integration claims, plus ports reserved by
+ * an in-progress port change. `exceptServerId`'s own game + RCON pair and its
+ * own reservation are left out (it may move between them); its Bedrock, extra
+ * and BlueMap ports still count, since it keeps holding those.
  * @param {{ exceptServerId?: string }} [opts]
  */
 function dbPortsInUse({ exceptServerId } = {}) {
   const rows = db.all(
-    `SELECT id, port_game, port_rcon, port_game_pending, port_rcon_pending, port_bedrock, extra_ports_json
-       FROM servers WHERE deleted_at IS NULL`
+    'SELECT id, port_game, port_rcon, port_bedrock, extra_ports_json FROM servers WHERE deleted_at IS NULL'
   );
   const used = new Set();
+  for (const [id, list] of reservations) if (id !== exceptServerId) for (const p of list) used.add(p);
   for (const r of rows) {
     if (r.id !== exceptServerId) {
-      for (const p of [r.port_game, r.port_rcon, r.port_game_pending, r.port_rcon_pending]) if (p) used.add(p);
+      used.add(r.port_game);
+      used.add(r.port_rcon);
     }
     if (r.port_bedrock) used.add(r.port_bedrock);
     for (const p of JSON.parse(r.extra_ports_json || '[]')) {
@@ -125,10 +144,9 @@ async function dockerPortsInUse(exceptServerId) {
 }
 
 /**
- * One snapshot of every taken port plus a check against it. A server's own live
- * and pending game + RCON ports count as free FOR IT without an OS probe: while
- * it runs, Docker holds the live pair, and moving back onto it must not read as
- * a clash.
+ * One snapshot of every taken port plus a check against it. A server's own game
+ * + RCON ports count as free FOR IT without an OS probe: while it runs, Docker
+ * holds them, and they are released when its container stops for the change.
  * @param {{ exceptServerId?: string }} [opts]
  */
 async function portChecker({ exceptServerId } = {}) {
@@ -136,11 +154,8 @@ async function portChecker({ exceptServerId } = {}) {
   for (const p of await dockerPortsInUse(exceptServerId)) used.add(p);
   const own = new Set();
   if (exceptServerId) {
-    const row = db.get(
-      'SELECT port_game, port_rcon, port_game_pending, port_rcon_pending FROM servers WHERE id = ?',
-      exceptServerId
-    );
-    if (row) for (const p of Object.values(row)) if (p) own.add(p);
+    const row = db.get('SELECT port_game, port_rcon FROM servers WHERE id = ?', exceptServerId);
+    if (row) own.add(row.port_game).add(row.port_rcon);
   }
   /** @param {number} port */
   return async (port) => {
@@ -161,27 +176,6 @@ async function portChecker({ exceptServerId } = {}) {
 async function isPortFree(port, opts = {}) {
   if (!Number.isInteger(port) || port < 1024 || port > 65535) return false; // no DB/Docker work for junk
   return (await portChecker(opts))(port);
-}
-
-/**
- * Whether `serverId` can move onto `list` right now. Unlike portChecker, its own
- * pending pair is NOT taken on trust: this is asked just before a rebuild binds
- * it, and something else may have claimed it since the move was saved. Its
- * own LIVE pair is free for it without a probe: its running container holds
- * those, and they are released when that container stops for the rebuild.
- * @param {string} serverId
- * @param {number[]} list
- */
-async function pairFreeFor(serverId, list) {
-  const used = dbPortsInUse({ exceptServerId: serverId });
-  for (const p of await dockerPortsInUse(serverId)) used.add(p);
-  const live = db.get('SELECT port_game, port_rcon FROM servers WHERE id = ?', serverId);
-  const own = new Set(live ? [live.port_game, live.port_rcon] : []);
-  for (const p of list) {
-    if (!Number.isInteger(p) || p < 1024 || p > 65535 || used.has(p)) return false;
-    if (!own.has(p) && !(await probe(p))) return false;
-  }
-  return true;
 }
 
 /**
@@ -289,7 +283,7 @@ module.exports = {
   assertPortsFree,
   checkGamePort,
   assertGamePortFree,
-  pairFreeFor,
+  reserve,
   gamePortRange,
   suggestPorts,
   probe,

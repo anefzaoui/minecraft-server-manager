@@ -264,16 +264,6 @@ document.addEventListener('click', async (e) => {
     kill: 'Force stopping…',
     recreate: 'Rebuilding…',
   };
-  // A saved port move goes live with the next rebuild; a restart of a running
-  // server is when players notice, so say so first (tooltips never reach touch).
-  if ((action === 'restart' || action === 'recreate') && btn.dataset.pendingPort) {
-    const ok = await confirmDialog({
-      title: `Restart and move players to port ${btn.dataset.pendingPort}?`,
-      message: `This server has a port change waiting. Restarting applies it: anyone online reconnects on port ${btn.dataset.pendingPort}. To stay on the current port, use Keep on its Configuration tab first.`,
-      confirmLabel: action === 'recreate' ? 'Apply Changes' : 'Restart',
-    });
-    if (!ok) return;
-  }
   if (action === 'kill') {
     const ok = await confirmDialog({
       title: `Force stop ${name}?`,

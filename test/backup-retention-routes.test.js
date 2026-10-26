@@ -286,3 +286,15 @@ test('a blank ("") panel-wide value is refused like null, not read as 0', async 
   assert.equal(r.status, 400);
   assert.match(r.json.error, /cannot be blank/);
 });
+
+test("Remove Now by the preview's token deletes what it listed, and an unknown token is refused", async () => {
+  const preview = await post('/api/backups/retention/preview', { keepScheduled: 5 });
+  assert.ok(preview.json.token);
+  await post('/api/backups/retention', { keepScheduled: 5 });
+  const r = await post('/api/backups/retention/apply', { token: preview.json.token });
+  assert.equal(r.status, 200, r.text);
+  assert.equal(r.json.deleted, 6);
+  const stale = await post('/api/servers/srv_a/backups/retention/apply', { token: 'not-a-real-token' });
+  assert.equal(stale.status, 409);
+  assert.match(stale.json.error, /too old/);
+});

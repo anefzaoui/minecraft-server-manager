@@ -15,7 +15,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const secrets = require('./secrets');
 const { pickJavaTag } = require('./javaMatrix');
-const { suggestPorts, assertPortsFree, assertGamePortFree, pairFreeFor } = require('./ports');
+const { suggestPorts, assertPortsFree, assertGamePortFree, reserve } = require('./ports');
 const containers = require('../docker/containers');
 const images = require('../docker/images');
 const { fetchLogs } = require('../docker/logs');
@@ -502,16 +502,13 @@ async function startServerImpl(id, { actor = 'system', rebuilt = false } = {}) {
   const server = mustGet(id);
   await ensureOwnership(id);
   const info = await containers.inspectStatus(id);
-  let moved = null;
   if (!rebuilt && (!info.exists || server.pending_recreate)) {
-    ({ moved } = await recreateServerImpl(id, { actor, quiet: true, applyMove: true }));
+    // Rebuilding a running server starts it again itself; starting it a second
+    // time here would fail with "container already started".
+    const { started } = await recreateServerImpl(id, { actor, quiet: true });
+    if (started) return;
   }
-  try {
-    await containers.startContainer(id);
-  } catch (err) {
-    if (!moved || !isPortClash(err)) throw err;
-    await recoverFromFailedMove(id, moved, err, { actor }); // back up on the old port, or rethrows
-  }
+  await containers.startContainer(id);
   markStarted(id, actor);
 }
 
@@ -576,50 +573,11 @@ async function killServerImpl(id, { actor = 'system' } = {}) {
 const killServer = guardOp('kill', killServerImpl);
 
 /** Recreate: remove + create with current env/resources. Applies pending changes. */
-/**
- * @param {string} id
- * @param {{ actor?: string, quiet?: boolean, applyMove?: boolean }} [opts] applyMove:
- *   apply a pending port move with this container. Only a rebuild that is
- *   started right away may (a start, or a rebuild of a running server - the
- *   default): whether the new port works is only known when it starts, so a
- *   rebuild of a stopped server (Apply Changes, an upgrade) keeps the live port
- *   and leaves the move for its next start.
- */
-async function recreateServerImpl(id, { actor = 'system', quiet = false, applyMove } = {}) {
+async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) {
   const server = mustGet(id);
   await ensureOwnership(id);
   const info = await containers.inspectStatus(id);
   const wasRunning = info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
-  const mayMove = applyMove ?? wasRunning;
-
-  // A pending game port change goes live with this fresh container (Docker
-  // fixes bindings at creation). Re-checked first: the port may have been taken
-  // since the move was saved. Then the server comes up on its current port and
-  // the move is PAUSED - not retried on every start, crash restart or scheduled
-  // restart - until someone saves a port again. A paused move is skipped here.
-  let moved = null;
-  if (mayMove && server.port_game_pending && !server.port_move_paused) {
-    const to = { game: server.port_game_pending, rcon: server.port_rcon_pending };
-    if (await pairFreeFor(id, [to.game, to.rcon])) {
-      moved = { from: { game: server.port_game, rcon: server.port_rcon }, to };
-    } else {
-      db.run("UPDATE servers SET port_move_paused = 'in-use' WHERE id = ?", id);
-      server.port_move_paused = 'in-use';
-      logger.warn('Kept a server on its current port because the pending one is taken.', {
-        serverId: id,
-        port: server.port_game,
-        pending: to.game,
-      });
-      recordEvent({
-        serverId: id,
-        actor,
-        type: 'port-move-blocked',
-        summary: `Port ${to.game} is in use by something else, so the server stayed on ${server.port_game}. The move is paused: save a port again on the Configuration tab to retry.`,
-        details: { pending: to, live: { game: server.port_game, rcon: server.port_rcon } },
-      });
-    }
-  }
-
   // A stop failure here isn't fatal to a recreate - removeContainer({force}) below
   // tears it down regardless - but log it so a chronically wedged daemon is visible.
   if (wasRunning) {
@@ -631,111 +589,82 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false, applyMo
     });
   }
   await containers.removeContainer(id);
-
-  // A failure from here to the container_id write promotes nothing: the row
-  // still says the live port, the move is still pending, and history says
-  // nothing that didn't happen.
-  {
-    const image = resolveImage(server);
-    await images.ensureImage(image);
-    const ports = moved ? moved.to : { game: server.port_game, rcon: server.port_rcon };
-    const containerSpec = {
+  await buildContainer(server, { game: server.port_game, rcon: server.port_rcon });
+  clearPendingRecreate(server);
+  if (!quiet)
+    recordEvent({
       serverId: id,
-      image,
-      env: assembleEnv(server),
-      dataDir: dataPath('servers', id),
-      ports: { game: ports.game, rcon: ports.rcon, bedrock: server.port_bedrock },
-      extraPorts: mergeExtraPorts(server),
-      resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
-      containerName: server.containerName,
-      networkName: server.networkName,
-      extraBinds: server.extraBinds,
-    };
-    let containerId;
-    try {
-      containerId = await containers.createContainer(containerSpec);
-    } catch (err) {
-      if (err.statusCode !== 409) throw err;
-      // Most likely our OWN orphan: a prior recreate attempt crashed after Docker
-      // created this container but before the DB write below landed, so this
-      // process still thinks it needs to (re)create it. Verify via the msm.id
-      // label before removing anything, then retry once - without this, that
-      // crash window permanently strands the server on a 409 requiring a manual
-      // `docker rm`.
-      const targetName = server.containerName || containers.containerName(id);
-      const removedOrphan = await containers.removeStaleNameConflict(targetName, id).catch(() => false);
-      if (!removedOrphan) {
-        if (server.containerName) {
-          throw httpError(
-            409,
-            `Container name "${server.containerName}" is already in use by another Docker container`
-          );
-        }
-        throw err;
+      actor,
+      type: 'recreated',
+      summary: 'Container rebuilt with the current configuration.',
+    });
+  if (wasRunning) await startServerImpl(id, { actor, rebuilt: true });
+  return { started: wasRunning };
+}
+
+/**
+ * Build (not start) a server's container from its row, bound to `ports`, and
+ * record its id. The one place a container spec is assembled for a rebuild.
+ * @param {object} server a server row (getServer)
+ * @param {{ game: number, rcon: number }} ports host game + RCON ports
+ */
+async function buildContainer(server, ports) {
+  const id = server.id;
+  const image = resolveImage(server);
+  await images.ensureImage(image);
+  const containerSpec = {
+    serverId: id,
+    image,
+    env: assembleEnv(server),
+    dataDir: dataPath('servers', id),
+    ports: { game: ports.game, rcon: ports.rcon, bedrock: server.port_bedrock },
+    extraPorts: mergeExtraPorts(server),
+    resources: { memoryMb: server.container_memory_mb, swapMb: server.container_swap_mb, cpus: server.cpus },
+    containerName: server.containerName,
+    networkName: server.networkName,
+    extraBinds: server.extraBinds,
+  };
+  let containerId;
+  try {
+    containerId = await containers.createContainer(containerSpec);
+  } catch (err) {
+    if (err.statusCode !== 409) throw err;
+    // Most likely our OWN orphan: a prior recreate attempt crashed after Docker
+    // created this container but before the DB write below landed, so this
+    // process still thinks it needs to (re)create it. Verify via the msm.id
+    // label before removing anything, then retry once - without this, that
+    // crash window permanently strands the server on a 409 requiring a manual
+    // `docker rm`.
+    const targetName = server.containerName || containers.containerName(id);
+    const removedOrphan = await containers.removeStaleNameConflict(targetName, id).catch(() => false);
+    if (!removedOrphan) {
+      if (server.containerName) {
+        throw httpError(409, `Container name "${server.containerName}" is already in use by another Docker container`);
       }
-      containerId = await containers.createContainer(containerSpec);
+      throw err;
     }
-    db.run('UPDATE servers SET container_id = ? WHERE id = ?', containerId, id);
+    containerId = await containers.createContainer(containerSpec);
   }
+  db.run('UPDATE servers SET container_id = ? WHERE id = ?', containerId, id);
+}
 
-  // The container is built on the new pair: promote it. (Whether it starts is
-  // the caller's next step; recoverFromFailedMove undoes this on a port clash.)
-  if (moved) {
-    const r = db.run(
-      `UPDATE servers SET port_game = port_game_pending, port_rcon = port_rcon_pending,
-         port_game_pending = NULL, port_rcon_pending = NULL
-       WHERE id = ? AND port_game_pending IS ? AND port_rcon_pending IS ?`,
-      id,
-      moved.to.game,
-      moved.to.rcon
-    );
-    if (r.changes === 1) {
-      recordEvent({
-        serverId: id,
-        actor,
-        type: 'config-changed',
-        summary: `Game port moved from ${moved.from.game} to ${moved.to.game}.`,
-        details: {
-          diff: { portGame: [moved.from.game, moved.to.game], portRcon: [moved.from.rcon, moved.to.rcon] },
-        },
-      });
-      logger.info('Moved a server to its new game port.', {
-        serverId: id,
-        actor,
-        from: moved.from.game,
-        to: moved.to.game,
-      });
-    } else {
-      // Can't happen under the op lock (changeGamePort takes it too); if the row
-      // changed anyway, say so rather than claim a move.
-      logger.warn('A port move was not recorded because the server row changed during the rebuild.', {
-        serverId: id,
-      });
-      moved = null;
-    }
-    Object.assign(
-      server,
-      db.get('SELECT port_game, port_rcon, port_game_pending, port_rcon_pending FROM servers WHERE id = ?', id)
-    );
-  }
-
-  // Only clear pending_recreate if none of the recreate-relevant columns changed
-  // since we read `server` above - a concurrent config PATCH (updateServer) can
-  // legally commit mid-recreate (it isn't covered by the op lock, since it's a
-  // synchronous, Docker-independent DB write); if it flagged a NEW pending
-  // change, this recreate's completion must not silently clear that flag, or
-  // the new change would never actually get applied to the container.
-  // A move still waiting to be applied keeps the flag; a paused one doesn't
-  // (it waits for a person, not for the next start).
+/**
+ * The container now matches `server` (the row as read before the rebuild):
+ * clear pending_recreate - but only if none of the recreate-relevant columns
+ * changed since. A concurrent config PATCH (updateServer) can legally commit
+ * mid-recreate (it isn't covered by the op lock, since it's a synchronous,
+ * Docker-independent DB write); if it flagged a NEW pending change, this
+ * rebuild's completion must not silently clear that flag, or the new change
+ * would never actually get applied to the container.
+ */
+function clearPendingRecreate(server) {
   db.run(
     `UPDATE servers SET pending_recreate = 0 WHERE id = ?
        AND container_name IS ? AND network_name IS ?
        AND mc_version IS ? AND java_tag IS ?
        AND heap_mb IS ? AND container_memory_mb IS ? AND cpus IS ?
-       AND extra_ports_json IS ? AND extra_binds_json IS ? AND env_json IS ?
-       AND port_game_pending IS ? AND port_rcon_pending IS ?
-       AND (port_game_pending IS NULL OR port_move_paused IS NOT NULL)`,
-    id,
+       AND extra_ports_json IS ? AND extra_binds_json IS ? AND env_json IS ?`,
+    server.id,
     server.container_name,
     server.network_name,
     server.mc_version,
@@ -745,90 +674,8 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false, applyMo
     server.cpus,
     server.extra_ports_json,
     server.extra_binds_json,
-    server.env_json,
-    server.port_game_pending,
-    server.port_rcon_pending
+    server.env_json
   );
-  if (!quiet)
-    recordEvent({
-      serverId: id,
-      actor,
-      type: 'recreated',
-      summary: 'Container rebuilt with the current configuration.',
-    });
-  if (wasRunning) {
-    try {
-      await startServerImpl(id, { actor, rebuilt: true });
-    } catch (err) {
-      if (!moved || !isPortClash(err)) throw err;
-      await recoverFromFailedMove(id, moved, err, { actor });
-      markStarted(id, actor);
-    }
-  }
-  return { moved };
-}
-
-/** Docker's words for "that host port is taken" when a container starts. */
-function isPortClash(err) {
-  return /port is already allocated|address already in use/i.test(String((err && err.message) || ''));
-}
-
-/**
- * Undo a promoted port move: the old pair is live again, the new one pending
- * again and PAUSED (with `reason`), and the container flagged for a rebuild so
- * the next one builds on the old pair. Only if the row still holds that move.
- */
-function pauseMove(id, moved, reason) {
-  return db.run(
-    `UPDATE servers SET port_game = ?, port_rcon = ?, port_game_pending = ?, port_rcon_pending = ?,
-       port_move_paused = ?, pending_recreate = 1 WHERE id = ? AND port_game = ? AND port_rcon = ?`,
-    moved.from.game,
-    moved.from.rcon,
-    moved.to.game,
-    moved.to.rcon,
-    reason,
-    id,
-    moved.to.game,
-    moved.to.rcon
-  ).changes;
-}
-
-/**
- * The server would not start on its new port (something the pre-check can't
- * see holds it, e.g. a host program when the panel runs in Docker). Put it back
- * on its old port, pause the move, and bring it up there now - a start, crash
- * restart or scheduled restart must end with the server running, not looping
- * on a port it can't have. If even the old port won't start, the original
- * error stands (the server stays stopped, as any failed start does).
- */
-async function recoverFromFailedMove(id, moved, startErr, { actor = 'system' } = {}) {
-  if (!pauseMove(id, moved, 'start-failed')) throw startErr;
-  try {
-    await recreateServerImpl(id, { actor, quiet: true, applyMove: false }); // builds on the old pair
-    await containers.startContainer(id);
-  } catch (err) {
-    // Handled here (the start's own error is what the caller gets): log this one.
-    logger.warn('A server could not be brought back up on its old port after a failed move.', {
-      serverId: id,
-      port: moved.from.game,
-      err: serializeError(err, { includeStack: false }),
-    });
-    recordEvent({
-      serverId: id,
-      actor,
-      type: 'port-move-blocked',
-      summary: `The server could not start on port ${moved.to.game}, and starting it back on ${moved.from.game} failed too. The move is paused.`,
-      details: { pending: moved.to, live: moved.from },
-    });
-    throw startErr;
-  }
-  recordEvent({
-    serverId: id,
-    actor,
-    type: 'port-move-blocked',
-    summary: `The server could not start on port ${moved.to.game}. It is back on ${moved.from.game}, and the move is paused.`,
-    details: { pending: moved.to, live: moved.from },
-  });
 }
 
 const recreateServer = guardOp('recreate', recreateServerImpl);
@@ -936,78 +783,93 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
 }
 
 /**
- * Move a server to a new host game port (RCON follows at game + offset). Docker
- * fixes port bindings at container creation, so the new pair is stored as
- * PENDING and flags pending_recreate; recreateServerImpl promotes it when it
- * builds the next container (any start or restart). Until then port_game and
- * port_rcon stay the live pair, so every address the panel shows still works.
- * Asking for the live game port again cancels a pending move (whatever its RCON
- * port is). It runs under the server's own op lock, so no rebuild, upgrade or
- * restart can apply or race it mid-way, and the pick under the port lock so a
- * concurrent create can't claim the same port.
+ * Move a server to a new host game port (RCON follows at game + offset), now.
+ * Docker fixes port bindings when a container is created, so the container is
+ * rebuilt on the new pair: a running server is restarted on it, a stopped one
+ * just gets the new container. The row only changes once that worked; if
+ * anything fails after the stop, the server is rebuilt (and started again, if
+ * it was running) on its old pair and the error is passed on. The new pair is
+ * reserved meanwhile so no create or other port change can take it.
  * @param {string} id
  * @param {number} port
- * @param {{ actor?: string, isAdmin?: boolean }} [opts]
- * @returns {Promise<{ server: object, changed: boolean, cancelled: boolean, running: boolean }>}
+ * @param {{ actor?: string, isAdmin?: boolean, canRestart?: boolean }} [opts]
+ * @returns {Promise<{ server: object, changed: boolean, restarted: boolean }>}
  */
-async function changeGamePortImpl(id, port, { actor = 'system', isAdmin = false } = {}) {
-  mustGet(id);
+async function changeGamePortImpl(id, port, { actor = 'system', isAdmin = false, canRestart = true } = {}) {
+  const before = mustGet(id);
+  if (before.port_game === port) return { server: before, changed: false, restarted: false };
   const rcon = port + config.ports.rconOffset;
-  const outcome = await withPortLock(async () => {
-    const before = mustGet(id);
-    if (before.port_game === port) {
-      if (!before.port_game_pending) return { changed: false, cancelled: false };
-      db.run(
-        'UPDATE servers SET port_game_pending = NULL, port_rcon_pending = NULL, port_move_paused = NULL WHERE id = ?',
-        id
-      );
-      recordEvent({
-        serverId: id,
-        actor,
-        type: 'config-changed',
-        summary: `Game port move to ${before.port_game_pending} cancelled. It stays on ${port}.`,
-        details: { diff: { portGamePending: [before.port_game_pending, null] } },
-      });
-      logger.info('Cancelled a pending game port change.', { serverId: id, actor, port });
-      return { changed: true, cancelled: true };
+  const info = await containers.inspectStatus(id);
+  const running = info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
+  if (running && !canRestart) {
+    throw httpError(403, 'Changing the port of a running server restarts it, which needs the Power permission.');
+  }
+  const release = await withPortLock(async () => {
+    await assertGamePortFree(port, { exceptServerId: id, isAdmin });
+    return reserve(id, [port, rcon]);
+  });
+  try {
+    if (running) await stopServerImpl(id, { actor });
+    await containers.removeContainer(id);
+    try {
+      await buildContainer(before, { game: port, rcon });
+      if (running) await containers.startContainer(id);
+    } catch (err) {
+      await putBackOnOldPort(before, { running, port, actor, err });
+      throw err;
     }
-    const resuming = before.port_game_pending === port && before.port_rcon_pending === rcon;
-    if (resuming && !before.port_move_paused) return { changed: false, cancelled: false };
-    // Any save - including the paused port itself - un-pauses. The usual check
-    // trusts the server's own pending port, so a paused one is probed for real:
-    // "resumed" must not be said of a port that is still taken.
-    if (resuming) {
-      if (!(await pairFreeFor(id, [port, rcon]))) {
-        throw httpError(
-          400,
-          `Port ${port} is still in use by something else. Pick another port, or free it and save again.`
-        );
-      }
-    } else {
-      await assertGamePortFree(port, { exceptServerId: id, isAdmin });
-    }
-    db.run(
-      'UPDATE servers SET port_game_pending = ?, port_rcon_pending = ?, port_move_paused = NULL, pending_recreate = 1 WHERE id = ?',
-      port,
-      rcon,
-      id
-    );
+    db.run('UPDATE servers SET port_game = ?, port_rcon = ? WHERE id = ?', port, rcon, id);
+    clearPendingRecreate(before);
+    if (running) markStarted(id, actor);
     recordEvent({
       serverId: id,
       actor,
       type: 'config-changed',
-      summary: resuming
-        ? `Game port move to ${port} resumed. It applies on the next start or restart.`
-        : `Game port set to move from ${before.port_game} to ${port} on the next start or restart.`,
-      details: {
-        diff: { portGame: [before.port_game, port], portRcon: [before.port_rcon, rcon] },
-        needsRecreate: true,
-      },
+      summary: running
+        ? `Game port changed from ${before.port_game} to ${port}. The server restarted on it.`
+        : `Game port changed from ${before.port_game} to ${port}.`,
+      details: { diff: { portGame: [before.port_game, port], portRcon: [before.port_rcon, rcon] } },
     });
-    logger.info('Requested a game port change.', { serverId: id, actor, from: before.port_game, to: port });
-    return { changed: true, cancelled: false };
+    logger.info('Changed a server game port.', { serverId: id, actor, from: before.port_game, to: port, running });
+    return { server: getServer(id), changed: true, restarted: running };
+  } finally {
+    release();
+  }
+}
+
+/**
+ * A port change failed after the old container was removed: rebuild on the old
+ * pair, start it again if it was running, and say so in history. The change's
+ * own error is what the caller reports; one that happens here is logged.
+ */
+async function putBackOnOldPort(before, { running, port, actor, err }) {
+  const id = before.id;
+  try {
+    await containers.removeContainer(id).catch(() => {});
+    await buildContainer(before, { game: before.port_game, rcon: before.port_rcon });
+    if (running) await containers.startContainer(id);
+  } catch (backErr) {
+    logger.warn('A server could not be put back on its old port after a failed port change.', {
+      serverId: id,
+      port: before.port_game,
+      err: serializeError(backErr, { includeStack: false }),
+    });
+    recordEvent({
+      serverId: id,
+      actor,
+      type: 'port-change-failed',
+      summary: `Game port change to ${port} failed, and the server could not be ${running ? 'started' : 'rebuilt'} again on ${before.port_game}.`,
+      details: { error: String(err && err.message), backError: String(backErr && backErr.message) },
+    });
+    return;
+  }
+  recordEvent({
+    serverId: id,
+    actor,
+    type: 'port-change-failed',
+    summary: `Game port change to ${port} failed, so the server is back on ${before.port_game}.`,
+    details: { error: String(err && err.message) },
   });
-  return { server: getServer(id), ...outcome };
 }
 
 const changeGamePortGuarded = guardOp('port change', changeGamePortImpl);
@@ -1023,12 +885,7 @@ async function changeGamePort(id, port, opts = {}) {
     }
     throw err;
   }
-  // Outside the server's lock: a slow Docker answer here must not hold up
-  // every other action on the server.
-  const UP = ['running', 'starting', 'unhealthy'];
-  const info = await containers.inspectStatus(id).catch(() => null);
-  const running = info ? Boolean(info.exists) && UP.includes(info.status) : false;
-  return { ...result, running };
+  return result;
 }
 
 /**

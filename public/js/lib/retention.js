@@ -267,7 +267,7 @@ export function initRetentionForm(
             }
             try {
               // Only the backups the preview listed; anything newer waits for the next backup.
-              const out = await postJson(applyUrl, { ids: preview.ids }, 'remove the old backups');
+              const out = await postJson(applyUrl, { token: preview.token }, 'remove the old backups');
               const busy = out.skipped
                 ? ` ${plural(out.skipped, 'server was', 'servers were')} busy and will trim after the next backup.`
                 : '';

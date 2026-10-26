@@ -274,11 +274,32 @@ const BUSY_MAX_WAIT_MS = 30 * 60_000;
  * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
  * @returns {Promise<boolean>} whether it was started
  */
+/**
+ * @param {string} serverId
+ * @param {number} since ms epoch: when this restart was armed
+ */
+function stillWantsAutoRestart(serverId, since) {
+  const row = db.get('SELECT auto_restart FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
+  if (!row || !row.auto_restart) return false;
+  const touched = db.get(
+    `SELECT 1 AS x FROM events WHERE server_id = ? AND type IN ('stop-requested', 'kill-requested', 'started')
+       AND created_at >= datetime(?, 'unixepoch')`,
+    serverId,
+    Math.floor(since / 1000)
+  );
+  return !touched;
+}
+
 async function restartAfterCrash(serverId, attemptNo, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
-  const giveUpAt = Date.now() + maxWaitMs;
+  const calledAt = Date.now();
+  const giveUpAt = calledAt + maxWaitMs;
   for (;;) {
-    // Re-check it is still crashed before every try so this can't race a user
-    // start/stop/recreate/delete that happened during a delay.
+    // Re-check before every try so this can't race what people did meanwhile:
+    // the container must still read as crashed, and the server must still want
+    // this restart - not deleted, auto-restart still on, and nobody has stopped,
+    // killed or started it since (a stopped crashed container still reads as
+    // crashed to Docker, so only the history says someone stopped it).
+    if (!stillWantsAutoRestart(serverId, calledAt)) return false;
     const info = await inspectStatus(serverId);
     if (!(info.exists && info.status === 'crashed')) return false;
     try {

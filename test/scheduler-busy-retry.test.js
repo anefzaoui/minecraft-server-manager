@@ -86,3 +86,24 @@ test('any other failure is final at once', async (t) => {
   await assert.rejects(runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 }), /disk space/);
   assert.equal(spy.mock.callCount(), 1);
 });
+
+test('a schedule whose last run is still waiting to retry skips its next firing', async (t) => {
+  const { fireJob } = require('../src/services/scheduler');
+  const job = schedule('backup');
+  let calls = 0;
+  let firstWaiting;
+  const waiting = new Promise((r) => (firstWaiting = r));
+  t.mock.method(backups, 'createBackup', async () => {
+    calls++;
+    if (calls === 1) {
+      firstWaiting();
+      throw busy(); // the first firing now waits to retry
+    }
+  });
+  const first = fireJob(job, { retryMs: 30, maxWaitMs: 500 });
+  await waiting;
+  await new Promise((r) => setImmediate(r));
+  await fireJob(job, { retryMs: 30, maxWaitMs: 500 }); // fired again (or re-armed) while the first waits
+  assert.equal(calls, 1, 'the second firing did not run');
+  await first;
+});

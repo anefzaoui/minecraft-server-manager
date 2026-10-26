@@ -419,11 +419,13 @@ router.put(
     // Range is the service's call (it differs by role and names the range in
     // its message); this only rejects a non-number.
     const { port } = z.object({ port: z.coerce.number().int() }).parse(req.body);
-    const { server, changed, cancelled, running } = await servers.changeGamePort(req.params.id, port, {
+    // A running server is restarted on the new port, which is the Power permission's call.
+    const { server, changed, restarted } = await servers.changeGamePort(req.params.id, port, {
       actor: req.user.username,
       isAdmin: req.user.role === 'admin',
+      canRestart: permissions.effective(req.user, req.params.id).includes('power'),
     });
-    res.json({ ok: true, changed, cancelled, running, server: publicServer(server) });
+    res.json({ ok: true, changed, restarted, server: publicServer(server) });
   })
 );
 
@@ -1541,10 +1543,19 @@ function parseServerRetention(body = {}) {
   return retentionServerPatchSchema.parse(patch);
 }
 
-// "Remove now" sends back the ids its preview showed; nothing else is deleted.
-const applySchema = z.object({ ids: z.array(z.string().max(64)).max(10000).optional() }).strict();
+// "Remove now" names what its preview showed - by the preview's token (the UI),
+// or the ids themselves (scripts) - and nothing else is deleted. Neither means
+// everything over the saved limits.
+const applySchema = z
+  .object({ token: z.string().max(64).optional(), ids: z.array(z.string().max(64)).max(10000).optional() })
+  .strict();
 const onlyIdsFrom = (body) => {
-  const { ids } = applySchema.parse(body || {});
+  const { token, ids } = applySchema.parse(body || {});
+  if (token) {
+    const listed = backups.previewIds(token);
+    if (!listed) throw httpError(409, 'That check is too old. Save again to see what would be removed now.');
+    return listed;
+  }
   return ids ? new Set(ids) : null;
 };
 

@@ -569,8 +569,33 @@ function previewRetention(serverIds, cfgFor) {
     bytes += serverBytes;
     for (const b of plan) ids.push(b.id);
   }
-  // ids go back with "Remove now", which then deletes nothing outside them.
-  return { backups, bytes, servers: byServer.length, ids, byServer };
+  // "Remove now" deletes nothing outside these ids. They are kept here under a
+  // token (a big install's list can outgrow a request body), and sent along too
+  // for scripts.
+  return { backups, bytes, servers: byServer.length, ids, byServer, token: rememberPreview(ids) };
+}
+
+// Recent previews' id lists, by token: 10 minutes each, at most 50 kept.
+const PREVIEW_TTL_MS = 10 * 60_000;
+const PREVIEW_MAX = 50;
+/** @type {Map<string, { ids: Set<string>, expires: number }>} */
+const previews = new Map();
+
+/** @param {string[]} ids */
+function rememberPreview(ids) {
+  const now = Date.now();
+  for (const [t, p] of previews) if (p.expires < now) previews.delete(t);
+  while (previews.size >= PREVIEW_MAX) previews.delete(previews.keys().next().value);
+  const token = nanoid(16);
+  previews.set(token, { ids: new Set(ids), expires: now + PREVIEW_TTL_MS });
+  return token;
+}
+
+/** The ids a preview listed, or null if the token is unknown or expired. */
+function previewIds(token) {
+  const p = previews.get(token);
+  if (!p || p.expires < Date.now()) return null;
+  return p.ids;
 }
 
 // "Remove now" from the retention settings runs under the per-server op lock,
@@ -711,6 +736,7 @@ module.exports = {
   planPrune,
   previewRetention,
   applyRetention,
+  previewIds,
   extractZip,
   zipDirectory,
 };

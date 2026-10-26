@@ -214,9 +214,8 @@ function init(serverId) {
     const nextBtn = document.getElementById('st-port-next');
     const saveBtn = document.getElementById('st-port-save');
     const current = Number(card.dataset.portCurrent); // live: what players reach now
-    const pending = Number(card.dataset.portPending) || null; // saved, applies on next start
-    const paused = 'portPaused' in card.dataset; // that move couldn't go live; saving it again retries
-    const target = pending || current;
+    const running = 'portRunning' in card.dataset; // saving restarts it on the new port
+    const target = current;
     const defaultHelp = help.textContent;
     const setHelp = (text, cls = '') => {
       help.textContent = text;
@@ -283,7 +282,6 @@ function init(serverId) {
         const next = data.ports.game;
         input.value = String(next);
         if (next === current) setHelp(`This server already uses the lowest free port, ${current}.`, 'text-ok');
-        else if (next === pending) setHelp(`This server is already set to move to ${next}.`, 'text-ok');
         else setHelp(`Port ${next} is free. RCON will use ${data.ports.rcon}. Save to switch.`, 'text-ok');
       } catch {
         toast(friendlyError(null, { action: 'find a free port' }), { kind: 'error' });
@@ -292,103 +290,63 @@ function init(serverId) {
       }
     });
 
-    saveBtn.addEventListener('click', () => save(Number(input.value), saveBtn));
-    const cancelBtn = document.getElementById('st-port-cancel');
-    cancelBtn?.addEventListener('click', () => save(Number(cancelBtn.dataset.port), cancelBtn));
+    saveBtn.addEventListener('click', () => save(Number(input.value)));
 
-    async function save(port, btn) {
+    // Applied at once: a running server is restarted on the new port (asked
+    // first), a stopped one just gets its new container. If the restart can't
+    // bind the new port, the server API puts it back on the old one and says why.
+    async function save(port) {
       cancelChecks();
-      if (port === target && !paused) {
-        toast(pending ? `The server is already set to move to ${port}.` : `The server already uses port ${port}.`, {
-          kind: 'info',
-        });
+      if (port === current) {
+        toast(`The server already uses port ${port}.`, { kind: 'info' });
         return;
       }
       if (!Number.isInteger(port)) {
         setHelp('Enter a whole number.', 'text-danger');
         return;
       }
-      const restore = setBusy(btn, 'Saving…');
-      let data;
+      if (running) {
+        if (!('portCanRestart' in card.dataset)) {
+          toast('Changing the port of a running server restarts it, which needs the Power permission.', {
+            kind: 'error',
+            timeout: 9000,
+          });
+          return;
+        }
+        const { confirmDialog } = await import('../lib/confirm.js');
+        const ok = await confirmDialog({
+          title: `Restart now to move players to port ${port}?`,
+          message:
+            'The world is saved first. Anyone online is disconnected and can rejoin on the new port once the server is back up, usually within a minute.',
+          confirmLabel: 'Restart Now',
+        });
+        if (!ok) return;
+      }
+      const restore = setBusy(saveBtn, running ? 'Restarting on the new port…' : 'Saving…');
+      nextBtn.disabled = true;
+      let res;
+      let data = {};
       try {
-        const res = await fetch(`/api/servers/${serverId}/port`, {
+        res = await fetch(`/api/servers/${serverId}/port`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ port }),
         });
         data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.ok) {
-          toast(data.error || friendlyError(res, { action: 'change the port' }), { kind: 'error', timeout: 9000 });
-          return;
-        }
       } catch {
-        toast(friendlyError(null, { action: 'change the port' }), { kind: 'error' });
-        return;
-      } finally {
-        restore();
+        res = null;
       }
-      if (data.cancelled) {
-        toast(`Move cancelled. The server stays on port ${port}.`);
+      if (res && res.ok && data.ok) {
+        toast(data.restarted ? `Restarted on port ${port}.` : `Port changed to ${port}.`);
         reload();
         return;
       }
-      if (!data.running) {
-        toast(`Saved. The server moves to port ${port} the next time it starts.`);
-        reload();
-        return;
-      }
-      if (!('portCanRestart' in card.dataset)) {
-        // No power permission here: the restart is someone else's call.
-        toast(`Saved. Players keep using port ${current} until the server restarts.`, { kind: 'info' });
-        reload();
-        return;
-      }
-      const { confirmDialog } = await import('../lib/confirm.js');
-      const now = await confirmDialog({
-        title: `Restart now to move players to port ${port}?`,
-        message:
-          'The world is saved first. Anyone online is disconnected and can rejoin on the new port once the server is back up. Choose Later to keep it running on the old port until its next restart.',
-        confirmLabel: 'Restart Now',
-        cancelLabel: 'Later',
-      });
-      if (!now) {
-        toast(`Saved. Players keep using port ${current} until the next restart.`, { kind: 'info' });
-        reload();
-        return;
-      }
-      const restoreRestart = setBusy(saveBtn, 'Restarting…');
-      nextBtn.disabled = true;
-      try {
-        const res = await fetch(`/api/servers/${serverId}/restart`, { method: 'POST' });
-        const out = await res.json().catch(() => ({}));
-        if (res.ok && out.ok !== false) {
-          // The server re-checks the port as it rebuilds; if something took it
-          // meanwhile it comes up on the old one and the move stays pending.
-          const live = out.server && out.server.port_game;
-          if (live && live !== port) {
-            toast(`Restarted, but port ${port} is in use by something else, so the server stayed on ${live}.`, {
-              kind: 'error',
-              timeout: 12000,
-            });
-          } else {
-            toast(`Restarted on port ${port}.`);
-          }
-          reload();
-          return;
-        }
-        toast(out.error || friendlyError(res, { action: 'restart the server' }), { kind: 'error', timeout: 12000 });
-      } catch {
-        toast(friendlyError(null, { action: 'restart the server' }), { kind: 'error', timeout: 12000 });
-      }
-      // The move is saved either way and stays pending; only the restart failed,
-      // and the server may now be stopped. Stay on the page so the error stays
-      // readable, and don't claim any port is live.
-      restoreRestart();
+      // Nothing changed: the server is still on its old port (the API put it back
+      // if the restart failed). Stay on the page so the reason stays readable.
+      restore();
       nextBtn.disabled = false;
-      setHelp(
-        `Saved, but the restart did not finish. The move to port ${port} is still pending; the server's History tab says what went wrong.`,
-        'text-warn'
-      );
+      toast(data.error || friendlyError(res, { action: 'change the port' }), { kind: 'error', timeout: 12000 });
+      setHelp(`The server is still on port ${current}.`, 'text-warn');
     }
   }
 
