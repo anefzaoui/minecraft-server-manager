@@ -785,17 +785,25 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
 /**
  * Move a server to a new host game port (RCON follows at game + offset), now.
  * Docker fixes port bindings when a container is created, so the container is
- * rebuilt on the new pair: a running server is restarted on it, a stopped one
- * just gets the new container. The row only changes once that worked; if
- * anything fails after the stop, the server is rebuilt (and started again, if
- * it was running) on its old pair and the error is passed on. The new pair is
- * reserved meanwhile so no create or other port change can take it.
+ * rebuilt on the new pair: a running server is restarted on it (the caller
+ * must say `restart: true`), a stopped one just gets the new container. The
+ * rebuild applies any other pending setting changes too, as Apply Changes
+ * would, so their image is pulled and the container name checked BEFORE the
+ * server is touched. The new pair is written first (with pending_recreate, so
+ * a panel crash mid-change leaves an honest "rebuild pending", not a row that
+ * disagrees with the container); if anything fails after the stop, the old
+ * pair is written back and the server rebuilt (and restarted, if it was
+ * running) on it. Both pairs are reserved meanwhile.
  * @param {string} id
  * @param {number} port
- * @param {{ actor?: string, isAdmin?: boolean, canRestart?: boolean }} [opts]
+ * @param {{ actor?: string, isAdmin?: boolean, canRestart?: boolean, restart?: boolean }} [opts]
  * @returns {Promise<{ server: object, changed: boolean, restarted: boolean }>}
  */
-async function changeGamePortImpl(id, port, { actor = 'system', isAdmin = false, canRestart = true } = {}) {
+async function changeGamePortImpl(
+  id,
+  port,
+  { actor = 'system', isAdmin = false, canRestart = true, restart = false } = {}
+) {
   const before = mustGet(id);
   if (before.port_game === port) return { server: before, changed: false, restarted: false };
   const rcon = port + config.ports.rconOffset;
@@ -804,21 +812,53 @@ async function changeGamePortImpl(id, port, { actor = 'system', isAdmin = false,
   if (running && !canRestart) {
     throw httpError(403, 'Changing the port of a running server restarts it, which needs the Power permission.');
   }
+  if (running && !restart) {
+    const err = httpError(409, 'This server is running. Changing its port restarts it.');
+    err.code = 'NEEDS_CONFIRM';
+    throw err;
+  }
   const release = await withPortLock(async () => {
     await assertGamePortFree(port, { exceptServerId: id, isAdmin });
-    return reserve(id, [port, rcon]);
+    return reserve(id, [port, rcon, before.port_game, before.port_rcon]);
   });
   try {
-    if (running) await stopServerImpl(id, { actor });
-    await containers.removeContainer(id);
+    // Pre-flight: anything that would make the rebuild fail for a reason that
+    // has nothing to do with the port fails here, while the server is untouched.
+    await ensureOwnership(id);
+    await images.ensureImage(resolveImage(before));
+    if (before.containerName && (await containers.nameTakenByOther(before.containerName, id))) {
+      throw httpError(409, `Container name "${before.containerName}" is already in use by another Docker container`);
+    }
+
+    db.run('UPDATE servers SET port_game = ?, port_rcon = ?, pending_recreate = 1 WHERE id = ?', port, rcon, id);
+    if (running) {
+      try {
+        await stopServerImpl(id, { actor });
+      } catch (err) {
+        restoreOldPair(before); // still running on it: nothing else to undo
+        recordEvent({
+          serverId: id,
+          actor,
+          type: 'port-change-failed',
+          summary: `Game port change to ${port} failed because the server could not be stopped. It is still on ${before.port_game}.`,
+          details: { error: String(err && err.message) },
+        });
+        throw err;
+      }
+    }
+    let step = 'removing the old container';
     try {
+      await containers.removeContainer(id);
+      step = 'building the new container';
       await buildContainer(before, { game: port, rcon });
-      if (running) await containers.startContainer(id);
+      if (running) {
+        step = 'starting on the new port';
+        await containers.startContainer(id);
+      }
     } catch (err) {
-      await putBackOnOldPort(before, { running, port, actor, err });
+      await putBackOnOldPort(before, { running, port, actor, err, step });
       throw err;
     }
-    db.run('UPDATE servers SET port_game = ?, port_rcon = ? WHERE id = ?', port, rcon, id);
     clearPendingRecreate(before);
     if (running) markStarted(id, actor);
     recordEvent({
@@ -837,17 +877,33 @@ async function changeGamePortImpl(id, port, { actor = 'system', isAdmin = false,
   }
 }
 
+/** Write the server's old game + RCON pair (and its rebuild flag) back. */
+function restoreOldPair(before) {
+  db.run(
+    'UPDATE servers SET port_game = ?, port_rcon = ?, pending_recreate = ? WHERE id = ?',
+    before.port_game,
+    before.port_rcon,
+    before.pending_recreate ? 1 : 0,
+    before.id
+  );
+}
+
 /**
- * A port change failed after the old container was removed: rebuild on the old
- * pair, start it again if it was running, and say so in history. The change's
- * own error is what the caller reports; one that happens here is logged.
+ * A port change failed after the old container was stopped: write the old pair
+ * back, rebuild on it, start it again if it was running, and say in history
+ * which step failed. The change's own error is what the caller reports; one
+ * that happens here is logged.
  */
-async function putBackOnOldPort(before, { running, port, actor, err }) {
+async function putBackOnOldPort(before, { running, port, actor, err, step }) {
   const id = before.id;
+  restoreOldPair(before);
   try {
     await containers.removeContainer(id).catch(() => {});
     await buildContainer(before, { game: before.port_game, rcon: before.port_rcon });
-    if (running) await containers.startContainer(id);
+    if (running) {
+      await containers.startContainer(id);
+      markStarted(id, actor);
+    }
   } catch (backErr) {
     logger.warn('A server could not be put back on its old port after a failed port change.', {
       serverId: id,
@@ -858,7 +914,7 @@ async function putBackOnOldPort(before, { running, port, actor, err }) {
       serverId: id,
       actor,
       type: 'port-change-failed',
-      summary: `Game port change to ${port} failed, and the server could not be ${running ? 'started' : 'rebuilt'} again on ${before.port_game}.`,
+      summary: `Game port change to ${port} failed while ${step}, and putting the server back on ${before.port_game} failed too. Start it from the panel once the cause is fixed.`,
       details: { error: String(err && err.message), backError: String(backErr && backErr.message) },
     });
     return;
@@ -867,7 +923,7 @@ async function putBackOnOldPort(before, { running, port, actor, err }) {
     serverId: id,
     actor,
     type: 'port-change-failed',
-    summary: `Game port change to ${port} failed, so the server is back on ${before.port_game}.`,
+    summary: `Game port change to ${port} failed while ${step}, so the server is back on ${before.port_game}.`,
     details: { error: String(err && err.message) },
   });
 }
@@ -880,8 +936,10 @@ async function changeGamePort(id, port, opts = {}) {
   try {
     result = await changeGamePortGuarded(id, port, opts);
   } catch (err) {
-    if (err && err.status === 409 && /operation is already in progress/.test(err.message)) {
-      throw httpError(409, 'Another action is running on this server. Try again when it finishes.');
+    if (err && err.code === 'BUSY') {
+      const busy = httpError(409, 'Another action is running on this server. Try again when it finishes.');
+      busy.code = 'BUSY';
+      throw busy;
     }
     throw err;
   }

@@ -131,14 +131,19 @@ Cross-cutting:
   not consult Docker. A port change on an existing server (`servers.changeGamePort`, under the
   server's op lock) is applied at once, because Docker fixes port bindings at container creation:
   the new pair (RCON always game + `PORT_RCON_OFFSET`) is checked and reserved in memory
-  (`ports.reserve`, honored by every other pick) under the port lock; a running server is stopped,
-  rebuilt on the new pair and started; a stopped one is rebuilt on it. The row changes only after
-  that worked. If anything fails after the stop, `putBackOnOldPort` rebuilds (and restarts, if it
-  was running) on the old pair and the error is reported, so a change never leaves a server down
-  or the row describing a port its container doesn't use. Changing a running server's port needs
+  (`ports.reserve`, both the old and the new pair, honored by every other pick) under the port
+  lock. A running server is only changed when the request says `restart: true` (otherwise 409
+  `NEEDS_CONFIRM`). Before anything is touched, the image is pulled and a custom container name
+  checked, since the rebuild also applies other pending settings. The new pair is then written with
+  `pending_recreate = 1` (a panel crash mid-change leaves an honest "rebuild pending"), a running
+  server stopped, the container removed, rebuilt on the new pair and started. If anything after
+  the stop fails, `putBackOnOldPort` writes the old pair back, rebuilds (and restarts, if it was
+  running) on it and records which step failed, so a change never leaves a server down or the row
+  describing a port its container doesn't use. Changing a running server's port needs
   the `power` capability as well as `settings`. Non-admins may only pick from `PORT_GAME_START` up.
-  (The `port_*_pending` / `port_move_paused` columns from migrations 029/030 belong to an earlier,
-  unreleased design and are unused; 031 clears them.) A crash auto-restart
+  (The `port_*_pending` columns from migration 029 belong to an earlier, unreleased design and are
+  unused; 031 clears them.) A lock collision answers 409 with `code: 'BUSY'`, which the retrying
+  callers below check rather than the wording. A crash auto-restart
   (`watcher.restartAfterCrash`) and a scheduled backup or start (`scheduler.runTaskWithRetry`)
   that find the server busy with another action try again every 20 s / 60 s for up to 30 minutes;
   the crash restart gives up once auto-restart is off, the server is gone, or someone has stopped

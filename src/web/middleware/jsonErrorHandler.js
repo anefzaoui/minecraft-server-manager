@@ -70,13 +70,17 @@ function makeJsonErrorHandler(tag, { fileTooLarge = 'File too large' } = {}) {
     // If a streaming route already sent headers, we can't send an error body;
     // hand off to Express's finalizer rather than throw ERR_HTTP_HEADERS_SENT.
     if (res.headersSent) return next(err);
+    // A panel error code (BUSY, NEEDS_CONFIRM, ...) on a client error lets the UI
+    // react to the case rather than parse the wording. System codes (ENOENT, ...)
+    // are never passed on.
+    const code = status < 500 && typeof err.code === 'string' && /^[A-Z][A-Z_]+$/.test(err.code) ? err.code : undefined;
     const friendly = friendlyError(err);
-    if (friendly) return res.status(status).json({ ok: false, error: friendly });
+    if (friendly) return res.status(status).json({ ok: false, error: friendly, code });
     if (status >= 500)
       return res
         .status(status)
         .json({ ok: false, error: 'Something went wrong on the server. Check the panel logs for details.' });
-    return res.status(status).json({ ok: false, error: err.message || 'Unexpected error' });
+    return res.status(status).json({ ok: false, error: err.message || 'Unexpected error', code });
   };
 }
 

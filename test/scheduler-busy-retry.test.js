@@ -16,7 +16,9 @@ const servers = require('../src/services/servers');
 const httpError = require('../src/utils/httpError');
 const { runTaskWithRetry } = require('../src/services/scheduler');
 
-const busy = () => httpError(409, 'Cannot backup: a backup cleanup operation is already in progress for this server');
+// What guardOp throws when the server is busy: a 409 with code BUSY.
+const busyErr = (message) => Object.assign(httpError(409, message), { code: 'BUSY' });
+const busy = () => busyErr('Cannot backup: a backup cleanup operation is already in progress for this server');
 
 function schedule(taskType) {
   db.run('DELETE FROM schedules');
@@ -52,8 +54,7 @@ test('a scheduled start that finds the server busy retries too (a start is safe 
   let calls = 0;
   t.mock.method(servers, 'startServer', async () => {
     calls++;
-    if (calls < 2)
-      throw httpError(409, 'Cannot start: a backup cleanup operation is already in progress for this server');
+    if (calls < 2) throw busyErr('Cannot start: a backup cleanup operation is already in progress for this server');
   });
   await runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 });
   assert.equal(calls, 2);
@@ -62,7 +63,7 @@ test('a scheduled start that finds the server busy retries too (a start is safe 
 test('a scheduled restart that collides does not run again later', async (t) => {
   const job = schedule('restart');
   const spy = t.mock.method(servers, 'restartServer', async () => {
-    throw httpError(409, 'Cannot restart: a restart operation is already in progress for this server');
+    throw busyErr('Cannot restart: a restart operation is already in progress for this server');
   });
   await assert.rejects(runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 }), /already in progress/);
   assert.equal(spy.mock.callCount(), 1);
@@ -106,4 +107,27 @@ test('a schedule whose last run is still waiting to retry skips its next firing'
   await fireJob(job, { retryMs: 30, maxWaitMs: 500 }); // fired again (or re-armed) while the first waits
   assert.equal(calls, 1, 'the second firing did not run');
   await first;
+});
+
+test("another run finishing does not clear a waiting run's flag", async (t) => {
+  const { fireJob } = require('../src/services/scheduler');
+  const job = schedule('backup');
+  let calls = 0;
+  let waitingNow;
+  const waiting = new Promise((r) => (waitingNow = r));
+  t.mock.method(backups, 'createBackup', async () => {
+    calls++;
+    if (calls === 1) {
+      waitingNow();
+      throw busy(); // run B waits to retry
+    }
+  });
+  const b = fireJob(job, { retryMs: 60, maxWaitMs: 600 });
+  await waiting;
+  await new Promise((r) => setImmediate(r));
+  await runTaskWithRetry(job, { retryMs: 1, maxWaitMs: 50 }); // run A (e.g. an old re-armed loop) finishes
+  const before = calls;
+  await fireJob(job, { retryMs: 60, maxWaitMs: 600 }); // B still waits: this firing must skip
+  assert.equal(calls, before, 'skipped');
+  await b;
 });

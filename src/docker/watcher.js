@@ -249,9 +249,10 @@ function armRestart(serverId) {
     return;
   }
   const delayMs = 5000 * 2 ** (recentCrashes - 1); // 5s, 10s, 20s
+  const armedAt = Date.now(); // a Stop pressed during the delay must count
   setTimeout(async () => {
     try {
-      await restartAfterCrash(serverId, recentCrashes);
+      await restartAfterCrash(serverId, recentCrashes, { since: armedAt });
     } catch (err) {
       logger.error('An automatic restart after a crash failed.', {
         serverId,
@@ -268,13 +269,7 @@ const BUSY_RETRY_MS = 20_000;
 const BUSY_MAX_WAIT_MS = 30 * 60_000;
 
 /**
- * Start a crashed server, unless something else already dealt with it.
- * @param {string} serverId
- * @param {number} attemptNo which rapid-crash attempt this is (for history)
- * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
- * @returns {Promise<boolean>} whether it was started
- */
-/**
+ * Whether a crashed server still wants this automatic restart.
  * @param {string} serverId
  * @param {number} since ms epoch: when this restart was armed
  */
@@ -290,9 +285,21 @@ function stillWantsAutoRestart(serverId, since) {
   return !touched;
 }
 
-async function restartAfterCrash(serverId, attemptNo, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
-  const calledAt = Date.now();
-  const giveUpAt = calledAt + maxWaitMs;
+/**
+ * Start a crashed server, unless something else already dealt with it.
+ * @param {string} serverId
+ * @param {number} attemptNo which rapid-crash attempt this is (for history)
+ * @param {{ since?: number, retryMs?: number, maxWaitMs?: number }} [opts] since:
+ *   when the restart was armed (default now)
+ * @returns {Promise<boolean>} whether it was started
+ */
+async function restartAfterCrash(
+  serverId,
+  attemptNo,
+  { since = Date.now(), retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}
+) {
+  const calledAt = since;
+  const giveUpAt = Date.now() + maxWaitMs;
   for (;;) {
     // Re-check before every try so this can't race what people did meanwhile:
     // the container must still read as crashed, and the server must still want
@@ -308,8 +315,17 @@ async function restartAfterCrash(serverId, attemptNo, { retryMs = BUSY_RETRY_MS,
       // (pending_recreate) are honored rather than starting a stale container.
       await require('../services/servers').startServer(serverId, { actor: 'watcher' });
     } catch (err) {
-      const busy = err && err.status === 409 && /operation is already in progress/.test(err.message || '');
-      if (!busy || Date.now() + retryMs > giveUpAt) throw err;
+      const busy = err && err.code === 'BUSY';
+      if (!busy) throw err;
+      if (Date.now() + retryMs > giveUpAt) {
+        recordEvent({
+          serverId,
+          type: 'auto-restart-gave-up',
+          summary:
+            'Gave up restarting the server after its crash because another action kept it busy for too long. Start it from the panel.',
+        });
+        throw err;
+      }
       await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
       continue;
     }

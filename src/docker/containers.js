@@ -164,6 +164,21 @@ async function removeStaleNameConflict(name, serverId) {
   }
 }
 
+/**
+ * Whether `name` belongs to a container that is NOT this server's (one without
+ * its msm.id label). Its own orphan doesn't count: a rebuild removes that.
+ */
+async function nameTakenByOther(name, serverId) {
+  try {
+    const info = await getDocker().getContainer(name).inspect();
+    const labels = (info.Config && info.Config.Labels) || {};
+    return labels[LABEL] !== serverId;
+  } catch (err) {
+    if (err.statusCode === 404) return false;
+    throw err;
+  }
+}
+
 /** Inspect → panel status. Returns { status, health, exitCode, startedAt, pid }. */
 async function inspectStatus(serverId) {
   try {
@@ -519,6 +534,7 @@ module.exports = {
   createContainer,
   getContainer,
   removeStaleNameConflict,
+  nameTakenByOther,
   inspectStatus,
   startContainer,
   stopContainer,

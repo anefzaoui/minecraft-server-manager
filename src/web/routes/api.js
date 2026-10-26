@@ -418,12 +418,15 @@ router.put(
   asyncHandler(async (req, res, next) => {
     // Range is the service's call (it differs by role and names the range in
     // its message); this only rejects a non-number.
-    const { port } = z.object({ port: z.coerce.number().int() }).parse(req.body);
+    const { port, restart } = z
+      .object({ port: z.coerce.number().int(), restart: z.boolean().optional() })
+      .parse(req.body);
     // A running server is restarted on the new port, which is the Power permission's call.
     const { server, changed, restarted } = await servers.changeGamePort(req.params.id, port, {
       actor: req.user.username,
       isAdmin: req.user.role === 'admin',
       canRestart: permissions.effective(req.user, req.params.id).includes('power'),
+      restart: restart === true, // the person agreed to restart a running server
     });
     res.json({ ok: true, changed, restarted, server: publicServer(server) });
   })

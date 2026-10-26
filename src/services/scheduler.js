@@ -34,9 +34,11 @@ const TASK_TYPES = {
 // A scheduled backup or start refused only because another action holds its
 // server (a restore, a backup cleanup, a port change) tries again every minute
 // until that action is done, for up to 30 minutes, instead of losing this run.
-// Both are safe to repeat. Restart and stop are not retried: one that collided
-// with someone's restart has effectively happened, and repeating it would kick
-// players twice. Before each retry the schedule must still exist and be on.
+// Both are safe to repeat. Restart and stop are not retried: a restart that
+// collided with someone's restart has in effect happened and repeating it would
+// kick players twice, and a stop or restart that met a backup or restore should
+// not land unannounced minutes later. They run again at their next time.
+// Before each retry the schedule must still exist and be on.
 // Any other failure fails at once, as before.
 const RETRY_WHEN_BUSY = new Set(['backup', 'start']);
 // Schedules whose last firing is still waiting to retry. A new firing of the
@@ -53,17 +55,18 @@ const BUSY_MAX_WAIT_MS = 30 * 60_000;
  */
 async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
   const giveUpAt = Date.now() + maxWaitMs;
+  let marked = false; // only the run that marked the schedule as waiting clears it
   try {
     return await retryLoop();
   } finally {
-    waitingToRetry.delete(job.id);
+    if (marked) waitingToRetry.delete(job.id);
   }
   async function retryLoop() {
     for (let attempt = 0; ; attempt++) {
       try {
         return await runTask(job);
       } catch (err) {
-        const busy = err && err.status === 409 && /operation is already in progress/.test(err.message || '');
+        const busy = err && err.code === 'BUSY';
         if (!busy || !RETRY_WHEN_BUSY.has(job.task_type) || Date.now() + retryMs > giveUpAt) throw err;
         if (attempt === 0) {
           logger.info('A scheduled task found its server busy and will retry.', {
@@ -73,6 +76,7 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY
           });
         }
         waitingToRetry.add(job.id);
+        marked = true;
         await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
         const still = db.get('SELECT enabled FROM schedules WHERE id = ?', job.id);
         if (!still || !still.enabled) return; // turned off or deleted while waiting

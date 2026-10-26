@@ -48,7 +48,9 @@ function seed(id, game, { rcon = game + 1000, bedrock = null, extraPorts = [] } 
 }
 
 const row = (id) => ({ ...db.get('SELECT port_game, port_rcon, pending_recreate FROM servers WHERE id = ?', id) });
-const putPort = (id, port, who = cookie) => app.req('PUT', `/api/servers/${id}/port`, { cookie: who, body: { port } });
+// restart: true is what the card sends once the person agreed to restart a running server.
+const putPort = (id, port, who = cookie, extra = { restart: true }) =>
+  app.req('PUT', `/api/servers/${id}/port`, { cookie: who, body: { port, ...extra } });
 const summaries = (id) =>
   db.all('SELECT summary FROM events WHERE server_id = ? ORDER BY id', id).map((e) => e.summary);
 
@@ -193,7 +195,11 @@ test('a restart that cannot bind the new port puts the server back up on the old
   assert.deepEqual(docker.built.at(-1), { game: P(0), rcon: R(0), bedrock: null });
   assert.ok(docker.isUp(), 'running again');
   assert.deepEqual([row('srv_a').port_game, row('srv_a').port_rcon], [P(0), R(0)]);
-  assert.ok(summaries('srv_a').includes(`Game port change to ${P(50)} failed, so the server is back on ${P(0)}.`));
+  assert.ok(
+    summaries('srv_a').includes(
+      `Game port change to ${P(50)} failed while starting on the new port, so the server is back on ${P(0)}.`
+    )
+  );
   assert.ok(!summaries('srv_a').some((s) => s.startsWith('Game port changed')));
 });
 
@@ -216,7 +222,7 @@ test('if even the old port will not start, history says so honestly', async (t) 
   assert.equal(row('srv_a').port_game, P(0));
   assert.ok(
     summaries('srv_a').includes(
-      `Game port change to ${P(50)} failed, and the server could not be started again on ${P(0)}.`
+      `Game port change to ${P(50)} failed while starting on the new port, and putting the server back on ${P(0)} failed too. Start it from the panel once the cause is fixed.`
     )
   );
 });
@@ -459,4 +465,87 @@ test('a port held by a host program reads as a friendly error', async () => {
   const { friendlyError } = require('../src/web/middleware/jsonErrorHandler');
   const err = new Error('driver failed programming external connectivity: bind: address already in use');
   assert.equal(friendlyError(err), 'That port is already in use by another program on this machine.');
+});
+
+// ---- round 8: pre-flight, confirmation, write-first, remove failures --------------
+
+test('a running server is not restarted without restart: true (409 NEEDS_CONFIRM), nothing touched', async (t) => {
+  const docker = mockDocker(t, { running: true });
+  seed('srv_a', P(0));
+  const r = await putPort('srv_a', P(50), cookie, {});
+  assert.equal(r.status, 409);
+  assert.equal(r.json.code, 'NEEDS_CONFIRM');
+  assert.equal(r.json.error, 'This server is running. Changing its port restarts it.');
+  assert.equal(docker.calls.stop, 0);
+  assert.equal(row('srv_a').port_game, P(0));
+});
+
+test('removing the old container failing after the stop still puts the server back up', async (t) => {
+  const docker = mockDocker(t, { running: true });
+  let removes = 0;
+  t.mock.method(containers, 'removeContainer', async () => {
+    if (++removes === 1)
+      throw Object.assign(new Error('removal of container is already in progress'), { statusCode: 409 });
+  });
+  seed('srv_a', P(0));
+  const r = await putPort('srv_a', P(50));
+  assert.notEqual(r.status, 200);
+  assert.ok(docker.isUp(), 'running again');
+  assert.deepEqual([row('srv_a').port_game, row('srv_a').port_rcon], [P(0), R(0)]);
+  assert.ok(
+    summaries('srv_a').includes(
+      `Game port change to ${P(50)} failed while removing the old container, so the server is back on ${P(0)}.`
+    )
+  );
+});
+
+test("a pending setting whose image can't be pulled stops the change before the server is touched", async (t) => {
+  const docker = mockDocker(t, { running: true });
+  t.mock.method(images, 'ensureImage', async () => {
+    throw new Error('manifest for itzg/minecraft-server:java99 not found');
+  });
+  seed('srv_a', P(0));
+  db.run("UPDATE servers SET java_tag = 'java99', pending_recreate = 1 WHERE id = 'srv_a'");
+  const r = await putPort('srv_a', P(50));
+  assert.notEqual(r.status, 200);
+  assert.equal(docker.calls.stop, 0, 'never stopped');
+  assert.ok(docker.isUp());
+  assert.deepEqual([row('srv_a').port_game, row('srv_a').pending_recreate], [P(0), 1]);
+});
+
+test('a custom container name taken by another container stops the change before the server is touched', async (t) => {
+  const docker = mockDocker(t, { running: true });
+  t.mock.method(containers, 'nameTakenByOther', async () => true);
+  seed('srv_a', P(0));
+  db.run("UPDATE servers SET container_name = 'mc-kids' WHERE id = 'srv_a'");
+  const r = await putPort('srv_a', P(50));
+  assert.equal(r.status, 409);
+  assert.match(r.json.error, /Container name "mc-kids" is already in use/);
+  assert.equal(docker.calls.stop, 0);
+  assert.equal(row('srv_a').port_game, P(0));
+});
+
+test('mid-change the row already says the new port and a rebuild is pending (honest after a crash)', async (t) => {
+  const docker = mockDocker(t, { running: true });
+  let midway;
+  t.mock.method(containers, 'createContainer', async (spec) => {
+    midway = row('srv_a');
+    docker.built.push(spec.ports);
+    return 'cid';
+  });
+  seed('srv_a', P(0));
+  assert.equal((await putPort('srv_a', P(50))).status, 200);
+  assert.deepEqual([midway.port_game, midway.pending_recreate], [P(50), 1]);
+  assert.equal(row('srv_a').pending_recreate, 0);
+});
+
+test('a lock collision carries code BUSY', async () => {
+  let release;
+  const held = guardOp('backup', () => new Promise((r) => (release = r)))('srv_lock');
+  await assert.rejects(
+    guardOp('restart', async () => {})('srv_lock'),
+    (err) => err.code === 'BUSY' && err.status === 409
+  );
+  release();
+  await held;
 });
