@@ -396,7 +396,7 @@ one game + RCON pair per server. Ten servers therefore occupy game `25565-25574`
 deliberate: it keeps RCON in a separate block so you can open a contiguous **game** range without ever
 exposing RCON.
 
-A port counts as taken if another server in the panel uses it (or is about to move to it), any
+A port counts as taken if another server in the panel uses it (or is moving onto it right now), any
 Docker container on the host publishes it (even one the panel didn't create, running or stopped), or
 the operating system reports it in use. When the panel itself runs in Docker, that last check only
 sees the panel's own container, so a program running directly on the host, or a container using host
@@ -404,15 +404,12 @@ networking, can still hold a port the panel thinks is free; the server then repo
 use when it starts.
 
 To move a server later, open its **Configuration** tab and use the **Game Port** card: type a port,
-or press **Use Next Free Port**. RCON moves with it, to the port 1000 higher. Docker only applies a
-port change when it builds a fresh container, so the move waits for the next one: a start, a restart
-(including a crash restart or a scheduled one), an update, or **Apply Changes**. A running server
-offers to restart right away, and until the move happens players keep connecting on the old port,
-which the panel keeps showing with a "moves to" note. **Keep** (choosing the old port again) cancels
-the move. If the new port has been taken by the time the server rebuilds, or the server fails to
-start on it, the server comes up on its old port instead and the move is **paused**: no later start,
-crash restart or scheduled restart tries it again until you save a port again on the Game Port card
-(saving the same port retries it). The card, the Overview and the server's history say why.
+or press **Use Next Free Port**, then **Save Port**. RCON moves with it, to the port 1000 higher. The
+change applies right away. A running server asks first, then restarts on the new port (the world is
+saved first, and players reconnect on the new port); changing a running server's port needs the
+**Power** permission. A stopped server simply gets its new port, used from its next start. If the
+running server can't start on the new port (something took it in the meantime), the panel starts it
+again on its old port, nothing is changed, and the card and the server's history say why.
 
 Admins may pick any port from 1024 up; other users pick from `PORT_GAME_START` upward. RCON sits 1000
 above the game port, so as long as the game range you open to players is narrower than 1000 ports,

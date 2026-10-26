@@ -128,23 +128,22 @@ Cross-cutting:
   only the Docker part, and a slow inspect costs only that container's ports. Server creates and
   `servers.changeGamePort` pick ports through one serialization chain that covers only the pick
   and the row write; BlueMap's port picker and the extra-port overrides are not in it and do
-  not consult Docker. A port change on an existing server is stored as `port_game_pending` /
-  `port_rcon_pending` (RCON always game + `PORT_RCON_OFFSET`) and sets `pending_recreate`,
-  because Docker fixes port bindings at container creation; `recreateServerImpl` promotes the
-  pair when it builds the next container, whatever triggered it (start, restart, crash restart,
-  scheduled restart, update, Apply Changes), so `port_game` / `port_rcon` always mean "live".
-  Before promoting it re-checks the pair (`ports.pairFreeFor`, where the server's own live ports
-  count as free); if it was taken meanwhile the container is built on the live pair and the move
-  is paused (`port_move_paused`, migration 030, `port-move-blocked` event). If the new container
-  then fails to start, `recoverFromFailedMove` pauses the move, rebuilds on the live pair and starts
-  it in the same operation, so a start never ends with the server down over a port. A paused move
-  is skipped by every rebuild and does not keep `pending_recreate` set; any port save (including
-  the same one) un-pauses it. A running server's rebuild starts the container it just built
-  (`startServerImpl(..., { rebuilt: true })`). `changeGamePort` runs under the server's op lock;
-  choosing the live game port again cancels a pending move. Non-admins may only pick from
-  `PORT_GAME_START` up. A crash auto-restart (`watcher.restartAfterCrash`) and a scheduled backup
-  (`scheduler.runTaskWithRetry`) retry a few times when another action holds the server; other
-  scheduled tasks do not.
+  not consult Docker. A port change on an existing server (`servers.changeGamePort`, under the
+  server's op lock) is applied at once, because Docker fixes port bindings at container creation:
+  the new pair (RCON always game + `PORT_RCON_OFFSET`) is checked and reserved in memory
+  (`ports.reserve`, honored by every other pick) under the port lock; a running server is stopped,
+  rebuilt on the new pair and started; a stopped one is rebuilt on it. The row changes only after
+  that worked. If anything fails after the stop, `putBackOnOldPort` rebuilds (and restarts, if it
+  was running) on the old pair and the error is reported, so a change never leaves a server down
+  or the row describing a port its container doesn't use. Changing a running server's port needs
+  the `power` capability as well as `settings`. Non-admins may only pick from `PORT_GAME_START` up.
+  (The `port_*_pending` / `port_move_paused` columns from migrations 029/030 belong to an earlier,
+  unreleased design and are unused; 031 clears them.) A crash auto-restart
+  (`watcher.restartAfterCrash`) and a scheduled backup or start (`scheduler.runTaskWithRetry`)
+  that find the server busy with another action try again every 20 s / 60 s for up to 30 minutes;
+  the crash restart gives up once auto-restart is off, the server is gone, or someone has stopped
+  or started it since. Scheduled restarts and stops are not retried, and a schedule whose last
+  run is still waiting skips its next firing.
 - **Disk quotas** are enforced by the panel because Docker can't cap bind-mount usage: the indexer
   caches per-directory sizes and disk-growing operations are gated on them.
 - **Secrets** (RCON passwords, API keys, TOTP secrets, the Discord webhook URL) are encrypted at
