@@ -224,9 +224,9 @@ function init(serverId) {
     window.addEventListener('beforeunload', (e) => {
       if (!leaving && input.value.trim() !== String(current)) e.preventDefault();
     });
-    const reload = () => {
+    const reload = (delayMs = 900) => {
       leaving = true;
-      setTimeout(() => location.reload(), 900);
+      setTimeout(() => location.reload(), delayMs);
     };
 
     // A check answers only if nothing newer (more typing, Next Free, a save)
@@ -351,7 +351,7 @@ function init(serverId) {
         reload();
         return;
       }
-      // Nothing changed: the server is still on its old port (the API put it back
+      // Nothing changed: the server is still on its old port (the API puts it back
       // if the restart failed). Stay on the page so the reason stays readable.
       restore();
       nextBtn.disabled = false;
@@ -365,6 +365,14 @@ function init(serverId) {
         return;
       }
       toast(data.error || friendlyError(res, { action: 'change the port' }), { kind: 'error', timeout: 12000 });
+      if (restart && res.status >= 500) {
+        // It failed after the server was stopped. The panel tried to put it back
+        // on its old port, but that can fail too and leave it stopped: reload
+        // once the reason has been read. The server's history keeps the reason.
+        setHelp('Reloading to show whether the server is running again…', 'text-warn');
+        reload(6000);
+        return;
+      }
       setHelp(
         data.code === 'PENDING_CHANGES'
           ? 'Use Apply Changes at the top of the page first, then save the port again.'
