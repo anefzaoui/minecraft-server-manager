@@ -5,6 +5,7 @@ import Section from '../../components/Section.astro';
 import FeatureCard from '../../components/FeatureCard.astro';
 import Community from '../../components/Community.astro';
 import InstallTutorial from '../../components/InstallTutorial.astro';
+import Clouds from '../../components/Clouds.astro';
 import XpDivider from '../../components/XpDivider.astro';
 import Icon from '../../components/Icon.astro';
 import WorksWith from '../../components/WorksWith.astro';
@@ -34,6 +35,7 @@ const moreHubs = [hub('guides'), hub('compare')];
   <section class="hero relative overflow-hidden">
     {heroDay && <Image src={heroDay} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-day" loading="eager" fetchpriority="high" />}
     {heroNight && <Image src={heroNight} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-night" loading="lazy" />}
+    <Clouds count={4} band={30} />
     <div class="relative mx-auto grid max-w-6xl items-start gap-8 px-4 pb-72 pt-10 sm:pb-80 lg:grid-cols-[5fr_7fr] lg:pt-14">
       <div>
         <p class="tag"><Icon name="sparkles" size={16} />{copy.hero.eyebrow}</p>
@@ -177,9 +179,13 @@ const moreHubs = [hub('guides'), hub('compare')];
 </style>
 
 <style is:global>
-  /* Night: light text over the panorama's painted clouds gets a hard shadow. */
+  /* Night: white text over white clouds would vanish, so hero text gets a hard
+     shadow and the clouds go translucent. Global: the clouds live in a child component. */
   :root[data-theme='dark'] .hero h1,
   :root[data-theme='dark'] .hero .lead {
     text-shadow: 2px 2px 0 #050a18;
+  }
+  :root[data-theme='dark'] .hero .cloud {
+    opacity: 0.3;
   }
 </style>

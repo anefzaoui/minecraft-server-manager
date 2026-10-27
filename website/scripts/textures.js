@@ -1,4 +1,4 @@
-// Renders the site's pixel textures (16x16 tiles plus a heart sprite) into
+// Renders the site's pixel textures (16x16 tiles plus a cloud sprite) into
 // public/textures/. Original art generated from the panel's palette with a
 // seeded noise so a re-run is byte-identical; nothing is taken from the game.
 // Tiles are 1x and scaled up in CSS with image-rendering: pixelated.
@@ -63,6 +63,23 @@ const darkPlanks = (x, y) => {
   return hex(band % 2 ? '#3d2a16' : '#432e19');
 };
 
+// Cloud sprite: 32×12 blocky puff, white with soft alpha edge (hard pixels).
+const CLOUD = [
+  '........xxxxxxxx........xxxx....',
+  '......xxxxxxxxxxxx....xxxxxxxx..',
+  '....xxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+  '..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+  '..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+  'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+  'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+  'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+  '..xxxxxxxxxxxxxxxxxxxxxxxxxxxx..',
+  '....xxxxxxxxxxxxxxxxxxxxxxxx....',
+  '......xxxxxxxx....xxxxxxxx......',
+  '................................',
+];
+const cloud = (x, y) => (CLOUD[y][x] === 'x' ? [255, 255, 255, y >= 8 ? 230 : 255] : [0, 0, 0, 0]);
+
 // Heart: 9×8 pixel heart for list bullets.
 const HEART = ['.xx...xx.', 'xxxx.xxxx', 'xxxxxxxxx', 'xxxxxxxxx', '.xxxxxxx.', '..xxxxx..', '...xxx...', '....x....'];
 const heart = (x, y) =>
@@ -77,6 +94,7 @@ const jobs = [
   ['deep-stone.png', 16, 16, deepStone],
   ['planks.png', 16, 16, planks],
   ['dark-planks.png', 16, 16, darkPlanks],
+  ['cloud.png', 32, 12, cloud],
   ['heart.png', 9, 8, heart],
 ];
 for (const [name, w, h, fn] of jobs) await raster(w, h, fn).toFile(join(out, name));

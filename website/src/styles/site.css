@@ -566,6 +566,29 @@
     flex-shrink: 0;
   }
 
+  /* Drifting pixel clouds. */
+  .cloud {
+    position: absolute;
+    width: 96px;
+    height: 36px;
+    background: url('/textures/cloud.png') no-repeat 0 0 / 96px 36px;
+    image-rendering: pixelated;
+    opacity: 0.95;
+    animation: drift linear infinite;
+    pointer-events: none;
+  }
+  @keyframes drift {
+    from {
+      transform: translateX(-140px);
+    }
+    to {
+      transform: translateX(calc(100vw + 140px));
+    }
+  }
+  [dir='rtl'] .cloud {
+    animation-direction: reverse;
+  }
+
   .prose-soft :where(p, li) {
     color: var(--color-ink-soft);
   }

@@ -4,6 +4,7 @@
 // pills, optional sprite on the end side, then the ground strip. Same shape on
 // every page.
 import { Image } from 'astro:assets';
+import Clouds from './Clouds.astro';
 import Pill from './Pill.astro';
 interface Props {
   title: string;
@@ -20,6 +21,7 @@ const { title, intro, eyebrow, sprite, spriteAlt = '', pills = [], crumbs = [], 
 ---
 
 <header class="sky relative overflow-hidden">
+  <Clouds count={2} band={22} />
   <div class="relative mx-auto flex max-w-6xl items-end justify-between gap-6 px-4 pb-6 pt-8 sm:pt-10">
     <div>
       {crumbs.length > 0 && (
