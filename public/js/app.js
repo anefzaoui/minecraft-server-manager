@@ -9,15 +9,17 @@ import { enhanceAll } from './lib/select.js';
 import { setBusy, withBusy } from './lib/loading.js';
 import { formatDateTime, timeAgo } from './lib/datetime.js';
 import { escapeHtml } from './lib/format.js';
+import { t } from './lib/i18n.js';
 import './lib/tooltip.js';
 import './lib/dropdown.js';
 import './lib/taskTray.js';
 import './lib/seg.js';
 import './lib/twoFactor.js';
 import './lib/avatar.js';
+import './lib/languagePicker.js';
 
 // Expose for inline handlers and future page scripts.
-window.CD = { toast, openModal, confirmDialog, setBusy, withBusy };
+window.CD = { toast, openModal, confirmDialog, setBusy, withBusy, t };
 
 // ---- Custom selects everywhere ----
 enhanceAll();
@@ -246,10 +248,10 @@ document.addEventListener('click', async (e) => {
   if (action === 'delete') {
     const ok = await confirmDelete({ name, id });
     if (!ok) return;
-    const restore = setBusy(btn, 'Deleting…');
+    const restore = setBusy(btn, t('common.deleting', { defaultValue: 'Deleting…' }));
     const res = await api(`/api/servers/${id}${ok.deleteData ? '?deleteFiles=true&deleteBackups=true' : ''}`, 'DELETE');
     if (res.ok) {
-      toast('Server deleted.');
+      toast(t('server_settings.server_deleted_toast'));
       location.href = '/';
     } else {
       restore();
@@ -258,18 +260,17 @@ document.addEventListener('click', async (e) => {
   }
 
   const labels = {
-    start: 'Starting…',
-    stop: 'Stopping…',
-    restart: 'Restarting…',
-    kill: 'Force stopping…',
-    recreate: 'Rebuilding…',
+    start: t('common.starting', { defaultValue: 'Starting…' }),
+    stop: t('common.stopping', { defaultValue: 'Stopping…' }),
+    restart: t('common.restarting', { defaultValue: 'Restarting…' }),
+    kill: t('server_settings.force_stop_btn') + '…',
+    recreate: t('common.rebuilding', { defaultValue: 'Rebuilding…' }),
   };
   if (action === 'kill') {
     const ok = await confirmDialog({
-      title: `Force stop ${name}?`,
-      message:
-        'A force stop skips the normal shutdown, so any unsaved world changes can be lost. Use Stop instead unless the server is frozen.',
-      confirmLabel: 'Force Stop',
+      title: t('server_settings.force_stop_title', { name }),
+      message: t('server_settings.force_stop_message'),
+      confirmLabel: t('server_settings.force_stop_btn'),
       danger: true,
     });
     if (!ok) return;
@@ -339,8 +340,7 @@ function confirmDelete({ name }) {
     content.className = 'space-y-3 text-sm';
 
     const p = document.createElement('p');
-    p.textContent =
-      'This removes the server from the panel but keeps its files and backups on disk. Tick the box below only if you want to permanently delete those files and backups too.';
+    p.textContent = t('server_settings.delete_modal_intro');
     content.appendChild(p);
 
     const delWrap = document.createElement('label');
@@ -350,33 +350,33 @@ function confirmDelete({ name }) {
     delInput.className = 'msm-check mt-0.5 shrink-0';
     delInput.checked = false;
     const delText = document.createElement('span');
-    delText.textContent = 'Also permanently delete the server files and backups from disk.';
+    delText.textContent = t('server_settings.delete_data_checkbox');
     delWrap.append(delInput, delText);
     content.appendChild(delWrap);
 
     const wrap = document.createElement('div');
     const label = document.createElement('label');
     label.className = 'label';
-    label.innerHTML = `Type <b class="font-mono">${escapeHtml(name)}</b> to confirm`;
+    label.innerHTML = t('confirm_dialog.type_to_confirm', { text: escapeHtml(name) });
     const input = document.createElement('input');
     input.className = 'input font-mono';
     input.autocomplete = 'off';
     input.spellcheck = false;
     const mismatch = document.createElement('p');
     mismatch.className = 'mt-1 hidden text-xs text-danger';
-    mismatch.textContent = "That name doesn't match.";
+    mismatch.textContent = t('confirm_dialog.mismatch');
     wrap.append(label, input, mismatch);
     content.appendChild(wrap);
 
     const modal = openModal({
-      title: `Delete ${name}?`,
+      title: t('server_settings.delete_modal_title', { name }),
       content,
       size: 'sm',
       onClose: () => settle(null),
       actions: [
-        { label: 'Cancel', kind: 'ghost', onClick: () => settle(null) },
+        { label: t('common.cancel'), kind: 'ghost', onClick: () => settle(null) },
         {
-          label: 'Delete Forever',
+          label: t('server_settings.delete_forever_btn'),
           kind: 'danger',
           onClick: () => {
             if (input.value !== name) {
@@ -452,9 +452,9 @@ async function copyText(value) {
   wrap.className = 'space-y-2';
   const help = document.createElement('p');
   help.className = 'text-xs text-ink-faint';
-  help.textContent = 'Automatic copy is not available here. Press Ctrl/Cmd+C to copy the selected value.';
+  help.textContent = t('common.copy_manually_help');
   wrap.append(input, help);
-  openModal({ title: 'Copy Manually', content: wrap, size: 'sm' });
+  openModal({ title: t('common.copy_manually_title'), content: wrap, size: 'sm' });
   input.select();
   return false;
 }

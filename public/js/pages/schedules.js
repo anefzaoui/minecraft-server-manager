@@ -9,6 +9,7 @@ import { enhanceAll } from '../lib/select.js';
 import { withBusy } from '../lib/loading.js';
 import { formatDateTime } from '../lib/datetime.js';
 import { escapeHtml } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const table = document.getElementById('schedules-table'); // absent when the list is empty
 const dataEl = document.getElementById('msm-schedule-data');
@@ -35,9 +36,9 @@ function init() {
     const delBtn = e.target.closest('[data-schedule-delete]');
     if (delBtn) {
       const ok = await confirmDialog({
-        title: 'Delete this schedule?',
-        message: `${row.dataset.task} (${row.dataset.cron}) stops running immediately.`,
-        confirmLabel: 'Delete',
+        title: t('schedules_page.delete_confirm_title'),
+        message: t('schedules_page.delete_confirm_msg', { task: row.dataset.task, cron: row.dataset.cron }),
+        confirmLabel: t('common.delete'),
         danger: true,
       });
       if (!ok) return;
@@ -45,12 +46,12 @@ function init() {
         const res = await fetch(`/api/schedules/${row.dataset.scheduleId}`, { method: 'DELETE' });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok !== false) {
-          toast('Schedule deleted.');
+          toast(t('schedules_page.deleted_toast'));
           const tbody = row.closest('tbody');
           row.remove();
           if (tbody && !tbody.querySelector('[data-schedule-row]')) setTimeout(() => location.reload(), 600);
         } else {
-          toast(data.error || friendlyError(res, { action: 'delete that schedule' }), { kind: 'error' });
+          toast(data.error || friendlyError(res, { action: t('schedules_page.action_delete') }), { kind: 'error' });
         }
       });
     } else if (e.target.closest('[data-schedule-edit]')) {
@@ -87,8 +88,12 @@ function init() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.ok === false)
-        throw new Error(data.error || friendlyError(res, { action: 'update that schedule' }));
-      toast(`Schedule ${enabled ? 'enabled' : 'disabled'}.`);
+        throw new Error(data.error || friendlyError(res, { action: t('schedules_page.action_update') }));
+      toast(
+        t('schedules_page.toggle_toast', {
+          state: enabled ? t('common.enabled').toLowerCase() : t('common.disabled').toLowerCase(),
+        })
+      );
     } catch (err) {
       input.checked = !enabled;
       toast(err.message, { kind: 'error', timeout: 8000 });
@@ -101,29 +106,29 @@ function init() {
 function scheduleModal({ servers, taskTypes, edit = null }) {
   const content = document.createElement('div');
   content.innerHTML = `
-    <label class="label">Runs on</label>
-    <select class="input" data-sc-server data-label="Runs on">
-      <option value="">Global (the panel itself)</option>
+    <label class="label">${t('schedules_page.runs_on')}</label>
+    <select class="input" data-sc-server data-label="${t('schedules_page.runs_on')}">
+      <option value="">${t('schedules_page.global_panel')}</option>
       ${servers.map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`).join('')}
     </select>
-    <label class="label mt-3">Task</label>
-    <select class="input" data-sc-type data-label="Task type">
-      ${taskTypes.map((t) => `<option value="${escapeHtml(t.value)}" data-desc="${t.serverScoped ? 'Needs a server' : 'Panel-wide'}">${escapeHtml(t.label)}</option>`).join('')}
+    <label class="label mt-3">${t('schedules_page.task_label')}</label>
+    <select class="input" data-sc-type data-label="${t('schedules_page.task_type_label')}">
+      ${taskTypes.map((taskType) => `<option value="${escapeHtml(taskType.value)}" data-desc="${taskType.serverScoped ? t('schedules_page.needs_server') : t('schedules_page.panel_wide')}">${escapeHtml(taskType.label)}</option>`).join('')}
     </select>
     <div class="mt-3 hidden" data-sc-cmdwrap>
-      <label class="label">RCON command</label>
-      <input class="input font-mono" data-sc-cmd placeholder="say Server restarts in 5 minutes" autocomplete="off">
+      <label class="label">${t('schedules_page.rcon_command')}</label>
+      <input class="input font-mono" data-sc-cmd placeholder="${t('schedules_page.rcon_placeholder')}" autocomplete="off">
     </div>
     <div class="mt-3 hidden" data-sc-shrinkwrap>
-      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="msm-check" data-sc-shrink> Shrink the world after each backup <span class="text-xs text-ink-faint">(removes rarely-visited chunks; only runs while the server is stopped)</span></label>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="msm-check" data-sc-shrink> ${t('schedules_page.shrink_label')} <span class="text-xs text-ink-faint">${t('schedules_page.shrink_desc')}</span></label>
     </div>
-    <label class="label mt-3">Cron expression</label>
-    <input class="input font-mono" data-sc-cron placeholder="0 4 * * *" autocomplete="off" spellcheck="false">
-    <p class="help">Five fields: minute hour day-of-month month day-of-week. Example: <b class="font-mono">0 4 * * *</b> = daily at 04:00.</p>
+    <label class="label mt-3">${t('schedules_page.cron_label')}</label>
+    <input class="input font-mono" data-sc-cron placeholder="${t('schedules_page.cron_placeholder')}" autocomplete="off" spellcheck="false">
+    <p class="help">${t('schedules_page.cron_help')}</p>
     <div class="mt-2 rounded-md border border-line bg-raised p-2.5 text-xs" data-sc-preview>
-      <span class="text-ink-faint">Type a cron expression to preview the next runs.</span>
+      <span class="text-ink-faint">${t('schedules_page.cron_preview_hint')}</span>
     </div>
-    ${edit ? '<p class="help mt-3">Saving creates the updated schedule and then removes the old one. The timing carries over without a gap.</p>' : ''}`;
+    ${edit ? `<p class="help mt-3">${t('schedules_page.edit_replacement_note')}</p>` : ''}`;
 
   const serverSel = content.querySelector('[data-sc-server]');
   const typeSel = content.querySelector('[data-sc-type]');
@@ -142,7 +147,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
     if (edit.payload && edit.payload.shrink) shrinkInput.checked = true;
   }
 
-  const typeMeta = () => taskTypes.find((t) => t.value === typeSel.value) || {};
+  const typeMeta = () => taskTypes.find((item) => item.value === typeSel.value) || {};
   const syncTypeUi = () => {
     cmdWrap.classList.toggle('hidden', typeSel.value !== 'rcon');
     shrinkWrap.classList.toggle('hidden', typeSel.value !== 'backup');
@@ -159,21 +164,21 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   const renderPreview = async () => {
     const expr = cronInput.value.trim();
     if (!expr) {
-      preview.innerHTML = '<span class="text-ink-faint">Type a cron expression to preview the next runs.</span>';
+      preview.innerHTML = `<span class="text-ink-faint">${t('schedules_page.cron_preview_hint')}</span>`;
       return;
     }
     try {
       const res = await fetch(`/api/schedules/preview?cron=${encodeURIComponent(expr)}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.ok === false) {
-        preview.innerHTML = `<span class="text-danger">${escapeHtml(data.error || "That cron expression isn't valid.")}</span>`;
+        preview.innerHTML = `<span class="text-danger">${escapeHtml(data.error || t('schedules_page.cron_invalid'))}</span>`;
         return;
       }
-      preview.innerHTML = `<span class="text-ink-faint">Next runs:</span> ${data.runs
+      preview.innerHTML = `<span class="text-ink-faint">${t('schedules_page.next_runs')}</span> ${data.runs
         .map((iso) => `<span class="mr-2 font-mono">${escapeHtml(formatDateTime(iso))}</span>`)
         .join('')}`;
     } catch {
-      preview.innerHTML = '<span class="text-ink-faint">Preview unavailable (network error).</span>';
+      preview.innerHTML = `<span class="text-ink-faint">${t('schedules_page.preview_error')}</span>`;
     }
   };
   cronInput.addEventListener('input', () => {
@@ -183,31 +188,33 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   if (edit) renderPreview();
 
   openModal({
-    title: edit ? `Edit Schedule: ${edit.taskType}` : 'New Scheduled Task',
+    title: edit
+      ? t('schedules_page.edit_modal_title', { taskType: edit.taskType })
+      : t('schedules_page.new_modal_title'),
     content,
     actions: [
-      { label: 'Cancel', kind: 'ghost' },
+      { label: t('common.cancel'), kind: 'ghost' },
       {
-        label: edit ? 'Save Changes' : 'Create Schedule',
+        label: edit ? t('schedules_page.save_changes') : t('schedules_page.create_schedule'),
         kind: 'primary',
-        busyLabel: edit ? 'Saving…' : 'Creating…',
+        busyLabel: edit ? t('common.saving') : t('common.creating'),
         onClick: async () => {
           const cron = cronInput.value.trim();
           if (!cron) {
-            toast('Enter a cron expression.', { kind: 'error' });
+            toast(t('schedules_page.enter_cron_toast'), { kind: 'error' });
             return false;
           }
           const meta = typeMeta();
           const serverId = serverSel.value || null;
           if (meta.serverScoped && !serverId) {
-            toast(`"${meta.label}" runs on a server. Pick one first.`, { kind: 'error' });
+            toast(t('schedules_page.pick_server_toast', { label: meta.label }), { kind: 'error' });
             return false;
           }
           const payload = {};
           if (typeSel.value === 'rcon') {
             const command = cmdInput.value.trim();
             if (!command) {
-              toast('Enter the RCON command to run.', { kind: 'error' });
+              toast(t('schedules_page.enter_rcon_toast'), { kind: 'error' });
               return false;
             }
             payload.command = command;
@@ -229,19 +236,19 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok || data.ok === false)
-              throw new Error(data.error || friendlyError(res, { action: 'save that schedule' }));
+              throw new Error(data.error || friendlyError(res, { action: t('schedules_page.action_save') }));
             if (edit) {
               const del = await fetch(`/api/schedules/${edit.id}`, { method: 'DELETE' });
               const delData = await del.json().catch(() => ({}));
               if (!del.ok || delData.ok === false) {
                 // Worst case is a duplicate, never a loss - say so plainly.
-                toast('Saved as a new schedule, but the old one could not be removed. Delete it manually.', {
+                toast(t('schedules_page.old_remove_failed'), {
                   kind: 'warn',
                   timeout: 10000,
                 });
               }
             }
-            toast(edit ? 'Schedule updated.' : 'Schedule created.');
+            toast(edit ? t('schedules_page.updated_toast') : t('schedules_page.created_toast'));
             setTimeout(() => location.reload(), 600);
           } catch (err) {
             toast(err.message, { kind: 'error', timeout: 9000 });

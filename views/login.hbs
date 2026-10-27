@@ -6,17 +6,17 @@
   <form method="post" action="/login" class="space-y-4" data-disable-on-submit>
     <input type="hidden" name="next" value="{{next}}">
     <div>
-      <label class="label" for="li-user">Username</label>
+      <label class="label" for="li-user">{{t 'auth.username'}}</label>
       <input class="input" id="li-user" name="username" autocomplete="username" required>
     </div>
     <div>
-      <label class="label" for="li-pass">Password</label>
+      <label class="label" for="li-pass">{{t 'auth.password'}}</label>
       <input class="input" id="li-pass" name="password" type="password" autocomplete="current-password" required>
     </div>
     <label class="flex cursor-pointer items-center gap-2 text-sm">
       <input type="checkbox" class="msm-check" name="remember" value="1" checked>
-      Remember me
+      {{t 'auth.remember_me'}}
     </label>
-    <button class="btn btn-primary w-full" type="submit">Sign In</button>
+    <button class="btn btn-primary w-full" type="submit">{{t 'auth.sign_in'}}</button>
   </form>
 </div>

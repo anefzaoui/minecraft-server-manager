@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
 import { fillTimezoneSelect, fillCountrySelect } from '../lib/tzPicker.js';
+import { t } from '../lib/i18n.js';
 
 const wizard = document.getElementById('setup-wizard');
 if (wizard) init();
@@ -31,7 +32,7 @@ function init() {
       // Step 3 fields save individually - Continue must not silently discard
       // something typed but never saved.
       if (step === 3 && unsavedStep3()) {
-        toast('You have unsaved values above. Press their Save buttons, or clear the fields to skip.', {
+        toast(t('setup_wizard.unsaved_warning'), {
           kind: 'warn',
           timeout: 8000,
         });
@@ -78,18 +79,16 @@ function init() {
     // never ran" must not look identical.
     const continueBtn = sections[1].querySelector('[data-next]');
     if (continueBtn) continueBtn.disabled = true;
-    list.innerHTML =
-      '<div class="flex items-center gap-2 py-6 text-sm text-ink-faint"><span class="size-4 animate-spin rounded-full border-2 border-line border-t-grass-500"></span> Running checks…</div>';
+    list.innerHTML = `<div class="flex items-center gap-2 py-6 text-sm text-ink-faint"><span class="size-4 animate-spin rounded-full border-2 border-line border-t-grass-500"></span> ${t('setup_wizard.running_checks')}</div>`;
     let checks;
     try {
       const res = await fetch('/setup/checks', { headers: { Accept: 'application/json' } });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'The system checks could not be run.');
+      if (!data.ok) throw new Error(data.error || t('setup_wizard.checks_failed'));
       checks = data.checks;
       checksLoaded = true;
     } catch {
-      list.innerHTML =
-        '<div class="notice notice-danger text-danger">The system checks could not be run. Use Re-check to try again.</div>';
+      list.innerHTML = `<div class="notice notice-danger text-danger">${t('setup_wizard.checks_failed')}</div>`;
       return;
     } finally {
       // Docker being down must not trap setup (the panel works without it) -
@@ -103,13 +102,17 @@ function init() {
     const d = checks.docker;
     const dDetail = d.available
       ? `${esc(d.version)} · ${esc(d.os || 'Docker')} · ${d.ncpu ?? '?'} CPUs${gb(d.memTotal) ? ` · ${gb(d.memTotal)} RAM` : ''}`
-      : `Not reachable. Creating, starting, and stopping servers stay disabled until Docker is running, but the panel works fine in the meantime.${d.installed === false ? " Docker doesn't appear to be installed." : ' Start Docker Desktop, then re-check.'}`;
+      : `${t('setup_wizard.docker_unreachable')}${d.installed === false ? ' ' + t('setup_wizard.docker_not_installed') : ''}`;
     list.appendChild(row(d.level, 'Docker', dDetail));
 
     // Node
     const n = checks.node;
     list.appendChild(
-      row(n.level, 'Node.js', `${esc(n.version)}${n.level === 'fail' ? `. Needs ${esc(n.required)} or newer.` : ''}`)
+      row(
+        n.level,
+        'Node.js',
+        `${esc(n.version)}${n.level === 'fail' ? '. ' + t('setup_wizard.node_needs', { required: esc(n.required) }) : ''}`
+      )
     );
 
     // Data dir
@@ -119,17 +122,15 @@ function init() {
         dd.level,
         'Data directory',
         dd.level === 'pass'
-          ? `${esc(dd.path)} is writable.`
-          : `${esc(dd.path)} is not writable. Fix the folder permissions.`
+          ? t('setup_wizard.data_dir_writable', { path: esc(dd.path) })
+          : t('setup_wizard.data_dir_not_writable', { path: esc(dd.path) })
       )
     );
 
     // Session secret
     const s = checks.sessionSecret;
     const sDetail =
-      s.level === 'pass'
-        ? "A strong secret is set. If you didn't provide one, the panel generated it and saved it to your data folder. It signs sessions and encrypts stored keys."
-        : 'The panel secret is weak. Use at least 16 random characters, or leave it blank to let the panel generate one. Changing it later invalidates stored server passwords.';
+      s.level === 'pass' ? t('setup_wizard.session_secret_strong') : t('setup_wizard.session_secret_weak');
     list.appendChild(row(s.level, 'Session secret', sDetail));
   }
 
@@ -140,7 +141,7 @@ function init() {
     e.preventDefault();
     adminError.classList.add('hidden');
     const btn = adminForm.querySelector('button[type="submit"]');
-    await withBusy(btn, 'Creating…', async () => {
+    await withBusy(btn, t('common.creating'), async () => {
       let data;
       try {
         const res = await fetch('/setup', {
@@ -160,7 +161,7 @@ function init() {
         return;
       }
       if (!data.ok) {
-        adminError.textContent = data.error || 'Could not create the account.';
+        adminError.textContent = data.error || t('setup_wizard.account_creation_failed');
         adminError.classList.remove('hidden');
         return;
       }
@@ -173,11 +174,13 @@ function init() {
   document.getElementById('su-domain-save').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const publicHost = document.getElementById('su-domain').value.trim();
-    await withBusy(btn, 'Saving…', async () => {
+    await withBusy(btn, t('common.saving'), async () => {
       const data = await post('/api/settings', { publicHost });
       if (data) {
         savedDomain = data.publicHost || '';
-        toast(publicHost ? `Public domain set to ${data.publicHost}.` : 'Public domain cleared.');
+        toast(
+          publicHost ? t('setup_wizard.domain_saved', { domain: data.publicHost }) : t('setup_wizard.domain_cleared')
+        );
       }
     });
   });
@@ -186,18 +189,18 @@ function init() {
     const btn = e.currentTarget;
     const key = document.getElementById('su-cf').value.trim();
     if (!key) {
-      toast('Paste a CurseForge API key first, or skip this step.', { kind: 'error' });
+      toast(t('setup_wizard.cf_key_prompt'), { kind: 'error' });
       return;
     }
-    await withBusy(btn, 'Checking…', async () => {
+    await withBusy(btn, t('common.checking'), async () => {
       const data = await post('/api/keys/curseforge', { key });
       if (data) {
-        toast('Key verified with CurseForge and saved (encrypted).');
+        toast(t('setup_wizard.cf_key_saved'));
         const cf = document.getElementById('su-cf');
         cf.value = '';
         // Reflect the stored state - an emptied field with an example
         // placeholder read as "nothing saved".
-        cf.placeholder = 'Stored. Paste a new key to replace it.';
+        cf.placeholder = t('setup_wizard.cf_key_placeholder_stored');
       }
     });
   });
@@ -228,12 +231,12 @@ function init() {
 
   document.getElementById('su-loc-save').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
-    await withBusy(btn, 'Saving…', async () => {
+    await withBusy(btn, t('common.saving'), async () => {
       const data = await post('/api/settings/localization', {
         timezone: document.getElementById('su-tz').value,
         country: document.getElementById('su-country').value,
       });
-      if (data) toast(`Time zone set to ${data.localization.timezone}.`);
+      if (data) toast(t('setup_wizard.tz_saved', { tz: data.localization.timezone }));
     });
   });
 

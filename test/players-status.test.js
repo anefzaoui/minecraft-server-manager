@@ -81,7 +81,7 @@ test('roster status column renders Joined / Whitelisted / Banned with enforcemen
   // Enforcement is off, so the un-whitelisted player just reads "Not whitelisted",
   // never a blocked hint.
   assert.match(r.text, />Not whitelisted<\/div>/);
-  assert.doesNotMatch(r.text, /join blocked/i);
+  assert.doesNotMatch(r.text, />Not whitelisted, join blocked<\/div>/);
 
   // The seen line and last-seen attribute survive for the joined-but-not-whitelisted player.
   assert.match(r.text, /data-last-seen="2027-01-01"/);

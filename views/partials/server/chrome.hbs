@@ -21,15 +21,15 @@
             {{statusLabel server.status}}
           </span>
           <span class="badge badge-warn {{#unless server.statusDetail}}hidden{{/unless}}" data-status-detail="{{server.id}}">{{server.statusDetail}}</span>
-          {{#if server.updateAvailable}}<span class="badge badge-warn">update available</span>{{/if}}
-          {{#if server.crashesUnread}}<span class="badge badge-danger">{{server.crashesUnread}} new {{plural server.crashesUnread 'crash' 'crashes'}}</span>{{/if}}
+          {{#if server.updateAvailable}}<span class="badge badge-warn">{{t 'servers.update_available'}}</span>{{/if}}
+          {{#if server.crashesUnread}}<span class="badge badge-danger">{{server.crashesUnread}} {{t 'server_card.new_crashes'}}</span>{{/if}}
         </div>
         <p class="mt-1 flex flex-wrap gap-x-3 text-xs text-ink-faint">
           <span><b class="font-semibold text-ink-soft">{{server.flavor}}</b> {{server.mcVersion}}</span>
-          <span>Java: {{server.javaTag}}</span>
-          <span>Port {{server.ports.game}}</span>
-          {{#if server.pack}}<span>{{platformName server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} (pinned)</span>{{/if}}
-          {{#if server.stats.uptime}}<span>Up {{server.stats.uptime}}</span>{{/if}}
+          {{#if server.javaTag}}<span>{{t 'servers.java_label' tag=server.javaTag}}</span>{{/if}}
+          <span>{{t 'servers.port'}} {{server.ports.game}}</span>
+          {{#if server.pack}}<span>{{platformName server.pack.platform}}: {{server.pack.name}} @ {{server.pack.version}} ({{t 'servers.pinned'}})</span>{{/if}}
+          {{#if server.stats.uptime}}<span>{{t 'servers.up'}} {{server.stats.uptime}}</span>{{/if}}
         </p>
         {{#if server.tags.length}}
           <div class="mt-2 flex flex-wrap gap-1.5">{{#each server.tags}}<span class="chip">{{this}}</span>{{/each}}</div>
@@ -41,15 +41,15 @@
         handlers in app.js still bind on every other page state. }}
     <div class="flex flex-wrap gap-2{{#unless perms.power}} hidden{{/unless}}">
       {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}}
-        <button class="btn" data-server-action="restart" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'rotate-cw' 'size-4'}}} Restart</button>
-        <button class="btn btn-danger" data-server-action="stop" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'square' 'size-4'}}} Stop</button>
-        <button class="btn btn-ghost" data-server-action="kill" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Force stop. Skips the world save; use only if the server is frozen.">{{{icon 'zap' 'size-4'}}}</button>
+        <button class="btn" data-server-action="restart" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'rotate-cw' 'size-4'}}} {{t 'servers.restart'}}</button>
+        <button class="btn btn-danger" data-server-action="stop" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'square' 'size-4'}}} {{t 'servers.stop'}}</button>
+        <button class="btn btn-ghost" data-server-action="kill" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="{{t 'servers.force_stop_tip'}}">{{{icon 'zap' 'size-4'}}}</button>
       {{else}}
-        <button class="btn btn-primary" data-server-action="start" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'play' 'size-4'}}} Start</button>
-        {{#if (eq server.status 'crashed')}}<a class="btn" href="/servers/{{server.id}}/history">{{{icon 'flame' 'size-4'}}} Latest Crash</a>{{/if}}
+        <button class="btn btn-primary" data-server-action="start" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'play' 'size-4'}}} {{t 'servers.start'}}</button>
+        {{#if (eq server.status 'crashed')}}<a class="btn" href="/servers/{{server.id}}/history">{{{icon 'flame' 'size-4'}}} {{t 'servers.latest_crash'}}</a>{{/if}}
       {{/if}}
       {{#if server.pendingRecreate}}
-        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Settings changed. Rebuild the container to apply them.">{{{icon 'wrench' 'size-4'}}} Apply Changes</button>
+        <button class="btn" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="{{t 'servers.recreate_tip'}}">{{{icon 'wrench' 'size-4'}}} {{t 'servers.apply_changes'}}</button>
       {{/if}}
     </div>
   </div>
@@ -62,7 +62,7 @@
       <a href="{{href}}"
          class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition
            {{#if active}}border-grass-500 text-ink{{else}}border-transparent text-ink-faint hover:text-ink{{/if}}">
-        {{{icon icon 'size-4'}}} {{label}}
+        {{{icon icon 'size-4'}}} {{#if key}}{{t (concat 'server_nav.' key)}}{{else}}{{label}}{{/if}}
         {{#if badge}}<span class="badge badge-danger">{{badge}}</span>{{/if}}
       </a>
     {{/each}}
@@ -72,7 +72,7 @@
     <div class="flex flex-nowrap items-center gap-1 overflow-x-auto border-t border-line bg-inset/40 px-3 py-1.5">
       {{#each nav.sub}}
         <a href="{{href}}" class="subtab shrink-0 {{#if active}}active{{/if}}">
-          {{label}}{{#if badge}} <span class="badge badge-danger">{{badge}}</span>{{/if}}
+          {{#if key}}{{t (concat 'server_nav.' key)}}{{else}}{{label}}{{/if}}{{#if badge}} <span class="badge badge-danger">{{badge}}</span>{{/if}}
         </a>
       {{/each}}
     </div>

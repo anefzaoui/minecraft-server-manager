@@ -6,6 +6,8 @@ import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 import { runTask } from '../lib/progress.js';
 import { showZipImportReport } from '../lib/zipImport.js';
+import { escapeHtml } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 // Escape a value for safe interpolation into an HTML attribute (Modrinth icon
 // URLs are third-party mod-author data — an unescaped `"` breaks out of src="").
@@ -74,12 +76,14 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       const btn = e.target.closest('[data-mod-revert]');
       const to = btn.dataset.revertTo;
       const ok = await confirmDialog({
-        title: 'Go back to the earlier build?',
-        message: `${row.dataset.name || file} goes back to ${to}, and that build stops being offered as an update until a newer one appears. The server restarts if it is running.`,
-        confirmLabel: 'Revert',
+        title: t('mods_modal.revert_title'),
+        message: t('mods_modal.revert_msg', { name: row.dataset.name || file, to }),
+        confirmLabel: t('mods_modal.revert_btn'),
       });
       if (!ok) return;
-      const res = await withBusy(btn, 'Reverting…', () => post(`/api/servers/${serverId}/mods/revert`, { file }));
+      const res = await withBusy(btn, t('mods_modal.reverting_btn'), () =>
+        post(`/api/servers/${serverId}/mods/revert`, { file })
+      );
       if (res) {
         const inst = res.installed || {};
         toast(
@@ -122,9 +126,9 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     } else if (e.target.closest('[data-mod-delete]')) {
       const btn = e.target.closest('[data-mod-delete]');
       const ok = await confirmDialog({
-        title: `Delete ${file}?`,
-        message: 'Removes the file from this server. The shared library copy stays for other servers.',
-        confirmLabel: 'Delete',
+        title: t('mods_modal.delete_mod_title', { file }),
+        message: t('mods_modal.delete_mod_msg'),
+        confirmLabel: t('mods_modal.delete_mod_btn'),
         danger: true,
       });
       if (!ok) return;
@@ -165,31 +169,31 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       <p class="help">Paste almost any link: Modrinth, CurseForge, Hangar, or SpigotMC project pages, a GitHub repo or release ("owner/repo" works too), a Modrinth slug, or a direct .jar URL. The right build for this server's loader and MC version is picked automatically.</p>
       <label class="label mt-3">Content type</label>
       <select class="input" id="mod-url-kind" data-label="Content type">
-        <option value="">Auto-detect</option>
-        <option value="mod">Mod</option>
-        <option value="plugin">Plugin</option>
-        <option value="datapack">Datapack</option>
-        <option value="resourcepack">Resource pack</option>
+        <option value="">${escapeHtml(t('mods_modal.url_auto_detect'))}</option>
+        <option value="mod">${escapeHtml(t('mods_modal.url_mod'))}</option>
+        <option value="plugin">${escapeHtml(t('mods_modal.url_plugin'))}</option>
+        <option value="datapack">${escapeHtml(t('mods_modal.url_datapack'))}</option>
+        <option value="resourcepack">${escapeHtml(t('mods_modal.url_resourcepack'))}</option>
       </select>
-      <p class="help">Leave on Auto-detect unless a link installs as the wrong type. Some datapacks are published under a "mod" project.</p>
+      <p class="help">${escapeHtml(t('mods_modal.url_help'))}</p>
       ${
         mc && !mc.startsWith('LATEST')
           ? `<label class="mt-3 flex cursor-pointer items-start gap-2 text-sm">
                <input type="checkbox" class="msm-check mt-0.5" id="mod-url-ignore-version">
-               <span>Install even if the build isn't listed as compatible with ${escAttr(mc)} or this server's loader.</span>
+               <span>${escapeHtml(t('mods_modal.ignore_version_label', { mc }))}</span>
              </label>`
           : ''
       }
       <div class="mt-3 hidden" id="mod-url-progress"><div class="meter meter-indeterminate"><div class="bg-grass-500" style="width:25%"></div></div></div>`;
     const modal = openModal({
-      title: 'Add Mod by URL',
+      title: t('mods_modal.add_url_title'),
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Download & Install',
+          label: t('mods_modal.download_install_btn'),
           kind: 'primary',
-          busyLabel: 'Installing…',
+          busyLabel: t('mods_modal.installing_btn'),
           onClick: async () => {
             const url = content.querySelector('#mod-url').value.trim();
             if (!url) return false;
@@ -326,33 +330,37 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
       box.className = 'mt-3 flex items-start gap-2 rounded-md border border-line bg-raised p-2.5 text-xs';
       box.innerHTML = `
         <input type="checkbox" class="msm-check mt-0.5 shrink-0">
-        <span class="text-ink-soft">Also apply the pack's <b>${Number(preview.overrides.count)} override file${preview.overrides.count === 1 ? '' : 's'}</b> (configs/scripts) to this server. Files that would be overwritten are backed up first inside the server folder.</span>`;
+        <span class="text-ink-soft">${t('mods_modal.overrides_count_label', { count: preview.overrides.count })}</span>`;
       overridesToggle = box.querySelector('input');
       content.appendChild(box);
     }
 
     const modal = openModal({
-      title: isMrpack ? 'Import Modrinth Modpack' : isPack ? 'Import CurseForge Modpack' : 'Import Mods from Zip',
+      title: isMrpack
+        ? t('mods_modal.import_zip_title_mrpack')
+        : isPack
+          ? t('mods_modal.import_zip_title_curseforge')
+          : t('mods_modal.import_zip_title_mods'),
       content,
       size: 'lg',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Install Selected',
+          label: t('mods_modal.install_selected_btn'),
           kind: 'primary',
           onClick: async () => {
             const selections = rows
               .filter((r) => !r.isBlocked && !r.missing && r.row.querySelector('input').checked)
               .map((r) => (isPack ? r.item.fileId : r.item.entry));
             if (!selections.length && !(overridesToggle && overridesToggle.checked)) {
-              toast('Nothing selected.', { kind: 'info' });
+              toast(t('mods_modal.nothing_selected_toast'), { kind: 'info' });
               return false;
             }
             modal.close();
             let report;
             try {
               report = await runTask({
-                title: 'Importing mod zip…',
+                title: t('mods_modal.import_task_title'),
                 start: async () => {
                   const res = await post(`/api/servers/${serverId}/mods/import-zip`, {
                     uploadToken,
@@ -417,15 +425,15 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
         mc && !mc.startsWith('LATEST')
           ? `<label class="mt-2 flex cursor-pointer items-start gap-2 text-sm">
                <input type="checkbox" class="msm-check mt-0.5" id="mr-any-version">
-               <span>Also show builds not listed as compatible with ${escAttr(mc)} or this server's loader. You accept the risk of installing one.</span>
+               <span>${escapeHtml(t('mods_modal.search_any_version', { mc }))}</span>
              </label>`
           : ''
       }
       <div class="mt-3 max-h-96 space-y-2 overflow-y-auto" id="mr-results">
-        <p class="p-6 text-center text-sm text-ink-faint">Type to search.</p>
+        <p class="p-6 text-center text-sm text-ink-faint">${escapeHtml(t('mods_modal.type_to_search'))}</p>
       </div>`;
     const modal = openModal({
-      title: contentKind === 'plugin' ? 'Search Plugins' : 'Search Mods',
+      title: contentKind === 'plugin' ? t('mods_modal.search_plugins_title') : t('mods_modal.search_mods_title'),
       content,
       size: 'lg',
     });
@@ -676,15 +684,15 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
   document.getElementById('mods-update-all')?.addEventListener('click', async () => {
     const pending = document.querySelectorAll('#mods-table [data-mod-update]').length;
     const ok = await confirmDialog({
-      title: 'Update all mods?',
-      message: `Applies ${pending} available update${pending === 1 ? '' : 's'}, then restarts the server once if it is running. Ignored updates are skipped.`,
-      confirmLabel: 'Update All',
+      title: t('mods_modal.update_all_title'),
+      message: t('mods_modal.update_all_msg', { count: pending }),
+      confirmLabel: t('mods_modal.update_all_btn'),
     });
     if (!ok) return;
     let result;
     try {
       result = await runTask({
-        title: 'Updating mods…',
+        title: t('mods_modal.updating_task_title'),
         start: async () => {
           const res = await post(`/api/servers/${serverId}/mods/update-all`, {});
           if (!res) throw Object.assign(new Error('Update failed to start'), { dismissed: true });
@@ -727,8 +735,8 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
     pendingBox.classList.remove('hidden');
     pendingBox.innerHTML = `
       <div class="notice notice-warn flex-wrap gap-3">
-        <span class="text-warn">${list.length} ${list.length === 1 ? 'mod' : 'mods'} in this modpack couldn't be auto-downloaded, so the pack won't finish installing until each is resolved.</span>
-        <button class="btn btn-sm ml-auto" id="mods-pending-open">Resolve Now</button>
+        <span class="text-warn">${escapeHtml(t('mods_modal.pending_notice', { count: list.length }))}</span>
+        <button class="btn btn-sm ml-auto" id="mods-pending-open">${escapeHtml(t('mods_modal.resolve_now_btn'))}</button>
       </div>`;
     pendingBox.querySelector('#mods-pending-open').addEventListener('click', () => openPendingModal(list));
     if (autoOpen && !pendingAutoOpened) {
@@ -740,15 +748,14 @@ function init(serverId, serverType, mcVersion, serverLoader, cfEnabled) {
   function openPendingModal(list) {
     const content = document.createElement('div');
     content.innerHTML = `
-      <p class="mb-3 text-sm text-ink-soft">These mods disallow automated download (or were pulled from CurseForge), so the pack can't finish. For each one, <b>Exclude</b> it, install a replacement via <b>search</b>, or <b>upload</b> the jar you downloaded by hand. Changes apply on the next recreate.</p>
+      <p class="mb-3 text-sm text-ink-soft">${t('mods_modal.manual_action_intro')}</p>
       <div class="space-y-2" id="pending-list"></div>`;
-    openModal({ title: 'Mods That Need Manual Action', content, size: 'lg' });
+    openModal({ title: t('mods_modal.manual_action_title'), content, size: 'lg' });
     const listEl = content.querySelector('#pending-list');
 
     function render(mods) {
       if (!mods.length) {
-        listEl.innerHTML =
-          '<div class="notice notice-ok"><svg class="icon size-4 mt-0.5 shrink-0 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div>All resolved. Recreate the server to apply.</div></div>';
+        listEl.innerHTML = `<div class="notice notice-ok"><svg class="icon size-4 mt-0.5 shrink-0 text-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div>${escapeHtml(t('mods_modal.manual_action_resolved'))}</div></div>`;
         return;
       }
       listEl.innerHTML = '';

@@ -1,6 +1,6 @@
 <div class="card p-4" data-chat-server="{{server.id}}" data-chat-running="{{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}1{{/if}}">
-  <h3 class="mb-1 font-semibold">Chat</h3>
-  <p class="mb-3 text-xs text-ink-faint">Send styled messages to everyone or one player, shown in-game. Available while the server runs.</p>
+  <h3 class="mb-1 font-semibold">{{t 'chat_tab.title'}}</h3>
+  <p class="mb-3 text-xs text-ink-faint">{{t 'chat_tab.subtitle'}}</p>
 
   {{! Always-dark console trough: literal stone steps on purpose (ink tokens
       flip in light mode and would vanish here). break-words: chat wraps,
@@ -10,9 +10,9 @@
       <div>
         {{{icon 'megaphone' 'mx-auto size-6 text-stone-500'}}}
         {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-          <p class="mt-2">No messages yet. Everything you send appears here, styled as players see it.</p>
+          <p class="mt-2">{{t 'chat_tab.no_messages_running'}}</p>
         {{else}}
-          <p class="mt-2">Recent messages appear here. Start the server to send chat.</p>
+          <p class="mt-2">{{t 'chat_tab.no_messages_offline'}}</p>
         {{/if}}
       </div>
     </div>
@@ -25,41 +25,41 @@
         the select and the seg share one 38px baseline instead of staggering. }}
     <div class="flex flex-wrap items-start gap-x-4 gap-y-2">
       <div data-chat-target-wrap>
-        <label class="label" for="chat-target">To</label>
-        <select class="input w-auto" id="chat-target" data-label="Recipient">
-          <option value="@a" selected>Everyone</option>
+        <label class="label" for="chat-target">{{t 'chat_tab.to'}}</label>
+        <select class="input w-auto" id="chat-target" data-label="{{t 'chat_tab.recipient'}}">
+          <option value="@a" selected>{{t 'chat_tab.everyone'}}</option>
           {{#each onlinePlayers}}<option value="{{this}}">{{this}}</option>{{/each}}
         </select>
       </div>
       <div>
-        <span class="label">Mode</span>
-        <div class="seg" id="chat-mode" role="group" aria-label="Message mode">
-          <button type="button" class="seg-btn" aria-pressed="true" data-mode="tellraw">Styled</button>
-          <button type="button" class="seg-btn" aria-pressed="false" data-mode="say">Plain</button>
+        <span class="label">{{t 'chat_tab.mode'}}</span>
+        <div class="seg" id="chat-mode" role="group" aria-label="{{t 'chat_tab.mode_group'}}">
+          <button type="button" class="seg-btn" aria-pressed="true" data-mode="tellraw">{{t 'chat_tab.styled'}}</button>
+          <button type="button" class="seg-btn" aria-pressed="false" data-mode="say">{{t 'chat_tab.plain'}}</button>
         </div>
       </div>
     </div>
-    <p class="help"><b>Styled</b> sends colored, formatted text and can target one player. <b>Plain</b> sends a simple <span class="font-mono">[Server]</span> broadcast to everyone.</p>
+    <p class="help">{{t 'chat_tab.mode_help'}}</p>
 
     {{! The composer group: formatting toolbar and live preview attached
         directly to the message input, not floating bands. Controls are
         injected by chat.js (swatches need the color map anyway). }}
     <div class="space-y-2 rounded-md border border-line bg-inset/30 p-2.5">
       <div class="flex flex-wrap items-center gap-x-2 gap-y-1.5" data-chat-styles>
-        <div class="flex flex-wrap items-center gap-1" id="chat-colors" role="group" aria-label="Text color"></div>
+        <div class="flex flex-wrap items-center gap-1" id="chat-colors" role="group" aria-label="{{t 'chat_tab.text_color'}}"></div>
         <span class="h-5 w-px shrink-0 bg-line-strong" aria-hidden="true"></span>
-        <div class="flex items-center gap-1" id="chat-formats" role="group" aria-label="Text style"></div>
+        <div class="flex items-center gap-1" id="chat-formats" role="group" aria-label="{{t 'chat_tab.text_style'}}"></div>
       </div>
       <div class="flex min-w-0 items-baseline gap-2 rounded-sm bg-stone-950 px-2.5 py-1.5 font-mono text-[13px] leading-6" data-chat-preview-row hidden>
-        <span class="shrink-0 text-[10px] uppercase tracking-wider text-stone-500">Preview</span>
+        <span class="shrink-0 text-[10px] uppercase tracking-wider text-stone-500">{{t 'chat_tab.preview'}}</span>
         <span class="min-w-0 break-words text-stone-200" data-chat-preview></span>
       </div>
       <div class="flex gap-2">
         {{! min-w-0: an <input>'s flexbox min-width defaults to its content size,
             which refuses to shrink below ~190px and pushes the whole page wider
             than the viewport on narrow screens - see settings.hbs for the same fix. }}
-        <input class="input min-w-0 flex-1" id="chat-input" placeholder="Message (press Enter to send)" autocomplete="off" maxlength="512" />
-        <button class="btn btn-primary" id="chat-send">{{{icon 'megaphone' 'size-4'}}} Send</button>
+        <input class="input min-w-0 flex-1" id="chat-input" placeholder="{{t 'chat_tab.placeholder'}}" autocomplete="off" maxlength="512" />
+        <button class="btn btn-primary" id="chat-send">{{{icon 'megaphone' 'size-4'}}} {{t 'chat_tab.send'}}</button>
       </div>
     </div>
   </fieldset>

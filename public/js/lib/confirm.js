@@ -7,16 +7,28 @@
 
 import { openModal } from './modal.js';
 import { escapeHtml } from './format.js';
+import { t } from './i18n.js';
 
 export function confirmDialog({
-  title = 'Are you sure?',
+  title,
+  titleKey,
   message = '',
+  messageKey,
   detail = '',
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  confirmKey,
+  cancelLabel,
+  cancelKey,
   danger = false,
   requireText = null,
 } = {}) {
+  const resolvedTitle = titleKey ? t(titleKey) : (title ?? (t('confirm.default_title') || 'Are you sure?'));
+  const resolvedMessage = messageKey ? t(messageKey) : message;
+  const resolvedConfirmLabel = confirmKey
+    ? t(confirmKey)
+    : (confirmLabel ?? (t('confirm.default_confirm') || 'Confirm'));
+  const resolvedCancelLabel = cancelKey ? t(cancelKey) : (cancelLabel ?? (t('confirm.default_cancel') || 'Cancel'));
+
   return new Promise((resolve) => {
     let settled = false;
     const settle = (v) => {
@@ -28,9 +40,9 @@ export function confirmDialog({
 
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
-    if (message) {
+    if (resolvedMessage) {
       const p = document.createElement('p');
-      p.textContent = message;
+      p.textContent = resolvedMessage;
       content.appendChild(p);
     }
     if (detail) {
@@ -46,27 +58,29 @@ export function confirmDialog({
       const wrap = document.createElement('div');
       const label = document.createElement('label');
       label.className = 'label';
-      label.innerHTML = `Type <b class="font-mono">${escapeHtml(requireText)}</b> to confirm`;
+      label.innerHTML =
+        t('confirm.type_to_confirm', { text: escapeHtml(requireText) }) ||
+        `Type <b class="font-mono">${escapeHtml(requireText)}</b> to confirm`;
       input = document.createElement('input');
       input.className = 'input font-mono';
       input.autocomplete = 'off';
       input.spellcheck = false;
       mismatch = document.createElement('p');
       mismatch.className = 'mt-1 hidden text-xs text-danger';
-      mismatch.textContent = "That name doesn't match.";
+      mismatch.textContent = t('confirm.mismatch') || "That name doesn't match.";
       wrap.append(label, input, mismatch);
       content.appendChild(wrap);
     }
 
     const modal = openModal({
-      title,
+      title: resolvedTitle,
       content,
       size: 'sm',
       onClose: () => settle(false),
       actions: [
-        { label: cancelLabel, kind: 'ghost', onClick: () => settle(false) },
+        { label: resolvedCancelLabel, kind: 'ghost', onClick: () => settle(false) },
         {
-          label: confirmLabel,
+          label: resolvedConfirmLabel,
           kind: danger ? 'danger' : 'primary',
           onClick: () => {
             if (input && input.value !== requireText) {

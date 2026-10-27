@@ -114,7 +114,7 @@ test('/modpacks lists pack-backed servers (sidebar VMs no longer carry pack info
   const r = await app.req('GET', '/modpacks', { cookie, headers: { Accept: 'text/html' } });
   assert.equal(r.status, 200);
   assert.match(r.text, /Cobblemon Pack/);
-  assert.doesNotMatch(r.text, /No Modpacks Installed/);
+  assert.doesNotMatch(r.text, /<h3[^>]*>[^<]*No Modpacks Installed/);
 });
 
 test('cached library icons are served authed-only (the /library/icons static mount)', async () => {
@@ -189,5 +189,5 @@ test('dashboard renders the per-server breakdown with a live server', async () =
   assert.match(r.text, /data-seg-cap="200"/);
   assert.match(r.text, /data-combined-row="srv_dashlive"/);
   // The run-only fallback copy is NOT shown when a server is running.
-  assert.doesNotMatch(r.text, /No servers are running right now\./);
+  assert.doesNotMatch(r.text, /<div class="card p-4 text-sm text-ink-faint">[^<]*No servers are running right now\./);
 });

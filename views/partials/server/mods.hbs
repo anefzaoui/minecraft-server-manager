@@ -1,18 +1,18 @@
 <div data-mods-server="{{server.id}}" data-mods-type="{{server.type}}" data-mods-loader="{{server.loader}}" data-mods-mc="{{server.mcVersion}}" data-mods-cf="{{#if curseforgeEnabled}}true{{else}}false{{/if}}">
   <div class="mb-4 flex flex-wrap items-center gap-2">
     {{#if mods.length}}
-    <input class="input max-w-xs" placeholder="Search installed mods…" id="mods-filter">
-    <select class="input w-auto" data-label="Filter by source" id="mods-source">
-      <option value="">All sources</option><option value="pack">Pack-managed</option><option value="overlay">Custom</option>
+    <input class="input max-w-xs" placeholder="{{t 'mods_page.search_placeholder'}}" id="mods-filter">
+    <select class="input w-auto" data-label="{{t 'mods_page.filter_source'}}" id="mods-source">
+      <option value="">{{t 'mods_page.source_all'}}</option><option value="pack">{{t 'mods_page.source_pack'}}</option><option value="overlay">{{t 'mods_page.source_custom'}}</option>
     </select>
     {{/if}}
     <div class="ml-auto flex flex-wrap gap-2{{#unless perms.content}} hidden{{/unless}}">
       {{#if hasModUpdates}}
-      <button class="btn btn-ghost btn-sm text-warn" id="mods-update-all" data-tip="Apply every available update, then restart the server once">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update All</button>
+      <button class="btn btn-ghost btn-sm text-warn" id="mods-update-all" data-tip="{{t 'mods_page.update_all_tip'}}">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{t 'mods_page.update_all'}}</button>
       {{/if}}
-      <button class="btn btn-sm" id="mods-search">{{{icon 'search' 'size-3.5'}}} Search Mods</button>
-      <button class="btn btn-sm" id="mods-import-zip" data-tip="Modrinth .mrpack, CurseForge modpack export, or any zip of mod jars">{{{icon 'archive' 'size-3.5'}}} Import Zip</button>
-      <button class="btn btn-primary btn-sm" id="mods-add-url">{{{icon 'plus' 'size-3.5'}}} Add by URL</button>
+      <button class="btn btn-sm" id="mods-search">{{{icon 'search' 'size-3.5'}}} {{t 'mods_page.search_mods'}}</button>
+      <button class="btn btn-sm" id="mods-import-zip" data-tip="{{t 'mods_page.import_zip_tip'}}">{{{icon 'archive' 'size-3.5'}}} {{t 'mods_page.import_zip'}}</button>
+      <button class="btn btn-primary btn-sm" id="mods-add-url">{{{icon 'plus' 'size-3.5'}}} {{t 'mods_page.add_by_url'}}</button>
       {{! button labels kept in sync with the modal titles in mods.js }}
     </div>
   </div>
@@ -23,9 +23,8 @@
   {{#if server.pack}}
     <div class="notice notice-info mb-4 max-w-prose text-xs">
       {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
-      <div><b class="text-link">Pack-managed</b> mods are installed by {{platformName server.pack.platform}} ({{server.pack.name}} {{server.pack.version}}).
-      Disabling one takes effect on the next restart. <b class="text-ok">Custom</b> mods are ones you added yourself.
-      They live in the shared library, survive pack updates, and can be turned on or off instantly.</div>
+      <div><b class="text-link">{{t 'mods_page.pack_managed'}}</b> {{t 'mods_page.pack_mods_desc_1'}} {{platformName server.pack.platform}} ({{server.pack.name}} {{server.pack.version}}).
+      {{t 'mods_page.pack_mods_desc_2'}} <b class="text-ok">{{t 'mods_page.custom'}}</b> {{t 'mods_page.pack_mods_desc_3'}}</div>
     </div>
   {{/if}}
 
@@ -33,7 +32,7 @@
   <div class="card overflow-x-auto">
     <table class="table-base table-stack" id="mods-table">
       <thead><tr>
-        <th>Mod</th><th>Source</th><th>Version</th><th class="text-right">Size</th><th>Status</th><th class="text-right">Actions</th>
+        <th>{{t 'mods_page.th_mod'}}</th><th>{{t 'mods_page.th_source'}}</th><th>{{t 'mods_page.th_version'}}</th><th class="text-right">{{t 'mods_page.th_size'}}</th><th>{{t 'mods_page.th_status'}}</th><th class="text-right">{{t 'mods_page.th_actions'}}</th>
       </tr></thead>
       <tbody>
         {{#each mods}}
@@ -53,50 +52,50 @@
                 </div>
               </div>
             </td>
-            <td data-th="Source">
+            <td data-th="{{t 'mods_page.th_source'}}">
               {{#if (eq source 'pack')}}
-                <span class="badge badge-info">pack</span>
+                <span class="badge badge-info">{{t 'mods_page.badge_pack'}}</span>
               {{else if (eq source 'overlay')}}
-                <span class="badge badge-ok">custom</span>
-                {{#if sharedWith}}<div class="mt-1 text-[11px] text-ink-faint">on {{sharedWith}} server{{#if (gt sharedWith 1)}}s{{/if}}</div>{{/if}}
+                <span class="badge badge-ok">{{t 'mods_page.badge_custom'}}</span>
+                {{#if sharedWith}}<div class="mt-1 text-[11px] text-ink-faint">{{t 'mods_page.shared_with_count' count=sharedWith}}</div>{{/if}}
               {{else}}
-                <span class="badge">file</span>
+                <span class="badge">{{t 'mods_page.badge_file'}}</span>
               {{/if}}
-              {{#if (eq kind 'datapack')}}<div class="mt-1"><span class="badge">datapack</span></div>{{/if}}
+              {{#if (eq kind 'datapack')}}<div class="mt-1"><span class="badge">{{t 'mods_page.badge_datapack'}}</span></div>{{/if}}
             </td>
-            <td data-th="Version">
+            <td data-th="{{t 'mods_page.th_version'}}">
               {{default version '-'}}
-              {{#if updateAvailable}}<span class="badge badge-warn ml-1" data-tip="Update available">→ {{updateAvailable}}</span>{{/if}}
-              {{#if updateIgnored}}<span class="badge ml-1 text-ink-faint" data-tip="This update is ignored and won't be applied">ignored → {{updateIgnored}}</span>{{/if}}
-              {{#if revertTo}}<div class="mt-1 text-[11px] text-ink-faint">updated from {{revertTo}}</div>{{/if}}
+              {{#if updateAvailable}}<span class="badge badge-warn ml-1" data-tip="{{t 'mods_page.update_available_tip'}}">→ {{updateAvailable}}</span>{{/if}}
+              {{#if updateIgnored}}<span class="badge ml-1 text-ink-faint" data-tip="{{t 'mods_page.update_ignored_tip'}}">{{t 'mods_page.ignored_arrow' version=updateIgnored}}</span>{{/if}}
+              {{#if revertTo}}<div class="mt-1 text-[11px] text-ink-faint">{{t 'mods_page.updated_from' version=revertTo}}</div>{{/if}}
             </td>
-            <td data-th="Size" class="text-right text-ink-faint">{{bytes size}}</td>
-            <td data-th="Status">
+            <td data-th="{{t 'mods_page.th_size'}}" class="text-right text-ink-faint">{{bytes size}}</td>
+            <td data-th="{{t 'mods_page.th_status'}}">
               {{#if missing}}
-                <span class="text-xs font-medium text-danger" data-tip="File missing on disk. Reinstall it from the library.">Missing</span>
+                <span class="text-xs font-medium text-danger" data-tip="{{t 'mods_page.missing_file_tip'}}">{{t 'mods_page.status_missing'}}</span>
               {{else if enabled}}
-                <span class="text-xs font-medium text-ok">Enabled</span>
+                <span class="text-xs font-medium text-ok">{{t 'mods_page.status_enabled'}}</span>
               {{else}}
-                <span class="text-xs font-medium text-ink-faint">Disabled</span>
+                <span class="text-xs font-medium text-ink-faint">{{t 'mods_page.status_disabled'}}</span>
               {{/if}}
             </td>
             <td data-th="" class="text-right">
               <div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
                 {{#if updateAvailable}}
-                  <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="Update to {{updateAvailable}}, then restart the server">{{{icon 'circle-arrow-up' 'size-3.5'}}} Update</button>
-                  <button class="btn btn-ghost btn-sm" data-mod-ignore-update data-tip="Stop offering {{updateAvailable}}">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>
+                  <button class="btn btn-ghost btn-sm text-warn" data-mod-update data-tip="{{t 'mods_page.update_to_tip' version=updateAvailable}}">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{t 'mods_page.btn_update'}}</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-ignore-update data-tip="{{t 'mods_page.stop_offering_tip' version=updateAvailable}}">{{{icon 'bell-off' 'size-3.5'}}} {{t 'mods_page.btn_ignore'}}</button>
                 {{/if}}
                 {{#if updateIgnored}}
-                  <button class="btn btn-ghost btn-sm" data-mod-unignore-update data-tip="Offer {{updateIgnored}} again">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-unignore-update data-tip="{{t 'mods_page.offer_again_tip' version=updateIgnored}}">{{{icon 'bell' 'size-3.5'}}} {{t 'mods_page.btn_unignore'}}</button>
                 {{/if}}
                 {{#if revertTo}}
-                  <button class="btn btn-ghost btn-sm" data-mod-revert data-revert-to="{{revertTo}}" data-tip="Put this mod back on {{revertTo}}, then restart the server">{{{icon 'undo-2' 'size-3.5'}}} Revert</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-revert data-revert-to="{{revertTo}}" data-tip="{{t 'mods_page.revert_to_tip' version=revertTo}}">{{{icon 'undo-2' 'size-3.5'}}} {{t 'mods_page.btn_revert'}}</button>
                 {{/if}}
                 {{#unless missing}}
-                  <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}Pack mods take effect on the next restart.{{else}}Takes effect instantly.{{/if}}">{{#if enabled}}Disable{{else}}Enable{{/if}}</button>
+                  <button class="btn btn-ghost btn-sm" data-mod-toggle data-tip="{{#if (eq source 'pack')}}{{t 'mods_page.pack_mods_restart_tip'}}{{else}}{{t 'mods_page.takes_effect_instantly_tip'}}{{/if}}">{{#if enabled}}{{t 'mods_page.btn_disable'}}{{else}}{{t 'mods_page.btn_enable'}}{{/if}}</button>
                 {{/unless}}
                 {{#if (ne source 'pack')}}
-                  <button class="btn btn-ghost btn-sm text-danger" data-mod-delete aria-label="Delete {{name}}">{{{icon 'x' 'size-3.5'}}}</button>
+                  <button class="btn btn-ghost btn-sm text-danger" data-mod-delete aria-label="{{t 'mods_page.aria_delete' name=name}}">{{{icon 'x' 'size-3.5'}}}</button>
                 {{/if}}
               </div>
             </td>
@@ -110,7 +109,7 @@
       instead of a broken-image glyph. }}
   <template id="mod-icon-fallback"><span class="grid size-8 shrink-0 place-items-center rounded bg-inset text-ink-faint">{{{icon 'puzzle' 'size-4'}}}</span></template>
   {{else}}
-    {{> empty-state iconName='puzzle' title='No Mods Installed Yet' message='Search Modrinth or CurseForge; add a mod, plugin, or datapack by URL; or import a zip with the buttons above. Custom content lives in the shared library and survives pack updates.'}}
+    {{> empty-state iconName='puzzle' title=(t 'mods_page.empty_title') message=(t 'mods_page.empty_message')}}
   {{/if}}
 </div>
 <script type="module" src="/js/pages/mods.js"></script>

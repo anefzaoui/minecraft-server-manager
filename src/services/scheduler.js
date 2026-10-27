@@ -66,8 +66,8 @@ async function runTask(schedule) {
         serverId: schedule.server_id,
         actor,
         type: 'rcon',
-        summary: `Scheduled RCON: ${payload.command}.`,
-        details: { output: out.slice(0, 1000) },
+        summary: `Scheduled RCON: ${payload.command || 'list'}.`,
+        details: { output: (out || '').slice(0, 1000) },
       });
       break;
     }
@@ -250,7 +250,20 @@ function deleteSchedule(id, { actor = 'system' } = {}) {
     });
 }
 
-function listSchedules() {
+function localizeTaskType(taskType, locale) {
+  if (!locale || locale === 'en') return TASK_TYPES[taskType]?.label || taskType;
+  const i18n = require('./i18n');
+  const normKey = taskType.replace(/-/g, '_');
+  const locKey = `scheduler_tasks.${normKey}`;
+  return i18n.has(locale, locKey) ? i18n.t(locale, locKey) : TASK_TYPES[taskType]?.label || taskType;
+}
+
+function listSchedules(locale) {
+  const i18n = locale && locale !== 'en' ? require('./i18n') : null;
+  const globalLabel =
+    i18n && i18n.has(locale, 'schedules_page.global_scope')
+      ? i18n.t(locale, 'schedules_page.global_scope')
+      : '- global -';
   return db.all('SELECT * FROM schedules ORDER BY server_id IS NULL, server_id, task_type').map((s) => {
     let next = null;
     let nextMs = null;
@@ -269,8 +282,8 @@ function listSchedules() {
     return {
       id: s.id,
       serverId: s.server_id,
-      server: server ? server.display_name : '- global -',
-      task: TASK_TYPES[s.task_type]?.label || s.task_type,
+      server: server ? server.display_name : globalLabel,
+      task: localizeTaskType(s.task_type, locale),
       taskType: s.task_type,
       cron: s.cron,
       payload: JSON.parse(s.payload_json || '{}'),
@@ -283,4 +296,13 @@ function listSchedules() {
   });
 }
 
-module.exports = { startScheduler, createSchedule, setEnabled, deleteSchedule, listSchedules, rearmAll, TASK_TYPES };
+module.exports = {
+  startScheduler,
+  createSchedule,
+  setEnabled,
+  deleteSchedule,
+  listSchedules,
+  rearmAll,
+  TASK_TYPES,
+  localizeTaskType,
+};

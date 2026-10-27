@@ -4,35 +4,31 @@
   <div class="card mb-4 p-4">
     <div class="flex flex-wrap items-start gap-4">
       <div class="min-w-0 flex-1">
-        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-link'}}} Custom Chat Commands</h3>
+        <h3 class="flex items-center gap-2 font-semibold">{{{icon 'terminal' 'size-4 text-link'}}} {{t 'commands_tab.title'}}</h3>
         <p class="mt-1 max-w-prose text-sm text-ink-faint">
-          Players type a trigger in the game chat, such as <code class="code-inline" data-cc-prefix-sample>{{chatPrefix}}rtp2</code>,
-          and the panel runs the action you chose <b class="text-ink-soft">as that player</b>: a random teleport, a structure or biome
-          teleport, or your own console commands. It works on any server, version, or modpack, with no mods needed.
-          Each command has its own permission level and per-player cooldown.
+          {{t 'commands_tab.description'}}
         </p>
       </div>
       <div class="flex items-end gap-2">
         <div>
-          <label class="label" for="cc-prefix">Prefix</label>
-          <input class="input w-16 text-center font-mono" id="cc-prefix" value="{{chatPrefix}}" maxlength="2" autocomplete="off" spellcheck="false" data-tip="One or two characters, such as ! or . It cannot be /, which Minecraft uses for its own commands.">
+          <label class="label" for="cc-prefix">{{t 'commands_tab.prefix'}}</label>
+          <input class="input w-16 text-center font-mono" id="cc-prefix" value="{{chatPrefix}}" maxlength="2" autocomplete="off" spellcheck="false" data-tip="{{t 'commands_tab.prefix_tip'}}">
         </div>
-        <button class="btn btn-sm" id="cc-prefix-save">{{{icon 'check' 'size-3.5'}}} Save</button>
+        <button class="btn btn-sm" id="cc-prefix-save">{{{icon 'check' 'size-3.5'}}} {{t 'common.save'}}</button>
       </div>
     </div>
   </div>
 
   {{#unless (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
     <div class="notice notice-warn mb-4 max-w-prose text-xs">
-      The server is offline. Commands are saved and start working the moment the server is running again.
-      The Test button needs a running server.
+      {{t 'commands_tab.offline_notice'}}
     </div>
   {{/unless}}
 
   <div class="mb-4 flex flex-wrap items-center gap-2">
-    <h3 class="font-semibold">Commands</h3>
+    <h3 class="font-semibold">{{t 'commands_tab.commands_heading'}}</h3>
     <div class="ml-auto">
-      <button class="btn btn-primary btn-sm" id="cc-add">{{{icon 'plus' 'size-3.5'}}} Add Command</button>
+      <button class="btn btn-primary btn-sm" id="cc-add">{{{icon 'plus' 'size-3.5'}}} {{t 'commands_tab.add_command'}}</button>
     </div>
   </div>
 
@@ -40,41 +36,41 @@
   <div class="card overflow-x-auto">
     <table class="table-base table-stack">
       <thead><tr>
-        <th>Command</th><th>Action</th><th>Permission</th><th>Cooldown</th><th class="text-right">Uses</th><th>Enabled</th><th class="text-right">Actions</th>
+        <th>{{t 'commands_tab.th_command'}}</th><th>{{t 'commands_tab.th_action'}}</th><th>{{t 'commands_tab.th_permission'}}</th><th>{{t 'commands_tab.th_cooldown'}}</th><th class="text-right">{{t 'commands_tab.th_uses'}}</th><th>{{t 'commands_tab.th_enabled'}}</th><th class="text-right">{{t 'commands_tab.th_actions'}}</th>
       </tr></thead>
       <tbody>
         {{#each chatCommands}}
           <tr data-cc-row data-id="{{id}}">
-            <td data-th="Command">
+            <td data-th="{{../t 'commands_tab.th_command'}}">
               <div class="font-mono font-medium">{{../chatPrefix}}{{trigger}}</div>
               {{#if description}}<div class="truncate text-xs text-ink-faint sm:max-w-56" data-tip="{{description}}">{{description}}</div>{{/if}}
             </td>
-            <td data-th="Action">
+            <td data-th="{{../t 'commands_tab.th_action'}}">
               <span class="chip">{{action}}</span>
               <div class="mt-0.5 truncate text-xs text-ink-faint sm:max-w-56" data-tip="{{actionSummary}}">{{actionSummary}}</div>
             </td>
-            <td data-th="Permission">
+            <td data-th="{{../t 'commands_tab.th_permission'}}">
               {{#if (eq permission 'ops')}}
-                <span class="badge badge-danger">ops only</span>
+                <span class="badge badge-danger">{{../t 'commands_tab.perm_ops'}}</span>
               {{else if (eq permission 'whitelist')}}
-                <span class="badge badge-info">whitelisted</span>
+                <span class="badge badge-info">{{../t 'commands_tab.perm_whitelist'}}</span>
               {{else}}
-                <span class="badge badge-ok">everyone</span>
+                <span class="badge badge-ok">{{../t 'commands_tab.perm_everyone'}}</span>
               {{/if}}
             </td>
-            <td data-th="Cooldown" class="text-sm text-ink-soft">{{cooldownLabel}}</td>
-            <td data-th="Uses" class="text-right text-sm tabular-nums text-ink-soft">
+            <td data-th="{{../t 'commands_tab.th_cooldown'}}" class="text-sm text-ink-soft">{{cooldownLabel}}</td>
+            <td data-th="{{../t 'commands_tab.th_uses'}}" class="text-right text-sm tabular-nums text-ink-soft">
               <span data-cc-uses>{{uses}}</span>
-              {{#if lastUsed}}<div class="text-[11px] text-ink-faint">last {{lastUsed}}</div>{{/if}}
+              {{#if lastUsed}}<div class="text-[11px] text-ink-faint">{{../t 'commands_tab.last_used_prefix'}} {{lastUsed}}</div>{{/if}}
             </td>
-            <td data-th="Enabled">
+            <td data-th="{{../t 'commands_tab.th_enabled'}}">
               <label class="inline-flex cursor-pointer"><span class="msm-toggle"><input type="checkbox" data-cc-toggle {{#if enabled}}checked{{/if}}><span></span></span></label>
             </td>
             <td data-th="" class="text-right">
               <div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
-                <button class="btn btn-ghost btn-sm" data-cc-test data-tip="Run now as a named player (permission and cooldown checks are skipped)">{{{icon 'play' 'size-3.5'}}}</button>
-                <button class="btn btn-ghost btn-sm" data-cc-edit data-tip="Edit command">{{{icon 'pencil' 'size-3.5'}}}</button>
-                <button class="btn btn-ghost btn-sm text-danger" data-cc-delete data-tip="Delete command" aria-label="Delete {{trigger}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-cc-test data-tip="{{../t 'commands_tab.run_now_tip'}}">{{{icon 'play' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-cc-edit data-tip="{{../t 'commands_tab.edit_command'}}">{{{icon 'pencil' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-cc-delete data-tip="{{../t 'commands_tab.delete_command'}}" aria-label="{{../t 'commands_tab.aria_delete' trigger=trigger}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               </div>
             </td>
           </tr>
@@ -83,13 +79,13 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='terminal' title='No Chat Commands Yet'
-        message=(concat 'Create your first one. A custom ' chatPrefix 'rtp that randomly teleports whoever types it takes about 20 seconds to set up.')
-        ctaId='cc-add-empty' ctaLabel='Add Command'}}
+    {{> empty-state iconName='terminal' title=(t 'commands_tab.empty_title')
+        message=(t 'commands_tab.empty_message' prefix=chatPrefix)
+        ctaId='cc-add-empty' ctaLabel=(t 'commands_tab.add_command')}}
   {{/if}}
 
   <div class="card mt-6 p-4">
-    <h3 class="mb-3 font-semibold">Recent Uses</h3>
+    <h3 class="mb-3 font-semibold">{{t 'commands_tab.recent_uses'}}</h3>
     {{#if chatCommandEvents.length}}
       <div class="divide-y divide-line text-sm">
         {{#each chatCommandEvents}}
@@ -101,7 +97,7 @@
         {{/each}}
       </div>
     {{else}}
-      <p class="text-sm text-ink-faint">Nothing yet. Every use, from chat or the Test button, shows up here and in the History tab.</p>
+      <p class="text-sm text-ink-faint">{{t 'commands_tab.no_events'}}</p>
     {{/if}}
   </div>
 </div>

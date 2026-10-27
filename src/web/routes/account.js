@@ -263,6 +263,29 @@ router.delete(
   })
 );
 
+router.post(
+  '/language',
+  asyncHandler((req, res) => {
+    const { language } = z
+      .object({
+        language: z.string().max(16),
+      })
+      .parse(req.body);
+
+    const cleanLang = language === 'auto' ? null : language.toLowerCase();
+    authService.setUserLanguage(req.user.id, cleanLang);
+    if (req.session) {
+      req.session.language = language;
+    }
+    res.cookie('msm_lang', language, {
+      maxAge: 365 * 24 * 3600 * 1000,
+      httpOnly: false,
+      sameSite: 'lax',
+    });
+    res.json({ ok: true, language });
+  })
+);
+
 router.use(makeJsonErrorHandler('account', { fileTooLarge: AVATAR_TOO_LARGE }));
 
 module.exports = router;

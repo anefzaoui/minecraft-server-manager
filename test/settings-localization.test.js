@@ -42,7 +42,7 @@ test('isValidTimezone / isValidCountry', () => {
   assert.equal(settings.isValidCountry('United States'), false);
 });
 
-test('clientLocalization exposes just timezone + locale', () => {
+test('clientLocalization exposes timezone, locale and translations', () => {
   const c = settings.clientLocalization();
-  assert.deepEqual(Object.keys(c).sort(), ['locale', 'timezone']);
+  assert.deepEqual(Object.keys(c).sort(), ['locale', 'timezone', 'translations']);
 });

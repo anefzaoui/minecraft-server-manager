@@ -4,40 +4,38 @@
 
   <div class="mb-4 flex flex-wrap items-end gap-3">
     <div class="w-72 max-w-full{{#if fixedPlayer}} hidden{{/if}}">
-      <label class="label" for="inv-player">Player</label>
-      <select class="input" id="inv-player" data-label="Player">
-        <option value="">Loading players…</option>
+      <label class="label" for="inv-player">{{t 'inventory_tab.player'}}</label>
+      <select class="input" id="inv-player" data-label="{{t 'inventory_tab.player'}}">
+        <option value="">{{t 'inventory_tab.loading_players'}}</option>
       </select>
     </div>
-    <button class="btn btn-sm" id="inv-refresh" data-tip="Re-read the player's saved data file">{{{icon 'refresh-cw' 'size-3.5'}}} Refresh</button>
-    <button class="btn btn-sm" id="inv-snapshot" data-tip="Save this inventory as a snapshot for later comparison">{{{icon 'camera' 'size-3.5'}}} Snapshot</button>
+    <button class="btn btn-sm" id="inv-refresh" data-tip="{{t 'inventory_tab.refresh_tip'}}">{{{icon 'refresh-cw' 'size-3.5'}}} {{t 'inventory_tab.refresh'}}</button>
+    <button class="btn btn-sm" id="inv-snapshot" data-tip="{{t 'inventory_tab.snapshot_tip'}}">{{{icon 'camera' 'size-3.5'}}} {{t 'inventory_tab.snapshot'}}</button>
     <div class="ml-auto flex gap-2">
       {{#if (or (eq server.status 'running') (eq server.status 'unhealthy'))}}
-        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server (vanilla and modded) and give one to an online player">{{{icon 'gift' 'size-3.5'}}} Give Item</button>
-        <button class="btn btn-sm" id="inv-clear" data-tip="Remove items from an online player">{{{icon 'eraser' 'size-3.5'}}} Clear Items</button>
+        <button class="btn btn-sm" id="inv-give" data-tip="{{t 'inventory_tab.give_online_tip'}}">{{{icon 'gift' 'size-3.5'}}} {{t 'inventory_tab.give_item'}}</button>
+        <button class="btn btn-sm" id="inv-clear" data-tip="{{t 'inventory_tab.clear_online_tip'}}">{{{icon 'eraser' 'size-3.5'}}} {{t 'inventory_tab.clear_items'}}</button>
       {{else}}
-        <button class="btn btn-sm" id="inv-give" data-tip="Browse every item on this server and add one straight into the selected player's save file">{{{icon 'gift' 'size-3.5'}}} Give Item</button>
-        <span data-tip="Start the server to clear items in bulk, or delete slots one by one below"><button class="btn btn-sm" id="inv-clear" disabled>{{{icon 'eraser' 'size-3.5'}}} Clear Items</button></span>
+        <button class="btn btn-sm" id="inv-give" data-tip="{{t 'inventory_tab.give_offline_tip'}}">{{{icon 'gift' 'size-3.5'}}} {{t 'inventory_tab.give_item'}}</button>
+        <span data-tip="{{t 'inventory_tab.clear_offline_tip'}}"><button class="btn btn-sm" id="inv-clear" disabled>{{{icon 'eraser' 'size-3.5'}}} {{t 'inventory_tab.clear_items'}}</button></span>
       {{/if}}
     </div>
   </div>
 
   <div class="notice mb-4 max-w-prose text-xs">
     {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
-    <div>Inventories are read from each player's saved data. For online players, this shows the state as of the last world save.
-    Click any slot to edit it: change counts, replace, move, or delete items.
-    Snapshots are taken automatically on joins and deaths.</div>
+    <div>{{t 'inventory_tab.help_notice'}}</div>
   </div>
 
   <div class="hidden card p-10 text-center text-sm text-ink-faint" id="inv-empty">
-    No player data yet. Inventories appear after the first player joins this server.
+    {{t 'inventory_tab.empty'}}
   </div>
 
   {{! Visible until inventory.js swaps in the real grids or the empty state -
       the tab used to show only the toolbar while the fetches ran. }}
   <div class="card p-10 text-center text-sm text-ink-faint" id="inv-loading" aria-busy="true">
     <svg class="icon mx-auto size-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-    <p class="mt-2">Loading inventories…</p>
+    <p class="mt-2">{{t 'inventory_tab.loading'}}</p>
   </div>
 
   <div class="hidden" id="inv-view">
@@ -48,20 +46,20 @@
         content and can push the whole grid past the viewport at lg. }}
     <div class="grid gap-6 lg:grid-cols-[minmax(0,auto)_1fr]">
       <div class="card p-4">
-        <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'backpack' 'size-4'}}} Inventory</h3>
+        <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'backpack' 'size-4'}}} {{t 'inventory_tab.inventory'}}</h3>
         {{! The 9-wide slot grids are ~392px min - wider than a phone. Scroll
             them inside the card instead of widening the page (same pattern as
             every data table). }}
-        <div class="mb-1 eyebrow">Main</div>
+        <div class="mb-1 eyebrow">{{t 'inventory_tab.main'}}</div>
         <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-main"></div></div>
-        <div class="mb-1 mt-3 eyebrow">Hotbar</div>
+        <div class="mb-1 mt-3 eyebrow">{{t 'inventory_tab.hotbar'}}</div>
         <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-hotbar"></div></div>
-        <div class="mb-1 mt-3 eyebrow">Armor &amp; offhand</div>
+        <div class="mb-1 mt-3 eyebrow">{{t 'inventory_tab.armor_offhand'}}</div>
         <div class="overflow-x-auto"><div class="grid w-max grid-cols-5 gap-1" id="inv-grid-armor"></div></div>
       </div>
 
       <div class="card h-max p-4">
-        <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'box' 'size-4'}}} Ender Chest</h3>
+        <h3 class="mb-3 flex items-center gap-2 font-semibold">{{{icon 'box' 'size-4'}}} {{t 'inventory_tab.ender_chest'}}</h3>
         <div class="overflow-x-auto"><div class="grid w-max grid-cols-9 gap-1" id="inv-grid-ender"></div></div>
       </div>
     </div>
@@ -70,23 +68,23 @@
   {{#unless fixedPlayer}}
   <div class="card mt-6 p-4">
     <div class="mb-3 flex flex-wrap items-center gap-2">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'search' 'size-4'}}} Item Search</h3>
-      <span class="text-xs text-ink-faint">Searches every player's inventory, armor, and ender chest on this server.</span>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'search' 'size-4'}}} {{t 'inventory_tab.item_search'}}</h3>
+      <span class="text-xs text-ink-faint">{{t 'inventory_tab.item_search_sub'}}</span>
       <div class="ml-auto flex flex-wrap justify-end gap-2">
-        <input class="input w-64 max-w-full" id="inv-search-q" placeholder="diamond, netherite_sword, Excalibur…" maxlength="100">
-        <button class="btn btn-sm" id="inv-search-go">{{{icon 'search' 'size-3.5'}}} Search</button>
+        <input class="input w-64 max-w-full" id="inv-search-q" placeholder="{{t 'inventory_tab.search_placeholder'}}" maxlength="100">
+        <button class="btn btn-sm" id="inv-search-go">{{{icon 'search' 'size-3.5'}}} {{t 'inventory_tab.search'}}</button>
       </div>
     </div>
     <div id="inv-search-results" class="hidden overflow-x-auto"></div>
-    <p class="text-sm text-ink-faint" id="inv-search-hint">Matches item IDs and custom display names (renamed items), and is not case-sensitive.</p>
+    <p class="text-sm text-ink-faint" id="inv-search-hint">{{t 'inventory_tab.search_hint'}}</p>
   </div>
   {{/unless}}
 
   <div class="card mt-6 p-4">
     <div class="mb-3 flex flex-wrap items-center gap-2">
-      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'history' 'size-4'}}} Snapshots</h3>
-      <span class="text-xs text-ink-faint">Pick two to compare.</span>
-      <span class="ml-auto" data-tip="Select exactly two snapshots to compare them"><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} Compare Selected</button></span>
+      <h3 class="flex items-center gap-2 font-semibold">{{{icon 'history' 'size-4'}}} {{t 'inventory_tab.snapshots'}}</h3>
+      <span class="text-xs text-ink-faint">{{t 'inventory_tab.snapshots_sub'}}</span>
+      <span class="ml-auto" data-tip="{{t 'inventory_tab.compare_tip'}}"><button class="btn btn-sm" id="inv-diff-go" disabled>{{{icon 'diff' 'size-3.5'}}} {{t 'inventory_tab.compare_selected'}}</button></span>
     </div>
     <div id="inv-snapshots"></div>
     <div id="inv-diff" class="mt-4 hidden"></div>

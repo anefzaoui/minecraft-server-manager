@@ -2,6 +2,7 @@
 // visible from ANY page with live progress - surviving navigation, unlike the
 // per-action modal. Polls /api/tasks; hidden when idle.
 import { toast } from './toast.js';
+import { t as tr } from './i18n.js';
 
 const mount = document.getElementById('task-tray');
 if (mount) init();
@@ -48,7 +49,11 @@ function init() {
     for (const t of tasks) {
       const prev = known.get(t.id);
       if (prev === 'running' && t.state !== 'running') {
-        toast(t.state === 'done' ? `${t.title} finished.` : `${t.title} failed.${t.error ? ` ${t.error}` : ''}`, {
+        const msg =
+          t.state === 'done'
+            ? tr('common.task_finished', { title: t.title })
+            : `${tr('common.task_failed', { title: t.title })}${t.error ? ` ${t.error}` : ''}`;
+        toast(msg, {
           kind: t.state === 'done' ? 'success' : 'error',
           timeout: 7000,
         });

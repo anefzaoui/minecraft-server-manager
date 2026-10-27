@@ -1,8 +1,9 @@
-// Live console: WebSocket log stream + RCON command bar with history.
+// Live console: WebSocket log stream + runtime-aware command bar with history.
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 import { fmtBytes, escapeHtml } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const log = document.getElementById('console-log');
 const input = document.getElementById('console-input');
@@ -38,11 +39,7 @@ function init(serverId) {
           toast(data.error || friendlyError(res, { action: 'save that label' }), { kind: 'error' });
           return;
         }
-        toast(
-          data.label
-            ? `Console commands now announce as "[${data.label}]" in chat.`
-            : 'Console announcements turned off.'
-        );
+        toast(data.label ? t('console.announced_as', { label: data.label }) : t('console.announced_off'));
       } catch {
         toast(friendlyError(null, { action: 'save that label' }), { kind: 'error' });
       }
@@ -216,7 +213,7 @@ function init(serverId) {
         note = document.createElement('div');
         note.dataset.consoleNomatch = '';
         note.className = 'py-2 text-center text-stone-500';
-        note.textContent = 'No lines match the current filters.';
+        note.textContent = t('console.nomatch');
         log.appendChild(note);
       }
     } else if (note) {
@@ -264,8 +261,13 @@ function init(serverId) {
       } else if (msg.kind === 'cmd-result') {
         ackPending();
         if (msg.error) appendLine(`[panel/ERROR]: ${msg.error}`);
-        else if (msg.output) for (const line of msg.output.split(/\r?\n/)) appendLine(`[rcon]: ${line}`);
-        else appendLine(`[rcon]: (no output) /${msg.command}`);
+        else if (msg.output) {
+          const source = msg.source === 'bedrock-console' ? 'bedrock-console' : 'rcon';
+          for (const line of msg.output.split(/\r?\n/)) appendLine(`[${source}]: ${line}`);
+        } else {
+          const source = msg.source === 'bedrock-console' ? 'bedrock-console' : 'rcon';
+          appendLine(`[${source}]: (no output) /${msg.command}`);
+        }
       } else if (msg.kind === 'error') {
         ackPending();
         appendLine(`[panel/WARN]: ${msg.message}`);
@@ -284,8 +286,8 @@ function init(serverId) {
         disconnectNote = document.createElement('div');
         disconnectNote.className = 'text-gold-300';
         disconnectNote.textContent = streamEnded
-          ? '[panel/WARN]: Server is stopped. Watching for it to start again…'
-          : '[panel/WARN]: Log stream disconnected. Reconnecting…';
+          ? t('console.server_stopped_reconnecting')
+          : t('console.stream_disconnected_reconnecting');
         log.appendChild(disconnectNote);
         if (autoScroll) log.scrollTop = log.scrollHeight;
       }
@@ -334,7 +336,7 @@ function init(serverId) {
   // run one pass now so a stored "hide" preference applies before any WS line.
   refilter();
 
-  // The send control stays busy until the RCON response (cmd-result/error) or
+  // The send control stays busy until the runtime command response (cmd-result/error) or
   // ws ack arrives. Entries self-remove; a failsafe timeout catches lost acks.
   const pendingAcks = [];
   function ackPending() {

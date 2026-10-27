@@ -8,6 +8,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
 import { fmtBytes, escapeHtml } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-files-server], [data-files-global]');
 if (root) init(root);
@@ -59,23 +60,23 @@ function init(rootEl) {
   document.getElementById('files-mkdir')?.addEventListener('click', () => {
     const content = document.createElement('div');
     content.innerHTML = `
-      <label class="label">Folder name</label>
-      <input class="input" data-mk-name placeholder="new-folder" autocomplete="off">`;
+      <label class="label">${escapeHtml(t('files.folder_name_label'))}</label>
+      <input class="input" data-mk-name placeholder="${escapeHtml(t('files.folder_name_placeholder'))}" autocomplete="off">`;
     openModal({
-      title: 'New Folder',
+      title: t('files.new_folder_title'),
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Create',
+          label: t('common.create'),
           kind: 'primary',
-          busyLabel: 'Creating…',
+          busyLabel: t('common.creating'),
           onClick: async () => {
             const name = content.querySelector('[data-mk-name]').value.trim();
             if (!name) return false;
             const res = await post(`${base}/mkdir`, { path: join(currentPath, name) });
             if (!res) return false;
-            toast(`Folder "${name}" created.`);
+            toast(t('files.folder_created_toast', { name }));
             reload();
           },
         },
@@ -87,12 +88,12 @@ function init(rootEl) {
   document.getElementById('files-search')?.addEventListener('click', () => {
     const content = document.createElement('div');
     content.innerHTML = `
-      <label class="label" for="fs-q">Search text</label>
-      <input class="input" id="fs-q" placeholder="a word or phrase (min 2 chars)" autocomplete="off">
+      <label class="label" for="fs-q">${escapeHtml(t('files.search_text_label'))}</label>
+      <input class="input" id="fs-q" placeholder="${escapeHtml(t('files.search_text_placeholder'))}" autocomplete="off">
       <label class="mt-2 flex items-center gap-2 text-xs text-ink-faint">
-        <input type="checkbox" class="msm-check" id="fs-case"> Match case
+        <input type="checkbox" class="msm-check" id="fs-case"> ${escapeHtml(t('files.match_case'))}
       </label>
-      <p class="help mt-1">Searches text files${currentPath ? ` under <span class="font-mono">${escapeHtml(currentPath)}</span>` : ' from here down'}. Large and binary files are skipped.</p>
+      <p class="help mt-1">${t('files.find_help', { path: currentPath ? t('files.under_folder', { path: escapeHtml(currentPath) }) : t('files.from_here_down') })}</p>
       <div class="mt-3 max-h-80 overflow-y-auto rounded-md border border-line text-sm" id="fs-results" hidden></div>`;
     const q = content.querySelector('#fs-q');
     const results = content.querySelector('#fs-results');
@@ -101,7 +102,7 @@ function init(rootEl) {
       const term = q.value.trim();
       if (term.length < 2) return false;
       results.hidden = false;
-      results.innerHTML = '<div class="p-3 text-ink-faint">Searching…</div>';
+      results.innerHTML = `<div class="p-3 text-ink-faint">${escapeHtml(t('files.searching'))}</div>`;
       const params = new URLSearchParams({ q: term });
       if (currentPath) params.set('path', currentPath);
       if (content.querySelector('#fs-case').checked) params.set('case', '1');
@@ -110,15 +111,15 @@ function init(rootEl) {
         const res = await fetch(`${base}/search?${params}`);
         data = await res.json().catch(() => ({}));
         if (!res.ok || data.ok === false) {
-          results.innerHTML = `<div class="p-3 text-danger">${escapeHtml(data.error || 'Search failed.')}</div>`;
+          results.innerHTML = `<div class="p-3 text-danger">${escapeHtml(data.error || t('files.search_failed'))}</div>`;
           return false;
         }
       } catch {
-        results.innerHTML = '<div class="p-3 text-danger">Search failed.</div>';
+        results.innerHTML = `<div class="p-3 text-danger">${escapeHtml(t('files.search_failed'))}</div>`;
         return false;
       }
       if (!data.matches.length) {
-        results.innerHTML = '<div class="p-3 text-ink-faint">No matches.</div>';
+        results.innerHTML = `<div class="p-3 text-ink-faint">${escapeHtml(t('files.no_matches'))}</div>`;
         return false;
       }
       results.innerHTML =
@@ -132,18 +133,23 @@ function init(rootEl) {
           )
           .join('') +
         (data.truncated
-          ? '<div class="px-3 py-1.5 text-xs text-ink-faint">Showing the first results only. Narrow the search to see the rest.</div>'
+          ? `<div class="px-3 py-1.5 text-xs text-ink-faint">${escapeHtml(t('files.showing_first_results'))}</div>`
           : '');
       return false; // keep the modal open
     };
 
     openModal({
-      title: 'Find in Files',
+      title: t('files.find_title'),
       content,
       size: 'lg',
       actions: [
-        { label: 'Close', kind: 'ghost' },
-        { label: 'Search', kind: 'primary', busyLabel: 'Searching…', onClick: run },
+        { label: t('common.close'), kind: 'ghost' },
+        {
+          label: t('common.search', { defaultValue: 'Search' }),
+          kind: 'primary',
+          busyLabel: t('files.searching'),
+          onClick: run,
+        },
       ],
     });
     q.addEventListener('keydown', (e) => {
@@ -175,11 +181,12 @@ function init(rootEl) {
       location.href = `${base}/download?path=${encodeURIComponent(path)}`;
     } else if (e.target.closest('[data-file-delete]')) {
       const btn = e.target.closest('[data-file-delete]');
+      const typeLabel = isDir ? t('files.type_folder') : t('files.type_file');
       const ok = await confirmDialog({
-        title: `Delete ${isDir ? 'folder' : 'file'} "${name}"?`,
-        message: isDir ? 'Deletes the folder and everything inside it.' : 'Deletes this file permanently.',
+        title: t('files.delete_confirm_title', { type: typeLabel, name }),
+        message: isDir ? t('files.delete_dir_msg') : t('files.delete_file_msg'),
         detail: `${fmtBytes(size)} will be freed.`,
-        confirmLabel: 'Delete',
+        confirmLabel: t('common.delete'),
         danger: true,
       });
       if (!ok) return;
@@ -188,7 +195,7 @@ function init(rootEl) {
         const res = await fetch(`${base}?path=${encodeURIComponent(path)}`, { method: 'DELETE' });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok !== false) {
-          toast(`"${name}" deleted (${fmtBytes(data.freedBytes)} freed).`);
+          toast(t('files.deleted_toast', { name, freed: fmtBytes(data.freedBytes) }));
           const tbody = row.closest('tbody');
           row.remove();
           // A header-only table after the last delete looks broken - restore
@@ -196,8 +203,7 @@ function init(rootEl) {
           if (tbody && !tbody.querySelector('[data-file-row]')) {
             const tr = document.createElement('tr');
             tr.dataset.filesEmpty = '';
-            tr.innerHTML =
-              '<td data-th="" colspan="4" class="py-10 text-center text-sm text-ink-faint">This folder is empty. Upload files or create a folder above.</td>';
+            tr.innerHTML = `<td data-th="" colspan="4" class="py-10 text-center text-sm text-ink-faint">${escapeHtml(t('files_page.folder_empty', { defaultValue: 'This folder is empty. Upload files or create a folder above.' }))}</td>`;
             tbody.appendChild(tr);
           }
         } else {
@@ -256,11 +262,11 @@ function init(rootEl) {
     content.innerHTML = `
       <div class="mb-1 flex items-center gap-2 text-xs text-ink-faint">
         <span class="badge">${escapeHtml(lang)}</span>
-        <span>${lineCount} line${lineCount === 1 ? '' : 's'} · ${fmtBytes(data.size)}</span>
-        <label class="ml-auto flex cursor-pointer items-center gap-1.5"><input type="checkbox" class="msm-check" data-ed-wrap> Wrap</label>
+        <span>${escapeHtml(t('files.lines_counter', { count: lineCount, size: fmtBytes(data.size) }))}</span>
+        <label class="ml-auto flex cursor-pointer items-center gap-1.5"><input type="checkbox" class="msm-check" data-ed-wrap> ${escapeHtml(t('files.wrap_label'))}</label>
       </div>
       <textarea class="input h-96 w-full resize-y whitespace-pre font-mono text-xs leading-relaxed" spellcheck="false" wrap="off"></textarea>
-      <p class="help mt-2">${escapeHtml(path)}. Tab inserts a tab; saves are written safely in one step.</p>`;
+      <p class="help mt-2">${t('files.editor_help', { path: escapeHtml(path) })}</p>`;
     const textarea = content.querySelector('textarea');
     textarea.value = data.content;
     content.querySelector('[data-ed-wrap]').addEventListener('change', (e) => {
@@ -277,19 +283,19 @@ function init(rootEl) {
       textarea.setRangeText('\t', s, en, 'end');
     });
     openModal({
-      title: `Edit ${name}`,
+      title: t('files.edit_file_title', { name }),
       content,
       size: 'lg',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Save',
+          label: t('common.save'),
           kind: 'primary',
-          busyLabel: 'Saving…',
+          busyLabel: t('common.saving'),
           onClick: async () => {
             const saved = await post(`${base}/write`, { path, content: textarea.value });
             if (!saved) return false;
-            toast(`${name} saved (${fmtBytes(saved.size)}).`);
+            toast(t('files.file_saved_toast', { name, size: fmtBytes(saved.size) }));
             reload();
           },
         },
@@ -312,25 +318,25 @@ function init(rootEl) {
   function renameModal(path, name) {
     const content = document.createElement('div');
     content.innerHTML = `
-      <label class="label">New name</label>
+      <label class="label">${escapeHtml(t('files.new_name_label'))}</label>
       <input class="input" data-rn-name autocomplete="off">`;
     const input = content.querySelector('[data-rn-name]');
     input.value = name;
     openModal({
-      title: `Rename ${name}`,
+      title: t('files.rename_title', { name }),
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Rename',
+          label: t('files_page.rename', { defaultValue: 'Rename' }),
           kind: 'primary',
-          busyLabel: 'Renaming…',
+          busyLabel: t('common.saving'),
           onClick: async () => {
             const newName = input.value.trim();
             if (!newName || newName === name) return false;
             const res = await post(`${base}/rename`, { path, newName });
             if (!res) return false;
-            toast(`Renamed to "${newName}".`);
+            toast(t('files.renamed_toast', { name: newName }));
             reload();
           },
         },
@@ -340,26 +346,29 @@ function init(rootEl) {
   }
 
   function destinationModal(verb, path, name, url) {
+    const verbLabel = verb === 'Copy' ? t('files.verb_copy') : t('files.verb_move');
+    const actionLabel = verb === 'Copy' ? t('files.action_copies') : t('files.action_moves');
+    const doneVerb = verb === 'Copy' ? t('files.verb_copied') : t('files.verb_moved');
     const content = document.createElement('div');
     content.innerHTML = `
-      <label class="label">Destination folder (relative to the root)</label>
-      <input class="input font-mono" data-dst placeholder="e.g. world/datapacks (leave empty for the root)" autocomplete="off">
-      <p class="help">${verb === 'Copy' ? 'Copies' : 'Moves'} "${escapeHtml(name)}" into the folder. It must already exist.</p>`;
+      <label class="label">${escapeHtml(t('files.dest_folder_label'))}</label>
+      <input class="input font-mono" data-dst placeholder="${escapeHtml(t('files.dest_placeholder'))}" autocomplete="off">
+      <p class="help">${t('files.dest_help', { action: actionLabel, name: escapeHtml(name) })}</p>`;
     const input = content.querySelector('[data-dst]');
     input.value = currentPath;
     openModal({
-      title: `${verb} ${name}`,
+      title: t('files.dest_title', { verb: verbLabel, name }),
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: verb,
+          label: verbLabel,
           kind: 'primary',
-          busyLabel: verb === 'Copy' ? 'Copying…' : 'Moving…',
+          busyLabel: t('common.saving'),
           onClick: async () => {
             const res = await post(url, { path, dest: input.value.trim() });
             if (!res) return false;
-            toast(`${verb === 'Copy' ? 'Copied' : 'Moved'} to ${res.path}.`);
+            toast(t('files.dest_toast', { verb: doneVerb, path: res.path }));
             reload();
           },
         },

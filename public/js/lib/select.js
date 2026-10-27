@@ -9,6 +9,7 @@
 
 import { openModal } from './modal.js';
 import { escapeHtml } from './format.js';
+import { t } from './i18n.js';
 
 const SEARCH_THRESHOLD = 6; // show the search box for lists this long or more
 
@@ -40,13 +41,14 @@ function buildTrigger(select, label) {
 function syncTrigger(select, btn) {
   const current = select.options[select.selectedIndex];
   btn.innerHTML = `
-    <span class="min-w-0 flex-1 truncate">${current ? escapeHtml(current.textContent.trim()) : '<span class="text-ink-faint">Select…</span>'}</span>
+    <span class="min-w-0 flex-1 truncate">${current ? escapeHtml(current.textContent.trim()) : `<span class="text-ink-faint">${escapeHtml(t('common.select_placeholder'))}</span>`}</span>
     <svg class="icon size-3.5 shrink-0 text-ink-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
 }
 
 function openPicker(select, btn) {
   const options = optionData(select);
-  const label = select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || 'Select an option';
+  const label =
+    select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || t('common.select_an_option');
 
   const content = document.createElement('div');
   content.className = 'space-y-2';
@@ -55,7 +57,7 @@ function openPicker(select, btn) {
   if (options.length >= SEARCH_THRESHOLD) {
     search = document.createElement('input');
     search.className = 'input';
-    search.placeholder = 'Search…';
+    search.placeholder = t('common.search_placeholder');
     search.autocomplete = 'off';
     content.appendChild(search);
   }
@@ -89,7 +91,7 @@ function openPicker(select, btn) {
     let lastGroup = null;
 
     if (!visible.length) {
-      list.innerHTML = '<div class="p-4 text-center text-sm text-ink-faint">No matches.</div>';
+      list.innerHTML = `<div class="p-4 text-center text-sm text-ink-faint">${escapeHtml(t('common.no_matches'))}</div>`;
       return;
     }
     for (const [i, opt] of visible.entries()) {
@@ -176,7 +178,8 @@ export function enhanceSelect(select) {
   // silently lose every selection past the first. Leave those native.
   if (select.multiple) return;
   select.dataset.enhanced = '1';
-  const label = select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || 'Select an option';
+  const label =
+    select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || t('common.select_an_option');
   const btn = buildTrigger(select, label);
   select.classList.add('hidden');
   select.setAttribute('tabindex', '-1');

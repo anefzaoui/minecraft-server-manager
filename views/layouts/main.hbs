@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="{{#if currentLocale}}{{currentLocale}}{{else}}en{{/if}}" dir="{{#if textDirection}}{{textDirection}}{{else}}ltr{{/if}}" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{title}} · Minecraft Server Manager</title>
+  <title>{{#if titleKey}}{{t titleKey}}{{else}}{{title}}{{/if}} · Minecraft Server Manager</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   {{! "Add to Home Screen" on iOS/Android - manifest.json covers Android/Chrome;
       iOS ignores the manifest's icons entirely and needs its own apple-touch-icon
@@ -35,7 +35,7 @@
         {{{body}}}
       </main>
       <footer class="border-t border-line px-6 py-3 text-xs text-ink-faint">
-        Minecraft Server Manager <span class="text-ink-soft">v{{appVersion}}</span> &middot; a control panel for Minecraft servers on Docker
+        Minecraft Server Manager <span class="text-ink-soft">v{{appVersion}}</span> &middot; {{t 'footer.tagline'}}
       </footer>
     </div>
   </div>

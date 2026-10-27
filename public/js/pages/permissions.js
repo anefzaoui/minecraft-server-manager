@@ -3,6 +3,7 @@
 import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
+import { t } from '../lib/i18n.js';
 
 const page = document.getElementById('permissions-page');
 if (page) init();
@@ -26,9 +27,9 @@ function init() {
   }
 
   function summarize(list) {
-    if (list.length === 0) return 'Hidden';
-    if (list.length === capabilities.length) return 'Everything';
-    if (list.length === 1 && list[0] === 'view') return 'View only';
+    if (list.length === 0) return t('permissions_page.summary_hidden');
+    if (list.length === capabilities.length) return t('permissions_page.summary_everything');
+    if (list.length === 1 && list[0] === 'view') return t('permissions_page.summary_view_only');
     return list
       .filter((c) => c !== 'view')
       .map((c) => labelOf[c] || c)
@@ -43,8 +44,7 @@ function init() {
     cell.classList.toggle('text-danger', grant !== null && grant.length === 0);
     // Custom grants get the pressed (green) border; a hidden cell reads in red on a neutral border instead.
     cell.setAttribute('aria-pressed', grant !== null && grant.length > 0 ? 'true' : 'false');
-    cell.dataset.tip =
-      grant === null ? 'Role default. Click to override for this server.' : 'Custom. Click to change or reset.';
+    cell.dataset.tip = grant === null ? t('permissions_page.tip_default') : t('permissions_page.tip_custom');
   }
 
   function openEditor(cell) {
@@ -52,6 +52,7 @@ function init() {
     const { grant, effective } = readCell(cell);
     const username = row.dataset.username;
     const role = row.dataset.role;
+    const roleLabel = t(`roles.${role}`, { defaultValue: role });
     const serverName = cell.dataset.serverName;
     const current = new Set(effective);
 
@@ -61,8 +62,8 @@ function init() {
     status.className = 'help mt-0';
     status.textContent =
       grant === null
-        ? `Using the ${role} default. Any change here applies to ${serverName} only.`
-        : `Custom permissions for ${serverName}. Reset to go back to the ${role} default.`;
+        ? t('permissions_page.status_default', { role: roleLabel, server: serverName })
+        : t('permissions_page.status_custom', { role: roleLabel, server: serverName });
     content.appendChild(status);
 
     const list = document.createElement('div');
@@ -71,7 +72,7 @@ function init() {
       const label = document.createElement('label');
       label.className = 'flex cursor-pointer items-start justify-between gap-4 py-2';
       label.innerHTML = `
-        <span class="min-w-0">
+        <span class="min-w-0 flex-1">
           <span class="block text-sm font-medium text-ink"></span>
           <span class="mt-0.5 block max-w-prose text-xs leading-relaxed text-ink-faint"></span>
         </span>
@@ -87,7 +88,7 @@ function init() {
 
     const hint = document.createElement('p');
     hint.className = 'help';
-    hint.textContent = 'Every permission includes view. Turn everything off to hide this server from the user.';
+    hint.textContent = t('permissions_page.hint');
     content.appendChild(hint);
 
     // Every capability implies view: ticking any other box ticks view, and
@@ -101,24 +102,24 @@ function init() {
       else if (input.checked) view.checked = true;
     });
 
-    const actions = [{ label: 'Cancel', kind: 'ghost' }];
+    const actions = [{ label: t('common.cancel'), kind: 'ghost' }];
     if (grant !== null) {
       actions.push({
-        label: 'Use Role Default',
+        label: t('permissions_page.btn_role_default'),
         kind: 'default',
-        busyLabel: 'Resetting…',
+        busyLabel: t('permissions_page.btn_resetting'),
         onClick: async () => {
           const res = await save(row.dataset.userId, cell.dataset.serverId, null);
           if (!res) return false;
           applyResult(cell, res);
-          toast(`${username} now uses the ${role} default on ${serverName}.`);
+          toast(t('permissions_page.toast_role_default', { username, role: roleLabel, server: serverName }));
         },
       });
     }
     actions.push({
-      label: 'Save',
+      label: t('common.save'),
       kind: 'primary',
-      busyLabel: 'Saving…',
+      busyLabel: t('common.saving'),
       onClick: async () => {
         const perms = [...list.querySelectorAll('input[data-cap]:checked')].map((b) => b.value);
         const res = await save(row.dataset.userId, cell.dataset.serverId, perms);
@@ -126,8 +127,8 @@ function init() {
         applyResult(cell, res);
         toast(
           perms.length
-            ? `Permissions for ${username} on ${serverName} saved.`
-            : `${serverName} is now hidden from ${username}.`
+            ? t('permissions_page.toast_saved', { username, server: serverName })
+            : t('permissions_page.toast_hidden', { server: serverName, username })
         );
       },
     });
@@ -150,12 +151,15 @@ function init() {
       });
       const data = await res.json();
       if (!res.ok || data.ok === false) {
-        toast(data.error || friendlyError(res, { action: 'save those permissions' }), { kind: 'error', timeout: 8000 });
+        toast(data.error || friendlyError(res, { action: t('permissions_page.action_save') }), {
+          kind: 'error',
+          timeout: 8000,
+        });
         return null;
       }
       return data;
     } catch {
-      toast(friendlyError(null, { action: 'save those permissions' }), { kind: 'error' });
+      toast(friendlyError(null, { action: t('permissions_page.action_save') }), { kind: 'error' });
       return null;
     }
   }

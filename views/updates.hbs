@@ -1,20 +1,18 @@
-{{> page-header heading="UPDATES" sub="Everything out of date across your servers. Nothing updates itself: every upgrade is deliberate, backed up, and reversible."}}
+{{> page-header headingKey="updates_page.heading" subKey="updates_page.sub"}}
 
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <span class="text-sm text-ink-faint">Last checked: {{#if lastChecked}}<span data-ts="{{lastChecked}}">{{lastChecked}}</span>{{else}}never{{/if}}</span>
-  <button class="btn btn-sm ml-auto" id="updates-check-all">{{{icon 'rotate-cw' 'size-3.5'}}} Check All Now</button>
+  <span class="text-sm text-ink-faint">{{#if lastChecked}}<span data-ts="{{lastChecked}}">{{t 'updates_page.last_checked' time=lastChecked}}</span>{{else}}{{t 'updates_page.last_checked' time=(t 'updates_page.never')}}{{/if}}</span>
+  <button class="btn btn-sm ml-auto" id="updates-check-all">{{{icon 'rotate-cw' 'size-3.5'}}} {{t 'updates_page.check_all_now'}}</button>
 </div>
 
 <p class="mb-4 text-xs text-ink-faint">
-  A check asks <b>Modrinth</b>, <b>CurseForge</b>, <b>Hangar</b>, <b>SpigotMC</b> and <b>GitHub&nbsp;Releases</b> about your custom
-  mods, plugins, datapacks and resource packs, and the <b>Minecraft version manifest</b>, <b>loader build lists</b> and
-  <b>Docker image tags</b> for each server. Pinned modpacks are compared against their platform too.
+  {{t 'updates_page.sources_info'}}
 </p>
 
 {{#if updates.length}}
 <div class="card overflow-x-auto">
   <table class="table-base table-stack" id="updates-table">
-    <thead><tr><th>Server</th><th>Type</th><th>Subject</th><th>Current</th><th>Latest</th><th class="text-right">Actions</th></tr></thead>
+    <thead><tr><th>{{t 'updates_page.th_server'}}</th><th>{{t 'updates_page.th_type'}}</th><th>{{t 'updates_page.th_subject'}}</th><th>{{t 'updates_page.th_current'}}</th><th>{{t 'updates_page.th_latest'}}</th><th class="text-right">{{t 'updates_page.th_actions'}}</th></tr></thead>
     <tbody>
       {{#each updates}}
         <tr data-update-row class="{{#if ignored}}opacity-60{{/if}}" data-server-id="{{serverId}}" data-server-name="{{server}}"
@@ -23,21 +21,21 @@
             {{#if imageUpgrade}}data-image-upgrade="1"{{/if}}
             {{#if targetVersion}}data-target-version="{{targetVersion}}"{{/if}}
             {{#if targetLoaderBuild}}data-target-build="{{targetLoaderBuild}}" data-env-key="{{envKey}}"{{/if}}>
-          <td data-th="Server" class="whitespace-nowrap">{{#if serverId}}<a class="text-link hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
-          <td data-th="Type"><span class="badge">{{kind}}</span></td>
+          <td data-th="{{t 'updates_page.th_server'}}" class="whitespace-nowrap">{{#if serverId}}<a class="text-link hover:underline" href="/servers/{{serverId}}">{{server}}</a>{{else}}<span class="text-ink-faint">{{server}}</span>{{/if}}</td>
+          <td data-th="{{t 'updates_page.th_type'}}"><span class="badge">{{kind}}</span></td>
           {{! w-full + max-w-0 (sm+ only) so long pack/mod names truncate instead of widening the table. }}
-          <td data-th="Subject" class="sm:w-full sm:max-w-0"><span class="block truncate font-medium" title="{{subject}}">{{subject}}</span></td>
-          <td data-th="Current" class="truncate font-mono text-xs text-ink-faint sm:max-w-40" title="{{current}}">{{current}}</td>
-          <td data-th="Latest" class="truncate font-mono text-xs sm:max-w-40 {{#if ignored}}text-ink-faint{{else}}text-warn{{/if}}" title="{{latest}}">
-            {{latest}}{{#if ignored}} <span class="badge ml-1 text-ink-faint" data-tip="This update is ignored and won't be offered">ignored</span>{{/if}}
+          <td data-th="{{t 'updates_page.th_subject'}}" class="sm:w-full sm:max-w-0"><span class="block truncate font-medium" title="{{subject}}">{{subject}}</span></td>
+          <td data-th="{{t 'updates_page.th_current'}}" class="truncate font-mono text-xs text-ink-faint sm:max-w-40" title="{{current}}">{{current}}</td>
+          <td data-th="{{t 'updates_page.th_latest'}}" class="truncate font-mono text-xs sm:max-w-40 {{#if ignored}}text-ink-faint{{else}}text-warn{{/if}}" title="{{latest}}">
+            {{latest}}{{#if ignored}} <span class="badge ml-1 text-ink-faint" data-tip="{{t 'updates_page.ignored_tip'}}">{{t 'updates_page.ignored'}}</span>{{/if}}
           </td>
           <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
-            {{#if changelog}}<a class="btn btn-ghost btn-sm" href="{{changelog}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Changelog</a>{{/if}}
+            {{#if changelog}}<a class="btn btn-ghost btn-sm" href="{{changelog}}" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} {{t 'updates_page.changelog'}}</a>{{/if}}
             {{#if ignored}}
-              <button class="btn btn-ghost btn-sm" data-update-unignore data-tip="Offer {{latest}} again">{{{icon 'bell' 'size-3.5'}}} Un-ignore</button>
+              <button class="btn btn-ghost btn-sm" data-update-unignore data-tip="{{t 'updates_page.unignore_tip' version=latest}}">{{{icon 'bell' 'size-3.5'}}} {{t 'updates_page.unignore'}}</button>
             {{else}}
-              <button class="btn btn-ghost btn-sm" data-update-ignore data-tip="Stop offering {{latest}} for this subject">{{{icon 'bell-off' 'size-3.5'}}} Ignore</button>
-              <button class="btn btn-sm" data-update-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} Upgrade…</button>
+              <button class="btn btn-ghost btn-sm" data-update-ignore data-tip="{{t 'updates_page.ignore_tip' version=latest}}">{{{icon 'bell-off' 'size-3.5'}}} {{t 'updates_page.ignore'}}</button>
+              <button class="btn btn-sm" data-update-upgrade>{{{icon 'circle-arrow-up' 'size-3.5'}}} {{t 'updates_page.upgrade'}}</button>
             {{/if}}
           </div></td>
         </tr>
@@ -48,9 +46,9 @@
 
 <div class="notice mt-4 text-xs">
   {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
-  <div>Your custom mods are always kept across pack updates. If a pack update changes the Minecraft or loader version, each custom mod is checked for compatibility, with a one-click "update this mod too" when a matching build exists. <b class="text-ink">Ignore</b> hides a specific version from this page and the sidebar count; a newer build than the one you ignored comes back on its own.</div>
+  <div>{{t 'updates_page.notice_text'}}</div>
 </div>
 {{else}}
-  {{> empty-state iconName='circle-check' title='Everything Is Up to Date' message='No pending updates across your servers. Run a check to ask Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases and the Minecraft/loader/image registries for anything new.'}}
+  {{> empty-state iconName='circle-check' titleKey='updates_page.all_up_to_date_title' messageKey='updates_page.all_up_to_date_message'}}
 {{/if}}
 <script type="module" src="/js/pages/updates.js"></script>

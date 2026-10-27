@@ -8,6 +8,7 @@ import { toast } from './toast.js';
 import { friendlyError } from './errors.js';
 import { escapeHtml } from './format.js';
 import { openCropModal } from './imageCrop.js';
+import { t } from './i18n.js';
 
 let pickerOpen = false;
 
@@ -44,7 +45,7 @@ async function openPickerModal() {
     btn.addEventListener('click', async () => {
       const ok = await post('/api/account/avatar/preset', { key: preset.key });
       if (!ok) return;
-      toast(`Profile picture set to ${preset.label}.`);
+      toast(t('avatar.preset_set', { label: preset.label }));
       finish();
     });
     grid.appendChild(btn);
@@ -56,17 +57,17 @@ async function openPickerModal() {
   const uploadBtn = document.createElement('button');
   uploadBtn.type = 'button';
   uploadBtn.className = 'btn';
-  uploadBtn.textContent = 'Upload Image';
+  uploadBtn.textContent = t('avatar.upload_image');
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className = 'btn btn-ghost';
-  removeBtn.textContent = 'Remove';
+  removeBtn.textContent = t('avatar.remove');
   uploadRow.append(uploadBtn, removeBtn);
   content.appendChild(uploadRow);
 
   const help = document.createElement('p');
   help.className = 'text-xs text-ink-faint';
-  help.textContent = 'PNG, JPEG, WebP, or SVG. Your picture is cropped to a square, up to 2048×2048.';
+  help.textContent = t('avatar.help');
   content.appendChild(help);
 
   uploadBtn.addEventListener('click', () => {
@@ -80,7 +81,7 @@ async function openPickerModal() {
       const isSvg = file.type === 'image/svg+xml' || /\.svg$/i.test(file.name);
       const maxRaw = isSvg ? 5 * 1024 * 1024 : 40 * 1024 * 1024;
       if (file.size > maxRaw) {
-        toast(isSvg ? 'SVG must be 5 MB or smaller.' : 'Image must be 40 MB or smaller.', { kind: 'error' });
+        toast(isSvg ? t('avatar.err_svg_too_large') : t('avatar.err_image_too_large'), { kind: 'error' });
         return;
       }
 
@@ -101,7 +102,7 @@ async function openPickerModal() {
           });
           return;
         }
-        toast('Profile picture updated.');
+        toast(t('avatar.updated'));
         finish();
       } catch {
         toast(friendlyError(null, { action: 'upload that picture' }), { kind: 'error' });
@@ -113,14 +114,14 @@ async function openPickerModal() {
   removeBtn.addEventListener('click', async () => {
     const ok = await del('/api/account/avatar');
     if (!ok) return;
-    toast('Profile picture reset.');
+    toast(t('avatar.reset'));
     finish();
   });
 
   openModal({
-    title: 'Profile Picture',
+    title: t('avatar.title'),
     content,
-    actions: [{ label: 'Close', kind: 'ghost' }],
+    actions: [{ label: t('common.close'), kind: 'ghost' }],
     onClose: () => {
       pickerOpen = false;
     },

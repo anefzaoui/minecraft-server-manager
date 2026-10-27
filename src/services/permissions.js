@@ -358,7 +358,19 @@ function filterVisible(user, rows) {
  * server, with the explicit grant (or null = role default) and the effective
  * capability list already resolved.
  */
-function listMatrix() {
+function localizeCapability(key, cap, locale) {
+  if (!locale || locale === 'en') return cap;
+  const i18n = require('./i18n');
+  const labelKey = `permissions_capabilities.${key}.label`;
+  const helpKey = `permissions_capabilities.${key}.help`;
+  return {
+    ...cap,
+    label: i18n.has(locale, labelKey) ? i18n.t(locale, labelKey) : cap.label,
+    help: i18n.has(locale, helpKey) ? i18n.t(locale, helpKey) : cap.help,
+  };
+}
+
+function listMatrix(locale) {
   const users = db
     .all("SELECT id, username, role FROM users WHERE role != 'admin' ORDER BY username COLLATE NOCASE")
     .map((u) => ({ id: u.id, username: u.username, role: u.role }));
@@ -384,7 +396,12 @@ function listMatrix() {
       };
     }),
   }));
-  return { capabilities: CAPABILITIES.map((c) => ({ key: c, ...CAPABILITY_INFO[c] })), users, servers, rows: cells };
+  return {
+    capabilities: CAPABILITIES.map((c) => ({ key: c, ...localizeCapability(c, CAPABILITY_INFO[c], locale) })),
+    users,
+    servers,
+    rows: cells,
+  };
 }
 
 /**

@@ -1,8 +1,7 @@
-// Admin chat: send styled tellraw/say messages with a live in-game preview.
-// History is server-side (chat-sent events) and replayed on load.
 import { toast } from '../lib/toast.js';
 import { setBusy } from '../lib/loading.js';
 import { formatTime } from '../lib/datetime.js';
+import { t } from '../lib/i18n.js';
 
 // The 16 vanilla text colors → hex (mirrors src/services/chat.js).
 const COLORS = {
@@ -24,12 +23,12 @@ const COLORS = {
   white: '#FFFFFF',
 };
 
-const STYLES = [
-  ['bold', 'B', 'Bold', 'font-bold'],
-  ['italic', 'I', 'Italic', 'italic'],
-  ['underlined', 'U', 'Underline', 'underline'],
-  ['strikethrough', 'S', 'Strikethrough', 'line-through'],
-  ['obfuscated', '▓', 'Obfuscated (scrambles in-game)', ''],
+const getStyles = () => [
+  ['bold', 'B', t('chat_tab.bold'), 'font-bold'],
+  ['italic', 'I', t('chat_tab.italic'), 'italic'],
+  ['underlined', 'U', t('chat_tab.underline'), 'underline'],
+  ['strikethrough', 'S', t('chat_tab.strikethrough'), 'line-through'],
+  ['obfuscated', '▓', t('chat_tab.obfuscated'), ''],
 ];
 
 const STYLE_BTN_CLASS =
@@ -123,8 +122,8 @@ function init(serverId) {
     time.textContent = formatTime(m.ts || Date.now());
     const prefix = document.createElement('span');
     prefix.className = 'mr-2 text-stone-400';
-    prefix.textContent = m.mode === 'say' ? '[Server]' : `→ ${m.target}`;
-    if (m.actor) prefix.title = `Sent by ${m.actor}`;
+    prefix.textContent = m.mode === 'say' ? t('chat_tab.server_prefix') : `→ ${m.target}`;
+    if (m.actor) prefix.title = t('chat_tab.sent_by', { actor: m.actor });
     line.append(time, prefix, styledSpan(m));
     // Stick to the bottom only when already reading the bottom - never yank
     // someone who scrolled up into history.
@@ -147,7 +146,7 @@ function init(serverId) {
   noneBtn.type = 'button';
   noneBtn.className = 'swatch swatch-none';
   noneBtn.dataset.color = '';
-  noneBtn.dataset.tip = 'Default (no color)';
+  noneBtn.dataset.tip = t('chat_tab.default_color');
   noneBtn.setAttribute('aria-pressed', 'true'); // selected from the start
   colorsBox.appendChild(noneBtn);
   for (const [name, hex] of Object.entries(COLORS)) {
@@ -161,7 +160,7 @@ function init(serverId) {
     colorsBox.appendChild(b);
   }
 
-  for (const [key, glyph, label, cls] of STYLES) {
+  for (const [key, glyph, label, cls] of getStyles()) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = `${STYLE_BTN_CLASS} ${cls}`;

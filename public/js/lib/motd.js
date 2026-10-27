@@ -6,6 +6,7 @@
 // "&a…" raw shows the literal characters in the client server list.
 
 import { openModal } from './modal.js';
+import { t } from './i18n.js';
 
 export const MC_COLORS = [
   ['0', '#000000', 'Black'],
@@ -110,7 +111,7 @@ export function renderMotdInto(el, text) {
   if (!el.childNodes.length) {
     const s = document.createElement('span');
     s.className = 'text-ink-faint';
-    s.textContent = 'A Minecraft Server';
+    s.textContent = t('motd.default_motd');
     el.appendChild(s);
   }
 }
@@ -174,7 +175,7 @@ export function attachMotdEditor(input, { preview, getName = () => 'My Server' }
   const presetsBtn = document.createElement('button');
   presetsBtn.type = 'button';
   presetsBtn.className = 'btn btn-ghost btn-sm ml-auto';
-  presetsBtn.textContent = 'Examples';
+  presetsBtn.textContent = t('motd.examples_btn');
   presetsBtn.addEventListener('click', showPresets);
   wrap.appendChild(presetsBtn);
 
@@ -198,10 +199,9 @@ export function attachMotdEditor(input, { preview, getName = () => 'My Server' }
     content.className = 'space-y-2';
     const hint = document.createElement('p');
     hint.className = 'help';
-    hint.textContent =
-      'Click any example to use it. {server} becomes your server name, and you can adjust it afterwards with the toolbar.';
+    hint.textContent = t('motd.examples_hint');
     content.appendChild(hint);
-    const modal = openModal({ title: 'MOTD Examples', content, size: 'md' });
+    const modal = openModal({ title: t('motd.examples_title'), content, size: 'md' });
     for (const preset of MOTD_PRESETS) {
       const filled = preset.replaceAll('{server}', getName() || 'My Server');
       const row = document.createElement('button');

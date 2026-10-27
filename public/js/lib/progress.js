@@ -6,13 +6,15 @@
 
 import { openModal } from './modal.js';
 import { toast } from './toast.js';
+import { escapeHtml } from './format.js';
+import { t as tr } from './i18n.js';
 
 export function runTask({ title, start, pollMs = 700 }) {
   return new Promise((resolve, reject) => {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
-      <p data-step class="font-medium">Starting…</p>
+      <p data-step class="font-medium">${escapeHtml(tr('common.starting'))}</p>
       <div class="meter"><div data-bar class="bg-grass-500 transition-[width]" style="width:3%"></div></div>
       <p data-detail class="text-xs text-ink-faint"></p>
       <pre data-logs class="console hidden max-h-32 overflow-y-auto whitespace-pre-wrap text-[11px]"></pre>`;
@@ -29,7 +31,7 @@ export function runTask({ title, start, pollMs = 700 }) {
         closed = true;
         if (!settled) {
           settled = true;
-          toast('This keeps running in the background. Follow it from the tasks tray in the top bar.', {
+          toast(tr('common.task_background_toast'), {
             kind: 'info',
           });
           reject(Object.assign(new Error('Progress dismissed'), { dismissed: true }));
@@ -83,7 +85,7 @@ export function runTask({ title, start, pollMs = 700 }) {
         } else {
           creep = Math.min(90, creep + 1.5);
           barEl.style.width = `${creep}%`;
-          detailEl.textContent = `${Math.round(t.elapsedMs / 1000)}s elapsed`;
+          detailEl.textContent = tr('common.elapsed_seconds', { seconds: Math.round(t.elapsedMs / 1000) });
         }
         if (t.logs && t.logs.length) {
           logsEl.classList.remove('hidden');

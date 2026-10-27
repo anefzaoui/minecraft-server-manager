@@ -6,39 +6,39 @@
 
     <nav class="flex-1 space-y-0.5 overflow-y-auto p-3">
       <a class="nav-item {{#if (eq active 'dashboard')}}active{{/if}}" href="/">
-        {{{icon 'house' 'size-4'}}} Dashboard
+        {{{icon 'house' 'size-4'}}} {{t 'nav.dashboard'}}
       </a>
       <a class="nav-item {{#if (eq active 'servers')}}active{{/if}}" href="/servers">
-        {{{icon 'server' 'size-4'}}} Servers
+        {{{icon 'server' 'size-4'}}} {{t 'nav.servers'}}
       </a>
       <a class="nav-item {{#if (eq active 'modpacks')}}active{{/if}}" href="/modpacks">
-        {{{icon 'package' 'size-4'}}} Modpacks
+        {{{icon 'package' 'size-4'}}} {{t 'nav.modpacks'}}
       </a>
       <a class="nav-item {{#if (eq active 'worlds')}}active{{/if}}" href="/worlds">
-        {{{icon 'earth' 'size-4'}}} Worlds
+        {{{icon 'earth' 'size-4'}}} {{t 'nav.worlds'}}
       </a>
       <a class="nav-item {{#if (eq active 'blueprints')}}active{{/if}}" href="/blueprints">
-        {{{icon 'drafting-compass' 'size-4'}}} Blueprints
+        {{{icon 'drafting-compass' 'size-4'}}} {{t 'nav.blueprints'}}
       </a>
       <a class="nav-item {{#if (eq active 'updates')}}active{{/if}}" href="/updates">
-        {{{icon 'circle-arrow-up' 'size-4'}}} Updates
+        {{{icon 'circle-arrow-up' 'size-4'}}} {{t 'nav.updates'}}
         {{#if updatesCount}}<span class="badge badge-warn ml-auto">{{updatesCount}}</span>{{/if}}
       </a>
       <a class="nav-item {{#if (eq active 'backups')}}active{{/if}}" href="/backups">
-        {{{icon 'archive' 'size-4'}}} Backups
+        {{{icon 'archive' 'size-4'}}} {{t 'nav.backups'}}
       </a>
       <a class="nav-item {{#if (eq active 'schedules')}}active{{/if}}" href="/schedules">
-        {{{icon 'calendar-clock' 'size-4'}}} Schedules
+        {{{icon 'calendar-clock' 'size-4'}}} {{t 'nav.schedules'}}
       </a>
       <a class="nav-item {{#if (eq active 'storage')}}active{{/if}}" href="/storage">
-        {{{icon 'hard-drive' 'size-4'}}} Storage
+        {{{icon 'hard-drive' 'size-4'}}} {{t 'nav.storage'}}
       </a>
       <a class="nav-item {{#if (eq active 'activity')}}active{{/if}}" href="/activity">
-        {{{icon 'history' 'size-4'}}} Activity
+        {{{icon 'history' 'size-4'}}} {{t 'nav.activity'}}
       </a>
 
       {{#if servers.length}}
-        <div class="pt-3 pb-1 pl-3 eyebrow">Servers</div>
+        <div class="pt-3 pb-1 pl-3 eyebrow">{{t 'nav.servers_heading'}}</div>
         {{#each servers}}
           <a class="nav-item" href="/servers/{{id}}">
             <img src="{{iconSrc this.icon}}" alt="" class="size-5 rounded-sm" style="background: {{this.accent}}" data-fallback-icon="/icons/servers/grass.svg">
@@ -52,11 +52,11 @@
     <div class="space-y-0.5 border-t border-line p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
       {{#if (eq user.role 'admin')}}
         <a href="/settings/permissions" class="nav-item {{#if (eq active 'permissions')}}active{{/if}}">
-          {{{icon 'shield-check' 'size-4'}}} Permissions
+          {{{icon 'shield-check' 'size-4'}}} {{t 'nav.permissions'}}
         </a>
       {{/if}}
       <a href="/settings" class="nav-item {{#if (eq active 'settings')}}active{{/if}}">
-        {{{icon 'settings' 'size-4'}}} Settings
+        {{{icon 'settings' 'size-4'}}} {{t 'nav.settings'}}
       </a>
     </div>
   </div>

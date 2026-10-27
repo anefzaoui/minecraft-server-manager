@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="{{#if currentLocale}}{{currentLocale}}{{else}}en{{/if}}" dir="{{#if textDirection}}{{textDirection}}{{else}}ltr{{/if}}" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{title}} · Minecraft Server Manager</title>
+  <title>{{#if titleKey}}{{t titleKey}}{{else}}{{title}}{{/if}} · Minecraft Server Manager</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -26,6 +26,7 @@
     auto margins center the same way but overflow gracefully. }}
 <body class="flex min-h-screen p-4 *:m-auto">
   {{{body}}}
+  {{#if panelLocalization}}<script nonce="{{cspNonce}}">window.MSM = Object.assign(window.MSM || {}, {{jsonScript panelLocalization}});</script>{{/if}}
   <script type="module" src="/js/app.js"></script>
 </body>
 </html>

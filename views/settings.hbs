@@ -1,4 +1,4 @@
-{{> page-header heading="SETTINGS" sub="Panel settings, connection keys, and user accounts."}}
+{{> page-header heading=(t 'settings.title') sub=(t 'settings.subtitle')}}
 
 {{! [&>*]:min-w-0 - grid items default to min-width:auto, so without it a card
     containing a wrapping flex row (the API-key/domain inputs) is sized off that
@@ -6,129 +6,143 @@
     than the viewport on mobile, even though the row itself wraps correctly. }}
 <div class="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0" id="settings-page">
 
-  {{#> settings/card heading="API Keys" desc="Keys the panel uses to reach mod sites on your behalf. Stored encrypted."}}
+  {{#> settings/card heading=(t 'settings.api_keys_heading') desc=(t 'settings.api_keys_desc')}}
     <div class="space-y-5">
       <div>
-        <label class="label" for="set-cf-key">CurseForge API key</label>
+        <label class="label" for="set-cf-key">{{t 'settings.cf_key_label'}}</label>
         {{! min-w-0 + flex-wrap: the monospace placeholder would otherwise refuse
             to shrink and push the page wider than a narrow screen; wrapping lets
             the buttons drop to their own row. }}
         <div class="flex flex-wrap gap-2">
-          <input class="input min-w-0 flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} (stored){{else}}paste your key from console.curseforge.com{{/if}}" autocomplete="off">
-          <button class="btn" id="set-cf-save">Save Key</button>
-          <button class="btn btn-ghost" id="set-cf-test" data-tip="Test the stored key against CurseForge">Test Key</button>
+          <input class="input min-w-0 flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} ({{t 'settings.stored'}}){{else}}{{t 'settings.cf_key_placeholder'}}{{/if}}" autocomplete="off">
+          <button class="btn" id="set-cf-save">{{t 'settings.save_key'}}</button>
+          <button class="btn btn-ghost" id="set-cf-test" data-tip="{{t 'settings.test_cf_tip'}}">{{t 'settings.test_key'}}</button>
         </div>
-        <p class="help">Needed for automatic CurseForge modpacks and CurseForge mod downloads. New keys are checked against CurseForge before they're saved.</p>
+        <p class="help">{{t 'settings.cf_help'}}</p>
       </div>
       <div>
         <span class="label">Modrinth</span>
-        <p class="help">No key needed. Modrinth's public API is used directly.</p>
+        <p class="help">{{t 'settings.modrinth_help'}}</p>
       </div>
     </div>
   {{/settings/card}}
 
-  {{#> settings/card heading="Panel"}}
+  {{#> settings/card heading=(t 'settings.panel_heading')}}
     <div class="space-y-5">
       <div>
-        <label class="label" for="set-domain">Public domain</label>
+        <label class="label" for="set-domain">{{t 'settings.public_domain_label'}}</label>
         <div class="flex flex-wrap gap-2">
           <input class="input min-w-0 flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
-          <button class="btn" id="set-domain-save">Save Domain</button>
+          <button class="btn" id="set-domain-save">{{t 'settings.save_domain'}}</button>
         </div>
-        <p class="help">Shown to players instead of your IP address in connect addresses (for example, <span class="font-mono">mc.example.com:25565</span>). Leave blank to use the server's IP address. Enter the domain only, with no scheme or port.</p>
+        <p class="help">{{{t 'settings.public_domain_help'}}}</p>
         {{#if cookieSecureWarning}}
         <div class="notice notice-danger mt-2">
           {{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}
           <div>
-            <span class="font-semibold text-danger">The login cookie is not marked Secure.</span>
-            <span>A public domain is set, but the secure-cookie option is not. If this panel is reachable over plain HTTP, the login cookie can be read in transit. Put the panel behind HTTPS and set <span class="font-mono">COOKIE_SECURE=true</span>, or <span class="font-mono">COOKIE_SECURE=auto</span> together with <span class="font-mono">TRUST_PROXY</span>, in the environment. See the README for details.</span>
+            <span class="font-semibold text-danger">{{t 'settings.cookie_secure_title'}}</span>
+            <span>{{{t 'settings.cookie_secure_warning'}}}</span>
           </div>
         </div>
         {{/if}}
       </div>
 
       <div>
-        <span class="label">Time zone &amp; region</span>
+        <label class="label" for="set-lang">{{t 'settings.language.label'}}</label>
+        <div class="flex flex-wrap items-center gap-2">
+          <select class="input max-w-xs" id="set-lang" data-native aria-label="{{t 'settings.language.label'}}">
+            <option value="auto" {{#if (eq userLanguage 'auto')}}selected{{/if}}>{{t 'settings.language.auto'}}</option>
+            {{#each supportedLanguages}}
+              <option value="{{this.code}}" {{#if (eq ../userLanguage this.code)}}selected{{/if}}>{{this.name}}</option>
+            {{/each}}
+          </select>
+          <button class="btn" id="set-lang-save">{{t 'settings.language.save'}}</button>
+        </div>
+        <p class="help">{{t 'settings.language.help'}}</p>
+      </div>
+
+      <div>
+        <span class="label">{{t 'settings.time_zone_region'}}</span>
         {{! data-native only until tzPicker fills them - it enhances post-fill. }}
         <div class="grid gap-2 sm:grid-cols-2">
-          <select class="input" id="set-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
-          <select class="input" id="set-country" data-native aria-label="Country" data-label="Country"></select>
+          <select class="input" id="set-tz" data-native aria-label="{{t 'settings.time_zone'}}" data-label="{{t 'settings.time_zone'}}"></select>
+          <select class="input" id="set-country" data-native aria-label="{{t 'settings.country'}}" data-label="{{t 'settings.country'}}"></select>
         </div>
         <div class="mt-2 flex flex-wrap items-center gap-2">
-          <button class="btn" id="set-loc-save">Save Time Zone</button>
+          <button class="btn" id="set-loc-save">{{t 'settings.save_time_zone'}}</button>
           <span class="help mt-0" id="set-loc-note"></span>
         </div>
-        <p class="help">Controls how dates and player-activity times are shown across the panel. "Auto" follows this machine's system settings.</p>
+        <p class="help">{{t 'settings.time_zone_help'}}</p>
       </div>
 
       <div class="border-t border-line pt-4">
-        <span class="label">Bind address &amp; port</span>
+        <span class="label">{{t 'settings.bind_address_port'}}</span>
         <dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <div><dt class="text-xs text-ink-faint">Bind address</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
-          <div><dt class="text-xs text-ink-faint">Port</dt><dd class="font-mono font-medium">{{panel.port}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">{{t 'settings.bind_address'}}</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">{{t 'settings.port'}}</dt><dd class="font-mono font-medium">{{panel.port}}</dd></div>
         </dl>
-        <p class="help">Set these in <span class="font-mono">.env</span> (PANEL_HOST and PANEL_PORT). A restart applies the changes. Theme is per-browser, set with the topbar toggle.</p>
+        <p class="help">{{{t 'settings.bind_help'}}}</p>
       </div>
 
       <div class="border-t border-line pt-4">
-        <span class="label">Panel version</span>
+        <span class="label">{{t 'settings.panel_version'}}</span>
         <div class="flex flex-wrap items-center gap-2">
           <span class="font-mono text-sm">v{{panel.version}}</span>
-          <button class="btn" id="msm-update-btn">Check for Updates</button>
+          <button class="btn" id="msm-update-btn">{{t 'settings.check_updates'}}</button>
         </div>
         <div id="msm-update-out"></div>
-        <p class="help">Compares the installed version with the latest release on GitHub. You download and install the update yourself. The panel never modifies its own files.</p>
+        <p class="help">{{t 'settings.panel_version_help'}}</p>
       </div>
 
       <div class="border-t border-line pt-4">
-        <span class="label">Defaults for new servers</span>
+        <span class="label">{{t 'settings.defaults_new_servers'}}</span>
         <div class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
           <div>
-            <label class="label" for="dflt-heap">Java heap (MB)</label>
+            <label class="label" for="dflt-heap">{{t 'settings.default_heap'}}</label>
             <input class="input" id="dflt-heap" type="number" inputmode="numeric" value="{{defaults.heapMb}}" data-default="{{defaultsBase.heapMb}}">
           </div>
           <div>
-            <label class="label" for="dflt-container">Container limit (MB)</label>
+            <label class="label" for="dflt-container">{{t 'settings.default_container'}}</label>
             <input class="input" id="dflt-container" type="number" inputmode="numeric" value="{{defaults.containerMemoryMb}}" data-default="{{defaultsBase.containerMemoryMb}}">
-            <p class="help">Usually 50% above the heap. Ignored when the wizard sets its own.</p>
+            <p class="help">{{t 'settings.default_container_help'}}</p>
           </div>
           <div>
-            <label class="label" for="dflt-cpus">CPU cores</label>
+            <label class="label" for="dflt-cpus">{{t 'settings.default_cpus'}}</label>
             <input class="input" id="dflt-cpus" type="number" inputmode="decimal" step="0.5" min="0" value="{{defaults.cpus}}" data-default="{{defaultsBase.cpus}}">
-            <p class="help">0 = no limit on CPU usage.</p>
+            <p class="help">{{t 'settings.default_cpus_help'}}</p>
           </div>
           <div>
-            <label class="label" for="dflt-quota">Disk quota (GB)</label>
+            <label class="label" for="dflt-quota">{{t 'settings.default_quota'}}</label>
             <input class="input" id="dflt-quota" type="number" inputmode="numeric" value="{{defaults.diskQuotaGb}}" data-default="{{defaultsBase.diskQuotaGb}}">
-            <p class="help">0 = storage use is not limited.</p>
+            <p class="help">{{t 'settings.default_quota_help'}}</p>
           </div>
           <div>
-            <label class="label" for="dflt-warnpct">Quota warn (%)</label>
+            <label class="label" for="dflt-warnpct">{{t 'settings.default_warn_pct'}}</label>
             <input class="input" id="dflt-warnpct" type="number" inputmode="numeric" min="0" max="99" value="{{defaults.quotaWarnPct}}" data-default="{{defaultsBase.quotaWarnPct}}">
           </div>
           <div>
-            <label class="label" for="dflt-critpct">Quota critical (%)</label>
+            <label class="label" for="dflt-critpct">{{t 'settings.default_crit_pct'}}</label>
             <input class="input" id="dflt-critpct" type="number" inputmode="numeric" min="1" max="100" value="{{defaults.quotaCriticalPct}}" data-default="{{defaultsBase.quotaCriticalPct}}">
           </div>
         </div>
         <div class="mt-2 flex flex-wrap items-center gap-2">
-          <button class="btn" id="dflt-save">Save Defaults</button>
-          <button class="btn btn-ghost" id="dflt-restore">Restore Built-ins</button>
+          <button class="btn" id="dflt-save">{{t 'settings.save_defaults'}}</button>
+          <button class="btn btn-ghost" id="dflt-restore">{{t 'settings.restore_defaults'}}</button>
           <span class="help mt-0" id="dflt-note"></span>
         </div>
-        <p class="help">These pre-fill the create-wizard, apply when a server is created via the API or a blueprint, and drive the quota-bar colors on the dashboard.</p>
+        <p class="help">{{t 'settings.defaults_help'}}</p>
       </div>
     </div>
   {{/settings/card}}
 
-  {{#> settings/card heading="Users" wide=true}}
+  {{#> settings/card heading=(t 'settings.users_heading') wide=true}}
     <div class="overflow-x-auto">
       <table class="table-base table-stack" id="users-table">
-        <thead><tr><th>User</th><th>Role</th><th>2FA</th><th>Created</th><th class="text-right">Actions</th></tr></thead>
+        <thead><tr><th>{{t 'settings.th_user'}}</th><th>{{t 'settings.th_role'}}</th><th>{{t 'settings.th_2fa'}}</th><th>{{t 'settings.th_created'}}</th><th class="text-right">{{t 'settings.th_actions'}}</th></tr></thead>
         <tbody>
           {{#each users}}
             <tr data-user-id="{{id}}" data-username="{{username}}">
-              <td data-th="User" class="font-medium">
+              <td data-th="{{t 'settings.th_user'}}" class="font-medium">
                 <div class="flex items-center gap-2">
                   <span class="grid size-6 shrink-0 place-items-center overflow-hidden rounded-md bg-diamond-700 text-[10px] font-bold text-white">
                     {{#if (avatarSrc avatar)}}
@@ -137,39 +151,39 @@
                       {{initial username}}
                     {{/if}}
                   </span>
-                  {{username}}{{#if (eq id ../user.id)}} <span class="badge">you</span>{{/if}}
+                  {{username}}{{#if (eq id ../user.id)}} <span class="badge">{{t 'common.you'}}</span>{{/if}}
                 </div>
               </td>
-              <td data-th="Role">
-                <select class="input w-auto" data-user-role data-prev-role="{{role}}" data-label="Role for {{username}}">
-                  <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>Admin</option>
-                  <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>Operator</option>
-                  <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>Viewer</option>
+              <td data-th="{{t 'settings.th_role'}}">
+                <select class="input w-auto" data-user-role data-prev-role="{{role}}" data-label="{{t 'settings.role_for' user=username}}">
+                  <option value="admin" {{#if (eq role 'admin')}}selected{{/if}}>{{t 'roles.admin'}}</option>
+                  <option value="operator" {{#if (eq role 'operator')}}selected{{/if}}>{{t 'roles.operator'}}</option>
+                  <option value="viewer" {{#if (eq role 'viewer')}}selected{{/if}}>{{t 'roles.viewer'}}</option>
                 </select>
               </td>
-              <td data-th="2FA">
+              <td data-th="{{t 'settings.th_2fa'}}">
                 {{#if totpEnabled}}
-                  <span class="badge badge-ok">On</span>
+                  <span class="badge badge-ok">{{t 'common.on'}}</span>
                 {{else}}
-                  <span class="text-xs text-ink-faint">Off</span>
+                  <span class="text-xs text-ink-faint">{{t 'common.off'}}</span>
                 {{/if}}
               </td>
-              <td data-th="Created" class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
+              <td data-th="{{t 'settings.th_created'}}" class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
               <td data-th="" class="text-right">
-                <button class="btn btn-ghost btn-sm" data-menu="user-menu-{{@index}}" data-tip="Actions for {{username}}" aria-label="Actions for {{username}}">{{{icon 'ellipsis' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-menu="user-menu-{{@index}}" data-tip="{{t 'settings.actions_for' user=username}}" aria-label="{{t 'settings.actions_for' user=username}}">{{{icon 'ellipsis' 'size-3.5'}}}</button>
                 <template id="user-menu-{{@index}}">
-                  <button data-user-password data-user-id="{{id}}" data-username="{{username}}">{{{icon 'key' 'size-3.5'}}} Set Password</button>
+                  <button data-user-password data-user-id="{{id}}" data-username="{{username}}">{{{icon 'key' 'size-3.5'}}} {{t 'settings.set_password'}}</button>
                   {{! Your own row: self-service, same modal as the topbar user menu -
                       2FA can only ever be set up on the device you're enrolling, so
                       there's nothing an admin can do here for someone ELSE's row. }}
                   {{#if (eq id ../user.id)}}
-                    <button data-open-2fa>{{{icon 'shield-check' 'size-3.5'}}} {{#if totpEnabled}}Manage 2FA{{else}}Set Up 2FA{{/if}}</button>
+                    <button data-open-2fa>{{{icon 'shield-check' 'size-3.5'}}} {{#if totpEnabled}}{{t 'settings.manage_2fa'}}{{else}}{{t 'settings.setup_2fa'}}{{/if}}</button>
                   {{else if totpEnabled}}
-                    <button data-user-totp-reset data-user-id="{{id}}" data-username="{{username}}">{{{icon 'shield-check' 'size-3.5'}}} Reset 2FA</button>
+                    <button data-user-totp-reset data-user-id="{{id}}" data-username="{{username}}">{{{icon 'shield-check' 'size-3.5'}}} {{t 'settings.reset_2fa'}}</button>
                   {{/if}}
                   {{! No self-delete affordance - deleting your own account mid-session is a trap, not a feature. }}
                   {{#unless (eq id ../user.id)}}
-                    <button class="btn btn-ghost btn-sm text-danger" data-user-delete data-user-id="{{id}}" data-username="{{username}}">{{{icon 'trash-2' 'size-3.5'}}} Delete User</button>
+                    <button class="btn btn-ghost btn-sm text-danger" data-user-delete data-user-id="{{id}}" data-username="{{username}}">{{{icon 'trash-2' 'size-3.5'}}} {{t 'settings.delete_user'}}</button>
                   {{/unless}}
                 </template>
               </td>
@@ -179,52 +193,52 @@
       </table>
     </div>
     <div class="mt-4 flex flex-wrap gap-2">
-      <button class="btn btn-primary btn-sm" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add User</button>
-      <a class="btn btn-sm" href="/settings/permissions">{{{icon 'shield-check' 'size-3.5'}}} Server Permissions</a>
+      <button class="btn btn-primary btn-sm" id="user-add">{{{icon 'plus' 'size-3.5'}}} {{t 'settings.add_user'}}</button>
+      <a class="btn btn-sm" href="/settings/permissions">{{{icon 'shield-check' 'size-3.5'}}} {{t 'settings.server_permissions'}}</a>
     </div>
-    <p class="help mt-2 max-w-prose">Roles: <b>Admin</b> can do everything. <b>Operator</b> can manage servers, but not storage, users, or update policies. <b>Viewer</b> is read-only. Server Permissions lets you change what an operator or viewer may do on each server.</p>
+    <p class="help mt-2 max-w-prose">{{{t 'settings.roles_help'}}}</p>
   {{/settings/card}}
 
-  {{#> settings/card heading="Sign-in Security" id="lockouts-card" wide=true desc="Accounts and addresses currently blocked from signing in after too many failed attempts. Locks clear on their own after the cooldown; unlock one here to end it early."}}
-    <div id="lockouts-body" class="text-sm text-ink-faint">Checking…</div>
-    <button class="btn btn-sm mt-4 hidden" id="lockouts-clear-all">{{{icon 'lock-open' 'size-3.5'}}} Clear All Locks</button>
+  {{#> settings/card heading=(t 'settings.lockouts_heading') id="lockouts-card" wide=true desc=(t 'settings.lockouts_desc')}}
+    <div id="lockouts-body" class="text-sm text-ink-faint">{{t 'common.loading'}}</div>
+    <button class="btn btn-sm mt-4 hidden" id="lockouts-clear-all">{{{icon 'lock-open' 'size-3.5'}}} {{t 'settings.clear_all_locks'}}</button>
   {{/settings/card}}
 
-  {{#> settings/card heading="Public API" id="api-tokens-card" wide=true desc="Let another app or website read your servers' status, like a live status page, an uptime monitor, or a Discord bot. It is read-only: nothing outside can start, stop, or change anything."}}
+  {{#> settings/card heading=(t 'settings.api_tokens_heading') id="api-tokens-card" wide=true desc=(t 'settings.api_tokens_desc')}}
     {{> settings/toggle-row
-        label="Let outside apps read status"
-        help="Switches on by itself when you make your first key below. Turn it off any time to pause outside access without losing your keys."
+        label=(t 'settings.public_api_toggle_label')
+        help=(t 'settings.public_api_toggle_help')
         inputId="public-api-enabled"
         checked=publicApiEnabled}}
 
     <div class="mt-4 border-t border-line pt-4">
-      <p class="help mt-0 max-w-prose">Each app connects with its own <b>access key</b> (sent as an <span class="font-mono">Authorization: Bearer</span> header). Make one key per app; anyone holding a key can see the servers you allow it: name, type, whether it's running, players online, and resource use. Cancel a key to cut that app off straight away.</p>
+      <p class="help mt-0 max-w-prose">{{{t 'settings.api_tokens_info'}}}</p>
       <div class="mt-4 overflow-x-auto">
         <table class="table-base table-stack" id="api-tokens-table">
-          <thead><tr><th>Name</th><th>Key</th><th>Can See</th><th>Created</th><th>Last Used</th><th>Expires</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+          <thead><tr><th>{{t 'settings.th_token_name'}}</th><th>{{t 'settings.th_token_key'}}</th><th>{{t 'settings.th_token_scope'}}</th><th>{{t 'settings.th_created'}}</th><th>{{t 'settings.th_last_used'}}</th><th>{{t 'settings.th_expires'}}</th><th>{{t 'common.status'}}</th><th class="text-right">{{t 'common.actions'}}</th></tr></thead>
           <tbody>
             {{#each apiTokens}}
               <tr data-token-id="{{id}}">
-                <td data-th="Name" class="font-medium">{{label}}</td>
-                <td data-th="Key" class="font-mono text-xs">{{tokenPrefix}}&hellip;</td>
-                <td data-th="Can See">{{#if scope.all}}Every server{{else}}{{scope.serverIds.length}} server(s){{/if}}</td>
-                <td data-th="Created" class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
-                <td data-th="Last Used" class="whitespace-nowrap text-xs text-ink-faint">{{#if lastUsedAt}}<span data-ts="{{lastUsedAt}}">{{lastUsedAt}}</span>{{else}}never{{/if}}</td>
-                <td data-th="Expires" class="whitespace-nowrap text-xs text-ink-faint">{{#if expiresAt}}<span data-ts="{{expiresAt}}">{{expiresAt}}</span>{{else}}never{{/if}}</td>
-                <td data-th="Status">{{#if (eq status 'active')}}<span class="badge badge-ok">Active</span>{{else}}<span class="badge">{{status}}</span>{{/if}}</td>
+                <td data-th="{{t 'settings.th_token_name'}}" class="font-medium">{{label}}</td>
+                <td data-th="{{t 'settings.th_token_key'}}" class="font-mono text-xs">{{tokenPrefix}}&hellip;</td>
+                <td data-th="{{t 'settings.th_token_scope'}}">{{#if scope.all}}{{t 'settings.scope_all_servers'}}{{else}}{{t 'settings.scope_servers_count' count=scope.serverIds.length}}{{/if}}</td>
+                <td data-th="{{t 'settings.th_created'}}" class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
+                <td data-th="{{t 'settings.th_last_used'}}" class="whitespace-nowrap text-xs text-ink-faint">{{#if lastUsedAt}}<span data-ts="{{lastUsedAt}}">{{lastUsedAt}}</span>{{else}}{{t 'common.never'}}{{/if}}</td>
+                <td data-th="{{t 'settings.th_expires'}}" class="whitespace-nowrap text-xs text-ink-faint">{{#if expiresAt}}<span data-ts="{{expiresAt}}">{{expiresAt}}</span>{{else}}{{t 'common.never'}}{{/if}}</td>
+                <td data-th="{{t 'common.status'}}">{{#if (eq status 'active')}}<span class="badge badge-ok">{{t 'settings.token_active'}}</span>{{else}}<span class="badge">{{status}}</span>{{/if}}</td>
                 <td data-th="" class="text-right">
                   {{#unless revokedAt}}
-                    <button class="btn btn-ghost btn-sm text-danger" data-token-revoke data-token-id="{{id}}" data-label="{{label}}">Cancel</button>
+                    <button class="btn btn-ghost btn-sm text-danger" data-token-revoke data-token-id="{{id}}" data-label="{{label}}">{{t 'settings.cancel_key'}}</button>
                   {{/unless}}
                 </td>
               </tr>
             {{else}}
-              <tr><td data-th="" colspan="8" class="text-sm text-ink-faint">No keys yet. Make one for each app that needs access.</td></tr>
+              <tr><td data-th="" colspan="8" class="text-sm text-ink-faint">{{t 'settings.no_tokens'}}</td></tr>
             {{/each}}
           </tbody>
         </table>
       </div>
-      <button class="btn btn-primary btn-sm mt-4" id="api-token-add">{{{icon 'plus' 'size-3.5'}}} New Key</button>
+      <button class="btn btn-primary btn-sm mt-4" id="api-token-add">{{{icon 'plus' 'size-3.5'}}} {{t 'settings.new_key'}}</button>
       <script type="application/json" id="api-token-servers">{{jsonScript serverOptions}}</script>
     </div>
   {{/settings/card}}

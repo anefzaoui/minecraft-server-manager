@@ -13,12 +13,13 @@ import { runTask } from './progress.js';
 import { withBusy } from './loading.js';
 import { glyphFor } from './itemGlyph.js';
 import { escapeHtml as esc } from './format.js';
+import { t } from './i18n.js';
 
 const PAGE = 100;
-const KINDS = [
-  { value: '', label: 'All' },
-  { value: 'item', label: 'Items' },
-  { value: 'block', label: 'Blocks' },
+const getKinds = () => [
+  { value: '', label: t('item_browser.all') },
+  { value: 'item', label: t('item_browser.items') },
+  { value: 'block', label: t('item_browser.blocks') },
 ];
 
 export function openItemBrowser({ serverId, onPick, onManual } = {}) {
@@ -29,32 +30,34 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   content.className = 'space-y-3 text-sm';
   content.innerHTML = `
     <div class="flex flex-wrap items-center gap-2">
-      <input class="input flex-1 min-w-48" data-ib-q placeholder="Search by name or ID, e.g. Iron Ingot, allthemodium, minecraft:tnt"
+      <input class="input flex-1 min-w-48" data-ib-q placeholder="${esc(t('item_browser.search_placeholder'))}"
              maxlength="120" autocomplete="off" spellcheck="false">
       <div class="w-52 max-w-full">
-        <select data-ib-mod data-label="Filter by mod" aria-label="Filter by mod">
-          <option value="">All mods</option>
+        <select data-ib-mod data-label="${esc(t('item_browser.filter_mod'))}" aria-label="${esc(t('item_browser.filter_mod'))}">
+          <option value="">${esc(t('item_browser.all_mods'))}</option>
         </select>
       </div>
-      <div class="seg" data-ib-kinds role="group" aria-label="Kind">
-        ${KINDS.map(
-          (k) => `
+      <div class="seg" data-ib-kinds role="group" aria-label="${esc(t('item_browser.kind'))}">
+        ${getKinds()
+          .map(
+            (k) => `
           <button type="button" data-kind="${k.value}" class="seg-btn h-7 px-2.5 text-xs"
-                  aria-pressed="${k.value === '' ? 'true' : 'false'}">${k.label}</button>`
-        ).join('')}
+                  aria-pressed="${k.value === '' ? 'true' : 'false'}">${esc(k.label)}</button>`
+          )
+          .join('')}
       </div>
     </div>
     <div data-ib-list class="min-h-48 divide-y divide-line/60 rounded-md border border-line"></div>
     <div class="flex flex-wrap items-center gap-2">
       <span class="text-xs text-ink-faint" data-ib-status></span>
-      <button class="btn btn-sm hidden" data-ib-more>Load More</button>
+      <button class="btn btn-sm hidden" data-ib-more>${esc(t('item_browser.load_more'))}</button>
       <span class="ml-auto flex items-center gap-3">
-        ${onManual ? '<a href="#" class="text-xs text-link hover:underline" data-ib-manual>Enter ID manually</a>' : ''}
-        <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="Re-scan the mod and server files. Use this after adding or removing mods.">Rebuild Registry</button>
+        ${onManual ? `<a href="#" class="text-xs text-link hover:underline" data-ib-manual>${esc(t('item_browser.enter_id_manually'))}</a>` : ''}
+        <button class="btn btn-ghost btn-sm" data-ib-rebuild data-tip="${esc(t('item_browser.rebuild_registry_tip'))}">${esc(t('item_browser.rebuild_registry'))}</button>
       </span>
     </div>`;
 
-  const modal = openModal({ title: 'Item Browser', content, size: 'lg' });
+  const modal = openModal({ title: t('item_browser.title'), content, size: 'lg' });
   const $ = (sel) => content.querySelector(sel);
   const listEl = $('[data-ib-list]');
   const statusEl = $('[data-ib-status]');
@@ -116,8 +119,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
     moreBtn.disabled = true;
     if (!append) {
       state.offset = 0;
-      listEl.innerHTML =
-        '<div class="p-6 text-center text-sm text-ink-faint">Loading items… <span class="text-xs">The first open scans every mod file; later opens are instant.</span></div>';
+      listEl.innerHTML = `<div class="p-6 text-center text-sm text-ink-faint">${esc(t('item_browser.loading'))} <span class="text-xs">${esc(t('item_browser.loading_sub'))}</span></div>`;
       setStatus('');
     }
     try {
@@ -136,12 +138,16 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       }
       if (!append) listEl.innerHTML = '';
       if (!data.items.length && !append) {
-        listEl.innerHTML = `<div class="p-6 text-center text-sm text-ink-faint">No items match${state.q ? ` "${esc(state.q)}"` : ''}. Try a different search, mod, or kind filter.</div>`;
+        listEl.innerHTML = `<div class="p-6 text-center text-sm text-ink-faint">${esc(t('item_browser.no_matches', { query: state.q ? ` "${state.q}"` : '' }))}</div>`;
       }
       for (const item of data.items) listEl.appendChild(row(item));
       const shown = state.offset + data.items.length;
       state.offset = shown;
-      setStatus(state.total ? `${shown.toLocaleString()} of ${state.total.toLocaleString()} items` : '');
+      setStatus(
+        state.total
+          ? t('item_browser.shown_count', { shown: shown.toLocaleString(), total: state.total.toLocaleString() })
+          : ''
+      );
       moreBtn.classList.toggle('hidden', shown >= state.total);
       moreBtn.disabled = false;
     } catch (err) {
@@ -191,7 +197,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
   $('[data-ib-rebuild]').addEventListener('click', async () => {
     try {
       const result = await runTask({
-        title: 'Rebuilding the item registry…',
+        title: t('item_browser.rebuilding_title'),
         start: async () => {
           const res = await fetch(`${base}/rebuild`, { method: 'POST' });
           const data = await res.json().catch(() => ({}));
@@ -199,9 +205,9 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
           return data.taskId;
         },
       });
-      toast(`Registry rebuilt: ${result.items.toLocaleString()} items from ${result.mods} mods.`);
+      toast(t('item_browser.rebuilt_toast', { items: result.items.toLocaleString(), mods: result.mods }));
       state.modsLoaded = false;
-      modSel.innerHTML = '<option value="">All mods</option>';
+      modSel.innerHTML = `<option value="">${esc(t('item_browser.all_mods'))}</option>`;
       state.mod = '';
       modSel.dispatchEvent(new Event('change', { bubbles: true })); // resync enhanced trigger + reload
     } catch (err) {

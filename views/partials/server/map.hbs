@@ -2,14 +2,14 @@
   <div class="card overflow-hidden">
     <div class="flex flex-wrap items-center gap-2 border-b border-line p-3">
       <span class="flex items-center gap-1.5 text-sm font-medium text-ok">
-        <span class="status-dot relative bg-grass-500 pulse"></span> Live map
+        <span class="status-dot relative bg-grass-500 pulse"></span> {{t 'map_tab.live_map'}}
       </span>
-      <span class="text-xs text-ink-faint">BlueMap renders in the background. A newly enabled map takes a few minutes to draw its first tiles.</span>
+      <span class="text-xs text-ink-faint">{{t 'map_tab.background_note'}}</span>
       <div class="ml-auto flex items-center gap-2">
-        <a class="btn btn-sm" href="/map/{{server.id}}/" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} Fullscreen</a>
+        <a class="btn btn-sm" href="/map/{{server.id}}/" target="_blank" rel="noopener">{{{icon 'external-link' 'size-3.5'}}} {{t 'map_tab.fullscreen'}}</a>
         {{! Divider: destructive Disable must not sit flush against Fullscreen. }}
         <span class="h-5 w-px bg-line" aria-hidden="true"></span>
-        <button class="btn btn-ghost btn-sm text-danger" data-map-disable data-server-id="{{server.id}}">Disable Map</button>
+        <button class="btn btn-ghost btn-sm text-danger" data-map-disable data-server-id="{{server.id}}">{{t 'map_tab.disable_map'}}</button>
       </div>
     </div>
     {{! map.js probes the proxy first - without this a stopped server showed
@@ -20,26 +20,25 @@
     <div class="hidden h-[70vh] place-items-center bg-stone-950 px-6 text-center" data-map-placeholder>
       <div class="text-sm text-stone-400">
         {{{icon 'map' 'mx-auto size-6 text-stone-500'}}}
-        <p class="mt-2 max-w-sm">The map isn't up yet. It appears here once the server is running and BlueMap has rendered its first tiles. Checking again automatically…</p>
+        <p class="mt-2 max-w-sm">{{t 'map_tab.not_ready'}}</p>
       </div>
     </div>
-    <iframe src="/map/{{server.id}}/" class="h-[70vh] w-full border-0 bg-stone-950" title="Live world map" data-map-frame></iframe>
+    <iframe src="/map/{{server.id}}/" class="h-[70vh] w-full border-0 bg-stone-950" title="{{t 'map_tab.frame_title'}}" data-map-frame></iframe>
   </div>
 {{else}}
   <div class="card grid place-items-center px-6 py-16 text-center">
     <div class="grid size-14 place-items-center rounded-lg bg-inset text-ink-faint">{{{icon 'map' 'size-7'}}}</div>
-    <h3 class="mt-3 font-semibold">Live World Map</h3>
+    <h3 class="mt-3 font-semibold">{{t 'map_tab.title'}}</h3>
     <p class="mt-1 max-w-md text-sm text-ink-faint">
-      One click installs <b class="text-ink-soft">BlueMap</b> (free and open source) into this server and embeds a zoomable,
-      real-time 3D map here, with player positions and every dimension. It is served only through the panel, never exposed directly.
+      {{t 'map_tab.description'}}
     </p>
     {{#if mapSupported}}
-      <button class="btn btn-primary mt-5" data-map-enable data-server-id="{{server.id}}">{{{icon 'map' 'size-4'}}} Enable Live Map</button>
-      <p class="help mt-2">Installs the right BlueMap build for this server's loader. Takes effect on the next restart.</p>
+      <button class="btn btn-primary mt-5" data-map-enable data-server-id="{{server.id}}">{{{icon 'map' 'size-4'}}} {{t 'map_tab.enable_map'}}</button>
+      <p class="help mt-2">{{t 'map_tab.enable_help'}}</p>
     {{else}}
       <div class="notice mt-4 text-xs">
         {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
-        <div>BlueMap has no build for <b class="text-ink">{{server.flavor}}</b> servers. It needs a mod loader (Fabric, Forge, NeoForge, or Quilt) or a plugin server (the Paper family).</div>
+        <div>{{{t 'map_tab.unsupported' flavor=server.flavor}}}</div>
       </div>
     {{/if}}
   </div>

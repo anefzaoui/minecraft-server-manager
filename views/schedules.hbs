@@ -1,29 +1,26 @@
-{{> page-header heading="SCHEDULES" sub="Automatic tasks that run on a schedule, for a single server or for the panel itself."}}
+{{> page-header headingKey="schedules_page.heading" subKey="schedules_page.sub"}}
 
 <div class="mb-4 flex flex-wrap items-center gap-2">
-  <button class="btn btn-primary" id="schedule-new">{{{icon 'plus' 'size-4'}}} New Task</button>
+  <button class="btn btn-primary" id="schedule-new">{{{icon 'plus' 'size-4'}}} {{t 'schedules_page.new_task'}}</button>
 </div>
 
 {{#if schedules.length}}
 <div class="card overflow-x-auto">
   <table class="table-base table-stack" id="schedules-table">
-    <thead><tr><th>Server</th><th>Task</th><th>Cron</th><th class="text-right">Next Run</th><th>Enabled</th><th class="text-right"></th></tr></thead>
+    <thead><tr><th>{{t 'schedules_page.th_server'}}</th><th>{{t 'schedules_page.th_task'}}</th><th>{{t 'schedules_page.th_cron'}}</th><th class="text-right">{{t 'schedules_page.th_next_run'}}</th><th>{{t 'schedules_page.th_enabled'}}</th><th class="text-right"></th></tr></thead>
     <tbody>
       {{#each schedules}}
         <tr data-schedule-row data-schedule-id="{{id}}" data-server-id="{{serverId}}" data-task-type="{{taskType}}" data-task="{{task}}" data-cron="{{cron}}" data-payload="{{jsonAttr payload}}">
-          {{! Global rows are faint by the serverId FACT, not by matching the display string. }}
-          <td data-th="Server" class="{{#unless serverId}}text-ink-faint{{/unless}}">{{server}}</td>
-          <td data-th="Task" class="font-medium">{{task}}</td>
-          <td data-th="Cron" class="font-mono text-xs text-ink-faint">{{cron}}</td>
-          {{! nextMs + the panel-TZ hydrator: the table used to show UTC while
-              the modal preview showed panel time for the SAME schedule. }}
-          <td data-th="Next run" class="whitespace-nowrap text-right tabular-nums text-ink-faint">{{#if nextMs}}<span data-ts="{{nextMs}}">{{next}}</span>{{else}}Not scheduled{{/if}}</td>
-          <td data-th="Enabled">
+          <td data-th="{{t 'schedules_page.th_server'}}" class="{{#unless serverId}}text-ink-faint{{/unless}}">{{server}}</td>
+          <td data-th="{{t 'schedules_page.th_task'}}" class="font-medium">{{task}}</td>
+          <td data-th="{{t 'schedules_page.th_cron'}}" class="font-mono text-xs text-ink-faint">{{cron}}</td>
+          <td data-th="{{t 'schedules_page.th_next_run'}}" class="whitespace-nowrap text-right tabular-nums text-ink-faint">{{#if nextMs}}<span data-ts="{{nextMs}}">{{next}}</span>{{else}}{{t 'schedules_page.not_scheduled'}}{{/if}}</td>
+          <td data-th="{{t 'schedules_page.th_enabled'}}">
             <label class="msm-toggle"><input type="checkbox" data-schedule-toggle {{#if enabled}}checked{{/if}}><span></span></label>
           </td>
           <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
-            <button class="btn btn-ghost btn-sm" data-schedule-edit data-tip="Edit schedule">{{{icon 'pencil' 'size-3.5'}}}</button>
-            <button class="btn btn-ghost btn-sm text-danger" data-schedule-delete data-tip="Delete schedule" aria-label="Delete schedule">{{{icon 'trash-2' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm" data-schedule-edit data-tip="{{t 'schedules_page.edit_schedule_tip'}}">{{{icon 'pencil' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-danger" data-schedule-delete data-tip="{{t 'schedules_page.delete_schedule_tip'}}" aria-label="{{t 'schedules_page.delete_schedule_tip'}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
           </div></td>
         </tr>
       {{/each}}
@@ -31,7 +28,7 @@
   </table>
 </div>
 {{else}}
-  {{> empty-state iconName='calendar-clock' title='No Scheduled Tasks Yet' message='Automate restarts, backups, and console commands on a schedule. Use New Task above to create the first one.'}}
+  {{> empty-state iconName='calendar-clock' titleKey='schedules_page.empty_title' messageKey='schedules_page.empty_message'}}
 {{/if}}
 
 <div id="msm-schedule-data" hidden data-servers="{{jsonAttr serverOptions}}" data-task-types="{{jsonAttr taskTypes}}"></div>

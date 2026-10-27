@@ -2,6 +2,8 @@
 // (server-side via ?sort=), grid/list view toggle, and the create-tile fix for
 // the text filter.
 
+import { t } from '../lib/i18n.js';
+
 const grid = document.getElementById('server-grid');
 const sortSel = document.getElementById('server-sort');
 
@@ -196,11 +198,12 @@ async function hydrateDocker() {
     if (d.available) {
       el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-ok';
       el.innerHTML = '<span class="status-dot relative bg-grass-500 pulse"></span> ';
-      el.append(`Connected${d.version ? ` · v${d.version}` : ''}`);
+      const connStr = t('dashboard.docker_connected') || 'Connected';
+      el.append(`${connStr}${d.version ? ` · v${d.version}` : ''}`);
     } else {
       el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-danger';
       el.innerHTML = '<span class="status-dot relative bg-redstone-500"></span> ';
-      el.append('Unreachable');
+      el.append(t('dashboard.docker_unreachable_badge') || 'Unreachable');
       el.title = d.error || 'Docker is not reachable. Is Docker running?';
       // Surface the fix inline, not just in a tooltip - the reason is visible.
       const warn = document.getElementById('docker-warning');
@@ -215,7 +218,7 @@ async function hydrateDocker() {
     // No eternal "Checking…" - say we don't know, and retry shortly.
     el.className = 'mt-1 flex items-center gap-2 text-sm font-semibold text-ink-faint';
     el.innerHTML = '<span class="status-dot relative bg-stone-500"></span> ';
-    el.append('Unknown, retrying…');
+    el.append(t('dashboard.docker_unknown') || 'Unknown, retrying…');
     setTimeout(hydrateDocker, 8000);
   }
 }
@@ -244,9 +247,11 @@ function applyStatus(card, status) {
   wrap.className = `flex items-center gap-1.5 text-xs font-medium ${meta.text}`;
   dot.className = `status-dot relative ${meta.dot} ${meta.pulse ? 'pulse' : ''}`;
   // The label is the text node after the dot.
+  const statusKey = status === 'over-quota' ? 'status.over_quota' : `status.${status}`;
+  const label = t(statusKey) || meta.label;
   for (const node of wrap.childNodes) {
     if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()) {
-      node.nodeValue = ` ${meta.label}`;
+      node.nodeValue = ` ${label}`;
       break;
     }
   }

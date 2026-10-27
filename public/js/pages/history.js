@@ -7,6 +7,7 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { withBusy } from '../lib/loading.js';
 import { confirmDialog } from '../lib/confirm.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-history-server]');
 if (root) init(root.dataset.historyServer);
@@ -82,19 +83,19 @@ function init(serverId) {
             'console max-h-[65vh] overflow-auto whitespace-pre-wrap break-words p-3 text-xs leading-relaxed';
           pre.textContent = text || '(empty excerpt)';
           openModal({
-            title: 'Captured Log Excerpt',
+            title: t('history_page.captured_log_title'),
             size: 'lg',
             content: pre,
             actions: [
               {
-                label: 'Copy',
+                label: t('common.copy'),
                 kind: 'ghost',
                 onClick: () => {
-                  copyToClipboard(text, 'Excerpt copied to clipboard.');
+                  copyToClipboard(text, t('history_page.excerpt_copied_toast'));
                   return false;
                 },
               },
-              { label: 'Close', kind: 'primary' },
+              { label: t('common.close'), kind: 'primary' },
             ],
           });
         } catch (err) {
@@ -131,7 +132,7 @@ function extractTrace(text) {
 
 async function copyTrace(serverId, crash) {
   try {
-    await copyToClipboard(extractTrace(await fetchText(serverId, crash)), 'Stack trace copied to clipboard.');
+    await copyToClipboard(extractTrace(await fetchText(serverId, crash)), t('history_page.trace_copied_toast'));
   } catch (err) {
     toast(err.message, { kind: 'error' });
   }
@@ -164,19 +165,17 @@ function markShared(card, url) {
     a.target = '_blank';
     a.rel = 'noopener';
     a.href = url;
-    a.textContent = 'mclo.gs paste';
+    a.textContent = t('history_page.mclogs_paste_btn');
     shareBtn.replaceWith(a);
   }
 }
 
 async function confirmPublish(crash, { analyzing = false } = {}) {
   return confirmDialog({
-    title: analyzing ? 'Analyze with mclo.gs?' : 'Share to mclo.gs?',
-    message: `${crash.filename} will be uploaded to mclo.gs as a public paste. Anyone with the link can read it.`,
-    detail: analyzing
-      ? "mclo.gs then runs its automated analysis (known problems with suggested fixes) over the paste. Crash reports can include player names and mod lists, so don't share what you wouldn't post on a forum."
-      : "Mod authors and support channels usually ask for exactly this link. Crash reports can include player names and mod lists, so don't share what you wouldn't post on a forum.",
-    confirmLabel: analyzing ? 'Publish & Analyze' : 'Publish Paste',
+    title: analyzing ? t('history_page.publish_analyze_title') : t('history_page.publish_share_title'),
+    message: t('history_page.publish_msg', { filename: crash.filename }),
+    detail: analyzing ? t('history_page.detail_analyze') : t('history_page.detail_share'),
+    confirmLabel: analyzing ? t('history_page.publish_analyze_btn') : t('history_page.publish_share_btn'),
   });
 }
 
@@ -218,8 +217,7 @@ async function showInsights(serverId, crash, card) {
   if (!ins.problems.length) {
     const p = document.createElement('p');
     p.className = 'text-ink-soft';
-    p.textContent =
-      'mclo.gs found no known problems in this report. The paste link below is still handy for support channels.';
+    p.textContent = t('history_page.no_problems_found');
     content.appendChild(p);
   }
   for (const problem of ins.problems) {
@@ -249,19 +247,19 @@ async function showInsights(serverId, crash, card) {
   }
 
   openModal({
-    title: ins.title || 'mclo.gs analysis',
+    title: ins.title || t('history_page.insights_title'),
     size: 'lg',
     content,
     actions: [
       {
-        label: 'Open Paste',
+        label: t('history_page.open_paste_btn'),
         kind: 'ghost',
         onClick: () => {
           window.open(ins.url, '_blank', 'noopener');
           return false;
         },
       },
-      { label: 'Close', kind: 'primary' },
+      { label: t('common.close'), kind: 'primary' },
     ],
   });
 }
@@ -286,18 +284,18 @@ async function openViewer(serverId, crash, card) {
     content: renderReport(text),
     actions: [
       {
-        label: 'Copy Full Report',
+        label: t('history_page.copy_full_report'),
         kind: 'ghost',
         onClick: () => {
-          copyToClipboard(text, 'Full report copied to clipboard.');
+          copyToClipboard(text, t('history_page.full_copied_toast'));
           return false;
         },
       },
       {
-        label: 'Copy Stack Trace',
+        label: t('history_page.copy_stack_trace'),
         kind: 'ghost',
         onClick: () => {
-          copyToClipboard(extractTrace(text), 'Stack trace copied to clipboard.');
+          copyToClipboard(extractTrace(text), t('history_page.trace_copied_toast'));
           return false;
         },
       },

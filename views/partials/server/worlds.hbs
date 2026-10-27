@@ -1,50 +1,50 @@
-<div data-worlds-server="{{server.id}}" data-worlds-server-name="{{server.name}}" data-worlds-status="{{server.status}}" class="contents">
+<div data-worlds-server="{{server.id}}" data-worlds-server-name="{{server.name}}" data-worlds-status="{{server.status}}" data-worlds-runtime="{{server.runtime}}" class="contents">
   <div class="mb-4 flex flex-wrap items-center gap-2">
-    <h3 class="font-semibold">Worlds on This Server</h3>
+    <h3 class="font-semibold">{{t 'worlds_page.worlds_on_server'}}</h3>
     <div class="ml-auto flex gap-2">
-      <button class="btn btn-sm" id="worlds-extract" data-tip="Save the active world into the library. Works while the server is running.">{{{icon 'camera' 'size-3.5'}}} Save to Library</button>
-      <button class="btn btn-primary btn-sm" id="worlds-upload" data-tip="Upload a world archive. The world root is found automatically, and it lands in the library below.">{{{icon 'upload' 'size-3.5'}}} Upload World</button>
+      <button class="btn btn-sm" id="worlds-extract" data-tip="{{t 'worlds_page.save_active_tip'}}">{{{icon 'camera' 'size-3.5'}}} {{t 'worlds_page.save_to_library'}}</button>
+      <button class="btn btn-primary btn-sm" id="worlds-upload" data-tip="{{t 'worlds_page.upload_world_tip'}}">{{{icon 'upload' 'size-3.5'}}} {{t 'worlds_page.upload_world'}}</button>
     </div>
   </div>
 
   {{#if worlds.length}}
   <div class="card overflow-x-auto">
     <table class="table-base table-stack" id="server-worlds-table">
-      <thead><tr><th>World</th><th>Dimensions</th><th class="text-right">Size</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+      <thead><tr><th>{{t 'worlds_page.th_world'}}</th><th>{{t 'worlds_page.th_dimensions'}}</th><th class="text-right">{{t 'worlds_page.th_size'}}</th><th>{{t 'worlds_page.th_status'}}</th><th class="text-right">{{t 'worlds_page.th_actions'}}</th></tr></thead>
       <tbody>
         {{#each worlds}}
           <tr data-world-row data-world="{{name}}" data-size="{{sizeBytes}}" data-active="{{active}}">
             <td data-th="" class="sm:w-full sm:max-w-0">
               <div class="truncate font-medium" title="{{name}}">{{name}}</div>
-              {{#if seed}}<div class="text-xs text-ink-faint">seed {{seed}}</div>{{/if}}
+              {{#if seed}}<div class="text-xs text-ink-faint">{{t 'worlds_page.seed_label' seed=seed}}</div>{{/if}}
             </td>
-            <td data-th="Dimensions" class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
-            <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes sizeBytes}}</td>
+            <td data-th="{{t 'worlds_page.th_dimensions'}}" class="text-xs text-ink-faint">{{#each dims}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</td>
+            <td data-th="{{t 'worlds_page.th_size'}}" class="whitespace-nowrap text-right text-ink-faint">{{bytes sizeBytes}}</td>
             {{! Status shows STATE only (both branches same height); the
                 Activate control lives with the other actions - mixed badge
                 and button here made row heights visibly alternate. }}
-            <td data-th="Status">
+            <td data-th="{{t 'worlds_page.th_status'}}">
               {{#if active}}
-                <span class="badge badge-ok">active</span>
+                <span class="badge badge-ok">{{t 'worlds_page.status_active'}}</span>
               {{else}}
-                <span class="badge">inactive</span>
+                <span class="badge">{{t 'worlds_page.status_inactive'}}</span>
               {{/if}}
             </td>
             <td data-th="" class="text-right"><div class="flex flex-wrap justify-end gap-1">
               {{#unless active}}
-                <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Make this the active world. The server must be stopped.">{{{icon 'play' 'size-3.5'}}} Activate</button>
+                <button class="btn btn-ghost btn-sm" data-world-activate data-tip="{{t 'worlds_page.make_active_tip'}}">{{{icon 'play' 'size-3.5'}}} {{t 'worlds_page.activate'}}</button>
               {{/unless}}
-              <button class="btn btn-ghost btn-sm" data-world-download data-tip="Download as a .zip (a consistent snapshot)">{{{icon 'download' 'size-3.5'}}}</button>
-              <button class="btn btn-ghost btn-sm" data-world-duplicate data-tip="Make a copy of this world on this server">{{{icon 'copy' 'size-3.5'}}}</button>
-              <button class="btn btn-ghost btn-sm" data-world-copy data-tip="Copy to another server. A compatibility check and a safety backup run first.">{{{icon 'arrow-right' 'size-3.5'}}}</button>
-              <button class="btn btn-ghost btn-sm" data-world-rename data-tip="Rename this world. The server must be stopped.">{{{icon 'pencil' 'size-3.5'}}}</button>
-              <button class="btn btn-ghost btn-sm" data-world-shrink data-tip="Shrink this world on disk by removing chunks no player has spent 30+ seconds in. The server must be stopped; back up first.">{{{icon 'shrink' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-download data-tip="{{t 'worlds_page.download_zip_tip'}}">{{{icon 'download' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-duplicate data-tip="{{t 'worlds_page.duplicate_world_tip'}}">{{{icon 'copy' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-copy data-tip="{{t 'worlds_page.copy_to_server_tip'}}">{{{icon 'arrow-right' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-rename data-tip="{{t 'worlds_page.rename_world_tip'}}">{{{icon 'pencil' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-shrink data-tip="{{t 'worlds_page.shrink_world_tip'}}">{{{icon 'shrink' 'size-3.5'}}}</button>
               {{#if active}}
                 {{! refresh-ccw, not undo-2 - this DELETES the world; undo-2 is
                     what the (recovering) backup Restore uses. }}
-                <button class="btn btn-ghost btn-sm text-danger" data-world-reset data-tip="Reset the world. A backup is taken, and you can keep or re-roll the seed.">{{{icon 'refresh-ccw' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-world-reset data-tip="{{t 'worlds_page.reset_world_tip'}}">{{{icon 'refresh-ccw' 'size-3.5'}}}</button>
               {{else}}
-                <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete world ({{bytes sizeBytes}} freed)" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="{{t 'worlds_page.delete_world_freed_tip' size=(bytes sizeBytes)}}" aria-label="{{t 'worlds_page.aria_delete' name=name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               {{/if}}
             </div></td>
           </tr>
@@ -53,10 +53,10 @@
     </table>
   </div>
   {{else}}
-    {{> empty-state iconName='earth' title='No Worlds Yet' message='Start the server once to generate a world, or install one from the library below.'}}
+    {{> empty-state iconName='earth' title=(t 'worlds_page.no_worlds_title') message=(t 'worlds_page.no_worlds_message')}}
   {{/if}}
 
-  <h3 class="mt-6 mb-3 font-semibold">World Library</h3>
+  <h3 class="mt-6 mb-3 font-semibold">{{t 'worlds_page.world_library'}}</h3>
   {{#if libraryWorlds.length}}
     <div class="card divide-y divide-line">
       {{#each libraryWorlds}}
@@ -67,13 +67,13 @@
             <div class="text-xs text-ink-faint">{{source}}{{#if flavor}} · {{flavor}}{{/if}}{{#if mcVersion}} {{mcVersion}}{{/if}} · <span data-ts="{{created}}">{{created}}</span></div>
           </div>
           <span class="text-xs text-ink-faint">{{bytes size}}</span>
-          <button class="btn btn-sm" data-lib-install data-tip="Install into this server, replacing the current world or alongside it">{{{icon 'import' 'size-3.5'}}} Install Here</button>
-          <a href="/worlds" class="btn btn-ghost btn-sm">Open in Worlds {{{icon 'arrow-right' 'size-3.5'}}}</a>
+          <button class="btn btn-sm" data-lib-install data-tip="{{t 'worlds_page.install_here_tip'}}">{{{icon 'import' 'size-3.5'}}} {{t 'worlds_page.install_here'}}</button>
+          <a href="/worlds" class="btn btn-ghost btn-sm">{{t 'worlds_page.open_in_worlds'}} {{{icon 'arrow-right' 'size-3.5'}}}</a>
         </div>
       {{/each}}
     </div>
   {{else}}
-    <div class="card p-6 text-center text-sm text-ink-faint">The world library is empty. Save this server's world to it, upload an archive, or visit the <a class="text-link hover:underline" href="/worlds">Worlds page</a>.</div>
+    <div class="card p-6 text-center text-sm text-ink-faint">{{{t 'worlds_page.library_empty_notice'}}}</div>
   {{/if}}
 
   <div id="msm-server-options" hidden data-options="{{jsonAttr serverOptions}}"></div>

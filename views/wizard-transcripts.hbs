@@ -1,4 +1,4 @@
-{{> page-header heading="CHATBOT TRANSCRIPTS" sub="Kept according to each server's retention policy, including conversations from servers that were later deleted."}}
+{{> page-header headingKey="wizard_transcripts.heading" subKey="wizard_transcripts.sub"}}
 
 <div class="card overflow-hidden">
   {{#if transcripts.length}}
@@ -16,6 +16,6 @@
       {{/each}}
     </div>
   {{else}}
-    <div class="p-10 text-center text-sm text-ink-faint">No chatbot transcripts are being kept right now.</div>
+    <div class="p-10 text-center text-sm text-ink-faint">{{t 'wizard_transcripts.no_transcripts'}}</div>
   {{/if}}
 </div>

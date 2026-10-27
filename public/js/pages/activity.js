@@ -5,6 +5,7 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { setBusy } from '../lib/loading.js';
+import { t } from '../lib/i18n.js';
 
 const form = document.getElementById('activity-filters');
 if (form) {
@@ -23,7 +24,7 @@ document.addEventListener('click', async (e) => {
     const res = await fetch(`/api/events/${id}/excerpt`);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.error || friendlyError(res, { action: 'open the captured log' }));
+      throw new Error(data.error || friendlyError(res, { action: t('activity_page.action_open_log') }));
     }
     const text = await res.text();
     const content = document.createElement('div');
@@ -32,10 +33,10 @@ document.addEventListener('click', async (e) => {
     pre.textContent = text;
     content.appendChild(pre);
     openModal({
-      title: `Captured Log: ${btn.dataset.eventType || `Event #${id}`}`,
+      title: t('history_page.captured_log_activity_title', { type: btn.dataset.eventType || `Event #${id}` }),
       content,
       size: 'lg',
-      actions: [{ label: 'Close', kind: 'ghost' }],
+      actions: [{ label: t('common.close'), kind: 'ghost' }],
     });
   } catch (err) {
     toast(err.message, { kind: 'error', timeout: 8000 });

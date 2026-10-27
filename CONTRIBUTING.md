@@ -161,6 +161,12 @@ users:
 - The field catalog (`src/config/field-catalog/`) uses curly `'` apostrophes
   internally and consistently; leave those as-is. Straight quotes everywhere
   else.
+- **Never hardcode user-facing copy.** All text in templates, views, and client scripts must go through the i18n system:
+  - In Handlebars templates: `{{t 'section.key' param=value}}`. HTML in interpolated parameters is automatically escaped to prevent XSS.
+  - In browser scripts (`public/js/`): import `t` from `/js/lib/i18n.js` (`t('section.key', { param: value })`).
+  - In server code: use `i18n.t(req.locale, 'section.key', params)` from `src/services/i18n.js`.
+  - **All 6 locale files require complete key parity:** `src/locales/*.json` (`en`, `de`, `es`, `fr`, `zh`, `ar`). Any key added to `en.json` must also exist in all other locale files. `test/i18n.test.js` enforces this in CI.
+  - **Pluralization:** count-dependent copy supports CLDR plural rules (e.g. `one` and `other` in English/German; `zero`, `one`, `two`, `few`, `many`, `other` in Arabic).
 
 ## Logging
 

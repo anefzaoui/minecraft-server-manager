@@ -7,6 +7,7 @@ import { confirmDialog } from '../lib/confirm.js';
 import { runTask } from '../lib/progress.js';
 import { openModal } from '../lib/modal.js';
 import { escapeHtml } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const PUZZLE_SVG =
   '<svg class="icon size-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></svg>';
@@ -37,9 +38,9 @@ export async function showPackDetails({ platform, ref, installedServerId } = {})
     ? `serverId=${encodeURIComponent(installedServerId)}`
     : `platform=${encodeURIComponent(platform)}&ref=${encodeURIComponent(ref)}`;
   const loading = openModal({
-    title: 'Loading pack details…',
+    title: t('modpacks_page.loading_details'),
     size: 'sm',
-    content: '<p class="text-sm text-ink-faint">Fetching from the platform…</p>',
+    content: `<p class="text-sm text-ink-faint">${escapeHtml(t('modpacks_page.fetching_platform'))}</p>`,
   });
   let pack;
   try {
@@ -61,8 +62,9 @@ function renderPackDetails(pack) {
   content.className = 'space-y-4 text-sm';
 
   const meta = [];
-  if (pack.author) meta.push(`by ${escapeHtml(pack.author)}`);
-  if (Number.isFinite(pack.downloads)) meta.push(`${formatDownloads(pack.downloads)} downloads`);
+  if (pack.author) meta.push(t('modpacks_page.meta_by', { author: pack.author }));
+  if (Number.isFinite(pack.downloads))
+    meta.push(t('modpacks_page.meta_downloads', { count: formatDownloads(pack.downloads) }));
   if (pack.mcVersion) meta.push(`Minecraft ${escapeHtml(pack.mcVersion)}`);
   if (pack.loaders && pack.loaders.length) meta.push(escapeHtml(pack.loaders.join(', ')));
 
@@ -75,23 +77,24 @@ function renderPackDetails(pack) {
           <span class="badge">${pack.platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}</span>
           ${meta.length ? `<span class="ml-1">${meta.join(' · ')}</span>` : ''}
         </div>
-        ${pack.installed ? `<div class="mt-1 text-xs text-ok">Installed on ${escapeHtml(pack.installed.serverName)}, pinned to ${escapeHtml(pack.installed.versionName)}</div>` : ''}
+        ${pack.installed ? `<div class="mt-1 text-xs text-ok">${escapeHtml(t('modpacks_page.meta_installed', { server: pack.installed.serverName, version: pack.installed.versionName }))}</div>` : ''}
       </div>
     </div>
     <div data-desc class="max-h-72 overflow-y-auto rounded-md border border-line bg-inset p-4 text-sm leading-relaxed"></div>
     <div>
-      <label class="label" for="pd-version">Version to pin</label>
-      <select class="input" id="pd-version" data-label="Pack version"></select>
-      <p class="help">Installs are always pinned to this exact version, so a restart can never silently upgrade the pack.</p>
+      <label class="label" for="pd-version">${escapeHtml(t('modpacks_page.version_to_pin'))}</label>
+      <select class="input" id="pd-version" data-label="${escapeHtml(t('modpacks_page.version_to_pin'))}"></select>
+      <p class="help">${escapeHtml(t('modpacks_page.version_pin_help'))}</p>
     </div>
     <div data-mods class="hidden">
-      <div class="label" data-mods-title>Pack contents</div>
+      <div class="label" data-mods-title>${escapeHtml(t('modpacks_page.pack_contents'))}</div>
       <div data-mods-list class="max-h-56 overflow-y-auto rounded-md border border-line"></div>
     </div>`;
 
   // Description arrives sanitized server-side (sanitize-html); constrain images.
   const descEl = content.querySelector('[data-desc]');
-  descEl.innerHTML = pack.description || '<span class="text-ink-faint">No description provided.</span>';
+  descEl.innerHTML =
+    pack.description || `<span class="text-ink-faint">${escapeHtml(t('modpacks_page.no_description'))}</span>`;
   descEl.querySelectorAll('img').forEach((img) => {
     img.loading = 'lazy';
     img.style.maxWidth = '100%';
@@ -121,7 +124,7 @@ function renderPackDetails(pack) {
 
   const actions = [
     {
-      label: 'Create Server with This Pack',
+      label: t('modpacks_page.create_server_pack_btn'),
       kind: 'primary',
       onClick: () => {
         const v = versionSel.value ? `&version=${encodeURIComponent(versionSel.value)}` : '';
@@ -131,7 +134,7 @@ function renderPackDetails(pack) {
   ];
   if (pack.installed) {
     actions.unshift({
-      label: 'Open Server',
+      label: t('modpacks_page.open_server_btn'),
       kind: 'default',
       onClick: () => {
         location.href = `/servers/${pack.installed.serverId}`;
@@ -149,17 +152,19 @@ async function loadInstalledMods(content, serverId) {
   const list = content.querySelector('[data-mods-list]');
   const title = content.querySelector('[data-mods-title]');
   wrap.classList.remove('hidden');
-  list.innerHTML = '<div class="p-3 text-center text-xs text-ink-faint">Reading installed pack content…</div>';
+  list.innerHTML = `<div class="p-3 text-center text-xs text-ink-faint">${escapeHtml(t('modpacks_page.reading_installed'))}</div>`;
   try {
     const res = await fetch(`/api/servers/${serverId}/pack/mods`);
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || friendlyError(res, { action: 'list the pack contents' }));
     if (!data.mods.length) {
-      list.innerHTML =
-        '<div class="p-3 text-center text-xs text-ink-faint">No pack-managed files on disk yet. They appear after the first start finishes installing the pack.</div>';
+      list.innerHTML = `<div class="p-3 text-center text-xs text-ink-faint">${escapeHtml(t('modpacks_page.no_pack_files'))}</div>`;
       return;
     }
-    title.textContent = `Pack contents (${data.mods.length} pack-managed file${data.mods.length === 1 ? '' : 's'})`;
+    title.textContent = t('modpacks_page.pack_contents_count', {
+      count: data.mods.length,
+      plural: data.mods.length === 1 ? '' : 's',
+    });
     list.innerHTML = data.mods
       .map(
         (m) => `
@@ -169,7 +174,7 @@ async function loadInstalledMods(content, serverId) {
           <span class="block truncate font-mono text-[11px] text-ink-faint">${escapeHtml(m.file)}</span>
         </span>
         ${m.version ? `<span class="shrink-0 font-mono text-xs text-ink-faint">${escapeHtml(m.version)}</span>` : ''}
-        ${m.enabled ? '' : '<span class="badge shrink-0">disabled</span>'}
+        ${m.enabled ? '' : `<span class="badge shrink-0">${escapeHtml(t('common.disabled'))}</span>`}
       </div>`
       )
       .join('');
@@ -247,13 +252,12 @@ function initPage() {
 
   function renderResults() {
     if (!lastResults.length) {
-      resultsEl.innerHTML =
-        '<div class="card p-4 text-sm text-ink-faint">No modpacks found. Try another search term.</div>';
+      resultsEl.innerHTML = `<div class="card p-4 text-sm text-ink-faint">${escapeHtml(t('modpacks_page.no_packs_found'))}</div>`;
       return;
     }
     // Both platforms return a capped page - say what's shown, never imply "all".
     const heading = resultsWrap.querySelector('h3');
-    if (heading) heading.textContent = `Search results: top ${lastResults.length} matches`;
+    if (heading) heading.textContent = t('modpacks_page.search_results_top', { count: lastResults.length });
     resultsEl.innerHTML = lastResults
       .map(
         (p, i) => `
@@ -262,13 +266,13 @@ function initPage() {
           ${packIconHtml(p.iconUrl, 'size-10')}
           <div class="min-w-0 flex-1">
             <div class="truncate font-semibold" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
-            <div class="text-xs text-ink-faint">${formatDownloads(p.downloads)} downloads</div>
+            <div class="text-xs text-ink-faint">${escapeHtml(t('modpacks_page.meta_downloads', { count: formatDownloads(p.downloads) }))}</div>
           </div>
         </div>
         <p class="mt-2 line-clamp-2 flex-1 text-xs text-ink-faint">${escapeHtml(p.description || '')}</p>
         <div class="mt-3 flex gap-2 border-t border-line pt-3">
-          <button type="button" class="btn btn-ghost btn-sm" data-details="${i}">Details</button>
-          <button type="button" class="btn btn-sm ml-auto" data-create="${i}">Create a Server</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-details="${i}">${escapeHtml(t('modpacks_page.details_btn'))}</button>
+          <button type="button" class="btn btn-sm ml-auto" data-create="${i}">${escapeHtml(t('modpacks_page.create_server'))}</button>
         </div>
       </div>`
       )
@@ -298,11 +302,15 @@ function initPage() {
     if (e.target.closest('[data-pack-check]')) {
       try {
         const result = await runTask({
-          title: `Checking ${packName} for updates…`,
+          title: t('modpacks_page.checking_updates', { name: packName }),
           start: async () => (await postJSON(`/api/servers/${serverId}/updates/check`, {})).taskId,
         });
         const n = result && result.findings ? result.findings.length : 0;
-        toast(n ? `${n} ${n === 1 ? 'update' : 'updates'} available for ${serverName}.` : `${packName} is up to date.`);
+        toast(
+          n
+            ? t('modpacks_page.updates_available_toast', { count: n, plural: n === 1 ? '' : 's', server: serverName })
+            : t('modpacks_page.up_to_date_toast', { name: packName })
+        );
         if (n) setTimeout(() => location.reload(), 900);
       } catch (err) {
         if (err.dismissed) return; // progress hidden - the task tray takes over
@@ -316,16 +324,15 @@ function initPage() {
 
     if (e.target.closest('[data-pack-upgrade]')) {
       const ok = await confirmDialog({
-        title: `Upgrade ${packName}?`,
-        message: `${serverName} moves from ${current} to ${latest}. The panel takes an automatic backup first, applies the new version, and starts the server back up, watching that it comes back healthy.`,
-        detail:
-          'Your custom mods are preserved, and you can roll back with one click from the Updates page if it does not come up. The server is briefly offline during the swap.',
-        confirmLabel: 'Upgrade Now',
+        title: t('modpacks_page.upgrade_confirm_title', { name: packName }),
+        message: t('modpacks_page.upgrade_confirm_msg', { server: serverName, current, latest }),
+        detail: t('modpacks_page.upgrade_confirm_detail'),
+        confirmLabel: t('modpacks_page.upgrade_confirm_btn'),
       });
       if (!ok) return;
       try {
         const result = await runTask({
-          title: `Upgrading ${packName} on ${serverName}…`,
+          title: t('modpacks_page.upgrading_title', { name: packName, server: serverName }),
           // Post the exact version the card showed as "latest" (belt and braces -
           // the server independently re-resolves and honours the pin's channel;
           // this just makes the request name what the user actually confirmed).
@@ -339,7 +346,7 @@ function initPage() {
           );
           return;
         }
-        toast(`Upgraded: ${result.from} → ${result.to}.`);
+        toast(t('modpacks_page.upgraded_toast', { from: result.from, to: result.to }));
         setTimeout(() => location.reload(), 900);
       } catch (err) {
         if (err.dismissed) return; // progress hidden - the task tray takes over

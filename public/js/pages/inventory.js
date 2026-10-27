@@ -12,7 +12,8 @@ import { openItemBrowser } from '../lib/itemBrowser.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
 import { glyphFor } from '../lib/itemGlyph.js';
-import { escapeHtml as esc } from '../lib/format.js';
+import { escapeHtml, escapeHtml as esc } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-inventory-root]');
 if (root) init(root);
@@ -130,9 +131,9 @@ function init(root) {
       if (label)
         cell.innerHTML = `<span class="text-[8px] uppercase tracking-wide text-ink-faint/60">${esc(label)}</span>`;
       cell.dataset.tip = editable
-        ? `Empty ${label || slotName(at.container, at.slot)}. Click to put an item here.`
+        ? t('inventory.empty_slot_tip', { label: label || slotName(at.container, at.slot) })
         : label
-          ? `Empty ${label} slot`
+          ? t('inventory.empty_slot_plain_tip', { label })
           : '';
     } else {
       const named = Boolean(item.displayName);
@@ -285,7 +286,11 @@ function init(root) {
     list.className = 'space-y-1.5';
     content.appendChild(list);
 
-    const modal = openModal({ title: nested ? 'Edit Backpack Item' : 'Edit Slot', content, size: 'sm' });
+    const modal = openModal({
+      title: nested ? t('inventory.edit_backpack_title') : t('inventory.edit_slot_title'),
+      content,
+      size: 'sm',
+    });
     const add = (label, iconName, handler, danger = false) => {
       const btn = menuButton(label, iconName, danger);
       btn.addEventListener('click', () => {
@@ -295,9 +300,9 @@ function init(root) {
       list.appendChild(btn);
     };
 
-    add('Change count', 'hash', () => openCountModal(at, item, nested));
-    add('Replace item', 'replace', () => openPlaceFlow(at, { replacing: item, nested }));
-    if (!nested) add('Move to another slot', 'move', () => openMoveModal(at, item));
+    add(t('inventory.change_count'), 'hash', () => openCountModal(at, item, nested));
+    add(t('inventory.replace_item'), 'replace', () => openPlaceFlow(at, { replacing: item, nested }));
+    if (!nested) add(t('inventory.move_slot'), 'move', () => openMoveModal(at, item));
     if (!nested && item.nested && item.nested.length) {
       for (const sub of item.nested) {
         const filled = sub.items.filter((i) => i.id).length;
@@ -305,14 +310,14 @@ function init(root) {
       }
     }
     add(
-      'Delete',
+      t('inventory.delete_slot'),
       'trash',
       async () => {
         if (
           !(await confirmDialog({
-            title: `Delete ${item.displayName || prettyId(item.id)}?`,
-            message: `Removes ${item.count}× ${item.id} from ${where}. Take a snapshot first if you might want it back.`,
-            confirmLabel: 'Delete Item',
+            title: t('inventory.delete_confirm_title', { item: item.displayName || prettyId(item.id) }),
+            message: t('inventory.delete_confirm_msg', { count: item.count, id: item.id, where }),
+            confirmLabel: t('inventory.delete_confirm_btn'),
             danger: true, // without this the destructive confirm rendered as a green primary
           }))
         )
@@ -322,7 +327,7 @@ function init(root) {
           postEdit(
             `/player/${currentUuid}/slot`,
             { container: at.container, slot: at.slot, op: 'delete', ...(nested ? { nested } : {}) },
-            (r) => `Deleted ${r.item} from ${r.slot}.`
+            (r) => t('inventory.deleted_toast', { item: r.item, slot: r.slot })
           )
         );
       },
@@ -337,7 +342,7 @@ function init(root) {
     content.innerHTML = `
       ${header}
       <div>
-        <label class="label">Count (1 to 99)</label>
+        <label class="label">${escapeHtml(t('inventory.count_label'))}</label>
         <input class="input" data-f="count" type="number" min="1" max="99" value="${esc(value)}">
       </div>`;
     openModal({
@@ -345,14 +350,14 @@ function init(root) {
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
           label: confirmLabel,
           kind: 'primary',
           onClick: async ({ body }) => {
             const n = Math.trunc(Number(body.querySelector('[data-f="count"]').value));
             if (!Number.isInteger(n) || n < 1 || n > 99) {
-              toast('Enter a count between 1 and 99.', { kind: 'error' });
+              toast(t('inventory.count_error'), { kind: 'error' });
               return false;
             }
             return (await onSubmit(n, body)) ? undefined : false;
@@ -364,10 +369,10 @@ function init(root) {
 
   function openCountModal(at, item, nested = null) {
     countDialog({
-      title: 'Change Count',
+      title: t('inventory.change_count'),
       header: itemHeader(item, slotName(at.container, at.slot)),
       value: item.count,
-      confirmLabel: 'Set Count',
+      confirmLabel: t('inventory.set_count_btn'),
       onSubmit: (n) =>
         postEdit(
           `/player/${currentUuid}/slot`,
@@ -391,10 +396,10 @@ function init(root) {
              <input class="input font-mono" data-f="item" placeholder="minecraft:diamond" maxlength="130" autocomplete="off" spellcheck="false">
            </div>`;
       countDialog({
-        title: replacing ? 'Replace item' : 'Put item here',
+        title: replacing ? t('inventory.replace_item') : t('inventory.place_item_title'),
         header,
         value: 1,
-        confirmLabel: replacing ? 'Replace' : 'Place',
+        confirmLabel: replacing ? t('inventory.replace_btn') : t('inventory.place_btn'),
         onSubmit: async (n, body) => {
           let itemId = id;
           if (!itemId) {
@@ -434,7 +439,7 @@ function init(root) {
         : 'Pick a target slot. Occupied targets swap the two items.';
     content.insertAdjacentHTML('beforeend', `<p class="text-xs text-ink-faint">${hint}</p>`);
 
-    const modal = openModal({ title: 'Move To…', content, size: 'lg' });
+    const modal = openModal({ title: t('inventory.move_title'), content, size: 'lg' });
 
     const doMove = async (to) => {
       if (to.container === from.container && to.slot === from.slot) {
@@ -488,13 +493,13 @@ function init(root) {
 
     const grids = document.createElement('div');
     grids.className = 'space-y-3';
-    grids.appendChild(section('Hotbar', 'hotbar', 9, bySlot, 0));
-    grids.appendChild(section('Inventory', 'inventory', 27, bySlot, 9));
-    grids.appendChild(section('Ender chest', 'enderchest', 27, enderBySlot, 0));
+    grids.appendChild(section(t('inventory.section_hotbar'), 'hotbar', 9, bySlot, 0));
+    grids.appendChild(section(t('inventory.section_inventory'), 'inventory', 27, bySlot, 9));
+    grids.appendChild(section(t('inventory.section_enderchest'), 'enderchest', 27, enderBySlot, 0));
     // Armor + offhand share one row; the last cell routes to the offhand container.
-    const armorRow = section('Armor & offhand', 'armor', 4, armorBySlot, 0, ARMOR_PIECES);
+    const armorRow = section(t('inventory.section_armor_offhand'), 'armor', 4, armorBySlot, 0, ARMOR_PIECES);
     const offCell = slotCell(currentData.offhand || null, {
-      label: 'offhand',
+      label: t('inventory.offhand_label'),
       onPick:
         from.container === 'offhand' && from.slot === 0
           ? () => toast("That's the source slot.", { kind: 'error' })
@@ -515,7 +520,7 @@ function init(root) {
     if (!editable) {
       content.insertAdjacentHTML(
         'beforeend',
-        '<p class="rounded-md border border-gold-500/40 bg-gold-400/5 p-2.5 text-xs text-warn">Read-only while the player is online. Stop the server or kick the player to edit backpack contents.</p>'
+        `<p class="rounded-md border border-gold-500/40 bg-gold-400/5 p-2.5 text-xs text-warn">${esc(t('inventory.read_only_online'))}</p>`
       );
     }
     const grid = document.createElement('div');
@@ -573,7 +578,7 @@ function init(root) {
     }
     playerSel.innerHTML = '';
     if (!players.length) {
-      playerSel.innerHTML = '<option value="">No player data yet</option>';
+      playerSel.innerHTML = `<option value="">${esc(t('inventory.no_player_data'))}</option>`;
       el('inv-empty').classList.remove('hidden');
       el('inv-view').classList.add('hidden');
       playerSel.dispatchEvent(new Event('change', { bubbles: true }));
@@ -829,7 +834,7 @@ function init(root) {
   // Server stopped -> the pick lands in the selected player's SAVE FILE
   // instead (first free slot), so god mode works either way.
   el('inv-give').addEventListener('click', () => {
-    if (!running && !currentUuid) return toast('Pick a player with saved data first.', { kind: 'error' });
+    if (!running && !currentUuid) return toast(t('inventory.pick_saved_first'), { kind: 'error' });
     openItemBrowser({
       serverId,
       onPick: (item) => (running ? openGiveModal(item) : openAddModal(item)),
@@ -849,10 +854,12 @@ function init(root) {
            <input class="input font-mono" data-f="item" placeholder="minecraft:diamond" maxlength="130" autocomplete="off" spellcheck="false">
          </div>`;
     countDialog({
-      title: item ? `Add ${item.name}` : 'Add Item',
+      title: item
+        ? t('inventory.add_item_title', { player: item.name })
+        : t('inventory.add_item_title', { player: currentPlayerName() || currentUuid }),
       header,
       value: 1,
-      confirmLabel: 'Add to Save File',
+      confirmLabel: t('inventory.add_save_file_btn'),
       onSubmit: async (n, body) => {
         let itemId = item ? item.id : null;
         if (!itemId) {
@@ -892,22 +899,24 @@ function init(root) {
         </div>`
       }
       <div>
-        <label class="label">Player (must be online)</label>
+        <label class="label">${escapeHtml(t('inventory.player_online_label'))}</label>
         <input class="input" data-f="player" maxlength="16" value="${esc(currentPlayerName())}"
                list="inv-give-players" autocomplete="off" spellcheck="false">
         <datalist id="inv-give-players">${names.map((n) => `<option value="${esc(n)}"></option>`).join('')}</datalist>
-        ${names.length ? '<p class="mt-1 text-xs text-ink-faint">Pick a player with saved data, or type any online name.</p>' : ''}
+        ${names.length ? `<p class="mt-1 text-xs text-ink-faint">${escapeHtml(t('inventory.player_pick_hint'))}</p>` : ''}
       </div>
       <div>
         <label class="label">Count</label>
         <input class="input" data-f="count" type="number" min="1" max="6400" value="1">
       </div>`;
     openModal({
-      title: item ? `Give ${item.name}` : 'Give Item',
+      title: item
+        ? t('inventory.give_item_title', { player: item.name })
+        : t('inventory.give_item_title', { player: currentPlayerName() || '' }),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
           label: 'Give',
           kind: 'primary',
@@ -948,21 +957,21 @@ function init(root) {
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
       <div>
-        <label class="label">Player (must be online)</label>
+        <label class="label">${escapeHtml(t('inventory.player_online_label'))}</label>
         <input class="input" data-f="player" maxlength="16" value="${esc(currentPlayerName())}" autocomplete="off" spellcheck="false">
       </div>
       <div>
-        <label class="label">Item id (leave empty to clear everything)</label>
+        <label class="label">${escapeHtml(t('inventory.item_id_clear_label'))}</label>
         <input class="input font-mono" data-f="item" placeholder="minecraft:tnt" maxlength="130" autocomplete="off" spellcheck="false">
       </div>`;
     openModal({
-      title: 'Clear Items',
+      title: t('inventory.clear_items_title'),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Clear',
+          label: t('inventory.clear_btn'),
           kind: 'danger',
           onClick: async ({ body }) => {
             const f = (k) => body.querySelector(`[data-f="${k}"]`).value.trim();
@@ -975,10 +984,9 @@ function init(root) {
             if (
               !item &&
               !(await confirmDialog({
-                title: `Clear the entire inventory of ${player}?`,
-                message:
-                  'Every item they carry will be deleted. This cannot be undone, so take a snapshot first if you might need it back.',
-                confirmLabel: 'Clear Everything',
+                title: t('inventory.clear_confirm_title', { player }),
+                message: t('inventory.clear_confirm_msg'),
+                confirmLabel: t('inventory.clear_confirm_btn'),
                 danger: true, // the most destructive dialog on the tab must not look like a positive action
               }))
             )

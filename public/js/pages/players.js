@@ -8,6 +8,8 @@ import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
 import { renderPlayerHead } from '../lib/playerHead.js';
+import { escapeHtml } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-players-root]');
 if (root) init(root);
@@ -95,23 +97,22 @@ function init(root) {
     } else if (d.whitelisted === '1') {
       append(label('Whitelisted', 'text-ok', 'bg-grass-700'));
     } else {
-      append(label('Joined', 'text-ink-soft', 'bg-stone-500'));
+      append(label(t('players_page.status_joined'), 'text-ink-soft', 'bg-stone-500'));
       const hint = document.createElement('div');
       hint.className = 'mt-0.5 text-[11px] leading-tight ' + (enforcedNow() ? 'text-warn' : 'text-ink-faint');
       if (enforcedNow()) {
-        hint.dataset.tip =
-          'Whitelist enforcement is on. This player has never been whitelisted, so they will be turned away when they try to join.';
-        hint.textContent = 'Not whitelisted, join blocked';
+        hint.dataset.tip = t('players_page.not_whitelisted_blocked_tip');
+        hint.textContent = t('players_page.not_whitelisted_blocked');
       } else {
-        hint.textContent = 'Not whitelisted';
+        hint.textContent = t('players_page.not_whitelisted');
       }
       append(hint);
     }
     if (d.lastSeen) {
       const seen = document.createElement('div');
       seen.className = 'mt-0.5 text-[11px] leading-tight text-ink-faint';
-      seen.dataset.tip = "The last time this name was seen in the server's cache";
-      seen.textContent = `seen ~${d.lastSeen}`;
+      seen.dataset.tip = t('players_page.last_seen_tip');
+      seen.textContent = `${t('players_page.seen_prefix')} ~${d.lastSeen}`;
       append(seen);
     }
   }
@@ -259,14 +260,14 @@ function init(root) {
           if (on) banModal(name);
           else if (
             await confirmDialog({
-              title: `Pardon ${name}?`,
-              message: 'The player will be able to join again.',
-              confirmLabel: 'Pardon',
+              title: t('players_modal.pardon_confirm_title', { name }),
+              message: t('players_modal.pardon_confirm_msg'),
+              confirmLabel: t('players_modal.pardon_confirm_btn'),
             })
           ) {
             await withBusy(toggle, async () => {
               await api('/pardon', { name });
-              patchRow(name, { banned: false }, `${name} pardoned.`);
+              patchRow(name, { banned: false }, t('players_modal.player_pardoned_toast', { name }));
             });
           }
         }
@@ -287,10 +288,9 @@ function init(root) {
     else if (act.dataset.act === 'notes') notesModal(name);
     else if (act.dataset.act === 'delete-player') {
       confirmDialog({
-        title: `Delete ${name}?`,
-        message:
-          'This removes the player from the whitelist, operators, bans, and usercache; deletes their saved inventory, stats and advancements; and clears their moderators notes. This cannot be undone.',
-        confirmLabel: 'Delete',
+        title: t('players_modal.delete_player_title', { name }),
+        message: t('players_modal.delete_player_msg'),
+        confirmLabel: t('players_modal.delete_player_btn'),
         danger: true,
       }).then(async (ok) => {
         if (!ok) return;
@@ -303,21 +303,21 @@ function init(root) {
           row?.remove();
           applyFilter();
           if (!root.querySelector('[data-player-row]')) location.reload();
-          toast(`${name} deleted.`);
+          toast(t('players_modal.player_deleted_toast', { name }));
         } catch (err) {
           fail(err);
         }
       });
     } else if (act.dataset.act === 'copy-uuid') {
       window.CD.copyText(act.dataset.uuid).then((ok) => {
-        if (ok) toast('UUID copied.');
+        if (ok) toast(t('players_modal.uuid_copied_toast'));
       });
     } else if (act.dataset.act === 'pardon-ip') {
       const ip = act.dataset.ip;
       confirmDialog({
-        title: `Unban ${ip}?`,
-        message: 'This IP address will be able to connect to the server again.',
-        confirmLabel: 'Unban',
+        title: t('players_modal.unban_ip_title', { ip }),
+        message: t('players_modal.unban_ip_msg'),
+        confirmLabel: t('players_modal.unban_ip_btn'),
       }).then(async (ok) => {
         if (!ok) return;
         try {
@@ -345,37 +345,37 @@ function init(root) {
       content.className = 'space-y-3 text-sm';
       content.innerHTML = `
       <div>
-        <label class="label">Player name</label>
+        <label class="label">${escapeHtml(t('players_page.th_player', { defaultValue: 'Player name' }))}</label>
         <input class="input" data-f="name" placeholder="Notch" autocomplete="off" spellcheck="false" maxlength="16">
-        <p class="mt-1 text-xs text-ink-faint">The name is looked up with Mojang, so the player never needs to have joined before.</p>
+        <p class="mt-1 text-xs text-ink-faint">${escapeHtml(t('players_modal.add_intro'))}</p>
       </div>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> Add to whitelist</label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> Make operator (level 4)</label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> ${escapeHtml(t('players_modal.add_whitelist'))}</label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> ${escapeHtml(t('players_modal.add_op'))}</label>`;
       openModal({
-        title: 'Add Player',
+        title: t('players_modal.add_title'),
         content,
         actions: [
-          { label: 'Cancel', kind: 'ghost' },
+          { label: t('common.cancel'), kind: 'ghost' },
           {
-            label: 'Add',
+            label: t('players_modal.add_btn'),
             kind: 'primary',
-            busyLabel: 'Adding…',
+            busyLabel: t('players_modal.adding_btn'),
             onClick: async ({ body }) => {
               const name = body.querySelector('[data-f="name"]').value.trim();
               const wl = body.querySelector('[data-f="whitelist"]').checked;
               const op = body.querySelector('[data-f="op"]').checked;
               if (!PLAYER_NAME_RE.test(name)) {
-                toast('Enter a valid player name.', { kind: 'error' });
+                toast(t('players_modal.valid_name_error'), { kind: 'error' });
                 return false;
               }
               if (!wl && !op) {
-                toast('Pick at least one role to grant.', { kind: 'error' });
+                toast(t('players_modal.pick_role_error'), { kind: 'error' });
                 return false;
               }
               try {
                 if (wl) await api('/whitelist', { name, on: true });
                 if (op) await api('/op', { name, on: true });
-                refresh(`${name} added.`);
+                refresh(t('players_modal.player_added_toast', { name }));
               } catch (err) {
                 fail(err);
                 return false;
@@ -390,22 +390,22 @@ function init(root) {
   function kickModal(name) {
     const content = document.createElement('div');
     content.innerHTML = `
-      <label class="label">Kick message (shown to the player)</label>
-      <input class="input" data-f="message" placeholder="Kicked by an operator" maxlength="256">`;
+      <label class="label">${escapeHtml(t('players_modal.kick_message_label'))}</label>
+      <input class="input" data-f="message" placeholder="${escapeHtml(t('players_modal.kick_placeholder'))}" maxlength="256">`;
     openModal({
-      title: `Kick ${name}`,
+      title: t('players_modal.kick_title', { name }),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Kick',
+          label: t('players_modal.kick_btn'),
           kind: 'danger',
-          busyLabel: 'Kicking…',
+          busyLabel: t('players_modal.kicking_btn'),
           onClick: async ({ body }) => {
             try {
               await api('/kick', { name, message: body.querySelector('[data-f="message"]').value.trim() || undefined });
-              patchRow(name, { online: false }, `${name} kicked.`);
+              patchRow(name, { online: false }, t('players_modal.player_kicked_toast', { name }));
             } catch (err) {
               fail(err);
               return false;
@@ -417,37 +417,37 @@ function init(root) {
   }
 
   // -------------------------------------------------------------------- ban
-  const DURATION_OPTIONS = `
-    <option value="">Permanent</option>
-    <option value="3600000">1 hour</option>
-    <option value="86400000">1 day</option>
-    <option value="259200000">3 days</option>
-    <option value="604800000">7 days</option>
-    <option value="2592000000">30 days</option>`;
+  const DURATION_OPTIONS = () => `
+    <option value="">${escapeHtml(t('players_modal.duration_perm'))}</option>
+    <option value="3600000">${escapeHtml(t('players_modal.duration_1h'))}</option>
+    <option value="86400000">${escapeHtml(t('players_modal.duration_1d'))}</option>
+    <option value="259200000">${escapeHtml(t('players_modal.duration_3d'))}</option>
+    <option value="604800000">${escapeHtml(t('players_modal.duration_7d'))}</option>
+    <option value="2592000000">${escapeHtml(t('players_modal.duration_30d'))}</option>`;
 
   function banModal(name) {
     const content = document.createElement('div');
     content.className = 'space-y-3';
     content.innerHTML = `
       <div>
-        <label class="label">Ban reason (recorded in the ban list)</label>
-        <input class="input" data-f="reason" placeholder="Banned by an operator" maxlength="256">
+        <label class="label">${escapeHtml(t('players_modal.ban_reason_label'))}</label>
+        <input class="input" data-f="reason" placeholder="${escapeHtml(t('players_modal.ban_placeholder'))}" maxlength="256">
       </div>
       <div>
-        <label class="label">Duration</label>
-        <select class="input" data-f="duration" data-label="Ban duration">${DURATION_OPTIONS}</select>
-        <p class="mt-2 text-xs text-ink-faint">A temporary ban lifts automatically when it expires, so there's no need to remember to pardon them.</p>
+        <label class="label">${escapeHtml(t('players_modal.ban_duration_label'))}</label>
+        <select class="input" data-f="duration" data-label="${escapeHtml(t('players_modal.ban_duration_label'))}">${DURATION_OPTIONS()}</select>
+        <p class="mt-2 text-xs text-ink-faint">${escapeHtml(t('players_modal.temp_ban_note'))}</p>
       </div>`;
     openModal({
-      title: `Ban ${name}`,
+      title: t('players_modal.ban_title', { name }),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Ban Player',
+          label: t('players_modal.ban_btn'),
           kind: 'danger',
-          busyLabel: 'Banning…',
+          busyLabel: t('players_modal.banning_btn'),
           onClick: async ({ body }) => {
             const reason = body.querySelector('[data-f="reason"]').value.trim();
             const duration = body.querySelector('[data-f="duration"]').value;
@@ -460,7 +460,9 @@ function init(root) {
               patchRow(
                 name,
                 { banned: true, banReason: reason, banExpires: result.banExpires },
-                `${name} banned${result.banExpires ? ` until ${result.banExpires}` : ''}.`
+                result.banExpires
+                  ? t('players_modal.player_banned_until_toast', { name, expires: result.banExpires })
+                  : t('players_modal.player_banned_toast', { name })
               );
             } catch (err) {
               fail(err);
@@ -478,10 +480,10 @@ function init(root) {
     content.className = 'space-y-3';
     content.innerHTML = `
       <div class="space-y-2" data-notes-list></div>
-      <p class="text-sm text-ink-faint" data-notes-empty>No notes yet.</p>
+      <p class="text-sm text-ink-faint" data-notes-empty>${escapeHtml(t('players_modal.no_notes'))}</p>
       <div class="flex gap-2">
-        <input class="input flex-1" data-f="new-note" placeholder="Add a note…" maxlength="1000">
-        <button type="button" class="btn btn-sm" data-notes-add-inline>Add</button>
+        <input class="input flex-1" data-f="new-note" placeholder="${escapeHtml(t('players_modal.add_note_placeholder'))}" maxlength="1000">
+        <button type="button" class="btn btn-sm" data-notes-add-inline>${escapeHtml(t('players_modal.add_note_btn'))}</button>
       </div>`;
     const list = content.querySelector('[data-notes-list]');
     const empty = content.querySelector('[data-notes-empty]');
@@ -505,7 +507,7 @@ function init(root) {
         const del = document.createElement('button');
         del.type = 'button';
         del.className = 'btn btn-ghost btn-sm text-danger shrink-0';
-        del.setAttribute('aria-label', 'Delete note');
+        del.setAttribute('aria-label', t('players_modal.delete_note_aria'));
         del.innerHTML =
           '<svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
         del.addEventListener('click', async () => {
@@ -557,31 +559,36 @@ function init(root) {
       }
     });
 
-    openModal({ title: `Notes for ${name}`, content, size: 'sm', actions: [{ label: 'Close', kind: 'ghost' }] });
+    openModal({
+      title: t('players_modal.notes_title', { name }),
+      content,
+      size: 'sm',
+      actions: [{ label: t('common.close'), kind: 'ghost' }],
+    });
   }
 
   // --------------------------------------------------------------- op level
   function opLevelModal(name) {
     const content = document.createElement('div');
     content.innerHTML = `
-      <label class="label">Permission level</label>
-      <select class="input" data-f="level" data-label="Op permission level">
-        <option value="1">1 (bypass spawn protection)</option>
-        <option value="2">2 (command blocks and most commands)</option>
-        <option value="3">3 (player management: kick, ban, op)</option>
-        <option value="4" selected>4 (full access, including stop and save-all)</option>
+      <label class="label">${escapeHtml(t('players_modal.permission_level_label'))}</label>
+      <select class="input" data-f="level" data-label="${escapeHtml(t('players_modal.permission_level_label'))}">
+        <option value="1">${escapeHtml(t('players_modal.op_level_1'))}</option>
+        <option value="2">${escapeHtml(t('players_modal.op_level_2'))}</option>
+        <option value="3">${escapeHtml(t('players_modal.op_level_3'))}</option>
+        <option value="4" selected>${escapeHtml(t('players_modal.op_level_4'))}</option>
       </select>
-      <p class="mt-2 text-xs text-ink-faint">Levels below 4 take effect after the next restart of a running server.</p>`;
+      <p class="mt-2 text-xs text-ink-faint">${escapeHtml(t('players_modal.op_note'))}</p>`;
     openModal({
-      title: `Operator Level for ${name}`,
+      title: t('players_modal.op_title', { name }),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Apply',
+          label: t('players_modal.apply_btn'),
           kind: 'primary',
-          busyLabel: 'Applying…',
+          busyLabel: t('players_modal.applying_btn'),
           onClick: async ({ body }) => {
             try {
               const { result } = await api('/op', {
@@ -593,7 +600,7 @@ function init(root) {
               patchRow(
                 name,
                 { op: true, opLevel: result.opLevel },
-                `${name} is now an operator at level ${result.opLevel}.`
+                t('players_modal.op_applied_toast', { name, level: result.opLevel })
               );
             } catch (err) {
               fail(err);
@@ -611,71 +618,71 @@ function init(root) {
     content.className = 'space-y-4 text-sm';
     content.innerHTML = `
       <div class="seg max-w-full" role="tablist">
-        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
-        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
-        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
-        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
-        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="coords">${escapeHtml(t('players_modal.tp_mode_coords'))}</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="biome">${escapeHtml(t('players_modal.tp_mode_biome'))}</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="player">${escapeHtml(t('players_modal.tp_mode_player'))}</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="rtp">${escapeHtml(t('players_modal.tp_mode_rtp'))}</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="structure">${escapeHtml(t('players_modal.tp_mode_structure'))}</button>
       </div>
 
       <div data-tp-panel="coords" class="space-y-3">
         <div class="grid grid-cols-3 gap-2">
-          <div><label class="label">X</label><input class="input" type="number" data-f="x" placeholder="0"></div>
-          <div><label class="label">Y</label><input class="input" type="number" data-f="y" placeholder="surface"></div>
-          <div><label class="label">Z</label><input class="input" type="number" data-f="z" placeholder="0"></div>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_x'))}</label><input class="input" type="number" data-f="x" placeholder="0"></div>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_y'))}</label><input class="input" type="number" data-f="y" placeholder="${escapeHtml(t('players_modal.tp_y_placeholder'))}"></div>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_z'))}</label><input class="input" type="number" data-f="z" placeholder="0"></div>
         </div>
-        <p class="text-xs text-ink-faint">Leave Y empty to land safely on the highest solid ground. If you set Y yourself, the player gets 15 seconds of Slow Falling as a safeguard.</p>
+        <p class="text-xs text-ink-faint">${escapeHtml(t('players_modal.tp_coords_help'))}</p>
         <div>
-          <label class="label">Dimension</label>
-          <select class="input" data-f="dimension" data-label="Dimension">
-            <option value="">Current dimension</option>
-            <option value="minecraft:overworld">Overworld</option>
-            <option value="minecraft:the_nether">The Nether</option>
-            <option value="minecraft:the_end">The End</option>
+          <label class="label">${escapeHtml(t('players_modal.tp_dimension'))}</label>
+          <select class="input" data-f="dimension" data-label="${escapeHtml(t('players_modal.tp_dimension'))}">
+            <option value="">${escapeHtml(t('players_modal.tp_dim_current'))}</option>
+            <option value="minecraft:overworld">${escapeHtml(t('players_modal.tp_dim_overworld'))}</option>
+            <option value="minecraft:the_nether">${escapeHtml(t('players_modal.tp_dim_nether'))}</option>
+            <option value="minecraft:the_end">${escapeHtml(t('players_modal.tp_dim_end'))}</option>
           </select>
         </div>
       </div>
 
       <div data-tp-panel="biome" class="hidden space-y-3">
         <div>
-          <label class="label">Biome</label>
-          <select class="input" data-f="biome" data-label="Biome"><option value="">Loading biomes…</option></select>
-          <p class="mt-1 text-xs text-ink-faint">Searches out from the player's current position for the nearest matching biome.</p>
+          <label class="label">${escapeHtml(t('players_modal.tp_biome_label'))}</label>
+          <select class="input" data-f="biome" data-label="${escapeHtml(t('players_modal.tp_biome_label'))}"><option value="">${escapeHtml(t('players_modal.tp_loading_biomes'))}</option></select>
+          <p class="mt-1 text-xs text-ink-faint">${escapeHtml(t('players_modal.tp_biome_help'))}</p>
         </div>
       </div>
 
       <div data-tp-panel="player" class="hidden space-y-3">
         <div>
-          <label class="label">Target player</label>
-          <select class="input" data-f="target" data-label="Target player"></select>
+          <label class="label">${escapeHtml(t('players_modal.tp_target_player'))}</label>
+          <select class="input" data-f="target" data-label="${escapeHtml(t('players_modal.tp_target_player'))}"></select>
         </div>
       </div>
 
       <div data-tp-panel="rtp" class="hidden space-y-3">
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="label">Min distance</label><input class="input" type="number" data-f="minDistance" value="500" min="0"></div>
-          <div><label class="label">Max distance</label><input class="input" type="number" data-f="maxDistance" value="5000" min="16"></div>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_min_distance'))}</label><input class="input" type="number" data-f="minDistance" value="500" min="0"></div>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_max_distance'))}</label><input class="input" type="number" data-f="maxDistance" value="5000" min="16"></div>
         </div>
         <div>
-          <label class="label">Around</label>
-          <select class="input" data-f="center" data-label="Around">
-            <option value="player">The player's current position</option>
-            <option value="origin">World center (0, 0)</option>
+          <label class="label">${escapeHtml(t('players_modal.tp_around'))}</label>
+          <select class="input" data-f="center" data-label="${escapeHtml(t('players_modal.tp_around'))}">
+            <option value="player">${escapeHtml(t('players_modal.tp_around_player'))}</option>
+            <option value="origin">${escapeHtml(t('players_modal.tp_around_origin'))}</option>
           </select>
         </div>
-        <p class="text-xs text-ink-faint">Built-in random teleport that works on any server, version, or modpack. Picks a random spot in the ring and lands on solid ground; ocean picks are retried automatically, up to 10 times.</p>
+        <p class="text-xs text-ink-faint">${escapeHtml(t('players_modal.tp_rtp_help'))}</p>
       </div>
 
       <div data-tp-panel="structure" class="hidden space-y-3">
         <div>
-          <label class="label">Structure</label>
-          <select class="input" data-f="structure" data-label="Structure"><option value="">Loading structures…</option></select>
+          <label class="label">${escapeHtml(t('players_modal.tp_structure_label'))}</label>
+          <select class="input" data-f="structure" data-label="${escapeHtml(t('players_modal.tp_structure_label'))}"><option value="">${escapeHtml(t('players_modal.tp_loading_structures'))}</option></select>
         </div>
         <div class="grid grid-cols-2 items-end gap-2">
-          <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
-          <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise me (random one, not nearest)</label>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_search_radius'))}</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
+          <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" class="msm-check" data-f="structRandom" checked> ${escapeHtml(t('players_modal.tp_surprise_me'))}</label>
         </div>
-        <p class="text-xs text-ink-faint">"Surprise me" searches from a random point in the radius, so you get a different result every time. It lands safely on the surface next to the structure.</p>
+        <p class="text-xs text-ink-faint">${escapeHtml(t('players_modal.tp_structure_help'))}</p>
       </div>`;
 
     let mode = 'coords';
@@ -701,28 +708,28 @@ function init(root) {
         targetSel.appendChild(opt);
       }
     } else {
-      targetSel.innerHTML = '<option value="">No other players online</option>';
+      targetSel.innerHTML = `<option value="">${escapeHtml(t('players_modal.tp_no_other_players'))}</option>`;
     }
 
     const modal = openModal({
-      title: `Teleport ${name}`,
+      title: t('players_modal.tp_title', { name }),
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Teleport',
+          label: t('players_modal.tp_btn'),
           kind: 'primary',
-          busyLabel: 'Searching…',
+          busyLabel: t('players_modal.tp_searching_btn'),
           onClick: async ({ body }) => {
             if (tpInFlight) {
-              toast('The previous teleport is still searching. Please wait for it to finish.', { kind: 'error' });
+              toast(t('players_modal.tp_in_flight_error'), { kind: 'error' });
               return false;
             }
             const f = (k) => body.querySelector(`[data-f="${k}"]`).value;
             let payload;
             if (mode === 'coords') {
               if ([f('x'), f('z')].some((v) => v.trim() === '')) {
-                toast('Enter X and Z. Y is optional; leave it empty to land on the surface.', { kind: 'error' });
+                toast(t('players_modal.tp_coords_error'), { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, x: Number(f('x')), z: Number(f('z')) };
@@ -730,7 +737,7 @@ function init(root) {
               if (f('dimension')) payload.dimension = f('dimension');
             } else if (mode === 'biome') {
               if (!f('biome')) {
-                toast('Pick a biome.', { kind: 'error' });
+                toast(t('players_modal.tp_pick_biome_error'), { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, biome: f('biome') };

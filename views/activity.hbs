@@ -1,20 +1,20 @@
-{{> page-header heading="ACTIVITY" sub="Every action across every server: who did what, when, with the details on record."}}
+{{> page-header headingKey="activity_page.heading" subKey="activity_page.sub"}}
 
 {{#if (or events.length (or filters.q (or filters.server filters.type)))}}
 <form class="mb-4 flex flex-wrap items-center gap-2" method="get" action="/activity" id="activity-filters">
-  <input class="input max-w-xs" name="q" value="{{filters.q}}" placeholder="Search events…" autocomplete="off">
-  <select class="input w-auto" name="server" data-label="Filter by server">
-    <option value="">All servers</option>
+  <input class="input max-w-xs" name="q" value="{{filters.q}}" placeholder="{{t 'activity_page.search_placeholder'}}" autocomplete="off">
+  <select class="input w-auto" name="server" data-label="{{t 'activity_page.filter_server'}}">
+    <option value="">{{t 'activity_page.all_servers'}}</option>
     {{#each servers}}<option value="{{id}}" {{#if (eq id ../filters.server)}}selected{{/if}}>{{name}}</option>{{/each}}
   </select>
-  <select class="input w-auto" name="type" data-label="Filter by type">
-    <option value="">All types</option>
+  <select class="input w-auto" name="type" data-label="{{t 'activity_page.filter_type'}}">
+    <option value="">{{t 'activity_page.all_types'}}</option>
     {{#each types}}<option value="{{this}}" {{#if (eq this ../filters.type)}}selected{{/if}}>{{this}}</option>{{/each}}
   </select>
-  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} Apply Filters</button>
+  <button class="btn btn-sm" type="submit">{{{icon 'search' 'size-3.5'}}} {{t 'activity_page.apply_filters'}}</button>
   <div class="ml-auto flex gap-1">
-    <a class="btn btn-sm" href="/api/events/export?format=csv{{exportQs}}" data-tip="Export the filtered events as CSV">{{{icon 'download' 'size-3.5'}}} CSV</a>
-    <a class="btn btn-sm" href="/api/events/export?format=json{{exportQs}}" data-tip="Export the filtered events as JSON">{{{icon 'download' 'size-3.5'}}} JSON</a>
+    <a class="btn btn-sm" href="/api/events/export?format=csv{{exportQs}}" data-tip="{{t 'activity_page.export_csv_tip'}}">{{{icon 'download' 'size-3.5'}}} CSV</a>
+    <a class="btn btn-sm" href="/api/events/export?format=json{{exportQs}}" data-tip="{{t 'activity_page.export_json_tip'}}">{{{icon 'download' 'size-3.5'}}} JSON</a>
   </div>
 </form>
 
@@ -27,28 +27,27 @@
         {{#if serverId}}
           <a href="/servers/{{serverId}}" class="shrink-0 text-xs text-link hover:underline">{{server}}</a>
         {{else}}
-          <span class="shrink-0 text-xs text-ink-faint">{{server}}</span>
+          <span class="shrink-0 text-xs text-ink-faint">{{#if (eq server '- panel -')}}{{t 'activity_page.server_panel'}}{{else}}{{server}}{{/if}}</span>
         {{/if}}
         <span class="shrink-0 text-xs text-ink-faint">{{actor}} · <span data-ts="{{ts}}">{{ts}}</span></span>
-        {{#if hasLog}}<button class="btn btn-ghost btn-sm shrink-0" data-event-excerpt data-event-id="{{id}}" data-event-type="{{type}}" data-tip="View the captured log">{{{icon 'file-text' 'size-3.5'}}}</button>{{/if}}
+        {{#if hasLog}}<button class="btn btn-ghost btn-sm shrink-0" data-event-excerpt data-event-id="{{id}}" data-event-type="{{type}}" data-tip="{{t 'activity_page.view_log_tip'}}">{{{icon 'file-text' 'size-3.5'}}}</button>{{/if}}
       </li>
     {{else}}
-      <li class="p-10 text-center text-sm text-ink-faint">No events match these filters.</li>
-      {{! wording kept in sync with the History tab's empty state }}
+      <li class="p-10 text-center text-sm text-ink-faint">{{t 'activity_page.no_match'}}</li>
     {{/each}}
   </ol>
   {{#if events.length}}
   <div class="flex items-center justify-between border-t border-line p-3 text-xs text-ink-faint">
-    <span>Showing {{from}} to {{to}} of {{total}} events</span>
+    <span>{{t 'activity_page.showing_range' from=from to=to total=total}}</span>
     <div class="flex items-center gap-2">
-      {{#if prevHref}}<a class="btn btn-ghost btn-sm" href="{{prevHref}}" aria-label="Previous page">{{{icon 'chevron-left' 'size-4'}}}</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="Previous page">{{{icon 'chevron-left' 'size-4'}}}</button>{{/if}}
-      <span class="tabular-nums">Page {{page}} of {{pages}}</span>
-      {{#if nextHref}}<a class="btn btn-ghost btn-sm" href="{{nextHref}}" aria-label="Next page">{{{icon 'chevron-right' 'size-4'}}}</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="Next page">{{{icon 'chevron-right' 'size-4'}}}</button>{{/if}}
+      {{#if prevHref}}<a class="btn btn-ghost btn-sm" href="{{prevHref}}" aria-label="{{t 'activity_page.prev_page'}}">{{{icon 'chevron-left' 'size-4'}}}</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="{{t 'activity_page.prev_page'}}">{{{icon 'chevron-left' 'size-4'}}}</button>{{/if}}
+      <span class="tabular-nums">{{t 'activity_page.page_counter' page=page pages=pages}}</span>
+      {{#if nextHref}}<a class="btn btn-ghost btn-sm" href="{{nextHref}}" aria-label="{{t 'activity_page.next_page'}}">{{{icon 'chevron-right' 'size-4'}}}</a>{{else}}<button class="btn btn-ghost btn-sm" disabled aria-label="{{t 'activity_page.next_page'}}">{{{icon 'chevron-right' 'size-4'}}}</button>{{/if}}
     </div>
   </div>
   {{/if}}
 </div>
 {{else}}
-  {{> empty-state iconName='history' title='No Activity Yet' message='Every action across every server lands here: starts and stops, backups, updates, and player management.'}}
+  {{> empty-state iconName='history' titleKey='activity_page.empty_title' messageKey='activity_page.empty_message'}}
 {{/if}}
 <script type="module" src="/js/pages/activity.js"></script>

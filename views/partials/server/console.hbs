@@ -1,21 +1,21 @@
 <div class="card p-4" data-console-server="{{server.id}}">
   <div class="mb-3 flex flex-wrap items-center gap-2">
-    <input class="input max-w-xs" placeholder="Filter log lines… (wrap in / / for a regex)" id="console-filter" aria-label="Filter log lines">
+    <input class="input max-w-xs" placeholder="{{t 'console.filter_placeholder'}}" id="console-filter" aria-label="{{t 'console.filter_label'}}">
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="INFO" checked> INFO</label>
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="WARN" checked> WARN</label>
     <label class="chip cursor-pointer gap-1.5"><input type="checkbox" class="msm-check" data-level-filter="ERROR" checked> ERROR</label>
-    <label class="chip cursor-pointer gap-1.5" data-tip="Hides the repeating connection lines the panel adds every few seconds while it checks on your server over its remote console (RCON): player count, time and world settings. Turn this off to see the raw log exactly as the server writes it."><input type="checkbox" class="msm-check" id="console-hide-rcon" checked> Hide Console Noise</label>
+    <label class="chip cursor-pointer gap-1.5" data-tip="{{t 'console.hide_rcon_tip'}}"><input type="checkbox" class="msm-check" id="console-hide-rcon" checked> {{t 'console.hide_rcon'}}</label>
     <div class="ml-auto flex flex-wrap items-center gap-2">
-      <div class="flex items-center gap-1.5" data-tip="Announce your console commands in the game chat under this name, for example Server Admin. Leave blank to stay silent. This is separate from the game's own [Rcon] line.">
+      <div class="flex items-center gap-1.5" data-tip="{{t 'console.announce_tip'}}">
         {{{icon 'megaphone' 'size-3.5 text-ink-faint'}}}
-        <input class="input w-36" id="console-label" placeholder="Announce as…" aria-label="Announce console commands as" value="{{server.consoleLabel}}" maxlength="48" autocomplete="off" spellcheck="false">
-        <button class="btn btn-sm" id="console-label-save">Save</button>
+        <input class="input w-36" id="console-label" placeholder="{{t 'console.announce_as'}}" aria-label="{{t 'console.announce_as'}}" value="{{server.consoleLabel}}" maxlength="48" autocomplete="off" spellcheck="false">
+        <button class="btn btn-sm" id="console-label-save">{{t 'console.save'}}</button>
       </div>
-      <button class="btn btn-sm" data-menu="console-dl-menu">{{{icon 'download' 'size-3.5'}}} Download {{{icon 'chevron-down' 'size-3.5'}}}</button>
+      <button class="btn btn-sm" data-menu="console-dl-menu">{{{icon 'download' 'size-3.5'}}} {{t 'console.download'}} {{{icon 'chevron-down' 'size-3.5'}}}</button>
       <template id="console-dl-menu">
-        <a href="/api/servers/{{server.id}}/logs?tail=2000" download="{{server.name}}-recent.log">{{{icon 'scroll-text' 'size-3.5'}}} Recent Output (Last 2000 Lines)</a>
-        <a href="/api/servers/{{server.id}}/logs/game/latest.log" download>{{{icon 'file-text' 'size-3.5'}}} Full latest.log</a>
-        <a href="/api/servers/{{server.id}}/logs/bundle.zip" download>{{{icon 'folder-archive' 'size-3.5'}}} All Log Files (.zip)</a>
+        <a href="/api/servers/{{server.id}}/logs?tail=2000" download="{{server.name}}-recent.log">{{{icon 'scroll-text' 'size-3.5'}}} {{t 'console.download_recent'}}</a>
+        <a href="/api/servers/{{server.id}}/logs/game/latest.log" download>{{{icon 'file-text' 'size-3.5'}}} {{t 'console.download_latest'}}</a>
+        <a href="/api/servers/{{server.id}}/logs/bundle.zip" download>{{{icon 'folder-archive' 'size-3.5'}}} {{t 'console.download_all'}}</a>
       </template>
     </div>
   </div>
@@ -24,7 +24,7 @@
       console.js on load; hidden until there's at least one. }}
   <details class="mb-3 rounded-md border border-line text-xs" data-console-logfiles hidden>
     <summary class="cursor-pointer px-3 py-2 font-semibold text-ink-faint marker:content-none">
-      {{{icon 'archive' 'size-3.5'}}} Older log files <span data-console-logfiles-count></span>
+      {{{icon 'archive' 'size-3.5'}}} {{t 'console.older_logs'}} <span data-console-logfiles-count></span>
     </summary>
     <div class="divide-y divide-line border-t border-line" data-console-logfiles-list></div>
   </details>
@@ -39,21 +39,21 @@
       <div class="grid h-full place-items-center px-4 text-center text-sm text-stone-400" data-console-empty>
         <div>
           {{{icon 'terminal' 'mx-auto size-6 text-stone-500'}}}
-          <p class="mt-2">No console output yet. Start the server to see live logs.</p>
+          <p class="mt-2">{{t 'console.no_output'}}</p>
         </div>
       </div>
     {{/if}}
   </div>
 
   {{#unless perms.console}}
-    <p class="notice notice-info mt-3">You can watch this console, but running commands needs the console permission on this server.</p>
+    <p class="notice notice-info mt-3">{{t 'console.read_only_notice'}}</p>
   {{/unless}}
   <div class="mt-3 flex gap-2{{#unless perms.console}} hidden{{/unless}}">
     <span class="grid place-items-center rounded-md border border-line-strong bg-inset px-3 font-mono text-sm text-ok">/</span>
     {{! min-w-0: see settings.hbs - without it this input won't shrink below its
         placeholder's intrinsic width and pushes the page wider on narrow screens. }}
-    <input class="input min-w-0 flex-1 font-mono" placeholder="Type a command (Enter to send, ↑ for history)" id="console-input" aria-label="Server command" autocomplete="off">
-    <button class="btn btn-primary" id="console-send">{{{icon 'terminal' 'size-4'}}} Send</button>
+    <input class="input min-w-0 flex-1 font-mono" placeholder="{{t 'console.command_placeholder'}}" id="console-input" aria-label="{{t 'console.command_label'}}" autocomplete="off">
+    <button class="btn btn-primary" id="console-send">{{{icon 'terminal' 'size-4'}}} {{t 'console.send'}}</button>
   </div>
   <div class="mt-2 flex flex-wrap gap-1.5{{#unless perms.console}} hidden{{/unless}}">
     <button class="chip" data-quick-cmd="time set day">{{{icon 'sun' 'size-3.5'}}} time set day</button>

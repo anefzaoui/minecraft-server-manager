@@ -5,11 +5,11 @@
   {{#if error}}<div class="notice notice-danger mb-4">{{{icon 'triangle-alert' 'size-4 mt-0.5 shrink-0 text-danger'}}}<div>{{error}}</div></div>{{/if}}
   <form method="post" action="/login/2fa" class="space-y-4" data-disable-on-submit>
     <div>
-      <label class="label" for="tf-code">Authenticator code</label>
+      <label class="label" for="tf-code">{{t 'auth.two_factor_code'}}</label>
       <input class="input font-mono text-center text-lg tracking-[0.3em]" id="tf-code" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus maxlength="12" placeholder="000000" required>
-      <p class="help">Enter the 6-digit code from your authenticator app, or one of your backup codes.</p>
+      <p class="help">{{t 'auth.two_factor_prompt'}}</p>
     </div>
-    <button class="btn btn-primary w-full" type="submit">Verify</button>
+    <button class="btn btn-primary w-full" type="submit">{{t 'auth.verify'}}</button>
   </form>
-  <a class="mt-4 block text-center text-xs text-ink-faint hover:text-ink" href="/login">Back to Sign In</a>
+  <a class="mt-4 block text-center text-xs text-ink-faint hover:text-ink" href="/login">{{t 'auth.back_to_sign_in'}}</a>
 </div>

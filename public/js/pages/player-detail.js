@@ -6,6 +6,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { escapeHtml } from '../lib/format.js';
+import { t } from '../lib/i18n.js';
 
 const root = document.querySelector('[data-player-detail]');
 if (root) init(root);
@@ -115,15 +116,15 @@ function init(root) {
         } else if (kind === 'ban') {
           if (on) {
             const ok = await confirmDialog({
-              title: `Pardon ${name}?`,
-              message: 'The player will be able to join again.',
-              confirmLabel: 'Pardon',
+              title: t('players_modal.pardon_title', { name }),
+              message: t('players_modal.pardon_message'),
+              confirmLabel: t('players_modal.pardon_button'),
             });
             if (!ok) return;
             await withBusy(chip, () => api('/pardon', { name }));
             setChip('ban', false, 'Ban');
             setBanBanner(false);
-            toast(`${name} pardoned.`);
+            toast(t('players_modal.pardon_success', { name }));
           } else {
             banModal();
           }
@@ -139,10 +140,9 @@ function init(root) {
     else if (act.dataset.act === 'teleport') teleportModal();
     else if (act.dataset.act === 'delete-player') {
       const ok = await confirmDialog({
-        title: `Delete ${name}?`,
-        message:
-          'This removes the player from the whitelist, operators, bans, and usercache; deletes their saved inventory, stats and advancements; and clears their moderators notes. This cannot be undone.',
-        confirmLabel: 'Delete',
+        title: t('players_modal.delete_player_title', { name }),
+        message: t('players_modal.delete_player_message'),
+        confirmLabel: t('common.delete'),
         danger: true,
       });
       if (!ok) return;
@@ -167,31 +167,31 @@ function init(root) {
     content.className = 'space-y-3';
     content.innerHTML = `
       <div>
-        <label class="label">Ban reason (recorded in the ban list)</label>
-        <input class="input" data-f="reason" placeholder="Banned by an operator" maxlength="256">
+        <label class="label">${escapeHtml(t('players_modal.ban_reason_label'))}</label>
+        <input class="input" data-f="reason" placeholder="${escapeHtml(t('players_modal.ban_reason_placeholder'))}" maxlength="256">
       </div>
       <div>
-        <label class="label">Duration</label>
-        <select class="input" data-f="duration" data-label="Ban duration">
-          <option value="">Permanent</option>
-          <option value="3600000">1 hour</option>
-          <option value="86400000">1 day</option>
-          <option value="259200000">3 days</option>
-          <option value="604800000">7 days</option>
-          <option value="2592000000">30 days</option>
+        <label class="label">${escapeHtml(t('players_modal.ban_duration_label'))}</label>
+        <select class="input" data-f="duration" data-label="${escapeHtml(t('players_modal.ban_duration_aria'))}">
+          <option value="">${escapeHtml(t('players_modal.ban_perm'))}</option>
+          <option value="3600000">${escapeHtml(t('players_modal.ban_1h'))}</option>
+          <option value="86400000">${escapeHtml(t('players_modal.ban_1d'))}</option>
+          <option value="259200000">${escapeHtml(t('players_modal.ban_3d'))}</option>
+          <option value="604800000">${escapeHtml(t('players_modal.ban_7d'))}</option>
+          <option value="2592000000">${escapeHtml(t('players_modal.ban_30d'))}</option>
         </select>
-        <p class="mt-2 text-xs text-ink-faint">A temporary ban lifts automatically when it expires, so there's no need to remember to pardon them.</p>
+        <p class="mt-2 text-xs text-ink-faint">${escapeHtml(t('players_modal.ban_temp_note'))}</p>
       </div>`;
     openModal({
-      title: `Ban ${name}`,
+      title: t('players_modal.ban_title', { name }),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Ban Player',
+          label: t('players_modal.ban_button'),
           kind: 'danger',
-          busyLabel: 'Banning…',
+          busyLabel: t('players_modal.ban_busy'),
           onClick: async ({ body }) => {
             const reason = body.querySelector('[data-f="reason"]').value.trim();
             const duration = body.querySelector('[data-f="duration"]').value;
@@ -203,7 +203,11 @@ function init(root) {
               });
               setChip('ban', true, 'Banned');
               setBanBanner(reason, result.banExpires);
-              toast(`${name} banned${result.banExpires ? ` until ${result.banExpires}` : ''}.`);
+              toast(
+                result.banExpires
+                  ? t('players_modal.ban_success_until', { name, expires: result.banExpires })
+                  : t('players_modal.ban_success', { name })
+              );
             } catch (err) {
               fail(err);
               return false;
@@ -239,7 +243,7 @@ function init(root) {
       const del = document.createElement('button');
       del.type = 'button';
       del.className = 'btn btn-ghost btn-sm text-danger shrink-0';
-      del.setAttribute('aria-label', 'Delete note');
+      del.setAttribute('aria-label', t('players_modal.notes_delete_aria'));
       del.innerHTML =
         '<svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
       del.addEventListener('click', async () => {
@@ -271,24 +275,24 @@ function init(root) {
   if (notesAddBtn)
     notesAddBtn.addEventListener('click', () => {
       const content = document.createElement('div');
-      content.innerHTML = `<label class="label">Note</label><textarea class="input" data-f="note" rows="3" maxlength="1000"></textarea>`;
+      content.innerHTML = `<label class="label">${escapeHtml(t('players_modal.notes_label'))}</label><textarea class="input" data-f="note" rows="3" maxlength="1000"></textarea>`;
       openModal({
-        title: `Note for ${name}`,
+        title: t('players_modal.notes_title', { name }),
         content,
         size: 'sm',
         actions: [
-          { label: 'Cancel', kind: 'ghost' },
+          { label: t('common.cancel'), kind: 'ghost' },
           {
-            label: 'Add Note',
+            label: t('players_modal.notes_add'),
             kind: 'primary',
-            busyLabel: 'Adding…',
+            busyLabel: t('players_modal.notes_adding'),
             onClick: async ({ body }) => {
               const note = body.querySelector('[data-f="note"]').value.trim();
               if (!note) return false;
               try {
                 await api('/notes', { name, note });
                 loadNotes();
-                toast('Note added.');
+                toast(t('players_modal.notes_add') + '.');
               } catch (err) {
                 fail(err);
                 return false;
@@ -303,22 +307,22 @@ function init(root) {
   function kickModal() {
     const content = document.createElement('div');
     content.className = 'space-y-3 text-sm';
-    content.innerHTML = `<div><label class="label">Kick message (optional)</label><input class="input" data-f="message" maxlength="120" placeholder="Kicked by an operator"></div>`;
+    content.innerHTML = `<div><label class="label">${escapeHtml(t('players_modal.kick_message_label'))}</label><input class="input" data-f="message" maxlength="120" placeholder="${escapeHtml(t('players_modal.kick_placeholder'))}"></div>`;
     openModal({
-      title: `Kick ${name}`,
+      title: t('players_modal.kick_title', { name }),
       content,
       size: 'sm',
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Kick',
+          label: t('players_modal.kick_button'),
           kind: 'danger',
-          busyLabel: 'Kicking…',
+          busyLabel: t('players_modal.kick_busy'),
           onClick: async ({ body }) => {
             try {
               await api('/kick', { name, message: body.querySelector('[data-f="message"]').value.trim() || undefined });
               setOffline(); // no stale pulsing "Online" + re-clickable Kick
-              toast(`${name} kicked.`);
+              toast(t('players_modal.kick_success', { name }));
             } catch (err) {
               fail(err);
               return false;
@@ -354,11 +358,11 @@ function init(root) {
     content.className = 'space-y-4 text-sm';
     content.innerHTML = `
       <div class="seg w-full" role="tablist">
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
-        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="coords">${escapeHtml(t('players_modal.tp_tab_coords'))}</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="biome">${escapeHtml(t('players_modal.tp_tab_biome'))}</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="player">${escapeHtml(t('players_modal.tp_tab_player'))}</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="rtp">${escapeHtml(t('players_modal.tp_tab_rtp'))}</button>
+        <button type="button" class="seg-btn flex-1 justify-center" role="tab" aria-selected="false" data-tp-mode="structure">${escapeHtml(t('players_modal.tp_tab_structure'))}</button>
       </div>
       <div data-tp-panel="coords" class="space-y-3">
         <div class="grid grid-cols-3 gap-2">
@@ -368,38 +372,38 @@ function init(root) {
         </div>
         <div><label class="label">Dimension</label>
           <select class="input" data-f="dimension" data-label="Dimension">
-            <option value="">Current dimension</option>
-            <option value="minecraft:overworld">Overworld</option>
-            <option value="minecraft:the_nether">The Nether</option>
-            <option value="minecraft:the_end">The End</option>
+            <option value="">${escapeHtml(t('players_modal.tp_dim_current'))}</option>
+            <option value="minecraft:overworld">${escapeHtml(t('players_modal.tp_dim_overworld'))}</option>
+            <option value="minecraft:the_nether">${escapeHtml(t('players_modal.tp_dim_nether'))}</option>
+            <option value="minecraft:the_end">${escapeHtml(t('players_modal.tp_dim_end'))}</option>
           </select></div>
-        <p class="text-xs text-ink-faint">Leave Y empty to land safely on the highest solid ground.</p>
+        <p class="text-xs text-ink-faint">${escapeHtml(t('players_modal.tp_coords_hint'))}</p>
       </div>
       <div data-tp-panel="biome" class="hidden space-y-3">
-        <label class="label">Biome</label>
-        <select class="input" data-f="biome" data-label="Biome"><option value="">Loading biomes…</option></select>
+        <label class="label">${escapeHtml(t('players_modal.tp_tab_biome'))}</label>
+        <select class="input" data-f="biome" data-label="Biome"><option value="">${escapeHtml(t('players_modal.tp_loading_biomes'))}</option></select>
       </div>
       <div data-tp-panel="player" class="hidden space-y-3">
-        <label class="label">Target player (online)</label>
-        <select class="input" data-f="target" data-label="Target player"><option value="">Loading…</option></select>
+        <label class="label">${escapeHtml(t('players_modal.tp_tab_player'))}</label>
+        <select class="input" data-f="target" data-label="Target player"><option value="">${escapeHtml(t('players_modal.tp_loading_players'))}</option></select>
       </div>
       <div data-tp-panel="rtp" class="hidden space-y-3">
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="label">Min distance</label><input class="input" type="number" data-f="minDistance" value="500" min="0"></div>
-          <div><label class="label">Max distance</label><input class="input" type="number" data-f="maxDistance" value="5000" min="16"></div>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_min_dist'))}</label><input class="input" type="number" data-f="minDistance" value="500" min="0"></div>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_max_dist'))}</label><input class="input" type="number" data-f="maxDistance" value="5000" min="16"></div>
         </div>
-        <div><label class="label">Around</label>
+        <div><label class="label">${escapeHtml(t('players_modal.tp_around'))}</label>
           <select class="input" data-f="center" data-label="Around">
-            <option value="player">The player's current position</option>
-            <option value="origin">World center (0, 0)</option>
+            <option value="player">${escapeHtml(t('players_modal.tp_around_player'))}</option>
+            <option value="origin">${escapeHtml(t('players_modal.tp_around_origin'))}</option>
           </select></div>
       </div>
       <div data-tp-panel="structure" class="hidden space-y-3">
-        <label class="label">Structure</label>
-        <select class="input" data-f="structure" data-label="Structure"><option value="">Loading structures…</option></select>
+        <label class="label">${escapeHtml(t('players_modal.tp_tab_structure'))}</label>
+        <select class="input" data-f="structure" data-label="Structure"><option value="">${escapeHtml(t('players_modal.tp_loading_structures'))}</option></select>
         <div class="grid grid-cols-2 items-end gap-2">
-          <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
-          <label class="flex items-center gap-2 pb-2"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise me</label>
+          <div><label class="label">${escapeHtml(t('players_modal.tp_search_radius'))}</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
+          <label class="flex items-center gap-2 pb-2"><input type="checkbox" class="msm-check" data-f="structRandom" checked> ${escapeHtml(t('players_modal.tp_surprise_me'))}</label>
         </div>
       </div>`;
 
@@ -432,7 +436,7 @@ function init(root) {
                   `<option value="${escapeHtml(e.id)}">${escapeHtml(dimShort(e.dimension))} · ${escapeHtml(label(e.id))}</option>`
               )
               .join('')
-          : '<option value="">None available. Start the server to load the list.</option>';
+          : `<option value="">${escapeHtml(t('players_modal.tp_empty_biomes'))}</option>`;
         sel.dataset.loaded = '1';
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       });
@@ -443,31 +447,31 @@ function init(root) {
         const online = list.filter((p) => p.online && p.name !== name);
         sel.innerHTML = online.length
           ? online.map((p) => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('')
-          : '<option value="">No other players online</option>';
+          : `<option value="">${escapeHtml(t('players_modal.tp_empty_players'))}</option>`;
         sel.dataset.loaded = '1';
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       });
     }
 
     openModal({
-      title: `Teleport ${name}`,
+      title: t('players_modal.teleport_title', { name }),
       content,
       actions: [
-        { label: 'Cancel', kind: 'ghost' },
+        { label: t('common.cancel'), kind: 'ghost' },
         {
-          label: 'Teleport',
+          label: t('players_modal.tp_button'),
           kind: 'primary',
-          busyLabel: 'Searching…',
+          busyLabel: t('players_modal.tp_searching'),
           onClick: async ({ body }) => {
             if (inflight) {
-              toast('The previous teleport is still searching. Please wait for it to finish.', { kind: 'error' });
+              toast(t('players_modal.tp_inflight'), { kind: 'error' });
               return false;
             }
             const f = (k) => body.querySelector(`[data-f="${k}"]`).value;
             let payload;
             if (mode === 'coords') {
               if ([f('x'), f('z')].some((v) => v.trim() === '')) {
-                toast('Enter X and Z. Y is optional; leave it empty to land on the surface.', { kind: 'error' });
+                toast(t('players_modal.tp_err_coords'), { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, x: Number(f('x')), z: Number(f('z')) };
@@ -475,7 +479,7 @@ function init(root) {
               if (f('dimension')) payload.dimension = f('dimension');
             } else if (mode === 'biome') {
               if (!f('biome')) {
-                toast('Pick a biome.', { kind: 'error' });
+                toast(t('players_modal.tp_err_biome'), { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, biome: f('biome') };
@@ -489,7 +493,7 @@ function init(root) {
               };
             } else if (mode === 'structure') {
               if (!f('structure')) {
-                toast('Pick a structure.', { kind: 'error' });
+                toast(t('players_modal.tp_err_structure'), { kind: 'error' });
                 return false;
               }
               payload = {
@@ -501,7 +505,7 @@ function init(root) {
               };
             } else {
               if (!f('target')) {
-                toast('No target player available.', { kind: 'error' });
+                toast(t('players_modal.tp_err_player'), { kind: 'error' });
                 return false;
               }
               payload = { mode, player: name, target: f('target') };
@@ -517,7 +521,7 @@ function init(root) {
                     ? `${name} randomly teleported ${result.distance} blocks out to ${at(result)}.`
                     : mode === 'structure'
                       ? `${name} sent to a ${prettyBiome(result.structure)} at ${at(result)}.`
-                      : `${name} teleported.`
+                      : t('players_modal.tp_success', { name })
               );
             } catch (err) {
               fail(err);

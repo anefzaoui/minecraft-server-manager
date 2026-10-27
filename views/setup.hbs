@@ -15,55 +15,54 @@
   <div class="card p-6">
     {{! ---- Step 0: Welcome ---- }}
     <section data-step="0">
-      <h2 class="text-center text-lg font-semibold">Welcome to Minecraft Server Manager</h2>
+      <h2 class="text-center text-lg font-semibold">{{t 'setup_wizard.welcome_title'}}</h2>
       <p class="mx-auto mt-2 max-w-sm text-center text-sm text-ink-faint">
-        Your control panel for Minecraft servers on Docker. Create, configure, back up, and manage
-        modpacks, worlds, players, and more. Let's get a few things set up. It only takes a minute.
+        {{t 'setup_wizard.welcome_desc'}}
       </p>
-      <button class="btn btn-primary mt-6 w-full" data-next>Get Started {{{icon 'arrow-right' 'size-4'}}}</button>
+      <button class="btn btn-primary mt-6 w-full" data-next>{{t 'setup_wizard.get_started'}} {{{icon 'arrow-right' 'size-4'}}}</button>
     </section>
 
     {{! ---- Step 1: System checks ---- }}
     <section data-step="1" hidden>
-      <h2 class="text-lg font-semibold">System Check</h2>
-      <p class="mt-1 text-sm text-ink-faint">Making sure everything Minecraft Server Manager needs is in place.</p>
+      <h2 class="text-lg font-semibold">{{t 'setup_wizard.check_title'}}</h2>
+      <p class="mt-1 text-sm text-ink-faint">{{t 'setup_wizard.check_desc'}}</p>
       <div class="mt-4 space-y-2" id="checks-list">
         <div class="flex items-center gap-2 py-6 text-sm text-ink-faint">
-          <span class="size-4 animate-spin rounded-full border-2 border-line border-t-grass-500"></span> Running checks…
+          <span class="size-4 animate-spin rounded-full border-2 border-line border-t-grass-500"></span> {{t 'setup_wizard.running_checks'}}
         </div>
       </div>
       <div class="mt-6 flex items-center gap-2">
-        <button class="btn btn-ghost" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
-        <button class="btn btn-ghost" data-recheck>{{{icon 'rotate-cw' 'size-4'}}} Re-check</button>
-        <button class="btn btn-primary ml-auto" data-next>Continue {{{icon 'arrow-right' 'size-4'}}}</button>
+        <button class="btn btn-ghost" data-back>{{{icon 'arrow-left' 'size-4'}}} {{t 'setup_wizard.back'}}</button>
+        <button class="btn btn-ghost" data-recheck>{{{icon 'rotate-cw' 'size-4'}}} {{t 'setup_wizard.recheck'}}</button>
+        <button class="btn btn-primary ml-auto" data-next>{{t 'setup_wizard.continue'}} {{{icon 'arrow-right' 'size-4'}}}</button>
       </div>
     </section>
 
     {{! ---- Step 2: Create admin ---- }}
     <section data-step="2" hidden>
-      <h2 class="text-lg font-semibold">Create Your Admin Account</h2>
-      <p class="mt-1 text-sm text-ink-faint">This is the owner account for the panel. You can add more users later.</p>
+      <h2 class="text-lg font-semibold">{{t 'setup_wizard.admin_title'}}</h2>
+      <p class="mt-1 text-sm text-ink-faint">{{t 'setup_wizard.admin_desc'}}</p>
       <div class="notice notice-danger mt-4 hidden" id="admin-error"></div>
       <form id="setup-admin" class="mt-4 space-y-4">
         <div>
-          <label class="label" for="su-user">Username</label>
+          <label class="label" for="su-user">{{t 'setup_wizard.username'}}</label>
           <input class="input" id="su-user" name="username" autocomplete="username" required minlength="2" maxlength="32">
         </div>
         <div>
-          <label class="label" for="su-pass">Password</label>
+          <label class="label" for="su-pass">{{t 'setup_wizard.password'}}</label>
           <input class="input" id="su-pass" name="password" type="password" autocomplete="new-password" required minlength="8">
-          <p class="help">At least 8 characters. If you get locked out later, you can reset this password from the server; the README explains how.</p>
+          <p class="help">{{t 'setup_wizard.password_help'}}</p>
         </div>
         {{#if needsPin}}
         <div>
-          <label class="label" for="su-pin">Setup PIN</label>
-          <input class="input" id="su-pin" name="pin" inputmode="numeric" autocomplete="off" required maxlength="12" placeholder="6-digit PIN from the console">
-          <p class="help">This panel is reachable beyond this machine, so first-run setup is PIN-gated. The 6-digit PIN was printed to the panel’s console/log on startup.</p>
+          <label class="label" for="su-pin">{{t 'setup_wizard.pin_label'}}</label>
+          <input class="input" id="su-pin" name="pin" inputmode="numeric" autocomplete="off" required maxlength="12" placeholder="{{t 'setup_wizard.pin_placeholder'}}">
+          <p class="help">{{t 'setup_wizard.pin_help'}}</p>
         </div>
         {{/if}}
         <div class="flex items-center gap-2">
-          <button class="btn btn-ghost" type="button" data-back>{{{icon 'arrow-left' 'size-4'}}} Back</button>
-          <button class="btn btn-primary ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} Create Admin</button>
+          <button class="btn btn-ghost" type="button" data-back>{{{icon 'arrow-left' 'size-4'}}} {{t 'setup_wizard.back'}}</button>
+          <button class="btn btn-primary ml-auto" type="submit">{{{icon 'shield' 'size-4'}}} {{t 'setup_wizard.create_admin'}}</button>
         </div>
       </form>
     </section>
@@ -71,43 +70,42 @@
     {{! ---- Step 3: Panel configuration (optional) ---- }}
     <section data-step="3" hidden>
       <div class="flex items-center gap-2">
-        <h2 class="text-lg font-semibold">Panel Configuration</h2>
-        <span class="badge">optional</span>
+        <h2 class="text-lg font-semibold">{{t 'setup_wizard.panel_config_title'}}</h2>
+        <span class="badge">{{t 'setup_wizard.optional'}}</span>
       </div>
-      <p class="mt-1 text-sm text-ink-faint">You can change all of this later in Settings.</p>
+      <p class="mt-1 text-sm text-ink-faint">{{t 'setup_wizard.panel_config_desc'}}</p>
 
       <div class="mt-5">
-        <label class="label" for="su-domain">Public domain <span class="text-ink-faint">(optional)</span></label>
+        <label class="label" for="su-domain">{{t 'setup_wizard.public_domain'}} <span class="text-ink-faint">({{t 'setup_wizard.optional'}})</span></label>
         <div class="flex flex-wrap gap-2">
           <input class="input min-w-0 flex-1" id="su-domain" placeholder="mc.example.com" autocomplete="off" spellcheck="false">
-          <button class="btn shrink-0" type="button" id="su-domain-save">Save Domain</button>
+          <button class="btn shrink-0" type="button" id="su-domain-save">{{t 'setup_wizard.save_domain'}}</button>
         </div>
-        <p class="help">Shown to players instead of your IP address in connect addresses, for example <code class="code-inline">mc.example.com:25565</code>. Enter the domain only, with no scheme or port.</p>
+        <p class="help">{{t 'setup_wizard.domain_help'}}</p>
       </div>
 
       <div class="mt-5">
-        <label class="label" for="su-cf">CurseForge API key <span class="text-ink-faint">(optional)</span></label>
+        <label class="label" for="su-cf">{{t 'setup_wizard.cf_key'}} <span class="text-ink-faint">({{t 'setup_wizard.optional'}})</span></label>
         <div class="flex flex-wrap gap-2">
           <input class="input min-w-0 flex-1" id="su-cf" type="password" placeholder="$2a$10$…" autocomplete="off" spellcheck="false">
-          <button class="btn shrink-0" type="button" id="su-cf-save">Test &amp; Save</button>
+          <button class="btn shrink-0" type="button" id="su-cf-save">{{t 'setup_wizard.cf_save'}}</button>
         </div>
-        <p class="help">Needed only for automated CurseForge modpacks. Get one at
-          <a class="text-link underline hover:text-link" href="https://console.curseforge.com/" target="_blank" rel="noopener">console.curseforge.com</a>.</p>
+        <p class="help">{{t 'setup_wizard.cf_help'}}</p>
       </div>
 
       <div class="mt-5">
-        <span class="label">Time zone &amp; region</span>
+        <span class="label">{{t 'setup_wizard.tz_region'}}</span>
         {{! data-native only until tzPicker fills them - it enhances post-fill. }}
         <div class="grid gap-2 sm:grid-cols-2">
-          <select class="input" id="su-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
-          <select class="input" id="su-country" data-native aria-label="Country" data-label="Country"></select>
+          <select class="input" id="su-tz" data-native aria-label="{{t 'settings.time_zone'}}" data-label="{{t 'settings.time_zone'}}"></select>
+          <select class="input" id="su-country" data-native aria-label="{{t 'settings.country'}}" data-label="{{t 'settings.country'}}"></select>
         </div>
-        <p class="help">Detected from your system. Sets how dates and player-activity times are shown across the panel.</p>
-        <button class="btn mt-2" type="button" id="su-loc-save">Save Time Zone</button>
+        <p class="help">{{t 'setup_wizard.tz_help'}}</p>
+        <button class="btn mt-2" type="button" id="su-loc-save">{{t 'setup_wizard.save_tz'}}</button>
       </div>
 
       <div class="mt-6 flex items-center">
-        <button class="btn btn-primary ml-auto" data-next>Continue {{{icon 'arrow-right' 'size-4'}}}</button>
+        <button class="btn btn-primary ml-auto" data-next>{{t 'setup_wizard.continue'}} {{{icon 'arrow-right' 'size-4'}}}</button>
       </div>
     </section>
 
@@ -115,12 +113,12 @@
     <section data-step="4" hidden>
       <div class="grid place-items-center py-2 text-center">
         <span class="grid size-12 place-items-center rounded-full bg-grass-600/15 text-ok">{{{icon 'party-popper' 'size-6'}}}</span>
-        <h2 class="mt-3 text-lg font-semibold">You're all set!</h2>
-        <p class="mt-1 max-w-sm text-sm text-ink-faint">Minecraft Server Manager is ready. Spin up your first Minecraft server whenever you like.</p>
+        <h2 class="mt-3 text-lg font-semibold">{{t 'setup_wizard.all_set_title'}}</h2>
+        <p class="mt-1 max-w-sm text-sm text-ink-faint">{{t 'setup_wizard.all_set_desc'}}</p>
       </div>
       <div class="mt-4 flex flex-col gap-2">
-        <a class="btn btn-primary w-full" href="/servers/new">{{{icon 'plus' 'size-4'}}} Create a Server</a>
-        <a class="btn btn-ghost w-full" href="/">Go to the Dashboard</a>
+        <a class="btn btn-primary w-full" href="/servers/new">{{{icon 'plus' 'size-4'}}} {{t 'setup_wizard.create_server'}}</a>
+        <a class="btn btn-ghost w-full" href="/">{{t 'setup_wizard.go_to_dashboard'}}</a>
       </div>
     </section>
   </div>
