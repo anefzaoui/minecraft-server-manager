@@ -1868,7 +1868,7 @@
     "not_included": "Not Included",
     "technical_reach": "Technical Reach",
     "admin_only_footer": "Always admin-only, on every server: the chatbot, backup retention, advanced Docker overrides, the panel-wide data folder, users, and API keys. Creating or cloning a server follows the global role.",
-    "cell_aria": "Permissions for {{user}} on {{server}}",
+    "cell_aria": "Permission settings for {{user}} on {{server}}",
     "summary_hidden": "Hidden",
     "summary_everything": "Everything",
     "summary_view_only": "View only",
@@ -1880,7 +1880,7 @@
     "btn_role_default": "Use Role Default",
     "btn_resetting": "Resetting…",
     "toast_role_default": "{{username}} now uses the {{role}} default on {{server}}.",
-    "toast_saved": "Permissions for {{username}} on {{server}} saved.",
+    "toast_saved": "Saved permissions for {{username}} on {{server}}.",
     "toast_hidden": "{{server}} is now hidden from {{username}}.",
     "action_save": "save those permissions"
   },
