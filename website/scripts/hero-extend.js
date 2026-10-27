@@ -23,7 +23,8 @@ const TALL = 1400;
 // `minSize`: the smallest group of pixels that counts (clouds by day, stars at night).
 const HEROES = [
   { id: 'hero-day', band: 190, seed: 7, minSize: 300 },
-  { id: 'hero-night', band: 140, seed: 11, minSize: 2 },
+  // Mirrored so the moon sits under the screenshot, not beside the hero buttons.
+  { id: 'hero-night', band: 140, seed: 11, minSize: 2, flop: true },
 ];
 // A pixel further than this from the sky colour (RGB distance) is cloud.
 const CLOUD_DISTANCE = 22;
@@ -159,8 +160,11 @@ function scatter(clouds, width, height, density, random) {
   return placed;
 }
 
-for (const { id, band, seed, minSize } of HEROES) {
-  const src = join(dir, `${id}.webp`);
+for (const { id, band, seed, minSize, flop = false } of HEROES) {
+  const src = await sharp(join(dir, `${id}.webp`))
+    .flop(flop)
+    .png()
+    .toBuffer();
   const { data: px, info } = await sharp(src).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width, height } = info;
   const sky = skyColour(px, width, band);
