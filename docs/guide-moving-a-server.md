@@ -80,8 +80,14 @@ every server, world, backup and setting with it, which makes moving the panel it
 than a migration.
 
 For one server rather than all of them, a blueprint captures its configuration, mod set and pinned
-pack version as a single `.mcserver.zip` that can be imported on another panel to rebuild the same
-server. Worlds can be exported and installed separately when only the world needs to travel.
+pack version (and, if you tick it, the active world) as a single `.mcserver.zip` that can be imported
+on another panel to rebuild the same server. Worlds can be downloaded and installed separately when
+only the world needs to travel.
+
+If the game port a server used is already taken on the new machine, or you want to test on a
+non-public port first, change it on **Settings → Configuration**: the **Game Port** card has
+**Use Next Free Port**, a running server asks before it restarts on the new port, and if it can't
+start there it goes back to the old one. Switch it to the public port when you point players at it.
 
 Related: [blueprints](blueprints.md), [backups that actually restore](guide-backups.md),
 [worlds and files](worlds-and-files.md).

@@ -68,14 +68,14 @@ copy to migrate.**
 - 🐳 Every server is its own **resource-capped Docker container**: create / start / stop / restart / rebuild / delete with graceful RCON stop and crash detection
 - 🧙 **Guided wizard**: Simple or Advanced mode, every image env var explained in plain English
 - 📌 **Modpacks always pinned** to an exact version, with explicit upgrades that offer a preview, pre-update backup, health monitoring, and **one-click rollback**
-- 🧩 **Five content registries in one browser**: Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases (three of them keyless)
+- 🧩 **Five content registries in one browser**: Modrinth, CurseForge, Hangar, SpigotMC, GitHub Releases (only CurseForge needs an API key)
 - 🔗 **Add by link**: paste any project page, GitHub repo, slug, or direct jar URL
 - 🗜️ **Import anything**: Modrinth `.mrpack`, CurseForge exports, or your own zip of jars, with every jar identified and compatibility-checked
 - 🔒 **Checksum-verified downloads** (sha512 → sha256 → sha1 → md5), so a mismatch never reaches the server
 - 📚 Shared **sha256-deduplicated mod library**, hard-linked into servers; custom mods survive pack updates
 - 🖥️ **Live console** over WebSocket, RCON command bar, log filters, player quick-actions
 - 👮 **Player moderation**: whitelist, ops, bans, IP bans, teleports, online via RCON and offline via JSON edits
-- 💾 **Save-safe backups** with retention classes + cron **schedules** (restart / backup / RCON)
+- 💾 **Save-safe backups** with retention you set panel-wide or per server + cron **schedules** (restart / backup / RCON)
 - 📜 **Blueprints** (`.mcserver.zip`): portable server recipes you export, import anywhere, and get the same server from
 - 🔥 **Crash forensics**: auto-detected, parsed, suspects identified, plus one-click **mclo.gs sharing and automated insights**
 - 🗺️ One-click **BlueMap live map**, served through the panel's authenticated proxy
@@ -108,7 +108,7 @@ by host path).
 ### 🐳 Option 1: Docker (Linux hosts, Portainer, Dockge, compose)
 
 A pre-built multi-arch image (amd64 + arm64) is published to GHCR on every release:
-`ghcr.io/anefzaoui/minecraft-server-manager:latest` (or pin a version tag, e.g. `:v0.11.0`).
+`ghcr.io/anefzaoui/minecraft-server-manager:latest` (or pin a version tag, e.g. `:v0.14.1`).
 
 On a fresh Linux server, the installer does the whole thing: installs Docker if it's missing, writes
 `/opt/msm`, starts the panel, and waits until it answers.
@@ -119,7 +119,7 @@ curl -fsSL https://raw.githubusercontent.com/anefzaoui/minecraft-server-manager/
 
 Run it again any time to upgrade; it keeps your data, your `.env`, and any edits you made to the
 compose file. `--help` lists the rest: `--dir`, `--port`, `--bind 127.0.0.1` for a reverse-proxy
-setup, `--tag v0.14.0` to pin a version, and `--uninstall`.
+setup, `--tag v0.14.1` to pin a version, and `--uninstall`.
 
 Prefer to drive it yourself, or using Portainer/Dockge? Grab the
 [docker-compose.yml](docker-compose.yml) from the repo root, set **one** variable, and start:
@@ -183,8 +183,9 @@ pnpm start                 # or: pnpm run dev (auto-restart + CSS watch)
 
 Open **http://localhost:25564**. By default the panel binds to **localhost only** (`127.0.0.1`), so it's
 reachable just from this machine; set `PANEL_HOST=0.0.0.0` to reach it across your LAN. The **first run**
-walks you through a system check, choosing your time zone, and creating the admin account. If Docker
-isn't running you still get the full UI, and the lifecycle features light up when the daemon comes up.
+walks you through a system check, creating the admin account, and optional panel configuration (public
+domain, CurseForge key, time zone). If Docker isn't running you still get the full UI, and the lifecycle
+features light up when the daemon comes up.
 
 > If you start with a non-loopback `PANEL_HOST`, first-run `/setup` is PIN-gated: a 6-digit PIN is
 > printed to the server console and must be entered before the admin account can be created.
@@ -280,17 +281,21 @@ Not affiliated with any of them.
 
 **Core**
 
-- **Multi-server lifecycle**: create / start / stop / restart / recreate / delete, with graceful
-  RCON `stop` before container stop, health-aware status, and crash detection with backoff.
+- **Multi-server lifecycle**: create / start / stop / restart / rebuild / delete, with graceful
+  RCON `stop` before container stop, health-aware status, and crash detection with backoff. A
+  server's game port can be changed later ([how](#ports-at-a-glance)).
+- **Loader build choice**: a server built from mods can pin a specific Fabric, Quilt, Forge, or
+  NeoForge loader build (the wizard's **Loader build** picker) instead of tracking the latest, and the
+  Updates page offers newer builds for a pinned one.
 - **Guided wizard**: Simple mode (the common knobs) or Advanced mode exposing every environment
   variable the image supports, each with plain-English help, grouped by section, plus a raw
   `KEY=value` escape hatch. Only non-default values are applied.
 - **Modpacks are always pinned**: "latest" is resolved to a concrete version id at install time and
   pinned, so the image never silently upgrades a pack on restart. Upgrades are explicit: preview →
-  automatic pre-update backup → graceful stop → re-pin → recreate → health monitoring → **one-click
+  automatic pre-update backup → graceful stop → re-pin → rebuild → health monitoring → **one-click
   rollback** if it doesn't come up. The Updates page also checks Docker-image staleness and, for
   servers with no managed pack, explicit Minecraft-version / loader-build pins.
-- **Version compatibility before a version update**: a server's Versions tab checks every installed
+- **Version compatibility before a version update**: a mod-loader server's **Mods → Versions** tab checks every installed
   mod against Modrinth and CurseForge and reports the highest Minecraft version they all have a
   build for, plus a per-version breakdown of what would be left behind. A newer Minecraft version is
   only offered once that check backs it, and never while a jar cannot be identified.
@@ -322,10 +327,12 @@ Not affiliated with any of them.
 - **Player moderation**: whitelist, ops (levels 1 to 4), bans, IP bans; via RCON while running and via
   direct JSON edits while stopped ("applies on start"). Teleport by coordinates, to a player, or to
   the nearest biome.
-- **Backups & schedules**: save-safe archive/restore with per-reason retention caps and free-space
-  preflight; every new server is seeded a daily backup automatically, each archive is
-  integrity-checked before it's recorded, and the panel's own database is snapshotted on a daily
-  timer. Per-server and global cron tasks (restart / backup / RCON) with next-run previews.
+- **Backups & schedules**: save-safe archive/restore with free-space preflight and retention per
+  backup reason, plus optional age and total-size limits. Admins set them panel-wide in **Settings →
+  Backup Retention** and per server under **Retention for This Server** on its Backups tab; saving
+  shows what would be removed and offers **Remove Now** or **From Next Backup**. Every new server is
+  seeded a daily backup automatically, each archive is integrity-checked before it's recorded, and the
+  panel's own database is snapshotted on a daily timer. Per-server and global cron tasks (restart / backup / RCON) with next-run previews.
 - **Blueprints (`.mcserver.zip`)**: a portable recipe of an instance. Full config (secrets
   stripped), resource limits, the pinned pack reference, the custom-mod overlay manifest (source
   URLs + hashes), chosen config files, and optionally an embedded world. Import reproduces the same
@@ -338,7 +345,7 @@ Not affiliated with any of them.
   reports are auto-detected, parsed (exception + suspected mods), exportable, and shareable to
   mclo.gs with automated insights.
 - **Accounts & two-factor auth**: multi-user with **admin / operator / viewer** roles, refined per
-  server under **Settings → Permissions** (view, power, console, players, content, backups, files,
+  server on the **Permissions** page (view, power, console, players, content, backups, files,
   settings, delete), so a read-only user can still run one server, and a server can be hidden from a
   user entirely. Plus optional
   **two-factor authentication (TOTP)** for any account. Enroll with any authenticator app (Google
@@ -359,8 +366,9 @@ Not affiliated with any of them.
 - **Investigation**: advisory x-ray suspicion scoring from ore-discovery ratios vs the server
   median; evidence laid out, never auto-punishing.
 - **Discord**: webhook notifications (lifecycle, crashes, backups, updates, player actions) with
-  per-event toggles, plus an **Alerts** category (OOM, unhealthy, stalled boot, stop-failed,
-  failed schedule, quota stop, offline-after-restart, crash loop) that's on by default. URLs
+  per-event toggles, plus an **Alerts** category (out of memory, unhealthy, stalled boot, stop
+  failed, failed schedule, quota stop, offline after a restart, crash restarts given up, a port change
+  that left the server down) that's on by default. URLs
   stored encrypted. See the [integrations guide](docs/integrations.md).
 - **Invites & client modpacks**: a paste-ready invite block plus a generated client `.mrpack` with
   the server pre-added to the in-game server list.
@@ -403,7 +411,7 @@ sees the panel's own container, so a program running directly on the host, or a 
 networking, can still hold a port the panel thinks is free; the server then reports the port as in
 use when it starts.
 
-To move a server later, open its **Configuration** tab and use the **Game Port** card: type a port,
+To move a server later, open its **Settings → Configuration** tab and use the **Game Port** card: type a port,
 or press **Use Next Free Port**, then **Save Port**. RCON moves with it, to the port 1000 higher. The
 change applies right away. A running server asks first, then restarts on the new port (the world is
 saved first, and players reconnect on the new port). A stopped server simply gets its new port, used from its next start. If the
@@ -412,9 +420,9 @@ change only rebuilds what already ran, so it can always put the server back. If 
 can't start on the new port (something took it in the meantime), the panel starts it again on its
 old port, the port is not changed, and the card and the server's history say why.
 
-Admins may pick any port from 1024 up; other users pick from `PORT_GAME_START` upward. RCON sits 1000
-above the game port, so as long as the game range you open to players is narrower than 1000 ports,
-RCON never lands inside it. The world and everything else in the data folder are untouched.
+Admins may pick any port from 1024 up; other users pick from `PORT_GAME_START` upward. Either way the
+port must leave room for RCON below 65535. RCON sits 1000 above the game port, so as long as the game
+range you open to players is narrower than 1000 ports, RCON never lands inside it. The world and everything else in the data folder are untouched.
 
 > **Why RCON must stay closed:** RCON is a plaintext remote-admin protocol guarded only by a password.
 > The panel reaches it via `docker exec` _inside_ the container, so the host RCON port is never needed
@@ -532,6 +540,7 @@ data/
   library/worlds/        world archives (the world library)
   library/icons/         instance icons + cached mod icons
   logs/<id>/events/      captured log excerpts linked from history events
+  logs/<id>/inventories/ player inventory snapshots (join/death)
   tmp/                   in-flight downloads (wiped on boot)
 ```
 
@@ -565,7 +574,7 @@ for three minutes after "Done" (each figure moved by under 50 MB in that time):
 
 Turning off pre-touch only delays the fill: Java still works through the whole heap over time and
 never hands it back (a Forge 1.20.1 server with a 4 GB heap and no preset read 3.7 GB after a week
-with nobody on). A smaller **Initial heap** is the setting that changes what Java asks for, so that
+with nobody on). A smaller **Initial heap** (Resources card on Settings → Configuration) is the setting that changes what Java asks for, so that
 is the lever if you want idle memory to follow real use; the trade-off is that Aikar's flags
 recommend equal heaps for the steadiest tick times. Java also needs memory outside the heap: about
 0.5 GB on vanilla, 1.5-2 GB on a large modpack, which is what the headroom above is for.
@@ -591,8 +600,9 @@ Budget **6 GB of heap and 20 GB of disk** to start; the wizard raises both for y
 ### Disk quotas are panel-enforced
 
 Docker can't cap bind-mount disk usage, so a background size-indexer walks `./data`, caches sizes in
-SQLite, and blocks disk-growing operations (mod installs, backups, world uploads) for servers over
-quota. Optional strict mode gracefully stops a runaway server past its quota.
+SQLite, and blocks disk-growing operations (mod installs, world installs, file uploads) for servers
+over quota. Backups live outside a server's folder and don't count. Optional strict mode (**Stop the
+Server When Over Quota** on the Resources card) gracefully stops a server more than 10% past its quota.
 
 ### Secrets at rest
 
@@ -659,6 +669,8 @@ src/
   events/      recordEvent() - the single history entry point
   docker/      dockerode: connect, containers, logs, stats, images, event watcher
   services/    domain logic (servers, ports, library, mods, packs, backups, players, …)
+  analytics/   player-event ingestion, log classifier, stats + scoreboard
+  integrations/ Discord webhooks, invites, mclo.gs, public status pages
   updates/     update checker + safe-upgrade orchestrator (rollback)
   crashes/     crash watcher + parser
   blueprints/  export / import / clone + starter blueprints

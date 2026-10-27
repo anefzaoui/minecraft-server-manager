@@ -76,11 +76,12 @@ Three levers, in order of how much they give back:
 
 ## In Minecraft Server Manager
 
-Backups take the `save-off`, flush, copy, `save-on` path, and a graceful stop that lands mid-backup
-waits for the copy to finish rather than racing it. The archive covers the whole server directory, so
+Backups take the `save-off`, flush, copy, `save-on` path, and a stop or restart requested mid-backup
+is refused until the copy finishes rather than racing it. The archive covers the whole server directory, so
 mods, configuration and player data travel with the world.
 
-Backups can run on a schedule alongside restarts and commands. Retention counts each kind separately,
+Backups can run on a schedule alongside restarts and commands, and every new server starts with a
+daily backup schedule. Retention counts each kind separately,
 so the ten scheduled copies that pile up on their own cannot push out the one you took by hand before
 a risky change, and age and size caps apply on top. Admins change all of it on the Settings page, or
 per server on its Backups tab. Restoring takes a fresh backup first, so a restore to the wrong point

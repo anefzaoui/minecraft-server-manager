@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-Each server carries its integrations under the **Settings** group: **Discord**, a public **Status Page**, one-click **Invites**, and the optional **Chatbot** tab. This page covers Discord (the others have their own docs and setup helpers in the panel).
+Each server carries its integrations under the **Settings** group: **Discord**, a public **Status Page**, one-click **Invites**, and the optional **Chatbot** tab (admins only). This page covers Discord (the others have their own docs and setup helpers in the panel).
 
 ## Discord notifications
 
@@ -12,7 +12,7 @@ The panel forwards server events to a Discord channel through a webhook. No bot,
 
 1. In Discord: **Server Settings → Integrations → Webhooks → New Webhook**. Pick the channel and copy the webhook URL.
 2. In the panel, open the server's **Settings → Discord** tab, paste the URL into **Webhook URL**, turn the card **on**, and **Save**. The URL is stored encrypted (in the same at-rest store as your API keys).
-3. Use **Send test** to confirm it works.
+3. Use **Send Test** to confirm it works.
 
 ![Discord integration](images/integrations-discord.png)
 
@@ -46,9 +46,7 @@ Notifications are grouped into toggleable categories. All are on by default.
 | `offline-after-restart` | The server was up before the panel restarted, isn't now, and won't be auto-started.                            |
 | `port-change-failed`    | A port change failed and the server could not be put back on its old port, so it is down.                      |
 | `auto-restart-gave-up`  | A crashed server was not restarted because another action kept it busy for too long.                           |
-| `crash-report`          | A new crash report was captured and parsed.                                                                    |
-| `update-failed`         | A guarded upgrade did not come up healthy.                                                                     |
 
 ### How delivery works
 
-A background bridge polls the [event log](activity.md) every 15 seconds and forwards mapped rows. If a webhook POST fails transiently, that row is retried on later polls rather than dropped; a permanently unreachable webhook is muted (one log line per hour) after a few attempts. The bridge never replays events from before the panel started.
+A background bridge polls the [event log](activity.md) every 15 seconds and forwards mapped rows. If a webhook POST fails transiently, that row is retried on later polls rather than dropped; after a few failed attempts the row is skipped, and delivery failures are logged at most once per hour per server. After a panel restart the bridge sends the events it had not delivered yet, but never more than two hours back; on its very first run it starts from the newest event.

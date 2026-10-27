@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-This fork adds an admin-configured chatbot to each managed Minecraft server. It connects to an
+The panel offers an admin-configured chatbot for each managed Minecraft server, set up on the server's **Settings → Chatbot** tab. It connects to an
 OpenAI-compatible chat-completions endpoint, including Ollama on another LAN host. Each server has
 its own endpoint, model, invocation name, persona, transcript policy, outreach messages, and power
 policy. The default invocation is `@wizard`, and the default persona demonstrates an ancient,
@@ -49,12 +49,14 @@ modded recipes direct the player to JEI/REI rather than fabricating an answer.
   committed; there is no such folder, and the data lives in the package. See "Dependency footprint".)
 - `src/analytics/ingest.js`: forwards parsed joins, leaves, and player chat to the chatbot.
 - `src/web/routes/wizard.js`, `public/js/pages/integrations.js`, and
-  `views/partials/server/integrations.hbs`: admin API and per-server Integrations UI.
-- `src/db/migrations/011_wizard_chat.js` through `019_wizard_power_controllers.js`: persistent schema.
+  `views/partials/server/integrations.hbs` (via `chatbot.hbs`): admin API and the per-server
+  Settings → Chatbot tab.
+- `src/db/migrations/011_wizard_chat.js`, `013_wizard_invocation_name.js`, `015_wizard_powers.js`,
+  `017_wizard_outreach.js`, and `019_wizard_power_controllers.js`: persistent schema.
 - `test/wizard.test.js`: authorization, tool-boundary, retention, outreach, and chat behavior tests.
 
 The internal `wizard` route/module/table names are retained for upgrade and API compatibility;
-“chatbot” is the user-facing product term. Likewise, the stored `power_testers_json` field maps to
+"chatbot" is the user-facing product term. Likewise, the stored `power_testers_json` field maps to
 the UI's **Basic users** group.
 
 ## Dependency footprint (`minecraft-data`)
@@ -83,8 +85,8 @@ All settings and retained transcripts live in the panel SQLite database at `/dat
 the panel container. With the standard Compose mount, the host path is
 `${DATA_DIR_HOST}/panel.db` (for example `/opt/msm/data/panel.db`). Relevant tables are
 `wizard_configs`, `wizard_transcripts`, and `wizard_outreach`; power audits are rows in the `events`
-table with type `wizard-power`. The optional LLM API key is AES-256-GCM encrypted using the panel's
-`SESSION_SECRET`, normally persisted as `${DATA_DIR_HOST}/.session-secret`.
+table with type `wizard-power`. The optional LLM API key is AES-256-GCM encrypted with the panel's
+at-rest key, `.secret-key` in the data folder (separate from `SESSION_SECRET`).
 
 Back up the database and stop the panel before direct SQLite edits so its WAL is handled safely.
 Using the admin UI/API is preferred because it applies validation and encryption. Keep the

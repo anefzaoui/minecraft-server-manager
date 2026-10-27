@@ -47,10 +47,10 @@ returns `404`.
 ## Rate limit
 
 Each token gets its own budget, `RATE_LIMIT_PUBLIC_API_PER_MIN` (default `120`
-requests/minute; `0` disables the limiter). Over the limit returns `429`. Requests that
-never present a valid token (missing, malformed, revoked, or expired) are capped separately
-per client IP at five times that number, so probing cannot bypass the budget by rotating
-tokens.
+requests/minute; `0` disables the limiter). Over the limit returns `429`. Every request,
+before its token is even checked, also counts toward a per-client-IP cap of five times that
+number, so probing with missing, malformed, revoked, or expired tokens cannot bypass the budget
+by rotating them.
 
 ## Endpoints
 
@@ -87,19 +87,19 @@ for a malformed id.
 
 ## Response fields
 
-| Field           | Meaning                                                                                           |
-| --------------- | ------------------------------------------------------------------------------------------------- |
-| `total`         | How many servers are visible to this token (after its scope filter).                              |
-| `online`        | How many of those are in state: `running`.                                                        |
-| `id`            | Stable server id (`srv_...`).                                                                     |
-| `name`          | Display name.                                                                                     |
-| `type`          | itzg server type (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                     |
-| `state`         | `running`, `starting`, `stopped`, or `crashed` - a stable summary of the panel's internal status. |
-| `cpuPct`        | Recent CPU %, or `null` when the server is not running.                                           |
-| `memoryMb`      | Resident memory in MB, or `null`.                                                                 |
-| `memoryLimitMb` | Configured container memory limit in MB, or `null`.                                               |
-| `uptimeSeconds` | Seconds since the container started, or `null`.                                                   |
-| `players`       | `{ online, max }`, or `null` until the server reports a player list.                              |
+| Field           | Meaning                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| `total`         | How many servers are visible to this token (after its scope filter).                             |
+| `online`        | How many of those are in state: `running`.                                                       |
+| `id`            | Stable server id (`srv_...`).                                                                    |
+| `name`          | Display name.                                                                                    |
+| `type`          | itzg server type (`PAPER`, `FABRIC`, `AUTO_CURSEFORGE`, ...).                                    |
+| `state`         | `running`, `starting`, `stopped`, or `crashed`: a stable summary of the panel's internal status. |
+| `cpuPct`        | Recent CPU %, or `null` when the server is not running.                                          |
+| `memoryMb`      | Resident memory in MB, or `null`.                                                                |
+| `memoryLimitMb` | Configured container memory limit in MB, or `null`.                                              |
+| `uptimeSeconds` | Seconds since the container started, or `null`.                                                  |
+| `players`       | `{ online, max }`, or `null` until the server reports a player list.                             |
 
 ## Example
 

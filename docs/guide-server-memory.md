@@ -83,8 +83,9 @@ server and is barely noticeable in play.
 ## In Minecraft Server Manager
 
 Each server has two separate fields, **Java heap** and **container memory limit**, precisely because
-they are different questions. The panel refuses to save a server whose container limit is not above
-its heap, because that combination ends in exit code 137 rather than an error message.
+they are different questions. The create wizard sets the container limit 50 percent above the heap
+for you, and the panel refuses to save a server whose container limit is not above its heap, because
+that combination ends in exit code 137 rather than an error message.
 
 The memory meter on a server shows what the container is really using, with a note when the heap was
 claimed up front, so a pre-touched heap does not read as a runaway. A server that the kernel killed

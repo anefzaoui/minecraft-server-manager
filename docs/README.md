@@ -20,7 +20,7 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 ## Data & automation
 
 - **[Per-server chatbot](chatbot.md)** - local/OpenAI-compatible conversation, outreach, retained transcripts, and constrained gameplay powers.
-- **[Backups](backups.md)** - one-click snapshots, scheduled backups, and restore.
+- **[Backups](backups.md)** - one-click snapshots, scheduled backups, how many to keep (panel-wide or per server), and restore.
 - **[Blueprints](blueprints.md)** - capture a server's whole configuration and stamp out new ones from it.
 - **[Schedules](schedules.md)** - cron-driven restarts, backups, and commands.
 - **[Storage](storage.md)** - per-server disk usage and panel-enforced quotas.
@@ -31,7 +31,7 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 
 ## Accounts & security
 
-- **[Users & roles](users-and-roles.md)** - admin, operator, and viewer, and what each can do.
+- **[Users & roles](users-and-roles.md)** - admin, operator, and viewer, what each can do, and per-server permissions that refine them.
 - **[Two-factor authentication](two-factor-authentication.md)** - protect your login with an authenticator app.
 
 ## Guides

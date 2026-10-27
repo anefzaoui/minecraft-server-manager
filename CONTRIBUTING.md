@@ -85,7 +85,7 @@ web/routes (HTTP)  →  services (domain logic)  →  docker / db / storage (inf
 - **`events/`** and **`ws/`** are cross-cutting: `recordEvent()` is the one entry point for history,
   and `ws/` carries the live console + stats sockets.
 
-## Two conventions that will surprise you
+## Three conventions that will surprise you
 
 1. **Never touch the filesystem under `./data` directly.** Always resolve paths through the path
    guard in `src/storage/` (`safeJoin`). It rejects any path that escapes the data root, which is the
@@ -139,7 +139,7 @@ users:
 - **History summaries:** every `recordEvent({ summary })` string ends in a
   period, including the terse `Label: detail` lines ("Folder created:
   plugins/x.jar.", "Server restarted.").
-- **In-progress status lines end in `…`, never a period** — `runTask` /
+- **In-progress status lines end in `…`, never a period:** `runTask` /
   progress modal titles and every `task.step(...)` / `onProgress(...)` /
   `onStep(...)` label, as sentence-case gerunds ("Creating backup…",
   "Querying Modrinth, CurseForge, …"). A step that reports an outcome rather
@@ -158,7 +158,7 @@ users:
   `err.message`, raw Zod text, or an internal id. Client code has
   `friendlyError(res | err, { action })` in
   [`public/js/lib/errors.js`](public/js/lib/errors.js) for API-call fallbacks.
-- The field catalog (`src/config/field-catalog/`) uses curly `'` apostrophes
+- The field catalog (`src/config/field-catalog/`) uses curly `’` apostrophes
   internally and consistently; leave those as-is. Straight quotes everywhere
   else.
 
