@@ -12,6 +12,8 @@ The first time you open the panel, a short setup wizard walks you through it:
 
 The last step offers **Create a Server** or **Go to the Dashboard**.
 
+![The System Check step of first-run setup](images/setup-system-check.png)
+
 > **Exposed installs are PIN-gated.** If you start the panel bound to a non-loopback address (`PANEL_HOST` other than `127.0.0.1`), the setup page also asks for a **6-digit PIN**. The panel prints it to its console on startup. Enter it along with your username and password. This stops a stranger who reaches the port first from claiming the admin account. The PIN disappears once the admin account exists.
 
 ## Signing in

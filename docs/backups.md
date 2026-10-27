@@ -44,10 +44,16 @@ Two optional ceilings apply on top of the per-reason counts, both off by default
 
 Admins set the panel-wide policy in the **Backup Retention** card on the **Settings** page (**Fill In Built-ins** puts the defaults above back into the form, ready to save). A server can differ on any of the six values: open its **Backups** tab and expand **Retention for This Server**. Each field there is blank unless that server sets it, and a blank field follows the panel-wide value (shown inside it). So a server can, for example, keep 3 scheduled backups and use the panel-wide values for everything else; clearing a field puts it back on the panel-wide value.
 
+![The Backup Retention card in Settings](images/settings-retention.png)
+
+![Retention for This Server on a server's Backups tab](images/server-retention.png)
+
 Saving never deletes anything by itself. If the new limits would leave existing backups over the limit, the panel lists, per server, how many backups of each kind would go, how much space that frees and how old the oldest one is. It also says when a server was already over its limits before this change (for example after an earlier **From Next Backup**), since applying now trims everything over the limit, not only what this edit adds. Then it asks how to apply them:
 
 - **Remove Now** deletes exactly the backups it just listed, nothing more: a backup made in the meantime waits for the next trim. From the Settings page, a server in the middle of a restore, backup or similar action is skipped and trims after its next backup; on a server's own Backups tab you are asked to try again once that action finishes. While a server's old backups are being deleted (usually seconds), other actions on that server have to wait: a scheduled backup or start that lands then tries again every minute until it can (for up to 30 minutes), a crashed server is restarted within about 20 seconds of it finishing (for up to 30 minutes), and a scheduled restart or stop that collides with it is skipped until its next time.
 - **From Next Backup** keeps them for now; each server trims its backups the next time it makes one, as it always has.
+
+![The dialog listing what new limits would remove](images/retention-preview.png)
 
 A backup that is being restored is never removed while the restore runs: retention leaves it alone (and does not delete other backups to make room for it), and deleting it by hand is refused until the restore finishes.
 

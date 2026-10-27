@@ -20,6 +20,8 @@ Commands sent from the panel can be announced in-game under a per-server label (
 
 **Console → Chat** sends messages into the game while the server runs: **Styled** messages take colors and formatting and can go to everyone or one online player, and **Plain** sends a simple `[Server]` broadcast to everyone.
 
+![Console → Chat](screenshots/04-chat.png)
+
 ## Chat commands
 
 Chat commands (**Console → Commands**) let players trigger panel actions by typing a prefix command in game chat, for example `!spawn` to random-teleport. Detection is log-based and execution goes through the server, so **no mods are required**.

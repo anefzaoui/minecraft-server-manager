@@ -77,6 +77,10 @@ Direct setting changes always stick across restarts. A PvP or difficulty change 
 
 The **Game Port** card on **Settings → Configuration** moves a server to another port at any time, with its own **Save Port** button. **Use Next Free Port** picks the lowest free one, and the card checks any port you enter before you save it. RCON always follows at 1000 above the game port (the default offset). Admins can pick any port from 1024 up; everyone else picks from the first game port (25565 by default) up. Saving applies the change right away: a stopped server just moves, and a running one asks first, then restarts on the new port (the world is saved first, and players reconnect on the new port). If the server can't start on the new port, it goes back to the old one. The change is refused while other changes wait for **Apply Changes**, so apply those first. Changing the port needs the Settings permission on that server.
 
+![The Game Port card](images/server-port.png)
+
+![The prompt before a running server restarts on its new port](images/port-restart.png)
+
 ## Crash reports & mclo.gs analysis
 
 Crash reports (`crash-reports/*.txt` and JVM `hs_err_pid*.log` files) are picked up automatically, parsed into a one-line summary with the exception and suspected mods, and listed under **Monitoring → History**:
