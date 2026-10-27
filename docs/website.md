@@ -6,31 +6,40 @@ languages, deployed as static files to GitHub Pages.
 
 ## What it is made of
 
-| Piece                 | Where                                                            | Notes                                                                                                                                                                                                                                                                                                                                                                                                    |
-| --------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Static site generator | [Astro](https://astro.build) 7                                   | Zero client JavaScript by default; images resized to WebP at build time.                                                                                                                                                                                                                                                                                                                                 |
-| Docs shell            | [Starlight](https://starlight.astro.build)                       | Sidebar, search (Pagefind, offline), per-locale UI strings, RTL support.                                                                                                                                                                                                                                                                                                                                 |
-| Styling               | Tailwind v4, `website/src/styles/site.css`                       | The game's own UI language, drawn from scratch: bevelled stone buttons, inventory-slot panels, tiled block textures, an XP-bar divider, item-tooltip callouts. Jersey 15 (OFL, a pixel face that stays legible at label sizes) for headings and labels, IBM Plex Sans body. No gradients, no rounded corners. Day is the default; `data-theme="dark"` is night (shares the docs' `starlight-theme` key). |
-| Copy                  | `website/src/i18n/en.json`                                       | English is the source of truth. Other locales are translations of it, committed next to it.                                                                                                                                                                                                                                                                                                              |
-| Locales               | `website/src/i18n/locales.js`                                    | The one list every other piece derives from (routing, sitemap hreflang, language menu, translation script).                                                                                                                                                                                                                                                                                              |
-| Docs pages            | generated from `docs/*.md`                                       | `website/scripts/sync-docs.js` copies them on every build, adds front matter, rewrites GitHub-relative links. Never edit the copies.                                                                                                                                                                                                                                                                     |
-| Changelog page        | generated from `CHANGELOG.md`                                    | Same script. English only.                                                                                                                                                                                                                                                                                                                                                                               |
-| Screenshots           | `docs/screenshots/*.png`, `docs/images/mobile/*.png`             | Imported straight from the docs so there is one copy.                                                                                                                                                                                                                                                                                                                                                    |
-| Install tutorial      | `website/src/components/InstallTutorial.astro`                   | Four tabs (Compose, Portainer/Dockge, source, PM2/systemd), numbered steps, copy buttons. Two inputs (data folder, host) rewrite every command and the panel URL live; tabs are radios so they work without JavaScript. Commands live in the component, the prose in `en.json` under `tutorial`.                                                                                                         |
-| Illustrations         | `website/src/assets/gen/*.webp`, `website/scripts/gen-images.js` | Original art generated through OpenRouter (see below) and committed as WebP. `website/src/data/art.js` looks them up by id; a missing picture just renders nothing.                                                                                                                                                                                                                                      |
-| Textures              | `website/public/textures/*.png`, `website/scripts/textures.js`   | Procedural 16x16 tiles (grass, dirt, stone, planks, cloud, heart) in the palette, byte-identical on every run. No Mojang assets anywhere on the site.                                                                                                                                                                                                                                                    |
-| Hosting               | GitHub Pages                                                     | `website/public/CNAME` holds the domain. `.github/workflows/website.yml` builds and deploys on push to `main`.                                                                                                                                                                                                                                                                                           |
+| Piece                 | Where                                                                   | Notes                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Static site generator | [Astro](https://astro.build) 7                                          | Zero client JavaScript by default; images resized to WebP at build time.                                                                                                                                                                                                                                                                                                                                 |
+| Docs shell            | [Starlight](https://starlight.astro.build)                              | Sidebar, search (Pagefind, offline), per-locale UI strings, RTL support.                                                                                                                                                                                                                                                                                                                                 |
+| Styling               | Tailwind v4, `website/src/styles/site.css`                              | The game's own UI language, drawn from scratch: bevelled stone buttons, inventory-slot panels, tiled block textures, an XP-bar divider, item-tooltip callouts. Jersey 15 (OFL, a pixel face that stays legible at label sizes) for headings and labels, IBM Plex Sans body. No gradients, no rounded corners. Day is the default; `data-theme="dark"` is night (shares the docs' `starlight-theme` key). |
+| Copy                  | `website/src/i18n/en.json`                                              | English is the source of truth. Other locales are translations of it, committed next to it.                                                                                                                                                                                                                                                                                                              |
+| Locales               | `website/src/i18n/locales.js`                                           | The one list every other piece derives from (routing, sitemap hreflang, language menu, translation script).                                                                                                                                                                                                                                                                                              |
+| Docs pages            | generated from `docs/*.md`                                              | `website/scripts/sync-docs.js` copies them on every build, adds front matter, rewrites GitHub-relative links. Never edit the copies.                                                                                                                                                                                                                                                                     |
+| Changelog page        | generated from `CHANGELOG.md`                                           | Same script. English only.                                                                                                                                                                                                                                                                                                                                                                               |
+| Screenshots           | `docs/screenshots/*.png`, `docs/images/mobile/*.png`                    | Imported straight from the docs so there is one copy.                                                                                                                                                                                                                                                                                                                                                    |
+| Landing pages         | `website/src/components/LandingPage.astro`, `website/src/lib/routes.js` | Server types, guides and comparisons. One component renders every page from its `en.json` key; `HUBS` in `routes.js` lists them. See "Landing pages" below.                                                                                                                                                                                                                                              |
+| Social cards          | `website/src/lib/og.js`, `website/src/pages/og/[...card].png.js`        | A 1200x630 PNG per page, drawn at build time in the site's look (satori lays it out with the bundled OFL fonts in `src/assets/og-fonts/`, sharp rasterises). English copy; every locale of a page shares its card.                                                                                                                                                                                       |
+| Install tutorial      | `website/src/components/InstallTutorial.astro`                          | Four tabs (Compose, Portainer/Dockge, source, PM2/systemd), numbered steps, copy buttons. Two inputs (data folder, host) rewrite every command and the panel URL live; tabs are radios so they work without JavaScript. Commands live in the component, the prose in `en.json` under `tutorial`.                                                                                                         |
+| Illustrations         | `website/src/assets/gen/*.webp`, `website/scripts/gen-images.js`        | Original art generated through OpenRouter (see below) and committed as WebP. `website/src/data/art.js` looks them up by id; a missing picture just renders nothing.                                                                                                                                                                                                                                      |
+| Textures              | `website/public/textures/*.png`, `website/scripts/textures.js`          | Procedural 16x16 tiles (grass, dirt, stone, planks, heart) in the palette, byte-identical on every run. No Mojang assets anywhere on the site.                                                                                                                                                                                                                                                           |
+| Hosting               | GitHub Pages                                                            | `website/public/CNAME` holds the domain. `.github/workflows/website.yml` builds and deploys on push to `main`.                                                                                                                                                                                                                                                                                           |
 
 ## URL layout
 
 - `/` `/features/` `/screenshots/` `/install/` `/faq/` `/changelog/`: marketing pages.
+- `/servers/…` (Paper, Fabric, Forge, Vanilla, Modpacks), `/guides/…` (Raspberry Pi, home server, leaving
+  paid hosting, several servers), `/compare/…` (Pterodactyl, Crafty Controller, AMP, MCSManager): landing
+  pages, each group with a hub page at its root.
 - `/docs/…`: one page per file in `docs/`, `docs/README.md` becomes `/docs/`.
 - Every locale except English is prefixed: `/ar/`, `/fr/docs/backups/`, … English has no prefix.
-- `/sitemap-index.xml`, `/robots.txt`, `/404.html`, `/og.png`, `/site.webmanifest`.
+- `/og/<page>.png`, `/og/<hub>-<slug>.png`, `/og/docs/<slug>.png`: social cards.
+- `/sitemap-index.xml`, `/robots.txt`, `/404.html`, `/site.webmanifest`, `/apple-touch-icon.png`, `/icon-512.png`.
 
 Every page carries a canonical URL, `hreflang` alternates for all locales plus `x-default`, Open
-Graph and Twitter card tags, and JSON-LD (`WebSite`, `Organization`, `SoftwareApplication`, plus
-`FAQPage`, `HowTo` and `BreadcrumbList` where they apply). The sitemap repeats the alternates.
+Graph and Twitter card tags with its own card image, and JSON-LD: `WebSite` and `Organization`
+everywhere, `SoftwareApplication` on the product pages, and `BreadcrumbList`, `FAQPage`, `HowTo`,
+`ItemList` and `TechArticle` where they apply. Docs pages get theirs from the Starlight route
+middleware in `website/src/routeData.js`. The sitemap repeats the alternates. Titles drop the
+" · Minecraft Server Manager" suffix when it would push them past 65 characters.
 
 ## Commands (from the repo root)
 
@@ -39,7 +48,7 @@ pnpm run site:dev        # dev server with hot reload (syncs docs first)
 pnpm run site:build      # production build into website/dist
 pnpm run site:preview    # serve website/dist locally
 pnpm run site:check      # astro check (types + template errors)
-pnpm run site:verify     # post-build checks: SEO tags, hreflang, JSON-LD, sitemap, internal links
+pnpm run site:verify     # post-build checks: SEO tags, cards, hreflang, JSON-LD, sitemap, links, title length
 pnpm run site:translate  # translate changed English source into every locale (see below)
 ```
 
@@ -97,17 +106,63 @@ banners, sprites, the 404 scene) through OpenRouter's image models and writes th
   existing game character, texture or logo.
 - Cost is printed per image (about $0.07 each at the time of writing).
 
+## Landing pages
+
+A landing page is data, not a new template. Its copy is one top-level key in `en.json` (one key per
+page, so the translator sends each page as its own request), with this shape; every block is
+optional except the meta, title and intro:
+
+```jsonc
+{
+  "meta": { "title": "≤ 60 characters, search phrase first", "description": "≤ 160 characters" },
+  "eyebrow": "short label above the title",
+  "title": "the H1",
+  "intro": "one or two sentences",
+  "pills": ["brand ids"],
+  "sections": [{ "title": "", "body": "", "points": [""], "pills": [""], "shot": "screenshot key" }],
+  "steps": { "title": "", "items": [{ "title": "", "body": "" }] },
+  "table": {
+    "title": "",
+    "columns": ["", "Minecraft Server Manager", "Other"],
+    "rows": [{ "label": "", "values": ["", ""] }],
+    "note": "",
+  },
+  "faq": { "title": "", "items": [{ "q": "", "a": "" }] },
+  "related": ["other page keys"],
+  "cta": { "title": "", "body": "" },
+}
+```
+
+Hubs (`serversHub`, `guidesHub`, `compareHub`) add `cards: { "<pageKey>": "summary" }`. To add a
+page: write its key in `en.json`, add `{ key, slug, sprite }` to its hub in `HUBS`, run the
+translator. Comparison pages state only facts checked against the other project's own docs, carry
+the date they were checked in `table.note`, and always say when the other panel is the better pick.
+
+## Doc page descriptions
+
+A doc's search description is the opening of its first paragraph (whole sentences, 70 to 160
+characters). A doc whose opening makes a poor summary sets one explicitly, anywhere in the file:
+
+```md
+<!-- description: How much RAM a Minecraft server needs, by server type and player count. -->
+```
+
+GitHub does not render the comment, and the site strips it from the page.
+
 ## Adding a page, a locale, or a screenshot
 
 - **Marketing page:** add `website/src/pages/[...locale]/<name>.astro` (copy an existing one), the
-  route in `website/src/lib/routes.js`, its copy under `meta.<name>` and `nav.<name>` in `en.json`.
+  route in `website/src/lib/routes.js` (`header: true` to show it in the top bar), its copy under
+  `meta.<name>` and `nav.<name>` in `en.json`. Its social card is generated from the meta.
 - **Locale:** one line in `website/src/i18n/locales.js` (`code`, native `label`, `dir`, optional
-  BCP-47 `lang`). Then run the translator for it. If Press Start 2P cannot render the script, leave it
-  out of `PIXEL_TITLE_LOCALES` in `routes.js` so titles fall back to the bold sans.
+  BCP-47 `lang`). Then run the translator for it. Jersey 15 only covers Latin scripts; headings in any
+  other script fall back to IBM Plex Sans or the system font on their own.
 - **Screenshot:** drop the PNG in `docs/screenshots/` and register it in
   `website/src/data/screenshots.js` with a caption key in `en.json`.
 - **Illustration:** add an entry to `IMAGES` in `website/scripts/gen-images.js`, run it, reference
-  the id through `art('<id>')`.
+  the id through `art('<id>')`. After regenerating a hero panorama, run
+  `node website/scripts/hero-extend.js` and copy the sky colour it prints into `--color-sky` in
+  `site.css`, so the headers and the hero stay one blue.
 
 ## Hosting checklist (one-time)
 

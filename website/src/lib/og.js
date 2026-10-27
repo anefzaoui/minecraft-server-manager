@@ -136,7 +136,7 @@ export async function renderCard({ title, eyebrow, subtitle, sprite, screenshot 
 
   const tree = h(
     'div',
-    { display: 'flex', flexDirection: 'column', width: W, height: H, background: '#96dafb' },
+    { display: 'flex', flexDirection: 'column', width: W, height: H, background: '#82d2fe' },
     h(
       'div',
       { display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'space-between', padding: '0 64px' },

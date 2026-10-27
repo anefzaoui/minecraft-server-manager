@@ -29,7 +29,7 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Semantic tokens, day values. */
-  --color-sky: #96dafb;
+  --color-sky: #82d2fe; /* = the hero panorama sky, see scripts/hero-extend.js */
   --color-canvas: #eeece4;
   --color-panel: #d4d4d4;
   --color-panel-hi: #ffffff;
@@ -61,7 +61,7 @@
 }
 
 :root[data-theme='dark'] {
-  --color-sky: #0f2360;
+  --color-sky: #122662;
   --color-canvas: #1c1f24;
   --color-panel: #3a3d42;
   --color-panel-hi: #62666c;
@@ -291,21 +291,6 @@
     min-height: 3.25rem;
     padding: 0.75rem 1.5rem;
     font-size: 1.5rem;
-  }
-
-  /* Small label, like a hotbar item count. */
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    background: var(--color-slot);
-    border: 2px solid;
-    border-color: var(--color-slot-lo) var(--color-slot-hi) var(--color-slot-hi) var(--color-slot-lo);
-    color: #ffffff;
-    text-shadow: 1px 1px 0 var(--color-slot-lo);
-    padding: 0.125rem 0.5rem;
-    font-family: var(--font-display);
-    font-size: 0.95rem;
   }
 
   /* Item tooltip: dark box, purple border. */
@@ -581,29 +566,6 @@
     flex-shrink: 0;
   }
 
-  /* Drifting pixel clouds. */
-  .cloud {
-    position: absolute;
-    width: 96px;
-    height: 36px;
-    background: url('/textures/cloud.png') no-repeat 0 0 / 96px 36px;
-    image-rendering: pixelated;
-    opacity: 0.95;
-    animation: drift linear infinite;
-    pointer-events: none;
-  }
-  @keyframes drift {
-    from {
-      transform: translateX(-140px);
-    }
-    to {
-      transform: translateX(calc(100vw + 140px));
-    }
-  }
-  [dir='rtl'] .cloud {
-    animation-direction: reverse;
-  }
-
   .prose-soft :where(p, li) {
     color: var(--color-ink-soft);
   }
@@ -694,10 +656,11 @@
     background: var(--color-sign);
     border: 2px solid var(--color-sign-edge);
     color: var(--color-sign-ink);
-    padding: 0.3rem 0.625rem;
+    padding: 0.35rem 0.625rem 0.3rem;
     font-family: var(--font-display);
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     line-height: 1;
+    letter-spacing: 0.02em;
   }
 
   /* Header navigation: text on the planks bar. Not a button: nothing to press,
