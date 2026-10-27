@@ -303,6 +303,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
   // Same fail-fast idea for the pinning invariant: an unpinned pack selector
   // would make the image re-resolve "latest" on every start (issue #22).
   require('./packPins').assertPinnedPackEnv(input.type, inputEnv);
+  assertInitHeapFits(inputEnv, input.heapMb ?? settings.getDefaults().heapMb);
 
   const id = `srv_${nanoid(8)}`;
 
@@ -690,6 +691,19 @@ function clearPendingRecreate(server) {
 
 const recreateServer = guardOp('recreate', recreateServerImpl);
 
+/**
+ * Java refuses to launch when its starting heap (INIT_MEMORY) is larger than
+ * the heap itself, so catch that when it's saved instead of at the next start.
+ * @param {Record<string, string> | null | undefined} env
+ * @param {number} heapMb
+ */
+function assertInitHeapFits(env, heapMb) {
+  const initMb = require('./jvm').parseMemMb(env && env.INIT_MEMORY);
+  if (initMb && initMb > heapMb) {
+    throw httpError(400, `The initial heap (${initMb} MB) can't be larger than the Java heap (${heapMb} MB).`);
+  }
+}
+
 /** Update config fields; computes a diff event and flags recreate needs. */
 function updateServer(id, changes, { actor = 'system' } = {}) {
   const before = mustGet(id);
@@ -725,6 +739,9 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     diff.tags = [before.tags, changes.tags];
     sets.push('tags_json = ?');
     params.push(JSON.stringify(changes.tags));
+  }
+  if (changes.env || changes.heapMb !== undefined) {
+    assertInitHeapFits(changes.env || before.env, changes.heapMb ?? before.heap_mb);
   }
   if (changes.env) {
     // The type column is not editable here, so the pinning check runs against

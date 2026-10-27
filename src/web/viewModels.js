@@ -112,7 +112,14 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
       rcon: s.port_rcon,
       bedrock: s.port_bedrock,
     },
-    resources: { heapMb: s.heap_mb, containerMemoryMb: s.container_memory_mb, cpus: s.cpus },
+    resources: {
+      heapMb: s.heap_mb,
+      // The starting heap (INIT_MEMORY) in MB, or null when Java gets the whole heap up front.
+      initHeapMb: require('../services/jvm').parseMemMb(s.env && s.env.INIT_MEMORY),
+      containerMemoryMb: s.container_memory_mb,
+      cpus: s.cpus,
+      quotaStrict: Boolean(s.quota_strict),
+    },
     // What the memory meter is going to show and why (#25): a heap given to
     // Java up front reads as fully used from the first minute, so the meters
     // say so and where the heap sits relative to the container limit.

@@ -575,6 +575,7 @@ function init(serverId) {
       updatePolicy: root.querySelector('input[name="up"]:checked')?.value || 'manual',
       autoStart: document.getElementById('st-autostart')?.checked ?? false,
       autoRestart: document.getElementById('st-autorestart')?.checked ?? true,
+      quotaStrict: document.getElementById('st-quota-strict')?.checked ?? false,
     };
     // Docker settings: only send a field that actually changed from what the
     // server rendered. Sending all 4 unconditionally would run the (Docker-
@@ -636,6 +637,15 @@ function init(serverId) {
             }
           }
         });
+      }
+
+      // The Resources card's Initial heap is INIT_MEMORY in MB. Compared with
+      // what the page rendered, so an untouched field never rewrites the env.
+      const initHeap = document.getElementById('st-initheap');
+      if (initHeap && initHeap.value.trim() !== initHeap.defaultValue.trim()) {
+        if (initHeap.value.trim()) merged.INIT_MEMORY = String(Number(initHeap.value));
+        else delete merged.INIT_MEMORY;
+        envChanged = true;
       }
 
       if (envChanged) body.env = merged;

@@ -67,8 +67,10 @@ function init(serverId) {
     if (e.target.closest('[data-backup-restore]')) {
       const ok = await confirmDialog({
         title: `Restore ${file}?`,
-        message: 'The server is stopped, its current data replaced with this archive, then started again.',
-        detail: 'A running server goes offline during the restore. This cannot be undone unless you back up first.',
+        message:
+          'The server is stopped and its current data is replaced with this archive. Start it again when the restore finishes.',
+        detail:
+          'A running server goes offline during the restore. The panel takes a safety backup of the current data first.',
         confirmLabel: 'Restore',
         danger: true,
       });

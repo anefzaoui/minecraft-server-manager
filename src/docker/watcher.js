@@ -384,7 +384,8 @@ function diagnoseFatal(logText) {
     {
       key: 'port-bind',
       re: /Failed to bind to port|Address already in use/i,
-      summary: 'The game port is already in use on this machine. Change the port in Settings, then rebuild the server.',
+      summary:
+        'The game port is already in use on this machine. Pick another one on the Settings → Configuration tab. The change applies right away.',
     },
     {
       key: 'oom',

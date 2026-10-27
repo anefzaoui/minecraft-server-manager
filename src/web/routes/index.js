@@ -379,9 +379,17 @@ router.get('/servers/new', async (req, res) => {
     pageDegraded('wizard-suggested-port', err); // daemon down
   }
   const catalog = require('../../config/field-catalog');
-  const SIMPLE_SECTIONS = new Set(['identity', 'flavor', 'resources']); // covered by the Simple UI
+  const SIMPLE_SECTIONS = new Set(['identity', 'flavor']); // covered by the Simple UI
+  // The Simple Resources card has the heap and quota sliders; of the rest, only
+  // the starting heap is offered here (MAX_MEMORY would fight the heap slider).
+  const ADVANCED_RESOURCE_KEYS = new Set(['INIT_MEMORY']);
   const advancedSections = catalog.SECTIONS.filter((s) => !SIMPLE_SECTIONS.has(s.id))
-    .map((s) => ({ ...s, fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env') }))
+    .map((s) => ({
+      ...s,
+      fields: catalog
+        .forSection(s.id, 'advanced')
+        .filter((f) => f.scope === 'env' && (s.id !== 'resources' || ADVANCED_RESOURCE_KEYS.has(f.key))),
+    }))
     .filter((s) => s.fields.length);
   res.render('wizard', {
     title: 'Create Server',

@@ -90,6 +90,14 @@
           <p class="help">The amount of RAM Minecraft itself may use.</p>
         </div>
         <div>
+          <label class="label" for="st-initheap">Initial heap <span class="font-normal text-ink-faint">(optional)</span></label>
+          <div class="flex items-center gap-3">
+            <input type="number" min="512" step="512" inputmode="numeric" class="input w-32 font-mono" id="st-initheap" value="{{server.resources.initHeapMb}}" placeholder="Whole heap">
+            <span class="text-sm text-ink-faint">MB</span>
+          </div>
+          <p class="help">How much of the heap Java takes when the server starts. Leave it empty and Java takes the whole heap up front, so memory use sits near the full heap even when nobody is playing. A smaller value, like 512 MB, lets it grow as the world needs it.</p>
+        </div>
+        <div>
           <label class="label" for="st-cmem">Container memory limit</label>
           <div class="flex items-center gap-3">
             <input type="range" min="1024" max="20480" step="512" value="{{server.resources.containerMemoryMb}}" id="st-cmem" class="msm-range msm-range-alt flex-1" data-out="out-cmem" data-unit=" MB">
@@ -112,8 +120,9 @@
             <input type="range" min="0" max="200" step="5" value="{{quotaGb}}" id="st-quota" class="msm-range flex-1" data-out="out-quota" data-unit=" GB" data-zero="off">
             <span class="w-20 text-right font-mono text-sm" id="out-quota">{{quotaGb}} GB</span>
           </div>
-          <p class="help">The panel enforces this quota itself, since Docker can't limit disk use for this kind of storage. Over quota, actions that would grow the disk are blocked, and an optional strict mode stops the server.</p>
+          <p class="help">The panel enforces this quota itself, since Docker can't limit disk use for this kind of storage. Over quota, actions that would grow the disk, like installing mods, adding worlds, or uploading files, are blocked. Backups don't count toward it.</p>
         </div>
+        {{> settings/toggle-row label="Stop the Server When Over Quota" help="Strict mode: when the server's folder grows more than 10% past the quota, the panel stops the server and notes it in history. Has no effect while the quota is off." inputId="st-quota-strict" checked=server.resources.quotaStrict}}
       </div>
     </div>
 
