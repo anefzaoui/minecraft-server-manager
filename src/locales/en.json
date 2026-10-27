@@ -3218,5 +3218,32 @@
     "examples_btn": "Examples",
     "examples_title": "MOTD Examples",
     "examples_hint": "Click any example to use it. {server} becomes your server name, and you can adjust it afterwards with the toolbar."
+  },
+  "server_overview": {
+    "address_label": "Server address",
+    "address_help": "(share this with players on your network)",
+    "copy_address": "Copy Address",
+    "internet_help": "Playing from the internet? Set up port forwarding or grab the full invite from the Invites tab (under Settings).",
+    "about": "About",
+    "created": "Created",
+    "last_started": "Last started",
+    "update_policy": "Update policy",
+    "start_on_boot": "Start on boot",
+    "game_port": "Game port",
+    "change_port": "Change",
+    "pending_port": "Moves to {{port}} on the next start or restart.",
+    "rcon_port": "RCON port",
+    "pinned_at": "pinned @",
+    "available": "available",
+    "live_usage": "Live Usage",
+    "of_cores": "of {{count}} cores",
+    "memory": "Memory",
+    "java_heap": "Java heap",
+    "disk_quota": "Disk quota",
+    "no_quota": "no quota",
+    "players": "Players",
+    "manage_players_tip": "Manage on the Players tab",
+    "manage_player_aria": "Manage {{player}}",
+    "no_players": "No players online."
   }
 }

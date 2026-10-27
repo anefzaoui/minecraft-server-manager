@@ -3218,5 +3218,32 @@
     "examples_btn": "Beispiele",
     "examples_title": "MOTD-Beispiele",
     "examples_hint": "Klicken Sie auf ein Beispiel, um es zu verwenden. {server} wird durch Ihren Servernamen ersetzt und kann danach angepasst werden."
+  },
+  "server_overview": {
+    "address_label": "Serveradresse",
+    "address_help": "(für Spieler im selben Netzwerk)",
+    "copy_address": "Adresse kopieren",
+    "internet_help": "Aus dem Internet spielen? Richte eine Portweiterleitung ein oder nutze den Einladungslink unter Einstellungen > Einladungen.",
+    "about": "Über den Server",
+    "created": "Erstellt",
+    "last_started": "Zuletzt gestartet",
+    "update_policy": "Update-Richtlinie",
+    "start_on_boot": "Autostart beim Booten",
+    "game_port": "Spiel-Port",
+    "change_port": "Ändern",
+    "pending_port": "Wechselt beim nächsten Start oder Neustart auf {{port}}.",
+    "rcon_port": "RCON-Port",
+    "pinned_at": "gepinnt auf",
+    "available": "verfügbar",
+    "live_usage": "Live-Auslastung",
+    "of_cores": "von {{count}} Kernen",
+    "memory": "Arbeitsspeicher",
+    "java_heap": "Java-Heap",
+    "disk_quota": "Speicherplatz-Quote",
+    "no_quota": "keine Quote",
+    "players": "Spieler",
+    "manage_players_tip": "Im Spieler-Tab verwalten",
+    "manage_player_aria": "{{player}} verwalten",
+    "no_players": "Keine Spieler online."
   }
 }
