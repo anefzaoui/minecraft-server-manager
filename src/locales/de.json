@@ -1520,7 +1520,7 @@
     "raknet_port_help": "RakNet benötigt offene UDP-Ports für IPv4 und IPv6 in der Firewall.",
     "bedrock_eula": "Ich akzeptiere die Minecraft-EULA für diesen Bedrock-Server.",
     "game_port": "Spiel-Port",
-    "game_port_help": "Ein freier Port wird vorgeschlagen. Die Remotekonsole (RCON) nutzt den Port +1000.",
+    "game_port_help": "Ein freier Port wird vorgeschlagen. Die Remotekonsole (RCON) nutzt den Port +1000. Du kannst ihn später im Konfigurations-Tab des Servers ändern.",
     "nethernet_address": "NetherNet-Adresse",
     "nethernet_address_help": "Erreichbare IPv4- oder IPv6-Adresse dieses Hosts. Hostnamen werden von NetherNet nicht unterstützt.",
     "world_rules_title": "Welt & Regeln",

@@ -120,7 +120,20 @@ Cross-cutting:
   orphaned by a shutdown on the next boot.
 - **Ports** are allocated from a base scheme (game from `PORT_GAME_START` upward, RCON = game +
   `PORT_RCON_OFFSET`, Bedrock from `PORT_BEDROCK_START`), probed for availability, and reserved in
-  the DB.
+  the DB. "Taken" is the union of every server's claims (live ports, plus a pending pair below),
+  every host port any Docker container publishes (`containers.publishedHostPorts`: running
+  containers' live bindings plus each stopped container's configured ones, because an OS bind probe
+  from inside the panel's own container sees only that container's network namespace), and the OS
+  probe. The Docker part is cached for 3 s and bounded: a list that doesn't answer in 2.5 s drops
+  only the Docker part, and a slow inspect costs only that container's ports. Server creates and
+  `servers.changeGamePort` pick ports through one serialization chain that covers only the pick
+  and the row write; BlueMap's port picker and the extra-port overrides are not in it and do
+  not consult Docker. A port change on an existing server is stored as `port_game_pending` /
+  `port_rcon_pending` (RCON always game + `PORT_RCON_OFFSET`) and sets `pending_recreate`,
+  because Docker fixes port bindings at container creation; `recreateServerImpl` promotes the
+  pair when it builds the next container (any start or restart), so `port_game` / `port_rcon`
+  always mean "live". Choosing the live port again cancels a pending move. Non-admins may only
+  pick from `PORT_GAME_START` up, so RCON can't land inside the range opened to players.
 - **Disk quotas** are enforced by the panel because Docker can't cap bind-mount usage: the indexer
   caches per-directory sizes and disk-growing operations are gated on them.
 - **Secrets** (RCON passwords, API keys, TOTP secrets, the Discord webhook URL) are encrypted at

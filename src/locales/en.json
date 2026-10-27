@@ -1520,7 +1520,7 @@
     "raknet_port_help": "RakNet is legacy. It requires UDP ports for IPv4 and IPv6. Allow both through your firewall and port forward.",
     "bedrock_eula": "I accept the Minecraft End User License Agreement for this Native Bedrock server.",
     "game_port": "Game port",
-    "game_port_help": "A free port, suggested automatically. The panel's remote console (RCON) runs on the port 1000 higher than this one.",
+    "game_port_help": "A free port, suggested automatically. The panel's remote console (RCON) runs on the port 1000 higher than this one. You can change it later on the server's Configuration tab.",
     "nethernet_address": "NetherNet advertised address",
     "nethernet_address_help": "The reachable IPv4 or IPv6 address of this host. Use <public_ip> to resolve a dynamic public address when the server starts. Hostnames are not supported by NetherNet.",
     "world_rules_title": "World & Rules",
