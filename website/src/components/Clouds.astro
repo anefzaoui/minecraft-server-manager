@@ -1,6 +1,7 @@
 ---
 // A few original pixel clouds drifting across a sky area. Pure CSS animation;
-// off under prefers-reduced-motion (handled globally).
+// off under prefers-reduced-motion (handled globally). Hidden on phones, where
+// the text fills the sky and a cloud would always sit behind a heading.
 interface Props {
   count?: number;
   /** Keep clouds in the top part of the area (percent of height). */
@@ -15,7 +16,7 @@ const clouds = Array.from({ length: count }, (_, i) => ({
 }));
 ---
 
-<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+<div class="pointer-events-none absolute inset-0 hidden overflow-hidden md:block" aria-hidden="true">
   {clouds.map((c) => (
     <span class="cloud" style={`top:${c.top};animation-duration:${c.duration};animation-delay:${c.delay};scale:${c.scale}`}></span>
   ))}

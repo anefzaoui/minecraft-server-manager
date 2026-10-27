@@ -1,0 +1,195 @@
+---
+// One landing page (server type, guide, or comparison) rendered from its copy
+// object in en.json (shape: docs/website.md, "Landing pages"). Sections, steps,
+// a comparison table, an FAQ, related pages, and a closing call to action; each
+// block renders only when the copy has it.
+import { Image } from 'astro:assets';
+import Site from '../layouts/Site.astro';
+import Section from './Section.astro';
+import PageHeader from './PageHeader.astro';
+import XpDivider from './XpDivider.astro';
+import Icon from './Icon.astro';
+import Pill from './Pill.astro';
+import { getCopy } from '../i18n/index.js';
+import { langTag } from '../i18n/locales.js';
+import { href, absolute, breadcrumbLd, faqLd, landingByKey, LANDING_PUBLISHED, SITE_URL } from '../lib/routes.js';
+import { DESKTOP } from '../data/screenshots.js';
+import { art } from '../data/art.js';
+
+interface Props {
+  locale: string;
+  /** Entry from landingPages(). */
+  entry: any;
+}
+const { locale, entry } = Astro.props;
+const copy = getCopy(locale);
+const page = copy[entry.key];
+const ui = copy.landing;
+const shot = (key) => DESKTOP.find((s) => s.key === key);
+const ogImage = `/og/${entry.hub.id}-${entry.slug}.png`;
+
+const trail: [string, string][] = [
+  [copy.nav.home, '/'],
+  [copy.nav[entry.hub.id], `/${entry.hub.id}/`],
+  [page.eyebrow || page.title, entry.path],
+];
+const crumbs: [string, string][] = trail.map(([name, path]) => [name, href(locale, path)]);
+const jsonLd: Record<string, unknown>[] = [breadcrumbLd(locale, trail)];
+if (page.faq?.items?.length) jsonLd.push(faqLd(page.faq.items));
+if (page.steps?.items?.length) {
+  jsonLd.push({
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: page.steps.title,
+    description: page.intro,
+    step: page.steps.items.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.title, text: s.body })),
+  });
+}
+if (entry.hub.article) {
+  jsonLd.push({
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: page.title,
+    description: page.meta.description,
+    inLanguage: langTag(locale),
+    url: absolute(locale, entry.path),
+    image: new URL(ogImage, SITE_URL).href,
+    datePublished: LANDING_PUBLISHED,
+    author: { '@type': 'Organization', name: copy.site.name, url: SITE_URL },
+    publisher: { '@type': 'Organization', name: copy.site.name, url: SITE_URL },
+  });
+}
+const related = (page.related || []).map((k) => landingByKey(k)).filter(Boolean);
+---
+
+<Site locale={locale} path={entry.path} pageKey={entry.key} title={page.meta.title} description={page.meta.description} jsonLd={jsonLd} ogImage={ogImage} ogType={entry.hub.article ? 'article' : 'website'}>
+  <PageHeader title={page.title} intro={page.intro} eyebrow={page.eyebrow} sprite={art(entry.sprite)} pills={page.pills} crumbs={crumbs} crumbsLabel={ui.breadcrumb} />
+
+  {(page.sections || []).map((s, i) => {
+    const pic = s.shot && shot(s.shot);
+    return (
+      <>
+        {i > 0 && <XpDivider />}
+        <Section>
+          <div class:list={['grid items-start gap-8', pic && 'lg:grid-cols-[6fr_5fr]']}>
+            <div class="max-w-3xl">
+              <h2>{s.title}</h2>
+              {s.body && <p class="lead mt-3">{s.body}</p>}
+              {s.points?.length > 0 && (
+                <ul class="hearts mt-4 space-y-2 text-ink-soft" role="list">
+                  {s.points.map((p) => <li>{p}</li>)}
+                </ul>
+              )}
+              {s.pills?.length > 0 && (
+                <ul class="mt-4 flex flex-wrap gap-2" role="list">
+                  {s.pills.map((id) => <Pill id={id} size="sm" />)}
+                </ul>
+              )}
+            </div>
+            {pic && (
+              <a class="panel panel-tight block" href={pic.image.src} target="_blank" rel="noopener">
+                <span class="slot block"><Image src={pic.image} alt={copy.screenshots.items[pic.key]} widths={[480, 800, 1100]} sizes="(min-width: 1024px) 480px, 100vw" class="block" /></span>
+              </a>
+            )}
+          </div>
+        </Section>
+      </>
+    );
+  })}
+
+  {page.table && (
+    <>
+      <XpDivider />
+      <Section title={page.table.title}>
+        <div class="panel panel-tight mt-5 overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>{page.table.columns.map((c) => <th scope="col">{c}</th>)}</tr>
+            </thead>
+            <tbody>
+              {page.table.rows.map((r) => (
+                <tr>
+                  <th scope="row">{r.label}</th>
+                  {r.values.map((v, i) => <td data-th={page.table.columns[i + 1]}>{v}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {page.table.note && <p class="mt-3 text-sm text-ink-faint">{page.table.note}</p>}
+      </Section>
+    </>
+  )}
+
+  {page.steps && (
+    <>
+      <XpDivider />
+      <Section title={page.steps.title}>
+        <ol class="panel mt-5 space-y-5 sm:p-6" role="list">
+          {page.steps.items.map((s, i) => (
+            <li class="flex gap-4">
+              <span class="step-badge">{i + 1}</span>
+              <div>
+                <h3 class="text-[1.4rem]">{s.title}</h3>
+                <p class="mt-1 text-ink-soft">{s.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Section>
+    </>
+  )}
+
+  {page.faq && (
+    <>
+      <XpDivider />
+      <Section title={page.faq.title}>
+        <dl class="masonry mt-5 md:columns-2">
+          {page.faq.items.map((f) => (
+            <div class="panel">
+              <dt class="display text-[1.4rem] text-ink">{f.q}</dt>
+              <dd class="mt-2 text-sm leading-relaxed text-ink-soft">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </Section>
+    </>
+  )}
+
+  {related.length > 0 && (
+    <Section title={ui.related} class="pt-0">
+      <ul class="cards mt-5" role="list">
+        {related.map((r) => {
+          const rc = copy[r.key];
+          const sprite = art(r.sprite);
+          return (
+            <li>
+              <a class="panel flex h-full gap-4 no-underline hover:brightness-105" href={href(locale, r.path)}>
+                {sprite && <span class="slot slot-icon"><Image src={sprite} alt="" width={64} class="pixelated" style="width:32px;height:32px" /></span>}
+                <span class="min-w-0">
+                  <span class="display block text-[1.35rem] text-ink">{rc.eyebrow || rc.title}</span>
+                  <span class="mt-1 block text-sm text-ink-soft">{copy[r.hub.hubKey].cards?.[r.key] || rc.intro}</span>
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </Section>
+  )}
+
+  {page.cta && (
+    <Section class="pt-0">
+      <div class="panel flex flex-col gap-5 sm:flex-row sm:items-center">
+        <div class="flex-1">
+          <h2>{page.cta.title}</h2>
+          <p class="mt-2 text-ink-soft">{page.cta.body}</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a class="btn btn-primary" href={href(locale, '/install/')}><Icon name="play" size={16} />{ui.install}</a>
+          <a class="btn" href={href(locale, '/docs/')}>{ui.docs}</a>
+        </div>
+      </div>
+    </Section>
+  )}
+</Site>

@@ -324,6 +324,98 @@
     font-size: 1.05rem;
   }
 
+  /* Card grid without orphans: 1 column, 2 from sm, 3 from lg. At lg the grid is
+     six tracks wide so a short last row can stretch: four cards become 2 + 2,
+     and a last row of one or two cards splits the full width. */
+  .cards {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 40rem) {
+    .cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .cards {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .cards > * {
+      grid-column: span 2;
+    }
+    .cards > :first-child:nth-last-child(4),
+    .cards > :first-child:nth-last-child(4) ~ *,
+    .cards > :nth-last-child(2):nth-child(3n + 1),
+    .cards > :last-child:nth-child(3n + 2) {
+      grid-column: span 3;
+    }
+    .cards > :last-child:nth-child(3n + 1):not(:first-child:nth-last-child(4) ~ *) {
+      grid-column: span 6;
+    }
+  }
+  /* Comparison table. Below sm each row becomes a card of "Label: value" lines
+     (label from the cell's data-th), so nothing scrolls sideways on a phone. */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .data-table :is(th, td) {
+    padding: 0.75rem 0.875rem;
+    text-align: start;
+    vertical-align: top;
+    border-bottom: 2px solid var(--color-panel-lo);
+  }
+  .data-table thead th {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.3rem;
+    background: var(--color-well);
+    color: var(--color-well-ink);
+  }
+  .data-table tbody th {
+    font-weight: 600;
+    color: var(--color-ink);
+    width: 22%;
+  }
+  .data-table td {
+    color: var(--color-ink-soft);
+  }
+  .data-table td:nth-child(2) {
+    background: color-mix(in srgb, var(--color-grass-500) 12%, transparent);
+  }
+  @media (max-width: 39.99rem) {
+    .data-table thead {
+      display: none;
+    }
+    .data-table tr {
+      display: block;
+      border-bottom: 2px solid var(--color-panel-lo);
+      padding: 0.5rem 0;
+    }
+    .data-table :is(th, td) {
+      display: block;
+      width: auto;
+      border: 0;
+      padding: 0.25rem 0.5rem;
+    }
+    .data-table td::before {
+      content: attr(data-th) ': ';
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+  }
+
+  /* Masonry columns for items of uneven height (screenshots, FAQ answers). */
+  .masonry {
+    column-gap: 1rem;
+  }
+  .masonry > * {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+
   /* XP bar as a section divider. */
   .xp {
     height: 12px;

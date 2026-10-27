@@ -1,5 +1,7 @@
 # Minecraft server backups that actually restore
 
+<!-- description: How to make Minecraft server backups that actually restore: consistent copies, kept somewhere else, and tested at least once. -->
+
 [← Back to docs index](README.md)
 
 Most servers have backups. Rather fewer have backups that work, and the difference is only ever

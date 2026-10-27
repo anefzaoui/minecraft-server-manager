@@ -1,5 +1,7 @@
 # Worlds & files
 
+<!-- description: The world library, world uploads and swaps, the mods and plugins tab, and the in-browser file manager. -->
+
 [← Back to docs index](README.md)
 
 ## Worlds

@@ -12,7 +12,7 @@ import WorksWith from '../../components/WorksWith.astro';
 import Pill from '../../components/Pill.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
-import { href } from '../../lib/routes.js';
+import { href, HUBS } from '../../lib/routes.js';
 import { HERO, DESKTOP } from '../../data/screenshots.js';
 import { art, cardFor } from '../../data/art.js';
 const heroDay = art('hero-day-tall');
@@ -26,6 +26,9 @@ const copy = getCopy(locale);
 const highlights = copy.features.groups.flatMap((g) => g.items).filter((f) => ['wand', 'search', 'shield', 'archive', 'map', 'flame'].includes(f.icon));
 const teaser = DESKTOP.slice(1, 4);
 const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')];
+const hub = (id) => HUBS.find((h) => h.id === id);
+const serverHub = hub('servers');
+const moreHubs = [hub('guides'), hub('compare')];
 ---
 
 <Site locale={locale} path="/" pageKey="home">
@@ -33,10 +36,10 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
     {heroDay && <Image src={heroDay} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-day" loading="eager" fetchpriority="high" />}
     {heroNight && <Image src={heroNight} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-night" loading="lazy" />}
     <Clouds count={4} band={30} />
-    <div class="relative mx-auto grid max-w-6xl items-start gap-8 px-4 pb-72 pt-10 sm:pb-80 lg:grid-cols-[1fr_1fr]">
+    <div class="relative mx-auto grid max-w-6xl items-start gap-8 px-4 pb-72 pt-10 sm:pb-80 lg:grid-cols-[5fr_7fr] lg:pt-14">
       <div>
         <p class="tag"><Icon name="sparkles" size={16} />{copy.hero.eyebrow}</p>
-        <h1 class="mt-4 text-[3rem] leading-[1.02] sm:text-[3.75rem]">{copy.hero.title}</h1>
+        <h1 class="mt-4 text-[3rem] leading-[1.02] sm:text-[3.75rem] lg:text-[3.5rem]">{copy.hero.title}</h1>
         <p class="lead mt-4 max-w-xl text-on-sky">{copy.hero.subtitle}</p>
         <div class="mt-6 flex flex-wrap gap-4">
           <a class="btn btn-primary btn-lg" href="#tutorial"><Icon name="play" size={18} />{copy.hero.primary}</a>
@@ -46,16 +49,38 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
           {copy.hero.pills.map((pill) => <li class="tag"><Icon name="check" size={14} />{pill}</li>)}
         </ul>
       </div>
-      <div class="panel panel-tight">
-        <div class="slot">
-          <Image src={HERO} alt={copy.screenshots.items.dashboard} widths={[560, 900, 1300]} sizes="(min-width: 1024px) 560px, 100vw" loading="eager" fetchpriority="high" class="block" />
-        </div>
-      </div>
+      <a class="panel panel-tight block" href={href(locale, '/screenshots/')}>
+        <span class="slot block">
+          <Image src={HERO} alt={copy.screenshots.items.dashboard} widths={[640, 1000, 1400]} sizes="(min-width: 1152px) 660px, (min-width: 1024px) 58vw, 100vw" loading="eager" fetchpriority="high" class="block" />
+        </span>
+      </a>
     </div>
     <div class="ground relative"></div>
   </section>
 
   <WorksWith copy={copy} />
+
+  <Section title={copy.serversHub.title} intro={copy.serversHub.intro}>
+    <ul class="cards mt-6" role="list">
+      {serverHub.pages.map((p) => {
+        const pc = copy[p.key];
+        const sprite = art(p.sprite);
+        return (
+          <li>
+            <a class="panel flex h-full gap-4 no-underline hover:brightness-105" href={href(locale, `/servers/${p.slug}/`)}>
+              {sprite && <span class="slot slot-icon"><Image src={sprite} alt="" width={64} class="pixelated" style="width:32px;height:32px" /></span>}
+              <span class="min-w-0">
+                <span class="display block text-[1.4rem] leading-tight text-ink">{pc.eyebrow}</span>
+                <span class="mt-1 block text-sm text-ink-soft">{copy.serversHub.cards[p.key]}</span>
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </Section>
+
+  <XpDivider />
 
   <Section title={copy.pillars.title}>
     <ul class="mt-6 grid gap-4 sm:grid-cols-3" role="list">
@@ -87,7 +112,7 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
   <XpDivider />
 
   <Section title={copy.features.title} intro={copy.features.intro}>
-    <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+    <ul class="cards mt-6" role="list">
       {highlights.map((f) => <FeatureCard title={f.title} body={f.body} icon={f.icon} image={cardFor(f.icon)} pills={f.pills} />)}
     </ul>
     <p class="mt-6"><a class="btn" href={href(locale, '/features/')}>{copy.hero.secondary}<Icon name="arrow" size={18} /></a></p>
@@ -95,7 +120,7 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
 
   <XpDivider />
 
-  <Section title={copy.screenshots.title} intro={copy.screenshots.intro} banner={art('banner-screenshots')}>
+  <Section title={copy.screenshots.title} intro={copy.screenshots.intro}>
     <ul class="mt-6 grid gap-4 sm:grid-cols-3" role="list">
       {teaser.map((s) => (
         <li>
@@ -106,6 +131,22 @@ const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')
       ))}
     </ul>
   </Section>
+
+  <XpDivider />
+
+  <section class="mx-auto grid max-w-6xl gap-4 px-4 py-12 lg:grid-cols-2">
+    {moreHubs.map((h) => (
+      <div class="panel">
+        <h2 class="text-[1.9rem]"><a class="hover:underline" href={href(locale, `/${h.id}/`)}>{copy[h.hubKey].title}</a></h2>
+        <p class="mt-2 text-sm text-ink-soft">{copy[h.hubKey].intro}</p>
+        <ul class="hearts mt-4 space-y-2" role="list">
+          {h.pages.map((p) => (
+            <li><a class="text-link underline underline-offset-4 hover:no-underline" href={href(locale, `/${h.id}/${p.slug}/`)}>{copy[p.key].title}</a></li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </section>
 
   <Community copy={copy} />
 </Site>

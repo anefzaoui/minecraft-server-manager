@@ -6,6 +6,17 @@ import translations from './sidebar.translations.json' with { type: 'json' };
 const GROUPS = [
   { id: 'start', label: 'Start here', items: ['docs', 'docs/getting-started', 'docs/dashboard'] },
   {
+    id: 'guides',
+    label: 'Guides',
+    items: [
+      'docs/guide-choosing-a-loader',
+      'docs/guide-server-memory',
+      'docs/guide-backups',
+      'docs/guide-moving-a-server',
+      'docs/guide-server-wont-start',
+    ],
+  },
+  {
     id: 'running',
     label: 'Running servers',
     items: ['docs/servers', 'docs/console-and-chat', 'docs/modpacks', 'docs/worlds-and-files', 'docs/world-shrink'],

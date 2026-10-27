@@ -15,7 +15,7 @@ const { title, intro, id, class: cls, banner } = Astro.props;
 <section id={id} class:list={['mx-auto max-w-6xl px-4 py-12', cls]}>
   {banner && (
     <div class="panel panel-tight mb-6">
-      <span class="slot block"><Image src={banner} alt="" widths={[720, 1200, 1584]} sizes="(min-width: 1152px) 1120px, 100vw" class="block aspect-[21/6] w-full object-cover object-bottom" /></span>
+      <span class="slot block"><Image src={banner} alt="" widths={[720, 1200, 1584]} sizes="(min-width: 1152px) 1120px, 100vw" class="block aspect-[21/6] w-full object-cover object-bottom sm:aspect-[21/4]" /></span>
     </div>
   )}
   {title && <h2>{title}</h2>}

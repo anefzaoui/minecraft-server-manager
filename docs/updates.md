@@ -1,5 +1,7 @@
 # Updates
 
+<!-- description: Track and apply updates to Minecraft versions, modpacks, mods and plugins across every server, with a policy per server. -->
+
 [← Back to docs index](README.md)
 
 The **Updates** page tracks what's out of date across your fleet in one place:

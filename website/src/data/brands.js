@@ -40,7 +40,7 @@ export const BRANDS = [
   { id: 'pm2', label: 'PM2', kind: 'platform', si: 'siPm2' },
   { id: 'linux', label: 'Linux', kind: 'os', si: 'siLinux' },
   { id: 'windows', label: 'Windows', kind: 'os', icon: 'windows' },
-  { id: 'macos', label: 'macOS', kind: 'os', si: 'siMacos' },
+  { id: 'macos', label: 'macOS', kind: 'os', si: 'siApple' },
   { id: 'nodejs', label: 'Node.js 24+', kind: 'platform', si: 'siNodedotjs' },
   { id: 'amd64', label: 'amd64', kind: 'arch' },
   { id: 'arm64', label: 'arm64', kind: 'arch' },

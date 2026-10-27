@@ -28,7 +28,7 @@ const faqLd = {
 <Site locale={locale} path="/faq/" pageKey="faq" jsonLd={[faqLd]}>
   <PageHeader title={copy.faq.title} sprite={spriteShield} />
   <Section>
-    <dl class="grid gap-4 md:grid-cols-2">
+    <dl class="masonry md:columns-2">
       {copy.faq.items.map((f) => (
         <div class="panel">
           <dt class="display text-[1.5rem] text-ink">{f.q}</dt>

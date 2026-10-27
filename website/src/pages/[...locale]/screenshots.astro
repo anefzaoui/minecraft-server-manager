@@ -18,11 +18,11 @@ const copy = getCopy(locale);
 <Site locale={locale} path="/screenshots/" pageKey="screenshots">
   <PageHeader title={copy.screenshots.title} intro={copy.screenshots.intro} />
   <Section title={copy.screenshots.desktop}>
-    <ul class="mt-5 grid gap-4 md:grid-cols-2" role="list">
+    <ul class="masonry mt-5 md:columns-2" role="list">
       {DESKTOP.map((s, i) => (
         <li>
           <figure class="panel panel-tight">
-            <span class="slot block"><Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[480, 800, 1200]} sizes="(min-width: 768px) 50vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} class="block" /></span>
+            <a class="slot block" href={s.image.src} target="_blank" rel="noopener"><Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[480, 800, 1200]} sizes="(min-width: 768px) 50vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} class="block" /></a>
             <figcaption class="px-1 pt-2 text-sm text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
           </figure>
         </li>

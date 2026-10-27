@@ -1,5 +1,7 @@
 # Your Minecraft server will not start
 
+<!-- description: A Minecraft server that will not start, fixed in order of likelihood: the log, the Java version, memory, the EULA and port, and mods. -->
+
 [← Back to docs index](README.md)
 
 Work down this list. It is ordered by how often each one is the answer, and the first four cover most

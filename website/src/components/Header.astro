@@ -1,6 +1,6 @@
 ---
-// Site header: planks bar with the logo lockup, bevelled navigation tabs (the
-// active one framed like the selected hotbar slot), language, theme, GitHub.
+// Site header: planks bar with the logo lockup, the `header` pages from the
+// registry (the active one underlined like an XP bar), language, theme, GitHub.
 import LangSwitcher from './LangSwitcher.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import Icon from './Icon.astro';
@@ -12,7 +12,7 @@ interface Props {
   active?: string;
 }
 const { locale, path, copy, active } = Astro.props;
-const links = PAGES.filter((p) => p.key !== 'home');
+const links = PAGES.filter((p) => p.header);
 ---
 
 <header class="header-bar sticky top-0 z-20 border-b-[3px] border-outline">

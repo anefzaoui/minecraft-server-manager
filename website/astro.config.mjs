@@ -46,6 +46,7 @@ export default defineConfig({
       sidebar: starlightSidebar(),
       components: {
         SiteTitle: './src/components/starlight/SiteTitle.astro',
+        SocialIcons: './src/components/starlight/SocialIcons.astro',
       },
     }),
   ],

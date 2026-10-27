@@ -54,28 +54,54 @@ export function toStarlight(md, { slug }) {
   const fm = [
     '---',
     `title: ${JSON.stringify(slug === 'index' ? 'Documentation' : title)}`,
-    `description: ${JSON.stringify(firstSentence(body))}`,
+    `description: ${JSON.stringify(describe(body))}`,
     // Keep GitHub as the canonical "edit" location for every doc page.
     `editUrl: ${JSON.stringify(`${GITHUB_BLOB.replace('/blob/', '/edit/')}docs/${slug === 'index' ? 'README' : slug}.md`)}`,
     '---',
     '',
   ].join('\n');
-  return `${fm}${rewriteLinks(body)}`;
+  return `${fm}${rewriteLinks(body.replace(/<!--\s*description:[\s\S]*?-->\s*/, ''))}`;
 }
 
-function firstSentence(body) {
-  // First real paragraph line: skip images, HTML, headings, tables, and
-  // navigation lines such as "[← Back to docs index](README.md)".
-  const text = body.split('\n').find((l) => {
+// The search description of a doc page. A doc can set it explicitly with an
+// HTML comment (invisible on GitHub) anywhere in the file:
+//   <!-- description: How much memory a Minecraft server needs, by player count. -->
+// Otherwise it is the opening of the first real paragraph: whole sentences
+// until there are at least 70 characters, capped at 160.
+export function describe(body) {
+  const explicit = body.match(/<!--\s*description:\s*([\s\S]*?)\s*-->/);
+  if (explicit) return explicit[1].replace(/\s+/g, ' ').trim();
+  return firstParagraphSentences(body);
+}
+
+function firstParagraphSentences(body) {
+  // First real paragraph: skip images, HTML, headings, tables, lists, quotes,
+  // and navigation lines such as "[← Back to docs index](README.md)".
+  const lines = body.split('\n');
+  const isProse = (l) => {
     const t = l.trim();
-    return t && !/^[!<#|>-]/.test(t) && !/^\[?[←→]/.test(t) && !/^\[[^\]]*\]\([^)]*\)\s*$/.test(t);
-  });
-  const plain = (text || '')
+    return t && !/^[!<#|>*-]/.test(t) && !/^\d+\./.test(t) && !/^\[?[←→]/.test(t) && !/^\[[^\]]*\]\([^)]*\)\s*$/.test(t);
+  };
+  const start = lines.findIndex(isProse);
+  if (start === -1) return '';
+  const para = [];
+  for (let i = start; i < lines.length && lines[i].trim(); i++) para.push(lines[i].trim());
+  const plain = para
+    .join(' ')
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/[*_`]/g, '')
     .trim();
-  const m = plain.match(/^(.{20,155}?[.!?])(\s|$)/);
-  return (m ? m[1] : plain.slice(0, 155)).trim();
+  // A sentence ends at . ! ? followed by a space and a capital (so "Node.js" and
+  // ".zip" do not split).
+  const sentences = plain.split(/(?<=[.!?:])\s+(?=[A-Z"(])/);
+  let out = '';
+  for (const sentence of sentences) {
+    const next = (out + ' ' + sentence.trim()).trim();
+    if (next.length > 160) break;
+    out = next;
+    if (out.length >= 70) break;
+  }
+  return out || plain.slice(0, 157).replace(/\s+\S*$/, '') + '…';
 }
 
 export function sync() {

@@ -1,5 +1,7 @@
 # Blueprints
 
+<!-- description: Blueprints save a Minecraft server's whole configuration as a reusable recipe for stamping out new servers. Secrets are never included. -->
+
 [← Back to docs index](README.md)
 
 A **blueprint** captures a server's whole configuration (type, version, resources, environment, pack pin, custom mods, and optionally its config and world) into a single portable `.mcserver.zip` file you can stamp new servers out of. Secrets (passwords, tokens, and keys in the environment) are never written to a blueprint.

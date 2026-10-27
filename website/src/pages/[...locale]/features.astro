@@ -34,7 +34,7 @@ const breadcrumb = {
     <>
       {gi > 0 && <XpDivider />}
       <Section title={g.title} banner={art(GROUP_ART[gi])}>
-        <ul class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+        <ul class="cards mt-5" role="list">
           {g.items.map((f) => <FeatureCard title={f.title} body={f.body} icon={f.icon} pills={f.pills} />)}
         </ul>
       </Section>
