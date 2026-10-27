@@ -9,7 +9,7 @@ import Banner from '../components/Banner.astro';
 import { art } from '../data/art.js';
 import { LOCALES, DEFAULT_LOCALE, getLocale, langTag } from '../i18n/locales.js';
 import { getCopy, hasTranslation } from '../i18n/index.js';
-import { SITE_URL, REPO_URL, DISCORD_URL, href } from '../lib/routes.js';
+import { SITE_URL, REPO_URL, DISCORD_URL, PAGES, href } from '../lib/routes.js';
 import pkg from '../../../package.json';
 
 interface Props {
@@ -37,10 +37,38 @@ const suffixed = `${title} · ${copy.site.name}`;
 const fullTitle = pageKey === 'home' ? `${copy.site.name}: ${title}` : suffixed.length <= 65 ? suffixed : title;
 const info = getLocale(locale);
 const canonical = new URL(href(locale, path), SITE_URL).href;
-const ogImage = new URL(Astro.props.ogImage || '/og.png', SITE_URL).href;
+// Every registered page has a card at /og/<key>.png (src/pages/og); anything
+// else (the 404) uses the home page's card.
+const ogPath = Astro.props.ogImage || `/og/${PAGES.some((p) => p.key === pageKey) ? pageKey : 'home'}.png`;
+const ogImage = new URL(ogPath, SITE_URL).href;
 const ogLocale = langTag(locale).replace('-', '_');
 const showLangNotice = locale !== DEFAULT_LOCALE && !hasTranslation(locale);
 
+// The app itself, described once per page that is about the whole product.
+const APP_PAGES = ['home', 'features', 'install', 'screenshots'];
+const appLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: copy.site.name,
+  alternateName: 'MSM',
+  description: copy.site.description,
+  url: SITE_URL,
+  applicationCategory: 'UtilitiesApplication',
+  applicationSubCategory: 'Game server control panel',
+  operatingSystem: 'Linux, Windows, macOS',
+  softwareRequirements: 'Docker',
+  softwareVersion: pkg.version,
+  license: `${REPO_URL}/blob/main/LICENSE`,
+  downloadUrl: `${REPO_URL}/releases/latest`,
+  installUrl: new URL(href(locale, '/install/'), SITE_URL).href,
+  codeRepository: REPO_URL,
+  image: new URL('/og/home.png', SITE_URL).href,
+  screenshot: new URL('/og/screenshots.png', SITE_URL).href,
+  featureList: copy.features.groups.flatMap((g) => g.items.map((f) => f.title)),
+  keywords: 'Minecraft server panel, self-hosted Minecraft server, Minecraft server manager, Docker Minecraft server, modpack server, Paper, Fabric, Forge, NeoForge',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  isAccessibleForFree: true,
+};
 const baseJsonLd = [
   {
     '@context': 'https://schema.org',
@@ -54,25 +82,10 @@ const baseJsonLd = [
     '@type': 'Organization',
     name: copy.site.name,
     url: SITE_URL,
-    logo: new URL('/favicon.svg', SITE_URL).href,
+    logo: new URL('/icon-512.png', SITE_URL).href,
     sameAs: [REPO_URL, DISCORD_URL],
   },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: copy.site.name,
-    description: copy.site.description,
-    url: SITE_URL,
-    applicationCategory: 'UtilitiesApplication',
-    operatingSystem: 'Linux, Windows, macOS',
-    softwareVersion: pkg.version,
-    license: `${REPO_URL}/blob/main/LICENSE`,
-    downloadUrl: `${REPO_URL}/releases/latest`,
-    codeRepository: REPO_URL,
-    screenshot: ogImage,
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    isAccessibleForFree: true,
-  },
+  ...(APP_PAGES.includes(pageKey) ? [appLd] : []),
   ...jsonLd,
 ];
 ---
@@ -91,6 +104,7 @@ const baseJsonLd = [
     ))}
     {!noindex && <link rel="alternate" hreflang="x-default" href={new URL(href(DEFAULT_LOCALE, path), SITE_URL).href} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="theme-color" content="#96dafb" />

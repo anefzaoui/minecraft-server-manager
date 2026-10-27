@@ -80,7 +80,9 @@ function firstParagraphSentences(body) {
   const lines = body.split('\n');
   const isProse = (l) => {
     const t = l.trim();
-    return t && !/^[!<#|>*-]/.test(t) && !/^\d+\./.test(t) && !/^\[?[←→]/.test(t) && !/^\[[^\]]*\]\([^)]*\)\s*$/.test(t);
+    return (
+      t && !/^[!<#|>*-]/.test(t) && !/^\d+\./.test(t) && !/^\[?[←→]/.test(t) && !/^\[[^\]]*\]\([^)]*\)\s*$/.test(t)
+    );
   };
   const start = lines.findIndex(isProse);
   if (start === -1) return '';

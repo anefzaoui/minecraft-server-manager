@@ -32,14 +32,14 @@ export default defineConfig({
       ],
       editLink: { baseUrl: `${REPO}/edit/main/` },
       customCss: ['./src/styles/starlight.css'],
-      // Starlight emits og:title/description itself; the card image is site-wide.
+      // Starlight emits og:title/description itself; each page's card image and
+      // JSON-LD come from src/routeData.js.
       head: [
-        { tag: 'meta', attrs: { property: 'og:image', content: `${SITE}/og.png` } },
-        { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
-        { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
         { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
-        { tag: 'meta', attrs: { name: 'twitter:image', content: `${SITE}/og.png` } },
+        { tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' } },
+        { tag: 'link', attrs: { rel: 'manifest', href: '/site.webmanifest' } },
       ],
+      routeMiddleware: './src/routeData.js',
       lastUpdated: false,
       // The site ships its own src/pages/404.astro (GitHub Pages serves /404.html).
       disable404Route: true,

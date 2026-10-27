@@ -317,28 +317,28 @@
   },
   "meta": {
     "home": {
-      "title": "Free self-hosted Minecraft server control panel",
-      "description": "Run vanilla and modded Minecraft servers from your browser. Docker-based, modpacks pinned to exact versions, backups, schedules, live map, player analytics. Free, open source, up and running in three steps."
+      "title": "Free self-hosted Minecraft server panel",
+      "description": "Run vanilla and modded Minecraft servers from your browser with a free, self-hosted Docker panel: pinned modpacks, backups, schedules, and a live map."
     },
     "features": {
-      "title": "Features",
-      "description": "Every feature of Minecraft Server Manager: containerised servers, five mod registries, checksum-verified downloads, save-safe backups, schedules, blueprints, crash forensics, live map, roles, and two-factor auth."
+      "title": "Minecraft server panel features",
+      "description": "Every feature of Minecraft Server Manager: Docker servers, five mod registries, verified downloads, backups, schedules, crash forensics, a live map, and 2FA."
     },
     "screenshots": {
-      "title": "Screenshots",
+      "title": "Minecraft server panel screenshots",
       "description": "Screenshots of the Minecraft Server Manager panel on desktop and phone: dashboard, wizard, console, mods, worlds, backups, schedules, and more."
     },
     "install": {
-      "title": "Install",
+      "title": "Install a Minecraft server panel with Docker",
       "description": "Install Minecraft Server Manager with Docker in three commands, or from source on Windows, macOS, and Linux."
     },
     "faq": {
-      "title": "FAQ",
-      "description": "Answers about cost, supported server types, ARM support, migration, roles, and exposure to the internet."
+      "title": "Minecraft server panel FAQ",
+      "description": "Answers about cost, supported server types, Raspberry Pi and ARM, moving to a new machine, roles, Bedrock players, and exposing the panel to the internet."
     },
     "changelog": {
-      "title": "Changelog",
-      "description": "Release notes for every version of Minecraft Server Manager."
+      "title": "Changelog and release notes",
+      "description": "Release notes for every version of Minecraft Server Manager, the free self-hosted Minecraft server panel."
     },
     "notFound": {
       "title": "Page not found",

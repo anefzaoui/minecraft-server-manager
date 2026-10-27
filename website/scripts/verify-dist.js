@@ -1,6 +1,8 @@
 // Post-build checks over dist/. Plain, deterministic code: every HTML page must
 // carry a canonical URL, a full hreflang set, the right lang/dir, parseable
-// JSON-LD, and no internal link that points at a path the build did not emit.
+// JSON-LD, a social card image that exists, and no internal link that points at
+// a path the build did not emit. English pages also need a unique title of at
+// most 70 characters and a description of at most 170.
 // Exits non-zero on the first category of failure so CI blocks the deploy.
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -29,9 +31,11 @@ for (const f of [
   'sitemap-index.xml',
   'sitemap-0.xml',
   '404.html',
-  'og.png',
+  'og/home.png',
   'site.webmanifest',
   'favicon.svg',
+  'apple-touch-icon.png',
+  'icon-512.png',
 ]) {
   if (!existsSync(join(dist, f))) failures.push(`missing ${f}`);
 }
@@ -53,6 +57,13 @@ const emitted = new Set(
 );
 let marketing = 0;
 let docs = 0;
+const englishTitles = new Map();
+const attr = (html, re) =>
+  html
+    .match(re)?.[1]
+    ?.replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"');
 
 for (const file of pages) {
   const html = readFileSync(file, 'utf8');
@@ -76,6 +87,20 @@ for (const file of pages) {
     if (!html.includes('<meta property="og:image"')) fail(file, 'no og:image');
     if (!html.includes('<meta name="description"')) fail(file, 'no meta description');
     if (!/<title>[^<]+<\/title>/.test(html)) fail(file, 'no title');
+
+    const card = html.match(
+      /<meta property="og:image" content="https:\/\/minecraft-server-manager\.com(\/[^"]+)"/
+    )?.[1];
+    if (card && !existsSync(join(dist, card))) fail(file, `og:image ${card} was not built`);
+
+    if (locale === DEFAULT_LOCALE) {
+      const title = attr(html, /<title>([^<]+)<\/title>/) || '';
+      const description = attr(html, /<meta name="description" content="([^"]*)"/) || '';
+      if (title.length > 70) fail(file, `title is ${title.length} characters (max 70): ${title}`);
+      if (description.length > 170) fail(file, `description is ${description.length} characters (max 170)`);
+      if (englishTitles.has(title)) fail(file, `same title as ${englishTitles.get(title)}`);
+      englishTitles.set(title, rel);
+    }
   }
 
   for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
