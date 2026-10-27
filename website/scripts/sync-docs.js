@@ -4,7 +4,7 @@
 // script derives the site copies from them on every dev/build, so the two can
 // never drift: it adds the frontmatter Starlight needs, drops the H1 (Starlight
 // renders the title itself), and rewrites GitHub-relative links into site URLs.
-// Output is gitignored (src/content/docs/docs/ + public/docs/images/).
+// Output is gitignored (src/content/docs/docs/ + public/docs/{images,screenshots}/).
 //
 // Translated docs are NOT produced here: scripts/translate.js writes those to
 // src/content/docs/<lang>/docs/ and they are committed.
@@ -16,7 +16,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, '..', '..');
 const docsDir = join(repoRoot, 'docs');
 const outDir = join(here, '..', 'src', 'content', 'docs', 'docs');
-const imagesOut = join(here, '..', 'public', 'docs', 'images');
+const publicDocs = join(here, '..', 'public', 'docs');
+// Both image folders the docs link to, copied as-is.
+const IMAGE_DIRS = ['images', 'screenshots'];
 const generatedDir = join(here, '..', 'src', 'generated');
 
 const GITHUB_BLOB = 'https://github.com/anefzaoui/minecraft-server-manager/blob/main/';
@@ -26,7 +28,7 @@ export function rewriteTarget(target) {
   if (/^(https?:|mailto:|#)/.test(target)) return target;
   const [path, hash = ''] = target.split('#');
   const anchor = hash ? `#${hash}` : '';
-  if (path.startsWith('images/')) return `/docs/${path}`;
+  if (path.startsWith('images/') || path.startsWith('screenshots/')) return `/docs/${path}`;
   if (path === 'README.md') return `/docs/${anchor}`;
   if (/^[\w-]+\.md$/.test(path)) return `/docs/${path.slice(0, -3)}/${anchor}`;
   if (path.startsWith('../')) return `${GITHUB_BLOB}${path.slice(3)}${anchor}`;
@@ -87,8 +89,8 @@ export function sync() {
     writeFileSync(join(outDir, `${slug}.md`), toStarlight(md, { slug }));
     count++;
   }
-  rmSync(imagesOut, { recursive: true, force: true });
-  cpSync(join(docsDir, 'images'), imagesOut, { recursive: true });
+  rmSync(publicDocs, { recursive: true, force: true });
+  for (const dir of IMAGE_DIRS) cpSync(join(docsDir, dir), join(publicDocs, dir), { recursive: true });
   // CHANGELOG.md feeds the /changelog/ page. Drop its H1 (the page has its own)
   // and turn the version headings into anchors GitHub also understands.
   mkdirSync(generatedDir, { recursive: true });
@@ -99,5 +101,5 @@ export function sync() {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const n = sync();
-  console.log(`sync-docs: ${n} docs copied to src/content/docs/docs/, images to public/docs/images/.`);
+  console.log(`sync-docs: ${n} docs copied to src/content/docs/docs/, images to public/docs/.`);
 }
