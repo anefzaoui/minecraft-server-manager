@@ -27,7 +27,7 @@
     "eyebrow": "Free and open source. Runs on your own machine.",
     "title": "Run your Minecraft servers from one friendly panel.",
     "subtitle": "Minecraft Server Manager turns Docker into a cosy home for your servers: modpacks that stay pinned, one-click backups, schedules, a live map, player stats, and a console that speaks plain English. No bills, no lock-in, your whole panel in one folder.",
-    "primary": "Get started in 3 steps",
+    "primary": "Get started in minutes",
     "secondary": "Explore the features",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
     "scroll": "See the tutorial"
@@ -352,8 +352,62 @@
   },
   "langNotice": "This page is shown in English until its translation lands.",
   "tutorial": {
-    "title": "Up and running in three steps",
-    "intro": "Pick how you want to run the panel. Fill in the two fields and every command below rewrites itself for your machine.",
+    "title": "Up and running in minutes",
+    "intro": "Pick your machine and paste the commands. Advanced has every other way to run the panel, with the commands rewritten for your own folder and address.",
+    "modes": {
+      "simple": "Simple",
+      "advanced": "Advanced"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Run the installer",
+            "body": "Works on any Linux machine with a 64-bit OS, from a VPS to a Raspberry Pi 4 or 5. It installs Docker if it is missing, sets the panel up in /opt/msm, and starts it. Run it again later to upgrade."
+          },
+          {
+            "title": "Open the panel",
+            "body": "The installer prints the address and a one-time setup PIN. Open the address in a browser, enter the PIN, and create your admin account."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Install Docker Desktop, Node.js, Git and pnpm",
+            "body": "One line each in PowerShell. Start Docker Desktop once it is installed and leave it running."
+          },
+          {
+            "title": "Get the panel and start it",
+            "body": "Open a new terminal so it finds the tools you just installed."
+          },
+          {
+            "title": "Open the panel",
+            "body": "The first run walks you through a system check, your time zone, and creating the admin account."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Install Docker Desktop, Node.js, Git and pnpm",
+            "body": "With Homebrew. Start Docker Desktop once it is installed and leave it running."
+          },
+          {
+            "title": "Get the panel and start it",
+            "body": "The install step also builds the panel. There is nothing to compile."
+          },
+          {
+            "title": "Open the panel",
+            "body": "The first run walks you through a system check, your time zone, and creating the admin account."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Fill in the two fields and every command below rewrites itself for your machine.",
     "dataDir": "Data folder on the host",
     "dataDirHint": "Absolute path. Worlds, backups, mods and the database all live here.",
     "host": "Host name or IP",

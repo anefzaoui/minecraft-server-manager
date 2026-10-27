@@ -60,6 +60,14 @@ const moreHubs = [hub('guides'), hub('compare')];
 
   <WorksWith copy={copy} />
 
+  <Section id="tutorial" title={copy.tutorial.title} intro={copy.tutorial.intro} class="scroll-mt-20" banner={art('banner-tutorial')}>
+    <div class="panel mt-6 sm:p-6">
+      <InstallTutorial copy={copy} id="home-tutorial" />
+    </div>
+  </Section>
+
+  <XpDivider />
+
   <Section title={copy.serversHub.title} intro={copy.serversHub.intro}>
     <ul class="cards mt-6" role="list">
       {serverHub.pages.map((p) => {
@@ -99,14 +107,6 @@ const moreHubs = [hub('guides'), hub('compare')];
         </li>
       ))}
     </ul>
-  </Section>
-
-  <XpDivider />
-
-  <Section id="tutorial" title={copy.tutorial.title} intro={copy.tutorial.intro} class="scroll-mt-20" banner={art('banner-tutorial')}>
-    <div class="panel mt-6 sm:p-6">
-      <InstallTutorial copy={copy} id="home-tutorial" />
-    </div>
   </Section>
 
   <XpDivider />

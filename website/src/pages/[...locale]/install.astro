@@ -39,6 +39,19 @@ const breadcrumb = {
 <Site locale={locale} path="/install/" pageKey="install" jsonLd={[howTo, breadcrumb]}>
   <PageHeader title={copy.install.title} intro={copy.install.intro} sprite={spriteClock} />
 
+  <Section title={copy.tutorial.title} intro={copy.tutorial.intro}>
+    <div class="panel mt-6 sm:p-6">
+      <InstallTutorial copy={copy} id="install-tutorial" />
+    </div>
+    <Tip class="mt-6" title={copy.install.docker.title}>{copy.install.docker.warning}</Tip>
+    <p class="mt-6 flex flex-wrap gap-4">
+      <a class="btn" href={`${REPO_URL}/blob/main/docker-compose.yml`} rel="noopener"><Icon name="docker" size={18} />{copy.install.compose}</a>
+      <a class="btn btn-primary" href={href(locale, '/docs/getting-started/')}>{copy.install.nextCta}<Icon name="arrow" size={18} /></a>
+    </p>
+  </Section>
+
+  <XpDivider />
+
   <Section title={copy.install.requirements}>
     <ul class="hearts mt-4 grid gap-4 text-ink-soft sm:grid-cols-3" role="list">
       {copy.install.reqItems.map((r, i) => (
@@ -54,18 +67,6 @@ const breadcrumb = {
     </ul>
   </Section>
 
-  <XpDivider />
-
-  <Section title={copy.tutorial.title} intro={copy.tutorial.intro}>
-    <div class="panel mt-6 sm:p-6">
-      <InstallTutorial copy={copy} id="install-tutorial" />
-    </div>
-    <Tip class="mt-6" title={copy.install.docker.title}>{copy.install.docker.warning}</Tip>
-    <p class="mt-6 flex flex-wrap gap-4">
-      <a class="btn" href={`${REPO_URL}/blob/main/docker-compose.yml`} rel="noopener"><Icon name="docker" size={18} />{copy.install.compose}</a>
-      <a class="btn btn-primary" href={href(locale, '/docs/getting-started/')}>{copy.install.nextCta}<Icon name="arrow" size={18} /></a>
-    </p>
-  </Section>
 
   <XpDivider />
 

@@ -496,7 +496,9 @@
     text-shadow: 1px 1px 0 var(--color-grass-900);
   }
 
-  /* Hotbar tabs: radio-driven slots; the checked one gets the white selection frame. */
+  /* Hotbar tabs: radio-driven slots; the checked one gets the white selection frame.
+     Child combinators only, so a tab group nested in another one's panel (the
+     install tutorial's Simple and Advanced modes) is switched by its own radios. */
   .tabs > input {
     position: absolute;
     opacity: 0;
@@ -523,26 +525,33 @@
     font-size: 1.25rem;
     cursor: pointer;
   }
+  /* A tab row inside another tab group's panel: smaller slots, so the two levels
+     read as a choice and a sub-choice. */
+  .hotbar-sm .tab-label {
+    min-height: 2.5rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 1.1rem;
+  }
   .tab-label:hover {
     filter: brightness(1.1);
   }
   .tab-panel {
     display: none;
   }
-  .tabs > input:nth-of-type(1):checked ~ .hotbar [for$='-1'],
-  .tabs > input:nth-of-type(2):checked ~ .hotbar [for$='-2'],
-  .tabs > input:nth-of-type(3):checked ~ .hotbar [for$='-3'],
-  .tabs > input:nth-of-type(4):checked ~ .hotbar [for$='-4'] {
+  .tabs > input:nth-of-type(1):checked ~ .hotbar > [for$='-1'],
+  .tabs > input:nth-of-type(2):checked ~ .hotbar > [for$='-2'],
+  .tabs > input:nth-of-type(3):checked ~ .hotbar > [for$='-3'],
+  .tabs > input:nth-of-type(4):checked ~ .hotbar > [for$='-4'] {
     box-shadow:
       0 0 0 2px var(--color-outline),
       0 0 0 5px #ffffff,
       0 0 0 7px var(--color-outline);
     background: var(--color-grass-600);
   }
-  .tabs > input:nth-of-type(1):checked ~ .tab-panels .tab-panel:nth-of-type(1),
-  .tabs > input:nth-of-type(2):checked ~ .tab-panels .tab-panel:nth-of-type(2),
-  .tabs > input:nth-of-type(3):checked ~ .tab-panels .tab-panel:nth-of-type(3),
-  .tabs > input:nth-of-type(4):checked ~ .tab-panels .tab-panel:nth-of-type(4) {
+  .tabs > input:nth-of-type(1):checked ~ .tab-panels > .tab-panel:nth-of-type(1),
+  .tabs > input:nth-of-type(2):checked ~ .tab-panels > .tab-panel:nth-of-type(2),
+  .tabs > input:nth-of-type(3):checked ~ .tab-panels > .tab-panel:nth-of-type(3),
+  .tabs > input:nth-of-type(4):checked ~ .tab-panels > .tab-panel:nth-of-type(4) {
     display: block;
   }
   .tabs > input:focus-visible ~ .hotbar {
