@@ -24,7 +24,7 @@ java.lang.UnsupportedClassVersionError: net/minecraft/server/Main has been compi
 by a more recent version of the Java Runtime (class file version 65.0)
 ```
 
-Class file 52 is Java 8, 60 is 16, 61 is 17, 65 is 21. The message means the server needs a newer
+Class file 52 is Java 8, 60 is 16, 61 is 17, 65 is 21, 69 is 25. The message means the server needs a newer
 Java than it is running on; the reverse, an old pack on new Java, usually fails with a mixin or
 reflection error instead.
 
@@ -34,7 +34,8 @@ reflection error instead.
 | 1.17               | 16   |
 | 1.18 and 1.19      | 17   |
 | 1.20 to 1.20.4     | 17   |
-| 1.20.5 and later   | 21   |
+| 1.20.5 to 1.21.x   | 21   |
+| 26.1 and later     | 25   |
 
 Old packs genuinely need Java 8. Newer is not better here.
 
@@ -108,13 +109,18 @@ with those four facts gets answered in one reply; without them it takes five.
 ## In Minecraft Server Manager
 
 Crashes are detected from the container's own exit, so a server that dies at three in the morning is
-recorded with its log excerpt rather than found the next day. Crash reports are parsed on arrival:
-the exception is highlighted, the stack is collapsible, and mods that appear in the trace are listed
-as suspects.
+recorded with its log excerpt rather than found the next day. The usual suspects on this page (the
+EULA, the wrong Java, a world from a newer version, a port already in use, Java running out of
+memory) are recognized in that log and named in the history entry with what to do about them, and
+auto-restart leaves those alone, since restarting will not fix them. Crash reports are parsed on
+arrival: the exception is highlighted, the stack is collapsible, and mods that appear in the trace
+are listed as suspects.
 
-Any report can be shared to mclo.gs in one click when you need help, and the panel keeps the log
-bundle so "post the whole log" is a download rather than an archaeology project. An out-of-memory
-kill is recorded as an out-of-memory kill, which saves the usual hour of blaming a mod.
+Any report can be shared to mclo.gs from its card when you need help (after a confirmation, since
+the paste is public), and the console's **Download** menu has every log file as one zip, so "post
+the whole log" is a download rather than an archaeology project. An out-of-memory kill is recorded
+as an out-of-memory kill, which saves the usual hour of blaming a mod. If something else genuinely
+needs the port, the **Game Port** card on **Settings → Configuration** moves the server to a free one.
 
 Related: [how much RAM a server needs](guide-server-memory.md), [choosing a loader](guide-choosing-a-loader.md),
 [creating and managing servers](servers.md).

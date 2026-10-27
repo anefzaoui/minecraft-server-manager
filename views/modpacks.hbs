@@ -10,7 +10,9 @@
     <div class="ml-auto flex gap-2">
       {{! Honest label + weight: this button focuses the search field, it doesn't install anything. }}
       <button class="btn" id="packs-install-btn">{{{icon 'search' 'size-4'}}} Search Packs</button>
-      <a href="/settings" class="btn">{{{icon 'key' 'size-4'}}} API Keys</a>
+      {{#if (eq user.role 'admin')}}
+        <a href="/settings" class="btn">{{{icon 'key' 'size-4'}}} API Keys</a>
+      {{/if}}
     </div>
   </div>
 

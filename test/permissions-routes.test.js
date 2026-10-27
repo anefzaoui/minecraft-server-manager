@@ -32,7 +32,11 @@ const routeSources = () =>
 
 // Admin-only endpoints keep their requireRole('admin') gate instead of a
 // capability. Anything added here must be admin-only by design.
-const ADMIN_ONLY_ROUTES = new Set(['/servers/:id/backups/retention']);
+const ADMIN_ONLY_ROUTES = new Set([
+  '/servers/:id/backups/retention',
+  '/servers/:id/backups/retention/preview',
+  '/servers/:id/backups/retention/apply',
+]);
 const ADMIN_ONLY_MOUNTS = new Set(['/servers/:id/wizard']);
 
 const hasCap = (stack) => stack.some((l) => typeof l.name === 'string' && l.name.startsWith('requireCap_'));

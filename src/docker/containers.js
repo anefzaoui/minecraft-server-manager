@@ -164,6 +164,21 @@ async function removeStaleNameConflict(name, serverId) {
   }
 }
 
+/**
+ * Whether `name` belongs to a container that is NOT this server's (one without
+ * its msm.id label). Its own orphan doesn't count: a rebuild removes that.
+ */
+async function nameTakenByOther(name, serverId) {
+  try {
+    const info = await getDocker().getContainer(name).inspect();
+    const labels = (info.Config && info.Config.Labels) || {};
+    return labels[LABEL] !== serverId;
+  } catch (err) {
+    if (err.statusCode === 404) return false;
+    throw err;
+  }
+}
+
 /** Inspect → panel status. Returns { status, health, exitCode, startedAt, pid }. */
 async function inspectStatus(serverId) {
   try {
@@ -469,7 +484,23 @@ function hostPortsOf(binding) {
 async function publishedHostPorts({ exceptServerId, deadlineMs = 2500 } = {}) {
   const docker = getDocker();
   const deadline = Date.now() + deadlineMs;
-  const list = await within(docker.listContainers({ all: true }), deadlineMs, null);
+  // At the deadline, cancel whatever is still in flight rather than leave
+  // requests hanging on a wedged daemon; within() stops the waiting.
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), deadlineMs);
+  timer.unref();
+  try {
+    return await collectPublishedPorts(docker, { exceptServerId, deadline, abortSignal: abort.signal });
+  } finally {
+    clearTimeout(timer);
+    // Whatever is still in flight when we return - including when the wait gave
+    // up a moment before the timer - is cancelled, never left hanging.
+    abort.abort();
+  }
+}
+
+async function collectPublishedPorts(docker, { exceptServerId, deadline, abortSignal }) {
+  const list = await within(docker.listContainers({ all: true, abortSignal }), deadline - Date.now(), null);
   if (!list) throw new Error('Docker did not list its containers in time.');
   const used = new Set();
   const stopped = [];
@@ -485,7 +516,7 @@ async function publishedHostPorts({ exceptServerId, deadlineMs = 2500 } = {}) {
       const id = stopped[next++];
       const left = deadline - Date.now();
       if (left <= 0) return;
-      const info = await within(docker.getContainer(id).inspect(), left, null);
+      const info = await within(docker.getContainer(id).inspect({ abortSignal }), left, null);
       for (const binds of Object.values((info && info.HostConfig && info.HostConfig.PortBindings) || {})) {
         for (const b of binds || []) for (const p of hostPortsOf(b)) used.add(p);
       }
@@ -503,6 +534,7 @@ module.exports = {
   createContainer,
   getContainer,
   removeStaleNameConflict,
+  nameTakenByOther,
   inspectStatus,
   startContainer,
   stopContainer,

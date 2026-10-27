@@ -25,6 +25,7 @@ const { serverScope } = require('../middleware/serverAccess');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
 const logger = require('../../logger')('pages');
 const { serializeError } = require('../../utils/logSanitize');
+const backupRetention = require('../../services/backupRetention');
 
 // Page renders degrade gracefully when optional/remote data is unavailable
 // (Docker down, no network, no API key). Record it at debug so "why is this
@@ -378,9 +379,17 @@ router.get('/servers/new', async (req, res) => {
     pageDegraded('wizard-suggested-port', err); // daemon down
   }
   const catalog = require('../../config/field-catalog');
-  const SIMPLE_SECTIONS = new Set(['identity', 'flavor', 'resources']); // covered by the Simple UI
+  const SIMPLE_SECTIONS = new Set(['identity', 'flavor']); // covered by the Simple UI
+  // The Simple Resources card has the heap and quota sliders; of the rest, only
+  // the starting heap is offered here (MAX_MEMORY would fight the heap slider).
+  const ADVANCED_RESOURCE_KEYS = new Set(['INIT_MEMORY']);
   const advancedSections = catalog.SECTIONS.filter((s) => !SIMPLE_SECTIONS.has(s.id))
-    .map((s) => ({ ...s, fields: catalog.forSection(s.id, 'advanced').filter((f) => f.scope === 'env') }))
+    .map((s) => ({
+      ...s,
+      fields: catalog
+        .forSection(s.id, 'advanced')
+        .filter((f) => f.scope === 'env' && (s.id !== 'resources' || ADVANCED_RESOURCE_KEYS.has(f.key))),
+    }))
     .filter((s) => s.fields.length);
   res.render('wizard', {
     title: 'Create Server',
@@ -787,7 +796,7 @@ router.get(
       context.backups = db
         .all('SELECT * FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT 50', row.id)
         .map((b) => ({ id: b.id, file: b.filename, size: b.size_bytes, reason: b.reason, ts: b.created_at }));
-      const rc = require('../../services/backupRetention').effective(row.id);
+      const rc = backupRetention.effective(row.id);
       context.retention = {
         keepScheduled: rc.keepScheduled,
         keepPreUpdate: rc.keepPreUpdate,
@@ -796,6 +805,14 @@ router.get(
         maxAgeDays: rc.maxAgeDays,
         maxTotalGb: rc.maxTotalGb,
       };
+      // Admins edit it here per field: the keys this server sets, and the
+      // panel-wide values its blank fields follow.
+      const own = backupRetention.overrideFor(row.id);
+      context.retentionOverride = Boolean(own);
+      context.retentionOwnAll =
+        Boolean(own) && Object.keys(own).length === Object.keys(backupRetention.DEFAULTS).length;
+      context.retentionOwn = own || {};
+      context.retentionGlobal = backupRetention.globalConfig();
     }
 
     res.render('server-detail', context);
@@ -1118,6 +1135,8 @@ router.get('/settings', requireRole('admin'), (req, res) => {
     },
     defaults: settings.getDefaults(),
     defaultsBase: config.defaults,
+    retention: backupRetention.globalConfig(),
+    retentionDefaults: backupRetention.DEFAULTS,
     publicApiEnabled: settings.isPublicApiEnabled(),
     apiTokens: require('../../services/apiTokens').listTokens(),
     serverOptions: require('../../services/servers')

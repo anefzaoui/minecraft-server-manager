@@ -7,12 +7,26 @@ import { openModal } from '../lib/modal.js';
 import { runTask } from '../lib/progress.js';
 import { setBusy } from '../lib/loading.js';
 import { fmtBytes } from '../lib/format.js';
+import { initRetentionForm } from '../lib/retention.js';
 
 const root = document.querySelector('[data-backups-server]');
 if (root) init(root.dataset.backupsServer);
 
 function init(serverId) {
   const reload = () => setTimeout(() => location.reload(), 700);
+
+  // Admin-only: this server's own retention limits (the form only renders for admins).
+  const retentionForm = document.querySelector('#bk-retention [data-retention-form]');
+  if (retentionForm) {
+    initRetentionForm(retentionForm, {
+      previewUrl: `/api/servers/${serverId}/backups/retention/preview`,
+      saveUrl: `/api/servers/${serverId}/backups/retention`,
+      applyUrl: `/api/servers/${serverId}/backups/retention/apply`,
+      currentUrl: `/api/servers/${serverId}/backups/retention`,
+      scope: 'server',
+      onSaved: reload,
+    });
+  }
 
   async function postJson(url, body) {
     const res = await fetch(url, {
@@ -53,8 +67,10 @@ function init(serverId) {
     if (e.target.closest('[data-backup-restore]')) {
       const ok = await confirmDialog({
         title: `Restore ${file}?`,
-        message: 'The server is stopped, its current data replaced with this archive, then started again.',
-        detail: 'A running server goes offline during the restore. This cannot be undone unless you back up first.',
+        message:
+          'The server is stopped and its current data is replaced with this archive. Start it again when the restore finishes.',
+        detail:
+          'A running server goes offline during the restore. The panel takes a safety backup of the current data first.',
         confirmLabel: 'Restore',
         danger: true,
       });

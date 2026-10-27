@@ -20,6 +20,8 @@ function friendlyError(err) {
     return 'Docker is not reachable. Is Docker running?';
   }
   if (/port is already allocated/i.test(msg)) return 'That port is already taken by another container.';
+  // A host process (not a container) holding the port, as Docker reports it.
+  if (/address already in use/i.test(msg)) return 'That port is already in use by another program on this machine.';
   if (/No such image/i.test(msg))
     return 'The server image is missing. It will be downloaded automatically on the next start.';
   return null;
@@ -31,6 +33,9 @@ function friendlyError(err) {
  * infrastructure errors to friendly text, and - crucially - never leaks raw
  * internal error text (SQLite messages, absolute paths) on an unexpected 5xx.
  */
+// Error codes the panel's own clients act on (see changeGamePort, guardOp).
+const CLIENT_CODES = new Set(['BUSY', 'NEEDS_CONFIRM', 'PENDING_CHANGES']);
+
 function makeJsonErrorHandler(tag, { fileTooLarge = 'File too large' } = {}) {
   const log = getLogger(tag);
   // Express recognizes an error handler by its 4-arg signature (next unused).
@@ -68,13 +73,16 @@ function makeJsonErrorHandler(tag, { fileTooLarge = 'File too large' } = {}) {
     // If a streaming route already sent headers, we can't send an error body;
     // hand off to Express's finalizer rather than throw ERR_HTTP_HEADERS_SENT.
     if (res.headersSent) return next(err);
+    // A panel error code on a client error lets the UI react to the case rather
+    // than parse the wording. An allow-list: system codes (ENOENT, ...) never pass.
+    const code = status < 500 && CLIENT_CODES.has(err.code) ? err.code : undefined;
     const friendly = friendlyError(err);
-    if (friendly) return res.status(status).json({ ok: false, error: friendly });
+    if (friendly) return res.status(status).json({ ok: false, error: friendly, code });
     if (status >= 500)
       return res
         .status(status)
         .json({ ok: false, error: 'Something went wrong on the server. Check the panel logs for details.' });
-    return res.status(status).json({ ok: false, error: err.message || 'Unexpected error' });
+    return res.status(status).json({ ok: false, error: err.message || 'Unexpected error', code });
   };
 }
 

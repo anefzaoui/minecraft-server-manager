@@ -52,22 +52,41 @@ function probe(port, host = '0.0.0.0', timeoutMs = 2000) {
   });
 }
 
+// Ports a server is moving onto right now (its port change is restarting it):
+// claimed against everyone else until the change finishes either way, so no
+// create or other port change can take them mid-restart. serverId -> ports.
+/** @type {Map<string, number[]>} */
+const reservations = new Map();
+
 /**
- * Every host port a panel server or integration claims, including a server's
- * pending (not yet live) game + RCON pair. `exceptServerId`'s own live and
- * pending game + RCON pairs are left out (it may move between them); its
- * Bedrock, extra and BlueMap ports still count, since it keeps holding those.
+ * Claim `list` for `serverId` until the returned release() is called.
+ * @param {string} serverId
+ * @param {number[]} list
+ */
+function reserve(serverId, list) {
+  reservations.set(serverId, list);
+  return () => {
+    if (reservations.get(serverId) === list) reservations.delete(serverId);
+  };
+}
+
+/**
+ * Every host port a panel server or integration claims, plus ports reserved by
+ * an in-progress port change. `exceptServerId`'s own game + RCON pair and its
+ * own reservation are left out (it may move between them); its Bedrock, extra
+ * and BlueMap ports still count, since it keeps holding those.
  * @param {{ exceptServerId?: string }} [opts]
  */
 function dbPortsInUse({ exceptServerId } = {}) {
   const rows = db.all(
-    `SELECT id, port_game, port_rcon, port_game_pending, port_rcon_pending, port_bedrock, extra_ports_json
-       FROM servers WHERE deleted_at IS NULL`
+    'SELECT id, port_game, port_rcon, port_bedrock, extra_ports_json FROM servers WHERE deleted_at IS NULL'
   );
   const used = new Set();
+  for (const [id, list] of reservations) if (id !== exceptServerId) for (const p of list) used.add(p);
   for (const r of rows) {
     if (r.id !== exceptServerId) {
-      for (const p of [r.port_game, r.port_rcon, r.port_game_pending, r.port_rcon_pending]) if (p) used.add(p);
+      used.add(r.port_game);
+      used.add(r.port_rcon);
     }
     if (r.port_bedrock) used.add(r.port_bedrock);
     for (const p of JSON.parse(r.extra_ports_json || '[]')) {
@@ -116,15 +135,18 @@ async function dockerPortsInUse(exceptServerId) {
     dockerThrottle.fail(logger.warn, 'Skipped the Docker published-port check because Docker did not answer.', {
       err: err.message,
     });
-    return new Set();
+    // Cached too: with a wedged daemon, every keystroke check would otherwise
+    // wait out the full deadline again.
+    const none = new Set();
+    dockerCache.set(key, { at: Date.now(), ports: none });
+    return none;
   }
 }
 
 /**
- * One snapshot of every taken port plus a check against it. A server's own live
- * and pending game + RCON ports count as free FOR IT without an OS probe: while
- * it runs, Docker holds the live pair, and moving back onto it must not read as
- * a clash.
+ * One snapshot of every taken port plus a check against it. A server's own game
+ * + RCON ports count as free FOR IT without an OS probe: while it runs, Docker
+ * holds them, and they are released when its container stops for the change.
  * @param {{ exceptServerId?: string }} [opts]
  */
 async function portChecker({ exceptServerId } = {}) {
@@ -132,11 +154,8 @@ async function portChecker({ exceptServerId } = {}) {
   for (const p of await dockerPortsInUse(exceptServerId)) used.add(p);
   const own = new Set();
   if (exceptServerId) {
-    const row = db.get(
-      'SELECT port_game, port_rcon, port_game_pending, port_rcon_pending FROM servers WHERE id = ?',
-      exceptServerId
-    );
-    if (row) for (const p of Object.values(row)) if (p) own.add(p);
+    const row = db.get('SELECT port_game, port_rcon FROM servers WHERE id = ?', exceptServerId);
+    if (row) own.add(row.port_game).add(row.port_rcon);
   }
   /** @param {number} port */
   return async (port) => {
@@ -264,6 +283,7 @@ module.exports = {
   assertPortsFree,
   checkGamePort,
   assertGamePortFree,
+  reserve,
   gamePortRange,
   suggestPorts,
   probe,

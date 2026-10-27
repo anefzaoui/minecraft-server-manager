@@ -9,7 +9,7 @@ const httpError = require('../utils/httpError');
 const { Cron } = require('croner');
 const { nanoid } = require('nanoid');
 const db = require('../db');
-const { recordEvent } = require('../events');
+const { recordEvent, lifecycleActionSince } = require('../events');
 const { getTimezone } = require('./settings');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
@@ -30,6 +30,114 @@ const TASK_TYPES = {
   'ban-expiry-sweep': { label: 'Ban expiry sweep', serverScoped: false },
   'content-meta-backfill': { label: 'Content metadata backfill', serverScoped: false },
 };
+
+// A scheduled backup or start refused only because another action holds its
+// server (a restore, a backup cleanup, a port change) tries again every minute
+// until that action is done, for up to 30 minutes, instead of losing this run.
+// Both are safe to repeat. Restart and stop are not retried: a restart that
+// collided with someone's restart has in effect happened and repeating it would
+// kick players twice, and a stop or restart that met a backup or restore should
+// not land unannounced minutes later. They run again at their next time.
+// Before each retry the schedule must still exist and be on.
+// Any other failure fails at once, as before.
+const RETRY_WHEN_BUSY = new Set(['backup', 'start']);
+// Schedules whose last firing is still waiting to retry. A new firing of the
+// same schedule (or one re-armed meanwhile, e.g. after a time zone change) is
+// skipped, so one schedule never runs twice in parallel.
+/** @type {Set<string>} */
+const waitingToRetry = new Set();
+const BUSY_RETRY_MS = 60_000;
+const BUSY_MAX_WAIT_MS = 30 * 60_000;
+
+/**
+ * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
+ * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
+ */
+async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
+  const firedAt = Date.now();
+  const giveUpAt = firedAt + maxWaitMs;
+  let current = job; // re-read before each retry: the schedule may have been edited
+  let marked = false; // only the run that marked the schedule as waiting clears it
+  try {
+    return await retryLoop();
+  } finally {
+    if (marked) waitingToRetry.delete(job.id);
+  }
+  async function retryLoop() {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await runTask(current);
+      } catch (err) {
+        const busy = err && err.code === 'BUSY';
+        if (!busy || !RETRY_WHEN_BUSY.has(current.task_type) || Date.now() + retryMs > giveUpAt) throw err;
+        if (attempt === 0) {
+          logger.info('A scheduled task found its server busy and will retry.', {
+            scheduleId: job.id,
+            taskType: job.task_type,
+            serverId: job.server_id || undefined,
+          });
+        }
+        waitingToRetry.add(job.id);
+        marked = true;
+        await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
+        const still = db.get('SELECT * FROM schedules WHERE id = ?', job.id);
+        if (!still || !still.enabled) return; // turned off or deleted while waiting
+        current = still;
+        // A start that waited must not undo what a person did meanwhile (a Stop
+        // pressed while the backup that blocked it was running, say).
+        if (current.task_type === 'start' && current.server_id && lifecycleActionSince(current.server_id, firedAt)) {
+          logger.debug('Dropped a scheduled start because the server was stopped or started meanwhile.', {
+            scheduleId: job.id,
+            serverId: current.server_id,
+          });
+          return;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * One firing of a schedule: record it, run it (with busy retries), record a failure.
+ * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
+ * @param {{ retryMs?: number, maxWaitMs?: number }} [retry] for tests
+ */
+async function fireJob(job, retry) {
+  if (waitingToRetry.has(job.id)) {
+    logger.debug('Skipped a scheduled task because its previous run is still waiting to retry.', {
+      scheduleId: job.id,
+    });
+    return;
+  }
+  db.run("UPDATE schedules SET last_run_at = datetime('now') WHERE id = ?", job.id);
+  recordEvent({
+    serverId: job.server_id || null,
+    actor: 'scheduler',
+    type: 'schedule-fired',
+    summary: `Scheduled task fired: ${TASK_TYPES[job.task_type]?.label || job.task_type}.`,
+  });
+  logger.info('A scheduled task fired.', {
+    scheduleId: job.id,
+    taskType: job.task_type,
+    serverId: job.server_id || undefined,
+  });
+  try {
+    await runTaskWithRetry(job, retry);
+  } catch (err) {
+    recordEvent({
+      serverId: job.server_id || null,
+      actor: 'scheduler',
+      type: 'schedule-failed',
+      summary: `Scheduled ${job.task_type} failed: ${err.message}.`,
+    });
+    logger.error('A scheduled task failed.', {
+      scheduleId: job.id,
+      taskType: job.task_type,
+      serverId: job.server_id || undefined,
+      err: serializeError(err),
+    });
+  }
+}
 
 async function runTask(schedule) {
   const payload = JSON.parse(schedule.payload_json || '{}');
@@ -108,36 +216,7 @@ function schedule(job) {
     // timezone: without it croner evaluates the expression in the SYSTEM
     // timezone (UTC in most containers), not the operator's configured one -
     // "0 3 * * *" would then fire at 3am UTC, not 3am in Settings.
-    const cron = new Cron(job.cron, { catch: true, protect: true, timezone: getTimezone() }, async () => {
-      db.run("UPDATE schedules SET last_run_at = datetime('now') WHERE id = ?", job.id);
-      recordEvent({
-        serverId: job.server_id || null,
-        actor: 'scheduler',
-        type: 'schedule-fired',
-        summary: `Scheduled task fired: ${TASK_TYPES[job.task_type]?.label || job.task_type}.`,
-      });
-      logger.info('A scheduled task fired.', {
-        scheduleId: job.id,
-        taskType: job.task_type,
-        serverId: job.server_id || undefined,
-      });
-      try {
-        await runTask(job);
-      } catch (err) {
-        recordEvent({
-          serverId: job.server_id || null,
-          actor: 'scheduler',
-          type: 'schedule-failed',
-          summary: `Scheduled ${job.task_type} failed: ${err.message}.`,
-        });
-        logger.error('A scheduled task failed.', {
-          scheduleId: job.id,
-          taskType: job.task_type,
-          serverId: job.server_id || undefined,
-          err: serializeError(err),
-        });
-      }
-    });
+    const cron = new Cron(job.cron, { catch: true, protect: true, timezone: getTimezone() }, () => fireJob(job));
     jobs.set(job.id, cron);
   } catch (err) {
     logger.error('A schedule has an invalid cron expression and was not armed.', {
@@ -283,4 +362,14 @@ function listSchedules() {
   });
 }
 
-module.exports = { startScheduler, createSchedule, setEnabled, deleteSchedule, listSchedules, rearmAll, TASK_TYPES };
+module.exports = {
+  startScheduler,
+  createSchedule,
+  setEnabled,
+  deleteSchedule,
+  listSchedules,
+  rearmAll,
+  runTaskWithRetry,
+  fireJob,
+  TASK_TYPES,
+};

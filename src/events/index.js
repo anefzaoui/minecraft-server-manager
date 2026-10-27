@@ -255,8 +255,29 @@ async function pruneEvents(days, { actor = 'system' } = {}) {
   return { removed: removedEvents, excerpts: removedExcerpts };
 }
 
+/**
+ * Whether someone stopped, killed or started a server since `sinceMs` (ms epoch,
+ * second resolution like history itself). Completions count too: a Stop pressed
+ * just before `sinceMs` finishes after it. Automatic restarts and scheduled
+ * starts that waited ask this, so they never override what a person just did.
+ * @param {string} serverId
+ * @param {number} sinceMs
+ */
+function lifecycleActionSince(serverId, sinceMs) {
+  return Boolean(
+    db.get(
+      `SELECT 1 AS x FROM events WHERE server_id = ?
+         AND type IN ('stop-requested', 'stopped', 'kill-requested', 'killed', 'started')
+         AND created_at >= datetime(?, 'unixepoch')`,
+      serverId,
+      Math.floor(sinceMs / 1000)
+    )
+  );
+}
+
 module.exports = {
   recordEvent,
+  lifecycleActionSince,
   listEvents,
   addUserScope,
   getEvent,

@@ -83,17 +83,20 @@ Minecraft's requirement moves with the game, and running the wrong one produces 
 | 1.17               | 16   |
 | 1.18 and 1.19      | 17   |
 | 1.20 to 1.20.4     | 17   |
-| 1.20.5 and later   | 21   |
+| 1.20.5 to 1.21.x   | 21   |
+| 26.1 and later     | 25   |
 
-Forge-family servers on 1.20 want Java 21 across that whole line. Old packs really do need Java 8;
-this is one of the few places in software where the newest version is wrong.
+Old packs really do need Java 8; this is one of the few places in software where the newest version
+is wrong.
 
 ## In Minecraft Server Manager
 
 The creation wizard asks what you want to run and picks the Java version from the table above, so the
-mismatch never happens by accident. Installing a pack from CurseForge, Modrinth, FTB or GT New
-Horizons pins it to an exact version, and upgrading is an explicit action that takes a backup first
-and can be rolled back.
+mismatch never happens by accident. Vanilla, Paper and Purpur are on its **Vanilla** tab; the
+**From Mods** tab takes Fabric, Forge, NeoForge or Quilt, with the Minecraft version and a loader
+build (the latest, or one you pin). Installing a pack from CurseForge, Modrinth or GT New Horizons
+pins it to an exact version. Upgrading only happens when you apply it (or after the daily check, if
+the server's update policy is **Auto-Update**), always takes a backup first, and can be rolled back.
 
 The mod browser knows which loader a server runs and filters what it offers accordingly, so a Fabric
 jar cannot land in a NeoForge server by mistake.

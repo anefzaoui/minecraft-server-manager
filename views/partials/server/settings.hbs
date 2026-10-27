@@ -90,6 +90,14 @@
           <p class="help">The amount of RAM Minecraft itself may use.</p>
         </div>
         <div>
+          <label class="label" for="st-initheap">Initial heap <span class="font-normal text-ink-faint">(optional)</span></label>
+          <div class="flex items-center gap-3">
+            <input type="number" min="512" step="512" inputmode="numeric" class="input w-32 font-mono" id="st-initheap" value="{{server.resources.initHeapMb}}" placeholder="Whole heap">
+            <span class="text-sm text-ink-faint">MB</span>
+          </div>
+          <p class="help">How much of the heap Java takes when the server starts. Leave it empty and Java takes the whole heap up front, so memory use sits near the full heap even when nobody is playing. A smaller value, like 512 MB, lets it grow as the world needs it.</p>
+        </div>
+        <div>
           <label class="label" for="st-cmem">Container memory limit</label>
           <div class="flex items-center gap-3">
             <input type="range" min="1024" max="20480" step="512" value="{{server.resources.containerMemoryMb}}" id="st-cmem" class="msm-range msm-range-alt flex-1" data-out="out-cmem" data-unit=" MB">
@@ -112,31 +120,27 @@
             <input type="range" min="0" max="200" step="5" value="{{quotaGb}}" id="st-quota" class="msm-range flex-1" data-out="out-quota" data-unit=" GB" data-zero="off">
             <span class="w-20 text-right font-mono text-sm" id="out-quota">{{quotaGb}} GB</span>
           </div>
-          <p class="help">The panel enforces this quota itself, since Docker can't limit disk use for this kind of storage. Over quota, actions that would grow the disk are blocked, and an optional strict mode stops the server.</p>
+          <p class="help">The panel enforces this quota itself, since Docker can't limit disk use for this kind of storage. Over quota, actions that would grow the disk, like installing mods, adding worlds, or uploading files, are blocked. Backups don't count toward it.</p>
         </div>
+        {{> settings/toggle-row label="Stop the Server When Over Quota" help="Strict mode: when the server's folder grows more than 10% past the quota, the panel stops the server and notes it in history. Has no effect while the quota is off." inputId="st-quota-strict" checked=server.resources.quotaStrict}}
       </div>
     </div>
 
-    {{! Its own Save: a port change may restart the server, so it never rides
-        along with the tab-wide Save. A saved change waits as "pending" until
-        the next start or restart rebuilds the container on the new port. }}
+    {{! Its own Save: a port change restarts a running server, so it never rides
+        along with the tab-wide Save. It applies at once: a running server is
+        restarted on the new port, a stopped one gets a new container on it. }}
     {{#if perms.settings}}
-    <div class="card scroll-mt-20 p-4" id="port" data-port-card data-port-current="{{server.ports.game}}" data-port-pending="{{server.ports.pendingGame}}"{{#if perms.power}} data-port-can-restart{{/if}}>
+    <div class="card scroll-mt-20 p-4" id="port" data-port-card data-port-current="{{server.ports.game}}"{{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}} data-port-running{{/if}}>
       <h3 class="mb-4 font-semibold">Game Port</h3>
       <div class="space-y-3">
-        {{#if server.ports.pendingGame}}
-        <div class="notice notice-info text-sm">
-          <p>Players still connect on port <b>{{server.ports.game}}</b>. The server moves to <b>{{server.ports.pendingGame}}</b> the next time it starts or restarts.</p>
-          <button type="button" class="btn btn-sm mt-2" id="st-port-cancel" data-port="{{server.ports.game}}">Keep {{server.ports.game}}</button>
-        </div>
-        {{/if}}
         <div>
           <label class="label" for="st-port">Port players connect to</label>
           <div class="flex flex-wrap items-center gap-2">
-            <input class="input w-32 font-mono" id="st-port" value="{{#if server.ports.pendingGame}}{{server.ports.pendingGame}}{{else}}{{server.ports.game}}{{/if}}" inputmode="numeric" autocomplete="off" aria-describedby="st-port-help{{#if portRconCustom}} st-port-rcon{{/if}}">
+            <input class="input w-32 font-mono" id="st-port" value="{{server.ports.game}}" inputmode="numeric" autocomplete="off" aria-describedby="st-port-help st-port-applies{{#if portRconCustom}} st-port-rcon{{/if}}">
             <button type="button" class="btn" id="st-port-next">{{{icon 'sparkles' 'size-4'}}} Use Next Free Port</button>
           </div>
           <p class="help" id="st-port-help" aria-live="polite">Each server needs its own port. The remote console (RCON) uses the port {{rconOffset}} higher, currently {{server.ports.rcon}}.</p>
+          <p class="help" id="st-port-applies">Saving applies it right away: a running server restarts on the new port, and players reconnect on it.</p>
           {{#if portRconCustom}}
           <p class="help text-warn" id="st-port-rcon">This server's RCON port was set by hand. A new game port puts RCON back at {{rconOffset}} above it.</p>
           {{/if}}

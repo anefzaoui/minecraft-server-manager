@@ -8,7 +8,7 @@ const path = require('node:path');
 const { getDocker } = require('./connect');
 const { LABEL, inspectStatus } = require('./containers');
 const { fetchLogs } = require('./logs');
-const { recordEvent } = require('../events');
+const { recordEvent, lifecycleActionSince } = require('../events');
 const db = require('../db');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
@@ -249,22 +249,10 @@ function armRestart(serverId) {
     return;
   }
   const delayMs = 5000 * 2 ** (recentCrashes - 1); // 5s, 10s, 20s
+  const armedAt = Date.now(); // a Stop pressed during the delay must count
   setTimeout(async () => {
     try {
-      const info = await inspectStatus(serverId);
-      // Re-check it is still crashed before restarting so this can't race a
-      // user start/stop/recreate/delete that happened during the delay.
-      if (info.exists && info.status === 'crashed') {
-        // Go through the guarded lifecycle (not startContainer directly) so this
-        // can't race a user start/recreate/delete and so pending config changes
-        // (pending_recreate) are honored rather than starting a stale container.
-        await require('../services/servers').startServer(serverId, { actor: 'watcher' });
-        recordEvent({
-          serverId,
-          type: 'auto-restarted',
-          summary: `Auto-restart attempt ${recentCrashes}/${MAX_RAPID_CRASHES} after a crash.`,
-        });
-      }
+      await restartAfterCrash(serverId, recentCrashes, { since: armedAt });
     } catch (err) {
       logger.error('An automatic restart after a crash failed.', {
         serverId,
@@ -272,6 +260,76 @@ function armRestart(serverId) {
       });
     }
   }, delayMs).unref();
+}
+
+// Another action holding the server (a port change, a backup or its cleanup, a
+// restore) answers a start with 409. A crashed server must not stay down over
+// that: try again every 20 s until the action is done, for up to 30 minutes.
+const BUSY_RETRY_MS = 20_000;
+const BUSY_MAX_WAIT_MS = 30 * 60_000;
+
+/**
+ * Whether a crashed server still wants this automatic restart.
+ * @param {string} serverId
+ * @param {number} since ms epoch: when this restart was armed
+ */
+function stillWantsAutoRestart(serverId, since) {
+  const row = db.get('SELECT auto_restart FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
+  if (!row || !row.auto_restart) return false;
+  return !lifecycleActionSince(serverId, since);
+}
+
+/**
+ * Start a crashed server, unless something else already dealt with it.
+ * @param {string} serverId
+ * @param {number} attemptNo which rapid-crash attempt this is (for history)
+ * @param {{ since?: number, retryMs?: number, maxWaitMs?: number }} [opts] since:
+ *   when the restart was armed (default now)
+ * @returns {Promise<boolean>} whether it was started
+ */
+async function restartAfterCrash(
+  serverId,
+  attemptNo,
+  { since = Date.now(), retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}
+) {
+  const calledAt = since;
+  const giveUpAt = Date.now() + maxWaitMs;
+  for (;;) {
+    // Re-check before every try so this can't race what people did meanwhile:
+    // the container must still read as crashed, and the server must still want
+    // this restart - not deleted, auto-restart still on, and nobody has stopped,
+    // killed or started it since (a stopped crashed container still reads as
+    // crashed to Docker, so only the history says someone stopped it).
+    if (!stillWantsAutoRestart(serverId, calledAt)) return false;
+    const info = await inspectStatus(serverId);
+    if (!(info.exists && info.status === 'crashed')) return false;
+    try {
+      // Go through the guarded lifecycle (not startContainer directly) so this
+      // can't race a user start/recreate/delete and so pending config changes
+      // (pending_recreate) are honored rather than starting a stale container.
+      await require('../services/servers').startServer(serverId, { actor: 'watcher' });
+    } catch (err) {
+      const busy = err && err.code === 'BUSY';
+      if (!busy) throw err;
+      if (Date.now() + retryMs > giveUpAt) {
+        recordEvent({
+          serverId,
+          type: 'auto-restart-gave-up',
+          summary:
+            'Gave up restarting the server after its crash because another action kept it busy for too long. Start it from the panel.',
+        });
+        throw err;
+      }
+      await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
+      continue;
+    }
+    recordEvent({
+      serverId,
+      type: 'auto-restarted',
+      summary: `Auto-restart attempt ${attemptNo}/${MAX_RAPID_CRASHES} after a crash.`,
+    });
+    return true;
+  }
 }
 
 /**
@@ -326,7 +384,8 @@ function diagnoseFatal(logText) {
     {
       key: 'port-bind',
       re: /Failed to bind to port|Address already in use/i,
-      summary: 'The game port is already in use on this machine. Change the port in Settings, then rebuild the server.',
+      summary:
+        'The game port is already in use on this machine. Pick another one on the Settings → Configuration tab. The change applies right away.',
     },
     {
       key: 'oom',
@@ -339,4 +398,4 @@ function diagnoseFatal(logText) {
   return null;
 }
 
-module.exports = { startWatcher, handleEvent, diagnoseFatal, inCrashLoopBackoff };
+module.exports = { startWatcher, handleEvent, diagnoseFatal, inCrashLoopBackoff, restartAfterCrash };

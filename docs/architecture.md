@@ -44,8 +44,10 @@ Dependencies flow in one direction:
         └───────────────┘ └─────────┘ └─────────────┘
 ```
 
-- **`web/routes/`** - one router per domain (`servers`, `players`, `worlds`, `crashes`, `blueprints`,
-  `files`, …), mounted in `web/app.js`. Routers validate with zod, call a service, and return JSON
+- **`web/routes/`** - one router per domain (`players`, `worlds`, `crashes`, `blueprints`, `files`, …).
+  `web/app.js` mounts the top-level ones (`api.js`, the session JSON API that also holds the core
+  server routes and mounts the per-server domain routers; `index.js`, the pages; `auth`, `account`,
+  `tasks`, …). Routers validate with zod, call a service, and return JSON
   or render a view. Business logic does not belong here. Two routers are mounted in the **public
   zone**, before `requireAuth`: `routes/status.js` (opt-in per-server HTML status pages) and
   `routes/apiV1.js` (`/api/v1`, a read-only JSON API authenticated by an admin-minted Bearer token
@@ -54,7 +56,8 @@ Dependencies flow in one direction:
   infrastructure and on other services.
 - **`docker/`** - dockerode wrappers: `connect` (endpoint detection + daemon health), `containers`
   (create/start/stop/recreate with bind mounts, memory/CPU limits, and labels), `logs`, `stats`,
-  `images`, and a `watcher` that turns Docker events into history + crash detection.
+  `images`, `networks` (host network discovery), `hostPath` (re-roots bind paths under
+  `DATA_DIR_HOST`), and a `watcher` that turns Docker events into history + crash detection.
 - **`db/`** - the SQLite wrapper and migration runner.
 - **`storage/`** - the `./data` bootstrap, the **path guard** (`safeJoin`, the file-safety
   backbone), and the background size-indexer + quota enforcement.
@@ -81,9 +84,10 @@ Cross-cutting:
 - **Rate limiting** - `src/web/middleware/rateLimit.js` puts `express-rate-limit` in front of `/api`
   (`RATE_LIMIT_API_PER_MIN`, default 1200) and the login / 2FA / setup POSTs
   (`RATE_LIMIT_AUTH_PER_15MIN`, default 100); `0` disables a limiter. It keys on `req.ip`, so
-  `TRUST_PROXY` matters behind a proxy. `/api/v1` has its own per-token limiter
-  (`RATE_LIMIT_PUBLIC_API_PER_MIN`, default 120), keyed on a hash of the Bearer token with an IP
-  fallback. A separate per-account soft counter in
+  `TRUST_PROXY` matters behind a proxy. `/api/v1` has its own limiters: a per-client-IP cap
+  (five times the per-token budget) that runs before the token is verified, then a per-token
+  budget (`RATE_LIMIT_PUBLIC_API_PER_MIN`, default 120) keyed on the verified token's id. A
+  separate per-account soft counter in
   `src/web/middleware/auth.js` handles the login lockout (per-IP and account-global, decaying).
 - **Authorization**: two layers. The global role (`requireAuth` → `requireRole` / `requireWrite` in
   `src/web/middleware/auth.js`) gates panel-wide actions and is the default on every server. Per-server
@@ -127,13 +131,32 @@ Cross-cutting:
   probe. The Docker part is cached for 3 s and bounded: a list that doesn't answer in 2.5 s drops
   only the Docker part, and a slow inspect costs only that container's ports. Server creates and
   `servers.changeGamePort` pick ports through one serialization chain that covers only the pick
-  and the row write; BlueMap's port picker and the extra-port overrides are not in it and do
-  not consult Docker. A port change on an existing server is stored as `port_game_pending` /
-  `port_rcon_pending` (RCON always game + `PORT_RCON_OFFSET`) and sets `pending_recreate`,
-  because Docker fixes port bindings at container creation; `recreateServerImpl` promotes the
-  pair when it builds the next container (any start or restart), so `port_game` / `port_rcon`
-  always mean "live". Choosing the live port again cancels a pending move. Non-admins may only
-  pick from `PORT_GAME_START` up, so RCON can't land inside the range opened to players.
+  and its claim (the row write for a create, the in-memory reservation for a port change);
+  BlueMap's port picker and the extra-port overrides are not in it and do
+  not consult Docker. A port change on an existing server (`servers.changeGamePort`, under the
+  server's op lock) is applied at once, because Docker fixes port bindings at container creation:
+  the new pair (RCON always game + `PORT_RCON_OFFSET`) is checked and reserved in memory
+  (`ports.reserve`, both the old and the new pair, honored by every other pick) under the port
+  lock. It is refused (409 `PENDING_CHANGES`) while other settings wait for a rebuild, so it only
+  ever rebuilds a container that already ran, on a new port; and a running server is only changed
+  when the request says `restart: true` (otherwise 409 `NEEDS_CONFIRM`). The image is pulled and a
+  custom container name checked before anything is touched. A running server is stopped; then the
+  new pair is written with `pending_recreate = 1` (so a panel crash from there leaves an honest
+  "rebuild pending"), the container removed, rebuilt on the new pair and started. If any step
+  after the stop fails, `putBackOnOldPort` writes the old pair back, rebuilds (and restarts, if it
+  was running) on it and records which step failed; history and alerts say if even that failed,
+  which leaves the server stopped until someone starts it. The `settings` capability is enough,
+  running server included. Non-admins may only pick from `PORT_GAME_START` up.
+  (The `port_*_pending` columns from migration 029 belong to an earlier, unreleased design and are
+  unused; 031 clears them.) A lock collision answers 409 with `code: 'BUSY'`, which the retrying
+  callers below check rather than the wording. A crash auto-restart
+  (`watcher.restartAfterCrash`) and a scheduled backup or start (`scheduler.runTaskWithRetry`)
+  that find the server busy with another action try again every 20 s / 60 s for up to 30 minutes,
+  and a pack update or rollback retries its locked steps the same way (`opLock.retryWhileBusy`);
+  a crash restart or a waiting scheduled start gives up once someone has stopped, killed or
+  started the server since (`events.lifecycleActionSince`), and the crash restart also when
+  auto-restart is off or the server is gone. Scheduled restarts, stops, and commands are not
+  retried, and a schedule whose last run is still waiting skips its next firing.
 - **Disk quotas** are enforced by the panel because Docker can't cap bind-mount usage: the indexer
   caches per-directory sizes and disk-growing operations are gated on them.
 - **Secrets** (RCON passwords, API keys, TOTP secrets, the Discord webhook URL) are encrypted at
@@ -184,13 +207,16 @@ Cross-cutting:
 4. Run DB migrations, then `PRAGMA integrity_check` (logs loudly, points at `data/backups/_panel`
    on failure).
 5. Re-encrypt any legacy `SESSION_SECRET`-keyed secrets under `.secret-key` (`secretsMigration`).
-6. Mark version compatibility scans left running by a previous process as interrupted
+6. Import API keys from the environment once (`apiKeys.importFromEnvOnce()`), pin any server still
+   carrying an unpinned modpack selector (`packPins.pinUnpinnedServers()`), mark version
+   compatibility scans left running by a previous process as interrupted
    (`compat.reconcileScans()`), then seed starter blueprints (guarded).
 7. Start the HTTP + WS server. On an exposed bind, print the first-run `/setup` PIN.
 8. Install the post-boot runtime guard (catches uncaught faults; `MSM_EXIT_ON_FATAL=1` makes it
    hard-exit for supervised deployments).
 9. Start background services: WS broker, storage indexer, crash + inventory watchers, scheduler,
-   Discord event bridge, and the **daily maintenance timer** (prune old analytics rows + snapshot
+   Discord event bridge, chatbot outreach watcher, and the **daily maintenance timer** (prune old
+   analytics rows, chatbot transcripts, event history (365 days) and API cache rows, then snapshot
    `panel.db`).
 10. Initialize Docker **in the background**. The UI is fully usable while the daemon is down;
     Docker features light up when it becomes reachable. Once connected, `refreshStatuses({ boot })`

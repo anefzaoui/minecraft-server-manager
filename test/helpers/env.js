@@ -51,12 +51,16 @@ const origLoad = Module._load;
 // @ts-ignore
 Module._load = function load(request, parent, isMain) {
   const exported = origLoad.call(this, request, parent, isMain);
-  if (!realPublished && exported && typeof exported.publishedHostPorts === 'function') {
-    // @ts-ignore
-    if (Module._resolveFilename(request, parent, isMain) === containersFile) {
-      realPublished = exported.publishedHostPorts;
-      exported.publishedHostPorts = async () => new Set();
-    }
+  // Match on the request and file name only: reading a property off every
+  // module's exports makes Node warn about half-loaded modules in require cycles.
+  // @ts-ignore
+  if (
+    !realPublished &&
+    /containers(\.js)?$/.test(request) &&
+    Module._resolveFilename(request, parent, isMain) === containersFile
+  ) {
+    realPublished = exported.publishedHostPorts;
+    exported.publishedHostPorts = async () => new Set();
   }
   return exported;
 };

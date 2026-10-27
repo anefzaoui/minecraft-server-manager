@@ -95,7 +95,7 @@ module.exports = [
     key: 'diskQuotaGb',
     scope: 'panel',
     label: 'Disk quota',
-    help: 'A limit on this server’s folder size, enforced by the panel itself, since Docker cannot limit disk use for this kind of storage. Over quota, actions that would grow the disk, like mod installs and backups, are blocked until space is freed.',
+    help: 'A limit on this server’s folder size, enforced by the panel itself, since Docker cannot limit disk use for this kind of storage. Over quota, actions that would grow the disk, like installing mods, adding worlds, or uploading files, are blocked until space is freed. Backups are stored outside this folder and don’t count toward it.',
     type: 'range',
     unit: 'GB',
     default: 25,

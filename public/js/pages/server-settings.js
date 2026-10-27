@@ -201,10 +201,9 @@ function init(serverId) {
 
   // -------------------------------------------------------------- game port
   // Self-contained (own check, "next free" and Save), and kept out of the
-  // tab-wide dirty tracking. Docker fixes a container's ports when it is
-  // created, so the server API flags a rebuild that any start or restart
-  // applies: a stopped server moves on its next start, a running one when
-  // restarted.
+  // tab-wide dirty tracking. A change applies at once: a running server is
+  // restarted on the new port (asked first), a stopped one gets a new
+  // container on it.
   const portCard = root.querySelector('[data-port-card]');
   if (portCard) initPortCard(portCard);
 
@@ -214,8 +213,7 @@ function init(serverId) {
     const nextBtn = document.getElementById('st-port-next');
     const saveBtn = document.getElementById('st-port-save');
     const current = Number(card.dataset.portCurrent); // live: what players reach now
-    const pending = Number(card.dataset.portPending) || null; // saved, applies on next start
-    const target = pending || current;
+    const running = 'portRunning' in card.dataset; // as the page saw it; the API checks Docker
     const defaultHelp = help.textContent;
     const setHelp = (text, cls = '') => {
       help.textContent = text;
@@ -224,11 +222,11 @@ function init(serverId) {
     let leaving = false; // a save is reloading the page: don't warn
     for (const type of ['input', 'change']) card.addEventListener(type, (e) => e.stopPropagation());
     window.addEventListener('beforeunload', (e) => {
-      if (!leaving && input.value.trim() !== String(target)) e.preventDefault();
+      if (!leaving && input.value.trim() !== String(current)) e.preventDefault();
     });
-    const reload = () => {
+    const reload = (delayMs = 900) => {
       leaving = true;
-      setTimeout(() => location.reload(), 900);
+      setTimeout(() => location.reload(), delayMs);
     };
 
     // A check answers only if nothing newer (more typing, Next Free, a save)
@@ -253,7 +251,7 @@ function init(serverId) {
     async function check() {
       const seq = checkSeq;
       const port = Number(input.value);
-      if (port === target) return setHelp(defaultHelp);
+      if (port === current) return setHelp(defaultHelp);
       if (!Number.isInteger(port)) return setHelp('Enter a whole number.', 'text-danger');
       try {
         const res = await fetch(`/api/servers/${serverId}/port/check?port=${port}`);
@@ -282,7 +280,6 @@ function init(serverId) {
         const next = data.ports.game;
         input.value = String(next);
         if (next === current) setHelp(`This server already uses the lowest free port, ${current}.`, 'text-ok');
-        else if (next === pending) setHelp(`This server is already set to move to ${next}.`, 'text-ok');
         else setHelp(`Port ${next} is free. RCON will use ${data.ports.rcon}. Save to switch.`, 'text-ok');
       } catch {
         toast(friendlyError(null, { action: 'find a free port' }), { kind: 'error' });
@@ -291,90 +288,95 @@ function init(serverId) {
       }
     });
 
-    saveBtn.addEventListener('click', () => save(Number(input.value), saveBtn));
-    const cancelBtn = document.getElementById('st-port-cancel');
-    cancelBtn?.addEventListener('click', () => save(Number(cancelBtn.dataset.port), cancelBtn));
+    saveBtn.addEventListener('click', () => save(Number(input.value)));
 
-    async function save(port, btn) {
-      cancelChecks();
-      if (port === target) {
-        toast(pending ? `The server is already set to move to ${port}.` : `The server already uses port ${port}.`, {
-          kind: 'info',
+    /** Ask before a restart; false when the person says no. */
+    async function confirmRestart(port) {
+      const { confirmDialog } = await import('../lib/confirm.js');
+      return confirmDialog({
+        title: `Restart now to move players to port ${port}?`,
+        message:
+          'The world is saved first. Anyone online is disconnected and can rejoin on the new port once the server is back up, usually within a minute.',
+        confirmLabel: 'Restart Now',
+      });
+    }
+
+    async function putPort(port, restart) {
+      try {
+        const res = await fetch(`/api/servers/${serverId}/port`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ port, restart }),
         });
+        return { res, data: await res.json().catch(() => ({})) };
+      } catch {
+        return { res: null, data: {} };
+      }
+    }
+
+    // Applied at once. A running server is restarted on the new port only once
+    // the person agreed (the API insists on `restart: true` for a server Docker
+    // reports running, so a page that thought it stopped asks then). If the
+    // restart can't bind the new port, the API puts it back on the old one.
+    async function save(port) {
+      cancelChecks();
+      if (port === current) {
+        toast(`The server already uses port ${port}.`, { kind: 'info' });
         return;
       }
       if (!Number.isInteger(port)) {
         setHelp('Enter a whole number.', 'text-danger');
         return;
       }
-      const restore = setBusy(btn, 'Saving…');
-      let data;
-      try {
-        const res = await fetch(`/api/servers/${serverId}/port`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ port }),
-        });
-        data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.ok) {
-          toast(data.error || friendlyError(res, { action: 'change the port' }), { kind: 'error', timeout: 9000 });
-          return;
-        }
-      } catch {
-        toast(friendlyError(null, { action: 'change the port' }), { kind: 'error' });
-        return;
-      } finally {
-        restore();
+      let restart = false;
+      if (running) {
+        if (!(await confirmRestart(port))) return;
+        restart = true;
       }
-      if (data.cancelled) {
-        toast(`Move cancelled. The server stays on port ${port}.`);
-        reload();
-        return;
-      }
-      if (!data.running) {
-        toast(`Saved. The server moves to port ${port} the next time it starts.`);
-        reload();
-        return;
-      }
-      if (!('portCanRestart' in card.dataset)) {
-        // No power permission here: the restart is someone else's call.
-        toast(`Saved. Players keep using port ${current} until the server restarts.`, { kind: 'info' });
-        reload();
-        return;
-      }
-      const { confirmDialog } = await import('../lib/confirm.js');
-      const now = await confirmDialog({
-        title: `Restart now to move players to port ${port}?`,
-        message:
-          'The world is saved first. Anyone online is disconnected and can rejoin on the new port once the server is back up. Choose Later to keep it running on the old port until its next restart.',
-        confirmLabel: 'Restart Now',
-        cancelLabel: 'Later',
-      });
-      if (!now) {
-        toast(`Saved. Players keep using port ${current} until the next restart.`, { kind: 'info' });
-        reload();
-        return;
-      }
-      const restoreRestart = setBusy(saveBtn, 'Restarting…');
+      const restore = setBusy(saveBtn, restart ? 'Restarting on the new port…' : 'Saving…');
       nextBtn.disabled = true;
-      try {
-        const res = await fetch(`/api/servers/${serverId}/restart`, { method: 'POST' });
-        const out = await res.json().catch(() => ({}));
-        if (res.ok && out.ok !== false) {
-          toast(`Restarted on port ${port}.`);
-          reload();
+      let { res, data } = await putPort(port, restart);
+      if (res && res.status === 409 && data.code === 'NEEDS_CONFIRM') {
+        // It is running after all: ask, then go again.
+        restore();
+        if (!(await confirmRestart(port))) {
+          nextBtn.disabled = false;
           return;
         }
-        toast(out.error || friendlyError(res, { action: 'restart the server' }), { kind: 'error', timeout: 12000 });
-      } catch {
-        toast(friendlyError(null, { action: 'restart the server' }), { kind: 'error', timeout: 12000 });
+        setBusy(saveBtn, 'Restarting on the new port…');
+        ({ res, data } = await putPort(port, true));
       }
-      // The port is saved either way; only the restart failed. Stay on the page
-      // so the error stays readable, and say where things stand.
-      restoreRestart();
+      if (res && res.ok && data.ok) {
+        toast(data.restarted ? `Restarted on port ${port}.` : `Port changed to ${port}. The server stays stopped.`);
+        reload();
+        return;
+      }
+      // Nothing changed: the server is still on its old port (the API puts it back
+      // if the restart failed). Stay on the page so the reason stays readable.
+      restore();
       nextBtn.disabled = false;
+      if (!res || !('ok' in data)) {
+        // No answer from the panel itself (a proxy timing out on this long
+        // request, say): the change may still have gone through, so show where
+        // the server really is. Any panel answer - 5xx included, like "that port
+        // is already in use" - is definite and shown below.
+        toast("Couldn't confirm the result. Reloading to show where the server is now.", { kind: 'error' });
+        reload();
+        return;
+      }
+      toast(data.error || friendlyError(res, { action: 'change the port' }), { kind: 'error', timeout: 12000 });
+      if (restart && res.status >= 500) {
+        // It failed after the server was stopped. The panel tried to put it back
+        // on its old port, but that can fail too and leave it stopped: reload
+        // once the reason has been read. The server's history keeps the reason.
+        setHelp('Reloading to show whether the server is running again…', 'text-warn');
+        reload(6000);
+        return;
+      }
       setHelp(
-        `Saved, but the restart did not finish, so players still use port ${current}. Restart the server to move it to ${port}.`,
+        data.code === 'PENDING_CHANGES'
+          ? 'Use Apply Changes at the top of the page first, then save the port again.'
+          : `The server is still on port ${current}.`,
         'text-warn'
       );
     }
@@ -573,6 +575,7 @@ function init(serverId) {
       updatePolicy: root.querySelector('input[name="up"]:checked')?.value || 'manual',
       autoStart: document.getElementById('st-autostart')?.checked ?? false,
       autoRestart: document.getElementById('st-autorestart')?.checked ?? true,
+      quotaStrict: document.getElementById('st-quota-strict')?.checked ?? false,
     };
     // Docker settings: only send a field that actually changed from what the
     // server rendered. Sending all 4 unconditionally would run the (Docker-
@@ -634,6 +637,15 @@ function init(serverId) {
             }
           }
         });
+      }
+
+      // The Resources card's Initial heap is INIT_MEMORY in MB. Compared with
+      // what the page rendered, so an untouched field never rewrites the env.
+      const initHeap = document.getElementById('st-initheap');
+      if (initHeap && initHeap.value.trim() !== initHeap.defaultValue.trim()) {
+        if (initHeap.value.trim()) merged.INIT_MEMORY = String(Number(initHeap.value));
+        else delete merged.INIT_MEMORY;
+        envChanged = true;
       }
 
       if (envChanged) body.env = merged;

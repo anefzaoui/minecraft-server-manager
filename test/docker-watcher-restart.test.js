@@ -34,6 +34,7 @@ serversService.startServer = async () => {
 };
 
 const watcher = require('../src/docker/watcher');
+const { recordEvent } = require('../src/events');
 
 function seedServer(id, autoRestart) {
   db.run(
@@ -130,4 +131,102 @@ test('a non-zero exit inside a stop/restart window is still recorded as a crash 
   assert.ok(crash, 'the crash is visible in history even though a restart was in progress');
   assert.equal(JSON.parse(crash.details_json).armedRestart, false);
   assert.equal(JSON.parse(crash.details_json).duringStopWindow, true);
+});
+
+test('a crash restart that finds the server busy retries instead of leaving it down', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' }; // the watcher reads this file's inspectStatus stub
+  let calls = 0;
+  t.mock.method(serversService, 'startServer', async () => {
+    calls++;
+    if (calls < 3) {
+      throw Object.assign(new Error('Cannot start: a port change operation is already in progress for this server'), {
+        status: 409,
+        code: 'BUSY',
+      });
+    }
+  });
+  seedServer('srv_busy1', 1);
+  const started = await watcher.restartAfterCrash('srv_busy1', 1, { retryMs: 1, maxWaitMs: 50 });
+  assert.equal(started, true);
+  assert.equal(calls, 3);
+});
+
+test('a crash restart stops retrying once someone else started the server', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' };
+  const spy = t.mock.method(serversService, 'startServer', async () => {
+    inspectResult = { exists: true, status: 'running' }; // a person started it while we waited
+    throw Object.assign(new Error('Cannot start: a backup operation is already in progress for this server'), {
+      status: 409,
+      code: 'BUSY',
+    });
+  });
+  seedServer('srv_busy2', 1);
+  assert.equal(await watcher.restartAfterCrash('srv_busy2', 1, { retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(spy.mock.callCount(), 1);
+});
+
+test('a crash restart waiting on a busy server stops if auto-restart is turned off meanwhile', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' };
+  seedServer('srv_busy3', 1);
+  const spy = t.mock.method(serversService, 'startServer', async () => {
+    db.run("UPDATE servers SET auto_restart = 0 WHERE id = 'srv_busy3'"); // someone turns it off while we wait
+    throw Object.assign(new Error('Cannot start: a backup operation is already in progress for this server'), {
+      status: 409,
+      code: 'BUSY',
+    });
+  });
+  assert.equal(await watcher.restartAfterCrash('srv_busy3', 1, { retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(spy.mock.callCount(), 1);
+});
+
+test('a crash restart waiting on a busy server stops if someone stops the server meanwhile', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' }; // a stopped crashed container still reads as crashed
+  seedServer('srv_busy4', 1);
+  const spy = t.mock.method(serversService, 'startServer', async () => {
+    recordEvent({ serverId: 'srv_busy4', type: 'stop-requested', summary: 'Graceful stop requested.' });
+    throw Object.assign(new Error('Cannot start: a backup operation is already in progress for this server'), {
+      status: 409,
+      code: 'BUSY',
+    });
+  });
+  assert.equal(await watcher.restartAfterCrash('srv_busy4', 1, { retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(spy.mock.callCount(), 1);
+});
+
+test('a crash restart for a server deleted meanwhile does nothing', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' };
+  const spy = t.mock.method(serversService, 'startServer', async () => {});
+  assert.equal(await watcher.restartAfterCrash('srv_gone', 1, { retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(spy.mock.callCount(), 0);
+});
+
+test('a Stop pressed during the crash-restart delay is respected', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' }; // a stopped crashed container still reads as crashed
+  seedServer('srv_delay', 1);
+  const armedAt = Date.now() - 5000; // armed 5 s ago
+  // A Stop 2 s ago: after the restart was armed, before its timer fired. (History has
+  // one-second timestamps, so it is written with that time directly.)
+  db.run(
+    "INSERT INTO events (server_id, actor, type, summary, created_at) VALUES ('srv_delay', 'admin', 'stop-requested', 'Graceful stop requested.', datetime('now', '-2 seconds'))"
+  );
+  const spy = t.mock.method(serversService, 'startServer', async () => {});
+  assert.equal(await watcher.restartAfterCrash('srv_delay', 1, { since: armedAt, retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(spy.mock.callCount(), 0);
+});
+
+test('a crash restart that gives up after waiting says so in history', async (t) => {
+  inspectResult = { exists: true, status: 'crashed' };
+  seedServer('srv_giveup', 1);
+  t.mock.method(serversService, 'startServer', async () => {
+    throw Object.assign(new Error('Cannot start: a restore operation is already in progress for this server'), {
+      status: 409,
+      code: 'BUSY',
+    });
+  });
+  await assert.rejects(watcher.restartAfterCrash('srv_giveup', 1, { retryMs: 5, maxWaitMs: 30 }));
+  const ev = db.get("SELECT summary FROM events WHERE server_id = 'srv_giveup' AND type = 'auto-restart-gave-up'");
+  assert.equal(
+    ev.summary,
+    'Gave up restarting the server after its crash because another action kept it busy for too long. Start it from the panel.'
+  );
 });

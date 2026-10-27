@@ -1,0 +1,38 @@
+{{!-- Backup retention fields, shared by the Settings page card and a server's
+    Backups tab so the two can't drift. public/js/lib/retention.js reads every
+    [data-retention-key] input (data-name is its short name in messages). Params: prefix (id prefix), values (the numbers
+    to show). With inherit=true (a server's own limits), values holds only the
+    keys the server sets, a blank field follows the panel-wide value shown as
+    its placeholder (placeholders), and saving a blank sends null. Bounds match
+    the API's retentionPatchSchema. --}}
+<div class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+  <div>
+    <label class="label" for="{{prefix}}-scheduled">Scheduled backups to keep</label>
+    <input class="input" id="{{prefix}}-scheduled" type="number" inputmode="numeric" min="1" max="500" value="{{values.keepScheduled}}" data-retention-key="keepScheduled" data-name="Scheduled backups"{{#if inherit}} data-inherit placeholder="Panel: {{placeholders.keepScheduled}}"{{/if}} data-min="1" data-max="500">
+  </div>
+  <div>
+    <label class="label" for="{{prefix}}-manual">Manual backups to keep</label>
+    <input class="input" id="{{prefix}}-manual" type="number" inputmode="numeric" min="1" max="500" value="{{values.keepManual}}" data-retention-key="keepManual" data-name="Manual backups"{{#if inherit}} data-inherit placeholder="Panel: {{placeholders.keepManual}}"{{/if}} data-min="1" data-max="500">
+  </div>
+  <div>
+    <label class="label" for="{{prefix}}-preupdate">Pre-update backups to keep</label>
+    <input class="input" id="{{prefix}}-preupdate" type="number" inputmode="numeric" min="1" max="500" value="{{values.keepPreUpdate}}" data-retention-key="keepPreUpdate" data-name="Pre-update backups"{{#if inherit}} data-inherit placeholder="Panel: {{placeholders.keepPreUpdate}}"{{/if}} data-min="1" data-max="500">
+    <p class="help">Taken automatically before an update is applied.</p>
+  </div>
+  <div>
+    <label class="label" for="{{prefix}}-prerestore">Safety backups to keep</label>
+    <input class="input" id="{{prefix}}-prerestore" type="number" inputmode="numeric" min="1" max="500" value="{{values.keepPreRestore}}" data-retention-key="keepPreRestore" data-name="Safety backups"{{#if inherit}} data-inherit placeholder="Panel: {{placeholders.keepPreRestore}}"{{/if}} data-min="1" data-max="500">
+    <p class="help">Taken automatically before a restore or a world reset.</p>
+  </div>
+  <div>
+    <label class="label" for="{{prefix}}-age">Remove backups older than (days)</label>
+    <input class="input" id="{{prefix}}-age" type="number" inputmode="numeric" min="0" max="3650" value="{{values.maxAgeDays}}" data-retention-key="maxAgeDays" data-name="The age limit"{{#if inherit}} data-inherit placeholder="Panel: {{placeholders.maxAgeDays}}"{{/if}} data-min="0" data-max="3650">
+    <p class="help">0 means no age limit.</p>
+  </div>
+  <div>
+    <label class="label" for="{{prefix}}-size">Total size per server (GB)</label>
+    <input class="input" id="{{prefix}}-size" type="number" inputmode="numeric" min="0" max="100000" value="{{values.maxTotalGb}}" data-retention-key="maxTotalGb" data-name="The size limit"{{#if inherit}} data-inherit placeholder="Panel: {{placeholders.maxTotalGb}}"{{/if}} data-min="0" data-max="100000">
+    <p class="help">0 means no size limit. Over it, the oldest go first: safety backups, then scheduled ones, then the rest.</p>
+  </div>
+</div>
+<p class="help">{{#if inherit}}Leave a field blank to use the panel-wide value shown in it. {{/if}}The newest backup of each server is never removed by the age or size limits.</p>

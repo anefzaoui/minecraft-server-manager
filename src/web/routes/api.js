@@ -329,6 +329,8 @@ router.get(
     // Keep in sync with the alert event types forwarded in integrations/discord.js.
     const ALERT_TYPES = [
       'oom',
+      'port-change-failed',
+      'auto-restart-gave-up',
       'unhealthy',
       'startup-stalled',
       'stop-failed',
@@ -418,12 +420,23 @@ router.put(
   asyncHandler(async (req, res, next) => {
     // Range is the service's call (it differs by role and names the range in
     // its message); this only rejects a non-number.
-    const { port } = z.object({ port: z.coerce.number().int() }).parse(req.body);
-    const { server, changed, cancelled, running } = await servers.changeGamePort(req.params.id, port, {
+    const { port, restart } = z
+      .object({
+        port: z.coerce.number().int(),
+        restart: z
+          .preprocess(
+            (v) => (v === 'true' ? true : v === 'false' ? false : v),
+            z.boolean({ message: 'Send restart as true or false.' })
+          )
+          .optional(),
+      })
+      .parse(req.body);
+    const { server, changed, restarted } = await servers.changeGamePort(req.params.id, port, {
       actor: req.user.username,
       isAdmin: req.user.role === 'admin',
+      restart: restart === true, // the person agreed to restart a running server
     });
-    res.json({ ok: true, changed, cancelled, running, server: publicServer(server) });
+    res.json({ ok: true, changed, restarted, server: publicServer(server) });
   })
 );
 
@@ -1467,7 +1480,7 @@ router.delete(
   '/backups/:backupId',
   requireCap('backups', { resolve: backupServerId }),
   asyncHandler(async (req, res, next) => {
-    res.json({ ok: true, ...(await backups.deleteBackup(req.params.backupId, { actor: req.user.username })) });
+    res.json({ ok: true, ...(await backups.deleteBackupByUser(req.params.backupId, { actor: req.user.username })) });
   })
 );
 
@@ -1503,17 +1516,99 @@ const retentionPatchSchema = z
     maxTotalGb: z.coerce.number().int().min(0).max(100000).optional(),
   })
   .strict();
+// A server's override is per key: null (or "", a blank form field) removes that
+// key, so it follows the panel-wide value again.
+const retentionServerPatchSchema = z
+  .object(
+    Object.fromEntries(
+      Object.entries(retentionPatchSchema.shape).map(([key, schema]) => [
+        key,
+        z.preprocess((v) => (v === '' ? null : v), schema.nullable()),
+      ])
+    )
+  )
+  .strict();
 
 router.get('/backups/retention', requireRoleKeys('admin'), (req, res) => {
   res.json({ ok: true, defaults: backupRetention.DEFAULTS, global: backupRetention.globalConfig() });
 });
 
+// The panel-wide policy has no blank: z.coerce would quietly turn null into 0
+// ("no age limit"), so say so instead.
+function parseGlobalRetention(body = {}) {
+  if (Object.values(body).some((v) => v === null || v === '')) {
+    throw httpError(400, 'Panel-wide retention values cannot be blank. Use 0 for no age or size limit.');
+  }
+  return retentionPatchSchema.parse(body);
+}
+
+// A server's body: { reset: true } clears its limits, anything else is a patch
+// ({ reset: false } is just a patch with nothing to reset).
+function parseServerRetention(body = {}) {
+  const { reset, ...patch } = body;
+  // Form posts and older scripts send "true" / 1; all of them mean reset.
+  if ([true, 'true', 1, '1'].includes(reset)) return null;
+  if (![undefined, false, 'false', 0, '0'].includes(reset)) {
+    throw httpError(400, 'Send reset as true or false.');
+  }
+  return retentionServerPatchSchema.parse(patch);
+}
+
+// "Remove now" names what its preview showed - by the preview's token (the UI),
+// or the ids themselves (scripts) - and nothing else is deleted. Neither means
+// everything over the saved limits.
+const applySchema = z
+  .object({ token: z.string().max(64).optional(), ids: z.array(z.string().max(64)).max(10000).optional() })
+  .strict();
+const onlyIdsFrom = (body) => {
+  const { token, ids } = applySchema.parse(body || {});
+  if (token) {
+    const listed = backups.previewIds(token);
+    if (!listed) throw httpError(409, 'That check is too old. Save again to see what would be removed now.');
+    return listed;
+  }
+  return ids ? new Set(ids) : null;
+};
+
 router.post(
   '/backups/retention',
   requireRoleKeys('admin'),
   asyncHandler((req, res, next) => {
-    const patch = retentionPatchSchema.parse(req.body || {});
+    const patch = parseGlobalRetention(req.body || {});
     res.json({ ok: true, global: backupRetention.setGlobal(patch) });
+  })
+);
+
+// What a retention change would remove right now, before it is saved, so the
+// settings UI can offer "remove now" or "from the next backup". Nothing is
+// deleted. A global change is previewed on every server: overrides are
+// partial, so it reaches servers with an override for the keys they don't set.
+const liveServerIds = () => db.all('SELECT id FROM servers WHERE deleted_at IS NULL').map((r) => r.id);
+
+router.post(
+  '/backups/retention/preview',
+  requireRoleKeys('admin'),
+  asyncHandler((req, res, next) => {
+    const patch = parseGlobalRetention(req.body || {});
+    res.json({
+      ok: true,
+      ...backups.previewRetention(liveServerIds(), (id) => backupRetention.effectiveIf(id, { global: patch })),
+    });
+  })
+);
+
+// Apply the saved policy now on every server instead of after each one's next
+// backup, limited to the previewed ids when given. Servers busy with another
+// action are skipped and counted.
+router.post(
+  '/backups/retention/apply',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    const { deleted, skipped } = await backups.applyRetention(liveServerIds(), {
+      actor: req.user.username,
+      onlyIds: onlyIdsFrom(req.body),
+    });
+    res.json({ ok: true, deleted, skipped: skipped.length });
   })
 );
 
@@ -1524,19 +1619,45 @@ router.get('/servers/:id/backups/retention', requireRoleKeys('admin'), (req, res
     defaults: backupRetention.DEFAULTS,
     global: backupRetention.globalConfig(),
     effective: backupRetention.effective(req.params.id),
+    override: backupRetention.overrideFor(req.params.id),
   });
 });
+
+router.post(
+  '/servers/:id/backups/retention/preview',
+  requireRoleKeys('admin'),
+  asyncHandler((req, res, next) => {
+    requireServer(req.params.id);
+    const server = parseServerRetention(req.body || {});
+    res.json({
+      ok: true,
+      ...backups.previewRetention([req.params.id], (id) => backupRetention.effectiveIf(id, { server })),
+    });
+  })
+);
+
+router.post(
+  '/servers/:id/backups/retention/apply',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res, next) => {
+    requireServer(req.params.id);
+    const { deleted, skipped } = await backups.applyRetention([req.params.id], {
+      actor: req.user.username,
+      onlyIds: onlyIdsFrom(req.body),
+    });
+    if (skipped.length) {
+      throw httpError(409, 'Another action is running on this server. Try again when it finishes.');
+    }
+    res.json({ ok: true, deleted });
+  })
+);
 
 router.post(
   '/servers/:id/backups/retention',
   requireRoleKeys('admin'),
   asyncHandler((req, res, next) => {
     requireServer(req.params.id);
-    // { reset: true } clears the per-server override; otherwise merge the patch.
-    const body = req.body || {};
-    const effective = body.reset
-      ? backupRetention.setServer(req.params.id, null)
-      : backupRetention.setServer(req.params.id, retentionPatchSchema.parse(body));
+    const effective = backupRetention.setServer(req.params.id, parseServerRetention(req.body || {}));
     res.json({ ok: true, effective });
   })
 );

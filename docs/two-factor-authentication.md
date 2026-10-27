@@ -8,7 +8,7 @@ It works with any standard TOTP authenticator (Google Authenticator, Authy, 1Pas
 
 ## Enabling 2FA
 
-Open the account menu (your initial, top-right) and choose **Two-factor authentication**.
+Open the account menu (your initial or profile picture, top-right) and choose **2FA**.
 
 ![Account menu](images/2fa-user-menu.png)
 
@@ -39,20 +39,20 @@ Enter the current 6-digit code from your app (or one of your backup codes) and y
 
 ## Managing or turning off 2FA
 
-Open the same **Two-factor authentication** entry in the account menu while it's enabled. After confirming your password you can:
+Open the same **2FA** entry in the account menu while it's enabled. After confirming your password you can:
 
-- **Regenerate backup codes** - issues a new set and retires the old.
-- **Disable 2FA** - removes it from your account.
+- **Regenerate Backup Codes** issues a new set and retires the old.
+- **Disable 2FA** removes it from your account.
 
 Both re-check your current password first.
 
 ## Lost your phone _and_ your backup codes?
 
-An **admin** can reset another user's 2FA from **Settings → Users** (the **Reset** button in the 2FA column). That clears 2FA for the account so the user can sign in with just their password and set it up fresh. Admins can't password-lessly reset their _own_ 2FA. They go through the normal password-gated disable, so a hijacked admin session can't strip its own second factor.
+An **admin** can reset another user's 2FA from **Settings → Users** (**Reset 2FA** in that user's actions menu). That clears 2FA for the account so the user can sign in with just their password and set it up fresh. Admins can't password-lessly reset their _own_ 2FA. They go through the normal password-gated disable, so a hijacked admin session can't strip its own second factor.
 
 ## Good to know
 
 - Codes are time-based and rotate every 30 seconds; the panel accepts a small clock drift, and quietly recovers if the server's clock is later corrected.
-- A code can't be replayed - once it's used to sign in, that same code won't work again within its window.
+- A code can't be replayed: once it's used to sign in, that same code won't work again within its window.
 - Wrong codes are rate-limited. The limiter is **shared** with the password step (a per-account lockout plus a per-IP `RATE_LIMIT_AUTH_PER_15MIN` limiter), so entering a correct password can't reset the counter right before guessing the 6-digit code.
 - 2FA changes (enable, disable, reset, backup-code use) are all recorded in the [Activity log](activity.md).

@@ -98,6 +98,24 @@ function jsonText(v) {
 const Handlebars = /** @type {typeof import('handlebars')} */ (createHandlebars().handlebars);
 const { SafeString, Utils: HbsUtils } = Handlebars;
 
+// (or a b c ...) / (and a b c ...) behave like JS `||` / `&&` over every
+// argument: the first truthy (or falsy) value, else the last one. Handlebars
+// passes its options hash as the final argument, which is dropped here. The old
+// two-argument versions silently ignored a third value onward, so
+// (or (eq s 'running') (eq s 'starting') (eq s 'unhealthy')) never saw 'unhealthy'.
+/** @param {...unknown} args */
+function orHelper(...args) {
+  const values = args.slice(0, -1);
+  return values.find(Boolean) ?? values[values.length - 1];
+}
+
+/** @param {...unknown} args */
+function andHelper(...args) {
+  const values = args.slice(0, -1);
+  const firstFalsy = values.findIndex((v) => !v);
+  return firstFalsy === -1 ? values[values.length - 1] : values[firstFalsy];
+}
+
 // {{jsonScript x}} inside <script> text (an application/json island or an
 // inline object literal). The browser does NOT decode HTML entities there, so
 // the JSON goes out untouched: `&quot;` would reach JSON.parse and throw.
@@ -138,8 +156,8 @@ function createApp() {
         startsWith: (s, p) => typeof s === 'string' && s.startsWith(p),
         ne: (a, b) => a !== b,
         gt: (a, b) => a > b,
-        and: (a, b) => a && b,
-        or: (a, b) => a || b,
+        and: andHelper,
+        or: orHelper,
         not: (a) => !a,
         jsonScript,
         jsonAttr,
@@ -396,4 +414,4 @@ function createApp() {
   return app;
 }
 
-module.exports = { createApp, jsonScript, jsonAttr };
+module.exports = { createApp, jsonScript, jsonAttr, orHelper, andHelper };

@@ -47,7 +47,7 @@ function heapPlan(env, heapMb) {
   if (maxMb > 0) {
     note = growsOnDemand
       ? `Java starts with ${initMb} MB and grows toward its ${maxMb} MB heap as the world needs it.`
-      : `Java was given the whole ${maxMb} MB heap up front, so memory settles around that figure even when nobody is playing. Lower "Initial heap" under Settings → Resources (advanced) to let it grow on demand instead.`;
+      : `Java was given the whole ${maxMb} MB heap up front, so memory settles around that figure even when nobody is playing. Set a smaller "Initial heap" in the Resources card on Settings → Configuration to let it grow on demand instead.`;
   }
   return { heapMb: maxMb, initMb, growsOnDemand, note };
 }
