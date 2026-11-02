@@ -16,7 +16,7 @@ const modrinth = require('./modrinthApi');
 const curseforge = require('./curseforgeApi');
 const modsService = require('./mods');
 const gtnhApi = require('./gtnhApi');
-const { pickJavaTag } = require('./javaMatrix');
+const { pickJavaTag, parseVersion } = require('./javaMatrix');
 
 /**
  * Resolve a pack reference to install candidates.
@@ -51,9 +51,13 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion, include
       versionId: String(file.fileId),
       versionName: file.name,
       mcVersion: pickMcVersion(file.gameVersions),
-      allVersions: files
-        .slice(0, 25)
-        .map((f) => ({ id: String(f.fileId), name: f.name, type: f.releaseType, date: f.fileDate })),
+      allVersions: files.slice(0, 25).map((f) => ({
+        id: String(f.fileId),
+        name: f.name,
+        type: f.releaseType,
+        date: f.fileDate,
+        mcVersion: pickMcVersion(f.gameVersions),
+      })),
     };
   }
   if (platform === 'modrinth') {
@@ -73,9 +77,13 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion, include
       versionName: version.version_number,
       mcVersion: version.game_versions[version.game_versions.length - 1] || null,
       loaders: version.loaders,
-      allVersions: versions
-        .slice(0, 25)
-        .map((v) => ({ id: v.id, name: v.version_number, type: v.version_type, date: v.date_published })),
+      allVersions: versions.slice(0, 25).map((v) => ({
+        id: v.id,
+        name: v.version_number,
+        type: v.version_type,
+        date: v.date_published,
+        mcVersion: v.game_versions[v.game_versions.length - 1] || null,
+      })),
     };
   }
   if (platform === 'ftb') {
@@ -324,39 +332,132 @@ async function afterPackOperation(serverId, { actor = 'system' } = {}) {
   return modsService.reapplyOverlay(serverId, { actor });
 }
 
-/** Warnings when a pack's MC version conflicts with the server's existing world. */
-function worldVersionWarnings(server, resolved) {
-  if (!resolved.mcVersion) return [];
-  const warnings = [];
+/**
+ * The pack a server runs: its server_packs row, or (no row) the pack its env
+ * selects, so a server the boot sweep could not pin can still be pinned from
+ * the version picker. Same column names as the row; `recorded` tells them apart.
+ */
+function packIdentity(serverId) {
+  const row = getPack(serverId);
+  if (row) return { ...row, recorded: true };
+  const server = serversService.getServer(serverId);
+  if (!server) return null;
+  const inferred = require('./packPins').inferPackIdentity(server.type, server.env);
+  if (!inferred) return null;
+  return {
+    platform: inferred.platform,
+    project_ref: inferred.ref,
+    project_name: null,
+    pinned_version_id: inferred.versionId,
+    pinned_version_name: inferred.versionId,
+    previous_version_id: null,
+    previous_version_name: null,
+    channel: null,
+    recorded: false,
+  };
+}
+
+/** -1 / 0 / 1 for two Minecraft release versions; null when either isn't one (snapshots, LATEST). */
+function compareMcVersions(a, b) {
+  const x = a ? parseVersion(a) : null;
+  const y = b ? parseVersion(b) : null;
+  if (!x || !y) return null;
+  for (const k of ['major', 'minor', 'patch']) {
+    if (x[k] !== y[k]) return x[k] < y[k] ? -1 : 1;
+  }
+  return 0;
+}
+
+/** The Minecraft version the server's active world was last saved by, or null. */
+function worldMcVersion(server) {
   try {
     const worlds = require('./worlds');
     const { dataPath } = require('../storage/pathGuard');
-    const path = require('node:path');
     const level = worlds.activeLevelName(server);
-    const worldVersion = worlds.readLevelVersion(path.join(dataPath('servers', server.id), level, 'level.dat'));
-    if (worldVersion && worldVersion !== resolved.mcVersion) {
-      const { parseVersion } = require('./javaMatrix');
-      const wv = parseVersion(worldVersion);
-      const pv = parseVersion(resolved.mcVersion);
-      const downgrade =
-        wv &&
-        pv &&
-        (pv.major < wv.major ||
-          (pv.major === wv.major && (pv.minor < wv.minor || (pv.minor === wv.minor && pv.patch < wv.patch))));
-      warnings.push(
-        downgrade
-          ? `This pack runs Minecraft ${resolved.mcVersion} but the existing world was generated on ${worldVersion} - Minecraft cannot load newer worlds on older versions and the server will crash. Reset or swap the world first, or confirm to proceed anyway.`
-          : `This pack runs Minecraft ${resolved.mcVersion} but the existing world is from ${worldVersion} - starting will permanently upgrade the world (make a backup first).`
-      );
-    }
+    return worlds.readLevelVersion(path.join(dataPath('servers', server.id), level, 'level.dat')) || null;
   } catch {
-    /* unreadable level.dat → no warning */
+    return null; // unreadable level.dat → unknown
   }
-  return warnings;
+}
+
+/**
+ * The Minecraft version a pack version change is judged against: the world's
+ * own (it is what can't be loaded by an older game), else the server's pinned
+ * release. Null when neither is a concrete release.
+ */
+function baselineMcVersion(server) {
+  const world = worldMcVersion(server);
+  if (world && parseVersion(world)) return world;
+  return server.mc_version && parseVersion(server.mc_version) ? server.mc_version : null;
+}
+
+/**
+ * Every listable version of a server's pack for the version picker, each
+ * tagged with how its Minecraft version relates to the server's world:
+ * 'same', 'newer' (converts the world, needs confirmation) or 'older'
+ * (refused: an older game can't load the world). 'unknown' when either side
+ * isn't a concrete release.
+ */
+async function listPackVersions(serverId) {
+  const server = serversService.getServer(serverId);
+  if (!server) throw httpError(404, 'Server not found');
+  const pack = packIdentity(serverId);
+  if (!pack) throw httpError(400, 'This server has no modpack to change.');
+  if (pack.platform === 'ftb') throw httpError(400, 'FTB pack versions cannot be listed yet.');
+
+  const resolved = await resolvePack(pack.platform, pack.project_ref, {});
+  const baseline = baselineMcVersion(server);
+  const relation = (mc) => {
+    const c = compareMcVersions(mc, baseline);
+    if (c === null) return 'unknown';
+    return c === 0 ? 'same' : c > 0 ? 'newer' : 'older';
+  };
+  const current = pack.pinned_version_id ? String(pack.pinned_version_id) : null;
+  const versions = (resolved.allVersions || []).map((v) => ({
+    id: String(v.id),
+    name: v.name,
+    type: v.type,
+    date: v.date || null,
+    mcVersion: v.mcVersion || null,
+    mcRelation: relation(v.mcVersion),
+    current: current != null && (String(v.id) === current || v.name === pack.pinned_version_name),
+  }));
+  return {
+    platform: pack.platform,
+    projectName: pack.project_name || resolved.projectName,
+    current: current ? { id: current, name: pack.pinned_version_name || current } : null,
+    recorded: pack.recorded,
+    mcVersion: baseline,
+    versions,
+  };
+}
+
+/** Warnings when a pack's MC version conflicts with the server's existing world. */
+function worldVersionWarnings(server, resolved) {
+  if (!resolved.mcVersion) return [];
+  const worldVersion = worldMcVersion(server);
+  if (!worldVersion || worldVersion === resolved.mcVersion) return [];
+  const downgrade = compareMcVersions(resolved.mcVersion, worldVersion) === -1;
+  return [
+    downgrade
+      ? `This pack runs Minecraft ${resolved.mcVersion} but the existing world was generated on ${worldVersion} - Minecraft cannot load newer worlds on older versions and the server will crash. Reset or swap the world first, or confirm to proceed anyway.`
+      : `This pack runs Minecraft ${resolved.mcVersion} but the existing world is from ${worldVersion} - starting will permanently upgrade the world (make a backup first).`,
+  ];
 }
 
 function pickMcVersion(gameVersions = []) {
   return gameVersions.find((v) => /^\d+\.\d+(\.\d+)?$/.test(v)) || null;
 }
 
-module.exports = { resolvePack, applyPack, getPack, latestFor, afterPackOperation, packEnv };
+module.exports = {
+  resolvePack,
+  applyPack,
+  getPack,
+  packIdentity,
+  listPackVersions,
+  compareMcVersions,
+  baselineMcVersion,
+  latestFor,
+  afterPackOperation,
+  packEnv,
+};
