@@ -53,7 +53,7 @@ Every build a mod is updated from stays in the shared library, so an update that
 
 ## Applying an update
 
-Updates are never silent. When you choose to upgrade a pack, the panel:
+Updates are never silent. When you choose to upgrade a pack (or [switch it to another version](modpacks.md#changing-the-pack-version), older ones included), the panel:
 
 1. Takes a **pre-update backup** (so it's reversible; by default the last 10 pre-update backups per server are kept, see [retention](backups.md#retention)).
 2. Re-pins the exact new version.
