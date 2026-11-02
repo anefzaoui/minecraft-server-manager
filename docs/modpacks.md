@@ -18,16 +18,28 @@ The **Modpacks** page (and the **From Modpack** tab in the [creation wizard](ser
 
 When you pick a pack, the panel resolves the exact version, records it, and installs that. On the **Updates** page you'll be told when a newer version is available (unless the server's [update policy](#update-policy) is **Manual Only**); upgrading is a deliberate, guarded action with a pre-update backup and rollback. Stable-tracking servers are never offered a beta. A server's own **Versions** tab answers the other half of the question: which future Minecraft versions the mods it actually has can follow ([updates](updates.md#minecraft-version-compatibility)).
 
-Servers created on very old panel versions (before 0.9.7) could be left _unpinned_, meaning the container image would quietly install the newest pack version on every start. The panel now repairs these at boot: it locks each one to the version that is actually installed (read from the panel's own records or the image's install manifest, never a freshly resolved "latest") and logs an event. If it can't tell what's installed, the server's Settings page shows a warning asking you to pick the version manually, and any attempt to save an unpinned modpack configuration is rejected outright.
+Servers created on very old panel versions (before 0.9.7) could be left _unpinned_, meaning the container image would quietly install the newest pack version on every start. The panel now repairs these at boot: it locks each one to the version that is actually installed (read from the panel's own records or the image's install manifest, never a freshly resolved "latest") and logs an event. If it can't tell what's installed, the server's Settings page shows a warning with a **Pick a Version…** button (CurseForge, Modrinth and GTNH packs) that opens the [version picker](#changing-the-pack-version), and any attempt to save an unpinned modpack configuration is rejected outright.
 
 ## Update policy
 
 Each server has an **Update Policy** card on its **Settings → Configuration** tab, and all three options mean what they say:
 
-- **Manual Only** (default): nothing ever changes on its own, and the server is left out of the update badge and Updates page entirely. The "leave me alone" mode: ideal for a hand-tuned or imported pack you never want touched.
+- **Manual Only** (default): nothing ever changes on its own, and the server is left out of the update badge and Updates page entirely. The "leave me alone" mode: ideal for a hand-tuned or imported pack you never want touched. It doesn't lock the version: [**Change Version…**](#changing-the-pack-version) works under every policy. To be told about new versions and apply them with one click, pick **Notify Me**.
 - **Notify Me**: the daily check surfaces available updates as a badge and on the Updates page; applying them is always your click.
 - **Auto-Update**: after the scheduled daily check, pending **pack** updates are applied through the same guarded path as a manual upgrade: pre-update backup, health monitoring, and an automatic rollback if the new version fails to boot. Updates that would move the server to a different Minecraft version are always skipped with an event instead: converting a world permanently is a decision the panel refuses to make for you. The manual **Check Now** buttons only check; they never trigger auto-updates.
 
 ## Upgrading a pack
 
 From a pinned server you can upgrade to a newer version in one action. The panel takes a backup first, swaps the pinned version, rebuilds the server (re-resolving Java if the new version needs a different runtime), and monitors the first boot, with a generous window for large packs like GTNH that download a couple of gigabytes and build a several-hundred-mod world on first start.
+
+## Changing the pack version
+
+To run a specific version, newer or older, use **Change Version…** on the pack card of the server's **Overview** tab. On the **Modpacks** page, opening an installed pack's card gives the same choice: pick a version in the dropdown and click **Switch to This Version**. Both need the server's **Content** permission, and both are available for CurseForge, Modrinth and GTNH packs (FTB packs have no version list yet). The list shows the 25 newest versions for CurseForge and Modrinth, and every GTNH release.
+
+The switch goes through the same guarded path as an upgrade: a pre-update backup, the new pin, a rebuild and a watched first boot, with a one-click rollback if the server doesn't come up healthy. Your custom mods are carried over.
+
+Each version is listed with the Minecraft version it runs, compared against the version your world was last saved by:
+
+- **Same Minecraft version**: switch after a normal confirmation. Going back to an older pack version can drop blocks and items from mods that version doesn't have, so the backup stays in the Backups tab either way.
+- **Newer Minecraft version**: allowed after a confirmation that warns the world is converted for good. The backup taken first is the only way back to the old world.
+- **Older Minecraft version**: unavailable. Minecraft cannot load a world on an older version than the one that last saved it, so the panel refuses rather than leaving a server that crashes on boot.
