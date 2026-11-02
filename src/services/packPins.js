@@ -74,6 +74,43 @@ function unpinnedPackSelectors(type, env = {}) {
 }
 
 /**
+ * Which pack a server's env selects, for servers the panel has no server_packs
+ * row for (pre-0.9.7 installs the boot sweep could not pin, or env set by
+ * hand). Returns { platform, ref, versionId } (versionId null when unpinned),
+ * or null when the env selects no pack the version picker can list. FTB is
+ * left out on purpose: the panel has no FTB version listing.
+ */
+function inferPackIdentity(type, env = {}) {
+  if (has(env, 'CF_SLUG') || has(env, 'CF_PAGE_URL')) {
+    if (has(env, 'CF_MODPACK_ZIP')) return null; // a fixed local zip, nothing to list
+    const ref = has(env, 'CF_SLUG') ? String(env.CF_SLUG).trim() : String(env.CF_PAGE_URL).trim();
+    const pageFile = has(env, 'CF_PAGE_URL') ? String(env.CF_PAGE_URL).match(/\/files\/(\d+)/)?.[1] : null;
+    return {
+      platform: 'curseforge',
+      ref: ref.replace(/\/files\/\d+.*$/, ''),
+      versionId: has(env, 'CF_FILE_ID') ? String(env.CF_FILE_ID).trim() : pageFile || null,
+    };
+  }
+  if (has(env, 'MODRINTH_MODPACK')) {
+    const raw = String(env.MODRINTH_MODPACK).trim();
+    const urlVersion = raw.match(/\/version\/([^/?#]+)/)?.[1] || null;
+    return {
+      platform: 'modrinth',
+      ref: raw.replace(/\/version\/.*$/, ''),
+      versionId: has(env, 'MODRINTH_VERSION') ? String(env.MODRINTH_VERSION).trim() : urlVersion,
+    };
+  }
+  if (type === 'GTNH') {
+    return {
+      platform: 'gtnh',
+      ref: 'gtnh',
+      versionId: has(env, 'GTNH_PACK_VERSION') ? String(env.GTNH_PACK_VERSION).trim() : null,
+    };
+  }
+  return null;
+}
+
+/**
  * Reject an env write that would leave a pack selector unpinned. Every path
  * that persists server env (create, config update, blueprint import) calls
  * this; applyPack is pinned by construction and never trips it.
@@ -212,4 +249,4 @@ function pinUnpinnedServers() {
   return { pinned, unresolved };
 }
 
-module.exports = { unpinnedPackSelectors, assertPinnedPackEnv, pinUnpinnedServers };
+module.exports = { unpinnedPackSelectors, inferPackIdentity, assertPinnedPackEnv, pinUnpinnedServers };

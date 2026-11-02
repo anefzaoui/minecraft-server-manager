@@ -3,7 +3,7 @@
 require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { unpinnedPackSelectors, assertPinnedPackEnv } = require('../src/services/packPins');
+const { unpinnedPackSelectors, inferPackIdentity, assertPinnedPackEnv } = require('../src/services/packPins');
 
 test('pinned pack envs pass for every platform', () => {
   assert.deepEqual(unpinnedPackSelectors('AUTO_CURSEFORGE', { CF_SLUG: 'all-the-mods-10', CF_FILE_ID: '5891234' }), []);
@@ -65,4 +65,30 @@ test('assertPinnedPackEnv throws a 400 naming the missing pin', () => {
     assert.match(err.message, /CF_FILE_ID/);
     assert.match(err.message, /every start/);
   }
+});
+
+test('inferPackIdentity reads the pack and any pin from a server env', () => {
+  assert.deepEqual(inferPackIdentity('AUTO_CURSEFORGE', { CF_SLUG: 'all-the-mods-10' }), {
+    platform: 'curseforge',
+    ref: 'all-the-mods-10',
+    versionId: null,
+  });
+  assert.deepEqual(
+    inferPackIdentity('AUTO_CURSEFORGE', {
+      CF_PAGE_URL: 'https://www.curseforge.com/minecraft/modpacks/atm10/files/5891234',
+    }),
+    { platform: 'curseforge', ref: 'https://www.curseforge.com/minecraft/modpacks/atm10', versionId: '5891234' }
+  );
+  assert.deepEqual(inferPackIdentity('MODRINTH', { MODRINTH_MODPACK: 'cobblemon', MODRINTH_VERSION: 'AbCd1234' }), {
+    platform: 'modrinth',
+    ref: 'cobblemon',
+    versionId: 'AbCd1234',
+  });
+  assert.deepEqual(inferPackIdentity('GTNH', {}), { platform: 'gtnh', ref: 'gtnh', versionId: null });
+});
+
+test('inferPackIdentity ignores FTB, local zips and non-pack servers', () => {
+  assert.equal(inferPackIdentity('FTBA', { FTB_MODPACK_ID: '126' }), null);
+  assert.equal(inferPackIdentity('AUTO_CURSEFORGE', { CF_SLUG: 'x', CF_MODPACK_ZIP: '/data/pack.zip' }), null);
+  assert.equal(inferPackIdentity('PAPER', { MEMORY: '4G' }), null);
 });
