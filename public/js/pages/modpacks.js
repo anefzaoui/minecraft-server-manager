@@ -7,6 +7,7 @@ import { confirmDialog } from '../lib/confirm.js';
 import { runTask } from '../lib/progress.js';
 import { openModal } from '../lib/modal.js';
 import { escapeHtml } from '../lib/format.js';
+import { changePackVersion } from '../lib/packVersion.js';
 
 const PUZZLE_SVG =
   '<svg class="icon size-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></svg>';
@@ -137,6 +138,24 @@ function renderPackDetails(pack) {
         location.href = `/servers/${pack.installed.serverId}`;
       },
     });
+    if (pack.installed.canChangeVersion) {
+      // Same dropdown, applied to the server that runs this pack: the shared
+      // picker confirms (and refuses older-Minecraft versions) from here on.
+      actions.splice(1, 0, {
+        label: 'Switch to This Version',
+        kind: 'default',
+        onClick: () => {
+          if (versionSel.value === String(pack.installed.versionId)) {
+            toast(`${pack.installed.serverName} already runs this version.`, { kind: 'warn' });
+            return false;
+          }
+          const { serverId, serverName } = pack.installed;
+          const versionId = versionSel.value;
+          // After this modal closes, so the picker's dialogs stack cleanly.
+          setTimeout(() => changePackVersion({ serverId, serverName, versionId }), 0);
+        },
+      });
+    }
   }
 
   openModal({ title: pack.name, size: 'lg', content, actions });

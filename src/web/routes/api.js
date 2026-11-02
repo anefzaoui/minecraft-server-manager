@@ -1001,6 +1001,8 @@ router.get(
         serverName: server.display_name,
         versionId: pin.pinned_version_id,
         versionName: pin.pinned_version_name,
+        // Gates the popup's "Switch to This Version" (the switch route needs Content).
+        canChangeVersion: permissions.can(req.user, server.id, 'content'),
       };
     }
 
