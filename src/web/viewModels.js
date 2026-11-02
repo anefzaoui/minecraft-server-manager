@@ -138,6 +138,9 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     // installed version to pin to) - the settings page warns and asks for a
     // manual version pick (#22).
     packUnpinned: require('../services/packPins').unpinnedPackSelectors(s.type, s.env).length > 0,
+    // The version picker can list this pack's versions (CurseForge, Modrinth,
+    // GTNH - not FTB), so the warning above can offer a Pick a Version button.
+    packPickable: require('../services/packPins').inferPackIdentity(s.type, s.env) != null,
     pendingRecreate: Boolean(s.pending_recreate),
     lastStarted: s.last_started_at || '-',
     created: s.created_at,
