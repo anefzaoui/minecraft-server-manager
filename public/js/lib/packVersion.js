@@ -89,8 +89,13 @@ function pickVersion(list) {
       opt.disabled = v.mcRelation === 'older';
       sel.appendChild(opt);
     }
-    const first = list.versions.find((v) => !v.current && v.mcRelation !== 'older');
-    sel.value = (first || list.versions.find((v) => v.current) || {}).id || '';
+    // Preselect the newest version that keeps the world's Minecraft version;
+    // a world-converting one is never the default, only a deliberate pick.
+    const first =
+      list.versions.find((v) => !v.current && (v.mcRelation === 'same' || v.mcRelation === 'unknown')) ||
+      list.versions.find((v) => v.current) ||
+      list.versions.find((v) => v.mcRelation !== 'older');
+    sel.value = (first || {}).id || '';
 
     openModal({
       title: `Change ${list.projectName || 'Pack'} Version`,
@@ -132,9 +137,12 @@ function confirmSwitch({ serverName, list, picked }) {
   return confirmDialog({
     title: `Switch to ${picked.name}?`,
     message: `${serverName} moves from ${from} to ${picked.name}. The panel takes an automatic backup first, applies the version, and starts the server back up, watching that it comes back healthy.`,
-    detail: goingBack
-      ? 'Going back to an older pack version can drop blocks and items from mods it does not have. If it does not come up, you can roll back with one click, and the backup stays in the Backups tab.'
-      : 'Your custom mods are preserved, and you can roll back with one click if it does not come up. The server is briefly offline during the swap.',
+    // No recorded version means nothing to re-pin on rollback: only the backup.
+    detail: !list.current
+      ? 'Your custom mods are preserved. If it does not come up, restore the automatic backup from the Backups tab.'
+      : goingBack
+        ? 'Going back to an older pack version can drop blocks and items from mods it does not have. If it does not come up, you can roll back with one click, and the backup stays in the Backups tab.'
+        : 'Your custom mods are preserved, and you can roll back with one click if it does not come up. The server is briefly offline during the swap.',
     confirmLabel: 'Switch Version',
   });
 }
