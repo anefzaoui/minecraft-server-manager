@@ -57,7 +57,7 @@ async function upgradePack(
     'backing-up': 'Creating pre-update backup…',
     stopping: 'Stopping server…',
     applying: 'Applying pack version…',
-    recreating: 'Recreating container…',
+    recreating: 'Rebuilding the server…',
     monitoring: 'Waiting for the server to come up…',
     overlay: 'Restoring custom mod overlay…',
   };

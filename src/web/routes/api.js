@@ -766,21 +766,35 @@ const UPGRADE_STEP_LABELS = {
   'backing-up': 'Creating pre-update backup…',
   stopping: 'Stopping server…',
   applying: 'Re-pinning pack version…',
-  recreating: 'Recreating container…',
+  recreating: 'Rebuilding the server…',
   // No fixed minutes in the label: the window is per-platform (30 min for
   // GTNH, 20 for CurseForge/Modrinth, 10 otherwise - see upgrade.js).
   monitoring: 'Starting & monitoring the new version…',
   overlay: 'Re-applying custom overlay mods…',
 };
 
+// The version picker's list: every listable version of the server's pack,
+// each tagged with how its Minecraft version relates to the world.
+router.get(
+  '/servers/:id/pack/versions',
+  requireCap('content'),
+  asyncHandler(async (req, res) => {
+    const server = requireServer(req.params.id);
+    res.json({ ok: true, ...(await packs.listPackVersions(server.id)) });
+  })
+);
+
 // Long operation - returns {ok, taskId}; poll /api/tasks/:id (client: runTask).
+// Serves both "upgrade to latest" and the version picker (any version id).
 // On failure with a rollback path, the task RESOLVES with
-// {ok:false, error, rollbackAvailable:true} so the client can offer rollback.
+// {ok:false, error, rollbackAvailable:true} so the client can offer rollback;
+// a newer-Minecraft target without allowVersionChange resolves with
+// {ok:false, requiresVersionConfirm, fromMcVersion, toMcVersion} to confirm.
 router.post(
   '/servers/:id/pack/upgrade',
   requireCap('content'),
   asyncHandler((req, res, next) => {
-    const { versionId, skipBackup } = z
+    const { versionId, skipBackup, allowVersionChange } = z
       .object({
         // Same shape constraint as the other pack versionId fields: this one
         // reaches the exact same GTNH_PACK_VERSION/CF_FILE_ID/etc. container
@@ -791,22 +805,36 @@ router.post(
           .regex(/^[\w.-]{1,64}$/)
           .optional(),
         skipBackup: z.coerce.boolean().optional(),
+        // A real boolean, not coerced: "false" must never read as consent to
+        // convert a world.
+        allowVersionChange: z.boolean().optional(),
       })
       .parse(req.body);
     const server = requireServer(req.params.id);
     const actor = req.user.username;
-    const taskId = tasks.run(`Upgrading pack on ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
+    const title = `Changing pack version on ${server.display_name}`;
+    const taskId = tasks.run(title, { serverId: server.id, actor }, async (t) => {
       t.step(UPGRADE_STEP_LABELS.resolving);
       try {
         return await upgrade.upgradePack(server.id, {
           versionId,
           skipBackup,
+          allowVersionChange,
           actor,
           onStep: (s) => t.step(UPGRADE_STEP_LABELS[s] || s),
         });
       } catch (err) {
         if (err.rollbackAvailable) {
           return { ok: false, error: err.message, rollbackAvailable: true };
+        }
+        if (err.requiresVersionConfirm) {
+          return {
+            ok: false,
+            error: err.message,
+            requiresVersionConfirm: true,
+            fromMcVersion: err.fromMcVersion,
+            toMcVersion: err.toMcVersion,
+          };
         }
         throw err;
       }

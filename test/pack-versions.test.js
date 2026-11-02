@@ -95,6 +95,14 @@ test('listPackVersions refuses servers with no listable pack', async () => {
   await assert.rejects(packs.listPackVersions(ftb), { status: 400 });
 });
 
+// /setup only answers once, so the route tests share one admin session.
+let session;
+async function adminSession() {
+  await app.start();
+  session ||= await app.adminCookie();
+  return session;
+}
+
 // upgradePack decides all of these before any backup, stop or Docker call.
 const upgrade = require('../src/updates/upgrade');
 
@@ -130,4 +138,53 @@ test('a server with no recorded pin reaches the version checks through its env',
   await assert.rejects(upgrade.upgradePack(id, { versionId: 'v1' }), { status: 409, olderMinecraft: true });
   const plain = app.seedServer('srv_pvnone');
   await assert.rejects(upgrade.upgradePack(plain, { versionId: 'v1' }), { status: 400 });
+});
+
+test('the versions route lists for Content holders and refuses viewers', async (t) => {
+  t.after(stubModrinth());
+  const cookie = await adminSession();
+  const id = seedModrinthServer('srv_pvroute', { MODRINTH_MODPACK: 'testpack', MODRINTH_VERSION: 'v3' });
+  recordPin(id, 'v3', '3.1.0');
+
+  const ok = await app.req('GET', `/api/servers/${id}/pack/versions`, { cookie });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.versions.length, 4);
+  assert.equal(ok.json.mcVersion, '1.20.1');
+
+  const authService = require('../src/services/auth');
+  await authService.createUser({ username: 'pv_viewer', password: 'viewerpass123', role: 'viewer' }, { actor: 'test' });
+  const login = await app.req('POST', '/login', { body: { username: 'pv_viewer', password: 'viewerpass123' } });
+  const viewer = (login.setCookie || []).map((c) => c.split(';')[0]).join('; ');
+  assert.equal((await app.req('GET', `/api/servers/${id}/pack/versions`, { cookie: viewer })).status, 403);
+});
+
+test('the upgrade route returns a newer-Minecraft target as a confirm request', async (t) => {
+  t.after(stubModrinth());
+  const cookie = await adminSession();
+  const id = seedModrinthServer('srv_pvconfirm', { MODRINTH_MODPACK: 'testpack', MODRINTH_VERSION: 'v3' });
+  recordPin(id, 'v3', '3.1.0');
+
+  // Consent has to be a real boolean: the string "false" must not slip through as true.
+  const bad = await app.req('POST', `/api/servers/${id}/pack/upgrade`, {
+    cookie,
+    body: { versionId: 'v4', allowVersionChange: 'false' },
+  });
+  assert.equal(bad.status, 400);
+
+  const started = await app.req('POST', `/api/servers/${id}/pack/upgrade`, { cookie, body: { versionId: 'v4' } });
+  assert.equal(started.status, 202);
+  let task;
+  for (let i = 0; i < 100; i++) {
+    task = (await app.req('GET', `/api/tasks/${started.json.taskId}`, { cookie })).json.task;
+    if (task.state !== 'running') break;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  assert.equal(task.state, 'done', task.error || '');
+  assert.equal(task.result.ok, false);
+  assert.equal(task.result.requiresVersionConfirm, true);
+  assert.equal(task.result.toMcVersion, '1.21.1');
+});
+
+test.after(async () => {
+  await app.stop();
 });
