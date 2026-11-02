@@ -17,10 +17,25 @@ const VERSIONS = [
 ].map((v) => ({ ...v, date_published: '2026-01-01T00:00:00Z' }));
 
 function stubModrinth() {
-  const real = { resolveUrl: modrinthApi.resolveUrl, getVersions: modrinthApi.getVersions };
+  const real = {
+    resolveUrl: modrinthApi.resolveUrl,
+    getVersions: modrinthApi.getVersions,
+    getVersion: modrinthApi.getVersion,
+  };
   modrinthApi.resolveUrl = async () => ({ projectId: 'P1', slug: 'testpack', title: 'Test Pack', iconUrl: null });
   modrinthApi.getVersions = async () => VERSIONS;
+  modrinthApi.getVersion = async (id) => VERSIONS.find((v) => v.id === id);
   return () => Object.assign(modrinthApi, real);
+}
+
+function recordPin(serverId, versionId, versionName) {
+  db.run(
+    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
+     VALUES (?, 'modrinth', 'testpack', 'Test Pack', ?, ?)`,
+    serverId,
+    versionId,
+    versionName
+  );
 }
 
 function seedModrinthServer(id, env, mcVersion = '1.20.1') {
@@ -45,11 +60,7 @@ test('compareMcVersions orders releases and gives up on non-releases', () => {
 test('listPackVersions tags each version against the server and marks the pin', async (t) => {
   t.after(stubModrinth());
   const id = seedModrinthServer('srv_pvlist', { MODRINTH_MODPACK: 'testpack', MODRINTH_VERSION: 'v3' });
-  db.run(
-    `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
-     VALUES (?, 'modrinth', 'testpack', 'Test Pack', 'v3', '3.1.0')`,
-    id
-  );
+  recordPin(id, 'v3', '3.1.0');
   const list = await packs.listPackVersions(id);
   assert.equal(list.recorded, true);
   assert.equal(list.mcVersion, '1.20.1');
@@ -82,4 +93,41 @@ test('listPackVersions refuses servers with no listable pack', async () => {
   const ftb = app.seedServer('srv_pvftb');
   db.run("UPDATE servers SET type = 'FTBA', env_json = ? WHERE id = ?", JSON.stringify({ FTB_MODPACK_ID: '126' }), ftb);
   await assert.rejects(packs.listPackVersions(ftb), { status: 400 });
+});
+
+// upgradePack decides all of these before any backup, stop or Docker call.
+const upgrade = require('../src/updates/upgrade');
+
+test('a pack version on an older Minecraft version is refused outright', async (t) => {
+  t.after(stubModrinth());
+  const id = seedModrinthServer('srv_pvolder', { MODRINTH_MODPACK: 'testpack', MODRINTH_VERSION: 'v3' });
+  recordPin(id, 'v3', '3.1.0');
+  await assert.rejects(upgrade.upgradePack(id, { versionId: 'v1', allowVersionChange: true }), (err) => {
+    assert.equal(err.status, 409);
+    assert.equal(err.olderMinecraft, true);
+    assert.match(err.message, /older than this world \(1\.20\.1\)/);
+    return true;
+  });
+});
+
+test('a newer Minecraft version needs confirmation, the same version does not re-apply', async (t) => {
+  t.after(stubModrinth());
+  const id = seedModrinthServer('srv_pvnewer', { MODRINTH_MODPACK: 'testpack', MODRINTH_VERSION: 'v3' });
+  recordPin(id, 'v3', '3.1.0');
+  await assert.rejects(upgrade.upgradePack(id, { versionId: 'v4' }), (err) => {
+    assert.equal(err.status, 409);
+    assert.equal(err.requiresVersionConfirm, true);
+    assert.equal(err.fromMcVersion, '1.20.1');
+    assert.equal(err.toMcVersion, '1.21.1');
+    return true;
+  });
+  await assert.rejects(upgrade.upgradePack(id, { versionId: 'v3' }), { status: 400 });
+});
+
+test('a server with no recorded pin reaches the version checks through its env', async (t) => {
+  t.after(stubModrinth());
+  const id = seedModrinthServer('srv_pvenv', { MODRINTH_MODPACK: 'testpack' });
+  await assert.rejects(upgrade.upgradePack(id, { versionId: 'v1' }), { status: 409, olderMinecraft: true });
+  const plain = app.seedServer('srv_pvnone');
+  await assert.rejects(upgrade.upgradePack(plain, { versionId: 'v1' }), { status: 400 });
 });

@@ -24,9 +24,12 @@ function upgradeStatus(serverId) {
 }
 
 /**
- * Run the full safe upgrade to a target pack version.
+ * Run the full safe switch to a target pack version, newer or older (the
+ * version picker uses it as well as the "upgrade to latest" buttons).
  * onStep(step: string) is invoked as the flow progresses.
- * opts.allowVersionChange must be true to cross MC versions (409 otherwise).
+ * opts.allowVersionChange must be true to move to a newer MC version (409
+ * otherwise); a version on an OLDER MC version than the world is always
+ * refused, since the game can't load a world a newer version has saved.
  * opts.task: optional tasks.js handle - step() calls are mirrored to it.
  */
 async function upgradePack(
@@ -43,8 +46,11 @@ async function upgradePack(
   if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server');
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const pack = packsService.getPack(serverId);
+  // packIdentity, not getPack: a server whose pin was never recorded (the boot
+  // sweep found no evidence) is pinned through this same guarded path.
+  const pack = packsService.packIdentity(serverId);
   if (!pack) throw httpError(400, 'This server has no managed modpack');
+  const fromName = pack.pinned_version_name || 'an unpinned version';
 
   const STEP_LABELS = {
     resolving: 'Resolving target version…',
@@ -58,11 +64,11 @@ async function upgradePack(
   const step = (s) => {
     activeUpgrades.set(serverId, { step: s, startedAt: activeUpgrades.get(serverId)?.startedAt || Date.now() });
     if (task) task.step(STEP_LABELS[s] || s);
-    logger.debug('A pack upgrade advanced.', { serverId, step: s });
+    logger.debug('A pack version change advanced.', { serverId, step: s });
     onStep(s);
   };
 
-  logger.info('Started a pack upgrade.', { serverId, actor, pack: pack.project_name });
+  logger.info('Started a pack version change.', { serverId, actor, pack: pack.project_name || pack.project_ref });
   try {
     step('resolving');
     // Thread the pin's own channel through: without this, an explicit versionId-less
@@ -74,26 +80,32 @@ async function upgradePack(
       versionId,
       includeBeta: pack.channel === 'beta',
     });
-    if (resolved.versionId === pack.pinned_version_id) {
-      throw httpError(400, `Already on ${pack.pinned_version_name}. Nothing to upgrade.`);
+    if (pack.pinned_version_id != null && resolved.versionId === String(pack.pinned_version_id)) {
+      throw httpError(400, `Already on ${pack.pinned_version_name}. Nothing to change.`);
     }
 
-    // Cross-MC-version upgrades permanently convert the world - demand
-    // explicit confirmation BEFORE any backup/stop work happens.
-    if (
-      resolved.mcVersion &&
-      server.mc_version &&
-      !['LATEST', 'SNAPSHOT'].includes(server.mc_version) &&
-      resolved.mcVersion !== server.mc_version &&
-      !allowVersionChange
-    ) {
+    // Judged against the world's own version (else the server's): an older
+    // game can't load it at all, and a newer one converts it for good. Both
+    // are decided BEFORE any backup/stop work happens.
+    const baseline = packsService.baselineMcVersion(server);
+    const mcOrder = packsService.compareMcVersions(resolved.mcVersion, baseline);
+    if (mcOrder === -1) {
       const err = httpError(
         409,
-        `${resolved.versionName} runs Minecraft ${resolved.mcVersion} but this server is on ${server.mc_version}. ` +
-          'Upgrading will permanently convert the world to the new Minecraft version. Confirm the version change to proceed.'
+        `${resolved.versionName} runs Minecraft ${resolved.mcVersion}, which is older than this world (${baseline}). ` +
+          'Minecraft cannot load a world on an older version, so this pack version cannot be installed here.'
+      );
+      err.olderMinecraft = true;
+      throw err;
+    }
+    if (mcOrder === 1 && !allowVersionChange) {
+      const err = httpError(
+        409,
+        `${resolved.versionName} runs Minecraft ${resolved.mcVersion} but this server is on ${baseline}. ` +
+          'Changing will permanently convert the world to the new Minecraft version. Confirm the version change to proceed.'
       );
       err.requiresVersionConfirm = true;
-      err.fromMcVersion = server.mc_version;
+      err.fromMcVersion = baseline;
       err.toMcVersion = resolved.mcVersion;
       throw err;
     }
@@ -104,7 +116,7 @@ async function upgradePack(
       const backup = await backupsService.createBackup(serverId, {
         reason: 'pre-update',
         actor,
-        note: `Before pack ${pack.pinned_version_name} → ${resolved.versionName}`,
+        note: `Before pack ${fromName} → ${resolved.versionName}`,
         task,
       });
       backupId = backup.id;
@@ -139,24 +151,32 @@ async function upgradePack(
     const excerpt = await fetchLogs(serverId, { tail: 200 }).catch(() => '');
 
     if (!healthy) {
+      // Rollback re-pins the recorded previous version; a server pinned here
+      // for the first time has none, so only its backup is left to restore.
+      const canRollBack = Boolean(backupId && previous);
       recordEvent({
         serverId,
         actor,
         type: 'update-failed',
-        summary: `Pack upgrade to ${resolved.versionName} failed to start. A rollback is available.`,
+        summary: canRollBack
+          ? `Pack version ${resolved.versionName} failed to start. A rollback is available.`
+          : `Pack version ${resolved.versionName} failed to start.`,
         details: { backupId, previousVersion: previous ? previous.pinned_version_id : null },
         logExcerpt: excerpt || null,
       });
-      logger.warn('A pack upgrade did not come up healthy; rollback is available.', {
+      logger.warn('A pack version change did not come up healthy.', {
         serverId,
         toVersion: resolved.versionName,
         backupId,
+        canRollBack,
       });
       const err = httpError(
         502,
-        `The server did not come up healthy after the upgrade. Use rollback to restore ${pack.pinned_version_name}.`
+        canRollBack
+          ? `The server did not come up healthy on ${resolved.versionName}. Roll back to restore ${fromName}.`
+          : `The server did not come up healthy on ${resolved.versionName}.${backupId ? ' Its pre-update backup can be restored from the Backups tab.' : ''}`
       );
-      err.rollbackAvailable = Boolean(backupId);
+      err.rollbackAvailable = canRollBack;
       // The unattended auto-update path needs the id to roll back without a
       // human in the loop; the interactive path keeps offering the button.
       err.backupId = backupId;
@@ -170,18 +190,18 @@ async function upgradePack(
       serverId,
       actor,
       type: 'update-applied',
-      summary: `Pack upgraded: ${pack.project_name} ${pack.pinned_version_name} → ${resolved.versionName}.`,
+      summary: `Pack version changed: ${pack.project_name || resolved.projectName} ${fromName} → ${resolved.versionName}.`,
       details: { backupId, from: pack.pinned_version_id, to: resolved.versionId },
       logExcerpt: excerpt || null,
     });
-    logger.info('Finished a pack upgrade.', {
+    logger.info('Finished a pack version change.', {
       serverId,
       actor,
       from: pack.pinned_version_name,
       to: resolved.versionName,
       backupId,
     });
-    return { ok: true, from: pack.pinned_version_name, to: resolved.versionName, backupId };
+    return { ok: true, from: fromName, to: resolved.versionName, backupId };
   } finally {
     activeUpgrades.delete(serverId);
   }
