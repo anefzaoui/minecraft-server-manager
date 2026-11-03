@@ -36,7 +36,7 @@ From a pinned server you can upgrade to a newer version in one action. The panel
 
 To run a specific version, newer or older, use **Change Version…** on the pack card of the server's **Overview** tab. On the **Modpacks** page, opening an installed pack's card gives the same choice: pick a version in the dropdown and click **Switch to This Version**. Both need the server's **Content** permission, and both are available for CurseForge, Modrinth and GTNH packs (FTB packs have no version list yet). The list shows the 25 newest versions for CurseForge and Modrinth, and every GTNH release.
 
-The switch goes through the same guarded path as an upgrade: a pre-update backup, the new pin, a rebuild and a watched first boot, with a one-click rollback if the server doesn't come up healthy. Your custom mods are carried over.
+The switch goes through the same guarded path as an upgrade: a pre-update backup, the new pin, a rebuild and a watched first boot, with a one-click rollback if the server doesn't come up healthy. Your custom mods are carried over, and so are the pack mods you disabled, along with the pack's other install settings (mods forced in, files to ignore, extra projects). Installing a different pack starts those settings fresh, because they only make sense for the pack they were made for.
 
 Each version is listed with the Minecraft version it runs, compared against the version your world was last saved by:
 
