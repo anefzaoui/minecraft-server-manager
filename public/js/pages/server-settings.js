@@ -679,6 +679,9 @@ function init(serverId) {
             }
           } else {
             const value = el.value.trim();
+            // An unset key whose field shows its catalog default (a dropdown
+            // preselects it) was not touched: saving would only pin the default.
+            if (!had && value !== '' && value === (el.dataset.catalogDefault ?? '')) return;
             if (!value) {
               if (had) {
                 delete merged[key];

@@ -57,6 +57,16 @@ test('empty or identical changes produce no rows', async () => {
   assert.deepEqual(servers.summarizeServerChanges('diff01', { name: 'Test Server' }).changes, []);
 });
 
+test('tags and the disk quota sent unchanged with every save are not listed', async () => {
+  const row = db.get('SELECT tags_json, disk_quota_bytes FROM servers WHERE id = ?', 'diff01');
+  const tags = JSON.parse(row.tags_json || '[]');
+  const quotaGb = (row.disk_quota_bytes || 0) / 1024 ** 3;
+  const r = servers.summarizeServerChanges('diff01', { tags: [...tags].reverse(), diskQuotaGb: quotaGb });
+  assert.deepEqual(r.changes, [], 'same tags (any order) and same quota are no change');
+  const changed = servers.summarizeServerChanges('diff01', { tags: [...tags, 'new-tag'], diskQuotaGb: quotaGb + 5 });
+  assert.deepEqual(changed.changes.map((c) => c.label).sort(), ['Disk quota', 'Tags']);
+});
+
 test('env differences expand per key, with catalog labels, additions and deletions', async () => {
   const r = servers.summarizeServerChanges('diff01', {
     env: { MOTD: 'Hello there', MAX_PLAYERS: '15', MEMORY: '1G' },

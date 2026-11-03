@@ -748,7 +748,10 @@ function computeServerDiff(id, changes) {
     params.push(changes[key]);
     if (RECREATE_FIELDS.has(key)) needsRecreate = true;
   }
-  if (changes.tags) {
+  // Tags and the quota come with every settings save, so only a real
+  // difference counts (otherwise the summary and the history list them as changed).
+  const sameTags = (a, b) => JSON.stringify([...(a || [])].sort()) === JSON.stringify([...(b || [])].sort());
+  if (changes.tags && !sameTags(before.tags, changes.tags)) {
     diff.tags = [before.tags, changes.tags];
     sets.push('tags_json = ?');
     params.push(JSON.stringify(changes.tags));
@@ -795,7 +798,7 @@ function computeServerDiff(id, changes) {
     params.push(JSON.stringify(changes.extraBinds));
     needsRecreate = true;
   }
-  if (changes.diskQuotaGb !== undefined) {
+  if (changes.diskQuotaGb !== undefined && Number(changes.diskQuotaGb) * 1024 ** 3 !== (before.disk_quota_bytes || 0)) {
     diff.diskQuotaGb = [Math.round(before.disk_quota_bytes / 1024 ** 3), changes.diskQuotaGb];
     sets.push('disk_quota_bytes = ?');
     params.push(changes.diskQuotaGb * 1024 ** 3);
