@@ -133,8 +133,13 @@ function jsonAttr(v) {
 function createApp() {
   const app = express();
 
-  // Package version, exposed to every template (footer) so it never goes stale.
-  app.locals.appVersion = require('../../package.json').version;
+  // Package version and repository page, exposed to every template (footer) so
+  // they never go stale. The repository URL is npm's "git+https://….git" form.
+  const pkg = require('../../package.json');
+  app.locals.appVersion = pkg.version;
+  app.locals.repoUrl = String(pkg.repository?.url || '')
+    .replace(/^git\+/, '')
+    .replace(/\.git$/, '');
 
   // Behind a TLS-terminating reverse proxy, trust the configured hops so req.ip
   // (login rate-limiting) and secure-cookie 'auto' see the real client + scheme.
