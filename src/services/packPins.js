@@ -132,7 +132,7 @@ function assertPinnedPackEnv(type, env) {
  * The version pin to adopt for one unpinned selector, from best evidence:
  * 1. the server's own server_packs row (the panel's recorded intent), else
  * 2. the image's install manifest in the data dir - what is ACTUALLY installed
- *    (.curseforge-manifest.json / .modrinth-manifest.json, written by
+ *    (.curseforge-manifest.json / .modrinth-modpack-manifest.json, written by
  *    mc-image-helper; slug is cross-checked so a leftover manifest from a
  *    different pack can't mis-pin).
  * Never resolves "latest": no evidence → no pin (the settings UI shows an
@@ -173,7 +173,7 @@ function findPinEvidence(server, issue) {
     };
   }
   if (issue.platform === 'modrinth') {
-    const m = readManifest('.modrinth-manifest.json');
+    const m = readManifest('.modrinth-modpack-manifest.json');
     if (!m || !m.versionId) return null;
     const ref = String(server.env.MODRINTH_MODPACK || '').trim();
     const expected = ref && !ref.includes('/') ? ref.toLowerCase() : null;
@@ -218,7 +218,7 @@ function pinUnpinnedServers() {
 
     db.run('UPDATE servers SET env_json = ?, pending_recreate = 1 WHERE id = ?', JSON.stringify(env), server.id);
     for (const { issue, evidence } of applied) {
-      // A CF manifest carries enough to give a legacy server the server_packs
+      // A manifest carries enough to give a legacy server the server_packs
       // row the upgrade/update-check flows key off; never clobber an existing row.
       if (evidence.manifest && issue.platform === 'curseforge') {
         db.run(
@@ -231,11 +231,27 @@ function pinUnpinnedServers() {
           evidence.name
         );
       }
+      // The Modrinth manifest has no display names: the slug and version id stand in.
+      if (evidence.manifest && issue.platform === 'modrinth') {
+        const slug = evidence.manifest.projectSlug || String(server.env.MODRINTH_MODPACK || '').trim() || '?';
+        db.run(
+          `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
+           VALUES (?, 'modrinth', ?, ?, ?, ?) ON CONFLICT(server_id) DO NOTHING`,
+          server.id,
+          slug,
+          slug,
+          evidence.pin,
+          evidence.name
+        );
+      }
+      const platform =
+        { curseforge: 'CurseForge', modrinth: 'Modrinth', ftb: 'FTB', gtnh: 'GT New Horizons' }[issue.platform] ||
+        issue.platform;
       recordEvent({
         serverId: server.id,
         actor: 'system',
         type: 'pack-pinned',
-        summary: `Locked the ${issue.platform} modpack to the installed version (${evidence.name}). It was set to auto-update on every start.`,
+        summary: `Locked the ${platform} modpack to the installed version (${evidence.name}). It was set to auto-update on every start.`,
         details: { pinKey: issue.pinKey, pin: evidence.pin, source: evidence.source },
       });
       pinned += 1;
