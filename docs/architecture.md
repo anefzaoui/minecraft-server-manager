@@ -110,7 +110,10 @@ Cross-cutting:
 - **The custom-mod overlay** is panel-managed: user-added mods land in the deduplicated library and
   are hard-linked into the server so they survive pack updates. Disabling is class-aware. Because
   the library keeps every build it has downloaded, an update records the build it replaced
-  (`server_content.previous_*`) and can be reverted from local files alone.
+  (`server_content.previous_*`) and can be reverted from local files alone. Disabling a pack mod
+  writes the pack's exclusion env var instead; `packs.applyPack` carries that and the rest of the
+  pack tuning (`PACK_TUNING_KEYS`) across a version change of the same pack, and drops it when the
+  pack changes.
 - **A Minecraft version upgrade has to be earned.** `services/compat.js` scans a server's mods -
   resolved from panel-installed rows, then the CurseForge pack manifest, then by content hash
   against Modrinth/CurseForge - and builds a (loader, Minecraft version) support matrix per project

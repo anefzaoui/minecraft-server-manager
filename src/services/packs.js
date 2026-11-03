@@ -183,6 +183,47 @@ function packEnv(resolved) {
   };
 }
 
+// The user's own pack tuning, per platform: exclusions (what "disable a pack
+// mod" writes), force-includes and install knobs. A version change of the SAME
+// pack carries these over (otherwise every disabled pack mod comes back); a
+// different pack starts clean, since mod tokens only mean something in one pack.
+// Deliberately absent: the pack/version selectors and loader override (they
+// belong to the old version) and SKIP_GTNH_UPDATE_CHECK (it would stop the
+// image installing the new version at all).
+const PACK_TUNING_KEYS = {
+  curseforge: [
+    'CF_EXCLUDE_MODS',
+    'CF_FORCE_INCLUDE_MODS',
+    'CF_EXCLUDE_ALL_MODS',
+    'CF_OVERRIDES_EXCLUSIONS',
+    'CF_IGNORE_MISSING_FILES',
+    'CF_FORCE_SYNCHRONIZE',
+    'CF_PARALLEL_DOWNLOADS',
+    'CF_SET_LEVEL_FROM',
+    'CF_API_KEY',
+  ],
+  modrinth: [
+    'MODRINTH_EXCLUDE_FILES',
+    'MODRINTH_FORCE_INCLUDE_FILES',
+    'MODRINTH_IGNORE_MISSING_FILES',
+    'MODRINTH_FORCE_SYNCHRONIZE',
+    'MODRINTH_PROJECTS',
+  ],
+  gtnh: ['GTNH_DELETE_BACKUPS'],
+  ftb: [],
+};
+
+/** True when `resolved` is another version of the pack the server already runs. */
+function isSamePack(server, previous, resolved) {
+  const norm = (ref) => String(ref || '').toLowerCase();
+  if (previous)
+    return previous.platform === resolved.platform && norm(previous.project_ref) === norm(resolved.projectRef);
+  const inferred = require('./packPins').inferPackIdentity(server.type, server.env);
+  return Boolean(
+    inferred && inferred.platform === resolved.platform && norm(inferred.ref) === norm(resolved.projectRef)
+  );
+}
+
 /**
  * Apply a pack (install or version change) to an existing server:
  * updates env with the pinned reference, records server_packs, flags recreate.
@@ -207,12 +248,14 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
 
   const previous = db.get('SELECT * FROM server_packs WHERE server_id = ?', serverId);
   // Strip EVERY previous pack-selection/exclusion env var (CF_/MODRINTH_/FTB_/GTNH_)
-  // before merging the new pack env: switching platform (or even version)
-  // must not leave stale slugs, file pins or exclusion lists behind. Unrelated
-  // user env is preserved. SKIP_GTNH_ is its own prefix (not GTNH_-prefixed)
-  // because that env var name is dictated by the container image's contract.
+  // before merging the new pack env: switching platform (or version) must not
+  // leave stale slugs, file pins or loader overrides behind. Unrelated user env
+  // is preserved, and so is the pack tuning when only the version changes.
+  // SKIP_GTNH_ is its own prefix (not GTNH_-prefixed) because that env var
+  // name is dictated by the container image's contract.
+  const keep = new Set(isSamePack(server, previous, resolved) ? PACK_TUNING_KEYS[resolved.platform] || [] : []);
   const cleanedEnv = Object.fromEntries(
-    Object.entries(server.env).filter(([key]) => !/^(CF_|MODRINTH_|FTB_|GTNH_|SKIP_GTNH_)/.test(key))
+    Object.entries(server.env).filter(([key]) => keep.has(key) || !/^(CF_|MODRINTH_|FTB_|GTNH_|SKIP_GTNH_)/.test(key))
   );
   const env = { ...cleanedEnv, ...packEnv(resolved) };
   // GTNH's own server start scripts ship -Dfml.queryResult=confirm, and the
