@@ -788,7 +788,7 @@ async function installResolved(
   { actor = 'system', onProgress, ignoreVersion = false } = {}
 ) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const lib = await library.downloadToLibrary(downloadUrl, meta, { onProgress, actor, serverId });
   // Post-download check with the real size: catches servers that omit content-length.
   indexer.assertUnderQuota(server, lib.size_bytes);

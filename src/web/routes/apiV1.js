@@ -185,7 +185,7 @@ function scopedServer(req, res) {
   const { id } = idParam.parse(req.params); // 400 via makeJsonErrorHandler
   const row = servers.getServer(id);
   if (!row || !inScope(req, id)) {
-    res.status(404).json({ ok: false, error: 'Server not found' });
+    res.status(404).json({ ok: false, error: 'Server not found.' });
     return null;
   }
   return row;

@@ -49,7 +49,7 @@ Dependencies flow in one direction:
         └───────────────┘ └─────────┘ └─────────────┘
 ```
 
-- **`web/routes/`** - one router per domain (`players`, `worlds`, `crashes`, `blueprints`, `files`, …).
+- **`web/routes/`**: one router per domain (`players`, `worlds`, `crashes`, `blueprints`, `files`, …).
   `web/app.js` mounts the top-level ones (`api.js`, the session JSON API that also holds the core
   server routes and mounts the per-server domain routers; `index.js`, the pages; `auth`, `account`,
   `tasks`, …). Routers validate with zod, call a service, and return JSON
@@ -60,14 +60,14 @@ Dependencies flow in one direction:
   serves server status, per-server players and backup history, and a Prometheus `/metrics` scrape
   target, all from the in-memory live cache and the database (never a Docker call per request).
   Successful responses are cacheable for five seconds (`Cache-Control: private, max-age=5`).
-- **`services/`** - the heart of the app. Each service owns one domain and may depend on
+- **`services/`**: the heart of the app. Each service owns one domain and may depend on
   infrastructure and on other services.
 - **`docker/`**: dockerode wrappers: `connect` (endpoint detection + daemon health), `containers`
   (create/start/stop/recreate with bind mounts, memory/CPU limits, and labels), `logs`, `stats`,
   `images`, `networks` (host network discovery), `hostPath` (re-roots bind paths under
   `DATA_DIR_HOST`), and a `watcher` that turns Docker events into history + crash detection.
-- **`db/`** - the SQLite wrapper and migration runner.
-- **`storage/`** - the `./data` bootstrap, the **path guard** (`safeJoin`, the file-safety
+- **`db/`**: the SQLite wrapper and migration runner.
+- **`storage/`**: the `./data` bootstrap, the **path guard** (`safeJoin`, the file-safety
   backbone), and the background size-indexer + quota enforcement.
 
 Cross-cutting:

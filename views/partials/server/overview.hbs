@@ -21,11 +21,11 @@
     <div class="prose-sm max-w-prose text-sm text-ink-soft [&_a]:text-link [&_code]:rounded [&_code]:bg-inset [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.9em] [&_code]:text-ink-soft">{{{markdown server.description}}}</div>
     <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
       <div><dt class="text-xs text-ink-faint">Created</dt><dd class="font-medium">{{server.created}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Update policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Start on boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}{{#if perms.settings}} <a class="ml-1 text-xs font-normal text-link hover:underline" href="/servers/{{server.id}}/settings#port">Change</a>{{/if}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Last Started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Update Policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Start on Boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Game Port</dt><dd class="font-medium">{{server.ports.game}}{{#if perms.settings}} <a class="ml-1 text-xs font-normal text-link hover:underline" href="/servers/{{server.id}}/settings#port">Change</a>{{/if}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">RCON Port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
     </dl>
     {{#if server.pack}}
       <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">

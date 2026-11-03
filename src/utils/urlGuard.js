@@ -244,7 +244,7 @@ async function safeFetch(rawUrl, options = {}) {
     if (!location) return res;
     current = new URL(location, current).toString();
   }
-  throw httpError(502, `Too many redirects (more than ${maxRedirects})`);
+  throw httpError(502, `Too many redirects (more than ${maxRedirects}).`);
 }
 
 module.exports = { safeFetch, assertPublicUrl, isBlockedIp, isAmbiguousNumericHost };

@@ -473,7 +473,7 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
   const neededBytes = uncompressedBytes + existingBytes;
   const { free } = await indexer.diskFree();
   if (free < neededBytes * 1.1) {
-    throw httpError(507, `Not enough disk space to install this world (~${humanBytes(neededBytes * 1.1)} needed)`);
+    throw httpError(507, `Not enough disk space to install this world (~${humanBytes(neededBytes * 1.1)} needed).`);
   }
 
   let targetLevel;
