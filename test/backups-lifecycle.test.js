@@ -277,3 +277,61 @@ test('a backup and a restore cannot run at the same time on one server (409)', a
   );
   await slow;
 });
+
+test('verifyBackup reads every entry of a healthy archive and records an event', async () => {
+  const id = seed();
+  const b = await backups.createBackup(id);
+  const out = await backups.verifyBackup(b.id, { actor: 'tester' });
+  assert.equal(out.ok, true);
+  assert.ok(out.entries >= 2);
+  assert.equal(out.bytes, 'LEVEL'.length + 'motd=hi'.length);
+  assert.equal(events(id, 'backup-verified').length, 1);
+});
+
+test('verifyBackup does not touch the live world or stop the server', async () => {
+  const id = seed();
+  const b = await backups.createBackup(id);
+  fs.writeFileSync(dataPath('servers', id, 'world/level.dat'), 'LIVE');
+  status = { exists: true, status: 'running' };
+  await backups.verifyBackup(b.id);
+  assert.equal(stopCalls, 0);
+  assert.equal(read(id, 'world/level.dat'), 'LIVE');
+});
+
+test('verifyBackup catches a bit-flipped archive (422) and records the failure', async () => {
+  const id = seed({ files: { 'world/region.mca': require('node:crypto').randomBytes(8192) } });
+  const b = await backups.createBackup(id);
+  const zip = dataPath(b.rel_path);
+  const buf = fs.readFileSync(zip);
+  buf[30 + 'world/region.mca'.length + 200] ^= 0xff; // inside the entry's data
+  fs.writeFileSync(zip, buf);
+  await assert.rejects(
+    () => backups.verifyBackup(b.id),
+    (e) => e.status === 422 && /damaged/.test(e.message)
+  );
+  assert.equal(events(id, 'backup-verify-failed').length, 1);
+});
+
+test('verifyBackup rejects a truncated or non-zip archive (422)', async () => {
+  const id = seed();
+  const b = await backups.createBackup(id);
+  fs.writeFileSync(dataPath(b.rel_path), 'not a zip');
+  await assert.rejects(
+    () => backups.verifyBackup(b.id),
+    (e) => e.status === 422
+  );
+});
+
+test('verifyBackup: unknown backup and missing archive are 404', async () => {
+  await assert.rejects(
+    () => backups.verifyBackup('bk_missing'),
+    (e) => e.status === 404
+  );
+  const id = seed();
+  const b = await backups.createBackup(id);
+  fs.rmSync(dataPath(b.rel_path));
+  await assert.rejects(
+    () => backups.verifyBackup(b.id),
+    (e) => e.status === 404 && /missing on disk/.test(e.message)
+  );
+});

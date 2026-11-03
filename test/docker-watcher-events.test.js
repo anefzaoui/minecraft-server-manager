@@ -91,6 +91,16 @@ test.beforeEach(() => {
   startImpl = async () => {};
 });
 
+test('events with no label, an unknown server, or a soft-deleted server are ignored', async () => {
+  const id = seed();
+  await watcher.handleEvent({ Action: 'die', Actor: { Attributes: {} } });
+  await watcher.handleEvent({ Action: 'die' });
+  await watcher.handleEvent(evt('srv_nobody', 'die', { exitCode: '1' }));
+  db.run("UPDATE servers SET deleted_at = datetime('now') WHERE id = ?", id);
+  await watcher.handleEvent(evt(id, 'die', { exitCode: '1' }));
+  assert.equal(status(id), 'running', 'a tombstone is not touched');
+});
+
 test('start marks the server starting; a healthy probe marks it running', async () => {
   const id = seed({ status: 'stopped' });
   await watcher.handleEvent(evt(id, 'start'));
@@ -155,6 +165,20 @@ test('clean exits (0, 143, 130) are stops; the event is only recorded when the p
   stopRequested(asked);
   await watcher.handleEvent(evt(asked, 'die', { exitCode: '0' }));
   assert.equal(events(asked, 'stopped').length, 0, 'the stop request already explains it');
+});
+
+test('SIGKILL (137) during a requested stop is a stop; without a request it is a crash that is not auto-restarted', async () => {
+  const asked = seed();
+  stopRequested(asked, 'kill-requested');
+  await watcher.handleEvent(evt(asked, 'die', { exitCode: '137' }));
+  assert.equal(status(asked), 'stopped');
+
+  const id = seed();
+  await watcher.handleEvent(evt(id, 'die', { exitCode: '137' }));
+  assert.equal(status(id), 'crashed');
+  assert.equal(JSON.parse(events(id, 'crashed')[0].details_json).armedRestart, false);
+  await settle();
+  assert.deepEqual(started, []);
 });
 
 test('a missing exit code counts as a crash', async () => {

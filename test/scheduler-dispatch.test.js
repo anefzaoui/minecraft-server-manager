@@ -90,6 +90,37 @@ test('server tasks dispatch to the matching service with the scheduler as actor'
   }
 });
 
+test('a backup task creates a scheduled backup and forwards the shrink option', async () => {
+  redundant = false;
+  await fireOnce({ serverId: 'srv_sch_a', taskType: 'backup', payload: { shrink: true } });
+  const call = calls.find((c) => c[0] === 'backup');
+  const { task, ...rest } = call[2];
+  assert.deepEqual(rest, { reason: 'scheduled', actor: 'scheduler', shrinkAfter: true });
+  assert.equal(typeof task.step, 'function', 'the backup reports progress into a tray task');
+});
+
+test('a scheduled backup is verified right after it is created', async () => {
+  redundant = false;
+  await fireOnce({ serverId: 'srv_sch_a', taskType: 'backup', payload: {} });
+  const names = calls.map((c) => c[0]);
+  assert.ok(names.indexOf('verify') > names.indexOf('backup'));
+  assert.deepEqual(calls.find((c) => c[0] === 'verify').slice(0, 2), ['verify', 'bk_sched']);
+  assert.equal(calls.find((c) => c[0] === 'verify')[2].actor, 'scheduler');
+});
+
+test('a scheduled backup is skipped when the server is stopped and already backed up', async () => {
+  redundant = true;
+  const s = scheduler.createSchedule({ serverId: 'srv_sch_a', taskType: 'backup', cron: EVERY_SECOND });
+  ids.push(s.id);
+  calls.length = 0;
+  await new Promise((r) => setTimeout(r, 2200));
+  scheduler.deleteSchedule(s.id);
+  redundant = false;
+  assert.ok(calls.some((c) => c[0] === 'redundant?'));
+  assert.ok(!calls.some((c) => c[0] === 'backup'));
+  assert.ok(!calls.some((c) => c[0] === 'verify'));
+});
+
 test('an rcon task runs rcon-cli with the words split, defaults to "list", and records the output', async () => {
   await fireOnce({ serverId: 'srv_sch_a', taskType: 'rcon', payload: { command: 'say hello world' } });
   assert.deepEqual(calls[0], ['rcon', 'srv_sch_a', ['rcon-cli', '--', 'say', 'hello', 'world']]);

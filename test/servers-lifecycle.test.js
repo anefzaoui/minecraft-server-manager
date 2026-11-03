@@ -299,6 +299,19 @@ test('a second lifecycle op on the same server while one runs is refused (409)',
   containers.stopContainer = track('stopContainer');
 });
 
+test('recreate of a running server stops it gracefully (marking it requested), rebuilds, and restarts', async () => {
+  const s = await create();
+  inspect = { exists: true, status: 'running' };
+  calls.length = 0;
+  await servers.recreateServer(s.id);
+  assert.deepEqual(
+    calls.filter((c) => ['stopContainer', 'remove', 'create', 'startContainer'].includes(c)),
+    ['stopContainer', 'remove', 'create', 'startContainer']
+  );
+  assert.ok(events(s.id, 'stop-requested').some((e) => /Rebuild requested/.test(e.summary)));
+  assert.equal(events(s.id, 'recreated').length, 1);
+});
+
 test('recreate tolerates a failing graceful stop and can be quiet', async () => {
   const s = await create();
   inspect = { exists: true, status: 'exited' };
