@@ -9,6 +9,7 @@ import { setBusy } from '../lib/loading.js';
 import { initDockerSettings } from '../lib/dockerSettings.js';
 import { wireCatalogConflicts } from '../lib/catalogConflicts.js';
 import { escapeHtml } from '../lib/format.js';
+import { changePackVersion } from '../lib/packVersion.js';
 
 const root = document.querySelector('[data-settings-server]');
 if (root) init(root.dataset.settingsServer);
@@ -676,3 +677,9 @@ function init(serverId) {
     }
   });
 }
+
+// Unpinned-pack warning: Pick a Version… pins the pack through the shared picker.
+document.querySelector('[data-pack-change]')?.addEventListener('click', async (e) => {
+  const { packChange: serverId, serverName } = e.currentTarget.dataset;
+  await changePackVersion({ serverId, serverName });
+});

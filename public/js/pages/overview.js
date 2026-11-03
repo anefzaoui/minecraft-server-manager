@@ -1,6 +1,9 @@
 // Overview tab: keep the "Live usage" card actually live. Subscribes to the
 // same stats WebSocket the Metrics tab uses; without this the card showed the
 // values from page load under a "Live" heading, forever.
+// Also wires the pack card's Change Version… button to the shared picker.
+
+import { changePackVersion } from '../lib/packVersion.js';
 
 const card = document.querySelector('[data-ov-live]');
 if (card && card.dataset.running === '1') init(card);
@@ -63,3 +66,9 @@ function init(card) {
   });
   connect();
 }
+
+// Pack card: Change Version… opens the shared pack version picker.
+document.querySelector('[data-pack-change]')?.addEventListener('click', async (e) => {
+  const { packChange: serverId, serverName } = e.currentTarget.dataset;
+  await changePackVersion({ serverId, serverName });
+});

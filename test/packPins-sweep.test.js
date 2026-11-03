@@ -83,19 +83,33 @@ test('a manifest for a different pack is not trusted', () => {
   assert.ok(result.unresolved >= 1);
 });
 
-test('pins an unpinned Modrinth server from its install manifest', () => {
+test('pins an unpinned Modrinth server from its install manifest and records the pack', () => {
   seedServer('srv_mrmani', 'MODRINTH', { MODRINTH_MODPACK: 'fabulously-optimized' });
-  writeManifest('srv_mrmani', '.modrinth-manifest.json', {
+  writeManifest('srv_mrmani', '.modrinth-modpack-manifest.json', {
     projectSlug: 'fabulously-optimized',
     versionId: 'aBc123Xy',
   });
   pinUnpinnedServers();
   assert.equal(serverRow('srv_mrmani').env.MODRINTH_VERSION, 'aBc123Xy');
+  const pack = db.get("SELECT * FROM server_packs WHERE server_id = 'srv_mrmani'");
+  assert.equal(pack.platform, 'modrinth');
+  assert.equal(pack.project_ref, 'fabulously-optimized');
+  assert.equal(pack.pinned_version_id, 'aBc123Xy');
+});
+
+test('a Modrinth manifest under any other file name is not evidence', () => {
+  seedServer('srv_mrold', 'MODRINTH', { MODRINTH_MODPACK: 'fabulously-optimized' });
+  writeManifest('srv_mrold', '.modrinth-manifest.json', {
+    projectSlug: 'fabulously-optimized',
+    versionId: 'aBc123Xy',
+  });
+  pinUnpinnedServers();
+  assert.equal(serverRow('srv_mrold').env.MODRINTH_VERSION, undefined);
 });
 
 test('the sweep is idempotent: a second run finds nothing to do', () => {
   const result = pinUnpinnedServers();
   assert.equal(result.pinned, 0);
-  // srv_wrong stays unresolved (still unpinned, still no usable evidence).
-  assert.equal(result.unresolved, 1);
+  // srv_wrong and srv_mrold stay unresolved (still unpinned, no usable evidence).
+  assert.equal(result.unresolved, 2);
 });
