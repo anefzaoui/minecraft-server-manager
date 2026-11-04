@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-The **Backups** page is every snapshot across your fleet, with size, reason, and age, filterable by server and by reason.
+The **Backups** page is every snapshot across your fleet, with size, reason, and age, filterable by server and by reason. Each server's card on the [dashboard](dashboard.md) also shows when it was last backed up, and warns once that is over 7 days ago.
 
 ![Backups](images/backups.png)
 
@@ -12,7 +12,7 @@ From a server's **Backups** tab (or via a [schedule](schedules.md)) you can snap
 
 Every archive is **integrity-checked** the moment it's written: the panel reopens the zip and reads its directory. A torn or unopenable archive is deleted and the backup call fails there and then, rather than the problem surfacing months later when a restore is the only thing between you and data loss. A zero-entry archive (a server that has never started) is allowed but flagged on the event.
 
-Tick **"Also shrink the world afterwards"** (on the Backups tab, or in a backup schedule) to remove rarely-visited chunks once the archive is safely written (see **[Shrinking a world](world-shrink.md)**). The shrink only runs while the server is stopped; on a running server the backup still happens and the shrink is skipped.
+Tick **"Shrink World Afterwards"** (on the Backups tab) or **"Shrink the World After Each Backup"** (in a backup schedule) to remove rarely-visited chunks once the archive is safely written (see **[Shrinking a world](world-shrink.md)**). The shrink only runs while the server is stopped; on a running server the backup still happens and the shrink is skipped.
 
 ![Server backups](images/server-backups.png)
 
@@ -58,6 +58,8 @@ Saving never deletes anything by itself. If the new limits would leave existing 
 A backup that is being restored is never removed while the restore runs: retention leaves it alone (and does not delete other backups to make room for it), and deleting it by hand is refused until the restore finishes.
 
 The same settings are available to scripts as admin API endpoints: `GET`/`POST /api/backups/retention` and `/api/servers/:id/backups/retention`. Panel-wide values cannot be `null`. For a server, a value of `null` (or `""`) removes that one key, so it follows the panel-wide value again, and `{ "reset": true }` removes them all. Under each of those two paths, `POST …/preview` reports what a change would remove without removing it (`backups`, `bytes`, `servers`, `ids` and a per-server `byServer` breakdown), and `POST …/apply` applies the saved policy now and answers `{ deleted, skipped }` panel-wide (`skipped` counts busy servers) or `{ deleted }` for one server. Send the preview's `{ "token": "..." }` (kept for 10 minutes) or its `{ "ids": [...] }` to delete only those; with neither, everything over the limit goes. A per-server apply on a busy server answers 409.
+
+Any backup can be **verified** on demand (the shield button on each row, or `POST /api/backups/:id/verify`): the panel reads every file in the archive and checks its checksum, exactly the bytes a restore would extract, without stopping the server or writing anything. **Scheduled backups are verified automatically** right after they are written. A damaged archive is reported as an error (a failed run for a schedule) and logged to the activity history, so you find out before you need it.
 
 Backups can be **renamed** from the backup list (the rename button on each row). The archive on disk and the panel's record move together, so download, restore, and retention keep working with the new name.
 

@@ -422,7 +422,7 @@ async function createServerImpl(input, { actor = 'system', start = false, onProg
       /* best effort */
     }
     if (err.statusCode === 409 && input.containerName) {
-      throw httpError(409, `Container name "${input.containerName}" is already in use by another Docker container`);
+      throw httpError(409, `Container name "${input.containerName}" is already in use by another Docker container.`);
     }
     throw err;
   }
@@ -548,7 +548,7 @@ async function stopServerImpl(id, { actor = 'system' } = {}) {
       type: 'stop-failed',
       summary: `The graceful stop did not take effect, and the server is still running. Try Force Stop.`,
     });
-    throw httpError(502, 'The server did not stop. Try Force stop, or check that Docker is running.');
+    throw httpError(502, 'The server did not stop. Try Force Stop, or check that Docker is running.');
   }
   db.run("UPDATE servers SET status = 'stopped' WHERE id = ?", id);
   const excerpt = await fetchLogs(id, { tail: 100 }).catch(() => '');
@@ -592,8 +592,15 @@ async function recreateServerImpl(id, { actor = 'system', quiet = false } = {}) 
   // A stop failure here isn't fatal to a recreate - removeContainer({force}) below
   // tears it down regardless - but log it so a chronically wedged daemon is visible.
   if (wasRunning) {
+    // Emit the same stop-requested marker as stopServerImpl: without it, the
+    // old container's `die` (docker stop escalates to SIGKILL on a slow-saving
+    // world → exit 137) is read by the watcher as an unrequested crash,
+    // recording phantom crash history and clobbering status - worst case it
+    // lands after the new container's `start` and flips the fleet view to
+    // crashed until the next health event.
+    recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Rebuild requested a graceful stop.' });
     await containers.stopContainer(id).catch((err) => {
-      logger.warn('A graceful stop failed while recreating a server; forcing removal.', {
+      logger.warn('A graceful stop failed while rebuilding a server, so removal is being forced.', {
         serverId: id,
         err: serializeError(err, { includeStack: false }),
       });
@@ -650,7 +657,7 @@ async function buildContainer(server, ports) {
     const removedOrphan = await containers.removeStaleNameConflict(targetName, id).catch(() => false);
     if (!removedOrphan) {
       if (server.containerName) {
-        throw httpError(409, `Container name "${server.containerName}" is already in use by another Docker container`);
+        throw httpError(409, `Container name "${server.containerName}" is already in use by another Docker container.`);
       }
       throw err;
     }
@@ -704,8 +711,14 @@ function assertInitHeapFits(env, heapMb) {
   }
 }
 
-/** Update config fields; computes a diff event and flags recreate needs. */
-function updateServer(id, changes, { actor = 'system' } = {}) {
+/**
+ * Build the config-column diff, SET clause, params, and recreate flag for a
+ * config change. PURE: reads, never writes - the settings save-confirmation
+ * preview reuses exactly the decisions the PATCH makes (same env-merge
+ * semantics, quota/pin checks, blank-clears-a-key). updateServer runs the
+ * UPDATE + event on top of this.
+ */
+function computeServerDiff(id, changes) {
   const before = mustGet(id);
   const columns = {
     name: 'display_name',
@@ -735,7 +748,10 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     params.push(changes[key]);
     if (RECREATE_FIELDS.has(key)) needsRecreate = true;
   }
-  if (changes.tags) {
+  // Tags and the quota come with every settings save, so only a real
+  // difference counts (otherwise the summary and the history list them as changed).
+  const sameTags = (a, b) => JSON.stringify([...(a || [])].sort()) === JSON.stringify([...(b || [])].sort());
+  if (changes.tags && !sameTags(before.tags, changes.tags)) {
     diff.tags = [before.tags, changes.tags];
     sets.push('tags_json = ?');
     params.push(JSON.stringify(changes.tags));
@@ -782,7 +798,7 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     params.push(JSON.stringify(changes.extraBinds));
     needsRecreate = true;
   }
-  if (changes.diskQuotaGb !== undefined) {
+  if (changes.diskQuotaGb !== undefined && Number(changes.diskQuotaGb) * 1024 ** 3 !== (before.disk_quota_bytes || 0)) {
     diff.diskQuotaGb = [Math.round(before.disk_quota_bytes / 1024 ** 3), changes.diskQuotaGb];
     sets.push('disk_quota_bytes = ?');
     params.push(changes.diskQuotaGb * 1024 ** 3);
@@ -796,6 +812,85 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     params.push(changes[flag] ? 1 : 0);
   }
 
+  return { diff, sets, params, needsRecreate };
+}
+
+/**
+ * What the settings save-confirmation modal is going to show: one labelled row
+ * per field that WILL change (friendly label + before → after), expanded
+ * per-key for env so the user sees exactly which variables change. Read-only.
+ */
+function summarizeServerChanges(id, changes) {
+  const before = mustGet(id);
+  const { diff, needsRecreate } = computeServerDiff(id, changes);
+  const { getField } = require('../config/field-catalog');
+  const rows = [];
+
+  const DIRECT_LABELS = {
+    name: 'Display name',
+    description: 'Description',
+    icon: 'Icon',
+    accent: 'Accent color',
+    notes: 'Private notes',
+    mcVersion: 'Minecraft version',
+    javaTag: 'Java version',
+    heapMb: 'Java heap',
+    containerMemoryMb: 'Container memory limit',
+    cpus: 'CPU limit',
+    updatePolicy: 'Update policy',
+    containerName: 'Container name',
+    networkName: 'Docker network',
+    diskQuotaGb: 'Disk quota',
+    autoStart: 'Start on panel boot',
+    autoRestart: 'Auto-restart on crash',
+    quotaStrict: 'Strict quota enforcement',
+    tags: 'Tags',
+    extraPorts: 'Extra port mappings',
+    extraBinds: 'Extra volume binds',
+  };
+  // Mirrors computeServerDiff's RECREATE_FIELDS plus every block that pushes
+  // pending_recreate: which keys need a container rebuild to take effect.
+  const RECREATE_KEYS = new Set([
+    'mcVersion',
+    'javaTag',
+    'heapMb',
+    'containerMemoryMb',
+    'cpus',
+    'env',
+    'containerName',
+    'networkName',
+    'extraPorts',
+    'extraBinds',
+  ]);
+
+  const push = (label, beforeVal, afterVal, requiresRebuild) => {
+    rows.push({ label, before: beforeVal ?? null, after: afterVal ?? null, requiresRebuild: Boolean(requiresRebuild) });
+  };
+
+  for (const [key, [beforeVal, afterVal]] of Object.entries(diff)) {
+    if (key === 'env') {
+      for (const envKey of new Set([...Object.keys(before.env || {}), ...Object.keys(changes.env || {})])) {
+        const b = (before.env || {})[envKey];
+        const a = (changes.env || {})[envKey];
+        if (String(b ?? null) === String(a ?? null)) continue;
+        push(getField('env', envKey)?.label ?? envKey, b, a, true);
+      }
+    } else if (key === 'extraPorts' || key === 'extraBinds') {
+      const beforeList = key === 'extraPorts' ? before.extraPorts : before.extraBinds;
+      const afterList = key === 'extraPorts' ? changes.extraPorts : changes.extraBinds;
+      push(DIRECT_LABELS[key], String(beforeList.length), String(afterList.length), true);
+    } else {
+      push(DIRECT_LABELS[key] ?? key, beforeVal, afterVal, RECREATE_KEYS.has(key));
+    }
+  }
+  rows.sort((a, b) => Number(b.requiresRebuild) - Number(a.requiresRebuild));
+  return { changes: rows, needsRecreate };
+}
+
+/** Update config fields; computes a diff event and flags recreate needs. */
+function updateServer(id, changes, { actor = 'system' } = {}) {
+  const before = mustGet(id);
+  const { diff, sets, params, needsRecreate } = computeServerDiff(id, changes);
   if (!sets.length) return { server: before, needsRecreate: false };
   if (needsRecreate) sets.push('pending_recreate = 1');
   db.run(`UPDATE servers SET ${sets.join(', ')} WHERE id = ?`, ...params, id);
@@ -803,7 +898,7 @@ function updateServer(id, changes, { actor = 'system' } = {}) {
     serverId: id,
     actor,
     type: 'config-changed',
-    summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (rebuild required)' : ''}`,
+    summary: `Configuration changed: ${Object.keys(diff).join(', ')}${needsRecreate ? ' (rebuild required).' : '.'}`,
     details: { diff, needsRecreate },
   });
   return { server: getServer(id), needsRecreate };
@@ -990,6 +1085,11 @@ async function changeGamePort(id, port, opts = {}) {
  */
 async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBackups = true } = {}) {
   const server = mustGet(id);
+  // Same stop-requested marker as stopServerImpl/recreateServerImpl: the
+  // deleted container's `die` must not be read by the watcher as an
+  // unrequested crash while the row is still live (the delete transaction
+  // below is what tombstones it).
+  recordEvent({ serverId: id, actor, type: 'stop-requested', summary: 'Delete requested a graceful stop.' });
   await containers.stopContainer(id).catch(() => {});
   await containers.removeContainer(id);
   let freedBytes = 0;
@@ -1069,6 +1169,9 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBa
     // Keep the soft-deleted server row itself (history retains context).
     db.run("UPDATE servers SET deleted_at = datetime('now'), status = 'stopped' WHERE id = ?", id);
   });
+  // The delete just dropped this server's update_checks/server_content/server_packs
+  // rows - the outdated-count badge would otherwise keep counting them.
+  require('../updates/checker').invalidateOutdatedCache();
   recordEvent({
     serverId: id,
     actor,
@@ -1210,7 +1313,9 @@ async function refreshStatusesInner({ boot }) {
       // 'stopped'. Suppress it when the boot sequence WILL bring it back -
       // either auto_start, or auto_restart on a crashed server - so the alert
       // never contradicts what the panel is about to do.
-      const bootWillStart = server.auto_start || (server.auto_restart && status === 'crashed');
+      const bootWillStart =
+        server.auto_start ||
+        (server.auto_restart && status === 'crashed' && !require('../docker/watcher').inCrashLoopBackoff(server.id));
       if (
         boot &&
         !bootWillStart &&
@@ -1289,7 +1394,7 @@ async function dirSize(dir) {
 
 function mustGet(id) {
   const server = getServer(id);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   return server;
 }
 
@@ -1316,7 +1421,7 @@ function parseProperties(text) {
  */
 function unsetEnvKeys(serverId, envKeys, { actor = 'system' } = {}) {
   const server = getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const removed = [];
   for (const key of envKeys) {
     if (key && Object.prototype.hasOwnProperty.call(server.env, key)) {
@@ -1357,7 +1462,7 @@ function unlockPropertyEnv(serverId, propKeys, { actor = 'system' } = {}) {
  * @returns {{ rebuildNeeded: boolean, unlocked: string[] }}
  */
 function writeServerProperties(serverId, content, { actor = 'system' } = {}) {
-  if (!getServer(serverId)) throw httpError(404, 'Server not found');
+  if (!getServer(serverId)) throw httpError(404, 'Server not found.');
   let oldText = '';
   try {
     oldText = fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
@@ -1387,7 +1492,7 @@ function writeServerProperties(serverId, content, { actor = 'system' } = {}) {
  * @returns {{ rebuildNeeded: boolean, unlocked: string[] }}
  */
 function setServerProperty(serverId, key, value, { actor = 'system', baseText } = {}) {
-  if (!getServer(serverId)) throw httpError(404, 'Server not found');
+  if (!getServer(serverId)) throw httpError(404, 'Server not found.');
   let text = '';
   try {
     text = baseText ?? fs.readFileSync(dataPath('servers', serverId, 'server.properties'), 'utf8');
@@ -1421,6 +1526,7 @@ module.exports = {
   createServer,
   updateServer,
   changeGamePort,
+  summarizeServerChanges,
   deleteServer,
   startServer,
   stopServer,

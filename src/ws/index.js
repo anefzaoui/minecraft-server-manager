@@ -169,6 +169,8 @@ const CONSOLE_REPLAY_BYTES = 256 * 1024;
 // that would freeze the console for every other admin watching the same server.
 const CONSOLE_SLOW_SOCKET_BYTES = 4 * 1024 * 1024;
 const CONSOLE_SLOW_GRACE_MS = 5_000;
+// How long upstream log chunks are batched before one frame goes to each tab.
+const CONSOLE_FLUSH_MS = 40;
 
 function dropSlowConsoleSubs(broker) {
   const now = Date.now();
@@ -217,6 +219,22 @@ function subscribeConsole(serverId, sub) {
           return;
         }
         broker.follower = follower;
+        // Coalesce upstream chunks: a boot burst arrives as hundreds of tiny
+        // chunks, and each used to cost one JSON.stringify + socket frame per
+        // tab. Batch them for a few ms and send one frame instead. The replay
+        // buffer is filled immediately; flush() runs before anything that must
+        // not reorder against pending text (a late joiner, end, error).
+        let pending = '';
+        let flushTimer = null;
+        broker.flush = () => {
+          if (flushTimer) clearTimeout(flushTimer);
+          flushTimer = null;
+          if (!pending) return;
+          const text = pending;
+          pending = '';
+          for (const s of broker.subs) if (!s.dropped) s.onLog(text);
+          dropSlowConsoleSubs(broker);
+        };
         follower.stream.on('data', (chunk) => {
           const text = chunk.toString('utf8');
           broker.buffer.push(text);
@@ -224,10 +242,11 @@ function subscribeConsole(serverId, sub) {
           while (broker.bufferBytes > CONSOLE_REPLAY_BYTES && broker.buffer.length > 1) {
             broker.bufferBytes -= Buffer.byteLength(broker.buffer.shift());
           }
-          for (const s of broker.subs) if (!s.dropped) s.onLog(text);
-          dropSlowConsoleSubs(broker);
+          pending += text;
+          if (!flushTimer) flushTimer = setTimeout(broker.flush, CONSOLE_FLUSH_MS);
         });
         follower.stream.on('end', () => {
+          broker.flush();
           for (const s of broker.subs) s.onEnd();
           // The follow is over (container stopped / docker restarted it). Drop
           // the broker so a tab that connects later starts a fresh follow rather
@@ -235,6 +254,7 @@ function subscribeConsole(serverId, sub) {
           stopConsoleBroker(serverId, broker);
         });
         follower.stream.on('error', (err) => {
+          broker.flush();
           logger.debug('A console log stream errored.', {
             serverId,
             err: serializeError(err, { includeStack: false }),
@@ -260,8 +280,12 @@ function subscribeConsole(serverId, sub) {
       });
   }
 
+  // Push out any batched-but-unsent text first, so the replay below (which
+  // already contains it) is not followed by a duplicate live frame.
+  if (broker.flush) broker.flush();
   broker.subs.add(sub);
-  for (const chunk of broker.buffer) sub.onLog(chunk); // catch a late tab up
+  // One frame for the whole replay, not one per buffered chunk.
+  if (broker.buffer.length) sub.onLog(broker.buffer.join('')); // catch a late tab up
 
   return () => {
     broker.subs.delete(sub);

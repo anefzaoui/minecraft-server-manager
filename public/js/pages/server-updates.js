@@ -119,13 +119,13 @@ function render(body, version, unknown, unchecked) {
   body.innerHTML = '';
   if (version.missingCount) {
     body.append(
-      section(`No build for ${version.version}`, version.missing, 'danger', 'These mods would be left behind.')
+      section(`No Build for ${version.version}`, version.missing, 'danger', 'These mods would be left behind.')
     );
   }
   if (unknown.length) {
     body.append(
       section(
-        'Could not be identified',
+        'Could Not Be Identified',
         unknown,
         'warn',
         'Neither registry recognises these files, so what they support is unknown.'
@@ -135,7 +135,7 @@ function render(body, version, unknown, unchecked) {
   if (unchecked.length) {
     body.append(
       section(
-        'Could not be checked',
+        'Could Not Be Checked',
         unchecked,
         'warn',
         'These come from a source that publishes no per-version build list, so nobody can say either way.'

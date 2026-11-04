@@ -230,7 +230,7 @@ export function initRetentionForm(
     dialogOpen = true;
     syncSave();
     openModal({
-      title: 'Remove old backups now?',
+      title: 'Remove Old Backups Now?',
       content,
       size: 'md', // three actions: sm wraps them onto two rows
       onClose: () => {
