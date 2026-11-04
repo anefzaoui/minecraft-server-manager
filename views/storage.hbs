@@ -16,7 +16,7 @@
     {{! meterColor: the headline bar must go gold/red as the drive fills - it
         stayed success-green even at 95%. }}
     <div class="meter mt-3 h-3"><div class="{{meterColor storage.totalUsed storage.diskTotal}}" style="width: {{pct storage.totalUsed storage.diskTotal}}%"></div></div>
-    <div class="mt-4 flex h-6 w-full overflow-hidden rounded-md" title="Breakdown by category">
+    <div class="mt-4 flex h-6 w-full overflow-hidden rounded-md" title="Breakdown by category.">
       {{#each storage.breakdown}}
         <div class="{{cls}}" style="width: {{width}}%" title="{{label}}: {{bytes size}}"></div>
       {{/each}}
@@ -33,7 +33,7 @@
     {{#if storage.trend.length}}
       <div class="flex h-24 items-end gap-1">
         {{#each storage.trend}}
-          <div class="flex-1 rounded-t bg-diamond-500/70" style="height: {{this}}%" title="{{this}}% of the largest scan"></div>
+          <div class="flex-1 rounded-t bg-diamond-500/70" style="height: {{this}}%" title="{{this}}% of the largest scan."></div>
         {{/each}}
       </div>
       <p class="help">GB used over the last scans. Snapshots recorded on every scan.</p>
@@ -54,7 +54,7 @@
               <td data-th=""><div class="font-medium">{{name}}</div><div class="break-all font-mono text-xs text-ink-faint">{{path}}</div></td>
               <td data-th="" class="sm:w-40"><div class="meter"><div class="bg-diamond-400" style="width: {{pct size ../storage.totalUsed}}%"></div></div></td>
               <td data-th="" class="text-ink-faint sm:w-24 sm:text-right">{{bytes size}}</td>
-              <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open in the global file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
+              <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open in the global file manager.">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
             </tr>
           {{/each}}
         </tbody>
@@ -68,8 +68,7 @@
       <div class="divide-y divide-line">
         {{#each storage.cleanup}}
           <div class="flex items-center gap-3 p-3 text-sm">
-            <span class="flex-1">{{action}}{{#if count}} <span class="text-xs text-ink-faint">({{count}} item{{#if (ne count 1)}}s{{/if}})</span>{{/if}}</span>
-            <span class="text-xs text-ok">frees {{bytes frees}}</span>
+            <span class="flex-1">{{action}}</span>
             <button class="btn btn-sm" data-cleanup-action="{{key}}" data-cleanup-label="{{action}}" {{#if days}}data-cleanup-days="{{days}}"{{/if}}>Preview…</button>
           </div>
         {{/each}}
@@ -97,26 +96,14 @@
   </div>
 </div>
 
-{{#if storage.largestFiles.length}}
 <div class="card mt-6">
   <div class="border-b border-line p-3 font-semibold">Largest Files</div>
   <div class="overflow-x-auto">
     <table class="table-base table-stack">
-      <tbody>
-        {{#each storage.largestFiles}}
-          <tr>
-            <td data-th="" class="break-all font-mono text-xs">{{path}}</td>
-            <td data-th="" class="text-ink-faint sm:w-24 sm:text-right">{{bytes size}}</td>
-            <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open containing folder in the file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
-          </tr>
-        {{/each}}
+      <tbody id="largest-files-body">
+        <tr><td data-th="" class="p-6 text-center text-ink-faint">Finding the largest files…</td></tr>
       </tbody>
     </table>
   </div>
 </div>
-{{else}}
-<div class="mt-6">
-  {{> empty-state iconName='file-search' title='Nothing Indexed Yet' message='Run a re-scan from the Disk Usage card above to index the largest files in the panel data folder.'}}
-</div>
-{{/if}}
 <script type="module" src="/js/pages/storage.js"></script>

@@ -21,11 +21,11 @@
     <div class="prose-sm max-w-prose text-sm text-ink-soft [&_a]:text-link [&_code]:rounded [&_code]:bg-inset [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.9em] [&_code]:text-ink-soft">{{{markdown server.description}}}</div>
     <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
       <div><dt class="text-xs text-ink-faint">Created</dt><dd class="font-medium">{{server.created}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Last started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Update policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Start on boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">Game port</dt><dd class="font-medium">{{server.ports.game}}{{#if perms.settings}} <a class="ml-1 text-xs font-normal text-link hover:underline" href="/servers/{{server.id}}/settings#port">Change</a>{{/if}}</dd></div>
-      <div><dt class="text-xs text-ink-faint">RCON port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Last Started</dt><dd class="font-medium">{{server.lastStarted}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Update Policy</dt><dd class="font-medium">{{capitalize server.updatePolicy}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Start on Boot</dt><dd class="font-medium">{{#if server.autoStart}}Yes{{else}}No{{/if}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">Game Port</dt><dd class="font-medium">{{server.ports.game}}{{#if perms.settings}} <a class="ml-1 text-xs font-normal text-link hover:underline" href="/servers/{{server.id}}/settings#port">Change</a>{{/if}}</dd></div>
+      <div><dt class="text-xs text-ink-faint">RCON Port</dt><dd class="font-medium">{{server.ports.rcon}}</dd></div>
     </dl>
     {{#if server.pack}}
       <div class="mt-4 rounded-md border border-line bg-raised p-3 text-sm">
@@ -34,7 +34,7 @@
           <b>{{server.pack.name}}</b>
           <span class="chip">pinned @ {{server.pack.version}}</span>
           {{#if server.updateAvailable}}
-            <a class="btn btn-sm ml-auto" href="/updates">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{server.pack.latest}} available</a>
+            <a class="btn btn-sm ml-auto" href="/updates">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{server.pack.latest}} Available</a>
           {{/if}}
         </div>
       </div>
@@ -57,7 +57,7 @@
           <div class="mb-1 flex justify-between text-ink-faint"><span>Memory</span><span data-ov-mem-label>{{server.stats.memUsedMb}} / {{server.resources.containerMemoryMb}} MB</span></div>
           {{! The tick marks the Java heap on the container-limit scale: usage
               parked on the tick is the heap doing what it was told (#25). }}
-          <div class="meter"><div data-ov-mem-bar class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div>{{#if server.memory.heapPct}}<span class="meter-mark" style="left: {{server.memory.heapPct}}%" data-tip="Java heap: {{server.memory.heapMb}} MB"></span>{{/if}}</div>
+          <div class="meter"><div data-ov-mem-bar class="{{meterColor server.stats.memUsedMb server.resources.containerMemoryMb}}" style="width: {{pct server.stats.memUsedMb server.resources.containerMemoryMb}}%"></div>{{#if server.memory.heapPct}}<span class="meter-mark" style="left: {{server.memory.heapPct}}%" data-tip="Java heap: {{server.memory.heapMb}} MB."></span>{{/if}}</div>
           {{#if server.memory.note}}<p class="mt-1 text-ink-faint">{{server.memory.note}}</p>{{/if}}
         </div>
         <div>
@@ -76,7 +76,7 @@
               <span class="grid size-6 place-items-center rounded bg-inset text-[11px] font-bold">{{this.[0]}}</span>
               <span class="flex-1 truncate">{{this}}</span>
               {{! arrow, not "⋯" - the ellipsis glyph means "menu" everywhere else, this navigates. }}
-              <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="Manage on the Players tab" aria-label="Manage {{this}}">{{{icon 'arrow-right' 'size-3.5'}}}</a>
+              <a class="btn btn-ghost btn-sm" href="/servers/{{../server.id}}/players" data-tip="Manage on the Players tab." aria-label="Manage {{this}}">{{{icon 'arrow-right' 'size-3.5'}}}</a>
             </li>
           {{/each}}
         </ul>

@@ -11,6 +11,7 @@ const express = require('express');
 const multer = require('multer');
 const { z } = require('zod');
 const worlds = require('../../services/worlds');
+const tasks = require('../../services/tasks');
 const { dataPath } = require('../../storage/pathGuard');
 const logger = require('../../logger')('worlds');
 const { serializeError } = require('../../utils/logSanitize');
@@ -24,7 +25,7 @@ const httpError = require('../../utils/httpError');
 /** Writing a world into a server needs `content` there; a hidden server reads as missing. */
 function requireContentOn(req, serverId) {
   const perms = permissions.effective(req.user, serverId);
-  if (!perms.includes('view')) throw httpError(404, 'Server not found');
+  if (!perms.includes('view')) throw httpError(404, 'Server not found.');
   if (!perms.includes('content')) throw httpError(403, "You don't have the content permission on this server.");
 }
 const db = require('../../db');
@@ -85,11 +86,10 @@ router.post('/upload', worldUploadPreflight, upload.single('file'), async (req, 
   try {
     if (!req.file) throw badRequest('Attach a world archive (zip, .mcworld, tar, or tar.gz).');
     const { name } = z.object({ name: z.string().trim().max(120).optional() }).parse(req.body || {});
-    const row = await worlds.importArchive(req.file.path, {
-      name,
-      originalName: req.file.originalname,
-      actor: actorOf(req),
-    });
+    const actor = actorOf(req);
+    const row = await tasks.track(`Importing ${req.file.originalname}…`, { actor }, () =>
+      worlds.importArchive(req.file.path, { name, originalName: req.file.originalname, actor })
+    );
     res.status(201).json({ ok: true, world: libVM(row) });
   } catch (err) {
     if (req.file) await fsp.rm(req.file.path, { force: true }).catch(onTempCleanupFailed);
@@ -107,7 +107,10 @@ router.post(
       })
       .parse(req.body);
     requireContentOn(req, serverId);
-    const row = await worlds.extractFromServer(serverId, { name, actor: actorOf(req) });
+    const actor = actorOf(req);
+    const row = await tasks.track('Saving a world to the library…', { serverId, actor }, () =>
+      worlds.extractFromServer(serverId, { name, actor })
+    );
     res.status(201).json({ ok: true, world: libVM(row) });
   })
 );
@@ -130,7 +133,10 @@ router.post(
     if (warnings.length && !confirm) {
       return res.json({ ok: true, requiresConfirm: true, warnings });
     }
-    const result = await worlds.installToServer(req.params.id, serverId, { mode, newName, actor: actorOf(req) });
+    const actor = actorOf(req);
+    const result = await tasks.track('Installing a world…', { serverId, actor }, () =>
+      worlds.installToServer(req.params.id, serverId, { mode, newName, actor })
+    );
     res.json({ ok: true, ...result });
   })
 );
@@ -139,7 +145,7 @@ router.get(
   '/:id/download',
   asyncHandler((req, res, next) => {
     const lib = db.get("SELECT * FROM library_files WHERE id = ? AND category = 'world'", req.params.id);
-    if (!lib) throw notFound('World not found in the library');
+    if (!lib) throw notFound('World not found in the library.');
     res.download(dataPath(lib.rel_path), lib.filename.endsWith('.zip') ? lib.filename : `${lib.filename}.zip`);
   })
 );
@@ -150,7 +156,7 @@ router.patch(
   asyncHandler((req, res, next) => {
     const { name } = z.object({ name: z.string().trim().min(1).max(120) }).parse(req.body);
     const lib = db.get("SELECT * FROM library_files WHERE id = ? AND category = 'world'", req.params.id);
-    if (!lib) throw notFound('World not found in the library');
+    if (!lib) throw notFound('World not found in the library.');
     db.run('UPDATE library_files SET name = ? WHERE id = ?', name, lib.id);
     require('../../events').recordEvent({
       actor: actorOf(req),
@@ -240,7 +246,13 @@ serverWorlds.post(
         backup: z.coerce.boolean().default(true),
       })
       .parse(req.body);
-    res.json({ ok: true, ...(await worlds.resetWorld(req.params.id, { ...opts, actor: actorOf(req) })) });
+    const actor = actorOf(req);
+    res.json({
+      ok: true,
+      ...(await tasks.track('Resetting the world…', { serverId: req.params.id, actor }, () =>
+        worlds.resetWorld(req.params.id, { ...opts, actor })
+      )),
+    });
   })
 );
 
@@ -271,7 +283,13 @@ serverWorlds.delete(
   '/:world',
   asyncHandler(async (req, res, next) => {
     const world = worldNameSchema.parse(req.params.world);
-    res.json({ ok: true, ...(await worlds.deleteServerWorld(req.params.id, world, { actor: actorOf(req) })) });
+    const actor = actorOf(req);
+    res.json({
+      ok: true,
+      ...(await tasks.track('Deleting a world…', { serverId: req.params.id, actor }, () =>
+        worlds.deleteServerWorld(req.params.id, world, { actor })
+      )),
+    });
   })
 );
 

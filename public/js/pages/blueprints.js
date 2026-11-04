@@ -82,7 +82,7 @@ function showPreview(preview, importBody) {
 
   content.innerHTML = `
     <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-      <div><dt class="text-ink-faint">Server type</dt><dd class="mt-0.5 font-medium">${esc(m.config.type)} · MC ${esc(m.config.mcVersion)}</dd></div>
+      <div><dt class="text-ink-faint">Server Type</dt><dd class="mt-0.5 font-medium">${esc(m.config.type)} · MC ${esc(m.config.mcVersion)}</dd></div>
       <div><dt class="text-ink-faint">Modpack</dt><dd class="mt-0.5 font-medium">${m.pack ? esc(`${m.pack.projectName || m.pack.projectRef} @ ${m.pack.versionName || m.pack.versionId}`) : 'None'}</dd></div>
       <div><dt class="text-ink-faint">Resources</dt><dd class="mt-0.5 font-medium">${esc(m.resources.heapMb)} MB heap · ${esc(m.resources.containerMemoryMb)} MB limit · ${esc(m.resources.cpus || 'unlimited')} CPU · ${esc(m.resources.diskQuotaGb)} GB quota</dd></div>
       <div><dt class="text-ink-faint">Includes</dt><dd class="mt-0.5 font-medium">${m.configFiles.length} config file${m.configFiles.length === 1 ? '' : 's'} · ${m.world ? 'world included' : 'no world'} · ${m.embedFiles ? 'files embedded' : 'manifest-only'}</dd></div>

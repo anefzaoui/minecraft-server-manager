@@ -1,6 +1,7 @@
 'use strict';
 
 require('./helpers/env');
+const http = require('node:http');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('./helpers/app');
@@ -130,6 +131,157 @@ test('scope filtering: a scoped token sees only its server', async () => {
   assert.equal((await app.req('GET', '/api/v1/servers/srv_v1b', auth(tokAll))).status, 200);
   assert.equal((await app.req('GET', '/api/v1/servers/not-an-id', auth(tokAll))).status, 400);
   assert.equal((await app.req('GET', '/api/v1/servers/srv_missing', auth(tokAll))).status, 404);
+});
+
+test('GET /api/v1/metrics serves Prometheus text, scoped and token-authed', async () => {
+  db.run("UPDATE servers SET status = 'stopped' WHERE id IN ('srv_v1a','srv_v1b')");
+  assert.equal((await app.req('GET', '/api/v1/metrics')).status, 401);
+
+  const all = await app.req('GET', '/api/v1/metrics', auth(tokAll));
+  assert.equal(all.status, 200);
+  assert.match(all.headers.get('content-type'), /^text\/plain;.*version=0\.0\.4/);
+  assert.match(all.text, /^msm_servers 2$/m);
+  assert.match(all.text, /^msm_server_up\{server_id="srv_v1a",name="Test Server"\} 0$/m);
+  assert.match(all.text, /^msm_server_up\{server_id="srv_v1b",name="Test Server"\} 0$/m);
+  // Seeded 1536 MB limit is exported in bytes; unknown live readings are absent.
+  assert.match(all.text, /^msm_server_memory_limit_bytes\{server_id="srv_v1a",[^}]*\} 1610612736$/m);
+  assert.doesNotMatch(all.text, /msm_server_cpu_percent|msm_server_players_online|msm_server_tps/);
+
+  db.run("UPDATE servers SET status = 'running' WHERE id = 'srv_v1a'");
+  const up = await app.req('GET', '/api/v1/metrics', auth(tokAll));
+  assert.match(up.text, /^msm_server_up\{server_id="srv_v1a",[^}]*\} 1$/m);
+
+  const scoped = await app.req('GET', '/api/v1/metrics', auth(tokScoped));
+  assert.match(scoped.text, /^msm_servers 1$/m);
+  assert.doesNotMatch(scoped.text, /srv_v1b/);
+  assert.equal((await app.req('POST', '/api/v1/metrics', auth(tokAll))).status, 405);
+  db.run("UPDATE servers SET status = 'stopped' WHERE id = 'srv_v1a'");
+});
+
+test('GET /api/v1/servers/:id/backups lists history newest first without file paths', async () => {
+  for (const [id, at, reason] of [
+    ['bk_old', '2026-01-01 00:00:00', 'scheduled'],
+    ['bk_new', '2026-02-01 00:00:00', 'manual'],
+  ]) {
+    db.run(
+      `INSERT INTO backups (id, server_id, filename, rel_path, size_bytes, reason, note, created_at)
+       VALUES (?, 'srv_v1a', ?, ?, 2048, ?, 'n', ?)`,
+      id,
+      `${id}.zip`,
+      `backups/srv_v1a/${id}.zip`,
+      reason,
+      at
+    );
+  }
+  const r = await app.req('GET', '/api/v1/servers/srv_v1a/backups', auth(tokAll));
+  assert.equal(r.status, 200);
+  assert.deepEqual(
+    r.json.backups.map((b) => b.id),
+    ['bk_new', 'bk_old']
+  );
+  assert.deepEqual(Object.keys(r.json.backups[0]).sort(), [
+    'createdAt',
+    'filename',
+    'id',
+    'note',
+    'reason',
+    'sizeBytes',
+  ]);
+  assert.equal(/rel_path|backups\/srv_v1a/.test(r.text), false);
+
+  const one = await app.req('GET', '/api/v1/servers/srv_v1a/backups?limit=1', auth(tokAll));
+  assert.deepEqual(
+    one.json.backups.map((b) => b.id),
+    ['bk_new']
+  );
+  assert.equal((await app.req('GET', '/api/v1/servers/srv_v1a/backups?limit=0', auth(tokAll))).status, 400);
+  assert.equal((await app.req('GET', '/api/v1/servers/srv_v1a/backups?limit=999', auth(tokAll))).status, 400);
+});
+
+test('GET /api/v1/servers/:id/players reports sessions, and null live data when unknown', async () => {
+  db.run(
+    `INSERT INTO player_sessions (server_id, player, started_at, ended_at) VALUES
+       ('srv_v1a', 'Alex', '2026-03-01T10:00:00.000Z', '2026-03-01T11:00:00.000Z'),
+       ('srv_v1a', 'Steve', '2026-03-02T10:00:00.000Z', NULL)`
+  );
+  const r = await app.req('GET', '/api/v1/servers/srv_v1a/players', auth(tokAll));
+  assert.equal(r.status, 200);
+  // Never started in this test process, so the live cache has no player list.
+  assert.equal(r.json.online, null);
+  assert.equal(r.json.max, null);
+  assert.equal(r.json.names, null);
+  assert.deepEqual(r.json.sessions, [
+    { player: 'Steve', startedAt: '2026-03-02T10:00:00.000Z', endedAt: null, open: true },
+    { player: 'Alex', startedAt: '2026-03-01T10:00:00.000Z', endedAt: '2026-03-01T11:00:00.000Z', open: false },
+  ]);
+  const one = await app.req('GET', '/api/v1/servers/srv_v1a/players?limit=1', auth(tokAll));
+  assert.equal(one.json.sessions.length, 1);
+});
+
+test('the per-server sub-routes honour token scope and id validation', async () => {
+  for (const sub of ['players', 'backups']) {
+    assert.equal((await app.req('GET', `/api/v1/servers/srv_v1a/${sub}`)).status, 401);
+    assert.equal((await app.req('GET', `/api/v1/servers/srv_v1a/${sub}`, auth(tokScoped))).status, 200);
+    assert.equal((await app.req('GET', `/api/v1/servers/srv_v1b/${sub}`, auth(tokScoped))).status, 404);
+    assert.equal((await app.req('GET', `/api/v1/servers/srv_missing/${sub}`, auth(tokAll))).status, 404);
+    assert.equal((await app.req('GET', `/api/v1/servers/not-an-id/${sub}`, auth(tokAll))).status, 400);
+  }
+});
+
+test('successful live reads are briefly cacheable; errors never are', async () => {
+  const ok = [
+    '/api/v1/servers',
+    '/api/v1/servers/srv_v1a',
+    '/api/v1/servers/srv_v1a/players',
+    '/api/v1/servers/srv_v1a/backups',
+    '/api/v1/metrics',
+  ];
+  for (const path of ok) {
+    const r = await app.req('GET', path, auth(tokAll));
+    assert.equal(r.status, 200, path);
+    assert.equal(r.headers.get('cache-control'), 'private, max-age=5', path);
+    assert.match(r.headers.get('vary') || '', /authorization/i, path);
+  }
+
+  // 401, 400, and 404 keep the panel-wide revalidate-always default.
+  const denied = [
+    ['/api/v1/servers', undefined],
+    ['/api/v1/servers/not-an-id', auth(tokAll)],
+    ['/api/v1/servers/srv_missing', auth(tokAll)],
+    ['/api/v1/servers/srv_v1b/players', auth(tokScoped)],
+    ['/api/v1/nope', auth(tokAll)],
+  ];
+  for (const [path, opts] of denied) {
+    const r = await app.req('GET', path, opts);
+    assert.notEqual(r.status, 200, path);
+    assert.doesNotMatch(r.headers.get('cache-control') || '', /max-age=5/, path);
+  }
+});
+
+test('a conditional GET revalidates to 304 via the ETag', async () => {
+  const first = await app.req('GET', '/api/v1/servers', auth(tokAll));
+  const etag = first.headers.get('etag');
+  assert.ok(etag, 'the response carries an ETag');
+  // node:http, not fetch: undici adds `Cache-Control: no-cache` to any
+  // conditional request, which makes Express skip the 304 by design.
+  const base = new URL(await app.start());
+  const status = await new Promise((resolve, reject) => {
+    http
+      .get(
+        {
+          host: base.hostname,
+          port: base.port,
+          path: '/api/v1/servers',
+          headers: { Authorization: `Bearer ${tokAll}`, 'If-None-Match': etag },
+        },
+        (res) => {
+          res.resume();
+          resolve(res.statusCode);
+        }
+      )
+      .on('error', reject);
+  });
+  assert.equal(status, 304);
 });
 
 test('the API is read-only: non-GET is 405 with Allow: GET', async () => {
