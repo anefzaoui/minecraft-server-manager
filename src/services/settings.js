@@ -240,9 +240,15 @@ function sanitizeDefaults(patch = {}) {
   return out;
 }
 
+// getDefaults() runs once per meter-bar/overview render (the Handlebars
+// meterColor helper fans out per row). The effective defaults only change via
+// setDefaults/resetDefaults, so memoize and invalidate on those two.
+let defaultsCache = null;
+
 /** The effective per-instance defaults: built-in/env base layered with saved overrides. */
 function getDefaults() {
-  return { ...config.defaults, ...sanitizeDefaults(get(DEFAULTS_KEY, {})) };
+  if (!defaultsCache) defaultsCache = { ...config.defaults, ...sanitizeDefaults(get(DEFAULTS_KEY, {})) };
+  return { ...defaultsCache };
 }
 
 /** Persist operator-set overrides for some/all default fields. Returns the new effective defaults. */
@@ -254,12 +260,14 @@ function setDefaults(patch) {
     throw require('../utils/httpError')(400, 'The disk warning threshold must be lower than the critical threshold.');
   }
   set(DEFAULTS_KEY, next);
+  defaultsCache = null;
   return getDefaults();
 }
 
 /** Clear operator overrides - back to the built-in/.env defaults. Returns the new effective defaults. */
 function resetDefaults() {
   remove(DEFAULTS_KEY);
+  defaultsCache = null;
   return getDefaults();
 }
 

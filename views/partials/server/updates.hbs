@@ -66,7 +66,7 @@
   {{#if (eq compat.status 'failed')}}
     <div class="notice notice-danger mb-4 text-xs">
       {{{icon 'circle-alert' 'size-4 mt-0.5 shrink-0'}}}
-      <div>The last version check could not finish. Run it again, and check that the panel can reach Modrinth and CurseForge.</div>
+      <div>The last version check could not finish. Run it again, and check that the panel can reach Modrinth and CurseForge.{{#if compat.error}}<pre class="mt-1 max-w-prose overflow-x-auto whitespace-pre-wrap rounded-sm bg-inset px-2 py-1.5 font-mono text-danger">{{compat.error}}</pre>{{/if}}</div>
     </div>
   {{/if}}
 

@@ -9,7 +9,7 @@ const path = require('node:path');
 const yaml = require('js-yaml');
 const httpError = require('../utils/httpError');
 const { isPortFree } = require('./ports');
-const networks = require('../docker/networks');
+const { HIDDEN_NETWORKS } = require('../docker/networks');
 
 const HEADER =
   '# Advanced Docker settings.\n' +
@@ -82,9 +82,21 @@ async function validateOverrides(
     );
   }
 
+  // A network that does not exist yet is fine: createContainer now creates
+  // bridge networks on demand. Keep a format guard so a bare typo can't create
+  // junk networks, and reject the pseudo-networks host/none - they are not real
+  // attach targets (filtered out of listNetworks, so networkExists reports them
+  // missing and createNetwork fails confusingly), and attaching to 'host' must
+  // never happen by accident.
   if (networkName) {
-    const exists = await networks.networkExists(networkName);
-    if (!exists) errors.push(`Docker network "${networkName}" does not exist.`);
+    if (!NAME_RE.test(networkName)) {
+      errors.push(
+        `Docker network "${networkName}" is invalid. Use letters, digits, "_", ".", "-", starting with a letter or digit, up to 63 characters.`
+      );
+    }
+    if (HIDDEN_NETWORKS.has(networkName)) {
+      errors.push(`Docker network "${networkName}" is reserved and cannot be attached or created.`);
+    }
   }
 
   const previousHostPorts = new Set((previousExtraPorts || []).map((p) => p.hostPort));

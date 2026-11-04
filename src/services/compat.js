@@ -166,6 +166,8 @@ async function inventory(serverId, { onProgress = () => {} } = {}) {
   // before answers from the cache; only genuinely new bytes cost a registry
   // lookup. Batched so one unreachable registry cannot strand the whole scan,
   // and so the progress bar moves on a big pack.
+  // (idempotent require — the file is already loaded on the first scan)
+  const { identifyJars, parseJarMeta } = require('./modIdentify');
   for (let i = 0; i < needIdentify.length; i += BATCH_SIZE) {
     const chunk = needIdentify.slice(i, i + BATCH_SIZE);
     const hashed = [];
@@ -188,7 +190,11 @@ async function inventory(serverId, { onProgress = () => {} } = {}) {
           sha1: crypto.createHash('sha1').update(buffer).digest('hex'),
           sha256,
           fingerprint: curseforgeFingerprint(buffer),
-          buffer,
+          // Resolved while the bytes are still in hand: identifyJars never needs
+          // the raw jar once the hashes and this metadata exist, and keeping a
+          // whole up-to-25-jar batch out of memory during the registry round-trip
+          // below is the whole point.
+          meta: (await parseJarMeta(buffer)) || null,
         });
       } catch (err) {
         logger.debug('Reading a mod file for identification failed; treating it as unknown.', {
@@ -206,14 +212,14 @@ async function inventory(serverId, { onProgress = () => {} } = {}) {
     }
     let identified = [];
     try {
-      identified = await require('./modIdentify').identifyJars(
+      identified = await identifyJars(
         hashed.map((h) => ({
           name: h.filename,
           size: h.size,
           sha1: h.sha1,
           sha256: h.sha256,
           fingerprint: h.fingerprint,
-          buffer: h.buffer,
+          meta: h.meta,
         }))
       );
     } catch (err) {
@@ -272,17 +278,13 @@ function appliesTo(serverId) {
 }
 
 /**
- * How many mod/plugin jars the server actually loads, without identifying any
- * of them. The update checker needs this to tell a modded server (where a
- * version upgrade has to be earned) from a vanilla one (where the newest
- * release is simply the newest release). Disabled jars do not count: the
- * server does not load them, so they cannot break on a new version.
+ * The server's ENABLED mod/plugin jars as [{name, size}], sorted, or [] if none.
+ * Always reads the folder fresh - the signature below must stay alive to a
+ * same-name jar swap (rewriting one jar's bytes does not bump the parent
+ * folder's mtime), and a re-read on this hot path is the point of correctness.
+ * modCount is the cheap one and IS memoized - a count depends only on the set
+ * of entries, which folder mtime captures exactly.
  */
-function modCount(serverId) {
-  return modFiles(serverId).length;
-}
-
-/** The server's ENABLED mod/plugin jars as [{name, size}], sorted, or [] if none. */
 function modFiles(serverId) {
   const serversService = require('./servers');
   const modsService = require('./mods');
@@ -309,6 +311,39 @@ function modFiles(serverId) {
       return { name, size };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * How many jars the server loads, without the per-file stat modFiles pays for -
+ * memoized per (server, folder) against the folder's mtime. A count can only
+ * change when an entry appears or disappears, which is exactly what the folder
+ * mtime records, so this is safe to cache where the file-based signature is not.
+ */
+const modCountMemo = new Map(); // `${serverId}:${dirAbs}` → { mtimeMs, count }
+function modCount(serverId) {
+  const serversService = require('./servers');
+  const modsService = require('./mods');
+  const server = serversService.getServer(serverId);
+  if (!server) return 0;
+  const kind = modsService.contentKindOf(server);
+  const dirAbs = dataPath('servers', serverId, modsService.contentDir(server, kind));
+  let st;
+  try {
+    st = fs.statSync(dirAbs);
+  } catch {
+    return 0;
+  }
+  const key = `${serverId}:${dirAbs}`;
+  const hit = modCountMemo.get(key);
+  if (hit && hit.mtimeMs === st.mtimeMs) return hit.count;
+  let names;
+  try {
+    names = fs.readdirSync(dirAbs).filter((f) => /\.jar$/i.test(f));
+  } catch {
+    return 0;
+  }
+  modCountMemo.set(key, { mtimeMs: st.mtimeMs, count: names.length });
+  return names.length;
 }
 
 /**
@@ -704,11 +739,16 @@ function getReport(serverId) {
  * answered (no scan yet, a stale scan, a jar nobody could identify, a scan
  * still running). Null always means "do not offer a version upgrade" - this
  * function never guesses.
+ * @param {ReturnType<typeof getReport>} [state] the already-parsed report state,
+ *   so callers that hold one (upgradeVerdict) do not re-read + re-parse the
+ *   stored report just to reach the ceiling.
  * @returns {{ceiling: string|null, reason: string, unknownCount: number, scannedAt: string|null}}
  */
-function compatCeiling(serverId) {
-  const state = getReport(serverId);
-  if (!state.report || state.status === 'failed') return reason('no-scan', state);
+function compatCeiling(serverId, state = getReport(serverId)) {
+  if (!state.report) return reason('no-scan', state);
+  // A failed scan is no answer, but it is NOT "never been checked" - the real
+  // failure reason is kept in state.error and surfaced on the Updates tab.
+  if (state.status === 'failed') return reason('failed', state);
   if (state.stale) return reason('stale', state);
   if (state.report.partial || state.status === 'running' || state.status === 'interrupted')
     return reason('incomplete', state);
@@ -735,6 +775,7 @@ function reason(why, state) {
 // Why a version cannot be offered, in words a player can act on.
 const HOLD_REASON = {
   'no-scan': 'This server has mods, but its versions have never been checked. Run a version check first.',
+  failed: 'The last version check failed. Run it again.',
   stale: 'The mods, Minecraft version or loader have changed since the last version check. Run it again.',
   incomplete: 'The last version check did not finish. Run it again.',
   'unknown-mods': 'Some mods could not be identified, so there is no way to tell what they support.',
@@ -753,7 +794,7 @@ function upgradeVerdict(serverId, targetVersion) {
   if (!appliesTo(serverId)) return { allowed: true, reason: 'not-applicable', message: null, ...empty };
   if (modCount(serverId) === 0) return { allowed: true, reason: 'no-mods', message: null, ...empty };
 
-  const ceiling = compatCeiling(serverId);
+  const ceiling = compatCeiling(serverId, getReport(serverId));
   if (ceiling.reason !== 'ok' && ceiling.reason !== 'no-compatible-version') {
     return {
       allowed: false,

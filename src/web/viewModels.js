@@ -4,15 +4,33 @@
 
 const { getVersionManifest } = require('../services/mojang');
 const db = require('../db');
+const { describeBackupAge } = require('../utils/backupAge');
 
 /**
  * UX rule (user-mandated): LATEST/SNAPSHOT are never shown bare - always
- * resolve to "LATEST (26.2)" style using the cached Mojang manifest.
+ * resolve to "LATEST (26.2)" style using the cached Mojang manifest. The one
+ * deliberate exception is the plugin family (#53): Paper & forks ship per-MC
+ * builds that lag Mojang, so a LATEST pin there resolves to the newest
+ * Minecraft version the loader actually ships ("LATEST (26.2)" today), and
+ * SNAPSHOT is shown bare (Paper builds releases only - there is no honest
+ * snapshot number to resolve to). Do not "simplify" this back - a plugin
+ * server must never display a Mojang version its loader cannot build.
  */
-async function displayVersion(mcVersion) {
+async function displayVersion(server) {
+  const mcVersion = server.mc_version;
   if (mcVersion !== 'LATEST' && mcVersion !== 'SNAPSHOT') return mcVersion;
   try {
     const manifest = await getVersionManifest();
+    const pluginFamily = require('../services/mods').loaderOf(server) === 'paper';
+    if (pluginFamily) {
+      if (mcVersion === 'LATEST') {
+        const mc = await require('../services/loaderVersions').newestMcSupportedByServerType(server.type, {
+          channel: server.env.PAPER_CHANNEL || 'default',
+        });
+        return mc ? `LATEST (${mc})` : `LATEST (${manifest.latest.release})`;
+      }
+      return 'SNAPSHOT';
+    }
     const resolved = mcVersion === 'LATEST' ? manifest.latest.release : manifest.latest.snapshot;
     return `${mcVersion} (${resolved})`;
   } catch {
@@ -74,14 +92,17 @@ function packServerVMs() {
       WHERE s.deleted_at IS NULL
       ORDER BY s.created_at`
   );
-  return rows.map((s) => ({
-    id: s.id,
-    name: s.display_name,
-    icon: s.icon,
-    accent: s.accent,
-    pack: packVM(s.id),
-    updateAvailable: hasPackUpdate(s.id),
-  }));
+  return rows.map((s) => {
+    const { pack, updateAvailable } = packInfo(s.id);
+    return {
+      id: s.id,
+      name: s.display_name,
+      icon: s.icon,
+      accent: s.accent,
+      pack,
+      updateAvailable,
+    };
+  });
 }
 
 async function serverVM(s, { withLive = true, ctx = null } = {}) {
@@ -89,11 +110,21 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
   // whole list (see serverVMs) so a dashboard with N servers issues ~O(N)
   // queries instead of ~6N. When absent, fall back to per-call lookups.
   const diskUsedFor = ctx ? ctx.disk : diskUsed;
-  const packFor = ctx ? ctx.packVM : packVM;
-  const updateFor = ctx ? ctx.update : hasPackUpdate;
   const crashesFor = ctx
     ? ctx.crashes
     : (id) => db.get('SELECT COUNT(*) AS n FROM crash_reports WHERE server_id = ? AND viewed = 0', id)?.n || 0;
+  // One call reads the pack row + its update check together (two queries per
+  // server, not four) when no ctx batching is available.
+  let pack, updateAvailable;
+  if (ctx) {
+    pack = ctx.packVM(s.id);
+    updateAvailable = ctx.update(s.id);
+  } else {
+    ({ pack, updateAvailable } = packInfo(s.id));
+  }
+  const lastBackupFor = ctx
+    ? ctx.lastBackup
+    : (id) => db.get('SELECT MAX(created_at) AS at FROM backups WHERE server_id = ?', id)?.at || null;
   const vm = {
     id: s.id,
     name: s.display_name,
@@ -104,7 +135,7 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     type: s.type,
     flavor: flavorLabel(s.type),
     loader: require('../services/mods').loaderOf(s), // resolved loader (detects the pack's for modpacks)
-    mcVersion: await displayVersion(s.mc_version),
+    mcVersion: await displayVersion(s),
     javaTag: s.java_tag || 'auto',
     status: s.status,
     ports: {
@@ -127,9 +158,10 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     stats: { cpuPct: 0, memUsedMb: 0, uptime: null, perf: null, perfSupported: true },
     players: { online: 0, max: Number(s.env.MAX_PLAYERS) || 20, names: [] },
     disk: { used: diskUsedFor(s.id), quota: s.disk_quota_bytes },
-    pack: packFor(s.id),
-    updateAvailable: updateFor(s.id),
+    pack,
+    updateAvailable,
     crashesUnread: crashesFor(s.id),
+    backup: describeBackupAge(lastBackupFor(s.id), { createdAt: s.created_at }),
     autoStart: Boolean(s.auto_start),
     autoRestart: Boolean(s.auto_restart),
     notes: s.notes,
@@ -216,6 +248,17 @@ function buildServerContext(rows) {
       disk.set(r.rel_path.slice('servers/'.length), r.size_bytes);
   }
 
+  // newest backup per server (idx_backups_server covers the grouped MAX).
+  const lastBackups = new Map();
+  for (const chunk of chunked(ids)) {
+    const ph = chunk.map(() => '?').join(',');
+    for (const r of db.all(
+      `SELECT server_id, MAX(created_at) AS at FROM backups WHERE server_id IN (${ph}) GROUP BY server_id`,
+      ...chunk
+    ))
+      lastBackups.set(r.server_id, r.at);
+  }
+
   // crash-unread counts.
   const crashes = new Map();
   for (const chunk of chunked(ids)) {
@@ -237,6 +280,7 @@ function buildServerContext(rows) {
       return Boolean(c && c.latest_version && c.latest_version !== p.pinned_version_id);
     },
     crashes: (id) => crashes.get(id) || 0,
+    lastBackup: (id) => lastBackups.get(id) || null,
   };
 }
 
@@ -274,35 +318,31 @@ function memoryVM(s) {
   };
 }
 
-function packVM(serverId) {
+/** One server_packs read + one update_checks read, serving both the pack card
+ *  and its update flag (the per-server path used to issue two calls of two
+ *  queries each). Returns { pack, updateAvailable }. */
+function packInfo(serverId) {
   const pack = db.get('SELECT * FROM server_packs WHERE server_id = ?', serverId);
-  if (!pack) return null;
+  if (!pack) return { pack: null, updateAvailable: false };
   const check = db.get(
     "SELECT latest_version, latest_name FROM update_checks WHERE subject_type = 'pack' AND subject_id = ?",
     serverId
   );
   return {
-    platform: { curseforge: 'CurseForge', modrinth: 'Modrinth', ftb: 'FTB' }[pack.platform] || pack.platform,
-    name: pack.project_name,
-    version: pack.pinned_version_name,
-    versionId: pack.pinned_version_id,
-    latest: check && check.latest_name ? check.latest_name : pack.pinned_version_name,
-    // The real platform id behind `latest` (a display NAME - differs from the id
-    // for CurseForge/Modrinth). Modpacks-page "Upgrade" posts this so the request
-    // names the exact version the card showed, rather than trusting the server to
-    // re-derive "latest" itself. Same pattern as updates.hbs's data-version-id.
-    latestVersionId: check && check.latest_version ? check.latest_version : null,
+    pack: {
+      platform: { curseforge: 'CurseForge', modrinth: 'Modrinth', ftb: 'FTB' }[pack.platform] || pack.platform,
+      name: pack.project_name,
+      version: pack.pinned_version_name,
+      versionId: pack.pinned_version_id,
+      latest: check && check.latest_name ? check.latest_name : pack.pinned_version_name,
+      // The real platform id behind `latest` (a display NAME - differs from the id
+      // for CurseForge/Modrinth). Modpacks-page "Upgrade" posts this so the request
+      // names the exact version the card showed, rather than trusting the server to
+      // re-derive "latest" itself. Same pattern as updates.hbs's data-version-id.
+      latestVersionId: check && check.latest_version ? check.latest_version : null,
+    },
+    updateAvailable: Boolean(check && check.latest_version && check.latest_version !== pack.pinned_version_id),
   };
-}
-
-function hasPackUpdate(serverId) {
-  const pack = db.get('SELECT pinned_version_id FROM server_packs WHERE server_id = ?', serverId);
-  if (!pack) return false;
-  const check = db.get(
-    "SELECT latest_version FROM update_checks WHERE subject_type = 'pack' AND subject_id = ?",
-    serverId
-  );
-  return Boolean(check && check.latest_version && check.latest_version !== pack.pinned_version_id);
 }
 
 function diskUsed(serverId) {
