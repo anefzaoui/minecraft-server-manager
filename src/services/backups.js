@@ -120,6 +120,12 @@ async function createBackupImpl(
     } else {
       await archive();
     }
+  } catch (err) {
+    // A failed write (disk full, unreadable file, archiver fault) leaves a
+    // partial zip that no backups row points at: invisible in the UI, never
+    // pruned, and still taking space. Remove it before reporting the failure.
+    await fsp.rm(absPath, { force: true }).catch(() => {});
+    throw err;
   } finally {
     releaseReservation();
   }

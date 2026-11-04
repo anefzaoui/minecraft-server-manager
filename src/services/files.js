@@ -8,6 +8,7 @@
 
 const httpError = require('../utils/httpError');
 const { sumFileSizes } = require('../utils/statSizes');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
@@ -165,9 +166,17 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
     return { path: rel, size: bytes, rebuildNeeded: result.rebuildNeeded, unlocked: result.unlocked };
   }
 
-  const tmp = path.join(parent, `.msm-write-${Date.now()}.tmp`);
-  await fsp.writeFile(tmp, content, 'utf8');
-  await fsp.rename(tmp, abs);
+  // Random suffix: two saves in the same millisecond (two tabs, a double
+  // click) must not share one temp file. Clean it up if the write or the
+  // rename fails, or it lingers in the user's folder.
+  const tmp = path.join(parent, `.msm-write-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.tmp`);
+  try {
+    await fsp.writeFile(tmp, content, 'utf8');
+    await fsp.rename(tmp, abs);
+  } catch (err) {
+    await fsp.rm(tmp, { force: true }).catch(() => {});
+    throw err;
+  }
 
   recordEvent({
     serverId: serverId || null,
@@ -182,6 +191,7 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
 async function mkdir(serverId, relPath, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   if (!rel) throw httpError(400, 'Folder name cannot be empty.');
+  guardProtected(serverId, rel);
   if (fs.existsSync(abs)) throw httpError(409, 'That name already exists.');
   await fsp.mkdir(abs, { recursive: true });
   recordEvent({
@@ -202,8 +212,10 @@ async function rename(serverId, relPath, newName, { actor = 'system' } = {}) {
   const clean = sanitizeName(newName);
   if (!fs.existsSync(abs)) throw httpError(404, 'Not found');
   const target = path.join(path.dirname(abs), clean);
-  // Re-check containment (sanitizeName guarantees it, but stay paranoid).
-  resolvePath(serverId, path.posix.join(path.posix.dirname(rel), clean));
+  // Re-check containment (sanitizeName guarantees it, but stay paranoid), and
+  // refuse to rename anything ONTO a protected panel file name either.
+  const targetRel = resolvePath(serverId, path.posix.join(path.posix.dirname(rel), clean)).rel;
+  guardProtected(serverId, targetRel);
   if (fs.existsSync(target) && path.resolve(target) !== path.resolve(abs)) {
     throw httpError(409, `"${clean}" already exists here.`);
   }
@@ -230,6 +242,7 @@ async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
   if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot move a folder into itself.');
 
   const target = path.join(dest.abs, path.basename(abs));
+  guardProtected(serverId, dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs));
   if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination.`);
   await moveEntry(abs, target);
   const toRel = dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs);
@@ -246,6 +259,9 @@ async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
 /** Copy into a destination directory (recursive; quota-checked). */
 async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
+  // Without this a copy of panel.db (or .session-secret) into any folder could
+  // then be downloaded from there, which is exactly what the guard forbids.
+  guardProtected(serverId, rel);
   if (!rel) throw httpError(400, 'Cannot copy the root.');
   const dest = resolvePath(serverId, destRel);
   const st = await fsp.stat(abs).catch(() => null);
@@ -259,6 +275,7 @@ async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
   await assertDiskFree(bytes);
 
   const target = path.join(dest.abs, path.basename(abs));
+  guardProtected(serverId, dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs));
   if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination.`);
   await fsp.cp(abs, target, { recursive: true });
   const toRel = dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs);
@@ -299,6 +316,10 @@ async function acceptUpload(serverId, destRel, tmpAbs, originalName, { actor = '
   const dst = await fsp.stat(dest.abs).catch(() => null);
   if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found.');
   const filename = sanitizeName(originalName || 'upload.bin');
+  // An upload lands with rename(), which overwrites: one named panel.db-wal or
+  // .session-secret at the data root would corrupt the database or replace the
+  // secrets key.
+  guardProtected(serverId, dest.rel ? `${dest.rel}/${filename}` : filename);
   const size = (await fsp.stat(tmpAbs)).size;
   assertRoom(serverId, size);
 

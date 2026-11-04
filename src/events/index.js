@@ -123,6 +123,15 @@ function addServerIdsClause(where, params, serverIds) {
   params.push(...ids);
 }
 
+/**
+ * Escape LIKE's wildcards (`%`, `_`) and the escape char itself so user text
+ * matches literally. Pair the pattern with `ESCAPE '\\'` in the SQL.
+ * @param {string} text
+ */
+function escapeLike(text) {
+  return String(text).replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
 function getEvent(id) {
   const row = db.get('SELECT * FROM events WHERE id = ?', id);
   return row ? hydrate(row) : null;
@@ -169,8 +178,10 @@ function exportEvents(serverId, { format = 'json', q = '', type = '', forUser = 
     params.push(String(type));
   }
   if (q) {
-    where.push('(summary LIKE ? OR actor LIKE ? OR type LIKE ?)');
-    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+    // Wildcards in the search text match literally (see escapeLike).
+    const like = `%${escapeLike(q)}%`;
+    where.push("(summary LIKE ? ESCAPE '\\' OR actor LIKE ? ESCAPE '\\' OR type LIKE ? ESCAPE '\\')");
+    params.push(like, like, like);
   }
   const rows = db.all(
     `SELECT id, created_at, server_id, actor, type, summary, details_json FROM events
@@ -276,6 +287,7 @@ function lifecycleActionSince(serverId, sinceMs) {
 }
 
 module.exports = {
+  escapeLike,
   recordEvent,
   lifecycleActionSince,
   listEvents,

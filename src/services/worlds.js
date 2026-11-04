@@ -1021,8 +1021,11 @@ function setProp(serverId, key, value) {
     /* create fresh */
   }
   const re = new RegExp(`^${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=.*$`, 'm');
-  if (re.test(text)) text = text.replace(re, `${key}=${value}`);
-  else text += `${text && !text.endsWith('\n') ? '\n' : ''}${key}=${value}\n`;
+  // A replacer function, not a string: in a replacement STRING `$&`, `$1`, `$$`
+  // are patterns, so a level name like "base$&2" would be rewritten on save.
+  const line = `${key}=${value}`;
+  if (re.test(text)) text = text.replace(re, () => line);
+  else text += `${text && !text.endsWith('\n') ? '\n' : ''}${line}\n`;
   const tmp = dataPath('servers', serverId, 'server.properties.tmp');
   fs.mkdirSync(dataPath('servers', serverId), { recursive: true });
   fs.writeFileSync(tmp, text);

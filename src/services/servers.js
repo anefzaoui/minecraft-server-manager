@@ -1165,7 +1165,13 @@ async function deleteServerImpl(id, { actor = 'system', keepWorld = true, keepBa
     // Added: these were previously leaked on delete (no FK cascade).
     db.run('DELETE FROM chat_commands WHERE server_id = ?', id);
     db.run('DELETE FROM chat_command_settings WHERE server_id = ?', id);
-    db.run('DELETE FROM storage_index WHERE rel_path = ? OR rel_path LIKE ?', `servers/${id}`, `servers/${id}/%`);
+    // Escaped: server ids can contain `_`, a LIKE wildcard, so an unescaped
+    // pattern could also drop another server's cached sizes.
+    db.run(
+      "DELETE FROM storage_index WHERE rel_path = ? OR rel_path LIKE ? ESCAPE '\\'",
+      `servers/${id}`,
+      `servers/${require('../events').escapeLike(id)}/%`
+    );
     // Keep the soft-deleted server row itself (history retains context).
     db.run("UPDATE servers SET deleted_at = datetime('now'), status = 'stopped' WHERE id = ?", id);
   });
@@ -1227,9 +1233,15 @@ async function refreshStatuses({ boot = false } = {}) {
   if (refreshing) return;
   refreshing = true;
   let timer;
+  // The lock follows the real pass, not the race below: when the timeout wins,
+  // the inner pass keeps running against a slow daemon, and releasing the lock
+  // then let the next tick stack a second pass on top of it.
+  const inner = refreshStatusesInner({ boot }).finally(() => {
+    refreshing = false;
+  });
   try {
     await Promise.race([
-      refreshStatusesInner({ boot }),
+      inner,
       new Promise((_, reject) => {
         timer = setTimeout(
           () =>
@@ -1241,7 +1253,6 @@ async function refreshStatuses({ boot = false } = {}) {
     ]);
   } finally {
     clearTimeout(timer);
-    refreshing = false;
   }
 }
 

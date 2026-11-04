@@ -47,15 +47,30 @@ async function statsOnce(serverId) {
   }
 }
 
-/** Stream stats; onSample(normalized) per tick. Returns stop(). */
-async function statsStream(serverId, onSample) {
+/**
+ * Stream stats; onSample(normalized) per tick. Returns stop().
+ * `onEnd` runs once when Docker closes the stream on its own (the container
+ * stopped, restarted, or was removed) or the stream errors - never after the
+ * caller's own stop(). Without it a consumer cannot tell a finished stream from
+ * a quiet one and keeps waiting on samples that will never come.
+ * @param {string} serverId
+ * @param {(sample: ReturnType<typeof normalize>) => void} onSample
+ * @param {{ onEnd?: () => void }} [opts]
+ */
+async function statsStream(serverId, onSample, { onEnd } = {}) {
   const raw = await getContainer(serverId).stats({ stream: true });
   let buffer = '';
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    if (onEnd) onEnd();
+  };
   // Without this, a container removal mid-stream emits an unhandled 'error'
   // event that would crash the whole panel process.
-  raw.on('error', () => {
-    /* consumer notices via silence; stop() cleans up */
-  });
+  raw.on('error', finish);
+  raw.on('end', finish);
+  raw.on('close', finish);
   raw.on('data', (chunk) => {
     buffer += chunk.toString('utf8');
     let idx;
@@ -71,6 +86,7 @@ async function statsStream(serverId, onSample) {
     }
   });
   return () => {
+    finished = true; // a stop the caller asked for is not an unexpected end
     try {
       raw.destroy();
     } catch {

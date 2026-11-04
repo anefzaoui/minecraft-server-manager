@@ -44,6 +44,8 @@ function isBlockedIpv4(ip, { allowPrivate = false } = {}) {
   if (a === 172 && b >= 16 && b <= 31) return true; // private
   if (a === 192 && b === 168) return true; // private
   if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64/10
+  if (a === 192 && b === 0 && p[2] === 0) return true; // IETF protocol assignments 192.0.0/24
+  if (a === 198 && (b === 18 || b === 19)) return true; // benchmarking 198.18/15
   return false;
 }
 
@@ -85,6 +87,23 @@ function ipv6MappedIpv4(groups) {
   return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join('.');
 }
 
+/** The IPv4 address embedded by IPv4-compatible, NAT64, or 6to4 IPv6 forms, else null. */
+function ipv6EmbeddedIpv4(groups) {
+  if (groups.length !== 8) return null;
+  const parts = groups.map((g) => (/^[0-9a-f]{1,4}$/.test(g) ? parseInt(g, 16) : NaN));
+  if (parts.some(Number.isNaN)) return null;
+  const v4 = (hi, lo) => [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join('.');
+  // ::a.b.c.d (but not :: or ::1, handled as unspecified/loopback by the caller)
+  if (parts.slice(0, 6).every((n) => n === 0) && parts[6] !== 0) return v4(parts[6], parts[7]);
+  // 64:ff9b::a.b.c.d well-known NAT64 prefix
+  if (parts[0] === 0x64 && parts[1] === 0xff9b && parts.slice(2, 6).every((n) => n === 0)) {
+    return v4(parts[6], parts[7]);
+  }
+  // 2002:AABB:CCDD::/48 6to4
+  if (parts[0] === 0x2002) return v4(parts[1], parts[2]);
+  return null;
+}
+
 function isBlockedIpv6(ip, { allowPrivate = false } = {}) {
   const s = ip.toLowerCase();
   if (s === '::') return true; // unspecified (always blocked)
@@ -93,8 +112,14 @@ function isBlockedIpv6(ip, { allowPrivate = false } = {}) {
   // Catches every IPv4-mapped spelling, not just the textual "::ffff:a.b.c.d"
   // shorthand - e.g. the fully-expanded "0:0:0:0:0:ffff:7f00:1" (=127.0.0.1).
   // The mapped v4 inherits the same allowPrivate policy.
-  const mapped = ipv6MappedIpv4(expandIpv6(s));
+  const groups = expandIpv6(s);
+  const mapped = ipv6MappedIpv4(groups);
   if (mapped) return isBlockedIpv4(mapped, { allowPrivate });
+  // Other spellings that carry an IPv4 address inside an IPv6 one and can reach
+  // it on the right network: IPv4-compatible (::a.b.c.d), NAT64 (64:ff9b::/96)
+  // and 6to4 (2002:AABB:CCDD::/48). Judge the embedded v4 by the v4 rules.
+  const embedded = ipv6EmbeddedIpv4(groups);
+  if (embedded) return isBlockedIpv4(embedded, { allowPrivate });
   if (allowPrivate) return false; // LAN-facing caller keeps loopback + ULA
   if (s === '::1') return true; // loopback
   if (s.startsWith('fc') || s.startsWith('fd')) return true; // unique-local

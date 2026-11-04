@@ -129,11 +129,13 @@ function setRole(id, role, { actor = 'system' } = {}) {
   if (!['admin', 'operator', 'viewer'].includes(role)) throw httpError(400, 'Pick a role: admin, operator, or viewer.');
   const admins = db.get("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'").n;
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
-  if (user && user.role === 'admin' && role !== 'admin' && admins <= 1) {
+  // Used to fall through, update nothing, and record "undefined role → x".
+  if (!user) throw httpError(404, 'User not found.');
+  if (user.role === 'admin' && role !== 'admin' && admins <= 1) {
     throw httpError(409, "You can't change the last admin's role.");
   }
   db.run('UPDATE users SET role = ? WHERE id = ?', role, id);
-  recordEvent({ actor, type: 'user-role-changed', summary: `${user?.username} role → ${role}.` });
+  recordEvent({ actor, type: 'user-role-changed', summary: `${user.username} role → ${role}.` });
 }
 
 function deleteUser(id, { actor = 'system' } = {}) {

@@ -255,7 +255,12 @@ function createApp() {
   if (hasJsBundle) {
     app.use('/js', (req, res, next) => {
       if (req.method !== 'GET' && req.method !== 'HEAD') return next();
-      const rel = decodeURIComponent(req.path.replace(/^\/+/, ''));
+      let rel;
+      try {
+        rel = decodeURIComponent(req.path.replace(/^\/+/, ''));
+      } catch {
+        return next(); // malformed %-escape: not a bundle path, let static 404 it
+      }
       if (!rel.endsWith('.js') || rel.includes('..') || rel.includes('\0')) return next();
       const built = path.join(DIST_JS_DIR, rel);
       if (!built.startsWith(DIST_JS_DIR + path.sep)) return next();

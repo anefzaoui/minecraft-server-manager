@@ -1052,8 +1052,11 @@ router.get('/activity', (req, res) => {
     params.push(type);
   }
   if (q) {
-    where.push('(summary LIKE ? OR actor LIKE ? OR type LIKE ?)');
-    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
+    // Escape LIKE's own wildcards so "50%" or "my_world" match literally
+    // instead of matching nearly every row.
+    const like = `%${eventsService.escapeLike(q)}%`;
+    where.push("(summary LIKE ? ESCAPE '\\' OR actor LIKE ? ESCAPE '\\' OR type LIKE ? ESCAPE '\\')");
+    params.push(like, like, like);
   }
   eventsService.addUserScope(where, params, req.user);
   const whereSql = where.length ? 'WHERE ' + where.join(' AND ') : '';

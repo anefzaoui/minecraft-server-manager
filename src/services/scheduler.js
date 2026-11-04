@@ -136,7 +136,7 @@ async function fireJob(job, retry) {
       serverId: job.server_id || null,
       actor: 'scheduler',
       type: 'schedule-failed',
-      summary: `Scheduled ${job.task_type} failed: ${err.message}.`,
+      summary: `Scheduled ${job.task_type} failed: ${String(err.message || 'unknown error').replace(/[.!?]+$/, '')}.`,
     });
     logger.error('A scheduled task failed.', {
       scheduleId: job.id,
@@ -248,11 +248,14 @@ async function runTask(schedule, task = null) {
     case 'rcon': {
       const { execCapture } = require('../docker/containers');
       // '--' stops rcon-cli parsing command words that start with '-' as flags.
-      const out = await execCapture(schedule.server_id, [
-        'rcon-cli',
-        '--',
-        ...String(payload.command || 'list').split(/\s+/),
-      ]);
+      // Trim and drop a leading slash like the console does: " say hi" used to
+      // send an empty first word, and "/say hi" an unknown "/say" command.
+      const words = (
+        String(payload.command || '')
+          .trim()
+          .replace(/^\//, '') || 'list'
+      ).split(/\s+/);
+      const out = await execCapture(schedule.server_id, ['rcon-cli', '--', ...words]);
       recordEvent({
         serverId: schedule.server_id,
         actor,
