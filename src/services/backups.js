@@ -9,6 +9,7 @@ const httpError = require('../utils/httpError');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
+const zlib = require('node:zlib');
 const { Worker } = require('node:worker_threads');
 const yauzl = require('yauzl');
 const { nanoid } = require('nanoid');
@@ -231,6 +232,10 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   const zipStat = await fsp.stat(zipPath).catch(() => null);
   if (!zipStat) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}`);
   const uncompressedBytes = await zipUncompressedSize(zipPath).catch(() => zipStat.size * 4);
+  // The archive's real entry count, used below to lift the extractor's hard
+  // caps for this archive. Fall back to 0 (defaults apply) if unreadable -
+  // the extraction itself will fail loudly on a truly broken zip.
+  const archiveEntryCount = await zipEntryCount(zipPath).catch(() => 0);
   const safetyBytes = skipSafety ? 0 : indexer.sizeOf(`servers/${serverId}`) || 0;
   const needed = uncompressedBytes + safetyBytes;
   const { free } = await indexer.diskFree();
@@ -290,7 +295,16 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   const releaseReservation = indexer.reserveDiskSpace(uncompressedBytes);
   try {
     try {
-      await extractZip(zipPath, stagingDir);
+      // The panel creates backups with no size/entry caps, so the extractor's
+      // hard defaults would reject a self-made backup whose uncompressed
+      // payload exceeds 50 GiB or 200 k entries. The preflight above already
+      // read the archive's real totals from the central directory (and
+      // reserved exactly that disk), so lift the caps to max(default, actuals)
+      // for this archive rather than permanently blocking the recovery path.
+      await extractZip(zipPath, stagingDir, {
+        maxBytes: Math.max(MAX_EXTRACT_BYTES, uncompressedBytes),
+        maxEntries: Math.max(MAX_EXTRACT_ENTRIES, archiveEntryCount),
+      });
     } catch (err) {
       await fsp.rm(stagingDir, { recursive: true, force: true }).catch(() => {});
       throw err; // original serverDir was never touched
@@ -316,8 +330,17 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
       await renameDir(stagingDir, serverDir);
     } catch (err) {
       // Extraction succeeded but the swap itself failed - put the original back
-      // rather than leaving the server dir missing.
-      if (hadOldDir) await renameDir(oldDir, serverDir).catch(() => {});
+      // rather than leaving the server dir missing. A rollback failure here is
+      // serious (the server dir stays missing until boot recovery fixes it), so
+      // log it instead of swallowing the reason.
+      if (hadOldDir) {
+        await renameDir(oldDir, serverDir).catch((rollbackErr) => {
+          logger.error('Could not put the original world back after the restore swap failed.', {
+            serverId,
+            err: serializeError(rollbackErr),
+          });
+        });
+      }
       throw err;
     }
     if (hadOldDir) await fsp.rm(oldDir, { recursive: true, force: true }).catch(() => {});
@@ -670,7 +693,7 @@ function zipDirectory(sourceDir, outFile, { onProgress = null } = {}) {
 // Zip-slip-safe extraction + decompression-bomb ceiling: the one shared
 // implementation (src/utils/zip.js), re-exported here because the
 // restore path and its tests have always reached for `backups.extractZip`.
-const { extractZip } = require('../utils/zip');
+const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/zip');
 
 /** Sum of uncompressedSize across every entry in a zip - cheap (reads the
  *  central directory only, no decompression) - used for an accurate restore
@@ -710,6 +733,70 @@ function zipEntryCount(zipFile) {
   });
 }
 
+/** Fully read every entry of a zip and check its CRC-32 - the same bytes a
+ *  restore would extract, without writing anything. Resolves { entries, bytes };
+ *  rejects on the first unreadable or corrupt entry. */
+function zipVerify(zipFile) {
+  return new Promise((resolve, reject) => {
+    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
+      if (err) return reject(err);
+      let entries = 0;
+      let bytes = 0;
+      zip.on('error', reject);
+      zip.on('end', () => resolve({ entries, bytes }));
+      zip.on('entry', (entry) => {
+        entries += 1;
+        if (entry.fileName.endsWith('/')) return zip.readEntry();
+        zip.openReadStream(entry, (openErr, stream) => {
+          if (openErr) return reject(openErr);
+          let crc = 0;
+          stream.on('data', (chunk) => {
+            crc = zlib.crc32(chunk, crc);
+            bytes += chunk.length;
+          });
+          stream.on('error', reject);
+          stream.on('end', () => {
+            if (crc !== entry.crc32) return reject(new Error(`CRC mismatch in ${entry.fileName}`));
+            zip.readEntry();
+          });
+        });
+      });
+      zip.readEntry();
+    });
+  });
+}
+
+/**
+ * Dry-run restore: prove a backup's archive can be read end to end. Read-only
+ * (no extraction, no server stop), so it is safe on a running server.
+ * ponytail: CRC check only, not a file-by-file diff against the live world.
+ */
+async function verifyBackup(backupId, { actor = 'system' } = {}) {
+  const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
+  if (!backup) throw httpError(404, 'Backup not found.');
+  const zipPath = dataPath(backup.rel_path);
+  if (!fs.existsSync(zipPath)) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}.`);
+  try {
+    const result = await zipVerify(zipPath);
+    recordEvent({
+      serverId: backup.server_id,
+      actor,
+      type: 'backup-verified',
+      summary: `Verified backup ${backup.filename}.`,
+    });
+    return { ok: true, ...result };
+  } catch (err) {
+    logger.warn('A backup failed verification.', { serverId: backup.server_id, backupId, err: serializeError(err) });
+    recordEvent({
+      serverId: backup.server_id,
+      actor,
+      type: 'backup-verify-failed',
+      summary: `Backup ${backup.filename} failed verification and may not restore.`,
+    });
+    throw httpError(422, 'This backup is damaged and may not restore correctly. Take a fresh backup.');
+  }
+}
+
 /** Rename a directory, falling back to copy+remove across devices (EXDEV). */
 async function renameDir(from, to) {
   try {
@@ -732,6 +819,7 @@ module.exports = {
   deleteBackup,
   deleteBackupByUser,
   renameBackup,
+  verifyBackup,
   pruneRetention,
   planPrune,
   previewRetention,
