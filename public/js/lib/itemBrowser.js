@@ -33,7 +33,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
              maxlength="120" autocomplete="off" spellcheck="false">
       <div class="w-52 max-w-full">
         <select data-ib-mod data-label="Filter by mod" aria-label="Filter by mod">
-          <option value="">All mods</option>
+          <option value="">All Mods</option>
         </select>
       </div>
       <div class="seg" data-ib-kinds role="group" aria-label="Kind">
@@ -201,7 +201,7 @@ export function openItemBrowser({ serverId, onPick, onManual } = {}) {
       });
       toast(`Registry rebuilt: ${result.items.toLocaleString()} items from ${result.mods} mods.`);
       state.modsLoaded = false;
-      modSel.innerHTML = '<option value="">All mods</option>';
+      modSel.innerHTML = '<option value="">All Mods</option>';
       state.mod = '';
       modSel.dispatchEvent(new Event('change', { bubbles: true })); // resync enhanced trigger + reload
     } catch (err) {

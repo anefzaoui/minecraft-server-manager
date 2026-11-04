@@ -19,6 +19,7 @@ const TTL_MS = 10 * 60 * 1000; // finished tasks linger for late polls
  *   t.log('…')                          - append a detail line (kept last 50)
  *   t.done(result) / t.fail(error)      - finish
  * run(title, opts, fn) wraps a promise-returning fn with automatic done/fail.
+ * track(title, opts, fn) does the same but returns fn's result to an awaiting caller.
  */
 function createTask(title, { serverId = null, actor = 'system' } = {}) {
   const id = `task_${nanoid(10)}`;
@@ -101,6 +102,23 @@ function run(title, opts, fn) {
   return t.id;
 }
 
+/**
+ * Track work the caller awaits itself (a route that answers when it is done,
+ * a scheduled job): the task shows in the top-bar tray while fn runs, then is
+ * marked done or failed. Resolves/rejects exactly as fn does.
+ */
+async function track(title, opts, fn) {
+  const t = createTask(title, opts);
+  try {
+    const result = await fn(t);
+    t.done();
+    return result;
+  } catch (err) {
+    t.fail(err);
+    throw err;
+  }
+}
+
 function getTask(id) {
   const t = tasks.get(id);
   if (!t) return null;
@@ -136,4 +154,4 @@ function listTasks() {
   return out.sort((a, b) => (a.state === 'running' ? -1 : 1) - (b.state === 'running' ? -1 : 1));
 }
 
-module.exports = { createTask, run, getTask, listTasks };
+module.exports = { createTask, run, track, getTask, listTasks };

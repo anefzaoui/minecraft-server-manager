@@ -50,7 +50,7 @@ const patchSchema = z
     msgSuccess: messageSchema.optional(),
     msgFailure: messageSchema.optional(),
   })
-  .refine((v) => Object.values(v).some((x) => x !== undefined), { message: 'Nothing to change' });
+  .refine((v) => Object.values(v).some((x) => x !== undefined), { message: 'Nothing to change.' });
 
 function requireServer(id) {
   const server = servers.getServer(id);
@@ -130,7 +130,7 @@ router.post(
           .trim()
           .regex(
             PLAYER_NAME_RE,
-            'Player names are 1-16 letters, digits or _ (a leading . or * for Bedrock players is fine)'
+            'Player names are 1-16 letters, digits or _ (a leading . or * for Bedrock players is fine).'
           ),
       })
       .parse(req.body);

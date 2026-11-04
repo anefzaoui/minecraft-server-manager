@@ -133,14 +133,30 @@ function jsonAttr(v) {
 function createApp() {
   const app = express();
 
-  // Package version, exposed to every template (footer) so it never goes stale.
-  app.locals.appVersion = require('../../package.json').version;
+  // Package version and repository page, exposed to every template (footer) so
+  // they never go stale. The repository URL is npm's "git+https://….git" form.
+  const pkg = require('../../package.json');
+  app.locals.appVersion = pkg.version;
+  app.locals.repoUrl = String(pkg.repository?.url || '')
+    .replace(/^git\+/, '')
+    .replace(/\.git$/, '');
 
   // Behind a TLS-terminating reverse proxy, trust the configured hops so req.ip
   // (login rate-limiting) and secure-cookie 'auto' see the real client + scheme.
   if (config.trustProxy !== false) app.set('trust proxy', config.trustProxy);
 
   app.use(require('./middleware/securityHeaders').securityHeaders);
+
+  // Gzip/deflate text responses (HTML, JS, CSS, JSON). Already-compressed bodies
+  // (PNG icons, zip/jar downloads, backups) are skipped by the default
+  // compressible-type filter; the map proxy is skipped explicitly because it
+  // streams BlueMap's own (often pre-encoded) responses through unchanged.
+  const compression = require('compression');
+  app.use(
+    compression({
+      filter: (req, res) => (req.path.startsWith('/map/') ? false : compression.filter(req, res)),
+    })
+  );
 
   app.engine(
     'hbs',
@@ -399,7 +415,7 @@ function createApp() {
     // inside this handler. Hand off to Express's finalizer instead.
     if (res.headersSent) return next(err);
     if (req.path.startsWith('/api/') || req.xhr) {
-      return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large' : 'Request failed' });
+      return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large.' : 'Request failed' });
     }
     res.status(code).render('error', {
       title: code >= 500 ? 'Something broke' : 'Request rejected',

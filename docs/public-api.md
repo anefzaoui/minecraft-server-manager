@@ -52,6 +52,14 @@ before its token is even checked, also counts toward a per-client-IP cap of five
 number, so probing with missing, malformed, revoked, or expired tokens cannot bypass the budget
 by rotating them.
 
+## Caching
+
+Every successful (`200`) response carries `Cache-Control: private, max-age=5` and
+`Vary: Authorization`, and an `ETag`. The data only refreshes every few seconds, so a
+client or dashboard can reuse a response for five seconds, or send `If-None-Match` and
+get a cheap `304`. Errors (`400`, `401`, `404`, `429`) are never cacheable. Polling more
+often than every five seconds gains nothing and spends your rate limit.
+
 ## Endpoints
 
 ### `GET /api/v1/servers`
@@ -84,6 +92,66 @@ Every server the token is scoped to.
 One server, same object under a `server` key. Returns `404` for an unknown id
 **and** for a server the token is not scoped to (no existence oracle), and `400`
 for a malformed id.
+
+### `GET /api/v1/servers/:id/players`
+
+Who is online right now, plus recent play sessions (newest first).
+`?limit=` sets how many sessions come back (1 to 200, default 50).
+
+```json
+{
+  "ok": true,
+  "online": 2,
+  "max": 20,
+  "names": ["Alex", "Steve"],
+  "sessions": [{ "player": "Steve", "startedAt": "2026-03-02T10:00:00.000Z", "endedAt": null, "open": true }]
+}
+```
+
+`online`, `max`, and `names` are `null` until the server has reported a player
+list. Only player names are exposed, never UUIDs or IP addresses.
+
+### `GET /api/v1/servers/:id/backups`
+
+Backup history, newest first, with `id`, `filename`, `sizeBytes`, `reason`
+(`manual`, `scheduled`, `pre-update`, or `pre-restore`), `note`, and `createdAt`.
+`?limit=` works the same as above. File paths and checksums are not exposed.
+
+Both routes return `404` for an unknown id **and** for a server the token is not
+scoped to, and `400` for a malformed id or limit.
+
+### `GET /api/v1/metrics`
+
+The same live data in Prometheus text format, for Grafana, Uptime Kuma, and
+other scrapers. It uses the same token, scope filter, and rate limit as the JSON
+routes, and it never touches Docker. A reading the server has not reported (for
+example TPS on a server type that does not expose it) is left out rather than
+reported as zero.
+
+| Metric                          | Meaning                                                |
+| ------------------------------- | ------------------------------------------------------ |
+| `msm_servers`                   | How many servers are visible to this token.            |
+| `msm_server_up`                 | `1` when the server is running, otherwise `0`.         |
+| `msm_server_cpu_percent`        | Recent CPU use as a percent of one core.               |
+| `msm_server_memory_bytes`       | Memory in use.                                         |
+| `msm_server_memory_limit_bytes` | Configured container memory limit.                     |
+| `msm_server_uptime_seconds`     | Seconds since the container started.                   |
+| `msm_server_players_online`     | Players currently online.                              |
+| `msm_server_players_max`        | Player slots.                                          |
+| `msm_server_tps`                | Ticks per second over the last minute, where reported. |
+| `msm_server_mspt`               | Mean milliseconds per tick, where reported.            |
+
+Per-server metrics carry `server_id` and `name` labels. A Prometheus scrape job:
+
+```yaml
+scrape_configs:
+  - job_name: minecraft
+    metrics_path: /api/v1/metrics
+    authorization:
+      credentials: msm_your_token_here
+    static_configs:
+      - targets: ['panel.example.com']
+```
 
 ## Response fields
 

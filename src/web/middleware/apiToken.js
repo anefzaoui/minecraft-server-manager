@@ -22,7 +22,7 @@ function bearerAuth(req, res, next) {
   if (!result || result.ok !== true) {
     const reason = result && result.ok === false ? result.reason : 'unknown';
     logger.debug('Rejected a public API request with an invalid token.', { path: req.path, ip: req.ip, reason });
-    return res.status(401).json({ ok: false, error: 'Invalid or expired API token' });
+    return res.status(401).json({ ok: false, error: 'Invalid or expired API token.' });
   }
   req.apiToken = result.token;
   req.apiTokenScope = result.scope;
