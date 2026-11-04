@@ -9,6 +9,7 @@ if (mount) init();
 function init() {
   const btn = mount.querySelector('button');
   const badge = mount.querySelector('[data-task-count]');
+  const ring = mount.querySelector('[data-task-ring]');
   const panel = mount.querySelector('[data-task-panel]');
   const list = mount.querySelector('[data-task-list]');
   const known = new Map(); // id -> last seen state (for completion toasts)
@@ -48,7 +49,9 @@ function init() {
     for (const t of tasks) {
       const prev = known.get(t.id);
       if (prev === 'running' && t.state !== 'running') {
-        toast(t.state === 'done' ? `${t.title} finished.` : `${t.title} failed.${t.error ? ` ${t.error}` : ''}`, {
+        // Titles end in an ellipsis while running ("Backing up Alpha…").
+        const name = t.title.replace(/…$/, '');
+        toast(t.state === 'done' ? `${name} finished.` : `${name} failed.${t.error ? ` ${t.error}` : ''}`, {
           kind: t.state === 'done' ? 'success' : 'error',
           timeout: 7000,
         });
@@ -63,7 +66,7 @@ function init() {
     badge.classList.toggle('bg-grass-600', running.length > 0);
     badge.classList.toggle('text-white', running.length > 0);
     badge.classList.toggle('bg-inset', running.length === 0);
-    btn.querySelector('svg')?.classList.toggle('animate-spin', running.length > 0);
+    ring.classList.toggle('hidden', running.length === 0);
 
     // Rebuilding every poll resets the open panel's scroll mid-read - keep it.
     const scrollTop = list.scrollTop;

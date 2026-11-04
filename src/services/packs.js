@@ -80,8 +80,8 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion, include
   }
   if (platform === 'ftb') {
     const id = String(ref).match(/\d+/)?.[0];
-    if (!id) throw httpError(400, 'FTB packs are referenced by numeric modpack ID');
-    if (!versionId) throw httpError(400, 'FTB installs need an explicit version ID (the panel never uses latest)');
+    if (!id) throw httpError(400, 'FTB packs are referenced by numeric modpack ID.');
+    if (!versionId) throw httpError(400, 'FTB installs need an explicit version ID (the panel never uses latest).');
     return {
       platform,
       projectRef: id,
@@ -103,7 +103,7 @@ async function resolvePack(platform, ref, { versionId = null, mcVersion, include
     // orchestrator) must pass it, or a beta-pinned server silently resolves to
     // the newest stable instead of the newest beta.
     const entry = versionId ? await gtnhApi.getVersion(String(versionId)) : gtnhApi.pickLatest(all, { includeBeta });
-    if (!entry) throw httpError(502, 'The GTNH release index returned no installable versions');
+    if (!entry) throw httpError(502, 'The GTNH release index returned no installable versions.');
     return {
       platform,
       projectRef: 'gtnh',
@@ -182,7 +182,7 @@ function packEnv(resolved) {
  */
 async function applyPack(serverId, resolved, { actor = 'system', force = false } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
 
   // World-safety guard (learned the hard way): applying a pack that targets a
   // different MC version than the existing world either crashes on boot
@@ -255,6 +255,9 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
     resolved.maxJavaVersion ?? null,
     resolved.channel ?? null
   );
+  // The pinned_version_id write above is exactly what the outdated-count query
+  // tests, so a stale cached count must not survive it.
+  require('../updates/checker').invalidateOutdatedCache();
   recordEvent({
     serverId,
     actor,
@@ -345,8 +348,8 @@ function worldVersionWarnings(server, resolved) {
           (pv.major === wv.major && (pv.minor < wv.minor || (pv.minor === wv.minor && pv.patch < wv.patch))));
       warnings.push(
         downgrade
-          ? `This pack runs Minecraft ${resolved.mcVersion} but the existing world was generated on ${worldVersion} - Minecraft cannot load newer worlds on older versions and the server will crash. Reset or swap the world first, or confirm to proceed anyway.`
-          : `This pack runs Minecraft ${resolved.mcVersion} but the existing world is from ${worldVersion} - starting will permanently upgrade the world (make a backup first).`
+          ? `This pack runs Minecraft ${resolved.mcVersion} but the existing world was generated on ${worldVersion}. Minecraft cannot load newer worlds on older versions and the server will crash. Reset or swap the world first, or confirm to proceed anyway.`
+          : `This pack runs Minecraft ${resolved.mcVersion} but the existing world is from ${worldVersion}. Starting will permanently upgrade the world (make a backup first).`
       );
     }
   } catch {

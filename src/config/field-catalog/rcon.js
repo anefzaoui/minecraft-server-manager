@@ -7,7 +7,7 @@ module.exports = [
   {
     key: 'ENABLE_RCON',
     scope: 'env',
-    label: 'RCON enabled',
+    label: 'RCON Enabled',
     help: 'The remote-console protocol used for graceful shutdown, backups, and the interactive console. The panel needs it to stop the server cleanly and send commands, so leave it on.',
     type: 'boolean',
     default: true,
@@ -43,7 +43,7 @@ module.exports = [
     key: 'BROADCAST_RCON_TO_OPS',
     scope: 'env',
     prop: 'broadcast-rcon-to-ops',
-    label: 'Show RCON output to ops',
+    label: 'Show RCON Output to Ops',
     help: 'Broadcasts the output of RCON-issued commands to online operators. With a panel sending frequent commands, leaving this off avoids chat spam for your ops.',
     type: 'boolean',
     default: false,
@@ -104,7 +104,7 @@ module.exports = [
   {
     key: 'CREATE_CONSOLE_IN_PIPE',
     scope: 'env',
-    label: 'Console input pipe',
+    label: 'Console Input Pipe',
     help: 'Creates a stdin pipe so console commands can still be sent (via mc-send-to-console) when RCON is disabled. Only needed as a fallback.',
     type: 'boolean',
     mode: 'advanced',

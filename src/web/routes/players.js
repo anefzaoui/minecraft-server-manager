@@ -24,7 +24,7 @@ const RUNNING_STATES = new Set(['running', 'unhealthy']); // rcon still answers 
 const nameSchema = z
   .string()
   .trim()
-  .regex(PLAYER_NAME_RE, 'Player names are 1-16 letters, digits or _ (a leading . or * for Bedrock players is fine)');
+  .regex(PLAYER_NAME_RE, 'Player names are 1-16 letters, digits or _ (a leading . or * for Bedrock players is fine).');
 const reasonSchema = z.string().trim().max(256).optional();
 const ipSchema = z
   .string()

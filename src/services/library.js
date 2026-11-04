@@ -41,7 +41,7 @@ const MAX_DOWNLOAD_BYTES = 8 * 1024 ** 3;
  * strongest digest and a mismatch aborts the install.
  * Returns the library_files row (existing row when the hash already exists).
  */
-async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'system' } = {}) {
+async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'system', serverId = null } = {}) {
   const category = meta.category || 'mod';
   const expected = contentHashes.strongest(meta.expectedHashes);
   const tmpFile = dataPath('tmp', `dl-${nanoid(6)}`);
@@ -51,7 +51,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
     headers: { 'User-Agent': 'MinecraftServerManager/0.1' },
     signal: AbortSignal.timeout(10 * 60 * 1000),
   });
-  if (!res.ok) throw httpError(502, `Download failed: HTTP ${res.status} from ${new URL(url).host}`);
+  if (!res.ok) throw httpError(502, `Download failed: HTTP ${res.status} from ${new URL(url).host}.`);
   const totalBytes = Number(res.headers.get('content-length')) || 0;
 
   // Disk preflight when the server declares a size (tmp copy + final copy).
@@ -62,9 +62,16 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
         `Download is ${humanBytes(totalBytes)}, which is over the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit.`
       );
     }
-    const { free } = await require('../storage/indexer').diskFree();
+    const indexer = require('../storage/indexer');
+    const { free } = await indexer.diskFree();
     if (free < totalBytes * 1.2) {
-      throw httpError(507, `Not enough disk space for this download (~${humanBytes(totalBytes)} needed)`);
+      throw httpError(507, `Not enough disk space for this download (~${humanBytes(totalBytes)} needed).`);
+    }
+    // Per-server quota must bite BEFORE any of this lands on disk - the library
+    // copy is shared, but it is the server that asked to pull the file in.
+    if (serverId) {
+      const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
+      if (server) indexer.assertUnderQuota(server, totalBytes);
     }
   }
 
@@ -81,7 +88,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
       if (receivedBytes > MAX_DOWNLOAD_BYTES) {
         // Hard abort - content-length can lie or be absent entirely.
         return cb(
-          httpError(413, `Download aborted: stream exceeded the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit`)
+          httpError(413, `Download aborted: stream exceeded the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit.`)
         );
       }
       onProgress({ receivedBytes, totalBytes });
@@ -104,7 +111,7 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
         502,
         `Download failed integrity check: ${expected.algo} of the received file does not match what ` +
           `${new URL(url).host} published (expected ${expected.hex.slice(0, 12)}…, got ${actual.slice(0, 12)}…). ` +
-          'Nothing was installed - try again.'
+          'Nothing was installed. Try again.'
       );
     }
   }
@@ -274,7 +281,7 @@ async function ensureContentMeta(libRow) {
     }
     if (iconUrl && !haveIcon) await cacheIcon(libRow.id, iconUrl);
   } catch (err) {
-    logger.debug('ensureContentMeta could not repair a library row.', {
+    logger.debug('Could not repair the metadata of a library row.', {
       libraryId: libRow.id,
       err: String(err && err.message),
     });
@@ -295,7 +302,7 @@ async function ensureContentMeta(libRow) {
  */
 async function installToServer(libraryId, serverId, destRel, { filename } = {}) {
   const lib = db.get('SELECT * FROM library_files WHERE id = ?', libraryId);
-  if (!lib) throw httpError(404, 'Library file not found');
+  if (!lib) throw httpError(404, 'Library file not found.');
   // The panel must own the server dir to write into it - a server created before
   // container-runs-as-panel-user has files owned by uid 1000. Lazy require breaks
   // the servers<->library cycle.
@@ -303,12 +310,16 @@ async function installToServer(libraryId, serverId, destRel, { filename } = {}) 
   const destDir = dataPath('servers', serverId, destRel);
   await fsp.mkdir(destDir, { recursive: true });
   const target = path.join(destDir, sanitizeFilename(filename || lib.filename));
-  await fsp.rm(target, { force: true });
+  // Install via a temp sibling then atomically rename over the target, so a
+  // crash or EPERM mid-link/copy can never leave the configured file missing
+  // (the old code removed it first, then linked).
+  const tmp = path.join(destDir, `.${path.basename(target)}.tmp-${nanoid(6)}`);
   try {
-    await fsp.link(dataPath(lib.rel_path), target);
+    await fsp.link(dataPath(lib.rel_path), tmp);
   } catch {
-    await fsp.copyFile(dataPath(lib.rel_path), target);
+    await fsp.copyFile(dataPath(lib.rel_path), tmp);
   }
+  await fsp.rename(tmp, target);
   return { installedPath: target, filename: path.basename(target) };
 }
 
@@ -319,7 +330,7 @@ async function installToServer(libraryId, serverId, destRel, { filename } = {}) 
 async function importFile(localPath, meta, { actor = 'system' } = {}) {
   const category = meta.category || 'mod';
   const buf = await fsp.readFile(localPath);
-  if (buf.length > MAX_DOWNLOAD_BYTES) throw httpError(413, 'File is too large');
+  if (buf.length > MAX_DOWNLOAD_BYTES) throw httpError(413, 'File is too large.');
   const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
   const existing = db.get('SELECT * FROM library_files WHERE sha256 = ? AND category = ?', sha256, category);
   if (existing) {
@@ -377,7 +388,7 @@ async function deleteLibraryFile(libraryId, { actor = 'system', force = false } 
   const lib = db.get('SELECT * FROM library_files WHERE id = ?', libraryId);
   if (!lib) return { freedBytes: 0 };
   const used = usageCount(libraryId);
-  if (used > 0 && !force) throw httpError(409, `Still installed on ${used} server(s) - remove it there first`);
+  if (used > 0 && !force) throw httpError(409, `Still installed on ${used} server(s). Remove it there first.`);
   await fsp.rm(dataPath(lib.rel_path), { force: true });
   if (lib.icon_rel_path) await fsp.rm(dataPath(lib.icon_rel_path), { force: true });
   db.run('DELETE FROM library_files WHERE id = ?', libraryId);

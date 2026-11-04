@@ -209,8 +209,8 @@ export function installWorldModal(libId, libName, { serverId = null, onDone } = 
     }
     <label class="label ${serverId ? '' : 'mt-3'}">Install mode</label>
     <select class="input" data-i-mode data-label="Install mode">
-      <option value="replace" data-desc="Server must be stopped. The current world is backed up first.">Replace current world</option>
-      <option value="alongside" data-desc="Adds it as another world folder. Switch to it later with Activate.">Install alongside</option>
+      <option value="replace" data-desc="Server must be stopped. The current world is backed up first.">Replace Current World</option>
+      <option value="alongside" data-desc="Adds it as another world folder. Switch to it later with Activate.">Install Alongside</option>
     </select>
     <div class="mt-3 hidden" data-i-namewrap>
       <label class="label">New world folder name</label>

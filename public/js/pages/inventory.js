@@ -132,7 +132,7 @@ function init(root) {
       cell.dataset.tip = editable
         ? `Empty ${label || slotName(at.container, at.slot)}. Click to put an item here.`
         : label
-          ? `Empty ${label} slot`
+          ? `Empty ${label} slot.`
           : '';
     } else {
       const named = Boolean(item.displayName);
@@ -295,9 +295,9 @@ function init(root) {
       list.appendChild(btn);
     };
 
-    add('Change count', 'hash', () => openCountModal(at, item, nested));
-    add('Replace item', 'replace', () => openPlaceFlow(at, { replacing: item, nested }));
-    if (!nested) add('Move to another slot', 'move', () => openMoveModal(at, item));
+    add('Change Count', 'hash', () => openCountModal(at, item, nested));
+    add('Replace Item', 'replace', () => openPlaceFlow(at, { replacing: item, nested }));
+    if (!nested) add('Move to Another Slot', 'move', () => openMoveModal(at, item));
     if (!nested && item.nested && item.nested.length) {
       for (const sub of item.nested) {
         const filled = sub.items.filter((i) => i.id).length;
@@ -391,7 +391,7 @@ function init(root) {
              <input class="input font-mono" data-f="item" placeholder="minecraft:diamond" maxlength="130" autocomplete="off" spellcheck="false">
            </div>`;
       countDialog({
-        title: replacing ? 'Replace item' : 'Put item here',
+        title: replacing ? 'Replace Item' : 'Put Item Here',
         header,
         value: 1,
         confirmLabel: replacing ? 'Replace' : 'Place',
@@ -490,9 +490,9 @@ function init(root) {
     grids.className = 'space-y-3';
     grids.appendChild(section('Hotbar', 'hotbar', 9, bySlot, 0));
     grids.appendChild(section('Inventory', 'inventory', 27, bySlot, 9));
-    grids.appendChild(section('Ender chest', 'enderchest', 27, enderBySlot, 0));
+    grids.appendChild(section('Ender Chest', 'enderchest', 27, enderBySlot, 0));
     // Armor + offhand share one row; the last cell routes to the offhand container.
-    const armorRow = section('Armor & offhand', 'armor', 4, armorBySlot, 0, ARMOR_PIECES);
+    const armorRow = section('Armor & Offhand', 'armor', 4, armorBySlot, 0, ARMOR_PIECES);
     const offCell = slotCell(currentData.offhand || null, {
       label: 'offhand',
       onPick:
@@ -573,7 +573,7 @@ function init(root) {
     }
     playerSel.innerHTML = '';
     if (!players.length) {
-      playerSel.innerHTML = '<option value="">No player data yet</option>';
+      playerSel.innerHTML = '<option value="">No Player Data yet</option>';
       el('inv-empty').classList.remove('hidden');
       el('inv-view').classList.add('hidden');
       playerSel.dispatchEvent(new Event('change', { bubbles: true }));

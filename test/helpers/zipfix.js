@@ -5,14 +5,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 
 /** Write a zip at zipPath from {entryName: content} (Buffer|string). Dirs end with '/'. */
 async function buildZip(zipPath, entries) {
   fs.mkdirSync(path.dirname(zipPath), { recursive: true });
   await new Promise((resolve, reject) => {
     const out = fs.createWriteStream(zipPath);
-    const zip = archiver('zip', { zlib: { level: 1 } });
+    const zip = new ZipArchive({ zlib: { level: 1 } });
     out.on('close', resolve);
     zip.on('error', reject);
     zip.pipe(out);

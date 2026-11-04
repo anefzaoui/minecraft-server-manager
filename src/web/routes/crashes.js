@@ -8,7 +8,7 @@ const { makeJsonErrorHandler } = require('../middleware/jsonErrorHandler');
 const express = require('express');
 const fs = require('node:fs');
 const path = require('node:path');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 const { z } = require('zod');
 const crashes = require('../../crashes');
 const { dataPath } = require('../../storage/pathGuard');
@@ -18,8 +18,8 @@ const permissions = require('../../services/permissions');
 
 const router = express.Router({ mergeParams: true });
 
-const serverIdSchema = z.string().regex(/^srv_[\w-]+$/, 'Invalid server id');
-const crashIdSchema = z.string().regex(/^cr_[\w-]+$/, 'Invalid crash report id');
+const serverIdSchema = z.string().regex(/^srv_[\w-]+$/, 'Invalid server id.');
+const crashIdSchema = z.string().regex(/^cr_[\w-]+$/, 'Invalid crash report id.');
 
 router.get(
   '/',
@@ -48,7 +48,7 @@ router.get(
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="crash-reports-${serverId}.zip"`);
 
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
     archive.on('error', (err) => {
       if (!res.headersSent) return next(err);
       res.destroy();
