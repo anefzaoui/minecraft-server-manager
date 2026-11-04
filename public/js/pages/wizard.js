@@ -43,8 +43,32 @@ function init() {
       btn.style.background = accent;
     });
   }
+  // Flavor-aware version defaults (#53): Paper & Purpur ship per-MC builds
+  // that lag Mojang, so their tiles carry their own <code>data-mc-latest</code>.
+  // Switching flavors re-annotates the LATEST option and, when the current
+  // value is still the previous flavor's default, reseeds it to the newly
+  // chosen latest so the pin never names a version the new loader cannot build.
+  let lastFlavorLatest = null;
   pickGroup('wz-flavors', 'type', (v) => {
     type = v;
+    const tile = document.querySelector(`#wz-flavors [data-type="${v}"]`);
+    const latest = tile?.dataset?.mcLatest;
+    const versionSel = document.getElementById('wz-version');
+    if (!versionSel || !latest) return;
+    for (const opt of versionSel.options) {
+      if (opt.value === 'LATEST') opt.textContent = `LATEST (${latest})`;
+    }
+    // Still on the LATEST sentinel? Leave it alone - the relabel above already
+    // keeps it accurate, and pinning it to a concrete version here would
+    // defeat the auto-tracking pin this feature exists to preserve. Only a
+    // pin that was itself auto-set from the PREVIOUS flavor's latest follows
+    // the new flavor forward.
+    const current = versionSel.value;
+    if (current === lastFlavorLatest) {
+      const match = [...versionSel.options].find((opt) => opt.value === latest);
+      if (match) versionSel.value = latest;
+    }
+    lastFlavorLatest = latest;
   });
 
   // Visual MOTD editor (shared lib: toolbar + presets + live preview)
@@ -1005,7 +1029,7 @@ function initZipUpload() {
       fd.append('file', file);
       const res = await fetch('/api/mods/zip-preview', { method: 'POST', body: fd });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok) throw new Error(data.error || `Could not read the zip (${res.status})`);
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not read the zip.');
       state = {
         uploadToken: data.uploadToken,
         preview: data.preview,
@@ -1128,12 +1152,19 @@ function initZipUpload() {
       pickers.classList.remove('hidden');
       pickers.classList.add('grid');
       const loaders = ['fabric', 'forge', 'neoforge', 'quilt', 'paper'];
+      const loaderLabels = {
+        fabric: 'Fabric',
+        forge: 'Forge',
+        neoforge: 'NeoForge',
+        quilt: 'Quilt',
+        paper: 'Paper (plugins)',
+      };
       const mcOptions = (p.inferred && p.inferred.mcVersionOptions) || [];
       pickers.innerHTML = `
         <div>
           <label class="label">Mod loader ${state.loader ? '<span class="text-xs font-normal text-ink-faint">(auto-detected)</span>' : ''}</label>
           <select class="input" data-role="loader">
-            ${loaders.map((l) => `<option value="${l}" ${l === state.loader ? 'selected' : ''}>${l === 'paper' ? 'Paper (plugins)' : l}</option>`).join('')}
+            ${loaders.map((l) => `<option value="${l}" ${l === state.loader ? 'selected' : ''}>${loaderLabels[l]}</option>`).join('')}
           </select>
         </div>
         <div>

@@ -14,6 +14,7 @@ const multer = require('multer');
 const { z } = require('zod');
 const { nanoid } = require('nanoid');
 const blueprints = require('../../blueprints');
+const tasks = require('../../services/tasks');
 const permissions = require('../../services/permissions');
 const httpError = require('../../utils/httpError');
 const { dataPath } = require('../../storage/pathGuard');
@@ -35,7 +36,7 @@ const upload = multer({
   limits: { fileSize: 8 * 1024 ** 3 },
 });
 
-const uploadTokenSchema = z.string().regex(/^bpup-[A-Za-z0-9_-]{10}\.mcserver\.zip$/, 'Invalid upload token');
+const uploadTokenSchema = z.string().regex(/^bpup-[A-Za-z0-9_-]{10}\.mcserver\.zip$/, 'Invalid upload token.');
 
 // Cleared cpus/diskQuotaGb inputs mean "leave the blueprint's value" rather
 // than a silent 0 (quota off / unlimited cpu). See src/web/routes/api.js.
@@ -79,7 +80,7 @@ router.get(
 function requireVisibleBlueprint(req, id) {
   const row = blueprints.getBlueprint(id);
   if (row && !blueprints.blueprintVisibleTo(req.user, row)) {
-    throw httpError(404, 'Blueprint not found');
+    throw httpError(404, 'Blueprint not found.');
   }
 }
 
@@ -87,7 +88,7 @@ function requireVisibleBlueprint(req, id) {
 // so it needs the `files` capability on the source; a hidden server reads as missing.
 function requireFilesOn(req, serverId) {
   const perms = permissions.effective(req.user, serverId);
-  if (!perms.includes('view')) throw httpError(404, 'Server not found');
+  if (!perms.includes('view')) throw httpError(404, 'Server not found.');
   if (!perms.includes('files')) throw httpError(403, "You don't have the files permission on this server.");
 }
 
@@ -103,10 +104,17 @@ router.post(
       })
       .parse(req.body);
     requireFilesOn(req, input.serverId);
-    const row = await blueprints.exportBlueprint(
-      input.serverId,
-      { includeConfig: input.includeConfig !== false, embedFiles: input.embedFiles, includeWorld: input.includeWorld },
-      { actor: req.user.username }
+    const actor = req.user.username;
+    const row = await tasks.track('Exporting a blueprint…', { serverId: input.serverId, actor }, () =>
+      blueprints.exportBlueprint(
+        input.serverId,
+        {
+          includeConfig: input.includeConfig !== false,
+          embedFiles: input.embedFiles,
+          includeWorld: input.includeWorld,
+        },
+        { actor }
+      )
     );
     res.status(201).json({ ok: true, blueprint: publicBlueprint(blueprints.getBlueprint(row.id)) });
   })
@@ -144,7 +152,7 @@ router.post(
         overrides: overridesSchema.optional(),
       })
       .refine((v) => Boolean(v.blueprintId) !== Boolean(v.uploadToken), {
-        message: 'Provide exactly one of blueprintId or uploadToken',
+        message: 'Provide exactly one of blueprintId or uploadToken.',
       })
       .parse(req.body);
 
@@ -157,9 +165,10 @@ router.post(
       }
     }
     if (input.overrides) requireAdminForOverrides(req, input.overrides);
-    const { server, report } = await blueprints.importBlueprint(zipRef, input.overrides || {}, {
-      actor: req.user.username,
-    });
+    const actor = req.user.username;
+    const { server, report } = await tasks.track('Creating a server from a blueprint…', { actor }, () =>
+      blueprints.importBlueprint(zipRef, input.overrides || {}, { actor })
+    );
     if (input.uploadToken) await fsp.rm(zipRef, { force: true }).catch(onTempCleanupFailed);
     res.status(201).json({ ok: true, server: publicServer(server), report });
   })
@@ -193,7 +202,7 @@ router.get(
   asyncHandler((req, res, next) => {
     const row = blueprints.getBlueprint(req.params.id);
     if (!row || !blueprints.blueprintVisibleTo(req.user, row)) {
-      return res.status(404).json({ ok: false, error: 'Blueprint not found' });
+      return res.status(404).json({ ok: false, error: 'Blueprint not found.' });
     }
     res.download(dataPath(row.rel_path), row.filename);
   })

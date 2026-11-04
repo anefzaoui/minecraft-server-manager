@@ -6,8 +6,12 @@
   <div class="ml-auto flex shrink-0 items-center gap-2">
     <div id="task-tray" class="relative hidden">
       <button class="btn btn-ghost btn-sm relative" aria-label="Background tasks" data-tip="Background tasks">
-        {{{icon 'loader-circle' 'size-4'}}}
-        <span data-task-count class="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-inset text-[11px] font-bold">0</span>
+        {{! The list icon stays put; the round ring around it spins only while something
+            runs (a square ring would swing its corners as it turned). Reduced motion
+            gets a still, full ring instead of a frozen arc. }}
+        {{{icon 'list-checks' 'size-4'}}}
+        <span data-task-ring class="pointer-events-none absolute inset-0 m-auto hidden size-6 animate-spin rounded-full border-2 border-ok/25 border-t-ok motion-reduce:animate-none motion-reduce:border-ok"></span>
+        <span data-task-count class="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-sm bg-inset px-1 text-[11px] font-bold leading-4">0</span>
       </button>
       {{! No z needed: the sticky header (z-20) already stacks above the page,
           and within it DOM order wins. A z here would be capped at 20 anyway.
@@ -16,14 +20,14 @@
           fixed panel, so inset-x-2 spans the viewport (minus a gutter) as a
           drop sheet; at sm+ it's the anchored w-80 dropdown. }}
       <div data-task-panel class="card hidden origin-top-right shadow-overlay animate-[menu-in_.12s_ease-out] max-sm:fixed max-sm:inset-x-2 max-sm:top-[calc(100%+0.5rem)] sm:absolute sm:right-0 sm:top-10 sm:w-80">
-        <div class="border-b border-line px-3 py-2 eyebrow">Background tasks</div>
+        <div class="border-b border-line px-3 py-2 eyebrow">Background Tasks</div>
         <div data-task-list class="max-h-96 overflow-y-auto"></div>
       </div>
     </div>
     {{! Label hides below sm: (icon-only) - the topbar is already tight on a
         phone (hamburger + title + this + theme + avatar); aria-label keeps it
         announced to screen readers regardless of which span is visible. }}
-    <a href="/servers/new" class="btn btn-primary btn-sm" aria-label="Create a Server" data-tip="Create a Server">{{{icon 'plus' 'size-3.5'}}} <span class="hidden sm:inline">Create a Server</span></a>
+    <a href="/servers/new" class="btn btn-primary btn-sm" aria-label="Create a Server" data-tip="Create a new server.">{{{icon 'plus' 'size-3.5'}}} <span class="hidden sm:inline">Create a Server</span></a>
     <button id="theme-toggle" class="btn btn-ghost btn-sm" aria-label="Toggle theme" data-tip="Switch theme">
       <span data-theme-icon="dark">{{{icon 'moon' 'size-4'}}}</span><span data-theme-icon="light" class="hidden">{{{icon 'sun' 'size-4'}}}</span>
     </button>

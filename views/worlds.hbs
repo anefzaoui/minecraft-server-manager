@@ -4,7 +4,7 @@
   <div class="mb-4 flex flex-wrap items-center gap-2">
     <button class="btn btn-primary" id="world-upload" data-tip="Any .zip or .tar archive. The world root is found automatically (level.dat anywhere, .mcworld, or Bukkit split folders).">{{{icon 'upload' 'size-4'}}} Upload World</button>
     {{! button labels kept in sync with the per-server Worlds tab }}
-    <button class="btn" id="world-extract" data-tip="Save a server's live world into the library">{{{icon 'camera' 'size-4'}}} Save to Library</button>
+    <button class="btn" id="world-extract" data-tip="Save a server's live world into the library.">{{{icon 'camera' 'size-4'}}} Save to Library</button>
   </div>
 
   {{#if worlds.length}}
@@ -27,9 +27,9 @@
             </td>
             <td data-th="Size" class="whitespace-nowrap text-right text-ink-faint">{{bytes size}}</td>
             <td data-th="" class="text-right"><div class="flex flex-wrap gap-1 sm:inline-flex sm:flex-nowrap">
-              <button class="btn btn-ghost btn-sm" data-world-install data-tip="Pick a target server. A compatibility check runs before the install.">{{{icon 'import' 'size-3.5'}}} Install to…</button>
-              <a class="btn btn-ghost btn-sm" href="/api/worlds/{{id}}/download" data-tip="Download archive">{{{icon 'download' 'size-3.5'}}}</a>
-              <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete from library ({{bytes size}} freed)" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-install data-tip="Pick a target server. A compatibility check runs before the install.">>{{{icon 'import' 'size-3.5'}}} Install to…</button>
+              <a class="btn btn-ghost btn-sm" href="/api/worlds/{{id}}/download" data-tip="Download the archive.">{{{icon 'download' 'size-3.5'}}}</a>
+              <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete this world ({{bytes size}} freed)." aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
             </div></td>
           </tr>
         {{/each}}

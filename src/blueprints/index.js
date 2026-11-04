@@ -12,7 +12,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 const { extractZip, readZipIndex } = require('../utils/zip');
 const { nanoid } = require('nanoid');
 const { z } = require('zod');
@@ -140,7 +140,7 @@ const manifestSchema = z.object({
  */
 async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}) {
   const server = servers.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const includeConfig = options.includeConfig !== false;
   const embedFiles = Boolean(options.embedFiles);
   const includeWorld = Boolean(options.includeWorld);
@@ -162,7 +162,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
     for (const d of worldDirs) needed += await servers.dirSize(d.abs);
     const { free } = await indexer.diskFree();
     if (free < needed * 1.1) {
-      throw httpError(507, `Not enough disk space to embed the world (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
+      throw httpError(507, `Not enough disk space to embed the world (~${(needed / 1024 ** 3).toFixed(1)} GB needed).`);
     }
   }
 
@@ -227,7 +227,7 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
 
   await new Promise((resolve, reject) => {
     const output = fs.createWriteStream(absPath);
-    const archive = archiver('zip', { zlib: { level: 6 } });
+    const archive = new ZipArchive({ zlib: { level: 6 } });
     output.on('close', resolve);
     archive.on('error', reject);
     archive.pipe(output);
@@ -277,26 +277,22 @@ async function exportBlueprint(serverId, options = {}, { actor = 'system' } = {}
 async function importPreview(zipPath) {
   const { entries, texts } = await readZipIndex(zipPath, { textEntry: (n) => n === 'manifest.json' });
   const manifestText = texts.get('manifest.json') || null;
-  if (!manifestText) throw httpError(400, 'Not a Minecraft Server Manager blueprint: manifest.json is missing');
+  if (!manifestText) throw httpError(400, 'Not a Minecraft Server Manager blueprint: manifest.json is missing.');
 
   let raw;
   try {
     raw = JSON.parse(manifestText);
   } catch {
-    throw httpError(400, 'Blueprint manifest is not valid JSON');
+    throw httpError(400, 'Blueprint manifest is not valid JSON.');
   }
   const parsed = manifestSchema.safeParse(raw);
   if (!parsed.success) {
-    const detail = parsed.error.issues
-      .slice(0, 3)
-      .map((i) => `${i.path.join('.')}: ${i.message}`)
-      .join('; ');
-    throw httpError(400, `The blueprint manifest is not valid: ${detail}`);
+    throw httpError(400, 'The blueprint manifest is not valid. It may be from a different app.');
   }
   const manifest = parsed.data;
   for (const rel of manifest.configFiles) {
     if (rel.split('/').includes('..') || path.isAbsolute(rel)) {
-      throw httpError(400, `Blueprint config file path escapes the server directory: ${rel}`);
+      throw httpError(400, `Blueprint config file path escapes the server directory: ${rel}.`);
     }
   }
 
@@ -354,7 +350,7 @@ async function importBlueprint(zipRef, overrides = {}, { actor = 'system', onPro
   if (/^bp_/.test(zipRef)) {
     zipPath = getBlueprintPath(zipRef);
   }
-  if (!fs.existsSync(zipPath)) throw httpError(404, 'Blueprint archive not found');
+  if (!fs.existsSync(zipPath)) throw httpError(404, 'Blueprint archive not found.');
 
   const { manifest, entries } = await importPreview(zipPath);
   const o = overrides || {};
@@ -470,18 +466,22 @@ async function installOverlayItem(entry, server, tmpDir, { actor }) {
         return {
           name: entry.name,
           status: 'hash-mismatch',
-          error: `Embedded file hash ${sha256.slice(0, 12)}… does not match the manifest`,
+          error: `Embedded file hash ${sha256.slice(0, 12)}… does not match the manifest.`,
         };
       }
       lib = await ingestLocalFile(embedded, entry, sha256);
     } else {
       const { url, meta } = await resolveOverlaySource(entry, server);
-      lib = await library.downloadToLibrary(url, { ...meta, category: entry.kind, name: entry.name }, { actor });
+      lib = await library.downloadToLibrary(
+        url,
+        { ...meta, category: entry.kind, name: entry.name },
+        { actor, serverId: server.id }
+      );
       if (entry.sha256 && lib.sha256 !== entry.sha256) {
         return {
           name: entry.name,
           status: 'hash-mismatch',
-          error: `Downloaded file hash ${lib.sha256.slice(0, 12)}… does not match the manifest`,
+          error: `Downloaded file hash ${lib.sha256.slice(0, 12)}… does not match the manifest.`,
         };
       }
     }
@@ -616,7 +616,7 @@ async function ingestLocalFile(absFile, entry, sha256) {
 /** One-click duplicate: full export (embedded files) + immediate import. */
 async function cloneServer(serverId, { includeWorld = false, actor = 'system', onProgress = () => {} } = {}) {
   const original = servers.getServer(serverId);
-  if (!original) throw httpError(404, 'Server not found');
+  if (!original) throw httpError(404, 'Server not found.');
   onProgress('Exporting blueprint…');
   const blueprint = await exportBlueprint(serverId, { includeConfig: true, embedFiles: true, includeWorld }, { actor });
   const { server, report } = await importBlueprint(
@@ -655,13 +655,13 @@ function getBlueprint(id) {
 
 function getBlueprintPath(id) {
   const row = db.get('SELECT * FROM blueprints WHERE id = ?', id);
-  if (!row) throw httpError(404, 'Blueprint not found');
+  if (!row) throw httpError(404, 'Blueprint not found.');
   return dataPath(row.rel_path);
 }
 
 async function deleteBlueprint(id, { actor = 'system' } = {}) {
   const row = db.get('SELECT * FROM blueprints WHERE id = ?', id);
-  if (!row) throw httpError(404, 'Blueprint not found');
+  if (!row) throw httpError(404, 'Blueprint not found.');
   await fsp.rm(dataPath(row.rel_path), { force: true });
   db.run('DELETE FROM blueprints WHERE id = ?', id);
   // Scoped to the source server (when known) so a user who may not see that
@@ -799,7 +799,7 @@ async function writeManifestOnlyBlueprint(manifest, { builtin = false } = {}) {
   await fsp.mkdir(path.dirname(absPath), { recursive: true });
   await new Promise((resolve, reject) => {
     const output = fs.createWriteStream(absPath);
-    const archive = archiver('zip', { zlib: { level: 6 } });
+    const archive = new ZipArchive({ zlib: { level: 6 } });
     output.on('close', resolve);
     archive.on('error', reject);
     archive.pipe(output);
