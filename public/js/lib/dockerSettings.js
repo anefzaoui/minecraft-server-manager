@@ -5,7 +5,7 @@
 // flow, only how the preview YAML is fetched differs.
 import { toast } from './toast.js';
 import { openModal } from './modal.js';
-import { enhanceSelect, syncSelectTrigger } from './select.js';
+import { enhanceSelect } from './select.js';
 
 const REMOVE_ICON_SVG =
   '<svg class="icon size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
@@ -19,29 +19,26 @@ const REMOVE_ICON_SVG =
  */
 export function initDockerSettings(ids) {
   const nameInput = document.getElementById(ids.name);
-  const networkSel = document.getElementById(ids.network);
+  const networkInput = document.getElementById(ids.network);
+  const networkList = document.getElementById(`${ids.network}-networks`);
   const portsWrap = document.getElementById(ids.ports);
   const bindsWrap = document.getElementById(ids.binds);
 
-  // seed() can run before this resolves (e.g. the Settings tab seeds from the
-  // server's current row immediately on load) - remember the desired value and
-  // re-apply it once the matching <option> actually exists.
-  let pendingNetwork = null;
-  if (networkSel)
+  // The network is free text with a datalist of existing networks for
+  // autocomplete: a brand-new name is valid (createContainer creates bridge
+  // networks on demand), so it must not be constrained to closed options.
+  if (networkList)
     fetch('/api/docker/networks')
       .then((res) => res.json())
       .then((data) => {
-        if (!data.ok || !networkSel) return;
+        if (!data.ok) return;
         for (const net of data.networks) {
           const opt = document.createElement('option');
           opt.value = net.name;
-          opt.textContent = `${net.name} (${net.driver})`;
-          networkSel.appendChild(opt);
+          networkList.appendChild(opt);
         }
-        if (pendingNetwork != null) networkSel.value = pendingNetwork;
-        syncSelectTrigger(networkSel); // sync the styled trigger - not a real edit, don't mark the page dirty
       })
-      .catch(() => {}); // Docker unreachable - leave just the default option
+      .catch(() => {}); // Docker unreachable - free-text entry still works
 
   function addPortRow(value = {}) {
     const row = document.createElement('div');
@@ -109,11 +106,7 @@ export function initDockerSettings(ids) {
 
   function seed({ containerName, networkName, extraPorts, extraBinds } = {}) {
     if (nameInput) nameInput.value = containerName || '';
-    pendingNetwork = networkName || '';
-    if (networkSel) {
-      networkSel.value = pendingNetwork;
-      syncSelectTrigger(networkSel);
-    }
+    if (networkInput) networkInput.value = networkName || '';
     if (portsWrap) {
       portsWrap.innerHTML = '';
       (extraPorts || []).forEach(addPortRow);
@@ -135,7 +128,7 @@ export function initDockerSettings(ids) {
     const out = {};
     const name = nameInput?.value.trim() || '';
     if (name || forUpdate) out.containerName = name;
-    const network = networkSel?.value || '';
+    const network = networkInput?.value.trim() || '';
     if (network || forUpdate) out.networkName = network;
     const extraPorts = readPortRows();
     if (extraPorts.length || forUpdate) out.extraPorts = extraPorts;

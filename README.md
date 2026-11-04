@@ -377,7 +377,8 @@ Not affiliated with any of them.
 - **Public status page**: optional unauthenticated `/status/<slug>` per server: live status, MOTD,
   version, flavor, icon, uptime, and player count, styled with the server's accent.
 - **Public API**: optional read-only `/api/v1`, authenticated with admin-minted Bearer tokens that
-  are scopable per server, revocable, and expiring; server list + live status. See
+  are scopable per server, revocable, and expiring; server list + live status, per-server players
+  and backup history, and a Prometheus `/metrics` endpoint for Grafana or Uptime Kuma. See
   [docs/public-api.md](docs/public-api.md).
 
 ---
