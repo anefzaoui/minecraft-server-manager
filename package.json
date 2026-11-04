@@ -45,6 +45,7 @@
   "dependencies": {
     "archiver": "^7.0.1",
     "bcryptjs": "^3.0.2",
+    "compression": "^1.8.2",
     "cookie-signature": "~1.0.7",
     "croner": "^10.0.1",
     "dockerode": "^5.0.1",

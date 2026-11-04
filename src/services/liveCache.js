@@ -324,6 +324,7 @@ async function sync() {
       // itself go blank the moment it's flagged.
       rows.filter((r) => ['running', 'starting', 'unhealthy', 'stalled'].includes(r.status)).map((r) => r.id)
     );
+    const toAttach = [];
     for (const id of running) {
       const row = byId.get(id);
       const existing = entries.get(id);
@@ -335,8 +336,12 @@ async function sync() {
       if (existing && existing.containerId && row.container_id && existing.containerId !== row.container_id) {
         detach(id);
       }
-      if (!entries.has(id)) await attach(id, row.container_id || null);
+      if (!entries.has(id)) toAttach.push(attach(id, row.container_id || null));
     }
+    // Each attach waits on a Docker inspect and a stats-stream open. Run them
+    // together, not one after another: after a panel restart with many servers
+    // running, the serial loop left the last one blank for N round-trips.
+    await Promise.all(toAttach);
     for (const id of [...entries.keys()]) if (!running.has(id)) detach(id);
     syncThrottle.ok(logger.info, 'The live-cache reconcile recovered.');
   } catch (err) {

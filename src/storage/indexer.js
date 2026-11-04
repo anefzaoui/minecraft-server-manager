@@ -11,6 +11,19 @@ const db = require('../db');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 const { makeFailureThrottle } = require('../logger');
+const { STAT_BATCH } = require('../utils/statSizes');
+
+/** stat() every path in bounded parallel batches; null for one that vanished. */
+async function statBatch(paths) {
+  const out = [];
+  for (let i = 0; i < paths.length; i += STAT_BATCH) {
+    out.push(...(await Promise.all(paths.slice(i, i + STAT_BATCH).map((p) => fs.stat(p).catch(() => null)))));
+  }
+  return out;
+}
+
+// Directory depth the storage_index table caches (servers/<id>/<sub> = 3).
+const MAX_CACHED_DEPTH = 3;
 
 let scanning = false;
 let timer = null;
@@ -40,6 +53,7 @@ async function scan() {
       } catch {
         return { size: 0, files: 0 }; // intentional: directory not present or unreadable
       }
+      const fileAbs = [];
       for (const entry of entries) {
         const childAbs = path.join(abs, entry.name);
         if (entry.isSymbolicLink()) continue;
@@ -48,16 +62,21 @@ async function scan() {
           size += sub.size;
           files += sub.files;
         } else if (entry.isFile()) {
-          try {
-            const st = await fs.stat(childAbs);
-            size += st.size;
-            files += 1;
-          } catch {
-            // intentional: file vanished between readdir and stat
-          }
+          fileAbs.push(childAbs);
         }
       }
-      if (rel) results.set(rel, { size, files });
+      // Stat this directory's files in bounded parallel batches. A file that
+      // vanished between readdir and stat is skipped (not counted).
+      const stats = await statBatch(fileAbs);
+      for (const st of stats) {
+        if (!st) continue;
+        size += st.size;
+        files += 1;
+      }
+      // Only the depths the table caches are kept: a modpack or world tree has
+      // tens of thousands of deeper dirs whose entries were held in memory for
+      // the whole scan and then thrown away.
+      if (rel && rel.split('/').length <= MAX_CACHED_DEPTH) results.set(rel, { size, files });
       return { size, files };
     }
 
@@ -85,8 +104,8 @@ async function scan() {
           "INSERT INTO storage_index (rel_path, size_bytes, file_count, scanned_at) VALUES (?, ?, ?, datetime('now'))"
         );
       for (const [rel, v] of results) {
-        // Cache depth ≤ 3 to keep the table small; deeper paths are summed live.
-        if (rel.split('/').length <= 3) insert.run(rel, v.size, v.files);
+        // The walk only kept depth ≤ MAX_CACHED_DEPTH; deeper paths are summed live.
+        insert.run(rel, v.size, v.files);
       }
     });
 
@@ -118,20 +137,12 @@ function recordSnapshot(results, total) {
 function cachedEqual(results) {
   const rows = db.all('SELECT rel_path, size_bytes, file_count FROM storage_index');
   if (rows.length === 0) return false;
-  if (rows.length !== countCachedEntries(results)) return false;
+  if (rows.length !== results.size) return false;
   for (const r of rows) {
     const v = results.get(r.rel_path);
     if (!v || v.size !== r.size_bytes || v.files !== r.file_count) return false;
   }
   return true;
-}
-
-function countCachedEntries(results) {
-  let n = 0;
-  for (const rel of results.keys()) {
-    if (rel.split('/').length <= 3) n += 1;
-  }
-  return n;
 }
 
 function startIndexer({ intervalMs = 15 * 60 * 1000 } = {}) {
@@ -167,6 +178,21 @@ function scheduleScan({ delayMs = 45_000 } = {}) {
 function sizeOf(relPath) {
   const row = db.get('SELECT size_bytes FROM storage_index WHERE rel_path = ?', relPath);
   return row ? row.size_bytes : 0;
+}
+
+/** Batched size lookups: one SELECT instead of per-path round-trips (listing a
+ *  directory with many subdirs used to issue a query per entry). Missing paths
+ *  resolve to 0, matching sizeOf. */
+function sizeOfMany(relPaths) {
+  // The empty-string rel_path is the index's root-total row (see the scan's
+  // `results.set('', total)`), so only undefined/null are dropped here.
+  const unique = [...new Set(relPaths)].filter((p) => p !== undefined && p !== null);
+  if (unique.length === 0) return new Map();
+  const rows = db.all(
+    `SELECT rel_path, size_bytes FROM storage_index WHERE rel_path IN (${unique.map(() => '?').join(',')})`,
+    ...unique
+  );
+  return new Map(rows.map((r) => [r.rel_path, r.size_bytes]));
 }
 
 function lastScan() {
@@ -250,6 +276,7 @@ module.exports = {
   scheduleScan,
   startIndexer,
   sizeOf,
+  sizeOfMany,
   lastScan,
   diskFree,
   reserveDiskSpace,

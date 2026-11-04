@@ -17,6 +17,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const zlib = require('node:zlib');
 const archiver = require('archiver');
+const yauzl = require('yauzl');
 const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/zip');
 const tar = require('tar');
 const { nanoid } = require('nanoid');
@@ -25,6 +26,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { execCapture, inspectStatus } = require('../docker/containers');
 const { serializeError } = require('../utils/logSanitize');
+const { dirSize } = require('../utils/statSizes');
 const indexer = require('../storage/indexer');
 const library = require('./library');
 const { withSaveLock } = require('./serverLocks');
@@ -287,7 +289,7 @@ async function addZipToLibrary(zipAbs, { name, actor, worldSource, worldFlavor, 
  * Snapshot a server's active world (plus Bukkit-split dims) into the library.
  * Works while the server runs - wraps the copy in save-off/save-all/save-on.
  */
-async function extractFromServer(serverId, { name = '', actor = 'system' } = {}) {
+async function extractFromServerImpl(serverId, { name = '', actor = 'system' } = {}) {
   const server = mustServer(serverId);
   const level = activeLevelName(server);
   const dims = serverWorldDims(serverId, level);
@@ -301,6 +303,7 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
     throw httpError(507, `Not enough disk space to snapshot this world (~${humanBytes(worldBytes * 2.2)} needed)`);
   }
 
+  const releaseReservation = indexer.reserveDiskSpace(worldBytes);
   const running = await isRunning(serverId);
   const tmpDir = dataPath('tmp', `world-snap-${nanoid(6)}`);
   const zipTmp = dataPath('tmp', `world-snap-${nanoid(6)}.zip`);
@@ -344,10 +347,16 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
     });
     return row;
   } finally {
+    releaseReservation();
     await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     await fsp.rm(zipTmp, { force: true }).catch(() => {});
   }
 }
+
+// Guarded under the shared per-server op lock so a snapshot can't interleave
+// with a concurrent restore/install of the same server (the source world is
+// live while `withPausedSaves` runs).
+const extractFromServer = guardOp('extract', extractFromServerImpl);
 
 // ---------------------------------------------------------------------------
 // Per-server world listing
@@ -355,9 +364,12 @@ async function extractFromServer(serverId, { name = '', actor = 'system' } = {})
 /**
  * Scan a server dir for worlds (top-level dirs containing level.dat), grouping
  * Bukkit-split dims under their main world and marking the active one.
+ * By default sizes come from a live recursive walk (for one-off ops like
+ * duplicate/extract); pass `{ sizesFromIndex: true }` on page-render paths so
+ * they reuse the storage index instead of stat-ing every region file.
  * @returns [{name, active, dims:[names], sizeBytes, seed}]
  */
-async function listServerWorlds(serverId) {
+async function listServerWorlds(serverId, { sizesFromIndex = false } = {}) {
   const server = mustServer(serverId);
   const base = dataPath('servers', serverId);
   const level = activeLevelName(server);
@@ -381,7 +393,12 @@ async function listServerWorlds(serverId) {
   const worlds = [];
   for (const main of mains) {
     const dimNames = [main, ...DIM_SUFFIXES.map((s) => main + s).filter((d) => dirNames.has(d))];
-    const sizeBytes = await dirsSize(dimNames.map((d) => path.join(base, d)));
+    // Same measure the storage breakdown bar uses (indexer.sizeOf) on index
+    // renders, so the two numbers can't disagree - only the level.dat probe and
+    // server.properties read stay live there.
+    const sizeBytes = sizesFromIndex
+      ? dimNames.reduce((sum, d) => sum + indexer.sizeOf(`servers/${serverId}/${d}`), 0)
+      : await dirsSize(dimNames.map((d) => path.join(base, d)));
     const active = main === level;
     worlds.push({
       name: main,
@@ -441,11 +458,24 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
   const server = mustServer(serverId);
   const warnings = compatWarnings({ flavor: lib.world_flavor, version: lib.version }, server);
 
-  // Disk-growing op: quota + free space first (extracted ≈ up to ~2x the zip).
-  indexer.assertUnderQuota(server, lib.size_bytes * 2);
+  // Disk-growing op: reserve the archive's REAL uncompressed size, not a guess
+  // from the compressed zip. Minecraft region files compress past 2:1, so
+  // sizing on compressed×2 gave sparse worlds no protection and ENOSPC after
+  // the old dims were removed left the active world partially missing.
+  const libZipPath = dataPath(lib.rel_path);
+  const libZipStat = await fsp.stat(libZipPath).catch(() => null);
+  if (!libZipStat) throw httpError(404, `Library world archive is missing on disk: ${lib.filename}`);
+  const uncompressedBytes = await zipUncompressedBytes(libZipPath).catch(() => libZipStat.size * 4);
+  indexer.assertUnderQuota(server, uncompressedBytes);
+  // 'replace' extracts the complete new world into tmpDir BEFORE touching the
+  // live one (see below) - the old world's bytes are still on disk the whole
+  // time, so the preflight must budget for both copies coexisting, same as
+  // restoreBackupImpl's safetyBytes in backups.js.
+  const existingBytes = mode === 'replace' ? indexer.sizeOf(`servers/${serverId}`) || 0 : 0;
+  const neededBytes = uncompressedBytes + existingBytes;
   const { free } = await indexer.diskFree();
-  if (free < lib.size_bytes * 2.5) {
-    throw httpError(507, `Not enough disk space to install this world (~${humanBytes(lib.size_bytes * 2.5)} needed)`);
+  if (free < neededBytes * 1.1) {
+    throw httpError(507, `Not enough disk space to install this world (~${humanBytes(neededBytes * 1.1)} needed)`);
   }
 
   let targetLevel;
@@ -477,29 +507,69 @@ async function installToServerImpl(libraryId, serverId, { mode = 'replace', newN
   // Reserved for the same reason as backups.js's createBackup/restoreBackup:
   // stop a second concurrent disk-growing op from passing its own preflight
   // against the same real free bytes this extraction is about to consume.
-  const releaseReservation = indexer.reserveDiskSpace(lib.size_bytes * 2);
+  const releaseReservation = indexer.reserveDiskSpace(uncompressedBytes);
   try {
-    await extractZip(dataPath(lib.rel_path), tmpDir);
+    // Lift the extractor's default decompression-bomb cap to the archive's own
+    // real total (already known above) - same reasoning as backups.js's
+    // restoreBackupImpl for a self-generated archive that legitimately exceeds it.
+    await extractZip(libZipPath, tmpDir, { maxBytes: Math.max(MAX_EXTRACT_BYTES, uncompressedBytes) });
 
     const tops = await fsp.readdir(tmpDir, { withFileTypes: true });
     const dimTops = tops.filter((e) => e.isDirectory() && isDimName(e.name));
     const mainTops = tops.filter((e) => !dimTops.includes(e));
 
     if (mode === 'replace') {
-      for (const dim of serverWorldDims(serverId, targetLevel)) {
-        replacedBytes += await dirsSize([dim]);
-        await fsp.rm(dim, { recursive: true, force: true });
+      // Build the COMPLETE new tree under a staging name inside tmpDir first,
+      // then swap each live dir into place name-by-name: rename the old away
+      // to a tombstone, rename the new in (atomic), and only delete the
+      // tombstones once every target sits. Nothing live is touched before all
+      // of the new world is extracted, so a failure mid-swap rolls the old
+      // dirs straight back - the active world is never left partially missing.
+      const mainStage = path.join(tmpDir, `__main-${nanoid(4)}`);
+      await fsp.mkdir(mainStage, { recursive: true });
+      for (const e of mainTops) await moveEntry(path.join(tmpDir, e.name), path.join(mainStage, e.name));
+      const targets = [{ stage: mainStage, target: dataPath('servers', serverId, targetLevel) }];
+      for (const e of dimTops) {
+        const suffix = e.name.endsWith('_the_end') ? '_the_end' : '_nether';
+        targets.push({ stage: path.join(tmpDir, e.name), target: dataPath('servers', serverId, targetLevel + suffix) });
       }
-    }
-
-    const mainDir = dataPath('servers', serverId, targetLevel);
-    await fsp.mkdir(mainDir, { recursive: true });
-    for (const e of mainTops) {
-      await moveEntry(path.join(tmpDir, e.name), path.join(mainDir, e.name));
-    }
-    for (const e of dimTops) {
-      const suffix = e.name.endsWith('_the_end') ? '_the_end' : '_nether';
-      await moveEntry(path.join(tmpDir, e.name), dataPath('servers', serverId, targetLevel + suffix));
+      const tombstones = [];
+      try {
+        for (const { stage, target } of targets) {
+          if (fs.existsSync(target)) {
+            replacedBytes += await dirSize(target);
+            const tomb = `${target}.old-${Date.now().toString(36)}-${nanoid(4)}`;
+            await fsp.rename(target, tomb);
+            tombstones.push({ tomb, target });
+          }
+          await moveEntry(stage, target);
+        }
+      } catch (err) {
+        // Put every displaced dir back - any target already swapped (even
+        // partially, if a cross-device copy was interrupted) is replaced with
+        // its tombstone so the server is exactly as it was before the install.
+        for (const { tomb, target } of tombstones) {
+          await fsp.rm(target, { recursive: true, force: true }).catch(() => {});
+          await fsp.rename(tomb, target).catch((renameErr) => {
+            logger.error(
+              'Could not roll a previous world back into place after a failed install; its content is preserved under the .old-* tombstone.',
+              { serverId, target, err: serializeError(renameErr, { includeStack: false }) }
+            );
+          });
+        }
+        throw err;
+      }
+      for (const { tomb } of tombstones) await fsp.rm(tomb, { recursive: true, force: true }).catch(() => {});
+    } else {
+      const mainDir = dataPath('servers', serverId, targetLevel);
+      await fsp.mkdir(mainDir, { recursive: true });
+      for (const e of mainTops) {
+        await moveEntry(path.join(tmpDir, e.name), path.join(mainDir, e.name));
+      }
+      for (const e of dimTops) {
+        const suffix = e.name.endsWith('_the_end') ? '_the_end' : '_nether';
+        await moveEntry(path.join(tmpDir, e.name), dataPath('servers', serverId, targetLevel + suffix));
+      }
     }
   } finally {
     releaseReservation();
@@ -541,7 +611,7 @@ function copyWarnings(sourceServerId, targetServerId) {
  * Copy the active world from one server to another via the library machinery:
  * snapshot source (works while running) → install into target.
  */
-async function copyBetweenServers(
+async function copyBetweenServersImpl(
   sourceServerId,
   targetServerId,
   { mode = 'replace', newName = '', actor = 'system' } = {}
@@ -551,11 +621,16 @@ async function copyBetweenServers(
   if (sourceServerId === targetServerId)
     throw httpError(400, 'Source and target are the same server - use Duplicate instead');
 
+  // Snapshot the source under its own op lock (the guarded extractFromServer)
+  // so a concurrent restore of the SOURCE can't race the consistent copy...
   const row = await extractFromServer(sourceServerId, {
     name: `${source.display_name} → ${target.display_name} (copy)`,
     actor,
   });
-  const result = await installToServer(row.id, targetServerId, { mode, newName, actor });
+  // ... then install into the target. The guarded installToServer would 409
+  // against our own 'copy' lock on the target, so call the impl directly
+  // (this whole function already holds the target's op lock end-to-end).
+  const result = await installToServerImpl(row.id, targetServerId, { mode, newName, actor });
   recordEvent({
     serverId: targetServerId,
     actor,
@@ -566,11 +641,16 @@ async function copyBetweenServers(
   return { library: row, ...result };
 }
 
+// Guarded on the TARGET server for the whole snapshot+install: a concurrent
+// restore/duplicate of the target can't interleave with the destructive
+// replace-mode swap at the end.
+const copyBetweenServers = guardOp('copy', copyBetweenServersImpl, (_sourceServerId, targetServerId) => targetServerId);
+
 // ---------------------------------------------------------------------------
 // Duplicate / rename / activate / reset / delete
 
 /** Fork a copy of a world within the same server (consistent while running). */
-async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
+async function duplicateWorldImpl(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
   const dims = serverWorldDims(serverId, worldName);
@@ -614,6 +694,10 @@ async function duplicateWorld(serverId, worldName, { actor = 'system' } = {}) {
   indexer.scheduleScan();
   return { name: copyName, sizeBytes };
 }
+
+// Guarded so two concurrent duplicates can't both pick the same "-copy" name
+// and fsp.cp into each other, or race a restore of this server.
+const duplicateWorld = guardOp('duplicate', duplicateWorldImpl);
 
 /** Rename a world (server must be stopped); updates level-name/LEVEL when active. */
 async function renameWorldImpl(serverId, worldName, newName, { actor = 'system' } = {}) {
@@ -800,7 +884,7 @@ const deleteServerWorld = guardOp('delete-world', deleteServerWorldImpl);
  * Zip a server world into ./data/tmp for a one-off download (consistent
  * snapshot while running). Caller must delete absPath when done sending.
  */
-async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = {}) {
+async function prepareWorldDownloadImpl(serverId, worldName, { actor = 'system' } = {}) {
   const server = mustServer(serverId);
   checkWorldName(worldName);
   const dims = serverWorldDims(serverId, worldName);
@@ -837,13 +921,36 @@ async function prepareWorldDownload(serverId, worldName, { actor = 'system' } = 
   };
 }
 
+// Guarded so a download's save-pause/zip can't interleave with a concurrent
+// restore/duplicate of the same world.
+const prepareWorldDownload = guardOp('download', prepareWorldDownloadImpl);
+
 // ---------------------------------------------------------------------------
 // Library listing / delete
 
 /** All library worlds mapped for the UI (friendly source labels, compat info). */
 /** @param {{ visibleServerIds?: Set<string> | null }} [opts] hide source-server names the caller may not see */
 function libraryWorlds({ visibleServerIds = null } = {}) {
-  return db.all("SELECT * FROM library_files WHERE category = 'world' ORDER BY created_at DESC").map((row) => {
+  const rows = db.all("SELECT * FROM library_files WHERE category = 'world' ORDER BY created_at DESC");
+  // One lookup per extract-source server, not one per library row (batched).
+  const extractSids = [
+    ...new Set(
+      rows
+        .map((r) => r.world_source)
+        .filter((s) => s && s.startsWith('extract:'))
+        .map((s) => s.slice('extract:'.length))
+    ),
+  ];
+  const names = new Map();
+  if (extractSids.length > 0) {
+    for (const s of db.all(
+      `SELECT id, display_name FROM servers WHERE id IN (${extractSids.map(() => '?').join(',')})`,
+      ...extractSids
+    )) {
+      names.set(s.id, s.display_name);
+    }
+  }
+  return rows.map((row) => {
     let source = 'Imported';
     let sourceKind = 'import';
     if (row.world_source === 'upload') {
@@ -851,9 +958,8 @@ function libraryWorlds({ visibleServerIds = null } = {}) {
       sourceKind = 'upload';
     } else if (row.world_source && row.world_source.startsWith('extract:')) {
       const sid = row.world_source.slice('extract:'.length);
-      const server = db.get('SELECT display_name FROM servers WHERE id = ?', sid);
       const visible = !visibleServerIds || visibleServerIds.has(sid);
-      source = visible ? `Extracted from ${server ? server.display_name : sid}` : 'Extracted from a server';
+      source = visible ? `Extracted from ${names.get(sid) || sid}` : 'Extracted from a server';
       sourceKind = 'extract';
     }
     return {
@@ -1109,48 +1215,11 @@ async function isRunning(serverId) {
   return info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
 }
 
-// Parallel, bounded-concurrency directory size walker. World trees hold a great
-// many small files; serializing one fsp.stat at a time is needlessly slow (the
-// same pattern servers.js uses for backup size estimates).
-const DIR_SIZE_CONCURRENCY = 32;
 async function dirsSize(absDirs) {
-  const totals = await Promise.all(absDirs.map((dir) => dirSize(dir)));
-  return totals.reduce((a, b) => a + b, 0);
-}
-
-async function dirSize(abs) {
-  let entries;
-  try {
-    entries = await fsp.readdir(abs, { withFileTypes: true });
-  } catch {
-    return 0;
-  }
-  const jobs = [];
-  for (const e of entries) {
-    if (e.isSymbolicLink()) continue;
-    jobs.push(path.join(abs, e.name));
-  }
-  let i = 0;
-  const push = async (p) => {
-    try {
-      const st = await fsp.stat(p);
-      if (st.isDirectory()) return dirSize(p);
-      return st.size;
-    } catch {
-      return 0; // transient
-    }
-  };
-  const workers = Array.from({ length: Math.min(DIR_SIZE_CONCURRENCY, jobs.length) }, async () => {
-    let sub = 0; // worker-local accumulator avoids lost updates on a shared total
-    while (i < jobs.length) {
-      const p = jobs[i];
-      i += 1; // sync claim, safe across the pool
-      sub += await push(p);
-    }
-    return sub;
-  });
-  const results = await Promise.all(workers);
-  return results.reduce((a, b) => a + b, 0);
+  let total = 0;
+  // One walk at a time: each dirSize() already runs its own bounded pool.
+  for (const dir of absDirs) total += await dirSize(dir);
+  return total;
 }
 
 function sha256File(abs) {
@@ -1182,6 +1251,29 @@ async function moveEntry(from, to) {
     await fsp.cp(from, to, { recursive: true });
     await fsp.rm(from, { recursive: true, force: true });
   }
+}
+
+/** Sum of every entry's uncompressed size: the real disk cost of installing a
+ *  world archive, which the compressed zip size badly underestimates. */
+function zipUncompressedBytes(zipPath, { maxBytes = MAX_EXTRACT_BYTES } = {}) {
+  return new Promise((resolve, reject) => {
+    yauzl.open(zipPath, { lazyEntries: true }, (openErr, zip) => {
+      if (openErr) return reject(openErr);
+      let total = 0;
+      const fail = (e) => {
+        zip.close();
+        reject(e);
+      };
+      zip.on('error', fail);
+      zip.on('end', () => resolve(total));
+      zip.on('entry', (entry) => {
+        total += entry.uncompressedSize;
+        if (total > maxBytes) return fail(new Error(`World archive expands past ${maxBytes} bytes`));
+        zip.readEntry();
+      });
+      zip.readEntry();
+    });
+  });
 }
 
 /** World dir names: strip path separators & control chars, keep it friendly. */
