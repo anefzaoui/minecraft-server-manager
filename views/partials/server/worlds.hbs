@@ -34,8 +34,8 @@
               {{#unless active}}
                 <button class="btn btn-ghost btn-sm" data-world-activate data-tip="Make this the active world. The server must be stopped.">{{{icon 'play' 'size-3.5'}}} Activate</button>
               {{/unless}}
-              <button class="btn btn-ghost btn-sm" data-world-download data-tip="Download as a .zip (a consistent snapshot)">{{{icon 'download' 'size-3.5'}}}</button>
-              <button class="btn btn-ghost btn-sm" data-world-duplicate data-tip="Make a copy of this world on this server">{{{icon 'copy' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-download data-tip="Download as a .zip (a consistent snapshot).">{{{icon 'download' 'size-3.5'}}}</button>
+              <button class="btn btn-ghost btn-sm" data-world-duplicate data-tip="Make a copy of this world on this server.">{{{icon 'copy' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-copy data-tip="Copy to another server. A compatibility check and a safety backup run first.">{{{icon 'arrow-right' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-rename data-tip="Rename this world. The server must be stopped.">{{{icon 'pencil' 'size-3.5'}}}</button>
               <button class="btn btn-ghost btn-sm" data-world-shrink data-tip="Shrink this world on disk by removing chunks no player has spent 30+ seconds in. The server must be stopped; back up first.">{{{icon 'shrink' 'size-3.5'}}}</button>
@@ -44,7 +44,7 @@
                     what the (recovering) backup Restore uses. }}
                 <button class="btn btn-ghost btn-sm text-danger" data-world-reset data-tip="Reset the world. A backup is taken, and you can keep or re-roll the seed.">{{{icon 'refresh-ccw' 'size-3.5'}}}</button>
               {{else}}
-                <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete world ({{bytes sizeBytes}} freed)" aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm text-danger" data-world-delete data-tip="Delete world ({{bytes sizeBytes}} freed)." aria-label="Delete {{name}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
               {{/if}}
             </div></td>
           </tr>
@@ -67,7 +67,7 @@
             <div class="text-xs text-ink-faint">{{source}}{{#if flavor}} · {{flavor}}{{/if}}{{#if mcVersion}} {{mcVersion}}{{/if}} · <span data-ts="{{created}}">{{created}}</span></div>
           </div>
           <span class="text-xs text-ink-faint">{{bytes size}}</span>
-          <button class="btn btn-sm" data-lib-install data-tip="Install into this server, replacing the current world or alongside it">{{{icon 'import' 'size-3.5'}}} Install Here</button>
+          <button class="btn btn-sm" data-lib-install data-tip="Install into this server, replacing the current world or alongside it.">{{{icon 'import' 'size-3.5'}}} Install Here</button>
           <a href="/worlds" class="btn btn-ghost btn-sm">Open in Worlds {{{icon 'arrow-right' 'size-3.5'}}}</a>
         </div>
       {{/each}}

@@ -88,9 +88,9 @@ function init(rootEl) {
     const content = document.createElement('div');
     content.innerHTML = `
       <label class="label" for="fs-q">Search text</label>
-      <input class="input" id="fs-q" placeholder="a word or phrase (min 2 chars)" autocomplete="off">
+      <input class="input" id="fs-q" placeholder="Enter a word or phrase (at least 2 characters)" autocomplete="off">
       <label class="mt-2 flex items-center gap-2 text-xs text-ink-faint">
-        <input type="checkbox" class="msm-check" id="fs-case"> Match case
+        <input type="checkbox" class="msm-check" id="fs-case"> Match Case
       </label>
       <p class="help mt-1">Searches text files${currentPath ? ` under <span class="font-mono">${escapeHtml(currentPath)}</span>` : ' from here down'}. Large and binary files are skipped.</p>
       <div class="mt-3 max-h-80 overflow-y-auto rounded-md border border-line text-sm" id="fs-results" hidden></div>`;

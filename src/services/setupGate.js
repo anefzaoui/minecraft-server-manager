@@ -103,9 +103,15 @@ function recordFailure(ip, now) {
     lockedUntil = now + backoff;
     wrongAttempts = 0; // a fresh MAX_ATTEMPTS is needed to lock again after this window
     logger.error(
-      `LOCKED for ${Math.round(backoff / 1000)}s after ${MAX_ATTEMPTS} wrong PIN attempts on the first-run setup gate. ` +
+      'The first-run setup gate is locked after too many wrong PIN attempts. ' +
         'Restart the panel to unlock early. If this is you, the PIN is above in the boot output.',
-      { backoffMs: backoff, lockLevel, ip: ip || null }
+      {
+        lockSeconds: Math.round(backoff / 1000),
+        maxAttempts: MAX_ATTEMPTS,
+        backoffMs: backoff,
+        lockLevel,
+        ip: ip || null,
+      }
     );
   }
   if (!ip) return;

@@ -115,7 +115,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
       <input class="input font-mono" data-sc-cmd placeholder="say Server restarts in 5 minutes" autocomplete="off">
     </div>
     <div class="mt-3 hidden" data-sc-shrinkwrap>
-      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="msm-check" data-sc-shrink> Shrink the world after each backup <span class="text-xs text-ink-faint">(removes rarely-visited chunks; only runs while the server is stopped)</span></label>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="msm-check" data-sc-shrink> Shrink the World After Each Backup <span class="text-xs text-ink-faint">(removes rarely-visited chunks; only runs while the server is stopped)</span></label>
     </div>
     <label class="label mt-3">Cron expression</label>
     <input class="input font-mono" data-sc-cron placeholder="0 4 * * *" autocomplete="off" spellcheck="false">
@@ -145,7 +145,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   const typeMeta = () => taskTypes.find((t) => t.value === typeSel.value) || {};
   const syncTypeUi = () => {
     cmdWrap.classList.toggle('hidden', typeSel.value !== 'rcon');
-    shrinkWrap.classList.toggle('hidden', typeSel.value !== 'backup');
+    shrinkWrap.classList.toggle('hidden', typeSel.value !== 'backup' && typeSel.value !== 'backup-all');
     // Panel-wide tasks ignore the server - disable the picker instead of
     // silently discarding whatever was selected in it.
     const scoped = Boolean(typeMeta().serverScoped);
@@ -212,7 +212,8 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
             }
             payload.command = command;
           }
-          if (typeSel.value === 'backup' && shrinkInput.checked) payload.shrink = true;
+          if ((typeSel.value === 'backup' || typeSel.value === 'backup-all') && shrinkInput.checked)
+            payload.shrink = true;
           const body = {
             serverId: meta.serverScoped ? serverId : null,
             taskType: typeSel.value,

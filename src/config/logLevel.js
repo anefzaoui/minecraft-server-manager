@@ -20,7 +20,7 @@ function normalizeLogLevel(raw, { strict = false } = {}) {
   if (LOG_LEVELS.includes(value)) return value;
   if (strict) {
     throw new Error(
-      `LOG_LEVEL must be one of ${LOG_LEVELS.join(', ')} - got "${raw}". ` +
+      `LOG_LEVEL must be one of ${LOG_LEVELS.join(', ')}, but got "${raw}". ` +
         'Fix it in your .env (or leave it blank for the default info).'
     );
   }

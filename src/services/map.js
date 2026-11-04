@@ -110,7 +110,7 @@ function writeMapConfigs(serverId) {
 
 async function enableMap(serverId, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   if (!supportsMap(server)) {
     throw httpError(400, `Live map needs a mod loader or plugin server. BlueMap does not support ${server.type}.`);
   }
@@ -153,7 +153,7 @@ async function enableMap(serverId, { actor = 'system' } = {}) {
 
 async function disableMap(serverId, { actor = 'system' } = {}) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   db.run(
     "UPDATE integrations SET enabled = 0, updated_at = datetime('now') WHERE server_id = ? AND kind = 'bluemap'",
     serverId
@@ -185,7 +185,7 @@ async function freePort() {
     if (used.has(port)) continue;
     if (await portsService.probe(port)) return port;
   }
-  throw httpError(503, 'No free port for the map web server');
+  throw httpError(503, 'No free port for the map web server.');
 }
 
 module.exports = {

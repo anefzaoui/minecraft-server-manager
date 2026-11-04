@@ -11,6 +11,16 @@ const db = require('../db');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 const { makeFailureThrottle } = require('../logger');
+const { STAT_BATCH } = require('../utils/statSizes');
+
+/** stat() every path in bounded parallel batches; null for one that vanished. */
+async function statBatch(paths) {
+  const out = [];
+  for (let i = 0; i < paths.length; i += STAT_BATCH) {
+    out.push(...(await Promise.all(paths.slice(i, i + STAT_BATCH).map((p) => fs.stat(p).catch(() => null)))));
+  }
+  return out;
+}
 
 let scanning = false;
 let timer = null;
@@ -40,6 +50,7 @@ async function scan() {
       } catch {
         return { size: 0, files: 0 }; // intentional: directory not present or unreadable
       }
+      const fileAbs = [];
       for (const entry of entries) {
         const childAbs = path.join(abs, entry.name);
         if (entry.isSymbolicLink()) continue;
@@ -48,14 +59,16 @@ async function scan() {
           size += sub.size;
           files += sub.files;
         } else if (entry.isFile()) {
-          try {
-            const st = await fs.stat(childAbs);
-            size += st.size;
-            files += 1;
-          } catch {
-            // intentional: file vanished between readdir and stat
-          }
+          fileAbs.push(childAbs);
         }
+      }
+      // Stat this directory's files in bounded parallel batches. A file that
+      // vanished between readdir and stat is skipped (not counted).
+      const stats = await statBatch(fileAbs);
+      for (const st of stats) {
+        if (!st) continue;
+        size += st.size;
+        files += 1;
       }
       if (rel) results.set(rel, { size, files });
       return { size, files };
@@ -169,6 +182,21 @@ function sizeOf(relPath) {
   return row ? row.size_bytes : 0;
 }
 
+/** Batched size lookups: one SELECT instead of per-path round-trips (listing a
+ *  directory with many subdirs used to issue a query per entry). Missing paths
+ *  resolve to 0, matching sizeOf. */
+function sizeOfMany(relPaths) {
+  // The empty-string rel_path is the index's root-total row (see the scan's
+  // `results.set('', total)`), so only undefined/null are dropped here.
+  const unique = [...new Set(relPaths)].filter((p) => p !== undefined && p !== null);
+  if (unique.length === 0) return new Map();
+  const rows = db.all(
+    `SELECT rel_path, size_bytes FROM storage_index WHERE rel_path IN (${unique.map(() => '?').join(',')})`,
+    ...unique
+  );
+  return new Map(rows.map((r) => [r.rel_path, r.size_bytes]));
+}
+
 function lastScan() {
   const row = db.get('SELECT MAX(scanned_at) AS t FROM storage_index');
   return row ? row.t : null;
@@ -250,6 +278,7 @@ module.exports = {
   scheduleScan,
   startIndexer,
   sizeOf,
+  sizeOfMany,
   lastScan,
   diskFree,
   reserveDiskSpace,

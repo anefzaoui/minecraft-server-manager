@@ -44,7 +44,7 @@ function normalizeInvocationName(raw) {
   if (!INVOCATION_NAME_RE.test(name)) {
     throw httpError(
       400,
-      'The invocation name must start with a letter and use only letters, numbers, _ or - (32 characters max)'
+      'The invocation name must start with a letter and use only letters, numbers, underscores, or hyphens (32 characters max).'
     );
   }
   return name;
@@ -118,18 +118,18 @@ function normalizeBaseUrl(raw) {
   try {
     u = new URL(String(raw || '').trim());
   } catch {
-    throw httpError(400, 'Enter a valid LLM URL, such as http://192.168.1.50:11434');
+    throw httpError(400, 'Enter a valid LLM URL, such as http://192.168.1.50:11434.');
   }
-  if (!['http:', 'https:'].includes(u.protocol)) throw httpError(400, 'The LLM URL must use http or https');
-  if (u.username || u.password) throw httpError(400, 'Put credentials in the API key field, not in the URL');
-  if (u.search || u.hash) throw httpError(400, 'The LLM base URL cannot contain a query string or fragment');
+  if (!['http:', 'https:'].includes(u.protocol)) throw httpError(400, 'The LLM URL must use http or https.');
+  if (u.username || u.password) throw httpError(400, 'Put credentials in the API key field, not in the URL.');
+  if (u.search || u.hash) throw httpError(400, 'The LLM base URL cannot contain a query string or fragment.');
   // Block the never-valid literal IPs at save time (link-local/metadata,
   // multicast, unspecified) while still allowing LAN and loopback for a
   // self-hosted LLM. Hostnames are re-checked against their resolved address
   // at fetch time by assertAllowedEndpoint. Shares the panel's SSRF guard.
   const host = u.hostname.replace(/^\[|\]$/g, '');
   if (net.isIP(host) && urlGuard.isBlockedIp(host, { allowPrivate: true })) {
-    throw httpError(400, 'Link-local, unspecified, multicast, and reserved LLM addresses are not allowed');
+    throw httpError(400, 'Link-local, unspecified, multicast, and reserved LLM addresses are not allowed.');
   }
   u.pathname = u.pathname.replace(/\/+$/, '');
   return u.toString().replace(/\/$/, '');
@@ -144,7 +144,7 @@ function saveConfig(serverId, input, _options = {}) {
   const baseUrl = normalizeBaseUrl(input.baseUrl);
   const model = String(input.model || '').trim();
   const invocationName = normalizeInvocationName(input.invocationName ?? previous?.invocation_name ?? 'wizard');
-  if (input.enabled && !model) throw httpError(400, 'Choose or enter a model before enabling the chatbot');
+  if (input.enabled && !model) throw httpError(400, 'Choose or enter a model before enabling the chatbot.');
   const retentionDays = Math.max(0, Math.min(3650, Math.trunc(Number(input.retentionDays))));
   const prompt = String(input.systemPrompt || '').trim() || DEFAULT_PROMPT;
   const priorCfg = getConfig(serverId);
@@ -154,10 +154,10 @@ function saveConfig(serverId, input, _options = {}) {
   const checkinMessage = normalizeOutreachMessage(input.checkinMessage, priorCfg.checkinMessage);
   const conversationMinutes = Math.trunc(Number(input.conversationMinutes ?? priorCfg.conversationMinutes));
   if (!Number.isInteger(checkinMinutes) || checkinMinutes < 0 || checkinMinutes > 1440) {
-    throw httpError(400, 'Chatbot check-in time must be between 0 and 1440 minutes');
+    throw httpError(400, 'Chatbot check-in time must be between 0 and 1440 minutes.');
   }
   if (!Number.isInteger(conversationMinutes) || conversationMinutes < 0 || conversationMinutes > 60) {
-    throw httpError(400, 'Chatbot conversation mode must be between 0 and 60 minutes');
+    throw httpError(400, 'Chatbot conversation mode must be between 0 and 60 minutes.');
   }
   const powerTesters = wizardPowers.normalizeTesters(input.powerTesters ?? priorCfg.powerTesters);
   const powerControllers = wizardPowers.normalizeControllers(input.powerControllers ?? priorCfg.powerControllers);
@@ -165,9 +165,9 @@ function saveConfig(serverId, input, _options = {}) {
   const giftItems = wizardPowers.normalizeGiftItems(input.giftItems ?? priorCfg.giftItems);
   const giftMaxCount = Math.trunc(Number(input.giftMaxCount ?? priorCfg.giftMaxCount));
   const powerCooldownSec = Math.trunc(Number(input.powerCooldownSec ?? priorCfg.powerCooldownSec));
-  if (giftMaxCount < 1 || giftMaxCount > 16) throw httpError(400, 'Maximum gift quantity must be between 1 and 16');
+  if (giftMaxCount < 1 || giftMaxCount > 16) throw httpError(400, 'Maximum gift quantity must be between 1 and 16.');
   if (powerCooldownSec < 3 || powerCooldownSec > 3600) {
-    throw httpError(400, 'Power cooldown must be between 3 and 3600 seconds');
+    throw httpError(400, 'Power cooldown must be between 3 and 3600 seconds.');
   }
   let cipher = previous ? previous.api_key_cipher : null;
   if (input.clearApiKey) cipher = null;
@@ -222,14 +222,6 @@ function authHeaders(cfg) {
   return cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {};
 }
 
-// Fetch-time SSRF guard. Resolves the host and blocks link-local (incl. cloud
-// metadata), multicast, and unspecified addresses while allowing the LAN and
-// loopback targets a self-hosted LLM needs. Delegates to the panel's shared
-// urlGuard so there is one SSRF implementation, not two that can drift apart.
-async function assertAllowedEndpoint(rawUrl) {
-  await urlGuard.assertPublicUrl(rawUrl, { allowPrivate: true });
-}
-
 // Read a JSON body but stop once it passes MAX_RESPONSE_BYTES, so a broken or
 // hostile endpoint cannot make the panel buffer an unbounded response. Returns
 // null on any read/parse problem, which callers already treat as "no body".
@@ -245,7 +237,7 @@ async function readJsonCapped(res) {
       total += value.length;
       if (total > MAX_RESPONSE_BYTES) {
         await reader.cancel().catch(() => {});
-        throw httpError(502, 'The LLM server returned an unreasonably large response');
+        throw httpError(502, 'The LLM server returned an unreasonably large response.');
       }
       chunks.push(value);
     }
@@ -260,18 +252,27 @@ async function readJsonCapped(res) {
   }
 }
 
+// allowPrivate: a self-hosted LLM is expected to be on the LAN or loopback.
+// maxRedirects: 0 - an LLM base URL redirecting is unexpected/suspicious, so
+// treat it as a failure rather than following it. Delegates to the panel's
+// shared, DNS-rebind-pinned urlGuard.safeFetch so there is one guarded fetch
+// implementation, not two that can drift apart.
 async function fetchJson(url, options = {}) {
-  await assertAllowedEndpoint(url);
   let res;
   try {
-    res = await fetch(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    res = await urlGuard.safeFetch(url, {
+      ...options,
+      allowPrivate: true,
+      maxRedirects: 0,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
   } catch (err) {
+    if (err && err.status) throw err;
     throw httpError(502, `Could not reach the LLM server: ${err.message}`);
   }
   const body = await readJsonCapped(res);
   if (!res.ok) {
-    const detail = body?.error?.message || body?.error || body?.message || `HTTP ${res.status}`;
-    throw httpError(502, `LLM server rejected the request: ${String(detail).slice(0, 300)}`);
+    throw httpError(502, 'The LLM server rejected the request. Check its configuration and try again.');
   }
   return body;
 }
@@ -298,7 +299,7 @@ async function completionMessage(
   { persist = true, override = {}, allowPowers = false } = {}
 ) {
   const cfg = { ...getConfig(serverId, { includeSecret: true }), ...override };
-  if (!cfg.model) throw httpError(409, 'The chatbot has no model configured');
+  if (!cfg.model) throw httpError(409, 'The chatbot has no model configured.');
   const history = persist && cfg.retentionDays > 0 ? recentConversation(serverId, player) : [];
   const tools = allowPowers ? wizardPowers.toolsFor(cfg, player, prompt) : [];
   const powerGuard = tools.length
@@ -341,12 +342,12 @@ async function completionMessage(
     body = await fetchJson(url, { ...options, body: JSON.stringify(request) });
   }
   const message = body?.choices?.[0]?.message;
-  if (!message || typeof message !== 'object') throw httpError(502, 'The LLM returned an empty response');
+  if (!message || typeof message !== 'object') throw httpError(502, 'The LLM returned an empty response.');
   return { message, cfg };
 }
 
 function cleanReply(raw) {
-  if (typeof raw !== 'string' || !raw.trim()) throw httpError(502, 'The LLM returned an empty response');
+  if (typeof raw !== 'string' || !raw.trim()) throw httpError(502, 'The LLM returned an empty response.');
   let text = raw.trim();
   if (text.startsWith('{') && text.endsWith('}')) {
     try {
@@ -366,7 +367,7 @@ function cleanReply(raw) {
       ].find((value) => typeof value === 'string' && value.trim());
       if (candidate) text = candidate;
       else if (envelope?.name || envelope?.function || envelope?.tool_calls || envelope?.parameters) {
-        throw httpError(502, 'The LLM returned a tool-shaped response instead of conversational text');
+        throw httpError(502, 'The LLM returned a tool-shaped response instead of conversational text.');
       }
     } catch (err) {
       if (err.status) throw err;

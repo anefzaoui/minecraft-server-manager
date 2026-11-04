@@ -18,8 +18,8 @@ const permissions = require('../../services/permissions');
 
 const router = express.Router({ mergeParams: true });
 
-const serverIdSchema = z.string().regex(/^srv_[\w-]+$/, 'Invalid server id');
-const crashIdSchema = z.string().regex(/^cr_[\w-]+$/, 'Invalid crash report id');
+const serverIdSchema = z.string().regex(/^srv_[\w-]+$/, 'Invalid server id.');
+const crashIdSchema = z.string().regex(/^cr_[\w-]+$/, 'Invalid crash report id.');
 
 router.get(
   '/',

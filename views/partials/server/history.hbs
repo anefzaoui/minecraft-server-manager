@@ -2,8 +2,8 @@
 {{#if events.length}}
 <div class="mb-4 flex flex-wrap items-center gap-2">
   <input class="input max-w-xs" id="hist-search" placeholder="Search events…">
-  <select class="input w-auto" id="hist-type" data-label="Filter by type"><option value="">All types</option></select>
-  <select class="input w-auto" id="hist-actor" data-label="Filter by actor"><option value="">All actors</option></select>
+  <select class="input w-auto" id="hist-type" data-label="Filter by type"><option value="">All Types</option></select>
+  <select class="input w-auto" id="hist-actor" data-label="Filter by actor"><option value="">All Actors</option></select>
   <button class="btn btn-sm ml-auto" data-menu="hist-export-menu">{{{icon 'download' 'size-3.5'}}} Export</button>
   <template id="hist-export-menu">
     <a href="/api/servers/{{server.id}}/events/export?format=json" target="_blank" rel="noopener">{{{icon 'file-text' 'size-3.5'}}} Export as JSON</a>
@@ -26,7 +26,7 @@
           <p class="mt-1.5 font-mono text-xs text-ink-soft">{{summary}}</p>
           <div class="mt-2 flex flex-wrap items-center gap-2">
             {{#each suspected}}
-              <span class="badge badge-warn" title="Suspected from stack trace">suspect: {{this}}</span>
+              <span class="badge badge-warn" title="Suspected from the stack trace.">suspect: {{this}}</span>
             {{/each}}
             {{! One treatment (icon + label) for all three sibling actions. }}
             <button class="btn btn-ghost btn-sm" data-crash-action="view">{{{icon 'file-search' 'size-3.5'}}} Open Viewer</button>
