@@ -22,6 +22,9 @@ async function statBatch(paths) {
   return out;
 }
 
+// Directory depth the storage_index table caches (servers/<id>/<sub> = 3).
+const MAX_CACHED_DEPTH = 3;
+
 let scanning = false;
 let timer = null;
 // When the last scan STARTED; the interval skip uses it to avoid re-walking the
@@ -70,7 +73,10 @@ async function scan() {
         size += st.size;
         files += 1;
       }
-      if (rel) results.set(rel, { size, files });
+      // Only the depths the table caches are kept: a modpack or world tree has
+      // tens of thousands of deeper dirs whose entries were held in memory for
+      // the whole scan and then thrown away.
+      if (rel && rel.split('/').length <= MAX_CACHED_DEPTH) results.set(rel, { size, files });
       return { size, files };
     }
 
@@ -98,8 +104,8 @@ async function scan() {
           "INSERT INTO storage_index (rel_path, size_bytes, file_count, scanned_at) VALUES (?, ?, ?, datetime('now'))"
         );
       for (const [rel, v] of results) {
-        // Cache depth ≤ 3 to keep the table small; deeper paths are summed live.
-        if (rel.split('/').length <= 3) insert.run(rel, v.size, v.files);
+        // The walk only kept depth ≤ MAX_CACHED_DEPTH; deeper paths are summed live.
+        insert.run(rel, v.size, v.files);
       }
     });
 
@@ -131,20 +137,12 @@ function recordSnapshot(results, total) {
 function cachedEqual(results) {
   const rows = db.all('SELECT rel_path, size_bytes, file_count FROM storage_index');
   if (rows.length === 0) return false;
-  if (rows.length !== countCachedEntries(results)) return false;
+  if (rows.length !== results.size) return false;
   for (const r of rows) {
     const v = results.get(r.rel_path);
     if (!v || v.size !== r.size_bytes || v.files !== r.file_count) return false;
   }
   return true;
-}
-
-function countCachedEntries(results) {
-  let n = 0;
-  for (const rel of results.keys()) {
-    if (rel.split('/').length <= 3) n += 1;
-  }
-  return n;
 }
 
 function startIndexer({ intervalMs = 15 * 60 * 1000 } = {}) {

@@ -26,6 +26,7 @@ const { dataPath } = require('../storage/pathGuard');
 const { recordEvent } = require('../events');
 const { execCapture, inspectStatus } = require('../docker/containers');
 const { serializeError } = require('../utils/logSanitize');
+const { dirSize } = require('../utils/statSizes');
 const indexer = require('../storage/indexer');
 const library = require('./library');
 const { withSaveLock } = require('./serverLocks');
@@ -1214,48 +1215,11 @@ async function isRunning(serverId) {
   return info.exists && ['running', 'starting', 'unhealthy'].includes(info.status);
 }
 
-// Parallel, bounded-concurrency directory size walker. World trees hold a great
-// many small files; serializing one fsp.stat at a time is needlessly slow (the
-// same pattern servers.js uses for backup size estimates).
-const DIR_SIZE_CONCURRENCY = 32;
 async function dirsSize(absDirs) {
-  const totals = await Promise.all(absDirs.map((dir) => dirSize(dir)));
-  return totals.reduce((a, b) => a + b, 0);
-}
-
-async function dirSize(abs) {
-  let entries;
-  try {
-    entries = await fsp.readdir(abs, { withFileTypes: true });
-  } catch {
-    return 0;
-  }
-  const jobs = [];
-  for (const e of entries) {
-    if (e.isSymbolicLink()) continue;
-    jobs.push(path.join(abs, e.name));
-  }
-  let i = 0;
-  const push = async (p) => {
-    try {
-      const st = await fsp.stat(p);
-      if (st.isDirectory()) return dirSize(p);
-      return st.size;
-    } catch {
-      return 0; // transient
-    }
-  };
-  const workers = Array.from({ length: Math.min(DIR_SIZE_CONCURRENCY, jobs.length) }, async () => {
-    let sub = 0; // worker-local accumulator avoids lost updates on a shared total
-    while (i < jobs.length) {
-      const p = jobs[i];
-      i += 1; // sync claim, safe across the pool
-      sub += await push(p);
-    }
-    return sub;
-  });
-  const results = await Promise.all(workers);
-  return results.reduce((a, b) => a + b, 0);
+  let total = 0;
+  // One walk at a time: each dirSize() already runs its own bounded pool.
+  for (const dir of absDirs) total += await dirSize(dir);
+  return total;
 }
 
 function sha256File(abs) {

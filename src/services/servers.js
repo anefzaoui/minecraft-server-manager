@@ -24,6 +24,7 @@ const settings = require('./settings');
 const { withSaveLock } = require('./serverLocks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
+const { dirSize } = require('../utils/statSizes');
 const { propEnvMap } = require('../config/field-catalog');
 
 function rowToServer(row, { parseOverrides = true } = {}) {
@@ -1353,43 +1354,6 @@ async function refreshStatusesInner({ boot }) {
       total: all.length,
     });
   }
-}
-
-// Parallel, bounded-concurrency directory size walker. Server world dirs hold a
-// great many small files; serializing one fsp.stat at a time is needlessly slow.
-// A small concurrency pool overlaps the directory reads without exhausting file
-// descriptors on huge trees.
-const DIR_SIZE_CONCURRENCY = 32;
-async function dirSize(dir) {
-  // Dirent types come from readdir and never follow symlinks, so a link to a
-  // parent directory cannot recurse forever and a linked file is not counted
-  // twice (lstat below for the same reason).
-  const jobs = [];
-  for (const entry of await fsp.readdir(dir, { withFileTypes: true })) {
-    if (entry.isSymbolicLink()) continue;
-    if (entry.isDirectory() || entry.isFile()) jobs.push({ p: path.join(dir, entry.name), dir: entry.isDirectory() });
-  }
-  let i = 0;
-  const push = async ({ p, dir: isDir }) => {
-    try {
-      if (isDir) return await dirSize(p);
-      const st = await fsp.lstat(p);
-      return st.isFile() ? st.size : 0;
-    } catch {
-      return 0; // transient file
-    }
-  };
-  const workers = Array.from({ length: Math.min(DIR_SIZE_CONCURRENCY, jobs.length) }, async () => {
-    let sub = 0; // worker-local accumulator avoids lost updates on a shared total
-    while (i < jobs.length) {
-      const p = jobs[i];
-      i += 1; // sync claim, safe across the pool
-      sub += await push(p);
-    }
-    return sub;
-  });
-  const results = await Promise.all(workers);
-  return results.reduce((a, b) => a + b, 0);
 }
 
 function mustGet(id) {
