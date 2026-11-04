@@ -20,6 +20,7 @@ const db = require('../../db');
 const permissions = require('../../services/permissions');
 const httpError = require('../../utils/httpError');
 const eventsService = require('../../events');
+const healthAlerts = require('../../services/healthAlerts');
 const { dataPath } = require('../../storage/pathGuard');
 const { checkDocker } = require('../../docker/connect');
 const { fetchLogs } = require('../../docker/logs');
@@ -123,12 +124,23 @@ router.post(
 const { serverScope, requireCap, requireCapForWrites, backupServerId } = require('../middleware/serverAccess');
 router.use('/servers/:id', serverScope);
 
-for (const action of ['start', 'stop', 'restart', 'kill', 'recreate']) {
+const POWER_TITLES = {
+  start: 'Starting',
+  stop: 'Stopping',
+  restart: 'Restarting',
+  kill: 'Force-stopping',
+  recreate: 'Rebuilding',
+};
+for (const action of Object.keys(POWER_TITLES)) {
   router.post(
     `/servers/:id/${action}`,
     requireCap('power'),
     asyncHandler(async (req, res, next) => {
-      await servers[`${action}Server`](req.params.id, { actor: req.user.username });
+      const actor = req.user.username;
+      const name = servers.getServer(req.params.id).display_name;
+      await tasks.track(`${POWER_TITLES[action]} ${name}…`, { serverId: req.params.id, actor }, () =>
+        servers[`${action}Server`](req.params.id, { actor })
+      );
       res.json({ ok: true, server: publicServer(servers.getServer(req.params.id)) });
     })
   );
@@ -249,11 +261,17 @@ router.delete(
   asyncHandler(async (req, res, next) => {
     // Deletion is opt-in: files + backups are KEPT by default, and only
     // removed when the caller explicitly asks via deleteFiles/deleteBackups.
-    const { freedBytes } = await servers.deleteServer(req.params.id, {
-      actor: req.user.username,
-      keepWorld: req.query.deleteFiles !== 'true' && req.query.keepFiles !== 'false',
-      keepBackups: req.query.deleteBackups !== 'true' && req.query.keepBackups !== 'false',
-    });
+    const actor = req.user.username;
+    const { freedBytes } = await tasks.track(
+      `Deleting ${servers.getServer(req.params.id).display_name}…`,
+      { actor },
+      () =>
+        servers.deleteServer(req.params.id, {
+          actor,
+          keepWorld: req.query.deleteFiles !== 'true' && req.query.keepFiles !== 'false',
+          keepBackups: req.query.deleteBackups !== 'true' && req.query.keepBackups !== 'false',
+        })
+    );
     res.json({ ok: true, freedBytes });
   })
 );
@@ -439,6 +457,18 @@ router.put(
     res.json({ ok: true, changed, restarted, server: publicServer(server) });
   })
 );
+
+// Dashboard health alerts (crashes, out-of-memory stops, auto-restarts): each
+// user dismisses their own; the history events stay. See services/healthAlerts.js.
+router.post('/alerts/clear', (req, res) => {
+  res.json({ ok: true, cleared: healthAlerts.clearAll(req.user, permissions.visibleServerIds(req.user)) });
+});
+
+router.post('/alerts/:eventId/dismiss', (req, res) => {
+  const eventId = z.coerce.number().int().positive().parse(req.params.eventId);
+  healthAlerts.dismiss(req.user, permissions.visibleServerIds(req.user), eventId);
+  res.json({ ok: true });
+});
 
 // Port picking for new servers: the roles that can create one. Answers name
 // host ports in use, so viewers don't get them.
@@ -795,7 +825,7 @@ router.post(
       .parse(req.body);
     const server = requireServer(req.params.id);
     const actor = req.user.username;
-    const taskId = tasks.run(`Upgrading pack on ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
+    const taskId = tasks.run(`Upgrading pack on ${server.display_name}…`, { serverId: server.id, actor }, async (t) => {
       t.step(UPGRADE_STEP_LABELS.resolving);
       try {
         return await upgrade.upgradePack(server.id, {
@@ -832,7 +862,7 @@ router.post(
       )?.id ||
       null;
     const taskId = tasks.run(
-      `Rolling back pack on ${server.display_name}`,
+      `Rolling back pack on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step(backupId ? 'Restoring pre-update backup & re-pinning…' : 'Re-pinning previous version…');
@@ -1170,7 +1200,7 @@ router.post(
     const server = requireServer(req.params.id);
     const actor = req.user.username;
     const taskId = tasks.run(
-      `Checking updates for ${server.display_name}`,
+      `Checking updates for ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step('Querying Modrinth, CurseForge, Hangar, SpigotMC, GitHub and the Minecraft/loader/image registries…');
@@ -1193,7 +1223,7 @@ router.post(
     const server = requireServer(req.params.id);
     const actor = req.user.username;
     const taskId = tasks.run(
-      `Updating container image on ${server.display_name}`,
+      `Updating container image on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step('Recreating container with the newer image…');
@@ -1267,7 +1297,7 @@ router.post(
       }
     }
     const taskId = tasks.run(
-      `Updating Minecraft version on ${server.display_name}`,
+      `Updating Minecraft version on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         const versionChanging = targetVersion && targetVersion !== server.mc_version;
@@ -1430,7 +1460,7 @@ router.post(
     const actor = req.user.username;
     const note = String(req.body?.note || '');
     const shrinkAfter = Boolean(req.body?.shrink);
-    const taskId = tasks.run(`Backing up ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
+    const taskId = tasks.run(`Backing up ${server.display_name}…`, { serverId: server.id, actor }, async (t) => {
       t.step('Snapshotting server directory (save-off → save-all → zip → save-on)…');
       const backup = await backups.createBackup(server.id, { reason: 'manual', actor, note, shrinkAfter });
       return { id: backup.id, filename: backup.filename, size: backup.size_bytes };
@@ -1449,7 +1479,7 @@ router.post(
     const actor = req.user.username;
     const backupId = req.params.backupId;
     const taskId = tasks.run(
-      `Restoring backup on ${server.display_name}`,
+      `Restoring backup on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step('Stopping server & taking a safety backup…');
@@ -1473,6 +1503,16 @@ router.get(
     const abs = dataPath(backup.rel_path);
     if (!fs.existsSync(abs)) throw Object.assign(new Error('Backup archive is missing on disk'), { status: 404 });
     res.download(abs, backup.filename);
+  })
+);
+
+// Read-only dry-run restore: reads every entry and checks its CRC. Synchronous
+// (ponytail: move to tasks.run if verifying huge archives outlasts request timeouts).
+router.post(
+  '/backups/:backupId/verify',
+  requireCap('backups', { resolve: backupServerId }),
+  asyncHandler(async (req, res) => {
+    res.json(await backups.verifyBackup(req.params.backupId, { actor: req.user.username }));
   })
 );
 
@@ -1792,7 +1832,7 @@ router.post(
     }
 
     const taskId = tasks.run(
-      `Shrinking "${world}" on ${server.display_name}`,
+      `Shrinking "${world}" on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         // Decide from the CONTAINER's current state, not the DB row above (which
@@ -1938,11 +1978,10 @@ router.post(
         ignoreVersion: z.boolean().optional(),
       })
       .parse(req.body);
-    const result = await mods.installFromUrl(req.params.id, url, {
-      actor: req.user.username,
-      kind,
-      ignoreVersion,
-    });
+    const actor = req.user.username;
+    const result = await tasks.track('Installing from a link…', { serverId: req.params.id, actor }, () =>
+      mods.installFromUrl(req.params.id, url, { actor, kind, ignoreVersion })
+    );
     res.status(201).json({
       ok: true,
       installed: {
@@ -2054,7 +2093,7 @@ router.post(
   asyncHandler((req, res, next) => {
     const server = requireServer(req.params.id);
     const actor = req.user.username;
-    const taskId = tasks.run(`Updating mods on ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
+    const taskId = tasks.run(`Updating mods on ${server.display_name}…`, { serverId: server.id, actor }, async (t) => {
       const rows = db.all(
         `SELECT sc.id, sc.name
              FROM server_content sc
@@ -2208,10 +2247,10 @@ router.post(
     const excludeFilename = (req.body && req.body.excludeFilename) || null;
     const excludeToken = excludeFilename ? mods.pendingExcludeToken(req.params.id, excludeFilename) : null;
     try {
-      const result = await mods.importUploadedMod(req.params.id, req.file.path, req.file.originalname, {
-        excludeToken,
-        actor: req.user.username,
-      });
+      const actor = req.user.username;
+      const result = await tasks.track(`Importing ${req.file.originalname}…`, { serverId: req.params.id, actor }, () =>
+        mods.importUploadedMod(req.params.id, req.file.path, req.file.originalname, { excludeToken, actor })
+      );
       if (excludeFilename) mods.clearPendingLine(req.params.id, excludeFilename);
       res.status(201).json({ ok: true, ...result, mods: mods.pendingDownloads(req.params.id) });
     } finally {
@@ -2279,7 +2318,7 @@ router.post(
     }
     const actor = req.user.username;
     const taskId = tasks.run(
-      `Importing mod zip into ${server.display_name}`,
+      `Importing mod zip into ${server.display_name}…`,
       { actor, serverId: server.id },
       async (t) => {
         try {

@@ -7,7 +7,9 @@
 const path = require('node:path');
 const { getDocker } = require('./connect');
 const { toHostPath } = require('./hostPath');
+const { ensureNetwork } = require('./networks');
 const db = require('../db');
+const logger = require('../logger')(path.basename(__filename));
 
 const LABEL = 'msm.id';
 const GAME_PORT = '25565';
@@ -28,7 +30,7 @@ function containerName(serverId) {
  * @param {object} spec.ports            { game, rcon, bedrock? } host ports
  * @param {object} spec.resources        { memoryMb, swapMb, cpus }
  * @param {string} [spec.containerName]  Docker container name override; default `msm-<serverId>`
- * @param {string} [spec.networkName]    existing host Docker network to attach to; default bridge
+ * @param {string} [spec.networkName]    host Docker network to attach to; created if it does not exist; default bridge
  * @param {Array}  [spec.extraBinds]     [{hostPath, containerPath, mode: 'rw'|'ro'}] - RAW host paths, not re-rooted
  */
 async function createContainer(spec) {
@@ -72,7 +74,11 @@ async function createContainer(spec) {
     NanoCpus: spec.resources.cpus ? Math.round(spec.resources.cpus * 1e9) : 0,
     RestartPolicy: { Name: 'no' }, // the panel owns restarts (crash backoff, quota stops)
   };
-  if (spec.networkName) hostConfig.NetworkMode = spec.networkName;
+  if (spec.networkName) {
+    const created = await ensureNetwork(spec.networkName);
+    if (created) logger.info('Created a Docker network.', { networkName: spec.networkName, serverId: spec.serverId });
+    hostConfig.NetworkMode = spec.networkName;
+  }
 
   const container = await docker.createContainer({
     name: spec.containerName || containerName(spec.serverId),
