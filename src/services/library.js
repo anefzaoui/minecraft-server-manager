@@ -41,7 +41,7 @@ const MAX_DOWNLOAD_BYTES = 8 * 1024 ** 3;
  * strongest digest and a mismatch aborts the install.
  * Returns the library_files row (existing row when the hash already exists).
  */
-async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'system' } = {}) {
+async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'system', serverId = null } = {}) {
   const category = meta.category || 'mod';
   const expected = contentHashes.strongest(meta.expectedHashes);
   const tmpFile = dataPath('tmp', `dl-${nanoid(6)}`);
@@ -62,9 +62,16 @@ async function downloadToLibrary(url, meta, { onProgress = () => {}, actor = 'sy
         `Download is ${humanBytes(totalBytes)}, which is over the ${humanBytes(MAX_DOWNLOAD_BYTES)} per-file limit.`
       );
     }
-    const { free } = await require('../storage/indexer').diskFree();
+    const indexer = require('../storage/indexer');
+    const { free } = await indexer.diskFree();
     if (free < totalBytes * 1.2) {
       throw httpError(507, `Not enough disk space for this download (~${humanBytes(totalBytes)} needed)`);
+    }
+    // Per-server quota must bite BEFORE any of this lands on disk - the library
+    // copy is shared, but it is the server that asked to pull the file in.
+    if (serverId) {
+      const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
+      if (server) indexer.assertUnderQuota(server, totalBytes);
     }
   }
 
@@ -303,12 +310,16 @@ async function installToServer(libraryId, serverId, destRel, { filename } = {}) 
   const destDir = dataPath('servers', serverId, destRel);
   await fsp.mkdir(destDir, { recursive: true });
   const target = path.join(destDir, sanitizeFilename(filename || lib.filename));
-  await fsp.rm(target, { force: true });
+  // Install via a temp sibling then atomically rename over the target, so a
+  // crash or EPERM mid-link/copy can never leave the configured file missing
+  // (the old code removed it first, then linked).
+  const tmp = path.join(destDir, `.${path.basename(target)}.tmp-${nanoid(6)}`);
   try {
-    await fsp.link(dataPath(lib.rel_path), target);
+    await fsp.link(dataPath(lib.rel_path), tmp);
   } catch {
-    await fsp.copyFile(dataPath(lib.rel_path), target);
+    await fsp.copyFile(dataPath(lib.rel_path), tmp);
   }
+  await fsp.rename(tmp, target);
   return { installedPath: target, filename: path.basename(target) };
 }
 

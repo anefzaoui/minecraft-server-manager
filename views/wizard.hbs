@@ -338,10 +338,9 @@
           </div>
           <div>
             <label class="label" for="wz-docker-network">Docker network <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
-            <select class="input" id="wz-docker-network" data-label="Docker network">
-              <option value="">Default (bridge)</option>
-            </select>
-            <p class="help">Attach to an existing network. Useful for a reverse proxy such as Pangolin or NGINX.</p>
+            <input class="input font-mono" id="wz-docker-network" list="wz-docker-networks" placeholder="Default (bridge)" autocomplete="off">
+            <datalist id="wz-docker-networks"></datalist>
+            <p class="help">Attach to an existing Docker network, or type a new name and the panel will create it for you. Leave blank for the default bridge.</p>
           </div>
         </div>
 
