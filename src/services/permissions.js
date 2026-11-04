@@ -171,6 +171,7 @@ const CAPABILITY_INFO = {
       'GET /api/backups/:backupId/download',
       'PATCH /api/backups/:backupId',
       'DELETE /api/backups/:backupId',
+      'POST /api/backups/:backupId/verify',
       'POST /api/schedules (backup)',
     ],
   },
@@ -209,6 +210,7 @@ const CAPABILITY_INFO = {
       'Advanced Docker overrides and the chatbot, which stay admin-only. Rebuilding the container after a change (Power).',
     reach: [
       'PATCH /api/servers/:id',
+      'POST /api/servers/:id/changes-preview',
       'PUT /api/servers/:id/console-label',
       'PUT /api/servers/:id/port',
       'GET /api/servers/:id/port/check',

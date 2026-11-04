@@ -8,6 +8,7 @@ const db = require('../src/db');
 const auth = require('../src/services/auth');
 const wizard = require('../src/services/wizard');
 const wizardPowers = require('../src/services/wizardPowers');
+const { stubHttpRequest } = require('./helpers/fakeHttp');
 
 let adminCookie;
 let operatorCookie;
@@ -335,25 +336,22 @@ test('power intent requires an explicit action and keeps recipe questions conver
 });
 
 test('eligible model requests receive only structured tools and unsupported models fall back to chat', async () => {
-  const originalFetch = global.fetch;
   const requests = [];
-  global.fetch = async (_url, options) => {
-    const body = JSON.parse(options.body);
-    requests.push(body);
+  const restore = stubHttpRequest(({ body }) => {
+    requests.push(JSON.parse(body.toString('utf8')));
     if (requests.length === 1) {
-      return new Response(JSON.stringify({ error: { message: 'tools are not supported' } }), {
+      return {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ error: { message: 'tools are not supported' } }),
+      };
     }
-    return new Response(
-      JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'Only conversation.' } }] }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  };
+    return {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'Only conversation.' } }] }),
+    };
+  });
   try {
     const result = await wizard.completionMessage(serverId, 'Gleep52', 'Give me two pieces of bread.', {
       allowPowers: true,
@@ -363,7 +361,7 @@ test('eligible model requests receive only structured tools and unsupported mode
     assert.equal(Object.hasOwn(requests[1], 'tools'), false);
     assert.match(requests[1].messages[0].content, /No gameplay tools are available/);
   } finally {
-    global.fetch = originalFetch;
+    restore();
   }
 });
 
@@ -393,21 +391,21 @@ test('dry-run powers write a complete audit event without executing RCON', async
 });
 
 test('model discovery supports OpenAI-compatible model lists and free-text trigger parsing', async () => {
-  const originalFetch = global.fetch;
-  global.fetch = async (url) => {
-    assert.equal(String(url), 'http://127.0.0.1:11434/v1/models');
-    return new Response(JSON.stringify({ data: [{ id: 'qwen:test' }, { id: 'llama:test' }] }), {
+  const restore = stubHttpRequest(({ path }) => {
+    assert.equal(path, '/v1/models');
+    return {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  };
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ data: [{ id: 'qwen:test' }, { id: 'llama:test' }] }),
+    };
+  });
   try {
     assert.deepEqual(await wizard.listModels(serverId, { baseUrl: 'http://127.0.0.1:11434', apiKey: '' }), [
       'llama:test',
       'qwen:test',
     ]);
   } finally {
-    global.fetch = originalFetch;
+    restore();
   }
   assert.equal(wizard.TRIGGER_RE.test('ordinary player chat'), false);
   assert.equal(wizard.TRIGGER_RE.test('@wizard what mysteries await?'), true);
@@ -588,16 +586,18 @@ test('a player in neither power list gets no tools and cannot invoke a hallucina
 });
 
 test('an oversized LLM response is refused instead of buffered without limit', async () => {
-  const originalFetch = global.fetch;
-  global.fetch = async () =>
-    new Response('x'.repeat(3 * 1024 * 1024), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  const restore = stubHttpRequest(() => ({
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+    body: 'x'.repeat(3 * 1024 * 1024),
+  }));
   try {
     await assert.rejects(
       wizard.listModels(serverId, { baseUrl: 'http://127.0.0.1:11434', apiKey: '' }),
       /unreasonably large/
     );
   } finally {
-    global.fetch = originalFetch;
+    restore();
   }
 });
 
