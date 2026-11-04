@@ -75,7 +75,7 @@ copy to migrate.**
 - 📚 Shared **sha256-deduplicated mod library**, hard-linked into servers; custom mods survive pack updates
 - 🖥️ **Live console** over WebSocket, RCON command bar, log filters, player quick-actions
 - 👮 **Player moderation**: whitelist, ops, bans, IP bans, teleports, online via RCON and offline via JSON edits
-- 💾 **Save-safe backups** with retention you set panel-wide or per server + cron **schedules** (restart / backup / RCON)
+- 💾 **Save-safe backups** with retention you set panel-wide or per server + cron **schedules** (restart / backup / RCON, plus fleet-wide back up all and restart all)
 - 📜 **Blueprints** (`.mcserver.zip`): portable server recipes you export, import anywhere, and get the same server from
 - 🔥 **Crash forensics**: auto-detected, parsed, suspects identified, plus one-click **mclo.gs sharing and automated insights**
 - 🗺️ One-click **BlueMap live map**, served through the panel's authenticated proxy
@@ -377,7 +377,8 @@ Not affiliated with any of them.
 - **Public status page**: optional unauthenticated `/status/<slug>` per server: live status, MOTD,
   version, flavor, icon, uptime, and player count, styled with the server's accent.
 - **Public API**: optional read-only `/api/v1`, authenticated with admin-minted Bearer tokens that
-  are scopable per server, revocable, and expiring; server list + live status. See
+  are scopable per server, revocable, and expiring; server list + live status, per-server players
+  and backup history, and a Prometheus `/metrics` endpoint for Grafana or Uptime Kuma. See
   [docs/public-api.md](docs/public-api.md).
 
 ---

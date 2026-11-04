@@ -145,7 +145,7 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
   const typeMeta = () => taskTypes.find((t) => t.value === typeSel.value) || {};
   const syncTypeUi = () => {
     cmdWrap.classList.toggle('hidden', typeSel.value !== 'rcon');
-    shrinkWrap.classList.toggle('hidden', typeSel.value !== 'backup');
+    shrinkWrap.classList.toggle('hidden', typeSel.value !== 'backup' && typeSel.value !== 'backup-all');
     // Panel-wide tasks ignore the server - disable the picker instead of
     // silently discarding whatever was selected in it.
     const scoped = Boolean(typeMeta().serverScoped);
@@ -212,7 +212,8 @@ function scheduleModal({ servers, taskTypes, edit = null }) {
             }
             payload.command = command;
           }
-          if (typeSel.value === 'backup' && shrinkInput.checked) payload.shrink = true;
+          if ((typeSel.value === 'backup' || typeSel.value === 'backup-all') && shrinkInput.checked)
+            payload.shrink = true;
           const body = {
             serverId: meta.serverScoped ? serverId : null,
             taskType: typeSel.value,

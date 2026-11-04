@@ -222,14 +222,6 @@ function authHeaders(cfg) {
   return cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {};
 }
 
-// Fetch-time SSRF guard. Resolves the host and blocks link-local (incl. cloud
-// metadata), multicast, and unspecified addresses while allowing the LAN and
-// loopback targets a self-hosted LLM needs. Delegates to the panel's shared
-// urlGuard so there is one SSRF implementation, not two that can drift apart.
-async function assertAllowedEndpoint(rawUrl) {
-  await urlGuard.assertPublicUrl(rawUrl, { allowPrivate: true });
-}
-
 // Read a JSON body but stop once it passes MAX_RESPONSE_BYTES, so a broken or
 // hostile endpoint cannot make the panel buffer an unbounded response. Returns
 // null on any read/parse problem, which callers already treat as "no body".
@@ -260,12 +252,22 @@ async function readJsonCapped(res) {
   }
 }
 
+// allowPrivate: a self-hosted LLM is expected to be on the LAN or loopback.
+// maxRedirects: 0 - an LLM base URL redirecting is unexpected/suspicious, so
+// treat it as a failure rather than following it. Delegates to the panel's
+// shared, DNS-rebind-pinned urlGuard.safeFetch so there is one guarded fetch
+// implementation, not two that can drift apart.
 async function fetchJson(url, options = {}) {
-  await assertAllowedEndpoint(url);
   let res;
   try {
-    res = await fetch(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    res = await urlGuard.safeFetch(url, {
+      ...options,
+      allowPrivate: true,
+      maxRedirects: 0,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
   } catch (err) {
+    if (err && err.status) throw err;
     throw httpError(502, `Could not reach the LLM server: ${err.message}`);
   }
   const body = await readJsonCapped(res);

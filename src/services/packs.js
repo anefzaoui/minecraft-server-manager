@@ -255,6 +255,9 @@ async function applyPack(serverId, resolved, { actor = 'system', force = false }
     resolved.maxJavaVersion ?? null,
     resolved.channel ?? null
   );
+  // The pinned_version_id write above is exactly what the outdated-count query
+  // tests, so a stale cached count must not survive it.
+  require('../updates/checker').invalidateOutdatedCache();
   recordEvent({
     serverId,
     actor,

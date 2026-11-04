@@ -789,7 +789,8 @@ async function installResolved(
 ) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const lib = await library.downloadToLibrary(downloadUrl, meta, { onProgress, actor });
+  const lib = await library.downloadToLibrary(downloadUrl, meta, { onProgress, actor, serverId });
+  // Post-download check with the real size: catches servers that omit content-length.
   indexer.assertUnderQuota(server, lib.size_bytes);
   const { filename } = await library.installToServer(lib.id, serverId, contentDir(server, kind));
 
@@ -962,6 +963,7 @@ function setIgnoredUpdate(serverId, { file, contentId }, { ignore, actor = 'syst
       throw httpError(409, 'No pending update to ignore. Run an update check first.');
     }
     db.run('UPDATE server_content SET ignored_update_version = ? WHERE id = ?', check.latest_name, row.id);
+    require('../updates/checker').invalidateOutdatedCache();
     recordEvent({
       serverId,
       actor,
@@ -972,6 +974,7 @@ function setIgnoredUpdate(serverId, { file, contentId }, { ignore, actor = 'syst
   }
 
   db.run('UPDATE server_content SET ignored_update_version = NULL WHERE id = ?', row.id);
+  require('../updates/checker').invalidateOutdatedCache();
   recordEvent({
     serverId,
     actor,
@@ -1033,6 +1036,7 @@ async function applyOverlayUpdate(serverId, { file, contentId }, { actor = 'syst
     serverId,
     result.filename
   );
+  require('../updates/checker').invalidateOutdatedCache();
   return {
     name: result.library.name,
     filename: result.filename,
@@ -1095,6 +1099,7 @@ async function revertOverlayUpdate(serverId, { file, contentId }, { actor = 'sys
     revertedFrom || null
   );
   if (!wasEnabled) await setEnabled(serverId, filename, false, { actor });
+  require('../updates/checker').invalidateOutdatedCache();
 
   recordEvent({
     serverId,
@@ -1294,6 +1299,10 @@ async function installLocalContent(
   const targetKind = contentKindOf(server);
 
   const fromRegistry = identity && (identity.platform === 'modrinth' || identity.platform === 'curseforge');
+  // Quota check with the staged upload's real size BEFORE it is written into
+  // the shared library path - the post-check below stays as the accurate gate.
+  const uploadSize = (await fsp.stat(tmpPath).catch(() => null))?.size;
+  if (uploadSize) indexer.assertUnderQuota(server, uploadSize);
   const lib = await library.importFile(
     tmpPath,
     {
