@@ -15,7 +15,7 @@ const PUZZLE_SVG =
 export function packIconHtml(iconUrl, size = 'size-10') {
   const shell = `class="relative grid ${size} shrink-0 place-items-center overflow-hidden rounded-md bg-inset text-ink-faint"`;
   if (!iconUrl) return `<span ${shell}>${PUZZLE_SVG}</span>`;
-  return `<span ${shell}>${PUZZLE_SVG}<img src="${escapeHtml(iconUrl)}" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover" onerror="this.remove()"></span>`;
+  return `<span ${shell}>${PUZZLE_SVG}<img src="${escapeHtml(iconUrl)}" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover" data-remove-on-error></span>`;
 }
 
 export function formatDownloads(n) {

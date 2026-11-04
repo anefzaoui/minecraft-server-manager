@@ -16,13 +16,13 @@ const ITEM_RE = /^([a-z0-9_.-]+:)?[a-z0-9_./-]{1,120}$/;
 
 function assertUuid(uuid) {
   const u = String(uuid || '').toLowerCase();
-  if (!UUID_RE.test(u)) throw httpError(400, 'Invalid player UUID');
+  if (!UUID_RE.test(u)) throw httpError(400, 'Invalid player UUID.');
   return u;
 }
 
 function assertName(name) {
   if (!NAME_RE.test(String(name)))
-    throw httpError(400, 'Invalid player name (letters, digits and _ only, max 16 chars)');
+    throw httpError(400, 'Invalid player name (letters, digits and _ only, max 16 chars).');
   return String(name);
 }
 
@@ -30,7 +30,7 @@ function assertItemId(item) {
   const id = String(item || '')
     .toLowerCase()
     .trim();
-  if (!ITEM_RE.test(id)) throw httpError(400, 'Invalid item id (e.g. minecraft:diamond_sword)');
+  if (!ITEM_RE.test(id)) throw httpError(400, 'Invalid item id (e.g. minecraft:diamond_sword).');
   return id;
 }
 

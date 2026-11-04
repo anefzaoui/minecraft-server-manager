@@ -15,6 +15,7 @@ fs.mkdirSync(path.join(env.dir, 'tmp'), { recursive: true }); // server.js creat
 const db = require('../src/db');
 const contentHashes = require('../src/utils/contentHashes');
 const library = require('../src/services/library');
+const { stubHttpRequest } = require('./helpers/fakeHttp');
 
 // ---- pure helpers -----------------------------------------------------------
 
@@ -52,14 +53,15 @@ test('strongest prefers sha512 > sha256 > sha1 > md5 and rejects non-hex', () =>
 const BYTES = Buffer.from('definitely a mod jar');
 const digest = (algo) => crypto.createHash(algo).update(BYTES).digest('hex');
 
-// A public IP literal skips DNS in the SSRF guard; fetch itself is stubbed.
+// A public IP literal skips DNS in the SSRF guard; the request itself is stubbed.
 const URL_BASE = 'http://203.0.113.10';
-const realFetch = globalThis.fetch;
+let restoreHttp = null;
 function stubDownload() {
-  globalThis.fetch = async () => new Response(BYTES, { status: 200 });
+  restoreHttp = stubHttpRequest(() => ({ status: 200, body: BYTES }));
 }
 test.afterEach(() => {
-  globalThis.fetch = realFetch;
+  if (restoreHttp) restoreHttp();
+  restoreHttp = null;
 });
 
 test('a download matching the published sha512 installs normally', async () => {

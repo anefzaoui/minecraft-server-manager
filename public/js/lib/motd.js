@@ -167,7 +167,7 @@ export function attachMotdEditor(input, { preview, getName = () => 'My Server' }
   nl.className =
     'grid h-6 place-items-center rounded-sm border border-line bg-inset px-1.5 text-xs transition hover:border-line-strong';
   nl.textContent = '↵';
-  nl.dataset.tip = 'Second line (MOTDs have two lines)';
+  nl.dataset.tip = 'Second line (MOTDs have two lines).';
   nl.addEventListener('click', () => insert('\\n'));
   wrap.appendChild(nl);
 

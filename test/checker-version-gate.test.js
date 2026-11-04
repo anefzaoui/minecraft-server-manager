@@ -43,19 +43,20 @@ const checker = require('../src/updates/checker');
 const compat = require('../src/services/compat');
 
 let port = 25700;
-function seedServer(id, { type = 'FORGE', mods = [], mcVersion = '1.20.1' } = {}) {
+function seedServer(id, { type = 'FORGE', mods = [], mcVersion = '1.20.1', envJson = '{}' } = {}) {
   port += 2;
   // 'notify' (not the 'manual' default) so findings are actually reported -
   // 'manual' means "leave me alone" and suppresses every notification.
   db.run(
     `INSERT INTO servers (id, display_name, type, mc_version, port_game, port_rcon, rcon_password_cipher, heap_mb, container_memory_mb, status, update_policy, env_json)
-     VALUES (?, ?, ?, ?, ?, ?, 'x', 1024, 1536, 'stopped', 'notify', '{}')`,
+     VALUES (?, ?, ?, ?, ?, ?, 'x', 1024, 1536, 'stopped', 'notify', ?)`,
     id,
     id,
     type,
     mcVersion,
     port,
-    port + 1
+    port + 1,
+    envJson
   );
   const dir = dataPath('servers', id, 'mods');
   fs.mkdirSync(dir, { recursive: true });
@@ -188,4 +189,65 @@ test('a ceiling equal to the running version is not an upgrade', async () => {
   });
   const findings = await checker.checkAll({ actor: 'test' });
   assert.deepEqual(mcFindings(findings, id), []);
+});
+
+// ---- #53: plugin-family gate (Paper & forks ship per-MC builds that lag -----
+// Mojang, so an unmodded Paper server must not be offered 26.3 until Paper
+// publishes it on the server's channel).
+
+function seedPaper(id, mcVersion = '26.2', envJson = '{}') {
+  return seedServer(id, { type: 'PAPER', mods: [], mcVersion, envJson });
+}
+
+function seedPaperProbe(mc, builds) {
+  // Same V3 shape the real Fill API returns (see test/loaderVersions-paper.test.js).
+  db.run(
+    `INSERT INTO api_cache (key, value_json, fetched_at) VALUES (?, ?, datetime('now'))
+     ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json, fetched_at = excluded.fetched_at`,
+    'loader:paper3:' + mc,
+    JSON.stringify(builds)
+  );
+}
+
+test('a default-channel Paper server is not offered a version with no stable build (the reported bug)', async () => {
+  const id = seedPaper('srv_paper_hold');
+  seedPaperProbe('26.3', [{ id: 7, time: '2026-08-05T00:00:00Z', channel: 'ALPHA' }]); // no STABLE/RECOMMENDED
+  const findings = await checker.checkAll({ actor: 'test' });
+  assert.deepEqual(mcFindings(findings, id), [], 'nothing is offered while Paper has no build');
+  const row = db.get("SELECT * FROM update_checks WHERE subject_type = 'mc_version' AND subject_id = ?", id);
+  assert.equal(row.latest_version, null);
+});
+
+test('an experimental-channel Paper server keeps tracking the pre-release channel', async () => {
+  const id = seedPaper('srv_paper_alpha', '26.2', JSON.stringify({ PAPER_CHANNEL: 'experimental' }));
+  seedPaperProbe('26.3', [{ id: 7, time: '2026-08-05T00:00:00Z', channel: 'ALPHA' }]);
+  const findings = await checker.checkAll({ actor: 'test' });
+  const mine = mcFindings(findings, id);
+  assert.equal(mine.length, 1);
+  assert.equal(mine[0].latest, '26.3', 'the experimental channel legitimately tracks pre-releases');
+});
+
+test('a Paper server IS offered the version once a stable build ships', async () => {
+  const id = seedPaper('srv_paper_shipped');
+  seedPaperProbe('26.3', [{ id: 7, time: '2026-08-05T00:00:00Z', channel: 'STABLE' }]);
+  const findings = await checker.checkAll({ actor: 'test' });
+  const mine = mcFindings(findings, id);
+  assert.equal(mine.length, 1);
+  assert.equal(mine[0].latest, '26.3');
+});
+
+test('a phantom 26.3 offer is cleared once Paper stops shipping it (badge cannot go stale)', async () => {
+  const id = seedPaper('srv_paper_retired');
+  // First pass: Paper did ship 26.3, so the offer is cached.
+  seedPaperProbe('26.3', [{ id: 7, time: '2026-08-05T00:00:00Z', channel: 'STABLE' }]);
+  await checker.checkAll({ actor: 'test' });
+  let row = db.get("SELECT * FROM update_checks WHERE subject_type = 'mc_version' AND subject_id = ?", id);
+  assert.equal(row.latest_version, '26.3');
+
+  // Paper's 26.3 builds vanish (its registry now returns only older variants).
+  db.run("DELETE FROM api_cache WHERE key = 'loader:paper3:26.3'");
+  seedPaperProbe('26.3', []);
+  await checker.checkAll({ actor: 'test' });
+  row = db.get("SELECT * FROM update_checks WHERE subject_type = 'mc_version' AND subject_id = ?", id);
+  assert.equal(row.latest_version, null, 'the retired offer must be cleared, not cached as current');
 });

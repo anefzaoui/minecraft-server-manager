@@ -60,7 +60,7 @@ const REPO_RE = /^[\w.-]+\/[\w.-]+$/;
 
 function assertRepo(repo) {
   const r = String(repo || '').trim();
-  if (!REPO_RE.test(r) || r.includes('..')) throw httpError(400, 'Invalid GitHub repository (expected owner/repo)');
+  if (!REPO_RE.test(r) || r.includes('..')) throw httpError(400, 'Invalid GitHub repository (expected owner/repo).');
   return r;
 }
 

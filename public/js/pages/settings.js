@@ -107,8 +107,8 @@ function init() {
       if (res) {
         toast(
           res.enabled
-            ? 'Outside apps can now read your servers’ status.'
-            : 'Outside apps can no longer read your servers’ status.'
+            ? "Outside apps can now read your servers' status."
+            : "Outside apps can no longer read your servers' status."
         );
       } else {
         el.checked = !enabled; // revert - post() already toasted why
@@ -132,8 +132,8 @@ function init() {
         <input class="input" id="at-label" autocomplete="off" placeholder="e.g. Status page">
         <p class="help">Just so you can recognise this key in the list later.</p></div>
       <div><span class="label">What it can see</span>
-        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="all" checked> Every server</label>
-        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="some"> Only the ones I pick</label>
+        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="all" checked> Every Server</label>
+        <label class="flex items-center gap-2 text-sm"><input type="radio" name="at-scope" value="some"> Only the Ones I Pick</label>
       </div>
       <div><label class="label" for="at-servers">Servers</label>
         <select class="input" id="at-servers" multiple size="6" disabled>
@@ -209,7 +209,7 @@ function init() {
 
     content.insertAdjacentHTML(
       'beforeend',
-      '<p class="notice notice-danger">You’ll only see this key once, so copy it somewhere safe now. For security, the panel doesn’t store a copy it can show you later.</p>'
+      '<p class="notice notice-danger">You\'ll only see this key once, so copy it somewhere safe now. For security, the panel doesn\'t store a copy it can show you later.</p>'
     );
     openModal({
       title: 'Copy Your Access Key Now',
@@ -270,7 +270,7 @@ function init() {
       const ok = await confirmDialog({
         title: `Cancel the key "${label}"?`,
         message:
-          'Any app still using this key stops working right away. You can’t bring the same key back, so you’d need to make a new one.',
+          "Any app still using this key stops working right away. You can't bring the same key back, so you'd need to make a new one.",
         confirmLabel: 'Cancel Key',
         danger: true,
       });
@@ -613,7 +613,7 @@ function init() {
     });
     clearAllBtn?.addEventListener('click', async (e) => {
       const ok = await confirmDialog({
-        title: 'Clear All Locks?',
+        title: 'Clear all locks?',
         message: 'Every locked account and address will be able to try signing in again immediately.',
         confirmLabel: 'Clear All Locks',
       });

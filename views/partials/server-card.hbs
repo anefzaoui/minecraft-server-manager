@@ -9,7 +9,7 @@
         <div class="flex items-center gap-2">
           <h3 class="truncate font-semibold group-hover:text-ok">{{name}}</h3>
           {{#if updateAvailable}}<span class="badge badge-warn shrink-0" title="Update available">update</span>{{/if}}
-          {{#if crashesUnread}}<span class="badge badge-danger shrink-0" title="New crash reports">{{crashesUnread}} {{plural crashesUnread 'crash' 'crashes'}}</span>{{/if}}
+          {{#if crashesUnread}}<span class="badge badge-danger shrink-0" title="New crash reports.">{{crashesUnread}} {{plural crashesUnread 'crash' 'crashes'}}</span>{{/if}}
         </div>
         <p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-ink-faint">
           <span class="font-medium text-ink-soft">{{flavor}}</span>
@@ -47,6 +47,11 @@
         <span>Disk</span><span>{{bytes disk.used}}{{#if disk.quota}} of {{bytes disk.quota}}{{else}} (no quota){{/if}}</span>
       </div>
       <div class="meter"><div class="{{meterColor disk.used disk.quota}}" style="width: {{pct disk.used disk.quota}}%"></div></div>
+    </div>
+
+    <div class="mt-2 flex justify-between text-[11px]" data-card-backup>
+      <span class="text-ink-faint">Last Backup</span>
+      <span class="tabular-nums {{#if backup.stale}}font-semibold text-warn{{else}}text-ink-faint{{/if}}"{{#if backup.stale}} data-tip="No backup in over 7 days."{{/if}}>{{backup.text}}</span>
     </div>
 
     {{#if tags.length}}

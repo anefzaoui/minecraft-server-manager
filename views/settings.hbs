@@ -13,10 +13,10 @@
         {{! min-w-0 + flex-wrap: the monospace placeholder would otherwise refuse
             to shrink and push the page wider than a narrow screen; wrapping lets
             the buttons drop to their own row. }}
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
           <input class="input min-w-0 flex-1 font-mono" id="set-cf-key" type="password" placeholder="{{#if cfKeyMasked}}{{cfKeyMasked}} (stored){{else}}paste your key from console.curseforge.com{{/if}}" autocomplete="off">
           <button class="btn" id="set-cf-save">Save Key</button>
-          <button class="btn btn-ghost" id="set-cf-test" data-tip="Test the stored key against CurseForge">Test Key</button>
+          <button class="btn btn-ghost" id="set-cf-test" data-tip="Test the stored key against CurseForge.">Test Key</button>
         </div>
         <p class="help">Needed for automatic CurseForge modpacks and CurseForge mod downloads. New keys are checked against CurseForge before they're saved.</p>
       </div>
@@ -31,7 +31,7 @@
     <div class="space-y-5">
       <div>
         <label class="label" for="set-domain">Public domain</label>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
           <input class="input min-w-0 flex-1" id="set-domain" placeholder="mc.example.com" value="{{publicHost}}" autocomplete="off" spellcheck="false">
           <button class="btn" id="set-domain-save">Save Domain</button>
         </div>
@@ -54,7 +54,7 @@
           <select class="input" id="set-tz" data-native aria-label="Time zone" data-label="Time zone"></select>
           <select class="input" id="set-country" data-native aria-label="Country" data-label="Country"></select>
         </div>
-        <div class="mt-2 flex flex-wrap items-center gap-2">
+        <div class="mt-2 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
           <button class="btn" id="set-loc-save">Save Time Zone</button>
           <span class="help mt-0" id="set-loc-note"></span>
         </div>
@@ -64,7 +64,7 @@
       <div class="border-t border-line pt-4">
         <span class="label">Bind address &amp; port</span>
         <dl class="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <div><dt class="text-xs text-ink-faint">Bind address</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
+          <div><dt class="text-xs text-ink-faint">Bind Address</dt><dd class="font-mono font-medium">{{panel.host}}</dd></div>
           <div><dt class="text-xs text-ink-faint">Port</dt><dd class="font-mono font-medium">{{panel.port}}</dd></div>
         </dl>
         <p class="help">Set these in <span class="font-mono">.env</span> (PANEL_HOST and PANEL_PORT). A restart applies the changes. Theme is per-browser, set with the topbar toggle.</p>
@@ -72,7 +72,7 @@
 
       <div class="border-t border-line pt-4">
         <span class="label">Panel version</span>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
           <span class="font-mono text-sm">v{{panel.version}}</span>
           <button class="btn" id="msm-update-btn">Check for Updates</button>
         </div>
@@ -111,7 +111,7 @@
             <input class="input" id="dflt-critpct" type="number" inputmode="numeric" min="1" max="100" value="{{defaults.quotaCriticalPct}}" data-default="{{defaultsBase.quotaCriticalPct}}">
           </div>
         </div>
-        <div class="mt-2 flex flex-wrap items-center gap-2">
+        <div class="mt-2 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
           <button class="btn" id="dflt-save">Save Defaults</button>
           <button class="btn btn-ghost" id="dflt-restore">Restore Built-ins</button>
           <span class="help mt-0" id="dflt-note"></span>
@@ -168,7 +168,7 @@
               </td>
               <td data-th="Created" class="whitespace-nowrap text-xs text-ink-faint" data-ts="{{createdAt}}">{{createdAt}}</td>
               <td data-th="" class="text-right">
-                <button class="btn btn-ghost btn-sm" data-menu="user-menu-{{@index}}" data-tip="Actions for {{username}}" aria-label="Actions for {{username}}">{{{icon 'ellipsis' 'size-3.5'}}}</button>
+                <button class="btn btn-ghost btn-sm" data-menu="user-menu-{{@index}}" data-tip="Actions for {{username}}." aria-label="Actions for {{username}}">{{{icon 'ellipsis' 'size-3.5'}}}</button>
                 <template id="user-menu-{{@index}}">
                   <button data-user-password data-user-id="{{id}}" data-username="{{username}}">{{{icon 'key' 'size-3.5'}}} Set Password</button>
                   {{! Your own row: self-service, same modal as the topbar user menu -
@@ -190,7 +190,7 @@
         </tbody>
       </table>
     </div>
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="mt-4 flex flex-col sm:flex-row sm:flex-wrap gap-2">
       <button class="btn btn-primary btn-sm" id="user-add">{{{icon 'plus' 'size-3.5'}}} Add User</button>
       <a class="btn btn-sm" href="/settings/permissions">{{{icon 'shield-check' 'size-3.5'}}} Server Permissions</a>
     </div>
@@ -199,12 +199,12 @@
 
   {{#> settings/card heading="Sign-in Security" id="lockouts-card" wide=true desc="Accounts and addresses currently blocked from signing in after too many failed attempts. Locks clear on their own after the cooldown; unlock one here to end it early."}}
     <div id="lockouts-body" class="text-sm text-ink-faint">Checking…</div>
-    <button class="btn btn-sm mt-4 hidden" id="lockouts-clear-all">{{{icon 'lock-open' 'size-3.5'}}} Clear All Locks</button>
+    <button class="btn btn-sm mt-4 hidden w-full sm:w-auto" id="lockouts-clear-all">{{{icon 'lock-open' 'size-3.5'}}} Clear All Locks</button>
   {{/settings/card}}
 
   {{#> settings/card heading="Public API" id="api-tokens-card" wide=true desc="Let another app or website read your servers' status, like a live status page, an uptime monitor, or a Discord bot. It is read-only: nothing outside can start, stop, or change anything."}}
     {{> settings/toggle-row
-        label="Let outside apps read status"
+        label="Let Outside Apps Read Status"
         help="Switches on by itself when you make your first key below. Turn it off any time to pause outside access without losing your keys."
         inputId="public-api-enabled"
         checked=publicApiEnabled}}
@@ -236,7 +236,7 @@
           </tbody>
         </table>
       </div>
-      <button class="btn btn-primary btn-sm mt-4" id="api-token-add">{{{icon 'plus' 'size-3.5'}}} New Key</button>
+      <button class="btn btn-primary btn-sm mt-4 w-full sm:w-auto" id="api-token-add">{{{icon 'plus' 'size-3.5'}}} New Key</button>
       <script type="application/json" id="api-token-servers">{{jsonScript serverOptions}}</script>
     </div>
   {{/settings/card}}

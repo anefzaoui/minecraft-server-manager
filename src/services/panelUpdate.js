@@ -85,7 +85,7 @@ async function checkLatest({ refresh = false } = {}) {
       return { ...cached, error: err.message || 'Could not check GitHub right now.' };
     }
     if (err && err.status) throw err;
-    throw httpError(502, `Could not reach GitHub: ${err.message || 'unknown error'}`);
+    throw httpError(502, 'Could not reach GitHub. Check the connection and try again.');
   }
 }
 
