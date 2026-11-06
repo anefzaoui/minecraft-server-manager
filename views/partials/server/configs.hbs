@@ -1,0 +1,57 @@
+<div class="mb-5">
+  <h2 class="text-lg font-semibold">Mod Configs</h2>
+  <p class="help mt-1 max-w-prose">Choose a mod to view and edit its detected settings. Changes are saved to the config file and may require a server restart.</p>
+</div>
+
+{{#if configsAccess}}
+  <div data-mod-configs data-server-id="{{server.id}}">
+    {{#if configGroups.length}}
+      <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {{#each configGroups}}
+          <article class="card p-3" data-mod-config-card>
+            <div class="flex min-w-0 items-start justify-between gap-2">
+              <div class="min-w-0">
+                <h3 class="truncate text-sm font-semibold">{{name}}</h3>
+                {{#if version}}<p class="mt-0.5 truncate text-xs text-ink-faint">{{version}}</p>{{/if}}
+              </div>
+              <span class="badge shrink-0 px-1.5 py-0.5 text-[10px]">{{files.length}} files</span>
+            </div>
+            {{#if files.length}}
+              <ul class="mt-2 space-y-1 border-t border-line pt-2">
+                {{#each files}}
+                  <li><button class="w-full truncate rounded px-1.5 py-1 text-left font-mono text-xs text-link hover:bg-hover" type="button" data-open-mod-config data-path="{{path}}" title="{{path}}">{{path}}</button></li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <p class="mt-2 border-t border-line pt-2 text-xs text-ink-faint">No config file detected.</p>
+            {{/if}}
+          </article>
+        {{/each}}
+      </div>
+    {{else}}
+      {{> empty-state iconName='puzzle' title='No Mods Detected' message='Detected mods will appear here with their config files.'}}
+    {{/if}}
+
+    {{#if unassignedConfigs.length}}
+      <section class="mt-8">
+        <div class="mb-3">
+          <h2 class="text-lg font-semibold">Unassigned Configs</h2>
+          <p class="help mt-1">These config files could not be confidently matched to a detected mod.</p>
+        </div>
+        <div class="card divide-y divide-line">
+          {{#each unassignedConfigs}}
+            <button class="btn btn-ghost w-full justify-start rounded-none px-4 py-3 text-left" type="button" data-open-mod-config data-path="{{path}}">
+              <span class="min-w-0 truncate">{{path}}</span>
+            </button>
+          {{/each}}
+        </div>
+      </section>
+    {{/if}}
+  </div>
+  <script type="module" src="/js/pages/configs.js?v={{assetVersion 'js/pages/configs.js'}}"></script>
+{{else}}
+  <div class="notice notice-info max-w-prose">
+    {{{icon 'info' 'size-4 mt-0.5 shrink-0'}}}
+    <p>You need the Files permission to view and edit mod configs.</p>
+  </div>
+{{/if}}
