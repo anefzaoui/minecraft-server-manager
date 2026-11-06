@@ -321,9 +321,9 @@ Not affiliated with any of them.
 - **Crash analysis via mclo.gs**: one click shares a crash report as an mclo.gs paste (always behind
   an explicit confirm, since it's public) and runs mclo.gs's automated insights: known problems with
   suggested fixes, rendered right in the History tab.
-- **Console, logs & RCON**: live console over WebSocket, ANSI rendering, search/level filters, a
-  command bar with history, and a player list with quick actions. Every server gets a generated,
-  encrypted RCON password injected automatically.
+- **Console, logs & RCON**: live console over WebSocket, ANSI rendering, search/level filters,
+  command history, built-in command autocomplete with syntax help, and a player list with quick
+  actions. Every server gets a generated, encrypted RCON password injected automatically.
 - **Player moderation**: whitelist, ops (levels 1 to 4), bans, IP bans; via RCON while running and via
   direct JSON edits while stopped ("applies on start"). Teleport by coordinates, to a player, or to
   the nearest biome.

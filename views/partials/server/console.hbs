@@ -52,7 +52,14 @@
     <span class="grid place-items-center rounded-md border border-line-strong bg-inset px-3 font-mono text-sm text-ok">/</span>
     {{! min-w-0: see settings.hbs - without it this input won't shrink below its
         placeholder's intrinsic width and pushes the page wider on narrow screens. }}
-    <input class="input min-w-0 flex-1 font-mono" placeholder="Type a command (Enter to send, ↑ for history)" id="console-input" aria-label="Server command" autocomplete="off">
+    <div class="relative min-w-0 flex-1">
+      <input class="input w-full font-mono" placeholder="Type a command (Tab to complete, ↑ for history)" id="console-input" aria-label="Server command" aria-autocomplete="list" aria-controls="console-suggestion-list" aria-expanded="false" autocomplete="off">
+      <div class="card absolute bottom-full z-[68] mb-2 hidden max-h-80 w-full overflow-y-auto p-1 shadow-overlay" data-console-suggestions>
+        <div id="console-suggestion-list" role="listbox" aria-label="Command suggestions" data-console-suggestion-list></div>
+        <div class="hidden border-t border-line px-3 py-2 text-xs" data-console-command-help></div>
+        <div class="border-t border-line px-3 py-2 text-[11px] text-ink-faint" data-console-suggestion-hint>↑ ↓ to browse · Tab to complete · Enter to run · Esc to close</div>
+      </div>
+    </div>
     <button class="btn btn-primary" id="console-send">{{{icon 'terminal' 'size-4'}}} Send</button>
   </div>
   <div class="mt-2 flex flex-wrap gap-1.5{{#unless perms.console}} hidden{{/unless}}">
