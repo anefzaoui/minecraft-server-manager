@@ -5,7 +5,7 @@
 //   content: string (HTML) or Node
 //   actions: array of { label, kind: 'primary'|'danger'|'default'|'ghost',
 //                       onClick(ctx) - return false to keep the modal open }
-//   size: 'sm' | 'md' | 'lg' (default 'md')
+//   size: 'sm' | 'md' | 'lg' | 'xl' (default 'md')
 
 import { enhanceAll } from './select.js'; // circular with select.js - safe: both only call at runtime
 import { setBusy } from './loading.js';
@@ -29,7 +29,7 @@ export function openModal({ title = '', content = '', actions = [], size = 'md',
   backdrop.className =
     'fixed inset-0 z-[60] grid grid-cols-1 place-items-center bg-black/60 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-[2px] animate-[fade-in_.15s_ease-out]';
 
-  const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' };
+  const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl', xl: 'max-w-5xl' };
   const panel = document.createElement('div');
   panel.className = `card w-full ${widths[size] || widths.md} max-h-[85vh] flex flex-col shadow-modal animate-[modal-in_.15s_ease-out]`;
   panel.setAttribute('role', 'dialog');

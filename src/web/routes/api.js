@@ -35,6 +35,7 @@ const logger = require('../../logger')('api');
 const { serializeError } = require('../../utils/logSanitize');
 
 const router = express.Router();
+const modConfigJsonParser = express.json({ limit: '3mb' });
 
 // Valid server TYPE values, derived from the field catalog so this stays in sync
 // with the wizard. An unknown type would create a container that only fails later
@@ -1906,6 +1907,36 @@ router.use('/servers/:id/items', requireCapForWrites('content'), require('./item
 
 // ---- Mods manager ----
 const mods = require('../../services/mods');
+const modConfigs = require('../../services/modConfigs');
+
+router.get(
+  '/servers/:id/configs',
+  requireCap('files'),
+  asyncHandler(async (req, res) => {
+    res.json({ ok: true, ...(await modConfigs.list(req.params.id)) });
+  })
+);
+
+router.get(
+  '/servers/:id/configs/file',
+  requireCap('files'),
+  asyncHandler(async (req, res) => {
+    const { path: filePath } = z.object({ path: z.string().min(1).max(1024) }).parse(req.query);
+    res.json({ ok: true, ...(await modConfigs.read(req.params.id, filePath)) });
+  })
+);
+
+router.put(
+  '/servers/:id/configs/file',
+  requireCap('files'),
+  modConfigJsonParser,
+  asyncHandler(async (req, res) => {
+    const { path: filePath, content } = z
+      .object({ path: z.string().min(1).max(1024), content: z.string().max(2 * 1024 * 1024) })
+      .parse(req.body);
+    res.json({ ok: true, ...(await modConfigs.write(req.params.id, filePath, content, { actor: req.user.username })) });
+  })
+);
 
 // Applying a mod update only swaps the jar on disk; the running JVM keeps the
 // old classes until the server restarts. Restart only when it's actually up -

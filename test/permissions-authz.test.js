@@ -182,6 +182,13 @@ test('server page reflects the grant: power buttons shown on B, hidden on A; fil
   const pageA = await app.req('GET', `/servers/${A}`, { cookie: viewerCookie, headers: { Accept: 'text/html' } });
   assert.ok(/class="flex flex-wrap gap-2 hidden">/.test(pageA.text), 'power row hidden on A');
   assert.ok(!pageA.text.includes(`/servers/${A}/files"`), 'files tab absent without the files capability');
+  assert.ok(!pageA.text.includes(`/servers/${A}/configs"`), 'configs tab absent without the files capability');
+  const configsPage = await app.req('GET', `/servers/${A}/configs`, {
+    cookie: viewerCookie,
+    headers: { Accept: 'text/html' },
+  });
+  assert.equal(configsPage.status, 200);
+  assert.match(configsPage.text, /You need the Files permission/);
   const filesPage = await app.req('GET', `/servers/${A}/files`, {
     cookie: viewerCookie,
     headers: { Accept: 'text/html' },

@@ -176,9 +176,9 @@ const CAPABILITY_INFO = {
   },
   files: {
     label: 'Files',
-    help: 'Browse, edit, upload, and download server files, archived logs, and log bundles; export blueprints.',
+    help: 'View and edit server files and mod configs, download logs and log bundles, and export blueprints.',
     covers: [
-      'Open the Files tab: browse, read, edit, upload, rename, and delete anything in the server folder, server.properties included.',
+      'Open the Files tab to browse and edit server files, or the Configs tab to edit detected mod configs.',
       'Download archived and game logs and the log bundle; export the history as a file.',
       'Share, delete, and mark crash reports.',
       'Export this server as a blueprint.',
@@ -186,6 +186,9 @@ const CAPABILITY_INFO = {
     excludes: "The panel-wide data folder (admin-only) and other servers' files.",
     reach: [
       'ALL /api/servers/:id/files/*',
+      'GET /api/servers/:id/configs',
+      'GET /api/servers/:id/configs/file',
+      'PUT /api/servers/:id/configs/file',
       'GET /api/servers/:id/logs/archived',
       'GET /api/servers/:id/logs/archived/:file',
       'GET /api/servers/:id/logs/game',

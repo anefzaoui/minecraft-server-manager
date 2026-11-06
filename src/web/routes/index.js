@@ -48,6 +48,7 @@ const SERVER_TABS = [
   'inventory',
   'analytics',
   'mods',
+  'configs',
   'updates',
   'map',
   'files',
@@ -72,7 +73,7 @@ const TAB_GROUPS = [
   { key: 'overview', label: 'Overview', icon: 'layout-dashboard', tabs: ['overview'] },
   { key: 'console', label: 'Console', icon: 'terminal', tabs: ['console', 'chat', 'commands'] },
   { key: 'players', label: 'Players', icon: 'users', tabs: ['players', 'inventory', 'analytics'] },
-  { key: 'mods', label: 'Mods', icon: 'puzzle', tabs: ['mods', 'updates'] },
+  { key: 'mods', label: 'Mods', icon: 'puzzle', tabs: ['mods', 'configs', 'updates'] },
   { key: 'world', label: 'World', icon: 'earth', tabs: ['worlds', 'map', 'files'] },
   { key: 'backups', label: 'Backups', icon: 'archive', tabs: ['backups'] },
   { key: 'monitoring', label: 'Monitoring', icon: 'activity', tabs: ['history', 'metrics'] },
@@ -92,6 +93,7 @@ const SUB_LABELS = {
   analytics: 'Stats',
   worlds: 'Worlds',
   mods: 'Mods',
+  configs: 'Configs',
   updates: 'Versions',
   map: 'Map',
   files: 'Files',
@@ -108,7 +110,7 @@ const ADMIN_ONLY_TABS = new Set(['chatbot']);
 
 /** Build the two-level nav (top groups + contextual sub-nav) for a given active tab. */
 // Sub-nav entries that need a per-server capability beyond `view`.
-const CAP_TABS = { files: 'files' };
+const CAP_TABS = { files: 'files', configs: 'files' };
 // Sub-nav entries that only make sense for some servers. Version compatibility
 // is answerable for mod loaders only (see services/compat.js appliesTo).
 const CONDITIONAL_TABS = { updates: (opts) => opts.modServer !== false };
@@ -603,6 +605,21 @@ router.get(
           context.filePath = '';
           context.crumbs = [];
           context.parentPath = '';
+        }
+      }
+    } else if (tab === 'configs') {
+      // Configs share the Files capability, but the UI is organized by mods
+      // rather than exposing a general-purpose directory browser.
+      context.configsAccess = Boolean(perms.files);
+      if (perms.files) {
+        try {
+          const listing = await require('../../services/modConfigs').list(row.id);
+          context.configGroups = listing.groups;
+          context.unassignedConfigs = listing.unassigned;
+        } catch (err) {
+          pageDegraded('server-mod-configs-tab', err);
+          context.configGroups = [];
+          context.unassignedConfigs = [];
         }
       }
     } else if (tab === 'map') {
