@@ -16,6 +16,8 @@ That polling opens a short-lived RCON connection every cycle, which the server l
 
 Commands sent from the panel can be announced in-game under a per-server label (the **Announce as…** box), so players know an operator acted rather than a mystery console.
 
+The command box offers built-in Minecraft command suggestions as you type. Use **Tab** to complete the highlighted option, the arrow keys to browse suggestions, and **Enter** to run the command. The help area shows a short description and syntax from the server's Minecraft-version catalog. Where the panel has a recent live player list, player names and selectors are suggested for player arguments. This catalog covers vanilla commands; mod and plugin commands are not included.
+
 ## Chat
 
 **Console → Chat** sends messages into the game while the server runs: **Styled** messages take colors and formatting and can go to everyone or one online player, and **Plain** sends a simple `[Server]` broadcast to everyone.

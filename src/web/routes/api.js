@@ -26,6 +26,7 @@ const { fetchLogs } = require('../../docker/logs');
 const { statsOnce } = require('../../docker/stats');
 const dockerNetworks = require('../../docker/networks');
 const dockerSpec = require('../../services/dockerSpec');
+const consoleCommands = require('../../services/consoleCommands');
 const { dockerOverridesSchema, requireAdminForOverrides } = require('./dockerOverridesSchema');
 const crypto = require('node:crypto');
 const { matchesImageType, imageDimensions } = require('../../utils/sniffImage');
@@ -278,6 +279,18 @@ router.put(
     requireServer(req.params.id);
     const { label } = z.object({ label: z.string().max(48).optional() }).parse(req.body);
     res.json({ ok: true, label: servers.setConsoleLabel(req.params.id, label) });
+  })
+);
+
+router.get(
+  '/servers/:id/console-suggestions',
+  requireCap('console'),
+  asyncHandler((req, res) => {
+    const server = requireServer(req.params.id);
+    const { input } = z.object({ input: z.string().max(500).default('') }).parse(req.query);
+    const live = require('../../services/liveCache').get(server.id);
+    const players = live.players ? live.players.names : [];
+    res.json({ ok: true, ...consoleCommands.suggest(server.mc_version, input, players) });
   })
 );
 
