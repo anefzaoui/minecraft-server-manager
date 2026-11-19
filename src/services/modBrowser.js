@@ -242,7 +242,7 @@ async function resolveDependencies({ loader, mc, selection = [] }) {
       vers = [];
     }
     if (!vers.length) {
-      warnings.push(`${meta.name} has no ${loader}${mc ? ` ${mc}` : ''} build - skipped`);
+      warnings.push(`${meta.name} has no ${loader}${mc ? ` ${mc}` : ''} build, so it was skipped.`);
       continue;
     }
     const chosen = vers[0]; // newest compatible build

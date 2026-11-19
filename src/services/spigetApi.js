@@ -123,7 +123,7 @@ function parseResourceRef(input) {
 
 function assertId(id) {
   const n = Number(id);
-  if (!Number.isInteger(n) || n <= 0) throw httpError(400, 'Invalid SpigotMC resource id');
+  if (!Number.isInteger(n) || n <= 0) throw httpError(400, 'Invalid SpigotMC resource id.');
   return n;
 }
 

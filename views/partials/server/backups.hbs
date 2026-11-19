@@ -7,7 +7,7 @@
   </p>
   <div class="ml-auto flex flex-wrap items-center gap-3">
     <label class="flex items-center gap-2 text-xs text-ink-faint" data-tip="After the backup is saved, remove chunks no player has spent 30+ seconds in to shrink the world. Only runs while the server is stopped.">
-      <input type="checkbox" class="msm-check" id="bk-shrink"> Also shrink the world afterwards.
+      <input type="checkbox" class="msm-check" id="bk-shrink"> Also Shrink the World Afterwards.
     </label>
     <button class="btn btn-primary btn-sm{{#unless perms.backups}} hidden{{/unless}}" id="bk-now">{{{icon 'save' 'size-3.5'}}} Back Up Now</button>
   </div>
@@ -47,7 +47,7 @@
             <button class="btn btn-ghost btn-sm text-warn" data-backup-restore data-tip="Stops the server and restores this archive. Start it again when the restore finishes.">{{{icon 'undo-2' 'size-3.5'}}} Restore</button>
             <a class="btn btn-ghost btn-sm" href="/api/backups/{{id}}/download" data-tip="Download archive" aria-label="Download {{file}}">{{{icon 'download' 'size-3.5'}}}</a>
             <button class="btn btn-ghost btn-sm" data-backup-rename data-tip="Rename archive" aria-label="Rename {{file}}">{{{icon 'square-pen' 'size-3.5'}}}</button>
-            <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="Delete ({{bytes size}} freed)" aria-label="Delete {{file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
+            <button class="btn btn-ghost btn-sm text-danger" data-backup-delete data-tip="Delete ({{bytes size}} freed)." aria-label="Delete {{file}}">{{{icon 'trash-2' 'size-3.5'}}}</button>
           </div></td>
         </tr>
       {{/each}}

@@ -6,7 +6,57 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { setBusy, withBusy } from '../lib/loading.js';
-import { fmtBytes } from '../lib/format.js';
+import { fmtBytes, escapeHtml } from '../lib/format.js';
+
+// Largest-files list loads after render (a bounded filesystem walk that used
+// to block the whole /storage render). Populated via DOM nodes never
+// innerHTML, so a path can't smuggle markup into the page.
+const largestBody = document.getElementById('largest-files-body');
+if (largestBody) {
+  fetch('/api/storage/largest-files')
+    .then(async (res) => {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.ok === false)
+        throw new Error(data.error || friendlyError(res, { action: 'list the largest files' }));
+      return data.files;
+    })
+    .then((files) => {
+      if (!files.length) {
+        largestBody.innerHTML =
+          '<tr><td data-th="" class="p-6 text-center text-ink-faint">No files in the data folder yet.</td></tr>';
+        return;
+      }
+      largestBody.textContent = '';
+      for (const f of files) {
+        const tr = document.createElement('tr');
+        const cell = td(tr);
+        const mono = document.createElement('span');
+        mono.className = 'break-all font-mono text-xs';
+        mono.textContent = f.path;
+        cell.append(mono);
+        td(tr, 'text-ink-faint sm:w-24 sm:text-right').textContent = fmtBytes(f.size);
+        const linkCell = td(tr, 'sm:w-10 sm:text-right');
+        const a = document.createElement('a');
+        a.className = 'btn btn-ghost btn-sm';
+        a.href = f.link;
+        a.dataset.tip = f.path;
+        a.textContent = 'folder';
+        linkCell.append(a);
+        largestBody.append(tr);
+      }
+    })
+    .catch((err) => {
+      largestBody.innerHTML = `<tr><td data-th="" class="p-6 text-center text-ink-faint">Could not load the largest files: ${escapeHtml(err.message)}</td></tr>`;
+    });
+}
+
+function td(tr, cls = '') {
+  const cell = document.createElement('td');
+  cell.dataset.th = '';
+  if (cls) cell.className = cls;
+  tr.append(cell);
+  return cell;
+}
 
 document.getElementById('storage-rescan')?.addEventListener('click', async (e) => {
   const btn = e.currentTarget;

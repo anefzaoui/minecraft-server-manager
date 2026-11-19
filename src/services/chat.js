@@ -45,13 +45,13 @@ function normalizeTarget(target) {
   const t = String(target || '@a').trim();
   if (['@a', '@p', '@r', '@s'].includes(t)) return t;
   if (PLAYER_NAME_RE.test(t)) return t;
-  throw httpError(400, 'Invalid recipient - pick Everyone or a valid player name');
+  throw httpError(400, 'Invalid recipient. Pick Everyone or a valid player name.');
 }
 
 async function assertRunning(serverId) {
   const info = await inspectStatus(serverId);
   if (!info.exists || !(info.status === 'running' || info.status === 'unhealthy')) {
-    throw httpError(409, 'Start the server before sending chat');
+    throw httpError(409, 'Start the server before sending chat.');
   }
 }
 
@@ -67,8 +67,8 @@ function deliveryLines(text, separateLines = false) {
 /** Send an admin chat message. Returns the sent message (for the panel's chat log). */
 async function sendChat(serverId, opts = {}) {
   const text = normalizeMessageText(opts.text, opts.preserveNewlines === true);
-  if (!text) throw httpError(400, 'Message text is required');
-  if (text.length > 512) throw httpError(400, 'Message is too long (512 characters max)');
+  if (!text) throw httpError(400, 'Message text is required.');
+  if (text.length > 512) throw httpError(400, 'Message is too long (512 characters max).');
   const mode = opts.mode === 'say' ? 'say' : 'tellraw';
   const actor = opts.actor || 'system';
   await assertRunning(serverId);
@@ -93,7 +93,7 @@ async function sendChat(serverId, opts = {}) {
   for (const command of commands) {
     const out = cleanText(await execCapture(serverId, ['rcon-cli', ...command]));
     if (out.trim() && /Unknown or incomplete|Incorrect argument|Expected|No player was found|<--\[HERE\]/i.test(out)) {
-      throw httpError(502, `The server rejected the message: ${out.split('\n')[0]}`);
+      throw httpError(502, 'The server rejected the message. Check the console for details.');
     }
   }
 

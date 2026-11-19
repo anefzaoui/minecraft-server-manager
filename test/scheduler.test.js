@@ -105,6 +105,7 @@ test('createSchedule persists a server-scoped schedule and lists it with a label
     assert.ok(created.id.startsWith('sch_'));
     assert.equal(created.serverId, sid);
     assert.equal(created.task, 'Restart server');
+    assert.equal(created.server, 'Test Server', 'the Server column shows the display name');
     assert.deepEqual(created.payload, { shrink: true });
     assert.equal(created.lastRun, null);
   } finally {
