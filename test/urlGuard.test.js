@@ -3,7 +3,9 @@
 require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isBlockedIp, assertPublicUrl, isAmbiguousNumericHost } = require('../src/utils/urlGuard');
+const http = require('node:http');
+const dns = require('node:dns').promises;
+const { isBlockedIp, assertPublicUrl, isAmbiguousNumericHost, safeFetch } = require('../src/utils/urlGuard');
 
 test('isBlockedIp blocks private, loopback, and link-local IPv4', () => {
   for (const ip of [
@@ -125,6 +127,53 @@ test('assertPublicUrl with allowPrivate reaches a LAN host but rejects the metad
   assert.equal(loopback.hostname, '127.0.0.1');
   await assert.rejects(
     () => assertPublicUrl('http://169.254.169.254/latest/meta-data/', { allowPrivate: true }),
+    /link-local, multicast, or unspecified/
+  );
+});
+
+// Regression coverage for the DNS-rebind TOCTOU: safeFetch must connect to the
+// exact address it just validated, never re-resolve the hostname a second time
+// at connect time. A hostname that cannot really resolve anywhere proves the
+// point - if the implementation ever went back to a plain fetch() (which does
+// its own independent resolution), this could not possibly reach the local
+// server below, and would fail or time out instead of passing.
+test('safeFetch connects to the exact address it validated, not a re-resolved one', async (t) => {
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'X-Marker': 'pinned-server' });
+    res.end('pinned-body');
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => server.close());
+  const port = server.address().port;
+
+  t.mock.method(dns, 'lookup', async () => [{ address: '127.0.0.1', family: 4 }]);
+
+  const res = await safeFetch(`http://this-hostname-does-not-resolve.invalid:${port}/`, { allowPrivate: true });
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('x-marker'), 'pinned-server');
+  const reader = res.body.getReader();
+  const chunks = [];
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  assert.equal(Buffer.concat(chunks).toString(), 'pinned-body');
+});
+
+test('safeFetch re-validates a redirect hop and rejects one that points at cloud metadata', async (t) => {
+  const server = http.createServer((req, res) => {
+    res.writeHead(302, { Location: 'http://169.254.169.254/latest/meta-data/' });
+    res.end();
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => server.close());
+  const port = server.address().port;
+
+  t.mock.method(dns, 'lookup', async () => [{ address: '127.0.0.1', family: 4 }]);
+
+  await assert.rejects(
+    () => safeFetch(`http://redirect-host.invalid:${port}/`, { allowPrivate: true }),
     /link-local, multicast, or unspecified/
   );
 });

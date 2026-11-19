@@ -20,6 +20,7 @@ const db = require('../../db');
 const permissions = require('../../services/permissions');
 const httpError = require('../../utils/httpError');
 const eventsService = require('../../events');
+const healthAlerts = require('../../services/healthAlerts');
 const { dataPath } = require('../../storage/pathGuard');
 const { checkDocker } = require('../../docker/connect');
 const { fetchLogs } = require('../../docker/logs');
@@ -118,55 +119,94 @@ router.post(
   })
 );
 
+// Shared PATCH + changes-preview input. One schema so the "what will change"
+// modal can never drift from what the PATCH accepts (a field accepted in the
+// preview but rejected by the save would be a confusing promise).
+const serverPatchSchema = z
+  .object({
+    name: z.string().trim().min(1).max(80).optional(),
+    description: z.string().max(4000).optional(),
+    icon: z.string().max(64).optional(),
+    accent: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
+    tags: z.array(z.string().trim().min(1).max(24)).max(16).optional(),
+    notes: z.string().max(8000).optional(),
+    mcVersion: z.string().trim().max(32).optional(),
+    javaTag: z.string().max(16).optional(),
+    heapMb: z.coerce.number().int().min(512).max(262144).optional(),
+    containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
+    cpus: optNum0(128),
+    diskQuotaGb: optNum0(16384),
+    quotaStrict: z.coerce.boolean().optional(),
+    updatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
+    autoStart: z.coerce.boolean().optional(),
+    autoRestart: z.coerce.boolean().optional(),
+    env: z.record(z.string(), z.string()).optional(),
+    ...dockerOverridesSchema,
+  })
+  .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
+    message: 'Container memory limit must be higher than the Java heap.',
+  });
+
 // Per-server permissions: resolve once per request, hide unviewable servers,
 // then every route below names the capability it needs (see docs/users-and-roles.md).
 const { serverScope, requireCap, requireCapForWrites, backupServerId } = require('../middleware/serverAccess');
 router.use('/servers/:id', serverScope);
 
-for (const action of ['start', 'stop', 'restart', 'kill', 'recreate']) {
+const POWER_TITLES = {
+  start: 'Starting',
+  stop: 'Stopping',
+  restart: 'Restarting',
+  kill: 'Force-stopping',
+  recreate: 'Rebuilding',
+};
+for (const action of Object.keys(POWER_TITLES)) {
   router.post(
     `/servers/:id/${action}`,
     requireCap('power'),
     asyncHandler(async (req, res, next) => {
-      await servers[`${action}Server`](req.params.id, { actor: req.user.username });
+      const actor = req.user.username;
+      const name = servers.getServer(req.params.id).display_name;
+      await tasks.track(`${POWER_TITLES[action]} ${name}…`, { serverId: req.params.id, actor }, () =>
+        servers[`${action}Server`](req.params.id, { actor })
+      );
       res.json({ ok: true, server: publicServer(servers.getServer(req.params.id)) });
     })
   );
+}
+
+// Plugin-family gate (#53): changing mc_version on a Paper-family server to a
+// loader-unsupported target is refused up front (cheap when untouched - the
+// probe only fires when the version actually changes). Registry down → pass
+// through, exactly like the upgrade route. Shared by the PATCH and the
+// changes-preview so the confirmation modal can never confirm a save the PATCH
+// would refuse.
+async function assertPluginFamilyMcGate(before, mcVersion) {
+  if (mcVersion !== before.mc_version && require('../../services/mods').loaderOf(before) === 'paper') {
+    const gate = await require('../../services/loaderVersions').mcAvailableOnServerType(before.type, mcVersion, {
+      channel: before.env.PAPER_CHANNEL || 'default',
+    });
+    if (!gate.supported) {
+      const flavor = require('../../web/viewModels').flavorLabel(before.type);
+      throw httpError(
+        409,
+        `${flavor} has not published a Minecraft ${mcVersion} build yet. Switch this server to the experimental channel to track pre-releases, or pick a released version.`
+      );
+    }
+  }
 }
 
 router.patch(
   '/servers/:id',
   requireCap('settings'),
   asyncHandler(async (req, res, next) => {
-    const changes = z
-      .object({
-        name: z.string().trim().min(1).max(80).optional(),
-        description: z.string().max(4000).optional(),
-        icon: z.string().max(64).optional(),
-        accent: z
-          .string()
-          .regex(/^#[0-9a-fA-F]{6}$/)
-          .optional(),
-        tags: z.array(z.string().trim().min(1).max(24)).max(16).optional(),
-        notes: z.string().max(8000).optional(),
-        mcVersion: z.string().trim().max(32).optional(),
-        javaTag: z.string().max(16).optional(),
-        heapMb: z.coerce.number().int().min(512).max(262144).optional(),
-        containerMemoryMb: z.coerce.number().int().min(1024).max(524288).optional(),
-        cpus: optNum0(128),
-        diskQuotaGb: optNum0(16384),
-        quotaStrict: z.coerce.boolean().optional(),
-        updatePolicy: z.enum(['manual', 'notify', 'auto']).optional(),
-        autoStart: z.coerce.boolean().optional(),
-        autoRestart: z.coerce.boolean().optional(),
-        env: z.record(z.string(), z.string()).optional(),
-        ...dockerOverridesSchema,
-      })
-      .refine((v) => !v.containerMemoryMb || !v.heapMb || v.containerMemoryMb > v.heapMb, {
-        message: 'Container memory limit must be higher than the Java heap.',
-      })
-      .parse(req.body);
+    const changes = serverPatchSchema.parse(req.body);
     requireAdminForOverrides(req, changes);
+    if (changes.mcVersion) {
+      await assertPluginFamilyMcGate(requireServer(req.params.id), changes.mcVersion);
+    }
     if (
       changes.containerName !== undefined ||
       changes.networkName !== undefined ||
@@ -186,6 +226,40 @@ router.patch(
     }
     const { server, needsRecreate } = servers.updateServer(req.params.id, changes, { actor: req.user.username });
     res.json({ ok: true, needsRecreate, server: publicServer(server) });
+  })
+);
+
+// What the settings save-confirmation modal shows BEFORE the PATCH runs: the
+// same diff, expanded per-key, without mutating anything. A POST so the
+// method-based requireWrite gate keeps viewers out exactly like the PATCH.
+router.post(
+  '/servers/:id/changes-preview',
+  requireCap('settings'),
+  asyncHandler(async (req, res, next) => {
+    const changes = serverPatchSchema.parse(req.body);
+    requireAdminForOverrides(req, changes);
+    if (changes.mcVersion) {
+      await assertPluginFamilyMcGate(requireServer(req.params.id), changes.mcVersion);
+    }
+    if (
+      changes.containerName !== undefined ||
+      changes.networkName !== undefined ||
+      changes.extraPorts !== undefined ||
+      changes.extraBinds !== undefined
+    ) {
+      const before = requireServer(req.params.id);
+      await dockerSpec.validateOverrides(
+        {
+          containerName: changes.containerName || null,
+          networkName: changes.networkName || null,
+          extraPorts: changes.extraPorts ?? before.extraPorts,
+          extraBinds: changes.extraBinds ?? before.extraBinds,
+        },
+        { previousExtraPorts: before.extraPorts }
+      );
+    }
+    const preview = servers.summarizeServerChanges(req.params.id, changes);
+    res.json({ ok: true, ...preview });
   })
 );
 
@@ -249,11 +323,17 @@ router.delete(
   asyncHandler(async (req, res, next) => {
     // Deletion is opt-in: files + backups are KEPT by default, and only
     // removed when the caller explicitly asks via deleteFiles/deleteBackups.
-    const { freedBytes } = await servers.deleteServer(req.params.id, {
-      actor: req.user.username,
-      keepWorld: req.query.deleteFiles !== 'true' && req.query.keepFiles !== 'false',
-      keepBackups: req.query.deleteBackups !== 'true' && req.query.keepBackups !== 'false',
-    });
+    const actor = req.user.username;
+    const { freedBytes } = await tasks.track(
+      `Deleting ${servers.getServer(req.params.id).display_name}…`,
+      { actor },
+      () =>
+        servers.deleteServer(req.params.id, {
+          actor,
+          keepWorld: req.query.deleteFiles !== 'true' && req.query.keepFiles !== 'false',
+          keepBackups: req.query.deleteBackups !== 'true' && req.query.keepBackups !== 'false',
+        })
+    );
     res.json({ ok: true, freedBytes });
   })
 );
@@ -283,7 +363,14 @@ router.put(
 
 router.get(
   '/servers/:id/stats',
-  asyncHandler(async (req, res, next) => {
+  asyncHandler(async (req, res) => {
+    requireServer(req.params.id);
+    const live = require('../../services/liveCache').get(req.params.id);
+    // The brokered docker-stats stream keeps per-tick samples in memory while a
+    // server runs, so a stats read is sub-millisecond instead of a ~2 s Docker
+    // round trip. Only containers with no live feed (stopped, or cache not yet
+    // attached) fall back to a one-shot statsOnce.
+    if (live.stats) return res.json({ ok: true, stats: live.stats });
     res.json({ ok: true, stats: await statsOnce(req.params.id) });
   })
 );
@@ -297,7 +384,11 @@ router.get('/servers/live', (req, res) => {
   const db = require('../../db');
   const all = liveCache.getAll();
   const out = {};
-  const rows = permissions.filterVisible(req.user, db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL'));
+  const rows = permissions.filterVisible(
+    req.user,
+    db.all('SELECT id, status FROM servers WHERE deleted_at IS NULL'),
+    permissions.visibleServerIds(req.user)
+  );
   for (const row of rows) {
     const e = all[row.id] || {};
     out[row.id] = {
@@ -342,13 +433,15 @@ router.get(
       'update-failed',
     ];
 
+    // Alerts use the full visibility set (deleted servers included) so a
+    // crash on a server removed since is still reported, as before. Built here
+    // and shared with the row filter so the granted set is queried once.
+    const visibleIds = permissions.visibleServerIds(req.user);
     const serverRows = permissions.filterVisible(
       req.user,
-      db.all('SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at')
+      db.all('SELECT id, display_name, status FROM servers WHERE deleted_at IS NULL ORDER BY created_at'),
+      visibleIds
     );
-    // Alerts use the full visibility set (deleted servers included) so a
-    // crash on a server removed since is still reported, as before.
-    const visibleIds = permissions.visibleServerIds(req.user);
     const problems = serverRows
       .filter((s) => PROBLEM_STATUSES.has(s.status))
       .map((s) => ({ serverId: s.id, server: s.display_name, kind: s.status }));
@@ -439,6 +532,18 @@ router.put(
     res.json({ ok: true, changed, restarted, server: publicServer(server) });
   })
 );
+
+// Dashboard health alerts (crashes, out-of-memory stops, auto-restarts): each
+// user dismisses their own; the history events stay. See services/healthAlerts.js.
+router.post('/alerts/clear', (req, res) => {
+  res.json({ ok: true, cleared: healthAlerts.clearAll(req.user, permissions.visibleServerIds(req.user)) });
+});
+
+router.post('/alerts/:eventId/dismiss', (req, res) => {
+  const eventId = z.coerce.number().int().positive().parse(req.params.eventId);
+  healthAlerts.dismiss(req.user, permissions.visibleServerIds(req.user), eventId);
+  res.json({ ok: true });
+});
 
 // Port picking for new servers: the roles that can create one. Answers name
 // host ports in use, so viewers don't get them.
@@ -795,7 +900,7 @@ router.post(
       .parse(req.body);
     const server = requireServer(req.params.id);
     const actor = req.user.username;
-    const taskId = tasks.run(`Upgrading pack on ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
+    const taskId = tasks.run(`Upgrading pack on ${server.display_name}…`, { serverId: server.id, actor }, async (t) => {
       t.step(UPGRADE_STEP_LABELS.resolving);
       try {
         return await upgrade.upgradePack(server.id, {
@@ -832,7 +937,7 @@ router.post(
       )?.id ||
       null;
     const taskId = tasks.run(
-      `Rolling back pack on ${server.display_name}`,
+      `Rolling back pack on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step(backupId ? 'Restoring pre-update backup & re-pinning…' : 'Re-pinning previous version…');
@@ -1170,7 +1275,7 @@ router.post(
     const server = requireServer(req.params.id);
     const actor = req.user.username;
     const taskId = tasks.run(
-      `Checking updates for ${server.display_name}`,
+      `Checking updates for ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step('Querying Modrinth, CurseForge, Hangar, SpigotMC, GitHub and the Minecraft/loader/image registries…');
@@ -1193,7 +1298,7 @@ router.post(
     const server = requireServer(req.params.id);
     const actor = req.user.username;
     const taskId = tasks.run(
-      `Updating container image on ${server.display_name}`,
+      `Updating container image on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step('Recreating container with the newer image…');
@@ -1221,7 +1326,7 @@ const LOADER_BUILD_ENV_KEYS = [
 router.post(
   '/servers/:id/mcversion/upgrade',
   requireCap('settings'),
-  asyncHandler((req, res, next) => {
+  asyncHandler(async (req, res, next) => {
     const { targetVersion, targetLoaderBuild, envKey, force } = z
       .object({
         targetVersion: z
@@ -1266,8 +1371,29 @@ router.post(
         });
       }
     }
+    // Plugin-family gate (#53): Paper & forks ship per-MC builds that lag
+    // Mojang, so an unmodded target the loader has not published is refused
+    // unless explicitly forced - the same override contract as the compat gate.
+    // The probe is authoritative only when it HEARD back; an outage passes.
+    if (
+      targetVersion &&
+      targetVersion !== server.mc_version &&
+      !force &&
+      require('../../services/mods').loaderOf(server) === 'paper'
+    ) {
+      const gate = await require('../../services/loaderVersions').mcAvailableOnServerType(server.type, targetVersion, {
+        channel: server.env.PAPER_CHANNEL || 'default',
+      });
+      if (!gate.supported) {
+        const flavor = require('../../web/viewModels').flavorLabel(server.type);
+        return res.status(409).json({
+          ok: false,
+          error: `${flavor} has not published a Minecraft ${targetVersion} build yet. Switch this server to the experimental channel to track pre-releases, or pick a released version.`,
+        });
+      }
+    }
     const taskId = tasks.run(
-      `Updating Minecraft version on ${server.display_name}`,
+      `Updating Minecraft version on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         const versionChanging = targetVersion && targetVersion !== server.mc_version;
@@ -1319,6 +1445,10 @@ const TASK_TYPE_KEYS = /** @type {[string, ...string[]]} */ (Object.keys(schedul
 function requireScheduleAccess(req, serverId, taskType) {
   const meta = scheduler.TASK_TYPES[taskType];
   if (!meta) throw httpError(400, 'Unknown task type.');
+  if (meta.adminOnly && req.user.role !== 'admin') {
+    // Fleet tasks (back up / restart every server) outrun any per-server grant.
+    throw httpError(403, 'Only an admin can schedule a task that acts on every server.');
+  }
   if (!meta.serverScoped) {
     // Panel-global work (storage scan, update check, temp cleanup, …) runs
     // against the whole panel whatever serverId is attached, so it follows the
@@ -1398,6 +1528,21 @@ router.post(
   })
 );
 
+// Largest files: a bounded filesystem walk, so it runs from an admin-only GET
+// the Storage page fires after render instead of blocking every page load (it
+// used to run four cleanup dry-runs PLUS this scan on each load).
+router.get(
+  '/storage/largest-files',
+  requireRoleKeys('admin'),
+  asyncHandler(async (req, res) => {
+    const files = (await storageCleanup.largestFiles({ top: 15, maxScan: 3000 }).catch(() => [])).map((f) => ({
+      ...f,
+      link: `/files?path=${encodeURIComponent(f.path.split('/').slice(0, -1).join('/'))}`,
+    }));
+    res.json({ ok: true, files });
+  })
+);
+
 // One-click cleanup. dryRun:true previews (nothing deleted) - the Storage
 // page uses it to show real numbers before the confirm dialog.
 router.post(
@@ -1430,7 +1575,7 @@ router.post(
     const actor = req.user.username;
     const note = String(req.body?.note || '');
     const shrinkAfter = Boolean(req.body?.shrink);
-    const taskId = tasks.run(`Backing up ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
+    const taskId = tasks.run(`Backing up ${server.display_name}…`, { serverId: server.id, actor }, async (t) => {
       t.step('Snapshotting server directory (save-off → save-all → zip → save-on)…');
       const backup = await backups.createBackup(server.id, { reason: 'manual', actor, note, shrinkAfter });
       return { id: backup.id, filename: backup.filename, size: backup.size_bytes };
@@ -1449,7 +1594,7 @@ router.post(
     const actor = req.user.username;
     const backupId = req.params.backupId;
     const taskId = tasks.run(
-      `Restoring backup on ${server.display_name}`,
+      `Restoring backup on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step('Stopping server & taking a safety backup…');
@@ -1473,6 +1618,16 @@ router.get(
     const abs = dataPath(backup.rel_path);
     if (!fs.existsSync(abs)) throw Object.assign(new Error('Backup archive is missing on disk'), { status: 404 });
     res.download(abs, backup.filename);
+  })
+);
+
+// Read-only dry-run restore: reads every entry and checks its CRC. Synchronous
+// (ponytail: move to tasks.run if verifying huge archives outlasts request timeouts).
+router.post(
+  '/backups/:backupId/verify',
+  requireCap('backups', { resolve: backupServerId }),
+  asyncHandler(async (req, res) => {
+    res.json(await backups.verifyBackup(req.params.backupId, { actor: req.user.username }));
   })
 );
 
@@ -1792,7 +1947,7 @@ router.post(
     }
 
     const taskId = tasks.run(
-      `Shrinking "${world}" on ${server.display_name}`,
+      `Shrinking "${world}" on ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         // Decide from the CONTAINER's current state, not the DB row above (which
@@ -1938,11 +2093,10 @@ router.post(
         ignoreVersion: z.boolean().optional(),
       })
       .parse(req.body);
-    const result = await mods.installFromUrl(req.params.id, url, {
-      actor: req.user.username,
-      kind,
-      ignoreVersion,
-    });
+    const actor = req.user.username;
+    const result = await tasks.track('Installing from a link…', { serverId: req.params.id, actor }, () =>
+      mods.installFromUrl(req.params.id, url, { actor, kind, ignoreVersion })
+    );
     res.status(201).json({
       ok: true,
       installed: {
@@ -2054,7 +2208,7 @@ router.post(
   asyncHandler((req, res, next) => {
     const server = requireServer(req.params.id);
     const actor = req.user.username;
-    const taskId = tasks.run(`Updating mods on ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
+    const taskId = tasks.run(`Updating mods on ${server.display_name}…`, { serverId: server.id, actor }, async (t) => {
       const rows = db.all(
         `SELECT sc.id, sc.name
              FROM server_content sc
@@ -2208,10 +2362,10 @@ router.post(
     const excludeFilename = (req.body && req.body.excludeFilename) || null;
     const excludeToken = excludeFilename ? mods.pendingExcludeToken(req.params.id, excludeFilename) : null;
     try {
-      const result = await mods.importUploadedMod(req.params.id, req.file.path, req.file.originalname, {
-        excludeToken,
-        actor: req.user.username,
-      });
+      const actor = req.user.username;
+      const result = await tasks.track(`Importing ${req.file.originalname}…`, { serverId: req.params.id, actor }, () =>
+        mods.importUploadedMod(req.params.id, req.file.path, req.file.originalname, { excludeToken, actor })
+      );
       if (excludeFilename) mods.clearPendingLine(req.params.id, excludeFilename);
       res.status(201).json({ ok: true, ...result, mods: mods.pendingDownloads(req.params.id) });
     } finally {
@@ -2279,7 +2433,7 @@ router.post(
     }
     const actor = req.user.username;
     const taskId = tasks.run(
-      `Importing mod zip into ${server.display_name}`,
+      `Importing mod zip into ${server.display_name}…`,
       { actor, serverId: server.id },
       async (t) => {
         try {

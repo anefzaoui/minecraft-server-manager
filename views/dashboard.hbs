@@ -36,17 +36,17 @@
     <div class="text-xs text-ink-faint">across all server data folders</div>
   </div>
 
-  <div class="card min-w-0 p-4">
+  <a href="/health" class="card block min-w-0 p-4 transition hover:border-line-strong" aria-label="Open the health page">
     <div class="flex items-center gap-1 text-xs text-ink-faint">{{{icon 'activity' 'size-3.5'}}} Health · 24h</div>
     <div class="mt-1 break-words text-2xl font-bold tabular-nums {{#if overview.healthTotal}}text-danger{{else}}text-ok{{/if}}">{{overview.healthTotal}}<span class="text-base font-medium text-ink-faint"> alert{{#unless (eq overview.healthTotal 1)}}s{{/unless}}</span></div>
     <div class="text-xs text-ink-faint">{{#if overview.healthTotal}}{{overview.health.crashes}} crash{{#unless (eq overview.health.crashes 1)}}es{{/unless}}, {{overview.health.oom}} out of memory, {{overview.health.autoRestarted}} auto-restart{{#unless (eq overview.health.autoRestarted 1)}}s{{/unless}}{{else}}No crashes, out-of-memory stops, or auto-restarts{{/if}}</div>
-  </div>
+  </a>
 
-  <div class="card min-w-0 p-4">
+  <a href="/updates" class="card block min-w-0 p-4 transition hover:border-line-strong" aria-label="Open the updates page">
     <div class="flex items-center gap-1 text-xs text-ink-faint">{{{icon 'circle-arrow-up' 'size-3.5'}}} Updates</div>
     <div class="mt-1 break-words text-2xl font-bold tabular-nums {{#if overview.updates.all}}text-warn{{/if}}">{{overview.updates.all}}</div>
     <div class="text-xs text-ink-faint">{{overview.updates.mods}} mod{{#unless (eq overview.updates.mods 1)}}s{{/unless}} / {{overview.updates.server}} server-level</div>
-  </div>
+  </a>
 </div>
 {{/unless}}
 

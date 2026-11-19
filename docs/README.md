@@ -27,7 +27,7 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 - **[Updates](updates.md)** - track new server, pack, image, and mod versions, check which Minecraft versions your mods support, and undo a mod update.
 - **[Activity log](activity.md)** - an audit trail of everything that happened.
 - **[Integrations](integrations.md)** - Discord webhook notifications and the Alerts category.
-- **[Public API](public-api.md)** - a read-only, token-authenticated HTTP API for fetching server status from outside the panel.
+- **[Public API](public-api.md)** - a read-only, token-authenticated HTTP API for fetching server status, players, and backups from outside the panel, including a Prometheus metrics endpoint.
 
 ## Accounts & security
 
