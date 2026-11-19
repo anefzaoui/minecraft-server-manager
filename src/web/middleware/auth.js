@@ -48,7 +48,7 @@ function requireAuth(req, res, next) {
   if (authService.firstRunNeeded()) {
     if (path.startsWith('/api/')) {
       logger.debug('Rejected an API request while first-run setup is incomplete.', { path });
-      return res.status(401).json({ ok: false, error: 'Panel setup incomplete' });
+      return res.status(401).json({ ok: false, error: 'Panel setup incomplete.' });
     }
     return res.redirect('/setup');
   }
@@ -63,7 +63,7 @@ function requireAuth(req, res, next) {
   }
   if (path.startsWith('/api/') || path.startsWith('/ws/')) {
     logger.debug('Rejected an unauthenticated API request.', { path, ip: req.ip });
-    return res.status(401).json({ ok: false, error: 'Not signed in' });
+    return res.status(401).json({ ok: false, error: 'Not signed in.' });
   }
   logger.debug('Redirected an unauthenticated visitor to the login page.', { path });
   return res.redirect(`/login${path !== '/' ? `?next=${encodeURIComponent(req.originalUrl)}` : ''}`);
@@ -103,7 +103,7 @@ function requireWrite(req, res, next) {
       // The path names a server this viewer may not see: answer exactly like
       // a missing server so the refusal never confirms it exists.
       logger.debug('Hid a server the viewer may not view.', { userId: req.user.id, path: req.path });
-      return res.status(404).json({ ok: false, error: 'Server not found' });
+      return res.status(404).json({ ok: false, error: 'Server not found.' });
     }
     logger.warn('Blocked a write from a read-only viewer.', {
       userId: req.user.id,

@@ -142,6 +142,17 @@ function createApp() {
 
   app.use(require('./middleware/securityHeaders').securityHeaders);
 
+  // Gzip/deflate text responses (HTML, JS, CSS, JSON). Already-compressed bodies
+  // (PNG icons, zip/jar downloads, backups) are skipped by the default
+  // compressible-type filter; the map proxy is skipped explicitly because it
+  // streams BlueMap's own (often pre-encoded) responses through unchanged.
+  const compression = require('compression');
+  app.use(
+    compression({
+      filter: (req, res) => (req.path.startsWith('/map/') ? false : compression.filter(req, res)),
+    })
+  );
+
   app.engine(
     'hbs',
     engine({
@@ -399,7 +410,7 @@ function createApp() {
     // inside this handler. Hand off to Express's finalizer instead.
     if (res.headersSent) return next(err);
     if (req.path.startsWith('/api/') || req.xhr) {
-      return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large' : 'Request failed' });
+      return res.status(code).json({ ok: false, error: code === 413 ? 'Request body too large.' : 'Request failed' });
     }
     res.status(code).render('error', {
       title: code >= 500 ? 'Something broke' : 'Request rejected',

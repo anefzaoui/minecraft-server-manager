@@ -110,7 +110,7 @@ test('viewer with power+console on B: allowed on B, still refused on A and panel
   // Power on B passes the gate (no Docker here, so anything but a gate status).
   const stopB = await app.req('POST', `/api/servers/${B}/stop`, { cookie: viewerCookie });
   assert.ok(NOT_GATED(stopB.status), `stop on B not gated, got ${stopB.status}`);
-  assert.notEqual(stopB.json && stopB.json.error, 'Server not found');
+  assert.notEqual(stopB.json && stopB.json.error, 'Server not found.');
   // Console on B: chat endpoint passes the gate.
   const chatB = await app.req('POST', `/api/servers/${B}/chat`, { cookie: viewerCookie, body: { message: 'hi' } });
   assert.ok(NOT_GATED(chatB.status), `chat on B not gated, got ${chatB.status}`);
@@ -274,7 +274,7 @@ test('hidden server: 404 on pages and API, refused actions read as not found', a
   assert.equal((await app.req('GET', `/servers/${A}/integrations`, { cookie: viewerCookie })).status, 404);
   const logs = await app.req('GET', `/api/servers/${A}/logs`, { cookie: viewerCookie });
   assert.equal(logs.status, 404);
-  assert.equal(logs.json.error, 'Server not found');
+  assert.equal(logs.json.error, 'Server not found.');
   assert.equal((await app.req('GET', `/api/servers/${A}/mods`, { cookie: viewerCookie })).status, 404);
   assert.equal((await app.req('GET', `/api/servers/${A}/players`, { cookie: viewerCookie })).status, 404);
   // An action on a hidden server is 404, never 403 (no existence leak).
@@ -723,7 +723,7 @@ test('capability mapping: log bundles need files, world quick actions need conso
   // The seeded server has no level.dat, so the world service answers its own
   // 404; the gate is passed when the error is not the "Server not found" one.
   assert.ok(![401, 403].includes(extractB.status), `extract from B passes the gate, got ${extractB.status}`);
-  assert.notEqual(extractB.json && extractB.json.error, 'Server not found');
+  assert.notEqual(extractB.json && extractB.json.error, 'Server not found.');
   assert.match(extractB.json.error, /level\.dat/);
   assert.equal(
     (await app.req('POST', '/api/worlds/extract', { cookie: viewerCookie, body: { serverId: A, name: 'w' } })).status,

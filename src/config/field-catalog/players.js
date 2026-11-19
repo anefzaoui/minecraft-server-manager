@@ -36,7 +36,7 @@ module.exports = [
       { value: 'MERGE', label: 'Merge', desc: 'Add configured players into the existing file (file URL not allowed).' },
       {
         value: 'SYNC_FILE_MERGE_LIST',
-        label: 'Sync file, merge list',
+        label: 'Sync File, Merge List',
         desc: 'Whitelist file replaces the existing one, then listed players are merged in.',
       },
     ],
@@ -48,7 +48,7 @@ module.exports = [
     key: 'ENFORCE_WHITELIST',
     scope: 'env',
     prop: 'enforce-whitelist',
-    label: 'Enforce whitelist changes',
+    label: 'Enforce Whitelist Changes',
     help: 'Immediately kicks online players who are removed from the whitelist, instead of waiting until they reconnect.',
     type: 'boolean',
     default: false,
@@ -105,7 +105,7 @@ module.exports = [
       { value: 'MERGE', label: 'Merge', desc: 'Add configured ops into the existing file (file URL not allowed).' },
       {
         value: 'SYNC_FILE_MERGE_LIST',
-        label: 'Sync file, merge list',
+        label: 'Sync File, Merge List',
         desc: 'Ops file replaces the existing one, then listed ops are merged in.',
       },
     ],

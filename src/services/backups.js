@@ -9,6 +9,7 @@ const httpError = require('../utils/httpError');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
+const zlib = require('node:zlib');
 const { Worker } = require('node:worker_threads');
 const yauzl = require('yauzl');
 const { nanoid } = require('nanoid');
@@ -36,13 +37,13 @@ async function createBackupImpl(
   { reason = 'manual', actor = 'system', note = '', task = null, shrinkAfter = false, shrinkMinTicks } = {}
 ) {
   const server = db.get('SELECT * FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
 
   // Free-space preflight: need roughly the server dir size.
   const needed = indexer.sizeOf(`servers/${serverId}`) || 0;
   const { free } = await indexer.diskFree();
   if (needed && free < needed * 1.1) {
-    throw httpError(507, `Not enough disk space for a backup (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
+    throw httpError(507, `Not enough disk space for a backup (~${(needed / 1024 ** 3).toFixed(1)} GB needed).`);
   }
 
   const info = await inspectStatus(serverId).catch(() => ({ exists: false }));
@@ -101,7 +102,7 @@ async function createBackupImpl(
           try {
             await execCapture(serverId, ['rcon-cli', 'save-on']);
           } catch (err) {
-            logger.error('Re-enabling world saves after a backup failed: the server may still have saves paused.', {
+            logger.error('Re-enabling world saves after a backup failed, so the server may still have saves paused.', {
               serverId,
               err: serializeError(err, { includeStack: false }),
             });
@@ -133,9 +134,9 @@ async function createBackupImpl(
   let entryCount;
   try {
     entryCount = await zipEntryCount(absPath);
-  } catch (err) {
+  } catch {
     await fsp.rm(absPath, { force: true }).catch(() => {});
-    throw httpError(500, `Backup archive failed its integrity check and was discarded: ${err.message}`);
+    throw httpError(500, 'Backup archive failed its integrity check and was discarded.');
   }
   const empty = entryCount === 0; // e.g. a server that has never started - nothing on disk yet
 
@@ -221,7 +222,7 @@ async function createBackupImpl(
  */
 async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSafety = false, task = null } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ? AND server_id = ?', backupId, serverId);
-  if (!backup) throw httpError(404, 'Backup not found');
+  if (!backup) throw httpError(404, 'Backup not found.');
 
   // Disk preflight: safety backup (~current world size) + extracted content
   // (its real uncompressed size, not a guess from the compressed zip size -
@@ -229,13 +230,17 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   // let this check pass right before the extraction fills the disk).
   const zipPath = dataPath(backup.rel_path);
   const zipStat = await fsp.stat(zipPath).catch(() => null);
-  if (!zipStat) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}`);
+  if (!zipStat) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}.`);
   const uncompressedBytes = await zipUncompressedSize(zipPath).catch(() => zipStat.size * 4);
+  // The archive's real entry count, used below to lift the extractor's hard
+  // caps for this archive. Fall back to 0 (defaults apply) if unreadable -
+  // the extraction itself will fail loudly on a truly broken zip.
+  const archiveEntryCount = await zipEntryCount(zipPath).catch(() => 0);
   const safetyBytes = skipSafety ? 0 : indexer.sizeOf(`servers/${serverId}`) || 0;
   const needed = uncompressedBytes + safetyBytes;
   const { free } = await indexer.diskFree();
   if (free < needed * 1.1) {
-    throw httpError(507, `Not enough disk space to restore (~${(needed / 1024 ** 3).toFixed(1)} GB needed)`);
+    throw httpError(507, `Not enough disk space to restore (~${(needed / 1024 ** 3).toFixed(1)} GB needed).`);
   }
 
   if (task) task.step('Stopping server…');
@@ -290,7 +295,16 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
   const releaseReservation = indexer.reserveDiskSpace(uncompressedBytes);
   try {
     try {
-      await extractZip(zipPath, stagingDir);
+      // The panel creates backups with no size/entry caps, so the extractor's
+      // hard defaults would reject a self-made backup whose uncompressed
+      // payload exceeds 50 GiB or 200 k entries. The preflight above already
+      // read the archive's real totals from the central directory (and
+      // reserved exactly that disk), so lift the caps to max(default, actuals)
+      // for this archive rather than permanently blocking the recovery path.
+      await extractZip(zipPath, stagingDir, {
+        maxBytes: Math.max(MAX_EXTRACT_BYTES, uncompressedBytes),
+        maxEntries: Math.max(MAX_EXTRACT_ENTRIES, archiveEntryCount),
+      });
     } catch (err) {
       await fsp.rm(stagingDir, { recursive: true, force: true }).catch(() => {});
       throw err; // original serverDir was never touched
@@ -316,8 +330,17 @@ async function restoreBackupCore(serverId, backupId, { actor = 'system', skipSaf
       await renameDir(stagingDir, serverDir);
     } catch (err) {
       // Extraction succeeded but the swap itself failed - put the original back
-      // rather than leaving the server dir missing.
-      if (hadOldDir) await renameDir(oldDir, serverDir).catch(() => {});
+      // rather than leaving the server dir missing. A rollback failure here is
+      // serious (the server dir stays missing until boot recovery fixes it), so
+      // log it instead of swallowing the reason.
+      if (hadOldDir) {
+        await renameDir(oldDir, serverDir).catch((rollbackErr) => {
+          logger.error('Could not put the original world back after the restore swap failed.', {
+            serverId,
+            err: serializeError(rollbackErr),
+          });
+        });
+      }
       throw err;
     }
     if (hadOldDir) await fsp.rm(oldDir, { recursive: true, force: true }).catch(() => {});
@@ -401,15 +424,15 @@ function cleanBackupName(raw) {
  */
 async function renameBackup(backupId, newName, { actor = 'system' } = {}) {
   const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
-  if (!backup) throw httpError(404, 'Backup not found');
+  if (!backup) throw httpError(404, 'Backup not found.');
   const name = cleanBackupName(newName);
   if (name === backup.filename) return backup;
 
   const abs = dataPath(backup.rel_path);
-  if (!fs.existsSync(abs)) throw httpError(404, 'Backup archive is missing on disk');
+  if (!fs.existsSync(abs)) throw httpError(404, 'Backup archive is missing on disk.');
   const targetRel = `backups/${backup.server_id}/${name}`;
   const target = dataPath(targetRel);
-  if (fs.existsSync(target)) throw httpError(409, `A backup named "${name}" already exists here`);
+  if (fs.existsSync(target)) throw httpError(409, `A backup named "${name}" already exists here.`);
 
   await fsp.rename(abs, target);
   try {
@@ -670,7 +693,7 @@ function zipDirectory(sourceDir, outFile, { onProgress = null } = {}) {
 // Zip-slip-safe extraction + decompression-bomb ceiling: the one shared
 // implementation (src/utils/zip.js), re-exported here because the
 // restore path and its tests have always reached for `backups.extractZip`.
-const { extractZip } = require('../utils/zip');
+const { extractZip, MAX_EXTRACT_BYTES, MAX_EXTRACT_ENTRIES } = require('../utils/zip');
 
 /** Sum of uncompressedSize across every entry in a zip - cheap (reads the
  *  central directory only, no decompression) - used for an accurate restore
@@ -710,6 +733,85 @@ function zipEntryCount(zipFile) {
   });
 }
 
+/** Fully read every entry of a zip and check its CRC-32 - the same bytes a
+ *  restore would extract, without writing anything. Resolves { entries, bytes };
+ *  rejects on the first unreadable or corrupt entry. */
+function zipVerify(zipFile, onBytes = null) {
+  return new Promise((resolve, reject) => {
+    yauzl.open(zipFile, { lazyEntries: true }, (err, zip) => {
+      if (err) return reject(err);
+      let entries = 0;
+      let bytes = 0;
+      zip.on('error', reject);
+      zip.on('end', () => resolve({ entries, bytes }));
+      zip.on('entry', (entry) => {
+        entries += 1;
+        if (entry.fileName.endsWith('/')) return zip.readEntry();
+        zip.openReadStream(entry, (openErr, stream) => {
+          if (openErr) return reject(openErr);
+          let crc = 0;
+          stream.on('data', (chunk) => {
+            crc = zlib.crc32(chunk, crc);
+            bytes += chunk.length;
+            if (onBytes) onBytes(bytes);
+          });
+          stream.on('error', reject);
+          stream.on('end', () => {
+            if (crc !== entry.crc32) return reject(new Error(`CRC mismatch in ${entry.fileName}`));
+            zip.readEntry();
+          });
+        });
+      });
+      zip.readEntry();
+    });
+  });
+}
+
+/**
+ * Dry-run restore: prove a backup's archive can be read end to end. Read-only
+ * (no extraction, no server stop), so it is safe on a running server.
+ * ponytail: CRC check only, not a file-by-file diff against the live world.
+ */
+async function verifyBackupImpl(backupId, { actor = 'system', task = null } = {}) {
+  const backup = db.get('SELECT * FROM backups WHERE id = ?', backupId);
+  if (!backup) throw httpError(404, 'Backup not found.');
+  const zipPath = dataPath(backup.rel_path);
+  if (!fs.existsSync(zipPath)) throw httpError(404, `Backup archive is missing on disk: ${backup.filename}.`);
+  try {
+    if (task) task.step('Reading backup contents…');
+    const total = task ? await zipUncompressedSize(zipPath).catch(() => 0) : 0;
+    const result = await zipVerify(zipPath, task ? (read) => task.progress(read, total) : null);
+    recordEvent({
+      serverId: backup.server_id,
+      actor,
+      type: 'backup-verified',
+      summary: `Verified backup ${backup.filename}.`,
+    });
+    return { ok: true, ...result };
+  } catch (err) {
+    logger.warn('A backup failed verification.', { serverId: backup.server_id, backupId, err: serializeError(err) });
+    recordEvent({
+      serverId: backup.server_id,
+      actor,
+      type: 'backup-verify-failed',
+      summary: `Backup ${backup.filename} failed verification and may not restore.`,
+    });
+    throw httpError(422, 'This backup is damaged and may not restore correctly. Take a fresh backup.');
+  }
+}
+
+/** Callers without a task of their own (the route) get one in the top-bar tray. */
+async function verifyBackup(backupId, opts = {}) {
+  if (opts.task) return verifyBackupImpl(backupId, opts);
+  const backup = db.get('SELECT server_id, filename FROM backups WHERE id = ?', backupId);
+  if (!backup) throw httpError(404, 'Backup not found.');
+  return require('./tasks').track(
+    `Verifying ${backup.filename}…`,
+    { serverId: backup.server_id, actor: opts.actor },
+    (task) => verifyBackupImpl(backupId, { ...opts, task })
+  );
+}
+
 /** Rename a directory, falling back to copy+remove across devices (EXDEV). */
 async function renameDir(from, to) {
   try {
@@ -725,13 +827,94 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms).unref());
 }
 
+// Per-server history events that never touch the server directory. Everything
+// else (file edits, mod/pack/world changes, player data, rebuilds, and any event
+// type added later) counts as a possible change, so a new type errs toward one
+// extra backup rather than a skipped one.
+const NON_DATA_EVENT_TYPES = [
+  'schedule-fired',
+  'schedule-failed',
+  'schedule-created',
+  'schedule-toggled',
+  'schedule-deleted',
+  'backup-created',
+  'backup-warning',
+  'backup-deleted',
+  'backup-renamed',
+  'update-check',
+  'version-check',
+  'storage-scan',
+  'storage-cleanup',
+  'tmp-clean',
+  'events-pruned',
+  'content-meta-backfill',
+  'content-meta-backfilled',
+  'ban-expiry-sweep',
+  'crash-report-deleted',
+  'crash-shared',
+  'mod-update-ignored',
+  'mod-update-unignored',
+];
+
+/**
+ * Whether a scheduled backup would only duplicate an existing one. All must hold:
+ *  - the server is cleanly stopped (Docker's status, not a file comparison);
+ *  - the newest backup is newer than the container's last stop (FinishedAt), so
+ *    nothing was played since;
+ *  - no history event that could have changed the server directory (see
+ *    NON_DATA_EVENT_TYPES) was recorded since that backup, which covers edits
+ *    made while the server is off: file manager, mods, pack apply, worlds, etc.;
+ *  - the history still reaches back to the backup, so pruning can't have hidden
+ *    such an event.
+ * Anything uncertain, including any error, returns false: a backup is never
+ * lost to a bad check.
+ */
+async function isScheduledBackupRedundant(serverId) {
+  try {
+    const info = await inspectStatus(serverId);
+    if (!info.exists || info.status !== 'stopped') return false;
+    const latest = db.get(
+      'SELECT created_at FROM backups WHERE server_id = ? ORDER BY created_at DESC LIMIT 1',
+      serverId
+    );
+    if (!latest) return false;
+    // SQLite stores UTC as 'YYYY-MM-DD HH:MM:SS'; Docker gives RFC 3339.
+    const backedUpAt = Date.parse(`${latest.created_at.replace(' ', 'T')}Z`);
+    const stoppedAt = Date.parse(info.finishedAt);
+    if (Number.isNaN(backedUpAt) || Number.isNaN(stoppedAt) || backedUpAt <= stoppedAt) return false;
+
+    // Events pruned oldest-first: if one from around the backup survives, none
+    // from after it were dropped. A backup records its own event, so this is
+    // only false once pruning has reached past it.
+    const reachesBack = db.get(
+      "SELECT 1 AS ok FROM events WHERE server_id = ? AND created_at <= datetime(?, '+1 minute') LIMIT 1",
+      serverId,
+      latest.created_at
+    );
+    if (!reachesBack) return false;
+
+    const marks = NON_DATA_EVENT_TYPES.map(() => '?').join(',');
+    const changed = db.get(
+      `SELECT 1 AS dirty FROM events WHERE server_id = ? AND created_at >= ? AND type NOT IN (${marks}) LIMIT 1`,
+      serverId,
+      latest.created_at,
+      ...NON_DATA_EVENT_TYPES
+    );
+    return !changed;
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
+  isScheduledBackupRedundant,
   createBackup,
   createBackupUnguarded: createBackupImpl,
   restoreBackup,
   deleteBackup,
   deleteBackupByUser,
   renameBackup,
+  verifyBackup,
   pruneRetention,
   planPrune,
   previewRetention,
