@@ -14,7 +14,7 @@
       <img src="{{iconSrc server.icon}}" alt="" class="size-14 shrink-0 rounded-lg" style="background: {{server.accent}}" data-fallback-icon="/icons/servers/grass.svg">
 
       <div class="min-w-0 flex-1">
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-2">
           <h2 class="min-w-0 max-w-full break-words text-xl font-bold">{{server.name}}</h2>
           <span class="flex items-center gap-1.5 text-xs font-medium {{statusText server.status}}">
             <span class="status-dot relative {{statusDot server.status}} {{#if (statusPulse server.status)}}pulse{{/if}}"></span>
@@ -39,7 +39,7 @@
     {{! Power controls need the `power` permission on this server (perms comes
         from the page route). Kept in the DOM but hidden so the action
         handlers in app.js still bind on every other page state. }}
-    <div class="flex flex-wrap gap-2{{#unless perms.power}} hidden{{/unless}}">
+    <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2{{#unless perms.power}} hidden{{/unless}}">
       {{#if (or (eq server.status 'running') (eq server.status 'starting') (eq server.status 'unhealthy') (eq server.status 'stalled'))}}
         <button class="btn" data-server-action="restart" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'rotate-cw' 'size-4'}}} Restart</button>
         <button class="btn btn-danger" data-server-action="stop" data-server-id="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'square' 'size-4'}}} Stop</button>

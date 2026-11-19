@@ -40,11 +40,11 @@ async function upgradePack(
     task = null,
   } = {}
 ) {
-  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server');
+  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server.');
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   const pack = packsService.getPack(serverId);
-  if (!pack) throw httpError(400, 'This server has no managed modpack');
+  if (!pack) throw httpError(400, 'This server has no managed modpack.');
 
   const STEP_LABELS = {
     resolving: 'Resolving target version…',
@@ -269,9 +269,9 @@ async function rollbackPack(serverId, { backupId, actor = 'system' } = {}) {
   // gets impatient during the 'monitoring' wait) can interleave applyPack's
   // pinned/previous-version bookkeeping and the recreate/start sequence,
   // leaving it unclear which pack version actually ended up installed.
-  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server');
+  if (activeUpgrades.has(serverId)) throw httpError(409, 'An upgrade or rollback is already running for this server.');
   const pack = packsService.getPack(serverId);
-  if (!pack || !pack.previous_version_id) throw httpError(400, 'No previous pack version recorded');
+  if (!pack || !pack.previous_version_id) throw httpError(400, 'No previous pack version recorded.');
 
   activeUpgrades.set(serverId, { step: 'rolling-back', startedAt: Date.now() });
   logger.info('Started a pack rollback.', { serverId, actor, toVersion: pack.previous_version_name, backupId });

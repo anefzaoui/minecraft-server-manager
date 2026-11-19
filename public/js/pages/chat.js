@@ -147,7 +147,7 @@ function init(serverId) {
   noneBtn.type = 'button';
   noneBtn.className = 'swatch swatch-none';
   noneBtn.dataset.color = '';
-  noneBtn.dataset.tip = 'Default (no color)';
+  noneBtn.dataset.tip = 'Use the default color.';
   noneBtn.setAttribute('aria-pressed', 'true'); // selected from the start
   colorsBox.appendChild(noneBtn);
   for (const [name, hex] of Object.entries(COLORS)) {

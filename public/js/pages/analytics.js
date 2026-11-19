@@ -4,6 +4,7 @@ import { toast } from '../lib/toast.js';
 import { friendlyError } from '../lib/errors.js';
 import { openModal } from '../lib/modal.js';
 import { withBusy } from '../lib/loading.js';
+import { escapeHtml as esc } from '../lib/format.js';
 
 const root = document.querySelector('[data-analytics-server]');
 if (root) init(root.dataset.analyticsServer);
@@ -103,9 +104,9 @@ function init(serverId) {
       // disagreed with every other table in the app.
       tr.className = 'cursor-pointer';
       tr.innerHTML = `
-        <td class="text-ink-faint">${row.rank}</td>
-        <td><span class="inline-flex items-center gap-1.5">${row.crown ? CROWN_SVG : ''}<span class="font-medium" data-name></span></span></td>
-        <td class="text-right" data-value></td>`;
+        <td data-th="#" class="text-ink-faint">${esc(row.rank)}</td>
+        <td data-th="Player"><span class="inline-flex items-center gap-1.5">${row.crown ? CROWN_SVG : ''}<span class="font-medium" data-name></span></span></td>
+        <td data-th="Value" class="text-right" data-value></td>`;
       tr.querySelector('[data-name]').textContent = row.name;
       tr.querySelector('[data-value]').textContent = fmtValue(metric, row.value);
       // Profile fetch happens before the drawer opens - spin the value cell.
@@ -291,7 +292,7 @@ function init(serverId) {
 
     const grid = document.createElement('div');
     grid.innerHTML =
-      '<h4 class="mb-2 text-sm font-semibold">Key stats <span class="font-normal text-ink-faint">(all time / last 7d)</span></h4>';
+      '<h4 class="mb-2 text-sm font-semibold">Key Stats <span class="font-normal text-ink-faint">(all time / last 7d)</span></h4>';
     const cells = document.createElement('div');
     cells.className = 'grid grid-cols-2 gap-2 sm:grid-cols-3';
     const keyStats = [
@@ -322,7 +323,7 @@ function init(serverId) {
     content.appendChild(grid);
 
     const sessions = document.createElement('div');
-    sessions.innerHTML = `<h4 class="mb-2 text-sm font-semibold">Recent sessions <span class="font-normal text-ink-faint">(${p.sessions.count} total)</span></h4>`;
+    sessions.innerHTML = `<h4 class="mb-2 text-sm font-semibold">Recent Sessions <span class="font-normal text-ink-faint">(${p.sessions.count} total)</span></h4>`;
     if (!p.sessions.recent.length) {
       const empty = document.createElement('p');
       empty.className = 'text-xs text-ink-faint';

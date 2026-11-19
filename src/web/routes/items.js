@@ -66,7 +66,7 @@ router.post(
     const server = requireServer(req.params.id);
     const actor = req.user ? req.user.username : 'admin';
     const taskId = tasks.run(
-      `Rebuilding item registry for ${server.display_name}`,
+      `Rebuilding item registry for ${server.display_name}…`,
       { serverId: server.id, actor },
       async (t) => {
         t.step('Scanning mod jars & the server jar for item names…');

@@ -21,6 +21,7 @@ const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
 const permissions = require('../../services/permissions');
+const healthAlerts = require('../../services/healthAlerts');
 const { serverScope } = require('../middleware/serverAccess');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
 const logger = require('../../logger')('pages');
@@ -147,13 +148,15 @@ router.use(
   asyncHandler(async (req, res, next) => {
     // Only the servers this user may view - the same filter every fleet-wide page applies.
     res.locals.visibleServerIds = permissions.visibleServerIds(req.user);
-    res.locals.servers = permissions.filterVisible(req.user, sidebarServerVMs());
+    res.locals.servers = permissions.filterVisible(req.user, sidebarServerVMs(), res.locals.visibleServerIds);
     // The badge counts only visible servers, with the same aggregate query for
     // everyone; the scope clause is added only for a user with a hidden server.
     const checker = require('../../updates/checker');
     res.locals.updatesCount = checker.countOutdated({
       serverIds: permissions.hidesAnyServer(req.user, res.locals.visibleServerIds) ? res.locals.visibleServerIds : null,
     });
+    // Undismissed health alerts (last 24h) for the sidebar badge.
+    res.locals.healthCount = healthAlerts.counts(req.user, res.locals.visibleServerIds).total;
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
     next();
@@ -221,14 +224,7 @@ function buildCombinedOverview(servers) {
 // Dashboard "At a glance" panel: everything below is aggregated from the
 // server VMs already built above (memory, disk, status counts) plus cheap
 // event/SQLite lookups (24h health, update breakdown). No extra Docker calls.
-function buildDashboardOverview(servers) {
-  const countEvents = (types, since) =>
-    db.get(
-      `SELECT COUNT(*) AS n FROM events WHERE type IN (${types.map(() => '?').join(',')})` +
-        (since ? ` AND created_at >= datetime('now', ?)` : ''),
-      ...(since ? [...types, since] : types)
-    )?.n || 0;
-
+function buildDashboardOverview(servers, { user, visibleIds }) {
   const byStatus = {
     running: 0,
     starting: 0,
@@ -253,12 +249,8 @@ function buildDashboardOverview(servers) {
     playersMax += s.players.max || 0;
   }
 
-  const health = {
-    oom: countEvents(['oom'], '-1 day'),
-    autoRestarted: countEvents(['auto-restarted'], '-1 day'),
-    crashes: countEvents(['crashed'], '-1 day'),
-  };
-  const healthTotal = health.oom + health.autoRestarted + health.crashes;
+  // Per user: alerts they dismissed, or on servers they can't see, don't count.
+  const { total: healthTotal, ...health } = healthAlerts.counts(user, visibleIds);
 
   let updates = { all: 0, mods: 0, server: 0 };
   try {
@@ -280,13 +272,13 @@ function buildDashboardOverview(servers) {
 
 async function renderServerList(req, res, next, { page }) {
   try {
-    const rows = permissions.filterVisible(req.user, serversService.listServers());
+    const rows = permissions.filterVisible(req.user, serversService.listServers(), res.locals.visibleServerIds);
     const ctx = buildServerContext(rows); // one batched DB pass for all servers
     const results = await Promise.allSettled(rows.map((s) => serverVM(s, { ctx })));
     const servers = results
       .map((r, i) => {
         if (r.status === 'fulfilled') return r.value;
-        logger.error('Failed to load server VM', { serverId: rows[i].id, err: serializeError(r.reason) });
+        logger.error('Could not load a server for the page.', { serverId: rows[i].id, err: serializeError(r.reason) });
         return {
           id: rows[i].id,
           name: rows[i].display_name,
@@ -342,7 +334,7 @@ async function renderServerList(req, res, next, { page }) {
         .filter((e) => !e.type.endsWith('-requested'))
         .slice(0, 6);
       context.activity = eventsVM(events);
-      context.overview = buildDashboardOverview(servers);
+      context.overview = buildDashboardOverview(servers, { user: req.user, visibleIds: res.locals.visibleServerIds });
     }
     res.render('dashboard', context);
   } catch (err) {
@@ -356,12 +348,20 @@ router.get('/servers', (req, res, next) => renderServerList(req, res, next, { pa
 router.get('/servers/new', async (req, res) => {
   let versions = [];
   let latestRelease = '';
+  let paperLatestRelease = null;
+  let purpurLatestRelease = null;
   try {
     const mojang = require('../../services/mojang');
     // Every channel - releases, snapshots, betas and alphas - so the picker can
     // offer the full history; the template groups them by type.
     versions = await mojang.listVersions({ includeAll: true, limit: 5000 });
     latestRelease = (await mojang.getVersionManifest()).latest.release;
+    // Flavor-aware wizard defaults (#53): Paper (and Purpur) ship per-MC
+    // builds that lag Mojang, so their tiles annotate "the latest version the
+    // loader actually supports" - null degrades to Mojang's newest below.
+    const loaderVersions = require('../../services/loaderVersions');
+    paperLatestRelease = await loaderVersions.newestMcSupportedByServerType('PAPER');
+    purpurLatestRelease = await loaderVersions.newestMcSupportedByServerType('PURPUR');
   } catch (err) {
     pageDegraded('wizard-mojang-versions', err); // offline - manual entry still works
   }
@@ -397,6 +397,8 @@ router.get('/servers/new', async (req, res) => {
     blueprints: require('../../blueprints').listBlueprintsFor(req.user),
     versions,
     latestRelease,
+    paperLatestRelease,
+    purpurLatestRelease,
     suggestedPort,
     advancedSections,
     curseforgeEnabled,
@@ -628,20 +630,30 @@ router.get(
       // All-time totals plus a recent window, so the card shows whether trouble
       // is current or ancient history. The events table is the persistence here
       // (pruned at 90 days by the daily maintenance job), indexed on created_at.
-      const countEvents = (type, since) =>
+      // One pass over the server's matching events (idx_events_server_type_id)
+      // with conditional sums, instead of seven separate COUNT queries.
+      const stab =
         db.get(
-          `SELECT COUNT(*) AS n FROM events WHERE server_id = ? AND type = ?` +
-            (since ? ` AND created_at >= datetime('now', ?)` : ''),
-          ...(since ? [row.id, type, since] : [row.id, type])
-        )?.n || 0;
+          `SELECT
+             COALESCE(SUM(type = 'oom'), 0) AS oom,
+             COALESCE(SUM(type = 'oom' AND created_at >= datetime('now', '-1 day')), 0) AS oom24h,
+             COALESCE(SUM(type = 'auto-restarted'), 0) AS restarts,
+             COALESCE(SUM(type = 'auto-restarted' AND created_at >= datetime('now', '-1 day')), 0) AS restarts24h,
+             COALESCE(SUM(type = 'crashed'), 0) AS crashes,
+             COALESCE(SUM(type = 'crashed' AND created_at >= datetime('now', '-1 day')), 0) AS crashes24h,
+             COALESCE(SUM(type = 'crashed' AND created_at >= datetime('now', '-7 days')), 0) AS crashes7d
+           FROM events
+           WHERE server_id = ? AND type IN ('oom', 'auto-restarted', 'crashed')`,
+          row.id
+        ) || {};
       context.stability = {
-        oomKills: countEvents('oom'),
-        oomKills24h: countEvents('oom', '-1 day'),
-        autoRestarts: countEvents('auto-restarted'),
-        autoRestarts24h: countEvents('auto-restarted', '-1 day'),
-        crashes: countEvents('crashed'),
-        crashes24h: countEvents('crashed', '-1 day'),
-        crashes7d: countEvents('crashed', '-7 days'),
+        oomKills: stab.oom || 0,
+        oomKills24h: stab.oom24h || 0,
+        autoRestarts: stab.restarts || 0,
+        autoRestarts24h: stab.restarts24h || 0,
+        crashes: stab.crashes || 0,
+        crashes24h: stab.crashes24h || 0,
+        crashes7d: stab.crashes7d || 0,
       };
       context.lastCrash = db.get(
         'SELECT id, summary, exception, file_mtime FROM crash_reports WHERE server_id = ? ORDER BY file_mtime DESC LIMIT 1',
@@ -651,7 +663,9 @@ router.get(
 
       // --- Per-world / per-dimension sizes + host disk free.
       try {
-        context.worldSizes = await require('../../services/worlds').listServerWorlds(row.id);
+        // Sizes from the storage index (matches the breakdown bar below) - not
+        // a live recursive stat walk of every region file on every render.
+        context.worldSizes = await require('../../services/worlds').listServerWorlds(row.id, { sizesFromIndex: true });
       } catch {
         context.worldSizes = [];
       }
@@ -835,7 +849,7 @@ router.get('/modpacks', async (req, res) => {
   res.render('modpacks', {
     title: 'Modpacks',
     active: 'modpacks',
-    packServers: permissions.filterVisible(req.user, packServerVMs()),
+    packServers: permissions.filterVisible(req.user, packServerVMs(), res.locals.visibleServerIds),
   });
 });
 
@@ -860,6 +874,11 @@ router.get('/blueprints', (req, res) => {
     active: 'blueprints',
     blueprints: require('../../blueprints').listBlueprintsFor(req.user),
   });
+});
+
+router.get('/health', (req, res) => {
+  const { counts, alerts } = healthAlerts.list(req.user, res.locals.visibleServerIds);
+  res.render('health', { title: 'Health', active: 'health', counts, alerts });
 });
 
 router.get('/updates', (req, res) => {
@@ -920,11 +939,13 @@ router.get('/schedules', (req, res) => {
     title: 'Schedules',
     active: 'schedules',
     schedules: scheduler.listSchedules().filter((j) => !j.serverId || res.locals.visibleServerIds.has(j.serverId)),
-    taskTypes: Object.entries(scheduler.TASK_TYPES).map(([value, t]) => ({
-      value,
-      label: t.label,
-      serverScoped: t.serverScoped,
-    })),
+    taskTypes: Object.entries(scheduler.TASK_TYPES)
+      .filter(([, t]) => !t.adminOnly || (req.user && req.user.role === 'admin'))
+      .map(([value, t]) => ({
+        value,
+        label: t.label,
+        serverScoped: t.serverScoped,
+      })),
     serverOptions: (res.locals.servers || []).map((s) => ({ id: s.id, name: s.name })),
   });
 });
@@ -946,23 +967,28 @@ router.get(
       blueprints: 'Blueprints',
       tmp: 'Temporary files',
     };
-    const categories = Object.entries(catNames)
-      .map(([rel, name]) => ({
-        name,
+    const catKeys = Object.keys(catNames);
+    const sizes = indexer.sizeOfMany([...catKeys, '', 'library']);
+    // The page used ~15 indexer.sizeOf() reads per load (one db.get each); a
+    // single batched SELECT serves every number the category table and the
+    // breakdown bar show.
+    const categories = catKeys
+      .map((rel) => ({
+        name: catNames[rel],
         path: `${rel}/`,
         link: `/files?path=${encodeURIComponent(rel)}`,
-        size: indexer.sizeOf(rel),
+        size: sizes.get(rel) || 0,
       }))
       .filter((c) => c.size > 0 || ['servers', 'backups', 'tmp'].includes(c.path.replace(/\/$/, '')));
     const snapshots = db.all('SELECT total_bytes FROM storage_snapshots ORDER BY id DESC LIMIT 14').reverse();
     const maxSnap = Math.max(1, ...snapshots.map((s) => s.total_bytes));
 
-    const totalUsed = indexer.sizeOf('');
+    const totalUsed = sizes.get('') || 0;
     // Real category bar: servers / backups / library / other, from the index.
     const segs = [
-      { label: 'Servers', cls: 'bg-grass-600', size: indexer.sizeOf('servers') },
-      { label: 'Backups', cls: 'bg-diamond-500', size: indexer.sizeOf('backups') },
-      { label: 'Library', cls: 'bg-gold-400', size: indexer.sizeOf('library') },
+      { label: 'Servers', cls: 'bg-grass-600', size: sizes.get('servers') || 0 },
+      { label: 'Backups', cls: 'bg-diamond-500', size: sizes.get('backups') || 0 },
+      { label: 'Library', cls: 'bg-gold-400', size: sizes.get('library') || 0 },
     ];
     segs.push({
       label: 'Logs, blueprints, temporary files',
@@ -974,22 +1000,16 @@ router.get(
       width: totalUsed ? Math.max(0.5, (s.size / totalUsed) * 100).toFixed(1) : 0,
     }));
 
-    const { runCleanup, largestFiles, DEFAULT_DAYS } = require('./storageCleanup');
-    const preview = async (action, label, olderThanDays) => {
-      const p = await runCleanup(action, { olderThanDays, dryRun: true }).catch(() => ({ freedBytes: 0, removed: 0 }));
-      return { key: action, action: label, frees: p.freedBytes, count: p.removed, days: olderThanDays || null };
-    };
-    const cleanup = await Promise.all([
-      preview('tmp', 'Clear temporary files older than 1 hour'),
-      preview('orphans', 'Remove orphaned library files'),
-      preview('old-logs', `Delete archived logs older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
-      preview('old-crashes', `Delete crash reports older than ${DEFAULT_DAYS} days`, DEFAULT_DAYS),
-    ]);
-
-    const largest = (await largestFiles({ top: 15, maxScan: 3000 }).catch(() => [])).map((f) => ({
-      ...f,
-      link: `/files?path=${encodeURIComponent(f.path.split('/').slice(0, -1).join('/'))}`,
-    }));
+    // Cleanup rows carry no numbers: previewing is the click job (storage.js
+    // dry-runs the action and the confirm dialog shows what it found). Four
+    // filesystem walks used to run on EVERY page load just to fill these.
+    const { DEFAULT_DAYS } = require('./storageCleanup');
+    const cleanup = [
+      { key: 'tmp', action: 'Clear temporary files older than 1 hour', days: null },
+      { key: 'orphans', action: 'Remove orphaned library files', days: null },
+      { key: 'old-logs', action: `Delete archived logs older than ${DEFAULT_DAYS} days`, days: DEFAULT_DAYS },
+      { key: 'old-crashes', action: `Delete crash reports older than ${DEFAULT_DAYS} days`, days: DEFAULT_DAYS },
+    ];
 
     res.render('storage', {
       title: 'Storage',
@@ -1001,7 +1021,7 @@ router.get(
         lastScan: indexer.lastScan() || 'not yet',
         categories,
         breakdown,
-        largestFiles: largest,
+        largestFiles: [],
         cleanup,
         trend: snapshots.map((s) => Math.max(4, Math.round((s.total_bytes / maxSnap) * 100))),
       },

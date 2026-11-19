@@ -41,7 +41,7 @@ function safeEntryName(name) {
 function readZipIndex(zipPath, { textEntry, maxTextBytes = 20 * 1024 * 1024 } = {}) {
   return new Promise((resolve, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(httpError(400, 'Not a valid zip archive'));
+      if (err) return reject(httpError(400, 'Not a valid zip archive.'));
       const entries = [];
       const texts = new Map();
       zip.on('error', (e) => reject(zipFailure(e)));
@@ -49,7 +49,7 @@ function readZipIndex(zipPath, { textEntry, maxTextBytes = 20 * 1024 * 1024 } = 
       zip.on('entry', (entry) => {
         if (!safeEntryName(entry.fileName)) {
           zip.close();
-          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}`));
+          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}.`));
         }
         entries.push({ name: entry.fileName, size: entry.uncompressedSize });
         const wantText = textEntry && !/\/$/.test(entry.fileName) && textEntry(entry.fileName);
@@ -85,7 +85,7 @@ function readZipIndex(zipPath, { textEntry, maxTextBytes = 20 * 1024 * 1024 } = 
 function readEntryBuffers(zipPath, select, { maxEntryBytes = 512 * 1024 * 1024, maxTotalBytes = 4 * 1024 ** 3 } = {}) {
   return new Promise((resolve, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(httpError(400, 'Not a valid zip archive'));
+      if (err) return reject(httpError(400, 'Not a valid zip archive.'));
       const out = new Map();
       let total = 0;
       zip.on('error', (e) => reject(zipFailure(e)));
@@ -93,7 +93,7 @@ function readEntryBuffers(zipPath, select, { maxEntryBytes = 512 * 1024 * 1024, 
       zip.on('entry', (entry) => {
         if (!safeEntryName(entry.fileName)) {
           zip.close();
-          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}`));
+          return reject(httpError(400, `Archive entry escapes its destination: ${entry.fileName}.`));
         }
         if (/\/$/.test(entry.fileName) || !select(entry.fileName)) return zip.readEntry();
         zip.openReadStream(entry, (streamErr, readStream) => {
@@ -105,7 +105,7 @@ function readEntryBuffers(zipPath, select, { maxEntryBytes = 512 * 1024 * 1024, 
             total += c.length;
             if (size > maxEntryBytes || total > maxTotalBytes) {
               zip.close();
-              return reject(httpError(413, 'Zip contents exceed the allowed size'));
+              return reject(httpError(413, 'Zip contents exceed the allowed size.'));
             }
             chunks.push(c);
           });
@@ -159,7 +159,7 @@ function extractZipSafe(
   const root = path.resolve(destDir);
   return new Promise((resolve, reject) => {
     yauzl.open(zipFile, { lazyEntries: true }, (openErr, zip) => {
-      if (openErr) return reject(httpError(400, 'Not a valid zip archive'));
+      if (openErr) return reject(httpError(400, 'Not a valid zip archive.'));
       let settled = false;
       let entryCount = 0;
       let declaredBytes = 0;
@@ -198,17 +198,17 @@ function extractZipSafe(
         }
 
         if (!safeEntryName(entry.fileName)) {
-          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}.`));
         }
         const isDir = /\/$/.test(entry.fileName);
         const mapped = map ? map(entry.fileName) : entry.fileName;
         if (mapped == null || mapped === '') return zip.readEntry();
         if (!safeEntryName(mapped)) {
-          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}.`));
         }
         const target = path.resolve(root, mapped);
         if (target !== root && !target.startsWith(root + path.sep)) {
-          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}`));
+          return fail(httpError(400, `Archive entry escapes destination: ${entry.fileName}.`));
         }
 
         if (isDir) {
@@ -259,7 +259,7 @@ function extractZipSafe(
 function forEachEntryBuffer(zipPath, select, fn, { maxEntryBytes = 512 * 1024 * 1024 } = {}) {
   return new Promise((resolve, reject) => {
     yauzl.open(zipPath, { lazyEntries: true }, (err, zip) => {
-      if (err) return reject(httpError(400, 'Not a valid zip archive'));
+      if (err) return reject(httpError(400, 'Not a valid zip archive.'));
       let done = false;
       const fail = (e) => {
         if (done) return;
@@ -279,7 +279,7 @@ function forEachEntryBuffer(zipPath, select, fn, { maxEntryBytes = 512 * 1024 * 
           let size = 0;
           readStream.on('data', (c) => {
             size += c.length;
-            if (size > maxEntryBytes) return fail(httpError(413, 'Zip entry exceeds the allowed size'));
+            if (size > maxEntryBytes) return fail(httpError(413, 'Zip entry exceeds the allowed size.'));
             chunks.push(c);
           });
           readStream.on('error', fail);

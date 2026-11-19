@@ -60,7 +60,7 @@ function maskedKey(provider) {
 
 /** Live-test the CurseForge key against their games endpoint. */
 async function testCurseForgeKey(key = getKey('curseforge')) {
-  if (!key) return { ok: false, error: 'No key stored' };
+  if (!key) return { ok: false, error: 'No key stored.' };
   try {
     const res = await fetch('https://api.curseforge.com/v1/games?index=0&pageSize=1', {
       headers: { 'x-api-key': key, Accept: 'application/json' },

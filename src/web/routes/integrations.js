@@ -17,7 +17,7 @@ const { recordEvent } = require('../../events');
 
 const router = express.Router({ mergeParams: true });
 
-const serverIdSchema = z.string().regex(/^srv_[\w-]+$/, 'Invalid server id');
+const serverIdSchema = z.string().regex(/^srv_[\w-]+$/, 'Invalid server id.');
 
 function mustGet(req) {
   const serverId = serverIdSchema.parse(req.params.id);

@@ -32,7 +32,7 @@ module.exports = [
   {
     key: 'ENABLE_ROLLING_LOGS',
     scope: 'env',
-    label: 'Rolling log files (legacy)',
+    label: 'Rolling Log Files (legacy)',
     help: 'Legacy switch. Rolling and archived log files are now on by default through the templated logging config. Only relevant for old Minecraft versions where rolling logs conflict with Log4j security patches.',
     type: 'boolean',
     default: false,
@@ -43,7 +43,7 @@ module.exports = [
   {
     key: 'LOG_TIMESTAMP',
     scope: 'env',
-    label: 'Timestamp startup logs',
+    label: 'Timestamp Startup Logs',
     help: 'Prefixes the container’s [init] startup log lines with a timestamp. Affects only the image’s setup logs, not the Minecraft server’s own log output.',
     type: 'boolean',
     default: false,
@@ -55,7 +55,7 @@ module.exports = [
     key: 'SNOOPER_ENABLED',
     scope: 'env',
     prop: 'snooper-enabled',
-    label: 'Mojang telemetry (snooper)',
+    label: 'Mojang Telemetry (snooper)',
     help: 'Sends usage telemetry to Mojang. This only exists on older Minecraft versions; it was removed in modern ones.',
     type: 'boolean',
     mode: 'advanced',
@@ -65,7 +65,7 @@ module.exports = [
   {
     key: 'DUMP_SERVER_PROPERTIES',
     scope: 'env',
-    label: 'Dump server.properties to log',
+    label: 'Dump server.properties to Log',
     help: 'Prints the final server.properties contents to the log before the server starts. Handy for debugging why a setting didn’t apply.',
     type: 'boolean',
     default: false,
@@ -76,7 +76,7 @@ module.exports = [
   {
     key: 'DEBUG',
     scope: 'env',
-    label: 'Verbose startup debug',
+    label: 'Verbose Startup Debug',
     help: 'Much more verbose logging of the container’s startup scripts (downloads and installs), not the Minecraft server itself. Turn on when reporting problems.',
     type: 'boolean',
     default: false,
@@ -87,7 +87,7 @@ module.exports = [
   {
     key: 'OVERRIDE_SERVER_PROPERTIES',
     scope: 'env',
-    label: 'Panel manages server.properties',
+    label: 'Panel Manages server.properties',
     help: 'When on (default), server.properties is rewritten from these settings at every start. Turn off only if you want to hand-edit the file. Panel property settings then stop applying.',
     type: 'boolean',
     default: true,
@@ -99,7 +99,7 @@ module.exports = [
   {
     key: 'SKIP_SERVER_PROPERTIES',
     scope: 'env',
-    label: 'Skip server.properties entirely',
+    label: 'Skip server.properties Entirely',
     help: 'Stops the image from creating or touching server.properties at all. This is stronger than the override toggle above; no file is created if it’s missing. Leave off unless something else fully manages the file.',
     type: 'boolean',
     default: false,
