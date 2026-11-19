@@ -1,0 +1,48 @@
+# Container unit (podman quadlet) for running the panel under rootless Podman.
+#
+# As with the Docker compose path, the panel talks to the HOST's container
+# daemon and creates each Minecraft server as a SIBLING container. Under Podman
+# that means mounting the *user's* Docker-compatible socket, not /var/run/docker.sock.
+#
+# Install (rootless, systemd user unit):
+#   1. Pick a host directory for panel data and set it in DATA_DIR_HOST below.
+#      It must be readable by your user (keep it under your home or ownership).
+#   2. Build the image from this fork, or pull a published image:
+#        podman build -t localhost/minecraft-server-manager:latest .
+#   3. Copy this file to ~/.config/containers/systemd/msm.container and edit
+#      the DATA_DIR_HOST, Image, and PublishPort lines to taste.
+#   4. systemctl --user daemon-reload
+#      systemctl --user enable --now msm.service
+#
+# SELinux note: the /data volume carries :Z so the container can read the host
+# data dir under enforcing policy. Host data dirs handed to SIBLING server
+# containers are re-rooted from DATA_DIR_HOST as host paths; if you hit
+# SELinux denials on those binds, re-run with `<container> --security-opt
+# label=disable` or relabel the source dir (see docs/podman.md).
+
+[Unit]
+Description=Minecraft Server Manager panel
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+# Build from this fork, or use a published image tag.
+Image=localhost/minecraft-server-manager:latest
+# The panel drives the host container daemon through the mounted socket. Under
+# SELinux enforcing (Fedora/Aurora default), the container must be allowed to
+# reach that socket and the data volume; label=disable scopes this to the
+# panel container only and does not touch the SIBLING Minecraft servers it
+# creates, which get their own policy.
+SecurityLabelDisable=true
+# Web UI. Bind to 127.0.0.1 and put a reverse proxy in front if you don't want
+# it exposed on the LAN.
+PublishPort=127.0.0.1:25564:25564
+# Panel data: worlds, mods, backups, the DB, and the .secret-key key.
+Volume=/home/jason/msm/data:/data:Z
+# The Podman Docker-compatible socket (the panel drives the host daemon).
+Volume=%t/podman/podman.sock:/var/run/docker.sock
+Environment=DATA_DIR_HOST=/home/jason/msm/data
+Environment=LOG_PRETTY=false
+
+[Install]
+WantedBy=default.target

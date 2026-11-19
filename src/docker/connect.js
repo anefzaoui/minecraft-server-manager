@@ -20,10 +20,13 @@ function detectOptions() {
   // Prefer the classic system socket, but recent Docker Desktop (macOS) and
   // rootless Docker/Podman only expose a per-user socket - probe those too so a
   // stranger with a default install isn't told "daemon unavailable".
+  // Podman's Docker-compatible socket lives under $XDG_RUNTIME_DIR/podman.
   const candidates = [
     '/var/run/docker.sock',
     path.join(os.homedir(), '.docker', 'run', 'docker.sock'),
     process.env.XDG_RUNTIME_DIR ? path.join(process.env.XDG_RUNTIME_DIR, 'docker.sock') : null,
+    process.env.XDG_RUNTIME_DIR ? path.join(process.env.XDG_RUNTIME_DIR, 'podman', 'podman.sock') : null,
+    process.env.PODMAN_HOST,
   ].filter(Boolean);
   const found = candidates.find((p) => {
     try {
@@ -53,6 +56,7 @@ async function checkDocker() {
     ncpu: null,
     memTotal: null,
     isDockerDesktop: false,
+    isPodman: false,
     error: null,
   };
   try {
@@ -65,6 +69,9 @@ async function checkDocker() {
     status.ncpu = info.NCPU;
     status.memTotal = info.MemTotal;
     status.isDockerDesktop = /docker desktop/i.test(status.os);
+    // Podman reports itself in the version components (e.g. "Podman Engine").
+    status.isPodman = Array.isArray(version.Components)
+      && version.Components.some((c) => /podman/i.test(c.Name || ''));
   } catch (err) {
     status.error = err.code || err.message;
     if (process.platform === 'win32') {

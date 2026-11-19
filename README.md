@@ -136,6 +136,14 @@ docker compose up -d
 Open **http://your-host:25564**. In Portainer/Dockge, paste the compose file as a stack and set
 `DATA_DIR_HOST` in the stack's environment.
 
+### 🐳 Option 2: Rootless Podman (Fedora/Aurora)
+
+No Docker installed? This fork ships a rootless Podman deployment (quadlet and
+podman-compose) that drives the user's Docker-compatible Podman socket instead of
+`/var/run/docker.sock`. Verified on Podman 6.1.3 with SELinux enforcing. See
+[docs/podman.md](docs/podman.md) for the build, install, and SELinux notes.
+
+
 > [!IMPORTANT]
 > The panel drives the **host's Docker daemon** through the mounted socket, and anything that holds
 > the Docker socket is root-equivalent on the host, so treat the panel's admin login accordingly and
