@@ -462,7 +462,7 @@ async function computeFingerprint(serverId) {
  */
 async function buildRegistry(serverId, { onProgress = () => {} } = {}) {
   const server = require('./servers').getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
 
   const started = Date.now();
   const fingerprint = await computeFingerprint(serverId);

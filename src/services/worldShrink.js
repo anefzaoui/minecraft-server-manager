@@ -49,7 +49,7 @@ function humanBytes(n) {
 
 function mustServer(serverId) {
   const row = db.get('SELECT id, display_name, env_json FROM servers WHERE id = ? AND deleted_at IS NULL', serverId);
-  if (!row) throw httpError(404, 'Server not found');
+  if (!row) throw httpError(404, 'Server not found.');
   let env = {};
   try {
     env = JSON.parse(row.env_json || '{}');
@@ -242,7 +242,8 @@ async function shrinkWorldImpl(serverId, opts = {}) {
   if (!dryRun) await assertStopped(serverId);
 
   const dims = discoverDimensions(serverId, worldName);
-  if (!dims.length || !fs.existsSync(dims[0].dir)) throw httpError(404, `No world named "${worldName}" on this server`);
+  if (!dims.length || !fs.existsSync(dims[0].dir))
+    throw httpError(404, `No world named "${worldName}" on this server.`);
   const spawn = spawnChunk(dims[0].dir);
 
   const run = async () => {

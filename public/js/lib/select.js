@@ -46,7 +46,7 @@ function syncTrigger(select, btn) {
 
 function openPicker(select, btn) {
   const options = optionData(select);
-  const label = select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || 'Select an option';
+  const label = select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || 'Select an Option';
 
   const content = document.createElement('div');
   content.className = 'space-y-2';
@@ -176,7 +176,7 @@ export function enhanceSelect(select) {
   // silently lose every selection past the first. Leave those native.
   if (select.multiple) return;
   select.dataset.enhanced = '1';
-  const label = select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || 'Select an option';
+  const label = select.dataset.label || select.getAttribute('aria-label') || labelFor(select) || 'Select an Option';
   const btn = buildTrigger(select, label);
   select.classList.add('hidden');
   select.setAttribute('tabindex', '-1');

@@ -21,6 +21,7 @@ function init(serverId) {
   // Server-rendered initial lines show instantly; the WS resends the same tail
   // on connect, so the first 'log' batch replaces them instead of duplicating.
   let clearedInitial = false;
+  const MAX_LINES = 3000;
   log.scrollTop = log.scrollHeight;
 
   // ---- "Announce as" label: attribute panel console commands in game chat ----
@@ -162,10 +163,9 @@ function init(serverId) {
     }
   }
 
-  function appendLine(text) {
-    // A command reply can arrive before any WS log batch (stopped server) -
-    // the full-height placeholder would otherwise push it out of view.
-    log.querySelector('[data-console-empty]')?.remove();
+  // Build one log row. Visibility is applied by the caller so a whole batch
+  // shares one compiled filter.
+  function buildLine(text) {
     const level = classify(text);
     const div = document.createElement('div');
     div.dataset.level = level;
@@ -175,43 +175,71 @@ function init(serverId) {
     if (level === 'WARN') div.className = 'text-gold-300';
     if (level === 'ERROR') div.className = 'text-redstone-400';
     renderAnsi(div, text);
-    applyVisibility(div);
-    log.appendChild(div);
-    while (log.childElementCount > 3000) log.firstElementChild.remove();
+    return div;
+  }
+
+  // Append a batch of lines with one DOM insert, one trim, one scroll, and one
+  // no-match check - a boot backlog is thousands of lines in a single message.
+  function appendLines(texts) {
+    if (!texts.length) return;
+    // A command reply can arrive before any WS log batch (stopped server) -
+    // the full-height placeholder would otherwise push it out of view.
+    log.querySelector('[data-console-empty]')?.remove();
+    const matches = makeMatcher();
+    const frag = document.createDocumentFragment();
+    for (const text of texts) {
+      const div = buildLine(text);
+      applyVisibility(div, matches);
+      frag.appendChild(div);
+    }
+    log.appendChild(frag);
+    let excess = log.childElementCount - MAX_LINES;
+    while (excess-- > 0) log.firstElementChild.remove();
     if (autoScroll) log.scrollTop = log.scrollHeight;
     syncNoMatch();
   }
 
-  function applyVisibility(el) {
+  function appendLine(text) {
+    appendLines([text]);
+  }
+
+  // The filter box compiled once per batch (not once per line): a /regex/ form
+  // is parsed a single time, a plain query is lowercased a single time.
+  function makeMatcher() {
     const q = filterInput ? filterInput.value.trim() : '';
-    let match = true;
-    if (q) {
-      if (q.startsWith('/') && q.endsWith('/') && q.length > 2) {
-        try {
-          match = new RegExp(q.slice(1, -1), 'i').test(el.textContent);
-        } catch {
-          match = true;
-        }
-      } else {
-        match = el.textContent.toLowerCase().includes(q.toLowerCase());
+    if (!q) return () => true;
+    if (q.startsWith('/') && q.endsWith('/') && q.length > 2) {
+      let re = null;
+      try {
+        re = new RegExp(q.slice(1, -1), 'i');
+      } catch {
+        return () => true;
       }
+      return (el) => re.test(el.textContent);
     }
+    const needle = q.toLowerCase();
+    return (el) => el.textContent.toLowerCase().includes(needle);
+  }
+
+  function applyVisibility(el, matches = makeMatcher()) {
     const noisy = hideRconNoise && RCON_NOISE.some((re) => re.test(el.textContent));
-    el.classList.toggle('hidden', !filters[el.dataset.level] || !match || noisy);
+    el.classList.toggle('hidden', !filters[el.dataset.level] || !matches(el) || noisy);
   }
 
   function refilter() {
-    log.querySelectorAll('[data-level]').forEach(applyVisibility);
+    const matches = makeMatcher();
+    log.querySelectorAll('[data-level]').forEach((el) => applyVisibility(el, matches));
     syncNoMatch();
   }
 
   // Filters hiding every line left a silent black box, indistinguishable from
-  // "no output" - say so instead.
+  // "no output" - say so instead. Two early-exit selector lookups, not a scan
+  // of every row.
   function syncNoMatch() {
-    const lines = log.querySelectorAll('[data-level]');
-    const anyVisible = [...lines].some((el) => !el.classList.contains('hidden'));
+    const hasLines = log.querySelector('[data-level]') !== null;
+    const anyVisible = log.querySelector('[data-level]:not(.hidden)') !== null;
     let note = log.querySelector('[data-console-nomatch]');
-    if (lines.length && !anyVisible) {
+    if (hasLines && !anyVisible) {
       if (!note) {
         note = document.createElement('div');
         note.dataset.consoleNomatch = '';
@@ -260,11 +288,11 @@ function init(serverId) {
           log.innerHTML = '';
           disconnectNote = null; // wiped with the rest of the log
         }
-        for (const line of msg.text.split(/\r?\n/)) if (line.trim()) appendLine(line);
+        appendLines(msg.text.split(/\r?\n/).filter((line) => line.trim()));
       } else if (msg.kind === 'cmd-result') {
         ackPending();
         if (msg.error) appendLine(`[panel/ERROR]: ${msg.error}`);
-        else if (msg.output) for (const line of msg.output.split(/\r?\n/)) appendLine(`[rcon]: ${line}`);
+        else if (msg.output) appendLines(msg.output.split(/\r?\n/).map((line) => `[rcon]: ${line}`));
         else appendLine(`[rcon]: (no output) /${msg.command}`);
       } else if (msg.kind === 'error') {
         ackPending();

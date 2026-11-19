@@ -32,7 +32,7 @@
 
     {{#if (eq type 'enum')}}
       <select class="input max-w-sm" data-catalog-key="{{key}}" data-catalog-scope="{{scope}}" data-catalog-type="enum" data-catalog-default="{{this.default}}" data-label="{{label}}">
-        {{#unless (isDefined default)}}<option value="">Use the default</option>{{/unless}}
+        {{#unless (isDefined default)}}<option value="">Use the Default</option>{{/unless}}
         {{#each options}}
           <option value="{{value}}" {{#if (eq value ../default)}}selected{{/if}} {{#if desc}}data-desc="{{desc}}"{{/if}}>{{label}}</option>
         {{/each}}

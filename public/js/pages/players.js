@@ -7,6 +7,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
+import { escapeHtml as esc } from '../lib/format.js';
 import { renderPlayerHead } from '../lib/playerHead.js';
 
 const root = document.querySelector('[data-players-root]');
@@ -110,7 +111,7 @@ function init(root) {
     if (d.lastSeen) {
       const seen = document.createElement('div');
       seen.className = 'mt-0.5 text-[11px] leading-tight text-ink-faint';
-      seen.dataset.tip = "The last time this name was seen in the server's cache";
+      seen.dataset.tip = "The last time this name was seen in the server's cache.";
       seen.textContent = `seen ~${d.lastSeen}`;
       append(seen);
     }
@@ -138,21 +139,21 @@ function init(root) {
     if ('whitelisted' in changes) {
       row.dataset.whitelisted = changes.whitelisted ? '1' : '0';
       setChip(row, 'whitelist', changes.whitelisted, {
-        tip: changes.whitelisted ? 'Remove from whitelist' : 'Add to whitelist',
+        tip: changes.whitelisted ? 'Remove from whitelist' : 'Add to Whitelist',
       });
     }
     if ('op' in changes) {
       row.dataset.op = changes.op ? '1' : '0';
       setChip(row, 'op', changes.op, {
         label: changes.op && changes.opLevel ? `Op L${changes.opLevel}` : 'Op',
-        tip: changes.op ? 'Remove operator status' : 'Make operator (level 4)',
+        tip: changes.op ? 'Remove operator status' : 'Make Operator (Level 4)',
       });
     }
     if ('banned' in changes) {
       row.dataset.banned = changes.banned ? '1' : '0';
       setChip(row, 'ban', changes.banned, {
         label: changes.banned ? 'Banned' : 'Ban',
-        tip: changes.banned ? 'Pardon this player' : 'Ban this player',
+        tip: changes.banned ? 'Pardon This Player' : 'Ban This Player',
       });
       const details = row.querySelector('[data-ban-details]');
       if (details) {
@@ -349,8 +350,8 @@ function init(root) {
         <input class="input" data-f="name" placeholder="Notch" autocomplete="off" spellcheck="false" maxlength="16">
         <p class="mt-1 text-xs text-ink-faint">The name is looked up with Mojang, so the player never needs to have joined before.</p>
       </div>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> Add to whitelist</label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> Make operator (level 4)</label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="whitelist" checked> Add to Whitelist</label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="op"> Make Operator (level 4)</label>`;
       openModal({
         title: 'Add Player',
         content,
@@ -613,7 +614,7 @@ function init(root) {
       <div class="seg max-w-full" role="tablist">
         <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="coords">Coordinates</button>
         <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="biome">Biome</button>
-        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="player">To player</button>
+        <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="player">To Player</button>
         <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="rtp">Random</button>
         <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tp-mode="structure">Structure</button>
       </div>
@@ -628,7 +629,7 @@ function init(root) {
         <div>
           <label class="label">Dimension</label>
           <select class="input" data-f="dimension" data-label="Dimension">
-            <option value="">Current dimension</option>
+            <option value="">Current Dimension</option>
             <option value="minecraft:overworld">Overworld</option>
             <option value="minecraft:the_nether">The Nether</option>
             <option value="minecraft:the_end">The End</option>
@@ -659,8 +660,8 @@ function init(root) {
         <div>
           <label class="label">Around</label>
           <select class="input" data-f="center" data-label="Around">
-            <option value="player">The player's current position</option>
-            <option value="origin">World center (0, 0)</option>
+            <option value="player">The Player's Current Position</option>
+            <option value="origin">World Center (0, 0)</option>
           </select>
         </div>
         <p class="text-xs text-ink-faint">Built-in random teleport that works on any server, version, or modpack. Picks a random spot in the ring and lands on solid ground; ocean picks are retried automatically, up to 10 times.</p>
@@ -673,7 +674,7 @@ function init(root) {
         </div>
         <div class="grid grid-cols-2 items-end gap-2">
           <div><label class="label">Search radius</label><input class="input" type="number" data-f="structMaxDistance" value="5000" min="16"></div>
-          <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise me (random one, not nearest)</label>
+          <label class="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" class="msm-check" data-f="structRandom" checked> Surprise Me (Random One, Not Nearest)</label>
         </div>
         <p class="text-xs text-ink-faint">"Surprise me" searches from a random point in the radius, so you get a different result every time. It lands safely on the surface next to the structure.</p>
       </div>`;
@@ -701,7 +702,7 @@ function init(root) {
         targetSel.appendChild(opt);
       }
     } else {
-      targetSel.innerHTML = '<option value="">No other players online</option>';
+      targetSel.innerHTML = '<option value="">No Other Players Online</option>';
     }
 
     const modal = openModal({
@@ -842,7 +843,7 @@ function init(root) {
           (DIM_ORDER[a.dimension] ?? 9) - (DIM_ORDER[b.dimension] ?? 9) ||
           prettyBiome(a.id).localeCompare(prettyBiome(b.id))
       )
-      .map((e) => `<option value="${e.id}">${dimShort(e.dimension)} · ${prettyBiome(e.id)}</option>`)
+      .map((e) => `<option value="${esc(e.id)}">${esc(dimShort(e.dimension))} · ${esc(prettyBiome(e.id))}</option>`)
       .join('');
   }
 
@@ -873,7 +874,7 @@ function init(root) {
     const actions = document.createElement('td');
     actions.className = 'text-right';
     actions.dataset.th = '';
-    actions.innerHTML = `<button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-tip="Remove this IP ban">
+    actions.innerHTML = `<button class="btn btn-ghost btn-sm text-danger" data-act="pardon-ip" data-tip="Remove this IP ban.">
       <svg class="icon size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
     actions.querySelector('button').dataset.ip = ip;
     tr.appendChild(actions);
