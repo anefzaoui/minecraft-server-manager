@@ -28,3 +28,7 @@ You can search your servers (by name, type, version, or tag), sort them by statu
 ## Recent activity
 
 The feed at the bottom shows the most recent entries from the panel's human-readable audit trail: logins, backups, blueprint exports, update checks, chat-command changes, server starts and stops, and more. Every entry is tagged with the server it belongs to (or the panel itself) and how long ago it happened. **View All** opens the full history on the [Activity](activity.md) page.
+
+## Background tasks
+
+Anything slow shows up in the **Background Tasks** menu in the top bar (the checklist icon), from any page: starting, stopping, restarting, and rebuilding servers, backups, restores, world imports and installs, mod and pack installs, blueprint exports and imports, update checks, and scheduled backups and update checks. The icon gets a spinning ring while something is running, with a count. Each row shows the current step and progress, and a toast tells you when a task you were watching finishes or fails. Finished tasks stay in the menu for a few seconds. Quick housekeeping jobs (temporary file cleanup, ban expiry sweeps) are left out so the menu stays quiet.

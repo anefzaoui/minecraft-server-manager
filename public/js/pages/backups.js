@@ -36,6 +36,19 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  if (action === 'verify') {
+    const restore = setBusy(btn);
+    try {
+      const res = await talk(`/api/backups/${encodeURIComponent(backupId)}/verify`, 'POST');
+      toast(`Backup verified: ${res.entries} files, ${fmtBytes(res.bytes)} read.`);
+    } catch (err) {
+      toast(err.message || 'That backup could not be verified. Please try again.', { kind: 'error', timeout: 9000 });
+    } finally {
+      restore();
+    }
+    return;
+  }
+
   if (action === 'rename') {
     const content = document.createElement('div');
     const label = document.createElement('label');

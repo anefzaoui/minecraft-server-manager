@@ -7,6 +7,7 @@
 // escape ./data, and server-scoped calls can't escape their server dir.
 
 const httpError = require('../utils/httpError');
+const { dirSize, STAT_BATCH } = require('../utils/statSizes');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
@@ -60,39 +61,41 @@ async function list(serverId, relPath = '') {
   if (!st.isDirectory()) throw httpError(400, 'Not a folder');
 
   const dirents = await fsp.readdir(abs, { withFileTypes: true });
+  // Batch the indexer lookups: one SELECT for every subdirectory, not a sizeOf()
+  // query per entry (opening a world folder with many dimension trees used to
+  // fan out a query per dir on every listing). mtime still needs a stat per dir.
+  const dirSizes = indexer.sizeOfMany(
+    dirents
+      .filter((e) => e.isDirectory())
+      .filter((e) => !(!serverId && isProtectedGlobal(rel ? `${rel}/${e.name}` : e.name)))
+      .map((e) => path.relative(config.dataDir, path.join(abs, e.name)).split(path.sep).join('/'))
+  );
+  // Stat the visible entries in bounded parallel batches instead of one
+  // awaited round-trip each: a mods/ or plugins/ folder with hundreds of jars
+  // used to cost hundreds of sequential stat calls per listing.
+  const visible = dirents.filter((e) => serverId || !isProtectedGlobal(rel ? `${rel}/${e.name}` : e.name));
   const entries = [];
-  for (const e of dirents) {
-    // Never surface panel-internal files (DB, session secret) in the global manager.
-    const childRel = rel ? `${rel}/${e.name}` : e.name;
-    if (!serverId && isProtectedGlobal(childRel)) continue;
-    const childAbs = path.join(abs, e.name);
-    const isDir = e.isDirectory();
-    let size = 0;
-    let mtimeMs = 0;
-    try {
-      if (isDir) {
-        // Use the background indexer's cached size instead of a live recursive
-        // walk per folder on every listing - opening a folder with a multi-GB
-        // world used to stat tens of thousands of files. Deep/not-yet-indexed
-        // dirs read 0 until the next scan; that's the instant-lookup trade-off.
-        const dataRel = path.relative(config.dataDir, childAbs).split(path.sep).join('/');
-        size = indexer.sizeOf(dataRel);
-        mtimeMs = (await fsp.stat(childAbs)).mtimeMs;
-      } else {
-        const cst = await fsp.stat(childAbs);
-        size = cst.size;
-        mtimeMs = cst.mtimeMs;
-      }
-    } catch {
-      /* transient */
-    }
-    entries.push({
-      name: e.name,
-      dir: isDir,
-      size,
-      mtimeMs,
-      mtime: formatWhen(mtimeMs),
-      path: rel ? `${rel}/${e.name}` : e.name,
+  for (let i = 0; i < visible.length; i += STAT_BATCH) {
+    const batch = visible.slice(i, i + STAT_BATCH);
+    const stats = await Promise.all(batch.map((e) => fsp.stat(path.join(abs, e.name)).catch(() => null)));
+    batch.forEach((e, k) => {
+      const isDir = e.isDirectory();
+      const st = stats[k];
+      // Directories use the background indexer's cached size instead of a
+      // live recursive walk per folder on every listing (a multi-GB world used
+      // to stat tens of thousands of files). Deep or not-yet-indexed dirs read
+      // 0 until the next scan; that's the instant-lookup trade-off.
+      const dataRel = path.relative(config.dataDir, path.join(abs, e.name)).split(path.sep).join('/');
+      const size = isDir ? dirSizes.get(dataRel) || 0 : st ? st.size : 0;
+      const mtimeMs = st ? st.mtimeMs : 0;
+      entries.push({
+        name: e.name,
+        dir: isDir,
+        size,
+        mtimeMs,
+        mtime: formatWhen(mtimeMs),
+        path: rel ? `${rel}/${e.name}` : e.name,
+      });
     });
   }
   entries.sort((a, b) => b.dir - a.dir || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
@@ -328,29 +331,6 @@ async function assertDiskFree(bytes) {
   if (free < bytes * 1.1) throw httpError(507, `Not enough disk space (~${humanBytes(bytes)} needed)`);
 }
 
-async function dirSize(abs) {
-  let total = 0;
-  let entries;
-  try {
-    entries = await fsp.readdir(abs, { withFileTypes: true });
-  } catch {
-    return 0;
-  }
-  for (const e of entries) {
-    const child = path.join(abs, e.name);
-    if (e.isSymbolicLink()) continue;
-    if (e.isDirectory()) total += await dirSize(child);
-    else if (e.isFile()) {
-      try {
-        total += (await fsp.stat(child)).size;
-      } catch {
-        /* transient */
-      }
-    }
-  }
-  return total;
-}
-
 async function moveEntry(from, to) {
   try {
     await fsp.rename(from, to);
@@ -441,6 +421,9 @@ async function searchFiles(serverId, query, { caseSensitive = false, subdir = ''
       }
       if (buf.subarray(0, 8192).includes(0)) continue; // binary
       const text = buf.toString('utf8');
+      // Most scanned files hold no match. One whole-file check skips the
+      // per-line split and lower-casing for them, which was most of the cost.
+      if (!(caseSensitive ? text.includes(needle) : text.toLowerCase().includes(hay))) continue;
       const lines = text.split('\n');
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];

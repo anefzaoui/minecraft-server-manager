@@ -18,9 +18,14 @@ Docker daemon over its API (never by shelling out to the `docker` CLI).
   boot. Prepared statements are cached in `src/db/index.js` keyed on the SQL text.
 - **`ws`** carries the live console and stats streams. Both are **brokered**: one upstream
   `docker logs --follow` (or `docker stats`) per server, demuxed once and fanned out to every
-  connected tab, rather than one upstream per viewer. The console broker keeps a small replay
-  buffer for late-joining tabs and drops a subscriber whose socket falls too far behind rather than
-  stalling the shared stream.
+  connected tab, rather than one upstream per viewer. The console broker coalesces upstream chunks
+  for a few milliseconds so a boot burst reaches each tab as one frame, keeps a small replay buffer
+  that a late-joining tab receives as a single message, and drops a subscriber whose socket falls
+  too far behind rather than stalling the shared stream. The browser appends each message as one
+  batch, so a thousand-line backlog costs one layout, not a thousand.
+- **`compression`** gzips text responses (HTML, JS, CSS, JSON) ahead of the static handlers. Images
+  and archives are skipped by its type filter, and the `/map/` proxy is excluded because it streams
+  BlueMap's own responses through unchanged.
 - **dockerode** is the only way the app talks to Docker. The endpoint is auto-detected per platform
   (Windows named pipe vs. unix socket).
 - **All persistent state lives under one directory** (`$DATA_DIR`, default `./data`). Copying that
