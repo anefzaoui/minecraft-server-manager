@@ -9,7 +9,7 @@ const path = require('node:path');
 const yaml = require('js-yaml');
 const httpError = require('../utils/httpError');
 const { isPortFree } = require('./ports');
-const networks = require('../docker/networks');
+const { HIDDEN_NETWORKS } = require('../docker/networks');
 
 const HEADER =
   '# Advanced Docker settings.\n' +
@@ -27,11 +27,11 @@ function fromYaml(text) {
   let obj;
   try {
     obj = yaml.load(text);
-  } catch (err) {
-    throw httpError(400, `Invalid YAML: ${err.message}`);
+  } catch {
+    throw httpError(400, "That isn't valid YAML. Fix the syntax and try again.");
   }
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
-    throw httpError(400, 'Invalid YAML: expected a mapping at the top level');
+    throw httpError(400, 'Invalid YAML: expected a mapping at the top level.');
   }
   return {
     containerName: obj.containerName || null,
@@ -70,21 +70,31 @@ async function validateOverrides(
 
   if (containerName != null && !NAME_RE.test(containerName)) {
     errors.push(
-      `Container name "${containerName}" is invalid - use letters, digits, "_", ".", "-", starting with a letter or digit, up to 63 characters.`
+      `Container name "${containerName}" is invalid. Use letters, digits, "_", ".", "-", starting with a letter or digit, up to 63 characters.`
     );
   }
   // getContainer() resolves servers WITHOUT a custom name as msm-<id> - a
   // custom name in that namespace could shadow another server's container and
   // route every lifecycle action (stop, kill, exec…) to the wrong instance.
   if (containerName != null && /^msm-/i.test(containerName)) {
-    errors.push(
-      `Container name "${containerName}" is reserved - the "msm-" prefix is used for the panel's own naming.`
-    );
+    errors.push(`Container name "${containerName}" is reserved. The "msm-" prefix is used for the panel's own naming.`);
   }
 
+  // A network that does not exist yet is fine: createContainer now creates
+  // bridge networks on demand. Keep a format guard so a bare typo can't create
+  // junk networks, and reject the pseudo-networks host/none - they are not real
+  // attach targets (filtered out of listNetworks, so networkExists reports them
+  // missing and createNetwork fails confusingly), and attaching to 'host' must
+  // never happen by accident.
   if (networkName) {
-    const exists = await networks.networkExists(networkName);
-    if (!exists) errors.push(`Docker network "${networkName}" does not exist.`);
+    if (!NAME_RE.test(networkName)) {
+      errors.push(
+        `Docker network "${networkName}" is invalid. Use letters, digits, "_", ".", "-", starting with a letter or digit, up to 63 characters.`
+      );
+    }
+    if (HIDDEN_NETWORKS.has(networkName)) {
+      errors.push(`Docker network "${networkName}" is reserved and cannot be attached or created.`);
+    }
   }
 
   const previousHostPorts = new Set((previousExtraPorts || []).map((p) => p.hostPort));
@@ -101,7 +111,7 @@ async function validateOverrides(
       continue;
     }
     if (!['tcp', 'udp'].includes(p.protocol)) {
-      errors.push(`Extra port mapping protocol must be "tcp" or "udp", got "${p.protocol}"`);
+      errors.push(`Extra port mapping protocol must be "tcp" or "udp", got "${p.protocol}".`);
       continue;
     }
     if (seenPorts.has(hostPort)) {
@@ -115,7 +125,7 @@ async function validateOverrides(
 
   for (const b of extraBinds || []) {
     if (!b.hostPath || typeof b.hostPath !== 'string' || b.hostPath.includes('\0') || !path.isAbsolute(b.hostPath)) {
-      errors.push(`Extra volume bind has an invalid host path: "${b.hostPath || ''}" - must be an absolute path.`);
+      errors.push(`Extra volume bind has an invalid host path: "${b.hostPath || ''}". It must be an absolute path.`);
     }
     if (
       !b.containerPath ||
@@ -124,11 +134,11 @@ async function validateOverrides(
       !b.containerPath.startsWith('/')
     ) {
       errors.push(
-        `Extra volume bind has an invalid container path: "${b.containerPath || ''}" - must be an absolute path.`
+        `Extra volume bind has an invalid container path: "${b.containerPath || ''}". It must be an absolute path.`
       );
     }
     if (b.mode && !['rw', 'ro'].includes(b.mode)) {
-      errors.push(`Extra volume bind mode must be "rw" or "ro", got "${b.mode}"`);
+      errors.push(`Extra volume bind mode must be "rw" or "ro", got "${b.mode}".`);
     }
   }
 

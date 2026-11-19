@@ -31,6 +31,12 @@ document.addEventListener(
     const img = e.target;
     if (!(img instanceof HTMLImageElement)) return;
 
+    // Layered over a placeholder: just drop the image so the placeholder shows.
+    if (img.dataset.removeOnError !== undefined) {
+      img.remove();
+      return;
+    }
+
     const fallback = img.dataset.fallbackIcon;
     if (fallback && img.src !== new URL(fallback, location.href).href) {
       img.src = fallback;

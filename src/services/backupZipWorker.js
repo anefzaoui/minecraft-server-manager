@@ -10,7 +10,7 @@
 
 const fs = require('node:fs');
 const { parentPort, workerData } = require('node:worker_threads');
-const archiver = require('archiver');
+const { ZipArchive } = require('archiver');
 
 const { sourceDir, outFile } = workerData;
 
@@ -22,7 +22,7 @@ const finish = (msg) => {
 };
 
 const output = fs.createWriteStream(outFile);
-const archive = archiver('zip', { zlib: { level: 6 } });
+const archive = new ZipArchive({ zlib: { level: 6 } });
 
 const fail = (err) => {
   if (settled) return;

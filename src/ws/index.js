@@ -7,6 +7,7 @@
 // 'log-end' marks the end of one console log stream (server stopped/restarted);
 // the client closes the socket on it so its reconnect/backoff resumes a fresh one.
 
+const { StringDecoder } = require('node:string_decoder');
 const { WebSocketServer } = require('ws');
 const signature = require('cookie-signature');
 const config = require('../config');
@@ -43,7 +44,8 @@ function attachWebSockets(httpServer) {
       socket.destroy();
       return;
     }
-    const user = sessionUser(req);
+    const auth = sessionAuth(req);
+    const user = auth && auth.user;
     if (!user) {
       logger.warn('Rejected a WebSocket upgrade with no valid session.', { path: req.url.split('?')[0] });
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
@@ -57,7 +59,7 @@ function attachWebSockets(httpServer) {
         ws.close(4404, 'unknown server');
         return;
       }
-      if (kind === 'console') handleConsole(ws, serverId, user);
+      if (kind === 'console') handleConsole(ws, serverId, user, auth.sid);
       else handleStats(ws, serverId);
     });
   });
@@ -66,7 +68,7 @@ function attachWebSockets(httpServer) {
   return wss;
 }
 
-async function handleConsole(ws, serverId, user) {
+async function handleConsole(ws, serverId, user, sid) {
   const send = (obj) => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
   };
@@ -95,6 +97,15 @@ async function handleConsole(ws, serverId, user) {
       return; // intentional: ignore a malformed inbound frame
     }
     if (msg.kind !== 'cmd' || typeof msg.command !== 'string') return;
+    // The socket outlives the handshake, so re-read the account on every
+    // command: a user deleted, demoted, or stripped of `console` after this tab
+    // connected must not keep running RCON on the role it had at connect time.
+    const current = sessionStillValid(sid) ? require('../services/auth').getUser(user.id) : null;
+    if (!current) {
+      ws.close(4401, 'signed out');
+      return;
+    }
+    user = current;
     // Watching logs needs `view`; running commands needs `console` on this server.
     if (!permissions.can(user, serverId, 'console')) {
       send({
@@ -169,6 +180,8 @@ const CONSOLE_REPLAY_BYTES = 256 * 1024;
 // that would freeze the console for every other admin watching the same server.
 const CONSOLE_SLOW_SOCKET_BYTES = 4 * 1024 * 1024;
 const CONSOLE_SLOW_GRACE_MS = 5_000;
+// How long upstream log chunks are batched before one frame goes to each tab.
+const CONSOLE_FLUSH_MS = 40;
 
 function dropSlowConsoleSubs(broker) {
   const now = Date.now();
@@ -217,17 +230,40 @@ function subscribeConsole(serverId, sub) {
           return;
         }
         broker.follower = follower;
+        // Coalesce upstream chunks: a boot burst arrives as hundreds of tiny
+        // chunks, and each used to cost one JSON.stringify + socket frame per
+        // tab. Batch them for a few ms and send one frame instead. The replay
+        // buffer is filled immediately; flush() runs before anything that must
+        // not reorder against pending text (a late joiner, end, error).
+        let pending = '';
+        let flushTimer = null;
+        broker.flush = () => {
+          if (flushTimer) clearTimeout(flushTimer);
+          flushTimer = null;
+          if (!pending) return;
+          const text = pending;
+          pending = '';
+          for (const s of broker.subs) if (!s.dropped) s.onLog(text);
+          dropSlowConsoleSubs(broker);
+        };
+        // A multi-byte UTF-8 character (accented names, CJK chat, box-drawing
+        // in mod banners) can straddle two upstream chunks; decoding each chunk
+        // on its own turns both halves into U+FFFD. The decoder carries the
+        // partial bytes over to the next chunk.
+        const decoder = new StringDecoder('utf8');
         follower.stream.on('data', (chunk) => {
-          const text = chunk.toString('utf8');
+          const text = typeof chunk === 'string' ? chunk : decoder.write(chunk);
+          if (!text) return;
           broker.buffer.push(text);
           broker.bufferBytes += Buffer.byteLength(text);
           while (broker.bufferBytes > CONSOLE_REPLAY_BYTES && broker.buffer.length > 1) {
             broker.bufferBytes -= Buffer.byteLength(broker.buffer.shift());
           }
-          for (const s of broker.subs) if (!s.dropped) s.onLog(text);
-          dropSlowConsoleSubs(broker);
+          pending += text;
+          if (!flushTimer) flushTimer = setTimeout(broker.flush, CONSOLE_FLUSH_MS);
         });
         follower.stream.on('end', () => {
+          broker.flush();
           for (const s of broker.subs) s.onEnd();
           // The follow is over (container stopped / docker restarted it). Drop
           // the broker so a tab that connects later starts a fresh follow rather
@@ -235,6 +271,7 @@ function subscribeConsole(serverId, sub) {
           stopConsoleBroker(serverId, broker);
         });
         follower.stream.on('error', (err) => {
+          broker.flush();
           logger.debug('A console log stream errored.', {
             serverId,
             err: serializeError(err, { includeStack: false }),
@@ -260,8 +297,12 @@ function subscribeConsole(serverId, sub) {
       });
   }
 
+  // Push out any batched-but-unsent text first, so the replay below (which
+  // already contains it) is not followed by a duplicate live frame.
+  if (broker.flush) broker.flush();
   broker.subs.add(sub);
-  for (const chunk of broker.buffer) sub.onLog(chunk); // catch a late tab up
+  // One frame for the whole replay, not one per buffered chunk.
+  if (broker.buffer.length) sub.onLog(broker.buffer.join('')); // catch a late tab up
 
   return () => {
     broker.subs.delete(sub);
@@ -279,16 +320,29 @@ function subscribeConsole(serverId, sub) {
 // to each open an independent Docker stats stream and demux pipeline - real,
 // avoidable load on the Docker daemon and the panel process that scales with
 // concurrent VIEWERS rather than with server count.
-const statsBrokers = new Map(); // serverId -> { subscribers, errorSubscribers, stop }
+const statsBrokers = new Map(); // serverId -> { subscribers, errorSubscribers, endSubscribers, stop }
 
-function subscribeStats(serverId, onSample, onError) {
+function subscribeStats(serverId, onSample, onError, onEnd = () => {}) {
   let broker = statsBrokers.get(serverId);
   if (!broker) {
-    broker = { subscribers: new Set(), errorSubscribers: new Set(), stop: null };
+    broker = { subscribers: new Set(), errorSubscribers: new Set(), endSubscribers: new Set(), stop: null };
     statsBrokers.set(serverId, broker);
-    statsStream(serverId, (sample) => {
-      for (const fn of broker.subscribers) fn(sample);
-    })
+    statsStream(
+      serverId,
+      (sample) => {
+        for (const fn of broker.subscribers) fn(sample);
+      },
+      {
+        // The upstream finished on its own (container stopped or restarted).
+        // Drop the broker so the next tab opens a fresh stream, and tell the
+        // tabs on this one so their sockets close and reconnect, instead of
+        // staying attached to a stream that will never send another sample.
+        onEnd: () => {
+          if (statsBrokers.get(serverId) === broker) statsBrokers.delete(serverId);
+          for (const fn of broker.endSubscribers) fn();
+        },
+      }
+    )
       .then((stopFn) => {
         if (statsBrokers.get(serverId) === broker) broker.stop = stopFn;
         else stopFn(); // every subscriber left before the stream finished connecting
@@ -300,9 +354,11 @@ function subscribeStats(serverId, onSample, onError) {
   }
   broker.subscribers.add(onSample);
   broker.errorSubscribers.add(onError);
+  broker.endSubscribers.add(onEnd);
   return () => {
     broker.subscribers.delete(onSample);
     broker.errorSubscribers.delete(onError);
+    broker.endSubscribers.delete(onEnd);
     if (broker.subscribers.size === 0 && statsBrokers.get(serverId) === broker) {
       statsBrokers.delete(serverId);
       if (broker.stop) broker.stop(); // else the .then() above stops it once connected
@@ -343,7 +399,14 @@ async function handleStats(ws, serverId) {
       );
     },
     (err) => {
-      if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ kind: 'error', message: err.message }));
+      if (ws.readyState !== ws.OPEN) return;
+      ws.send(JSON.stringify({ kind: 'error', message: err.message }));
+      // The broker is gone; a socket left open here would never get a sample.
+      ws.close(1011, 'stats stream unavailable');
+    },
+    () => {
+      // Upstream over: close so the page's reconnect/backoff opens a fresh stream.
+      if (ws.readyState === ws.OPEN) ws.close(1011, 'stats stream ended');
     }
   );
   if (closed) unsubscribe(); // client left synchronously before subscribing even returned
@@ -361,8 +424,15 @@ function originAllowed(req) {
   }
 }
 
-/** Authenticate a WS upgrade from the express-session cookie → {id, username, role} | null. */
-function sessionUser(req) {
+/** True while the session row behind a socket exists and has not expired (sign-out and credential changes delete it). */
+function sessionStillValid(sid) {
+  if (!sid) return false;
+  const row = db.get('SELECT expires_at FROM sessions WHERE sid = ?', sid);
+  return Boolean(row) && Date.parse(row.expires_at) >= Date.now();
+}
+
+/** Authenticate a WS upgrade from the express-session cookie → { sid, user: {id, username, role} } | null. */
+function sessionAuth(req) {
   try {
     const cookies = Object.fromEntries(
       (req.headers.cookie || '').split(';').map((c) => {
@@ -379,7 +449,8 @@ function sessionUser(req) {
     if (!row || Date.parse(row.expires_at) < Date.now()) return null;
     const data = JSON.parse(row.data_json);
     if (!data.userId) return null;
-    return require('../services/auth').getUser(data.userId);
+    const user = require('../services/auth').getUser(data.userId);
+    return user ? { sid, user } : null;
   } catch {
     return null;
   }

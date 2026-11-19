@@ -25,4 +25,23 @@ async function networkExists(name) {
   return nets.some((n) => n.name === name);
 }
 
-module.exports = { listNetworks, networkExists };
+/**
+ * Create a Docker bridge network if it does not already exist. Resolves true
+ * when this call created it, false when it already existed (or another create
+ * won a concurrent race, Docker's 409). Any other error propagates - a
+ * declared network that cannot be created must abort the create/recreate
+ * rather than silently dropping the container onto the default bridge.
+ */
+async function ensureNetwork(name) {
+  if (!name) return false;
+  if (await networkExists(name)) return false;
+  try {
+    await getDocker().createNetwork({ Name: name, Driver: 'bridge', CheckDuplicate: true });
+    return true;
+  } catch (err) {
+    if (err.statusCode === 409) return false; // concurrent create won the race
+    throw err;
+  }
+}
+
+module.exports = { listNetworks, networkExists, ensureNetwork, HIDDEN_NETWORKS };

@@ -37,13 +37,13 @@ function assertName(name) {
   if (!PLAYER_NAME_RE.test(String(name)))
     throw httpError(
       400,
-      'Invalid player name (letters, digits and _ only, max 16 characters - a leading . or * for Bedrock players is fine)'
+      'Invalid player name (letters, digits and _ only, max 16 characters. A leading . or * for Bedrock players is fine).'
     );
   return String(name);
 }
 
 function assertIp(ip) {
-  if (!IP_RE.test(String(ip))) throw httpError(400, 'Invalid IP address');
+  if (!IP_RE.test(String(ip))) throw httpError(400, 'Invalid IP address.');
   return String(ip);
 }
 
@@ -122,7 +122,7 @@ async function rconT(serverId, timeoutMs, ...args) {
 const TP_TIMEOUT_MS = 45000;
 
 function assertRunning(running, what) {
-  if (!running) throw httpError(409, `Server must be running to ${what}`);
+  if (!running) throw httpError(409, `Server must be running to ${what}.`);
 }
 
 /**
@@ -206,7 +206,7 @@ async function resolveIdentity(serverId, name) {
       `Could not look up "${name}". The player has never joined this server, and the Mojang API is unreachable. Try again when you are online.`
     );
   }
-  if (!profile || !profile.uuid) throw httpError(404, `No Minecraft account named "${name}" exists`);
+  if (!profile || !profile.uuid) throw httpError(404, `No Minecraft account named "${name}" exists.`);
   return profile;
 }
 
@@ -698,7 +698,7 @@ async function kickPlayer(serverId, name, message, { running = false, actor = 's
   assertRunning(running, 'kick a player');
   message = cleanText(message, 'Kicked by an operator.');
   const out = await rcon(serverId, 'kick', name, message);
-  if (/No player was found/i.test(out)) throw httpError(404, `${name} is not online`);
+  if (/No player was found/i.test(out)) throw httpError(404, `${name} is not online.`);
   recordEvent({
     serverId,
     actor,
@@ -733,7 +733,7 @@ function assertTpOutput(out, player) {
     throw httpError(404, `${player} is not online. Teleport needs a player who is currently connected.`);
   }
   if (/Unknown or incomplete command|Incorrect argument/i.test(out)) {
-    throw httpError(400, `Teleport command rejected by the server: ${out}`);
+    throw httpError(400, 'The server rejected the teleport command. Check the console for details.');
   }
 }
 
@@ -1010,7 +1010,7 @@ async function tpToStructure(
 ) {
   assertName(player);
   assertRunning(running, 'teleport a player');
-  if (!/^#?[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(structureRef))) throw httpError(400, 'Invalid structure id');
+  if (!/^#?[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(structureRef))) throw httpError(400, 'Invalid structure id.');
 
   // Search in the structure's HOME dimension - a Village is Overworld even if you
   // ask from the End. Search near the player when they're already there, else from
@@ -1218,7 +1218,7 @@ async function tpToCoords(
   assertRunning(running, 'teleport a player');
   const hasY = y !== undefined && y !== null && String(y).trim() !== '';
   for (const v of hasY ? [x, y, z] : [x, z]) {
-    if (!Number.isFinite(Number(v))) throw httpError(400, 'Coordinates must be numbers');
+    if (!Number.isFinite(Number(v))) throw httpError(400, 'Coordinates must be numbers.');
   }
   if (dimension && !DIMENSIONS.has(dimension)) throw httpError(400, 'Unknown dimension');
 
@@ -1276,7 +1276,7 @@ async function tpToPlayer(serverId, player, target, { running = false, actor = '
 async function tpToBiome(serverId, player, biomeId, { running = false, actor = 'system' } = {}) {
   assertName(player);
   assertRunning(running, 'teleport a player');
-  if (!/^[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(biomeId))) throw httpError(400, 'Invalid biome id');
+  if (!/^[a-z0-9_.-]+:[a-z0-9_/.-]+$/.test(String(biomeId))) throw httpError(400, 'Invalid biome id.');
 
   // Cross-dimension biomes must be located IN their home dimension - running
   // `locate biome minecraft:the_end` from the Overworld fails (sometimes with

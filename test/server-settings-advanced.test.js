@@ -116,7 +116,7 @@ test('the overview explains a heap given up front and marks it on the memory met
   let page = await app.req('GET', '/servers/srv_adv01', { cookie, headers: { Accept: 'text/html' } });
   assert.equal(page.status, 200);
   assert.match(page.text, /whole 1024 MB heap up front/);
-  assert.match(page.text, /class="meter-mark"/);
+  assert.match(page.text, /class="meter-mark\b/);
   await app.req('PATCH', '/api/servers/srv_adv01', { cookie, body: { env: { INIT_MEMORY: '512' } } });
   page = await app.req('GET', '/servers/srv_adv01', { cookie, headers: { Accept: 'text/html' } });
   assert.match(page.text, /starts with 512 MB and grows toward its 1024 MB heap/);

@@ -155,11 +155,36 @@ async function attach(serverId, containerId = null) {
   }
 
   try {
-    entry.stopStats = await statsStream(serverId, (sample) => {
-      entry.stats = { ...sample, at: Date.now() };
-    });
+    entry.stopStats = await statsStream(
+      serverId,
+      (sample) => {
+        entry.stats = { ...sample, at: Date.now() };
+      },
+      {
+        // Docker closed the stream (the container restarted in place, which
+        // keeps its id, or went away). Drop the entry so the next sync()
+        // re-attaches a live stream, instead of serving the last sample forever.
+        onEnd: () => {
+          if (entries.get(serverId) === entry) detach(serverId);
+        },
+      }
+    );
   } catch {
     /* stats unavailable - cache stays null */
+  }
+
+  // detach() may have run while the awaits above were in flight (the server
+  // stopped, or a recreate swapped the container). This entry is orphaned: stop
+  // its stream and do not start timers nobody will ever clear.
+  if (entries.get(serverId) !== entry) {
+    if (entry.stopStats) {
+      try {
+        entry.stopStats();
+      } catch {
+        /* closed */
+      }
+    }
+    return;
   }
 
   let playersInFlight = false;

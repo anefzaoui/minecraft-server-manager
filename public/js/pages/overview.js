@@ -23,8 +23,14 @@ function init(card) {
 
   let ws = null;
   let delay = 5000;
+  let retryTimer = null;
   function connect() {
+    clearTimeout(retryTimer);
+    retryTimer = null;
     if (document.hidden) return;
+    // Never two sockets at once: a reconnect timer still pending when the tab
+    // comes back into view would otherwise open a second, orphaned one.
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}/ws/stats/${serverId}`);
     ws.addEventListener('open', () => {
@@ -50,7 +56,7 @@ function init(card) {
     });
     ws.addEventListener('close', () => {
       if (document.hidden) return;
-      setTimeout(connect, delay);
+      retryTimer = setTimeout(connect, delay);
       delay = Math.min(delay * 2, 30000);
     });
   }

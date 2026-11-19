@@ -6,7 +6,7 @@ module.exports = [
   {
     key: 'USE_AIKAR_FLAGS',
     scope: 'env',
-    label: 'Aikar’s optimization flags',
+    label: 'Aikar’s Optimization Flags',
     help: 'Battle-tested Java garbage-collection tuning that reduces lag spikes on busy servers. Recommended for most servers with 4 GB of RAM or more. Reserves the whole heap the moment the server starts, so memory reads as the full "RAM (Java heap)" value immediately (it would reach that figure within a minute anyway).',
     type: 'boolean',
     default: false,
@@ -19,7 +19,7 @@ module.exports = [
   {
     key: 'USE_MEOWICE_FLAGS',
     scope: 'env',
-    label: 'MeowIce’s flags (Java 17+)',
+    label: 'MeowIce’s Flags (Java 17+)',
     help: 'A newer alternative to Aikar’s flags tuned for modern Java versions. Pick either this or Aikar’s flags, not both. Like Aikar’s, it reserves the whole heap the moment the server starts.',
     type: 'boolean',
     default: false,
@@ -63,7 +63,7 @@ module.exports = [
     key: 'ENABLE_JMX',
     scope: 'env',
     prop: 'enable-jmx-monitoring',
-    label: 'JMX monitoring',
+    label: 'JMX Monitoring',
     help: 'Opens a JMX port for attaching Java profilers like VisualVM from another machine. Requires JMX_HOST to be set to the Docker host’s IP.',
     type: 'boolean',
     default: false,

@@ -13,6 +13,9 @@ const { captureError, closeSentry } = require('./instrument');
 const { serializeError } = require('./utils/logSanitize');
 const { makeFailureThrottle } = require('./logger');
 
+// How often boot re-checks a Docker daemon that was not reachable yet.
+const DOCKER_RETRY_MS = 15_000;
+
 function bailOut(code = 1) {
   closeSentry().finally(() => process.exit(code));
 }
@@ -286,12 +289,18 @@ function startBackgroundServices(httpServer) {
   // when the daemon is down (setup wizard handles that state).
   (async () => {
     const { checkDocker } = require('./docker/connect');
-    const status = await checkDocker();
+    let status = await checkDocker();
     if (!status.available) {
       logger.warn('Docker is not reachable. Server start, stop, and create stay disabled until it comes up.', {
         reason: status.error,
       });
-      return;
+      // Keep checking: a panel that boots before the Docker daemon (host
+      // reboot, service ordering) must pick it up once it is ready, not stay
+      // without the watcher, status reconcile and live data until restarted.
+      while (!status.available) {
+        await new Promise((resolve) => setTimeout(resolve, DOCKER_RETRY_MS).unref());
+        status = await checkDocker();
+      }
     }
     logger.info('Connected to Docker.', { os: status.os, version: status.version });
     const { startWatcher } = require('./docker/watcher');
@@ -330,7 +339,7 @@ function startBackgroundServices(httpServer) {
       // enforces - otherwise every panel restart gives a crash-looping server
       // one more free attempt.
       if (crashRecover && !autoStart && inCrashLoopBackoff(s.id)) {
-        logger.warn('Did not auto-restart a server on boot: it is in crash-loop backoff.', { serverId: s.id });
+        logger.warn('Did not auto-restart a server on boot because it is in crash-loop backoff.', { serverId: s.id });
         continue;
       }
       serversService

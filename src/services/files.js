@@ -7,6 +7,8 @@
 // escape ./data, and server-scoped calls can't escape their server dir.
 
 const httpError = require('../utils/httpError');
+const { sumFileSizes } = require('../utils/statSizes');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
@@ -48,7 +50,7 @@ function guardProtected(serverId, rel) {
     // Applies to read/download AND write - the DB holds password hashes and the
     // at-rest secret cipher, and .session-secret is that cipher's key, so neither
     // must ever leave (or change) via the file manager.
-    throw httpError(403, 'That panel file is not accessible from the file manager');
+    throw httpError(403, 'That panel file is not accessible from the file manager.');
   }
 }
 
@@ -56,10 +58,19 @@ function guardProtected(serverId, rel) {
 async function list(serverId, relPath = '') {
   const { abs, rel } = resolvePath(serverId, relPath);
   const st = await fsp.stat(abs).catch(() => null);
-  if (!st) throw httpError(404, 'Folder not found');
-  if (!st.isDirectory()) throw httpError(400, 'Not a folder');
+  if (!st) throw httpError(404, 'Folder not found.');
+  if (!st.isDirectory()) throw httpError(400, 'Not a folder.');
 
   const dirents = await fsp.readdir(abs, { withFileTypes: true });
+  // Batch the indexer lookups: one SELECT for every subdirectory, not a sizeOf()
+  // query per entry (opening a world folder with many dimension trees used to
+  // fan out a query per dir on every listing). mtime still needs a stat per dir.
+  const dirSizes = indexer.sizeOfMany(
+    dirents
+      .filter((e) => e.isDirectory())
+      .filter((e) => !(!serverId && isProtectedGlobal(rel ? `${rel}/${e.name}` : e.name)))
+      .map((e) => path.relative(config.dataDir, path.join(abs, e.name)).split(path.sep).join('/'))
+  );
   const entries = [];
   for (const e of dirents) {
     // Never surface panel-internal files (DB, session secret) in the global manager.
@@ -76,7 +87,7 @@ async function list(serverId, relPath = '') {
         // world used to stat tens of thousands of files. Deep/not-yet-indexed
         // dirs read 0 until the next scan; that's the instant-lookup trade-off.
         const dataRel = path.relative(config.dataDir, childAbs).split(path.sep).join('/');
-        size = indexer.sizeOf(dataRel);
+        size = dirSizes.get(dataRel) || 0;
         mtimeMs = (await fsp.stat(childAbs)).mtimeMs;
       } else {
         const cst = await fsp.stat(childAbs);
@@ -104,16 +115,16 @@ async function readText(serverId, relPath) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
   const st = await fsp.stat(abs).catch(() => null);
-  if (!st || !st.isFile()) throw httpError(404, 'File not found');
+  if (!st || !st.isFile()) throw httpError(404, 'File not found.');
   if (st.size > MAX_TEXT_BYTES) {
     throw httpError(
       413,
-      `File is too large for the editor (${humanBytes(st.size)} - limit is ${MAX_TEXT_MB_LABEL}). Download it instead.`
+      `File is too large for the editor (${humanBytes(st.size)}, limit ${MAX_TEXT_MB_LABEL}). Download it instead.`
     );
   }
   const buf = await fsp.readFile(abs);
   if (buf.subarray(0, 8192).includes(0)) {
-    throw httpError(415, 'This looks like a binary file - download it instead of editing');
+    throw httpError(415, 'This looks like a binary file. Download it instead of editing.');
   }
   return { content: buf.toString('utf8'), size: st.size };
 }
@@ -122,16 +133,16 @@ async function readText(serverId, relPath) {
 async function writeText(serverId, relPath, content, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
-  if (!rel) throw httpError(400, 'Cannot write the root');
+  if (!rel) throw httpError(400, 'Cannot write the root.');
   const bytes = Buffer.byteLength(content, 'utf8');
-  if (bytes > MAX_TEXT_BYTES) throw httpError(413, `Content exceeds the ${MAX_TEXT_MB_LABEL} editor limit`);
+  if (bytes > MAX_TEXT_BYTES) throw httpError(413, `Content exceeds the ${MAX_TEXT_MB_LABEL} editor limit.`);
   assertRoom(serverId, bytes);
 
   const parent = path.dirname(abs);
   const pst = await fsp.stat(parent).catch(() => null);
-  if (!pst || !pst.isDirectory()) throw httpError(404, 'Parent folder not found');
+  if (!pst || !pst.isDirectory()) throw httpError(404, 'Parent folder not found.');
   const existing = await fsp.stat(abs).catch(() => null);
-  if (existing && existing.isDirectory()) throw httpError(400, 'That path is a folder');
+  if (existing && existing.isDirectory()) throw httpError(400, 'That path is a folder.');
 
   // server.properties is the one file whose values the itzg image re-asserts
   // from env on every start. Route those writes through the server.properties
@@ -155,9 +166,17 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
     return { path: rel, size: bytes, rebuildNeeded: result.rebuildNeeded, unlocked: result.unlocked };
   }
 
-  const tmp = path.join(parent, `.msm-write-${Date.now()}.tmp`);
-  await fsp.writeFile(tmp, content, 'utf8');
-  await fsp.rename(tmp, abs);
+  // Random suffix: two saves in the same millisecond (two tabs, a double
+  // click) must not share one temp file. Clean it up if the write or the
+  // rename fails, or it lingers in the user's folder.
+  const tmp = path.join(parent, `.msm-write-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.tmp`);
+  try {
+    await fsp.writeFile(tmp, content, 'utf8');
+    await fsp.rename(tmp, abs);
+  } catch (err) {
+    await fsp.rm(tmp, { force: true }).catch(() => {});
+    throw err;
+  }
 
   recordEvent({
     serverId: serverId || null,
@@ -171,8 +190,9 @@ async function writeText(serverId, relPath, content, { actor = 'system' } = {}) 
 
 async function mkdir(serverId, relPath, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
-  if (!rel) throw httpError(400, 'Folder name cannot be empty');
-  if (fs.existsSync(abs)) throw httpError(409, 'That name already exists');
+  if (!rel) throw httpError(400, 'Folder name cannot be empty.');
+  guardProtected(serverId, rel);
+  if (fs.existsSync(abs)) throw httpError(409, 'That name already exists.');
   await fsp.mkdir(abs, { recursive: true });
   recordEvent({
     serverId: serverId || null,
@@ -188,14 +208,16 @@ async function mkdir(serverId, relPath, { actor = 'system' } = {}) {
 async function rename(serverId, relPath, newName, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
-  if (!rel) throw httpError(400, 'Cannot rename the root');
+  if (!rel) throw httpError(400, 'Cannot rename the root.');
   const clean = sanitizeName(newName);
   if (!fs.existsSync(abs)) throw httpError(404, 'Not found');
   const target = path.join(path.dirname(abs), clean);
-  // Re-check containment (sanitizeName guarantees it, but stay paranoid).
-  resolvePath(serverId, path.posix.join(path.posix.dirname(rel), clean));
+  // Re-check containment (sanitizeName guarantees it, but stay paranoid), and
+  // refuse to rename anything ONTO a protected panel file name either.
+  const targetRel = resolvePath(serverId, path.posix.join(path.posix.dirname(rel), clean)).rel;
+  guardProtected(serverId, targetRel);
   if (fs.existsSync(target) && path.resolve(target) !== path.resolve(abs)) {
-    throw httpError(409, `"${clean}" already exists here`);
+    throw httpError(409, `"${clean}" already exists here.`);
   }
   await fsp.rename(abs, target);
   recordEvent({
@@ -212,15 +234,16 @@ async function rename(serverId, relPath, newName, { actor = 'system' } = {}) {
 async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
-  if (!rel) throw httpError(400, 'Cannot move the root');
+  if (!rel) throw httpError(400, 'Cannot move the root.');
   const dest = resolvePath(serverId, destRel);
   const dst = await fsp.stat(dest.abs).catch(() => null);
   if (!fs.existsSync(abs)) throw httpError(404, 'Not found');
-  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found');
-  if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot move a folder into itself');
+  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found.');
+  if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot move a folder into itself.');
 
   const target = path.join(dest.abs, path.basename(abs));
-  if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination`);
+  guardProtected(serverId, dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs));
+  if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination.`);
   await moveEntry(abs, target);
   const toRel = dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs);
   recordEvent({
@@ -236,20 +259,24 @@ async function move(serverId, relPath, destRel, { actor = 'system' } = {}) {
 /** Copy into a destination directory (recursive; quota-checked). */
 async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
-  if (!rel) throw httpError(400, 'Cannot copy the root');
+  // Without this a copy of panel.db (or .session-secret) into any folder could
+  // then be downloaded from there, which is exactly what the guard forbids.
+  guardProtected(serverId, rel);
+  if (!rel) throw httpError(400, 'Cannot copy the root.');
   const dest = resolvePath(serverId, destRel);
   const st = await fsp.stat(abs).catch(() => null);
   const dst = await fsp.stat(dest.abs).catch(() => null);
   if (!st) throw httpError(404, 'Not found');
-  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found');
-  if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot copy a folder into itself');
+  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found.');
+  if ((dest.abs + path.sep).startsWith(abs + path.sep)) throw httpError(400, 'Cannot copy a folder into itself.');
 
   const bytes = st.isDirectory() ? await dirSize(abs) : st.size;
   assertRoom(serverId, bytes);
   await assertDiskFree(bytes);
 
   const target = path.join(dest.abs, path.basename(abs));
-  if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination`);
+  guardProtected(serverId, dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs));
+  if (fs.existsSync(target)) throw httpError(409, `"${path.basename(abs)}" already exists in the destination.`);
   await fsp.cp(abs, target, { recursive: true });
   const toRel = dest.rel ? `${dest.rel}/${path.basename(abs)}` : path.basename(abs);
   recordEvent({
@@ -267,7 +294,7 @@ async function copy(serverId, relPath, destRel, { actor = 'system' } = {}) {
 async function remove(serverId, relPath, { actor = 'system' } = {}) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel);
-  if (!rel) throw httpError(400, 'Cannot delete the root folder');
+  if (!rel) throw httpError(400, 'Cannot delete the root folder.');
   const st = await fsp.stat(abs).catch(() => null);
   if (!st) throw httpError(404, 'Not found');
   const freedBytes = st.isDirectory() ? await dirSize(abs) : st.size;
@@ -287,8 +314,12 @@ async function remove(serverId, relPath, { actor = 'system' } = {}) {
 async function acceptUpload(serverId, destRel, tmpAbs, originalName, { actor = 'system' } = {}) {
   const dest = resolvePath(serverId, destRel);
   const dst = await fsp.stat(dest.abs).catch(() => null);
-  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found');
+  if (!dst || !dst.isDirectory()) throw httpError(400, 'Destination folder not found.');
   const filename = sanitizeName(originalName || 'upload.bin');
+  // An upload lands with rename(), which overwrites: one named panel.db-wal or
+  // .session-secret at the data root would corrupt the database or replace the
+  // secrets key.
+  guardProtected(serverId, dest.rel ? `${dest.rel}/${filename}` : filename);
   const size = (await fsp.stat(tmpAbs)).size;
   assertRoom(serverId, size);
 
@@ -311,7 +342,7 @@ async function statFile(serverId, relPath) {
   const { abs, rel } = resolvePath(serverId, relPath);
   guardProtected(serverId, rel); // no downloading panel.db either
   const st = await fsp.stat(abs).catch(() => null);
-  if (!st || !st.isFile()) throw httpError(404, 'File not found');
+  if (!st || !st.isFile()) throw httpError(404, 'File not found.');
   return { abs, rel, size: st.size, name: path.basename(abs) };
 }
 
@@ -325,7 +356,7 @@ function assertRoom(serverId, aboutToAddBytes) {
 
 async function assertDiskFree(bytes) {
   const { free } = await indexer.diskFree().catch(() => ({ free: Infinity }));
-  if (free < bytes * 1.1) throw httpError(507, `Not enough disk space (~${humanBytes(bytes)} needed)`);
+  if (free < bytes * 1.1) throw httpError(507, `Not enough disk space (~${humanBytes(bytes)} needed).`);
 }
 
 async function dirSize(abs) {
@@ -336,19 +367,14 @@ async function dirSize(abs) {
   } catch {
     return 0;
   }
+  const files = [];
   for (const e of entries) {
     const child = path.join(abs, e.name);
     if (e.isSymbolicLink()) continue;
     if (e.isDirectory()) total += await dirSize(child);
-    else if (e.isFile()) {
-      try {
-        total += (await fsp.stat(child)).size;
-      } catch {
-        /* transient */
-      }
-    }
+    else if (e.isFile()) files.push(child);
   }
-  return total;
+  return total + (await sumFileSizes(files));
 }
 
 async function moveEntry(from, to) {
@@ -396,7 +422,7 @@ async function searchFiles(serverId, query, { caseSensitive = false, subdir = ''
   if (needle.length > 200) throw httpError(400, 'Search text is too long.');
   const { abs: rootAbs, rel: rootRel } = resolvePath(serverId, subdir);
   const rootStat = await fsp.stat(rootAbs).catch(() => null);
-  if (!rootStat || !rootStat.isDirectory()) throw httpError(404, 'Folder not found');
+  if (!rootStat || !rootStat.isDirectory()) throw httpError(404, 'Folder not found.');
 
   const hay = caseSensitive ? null : needle.toLowerCase();
   const matches = [];

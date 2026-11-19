@@ -65,7 +65,7 @@ test('uploadLog posts form-encoded content and returns the paste', async () => {
   assert.equal(fetchLog[0].method, 'POST');
   await assert.rejects(mclogs.uploadLog('   '), /Nothing to upload/);
   stubMclogs({ uploadOk: false });
-  await assert.rejects(mclogs.uploadLog('x'), /rejected the upload: too large/);
+  await assert.rejects(mclogs.uploadLog('x'), /rejected the upload\. Check that the log is valid and try again\./);
 });
 
 test('getInsights validates the paste id and maps the analysis', async () => {

@@ -27,7 +27,7 @@
           <span class="label">Icon</span>
           <div class="flex flex-wrap gap-1.5" id="st-icon-picker">
             {{#if (startsWith server.icon 'custom:')}}
-              <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="{{server.icon}}" data-tip="Current custom icon" aria-pressed="true"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" data-fallback-icon="/icons/servers/grass.svg"></button>
+              <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="{{server.icon}}" data-tip="Current custom icon." aria-pressed="true"><img src="{{iconSrc server.icon}}" alt="" class="size-full rounded-sm" data-fallback-icon="/icons/servers/grass.svg"></button>
             {{/if}}
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="grass" aria-pressed="{{eq server.icon 'grass'}}"><img src="/icons/servers/grass.svg" alt="Grass block" class="size-full rounded-sm"></button>
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="creeper" aria-pressed="{{eq server.icon 'creeper'}}"><img src="/icons/servers/creeper.svg" alt="Creeper" class="size-full rounded-sm"></button>
@@ -37,7 +37,7 @@
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="sword" aria-pressed="{{eq server.icon 'sword'}}"><img src="/icons/servers/sword.svg" alt="Sword" class="size-full rounded-sm"></button>
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="potion" aria-pressed="{{eq server.icon 'potion'}}"><img src="/icons/servers/potion.svg" alt="Potion" class="size-full rounded-sm"></button>
             <button class="swatch grid size-9 place-items-center p-1" style="background: {{server.accent}}" data-pick-icon="tnt" aria-pressed="{{eq server.icon 'tnt'}}"><img src="/icons/servers/tnt.svg" alt="TNT" class="size-full rounded-sm"></button>
-            <button class="grid size-9 place-items-center rounded-sm border border-dashed border-line-strong text-ink-faint transition hover:border-stone-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400" id="st-icon-upload" data-tip="Upload a custom icon (PNG/SVG)">{{{icon 'upload' 'size-4'}}}</button>
+            <button class="grid size-9 place-items-center rounded-sm border border-dashed border-line-strong text-ink-faint transition hover:border-stone-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-diamond-400" id="st-icon-upload" data-tip="Upload a custom icon (PNG/SVG).">{{{icon 'upload' 'size-4'}}}</button>
           </div>
         </div>
         <div>
@@ -66,11 +66,11 @@
       </div>
       <div class="space-y-2.5 border-t border-line pt-3">
         <label class="flex items-center justify-between gap-3 text-sm">
-          <span>Start on panel boot</span>
+          <span>Start on Panel Boot</span>
           <span class="msm-toggle"><input type="checkbox" id="st-autostart" {{#if server.autoStart}}checked{{/if}}><span></span></span>
         </label>
         <label class="flex items-center justify-between gap-3 text-sm">
-          <span>Auto-restart on crash <span class="block text-xs text-ink-faint">Waits longer between each try, and gives up after 3 rapid crashes.</span></span>
+          <span>Auto-restart on Crash <span class="block text-xs text-ink-faint">Waits longer between each try, and gives up after 3 rapid crashes.</span></span>
           <span class="msm-toggle"><input type="checkbox" id="st-autorestart" {{#if server.autoRestart}}checked{{/if}}><span></span></span>
         </label>
       </div>
@@ -165,7 +165,7 @@
       <div class="space-y-2 text-sm">
         <label class="flex items-center gap-2.5"><input type="radio" name="up" value="manual" class="msm-radio" {{#if (eq server.updatePolicy 'manual')}}checked{{/if}}> Manual Only <span class="text-xs text-ink-faint">(never changes anything, and no update badges for this server)</span></label>
         <label class="flex items-center gap-2.5"><input type="radio" name="up" value="notify" class="msm-radio" {{#if (eq server.updatePolicy 'notify')}}checked{{/if}}> Notify Me <span class="text-xs text-ink-faint">(show a badge when updates exist; you apply them)</span></label>
-        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure, but never across Minecraft versions)</span></label>
+        <label class="flex items-center gap-2.5"><input type="radio" name="up" value="auto" class="msm-radio" {{#if (eq server.updatePolicy 'auto')}}checked{{/if}}> Auto-Update <span class="text-xs text-ink-faint">(applies pack updates after the daily check: pre-update backup, health check, automatic rollback on failure, but never across Minecraft versions.)</span></label>
       </div>
     </div>
 
@@ -182,9 +182,8 @@
           </div>
           <div>
             <label class="label" for="st-docker-network">Docker network</label>
-            <select class="input" id="st-docker-network" data-label="Docker network">
-              <option value="">Default (bridge)</option>
-            </select>
+            <input class="input font-mono" id="st-docker-network" list="st-docker-networks" placeholder="Default (bridge)" autocomplete="off">
+            <datalist id="st-docker-networks"></datalist>
           </div>
         </div>
 
@@ -216,10 +215,10 @@
 
     <div class="card p-4">
       <h3 class="mb-3 font-semibold">Blueprint &amp; Maintenance</h3>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
         <button class="btn" id="st-export-bp">{{{icon 'drafting-compass' 'size-4'}}} Export as Blueprint</button>
         <button class="btn" id="st-clone">{{{icon 'copy' 'size-4'}}} Clone Server</button>
-        <button class="btn{{#unless perms.power}} hidden{{/unless}}" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending settings and resource changes">{{{icon 'wrench' 'size-4'}}} Rebuild Container</button>
+        <button class="btn{{#unless perms.power}} hidden{{/unless}}" data-server-action="recreate" data-server-id="{{server.id}}" data-server-name="{{server.name}}" data-tip="Applies pending settings and resource changes.">{{{icon 'wrench' 'size-4'}}} Rebuild Container</button>
       </div>
       {{! Destruction lives behind its own divider, never one accidental click
           from the safe maintenance actions above. }}

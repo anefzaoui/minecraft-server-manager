@@ -11,6 +11,7 @@ const { nanoid } = require('nanoid');
 const db = require('../db');
 const { recordEvent, lifecycleActionSince } = require('../events');
 const { getTimezone } = require('./settings');
+const tasks = require('./tasks');
 const logger = require('../logger')(path.basename(__filename));
 const { serializeError } = require('../utils/logSanitize');
 
@@ -24,6 +25,11 @@ const TASK_TYPES = {
   stop: { label: 'Stop server', serverScoped: true, capability: 'power' },
   start: { label: 'Start server', serverScoped: true, capability: 'power' },
   rcon: { label: 'Run command', serverScoped: true, capability: 'console' },
+  // Fleet tasks: act on every server, so they are admin-only (a per-server
+  // grant cannot cover "all"). Each server is handled on its own - one failure
+  // does not stop the rest - and any failure fails the run at the end.
+  'backup-all': { label: 'Back up all servers', serverScoped: false, adminOnly: true },
+  'restart-all': { label: 'Restart all running servers', serverScoped: false, adminOnly: true },
   'update-check': { label: 'Update check', serverScoped: false },
   'storage-scan': { label: 'Storage re-scan', serverScoped: false },
   'tmp-clean': { label: 'Clear temporary files', serverScoped: false },
@@ -52,8 +58,9 @@ const BUSY_MAX_WAIT_MS = 30 * 60_000;
 /**
  * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
  * @param {{ retryMs?: number, maxWaitMs?: number }} [opts]
+ * @param {any} [task] the tray task this run reports to, if it is shown there
  */
-async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}) {
+async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY_MAX_WAIT_MS } = {}, task = null) {
   const firedAt = Date.now();
   const giveUpAt = firedAt + maxWaitMs;
   let current = job; // re-read before each retry: the schedule may have been edited
@@ -66,7 +73,7 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY
   async function retryLoop() {
     for (let attempt = 0; ; attempt++) {
       try {
-        return await runTask(current);
+        return await runTask(current, task);
       } catch (err) {
         const busy = err && err.code === 'BUSY';
         if (!busy || !RETRY_WHEN_BUSY.has(current.task_type) || Date.now() + retryMs > giveUpAt) throw err;
@@ -79,6 +86,7 @@ async function runTaskWithRetry(job, { retryMs = BUSY_RETRY_MS, maxWaitMs = BUSY
         }
         waitingToRetry.add(job.id);
         marked = true;
+        if (task) task.step('Waiting for the server to finish another action…');
         await new Promise((resolve) => setTimeout(resolve, retryMs).unref());
         const still = db.get('SELECT * FROM schedules WHERE id = ?', job.id);
         if (!still || !still.enabled) return; // turned off or deleted while waiting
@@ -122,13 +130,13 @@ async function fireJob(job, retry) {
     serverId: job.server_id || undefined,
   });
   try {
-    await runTaskWithRetry(job, retry);
+    await runTracked(job, retry);
   } catch (err) {
     recordEvent({
       serverId: job.server_id || null,
       actor: 'scheduler',
       type: 'schedule-failed',
-      summary: `Scheduled ${job.task_type} failed: ${err.message}.`,
+      summary: `Scheduled ${job.task_type} failed: ${String(err.message || 'unknown error').replace(/[.!?]+$/, '')}.`,
     });
     logger.error('A scheduled task failed.', {
       scheduleId: job.id,
@@ -139,7 +147,64 @@ async function fireJob(job, retry) {
   }
 }
 
-async function runTask(schedule) {
+// Servers a fleet restart acts on. Mid-boot servers (starting, stalled) are left
+// alone: restarting one only restarts the boot it is already in.
+const FLEET_RESTART_STATUSES = new Set(['running', 'unhealthy']);
+
+/**
+ * Run `fn` for each server in turn (backups and restarts are heavy, so never in
+ * parallel), isolating failures. Throws once at the end naming how many failed.
+ * @param {string} verb  past-tense-free label for the error, e.g. "Backup"
+ * @param {Array<{id: string, display_name: string}>} list
+ * @param {(server: any) => Promise<void>} fn
+ * @param {{ step: (label: string) => void } | null} task
+ */
+async function forEachServer(verb, list, fn, task) {
+  const failed = [];
+  for (const server of list) {
+    if (task) task.step(`${verb} ${server.display_name}…`);
+    try {
+      await fn(server);
+    } catch (err) {
+      failed.push(server.display_name);
+      logger.warn('A fleet task failed for one server.', {
+        serverId: server.id,
+        verb,
+        err: serializeError(err, { includeStack: false }),
+      });
+    }
+  }
+  if (failed.length) {
+    throw new Error(`${verb} failed for ${failed.length} of ${list.length} servers: ${failed.join(', ')}.`);
+  }
+}
+
+async function backupAllServers({ actor, task, shrink = false }) {
+  const servers = require('./servers');
+  const backups = require('./backups');
+  await forEachServer(
+    'Backing up',
+    servers.listServers(),
+    async (server) => {
+      if (await backups.isScheduledBackupRedundant(server.id)) return; // stopped and already backed up
+      const backup = await backups.createBackup(server.id, { reason: 'scheduled', actor, task, shrinkAfter: shrink });
+      await backups.verifyBackup(backup.id, { actor, task });
+    },
+    task
+  );
+}
+
+async function restartRunningServers({ actor, task }) {
+  const servers = require('./servers');
+  await forEachServer(
+    'Restarting',
+    servers.listServers().filter((s) => FLEET_RESTART_STATUSES.has(s.status)),
+    (server) => servers.restartServer(server.id, { actor }),
+    task
+  );
+}
+
+async function runTask(schedule, task = null) {
   const payload = JSON.parse(schedule.payload_json || '{}');
   const actor = 'scheduler';
   const servers = require('./servers');
@@ -153,23 +218,44 @@ async function runTask(schedule) {
     case 'start':
       await servers.startServer(schedule.server_id, { actor });
       break;
-    case 'backup':
-      await require('./backups').createBackup(schedule.server_id, {
+    case 'backup': {
+      const backups = require('./backups');
+      if (await backups.isScheduledBackupRedundant(schedule.server_id)) {
+        logger.info('Skipped a scheduled backup because the server is stopped and already backed up.', {
+          serverId: schedule.server_id,
+        });
+        break;
+      }
+      const backup = await backups.createBackup(schedule.server_id, {
         reason: 'scheduled',
         actor,
+        task,
         // Opt-in per schedule: trim rarely-visited chunks after the archive is
         // written. Only runs when the server is stopped (see createBackupImpl).
         shrinkAfter: Boolean(payload.shrink),
       });
+      // Read the fresh archive back end to end. A damaged one throws, so the
+      // run is marked failed and the operator hears about it now, not at restore time.
+      await backups.verifyBackup(backup.id, { actor, task });
+      break;
+    }
+    case 'backup-all':
+      await backupAllServers({ actor, task, shrink: Boolean(payload.shrink) });
+      break;
+    case 'restart-all':
+      await restartRunningServers({ actor, task });
       break;
     case 'rcon': {
       const { execCapture } = require('../docker/containers');
       // '--' stops rcon-cli parsing command words that start with '-' as flags.
-      const out = await execCapture(schedule.server_id, [
-        'rcon-cli',
-        '--',
-        ...String(payload.command || 'list').split(/\s+/),
-      ]);
+      // Trim and drop a leading slash like the console does: " say hi" used to
+      // send an empty first word, and "/say hi" an unknown "/say" command.
+      const words = (
+        String(payload.command || '')
+          .trim()
+          .replace(/^\//, '') || 'list'
+      ).split(/\s+/);
+      const out = await execCapture(schedule.server_id, ['rcon-cli', '--', ...words]);
       recordEvent({
         serverId: schedule.server_id,
         actor,
@@ -180,13 +266,16 @@ async function runTask(schedule) {
       break;
     }
     case 'update-check':
+      if (task) task.step('Checking for updates…');
       await require('../updates/checker').checkAll({ actor });
+      if (task) task.step('Applying automatic updates…');
       // Only the scheduled daily check triggers auto-updates - the manual
       // "check now" buttons never apply anything (#24; the settings-page
       // policy label promises exactly this).
       await require('../updates/upgrade').runAutoUpgrades({ actor });
       break;
     case 'storage-scan':
+      if (task) task.step('Scanning storage…');
       await require('../storage/indexer').scan();
       await require('../storage/indexer').enforceStrictQuotas();
       break;
@@ -205,6 +294,32 @@ async function runTask(schedule) {
     default:
       throw new Error(`Unknown task type ${schedule.task_type}`);
   }
+}
+
+// Scheduled jobs a person would wonder about show in the top-bar task tray. The
+// once-a-minute housekeeping jobs (temp files, ban sweep, metadata backfill,
+// rcon) stay out of it so the tray does not flicker all day.
+const TRAY_VERBS = { restart: 'Restarting', stop: 'Stopping', start: 'Starting', backup: 'Backing up' };
+const TRAY_TITLES = {
+  'update-check': 'Checking for updates…',
+  'storage-scan': 'Scanning storage…',
+  'backup-all': 'Backing up all servers (scheduled)…',
+  'restart-all': 'Restarting all running servers (scheduled)…',
+};
+
+/**
+ * @param {{ id: string, task_type: string, server_id?: string | null, payload_json?: string }} job a schedules row
+ * @param {{ retryMs?: number, maxWaitMs?: number }} [retry]
+ */
+function runTracked(job, retry) {
+  const server = job.server_id ? db.get('SELECT display_name FROM servers WHERE id = ?', job.server_id) : null;
+  const verb = TRAY_VERBS[job.task_type];
+  const title = verb && server ? `${verb} ${server.display_name} (scheduled)…` : TRAY_TITLES[job.task_type];
+  if (!title) return runTaskWithRetry(job, retry);
+  // One tray entry covers every busy retry, so waiting does not flash a failure.
+  return tasks.track(title, { serverId: job.server_id || null, actor: 'scheduler' }, (task) =>
+    runTaskWithRetry(job, retry, task)
+  );
 }
 
 function schedule(job) {
@@ -330,7 +445,15 @@ function deleteSchedule(id, { actor = 'system' } = {}) {
 }
 
 function listSchedules() {
-  return db.all('SELECT * FROM schedules ORDER BY server_id IS NULL, server_id, task_type').map((s) => {
+  const rows = db.all('SELECT * FROM schedules ORDER BY server_id IS NULL, server_id, task_type');
+  const serverIds = [...new Set(rows.map((s) => s.server_id).filter(Boolean))];
+  const serverNames = new Map();
+  if (serverIds.length) {
+    const ph = serverIds.map(() => '?').join(',');
+    for (const r of db.all(`SELECT id, display_name FROM servers WHERE id IN (${ph})`, ...serverIds))
+      serverNames.set(r.id, r.display_name);
+  }
+  return rows.map((s) => {
     let next = null;
     let nextMs = null;
     try {
@@ -344,11 +467,13 @@ function listSchedules() {
     }
     // last_run_at is SQLite datetime('now') - UTC without a zone marker.
     const lastRunMs = s.last_run_at ? Date.parse(s.last_run_at.replace(' ', 'T') + 'Z') : null;
-    const server = s.server_id ? db.get('SELECT display_name FROM servers WHERE id = ?', s.server_id) : null;
+    const server = s.server_id ? (serverNames.get(s.server_id) ?? null) : null;
     return {
       id: s.id,
       serverId: s.server_id,
-      server: server ? server.display_name : '- global -',
+      // serverNames maps id -> display name. A schedule whose server row is gone
+      // shows its id, not "global", so it is not mistaken for a panel-wide one.
+      server: s.server_id ? (server ?? s.server_id) : '- global -',
       task: TASK_TYPES[s.task_type]?.label || s.task_type,
       taskType: s.task_type,
       cron: s.cron,
@@ -371,5 +496,6 @@ module.exports = {
   rearmAll,
   runTaskWithRetry,
   fireJob,
+  runTask,
   TASK_TYPES,
 };
