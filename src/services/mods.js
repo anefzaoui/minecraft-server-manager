@@ -789,7 +789,8 @@ async function installResolved(
 ) {
   const server = serversService.getServer(serverId);
   if (!server) throw httpError(404, 'Server not found');
-  const lib = await library.downloadToLibrary(downloadUrl, meta, { onProgress, actor });
+  const lib = await library.downloadToLibrary(downloadUrl, meta, { onProgress, actor, serverId });
+  // Post-download check with the real size: catches servers that omit content-length.
   indexer.assertUnderQuota(server, lib.size_bytes);
   const { filename } = await library.installToServer(lib.id, serverId, contentDir(server, kind));
 
@@ -1294,6 +1295,10 @@ async function installLocalContent(
   const targetKind = contentKindOf(server);
 
   const fromRegistry = identity && (identity.platform === 'modrinth' || identity.platform === 'curseforge');
+  // Quota check with the staged upload's real size BEFORE it is written into
+  // the shared library path - the post-check below stays as the accurate gate.
+  const uploadSize = (await fsp.stat(tmpPath).catch(() => null))?.size;
+  if (uploadSize) indexer.assertUnderQuota(server, uploadSize);
   const lib = await library.importFile(
     tmpPath,
     {

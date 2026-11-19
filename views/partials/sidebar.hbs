@@ -24,6 +24,10 @@
         {{{icon 'circle-arrow-up' 'size-4'}}} Updates
         {{#if updatesCount}}<span class="badge badge-warn ml-auto">{{updatesCount}}</span>{{/if}}
       </a>
+      <a class="nav-item {{#if (eq active 'health')}}active{{/if}}" href="/health">
+        {{{icon 'activity' 'size-4'}}} Health
+        {{#if healthCount}}<span class="badge badge-danger ml-auto">{{healthCount}}</span>{{/if}}
+      </a>
       <a class="nav-item {{#if (eq active 'backups')}}active{{/if}}" href="/backups">
         {{{icon 'archive' 'size-4'}}} Backups
       </a>

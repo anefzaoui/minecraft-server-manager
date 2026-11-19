@@ -7,12 +7,29 @@ const db = require('../db');
 
 /**
  * UX rule (user-mandated): LATEST/SNAPSHOT are never shown bare - always
- * resolve to "LATEST (26.2)" style using the cached Mojang manifest.
+ * resolve to "LATEST (26.2)" style using the cached Mojang manifest. The one
+ * deliberate exception is the plugin family (#53): Paper & forks ship per-MC
+ * builds that lag Mojang, so a LATEST pin there resolves to the newest
+ * Minecraft version the loader actually ships ("LATEST (26.2)" today), and
+ * SNAPSHOT is shown bare (Paper builds releases only - there is no honest
+ * snapshot number to resolve to). Do not "simplify" this back - a plugin
+ * server must never display a Mojang version its loader cannot build.
  */
-async function displayVersion(mcVersion) {
+async function displayVersion(server) {
+  const mcVersion = server.mc_version;
   if (mcVersion !== 'LATEST' && mcVersion !== 'SNAPSHOT') return mcVersion;
   try {
     const manifest = await getVersionManifest();
+    const pluginFamily = require('../services/mods').loaderOf(server) === 'paper';
+    if (pluginFamily) {
+      if (mcVersion === 'LATEST') {
+        const mc = await require('../services/loaderVersions').newestMcSupportedByServerType(server.type, {
+          channel: server.env.PAPER_CHANNEL || 'default',
+        });
+        return mc ? `LATEST (${mc})` : `LATEST (${manifest.latest.release})`;
+      }
+      return 'SNAPSHOT';
+    }
     const resolved = mcVersion === 'LATEST' ? manifest.latest.release : manifest.latest.snapshot;
     return `${mcVersion} (${resolved})`;
   } catch {
@@ -104,7 +121,7 @@ async function serverVM(s, { withLive = true, ctx = null } = {}) {
     type: s.type,
     flavor: flavorLabel(s.type),
     loader: require('../services/mods').loaderOf(s), // resolved loader (detects the pack's for modpacks)
-    mcVersion: await displayVersion(s.mc_version),
+    mcVersion: await displayVersion(s),
     javaTag: s.java_tag || 'auto',
     status: s.status,
     ports: {

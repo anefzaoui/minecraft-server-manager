@@ -21,6 +21,7 @@ const { fetchLogs } = require('../../docker/logs');
 const db = require('../../db');
 const { requireRole } = require('../middleware/auth');
 const permissions = require('../../services/permissions');
+const healthAlerts = require('../../services/healthAlerts');
 const { serverScope } = require('../middleware/serverAccess');
 const { PLAYER_NAME_RE, isBedrockName } = require('../../utils/playerName');
 const logger = require('../../logger')('pages');
@@ -154,6 +155,8 @@ router.use(
     res.locals.updatesCount = checker.countOutdated({
       serverIds: permissions.hidesAnyServer(req.user, res.locals.visibleServerIds) ? res.locals.visibleServerIds : null,
     });
+    // Undismissed health alerts (last 24h) for the sidebar badge.
+    res.locals.healthCount = healthAlerts.counts(req.user, res.locals.visibleServerIds).total;
     // Timezone + locale for client-side date formatting (window.MSM).
     res.locals.panelLocalization = require('../../services/settings').clientLocalization();
     next();
@@ -221,14 +224,7 @@ function buildCombinedOverview(servers) {
 // Dashboard "At a glance" panel: everything below is aggregated from the
 // server VMs already built above (memory, disk, status counts) plus cheap
 // event/SQLite lookups (24h health, update breakdown). No extra Docker calls.
-function buildDashboardOverview(servers) {
-  const countEvents = (types, since) =>
-    db.get(
-      `SELECT COUNT(*) AS n FROM events WHERE type IN (${types.map(() => '?').join(',')})` +
-        (since ? ` AND created_at >= datetime('now', ?)` : ''),
-      ...(since ? [...types, since] : types)
-    )?.n || 0;
-
+function buildDashboardOverview(servers, { user, visibleIds }) {
   const byStatus = {
     running: 0,
     starting: 0,
@@ -253,12 +249,8 @@ function buildDashboardOverview(servers) {
     playersMax += s.players.max || 0;
   }
 
-  const health = {
-    oom: countEvents(['oom'], '-1 day'),
-    autoRestarted: countEvents(['auto-restarted'], '-1 day'),
-    crashes: countEvents(['crashed'], '-1 day'),
-  };
-  const healthTotal = health.oom + health.autoRestarted + health.crashes;
+  // Per user: alerts they dismissed, or on servers they can't see, don't count.
+  const { total: healthTotal, ...health } = healthAlerts.counts(user, visibleIds);
 
   let updates = { all: 0, mods: 0, server: 0 };
   try {
@@ -342,7 +334,7 @@ async function renderServerList(req, res, next, { page }) {
         .filter((e) => !e.type.endsWith('-requested'))
         .slice(0, 6);
       context.activity = eventsVM(events);
-      context.overview = buildDashboardOverview(servers);
+      context.overview = buildDashboardOverview(servers, { user: req.user, visibleIds: res.locals.visibleServerIds });
     }
     res.render('dashboard', context);
   } catch (err) {
@@ -356,12 +348,20 @@ router.get('/servers', (req, res, next) => renderServerList(req, res, next, { pa
 router.get('/servers/new', async (req, res) => {
   let versions = [];
   let latestRelease = '';
+  let paperLatestRelease = null;
+  let purpurLatestRelease = null;
   try {
     const mojang = require('../../services/mojang');
     // Every channel - releases, snapshots, betas and alphas - so the picker can
     // offer the full history; the template groups them by type.
     versions = await mojang.listVersions({ includeAll: true, limit: 5000 });
     latestRelease = (await mojang.getVersionManifest()).latest.release;
+    // Flavor-aware wizard defaults (#53): Paper (and Purpur) ship per-MC
+    // builds that lag Mojang, so their tiles annotate "the latest version the
+    // loader actually supports" - null degrades to Mojang's newest below.
+    const loaderVersions = require('../../services/loaderVersions');
+    paperLatestRelease = await loaderVersions.newestMcSupportedByServerType('PAPER');
+    purpurLatestRelease = await loaderVersions.newestMcSupportedByServerType('PURPUR');
   } catch (err) {
     pageDegraded('wizard-mojang-versions', err); // offline - manual entry still works
   }
@@ -397,6 +397,8 @@ router.get('/servers/new', async (req, res) => {
     blueprints: require('../../blueprints').listBlueprintsFor(req.user),
     versions,
     latestRelease,
+    paperLatestRelease,
+    purpurLatestRelease,
     suggestedPort,
     advancedSections,
     curseforgeEnabled,
@@ -860,6 +862,11 @@ router.get('/blueprints', (req, res) => {
     active: 'blueprints',
     blueprints: require('../../blueprints').listBlueprintsFor(req.user),
   });
+});
+
+router.get('/health', (req, res) => {
+  const { counts, alerts } = healthAlerts.list(req.user, res.locals.visibleServerIds);
+  res.render('health', { title: 'Health', active: 'health', counts, alerts });
 });
 
 router.get('/updates', (req, res) => {

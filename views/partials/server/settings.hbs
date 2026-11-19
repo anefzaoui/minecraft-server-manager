@@ -182,9 +182,8 @@
           </div>
           <div>
             <label class="label" for="st-docker-network">Docker network</label>
-            <select class="input" id="st-docker-network" data-label="Docker network">
-              <option value="">Default (bridge)</option>
-            </select>
+            <input class="input font-mono" id="st-docker-network" list="st-docker-networks" placeholder="Default (bridge)" autocomplete="off">
+            <datalist id="st-docker-networks"></datalist>
           </div>
         </div>
 
