@@ -7,6 +7,7 @@ import { openModal } from '../lib/modal.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { withBusy } from '../lib/loading.js';
 import { PLAYER_NAME_RE } from '../lib/playerName.js';
+import { escapeHtml as esc } from '../lib/format.js';
 import { renderPlayerHead } from '../lib/playerHead.js';
 
 const root = document.querySelector('[data-players-root]');
@@ -842,7 +843,7 @@ function init(root) {
           (DIM_ORDER[a.dimension] ?? 9) - (DIM_ORDER[b.dimension] ?? 9) ||
           prettyBiome(a.id).localeCompare(prettyBiome(b.id))
       )
-      .map((e) => `<option value="${e.id}">${dimShort(e.dimension)} · ${prettyBiome(e.id)}</option>`)
+      .map((e) => `<option value="${esc(e.id)}">${esc(dimShort(e.dimension))} · ${esc(prettyBiome(e.id))}</option>`)
       .join('');
   }
 

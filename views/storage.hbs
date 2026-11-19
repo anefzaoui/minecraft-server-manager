@@ -68,8 +68,7 @@
       <div class="divide-y divide-line">
         {{#each storage.cleanup}}
           <div class="flex items-center gap-3 p-3 text-sm">
-            <span class="flex-1">{{action}}{{#if count}} <span class="text-xs text-ink-faint">({{count}} item{{#if (ne count 1)}}s{{/if}})</span>{{/if}}</span>
-            <span class="text-xs text-ok">frees {{bytes frees}}</span>
+            <span class="flex-1">{{action}}</span>
             <button class="btn btn-sm" data-cleanup-action="{{key}}" data-cleanup-label="{{action}}" {{#if days}}data-cleanup-days="{{days}}"{{/if}}>Preview…</button>
           </div>
         {{/each}}
@@ -97,26 +96,14 @@
   </div>
 </div>
 
-{{#if storage.largestFiles.length}}
 <div class="card mt-6">
   <div class="border-b border-line p-3 font-semibold">Largest Files</div>
   <div class="overflow-x-auto">
     <table class="table-base table-stack">
-      <tbody>
-        {{#each storage.largestFiles}}
-          <tr>
-            <td data-th="" class="break-all font-mono text-xs">{{path}}</td>
-            <td data-th="" class="text-ink-faint sm:w-24 sm:text-right">{{bytes size}}</td>
-            <td data-th="" class="sm:w-10 sm:text-right"><a class="btn btn-ghost btn-sm" href="{{link}}" data-tip="Open containing folder in the file manager">{{{icon 'folder-open' 'size-3.5'}}}</a></td>
-          </tr>
-        {{/each}}
+      <tbody id="largest-files-body">
+        <tr><td data-th="" class="p-6 text-center text-ink-faint">Finding the largest files…</td></tr>
       </tbody>
     </table>
   </div>
 </div>
-{{else}}
-<div class="mt-6">
-  {{> empty-state iconName='file-search' title='Nothing Indexed Yet' message='Run a re-scan from the Disk Usage card above to index the largest files in the panel data folder.'}}
-</div>
-{{/if}}
 <script type="module" src="/js/pages/storage.js"></script>

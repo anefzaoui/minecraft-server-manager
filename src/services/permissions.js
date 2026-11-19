@@ -171,6 +171,7 @@ const CAPABILITY_INFO = {
       'GET /api/backups/:backupId/download',
       'PATCH /api/backups/:backupId',
       'DELETE /api/backups/:backupId',
+      'POST /api/backups/:backupId/verify',
       'POST /api/schedules (backup)',
     ],
   },
@@ -209,6 +210,7 @@ const CAPABILITY_INFO = {
       'Advanced Docker overrides and the chatbot, which stay admin-only. Rebuilding the container after a change (Power).',
     reach: [
       'PATCH /api/servers/:id',
+      'POST /api/servers/:id/changes-preview',
       'PUT /api/servers/:id/console-label',
       'PUT /api/servers/:id/port',
       'GET /api/servers/:id/port/check',
@@ -345,11 +347,14 @@ function visibleServerIds(user) {
  * @template {{ id: string }} T
  * @param {{ id: string, role: string } | null | undefined} user
  * @param {T[]} rows
+ * @param {Set<string>} [visible] a `visibleServerIds(user)` result, if already
+ *   computed by the caller - most routes build it once for res.locals, and this
+ *   hot path should never query the same granted set twice per request.
  * @returns {T[]}
  */
-function filterVisible(user, rows) {
+function filterVisible(user, rows, visible) {
   if (user && user.role === 'admin') return rows;
-  const ids = visibleServerIds(user);
+  const ids = visible || visibleServerIds(user);
   return rows.filter((r) => ids.has(r.id));
 }
 

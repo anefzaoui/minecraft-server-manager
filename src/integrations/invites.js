@@ -78,7 +78,7 @@ async function inviteInfo(serverId) {
   const port = server.port_game;
   const candidates = localIPv4s().map((ip) => `${ip}:${port}`);
 
-  const mcVersion = await displayVersion(server.mc_version);
+  const mcVersion = await displayVersion(server);
   const flavor = flavorLabel(server.type);
   const whitelistEnforced = players.getWhitelistEnforced(serverId);
 
@@ -147,6 +147,19 @@ function splitOverlay(serverId) {
 /** Concrete MC version for the pack manifest (LATEST/SNAPSHOT resolved now). */
 async function resolvedMcVersion(server) {
   if (server.mc_version !== 'LATEST' && server.mc_version !== 'SNAPSHOT') return server.mc_version;
+  // A plugin-family LATEST pin is resolved to what the loader actually ships
+  // (#53) so the generated .mrpack's `minecraft` field is honest about what the
+  // server runs, not Mojang's newest. Registry down → the Mojang fallback.
+  if (server.mc_version === 'LATEST' && modsService.loaderOf(server) === 'paper') {
+    try {
+      const mc = await require('../services/loaderVersions').newestMcSupportedByServerType(server.type, {
+        channel: server.env.PAPER_CHANNEL || 'default',
+      });
+      if (mc) return mc;
+    } catch {
+      // no data at all - fall through to the Mojang fallback below
+    }
+  }
   try {
     const manifest = await getVersionManifest();
     return server.mc_version === 'LATEST' ? manifest.latest.release : manifest.latest.snapshot;

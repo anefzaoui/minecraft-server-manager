@@ -18,9 +18,14 @@ Docker daemon over its API (never by shelling out to the `docker` CLI).
   boot. Prepared statements are cached in `src/db/index.js` keyed on the SQL text.
 - **`ws`** carries the live console and stats streams. Both are **brokered**: one upstream
   `docker logs --follow` (or `docker stats`) per server, demuxed once and fanned out to every
-  connected tab, rather than one upstream per viewer. The console broker keeps a small replay
-  buffer for late-joining tabs and drops a subscriber whose socket falls too far behind rather than
-  stalling the shared stream.
+  connected tab, rather than one upstream per viewer. The console broker coalesces upstream chunks
+  for a few milliseconds so a boot burst reaches each tab as one frame, keeps a small replay buffer
+  that a late-joining tab receives as a single message, and drops a subscriber whose socket falls
+  too far behind rather than stalling the shared stream. The browser appends each message as one
+  batch, so a thousand-line backlog costs one layout, not a thousand.
+- **`compression`** gzips text responses (HTML, JS, CSS, JSON) ahead of the static handlers. Images
+  and archives are skipped by its type filter, and the `/map/` proxy is excluded because it streams
+  BlueMap's own responses through unchanged.
 - **dockerode** is the only way the app talks to Docker. The endpoint is auto-detected per platform
   (Windows named pipe vs. unix socket).
 - **All persistent state lives under one directory** (`$DATA_DIR`, default `./data`). Copying that
@@ -51,7 +56,10 @@ Dependencies flow in one direction:
   or render a view. Business logic does not belong here. Two routers are mounted in the **public
   zone**, before `requireAuth`: `routes/status.js` (opt-in per-server HTML status pages) and
   `routes/apiV1.js` (`/api/v1`, a read-only JSON API authenticated by an admin-minted Bearer token
-  from `services/apiTokens.js`, off unless enabled in Settings; see `docs/public-api.md`).
+  from `services/apiTokens.js`, off unless enabled in Settings; see `docs/public-api.md`). It
+  serves server status, per-server players and backup history, and a Prometheus `/metrics` scrape
+  target, all from the in-memory live cache and the database (never a Docker call per request).
+  Successful responses are cacheable for five seconds (`Cache-Control: private, max-age=5`).
 - **`services/`** - the heart of the app. Each service owns one domain and may depend on
   infrastructure and on other services.
 - **`docker/`** - dockerode wrappers: `connect` (endpoint detection + daemon health), `containers`
