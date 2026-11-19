@@ -20,6 +20,7 @@ const db = require('../../db');
 const permissions = require('../../services/permissions');
 const httpError = require('../../utils/httpError');
 const eventsService = require('../../events');
+const healthAlerts = require('../../services/healthAlerts');
 const { dataPath } = require('../../storage/pathGuard');
 const { checkDocker } = require('../../docker/connect');
 const { fetchLogs } = require('../../docker/logs');
@@ -439,6 +440,18 @@ router.put(
     res.json({ ok: true, changed, restarted, server: publicServer(server) });
   })
 );
+
+// Dashboard health alerts (crashes, out-of-memory stops, auto-restarts): each
+// user dismisses their own; the history events stay. See services/healthAlerts.js.
+router.post('/alerts/clear', (req, res) => {
+  res.json({ ok: true, cleared: healthAlerts.clearAll(req.user, permissions.visibleServerIds(req.user)) });
+});
+
+router.post('/alerts/:eventId/dismiss', (req, res) => {
+  const eventId = z.coerce.number().int().positive().parse(req.params.eventId);
+  healthAlerts.dismiss(req.user, permissions.visibleServerIds(req.user), eventId);
+  res.json({ ok: true });
+});
 
 // Port picking for new servers: the roles that can create one. Answers name
 // host ports in use, so viewers don't get them.
@@ -1473,6 +1486,16 @@ router.get(
     const abs = dataPath(backup.rel_path);
     if (!fs.existsSync(abs)) throw Object.assign(new Error('Backup archive is missing on disk'), { status: 404 });
     res.download(abs, backup.filename);
+  })
+);
+
+// Read-only dry-run restore: reads every entry and checks its CRC. Synchronous
+// (ponytail: move to tasks.run if verifying huge archives outlasts request timeouts).
+router.post(
+  '/backups/:backupId/verify',
+  requireCap('backups', { resolve: backupServerId }),
+  asyncHandler(async (req, res) => {
+    res.json(await backups.verifyBackup(req.params.backupId, { actor: req.user.username }));
   })
 );
 
