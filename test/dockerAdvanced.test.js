@@ -56,6 +56,22 @@ test('validateOverrides accepts an unset containerName/network (defaults)', asyn
   await assert.doesNotReject(() => dockerSpec.validateOverrides({}));
 });
 
+test('validateOverrides accepts a missing network name (it will be created on attach)', async () => {
+  // Previously this probed the host and rejected "does not exist". Now the
+  // check is format-only and createContainer creates bridge networks on demand,
+  // so a fresh name passes without any Docker call.
+  await assert.doesNotReject(() => dockerSpec.validateOverrides({ networkName: 'fresh-net' }));
+});
+
+test('validateOverrides rejects a malformed network name before any attach', async () => {
+  await assert.rejects(() => dockerSpec.validateOverrides({ networkName: '../bad' }), /is invalid/);
+});
+
+test('validateOverrides rejects the reserved pseudo-networks host and none', async () => {
+  await assert.rejects(() => dockerSpec.validateOverrides({ networkName: 'host' }), /reserved and cannot/);
+  await assert.rejects(() => dockerSpec.validateOverrides({ networkName: 'none' }), /reserved and cannot/);
+});
+
 test('validateOverrides reserves the msm- prefix (would let a name shadow another server’s container)', async () => {
   await assert.rejects(() => dockerSpec.validateOverrides({ containerName: 'msm-hijack' }), /reserved/);
   await assert.rejects(() => dockerSpec.validateOverrides({ containerName: 'MSM-hijack' }), /reserved/);

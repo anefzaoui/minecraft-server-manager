@@ -142,6 +142,17 @@ function createApp() {
 
   app.use(require('./middleware/securityHeaders').securityHeaders);
 
+  // Gzip/deflate text responses (HTML, JS, CSS, JSON). Already-compressed bodies
+  // (PNG icons, zip/jar downloads, backups) are skipped by the default
+  // compressible-type filter; the map proxy is skipped explicitly because it
+  // streams BlueMap's own (often pre-encoded) responses through unchanged.
+  const compression = require('compression');
+  app.use(
+    compression({
+      filter: (req, res) => (req.path.startsWith('/map/') ? false : compression.filter(req, res)),
+    })
+  );
+
   app.engine(
     'hbs',
     engine({

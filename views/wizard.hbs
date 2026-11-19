@@ -212,9 +212,9 @@
     <h3 class="mb-4 font-semibold">Server Type &amp; Version</h3>
     <p class="help mb-3">Vanilla and plugin servers. Want mods? Use the <b>From Mods</b> tab. That's where the mod loaders (Fabric, Forge, NeoForge, Quilt) live.</p>
     <div class="mb-4 grid grid-cols-3 gap-2" id="wz-flavors">
-      <button type="button" data-type="VANILLA" class="tile p-3" aria-pressed="true">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
-      <button type="button" data-type="PAPER" class="tile p-3" aria-pressed="false">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
-      <button type="button" data-type="PURPUR" class="tile p-3" aria-pressed="false">{{{icon 'gem' 'size-5'}}}<span class="text-xs font-semibold">Purpur</span></button>
+      <button type="button" data-type="VANILLA" data-mc-latest="{{latestRelease}}" class="tile p-3" aria-pressed="true">{{{icon 'box' 'size-5'}}}<span class="text-xs font-semibold">Vanilla</span></button>
+      <button type="button" data-type="PAPER" data-mc-latest="{{#if paperLatestRelease}}{{paperLatestRelease}}{{else}}{{latestRelease}}{{/if}}" class="tile p-3" aria-pressed="false">{{{icon 'scroll-text' 'size-5'}}}<span class="text-xs font-semibold">Paper</span></button>
+      <button type="button" data-type="PURPUR" data-mc-latest="{{#if purpurLatestRelease}}{{purpurLatestRelease}}{{else}}{{latestRelease}}{{/if}}" class="tile p-3" aria-pressed="false">{{{icon 'gem' 'size-5'}}}<span class="text-xs font-semibold">Purpur</span></button>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
@@ -338,10 +338,9 @@
           </div>
           <div>
             <label class="label" for="wz-docker-network">Docker network <span class="text-xs font-normal text-ink-faint">(optional)</span></label>
-            <select class="input" id="wz-docker-network" data-label="Docker network">
-              <option value="">Default (bridge)</option>
-            </select>
-            <p class="help">Attach to an existing network. Useful for a reverse proxy such as Pangolin or NGINX.</p>
+            <input class="input font-mono" id="wz-docker-network" list="wz-docker-networks" placeholder="Default (bridge)" autocomplete="off">
+            <datalist id="wz-docker-networks"></datalist>
+            <p class="help">Attach to an existing Docker network, or type a new name and the panel will create it for you. Leave blank for the default bridge.</p>
           </div>
         </div>
 
