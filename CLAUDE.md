@@ -37,6 +37,10 @@ pnpm run db:migrate     # apply src/db/migrations/* by hand
 `main` is protected; every change lands through a PR. The required `quality` status check is an
 aggregate of the `checks` (lint, format, typecheck, build), `tests`, and `docker-build` CI jobs.
 
+The gates aren't the whole check: run the change for real as the `verify` skill says
+(`.claude/skills/verify`), check what the diff touches against [`REVIEW.md`](REVIEW.md), and end
+every PR with `Verified:` and `Not verified:` lines.
+
 ## Architecture — layering flows one direction only
 
 ```
