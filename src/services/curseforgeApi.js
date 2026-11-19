@@ -215,7 +215,7 @@ async function resolveUrl(input, { kind } = {}) {
   const mod = /^\d+$/.test(slug)
     ? await getMod(Number(slug))
     : (await getModBySlug(slug, { classId })) || (await getModBySlug(slug, { classId: fallbackClassId }));
-  if (!mod) throw httpError(404, `CurseForge project "${slug}" not found`);
+  if (!mod) throw httpError(404, `CurseForge project "${slug}" not found.`);
   return { ...mod, fileId };
 }
 

@@ -22,7 +22,7 @@ const dockerOverridesSchema = {
         .regex(/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/),
     ])
     .optional(),
-  networkName: z.string().trim().max(128).optional(),
+  networkName: z.string().trim().max(63).optional(),
   extraPorts: z
     .array(
       z.object({

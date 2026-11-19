@@ -7,7 +7,7 @@ module.exports = [
   {
     key: 'ENABLE_AUTOPAUSE',
     scope: 'env',
-    label: 'Auto-pause when empty',
+    label: 'Auto-pause When Empty',
     help: 'Freezes the Java process after the server has been idle, and wakes it the moment someone tries to connect. Requires the tick watchdog to be disabled (Max tick time = -1) or the server may be killed on resume.',
     type: 'boolean',
     default: false,
@@ -106,7 +106,7 @@ module.exports = [
   {
     key: 'DEBUG_AUTOPAUSE',
     scope: 'env',
-    label: 'Auto-pause debug logging',
+    label: 'Auto-pause Debug Logging',
     help: 'Verbose logging of the auto-pause state machine, for troubleshooting why the server does or does not pause.',
     type: 'boolean',
     default: false,
@@ -130,7 +130,7 @@ module.exports = [
   {
     key: 'ENABLE_AUTOSTOP',
     scope: 'env',
-    label: 'Auto-stop when empty',
+    label: 'Auto-stop When Empty',
     help: 'Shuts the server down entirely (the container exits) after being idle. Unlike auto-pause, it does not wake automatically. You start it again from the panel. Do not combine it with auto-pause.',
     type: 'boolean',
     default: false,
@@ -182,7 +182,7 @@ module.exports = [
   {
     key: 'DEBUG_AUTOSTOP',
     scope: 'env',
-    label: 'Auto-stop debug logging',
+    label: 'Auto-stop Debug Logging',
     help: 'Verbose logging of the auto-stop state machine.',
     type: 'boolean',
     default: false,

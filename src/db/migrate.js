@@ -37,7 +37,12 @@ const LEGACY_MIGRATION_ALIASES = {
   '024_update_check_ignore': ['017_update_check_ignore'],
 };
 
-function migrate() {
+/**
+ * Apply every migration not yet recorded. `dir` exists so a test can point the
+ * runner at a throwaway folder instead of touching the real migrations.
+ * @param {{ dir?: string }} [opts]
+ */
+function migrate({ dir = MIGRATIONS_DIR } = {}) {
   db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
     version TEXT PRIMARY KEY,
     applied_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -45,7 +50,7 @@ function migrate() {
 
   const applied = new Set(db.all('SELECT version FROM schema_migrations').map((r) => r.version));
   const files = fs
-    .readdirSync(MIGRATIONS_DIR)
+    .readdirSync(dir)
     .filter((f) => /^\d{3}_.+\.js$/.test(f))
     .sort();
 
@@ -76,7 +81,7 @@ function migrate() {
       logger.info('Re-recorded a renumbered migration under its current filename.', { version, legacy });
       continue;
     }
-    const { up } = require(path.join(MIGRATIONS_DIR, file));
+    const { up } = require(path.join(dir, file));
     db.transaction(() => {
       up(db);
       db.run('INSERT INTO schema_migrations (version) VALUES (?)', version);

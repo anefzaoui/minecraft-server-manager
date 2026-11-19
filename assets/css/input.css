@@ -277,8 +277,11 @@
   :root[data-theme='light'] {
     color-scheme: light;
   }
+  html {
+    @apply overflow-x-clip;
+  }
   body {
-    @apply font-sans text-[0.9375rem] leading-relaxed;
+    @apply font-sans text-[0.9375rem] leading-relaxed overflow-x-clip;
   }
   h1,
   h2,

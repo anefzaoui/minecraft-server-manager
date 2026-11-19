@@ -4,6 +4,7 @@ require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { migrate } = require('../src/db/migrate');
 const db = require('../src/db');
@@ -44,19 +45,36 @@ test('a renumbered migration recorded under its legacy filename is aliased, not 
 });
 
 test('a duplicate migration number prefix is a loud boot failure, not a silent reorder', () => {
-  const dir = path.join(__dirname, '..', 'src', 'db', 'migrations');
-  const a = path.join(dir, '999_dup_guard_a.js');
-  const b = path.join(dir, '999_dup_guard_b.js');
-  fs.writeFileSync(a, 'exports.up = () => {};\n');
-  fs.writeFileSync(b, 'exports.up = () => {};\n');
+  // A throwaway folder, NOT src/db/migrations: test files run in parallel, and a
+  // stray 999_* file in the real folder breaks every other test that migrates or
+  // lists it while this one is running.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-migrations-'));
   try {
-    assert.throws(() => migrate(), /Duplicate migration number 999/);
+    fs.writeFileSync(path.join(dir, '999_dup_guard_a.js'), 'exports.up = () => {};\n');
+    fs.writeFileSync(path.join(dir, '999_dup_guard_b.js'), 'exports.up = () => {};\n');
+    assert.throws(() => migrate({ dir }), /Duplicate migration number 999/);
   } finally {
-    fs.rmSync(a, { force: true });
-    fs.rmSync(b, { force: true });
+    fs.rmSync(dir, { recursive: true, force: true });
   }
-  // The directory is clean again, so a normal run is still idempotent.
+  // The real folder was never touched, so a normal run is still idempotent.
   assert.equal(migrate(), 0);
+});
+
+test('a throwaway migrations folder is applied and recorded like the real one', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-migrations-'));
+  try {
+    fs.writeFileSync(
+      path.join(dir, '900_probe.js'),
+      "exports.up = (db) => db.exec('CREATE TABLE IF NOT EXISTS migrate_probe (id INTEGER)');\n"
+    );
+    assert.equal(migrate({ dir }), 1, 'the probe migration is applied');
+    assert.equal(migrate({ dir }), 0, 'and not applied twice');
+    assert.ok(db.get("SELECT 1 AS x FROM schema_migrations WHERE version = '900_probe'"));
+  } finally {
+    db.run("DELETE FROM schema_migrations WHERE version = '900_probe'");
+    db.exec('DROP TABLE IF EXISTS migrate_probe');
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('transaction() rolls back on throw', () => {
