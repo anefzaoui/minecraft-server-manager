@@ -43,6 +43,25 @@ function getDocker() {
   return client;
 }
 
+let podmanCache = null;
+/**
+ * Whether the daemon behind the socket is Podman. Queried once and cached.
+ * Under Podman + SELinux enforcing, sibling containers need `:Z`-labeled bind
+ * mounts (the panel's own container already runs with label=disable, but the
+ * servers it creates are separate containers subject to their own policy).
+ */
+async function isPodmanDaemon() {
+  if (podmanCache === null) {
+    try {
+      const v = await getDocker().version();
+      podmanCache = Array.isArray(v.Components) && v.Components.some((c) => /podman/i.test(c.Name || ''));
+    } catch {
+      podmanCache = false;
+    }
+  }
+  return podmanCache;
+}
+
 /**
  * Probe the daemon. Never throws - returns a status object the setup wizard
  * renders directly.
@@ -81,4 +100,4 @@ async function checkDocker() {
   return status;
 }
 
-module.exports = { getDocker, checkDocker };
+module.exports = { getDocker, checkDocker, isPodmanDaemon };

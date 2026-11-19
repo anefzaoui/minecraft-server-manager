@@ -5,7 +5,7 @@
 // labeled msm.id=<serverId> and named msm-<serverId>.
 
 const path = require('node:path');
-const { getDocker } = require('./connect');
+const { getDocker, isPodmanDaemon } = require('./connect');
 const { toHostPath } = require('./hostPath');
 const db = require('../db');
 
@@ -33,6 +33,9 @@ function containerName(serverId) {
  */
 async function createContainer(spec) {
   const docker = getDocker();
+  // Under Podman + SELinux enforcing, sibling containers need `:Z`-labeled bind
+  // mounts or the server process cannot write to the host data dir.
+  const bindLabel = (await isPodmanDaemon()) ? ':Z' : '';
   const exposed = {
     [`${GAME_PORT}/tcp`]: {},
     [`${GAME_PORT}/udp`]: {}, // query protocol shares the game port
@@ -61,11 +64,11 @@ async function createContainer(spec) {
   // running them through toHostPath would reject anything outside DATA_DIR,
   // which is the entire point of this escape hatch.
   const extraBindStrings = (spec.extraBinds || []).map(
-    (b) => `${b.hostPath}:${b.containerPath}${b.mode === 'ro' ? ':ro' : ''}`
+    (b) => `${b.hostPath}:${b.containerPath}${b.mode === 'ro' ? ':ro' : ''}${bindLabel}`
   );
 
   const hostConfig = {
-    Binds: [`${toHostPath(spec.dataDir)}:/data`, ...extraBindStrings],
+    Binds: [`${toHostPath(spec.dataDir)}:/data${bindLabel}`, ...extraBindStrings],
     PortBindings: bindings,
     Memory: memoryBytes,
     MemorySwap: swapBytes,
@@ -393,6 +396,7 @@ async function execCaptureChecked(serverId, cmd, opts = {}) {
  */
 async function removeDataDir(dir, image) {
   const docker = getDocker();
+  const podman = await isPodmanDaemon();
   const parent = path.dirname(dir);
   const base = path.basename(dir);
   const container = await docker.createContainer({
@@ -401,7 +405,7 @@ async function removeDataDir(dir, image) {
     Cmd: [],
     User: '0:0',
     Labels: { 'msm.managed': 'true', 'msm.role': 'cleanup' },
-    HostConfig: { Binds: [`${toHostPath(parent)}:/work`], AutoRemove: false, NetworkMode: 'none' },
+    HostConfig: { Binds: [`${toHostPath(parent)}:/work${podman ? ':Z' : ''}`], AutoRemove: false, NetworkMode: 'none' },
   });
   try {
     await container.start();
@@ -422,6 +426,7 @@ async function removeDataDir(dir, image) {
  */
 async function chownDataDir(dir, image, uid, gid) {
   const docker = getDocker();
+  const podman = await isPodmanDaemon();
   const parent = path.dirname(dir);
   const base = path.basename(dir);
   const container = await docker.createContainer({
@@ -430,7 +435,7 @@ async function chownDataDir(dir, image, uid, gid) {
     Cmd: [],
     User: '0:0',
     Labels: { 'msm.managed': 'true', 'msm.role': 'chown' },
-    HostConfig: { Binds: [`${toHostPath(parent)}:/work`], AutoRemove: false, NetworkMode: 'none' },
+    HostConfig: { Binds: [`${toHostPath(parent)}:/work${podman ? ':Z' : ''}`], AutoRemove: false, NetworkMode: 'none' },
   });
   try {
     await container.start();

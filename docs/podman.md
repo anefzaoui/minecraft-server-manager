@@ -95,6 +95,10 @@ podman-compose -f deploy/podman-compose.yml up -d
   not your login UID. The panel already handles chown/cleanup through throwaway
   root containers; if you ever touch those files by hand, prefer the panel's
   file manager to plain `rm`.
+- **SELinux bind labeling.** Under Podman + SELinux enforcing, the panel
+  auto-appends `:Z` to the data-dir bind mounts it creates for sibling server
+  containers (and its cleanup containers). Without this the server process fails
+  the first write to `/data` (`Permission denied` writing `eula.txt`).
 - **Force removal is slower than Docker.** `podman rm -f` of a *running*
   container took ~15s here (Docker is near-instant). Deletes and rebuilds still
   complete; they're just not snappy on a live server.
