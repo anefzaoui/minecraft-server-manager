@@ -1476,6 +1476,16 @@ router.get(
   })
 );
 
+// Read-only dry-run restore: reads every entry and checks its CRC. Synchronous
+// (ponytail: move to tasks.run if verifying huge archives outlasts request timeouts).
+router.post(
+  '/backups/:backupId/verify',
+  requireCap('backups', { resolve: backupServerId }),
+  asyncHandler(async (req, res) => {
+    res.json(await backups.verifyBackup(req.params.backupId, { actor: req.user.username }));
+  })
+);
+
 router.delete(
   '/backups/:backupId',
   requireCap('backups', { resolve: backupServerId }),
