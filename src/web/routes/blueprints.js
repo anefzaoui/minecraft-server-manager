@@ -14,6 +14,7 @@ const multer = require('multer');
 const { z } = require('zod');
 const { nanoid } = require('nanoid');
 const blueprints = require('../../blueprints');
+const tasks = require('../../services/tasks');
 const permissions = require('../../services/permissions');
 const httpError = require('../../utils/httpError');
 const { dataPath } = require('../../storage/pathGuard');
@@ -103,10 +104,17 @@ router.post(
       })
       .parse(req.body);
     requireFilesOn(req, input.serverId);
-    const row = await blueprints.exportBlueprint(
-      input.serverId,
-      { includeConfig: input.includeConfig !== false, embedFiles: input.embedFiles, includeWorld: input.includeWorld },
-      { actor: req.user.username }
+    const actor = req.user.username;
+    const row = await tasks.track('Exporting a blueprint…', { serverId: input.serverId, actor }, () =>
+      blueprints.exportBlueprint(
+        input.serverId,
+        {
+          includeConfig: input.includeConfig !== false,
+          embedFiles: input.embedFiles,
+          includeWorld: input.includeWorld,
+        },
+        { actor }
+      )
     );
     res.status(201).json({ ok: true, blueprint: publicBlueprint(blueprints.getBlueprint(row.id)) });
   })
@@ -157,9 +165,10 @@ router.post(
       }
     }
     if (input.overrides) requireAdminForOverrides(req, input.overrides);
-    const { server, report } = await blueprints.importBlueprint(zipRef, input.overrides || {}, {
-      actor: req.user.username,
-    });
+    const actor = req.user.username;
+    const { server, report } = await tasks.track('Creating a server from a blueprint…', { actor }, () =>
+      blueprints.importBlueprint(zipRef, input.overrides || {}, { actor })
+    );
     if (input.uploadToken) await fsp.rm(zipRef, { force: true }).catch(onTempCleanupFailed);
     res.status(201).json({ ok: true, server: publicServer(server), report });
   })

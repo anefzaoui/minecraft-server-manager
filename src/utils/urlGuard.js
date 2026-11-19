@@ -1,19 +1,27 @@
 'use strict';
 
 // SSRF guard for server-side fetches of user-influenced URLs (direct mod
-// downloads, remote mod icons). Blocks non-HTTP(S) schemes and any URL that
-// resolves to a private, loopback, link-local, or otherwise-reserved address -
-// the ranges an attacker would target to reach cloud metadata
-// (169.254.169.254) or services bound to the panel host.
+// downloads, remote mod icons, the self-hosted-LLM wizard endpoint). Blocks
+// non-HTTP(S) schemes and any URL that resolves to a private, loopback,
+// link-local, or otherwise-reserved address - the ranges an attacker would
+// target to reach cloud metadata (169.254.169.254) or services bound to the
+// panel host.
 //
 // Redirects are followed manually so every hop is re-validated: a public URL can
-// still 302 to http://127.0.0.1/. Caveat: this validates the resolved address
-// before each connection but can't pin the socket to that exact address, so a
-// determined DNS-rebind retains a narrow window. That's acceptable
-// defense-in-depth here (the caller is already an authenticated operator).
+// still 302 to http://127.0.0.1/. The actual connection is made with node:http /
+// node:https using a `lookup` override pinned to the exact address that was
+// just validated - never Node's global fetch(), which re-resolves DNS
+// independently at connect time. Without that pin, an attacker-controlled DNS
+// answer (a TTL=0/alternating-answer nameserver - "DNS rebinding") can return a
+// public address for the validation lookup and a private/metadata address for
+// the real connection, deterministically bypassing this guard on every
+// request rather than just leaving a narrow race window.
 
 const dns = require('node:dns').promises;
 const net = require('node:net');
+const http = require('node:http');
+const https = require('node:https');
+const { Readable } = require('node:stream');
 const httpError = require('./httpError');
 
 const MAX_REDIRECTS = 5;
@@ -119,13 +127,8 @@ function isBlockedIp(ip, { allowPrivate = false } = {}) {
   return true; // unknown format - block
 }
 
-/**
- * Throw unless `rawUrl` is an http(s) URL that resolves to an allowed address.
- * With `{ allowPrivate: true }` the caller opts into LAN/loopback targets (a
- * self-hosted LLM, say) while link-local, multicast, and unspecified addresses
- * stay blocked; the default is public-only.
- */
-async function assertPublicUrl(rawUrl, { allowPrivate = false } = {}) {
+/** Parse `rawUrl`, requiring http(s). Returns the URL plus its host with IPv6 brackets stripped. */
+function parseHttpUrl(rawUrl) {
   let u;
   try {
     u = new URL(rawUrl);
@@ -135,7 +138,17 @@ async function assertPublicUrl(rawUrl, { allowPrivate = false } = {}) {
   if (u.protocol !== 'http:' && u.protocol !== 'https:') {
     throw httpError(400, `Only http(s) URLs are allowed (got ${u.protocol})`);
   }
-  const host = u.hostname.replace(/^\[|\]$/g, ''); // strip IPv6 brackets
+  return { u, host: u.hostname.replace(/^\[|\]$/g, '') };
+}
+
+/**
+ * Resolve `host` and throw unless every candidate address is allowed; returns
+ * the validated (never-empty) address list. This is the single DNS lookup
+ * whose result both gates the request and pins the connection made for it -
+ * a second, independent resolution at connect time is exactly the TOCTOU this
+ * module exists to close.
+ */
+async function resolveValidated(host, { allowPrivate = false } = {}) {
   let addrs;
   if (net.isIP(host)) {
     addrs = [host];
@@ -158,24 +171,80 @@ async function assertPublicUrl(rawUrl, { allowPrivate = false } = {}) {
         : `Refusing to fetch a private or internal address (${host})`
     );
   }
+  return addrs;
+}
+
+/**
+ * Throw unless `rawUrl` is an http(s) URL that resolves to an allowed address.
+ * With `{ allowPrivate: true }` the caller opts into LAN/loopback targets (a
+ * self-hosted LLM, say) while link-local, multicast, and unspecified addresses
+ * stay blocked; the default is public-only.
+ */
+async function assertPublicUrl(rawUrl, { allowPrivate = false } = {}) {
+  const { u, host } = parseHttpUrl(rawUrl);
+  await resolveValidated(host, { allowPrivate });
   return u;
 }
 
 /**
- * Like fetch(), but SSRF-guarded: validates the target (and every redirect hop)
- * resolves to a public address before connecting. Options are passed through;
- * `redirect` is forced to manual so hops can be re-checked.
+ * A single HTTP(S) request whose TCP connection is pinned to `address` - the
+ * exact address resolveValidated already checked - via a `lookup` override, so
+ * the socket cannot land anywhere else no matter what the real resolver would
+ * say. Returns a minimal fetch Response shim (ok/status/headers.get/body)
+ * matching what safeFetch's callers already use.
+ * @param {URL} u
+ * @param {string} address
+ * @param {{method?: string, headers?: Record<string,string>, body?: string|Buffer|null, signal?: AbortSignal}} [options]
+ */
+function pinnedRequest(u, address, options = {}) {
+  const { method = 'GET', headers = {}, body = null, signal } = options;
+  return new Promise((resolve, reject) => {
+    const mod = u.protocol === 'https:' ? https : http;
+    const family = net.isIPv6(address) ? 6 : 4;
+    const req = mod.request(
+      {
+        method,
+        headers,
+        signal,
+        hostname: u.hostname.replace(/^\[|\]$/g, ''),
+        port: u.port || (u.protocol === 'https:' ? 443 : 80),
+        path: `${u.pathname}${u.search}`,
+        lookup: (_hostname, opts, cb) => (opts.all ? cb(null, [{ address, family }]) : cb(null, address, family)),
+      },
+      (res) => {
+        resolve({
+          status: res.statusCode,
+          ok: res.statusCode >= 200 && res.statusCode < 300,
+          headers: { get: (name) => res.headers[String(name).toLowerCase()] ?? null },
+          body: Readable.toWeb(res),
+        });
+      }
+    );
+    req.on('error', reject);
+    if (body != null) req.write(body);
+    req.end();
+  });
+}
+
+/**
+ * Like fetch(), but SSRF-guarded: validates the target (and every redirect
+ * hop) resolves to an allowed address, then connects directly to that exact
+ * address (see the file header for why that pin matters). `allowPrivate` is
+ * forwarded to the validation step. `maxRedirects: 0` (the self-hosted-LLM
+ * caller's choice) rejects any redirect instead of following it.
  */
 async function safeFetch(rawUrl, options = {}) {
+  const { allowPrivate = false, maxRedirects = MAX_REDIRECTS, ...requestOptions } = options;
   let current = String(rawUrl);
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    await assertPublicUrl(current);
-    const res = await fetch(current, { ...options, redirect: 'manual' });
+  for (let hop = 0; hop <= maxRedirects; hop++) {
+    const { u, host } = parseHttpUrl(current);
+    const addrs = await resolveValidated(host, { allowPrivate });
+    const res = await pinnedRequest(u, addrs[0], requestOptions);
     const location = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null;
     if (!location) return res;
     current = new URL(location, current).toString();
   }
-  throw httpError(502, `Too many redirects (more than ${MAX_REDIRECTS})`);
+  throw httpError(502, `Too many redirects (more than ${maxRedirects})`);
 }
 
 module.exports = { safeFetch, assertPublicUrl, isBlockedIp, isAmbiguousNumericHost };
