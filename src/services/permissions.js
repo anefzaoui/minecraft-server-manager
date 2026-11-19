@@ -171,6 +171,7 @@ const CAPABILITY_INFO = {
       'GET /api/backups/:backupId/download',
       'PATCH /api/backups/:backupId',
       'DELETE /api/backups/:backupId',
+      'POST /api/backups/:backupId/verify',
       'POST /api/schedules (backup)',
     ],
   },
