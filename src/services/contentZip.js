@@ -145,13 +145,13 @@ function parsePackManifest(text) {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw httpError(400, 'manifest.json is not valid JSON');
+    throw httpError(400, 'manifest.json is not valid JSON.');
   }
   if (!raw || raw.manifestType !== 'minecraftModpack' || !Array.isArray(raw.files)) {
-    throw httpError(400, 'manifest.json is not a CurseForge modpack manifest');
+    throw httpError(400, 'manifest.json is not a CurseForge modpack manifest.');
   }
   if (raw.files.length > MAX_MANIFEST_FILES) {
-    throw httpError(400, `Manifest pins ${raw.files.length} files, but the ${MAX_MANIFEST_FILES} limit blocks it`);
+    throw httpError(400, `Manifest pins ${raw.files.length} files, but the ${MAX_MANIFEST_FILES} limit blocks it.`);
   }
   const files = raw.files
     .map((f) => ({
@@ -193,13 +193,13 @@ function parseMrpackIndex(text) {
   try {
     raw = JSON.parse(text);
   } catch {
-    throw httpError(400, 'modrinth.index.json is not valid JSON');
+    throw httpError(400, 'modrinth.index.json is not valid JSON.');
   }
   if (!raw || raw.game !== 'minecraft' || !Array.isArray(raw.files)) {
-    throw httpError(400, 'modrinth.index.json is not a Modrinth modpack index');
+    throw httpError(400, 'modrinth.index.json is not a Modrinth modpack index.');
   }
   if (raw.files.length > MAX_MANIFEST_FILES) {
-    throw httpError(400, `Pack pins ${raw.files.length} files, but the ${MAX_MANIFEST_FILES} limit blocks it`);
+    throw httpError(400, `Pack pins ${raw.files.length} files, but the ${MAX_MANIFEST_FILES} limit blocks it.`);
   }
   const deps = raw.dependencies || {};
   const loaderKey = Object.keys(MRPACK_LOADER_KEYS).find((k) => deps[k]);
@@ -333,11 +333,11 @@ async function inspect(zipPath) {
   if (!jarEntries.length) {
     throw httpError(
       400,
-      'Unrecognized zip: neither a CurseForge modpack export (manifest.json) nor an archive containing mod jars'
+      'Unrecognized zip: neither a CurseForge modpack export (manifest.json) nor an archive containing mod jars.'
     );
   }
   if (jarEntries.length > MAX_JARS) {
-    throw httpError(400, `Zip contains ${jarEntries.length} jars, but the ${MAX_JARS} limit blocks it`);
+    throw httpError(400, `Zip contains ${jarEntries.length} jars, but the ${MAX_JARS} limit blocks it.`);
   }
   return { type: 'jars', manifest: null, jarEntries, overridesEntries: [] };
 }
@@ -346,7 +346,7 @@ async function inspect(zipPath) {
 
 function serverTarget(serverId) {
   const server = serversService.getServer(serverId);
-  if (!server) throw httpError(404, 'Server not found');
+  if (!server) throw httpError(404, 'Server not found.');
   return server;
 }
 
@@ -430,8 +430,8 @@ async function previewForServer(serverId, zipPath) {
     if (info.manifest.loader && serverLoader && info.manifest.loader !== serverLoader) {
       warnings.push(`Pack targets ${info.manifest.loader}, this server runs ${serverLoader}`);
     }
-    if (clientOnly.length) warnings.push(`${clientOnly.length} client-only file(s) will be skipped`);
-    if (nonMod.length) warnings.push(`${nonMod.length} non-mod file(s) (resource/shader packs) will be skipped`);
+    if (clientOnly.length) warnings.push(`${clientOnly.length} client-only file(s) will be skipped.`);
+    if (nonMod.length) warnings.push(`${nonMod.length} non-mod file(s) (resource/shader packs) will be skipped.`);
     return {
       type: 'mrpack',
       pack: {
@@ -605,9 +605,9 @@ async function applyOverridesTo(serverId, zipPath, overridesPrefix, { actor = 's
   const { entries } = await readZipIndex(zipPath);
   const overrideFiles = entries.filter((e) => prefixes.some((p) => e.name.startsWith(p)) && !e.name.endsWith('/'));
   if (!overrideFiles.length) return { applied: 0, backedUp: 0, backupDir: null };
-  if (overrideFiles.length > MAX_OVERRIDE_ENTRIES) throw httpError(400, 'Overrides tree has too many files');
+  if (overrideFiles.length > MAX_OVERRIDE_ENTRIES) throw httpError(400, 'Overrides tree has too many files.');
   const totalBytes = overrideFiles.reduce((n, e) => n + (e.size || 0), 0);
-  if (totalBytes > MAX_OVERRIDE_BYTES) throw httpError(413, 'Overrides tree is too large');
+  if (totalBytes > MAX_OVERRIDE_BYTES) throw httpError(413, 'Overrides tree is too large.');
 
   // Reversibility first: copy aside everything the extraction would replace
   // (a path present in several trees is backed up once).

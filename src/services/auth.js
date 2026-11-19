@@ -31,7 +31,10 @@ const BCRYPT_COST = 11;
 
 async function createUser({ username, password, role = 'admin' }, { actor = 'system' } = {}) {
   if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username))
-    throw httpError(400, 'A username must be 2 to 32 characters: letters, numbers, and _ . - only.');
+    throw httpError(
+      400,
+      'A username must be 2 to 32 characters: letters, numbers, underscores, periods, and hyphens only.'
+    );
   if (typeof password !== 'string' || password.length < 8)
     throw httpError(400, 'A password must be at least 8 characters.');
   if (db.get('SELECT 1 AS x FROM users WHERE username = ?', username))
@@ -112,7 +115,7 @@ async function changePassword(
   if (!acting || !(await bcrypt.compare(String(currentPassword || ''), acting.password_hash))) {
     throw httpError(401, 'That password is incorrect.');
   }
-  if (!db.get('SELECT id FROM users WHERE id = ?', targetId)) throw httpError(404, 'User not found');
+  if (!db.get('SELECT id FROM users WHERE id = ?', targetId)) throw httpError(404, 'User not found.');
   db.run('UPDATE users SET password_hash = ? WHERE id = ?', await bcrypt.hash(newPassword, BCRYPT_COST), targetId);
   revokeOtherSessions(targetId, exceptSid);
   recordEvent({
@@ -166,7 +169,7 @@ function publicUser(u) {
 function setAvatarPreset(id, key, { actor = 'system' } = {}) {
   if (!AVATAR_PRESET_KEYS.has(key)) throw httpError(400, "That profile picture option isn't recognized.");
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
-  if (!user) throw httpError(404, 'User not found');
+  if (!user) throw httpError(404, 'User not found.');
   db.run('UPDATE users SET avatar = ? WHERE id = ?', `preset:${key}`, id);
   recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} set a preset avatar.` });
 }
@@ -174,7 +177,7 @@ function setAvatarPreset(id, key, { actor = 'system' } = {}) {
 /** Record an uploaded avatar file (the route has already validated + saved it to disk). */
 function setAvatarCustom(id, filename, { actor = 'system' } = {}) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
-  if (!user) throw httpError(404, 'User not found');
+  if (!user) throw httpError(404, 'User not found.');
   db.run('UPDATE users SET avatar = ? WHERE id = ?', `custom:${filename}`, id);
   recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} uploaded a custom avatar.` });
 }
@@ -182,7 +185,7 @@ function setAvatarCustom(id, filename, { actor = 'system' } = {}) {
 /** Revert to the default initial-letter avatar. */
 function clearAvatar(id, { actor = 'system' } = {}) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
-  if (!user) throw httpError(404, 'User not found');
+  if (!user) throw httpError(404, 'User not found.');
   db.run('UPDATE users SET avatar = NULL WHERE id = ?', id);
   recordEvent({ actor, type: 'user-avatar-changed', summary: `${user.username} reset their avatar.` });
 }
@@ -196,7 +199,7 @@ function clearAvatar(id, { actor = 'system' } = {}) {
 /** Start enrollment: a fresh secret + otpauth URL, NOT persisted until confirmTotp(). */
 function beginTotpEnrollment(id) {
   const user = db.get('SELECT username FROM users WHERE id = ?', id);
-  if (!user) throw httpError(404, 'User not found');
+  if (!user) throw httpError(404, 'User not found.');
   const secret = totp.generateSecret();
   return { secret, otpauthUrl: totp.buildOtpauthUrl(secret, { account: user.username }) };
 }
@@ -204,7 +207,7 @@ function beginTotpEnrollment(id) {
 /** Verify the account password + the first live code, then persist the secret + backup codes. */
 async function confirmTotp(id, secret, code, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
-  if (!user) throw httpError(404, 'User not found');
+  if (!user) throw httpError(404, 'User not found.');
   if (user.totp_enabled) {
     throw httpError(409, 'Two-factor authentication is already on. Turn it off first to set it up again.');
   }
@@ -242,7 +245,7 @@ async function confirmTotp(id, secret, code, password, { actor = 'system', excep
 /** Self-service disable - re-checks the account's own current password first. */
 async function disableTotp(id, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
-  if (!user) throw httpError(404, 'User not found');
+  if (!user) throw httpError(404, 'User not found.');
   if (!(await bcrypt.compare(password, user.password_hash))) throw httpError(401, 'That password is incorrect.');
   db.run(
     'UPDATE users SET totp_secret = NULL, totp_enabled = 0, totp_backup_codes_json = NULL, totp_last_step = NULL WHERE id = ?',
@@ -259,7 +262,7 @@ async function disableTotp(id, password, { actor = 'system', exceptSid = null } 
 /** Admin recovery path: force-disable another user's 2FA (lost phone + backup codes). */
 function adminDisableTotp(id, { actor = 'system' } = {}) {
   const user = db.get('SELECT username, totp_enabled FROM users WHERE id = ?', id);
-  if (!user) throw httpError(404, 'User not found');
+  if (!user) throw httpError(404, 'User not found.');
   if (!user.totp_enabled) return;
   db.run(
     'UPDATE users SET totp_secret = NULL, totp_enabled = 0, totp_backup_codes_json = NULL, totp_last_step = NULL WHERE id = ?',
@@ -276,7 +279,7 @@ function adminDisableTotp(id, { actor = 'system' } = {}) {
 /** Re-check the password, then reissue backup codes (old ones stop working). */
 async function regenerateBackupCodes(id, password, { actor = 'system', exceptSid = null } = {}) {
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
-  if (!user) throw httpError(404, 'User not found');
+  if (!user) throw httpError(404, 'User not found.');
   if (!user.totp_enabled) throw httpError(400, 'Two-factor authentication is not turned on for this account.');
   if (!(await bcrypt.compare(password, user.password_hash))) throw httpError(401, 'That password is incorrect.');
   const backupCodes = totp.generateBackupCodes();

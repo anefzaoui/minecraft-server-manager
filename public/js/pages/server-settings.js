@@ -422,9 +422,9 @@ function init(serverId) {
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
       <p class="text-xs text-ink-faint">Saves this server's setup as a reusable blueprint in the library.</p>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include config directories</label>
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="config" checked> Include Config Directories</label>
       <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="embed"> Embed custom mod files in the archive <span class="text-xs text-ink-faint">(bigger file, fully portable)</span></label>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the active world <span class="text-xs text-ink-faint">(can be large)</span></label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Include the Active World <span class="text-xs text-ink-faint">(can be large)</span></label>`;
     openModal({
       title: 'Export as Blueprint',
       content,
@@ -474,7 +474,7 @@ function init(serverId) {
     content.className = 'space-y-3 text-sm';
     content.innerHTML = `
       <p class="text-xs text-ink-faint">Creates a copy of this server with its own ports. It exports a blueprint and imports it as a new server.</p>
-      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Also copy the active world</label>`;
+      <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" class="msm-check" data-f="world"> Also Copy the Active World</label>`;
     openModal({
       title: 'Clone Server',
       content,
@@ -554,6 +554,59 @@ function init(serverId) {
     return data;
   }
 
+  // One labelled before → after row per change, then confirm/cancel. Built with
+  // DOM nodes (never innerHTML) so a field value can't smuggle markup in.
+  function confirmSummary(preview) {
+    return new Promise((resolve) => {
+      const list = document.createElement('div');
+      list.className = 'divide-y divide-line';
+      for (const c of preview.changes) {
+        const row = document.createElement('div');
+        row.className = 'py-2.5 text-sm';
+        const label = document.createElement('div');
+        label.className = 'font-medium';
+        label.textContent = c.label;
+        row.append(label);
+        const value = document.createElement('div');
+        value.className = 'break-words font-mono text-xs text-ink-faint';
+        if (Array.isArray(c.before) || Array.isArray(c.after)) {
+          const added = (c.after || []).filter((x) => !(c.before || []).includes(x));
+          const removed = (c.before || []).filter((x) => !(c.after || []).includes(x));
+          const parts = [];
+          if (added.length) parts.push(`Added: ${added.join(', ')}`);
+          if (removed.length) parts.push(`Removed: ${removed.join(', ')}`);
+          value.textContent = parts.join('   ');
+        } else {
+          const human = (v) => (typeof v === 'boolean' ? (v ? 'On' : 'Off') : String(v ?? ''));
+          value.textContent = `${human(c.before)} → ${human(c.after)}`;
+        }
+        row.append(value);
+        list.append(row);
+      }
+      const content = document.createElement('div');
+      const intro = document.createElement('p');
+      intro.className = 'mb-3 text-sm text-ink-soft';
+      intro.textContent = 'Review the changes before they are saved.';
+      content.append(intro);
+      content.append(list);
+      if (preview.needsRecreate) {
+        const notice = document.createElement('div');
+        notice.className = 'notice notice-warn mt-3';
+        notice.textContent = 'Some of these changes need a container rebuild to take effect.';
+        content.append(notice);
+      }
+      openModal({
+        title: 'Save Changes',
+        content,
+        actions: [
+          { label: 'Cancel', kind: 'ghost' },
+          { label: 'Save Changes', kind: 'primary', busyLabel: 'Saving…', onClick: () => resolve(true) },
+        ],
+        onClose: () => resolve(false),
+      });
+    });
+  }
+
   document.getElementById('st-save')?.addEventListener('click', async (e) => {
     const saveBtn = e.currentTarget; // capture before await - currentTarget is null afterwards
     const heapMb = Number(document.getElementById('st-heap').value);
@@ -626,6 +679,9 @@ function init(serverId) {
             }
           } else {
             const value = el.value.trim();
+            // An unset key whose field shows its catalog default (a dropdown
+            // preselects it) was not touched: saving would only pin the default.
+            if (!had && value !== '' && value === (el.dataset.catalogDefault ?? '')) return;
             if (!value) {
               if (had) {
                 delete merged[key];
@@ -650,6 +706,24 @@ function init(serverId) {
 
       if (envChanged) body.env = merged;
     }
+    // ---- Save confirmation ----------------------------------------------
+    // Ask the server which fields will actually change (same diff the PATCH
+    // applies, expanded per-key server-side) and show it before sending.
+    const busyCheck = setBusy(saveBtn, 'Checking…');
+    let preview;
+    try {
+      preview = await postJson(`/api/servers/${serverId}/changes-preview`, body);
+    } catch (err) {
+      toast(err.message, { kind: 'error', timeout: 8000 });
+      return;
+    } finally {
+      busyCheck();
+    }
+    if (preview.changes.length === 0) {
+      toast('No changes to save.');
+      return;
+    }
+    if (!(await confirmSummary(preview))) return; // cancelled - the form stays exactly as edited
     const restore = setBusy(saveBtn, 'Saving…');
     try {
       const res = await fetch(`/api/servers/${serverId}`, {

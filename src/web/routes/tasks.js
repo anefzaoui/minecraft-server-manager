@@ -16,7 +16,7 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   const task = getTask(req.params.id);
   if (!task || (task.serverId && !permissions.can(req.user, task.serverId, 'view'))) {
-    return res.status(404).json({ ok: false, error: 'Unknown or expired task' });
+    return res.status(404).json({ ok: false, error: 'Unknown or expired task.' });
   }
   res.json({ ok: true, task });
 });

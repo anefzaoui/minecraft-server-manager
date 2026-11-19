@@ -50,12 +50,12 @@ it, so a regenerated chunk does not inherit stale mobs, minecarts, or job sites.
 
 ## Doing it as part of a backup
 
-On the **Backups** tab, tick **"Also shrink the world afterwards"** before
+On the **Backups** tab, tick **"Shrink World Afterwards"** before
 **Back Up Now**. The backup archive is written first (that archive is your
 undo), then the world is shrunk, but only if the server is stopped. If the
 server is running, the backup still runs and the shrink is skipped with a note.
 
 Scheduled backups have the same option: in the schedule editor, choose the
-**Backup** task and tick **"Shrink the world after each backup"**. Pair it with
+**Backup** task and tick **"Shrink the World After Each Backup"**. Pair it with
 a **Stop server** schedule a few minutes earlier if you want it to run
 unattended.

@@ -108,7 +108,7 @@ module.exports = [
   {
     key: 'quotaStrict',
     scope: 'panel',
-    label: 'Strict quota mode',
+    label: 'Strict Quota Mode',
     help: 'When usage exceeds the quota by more than 10%, gracefully stop the server automatically. Protects the host from runaway world or log growth; the stop is recorded in history.',
     type: 'boolean',
     default: false,
