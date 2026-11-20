@@ -36,6 +36,19 @@ async function login(username, password, role) {
 const NOT_GATED = (status) => ![401, 403, 404].includes(status);
 
 test.before(async () => {
+  // No live Docker daemon: these tests are about who reaches a route, not about
+  // Docker. The stand-in has no containers and answers every container call
+  // the way a daemon does for a missing one (404), which is what CI's daemon
+  // answered; without a daemon the calls failed and the routes answered 500.
+  const docker = require('../src/docker/connect').getDocker();
+  const missing = () =>
+    Promise.reject(Object.assign(new Error('(HTTP code 404) no such container'), { statusCode: 404 }));
+  test.mock.method(
+    docker,
+    'getContainer',
+    () => new Proxy({}, { get: (_, key) => (key === 'then' ? undefined : missing) })
+  );
+  test.mock.method(docker, 'listContainers', async () => []);
   await app.start();
   require('../src/ws').attachWebSockets(app.httpServer());
   adminCookie = await app.adminCookie();

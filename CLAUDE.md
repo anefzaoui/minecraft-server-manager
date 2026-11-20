@@ -207,9 +207,12 @@ validation and error messages, and the docs — follows one house style (full de
 
 ## Tests
 
-`node:test`, fast, no network. Most tests need no Docker, but a few route tests expect a reachable
-daemon that answers "no such container" (CI runners have one), so the suite talks to the local
-Docker when it runs. A test that drives a backup or a rebuild must stub `backups.createBackup` and
+`node:test`, fast, no network, and it passes with no Docker daemon. Every test file requires
+`test/helpers/env` (or `test/helpers/app`) before any `src/` module: it points `DATA_DIR` at a
+throwaway folder, and `src/config` refuses to load in a test process without it. A route test whose
+route touches containers stands in for the daemon (see `test/permissions-authz.test.js`) instead of
+relying on what a local one answers, and a test whose result depends on a free-port check stands in
+for the OS probe (see `test/server-port-change.test.js`). A test that drives a backup or a rebuild must stub `backups.createBackup` and
 `servers.recreateServer` (see `test/compat-routes.test.js`), or it creates real containers there. In-process integration tests boot the real Express app
 against a throwaway DB via [`test/helpers/app.js`](test/helpers/app.js) (`start`, `req`,
 `adminCookie`, `seedServer`) — `createApp()` wires only routes/middleware, background services live
