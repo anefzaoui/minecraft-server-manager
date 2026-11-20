@@ -21,6 +21,9 @@ entirely free and local.
 **Zero paid services. Everything runs on your machine, and your entire panel is one folder you can
 copy to migrate.**
 
+🤖 **Made with AI help:** most of the code is written with Claude Code, and every feature is
+designed, reviewed and tested by a human. The details are in [AI-DECLARATION.md](AI-DECLARATION.md).
+
 | 🚀 [Installation](#installation) | ✨ [Getting Started](docs/getting-started.md) | 📜 [Documentation](docs/README.md) | 🖼️ [Screenshots](#screenshots) |
 | -------------------------------- | --------------------------------------------- | ---------------------------------- | ------------------------------ |
 
