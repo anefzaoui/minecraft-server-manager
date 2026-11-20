@@ -1,0 +1,27 @@
+---
+// A badge for one supported thing: slot-styled, with its logo (Simple Icons,
+// inlined) or a generated pixel item icon, and the label. Optional note tag
+// (e.g. "keyless") on the end.
+import { Image } from 'astro:assets';
+import { brand, simpleIcon, pixelIcon } from '../data/brands.js';
+interface Props {
+  id: string;
+  size?: 'sm' | 'md' | 'lg';
+  note?: string;
+}
+const { id, size = 'md', note } = Astro.props;
+const b = brand(id);
+const si = simpleIcon(b);
+const px = pixelIcon(b);
+const px_size = size === 'lg' ? 40 : size === 'sm' ? 20 : 28;
+---
+
+<li class:list={['pill', `pill-${size}`]} title={b.label}>
+  {si && (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width={px_size} height={px_size} class="pill-logo"><path d={si.path} fill="currentColor" /></svg>
+  )}
+  {!si && px && <Image src={px} alt="" width={px_size * 2} class="pixelated pill-icon" style={`width:${px_size}px;height:${px_size}px`} />}
+  {!si && !px && <span class="pill-dot" aria-hidden="true"></span>}
+  <span class="pill-label" dir="ltr">{b.label}</span>
+  {(note || b.note) && <span class="pill-note">{note || b.note}</span>}
+</li>

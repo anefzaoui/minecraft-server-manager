@@ -1,0 +1,31 @@
+---
+// GitHub Pages serves /404.html for any unknown path, so this page is not
+// locale-routed. It renders in English and links to the English home and docs.
+import { Image } from 'astro:assets';
+import Site from '../layouts/Site.astro';
+import Clouds from '../components/Clouds.astro';
+import { getCopy } from '../i18n/index.js';
+import { DEFAULT_LOCALE } from '../i18n/locales.js';
+import { art } from '../data/art.js';
+const scene = art('scene-404');
+const copy = getCopy(DEFAULT_LOCALE);
+---
+
+<Site locale={DEFAULT_LOCALE} path="/" pageKey="notFound" noindex>
+  <section class="sky relative overflow-hidden">
+    <Clouds count={3} />
+    <div class="relative mx-auto grid max-w-6xl items-center gap-8 px-4 py-12 lg:grid-cols-2">
+      <div>
+        <p class="display text-7xl text-ok" style="text-shadow: 3px 3px 0 var(--color-outline)">404</p>
+        <h1 class="mt-3">{copy.notFound.title}</h1>
+        <p class="lead mt-3 text-on-sky">{copy.notFound.body}</p>
+        <div class="mt-6 flex flex-wrap gap-4">
+          <a class="btn btn-primary" href="/">{copy.notFound.home}</a>
+          <a class="btn" href="/docs/">{copy.nav.docs}</a>
+        </div>
+      </div>
+      <div class="panel panel-tight"><span class="slot block"><Image src={scene} alt="" widths={[600, 1376]} sizes="(min-width: 1024px) 560px, 100vw" class="pixelated block" /></span></div>
+    </div>
+    <div class="ground relative"></div>
+  </section>
+</Site>

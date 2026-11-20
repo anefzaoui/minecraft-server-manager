@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://minecraft-server-manager.com/sitemap-index.xml

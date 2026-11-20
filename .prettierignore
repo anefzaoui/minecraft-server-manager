@@ -16,3 +16,13 @@ pnpm-lock.yaml
 
 # Claude Code local tooling state - not project source.
 .claude
+
+# Marketing site: build output, Astro cache, generated doc copies
+website/dist
+website/.astro
+website/src/content/docs/docs
+website/public/docs
+website/src/generated
+
+# Astro components need prettier-plugin-astro to format; `astro check` gates them instead.
+website/**/*.astro

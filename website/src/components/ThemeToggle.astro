@@ -1,0 +1,36 @@
+---
+import Icon from './Icon.astro';
+interface Props {
+  label: string;
+}
+const { label } = Astro.props;
+---
+
+<button type="button" class="btn btn-sm btn-icon" data-theme-toggle aria-label={label} title={label}>
+  <span class="theme-icon-to-dark"><Icon name="moon" size={20} /></span>
+  <span class="theme-icon-to-light"><Icon name="sun" size={20} /></span>
+</button>
+
+<style>
+  .theme-icon-to-light { display: none; }
+  :global(:root[data-theme='dark']) .theme-icon-to-light { display: inline; }
+  :global(:root[data-theme='dark']) .theme-icon-to-dark { display: none; }
+</style>
+
+<script>
+  // Same storage key as Starlight ('starlight-theme') so the docs and the
+  // marketing pages agree. Day is the default here; 'dark' opts in.
+  document.querySelectorAll('[data-theme-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const root = document.documentElement;
+      const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'dark' ? '#122662' : '#82d2fe');
+      try {
+        localStorage.setItem('starlight-theme', next);
+      } catch {
+        /* storage may be unavailable; the choice just won't persist */
+      }
+    });
+  });
+</script>

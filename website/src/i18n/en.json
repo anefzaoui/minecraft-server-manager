@@ -1,0 +1,2174 @@
+{
+  "$comment": "English is the source of truth for the marketing copy. Other locales are translations of this file (scripts/translate.js). Keys never change meaning between locales; only values are translated.",
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Free, self-hosted control panel for Minecraft servers on Docker.",
+    "description": "Run modded and vanilla Minecraft servers from your browser. Modpacks pinned to exact versions, one-click backups, schedules, live map, player analytics. Free, open source, and your whole panel is one folder."
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "screenshots": "Screenshots",
+    "servers": "Servers",
+    "guides": "Guides",
+    "install": "Install",
+    "docs": "Docs",
+    "faq": "FAQ",
+    "compare": "Compare",
+    "changelog": "Changelog",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Language",
+    "theme": "Toggle light or dark theme",
+    "skip": "Skip to content"
+  },
+  "hero": {
+    "eyebrow": "Free and open source. Runs on your own machine.",
+    "title": "Run your Minecraft servers from one friendly panel.",
+    "subtitle": "Minecraft Server Manager turns Docker into a cosy home for your servers: modpacks that stay pinned, one-click backups, schedules, a live map, player stats, and a console that speaks plain English. No bills, no lock-in, your whole panel in one folder.",
+    "primary": "Get started in minutes",
+    "secondary": "Explore the features",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "See the tutorial",
+    "shotCaption": "The real panel: its dashboard with six example servers, in the dark theme."
+  },
+  "pillars": {
+    "title": "Made for people who run servers, not tickets",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "One folder is your whole panel",
+        "body": "Database, worlds, backups, and the shared mod library all live under a single data folder. Copy it and you have migrated."
+      },
+      {
+        "icon": "box",
+        "title": "Every server is a container",
+        "body": "Each server runs on the battle-tested itzg image with its own CPU and memory caps, graceful stops over RCON, and crash detection.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpacks stay pinned",
+        "body": "Packs are locked to an exact version. Upgrades are explicit, previewed, backed up first, health-checked, and rolled back with one click.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Everything a server owner reaches for",
+    "intro": "The full feature tour, from creating a server to sharing its live map.",
+    "cta": "Read the documentation",
+    "groups": [
+      {
+        "title": "Servers and lifecycle",
+        "items": [
+          {
+            "title": "Resource-capped containers",
+            "body": "Create, start, stop, restart, rebuild, and delete servers with graceful RCON stops and automatic crash detection.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Guided creation wizard",
+            "body": "Simple or Advanced mode, with every image setting explained in plain English before you pick it.",
+            "icon": "wand"
+          },
+          {
+            "title": "Live console",
+            "body": "A WebSocket console with an RCON command bar, log filters, and one-click player actions.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Player moderation",
+            "body": "Whitelist, ops, bans, IP bans, and teleports, online through RCON and offline through the JSON files.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mods and modpacks",
+        "items": [
+          {
+            "title": "Five registries in one browser",
+            "body": "Search all five from one place. Three of them need no API key.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Add by link",
+            "body": "Paste a project page, a GitHub repository, a slug, or a direct jar URL. The panel identifies it.",
+            "icon": "link"
+          },
+          {
+            "title": "Import anything",
+            "body": "Every jar identified and compatibility-checked on the way in.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Checksum-verified downloads",
+            "body": "Verified before a file reaches the server, strongest hash first. A mismatch never ships.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Shared mod library",
+            "body": "Deduplicated by sha256 and hard-linked into servers, so custom mods survive pack updates.",
+            "icon": "library"
+          },
+          {
+            "title": "Pick-mods-first solver",
+            "body": "Choose the mods you want and get the newest fully compatible loader and Minecraft version.",
+            "icon": "sparkles"
+          },
+          {
+            "title": "Any pack version, any loader build",
+            "body": "Move a modpack to any published version, newer or older, or switch the mod loader build. A backup comes first, and a failed boot rolls back.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Protection and automation",
+        "items": [
+          {
+            "title": "Save-safe backups",
+            "body": "Snapshots with retention classes, restore in place, and optional world shrinking to reclaim disk.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron schedules",
+            "body": "Restarts, backups, and RCON commands on a schedule, with the next run shown up front.",
+            "icon": "clock"
+          },
+          {
+            "title": "Blueprints",
+            "body": "Export a server as a portable recipe, import it anywhere, and get the same server back.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Crash forensics",
+            "body": "Crashes are detected, parsed, and suspects named, with one-click sharing and automated insights.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Update tracking",
+            "body": "New server, pack, image, and mod versions are tracked, with pre-update backups and one-click rollback.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Insight and community",
+        "items": [
+          {
+            "title": "Live map",
+            "body": "One click to a live map, served through the panel's authenticated proxy.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analytics and storage",
+            "body": "Playtime, deaths, and mining scoreboards, inventory forensics, per-server disk usage, and enforced quotas.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord and chatbot",
+            "body": "Webhooks with per-event toggles, plus an optional per-server chatbot with constrained in-game powers.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Public status page and API",
+            "body": "Opt-in status pages, invite blocks, a generated client .mrpack, and a read-only token-authenticated API.",
+            "icon": "globe"
+          },
+          {
+            "title": "Invite friends",
+            "body": "Copy an invite with the address and version. For a server built from mods you picked, hand friends a client .mrpack that installs them and adds the server to their list.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
+            "title": "Users, roles, and 2FA",
+            "body": "Admin, operator, and viewer roles with TOTP two-factor authentication.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "A panel that is a pleasure to use",
+    "intro": "Desktop and phone. The panel is designed narrow-first, so every page works on a phone.",
+    "desktop": "Desktop",
+    "mobile": "On a phone",
+    "items": {
+      "dashboard": "The dashboard: every server, player count, and recent activity at a glance.",
+      "wizard": "The creation wizard explains every setting before you pick it.",
+      "overview": "A server's overview with resource meters and quick actions.",
+      "console": "The live console with an RCON command bar and log filters.",
+      "mods": "Mods from five registries, filtered to the server's loader and version.",
+      "modpacks": "Modpacks: search CurseForge and Modrinth, and every pack installs pinned to an exact version.",
+      "worlds": "Swap worlds and manage files from the browser.",
+      "backups": "Backups with retention classes and in-place restore.",
+      "schedules": "Cron schedules for restarts, backups, and commands.",
+      "blueprints": "Blueprints: portable server recipes.",
+      "storage": "Storage analytics and enforced quotas."
+    }
+  },
+  "install": {
+    "title": "Install",
+    "intro": "Pick the option that matches your host. Every path gives you the same panel.",
+    "requirements": "Requirements",
+    "reqItems": [
+      "Docker Engine (Linux) or Docker Desktop (Windows, macOS).",
+      "Node.js 24 or newer for the from-source install. The Docker image bundles its own.",
+      "A few gigabytes of disk for server images and worlds."
+    ],
+    "docker": {
+      "title": "Option 1: Docker",
+      "body": "A pre-built multi-arch image is published to GHCR on every release. Grab the compose file, set one variable, and start.",
+      "after": "Then open http://your-host:25564. In Portainer or Dockge, paste the compose file as a stack and set DATA_DIR_HOST in the stack's environment.",
+      "warning": "The panel drives the host's Docker daemon through the mounted socket, which is root-equivalent on the host. Treat the admin login accordingly and never expose the panel raw to the internet."
+    },
+    "source": {
+      "title": "Option 2: From source",
+      "body": "Any operating system, including Windows and macOS with Docker Desktop.",
+      "after": "Open http://localhost:25564. The first run walks you through a system check, your time zone, and creating the admin account."
+    },
+    "next": "Next steps",
+    "nextBody": "The getting-started guide covers first-run setup, creating your first server, and where everything lives.",
+    "nextCta": "Read getting started",
+    "compose": "Download docker-compose.yml",
+    "windows": "Windows notes",
+    "windowsItems": [
+      "Docker Desktop must be running before you start or create servers.",
+      "Share your project drive with Docker Desktop (Settings, Resources, File sharing) so bind mounts work.",
+      "The Docker image targets Linux hosts; on Windows and macOS run the panel from source."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Installer Options",
+      "intro": "The Linux installer takes its options after bash -s --, so they work through the pipe as well. Run it again with the same options to upgrade; your data folder, .env and compose edits are kept.",
+      "items": {
+        "port": "Serve the panel on another port.",
+        "proxy": "Listen on 127.0.0.1 only, for a reverse proxy with TLS in front.",
+        "tag": "Pin a release instead of following the newest one.",
+        "dir": "Install somewhere other than /opt/msm.",
+        "uninstall": "Remove the panel and keep its data. Through a pipe there is no keyboard to answer the question, so add --yes; add --purge as well to delete the data folder.",
+        "help": "Every option, with its default."
+      }
+    }
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "items": [
+      {
+        "q": "Is it really free?",
+        "a": "Yes. The panel is MIT licensed and uses no paid services. Everything runs on your machine."
+      },
+      {
+        "q": "Does it work on a Raspberry Pi or another ARM machine?",
+        "a": "Yes. The Docker image is published for both architectures, and the from-source install runs anywhere Node.js 24 and Docker do.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Which server types are supported?",
+        "a": "Everything the itzg image supports, plus modpacks from the big four sources.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "How do I move my panel to a new machine?",
+        "a": "Copy the data folder. It holds the database, every server's world, backups, and the mod library. Start the panel on the new machine pointing at that folder."
+      },
+      {
+        "q": "Can several people manage servers?",
+        "a": "Yes. The panel has admin, operator, and viewer roles, and each account can turn on two-factor authentication."
+      },
+      {
+        "q": "How do friends outside my home join?",
+        "a": "Forward the server's game port, from 25565 upward, on your router to the machine that runs it, or use a tunnel if your internet provider does not allow port forwarding. The server's Invites tab shows the address to share and writes the invite text for you. Keep the panel's own port closed."
+      },
+      {
+        "q": "Does it need to be exposed to the internet?",
+        "a": "No. Players connect to the game ports, not the panel. Keep the panel on your LAN or behind a VPN or reverse proxy with authentication."
+      },
+      {
+        "q": "What about Bedrock players?",
+        "a": "Both can be installed like any other plugin or mod, and the panel exposes the settings they need.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Is it made with AI?",
+        "a": "Partly, and openly. Most of the code is written with Claude Code, and the maintainer designs, reviews and tests every feature. The AI declaration in the repository describes how."
+      },
+      {
+        "q": "Where do I get help?",
+        "a": "The Discord server has a support forum and real humans. Bugs and feature requests go to GitHub issues."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Changelog",
+    "intro": "Every release, newest first. Release notes are published in English.",
+    "releases": "All releases on GitHub",
+    "feed": "Release Feed (Atom)"
+  },
+  "community": {
+    "title": "Come say hi",
+    "body": "Report bugs, suggest features, get help from real humans, and show off your servers.",
+    "discord": "Join the Discord",
+    "github": "Star on GitHub"
+  },
+  "footer": {
+    "tagline": "Free and open source under the MIT license.",
+    "product": "Product",
+    "community": "Community",
+    "resources": "Resources",
+    "issues": "Issues",
+    "releases": "Releases",
+    "contributing": "Contributing",
+    "license": "License",
+    "notAffiliated": "Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.",
+    "serverTypes": "Server Types",
+    "guides": "Guides",
+    "compare": "Compare",
+    "roadmap": "Roadmap",
+    "ai": "How AI Is Used",
+    "conduct": "Code of Conduct"
+  },
+  "meta": {
+    "home": {
+      "title": "Free self-hosted Minecraft server panel",
+      "description": "Run vanilla and modded Minecraft servers from your browser with a free, self-hosted Docker panel: pinned modpacks, backups, schedules, and a live map."
+    },
+    "features": {
+      "title": "Minecraft server panel features",
+      "description": "Every feature of Minecraft Server Manager: Docker servers, five mod registries, verified downloads, backups, schedules, crash forensics, a live map, and 2FA."
+    },
+    "screenshots": {
+      "title": "Minecraft server panel screenshots",
+      "description": "Screenshots of the Minecraft Server Manager panel on desktop and phone: dashboard, wizard, console, mods, worlds, backups, schedules, and more."
+    },
+    "install": {
+      "title": "Install a Minecraft server panel with Docker",
+      "description": "Install Minecraft Server Manager with Docker in three commands, or from source on Windows, macOS, and Linux."
+    },
+    "faq": {
+      "title": "Minecraft server panel FAQ",
+      "description": "Answers about cost, supported server types, Raspberry Pi and ARM, moving to a new machine, roles, Bedrock players, and exposing the panel to the internet."
+    },
+    "changelog": {
+      "title": "Changelog and release notes",
+      "description": "Release notes for every version of Minecraft Server Manager, the free self-hosted Minecraft server panel."
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "This page does not exist."
+    }
+  },
+  "notFound": {
+    "title": "This chunk never generated.",
+    "body": "The page you asked for does not exist. Try the home page or the documentation.",
+    "home": "Go home"
+  },
+  "langNotice": "This page is shown in English until its translation lands.",
+  "tutorial": {
+    "title": "Up and running in minutes",
+    "intro": "Pick your machine and paste the commands. Advanced has every other way to run the panel, with the commands rewritten for your own folder and address.",
+    "modes": {
+      "simple": "Simple",
+      "advanced": "Advanced"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Run the installer",
+            "body": "Works on any Linux machine with a 64-bit OS, from a VPS to a Raspberry Pi 4 or 5. It installs Docker if it is missing, sets the panel up in /opt/msm, and starts it. Run it again later to upgrade."
+          },
+          {
+            "title": "Open the panel",
+            "body": "The installer prints the address and a one-time setup PIN. Open the address in a browser, enter the PIN, and create your admin account."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Install Docker Desktop, Node.js, Git and pnpm",
+            "body": "One line each in PowerShell. Start Docker Desktop once it is installed and leave it running."
+          },
+          {
+            "title": "Get the panel and start it",
+            "body": "Open a new terminal so it finds the tools you just installed."
+          },
+          {
+            "title": "Open the panel",
+            "body": "The first run walks you through a system check, your time zone, and creating the admin account."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Install Docker Desktop, Node.js, Git and pnpm",
+            "body": "With Homebrew. Start Docker Desktop once it is installed and leave it running."
+          },
+          {
+            "title": "Get the panel and start it",
+            "body": "The install step also builds the panel. There is nothing to compile."
+          },
+          {
+            "title": "Open the panel",
+            "body": "The first run walks you through a system check, your time zone, and creating the admin account."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Fill in the two fields and every command below rewrites itself for your machine.",
+    "dataDir": "Data folder on the host",
+    "dataDirHint": "Absolute path. Worlds, backups, mods and the database all live here.",
+    "host": "Host name or IP",
+    "hostHint": "Where you will open the panel from a browser.",
+    "then": "Then open the panel",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "firstRun": "The first run walks you through a system check, your time zone, and creating the admin account.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Create the data folder",
+            "body": "One folder holds everything the panel owns."
+          },
+          {
+            "title": "Download the compose file and point it at that folder",
+            "body": "DATA_DIR_HOST must be the absolute path on the host, because Docker mounts it from the host's point of view."
+          },
+          {
+            "title": "Start the panel",
+            "body": "The image is multi-arch (amd64 and arm64) and updates on every release."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Create the data folder on the host",
+            "body": "Same folder rule: absolute path, on the machine that runs Docker."
+          },
+          {
+            "title": "Add a stack from the compose file",
+            "body": "Paste the contents of the compose file into a new stack. The raw file is here:"
+          },
+          {
+            "title": "Set the environment variable and deploy",
+            "body": "Add it in the stack's environment section, then deploy."
+          }
+        ]
+      },
+      "source": {
+        "label": "From source",
+        "steps": [
+          {
+            "title": "Check the requirements",
+            "body": "Node.js 24 or newer, pnpm, and Docker running (Docker Desktop on Windows and macOS)."
+          },
+          {
+            "title": "Clone and install",
+            "body": "The install step also builds the panel's CSS. No native modules to compile."
+          },
+          {
+            "title": "Start the panel",
+            "body": "By default it listens on localhost only. Set PANEL_HOST=0.0.0.0 to reach it from other machines on your network."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Start from a source install",
+            "body": "Run this from the cloned folder. PM2 launches apps with the Node version that started its daemon, so pin the interpreter."
+          },
+          {
+            "title": "Save the process list and enable startup",
+            "body": "pm2 startup prints one command to run with sudo; run it once."
+          },
+          {
+            "title": "Prefer systemd?",
+            "body": "A unit that runs node src/server.js from the cloned folder with WorkingDirectory set works the same way. The panel needs no extra flags."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Works with everything you already use",
+    "registries": "Registries",
+    "loaders": "Server types",
+    "packs": "Modpacks",
+    "runsOn": "Runs on",
+    "formats": "Imports",
+    "checksums": "Checksums",
+    "integrations": "Integrations",
+    "keyless": "keyless"
+  },
+  "landing": {
+    "breadcrumb": "Breadcrumb",
+    "install": "Install the Panel",
+    "docs": "Read the Docs",
+    "related": "Keep Reading",
+    "open": "Open",
+    "docsGuides": "More Guides in the Docs",
+    "docsGuidesIntro": "Short, practical answers to the questions server owners ask most, kept next to the documentation."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Minecraft server types: Paper, Fabric, Forge",
+      "description": "Run Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla, or a full modpack from one self-hosted panel. Pick the server type and see what you get."
+    },
+    "eyebrow": "Every server type",
+    "title": "One panel for every kind of Minecraft server",
+    "intro": "Plugins, mods, the unchanged game, or a whole modpack. Pick what you want to run and the panel handles the Java version, the downloads, and the pinning for you.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Paper and Purpur plugin servers, with plugins from four registries and players joining on an unmodified client.",
+      "serverFabric": "Fabric and Quilt servers for lightweight, fast-updating mods, with a version check before every Minecraft upgrade.",
+      "serverForge": "Forge and NeoForge for heavyweight mods, from 1.7.10 classics to current packs, with the right Java picked for you.",
+      "serverVanilla": "The unchanged game, from snapshots to old betas, with world controls, backups, and player stats around it.",
+      "serverModpacks": "CurseForge, Modrinth, FTB, and GT New Horizons packs pinned to an exact version, plus your own zip or .mrpack."
+    },
+    "sections": [
+      {
+        "title": "Not Sure Which One?",
+        "body": "Choose by what your players should install, not by what sounds fastest. If nobody should install anything, run vanilla or Paper. If you are installing a published pack, the pack decides the loader and the Minecraft version for you. If you are building a modded server yourself, Fabric and NeoForge cover most modern mods, and Forge covers the older eras.",
+        "points": [
+          "Survival with friends, nothing unusual: vanilla.",
+          "A public server with ranks, claims, and moderation: Paper.",
+          "A specific pack from CurseForge or Modrinth: whatever the pack says.",
+          "A modern pack you assemble yourself: Fabric or NeoForge.",
+          "An old pack from the 1.7 to 1.12 era: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Start Your First Server",
+      "body": "Install the panel, open the creation wizard, and pick a server type. Every type is free and runs on your own machine."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Paper server panel: plugins, self-hosted",
+      "description": "A free, self-hosted Paper and Purpur server panel. Search Hangar, SpigotMC, and Modrinth for plugins, verify every download, and keep them updated."
+    },
+    "eyebrow": "Paper and Purpur",
+    "title": "A self-hosted Paper server panel with a real plugin browser",
+    "intro": "Run Paper or Purpur in its own Docker container, find plugins from four registries without leaving the panel, and let players join on the game they already have.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Why Paper for a Public Server",
+        "body": "Plugins run only on the server, so players join with an ordinary, unmodified client and never have to install a thing. Anything that is about rules, permissions, economies, land claims, minigames, or moderation is a plugin, and that is why nearly every public server runs Paper. It has years of performance work behind it and a setting for nearly every behaviour that has ever annoyed an administrator. Purpur is a fork of Paper with even more switches, gameplay ones included. Both are on the Vanilla tab of the creation wizard.",
+        "points": [
+          "Players connect with the normal game. No mods, no launcher setup.",
+          "Most plugins from the Bukkit era still run.",
+          "Pick Purpur only if you want its extra switches; otherwise Paper."
+        ]
+      },
+      {
+        "title": "Four Plugin Registries in One Search",
+        "body": "The Mods tab of a plugin server searches Hangar (PaperMC's own plugin registry), SpigotMC, Modrinth, and CurseForge, filtered to the server's Minecraft version. Only CurseForge needs an API key. You can also paste a project page, a GitHub repository or release, or a direct jar link, and the panel finds the right build. Every registry download is checked against the strongest checksum the registry publishes before it reaches the server, so a corrupted or tampered file never lands.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Results already on the server show an Installed badge.",
+          "If a SpigotMC resource is hosted somewhere else, the panel says so up front and offers to open the page and take the jar as an upload instead.",
+          "Uploaded jars are identified, so they keep their real name and stay update-checkable."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Plugin Updates Without the Guesswork",
+        "body": "Every plugin you add is checked against its source on a daily schedule, and on demand. Update one plugin, ignore a version you do not want, or press Update All to apply everything with a single restart. If an update turns out badly, revert to the previous build from the shared library. Turn on Notify Me in the server's update policy and pending updates show up as a badge and on the Updates page.",
+        "points": [
+          "Daily checks against Hangar, SpigotMC, Modrinth, CurseForge, and GitHub Releases.",
+          "A revert puts the previous build back from the library.",
+          "If you pin a Paper build, the Updates page tells you when a newer one ships."
+        ]
+      },
+      {
+        "title": "Run It Like a Community Server",
+        "body": "Paper servers get the same tools as every other server in the panel: a live console with an RCON command bar, whitelist, ops, bans and IP bans, teleports, and custom chat commands with cooldowns. Give your staff accounts with per-server permissions, so a moderator can run the console without touching backups or files. One click adds a BlueMap live map, served only through the panel's own sign-in, and Discord alerts tell you when something needs you.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Start a Paper Server in Three Steps",
+      "items": [
+        {
+          "title": "Pick Paper in the Wizard",
+          "body": "Open Create a Server, stay on the Vanilla tab, choose Paper or Purpur, and pick a Minecraft version. A free game port and sensible memory are filled in for you."
+        },
+        {
+          "title": "Add Your Plugins",
+          "body": "On the server's Mods tab, search Hangar, SpigotMC, Modrinth, or CurseForge, or paste a link. Installs are verified as they download."
+        },
+        {
+          "title": "Share the Address",
+          "body": "The Overview tab shows the address to give players. They join with the game they already have."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Paper Server Questions",
+      "items": [
+        {
+          "q": "Can I add mods to a Paper server?",
+          "a": "No. Paper loads plugins, which run only on the server. Mods change the game itself and need a mod loader such as Fabric or NeoForge on both the server and every client. If you want both, run a modded server and a plugin server side by side rather than one hybrid."
+        },
+        {
+          "q": "Do I need a SpigotMC account or an API key to install plugins?",
+          "a": "No. SpigotMC, Hangar, and Modrinth all work without a key. Only CurseForge asks for an API key, which you add once under Settings, API Keys."
+        },
+        {
+          "q": "A redstone farm from a video does not work on my server. Why?",
+          "a": "Paper changes some vanilla behaviour by default in the name of performance. That is usually the reason, and it is usually a setting in Paper's configuration, which you can edit in the server's file manager."
+        },
+        {
+          "q": "Will my old Bukkit and Spigot plugins still work?",
+          "a": "Most of them, yes. Paper is a fork of Spigot and keeps the plugin API, so plugins written for Bukkit and Spigot mostly run unchanged. Check each plugin's page for the Minecraft versions it supports."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Run Your Paper Server at Home",
+      "body": "Install the panel on any machine with Docker, then create a Paper server from the wizard. Free, open source, and yours."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Self-hosted Fabric server with a mod browser",
+      "description": "Host a Fabric or Quilt Minecraft server yourself. Search Modrinth and CurseForge, pin the loader build, and check every mod before upgrading."
+    },
+    "eyebrow": "Fabric and Quilt",
+    "title": "A self-hosted Fabric server that knows what your mods support",
+    "intro": "Create a Fabric or Quilt server from the mods you want, keep the loader build where you put it, and only move to a new Minecraft version once every mod can follow.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Why Fabric",
+        "body": "Fabric is small, follows new Minecraft versions within days, and carries most of the modern performance mods. If your goal is a fast server with a handful of quality-of-life mods, this is the loader to pick. Nearly every Fabric mod also needs the Fabric API, which is a separate download you add like any other mod. Quilt is a fork of Fabric that runs most Fabric mods; choose it if you have a specific reason, otherwise choose Fabric.",
+        "points": [
+          "Quick to follow new Minecraft releases.",
+          "Home of most modern performance mods.",
+          "Quilt servers see Fabric builds automatically, since Quilt runs Fabric mods."
+        ]
+      },
+      {
+        "title": "Start From the Mods You Want",
+        "body": "The wizard's From Mods tab picks the loader, the Minecraft version, and a loader build: the latest, or a specific one you pin. You can also do it the other way round. Choose the mods first, and the solver proposes the newest loader and Minecraft version that every one of them supports, then installs the set when the server is created.",
+        "points": [
+          "Pin a Fabric or Quilt loader build instead of tracking the latest.",
+          "The Updates page offers newer builds for a pinned loader.",
+          "The mod browser filters by loader, so a Forge jar cannot land in a Fabric server by mistake."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "A Version Check Before Every Upgrade",
+        "body": "A Fabric server's Mods tab has a Versions sub-tab. It checks every installed mod against Modrinth and CurseForge and reports the highest Minecraft version they all have a build for, plus a breakdown of what each newer version would leave behind. A newer Minecraft version is only offered once that check backs it, and never while a jar cannot be identified.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Mods You Can Trust and Undo",
+        "body": "Every registry download is verified against the strongest checksum the registry publishes before it reaches the server. Mods you add live in a shared library, deduplicated by sha256, so ten servers running the same mod store it once. Update a mod, ignore a version, or revert to the previous build when an update goes wrong. Import a Modrinth .mrpack or a zip of jars and every jar is identified and checked against the server before anything installs.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Start a Fabric Server in Three Steps",
+      "items": [
+        {
+          "title": "Choose Fabric on the From Mods Tab",
+          "body": "Pick Fabric or Quilt, a Minecraft version, and the latest loader build or a pinned one."
+        },
+        {
+          "title": "Search and Add Mods",
+          "body": "Search Modrinth or CurseForge, add the Fabric API, and add the rest. Each download is verified."
+        },
+        {
+          "title": "Invite Your Players",
+          "body": "The Invites tab makes a paste-ready invite and a client .mrpack of the mods you added, with your server already in the in-game server list."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Fabric Server Questions",
+      "items": [
+        {
+          "q": "Do players need to install the same mods?",
+          "a": "Yes, for any mod that adds content. Mods change the game itself, so the client has to load the same ones. The Invites tab builds a client .mrpack of the mods you added, with your server already in the in-game server list, which players import into a launcher such as Prism or the Modrinth App."
+        },
+        {
+          "q": "Do I really need the Fabric API?",
+          "a": "Almost always. Nearly every Fabric mod depends on it, and it is a separate download. Add it from the mod browser like any other mod."
+        },
+        {
+          "q": "How do I know my mods will work on the next Minecraft version?",
+          "a": "Open the server's Mods tab and then Versions. It shows the highest Minecraft version every installed mod has a build for, and what a newer one would leave behind."
+        },
+        {
+          "q": "A mod update broke the server. Can I go back?",
+          "a": "Yes. Revert the mod from its row on the Mods tab and the previous build comes back from the shared library."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Host Your Fabric Server Yourself",
+      "body": "Install the panel, open the From Mods tab, and pick your mods. No subscription and no limits on how many servers you run."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Forge and NeoForge modded server panel",
+      "description": "Run a Forge or NeoForge modded Minecraft server yourself. The right Java is picked for you, loader builds can be pinned, and crashes name their suspects."
+    },
+    "eyebrow": "Forge and NeoForge",
+    "title": "A Forge modded server panel that picks the right Java for you",
+    "intro": "From 1.7.10 classics to current NeoForge packs, create the server, size its memory, and find the mod behind a crash without reading a stack trace line by line.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge or NeoForge?",
+        "body": "NeoForge is where the old Forge ecosystem now does its work for current versions. It split from Forge during 1.20.1, and most large packs built for 1.20.2 and later target it, so start a new heavyweight server on NeoForge. Forge still owns the past: anything from the 1.7.10, 1.12.2, and 1.16.5 eras is Forge, and that is a great deal of the best-loved packs. Mods for one loader do not run on the other, and a 1.20.1 NeoForge pack does not run on 1.20.1 Forge.",
+        "points": [
+          "New heavyweight server: NeoForge.",
+          "1.7.10, 1.12.2, or 1.16.5 era: Forge.",
+          "A published pack: whatever the pack lists, exactly."
+        ]
+      },
+      {
+        "title": "The Right Java, Every Time",
+        "body": "Minecraft's Java requirement moves with the game, and the wrong one gives you an unhelpful UnsupportedClassVersionError instead of a clear message. Old packs really do need Java 8, and current versions need 21 or newer. The creation wizard reads the Minecraft version you pick and chooses the runtime itself, so the mismatch never happens by accident. Upgrading a pack re-resolves Java if the new version needs a different one.",
+        "points": ["1.16.5 and earlier: Java 8.", "1.18 to 1.20.4: Java 17.", "1.20.5 to 1.21: Java 21."]
+      },
+      {
+        "title": "Memory Sized for Modded",
+        "body": "Each server has two numbers: the Java heap and the container memory limit. Java needs memory beyond the heap, about 1.5 to 2 GB on a large modpack, and a container with no headroom is killed the moment Java reaches for it. The wizard sets the limit 50 percent above the heap, and the panel refuses a container limit that is not above the heap. A kitchen-sink pack of 150 to 300 mods wants a 6 to 8 GB heap.",
+        "points": [
+          "A server stopped for running out of memory is recorded as exactly that in its history.",
+          "Set a smaller initial heap to see memory follow real use."
+        ]
+      },
+      {
+        "title": "Crashes That Name Their Suspects",
+        "body": "Crash reports are picked up automatically and parsed into a one-line summary with the exception and the mods most likely behind it. Open the built-in viewer, copy the stack trace, or, after an explicit confirmation, share it to mclo.gs and get its automated insights: known problems with suggested fixes, shown right in the panel. Auto-restart on crash tries again with growing waits, and skips crashes that need a fix first, like the wrong Java or running out of memory.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Start a Forge Server in Three Steps",
+      "items": [
+        {
+          "title": "Pick the Loader and Version",
+          "body": "On the wizard's From Mods tab, choose Forge or NeoForge, the Minecraft version, and the latest loader build or a pinned one."
+        },
+        {
+          "title": "Give It Enough Memory",
+          "body": "Set the Java heap for the size of your mod list. The container limit follows, 50 percent above it."
+        },
+        {
+          "title": "Add Mods or Import a Zip",
+          "body": "Search CurseForge and Modrinth, or import a CurseForge export or a zip of jars. Every jar is identified and checked against the server first."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Forge Server Questions",
+      "items": [
+        {
+          "q": "Can I still run a 1.12.2 or 1.7.10 pack?",
+          "a": "Yes. Pick the version and Forge in the wizard and the panel runs it on Java 8, which those versions need. GT New Horizons, the 1.7.10 expert pack, installs from the Modpacks page with its own Java choice."
+        },
+        {
+          "q": "How much memory does a Forge server need?",
+          "a": "A light pack of 40 to 80 mods runs well on a 4 GB heap in a 6 GB container. A pack of 150 to 300 mods wants 6 to 8 GB of heap and about 10 GB for the container."
+        },
+        {
+          "q": "Can I pin a specific Forge build?",
+          "a": "Yes. The wizard's loader build picker takes the latest or a specific build, and the Updates page offers newer builds for a pinned one without applying them on its own."
+        },
+        {
+          "q": "My server crashed on start. Where do I look?",
+          "a": "Open Monitoring and then History. The crash report card lists the exception and the suspected mods, and Analyze runs mclo.gs insights for known problems and fixes."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Run Your Modded Server Yourself",
+      "body": "Install the panel on a machine with enough memory, then create a Forge or NeoForge server from the wizard."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Vanilla Minecraft server panel, self-hosted",
+      "description": "Host a vanilla Minecraft server yourself: any version from old betas to the latest snapshot, with world controls, daily backups, and player stats."
+    },
+    "eyebrow": "The unchanged game",
+    "title": "A vanilla Minecraft server with everything around it handled",
+    "intro": "Keep the game exactly as Mojang ships it, and get backups, world tools, moderation, and player stats from the panel instead of from plugins.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Any Version You Want",
+        "body": "Pick the latest release, a snapshot, or a specific version, old betas and alphas included. The panel chooses the Java runtime that version needs, pulls the image, and starts the server from the one form. Nobody installs anything to join: players connect with the game they already have.",
+        "points": [
+          "Latest release, snapshots, or a specific version.",
+          "Old betas and alphas for a nostalgia server.",
+          "The right Java picked for each version."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "World Controls Without Typing Commands",
+        "body": "The World Controls rail rides along on every tab of a server: the in-game clock, the weather, and the common gamerules as toggle chips, with every other rule one click away. The Worlds tab resets the active world with a new, kept, or custom seed, offering a safety backup first. Duplicate a world, keep finished ones in the world library, or upload a world you already have as a .zip or .tar archive.",
+        "points": [
+          "Reset with a new seed, the same seed, or one you type.",
+          "A world library shared by every server.",
+          "Edit server.properties in the browser; the value on disk wins."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Backups From Day One",
+        "body": "Every new server gets a daily backup schedule automatically. Backups are save-safe: the panel pauses saving, flushes the world, zips it, and checks the archive opens before it records it. Restore puts the server back exactly as it was, and takes a safety backup of the current data first.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderation and Stats Without Plugins",
+        "body": "Vanilla has no permission system, so the panel gives you the moderation tools instead: whitelist, ops at every level, bans and IP bans, and teleports, live while the server runs and straight into the files while it is stopped. The game's own statistics are read on a schedule into player profiles and a scoreboard: playtime, deaths, kills, blocks and diamonds mined, and distance travelled. An activity timeline keeps chat, joins, deaths, and advancements searchable."
+      }
+    ],
+    "faq": {
+      "title": "Vanilla Server Questions",
+      "items": [
+        {
+          "q": "Can I run a snapshot server?",
+          "a": "Yes. Choose a snapshot as the Minecraft version in the wizard. Keep a backup before each new snapshot, because snapshot worlds cannot be opened in an older version."
+        },
+        {
+          "q": "Can a vanilla server have a live map?",
+          "a": "Not on vanilla. BlueMap needs a plugin or mod loader to run. A Paper server gets one with a single click, and players still join on an unmodified client."
+        },
+        {
+          "q": "Can I reset the world but keep the seed?",
+          "a": "Yes. Reset the active world from the Worlds tab and choose to keep the current seed. The panel offers a safety backup of the old world first."
+        },
+        {
+          "q": "How many players can a vanilla server handle?",
+          "a": "Vanilla is slower with many players than Paper. For a group of friends it is fine. For a busy public server, Paper runs the same game with years of performance work."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Start a Vanilla Server",
+      "body": "Install the panel, pick Vanilla in the wizard, and share the address. Free and open source."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Minecraft modpack server: one-click installs",
+      "description": "Run a Minecraft modpack server from CurseForge, Modrinth, FTB, or GT New Horizons. Packs stay pinned, and every update comes with a backup and a rollback."
+    },
+    "eyebrow": "Modpack servers",
+    "title": "A Minecraft modpack server that never upgrades behind your back",
+    "intro": "Install a pack by name, pin it to an exact version, and upgrade only when you choose, with a backup first and a one-click rollback if the new version will not start.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Every Big Pack Source",
+        "body": "The Modpacks page and the wizard's From Modpack tab install packs from CurseForge and Modrinth by searching their names, FTB packs by their pack and version IDs, and GT New Horizons from its own release index. Not a published pack at all? Upload a Modrinth .mrpack, a CurseForge modpack export, or any zip of mod jars. The manifest, or a majority vote across the identified jars, fills in the loader and the Minecraft version.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge needs an API key, added once under Settings, API Keys.",
+          "Mods whose authors disallow automated downloads are listed with a link and an upload slot instead of failing the install.",
+          "GT New Horizons gets its Java version and sensible memory and disk minimums set for you."
+        ]
+      },
+      {
+        "title": "Pinned to an Exact Version",
+        "body": "When you pick a pack, the panel resolves the exact version, records it, and installs that one. A restart can never quietly upgrade the pack. You choose how each server hears about new versions: Manual Only leaves it alone entirely, Notify Me shows a badge and lists it on the Updates page, and Auto-Update applies pack updates after the daily check through the same guarded path. Updates that would move a world to a different Minecraft version are always skipped, because converting a world is your decision.",
+        "points": [
+          "Manual Only is the default.",
+          "Servers tracking stable releases are never offered a beta.",
+          "Auto-Update never crosses a Minecraft version."
+        ]
+      },
+      {
+        "title": "Upgrades With a Way Back",
+        "body": "Upgrading a pack is one action. The panel takes a backup, stops the server gracefully, swaps the pinned version, rebuilds the server with the right Java for the new version, and watches the first boot, with a generous window for large packs that download gigabytes on first start. If the new version does not come up, roll back with one click.",
+        "shot": "backups"
+      },
+      {
+        "title": "Your Own Mods on Top",
+        "body": "Mods you add to a pack server live in a shared library and are linked into the server, so they survive pack updates. Disable a pack mod you do not want, add a performance mod the pack lacks, and keep both through the next upgrade. Players install the same pack at the same version from CurseForge or Modrinth, and the Invites tab gives you a paste-ready invite with the address and version.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Start a Modpack Server in Three Steps",
+      "items": [
+        {
+          "title": "Find the Pack",
+          "body": "Search CurseForge or Modrinth on the Modpacks page, or upload a .mrpack, a CurseForge export, or a zip of jars."
+        },
+        {
+          "title": "Pick the Version and Memory",
+          "body": "Choose the exact pack version. Give the Java heap room for the mod count; the container limit follows."
+        },
+        {
+          "title": "Create and Watch It Boot",
+          "body": "The panel installs the pack, pins it, and starts the server. The first start of a big pack takes a while; the console shows every line."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack Server Questions",
+      "items": [
+        {
+          "q": "Will restarting the server update my modpack?",
+          "a": "No. The pack is pinned to the exact version you installed. It only changes when you upgrade it, or after the daily check if you set the server to Auto-Update."
+        },
+        {
+          "q": "Why does CurseForge need an API key when Modrinth does not?",
+          "a": "CurseForge only answers requests that carry a key. You can get one from the CurseForge console and add it once under Settings, API Keys. Modrinth works without one."
+        },
+        {
+          "q": "Some mods in my pack could not be downloaded. What now?",
+          "a": "Their authors disallow automated downloads. The panel lists each one with a link to its page and an upload slot, so you download the jar in your browser and drop it in."
+        },
+        {
+          "q": "Can I install an FTB pack?",
+          "a": "Yes, through the FTB API with the pack's numeric ID and an explicit version ID. The panel does not check FTB packs for updates yet."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Run Your Modpack Server at Home",
+      "body": "Install the panel, open the Modpacks page, and pick a pack. It stays on the version you chose until you say otherwise."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Guides: host a Minecraft server yourself",
+      "description": "Guides for hosting Minecraft servers yourself: a modpack server for friends, a Raspberry Pi, a home PC, leaving paid hosting, and many servers on one machine."
+    },
+    "eyebrow": "Guides",
+    "title": "Guides for hosting Minecraft servers yourself",
+    "intro": "Practical walkthroughs for the setups people actually run, from a Raspberry Pi on a shelf to a machine full of servers.",
+    "cards": {
+      "guideFriends": "Host a CurseForge or Modrinth modpack for your friends, with the right memory and an invite they can follow.",
+      "guidePi": "Turn a Raspberry Pi 4 or 5 into a Minecraft server with a web panel, and size it honestly.",
+      "guideHome": "Host a Minecraft server at home on Windows, macOS, or Linux, and let friends join safely.",
+      "guideHosting": "Move your world, plugins, and mods off a paid host without losing a single inventory.",
+      "guideMulti": "Run several Minecraft servers on one machine without ports, memory, or disk getting in each other's way."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Need Something Not Covered Here?",
+      "body": "The documentation goes deeper on every feature, and the Discord has real humans who run servers."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Host a Modpack Server for Friends",
+      "description": "Host a CurseForge or Modrinth modpack server for your friends on your own machine: pick the pack, give it enough memory, invite friends, and keep backups."
+    },
+    "eyebrow": "Modpack server guide",
+    "title": "How to Host a Modpack Server for Your Friends",
+    "intro": "Your own machine can host the pack you play with your friends. Install the panel, create the server from the pack, give it the memory it needs, and send friends an invite they can follow.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Pick the Pack From the Wizard",
+        "body": "The Modpacks page and the From Modpack tab of the creation wizard search CurseForge and Modrinth by name; the wizard also takes FTB packs by ID, or a pack export you already have. Choose the version your friends will play. The panel installs exactly that version and keeps it there: a restart never upgrades the pack behind your back. CurseForge needs a free API key, added once under Settings, API Keys; Modrinth needs none.",
+        "points": [
+          "Search CurseForge and Modrinth, or upload a .mrpack, a CurseForge export or a zip of mod jars.",
+          "The pack version is pinned, so everyone plays the same one.",
+          "Java is picked for the pack's Minecraft version."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Give It Enough Memory",
+        "body": "Modpacks need far more memory than a vanilla server, and a server has two numbers: the Java heap, and the container limit around it, which must be larger because Java uses memory beyond its heap. A light pack of 40 to 80 mods wants a 4 GB heap in a 6 GB container; a big kitchen-sink pack 6 to 8 GB of heap in 10 GB. The panel tells a server stopped for running out of memory apart from a crash, so you know which setting to change.",
+        "points": [
+          "Set the memory in the wizard, and change it later in the server's settings.",
+          "Leave memory for the operating system and the panel.",
+          "The Monitoring tab shows what the server really uses."
+        ]
+      },
+      {
+        "title": "Send Friends an Invite They Can Follow",
+        "body": "Friends install the same pack at the same version in their launcher: the CurseForge app, the Modrinth App or Prism Launcher. The server's Invites tab, under Settings, copies the address to share and an invite text with the Minecraft version. Friends on your network use the local address. For friends elsewhere, forward the game port on your router, or use a tunnel when your provider does not allow it.",
+        "points": [
+          "The Invites tab offers the local address, your public address and a custom one.",
+          "If the whitelist is on, add each friend on the Players tab first.",
+          "For a server built from mods you picked, the Invites tab also makes a client .mrpack that installs them and adds the server to the multiplayer list."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Keep the World Safe",
+        "body": "Every new server gets a daily backup schedule. Before a pack update the panel takes another backup, rebuilds the server on the new version and watches the first boot; if it does not come up, one click rolls it back. Mods you added on top of the pack stay through updates.",
+        "points": [
+          "Daily backups from the first day.",
+          "Pack updates and downgrades with a backup and a rollback.",
+          "Crash reports detected, explained and shareable."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Host Your Modpack Server",
+      "items": [
+        {
+          "title": "Install the Panel",
+          "body": "On Linux, the one-line installer sets up Docker and the panel. On Windows and macOS, run the panel with Node.js next to Docker Desktop."
+        },
+        {
+          "title": "Add a CurseForge API Key",
+          "body": "Only for CurseForge packs: add a free key under Settings, API Keys."
+        },
+        {
+          "title": "Create the Server From the Pack",
+          "body": "Open the From Modpack tab of the wizard, find the pack, pick its version and memory, and create the server."
+        },
+        {
+          "title": "Invite Your Friends",
+          "body": "Start the server, open Settings, Invites, and send the invite text. Friends install the same pack version in their launcher and join."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack Server Questions",
+      "items": [
+        {
+          "q": "How much RAM does a modpack server need?",
+          "a": "About 6 GB for a light pack of 40 to 80 mods and 10 GB for a big pack of 150 to 300, each with a smaller Java heap inside. Expert packs such as GregTech New Horizons want 16 GB. Leave room for the operating system too."
+        },
+        {
+          "q": "Do my friends need the same modpack version?",
+          "a": "Yes. The server runs one pinned pack version, and a client with different versions of the mods is usually refused or crashes. Tell friends the version shown on the server's Overview tab."
+        },
+        {
+          "q": "Can friends join without port forwarding?",
+          "a": "Yes, if they are on your network. From elsewhere, either forward the game port on your router or use a tunnel service, which also works when your provider blocks port forwarding."
+        },
+        {
+          "q": "What happens when the pack gets an update?",
+          "a": "With the Notify Me policy the Updates page shows it. Applying it takes a backup, rebuilds the server and watches the first boot, and a rollback is one click. Your friends then update the pack in their launcher too."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Play Your Pack on Your Own Server",
+      "body": "Free, open source, and no account with anyone. Install the panel and create the server from the pack in the wizard."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Raspberry Pi Minecraft server with a web panel",
+      "description": "Set up a Raspberry Pi Minecraft server with a free web panel. What hardware you need, how to install it in one command, and how to size memory."
+    },
+    "eyebrow": "Raspberry Pi guide",
+    "title": "Run a Raspberry Pi Minecraft server with a real web panel",
+    "intro": "A Raspberry Pi 4 or 5 makes a quiet, low-power home for a small Minecraft server. Here is what to buy, how to install the panel in one command, and how far to push it.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "What You Need",
+        "body": "The panel and its server image are published for arm64, so a 64-bit Raspberry Pi runs them like any other Linux machine. Memory is the limit that matters most: a vanilla or Paper server for up to ten players wants a 2 GB Java heap on a 4 GB machine, and a light modpack wants a 4 GB heap on a 6 GB machine. That puts a 4 GB Pi at the small end and an 8 GB Pi in the comfortable middle.",
+        "points": [
+          "A Raspberry Pi 4 or 5 with 4 GB of memory or more. 8 GB if you want mods.",
+          "A 64-bit operating system, such as 64-bit Raspberry Pi OS.",
+          "An SSD over USB rather than the SD card. Worlds read and write constantly, and a world on slow storage stutters during chunk loading.",
+          "A wired network connection if you can."
+        ]
+      },
+      {
+        "title": "Pick a Server Type That Suits the Pi",
+        "body": "Minecraft cares far more about how fast one core is than about how many there are, and a Pi's cores are modest. Paper runs the same game as vanilla with years of performance work, and players still join with an unmodified client. If you want mods, Fabric with a handful of performance and quality-of-life mods is a better fit than a large Forge pack. A 200-mod kitchen-sink pack is not a Pi job.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Small group, unchanged game: Paper.",
+          "A few mods: Fabric.",
+          "Lower the view distance; dropping from 12 to 8 chunks saves a lot of memory and is barely noticeable in play."
+        ]
+      },
+      {
+        "title": "Keep an Eye on It",
+        "body": "The server's Monitoring tab shows ticks per second and milliseconds per tick, so you can see when the Pi is falling behind. The memory meter shows what the container really uses. Java claims its whole heap up front by default; if you would rather see memory follow real use, set a smaller initial heap in the server's Resources card. Daily backups are on from the first day.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Install the Panel on a Raspberry Pi",
+      "items": [
+        {
+          "title": "Flash a 64-bit OS",
+          "body": "Install 64-bit Raspberry Pi OS (or another 64-bit Linux), boot from the SSD if you can, and update the system."
+        },
+        {
+          "title": "Run the One-Line Installer",
+          "body": "The installer on the Install page installs Docker if it is missing, sets up the panel in /opt/msm, starts it, and waits until it answers. It detects arm64 by itself."
+        },
+        {
+          "title": "Finish Setup in the Browser",
+          "body": "Open the Pi's address on port 25564 from another computer. Because the panel is reachable from your network, setup asks for a 6-digit PIN, which the installer prints for you."
+        },
+        {
+          "title": "Create a Small Server",
+          "body": "Pick Paper or Fabric in the wizard. The default memory adapts to the Pi's RAM; leave room for the system and other services."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Raspberry Pi Questions",
+      "items": [
+        {
+          "q": "Will a Raspberry Pi 3 work?",
+          "a": "It is not a good fit. A Pi 3 has 1 GB of memory, while even a small vanilla or Paper server wants a 2 GB heap on a 4 GB machine. Use a Pi 4 or 5 with 4 GB or more."
+        },
+        {
+          "q": "Do I need a 64-bit operating system?",
+          "a": "Yes. The panel image and the installer are built for arm64 and amd64, and the installer stops on any other architecture."
+        },
+        {
+          "q": "Can I run a big modpack on a Pi?",
+          "a": "Large packs want 6 to 8 GB of Java heap and around 10 GB of memory in total, more than any Pi has. Stick to Paper or a light Fabric setup."
+        },
+        {
+          "q": "How do players outside my home join?",
+          "a": "Forward the game port, 25565 by default over TCP and UDP, from your router to the Pi. Never forward the panel's port or the RCON ports; reach the panel through a VPN or a reverse proxy with TLS instead."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Turn Your Pi Into a Server",
+      "body": "One command installs everything. The panel is free, open source, and runs entirely on the Pi."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Host a Minecraft server at home, step by step",
+      "description": "Host a Minecraft server at home on Windows, macOS, or Linux with a free web panel. Install it, keep the panel private, and let friends join safely."
+    },
+    "eyebrow": "Home server guide",
+    "title": "Host a Minecraft server at home on Windows, macOS, or Linux",
+    "intro": "Any computer that can run Docker can host your servers. Install the panel, keep it private, open only the game port, and your friends can join from anywhere.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Two Ways to Install",
+        "body": "On a Linux machine, the one-line installer does everything: it installs Docker if it is missing, runs the panel as a container, and starts it again after a reboot. On Windows and macOS, run the panel directly with Node.js 24 next to Docker Desktop. The panel prints a clear message and stops if your Node.js is too old, and if Docker is not running yet you still get the full panel; servers start as soon as Docker is up.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: the installer, or the compose file in Portainer or Dockge.",
+          "Windows: Docker Desktop with the WSL2 backend, then the panel from source.",
+          "macOS: Docker Desktop, then the panel from source.",
+          "Under PM2 or systemd, the panel survives reboots."
+        ]
+      },
+      {
+        "title": "Keep the Panel Private",
+        "body": "Players never talk to the panel. They connect to the game port. A fresh install from source answers only on the machine it runs on, at localhost port 25564. To reach it from another computer in your home, set it to listen on your network; setup then asks for a one-time PIN, so a stranger who reaches the port first cannot claim the admin account. Never forward the panel's port to the internet. To manage servers away from home, use a VPN, an SSH tunnel, or a reverse proxy with TLS.",
+        "points": [
+          "Localhost only out of the box.",
+          "A setup PIN when the panel is reachable from the network.",
+          "Two-factor authentication for every account."
+        ]
+      },
+      {
+        "title": "Let Friends Join",
+        "body": "Each server gets a game port, starting at 25565 and counting up. On your router, forward that port, over both TCP and UDP, to the computer running the servers. Leave the remote console ports, 1000 above each game port, closed: the panel reaches them from inside the container and never needs them open. Give players a hostname you control instead of your home address, so a change of address is a DNS change and not a message to every player.",
+        "points": [
+          "Forward game ports only, TCP and UDP.",
+          "Keep RCON and the panel port closed.",
+          "The Overview tab shows the address to share."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Make It Behave Like a Server",
+        "body": "A home computer that sleeps takes your server with it, so turn off sleep on the machine that hosts it. Tick Start on Panel Boot in a server's settings and it comes back with the panel. Auto-restart on crash brings a crashed server back with growing waits between tries. Daily backups are scheduled for every new server, and schedules can restart servers at quiet hours.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Host Your First Server at Home",
+      "items": [
+        {
+          "title": "Install Docker",
+          "body": "Docker Engine on Linux, or Docker Desktop on Windows and macOS. On Windows, share the drive that holds the panel with Docker Desktop."
+        },
+        {
+          "title": "Install and Open the Panel",
+          "body": "Follow the Install page for your system, then open the panel in a browser. Setup checks Docker, creates your admin account, and asks for your time zone."
+        },
+        {
+          "title": "Create a Server",
+          "body": "The wizard suggests a free port and memory that fits your machine. Pick a server type and press create."
+        },
+        {
+          "title": "Forward the Game Port",
+          "body": "Forward the server's game port on your router, TCP and UDP, and send friends the address from the Overview tab."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Home Hosting Questions",
+      "items": [
+        {
+          "q": "Can I host on the same PC I play on?",
+          "a": "Yes, as long as it has the memory for both. Give the server its heap plus headroom for Java, and leave enough for the game client. A vanilla server for a few friends wants about 4 GB to itself."
+        },
+        {
+          "q": "Why can friends on my Wi-Fi join but friends outside cannot?",
+          "a": "The game port is not forwarded on your router, or a firewall blocks it. Forward the server's game port over TCP and UDP to the hosting machine, and allow it in the machine's firewall."
+        },
+        {
+          "q": "Can I run the panel's Docker image on Windows or macOS?",
+          "a": "The container install targets Linux hosts. On Windows and macOS, run the panel from source with Node.js 24 next to Docker Desktop, which works the same once it is running."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Start Hosting at Home",
+      "body": "Free, open source, and no account with anyone. Your servers live in one folder on your own machine."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Leave paid Minecraft hosting: move your world",
+      "description": "Move a Minecraft server off a paid host: take the right files, bring the world and plugins into your own panel, keep every inventory, and keep the address."
+    },
+    "eyebrow": "Migration guide",
+    "title": "Move your Minecraft server off paid hosting",
+    "intro": "Bring your world, plugins, and mods home with every inventory intact. Take stock first, copy the whole server folder, rebuild it in your own panel, and only then point players at it.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Take Stock Before You Download",
+        "body": "Write these down while the old server is still running. Every one of them has ended a migration badly when it was assumed rather than checked. Online mode matters most: if the old server ran with it off and the new one runs with it on, or the other way round, every player gets a different identity and a brand new, empty inventory.",
+        "points": [
+          "The exact Minecraft version and loader. 1.20.1 NeoForge is not 1.20.1 Forge.",
+          "The mod or plugin list, with versions.",
+          "The level-name from server.properties. The world folder is often not called world.",
+          "Online mode, on or off.",
+          "Anything living outside the server folder, such as a plugin's database."
+        ]
+      },
+      {
+        "title": "Take the Whole Folder, Not Just the World",
+        "body": "Use the host's file manager or download option and take the entire server directory. Get the plugin and mod jars themselves, not a list of names: the versions matter, and latest is a different file next month. Download your backups too. A backup that only exists inside the panel you are leaving is not a backup you own. Stop the server properly before the final download so the game flushes the world to disk."
+      },
+      {
+        "title": "Rebuild It in Your Own Panel",
+        "body": "Create a server of the same type and the same exact version. Then bring the pieces in. The Worlds page takes your world as a .zip or .tar archive, finds the world inside it automatically, and installs it to the server, backing up the current one first. On a plugin or mod server, import a zip of your jars: each one is identified, judged against the server, and installed if it fits. Configs and the rest go in through the file manager, which edits and uploads right in the browser. If the old server ran a published pack, install the same pack at the same version instead.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Upload World finds the world inside your archive.",
+          "Import Zip identifies every jar and checks it against the server.",
+          "The file manager handles configs, whitelist, and ops files."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Keep the Address, Keep the Players",
+        "body": "If players connect to a bare IP address, every move makes them edit their server list, and some never do. Use a hostname you control and point it at your new machine. Moving then becomes a DNS change. Lower the record's time to live a day before the switch so the change spreads quickly. An SRV record lets players type a bare domain even when the server runs on a different port, the same thing hosts do to hand out a play address."
+      }
+    ],
+    "steps": {
+      "title": "The Switch Over, in Order",
+      "items": [
+        {
+          "title": "Test on a Private Port",
+          "body": "Start the new server on a port players do not know, join it yourself, and check a base you know, your inventory, and that every plugin or mod loaded."
+        },
+        {
+          "title": "Final Copy",
+          "body": "Announce a restart, stop the old server properly, download the world once more, and install that copy so the newest changes come with it."
+        },
+        {
+          "title": "Switch the Port and the Address",
+          "body": "Move the server to its public port with the Game Port card, then point your hostname at the new machine."
+        },
+        {
+          "title": "Keep the Old One for a While",
+          "body": "Cancel the old plan only after a few days. Keep it stopped, so nobody builds on the abandoned copy."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Migration Questions",
+      "items": [
+        {
+          "q": "Will players keep their inventories?",
+          "a": "Yes, as long as online mode is the same on both servers and you moved the whole world folder. Player data lives inside the world, keyed by each player's identity, and that identity changes if online mode does."
+        },
+        {
+          "q": "My host only lets me download the world. Is that enough?",
+          "a": "For vanilla, mostly. For a plugin or mod server, you also need the jars at their exact versions, because the world will not load correctly without the mods that made it. Ask your host for the full server directory."
+        },
+        {
+          "q": "What does the panel replace from my host's control panel?",
+          "a": "The console, file manager, backups, schedules, player management, plugin and mod installs, and modpack installs, plus things hosts often charge extra for, such as more servers or more backup slots. The limit is your own hardware."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Bring Your Server Home",
+      "body": "Install the panel, create a server that matches your old one, and upload your world. Free, open source, and yours to keep."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Run multiple Minecraft servers on one machine",
+      "description": "Run multiple Minecraft servers on one machine: automatic ports, per-server memory, CPU and disk caps, shared mods, and one dashboard for the whole fleet."
+    },
+    "eyebrow": "Multi-server guide",
+    "title": "Run multiple Minecraft servers on one machine, cleanly",
+    "intro": "A survival world, a creative build server, and a modpack for the weekend, all on the same machine. Each one gets its own container, its own port, and its own limits, and you see them all on one dashboard.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Ports Sorted for You",
+        "body": "Game ports are handed out first-free, counting up from 25565, with the remote console 1000 above each one. Ten servers use game ports 25565 to 25574 and keep RCON in its own block, so you can open one contiguous game range on your firewall without ever exposing RCON. A port counts as taken if another server uses it, any Docker container on the machine publishes it, or the system reports it busy. Move a server later with the Game Port card, and the panel checks the new port before it saves.",
+        "points": [
+          "One game and RCON pair per server, assigned automatically.",
+          "Use Next Free Port picks the lowest free one.",
+          "Open the game range only. RCON stays closed."
+        ]
+      },
+      {
+        "title": "Limits So One Server Cannot Starve the Rest",
+        "body": "Each server is its own Docker container with a CPU limit, a Java heap, and a hard memory limit above it. Docker cannot cap the disk use of a folder, so the panel does: every server has a disk quota, and an action that would push a server past it, like installing a mod or uploading a world, is blocked until space is freed. Turn on Stop the Server When Over Quota and a server that grows more than 10 percent past its quota is stopped and noted in its history.",
+        "points": [
+          "Per-server CPU, heap, and memory limit.",
+          "Panel-enforced disk quotas.",
+          "Defaults for new servers adapt to the machine's memory."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Share What Can Be Shared",
+        "body": "Mods you add are stored once in a shared library, deduplicated by sha256, and linked into every server that uses them, so ten servers running the same mod do not store it ten times. Worlds go into a world library any server can install from. A blueprint captures a server's whole recipe as a single .mcserver.zip, and Clone uses it to stamp out an identical server with fresh ports.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "One View of the Fleet",
+        "body": "The dashboard shows every server at a glance: status, memory, players online, updates waiting, and recent activity. Tags organize the servers list. Global schedules run restarts, backups, or commands across servers, and the Updates page collects what is out of date across the fleet. Per-server permissions let a friend run their own server in the panel without seeing yours.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Plan a Multi-Server Machine",
+      "items": [
+        {
+          "title": "Add Up the Memory",
+          "body": "Sum each server's Java heap and its headroom, then leave room for the system. Servers that are stopped use no memory, so a weekend pack does not cost anything on weekdays."
+        },
+        {
+          "title": "Set Sensible Defaults",
+          "body": "An admin sets the heap, disk quota, and CPU limit every new server starts with under Settings, Defaults for New Servers."
+        },
+        {
+          "title": "Open One Port Range",
+          "body": "Open a game port range sized for the servers you plan to run, over TCP and UDP. Leave the RCON block closed."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Multi-Server Questions",
+      "items": [
+        {
+          "q": "How many servers can one machine run?",
+          "a": "Memory decides it first. Add up each running server's heap and its headroom: a small vanilla or Paper server wants about 4 GB in total, a light modpack about 6 GB. Stopped servers cost nothing."
+        },
+        {
+          "q": "Can each server have its own admins?",
+          "a": "Yes. Per-server permissions grant view, power, console, players, content, backups, files, settings, and delete separately for each server, and a server can be hidden from a user entirely."
+        },
+        {
+          "q": "Can players switch between my servers in game?",
+          "a": "Not through the panel itself. Each server has its own address and port. Linking servers so players move between them in game takes a proxy server, which you would run alongside them."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Run Your Whole Fleet From One Place",
+      "body": "Install the panel once and add servers as you need them. No per-server fees and no instance limits."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Minecraft Server Panel Comparison: Pterodactyl, AMP, Crafty",
+      "description": "A fair comparison of free and paid Minecraft server panels: Pterodactyl, Crafty Controller, AMP, MCSManager and PufferPanel, next to Minecraft Server Manager."
+    },
+    "eyebrow": "Compare panels",
+    "title": "Minecraft Server Panel Comparison",
+    "intro": "Several good panels can run a Minecraft server. Here is how Minecraft Server Manager differs from each of them, with the cases where another panel is the better pick.",
+    "cards": {
+      "comparePtero": "A free multi-game panel built for hosting companies, with a separate daemon on every machine. Compare setup effort and Minecraft features.",
+      "compareCrafty": "A free Minecraft panel written in Python that runs servers as plain processes. Compare how servers are isolated and how modpacks get in.",
+      "compareAmp": "A commercial panel for hundreds of games, sold in licence tiers. Compare price, instance limits and Minecraft depth.",
+      "compareMcsm": "A free, distributed panel for Minecraft and Steam games. Compare architecture, Docker use and modpack handling.",
+      "comparePuffer": "A free, lightweight panel for many games and many machines, with servers as processes or containers. Compare isolation, nodes and Minecraft depth."
+    },
+    "sections": [
+      {
+        "title": "How These Comparisons Are Written",
+        "body": "Every fact about another panel comes from that project's own website, documentation or repository, and each page says when it was checked. Where we could not confirm something, we left it out instead of guessing. If a fact has changed, tell us on Discord or GitHub and we will fix the page.",
+        "points": [
+          "Each page lists what the other panel does better.",
+          "Prices and versions are quoted with the date they were checked.",
+          "Minecraft Server Manager is not affiliated with any of these projects. Their names belong to their owners."
+        ]
+      },
+      {
+        "title": "What Minecraft Server Manager Is Built For",
+        "body": "One owner, or a small team, running Minecraft Java servers on their own machine. Every server is a resource-capped Docker container, the whole panel lives in one folder, and the Minecraft parts that are fiddly elsewhere are built in: pinned modpacks with rollback, five mod registries in one search, crash forensics, a one-click live map and portable blueprints.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Questions About Choosing a Panel",
+      "items": [
+        {
+          "q": "Which panel should I pick for a single Minecraft server at home?",
+          "a": "If you only run Minecraft Java and want modpacks, backups and a live map without assembling them yourself, Minecraft Server Manager is made for that. If you also host other games or manage many machines, a multi-game panel such as Pterodactyl, MCSManager or AMP fits better."
+        },
+        {
+          "q": "Is Minecraft Server Manager really free?",
+          "a": "Yes. It is MIT licensed, has no paid tier and uses no paid services. CurseForge downloads need a CurseForge API key, which you add in Settings."
+        },
+        {
+          "q": "Can I move my existing world into Minecraft Server Manager?",
+          "a": "Yes. Upload the world on the Worlds page and install it to a new server, or import a modpack export or a zip of mod jars when you create the server."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Try It on Your Own Machine",
+      "body": "Install the panel in three steps and create your first server from the wizard. Your whole panel stays in one folder you can copy anywhere."
+    },
+    "table": {
+      "title": "All Panels at a Glance",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Price",
+          "values": ["Free.", "Free.", "Free.", "Paid licence tiers.", "Free.", "Free."]
+        },
+        {
+          "label": "Licence",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Commercial, closed source.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition.",
+            "Many, through eggs.",
+            "Minecraft Java and Bedrock.",
+            "More than 200.",
+            "Minecraft and Steam games.",
+            "Many, through templates."
+          ]
+        },
+        {
+          "label": "Game servers run as",
+          "values": [
+            "Docker containers.",
+            "Docker containers.",
+            "Processes on the host.",
+            "Processes, or Docker containers once turned on.",
+            "Containers or processes.",
+            "Processes or containers."
+          ]
+        },
+        {
+          "label": "Several machines",
+          "values": [
+            "No. One panel per machine.",
+            "Yes, with Wings nodes.",
+            "No remote nodes in its documentation.",
+            "Professional licence and above.",
+            "Yes, with daemons.",
+            "Yes, with nodes."
+          ]
+        },
+        {
+          "label": "Host systems",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Facts checked against each project's own documentation, October and November 2026. Each comparison page has the details."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Pterodactyl Alternative for Minecraft Servers",
+      "description": "Minecraft Server Manager compared with Pterodactyl: one process and one folder instead of a panel, daemon, database and Redis, with Minecraft features built in."
+    },
+    "eyebrow": "Pterodactyl alternative",
+    "title": "A Pterodactyl Alternative Built Only for Minecraft",
+    "intro": "Pterodactyl is a free, open-source panel that runs many games for many machines. Minecraft Server Manager does one game on one machine, so it needs far less to set up and ships the Minecraft tools built in.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side by Side",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Price and licence",
+          "values": ["Free, MIT.", "Free, MIT."]
+        },
+        {
+          "label": "What you install",
+          "values": [
+            "One Node.js process, or one Docker container.",
+            "A PHP (Laravel) panel with a React frontend, plus the Wings daemon written in Go on every node."
+          ]
+        },
+        {
+          "label": "Database and cache",
+          "values": [
+            "Built-in SQLite file inside the data folder. Nothing else to run.",
+            "MySQL 5.7.22+ or MariaDB 10.2+, Redis, a web server and Composer."
+          ]
+        },
+        {
+          "label": "Game servers run as",
+          "values": ["Resource-capped Docker containers.", "Isolated Docker containers (Docker is required)."]
+        },
+        {
+          "label": "Host systems",
+          "values": [
+            "Linux, Windows and macOS. The image is built for amd64 and arm64.",
+            "Linux only: Ubuntu, Debian and RHEL family releases. Wings does not run on Windows."
+          ]
+        },
+        {
+          "label": "Machines managed",
+          "values": [
+            "One. The panel and Docker run on the same host.",
+            "Many. One panel controls Wings nodes on many machines."
+          ]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition. Bedrock players can join through Geyser.",
+            "Many games through \"eggs\", including Minecraft, Rust, Terraria and ARK."
+          ]
+        }
+      ],
+      "note": "Facts checked October 2026 against each project's own documentation."
+    },
+    "sections": [
+      {
+        "title": "Setup Without a Stack to Assemble",
+        "body": "Pterodactyl's own documentation calls it a highly complex system with multiple dependencies: PHP, a database server, Redis, a web server, a queue worker, and Wings on each node. That design is what lets it serve hosting companies. Minecraft Server Manager is one process that talks to your Docker socket and keeps everything, database included, in one folder. On Linux one installer script sets it up, and installs Docker if it is missing.",
+        "points": [
+          "No separate daemon, database server or cache to keep running.",
+          "Copy the data folder to move the whole panel to a new machine.",
+          "Runs natively on Windows and macOS next to Docker Desktop."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Where Minecraft Server Manager Is Stronger for Minecraft",
+        "body": "Because it only runs Minecraft, the panel knows what a modpack, a mod jar and a crash report are. The tools a Minecraft owner reaches for are part of the panel, not something to find and wire in.",
+        "points": [
+          "Modpacks are pinned to an exact version, and upgrades take a backup first and roll back in one click.",
+          "One search across five registries, filtered to the server's loader and Minecraft version.",
+          "Every download is checksum-verified before it reaches the server.",
+          "Crashes are detected, parsed and shareable to mclo.gs in one click.",
+          "A one-click BlueMap live map, behind the panel's own sign-in.",
+          "Every setting of the itzg image is explained in plain English in the wizard."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "When Pterodactyl Is the Better Pick",
+        "body": "Pterodactyl is mature, actively maintained, and backed by hosting companies. If any of these describe you, it is the stronger choice.",
+        "points": [
+          "You run servers on several machines and want one panel for all of them.",
+          "You host games other than Minecraft.",
+          "You sell or share hosting with many separate customers and need that scale.",
+          "You already run Pterodactyl and its eggs cover what you need."
+        ]
+      },
+      {
+        "title": "A Note on Pelican",
+        "body": "Pelican Panel is a fork of Pterodactyl, licensed AGPL-3.0 and still at release candidate stage when this page was checked. It keeps the panel plus Wings design, adds SQLite and PostgreSQL as database options, and has a plugin hub where a third-party plugin browses CurseForge and Modrinth modpacks."
+      }
+    ],
+    "faq": {
+      "title": "Pterodactyl Questions",
+      "items": [
+        {
+          "q": "Can I move a server from Pterodactyl to Minecraft Server Manager?",
+          "a": "Yes. Download the server's world from Pterodactyl, create a server of the same type and Minecraft version in Minecraft Server Manager, then upload the world on the Worlds page and install it to that server. For modded servers, import the pack or your zip of mod jars when you create it."
+        },
+        {
+          "q": "Does Minecraft Server Manager need a database server like MySQL?",
+          "a": "No. It uses the SQLite engine built into Node.js 24 and stores the database file in the data folder with everything else."
+        },
+        {
+          "q": "Can Minecraft Server Manager manage several machines like Wings nodes?",
+          "a": "No. It manages the Docker daemon on the machine it runs on. For several machines, run one panel on each, or pick a multi-node panel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Run Minecraft Without the Extra Stack",
+      "body": "Install Minecraft Server Manager in three steps and create your first server in the wizard."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller and Minecraft Server Manager are both free Minecraft panels. Compare how servers are isolated, how modpacks install, and where each one fits."
+    },
+    "eyebrow": "Crafty Controller alternative",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Both are free, self-hosted panels made for Minecraft. Crafty runs each server as a process on the host, written in Python. Minecraft Server Manager runs each server in its own Docker container and builds modpacks, mod search and crash tools into the panel.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side by Side",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Price and licence",
+          "values": ["Free, MIT.", "Free, GPL-3.0."]
+        },
+        {
+          "label": "Written in",
+          "values": ["Node.js 24.", "Python 3.10 to 3.12."]
+        },
+        {
+          "label": "Game servers run as",
+          "values": [
+            "Resource-capped Docker containers.",
+            "Processes on the host. The panel itself can also run in Docker."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Required on the host.", "Optional."]
+        },
+        {
+          "label": "Host systems",
+          "values": [
+            "Linux, Windows and macOS. The image is built for amd64 and arm64.",
+            "Linux, Windows, macOS and Raspberry Pi OS, plus Docker, UnRAID and CasaOS guides. Its image covers amd64 and arm64."
+          ]
+        },
+        {
+          "label": "Editions",
+          "values": [
+            "Java Edition. Bedrock players can join through Geyser.",
+            "Java Edition from 1.8 to the latest, and Bedrock."
+          ]
+        },
+        {
+          "label": "Modpacks",
+          "values": [
+            "CurseForge, Modrinth, FTB and GT New Horizons packs from the wizard, pinned to an exact version.",
+            "Its FAQ describes importing a pack as a zip, or Modrinth packs through mrpack-install."
+          ]
+        },
+        {
+          "label": "Backups, schedules, roles, 2FA",
+          "values": [
+            "Yes: retention per server, cron schedules, three roles with per-server permissions, TOTP.",
+            "Yes: a backup manager, a task scheduler, user roles, and TOTP plus passkeys."
+          ]
+        }
+      ],
+      "note": "Facts checked October 2026 against each project's own documentation."
+    },
+    "sections": [
+      {
+        "title": "Containers Instead of Host Processes",
+        "body": "In Minecraft Server Manager every server is its own Docker container on the well-known itzg Minecraft image, with its own memory and CPU limits and a disk quota the panel enforces. One server cannot eat the machine's memory or fill its disk, and rebuilding a server never touches the others. The trade is that Docker has to be installed on the host.",
+        "points": [
+          "Memory, CPU and disk limits per server.",
+          "Graceful RCON stop before the container stops, and crash detection with backoff.",
+          "Java is picked per server by the image, so mixed Minecraft versions just work."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Where Minecraft Server Manager Is Stronger",
+        "body": "The wizard installs modpacks and mods for you and keeps them pinned, so a restart never silently upgrades a pack.",
+        "points": [
+          "Install CurseForge, Modrinth, FTB and GT New Horizons packs from the wizard.",
+          "Import a Modrinth .mrpack, a CurseForge export or your own zip of jars, with every jar identified.",
+          "Search five registries at once, filtered to the server's loader and version.",
+          "Upgrades take a backup first and roll back in one click.",
+          "One-click BlueMap live map and mclo.gs crash sharing.",
+          "Portable blueprints: export a server's recipe and get the same server anywhere."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "When Crafty Controller Is the Better Pick",
+        "body": "Crafty is mature, actively maintained, and runs in more places without Docker.",
+        "points": [
+          "You want to run servers without installing Docker, for example directly on Windows, macOS or a Raspberry Pi.",
+          "You run Bedrock Dedicated Server itself, not only Java with Geyser.",
+          "You want passkey sign-in."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Crafty Controller Questions",
+      "items": [
+        {
+          "q": "Can I move my Crafty server into Minecraft Server Manager?",
+          "a": "Yes. Create a server with the same type and Minecraft version, then upload the world as a zip on the Worlds page and install it to that server. For a modded server, import your pack or a zip of the mod jars when you create it."
+        },
+        {
+          "q": "Does Minecraft Server Manager run on a Raspberry Pi?",
+          "a": "Yes, on a 64-bit OS with Docker. The panel image is published for arm64 as well as amd64."
+        },
+        {
+          "q": "Why does Minecraft Server Manager need Docker?",
+          "a": "Each server runs in its own container, which is how it gets resource limits, a clean rebuild, and the right Java version for every Minecraft version."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "See It With Your Own Server",
+      "body": "Install the panel in three steps, then create a server from a modpack in the wizard."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Free AMP Alternative for Minecraft Servers",
+      "description": "Minecraft Server Manager compared with AMP by CubeCoders: a free, MIT-licensed Minecraft panel with no instance limits, next to a commercial multi-game panel."
+    },
+    "eyebrow": "AMP alternative",
+    "title": "A Free AMP Alternative for Minecraft",
+    "intro": "AMP by CubeCoders is a commercial panel for a very long list of games, sold in licence tiers. Minecraft Server Manager is free and open source, runs only Minecraft, and has no limit on how many servers you create.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side by Side",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Price",
+          "values": [
+            "Free. No tiers.",
+            "Standard £7.50 / $10, Professional £15 / $30, Advanced £30 / $40, Enterprise on a variable subscription."
+          ]
+        },
+        {
+          "label": "Licence and source",
+          "values": [
+            "MIT, source on GitHub.",
+            "Commercial and closed source. Its public GitHub repository holds issues and docs."
+          ]
+        },
+        {
+          "label": "Servers you can create",
+          "values": ["No limit beyond your hardware.", "5 instances on Standard, 15 on Professional, 50 on Advanced."]
+        },
+        {
+          "label": "Panel users",
+          "values": ["Unlimited, with admin, operator and viewer roles.", "3 on Standard, unlimited from Professional."]
+        },
+        {
+          "label": "Commercial use",
+          "values": ["Allowed by the MIT licence.", "Enterprise licence only."]
+        },
+        {
+          "label": "Several machines",
+          "values": ["One machine per panel.", "Professional and above."]
+        },
+        {
+          "label": "Host systems",
+          "values": ["Linux, Windows and macOS. The image is built for amd64 and arm64.", "Windows and Linux."]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition. Bedrock players can join through Geyser.",
+            "More than 200 games and applications on its compatibility list, including Minecraft Java and Bedrock."
+          ]
+        }
+      ],
+      "note": "Facts checked October 2026 against each project's own documentation. AMP prices come from CubeCoders' editions comparison sheet and may change."
+    },
+    "sections": [
+      {
+        "title": "No Licence, No Instance Count",
+        "body": "AMP's tiers decide how many instances and panel users you get, and only the Enterprise tier allows commercial use. Minecraft Server Manager has no tiers: every feature, every server and every user account is free under the MIT licence, and it uses no paid services. CurseForge downloads need a CurseForge API key, which you add in Settings.",
+        "points": [
+          "Create as many servers as your machine can hold.",
+          "Invite your whole team with per-server permissions and two-factor sign-in.",
+          "The source is public, so you can read, fork and contribute to it."
+        ]
+      },
+      {
+        "title": "Where Minecraft Server Manager Is Stronger for Minecraft",
+        "body": "A panel for one game can go deep on it. Every setting the itzg Minecraft image supports is in the wizard with plain-English help, and the Minecraft workflows are built in.",
+        "points": [
+          "CurseForge, Modrinth, FTB and GT New Horizons modpacks, pinned with one-click rollback.",
+          "One mod search across five registries, with checksum-verified downloads.",
+          "Version compatibility checks before a Minecraft upgrade is offered.",
+          "Crash forensics with mclo.gs sharing, and a one-click BlueMap live map.",
+          "Player analytics, inventory forensics and storage analytics with disk quotas."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "When AMP Is the Better Pick",
+        "body": "AMP covers far more ground than a Minecraft-only panel, and comes with commercial support.",
+        "points": [
+          "You host many different games from one panel.",
+          "You need single sign-on through OIDC, custom branding or deployment templates, which its Advanced tier includes.",
+          "You run a hosting business and want a commercial licence with vendor support.",
+          "You want to run Bedrock Dedicated Server itself."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "AMP Questions",
+      "items": [
+        {
+          "q": "Is Minecraft Server Manager free for commercial use?",
+          "a": "The MIT licence allows commercial use. The panel is built for owners and small teams on one machine, so check that it fits how you host before you rely on it for customers."
+        },
+        {
+          "q": "Does Minecraft Server Manager support games other than Minecraft?",
+          "a": "No. It runs Minecraft Java Edition servers only, which is why it can go deep on modpacks, mods and crash reports."
+        },
+        {
+          "q": "Can I bring an AMP Minecraft instance over?",
+          "a": "Yes. Create a server with the same type and Minecraft version, then upload the instance's world as a zip on the Worlds page and install it to that server. Modded servers can start from a modpack, a pack export or a zip of mod jars."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Every Feature, Free",
+      "body": "Install Minecraft Server Manager in three steps. There is nothing to buy and nothing to unlock."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "MCSManager Alternative for Minecraft Servers",
+      "description": "MCSManager and Minecraft Server Manager compared: a distributed panel for Minecraft and Steam games, next to a Minecraft-only panel with modpacks built in."
+    },
+    "eyebrow": "MCSManager alternative",
+    "title": "An MCSManager Alternative Focused on Minecraft",
+    "intro": "MCSManager is a free, open-source panel for Minecraft and Steam games that can manage several machines. Minecraft Server Manager runs only Minecraft on one machine, with every server in a Docker container and the Minecraft tools built in.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side by Side",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Price and licence",
+          "values": ["Free, MIT.", "Free, Apache-2.0."]
+        },
+        {
+          "label": "Written in",
+          "values": ["Node.js 24.", "TypeScript on Node.js."]
+        },
+        {
+          "label": "What you install",
+          "values": ["One process, or one Docker container.", "Two services: a web panel and a daemon."]
+        },
+        {
+          "label": "Database",
+          "values": ["Built-in SQLite file inside the data folder.", "None needed."]
+        },
+        {
+          "label": "Game servers run as",
+          "values": ["Resource-capped Docker containers.", "Docker containers or plain processes, your choice."]
+        },
+        {
+          "label": "Host systems",
+          "values": [
+            "Linux, Windows and macOS. The image is built for amd64 and arm64.",
+            "Windows, Linux and macOS, with a one-line install script for Linux."
+          ]
+        },
+        {
+          "label": "Machines managed",
+          "values": ["One. The panel and Docker run on the same host.", "Many, through distributed daemons."]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition. Bedrock players can join through Geyser.",
+            "Minecraft and Steam games such as Palworld and Terraria, from a built-in marketplace."
+          ]
+        }
+      ],
+      "note": "Facts checked October 2026 against each project's own documentation."
+    },
+    "sections": [
+      {
+        "title": "Where Minecraft Server Manager Is Stronger for Minecraft",
+        "body": "MCSManager deploys many kinds of game servers. Minecraft Server Manager is about one game, so the wizard, the mod tools and the history all speak Minecraft.",
+        "points": [
+          "Every setting of the itzg Minecraft image, explained in plain English in the wizard.",
+          "CurseForge, Modrinth, FTB and GT New Horizons modpacks, pinned with one-click rollback.",
+          "One mod search across five registries, with checksum-verified downloads.",
+          "Crash forensics with suspects named, and one-click mclo.gs sharing.",
+          "A one-click BlueMap live map, player analytics and portable blueprints.",
+          "The whole panel, database included, is one folder you can copy to migrate."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Containers by Default",
+        "body": "Every server in Minecraft Server Manager is a Docker container with its own memory and CPU limits, plus a disk quota the panel enforces. Java is chosen per server, so a 1.12 modpack and the latest Paper release run side by side without juggling Java installs. MCSManager lets you choose between containers and plain processes, which is more flexible when Docker is not an option.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "When MCSManager Is the Better Pick",
+        "body": "MCSManager is very actively developed and covers more than Minecraft.",
+        "points": [
+          "You manage servers across several machines from one panel.",
+          "You also host Steam games such as Palworld or Terraria.",
+          "You want to run servers as plain processes, without Docker.",
+          "You want a drag-and-drop dashboard and a marketplace of ready-made game deployments."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "MCSManager Questions",
+      "items": [
+        {
+          "q": "Can I move a Minecraft server from MCSManager?",
+          "a": "Yes. Create a server with the same type and Minecraft version in Minecraft Server Manager, then upload the world as a zip on the Worlds page and install it to that server. Modded servers can start from a modpack, a pack export or a zip of mod jars."
+        },
+        {
+          "q": "Do I need Docker for Minecraft Server Manager?",
+          "a": "Yes. Docker runs every server. On Linux the installer script installs Docker for you if it is missing."
+        },
+        {
+          "q": "Can several people share one Minecraft Server Manager panel?",
+          "a": "Yes. There are admin, operator and viewer roles, per-server permissions, and optional two-factor sign-in for every account."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, Done in Depth",
+      "body": "Install the panel in three steps and create your first server from the wizard."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "PufferPanel Alternative for Minecraft Servers",
+      "description": "Minecraft Server Manager compared with PufferPanel: every server in its own Docker container and Minecraft tools built in, against a light multi-game, multi-node panel."
+    },
+    "eyebrow": "PufferPanel alternative",
+    "title": "A PufferPanel Alternative Made Only for Minecraft",
+    "intro": "PufferPanel is a free, open-source panel for many games on one or many machines. Minecraft Server Manager runs only Minecraft on one machine, always in Docker, with the Minecraft tools built in.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side by Side",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Price and licence",
+          "values": ["Free, MIT.", "Free, Apache-2.0."]
+        },
+        {
+          "label": "Written in",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "What you install",
+          "values": [
+            "One process, or one Docker container.",
+            "One service from its apt or yum repository, or its Docker image. A node on another machine runs the same package."
+          ]
+        },
+        {
+          "label": "Database",
+          "values": [
+            "Built-in SQLite file inside the data folder.",
+            "None to set up for a basic install. A guide covers using an external database."
+          ]
+        },
+        {
+          "label": "Game servers run as",
+          "values": [
+            "Resource-capped Docker containers, always.",
+            "Processes on the host (its docs say this environment has no security features) or Docker containers."
+          ]
+        },
+        {
+          "label": "Host systems",
+          "values": [
+            "Linux, Windows and macOS. The image is built for amd64 and arm64.",
+            "Linux: packages for Ubuntu 22.04 and 24.04 and Debian 10 and 11 on amd64 and arm64, Raspbian on arm64, and a yum repository. 32-bit is not supported."
+          ]
+        },
+        {
+          "label": "Machines managed",
+          "values": [
+            "One. The panel and Docker run on the same host.",
+            "Many. Nodes on other machines run servers for one panel."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, every server type of the itzg image, and CurseForge, Modrinth, FTB and GT New Horizons packs. Bedrock players join through Geyser.",
+            "Templates for Java and Bedrock servers, CurseForge and FTB packs, and BungeeCord, Velocity and Waterfall proxies."
+          ]
+        }
+      ],
+      "note": "Facts checked November 2026 against PufferPanel's documentation, its repository and its templates repository."
+    },
+    "sections": [
+      {
+        "title": "Isolation Without a Setting to Remember",
+        "body": "PufferPanel lets you pick an environment per server. The standard one runs the server as a process on the host, as the same user as the panel, and its own documentation says it has no security features; the Docker one isolates it. Minecraft Server Manager has only the second kind. Every server is its own container with a memory and CPU cap, a disk quota the panel enforces, and nothing shared with the others but the mod library.",
+        "points": [
+          "One container per server, labelled and capped.",
+          "Disk quotas enforced by the panel.",
+          "A server that crashes or runs out of memory is detected and recorded."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Where Minecraft Server Manager Goes Deeper on Minecraft",
+        "body": "A template starts a server; the work comes after. Mods to find and update, packs that move on, crashes to read, worlds to back up. Those are built into the panel here.",
+        "points": [
+          "Modpacks are pinned to an exact version. Upgrades and downgrades take a backup first and roll back in one click.",
+          "One search across five registries, filtered to the server's loader and Minecraft version.",
+          "Every download is checksum-verified before it reaches the server.",
+          "A version check shows which future Minecraft versions every installed mod already supports.",
+          "Crash reports are detected, parsed and shareable to mclo.gs in one click.",
+          "A one-click BlueMap live map, behind the panel's own sign-in."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "When PufferPanel Is the Better Pick",
+        "body": "PufferPanel is light, free and has been around for years. If any of these describe you, pick it.",
+        "points": [
+          "You host games other than Minecraft.",
+          "You run servers on several machines and want one panel for all of them.",
+          "You want a native Bedrock server, or a BungeeCord, Velocity or Waterfall proxy network.",
+          "You would rather not run Docker at all.",
+          "You want SFTP access to server files."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "PufferPanel Questions",
+      "items": [
+        {
+          "q": "Can I move a Minecraft server from PufferPanel to Minecraft Server Manager?",
+          "a": "Yes. Download the server's world folder, create a server of the same type and Minecraft version, then upload the world on the Worlds page and install it to that server. For a modded server, import the pack or a zip of its mod jars when you create it."
+        },
+        {
+          "q": "Does Minecraft Server Manager need Docker?",
+          "a": "Yes. Every Minecraft server runs as a Docker container, which is how it caps memory, CPU and disk per server. The panel itself can run in Docker or straight from Node.js."
+        },
+        {
+          "q": "Can it run servers on a second machine?",
+          "a": "No. It manages the Docker daemon on the machine it runs on. For two machines, run a panel on each, or pick a panel with nodes such as PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Every Server in Its Own Container",
+      "body": "Install the panel in three steps and create your first server in the wizard."
+    }
+  }
+}

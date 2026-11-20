@@ -1,0 +1,69 @@
+---
+// Site footer on dark dirt: the lockup, then one column each for the product
+// pages, the server-type pages, the guides and comparisons, and the community.
+// Every page on the site is reachable from here.
+import { PAGES, HUBS, REPO_URL, DISCORD_URL, href } from '../lib/routes.js';
+interface Props {
+  locale: string;
+  copy: any;
+}
+const { locale, copy } = Astro.props;
+const year = new Date().getFullYear();
+const hub = (id) => HUBS.find((h) => h.id === id);
+const hubLinks = (id) => hub(id).pages.map((p) => [copy[p.key].eyebrow || copy[p.key].title, href(locale, `/${id}/${p.slug}/`)]);
+const link = 'hover:text-white hover:underline';
+---
+
+<footer class="tex tex-dark-dirt border-t-[3px] border-outline text-[#e8e6df]">
+  <div class="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-10 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1fr]">
+    <div class="col-span-2 lg:col-span-1">
+      <p class="display flex items-center gap-2 text-xl text-white"><img src="/favicon.svg" alt="" width="26" height="26" class="pixelated" />{copy.site.name}</p>
+      <p class="mt-3 text-sm">{copy.site.tagline}</p>
+      <p class="mt-1 text-sm opacity-80">{copy.footer.tagline}</p>
+    </div>
+    <div>
+      <h2 class="text-base text-white">{copy.footer.product}</h2>
+      <ul class="mt-3 space-y-1.5 text-sm">
+        {PAGES.filter((p) => p.key !== 'home' && !HUBS.some((h) => h.id === p.key)).map((p) => (
+          <li><a class={link} href={href(locale, p.path)}>{copy.nav[p.key]}</a></li>
+        ))}
+      </ul>
+    </div>
+    <div>
+      <h2 class="text-base text-white"><a class={link} href={href(locale, '/servers/')}>{copy.footer.serverTypes}</a></h2>
+      <ul class="mt-3 space-y-1.5 text-sm">
+        {hubLinks('servers').map(([label, url]) => <li><a class={link} href={url}>{label}</a></li>)}
+      </ul>
+    </div>
+    <div>
+      <h2 class="text-base text-white"><a class={link} href={href(locale, '/guides/')}>{copy.footer.guides}</a></h2>
+      <ul class="mt-3 space-y-1.5 text-sm">
+        {hubLinks('guides').map(([label, url]) => <li><a class={link} href={url}>{label}</a></li>)}
+      </ul>
+      <h2 class="mt-5 text-base text-white"><a class={link} href={href(locale, '/compare/')}>{copy.footer.compare}</a></h2>
+      <ul class="mt-3 space-y-1.5 text-sm">
+        {hubLinks('compare').map(([label, url]) => <li><a class={link} href={url}>{label}</a></li>)}
+      </ul>
+    </div>
+    <div>
+      <h2 class="text-base text-white">{copy.footer.community}</h2>
+      <ul class="mt-3 space-y-1.5 text-sm">
+        <li><a class={link} href={DISCORD_URL} rel="noopener">{copy.nav.discord}</a></li>
+        <li><a class={link} href={REPO_URL} rel="noopener">{copy.nav.github}</a></li>
+        <li><a class={link} href={`${REPO_URL}/issues`} rel="noopener">{copy.footer.issues}</a></li>
+      </ul>
+      <h2 class="mt-5 text-base text-white">{copy.footer.resources}</h2>
+      <ul class="mt-3 space-y-1.5 text-sm">
+        <li><a class={link} href={`${REPO_URL}/releases`} rel="noopener">{copy.footer.releases}</a></li>
+        <li><a class={link} href={`${REPO_URL}/blob/main/CONTRIBUTING.md`} rel="noopener">{copy.footer.contributing}</a></li>
+        <li><a class={link} href={`${REPO_URL}/blob/main/LICENSE`} rel="noopener">{copy.footer.license}</a></li>
+        <li><a class={link} href={`${REPO_URL}/blob/main/ROADMAP.md`} rel="noopener">{copy.footer.roadmap}</a></li>
+        <li><a class={link} href={`${REPO_URL}/blob/main/AI-DECLARATION.md`} rel="noopener">{copy.footer.ai}</a></li>
+        <li><a class={link} href={`${REPO_URL}/blob/main/CODE_OF_CONDUCT.md`} rel="noopener">{copy.footer.conduct}</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="tex tex-deep-stone border-t-[3px] border-outline">
+    <p class="mx-auto max-w-6xl px-4 py-3 text-xs text-[#cfd3d8]">© {year} Minecraft Server Manager contributors. {copy.footer.notAffiliated}</p>
+  </div>
+</footer>

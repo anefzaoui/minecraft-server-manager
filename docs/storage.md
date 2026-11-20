@@ -1,5 +1,7 @@
 # Storage
 
+<!-- description: See where disk space goes, cap each server folder with a disk quota, and clean up what you no longer need. -->
+
 [← Back to docs index](README.md)
 
 The **Storage** page shows where your disk is going: usage by category, each server against its quota, the largest files, and how total use is trending over recent scans. It is for admins only.

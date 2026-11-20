@@ -1,5 +1,7 @@
 # How much RAM does a Minecraft server need?
 
+<!-- description: How much RAM a Minecraft server needs for vanilla, Paper, light mods and big modpacks, and how much to leave for the machine. -->
+
 [← Back to docs index](README.md)
 
 Short answer, for a server that will actually be played on:

@@ -1,0 +1,21 @@
+---
+// Starlight's header icons, preceded by the marketing site's main links so a
+// reader can get from the docs back to Features, Install and the FAQ.
+import Default from '@astrojs/starlight/components/SocialIcons.astro';
+import { href } from '../../lib/routes.js';
+import { getCopy } from '../../i18n/index.js';
+import { localeCode } from '../../i18n/locales.js';
+// Astro.currentLocale is the language tag here ('pt-BR'); links need the code ('pt-br').
+const locale = localeCode(Astro.currentLocale);
+const copy = getCopy(locale);
+const links = [
+  ['features', '/features/'],
+  ['install', '/install/'],
+  ['faq', '/faq/'],
+];
+---
+
+<nav class="docs-nav" aria-label={copy.site.name}>
+  {links.map(([key, path]) => <a href={href(locale, path)}>{copy.nav[key]}</a>)}
+</nav>
+<Default />

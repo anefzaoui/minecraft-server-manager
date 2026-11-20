@@ -1,0 +1,47 @@
+---
+import Site from '../../layouts/Site.astro';
+import Section from '../../components/Section.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import Community from '../../components/Community.astro';
+import XpDivider from '../../components/XpDivider.astro';
+import Icon from '../../components/Icon.astro';
+import { localePaths, localeFromParams } from '../../lib/paths.js';
+import { getCopy } from '../../i18n/index.js';
+import { href, SITE_URL } from '../../lib/routes.js';
+import { art } from '../../data/art.js';
+const spriteChest = art('sprite-chest');
+
+export function getStaticPaths() {
+  return localePaths();
+}
+const locale = localeFromParams(Astro.params);
+const copy = getCopy(locale);
+const GROUP_ART = ['group-servers', 'group-mods', 'group-protection', 'group-insight'];
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: copy.nav.home, item: new URL(href(locale, '/'), SITE_URL).href },
+    { '@type': 'ListItem', position: 2, name: copy.nav.features, item: new URL(href(locale, '/features/'), SITE_URL).href },
+  ],
+};
+---
+
+<Site locale={locale} path="/features/" pageKey="features" jsonLd={[breadcrumb]}>
+  <PageHeader title={copy.features.title} intro={copy.features.intro} sprite={spriteChest} />
+  {copy.features.groups.map((g, gi) => (
+    <>
+      {gi > 0 && <XpDivider />}
+      <Section title={g.title} banner={art(GROUP_ART[gi])}>
+        <ul class="cards mt-5" role="list">
+          {g.items.map((f) => <FeatureCard title={f.title} body={f.body} icon={f.icon} pills={f.pills} />)}
+        </ul>
+      </Section>
+    </>
+  ))}
+  <Section class="pt-0">
+    <a class="btn btn-primary btn-lg" href={href(locale, '/docs/')}>{copy.features.cta}<Icon name="arrow" size={18} /></a>
+  </Section>
+  <Community copy={copy} />
+</Site>

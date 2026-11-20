@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "Aktiviteettiloki",
+    "description": "Aktiviteettisivu on täydellinen auditointiloki: haettava, kronologinen tallenne kaikesta, mitä paneelissa tapahtui."
+  },
+  "architecture": {
+    "title": "Arkkitehtuuri",
+    "description": "Minecraft Server Manager on yhden prosessin, palvelimella renderöity Node.js-sovellus."
+  },
+  "backups": {
+    "title": "Varmuuskopiot",
+    "description": "Varmuuskopiot-sivu näyttää kaikki tilannekuvat koko laivastostasi, sisältäen koon, syyn ja iän, ja ne voi suodattaa palvelimen ja syyn mukaan."
+  },
+  "blueprints": {
+    "title": "Blueprintit",
+    "description": "Blueprintit tallentavat Minecraft-palvelimen koko konfiguraation uudelleenkäytettäväksi reseptiksi uusien palvelimien luomiseen. Salaisuuksia ei koskaan sisällytetä."
+  },
+  "chatbot": {
+    "title": "Minecraft-chatbot palvelukohtaisesti",
+    "description": "Paneeli tarjoaa jokaiselle hallitulle Minecraft-palvelimelle ylläpitäjän määrittämän chatbotin, joka asetetaan palvelimen Asetukset → Chatbot-välilehdellä."
+  },
+  "console-and-chat": {
+    "title": "Konsoli ja chat-komennot",
+    "description": "Konsoli-välilehti näyttää palvelimen lokin reaaliaikaisesti ja tarjoaa komentoruudun, johon voit lähettää minkä tahansa palvelinkomennon."
+  },
+  "dashboard": {
+    "title": "Kojelauta",
+    "description": "Kojelauta on kotipesäsi: jokainen palvelin, sen reaaliaikainen tila ja käynnissä oleva syöte tapahtumista."
+  },
+  "getting-started": {
+    "title": "Aloitus",
+    "description": "Asenna Minecraft Server Manager ja suorita ensimmäisen käynnistyksen asetukset: järjestelmän tarkistus, aikavyöhykkeesi ja pääkäyttäjätili."
+  },
+  "index": {
+    "title": "Dokumentaatio",
+    "description": "Täydellinen, itse isännöity ohjauspaneeli itzg/docker-minecraft-serverille."
+  },
+  "integrations": {
+    "title": "Integraatiot",
+    "description": "Jokainen palvelin sisältää integraationsa Asetukset-ryhmän alla: Discord, julkinen tilasivu, kertaklikkauksella luotavat kutsut ja valinnainen Chatbot-välilehti (vain ylläpitäjille)."
+  },
+  "modpacks": {
+    "title": "Modpackit",
+    "description": "Asenna CurseForge-, Modrinth-, FTB- ja GT New Horizons -modpackit palvelimiksi, aina kiinnitettynä tarkkaan pack-versioon."
+  },
+  "public-api": {
+    "title": "Julkinen API",
+    "description": "Pieni, vain lukuoikeudellinen HTTP API palvelimen tilan hakemiseen paneelin ulkopuolelta: tilan kojelauta, käytettävyysvalvonta, Discord-botti, kotiautomaatiosääntö."
+  },
+  "schedules": {
+    "title": "Aikataulut",
+    "description": "Aikataulut-sivu automatisoi toistuvat tehtävät cron-lausekkeilla. Ei ulkoista cronia, ei skriptejä."
+  },
+  "servers": {
+    "title": "Palvelinten luominen ja hallinta",
+    "description": "Luo, käynnistä, pysäytä, rakenna uudelleen ja määritä Minecraft-palvelimia ohjauspaneelissa: luontivelho, asetukset, muisti ja pelin portti."
+  },
+  "storage": {
+    "title": "Tallennustila",
+    "description": "Näe, mihin levytila kuluu, aseta kiintiörajat jokaiselle palvelinkansiolle ja siivoa tarpeettomat tiedostot."
+  },
+  "two-factor-authentication": {
+    "title": "Kaksivaiheinen tunnistautuminen",
+    "description": "Kaksivaiheinen tunnistautuminen (2FA) lisää toisen vaiheen kirjautumiseen: salasanasi jälkeen syötät lyhyen koodin puhelimesi tunnistussovelluksesta."
+  },
+  "updates": {
+    "title": "Päivitykset",
+    "description": "Seuraa ja asenna Minecraft-versioiden, modpackien, modien ja lisäosien päivitykset jokaiselle palvelimelle palvelinkohtaisella käytännöllä."
+  },
+  "users-and-roles": {
+    "title": "Käyttäjät ja roolit",
+    "description": "Tilit, järjestelmänvalvojan, operaattorin ja katselijan roolit sekä palvelinkohtaiset käyttöoikeudet Minecraft Server Managerissa."
+  },
+  "world-shrink": {
+    "title": "Maailman pienentäminen",
+    "description": "Pienennä Minecraft-maailmaa poistamalla harvoin vierailtuja paloja levytilan vapauttamiseksi ja varmuuskopioiden nopeuttamiseksi."
+  },
+  "worlds-and-files": {
+    "title": "Maailmat ja tiedostot",
+    "description": "Maailmakirjasto, maailmojen lataukset ja vaihdot, modien ja pluginien välilehti sekä selainpohjainen tiedostonhallinta."
+  },
+  "guide-backups": {
+    "title": "Minecraft-palvelimen varmuuskopiot, jotka todella palautuvat",
+    "description": "Kuinka tehdä Minecraft-palvelimen varmuuskopioita, jotka todella palautuvat: johdonmukaiset kopiot, säilytetty muualla ja testattu vähintään kerran."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: kumpi?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge vai Quilt: kumpi Minecraft-palvelintyyppi ajetaan, valittuna sen perusteella, mitä pelaajasi asentavat."
+  },
+  "guide-moving-a-server": {
+    "title": "Minecraft-palvelimen siirtäminen toiseen palvelimeen",
+    "description": "Maailman siirtäminen on helppoa. Palvelimen siirtäminen niin, että pelaajat voivat edelleen kirjautua sisään, inventaariot, kodit ja käyttöoikeudet ennallaan, on se osa, joka menee pieleen."
+  },
+  "guide-server-memory": {
+    "title": "Kuinka paljon RAM-muistia Minecraft-palvelin tarvitsee?",
+    "description": "Kuinka paljon RAM-muistia Minecraft-palvelin tarvitsee vanilla-, Paper-, kevyeen modaukseen ja suuriin modipaketteihin, ja kuinka paljon jätetään koneelle."
+  },
+  "guide-server-wont-start": {
+    "title": "Minecraft-palvelimesi ei käynnisty",
+    "description": "Minecraft-palvelin, joka ei käynnisty, korjattuna todennäköisyysjärjestyksessä: loki, Java-versio, muisti, EULA ja portti sekä modit."
+  },
+  "invites-and-status-page": {
+    "title": "Kutsut ja tilasivu",
+    "description": "Kutsu ystäviä palvelimelle osoitteen, version ja asiakasmodipakkauksen avulla ja jaa julkinen tilasivu, joka näyttää vain sen, mitä itse valitset."
+  },
+  "live-map": {
+    "title": "Live-kartta",
+    "description": "Ota käyttöön BlueMap-live 3D-kartta palvelimen maailmasta yhdellä napsautuksella, tarjoiltuna vain paneelin kirjautumisen kautta."
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "Tevékenységnapló",
+    "description": "A Tevékenység oldal a teljes audit trail: minden, ami a panelben történt, kereshető, kronologikus nyilvántartása."
+  },
+  "architecture": {
+    "title": "Architektúra",
+    "description": "A Minecraft Server Manager egy egyszálú, szerveroldalon renderelt Node.js alkalmazás."
+  },
+  "backups": {
+    "title": "Biztonsági mentések",
+    "description": "A Biztonsági mentések oldal az összes pillanatképét mutatja a teljes flottában, mérettel, okkal és korszakkal, kiszolgálónként és okonként szűrhetően."
+  },
+  "blueprints": {
+    "title": "Sablonok",
+    "description": "A sablonok megmentik egy Minecraft szerver teljes konfigurációját, mint új szerverek létrehozására alkalmas, újrafelhasználható receptet. Titkos kulcsok soha nem szerepelnek benne."
+  },
+  "chatbot": {
+    "title": "Szerverenkénti Minecraft chatbot",
+    "description": "A panel minden felügyelt Minecraft szerverhez egy rendszergazda által konfigurált chatbotot kínál, amely a szerver Beállítások → Chatbot lapján állítható be."
+  },
+  "console-and-chat": {
+    "title": "Konzol és csevegési parancsok",
+    "description": "A Konzol lap valós időben streameli a szervernaplót, és rendelkezik egy parancssori mezővel, amellyel bármilyen szerverparancsot elküldhet."
+  },
+  "dashboard": {
+    "title": "Az irányítópult",
+    "description": "Az irányítópult az otthona: minden szerver, annak élő állapota és egy folyamatosan frissülő napló arról, hogy mi történt."
+  },
+  "getting-started": {
+    "title": "Első lépések",
+    "description": "Telepítse a Minecraft Server Managert, és fejezze be az első indítási beállításokat: rendszerellenőrzés, időzóna és rendszergazdai fiók."
+  },
+  "index": {
+    "title": "Dokumentáció",
+    "description": "Egy teljes körű, önállóan hosztolt vezérlőpanel az itzg/docker-minecraft-server számára."
+  },
+  "modpacks": {
+    "title": "Modpackok",
+    "description": "Telepíts CurseForge, Modrinth, FTB és GT New Horizons modpackokat szerverként, mindig egy pontos csomagverzióhoz rögzítve."
+  },
+  "public-api": {
+    "title": "Nyilvános API",
+    "description": "Egy kis, csak olvasható HTTP API a szerver állapotának lekérdezéséhez a panelen kívülről: állapot-kijelző, üzemidő-monitor, Discord bot, otthonautomatizálási szabály."
+  },
+  "integrations": {
+    "title": "Integrációk",
+    "description": "Minden szerver integrációi a Beállítások csoport alatt találhatók: Discord, nyilvános Állapotoldal, egérkattintásos Meghívók és az opcionális Chatbot fül (csak adminoknak)."
+  },
+  "schedules": {
+    "title": "Ütemezések",
+    "description": "Az Ütemezések oldal automatizálja az ismétlődő feladatokat cron kifejezésekkel. Nincs külső cron, nincsenek szkriptek."
+  },
+  "storage": {
+    "title": "Tárhely",
+    "description": "Tekintse meg, hol fogy a lemezterület, korlátozza a szervermappákat lemez kvótával, és törölje a felesleges fájlokat."
+  },
+  "servers": {
+    "title": "Szerverek létrehozása és kezelése",
+    "description": "Hozzon létre, indítson, állítson le, építsen újra és konfiguráljon Minecraft szervereket a panelen: a létrehozási varázsló, a beállítások, a memória és a játékkikötő segítségével."
+  },
+  "two-factor-authentication": {
+    "title": "Kétfaktoros hitelesítés",
+    "description": "A kétfaktoros hitelesítés (2FA) egy második lépést ad a bejelentkezéshez: a jelszó megadása után be kell írnia egy rövid kódot a telefonján lévő hitelesítő alkalmazásból."
+  },
+  "updates": {
+    "title": "Frissítések",
+    "description": "Kövesse nyomon és alkalmazza a Minecraft verziók, modpackok, modok és bővítmények frissítéseit minden szerveren, szerverenkénti szabályzattal."
+  },
+  "users-and-roles": {
+    "title": "Felhasználók és szerepkörök",
+    "description": "Fiókok, az adminisztrátor, üzemeltető és megtekintő szerepkörök, valamint a Minecraft Server Manager szerverenkénti engedélyei."
+  },
+  "world-shrink": {
+    "title": "Világ méretének csökkentése",
+    "description": "Csökkentse egy Minecraft világ méretét a ritkán látogatott chunkok törlésével, hogy lemezterületet szabadítson fel és gyorsítsa a biztonsági mentéseket."
+  },
+  "worlds-and-files": {
+    "title": "Világok és fájlok",
+    "description": "A világkönyvtár, világfeltöltések és cserék, a modok és bővítmények lap, valamint a böngészőben elérhető fájlkezelő."
+  },
+  "guide-backups": {
+    "title": "Minecraft szervermentések, amelyek valóban visszaállíthatók",
+    "description": "Hogyan készítsünk Minecraft szervermentéseket, amelyek valóban visszaállíthatók: konzisztens másolatok, máshol tárolva, és legalább egyszer tesztelve."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: melyiket?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge vagy Quilt: melyik Minecraft szervertípus fusson, attól függően, mit telepítenek a játékosok."
+  },
+  "guide-moving-a-server": {
+    "title": "Minecraft szerver áthelyezése másik tárhelyre",
+    "description": "Egy világ áthelyezése egyszerű. Az a szerver áthelyezése, amelyre a játékosok továbbra is be tudnak jelentkezni, leltáraikkal, otthonaikkal és engedélyeikkel együtt, az, ami általában elromlik."
+  },
+  "guide-server-memory": {
+    "title": "Mennyi RAM-ra van szüksége egy Minecraft szervernek?",
+    "description": "Mennyi RAM-ra van szüksége egy Minecraft szervernek a vanilla, Paper, könnyű modok és nagy modpackok esetén, és mennyi maradjon a gépnek."
+  },
+  "guide-server-wont-start": {
+    "title": "A Minecraft szervered nem indul el",
+    "description": "Egy Minecraft szerver, ami nem indul el, valószínűségi sorrendben javítva: a napló, a Java verzió, a memória, az EULA és a port, valamint a modok."
+  },
+  "invites-and-status-page": {
+    "title": "Meghívók és állapotoldal",
+    "description": "Hívj meg barátokat egy szerverre a címmel, verzióval és egy kliens modpackkal, és ossz meg egy nyilvános állapotoldalt, amely csak azt mutatja, amit te választasz."
+  },
+  "live-map": {
+    "title": "Élő térkép",
+    "description": "Egykattintásos BlueMap élő 3D térkép a szerver világáról, kizárólag a panel bejelentkezésén keresztül elérhetően."
+  }
+}

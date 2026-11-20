@@ -1,5 +1,7 @@
 # Modpacks
 
+<!-- description: Install CurseForge, Modrinth, FTB and GT New Horizons modpacks as servers, always pinned to an exact pack version. -->
+
 [← Back to docs index](README.md)
 
 The **Modpacks** page (and the **From Modpack** tab in the [creation wizard](servers.md)) installs a modpack as a server, always **pinned to an exact pack version** so a restart can never silently upgrade the pack out from under you.

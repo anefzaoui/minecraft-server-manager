@@ -1,0 +1,19 @@
+---
+// A labelled row of pills: "Registries: [Modrinth] [CurseForge] ...".
+import Pill from './Pill.astro';
+interface Props {
+  label?: string;
+  ids: string[];
+  size?: 'sm' | 'md' | 'lg';
+  notes?: Record<string, string>;
+  class?: string;
+}
+const { label, ids, size = 'md', notes = {}, class: cls } = Astro.props;
+---
+
+<div class:list={['flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4', cls]}>
+  {label && <span class="display shrink-0 pt-1.5 text-[1.25rem] text-ink sm:w-36">{label}</span>}
+  <ul class="flex flex-wrap gap-2" role="list">
+    {ids.map((id) => <Pill id={id} size={size} note={notes[id]} />)}
+  </ul>
+</div>

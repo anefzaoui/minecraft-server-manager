@@ -1,0 +1,186 @@
+/* Re-skins Starlight's docs shell to match the marketing pages: the planks
+   header bar, Jersey 15 headings, square corners, bevelled frames around
+   screenshots, and the selected sidebar entry drawn like the green "play"
+   button. Only Starlight's public custom properties and stable hooks
+   (element + sl-* classes, aria-current) are touched. */
+@import './fonts.css';
+
+:root {
+  --sl-font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --pixel-font: 'Jersey 15', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --sl-color-accent-low: #1e461b;
+  --sl-color-accent: #4fae32;
+  --sl-color-accent-high: #aeea99;
+  --sl-color-white: #f4f5f6;
+  --sl-color-gray-1: #e8eaec;
+  --sl-color-gray-2: #d3d7db;
+  --sl-color-gray-3: #b1b8bf;
+  --sl-color-gray-4: #6a747f;
+  --sl-color-gray-5: #33383e;
+  --sl-color-gray-6: #1b1f23;
+  --sl-color-black: #16191c;
+  --sl-color-bg-nav: #221910;
+  --sl-color-bg-sidebar: #1c1f24;
+  --sl-color-hairline-shade: #0a0b0c;
+  --sl-nav-height: 4rem;
+  --frame-hi: #62666c;
+  --frame-lo: #0e0f11;
+  --frame-outline: #0a0b0c;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d5f5c9;
+  --sl-color-accent: #27661d;
+  --sl-color-accent-high: #1e461b;
+  --sl-color-white: #1b1f23;
+  --sl-color-gray-1: #33383e;
+  --sl-color-gray-2: #464d55;
+  --sl-color-gray-3: #6a747f;
+  --sl-color-gray-4: #b1b8bf;
+  --sl-color-gray-5: #d3d7db;
+  --sl-color-gray-6: #eeece4;
+  --sl-color-gray-7: #f6f5f0;
+  --sl-color-black: #f6f5f0;
+  --sl-color-bg-nav: #221910;
+  --sl-color-bg-sidebar: #eeece4;
+  --frame-hi: #ffffff;
+  --frame-lo: #6b6b6b;
+  --frame-outline: #1f1f1f;
+}
+
+/* Header: the same dark planks bar as the marketing pages, in both themes. */
+header.header {
+  border-bottom: 3px solid #0e0805;
+  box-shadow: inset 0 -3px 0 0 #3a2a18;
+  color: #ffffff;
+}
+header.header :is(a, button, select, svg) {
+  color: #ffffff;
+}
+header.header site-search button {
+  border-radius: 0;
+  border: 2px solid;
+  border-color: #0a0b0c #6b6f75 #6b6f75 #0a0b0c;
+  background: #1b1f23;
+  color: #cfd3d8;
+}
+header.header :is(starlight-theme-select, starlight-lang-select) select {
+  color: #ffffff;
+}
+header.header :is(starlight-theme-select, starlight-lang-select) option {
+  color: #1b1f23;
+}
+.site-title-pixel {
+  font-family: var(--pixel-font);
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #0e0805;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+.site-title-pixel img {
+  width: 1.75rem;
+  height: 1.75rem;
+  image-rendering: pixelated;
+}
+.docs-nav {
+  display: none;
+  gap: 0.25rem;
+  margin-inline-end: 0.5rem;
+}
+@media (min-width: 72rem) {
+  .docs-nav {
+    display: flex;
+  }
+}
+.docs-nav a {
+  font-family: var(--pixel-font);
+  font-size: 1.3rem;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #0e0805;
+  text-decoration: none;
+  padding: 0.5rem 0.5rem;
+}
+.docs-nav a:hover {
+  color: #f0b42f;
+}
+
+/* Pixel headings. */
+h1#_top,
+.sl-markdown-content :is(h2, h3, h4) {
+  font-family: var(--pixel-font);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+}
+h1#_top {
+  font-size: 3rem;
+}
+.sl-markdown-content h2 {
+  font-size: 2.25rem;
+}
+.sl-markdown-content h3 {
+  font-size: 1.65rem;
+}
+.sl-markdown-content h4 {
+  font-size: 1.35rem;
+}
+
+/* Sidebar: group labels in the pixel face; the current page is the green button. */
+nav.sidebar .group-label .large,
+nav.sidebar .large {
+  font-family: var(--pixel-font);
+  font-weight: 400;
+  font-size: 1.35rem;
+}
+nav.sidebar a[aria-current='page'] {
+  background: #4fae32;
+  color: #ffffff;
+  border: 2px solid;
+  border-color: #7fd965 #27661d #27661d #7fd965;
+  box-shadow: 0 0 0 2px #1e461b;
+  border-radius: 0;
+  text-shadow: 1px 1px 0 #27661d;
+  font-weight: 600;
+}
+
+/* Square corners everywhere the theme rounds them. */
+.sl-markdown-content :is(img, pre, code, table, .starlight-aside, .expressive-code .frame, kbd),
+.pagination-links a,
+.sl-link-card,
+.card {
+  border-radius: 0 !important;
+}
+
+/* Screenshots sit in the inventory-slot frame. */
+.sl-markdown-content img {
+  border: 3px solid;
+  border-color: var(--frame-lo) var(--frame-hi) var(--frame-hi) var(--frame-lo);
+  box-shadow: 0 0 0 2px var(--frame-outline);
+  background: #1b1f23;
+}
+
+/* Callouts and the pagination buttons get the bevelled panel edge. */
+.sl-markdown-content .starlight-aside {
+  border-inline-start-width: 6px;
+}
+.pagination-links a {
+  border: 2px solid;
+  border-color: var(--frame-hi) var(--frame-lo) var(--frame-lo) var(--frame-hi);
+  box-shadow: 0 0 0 2px var(--frame-outline);
+}
+.pagination-links a .link-title {
+  font-family: var(--pixel-font);
+  font-size: 1.4rem;
+}
+
+/* English anchors kept on translated docs (src/lib/doc-anchors.js) land where
+   the heading does, below the sticky header. */
+.anchor-alias {
+  display: block;
+  scroll-margin-top: calc(var(--sl-nav-height) + 2rem);
+}

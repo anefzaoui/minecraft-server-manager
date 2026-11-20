@@ -1,0 +1,166 @@
+---
+// Shell for every marketing page: full SEO head (canonical, hreflang for all
+// locales, Open Graph, Twitter card, JSON-LD), lang/dir on <html>, theme init,
+// header and footer. Docs pages use Starlight's own shell instead.
+import '../styles/site.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Banner from '../components/Banner.astro';
+import { art } from '../data/art.js';
+import { LOCALES, DEFAULT_LOCALE, getLocale, langTag } from '../i18n/locales.js';
+import { getCopy, hasTranslation } from '../i18n/index.js';
+import { SITE_URL, REPO_URL, DISCORD_URL, PAGES, href } from '../lib/routes.js';
+import pkg from '../../../package.json';
+
+interface Props {
+  locale: string;
+  path: string;
+  pageKey: string;
+  title?: string;
+  description?: string;
+  jsonLd?: Record<string, unknown>[];
+  noindex?: boolean;
+  noFooterBanner?: boolean;
+  /** Site-relative path of this page's 1200x630 card image. */
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+}
+const { locale, path, pageKey, jsonLd = [], noindex = false, ogType = 'website' } = Astro.props;
+const copy = getCopy(locale);
+const footerBanner = art('banner-footer');
+const meta = copy.meta[pageKey] || copy.meta.home;
+const title = Astro.props.title || meta.title;
+const description = Astro.props.description || meta.description;
+// Search results cut titles near 60 characters, so the brand suffix is only
+// added while it still fits.
+const suffixed = `${title} · ${copy.site.name}`;
+const fullTitle = pageKey === 'home' ? `${copy.site.name}: ${title}` : suffixed.length <= 65 ? suffixed : title;
+const info = getLocale(locale);
+const canonical = new URL(href(locale, path), SITE_URL).href;
+// Every registered page has a card at /og/<key>.png (src/pages/og); anything
+// else (the 404) uses the home page's card.
+const ogPath = Astro.props.ogImage || `/og/${PAGES.some((p) => p.key === pageKey) ? pageKey : 'home'}.png`;
+const ogImage = new URL(ogPath, SITE_URL).href;
+const ogLocale = langTag(locale).replace('-', '_');
+const showLangNotice = locale !== DEFAULT_LOCALE && !hasTranslation(locale);
+
+// The app itself, described once per page that is about the whole product.
+const APP_PAGES = ['home', 'features', 'install', 'screenshots'];
+const appLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: copy.site.name,
+  alternateName: 'MSM',
+  description: copy.site.description,
+  url: SITE_URL,
+  applicationCategory: 'UtilitiesApplication',
+  applicationSubCategory: 'Game server control panel',
+  operatingSystem: 'Linux, Windows, macOS',
+  softwareRequirements: 'Docker',
+  softwareVersion: pkg.version,
+  license: `${REPO_URL}/blob/main/LICENSE`,
+  downloadUrl: `${REPO_URL}/releases/latest`,
+  installUrl: new URL(href(locale, '/install/'), SITE_URL).href,
+  codeRepository: REPO_URL,
+  image: new URL('/og/home.png', SITE_URL).href,
+  screenshot: new URL('/og/screenshots.png', SITE_URL).href,
+  featureList: copy.features.groups.flatMap((g) => g.items.map((f) => f.title)),
+  keywords: 'Minecraft server panel, self-hosted Minecraft server, Minecraft server manager, Docker Minecraft server, modpack server, Paper, Fabric, Forge, NeoForge',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  isAccessibleForFree: true,
+};
+const baseJsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: copy.site.name,
+    url: SITE_URL,
+    inLanguage: langTag(locale),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: copy.site.name,
+    url: SITE_URL,
+    logo: new URL('/icon-512.png', SITE_URL).href,
+    sameAs: [REPO_URL, DISCORD_URL],
+  },
+  ...(APP_PAGES.includes(pageKey) ? [appLd] : []),
+  ...jsonLd,
+];
+---
+
+<!doctype html>
+<html lang={langTag(locale)} dir={info.dir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    {!noindex && <link rel="canonical" href={canonical} />}
+    {!noindex && LOCALES.map((l) => (
+      <link rel="alternate" hreflang={langTag(l.code)} href={new URL(href(l.code, path), SITE_URL).href} />
+    ))}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={new URL(href(DEFAULT_LOCALE, path), SITE_URL).href} />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/atom+xml" title={copy.changelog.feed} href="/changelog.xml" />
+    <meta name="theme-color" content="#82d2fe" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={copy.site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:locale" content={ogLocale} />
+    {LOCALES.filter((l) => l.code !== locale).map((l) => (
+      <meta property="og:locale:alternate" content={langTag(l.code).replace('-', '_')} />
+    ))}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="preload" href="/fonts/IBMPlexSans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Jersey15-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+    {baseJsonLd.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+
+    <script is:inline>
+      // Theme init before first paint. Shares Starlight's storage key so the docs
+      // and marketing pages agree. Dark is the default; light is opt-in.
+      (function () {
+        try {
+          if (localStorage.getItem('starlight-theme') === 'dark') {
+            document.documentElement.dataset.theme = 'dark';
+            // The browser bar follows the night sky too.
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#122662');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <a href="#main" class="btn btn-primary sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50">{copy.nav.skip}</a>
+    <Header locale={locale} path={path} copy={copy} active={pageKey} />
+    {showLangNotice && (
+      <p class="border-b-[3px] border-outline bg-panel px-4 py-1.5 text-center text-xs font-semibold text-ink-soft" lang="en" dir="ltr">
+        {copy.langNotice}
+      </p>
+    )}
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+    {!Astro.props.noFooterBanner && footerBanner && <Banner image={footerBanner} class="mt-12 border-b-0" />}
+    <Footer locale={locale} copy={copy} />
+  </body>
+</html>

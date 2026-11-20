@@ -1,0 +1,55 @@
+---
+// Site header: planks bar with the logo lockup, the `header` pages from the
+// registry (the active one underlined like an XP bar), language, theme, GitHub.
+import LangSwitcher from './LangSwitcher.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import Icon from './Icon.astro';
+import { PAGES, REPO_URL, href } from '../lib/routes.js';
+interface Props {
+  locale: string;
+  path: string;
+  copy: any;
+  active?: string;
+}
+const { locale, path, copy, active } = Astro.props;
+const links = PAGES.filter((p) => p.header);
+---
+
+<header class="header-bar sticky top-0 z-20 border-b-[3px] border-outline">
+  <div class="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
+    <a href={href(locale, '/')} class="brand-lockup display flex shrink-0 items-center gap-2.5 whitespace-nowrap text-[1.5rem] no-underline" aria-label={copy.site.name}>
+      <img src="/favicon.svg" alt="" width="32" height="32" class="pixelated" />
+      <span class="hidden 2xl:inline">{copy.site.name}</span>
+      <span class="2xl:hidden">MSM</span>
+    </a>
+
+    <nav class="ms-auto hidden items-center lg:flex" aria-label="Primary">
+      {links.map((p) => (
+        <a href={href(locale, p.path)} class="nav-link" aria-current={active === p.key ? 'page' : undefined}>
+          {copy.nav[p.key]}
+        </a>
+      ))}
+    </nav>
+
+    <div class="ms-auto flex shrink-0 items-center gap-2 lg:ms-4">
+      <LangSwitcher locale={locale} path={path} label={copy.nav.language} />
+      <ThemeToggle label={copy.nav.theme} />
+      <a href={REPO_URL} class="btn btn-sm btn-icon hidden sm:inline-flex" rel="noopener" aria-label={copy.nav.github} title={copy.nav.github}>
+        <Icon name="github" size={20} />
+      </a>
+      <details class="relative lg:hidden">
+        <summary class="btn btn-sm btn-icon cursor-pointer list-none" aria-label={copy.nav.menu}>
+          <Icon name="menu" size={22} />
+        </summary>
+        <nav class="panel nav-menu absolute end-0 z-40 mt-3 flex w-60 flex-col" aria-label="Primary">
+          {links.map((p) => (
+            <a href={href(locale, p.path)} class="nav-link" aria-current={active === p.key ? 'page' : undefined}>
+              {copy.nav[p.key]}
+            </a>
+          ))}
+          <a href={REPO_URL} class="nav-link" rel="noopener">{copy.nav.github}</a>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>

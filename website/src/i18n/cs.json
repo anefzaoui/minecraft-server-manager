@@ -1,0 +1,2182 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Bezplatný, lokálně hostovaný ovládací panel pro Minecraft servery na Dockeru.",
+    "description": "Spravujte modované i vanilla Minecraft servery z prohlížeče. Modpacky připnuté na přesné verze, zálohy jedním kliknutím, plány, živá mapa, analýza hráčů. Zdarma, open source a celý váš panel je jedna složka."
+  },
+  "nav": {
+    "home": "Domů",
+    "features": "Funkce",
+    "screenshots": "Snímky obrazovky",
+    "servers": "Servery",
+    "guides": "Návody",
+    "install": "Instalace",
+    "docs": "Dokumentace",
+    "faq": "Často kladené dotazy",
+    "compare": "Porovnání",
+    "changelog": "Seznam změn",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Jazyk",
+    "theme": "Přepnout světlé nebo tmavé téma",
+    "skip": "Přeskočit na obsah"
+  },
+  "hero": {
+    "eyebrow": "Zdarma a s otevřeným zdrojovým kódem. Běží na vašem vlastním stroji.",
+    "title": "Spravujte své Minecraft servery z jednoho přívětivého panelu.",
+    "subtitle": "Minecraft Server Manager promění Docker v útulný domov pro vaše servery: modpacky, které zůstanou připnuté, zálohy jedním kliknutím, plány, živá mapa, statistiky hráčů a konzole, která mluví prostou češtinou. Žádné účty, žádné uzamčení, celý váš panel v jedné složce.",
+    "primary": "Začněte během několika minut",
+    "secondary": "Prozkoumejte funkce",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Podívejte se na návod",
+    "shotCaption": "Skutečný panel: jeho ovládací panel se šesti ukázkovými servery, v tmavém motivu."
+  },
+  "pillars": {
+    "title": "Vytvořeno pro ty, kdo spravují servery, ne tikety",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Jedna složka je celý váš panel",
+        "body": "Databáze, světy, zálohy a sdílená knihovna modů žijí pod jedinou datovou složkou. Zkopírujte ji a máte hotovou migraci."
+      },
+      {
+        "icon": "box",
+        "title": "Každý server je kontejner",
+        "body": "Každý server běží na osvědčeném obraze itzg s vlastními limity CPU a paměti, elegantním ukončováním přes RCON a detekcí pádů.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpacky zůstávají připnuté",
+        "body": "Packs jsou uzamčeny na přesnou verzi. Upgrady jsou explicitní, náhledové, nejprve zálohované, kontrolované na funkčnost a vrácené jedním kliknutím.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Vše, po čem majitel serveru sáhne",
+    "intro": "Kompletní přehled funkcí, od vytvoření serveru po sdílení jeho živé mapy.",
+    "cta": "Přečíst dokumentaci",
+    "groups": [
+      {
+        "title": "Servery a životní cyklus",
+        "items": [
+          {
+            "title": "Kontejnery s omezenými zdroji",
+            "body": "Vytvářejte, spouštějte, zastavujte, restartujte, přestavujte a mažte servery s korektním RCON ukončením a automatickou detekcí pádu.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Průvodce vytvořením",
+            "body": "Jednoduchý nebo pokročilý režim, s každým nastavením obrazu vysvětleným srozumitelně před jeho výběrem.",
+            "icon": "wand"
+          },
+          {
+            "title": "Živá konzole",
+            "body": "Konzole přes WebSocket s lištou pro RCON příkazy, filtry logů a akcemi pro hráče na jedno kliknutí.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Moderování hráčů",
+            "body": "Whitelist, operátoři, banování, IP banování a teleportace, online přes RCON a offline přes JSON soubory.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mody a modpacky",
+        "items": [
+          {
+            "title": "Pět registrů v jednom prohlížeči",
+            "body": "Prohledávejte všech pět z jednoho místa. Tři z nich nepotřebují API klíč.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Přidat pomocí odkazu",
+            "body": "Vložte odkaz na stránku projektu, GitHub repozitář, slug nebo přímý odkaz na jar. Panel jej rozpozná.",
+            "icon": "link"
+          },
+          {
+            "title": "Importovat cokoliv",
+            "body": "Každý jar soubor je při importu identifikován a zkontrolován na kompatibilitu.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Stahování ověřené kontrolním součtem",
+            "body": "Ověřeno před nahráním souboru na server, nejprve nejpevnější hash. Nesrovnalost se nikdy neprovede.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Sdílená knihovna modů",
+            "body": "Deduplikováno pomocí sha256 a propojeno do serverů, takže vlastní mody přežijí aktualizace balíčků.",
+            "icon": "library"
+          },
+          {
+            "title": "Řešení „vyber mody jako první“",
+            "body": "Vyberte mody, které chcete, a získejte nejnovější plně kompatibilní loader a verzi Minecraftu.",
+            "icon": "sparkles"
+          },
+          {
+            "title": "Jakákoli verze modpacku, jakýkoli build loaderu",
+            "body": "Přesuňte modpack na jakoukoli publikovanou verzi, novější nebo starší, nebo přepněte build mod loaderu. Záloha je první a neúspěšné spuštění se vrátí zpět.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Ochrana a automatizace",
+        "items": [
+          {
+            "title": "Bezpečné zálohy",
+            "body": "Snímky s třídami uchovávání, obnovení na místě a volitelné zmenšení světa pro uvolnění místa na disku.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron úlohy",
+            "body": "Restartování, zálohování a RCON příkazy podle plánu, s viditelným dalším spuštěním.",
+            "icon": "clock"
+          },
+          {
+            "title": "Šablony",
+            "body": "Exportujte server jako přenositelný recept, importujte jej kdekoli a získejte zpět stejný server.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Forenzní analýza pádů",
+            "body": "Pády jsou detekovány, analyzovány a podezřelí pojmenováni, s možností sdílení na jedno kliknutí a automatizovanými poznatky.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Sledování aktualizací",
+            "body": "Sledují se nové verze serveru, balíčků, obrazů a modů, s před-aktualizačními zálohami a vrácením zpět na jedno kliknutí.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Přehled a komunita",
+        "items": [
+          {
+            "title": "Živá mapa",
+            "body": "Jedno kliknutí k živé mapě, obsluhované přes autentizovaný proxy serveru.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analytika a úložiště",
+            "body": "Tabulky výsledků odehraného času, úmrtí a těžby, forenzní analýza inventáře, využití disku na server, a vynucené kvóty.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord a chatbot",
+            "body": "Webhooks s přepínači pro jednotlivé události, plus volitelný chatbot pro každý server s omezenými pravomocemi ve hře.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Veřejná stránka stavu a API",
+            "body": "Volitelné stránky stavu, bloky pozvánek, vygenerovaný klientský .mrpack a API pouze pro čtení s autentizací tokenem.",
+            "icon": "globe"
+          },
+          {
+            "title": "Pozvat přátele",
+            "body": "Zkopírujte pozvánku s adresou a verzí. Pro server vytvořený z vámi vybraných modů, dejte přátelům .mrpack klienta, který je nainstaluje a přidá server do jejich seznamu.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
+            "title": "Uživatelé, role a 2FA",
+            "body": "Role administrátora, operátora a prohlížeče s dvoufaktorovou autentizací TOTP.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Panel, který vás bude bavit používat",
+    "intro": "Počítač i telefon. Panel je navržen primárně pro úzké obrazovky, takže každá stránka funguje na telefonu.",
+    "desktop": "Počítač",
+    "mobile": "Na telefonu",
+    "items": {
+      "dashboard": "Přehled: každý server, počet hráčů a nedávná aktivita na první pohled.",
+      "wizard": "Průvodce vytvořením vysvětlí každé nastavení, než si ho vyberete.",
+      "overview": "Přehled serveru s měřiči zdrojů a rychlými akcemi.",
+      "console": "Živá konzole s lištou pro příkazy RCON a filtry logů.",
+      "mods": "Mody z pěti registrů, filtrované podle loaderu a verze serveru.",
+      "modpacks": "Modpacky: prohledávejte CurseForge a Modrinth a každý balíček se nainstaluje připnutý na přesnou verzi.",
+      "worlds": "Výměna světů a správa souborů z prohlížeče.",
+      "backups": "Zálohy s třídami uchovávání a obnovením na místě.",
+      "schedules": "Cron úlohy pro restarty, zálohy a příkazy.",
+      "blueprints": "Šablony: přenosné recepty pro servery.",
+      "storage": "Analýza úložiště a vynucené kvóty."
+    }
+  },
+  "install": {
+    "title": "Instalace",
+    "intro": "Vyberte možnost, která odpovídá vašemu hostiteli. Každá cesta vám poskytne stejný panel.",
+    "requirements": "Požadavky",
+    "reqItems": [
+      "Docker Engine (Linux) nebo Docker Desktop (Windows, macOS).",
+      "Node.js 24 nebo novější pro instalaci ze zdrojového kódu. Obraz Dockeru obsahuje vlastní.",
+      "Několik gigabajtů místa na disku pro obrazy serverů a světy."
+    ],
+    "docker": {
+      "title": "Možnost 1: Docker",
+      "body": "Předkompilovaný multi-arch obraz je publikován na GHCR při každém vydání. Stáhněte si compose soubor, nastavte jednu proměnnou a spusťte.",
+      "after": "Poté otevřete http://váš-hostitel:25564. V Portaineru nebo Dockge vložte compose soubor jako stack a nastavte DATA_DIR_HOST v prostředí stacku.",
+      "warning": "Panel řídí Docker daemon hostitele prostřednictvím připojeného socketu, což je na hostiteli ekvivalentem root oprávnění. S přihlašovacími údaji administrátora nakládejte odpovídajícím způsobem a nikdy nevystavujte panel přímo do internetu."
+    },
+    "source": {
+      "title": "Možnost 2: Ze zdrojového kódu",
+      "body": "Jakýkoli operační systém, včetně Windows a macOS s Docker Desktop.",
+      "after": "Otevřete http://localhost:25564. První spuštění vás provede kontrolou systému, nastavením časové zóny a vytvořením účtu administrátora."
+    },
+    "next": "Další kroky",
+    "nextBody": "Průvodce pro začátečníky pokrývá nastavení při prvním spuštění, vytvoření prvního serveru a kde co najdete.",
+    "nextCta": "Přečíst průvodce pro začátečníky",
+    "compose": "Stáhnout docker-compose.yml",
+    "windows": "Poznámky pro Windows",
+    "windowsItems": [
+      "Docker Desktop musí běžet před spuštěním nebo vytvořením serverů.",
+      "Sdílejte svůj projektový disk s Docker Desktop (Nastavení, Zdroje, Sdílení souborů), aby bind mounty fungovaly.",
+      "Obraz Dockeru je určen pro Linux hostitele; na Windows a macOS spusťte panel ze zdrojového kódu."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Možnosti instalátoru",
+      "intro": "Instalátor pro Linux přijímá své možnosti po bash -s --, takže fungují i přes pipe. Spusťte jej znovu se stejnými možnostmi pro upgrade; váš datový adresář, úpravy .env a compose jsou zachovány.",
+      "items": {
+        "port": "Spustit panel na jiném portu.",
+        "proxy": "Naslouchat pouze na 127.0.0.1, pro reverzní proxy s TLS vpředu.",
+        "tag": "Připnout konkrétní vydání místo sledování nejnovějšího.",
+        "dir": "Nainstalovat jinam než do /opt/msm.",
+        "uninstall": "Odinstalovat panel a ponechat jeho data. Přes pipe není klávesnice pro odpověď na otázku, takže přidejte --yes; přidejte také --purge pro smazání datového adresáře.",
+        "help": "Každá možnost s její výchozí hodnotou."
+      }
+    }
+  },
+  "faq": {
+    "title": "Často kladené dotazy",
+    "items": [
+      {
+        "q": "Je to opravdu zdarma?",
+        "a": "Ano. Panel je licencován pod licencí MIT a nepoužívá žádné placené služby. Vše běží na vašem stroji."
+      },
+      {
+        "q": "Funguje to na Raspberry Pi nebo jiném ARM stroji?",
+        "a": "Ano. Docker obraz je publikován pro obě architektury a instalace ze zdrojového kódu běží všude tam, kde běží Node.js 24 a Docker.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Jaké typy serverů jsou podporovány?",
+        "a": "Vše, co podporuje obraz itzg, plus modpacky ze čtyř hlavních zdrojů.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Jak přesunu svůj panel na nový stroj?",
+        "a": "Zkopírujte složku s daty. Obsahuje databázi, svět každého serveru, zálohy a knihovnu modů. Spusťte panel na novém stroji s odkazem na tuto složku."
+      },
+      {
+        "q": "Může spravovat servery více lidí?",
+        "a": "Ano. Panel má role administrátora, operátora a prohlížeče a každý účet může zapnout dvoufaktorové ověřování."
+      },
+      {
+        "q": "Jak se připojí přátelé mimo můj domov?",
+        "a": "Přesměrujte herní port serveru, od 25565 výše, na vašem routeru na stroj, který jej spouští, nebo použijte tunel, pokud váš poskytovatel internetu nepovoluje přesměrování portů. Karta Pozvánky serveru zobrazuje adresu, kterou můžete sdílet, a vytvoří pro vás text pozvánky. Port samotného panelu nechte zavřený."
+      },
+      {
+        "q": "Musí být vystaven internetu?",
+        "a": "Ne. Hráči se připojují k herním portům, nikoli k panelu. Panel nechte ve své LAN síti nebo za VPN nebo reverzním proxy s ověřováním."
+      },
+      {
+        "q": "A co hráči Bedrocku?",
+        "a": "Oba mohou být nainstalováni jako jakýkoli jiný plugin nebo mod a panel zpřístupňuje nastavení, která potřebují.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Je to vytvořeno pomocí AI?",
+        "a": "Částečně a otevřeně. Většina kódu je napsána pomocí Claude Code a správce navrhuje, kontroluje a testuje každou funkci. Deklarace AI v repozitáři popisuje jak."
+      },
+      {
+        "q": "Kde dostanu pomoc?",
+        "a": "Server Discord má podpůrné fórum a skutečné lidi. Chyby a požadavky na funkce směřujte na GitHub issues."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Changelog",
+    "intro": "Každé vydání, nejnovější první. Poznámky k vydání jsou publikovány v angličtině.",
+    "releases": "Všechna vydání na GitHubu",
+    "feed": "Kanál vydání (Atom)"
+  },
+  "community": {
+    "title": "Přijďte nás pozdravit",
+    "body": "Nahlašujte chyby, navrhujte funkce, získejte pomoc od skutečných lidí a pochlubte se svými servery.",
+    "discord": "Připojte se na Discord",
+    "github": "Dejte hvězdičku na GitHub"
+  },
+  "footer": {
+    "tagline": "Zdarma a open source pod licencí MIT.",
+    "product": "Produkt",
+    "community": "Komunita",
+    "resources": "Zdroje",
+    "issues": "Hlášení chyb",
+    "releases": "Vydání",
+    "contributing": "Přispívání",
+    "license": "Licence",
+    "notAffiliated": "Není oficiálním produktem Minecraftu. Není schváleno ani spojeno se společností Mojang nebo Microsoft.",
+    "serverTypes": "Typy serverů",
+    "guides": "Návody",
+    "compare": "Porovnání",
+    "roadmap": "Plán rozvoje",
+    "ai": "Jak je využíváno AI",
+    "conduct": "Kodex chování"
+  },
+  "meta": {
+    "home": {
+      "title": "Bezplatný panel pro Minecraft servery s vlastním hostováním",
+      "description": "Spravujte vanilla a modované Minecraft servery z prohlížeče pomocí bezplatného panelu pro Docker s vlastním hostováním: připnuté modpacky, zálohy, plány a živá mapa."
+    },
+    "features": {
+      "title": "Funkce panelu pro Minecraft servery",
+      "description": "Všechny funkce Minecraft Server Manager: Docker servery, pět registrů modů, ověřená stahování, zálohy, plány, forenzní analýza pádů, živá mapa a 2FA."
+    },
+    "screenshots": {
+      "title": "Snímky obrazovky panelu pro Minecraft servery",
+      "description": "Snímky obrazovky panelu Minecraft Server Manager na desktopu a telefonu: dashboard, průvodce, konzole, mody, světy, zálohy, plány a další."
+    },
+    "install": {
+      "title": "Instalace panelu pro Minecraft servery pomocí Dockeru",
+      "description": "Nainstalujte Minecraft Server Manager pomocí Dockeru ve třech příkazech, nebo ze zdrojového kódu na Windows, macOS a Linuxu."
+    },
+    "faq": {
+      "title": "Často kladené dotazy k panelu pro Minecraft servery",
+      "description": "Odpovědi na otázky ohledně ceny, podporovaných typů serverů, Raspberry Pi a ARM, přesunu na nový stroj, rolí, Bedrock hráčů a zpřístupnění panelu na internetu."
+    },
+    "changelog": {
+      "title": "Změnový log a poznámky k vydání",
+      "description": "Poznámky k vydání pro každou verzi Minecraft Server Manager, bezplatného panelu pro Minecraft servery s vlastním hostováním."
+    },
+    "notFound": {
+      "title": "Stránka nenalezena",
+      "description": "Tato stránka neexistuje."
+    }
+  },
+  "notFound": {
+    "title": "Tato část nikdy nebyla vygenerována.",
+    "body": "Stránka, kterou jste požadovali, neexistuje. Zkuste domovskou stránku nebo dokumentaci.",
+    "home": "Přejít na domovskou stránku"
+  },
+  "langNotice": "Tato stránka se zobrazuje v angličtině, dokud nebude její překlad hotový.",
+  "tutorial": {
+    "title": "Běží během minut",
+    "intro": "Vyberte svůj stroj a vložte příkazy. Pokročilé nabízí všechny ostatní způsoby spuštění panelu s příkazy přepsanými pro vaši vlastní složku a adresu.",
+    "modes": {
+      "simple": "Jednoduché",
+      "advanced": "Pokročilé"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Spusťte instalátor",
+            "body": "Funguje na jakémkoli Linuxovém stroji se 64bitovým OS, od VPS po Raspberry Pi 4 nebo 5. Nainstaluje Docker, pokud chybí, nastaví panel do /opt/msm a spustí ho. Spusťte ho znovu později pro aktualizaci."
+          },
+          {
+            "title": "Otevřete panel",
+            "body": "Instalátor vypíše adresu a jednorázový nastavitelný PIN. Otevřete adresu v prohlížeči, zadejte PIN a vytvořte si účet správce."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Nainstalujte Docker Desktop, Node.js, Git a pnpm",
+            "body": "Každý příkaz na jednom řádku v PowerShellu. Po instalaci spusťte Docker Desktop a nechte ho běžet."
+          },
+          {
+            "title": "Získejte panel a spusťte ho",
+            "body": "Otevřete nový terminál, aby našel nástroje, které jste právě nainstalovali."
+          },
+          {
+            "title": "Otevřete panel",
+            "body": "První spuštění vás provede kontrolou systému, nastavením časového pásma a vytvořením účtu správce."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Nainstalujte Docker Desktop, Node.js, Git a pnpm",
+            "body": "Pomocí Homebrew. Po instalaci spusťte Docker Desktop a nechte ho běžet."
+          },
+          {
+            "title": "Získejte panel a spusťte ho",
+            "body": "Krok instalace také sestaví panel. Není třeba nic kompilovat."
+          },
+          {
+            "title": "Otevřete panel",
+            "body": "První spuštění vás provede kontrolou systému, nastavením časového pásma a vytvořením účtu správce."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Vyplňte dvě pole a každý příkaz níže se pro váš stroj přepíše.",
+    "dataDir": "Složka dat na hostiteli",
+    "dataDirHint": "Absolutní cesta. Světy, zálohy, mody a databáze zde všechny žijí.",
+    "host": "Název hostitele nebo IP",
+    "hostHint": "Odkud panel otevřete v prohlížeči.",
+    "then": "Poté otevřete panel",
+    "copy": "Kopírovat",
+    "copied": "Zkopírováno!",
+    "firstRun": "První spuštění vás provede kontrolou systému, nastavením časového pásma a vytvořením účtu správce.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Vytvořte složku dat",
+            "body": "Jedna složka obsahuje vše, co panel vlastní."
+          },
+          {
+            "title": "Stáhněte soubor compose a nasměrujte ho na tuto složku",
+            "body": "DATA_DIR_HOST musí být absolutní cesta na hostiteli, protože Docker ji připojuje z pohledu hostitele."
+          },
+          {
+            "title": "Spusťte panel",
+            "body": "Obraz je multi-arch (amd64 a arm64) a aktualizuje se při každém vydání."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Vytvořte složku dat na hostiteli",
+            "body": "Stejné pravidlo pro složku: absolutní cesta, na stroji, kde běží Docker."
+          },
+          {
+            "title": "Přidejte stack ze souboru compose",
+            "body": "Vložte obsah souboru compose do nového stacku. Syrový soubor je zde:"
+          },
+          {
+            "title": "Nastavte proměnnou prostředí a nasaďte",
+            "body": "Přidejte ji do sekce prostředí stacku a poté nasaďte."
+          }
+        ]
+      },
+      "source": {
+        "label": "Ze zdrojového kódu",
+        "steps": [
+          {
+            "title": "Zkontrolujte požadavky",
+            "body": "Node.js 24 nebo novější, pnpm a běžící Docker (Docker Desktop na Windows a macOS)."
+          },
+          {
+            "title": "Klonujte a nainstalujte",
+            "body": "Krok instalace také sestaví CSS panelu. Není třeba kompilovat žádné nativní moduly."
+          },
+          {
+            "title": "Spusťte panel",
+            "body": "Ve výchozím nastavení naslouchá pouze na localhostu. Nastavte PANEL_HOST=0.0.0.0 pro přístup z jiných strojů ve vaší síti."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Spusťte z instalace ze zdrojového kódu",
+            "body": "Spusťte toto z naklonované složky. PM2 spouští aplikace s verzí Node, která spustila jeho démona, takže připněte interpret."
+          },
+          {
+            "title": "Uložte seznam procesů a povolte spouštění při startu",
+            "body": "pm2 startup vypíše jeden příkaz ke spuštění s sudo; spusťte ho jednou."
+          },
+          {
+            "title": "Preferujete systemd?",
+            "body": "Jednotka, která spouští node src/server.js z naklonované složky s nastaveným WorkingDirectory, funguje stejně. Panel nepotřebuje žádné další příznaky."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Funguje se vším, co už používáte",
+    "registries": "Registry",
+    "loaders": "Typy serverů",
+    "packs": "Modpacky",
+    "runsOn": "Běží na",
+    "formats": "Importy",
+    "checksums": "Kontrolní součty",
+    "integrations": "Integrace",
+    "keyless": "bez klíče"
+  },
+  "landing": {
+    "breadcrumb": "Navigace",
+    "install": "Nainstalujte panel",
+    "docs": "Přečtěte si dokumentaci",
+    "related": "Čtěte dál",
+    "open": "Otevřít",
+    "docsGuides": "Další návody v dokumentaci",
+    "docsGuidesIntro": "Krátké, praktické odpovědi na nejčastější otázky správců serverů, uložené spolu s dokumentací."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Typy Minecraft serverů: Paper, Fabric, Forge",
+      "description": "Spravujte servery Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla nebo celé modpacky z jednoho panelu. Vyberte typ serveru a zjistěte, co získáte."
+    },
+    "eyebrow": "Každý typ serveru",
+    "title": "Jeden panel pro každý typ Minecraft serveru",
+    "intro": "Pluginy, mody, nezměněná hra nebo celý modpack. Vyberte, co chcete spustit, a panel se postará o verzi Javy, stahování a připnutí za vás.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Servery s pluginy Paper a Purpur, s pluginy ze čtyř registrů a hráči připojujícími se z neupraveného klienta.",
+      "serverFabric": "Servery Fabric a Quilt pro lehké, rychle aktualizované mody, s kontrolou verze před každou aktualizací Minecraftu.",
+      "serverForge": "Forge a NeoForge pro náročné mody, od klasik 1.7.10 po současné balíčky, s výběrem správné Javy pro vás.",
+      "serverVanilla": "Nezměněná hra, od snapshotů po staré bety, s ovládáním světa, zálohami a statistikami hráčů.",
+      "serverModpacks": "Balíčky CurseForge, Modrinth, FTB a GT New Horizons připnuté na přesnou verzi, plus váš vlastní zip nebo .mrpack."
+    },
+    "sections": [
+      {
+        "title": "Nejste si jisti, který zvolit?",
+        "body": "Vybírejte podle toho, co si mají nainstalovat vaši hráči, ne podle toho, co zní nejrychleji. Pokud si nikdo nemá nic instalovat, spusťte vanilla nebo Paper. Pokud instalujete publikovaný balíček, balíček určí loader a verzi Minecraftu za vás. Pokud si sami sestavujete modovaný server, Fabric a NeoForge pokrývají většinu moderních modů a Forge pokrývá starší éry.",
+        "points": [
+          "Survival s přáteli, nic neobvyklého: vanilla.",
+          "Veřejný server s hodnostmi, pozemky a moderací: Paper.",
+          "Specifický balíček z CurseForge nebo Modrinth: cokoliv balíček říká.",
+          "Moderní balíček, který si sestavíte sami: Fabric nebo NeoForge.",
+          "Starý balíček z éry 1.7 až 1.12: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Spusťte svůj první server",
+      "body": "Nainstalujte panel, otevřete průvodce vytvořením a vyberte typ serveru. Každý typ je zdarma a běží na vašem vlastním stroji."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Panel pro server Paper: pluginy, self-hosted",
+      "description": "Bezplatný, self-hosted panel pro servery Paper a Purpur. Hledejte pluginy na Hangar, SpigotMC a Modrinth, ověřte každý download a udržujte je aktualizované."
+    },
+    "eyebrow": "Paper a Purpur",
+    "title": "Self-hosted panel pro servery Paper s prohlížečem pluginů",
+    "intro": "Spusťte Paper nebo Purpur ve vlastním Docker kontejneru, najděte pluginy ze čtyř registrů, aniž byste opustili panel, a nechte hráče připojit se s hrou, kterou již mají.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Proč Paper pro veřejný server",
+        "body": "Pluginy běží pouze na serveru, takže se hráči připojují s obyčejným, neupraveným klientem a nikdy si nemusí nic instalovat. Cokoli, co se týká pravidel, oprávnění, ekonomik, zabírání území, minihier nebo moderování, je plugin, a proto téměř každý veřejný server používá Paper. Má za sebou roky optimalizací výkonu a nastavení pro téměř každé chování, které kdy administrátora rozčilovalo. Purpur je fork Paperu s ještě více přepínači, včetně těch pro hratelnost. Oba jsou na kartě Vanilla v průvodci vytvořením serveru.",
+        "points": [
+          "Hráči se připojují s normální hrou. Žádné mody, žádné nastavení launcheru.",
+          "Většina pluginů z éry Bukkitu stále funguje.",
+          "Zvolte Purpur pouze pokud chcete jeho extra přepínače; jinak Paper."
+        ]
+      },
+      {
+        "title": "Čtyři registry pluginů v jednom vyhledávání",
+        "body": "Karta Mody serveru s pluginy prohledává Hangar (vlastní registr pluginů PaperMC), SpigotMC, Modrinth a CurseForge, filtrované podle verze Minecraftu serveru. Pouze CurseForge vyžaduje API klíč. Můžete také vložit odkaz na stránku projektu, GitHub repozitář nebo vydání, nebo přímý odkaz na jar soubor a panel najde správnou sestavu. Každý stažený soubor z registru je před stažením do serveru zkontrolován proti nejsilnějšímu kontrolnímu součtu, který registr publikuje, takže poškozený nebo pozměněný soubor se nikdy nedostane na server.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Výsledky, které již jsou na serveru, zobrazují odznak „Nainstalováno“.",
+          "Pokud je zdroj na SpigotMC hostován jinde, panel to dopředu oznámí a nabídne otevření stránky a přijetí jar souboru jako nahrání.",
+          "Nahrané jar soubory jsou identifikovány, takže si zachovají své skutečné jméno a zůstanou kontrolovatelné pro aktualizace."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Aktualizace pluginů bez hádání",
+        "body": "Každý přidaný plugin je denně kontrolován oproti svému zdroji a na vyžádání. Aktualizujte jeden plugin, ignorujte verzi, kterou nechcete, nebo stiskněte „Aktualizovat vše“ pro aplikaci všech změn s jedním restartem. Pokud se aktualizace nepovede, vraťte se k předchozí sestavě ze sdílené knihovny. Zapněte „Upozornit mě“ v politice aktualizací serveru a čekající aktualizace se zobrazí jako odznak a na stránce Aktualizace.",
+        "points": [
+          "Denní kontroly proti Hangar, SpigotMC, Modrinth, CurseForge a GitHub Releases.",
+          "Návrat vrátí předchozí sestavu z knihovny.",
+          "Pokud připnete sestavu Paper, stránka Aktualizace vám řekne, kdy vyjde novější."
+        ]
+      },
+      {
+        "title": "Spusťte to jako komunitní server",
+        "body": "Servery Paper získávají stejné nástroje jako všechny ostatní servery v panelu: živou konzoli s příkazovým řádkem RCON, whitelist, operátory, zákazy a zákazy IP adres, teleporty a vlastní příkazy chatu s omezeními. Dejte svému personálu účty s oprávněními pro konkrétní server, takže moderátor může spravovat konzoli, aniž by se dotýkal záloh nebo souborů. Jedním kliknutím přidáte živou mapu BlueMap, obsluhovanou pouze přes vlastní přihlášení panelu, a upozornění na Discordu vám řeknou, kdy něco potřebuje vaši pozornost.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Spusťte server Paper ve třech krocích",
+      "items": [
+        {
+          "title": "Vyberte Paper v průvodci",
+          "body": "Otevřete „Vytvořit server“, zůstaňte na kartě Vanilla, vyberte Paper nebo Purpur a zvolte verzi Minecraftu. Zdarma port pro hru a rozumné množství paměti jsou předvyplněny."
+        },
+        {
+          "title": "Přidejte své pluginy",
+          "body": "Na kartě Mody serveru vyhledejte Hangar, SpigotMC, Modrinth nebo CurseForge, nebo vložte odkaz. Instalace jsou ověřeny při stahování."
+        },
+        {
+          "title": "Sdílejte adresu",
+          "body": "Karta Přehled zobrazuje adresu, kterou můžete dát hráčům. Připojují se s hrou, kterou již mají."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otázky k serveru Paper",
+      "items": [
+        {
+          "q": "Mohu na server Paper přidat mody?",
+          "a": "Ne. Paper načítá pluginy, které běží pouze na serveru. Mody mění samotnou hru a vyžadují mod loader, jako je Fabric nebo NeoForge, na serveru i na každém klientovi. Pokud chcete obojí, spusťte modovaný server a pluginový server vedle sebe, nikoli hybrid."
+        },
+        {
+          "q": "Potřebuji účet SpigotMC nebo API klíč k instalaci pluginů?",
+          "a": "Ne. SpigotMC, Hangar a Modrinth fungují bez klíče. Pouze CurseForge si vyžádá API klíč, který jednou přidáte v Nastavení, API klíče."
+        },
+        {
+          "q": "Redstone farma z videa mi na serveru nefunguje. Proč?",
+          "a": "Paper ve výchozím nastavení mění některé chování vanilla ve jménu výkonu. To je obvykle důvod a obvykle se jedná o nastavení v konfiguraci Paperu, které můžete upravit ve správci souborů serveru."
+        },
+        {
+          "q": "Budou mé staré pluginy Bukkit a Spigot stále fungovat?",
+          "a": "Většina z nich, ano. Paper je fork Spigotu a zachovává API pluginů, takže pluginy napsané pro Bukkit a Spigot většinou fungují nezměněny. Zkontrolujte stránku každého pluginu, pro které verze Minecraftu je podporován."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Spusťte svůj server Paper doma",
+      "body": "Nainstalujte panel na jakýkoli stroj s Dockerem, poté vytvořte server Paper z průvodce. Zdarma, open source a váš."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Vlastní server Fabric s prohlížečem modů",
+      "description": "Spravujte si vlastní server Fabric nebo Quilt pro Minecraft. Vyhledávejte na Modrinth a CurseForge, připněte verzi loaderu a před aktualizací zkontrolujte každý mod."
+    },
+    "eyebrow": "Fabric a Quilt",
+    "title": "Vlastní server Fabric, který ví, co vaše mody podporují",
+    "intro": "Vytvořte si server Fabric nebo Quilt z požadovaných modů, ponechte verzi loaderu tam, kde má být, a přejděte na novou verzi Minecraftu až tehdy, až ji budou podporovat všechny mody.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Proč Fabric",
+        "body": "Fabric je malý, sleduje nové verze Minecraftu během několika dní a obsahuje většinu moderních výkonnostních modů. Pokud je vaším cílem rychlý server s několika mody pro vylepšení kvality života, je toto ten správný loader. Téměř každý mod pro Fabric potřebuje také Fabric API, což je samostatný soubor ke stažení, který přidáte jako jakýkoli jiný mod. Quilt je fork Fabric, který spouští většinu modů pro Fabric; vyberte si ho, pokud máte specifický důvod, jinak zvolte Fabric.",
+        "points": [
+          "Rychle sleduje nové verze Minecraftu.",
+          "Domov většiny moderních výkonnostních modů.",
+          "Servery Quilt automaticky vidí sestavení Fabric, protože Quilt spouští mody Fabric."
+        ]
+      },
+      {
+        "title": "Začněte s požadovanými mody",
+        "body": "Karta „Z modů“ v průvodci vybere loader, verzi Minecraftu a sestavení loaderu: nejnovější nebo konkrétní, které si připnete. Můžete to udělat i naopak. Nejprve vyberte mody a solver navrhne nejnovější loader a verzi Minecraftu, které všechny podporují, a poté nainstaluje sadu při vytváření serveru.",
+        "points": [
+          "Připněte si sestavení loaderu Fabric nebo Quilt místo sledování nejnovějšího.",
+          "Stránka Aktualizace nabízí novější sestavení pro připnutý loader.",
+          "Prohlížeč modů filtruje podle loaderu, takže se jar soubor Forge nemůže omylem dostat na server Fabric."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Kontrola verze před každou aktualizací",
+        "body": "Karta Modů serveru Fabric obsahuje podkartu Verze. Zkontroluje každý nainstalovaný mod oproti Modrinth a CurseForge a nahlásí nejvyšší verzi Minecraftu, pro kterou má každý z nich sestavení, plus rozpis toho, co by každá novější verze zanechala pozadu. Novější verze Minecraftu je nabídnuta pouze tehdy, když ji tato kontrola podpoří, a nikdy, když nelze jar soubor identifikovat.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Mody, kterým můžete důvěřovat a vrátit zpět",
+        "body": "Každé stažení z registru je před doručením na server ověřeno proti nejsilnějšímu kontrolnímu součtu, který registr publikuje. Mody, které přidáte, žijí ve sdílené knihovně, deduplikované pomocí sha256, takže deset serverů se stejným modem jej ukládá jednou. Aktualizujte mod, ignorujte verzi nebo se vraťte k předchozímu sestavení, když se aktualizace pokazí. Importujte .mrpack z Modrinth nebo zip souborů s jary a každý jar je identifikován a zkontrolován proti serveru, než se cokoli nainstaluje.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Spusťte server Fabric ve třech krocích",
+      "items": [
+        {
+          "title": "Vyberte Fabric na kartě Z modů",
+          "body": "Vyberte Fabric nebo Quilt, verzi Minecraftu a nejnovější sestavení loaderu nebo připnuté."
+        },
+        {
+          "title": "Vyhledejte a přidejte mody",
+          "body": "Vyhledejte na Modrinth nebo CurseForge, přidejte Fabric API a zbytek. Každé stažení je ověřeno."
+        },
+        {
+          "title": "Pozvěte své hráče",
+          "body": "Karta Pozvánky vytvoří pozvánku připravenou ke zkopírování a klientský .mrpack modů, které jste přidali, s vaším serverem již v seznamu serverů ve hře."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otázky k serveru Fabric",
+      "items": [
+        {
+          "q": "Potřebují hráči nainstalovat stejné mody?",
+          "a": "Ano, pro jakýkoli mod, který přidává obsah. Mody mění samotnou hru, takže klient musí načíst stejné. Karta Pozvánky sestaví klientský .mrpack modů, které jste přidali, s vaším serverem již v seznamu serverů ve hře, který hráči importují do spouštěče, jako je Prism nebo Modrinth App."
+        },
+        {
+          "q": "Opravdu potřebuji Fabric API?",
+          "a": "Téměř vždy. Téměř každý mod pro Fabric na něm závisí a je to samostatný soubor ke stažení. Přidejte jej z prohlížeče modů jako jakýkoli jiný mod."
+        },
+        {
+          "q": "Jak poznám, že mé mody budou fungovat na další verzi Minecraftu?",
+          "a": "Otevřete kartu Modů serveru a poté Verze. Zobrazí nejvyšší verzi Minecraftu, pro kterou má každý nainstalovaný mod sestavení, a co by novější verze zanechala pozadu."
+        },
+        {
+          "q": "Aktualizace modu rozbila server. Můžu se vrátit zpět?",
+          "a": "Ano. Vraťte mod z jeho řádku na kartě Modů a předchozí sestavení se vrátí ze sdílené knihovny."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Spravujte svůj Fabric server sami",
+      "body": "Nainstalujte panel, otevřete kartu Z modů a vyberte své mody. Žádné předplatné a žádné limity na počet spuštěných serverů."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Ovládací panel pro modované servery Forge a NeoForge",
+      "description": "Spravujte si sami modovaný Minecraft server s Forge nebo NeoForge. Správná Java se vybere za vás, verze loaderu lze připnout a pády serveru identifikují viníky."
+    },
+    "eyebrow": "Forge a NeoForge",
+    "title": "Ovládací panel pro modovaný server Forge, který za vás vybere správnou Javu",
+    "intro": "Od klasik 1.7.10 po nejnovější balíčky NeoForge: vytvořte server, nastavte jeho paměť a zjistěte, který mod způsobil pád, aniž byste museli číst řádek po řádku výpis chyby.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge nebo NeoForge?",
+        "body": "NeoForge je místo, kde ekosystém starého Forge nyní funguje pro aktuální verze. Oddělil se od Forge během verze 1.20.1 a většina velkých balíčků vytvořených pro 1.20.2 a novější cílí na něj, takže si na NeoForge vytvořte nový výkonný server. Forge stále patří minulosti: vše od éry 1.7.10, 1.12.2 a 1.16.5 je Forge, a to je velká část nejoblíbenějších balíčků. Mody pro jeden loader neběží na druhém a balíček NeoForge 1.20.1 neběží na Forge 1.20.1.",
+        "points": [
+          "Nový výkonný server: NeoForge.",
+          "Éra 1.7.10, 1.12.2 nebo 1.16.5: Forge.",
+          "Publikovaný balíček: přesně to, co balíček uvádí."
+        ]
+      },
+      {
+        "title": "Správná Java, pokaždé",
+        "body": "Požadavky Minecraftu na Javu se s hrou posouvají a nesprávná verze vám místo jasné zprávy poskytne neužitečnou chybu UnsupportedClassVersionError. Staré balíčky skutečně potřebují Javu 8 a aktuální verze potřebují 21 nebo novější. Průvodce vytvořením čte verzi Minecraftu, kterou vyberete, a sám si zvolí runtime, takže k nesouladu nikdy nedojde omylem. Aktualizace balíčku znovu vyřeší Javu, pokud nová verze potřebuje jinou.",
+        "points": ["1.16.5 a starší: Java 8.", "1.18 až 1.20.4: Java 17.", "1.20.5 až 1.21: Java 21."]
+      },
+      {
+        "title": "Paměť nastavená pro mody",
+        "body": "Každý server má dvě čísla: Java heap a limit paměti kontejneru. Java potřebuje paměť nad rámec heapu, asi 1,5 až 2 GB u velkého modpacku, a kontejner bez rezervy je okamžitě ukončen, jakmile se k němu Java pokusí dostat. Průvodce nastaví limit o 50 procent nad heap a panel odmítne limit kontejneru, který není nad heapem. Rozsáhlý balíček 150 až 300 modů vyžaduje 6 až 8 GB heapu.",
+        "points": [
+          "Server zastavený kvůli nedostatku paměti je ve své historii zaznamenán přesně tak.",
+          "Nastavte menší počáteční heap, aby paměť sledovala skutečné využití."
+        ]
+      },
+      {
+        "title": "Pády, které identifikují viníky",
+        "body": "Výpisy chyb jsou automaticky načteny a zpracovány do jednorázového souhrnu s výjimkou a mody, které jsou za ně nejpravděpodobněji zodpovědné. Otevřete vestavěný prohlížeč, zkopírujte výpis chyby nebo po explicitním potvrzení sdílejte na mclo.gs a získejte automatizované informace: známé problémy s navrhovanými opravami, zobrazené přímo v panelu. Automatický restart při pádu se pokusí znovu s rostoucími prodlevami a přeskočí pády, které nejprve potřebují opravu, jako je nesprávná Java nebo nedostatek paměti.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Spusťte Forge server ve třech krocích",
+      "items": [
+        {
+          "title": "Vyberte Loader a verzi",
+          "body": "Na kartě Průvodce z modů vyberte Forge nebo NeoForge, verzi Minecraftu a nejnovější sestavení loaderu nebo připnuté."
+        },
+        {
+          "title": "Dopřejte mu dostatek paměti",
+          "body": "Nastavte Java heap podle velikosti vašeho seznamu modů. Limit kontejneru následuje, o 50 procent nad ním."
+        },
+        {
+          "title": "Přidejte mody nebo importujte ZIP",
+          "body": "Prohledejte CurseForge a Modrinth, nebo importujte export CurseForge nebo ZIP soubor s jar soubory. Každý jar je identifikován a nejprve zkontrolován proti serveru."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otázky k Forge serverům",
+      "items": [
+        {
+          "q": "Mohu stále spustit balíček 1.12.2 nebo 1.7.10?",
+          "a": "Ano. V průvodci vyberte verzi a Forge a panel jej spustí na Javě 8, kterou tyto verze potřebují. GT New Horizons, expertní balíček 1.7.10, se instaluje ze stránky Modpacks s vlastním výběrem Javy."
+        },
+        {
+          "q": "Kolik paměti Forge server potřebuje?",
+          "a": "Lehký balíček 40 až 80 modů běží dobře na 4 GB heapu v 6 GB kontejneru. Balíček 150 až 300 modů vyžaduje 6 až 8 GB heapu a asi 10 GB pro kontejner."
+        },
+        {
+          "q": "Mohu připnout konkrétní sestavení Forge?",
+          "a": "Ano. Volič sestavení loaderu v průvodci přijímá nejnovější nebo konkrétní sestavení a stránka Aktualizace nabízí novější sestavení pro připnuté bez jejich automatického použití."
+        },
+        {
+          "q": "Můj server při spuštění spadl. Kam se mám podívat?",
+          "a": "Otevřete Monitorování a poté Historii. Karta s výpisem chyby uvádí výjimku a podezřelé mody a Analýza spustí informace z mclo.gs pro známé problémy a opravy."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Spravujte svůj modovaný server sami",
+      "body": "Nainstalujte panel na stroj s dostatkem paměti, poté vytvořte server Forge nebo NeoForge pomocí průvodce."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Panel pro vanilla Minecraft server, vlastní hosting",
+      "description": "Spravujte si vlastní vanilla Minecraft server: jakákoli verze od starých beta po nejnovější snapshot, s ovládáním světa, denním zálohováním a statistikami hráčů."
+    },
+    "eyebrow": "Nezměněná hra",
+    "title": "Vanilla Minecraft server se vším, co k němu patří",
+    "intro": "Udržujte hru přesně tak, jak ji vydal Mojang, a získejte zálohy, nástroje pro správu světa, moderování a statistiky hráčů z panelu místo z pluginů.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Jakákoli verze, kterou chcete",
+        "body": "Vyberte nejnovější vydání, snapshot nebo konkrétní verzi, včetně starých beta a alfa verzí. Panel vybere Java runtime, který daná verze potřebuje, stáhne obraz a spustí server z něj. Nikdo nemusí nic instalovat, aby se připojil: hráči se připojují se hrou, kterou již mají.",
+        "points": [
+          "Nejnovější vydání, snapshoty nebo konkrétní verze.",
+          "Staré beta a alfa verze pro nostalgický server.",
+          "Správná Java vybraná pro každou verzi."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Ovládání světa bez zadávání příkazů",
+        "body": "Ovládání světa je dostupné na všech záložkách serveru: herní hodiny, počasí a běžné gamerules jako přepínače, s každým dalším pravidlem na jedno kliknutí. Na záložce Světy resetujete aktivní svět s novým, zachovaným nebo vlastním seedem, přičemž nejprve nabídne bezpečnostní zálohu. Duplikujte svět, uchovejte dokončené světy ve světové knihovně nebo nahrajte svět, který již máte, jako .zip nebo .tar archiv.",
+        "points": [
+          "Resetujte s novým seedem, stejným seedem nebo vlastním, který zadáte.",
+          "Světová knihovna sdílená všemi servery.",
+          "Upravte server.properties v prohlížeči; hodnota na disku má přednost."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Zálohy od prvního dne",
+        "body": "Každý nový server automaticky získá denní plán zálohování. Zálohy jsou bezpečné: panel pozastaví ukládání, vyprázdní svět, zazipuje ho a zkontroluje, zda se archiv otevře, než ho zaznamená. Obnovení vrátí server přesně do stavu, v jakém byl, a nejprve vytvoří bezpečnostní zálohu aktuálních dat.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderování a statistiky bez pluginů",
+        "body": "Vanilla nemá žádný systém oprávnění, takže vám panel místo toho poskytuje nástroje pro moderování: whitelist, operátoři na všech úrovních, zákazy a IP zákazy a teleportace, živě během běhu serveru a přímo do souborů, když je server zastaven. Vlastní statistiky hry jsou pravidelně čteny do profilů hráčů a na tabuli: doba hraní, úmrtí, zabití, vytěžené bloky a diamanty a uražená vzdálenost. Časová osa aktivity udržuje chat, připojení, úmrtí a úspěchy prohledávatelné."
+      }
+    ],
+    "faq": {
+      "title": "Otázky k vanilla serveru",
+      "items": [
+        {
+          "q": "Mohu spustit snapshot server?",
+          "a": "Ano. V průvodci vyberte snapshot jako verzi Minecraftu. Před každým novým snapshotem si vytvořte zálohu, protože světy snapshotů nelze otevřít ve starší verzi."
+        },
+        {
+          "q": "Může mít vanilla server živou mapu?",
+          "a": "Ve vanilla ne. BlueMap potřebuje k běhu plugin nebo mod loader. Paper server získá jeden jediným kliknutím a hráči se stále připojují s neupraveným klientem."
+        },
+        {
+          "q": "Mohu resetovat svět, ale zachovat seed?",
+          "a": "Ano. Resetujte aktivní svět ze záložky Světy a zvolte zachování aktuálního seedu. Panel nejprve nabídne bezpečnostní zálohu starého světa."
+        },
+        {
+          "q": "Kolik hráčů zvládne vanilla server?",
+          "a": "Vanilla je s mnoha hráči pomalejší než Paper. Pro skupinu přátel je v pořádku. Pro rušný veřejný server běží Paper stejnou hru s roky optimalizací výkonu."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Spusťte vanilla server",
+      "body": "Nainstalujte panel, vyberte Vanilla v průvodci a sdílejte adresu. Zdarma a s otevřeným zdrojovým kódem."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Server s modpacky pro Minecraft: instalace jedním kliknutím",
+      "description": "Spravujte server s modpackem pro Minecraft z CurseForge, Modrinth, FTB nebo GT New Horizons. Modpacky zůstanou připnuté a každá aktualizace zahrnuje zálohu a možnost vrácení zpět."
+    },
+    "eyebrow": "Servery s modpacky",
+    "title": "Server s modpackem pro Minecraft, který se sám neaktualizuje",
+    "intro": "Nainstalujte modpack podle názvu, připněte jej na přesnou verzi a aktualizujte, až když se rozhodnete, nejprve se zálohou a možností vrácení zpět jedním kliknutím, pokud se nová verze nespustí.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Každý hlavní zdroj modpacků",
+        "body": "Stránka Modpacky a karta Z modpacku v průvodci instalují modpacky z CurseForge a Modrinth vyhledáním jejich názvů, FTB modpacky podle jejich ID a verze, a GT New Horizons z vlastního indexu vydání. Není to publikovaný modpack? Nahrajte .mrpack z Modrinth, export modpacku z CurseForge nebo jakýkoli zip s mody. Manifest, nebo většina hlasů napříč identifikovanými jary, vyplní loader a verzi Minecraftu.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge vyžaduje API klíč, který se jednou přidá v Nastavení, API klíče.",
+          "Mody, jejichž autoři zakazují automatické stahování, jsou uvedeny s odkazem a možností nahrání místo selhání instalace.",
+          "GT New Horizons nastaví správnou verzi Javy a rozumné minimum paměti a místa na disku za vás."
+        ]
+      },
+      {
+        "title": "Připnuto na přesnou verzi",
+        "body": "Když vyberete modpack, panel určí přesnou verzi, zaznamená ji a nainstaluje právě tu. Restart nikdy nemůže tiše aktualizovat modpack. Vy sami si zvolíte, jak každý server obdrží informace o nových verzích: Pouze ručně jej nechá být úplně, Upozornit mě zobrazí odznak a uvede jej na stránce Aktualizace, a Automatická aktualizace aplikuje aktualizace modpacku po denní kontrole stejnou chráněnou cestou. Aktualizace, které by přesunuly svět na jinou verzi Minecraftu, jsou vždy přeskočeny, protože konverze světa je vaše rozhodnutí.",
+        "points": [
+          "Výchozí je Pouze ručně.",
+          "Servery sledující stabilní verze nikdy nedostanou beta verzi.",
+          "Automatická aktualizace nikdy nepřekročí verzi Minecraftu."
+        ]
+      },
+      {
+        "title": "Aktualizace s možností návratu",
+        "body": "Aktualizace modpacku je jedna akce. Panel provede zálohu, korektně zastaví server, vymění připnutou verzi, znovu sestaví server se správnou Javou pro novou verzi a sleduje první spuštění, s dostatečným oknem pro velké modpacky, které při prvním spuštění stahují gigabajty. Pokud se nová verze nespustí, vraťte se jedním kliknutím.",
+        "shot": "backups"
+      },
+      {
+        "title": "Vaše vlastní mody navrch",
+        "body": "Mody, které přidáte na server s modpackem, žijí ve sdílené knihovně a jsou propojeny do serveru, takže přežijí aktualizace modpacku. Deaktivujte mod z modpacku, který nechcete, přidejte výkonnostní mod, který modpacku chybí, a uchovejte obojí i po další aktualizaci. Hráči si nainstalují stejný modpack na stejné verzi z CurseForge nebo Modrinth a karta Pozvánky vám poskytne připravenou pozvánku s adresou a verzí.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Spusťte server s modpackem ve třech krocích",
+      "items": [
+        {
+          "title": "Najděte modpack",
+          "body": "Vyhledejte CurseForge nebo Modrinth na stránce Modpacky, nebo nahrajte .mrpack, export z CurseForge, nebo zip souborů."
+        },
+        {
+          "title": "Vyberte verzi a paměť",
+          "body": "Zvolte přesnou verzi modpacku. Poskytněte haldě Javy dostatek místa pro počet modů; limit kontejneru následuje."
+        },
+        {
+          "title": "Vytvořte a sledujte spuštění",
+          "body": "Panel nainstaluje modpack, připne jej a spustí server. První spuštění velkého modpacku chvíli trvá; konzole zobrazuje každý řádek."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Často kladené otázky o serverech s modpacky",
+      "items": [
+        {
+          "q": "Aktualizuje se můj modpack při restartu serveru?",
+          "a": "Ne. Modpack je připnut na přesnou verzi, kterou jste nainstalovali. Změní se pouze tehdy, když jej aktualizujete, nebo po denní kontrole, pokud jste server nastavili na Automatickou aktualizaci."
+        },
+        {
+          "q": "Proč CurseForge potřebuje API klíč, zatímco Modrinth ne?",
+          "a": "CurseForge odpovídá pouze na požadavky, které obsahují klíč. Můžete jej získat z konzole CurseForge a jednou jej přidat v Nastavení, API klíče. Modrinth funguje bez něj."
+        },
+        {
+          "q": "Některé mody v mém modpacku se nepodařilo stáhnout. Co teď?",
+          "a": "Jejich autoři zakazují automatické stahování. Panel uvádí každý z nich s odkazem na jeho stránku a možností nahrání, takže si jar stáhnete ve svém prohlížeči a nahrajete jej."
+        },
+        {
+          "q": "Mohu nainstalovat FTB modpack?",
+          "a": "Ano, přes FTB API s číselným ID modpacku a explicitním ID verze. Panel zatím nekontroluje aktualizace FTB modpacků."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Spusťte svůj server s modpackem doma",
+      "body": "Nainstalujte panel, otevřete stránku Modpacky a vyberte modpack. Zůstane na verzi, kterou jste si vybrali, dokud neřeknete jinak."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Návody: Vlastní hosting Minecraft serveru",
+      "description": "Návody pro vlastní hosting Minecraft serverů: modpack server pro přátele, Raspberry Pi, domácí PC, přechod z placeného hostingu a mnoho serverů na jednom stroji."
+    },
+    "eyebrow": "Návody",
+    "title": "Návody pro vlastní hosting Minecraft serveru",
+    "intro": "Praktické návody pro nastavení, která lidé skutečně používají, od Raspberry Pi na poličce po stroj plný serverů.",
+    "cards": {
+      "guideFriends": "Hostujte modpack CurseForge nebo Modrinth pro své přátele s dostatkem paměti a pozvánkou, kterou mohou následovat.",
+      "guidePi": "Proměňte Raspberry Pi 4 nebo 5 na Minecraft server s webovým panelem a poctivě jej nastavte.",
+      "guideHome": "Hostujte Minecraft server doma na Windows, macOS nebo Linuxu a nechte přátele bezpečně se připojit.",
+      "guideHosting": "Přesuňte svůj svět, pluginy a mody z placeného hostingu, aniž byste ztratili jedinou inventář.",
+      "guideMulti": "Spusťte několik Minecraft serverů na jednom stroji, aniž by si porty, paměť nebo disk překážely."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Potřebujete něco, co zde není?",
+      "body": "Dokumentace se podrobněji věnuje každé funkci a na Discordu jsou skuteční lidé, kteří servery spravují."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Hostujte modpack server pro přátele",
+      "description": "Hostujte modpack server z CurseForge nebo Modrinth na vlastním stroji pro své přátele: vyberte balíček, dejte mu dostatek paměti, pozvěte přátele a zálohujte."
+    },
+    "eyebrow": "Průvodce serverem pro modpacky",
+    "title": "Jak hostovat server pro modpacky pro své přátele",
+    "intro": "Váš vlastní stroj může hostovat balíček, který hrajete s přáteli. Nainstalujte panel, vytvořte server z balíčku, dejte mu potřebnou paměť a pošlete přátelům pozvánku, kterou mohou sledovat.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Vyberte balíček z průvodce",
+        "body": "Stránka Modpacks a karta From Modpack v průvodci vytvořením prohledávají CurseForge a Modrinth podle názvu; průvodce také přijímá FTB balíčky podle ID nebo export balíčku, který již máte. Vyberte verzi, kterou budou vaši přátelé hrát. Panel nainstaluje přesně tuto verzi a ponechá ji tam: restart nikdy neaktualizuje balíček za vašimi zády. CurseForge potřebuje bezplatný API klíč, který se jednou přidá v Nastavení, API Keys; Modrinth nic nepotřebuje.",
+        "points": [
+          "Prohledejte CurseForge a Modrinth, nebo nahrajte .mrpack, export CurseForge nebo zip mod jar souborů.",
+          "Verze balíčku je připnuta, takže všichni hrají stejnou.",
+          "Java je vybrána pro verzi Minecraftu balíčku."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Dopřejte mu dostatek paměti",
+        "body": "Modpacky potřebují mnohem více paměti než vanilla server a server má dvě čísla: Java heap a limit kontejneru kolem něj, který musí být větší, protože Java používá paměť nad rámec svého heapu. Lehký balíček 40 až 80 modů chce 4 GB heap v 6 GB kontejneru; velký \"kitchen-sink\" balíček 6 až 8 GB heapu v 10 GB. Panel odliší server zastavený kvůli nedostatku paměti od pádu, takže víte, které nastavení změnit.",
+        "points": [
+          "Nastavte paměť v průvodci a později ji změňte v nastavení serveru.",
+          "Ponechte paměť pro operační systém a panel.",
+          "Karta Monitoring ukazuje, co server skutečně používá."
+        ]
+      },
+      {
+        "title": "Pošlete přátelům pozvánku, kterou mohou sledovat",
+        "body": "Přátelé nainstalují stejný balíček ve stejné verzi do svého launcheru: aplikace CurseForge, aplikace Modrinth nebo Prism Launcher. Karta Invites serveru, v Nastavení, zkopíruje adresu k sdílení a text pozvánky s verzí Minecraftu. Přátelé ve vaší síti použijí lokální adresu. Pro přátele mimo vaši síť přesměrujte herní port na vašem routeru, nebo použijte tunel, když vám to váš poskytovatel nedovolí.",
+        "points": [
+          "Karta Invites nabízí lokální adresu, vaši veřejnou adresu a vlastní.",
+          "Pokud je whitelist zapnutý, nejprve přidejte každého přítele na kartě Players.",
+          "Pro server vytvořený z modů, které jste vybrali, karta Invites také vytvoří klientský .mrpack, který je nainstaluje a přidá server do seznamu multiplayeru."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Udržujte svět v bezpečí",
+        "body": "Každý nový server dostane denní plán zálohování. Před aktualizací balíčku panel pořídí další zálohu, znovu sestaví server na nové verzi a sleduje první spuštění; pokud se nespustí, jedním kliknutím se vrátí zpět. Mody, které jste přidali navíc k balíčku, zůstanou i po aktualizacích.",
+        "points": [
+          "Denní zálohy od prvního dne.",
+          "Aktualizace a vrácení zpět balíčků se zálohou a možností vrácení.",
+          "Detekovány, vysvětleny a sdíleny reporty o pádech."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Hostujte svůj modpack server",
+      "items": [
+        {
+          "title": "Nainstalujte panel",
+          "body": "Na Linuxu instalátor na jeden řádek nastaví Docker a panel. Na Windows a macOS spusťte panel s Node.js vedle Docker Desktop."
+        },
+        {
+          "title": "Přidejte API klíč CurseForge",
+          "body": "Pouze pro balíčky CurseForge: přidejte bezplatný klíč v Nastavení, API Keys."
+        },
+        {
+          "title": "Vytvořte server z balíčku",
+          "body": "Otevřete kartu From Modpack v průvodci, najděte balíček, vyberte jeho verzi a paměť a vytvořte server."
+        },
+        {
+          "title": "Pozvěte své přátele",
+          "body": "Spusťte server, otevřete Nastavení, Invites a pošlete text pozvánky. Přátelé nainstalují stejnou verzi balíčku do svého launcheru a připojí se."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otázky k serveru pro modpacky",
+      "items": [
+        {
+          "q": "Kolik RAM potřebuje server pro modpack?",
+          "a": "Přibližně 6 GB pro lehký balíček 40 až 80 modů a 10 GB pro velký balíček 150 až 300, každý s menším Java heapem uvnitř. Expertní balíčky jako GregTech New Horizons chtějí 16 GB. Nezapomeňte na místo pro operační systém."
+        },
+        {
+          "q": "Potřebují moji přátelé stejnou verzi modpacku?",
+          "a": "Ano. Server běží na jedné připnuté verzi balíčku a klient s různými verzemi modů je obvykle odmítnut nebo spadne. Řekněte přátelům verzi zobrazenou na kartě Overview serveru."
+        },
+        {
+          "q": "Mohou se přátelé připojit bez přesměrování portů?",
+          "a": "Ano, pokud jsou ve vaší síti. Zvenčí buď přesměrujte herní port na vašem routeru, nebo použijte tunelovací službu, která funguje i v případě, že váš poskytovatel blokuje přesměrování portů."
+        },
+        {
+          "q": "Co se stane, když balíček dostane aktualizaci?",
+          "a": "S politikou Notify Me se na stránce Updates zobrazí. Její aplikace zahrnuje zálohu, znovu sestavení serveru a sledování prvního spuštění, a vrácení zpět je na jedno kliknutí. Vaši přátelé pak také aktualizují balíček ve svém launcheru."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Hrajte svůj balíček na vlastním serveru",
+      "body": "Zdarma, open source a bez účtu u kohokoli. Nainstalujte panel a vytvořte server z balíčku v průvodci."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Minecraft server na Raspberry Pi s webovým panelem",
+      "description": "Nastavte si Minecraft server na Raspberry Pi s bezplatným webovým panelem. Jaký hardware potřebujete, jak jej nainstalovat jedním příkazem a jak nastavit velikost paměti."
+    },
+    "eyebrow": "Průvodce pro Raspberry Pi",
+    "title": "Spusťte Minecraft server na Raspberry Pi se skutečným webovým panelem",
+    "intro": "Raspberry Pi 4 nebo 5 je tichým a energeticky úsporným domovem pro malý Minecraft server. Zde je návod, co koupit, jak nainstalovat panel jedním příkazem a jak daleko jej můžete posunout.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Co potřebujete",
+        "body": "Panel a jeho serverový obraz jsou publikovány pro arm64, takže 64bitové Raspberry Pi je spustí jako jakýkoli jiný Linuxový stroj. Paměť je nejdůležitějším limitem: vanilla nebo Paper server pro až deset hráčů potřebuje 2 GB Java heap na 4 GB stroji a lehký modpack potřebuje 4 GB heap na 6 GB stroji. To staví 4 GB Pi na spodní hranici a 8 GB Pi do pohodlného středu.",
+        "points": [
+          "Raspberry Pi 4 nebo 5 s 4 GB paměti nebo více. 8 GB, pokud chcete mody.",
+          "64bitový operační systém, například 64bitový Raspberry Pi OS.",
+          "SSD přes USB místo SD karty. Světy se neustále čtou a zapisují a svět na pomalém úložišti se při načítání chunků zasekává.",
+          "Kabelové připojení k síti, pokud je to možné."
+        ]
+      },
+      {
+        "title": "Vyberte typ serveru vhodný pro Pi",
+        "body": "Minecraft se mnohem více stará o rychlost jednoho jádra než o jejich počet a jádra Pi jsou skromná. Paper běží stejnou hru jako vanilla s roky optimalizací výkonu a hráči se stále připojují s neupraveným klientem. Pokud chcete mody, Fabric s několika mody pro výkon a kvalitu života je vhodnější než velký Forge balíček. Balíček s 200 mody typu „kitchen-sink“ není pro Pi práce.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Malá skupina, nezměněná hra: Paper.",
+          "Několik modů: Fabric.",
+          "Snižte dohledovou vzdálenost; snížení z 12 na 8 chunků ušetří hodně paměti a je v hraní téměř neznatelné."
+        ]
+      },
+      {
+        "title": "Mějte to pod kontrolou",
+        "body": "Karta Monitorování serveru zobrazuje ticky za sekundu a milisekundy na tick, takže vidíte, kdy Pi zaostává. Měřič paměti ukazuje, co kontejner skutečně používá. Java si ve výchozím nastavení nárokuje celý svůj heap předem; pokud byste raději viděli, jak paměť sleduje skutečné využití, nastavte menší počáteční heap v kartě Zdroje serveru. Denní zálohy jsou zapnuté od prvního dne.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Nainstalujte panel na Raspberry Pi",
+      "items": [
+        {
+          "title": "Nainstalujte 64bitový OS",
+          "body": "Nainstalujte 64bitový Raspberry Pi OS (nebo jiný 64bitový Linux), nabootujte z SSD, pokud je to možné, a aktualizujte systém."
+        },
+        {
+          "title": "Spusťte instalátor jedním řádkem",
+          "body": "Instalátor na stránce Instalace nainstaluje Docker, pokud chybí, nastaví panel do /opt/msm, spustí jej a čeká, dokud neodpoví. Sám detekuje arm64."
+        },
+        {
+          "title": "Dokončete nastavení v prohlížeči",
+          "body": "Otevřete adresu Pi na portu 25564 z jiného počítače. Protože je panel dostupný z vaší sítě, nastavení vyžaduje 6místný PIN, který vám instalátor vypíše."
+        },
+        {
+          "title": "Vytvořte malý server",
+          "body": "Ve wizardu vyberte Paper nebo Fabric. Výchozí paměť se přizpůsobí RAM Pi; ponechte místo pro systém a další služby."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otázky k Raspberry Pi",
+      "items": [
+        {
+          "q": "Bude fungovat Raspberry Pi 3?",
+          "a": "Není to dobrá volba. Pi 3 má 1 GB paměti, zatímco i malý vanilla nebo Paper server chce 2 GB heap na 4 GB stroji. Použijte Pi 4 nebo 5 s 4 GB nebo více."
+        },
+        {
+          "q": "Potřebuji 64bitový operační systém?",
+          "a": "Ano. Obraz panelu a instalátor jsou sestaveny pro arm64 a amd64 a instalátor se zastaví na jakékoli jiné architektuře."
+        },
+        {
+          "q": "Mohu na Pi spustit velký modpack?",
+          "a": "Velké balíčky chtějí 6 až 8 GB Java heap a celkem kolem 10 GB paměti, více, než má jakékoli Pi. Držte se Paper nebo lehké konfigurace Fabric."
+        },
+        {
+          "q": "Jak se připojí hráči mimo můj domov?",
+          "a": "Přesměrujte herní port, ve výchozím nastavení 25565 přes TCP a UDP, z vašeho routeru na Pi. Nikdy nepřesměrovávejte port panelu nebo RCON porty; k panelu přistupujte přes VPN nebo reverzní proxy s TLS."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Proměňte své Pi na server",
+      "body": "Jediný příkaz nainstaluje vše. Panel je zdarma, s otevřeným zdrojovým kódem a běží výhradně na Pi."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Domácí hostování Minecraft serveru krok za krokem",
+      "description": "Spravujte Minecraft server doma na Windows, macOS nebo Linuxu pomocí bezplatného webového panelu. Nainstalujte jej, udržujte panel soukromý a nechte přátele bezpečně se připojit."
+    },
+    "eyebrow": "Průvodce domácím serverem",
+    "title": "Spravujte Minecraft server doma na Windows, macOS nebo Linuxu",
+    "intro": "Jakýkoli počítač, na kterém běží Docker, může hostovat vaše servery. Nainstalujte panel, udržujte jej soukromý, otevřete pouze herní port a vaši přátelé se mohou připojit odkudkoli.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Dva způsoby instalace",
+        "body": "Na linuxovém stroji provede instalátor na jeden řádek vše: nainstaluje Docker, pokud chybí, spustí panel jako kontejner a po restartu jej znovu spustí. Na Windows a macOS spusťte panel přímo s Node.js 24 vedle Docker Desktop. Panel vypíše jasnou zprávu a zastaví se, pokud je váš Node.js příliš starý, a pokud Docker ještě neběží, stále získáte plný panel; servery se spustí, jakmile je Docker spuštěn.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: instalátor, nebo compose soubor v Portaineru nebo Dockge.",
+          "Windows: Docker Desktop s backendem WSL2, poté panel ze zdrojového kódu.",
+          "macOS: Docker Desktop, poté panel ze zdrojového kódu.",
+          "Pod PM2 nebo systemd panel přežije restarty."
+        ]
+      },
+      {
+        "title": "Udržujte panel soukromý",
+        "body": "Hráči nikdy nemluví s panelem. Připojují se k hernímu portu. Čerstvá instalace ze zdrojového kódu odpovídá pouze na stroji, na kterém běží, na localhost portu 25564. Abyste se k němu dostali z jiného počítače ve vaší síti, nastavte jej tak, aby naslouchal ve vaší síti; nastavení poté vyžádá jednorázový PIN, takže cizí člověk, který se k portu dostane jako první, nemůže nárokovat účet správce. Nikdy nepřesměrovávejte port panelu do internetu. Pro správu serverů mimo domov použijte VPN, SSH tunel nebo reverzní proxy s TLS.",
+        "points": [
+          "Po instalaci pouze localhost.",
+          "Nastavovací PIN, když je panel dostupný ze sítě.",
+          "Dvoufaktorové ověřování pro každý účet."
+        ]
+      },
+      {
+        "title": "Nechte přátele připojit",
+        "body": "Každý server dostane herní port, počínaje 25565 a dále. Na vašem routeru přesměrujte tento port, přes TCP i UDP, do počítače, na kterém běží servery. Ponechte porty vzdálené konzole, 1000 nad každým herním portem, zavřené: panel se k nim dostane zevnitř kontejneru a nikdy je nepotřebuje otevřené. Dejte hráčům název hostitele, který ovládáte, místo vaší domácí adresy, takže změna adresy je změnou DNS a ne zprávou všem hráčům.",
+        "points": [
+          "Přesměrujte pouze herní porty, TCP a UDP.",
+          "Udržujte RCON a port panelu zavřené.",
+          "Karta Přehled zobrazuje adresu ke sdílení."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Ať se chová jako server",
+        "body": "Domácí počítač, který usíná, bere s sebou váš server, takže na stroji, který jej hostuje, vypněte uspávání. Zaškrtněte Spustit při startu panelu v nastavení serveru a ten se spustí spolu s panelem. Automatický restart při pádu vrátí spadlý server zpět s prodlužujícími se prodlevami mezi pokusy. Denní zálohy jsou naplánovány pro každý nový server a plány mohou restartovat servery v klidných hodinách.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Spravujte svůj první server doma",
+      "items": [
+        {
+          "title": "Nainstalujte Docker",
+          "body": "Docker Engine na Linuxu, nebo Docker Desktop na Windows a macOS. Na Windows sdílejte disk, na kterém je panel, s Docker Desktop."
+        },
+        {
+          "title": "Nainstalujte a otevřete panel",
+          "body": "Postupujte podle stránky Instalace pro váš systém, poté otevřete panel v prohlížeči. Nastavení zkontroluje Docker, vytvoří váš účet správce a zeptá se na vaše časové pásmo."
+        },
+        {
+          "title": "Vytvořte server",
+          "body": "Průvodce navrhne bezplatný port a paměť, která se vejde do vašeho stroje. Vyberte typ serveru a stiskněte vytvořit."
+        },
+        {
+          "title": "Přesměrujte herní port",
+          "body": "Přesměrujte herní port serveru na vašem routeru, TCP a UDP, a pošlete přátelům adresu z karty Přehled."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otázky k domácímu hostování",
+      "items": [
+        {
+          "q": "Mohu hostovat na stejném PC, na kterém hraji?",
+          "a": "Ano, pokud má dostatek paměti pro obojí. Dejte serveru jeho haldu plus rezervu pro Javu a nechte dostatek pro herního klienta. Vanilla server pro pár přátel potřebuje asi 4 GB pro sebe."
+        },
+        {
+          "q": "Proč se na mou Wi-Fi mohou připojit přátelé, ale přátelé mimo síť ne?",
+          "a": "Herní port není na vašem routeru přesměrován, nebo jej blokuje firewall. Přesměrujte herní port serveru přes TCP a UDP na hostující stroj a povolte jej ve firewallu stroje."
+        },
+        {
+          "q": "Mohu spustit Docker image panelu na Windows nebo macOS?",
+          "a": "Instalace kontejneru je určena pro linuxové hostitele. Na Windows a macOS spusťte panel ze zdrojového kódu s Node.js 24 vedle Docker Desktop, což funguje stejně, jakmile je spuštěn."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Začněte hostovat doma",
+      "body": "Zdarma, open source a bez účtu u kohokoli. Vaše servery žijí v jedné složce na vašem vlastním stroji."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Opusťte placený hosting Minecraftu: přesuňte svůj svět",
+      "description": "Přeneste server Minecraftu z placeného hostingu: vezměte správné soubory, přeneste svět a pluginy do svého vlastního panelu, zachovejte veškerý inventář a ponechte si adresu."
+    },
+    "eyebrow": "Průvodce migrací",
+    "title": "Přeneste svůj server Minecraftu z placeného hostingu",
+    "intro": "Přineste svůj svět, pluginy a mody domů s veškerým inventářem beze změn. Nejprve si udělejte inventuru, zkopírujte celou složku serveru, přestavte ji ve svém vlastním panelu a teprve potom na ni nasměrujte hráče.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Inventura před stažením",
+        "body": "Zapište si tyto věci, dokud je starý server ještě spuštěný. Každá z nich špatně ukončila migraci, protože byla předpokládána, nikoli zkontrolována. Online režim je nejdůležitější: pokud starý server běžel s vypnutým režimem a nový s zapnutým, nebo naopak, každý hráč získá jinou identitu a zbrusu nový, prázdný inventář.",
+        "points": [
+          "Přesná verze Minecraftu a loader. 1.20.1 NeoForge není 1.20.1 Forge.",
+          "Seznam modů nebo pluginů s verzemi.",
+          "Název úrovně (level-name) ze souboru server.properties. Složka světa se často nejmenuje world.",
+          "Online režim, zapnutý nebo vypnutý.",
+          "Cokoli žijícího mimo složku serveru, například databáze pluginu."
+        ]
+      },
+      {
+        "title": "Vezměte celou složku, nejen svět",
+        "body": "Použijte správce souborů nebo možnost stažení hostitele a vezměte celý adresář serveru. Získejte samotné soubory pluginů a modů, nikoli seznam názvů: verze jsou důležité a „nejnovější“ je příští měsíc jiný soubor. Stáhněte si také své zálohy. Záloha, která existuje pouze v panelu, který opouštíte, není záloha, kterou vlastníte. Před finálním stažením server řádně zastavte, aby hra zapsala svět na disk."
+      },
+      {
+        "title": "Přestavte to ve svém vlastním panelu",
+        "body": "Vytvořte server stejného typu a se stejnou přesnou verzí. Poté přineste dílky. Stránka Světy přijme váš svět jako archiv .zip nebo .tar, automaticky v něm najde svět a nainstaluje ho na server, přičemž nejprve zálohuje ten aktuální. Na serveru s pluginy nebo mody importujte zip vašich jar souborů: každý z nich je identifikován, posouzen vůči serveru a nainstalován, pokud se hodí. Konfigurace a zbytek se nahrají přes správce souborů, který upravuje a nahrává přímo v prohlížeči. Pokud starý server používal publikovaný balíček, nainstalujte místo toho stejný balíček se stejnou verzí.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Nahrát svět najde svět uvnitř vašeho archivu.",
+          "Importovat Zip identifikuje každý jar soubor a zkontroluje ho vůči serveru.",
+          "Správce souborů zpracovává konfigurační soubory, whitelist a ops."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Ponechte si adresu, ponechte si hráče",
+        "body": "Pokud se hráči připojují k holé IP adrese, každý krok je nutí upravovat jejich seznam serverů a někteří to nikdy neudělají. Použijte název hostitele, který ovládáte, a nasměrujte ho na svůj nový stroj. Přesun se pak stane změnou DNS. Snižte dobu platnosti záznamu (TTL) den před přepnutím, aby se změna rychle rozšířila. Záznam SRV umožňuje hráčům zadat holou doménu, i když server běží na jiném portu, což je totéž, co dělají hostitelé, aby poskytli adresu pro hraní."
+      }
+    ],
+    "steps": {
+      "title": "Přepnutí, v pořadí",
+      "items": [
+        {
+          "title": "Test na soukromém portu",
+          "body": "Spusťte nový server na portu, který hráči neznají, připojte se sami a zkontrolujte základ, který znáte, svůj inventář a že se načetl každý plugin nebo mod."
+        },
+        {
+          "title": "Finální kopie",
+          "body": "Oznámte restart, řádně zastavte starý server, stáhněte svět ještě jednou a nainstalujte tuto kopii, aby s ní přišly nejnovější změny."
+        },
+        {
+          "title": "Přepněte port a adresu",
+          "body": "Přesuňte server na jeho veřejný port pomocí karty Herní port a poté nasměrujte svůj název hostitele na nový stroj."
+        },
+        {
+          "title": "Nechte starý server ještě nějakou dobu běžet",
+          "body": "Zrušte starý plán až po několika dnech. Nechte ho zastavený, aby nikdo nestavěl na opuštěné kopii."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otázky k migraci",
+      "items": [
+        {
+          "q": "Zachovají si hráči své inventáře?",
+          "a": "Ano, pokud je online režim na obou serverech stejný a přenesli jste celou složku světa. Data hráčů žijí uvnitř světa, klíčovaná identitou každého hráče, a tato identita se změní, pokud se změní online režim."
+        },
+        {
+          "q": "Můj hostitel mi dovoluje stáhnout pouze svět. Je to dost?",
+          "a": "Pro vanilla verzi většinou ano. Pro server s pluginy nebo mody potřebujete také jar soubory v jejich přesných verzích, protože svět se bez modů, které ho vytvořily, správně nenačte. Požádejte svého hostitele o celý adresář serveru."
+        },
+        {
+          "q": "Co panel nahrazuje z ovládacího panelu mého hostitele?",
+          "a": "Konzoli, správce souborů, zálohy, plány, správu hráčů, instalace pluginů a modů a instalace modpacků, plus věci, za které hostitelé často účtují příplatek, jako je více serverů nebo více slotů pro zálohy. Limit je váš vlastní hardware."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Přineste svůj server domů",
+      "body": "Nainstalujte panel, vytvořte server, který odpovídá vašemu starému, a nahrajte svůj svět. Zdarma, open source a váš k zachování."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Provozujte více serverů Minecraft na jednom stroji",
+      "description": "Provozujte více serverů Minecraft na jednom stroji: automatické porty, paměť, limity CPU a disku pro každý server, sdílené mody a jeden ovládací panel pro celou flotilu."
+    },
+    "eyebrow": "Průvodce pro více serverů",
+    "title": "Provozujte více serverů Minecraft na jednom stroji, čistě",
+    "intro": "Survival svět, kreativní stavitel server a modpack na víkend, to vše na stejném stroji. Každý dostane svůj vlastní kontejner, svůj vlastní port a své vlastní limity a vy je všechny vidíte na jednom ovládacím panelu.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Porty vyřešené za vás",
+        "body": "Herní porty jsou přidělovány podle principu „první volný“, počítáno od 25565, s portem pro vzdálenou konzoli o 1000 výše než každý z nich. Deset serverů používá herní porty 25565 až 25574 a RCON udržuje ve svém vlastním bloku, takže můžete otevřít jeden souvislý rozsah portů ve svém firewallu, aniž byste kdy vystavili RCON. Port je považován za obsazený, pokud jej používá jiný server, jakýkoli Docker kontejner na stroji jej publikuje, nebo systém hlásí, že je zaneprázdněn. Server později přesunete pomocí karty Herní port a panel před uložením zkontroluje nový port.",
+        "points": [
+          "Jeden pár herního portu a RCON na server, přidělený automaticky.",
+          "„Další volný port“ vybere nejnižší volný.",
+          "Otevřete pouze herní rozsah. RCON zůstane zavřený."
+        ]
+      },
+      {
+        "title": "Limity, aby jeden server nemohl vyhladovět ostatní",
+        "body": "Každý server je svým vlastním Docker kontejnerem s limitem CPU, Java heapem a nad ním pevným limitem paměti. Docker nemůže omezit využití disku složky, takže to dělá panel: každý server má diskovou kvótu a akce, která by server posunula za její hranici, jako je instalace modu nebo nahrání světa, je zablokována, dokud se neuvolní místo. Zapněte „Zastavit server při překročení kvóty“ a server, který naroste o více než 10 procent nad svou kvótu, je zastaven a zaznamenán v jeho historii.",
+        "points": [
+          "Limit CPU, heapu a paměti pro každý server.",
+          "Diskové kvóty vynucené panelem.",
+          "Výchozí nastavení pro nové servery se přizpůsobí paměti stroje."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Sdílejte, co lze sdílet",
+        "body": "Přidané mody jsou uloženy jednou ve sdílené knihovně, deduplikovány pomocí sha256 a propojeny do každého serveru, který je používá, takže deset serverů se stejným modem jej neukládá desetkrát. Světy jdou do knihovny světů, ze které může instalovat jakýkoli server. Blueprint zachycuje celý recept serveru jako jeden soubor .mcserver.zip a Clone jej použije k vytvoření identického serveru s novými porty.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Jeden pohled na flotilu",
+        "body": "Ovládací panel zobrazuje každý server na první pohled: stav, paměť, online hráči, čekající aktualizace a nedávná aktivita. Značky organizují seznam serverů. Globální plány spouštějí restarty, zálohy nebo příkazy napříč servery a stránka Aktualizace shromažďuje, co je ve flotile zastaralé. Oprávnění pro jednotlivé servery umožňují příteli spravovat svůj vlastní server v panelu, aniž by viděl ten váš.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Plánování stroje pro více serverů",
+      "items": [
+        {
+          "title": "Sečtěte paměť",
+          "body": "Sečtěte Java heap každého serveru a jeho rezervu a poté nechte místo pro systém. Zastavené servery nevyužívají žádnou paměť, takže víkendový balíček ve všední dny nic nestojí."
+        },
+        {
+          "title": "Nastavte rozumné výchozí hodnoty",
+          "body": "Správce nastaví heap, diskovou kvótu a limit CPU, se kterými každý nový server začíná, v Nastavení, Výchozí hodnoty pro nové servery."
+        },
+        {
+          "title": "Otevřete jeden rozsah portů",
+          "body": "Otevřete rozsah herních portů dimenzovaný pro servery, které plánujete provozovat, přes TCP a UDP. Ponechte RCON blok zavřený."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Otázky k více serverům",
+      "items": [
+        {
+          "q": "Kolik serverů může jeden stroj provozovat?",
+          "a": "Rozhoduje především paměť. Sečtěte heap každého běžícího serveru a jeho rezervu: malý vanilla nebo Paper server potřebuje celkem asi 4 GB, lehký modpack asi 6 GB. Zastavené servery nic nestojí."
+        },
+        {
+          "q": "Může mít každý server své vlastní administrátory?",
+          "a": "Ano. Oprávnění pro jednotlivé servery umožňují samostatně pro každý server udělit oprávnění k zobrazení, napájení, konzoli, hráčům, obsahu, zálohám, souborům, nastavení a mazání a server může být uživateli zcela skryt."
+        },
+        {
+          "q": "Mohou hráči přepínat mezi mými servery ve hře?",
+          "a": "Ne prostřednictvím samotného panelu. Každý server má svou vlastní adresu a port. Propojení serverů tak, aby se mezi nimi hráči ve hře pohybovali, vyžaduje proxy server, který byste provozovali vedle nich."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Spravujte celou svou flotilu z jednoho místa",
+      "body": "Nainstalujte panel jednou a přidávejte servery podle potřeby. Žádné poplatky za server a žádné limity instancí."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Porovnání panelů pro Minecraft servery: Pterodactyl, AMP, Crafty",
+      "description": "Férové porovnání bezplatných a placených panelů pro Minecraft servery: Pterodactyl, Crafty Controller, AMP, MCSManager a PufferPanel vedle Minecraft Server Manager."
+    },
+    "eyebrow": "Porovnat panely",
+    "title": "Porovnání panelů pro Minecraft servery",
+    "intro": "Několik dobrých panelů dokáže spustit Minecraft server. Zde je, jak se Minecraft Server Manager liší od každého z nich, s případy, kdy je jiný panel lepší volbou.",
+    "cards": {
+      "comparePtero": "Bezplatný multi-herní panel navržený pro hostingové společnosti, s odděleným démonem na každém stroji. Porovnejte náročnost nastavení a funkce pro Minecraft.",
+      "compareCrafty": "Bezplatný panel pro Minecraft napsaný v Pythonu, který spouští servery jako běžné procesy. Porovnejte, jak jsou servery izolované a jak se instalují modpacky.",
+      "compareAmp": "Komerční panel pro stovky her, prodávaný v licenčních úrovních. Porovnejte cenu, limity instancí a hloubku podpory pro Minecraft.",
+      "compareMcsm": "Bezplatný, distribuovaný panel pro hry Minecraft a Steam. Porovnejte architekturu, využití Dockeru a správu modpacků.",
+      "comparePuffer": "Bezplatný, lehký panel pro mnoho her a mnoho strojů, se servery jako procesy nebo kontejnery. Porovnejte izolaci, uzly a hloubku podpory pro Minecraft."
+    },
+    "sections": [
+      {
+        "title": "Jak jsou tato porovnání napsána",
+        "body": "Každý fakt o jiném panelu pochází z webových stránek, dokumentace nebo repozitáře daného projektu a každá stránka uvádí, kdy byla zkontrolována. Kde jsme něco nemohli potvrdit, vynechali jsme to místo hádání. Pokud se nějaký fakt změnil, dejte nám vědět na Discordu nebo GitHubu a my stránku opravíme.",
+        "points": [
+          "Každá stránka uvádí, co jiný panel dělá lépe.",
+          "Ceny a verze jsou uvedeny s datem jejich kontroly.",
+          "Minecraft Server Manager není spojen s žádným z těchto projektů. Jejich názvy patří jejich vlastníkům."
+        ]
+      },
+      {
+        "title": "Pro co je Minecraft Server Manager navržen",
+        "body": "Jeden vlastník nebo malý tým, který spravuje Minecraft Java servery na svém vlastním stroji. Každý server je Docker kontejner s omezenými zdroji, celý panel žije v jedné složce a části pro Minecraft, které jsou jinde složité, jsou vestavěné: připnuté modpacky s možností návratu, pět registrů modů v jednom vyhledávání, forenzní analýza pádů, živá mapa na jedno kliknutí a přenosné šablony.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Otázky ohledně výběru panelu",
+      "items": [
+        {
+          "q": "Který panel si mám vybrat pro jeden Minecraft server doma?",
+          "a": "Pokud spravujete pouze Minecraft Java a chcete modpacky, zálohy a živou mapu bez nutnosti je sami sestavovat, Minecraft Server Manager je pro to stvořen. Pokud také hostujete jiné hry nebo spravujete více strojů, lépe se hodí multi-herní panel, jako je Pterodactyl, MCSManager nebo AMP."
+        },
+        {
+          "q": "Je Minecraft Server Manager opravdu zdarma?",
+          "a": "Ano. Má MIT licenci, nemá placenou verzi a nepoužívá žádné placené služby. Stahování z CurseForge vyžaduje API klíč CurseForge, který přidáte v Nastavení."
+        },
+        {
+          "q": "Mohu přesunout svůj stávající svět do Minecraft Server Manager?",
+          "a": "Ano. Nahrajte svět na stránce Světy a nainstalujte jej na nový server, nebo při vytváření serveru importujte export modpacku nebo zip souborů s mody."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Vyzkoušejte si ho na svém vlastním stroji",
+      "body": "Nainstalujte panel ve třech krocích a vytvořte svůj první server pomocí průvodce. Celý váš panel zůstane v jedné složce, kterou můžete zkopírovat kamkoli."
+    },
+    "table": {
+      "title": "Všechny panely v kostce",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Cena",
+          "values": ["Zdarma.", "Zdarma.", "Zdarma.", "Placené licenční úrovně.", "Zdarma.", "Zdarma."]
+        },
+        {
+          "label": "Licence",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Komerční, uzavřený zdroj.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Hry",
+          "values": [
+            "Minecraft Java Edition.",
+            "Mnoho, přes „eggs“.",
+            "Minecraft Java a Bedrock.",
+            "Více než 200.",
+            "Minecraft a Steam hry.",
+            "Mnoho, přes šablony."
+          ]
+        },
+        {
+          "label": "Herní servery běží jako",
+          "values": [
+            "Docker kontejnery.",
+            "Docker kontejnery.",
+            "Procesy na hostiteli.",
+            "Procesy, nebo Docker kontejnery po zapnutí.",
+            "Kontejnery nebo procesy.",
+            "Procesy nebo kontejnery."
+          ]
+        },
+        {
+          "label": "Více strojů",
+          "values": [
+            "Ne. Jeden panel na stroj.",
+            "Ano, s uzly Wings.",
+            "Ve své dokumentaci nejsou žádné vzdálené uzly.",
+            "Licence Professional a vyšší.",
+            "Ano, s démony.",
+            "Ano, s uzly."
+          ]
+        },
+        {
+          "label": "Hostitelské systémy",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Fakta ověřena proti dokumentaci každého projektu, říjen a listopad 2026. Každá porovnávací stránka obsahuje podrobnosti."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Alternativa k Pterodactyl pro Minecraft servery",
+      "description": "Minecraft Server Manager oproti Pterodactyl: jeden proces a jedna složka místo panelu, démona, databáze a Redis, s integrovanými funkcemi pro Minecraft."
+    },
+    "eyebrow": "Alternativa k Pterodactyl",
+    "title": "Alternativa k Pterodactyl postavená pouze pro Minecraft",
+    "intro": "Pterodactyl je bezplatný panel s otevřeným zdrojovým kódem, který spravuje mnoho her na mnoha strojích. Minecraft Server Manager spravuje jednu hru na jednom stroji, takže vyžaduje mnohem méně nastavení a obsahuje integrované nástroje pro Minecraft.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porovnání",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Cena a licence",
+          "values": ["Zdarma, MIT.", "Zdarma, MIT."]
+        },
+        {
+          "label": "Co instalujete",
+          "values": [
+            "Jeden proces Node.js nebo jeden Docker kontejner.",
+            "PHP (Laravel) panel s React frontendem, plus démon Wings napsaný v Go na každém uzlu."
+          ]
+        },
+        {
+          "label": "Databáze a cache",
+          "values": [
+            "Vestavěný soubor SQLite ve složce s daty. Nic dalšího ke spuštění.",
+            "MySQL 5.7.22+ nebo MariaDB 10.2+, Redis, webový server a Composer."
+          ]
+        },
+        {
+          "label": "Herní servery běží jako",
+          "values": ["Docker kontejnery s omezenými zdroji.", "Izolované Docker kontejnery (vyžaduje Docker)."]
+        },
+        {
+          "label": "Hostitelské systémy",
+          "values": [
+            "Linux, Windows a macOS. Obraz je sestaven pro amd64 a arm64.",
+            "Pouze Linux: Ubuntu, Debian a distribuce rodiny RHEL. Wings neběží na Windows."
+          ]
+        },
+        {
+          "label": "Spravované stroje",
+          "values": [
+            "Jeden. Panel a Docker běží na stejném hostiteli.",
+            "Mnoho. Jeden panel řídí uzly Wings na mnoha strojích."
+          ]
+        },
+        {
+          "label": "Hry",
+          "values": [
+            "Minecraft Java Edition. Hráči Bedrock se mohou připojit přes Geyser.",
+            "Mnoho her prostřednictvím \"eggs\", včetně Minecraft, Rust, Terraria a ARK."
+          ]
+        }
+      ],
+      "note": "Fakta ověřena v říjnu 2026 proti dokumentaci každého projektu."
+    },
+    "sections": [
+      {
+        "title": "Nastavení bez nutnosti skládat dohromady složitý systém",
+        "body": "Dokumentace Pterodactyl jej označuje za vysoce komplexní systém s mnoha závislostmi: PHP, databázový server, Redis, webový server, front worker a Wings na každém uzlu. Tento design mu umožňuje sloužit hostingovým společnostem. Minecraft Server Manager je jeden proces, který komunikuje s vaším Docker socketem a udržuje vše, včetně databáze, v jedné složce. Na Linuxu jej nastaví jeden instalační skript, který v případě potřeby nainstaluje i Docker.",
+        "points": [
+          "Žádný samostatný démon, databázový server nebo cache, které by bylo třeba udržovat v chodu.",
+          "Zkopírujte složku s daty pro přesunutí celého panelu na nový stroj.",
+          "Běží nativně na Windows a macOS vedle Docker Desktop."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Kde Minecraft Server Manager vyniká pro Minecraft",
+        "body": "Protože spravuje pouze Minecraft, panel ví, co je to modpack, mod jar a crash report. Nástroje, které majitel Minecraftu používá, jsou součástí panelu, nikoli něco, co je třeba hledat a propojovat.",
+        "points": [
+          "Modpacky jsou připnuty na přesnou verzi a upgrady nejprve provedou zálohu a vrátí zpět jedním kliknutím.",
+          "Jedno vyhledávání napříč pěti registry, filtrované podle loaderu serveru a verze Minecraftu.",
+          "Každé stažení je ověřeno kontrolním součtem před doručením na server.",
+          "Pády jsou detekovány, analyzovány a sdíleny na mclo.gs jedním kliknutím.",
+          "Živá mapa BlueMap jedním kliknutím, za vlastním přihlášením panelu.",
+          "Každé nastavení itzg obrazu je vysvětleno prostým jazykem v průvodci."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Kdy je Pterodactyl lepší volbou",
+        "body": "Pterodactyl je vyspělý, aktivně udržovaný a podporovaný hostingovými společnostmi. Pokud se vás týká cokoli z následujícího, je to silnější volba.",
+        "points": [
+          "Provozujete servery na několika strojích a chcete pro ně jeden panel.",
+          "Hostujete hry jiné než Minecraft.",
+          "Prodáváte nebo sdílíte hosting s mnoha oddělenými zákazníky a potřebujete takové škálování.",
+          "Již provozujete Pterodactyl a jeho \"eggs\" pokrývají vaše potřeby."
+        ]
+      },
+      {
+        "title": "Poznámka k Pelican",
+        "body": "Pelican Panel je fork Pterodactylu, licencovaný pod AGPL-3.0 a v době kontroly této stránky stále ve fázi release candidate. Zachovává design panelu a Wings, přidává SQLite a PostgreSQL jako možnosti databáze a má plugin hub, kde plugin třetí strany prohledává modpacky z CurseForge a Modrinth."
+      }
+    ],
+    "faq": {
+      "title": "Otázky k Pterodactyl",
+      "items": [
+        {
+          "q": "Mohu přesunout server z Pterodactyl do Minecraft Server Manager?",
+          "a": "Ano. Stáhněte svět serveru z Pterodactyl, vytvořte server stejného typu a verze Minecraftu v Minecraft Server Manager, poté nahrajte svět na stránce Světy a nainstalujte jej na daný server. U modovaných serverů importujte balíček nebo váš zip mod jar souborů při jeho vytváření."
+        },
+        {
+          "q": "Potřebuje Minecraft Server Manager databázový server jako MySQL?",
+          "a": "Ne. Používá engine SQLite integrovaný v Node.js 24 a ukládá databázový soubor ve složce s daty spolu se vším ostatním."
+        },
+        {
+          "q": "Může Minecraft Server Manager spravovat několik strojů jako uzly Wings?",
+          "a": "Ne. Spravuje Docker démona na stroji, na kterém běží. Pro více strojů spusťte jeden panel na každém, nebo si vyberte multi-node panel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Spusťte Minecraft bez zbytečného systému",
+      "body": "Nainstalujte Minecraft Server Manager ve třech krocích a vytvořte svůj první server v průvodci."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller a Minecraft Server Manager jsou oba bezplatné panely pro Minecraft. Porovnejte izolaci serverů, instalaci modpacků a jejich zařazení."
+    },
+    "eyebrow": "Alternativa k Crafty Controller",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Oba jsou bezplatné, samoobslužné panely vytvořené pro Minecraft. Crafty spouští každý server jako proces na hostiteli, napsaný v Pythonu. Minecraft Server Manager spouští každý server ve vlastním Docker kontejneru a integruje do panelu nástroje pro tvorbu modpacků, vyhledávání modů a analýzu pádů.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porovnání",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Cena a licence",
+          "values": ["Zdarma, MIT.", "Zdarma, GPL-3.0."]
+        },
+        {
+          "label": "Napsáno v",
+          "values": ["Node.js 24.", "Python 3.10 až 3.12."]
+        },
+        {
+          "label": "Herní servery běží jako",
+          "values": [
+            "Docker kontejnery s omezenými zdroji.",
+            "Procesy na hostiteli. Samotný panel může běžet také v Dockeru."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Vyžadován na hostiteli.", "Volitelný."]
+        },
+        {
+          "label": "Hostitelské systémy",
+          "values": [
+            "Linux, Windows a macOS. Obraz je sestaven pro amd64 a arm64.",
+            "Linux, Windows, macOS a Raspberry Pi OS, plus návody pro Docker, UnRAID a CasaOS. Jeho obraz pokrývá amd64 a arm64."
+          ]
+        },
+        {
+          "label": "Edice",
+          "values": [
+            "Java Edition. Hráči Bedrock se mohou připojit přes Geyser.",
+            "Java Edition od verze 1.8 po nejnovější a Bedrock."
+          ]
+        },
+        {
+          "label": "Modpacky",
+          "values": [
+            "Balíčky CurseForge, Modrinth, FTB a GT New Horizons z průvodce, připnuté na přesnou verzi.",
+            "Jeho FAQ popisuje import balíčku jako zip, nebo Modrinth balíčky přes mrpack-install."
+          ]
+        },
+        {
+          "label": "Zálohy, plány, role, 2FA",
+          "values": [
+            "Ano: uchovávání na server, cron plány, tři role s oprávněními na server, TOTP.",
+            "Ano: správce záloh, plánovač úloh, uživatelské role a TOTP plus passkeys."
+          ]
+        }
+      ],
+      "note": "Fakta ověřena v říjnu 2026 proti dokumentaci každého projektu."
+    },
+    "sections": [
+      {
+        "title": "Kontejnery místo hostitelských procesů",
+        "body": "V Minecraft Server Manager je každý server ve svém vlastním Docker kontejneru na známém itzg Minecraft obraze, s vlastními limity paměti a CPU a diskovým kvótou, kterou panel vynucuje. Jeden server nemůže vyčerpat paměť stroje nebo zaplnit jeho disk a přestavba serveru se nikdy nedotkne ostatních. Nevýhodou je, že Docker musí být nainstalován na hostiteli.",
+        "points": [
+          "Limity paměti, CPU a disku na server.",
+          "Elegantní RCON zastavení před zastavením kontejneru a detekce pádu s opakovaným pokusem.",
+          "Java je pro každý server vybrána obrazem, takže smíšené verze Minecraftu prostě fungují."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Kde Minecraft Server Manager vyniká",
+        "body": "Průvodce vám nainstaluje modpacky a mody a udrží je připnuté, takže restart nikdy potichu neaktualizuje balíček.",
+        "points": [
+          "Nainstalujte balíčky CurseForge, Modrinth, FTB a GT New Horizons z průvodce.",
+          "Importujte Modrinth .mrpack, export CurseForge nebo vlastní zip jar souborů, s identifikací každého jar.",
+          "Prohledejte pět registrů najednou, filtrované podle loaderu a verze serveru.",
+          "Aktualizace nejprve provedou zálohu a vrátí zpět jedním kliknutím.",
+          "Jednoklikové sdílení živé mapy BlueMap a sdílení pádů na mclo.gs.",
+          "Přenosné blueprinty: exportujte recept serveru a získejte stejný server kdekoli."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Kdy je Crafty Controller lepší volbou",
+        "body": "Crafty je zralý, aktivně udržovaný a běží na více místech bez Dockeru.",
+        "points": [
+          "Chcete spouštět servery bez instalace Dockeru, například přímo na Windows, macOS nebo Raspberry Pi.",
+          "Spouštíte Bedrock Dedicated Server samotný, nejen Java s Geyserem.",
+          "Chcete přihlášení pomocí passkey."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Otázky k Crafty Controller",
+      "items": [
+        {
+          "q": "Mohu přesunout svůj Crafty server do Minecraft Server Manager?",
+          "a": "Ano. Vytvořte server se stejným typem a verzí Minecraftu, poté nahrajte svět jako zip na stránce Worlds a nainstalujte jej na tento server. Pro modovaný server importujte svůj balíček nebo zip mod jar souborů při jeho vytváření."
+        },
+        {
+          "q": "Běží Minecraft Server Manager na Raspberry Pi?",
+          "a": "Ano, na 64bitovém OS s Dockerem. Panelový obraz je publikován pro arm64 i amd64."
+        },
+        {
+          "q": "Proč Minecraft Server Manager potřebuje Docker?",
+          "a": "Každý server běží ve svém vlastním kontejneru, což je způsob, jak získává limity zdrojů, čisté přestavby a správnou verzi Javy pro každou verzi Minecraftu."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Vyzkoušejte si to s vlastním serverem",
+      "body": "Nainstalujte panel ve třech krocích, poté vytvořte server z modpacku v průvodci."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Bezplatná alternativa k AMP pro Minecraft servery",
+      "description": "Minecraft Server Manager oproti AMP od CubeCoders: bezplatný panel pro Minecraft s licencí MIT, bez omezení instancí, vedle komerčního panelu pro více her."
+    },
+    "eyebrow": "Alternativa k AMP",
+    "title": "Bezplatná alternativa k AMP pro Minecraft",
+    "intro": "AMP od CubeCoders je komerční panel pro velmi dlouhý seznam her, prodávaný v licenčních úrovních. Minecraft Server Manager je zdarma a s otevřeným zdrojovým kódem, spravuje pouze Minecraft a nemá žádné omezení počtu vytvořených serverů.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porovnání",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Cena",
+          "values": [
+            "Zdarma. Žádné úrovně.",
+            "Standardní 7,50 £ / 10 $, Profesionální 15 £ / 30 $, Pokročilý 30 £ / 40 $, Enterprise na variabilní předplatné."
+          ]
+        },
+        {
+          "label": "Licence a zdrojový kód",
+          "values": [
+            "MIT, zdroj na GitHubu.",
+            "Komerční a uzavřený zdroj. Jeho veřejný repozitář na GitHubu obsahuje problémy a dokumentaci."
+          ]
+        },
+        {
+          "label": "Servery, které můžete vytvořit",
+          "values": [
+            "Žádný limit kromě vašeho hardwaru.",
+            "5 instancí ve Standard, 15 v Profesionální, 50 v Pokročilé."
+          ]
+        },
+        {
+          "label": "Uživatelé panelu",
+          "values": [
+            "Neomezeně, s rolemi administrátora, operátora a prohlížeče.",
+            "3 ve Standard, neomezeně od Profesionální."
+          ]
+        },
+        {
+          "label": "Komerční využití",
+          "values": ["Povoleno licencí MIT.", "Pouze licence Enterprise."]
+        },
+        {
+          "label": "Více strojů",
+          "values": ["Jeden stroj na panel.", "Profesionální a vyšší."]
+        },
+        {
+          "label": "Hostitelské systémy",
+          "values": ["Linux, Windows a macOS. Obraz je sestaven pro amd64 a arm64.", "Windows a Linux."]
+        },
+        {
+          "label": "Hry",
+          "values": [
+            "Minecraft Java Edition. Hráči Bedrock se mohou připojit přes Geyser.",
+            "Více než 200 her a aplikací na seznamu kompatibility, včetně Minecraft Java a Bedrock."
+          ]
+        }
+      ],
+      "note": "Fakta ověřena v říjnu 2026 oproti dokumentaci každého projektu. Ceny AMP pocházejí z přehledu edic CubeCoders a mohou se změnit."
+    },
+    "sections": [
+      {
+        "title": "Žádná licence, žádný počet instancí",
+        "body": "Úrovně AMP určují, kolik instancí a uživatelů panelu získáte, a pouze úroveň Enterprise umožňuje komerční využití. Minecraft Server Manager nemá žádné úrovně: každá funkce, každý server a každý uživatelský účet je zdarma pod licencí MIT a nepoužívá žádné placené služby. Stahování z CurseForge vyžaduje API klíč CurseForge, který přidáte v Nastavení.",
+        "points": [
+          "Vytvořte tolik serverů, kolik váš stroj zvládne.",
+          "Pozvěte celý svůj tým s oprávněními pro každý server a dvoufaktorovým přihlášením.",
+          "Zdrojový kód je veřejný, takže si jej můžete prohlížet, forkovat a přispívat do něj."
+        ]
+      },
+      {
+        "title": "Kde je Minecraft Server Manager pro Minecraft silnější",
+        "body": "Panel pro jednu hru se do ní může hluboce ponořit. Každé nastavení, které obraz itzg Minecraft podporuje, je v průvodci srozumitelnou nápovědou a pracovní postupy pro Minecraft jsou zabudované.",
+        "points": [
+          "Modpacky CurseForge, Modrinth, FTB a GT New Horizons, připnuté s jednoklikovým vrácením zpět.",
+          "Jedno vyhledávání modů napříč pěti registry s ověřenými kontrolními součty ke stažení.",
+          "Kontroly kompatibility verzí před nabídkou aktualizace Minecraftu.",
+          "Forenzní analýza pádů se sdílením na mclo.gs a živá mapa BlueMap na jedno kliknutí.",
+          "Analytika hráčů, forenzní analýza inventáře a analytika úložiště s diskovými kvótami."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Kdy je AMP lepší volbou",
+        "body": "AMP pokrývá mnohem širší spektrum než panel určený pouze pro Minecraft a přichází s komerční podporou.",
+        "points": [
+          "Spravujete mnoho různých her z jednoho panelu.",
+          "Potřebujete jednotné přihlášení přes OIDC, vlastní branding nebo šablony nasazení, které jsou součástí jeho pokročilé úrovně.",
+          "Provozujete hostingový byznys a chcete komerční licenci s podporou dodavatele.",
+          "Chcete spustit samotný Bedrock Dedicated Server."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Otázky k AMP",
+      "items": [
+        {
+          "q": "Je Minecraft Server Manager zdarma pro komerční využití?",
+          "a": "Licence MIT umožňuje komerční využití. Panel je navržen pro majitele a malé týmy na jednom stroji, takže si předtím, než se na něj budete spoléhat pro zákazníky, ověřte, zda vyhovuje vašemu způsobu hostování."
+        },
+        {
+          "q": "Podporuje Minecraft Server Manager hry jiné než Minecraft?",
+          "a": "Ne. Spravuje pouze servery Minecraft Java Edition, proto se může hluboce ponořit do modpacků, modů a zpráv o pádech."
+        },
+        {
+          "q": "Mohu přenést instanci AMP pro Minecraft?",
+          "a": "Ano. Vytvořte server se stejným typem a verzí Minecraftu, poté nahrajte svět instance jako zip na stránce Světy a nainstalujte jej na daný server. Modifikované servery lze spustit z modpacku, exportu balíčku nebo zipu souborů jar s mody."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Všechny funkce, zdarma",
+      "body": "Nainstalujte Minecraft Server Manager ve třech krocích. Není třeba nic kupovat ani odemykat."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "Alternativa k MCSManager pro Minecraft servery",
+      "description": "Porovnání MCSManager a Minecraft Server Manager: distribuovaný panel pro hry Minecraft a Steam vedle panelu pouze pro Minecraft s vestavěnými modpacky."
+    },
+    "eyebrow": "Alternativa k MCSManager",
+    "title": "Alternativa k MCSManager zaměřená na Minecraft",
+    "intro": "MCSManager je bezplatný, open-source panel pro hry Minecraft a Steam, který dokáže spravovat několik strojů. Minecraft Server Manager spouští pouze Minecraft na jednom stroji, přičemž každý server je v Docker kontejneru a nástroje pro Minecraft jsou vestavěné.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Porovnání",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Cena a licence",
+          "values": ["Zdarma, MIT.", "Zdarma, Apache-2.0."]
+        },
+        {
+          "label": "Napsáno v",
+          "values": ["Node.js 24.", "TypeScript na Node.js."]
+        },
+        {
+          "label": "Co instalujete",
+          "values": ["Jeden proces nebo jeden Docker kontejner.", "Dvě služby: webový panel a démon."]
+        },
+        {
+          "label": "Databáze",
+          "values": ["Vestavěný soubor SQLite ve složce s daty.", "Není potřeba žádná."]
+        },
+        {
+          "label": "Herní servery běží jako",
+          "values": ["Docker kontejnery s omezenými zdroji.", "Docker kontejnery nebo běžné procesy, dle vaší volby."]
+        },
+        {
+          "label": "Hostitelské systémy",
+          "values": [
+            "Linux, Windows a macOS. Obraz je sestaven pro amd64 a arm64.",
+            "Windows, Linux a macOS, s instalačním skriptem pro Linux na jeden řádek."
+          ]
+        },
+        {
+          "label": "Spravované stroje",
+          "values": [
+            "Jeden. Panel a Docker běží na stejném hostiteli.",
+            "Mnoho, prostřednictvím distribuovaných démonů."
+          ]
+        },
+        {
+          "label": "Hry",
+          "values": [
+            "Minecraft Java Edition. Hráči Bedrock se mohou připojit přes Geyser.",
+            "Minecraft a hry Steam jako Palworld a Terraria, z vestavěného tržiště."
+          ]
+        }
+      ],
+      "note": "Fakta ověřena v říjnu 2026 oproti dokumentaci každého projektu."
+    },
+    "sections": [
+      {
+        "title": "Kde Minecraft Server Manager vyniká pro Minecraft",
+        "body": "MCSManager nasazuje mnoho druhů herních serverů. Minecraft Server Manager se soustředí na jednu hru, takže průvodce, nástroje pro mody a historie mluví pouze o Minecraftu.",
+        "points": [
+          "Každé nastavení itzg Minecraft obrazu vysvětleno prostým jazykem v průvodci.",
+          "Modpacky CurseForge, Modrinth, FTB a GT New Horizons, připnuté s jednoklikovým vrácením zpět.",
+          "Jedno vyhledávání modů napříč pěti registry s ověřenými kontrolními součty.",
+          "Forenzní analýza pádů s pojmenovanými podezřelými a jednoklikovým sdílením na mclo.gs.",
+          "Jednokliková živá mapa BlueMap, analýza hráčů a přenositelné plány.",
+          "Celý panel, včetně databáze, je jedna složka, kterou můžete zkopírovat pro migraci."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Kontejnery ve výchozím nastavení",
+        "body": "Každý server v Minecraft Server Manager je Docker kontejner s vlastními limity paměti a CPU, plus diskovým kvótou, kterou panel vynucuje. Java je volena pro každý server, takže 1.12 modpack a nejnovější vydání Paper běží vedle sebe bez žonglování s instalacemi Javy. MCSManager vám umožňuje vybrat si mezi kontejnery a běžnými procesy, což je flexibilnější, když Docker není možností.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Kdy je MCSManager lepší volbou",
+        "body": "MCSManager je velmi aktivně vyvíjen a pokrývá více než jen Minecraft.",
+        "points": [
+          "Spravujete servery na několika strojích z jednoho panelu.",
+          "Hostujete také hry Steam jako Palworld nebo Terraria.",
+          "Chcete spouštět servery jako běžné procesy, bez Dockeru.",
+          "Chcete dashboard s přetažením a tržiště hotových herních nasazení."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Dotazy k MCSManager",
+      "items": [
+        {
+          "q": "Mohu přesunout Minecraft server z MCSManager?",
+          "a": "Ano. Vytvořte server se stejným typem a verzí Minecraftu v Minecraft Server Manager, poté nahrajte svět jako zip na stránce Světy a nainstalujte jej na daný server. Modované servery lze spustit z modpacku, exportu balíčku nebo zipu mod jar souborů."
+        },
+        {
+          "q": "Potřebuji Docker pro Minecraft Server Manager?",
+          "a": "Ano. Docker spouští každý server. Na Linuxu vám instalační skript nainstaluje Docker, pokud chybí."
+        },
+        {
+          "q": "Mohou více lidí sdílet jeden panel Minecraft Server Manager?",
+          "a": "Ano. Existují role administrátora, operátora a prohlížeče, oprávnění na server, a volitelné dvoufaktorové přihlášení pro každý účet."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, do hloubky",
+      "body": "Nainstalujte panel ve třech krocích a vytvořte svůj první server z průvodce."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "Alternativa k PufferPanel pro Minecraft servery",
+      "description": "Minecraft Server Manager ve srovnání s PufferPanel: každý server ve vlastním Docker kontejneru a vestavěné nástroje pro Minecraft, proti lehkému multi-game, multi-node panelu."
+    },
+    "eyebrow": "Alternativa k PufferPanel",
+    "title": "Alternativa k PufferPanel vytvořená pouze pro Minecraft",
+    "intro": "PufferPanel je bezplatný, open-source panel pro mnoho her na jednom nebo více strojích. Minecraft Server Manager spouští pouze Minecraft na jednom stroji, vždy v Dockeru, s vestavěnými nástroji pro Minecraft.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Srovnání",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Cena a licence",
+          "values": ["Zdarma, MIT.", "Zdarma, Apache-2.0."]
+        },
+        {
+          "label": "Napsáno v",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Co instalujete",
+          "values": [
+            "Jeden proces, nebo jeden Docker kontejner.",
+            "Jedna služba z jeho apt nebo yum repozitáře, nebo jeho Docker image. Node na jiném stroji běží stejný balíček."
+          ]
+        },
+        {
+          "label": "Databáze",
+          "values": [
+            "Vestavěný SQLite soubor uvnitř složky s daty.",
+            "Žádná k nastavení pro základní instalaci. Průvodce pokrývá použití externí databáze."
+          ]
+        },
+        {
+          "label": "Herní servery běží jako",
+          "values": [
+            "Docker kontejnery s omezenými zdroji, vždy.",
+            "Procesy na hostiteli (jeho dokumentace uvádí, že toto prostředí nemá žádné bezpečnostní funkce) nebo Docker kontejnery."
+          ]
+        },
+        {
+          "label": "Hostitelské systémy",
+          "values": [
+            "Linux, Windows a macOS. Image je sestavena pro amd64 a arm64.",
+            "Linux: balíčky pro Ubuntu 22.04 a 24.04 a Debian 10 a 11 na amd64 a arm64, Raspbian na arm64, a yum repozitář. 32-bit není podporován."
+          ]
+        },
+        {
+          "label": "Spravované stroje",
+          "values": [
+            "Jeden. Panel a Docker běží na stejném hostiteli.",
+            "Mnoho. Nody na jiných strojích spouštějí servery pro jeden panel."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, každý typ serveru z itzg image, a balíčky CurseForge, Modrinth, FTB a GT New Horizons. Bedrock hráči se připojují přes Geyser.",
+            "Šablony pro Java a Bedrock servery, balíčky CurseForge a FTB, a proxy sítě BungeeCord, Velocity a Waterfall."
+          ]
+        }
+      ],
+      "note": "Fakta ověřena v listopadu 2026 proti dokumentaci PufferPanel, jeho repozitáři a repozitáři šablon."
+    },
+    "sections": [
+      {
+        "title": "Izolace bez nutnosti nastavování",
+        "body": "PufferPanel vám umožňuje vybrat prostředí pro každý server. Standardní prostředí spouští server jako proces na hostiteli, pod stejným uživatelem jako panel, a jeho vlastní dokumentace uvádí, že nemá žádné bezpečnostní funkce; Docker prostředí jej izoluje. Minecraft Server Manager má pouze druhý typ. Každý server je vlastní kontejner s omezením paměti a CPU, diskovým kvótou vynucenou panelem, a nic nesdílí s ostatními kromě knihovny modů.",
+        "points": [
+          "Jeden kontejner na server, označený a s omezením.",
+          "Diskové kvóty vynucené panelem.",
+          "Server, který spadne nebo mu dojde paměť, je detekován a zaznamenán."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Kde Minecraft Server Manager jde hlouběji do Minecraftu",
+        "body": "Šablona spustí server; práce začíná potom. Mody k nalezení a aktualizaci, balíčky, které se vyvíjejí, pády ke čtení, světy k zálohování. To je zde integrováno do panelu.",
+        "points": [
+          "Modpacky jsou připnuty na přesnou verzi. Upgrady a downgrady nejprve provedou zálohu a vrátí se zpět jedním kliknutím.",
+          "Jedno vyhledávání napříč pěti registry, filtrované podle loaderu serveru a verze Minecraftu.",
+          "Každé stažení je ověřeno kontrolním součtem před tím, než se dostane na server.",
+          "Kontrola verze ukazuje, které budoucí verze Minecraftu již každý nainstalovaný mod podporuje.",
+          "Crash reporty jsou detekovány, analyzovány a sdíleny na mclo.gs jedním kliknutím.",
+          "BlueMap živá mapa jedním kliknutím, za vlastním přihlášením panelu."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Kdy je PufferPanel lepší volbou",
+        "body": "PufferPanel je lehký, bezplatný a existuje již léta. Pokud vás popisuje cokoli z následujícího, vyberte si jej.",
+        "points": [
+          "Spravujete hry jiné než Minecraft.",
+          "Provozujete servery na několika strojích a chcete pro ně jeden panel.",
+          "Chcete nativní Bedrock server, nebo síť proxy BungeeCord, Velocity nebo Waterfall.",
+          "Nechcete vůbec používat Docker.",
+          "Chcete přístup k souborům serveru přes SFTP."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Otázky k PufferPanel",
+      "items": [
+        {
+          "q": "Mohu přesunout Minecraft server z PufferPanel do Minecraft Server Manager?",
+          "a": "Ano. Stáhněte složku se světem serveru, vytvořte server stejného typu a verze Minecraftu, poté nahrajte svět na stránce Světy a nainstalujte jej na tento server. Pro modovaný server importujte balíček nebo zip jeho mod jar souborů při jeho vytváření."
+        },
+        {
+          "q": "Potřebuje Minecraft Server Manager Docker?",
+          "a": "Ano. Každý Minecraft server běží jako Docker kontejner, což je způsob, jakým omezuje paměť, CPU a disk na server. Samotný panel může běžet v Dockeru nebo přímo z Node.js."
+        },
+        {
+          "q": "Může spouštět servery na druhém stroji?",
+          "a": "Ne. Spravuje Docker daemon na stroji, na kterém běží. Pro dva stroje spusťte panel na každém, nebo si vyberte panel s nody, jako je PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Každý server ve vlastním kontejneru",
+      "body": "Nainstalujte panel ve třech krocích a vytvořte svůj první server v průvodci."
+    }
+  }
+}

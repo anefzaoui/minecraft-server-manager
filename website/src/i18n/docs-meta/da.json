@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "Aktivitetslog",
+    "description": "Aktivitetssiden er den komplette revisionsspor: en søgbar, kronologisk oversigt over alt, hvad der er sket i panelet."
+  },
+  "architecture": {
+    "title": "Arkitektur",
+    "description": "Minecraft Server Manager er en single-process, server-rendered Node.js-applikation."
+  },
+  "backups": {
+    "title": "Sikkerhedskopier",
+    "description": "Sikkerhedskopier-siden viser alle snapshots på tværs af din flåde, med størrelse, årsag og alder, filtrerbar efter server og årsag."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Blueprints gemmer en Minecraft-servers komplette konfiguration som en genanvendelig opskrift til at oprette nye servere. Hemmeligheder er aldrig inkluderet."
+  },
+  "chatbot": {
+    "title": "Chatbot pr. Minecraft-server",
+    "description": "Panelet tilbyder en admin-konfigurerbar chatbot til hver administreret Minecraft-server, opsat under serverens Indstillinger → Chatbot-fane."
+  },
+  "console-and-chat": {
+    "title": "Konsol & chat-kommandoer",
+    "description": "Konsol-fanen streamer serverloggen i realtid og giver dig en kommandoboks til at sende enhver serverkommando."
+  },
+  "dashboard": {
+    "title": "Dashboardet",
+    "description": "Dashboardet er din base: hver server, dens live-status og et løbende feed af, hvad der er sket."
+  },
+  "getting-started": {
+    "title": "Kom godt i gang",
+    "description": "Installer Minecraft Server Manager og fuldfør den første opsætning: systemtjekket, din tidszone og administratorkontoen."
+  },
+  "index": {
+    "title": "Dokumentation",
+    "description": "Et komplet, selv-hostet kontrolpanel til itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrationer",
+    "description": "Hver server har sine integrationer under Indstillinger-gruppen: Discord, en offentlig Status Side, Invites med ét klik og den valgfrie Chatbot-fane (kun for administratorer)."
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "Installer CurseForge, Modrinth, FTB og GT New Horizons modpacks som servere, altid fastgjort til en præcis pack-version."
+  },
+  "public-api": {
+    "title": "Offentlig API",
+    "description": "En lille, skrivebeskyttet HTTP API til at hente serverstatus udefra panelet: et statusdashboard, en oppetidsovervågning, en Discord-bot, en hjemmeautomatiseringsregel."
+  },
+  "schedules": {
+    "title": "Tidsplaner",
+    "description": "Siden Tidsplaner automatiserer tilbagevendende opgaver med cron-udtryk. Ingen ekstern cron, ingen scripts."
+  },
+  "servers": {
+    "title": "Oprettelse og administration af servere",
+    "description": "Opret, start, stop, genopbyg og konfigurer Minecraft-servere i panelet: oprettelsesguiden, indstillinger, hukommelse og spilporten."
+  },
+  "storage": {
+    "title": "Lagerplads",
+    "description": "Se, hvor diskpladsen bliver af, sæt en diskkvote for hver servermappe, og ryd op i det, du ikke længere har brug for."
+  },
+  "two-factor-authentication": {
+    "title": "Tofaktor-godkendelse",
+    "description": "Tofaktor-godkendelse (2FA) tilføjer et andet trin til login: efter din adgangskode indtaster du en kort kode fra en godkendelsesapp på din telefon."
+  },
+  "users-and-roles": {
+    "title": "Brugere & roller",
+    "description": "Konti, administrator-, operatør- og seerroller samt server-specifikke tilladelser i Minecraft Server Manager."
+  },
+  "world-shrink": {
+    "title": "Formindsk en verden",
+    "description": "Formindsk en Minecraft-verden ved at slette sjældent besøgte bidder for at frigøre diskplads og fremskynde sikkerhedskopieringer."
+  },
+  "worlds-and-files": {
+    "title": "Verdener & filer",
+    "description": "Verdensbiblioteket, upload og udskiftning af verdener, fanen mods og plugins samt filhåndteringen i browseren."
+  },
+  "updates": {
+    "title": "Opdateringer",
+    "description": "Følg og anvend opdateringer til Minecraft-versioner, modpacks, mods og plugins på tværs af alle servere, med en politik pr. server."
+  },
+  "guide-backups": {
+    "title": "Minecraft-server-sikkerhedskopier, der rent faktisk kan gendannes",
+    "description": "Sådan laver du Minecraft-server-sikkerhedskopier, der rent faktisk kan gendannes: konsistente kopier, gemt et andet sted og testet mindst én gang."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: hvilken?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge eller Quilt: hvilken type Minecraft-server skal du køre, valgt ud fra hvad dine spillere installerer."
+  },
+  "guide-moving-a-server": {
+    "title": "Flytning af en Minecraft-server til en anden vært",
+    "description": "Det er nemt at flytte en verden. At flytte en server, som spillere stadig kan logge ind på, med deres inventar, hjem og tilladelser intakte, er den del, der går galt."
+  },
+  "guide-server-memory": {
+    "title": "Hvor meget RAM har en Minecraft-server brug for?",
+    "description": "Hvor meget RAM en Minecraft-server har brug for til vanilla, Paper, lette mods og store modpacks, og hvor meget der skal efterlades til maskinen."
+  },
+  "guide-server-wont-start": {
+    "title": "Din Minecraft-server starter ikke",
+    "description": "En Minecraft-server, der ikke vil starte, løst i rækkefølge efter sandsynlighed: loggen, Java-versionen, hukommelse, EULA og port, samt mods."
+  },
+  "invites-and-status-page": {
+    "title": "Invitationer & statusside",
+    "description": "Inviter venner til en server med adressen, versionen og en klient-modpack, og del en offentlig statusside, der kun viser, hvad du vælger."
+  },
+  "live-map": {
+    "title": "Live kort",
+    "description": "Tænd et live 3D-kort af serverens verden med BlueMap med et enkelt klik, serveret udelukkende gennem panelets login."
+  }
+}

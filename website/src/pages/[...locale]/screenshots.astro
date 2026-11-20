@@ -1,0 +1,45 @@
+---
+import { Image } from 'astro:assets';
+import Site from '../../layouts/Site.astro';
+import Section from '../../components/Section.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import XpDivider from '../../components/XpDivider.astro';
+import { localePaths, localeFromParams } from '../../lib/paths.js';
+import { getCopy } from '../../i18n/index.js';
+import { DESKTOP, MOBILE } from '../../data/screenshots.js';
+
+export function getStaticPaths() {
+  return localePaths();
+}
+const locale = localeFromParams(Astro.params);
+const copy = getCopy(locale);
+---
+
+<Site locale={locale} path="/screenshots/" pageKey="screenshots">
+  <PageHeader title={copy.screenshots.title} intro={copy.screenshots.intro} />
+  <Section title={copy.screenshots.desktop}>
+    <ul class="masonry mt-5 md:columns-2" role="list">
+      {DESKTOP.map((s, i) => (
+        <li>
+          <figure class="panel panel-tight">
+            <a class="slot block" href={s.image.src} target="_blank" rel="noopener"><Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[480, 800, 1200]} sizes="(min-width: 768px) 50vw, 100vw" loading={i < 2 ? 'eager' : 'lazy'} class="block" /></a>
+            <figcaption class="px-1 pt-2 text-sm text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  </Section>
+  <XpDivider />
+  <Section title={copy.screenshots.mobile}>
+    <ul class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5" role="list">
+      {MOBILE.map((s) => (
+        <li>
+          <figure class="panel panel-tight">
+            <span class="slot block"><Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[240, 480]} sizes="(min-width: 1024px) 20vw, 50vw" class="block" /></span>
+            <figcaption class="px-1 pt-2 text-xs text-ink-soft">{copy.screenshots.items[s.key]}</figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  </Section>
+</Site>

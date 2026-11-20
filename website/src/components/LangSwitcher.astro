@@ -1,0 +1,37 @@
+---
+// A no-JS language menu: <details> keeps it keyboard-accessible and works before
+// hydration. Every locale links to the same page in that language.
+import { LOCALES, getLocale } from '../i18n/locales.js';
+import { href } from '../lib/routes.js';
+import Icon from './Icon.astro';
+interface Props {
+  locale: string;
+  path: string;
+  label: string;
+}
+const { locale, path, label } = Astro.props;
+const current = getLocale(locale);
+---
+
+<details class="relative">
+  <summary class="btn btn-sm cursor-pointer list-none" aria-label={label} title={label}>
+    <Icon name="globe" size={18} />
+    <span class="hidden sm:inline lg:hidden 2xl:inline">{current.label}</span>
+  </summary>
+  <ul class="panel panel-tight absolute end-0 z-40 mt-3 grid max-h-[70vh] w-72 grid-cols-2 gap-0.5 overflow-y-auto" role="list">
+    {LOCALES.map((l) => (
+      <li>
+        <a
+          href={href(l.code, path)}
+          hreflang={l.lang || l.code}
+          lang={l.lang || l.code}
+          dir={l.dir}
+          class:list={['block px-2.5 py-1.5 text-sm hover:bg-slot hover:text-white', l.code === locale && 'bg-slot font-bold text-white']}
+          aria-current={l.code === locale ? 'true' : undefined}
+        >
+          {l.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</details>

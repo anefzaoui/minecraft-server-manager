@@ -1,0 +1,13 @@
+---
+// Full-bleed illustration strip between sections (e.g. above the footer).
+import { Image } from 'astro:assets';
+interface Props {
+  image: ImageMetadata;
+  class?: string;
+}
+const { image, class: cls } = Astro.props;
+---
+
+<div class:list={['border-y-[3px] border-outline', cls]} aria-hidden="true">
+  <Image src={image} alt="" widths={[800, 1584, 2400]} sizes="100vw" class="block aspect-[21/5] w-full object-cover object-bottom" />
+</div>

@@ -1,0 +1,2182 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Docker üzerinde çalışan Minecraft sunucuları için ücretsiz, kendi kendine barındırılan kontrol paneli.",
+    "description": "Tarayıcınızdan modlu ve vanilla Minecraft sunucuları çalıştırın. Mod paketleri tam sürümlere sabitlenmiş, tek tıklamayla yedeklemeler, zamanlamalar, canlı harita, oyuncu analizi. Ücretsiz, açık kaynaklı ve tüm paneliniz tek bir klasörde."
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "features": "Özellikler",
+    "screenshots": "Ekran Görüntüleri",
+    "servers": "Sunucular",
+    "guides": "Rehberler",
+    "install": "Kurulum",
+    "docs": "Belgeler",
+    "faq": "SSS",
+    "compare": "Karşılaştır",
+    "changelog": "Değişiklik Günlüğü",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menü",
+    "language": "Dil",
+    "theme": "Açık veya koyu temayı değiştir",
+    "skip": "İçeriğe atla"
+  },
+  "hero": {
+    "eyebrow": "Ücretsiz ve açık kaynaklı. Kendi makinenizde çalışır.",
+    "title": "Minecraft sunucularınızı tek bir kullanıcı dostu panelden çalıştırın.",
+    "subtitle": "Minecraft Server Manager, Docker'ı sunucularınız için rahat bir yuvaya dönüştürür: sabitlenmiş mod paketleri, tek tıklamayla yedeklemeler, zamanlamalar, canlı harita, oyuncu istatistikleri ve anlaşılır bir konsol. Faturalar yok, kilitlenme yok, tüm paneliniz tek bir klasörde.",
+    "primary": "Dakikalar içinde başlayın",
+    "secondary": "Özellikleri keşfedin",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Öğreticiyi görün",
+    "shotCaption": "Gerçek panel: altı örnek sunucunun bulunduğu kontrol paneli, koyu tema ile."
+  },
+  "pillars": {
+    "title": "Sunucu çalıştıranlar için, biletler için değil",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Tüm paneliniz tek bir klasörde",
+        "body": "Veritabanı, dünyalar, yedeklemeler ve paylaşılan mod kitaplığı tek bir veri klasörü altında bulunur. Kopyalayın ve taşıma işlemini tamamladınız."
+      },
+      {
+        "icon": "box",
+        "title": "Her sunucu bir konteynerdir",
+        "body": "Her sunucu, kendi CPU ve bellek sınırları, RCON üzerinden nazik duruşlar ve çökme tespiti ile savaşta test edilmiş itzg görüntüsü üzerinde çalışır.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Mod paketleri sabitlenmiş kalır",
+        "body": "Paketler tam bir sürüme kilitlenir. Yükseltmeler açık, önizlenmiş, önce yedeklenmiş, sağlık kontrolünden geçmiş ve tek tıklamayla geri alınabilir.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Bir sunucu sahibinin elinin değdiği her şey",
+    "intro": "Sunucu oluşturmaktan canlı haritasını paylaşmaya kadar tüm özelliklere göz atın.",
+    "cta": "Belgeleri oku",
+    "groups": [
+      {
+        "title": "Sunucular ve yaşam döngüsü",
+        "items": [
+          {
+            "title": "Kaynak sınırlı konteynerler",
+            "body": "Sunucuları nazik RCON durdurmaları ve otomatik çökme algılama ile oluşturun, başlatın, durdurun, yeniden başlatın, yeniden derleyin ve silin.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Yönlendirmeli oluşturma sihirbazı",
+            "body": "Basit veya Gelişmiş mod, her görüntü ayarı seçmeden önce anlaşılır bir dille açıklanır.",
+            "icon": "wand"
+          },
+          {
+            "title": "Canlı konsol",
+            "body": "RCON komut çubuğu, günlük filtreleri ve tek tıklamayla oyuncu eylemleri içeren bir WebSocket konsolu.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Oyuncu moderasyonu",
+            "body": "Beyaz liste, operatörler, yasaklar, IP yasakları ve ışınlanmalar, RCON aracılığıyla çevrimiçi ve JSON dosyaları aracılığıyla çevrimdışı.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Modlar ve mod paketleri",
+        "items": [
+          {
+            "title": "Tek tarayıcıda beş kayıt",
+            "body": "Beşini de tek bir yerden arayın. Bunlardan üçü API anahtarı gerektirmez.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Bağlantı ile ekle",
+            "body": "Bir proje sayfası, bir GitHub deposu, bir takma ad veya doğrudan bir jar URL'si yapıştırın. Panel bunu tanımlar.",
+            "icon": "link"
+          },
+          {
+            "title": "Her şeyi içe aktar",
+            "body": "Her jar tanımlanır ve içeri aktarılırken uyumluluk kontrol edilir.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Sağlama toplamı doğrulanmış indirmeler",
+            "body": "Bir dosya sunucuya ulaşmadan önce doğrulanır, en güçlü karma ilk sırada. Uyuşmazlık asla gönderilmez.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Paylaşılan mod kitaplığı",
+            "body": "Sha256 ile tekilleştirilir ve sunuculara sabit bağlantılıdır, böylece özel modlar paket güncellemelerinden kurtulur.",
+            "icon": "library"
+          },
+          {
+            "title": "Modları önce seçen çözümleyici",
+            "body": "İstediğiniz modları seçin ve en yeni, tam uyumlu yükleyiciyi ve Minecraft sürümünü alın.",
+            "icon": "sparkles"
+          },
+          {
+            "title": "Herhangi bir paket sürümü, herhangi bir yükleyici yapısı",
+            "body": "Bir mod paketini yayınlanmış herhangi bir sürüme, daha yeni veya daha eskiye taşıyın veya mod yükleyici yapısını değiştirin. Önce bir yedekleme gelir ve başarısız bir önyükleme geri alınır.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Koruma ve otomasyon",
+        "items": [
+          {
+            "title": "Güvenli yedeklemeler",
+            "body": "Saklama sınıflarına sahip anlık görüntüler, yerinde geri yükleme ve disk alanını geri kazanmak için isteğe bağlı dünya küçültme.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron zamanlamaları",
+            "body": "Zamanlanmış yeniden başlatmalar, yedeklemeler ve RCON komutları, bir sonraki çalıştırma önde gösterilir.",
+            "icon": "clock"
+          },
+          {
+            "title": "Mavi kopyalar",
+            "body": "Bir sunucuyu taşınabilir bir tarif olarak dışa aktarın, her yere içe aktarın ve aynı sunucuyu geri alın.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Çökme adli tıpı",
+            "body": "Çökmeler algılanır, ayrıştırılır ve şüpheliler adlandırılır, tek tıklamayla paylaşım ve otomatik içgörülerle.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Güncelleme takibi",
+            "body": "Yeni sunucu, paket, görüntü ve mod sürümleri takip edilir, güncelleme öncesi yedeklemeler ve tek tıklamayla geri alma ile.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "İçgörü ve topluluk",
+        "items": [
+          {
+            "title": "Canlı harita",
+            "body": "Panelin kimliği doğrulanmış proxy'si aracılığıyla sunulan canlı bir haritaya tek tıklama.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analitik ve depolama",
+            "body": "Oynama süresi, ölümler ve madencilik skor tabloları, envanter adli tıpı, sunucu başına disk kullanımı ve zorunlu kotalar.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord ve sohbet botu",
+            "body": "Olay başına geçişli webhook'lar ve sınırlı oyun içi yetkilere sahip isteğe bağlı sunucu başına sohbet botu.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Genel durum sayfası ve API",
+            "body": "İsteğe bağlı durum sayfaları, davet blokları, oluşturulmuş bir istemci .mrpack ve salt okunur belirteç kimlik doğrulamalı bir API.",
+            "icon": "globe"
+          },
+          {
+            "title": "Arkadaş davet et",
+            "body": "Adres ve sürümle bir davet kopyalayın. Seçtiğiniz modlardan oluşturulmuş bir sunucu için, arkadaşlara bunları yükleyen ve sunucuyu listelerine ekleyen bir istemci .mrpack verin.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
+            "title": "Kullanıcılar, roller ve 2FA",
+            "body": "TOTP iki faktörlü kimlik doğrulama ile yönetici, operatör ve görüntüleyici rolleri.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Kullanımı keyifli bir panel",
+    "intro": "Masaüstü ve telefon. Panel dar öncelikli olarak tasarlandığından, her sayfa telefonda çalışır.",
+    "desktop": "Masaüstü",
+    "mobile": "Telefonda",
+    "items": {
+      "dashboard": "Gösterge paneli: tüm sunucular, oyuncu sayısı ve son etkinlikler bir bakışta.",
+      "wizard": "Oluşturma sihirbazı, seçmeden önce her ayarı açıklar.",
+      "overview": "Kaynak ölçerleri ve hızlı eylemlerle bir sunucunun genel görünümü.",
+      "console": "RCON komut çubuğu ve günlük filtreleriyle canlı konsol.",
+      "mods": "Beş kayıtlı kaynaktan modlar, sunucunun yükleyicisine ve sürümüne göre filtrelenmiş.",
+      "modpacks": "Modpack'ler: CurseForge ve Modrinth'te arama yapın ve her paket tam sürüme sabitlenmiş olarak yüklenir.",
+      "worlds": "Dünyaları değiştirin ve tarayıcıdan dosyaları yönetin.",
+      "backups": "Saklama sınıfları ve yerinde geri yükleme ile yedeklemeler.",
+      "schedules": "Yeniden başlatmalar, yedeklemeler ve komutlar için cron zamanlamaları.",
+      "blueprints": "Planlar: taşınabilir sunucu tarifleri.",
+      "storage": "Depolama analizleri ve zorunlu kotalar."
+    }
+  },
+  "install": {
+    "title": "Kurulum",
+    "intro": "Ana bilgisayarınıza uyan seçeneği seçin. Her yol size aynı paneli verir.",
+    "requirements": "Gereksinimler",
+    "reqItems": [
+      "Docker Engine (Linux) veya Docker Desktop (Windows, macOS).",
+      "Kaynak kodundan kurulum için Node.js 24 veya daha yenisi. Docker imajı kendi Node.js'ini içerir.",
+      "Sunucu imajları ve dünyalar için birkaç gigabayt disk alanı."
+    ],
+    "docker": {
+      "title": "Seçenek 1: Docker",
+      "body": "Her sürümde GHCR'ye önceden oluşturulmuş çoklu mimari bir imaj yayınlanır. Compose dosyasını alın, bir değişken ayarlayın ve başlatın.",
+      "after": "Ardından http://your-host:25564 adresini açın. Portainer veya Dockge'de, compose dosyasını bir yığın olarak yapıştırın ve yığının ortamında DATA_DIR_HOST'u ayarlayın.",
+      "warning": "Panel, ana bilgisayarın Docker arka plan programını bağlanan soket aracılığıyla yönlendirir, bu da ana bilgisayarda kök eşdeğeridir. Yönetici oturumunu buna göre ele alın ve paneli asla doğrudan internete maruz bırakmayın."
+    },
+    "source": {
+      "title": "Seçenek 2: Kaynak kodundan",
+      "body": "Docker Desktop ile Windows ve macOS dahil olmak üzere herhangi bir işletim sistemi.",
+      "after": "http://localhost:25564 adresini açın. İlk çalıştırma, sistem kontrolü, saat diliminiz ve yönetici hesabı oluşturma adımlarında size yol gösterecektir."
+    },
+    "next": "Sonraki adımlar",
+    "nextBody": "Başlangıç kılavuzu, ilk çalıştırma kurulumunu, ilk sunucunuzu oluşturmayı ve her şeyin nerede bulunduğunu kapsar.",
+    "nextCta": "Başlangıç kılavuzunu oku",
+    "compose": "docker-compose.yml'yi indir",
+    "windows": "Windows notları",
+    "windowsItems": [
+      "Sunucuları başlatmadan veya oluşturmadan önce Docker Desktop çalışıyor olmalıdır.",
+      "Bağlama bağlamalarının çalışması için proje sürücünüzü Docker Desktop ile paylaşın (Ayarlar, Kaynaklar, Dosya paylaşımı).",
+      "Docker imajı Linux ana bilgisayarlarını hedefler; Windows ve macOS'ta paneli kaynak kodundan çalıştırın."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Kurulum Seçenekleri",
+      "intro": "Linux yükleyicisi bash -s -- sonrasına seçeneklerini alır, bu nedenle boru hattı aracılığıyla da çalışırlar. Yükseltmek için aynı seçeneklerle tekrar çalıştırın; veri klasörünüz, .env ve compose düzenlemeleriniz korunur.",
+      "items": {
+        "port": "Paneli başka bir bağlantı noktasında sunun.",
+        "proxy": "Yalnızca 127.0.0.1 üzerinde dinleyin, önünde TLS bulunan ters bir proxy için.",
+        "tag": "En yeni sürümü takip etmek yerine belirli bir sürümü sabitleyin.",
+        "dir": "/opt/msm dışında bir yere kurun.",
+        "uninstall": "Paneli kaldırın ve verilerini saklayın. Boru hattı aracılığıyla soruya cevap verecek klavye yoktur, bu nedenle --yes ekleyin; veri klasörünü silmek için --purge de ekleyin.",
+        "help": "Her seçenek, varsayılanıyla birlikte."
+      }
+    }
+  },
+  "faq": {
+    "title": "Sıkça Sorulan Sorular",
+    "items": [
+      {
+        "q": "Gerçekten ücretsiz mi?",
+        "a": "Evet. Panel MIT lisanslıdır ve ücretli hizmetler kullanmaz. Her şey sizin makinenizde çalışır."
+      },
+      {
+        "q": "Raspberry Pi veya başka bir ARM makinede çalışır mı?",
+        "a": "Evet. Docker imajı her iki mimari için de yayınlanmıştır ve kaynaktan kurulum Node.js 24 ve Docker'ın çalıştığı her yerde çalışır.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Hangi sunucu türleri destekleniyor?",
+        "a": "itzg imajının desteklediği her şey, artı büyük dört kaynaktan mod paketleri.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Panelimi yeni bir makineye nasıl taşırım?",
+        "a": "Veri klasörünü kopyalayın. Veritabanını, her sunucunun dünyasını, yedeklerini ve mod kütüphanesini içerir. Paneli, o klasörü işaret ederek yeni makinede başlatın."
+      },
+      {
+        "q": "Birden fazla kişi sunucuları yönetebilir mi?",
+        "a": "Evet. Panelde yönetici, operatör ve görüntüleyici rolleri bulunur ve her hesap iki faktörlü kimlik doğrulamayı etkinleştirebilir."
+      },
+      {
+        "q": "Evim dışındaki arkadaşlarım nasıl katılır?",
+        "a": "Sunucunun oyun portunu (25565'ten başlayarak) yönlendiricinizde onu çalıştıran makineye yönlendirin veya internet servis sağlayıcınız port yönlendirmesine izin vermiyorsa bir tünel kullanın. Sunucunun Davetler sekmesi paylaşılacak adresi gösterir ve sizin için davet metnini yazar. Panelin kendi portunu kapalı tutun."
+      },
+      {
+        "q": "İnternete açık olması gerekiyor mu?",
+        "a": "Hayır. Oyuncular panele değil, oyun portlarına bağlanır. Paneli LAN'ınızda veya kimlik doğrulamalı bir VPN veya ters proxy'nin arkasında tutun."
+      },
+      {
+        "q": "Bedrock oyuncuları ne olacak?",
+        "a": "Her ikisi de diğer eklentiler veya modlar gibi kurulabilir ve panel ihtiyaç duydukları ayarları sunar.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Yapay zeka ile mi yapıldı?",
+        "a": "Kısmen ve açıkça. Kodun çoğu Claude Code ile yazılmıştır ve bakımcısı her özelliği tasarlar, gözden geçirir ve test eder. Depodaki yapay zeka beyanı bunu açıklar."
+      },
+      {
+        "q": "Nereden yardım alabilirim?",
+        "a": "Discord sunucusunda bir destek forumu ve gerçek insanlar var. Hatalar ve özellik istekleri GitHub sorunlarına gider."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Değişiklik Günlüğü",
+    "intro": "Her sürüm, en yenisi önce. Sürüm notları İngilizce olarak yayınlanır.",
+    "releases": "Tüm sürümler GitHub'da",
+    "feed": "Sürüm Akışı (Atom)"
+  },
+  "community": {
+    "title": "Merhaba deyin",
+    "body": "Hata bildirin, özellik önerin, gerçek insanlardan yardım alın ve sunucularınızı sergileyin.",
+    "discord": "Discord'a Katılın",
+    "github": "GitHub'da Yıldızlayın"
+  },
+  "footer": {
+    "tagline": "MIT lisansı altında ücretsiz ve açık kaynaklıdır.",
+    "product": "Ürün",
+    "community": "Topluluk",
+    "resources": "Kaynaklar",
+    "issues": "Sorunlar",
+    "releases": "Sürümler",
+    "contributing": "Katkıda Bulunma",
+    "license": "Lisans",
+    "notAffiliated": "Resmi bir Minecraft ürünü değildir. Mojang veya Microsoft tarafından onaylanmamıştır veya bunlarla ilişkilendirilmemiştir.",
+    "serverTypes": "Sunucu Türleri",
+    "guides": "Kılavuzlar",
+    "compare": "Karşılaştır",
+    "roadmap": "Yol Haritası",
+    "ai": "Yapay Zeka Nasıl Kullanılır",
+    "conduct": "Davranış Kuralları"
+  },
+  "meta": {
+    "home": {
+      "title": "Ücretsiz kendi kendine barındırılan Minecraft sunucu paneli",
+      "description": "Ücretsiz, kendi kendine barındırılan bir Docker paneli ile tarayıcınızdan vanilla ve modlu Minecraft sunucuları çalıştırın: sabitlenmiş mod paketleri, yedeklemeler, zamanlamalar ve canlı harita."
+    },
+    "features": {
+      "title": "Minecraft sunucu paneli özellikleri",
+      "description": "Minecraft Server Manager'ın tüm özellikleri: Docker sunucuları, beş mod kayıt defteri, doğrulanmış indirmeler, yedeklemeler, zamanlamalar, çökme adli tıp, canlı harita ve 2FA."
+    },
+    "screenshots": {
+      "title": "Minecraft sunucu paneli ekran görüntüleri",
+      "description": "Masaüstü ve telefonda Minecraft Server Manager panelinin ekran görüntüleri: kontrol paneli, sihirbaz, konsol, modlar, dünyalar, yedeklemeler, zamanlamalar ve daha fazlası."
+    },
+    "install": {
+      "title": "Docker ile bir Minecraft sunucu paneli kurun",
+      "description": "Minecraft Server Manager'ı üç komutla Docker ile veya Windows, macOS ve Linux'ta kaynaktan kurun."
+    },
+    "faq": {
+      "title": "Minecraft sunucu paneli SSS",
+      "description": "Maliyet, desteklenen sunucu türleri, Raspberry Pi ve ARM, yeni bir makineye taşıma, roller, Bedrock oyuncuları ve panelin internete açılması hakkında yanıtlar."
+    },
+    "changelog": {
+      "title": "Değişiklik günlüğü ve sürüm notları",
+      "description": "Ücretsiz kendi kendine barındırılan Minecraft sunucu paneli olan Minecraft Server Manager'ın her sürümü için sürüm notları."
+    },
+    "notFound": {
+      "title": "Sayfa bulunamadı",
+      "description": "Bu sayfa mevcut değil."
+    }
+  },
+  "notFound": {
+    "title": "Bu bölüm hiç oluşturulmadı.",
+    "body": "İstediğiniz sayfa bulunamadı. Ana sayfayı veya belgeleri deneyin.",
+    "home": "Ana sayfaya git"
+  },
+  "langNotice": "Bu sayfa çevirisi tamamlanana kadar İngilizce gösterilir.",
+  "tutorial": {
+    "title": "Dakikalar içinde çalışır duruma gelin",
+    "intro": "Makinenizi seçin ve komutları yapıştırın. Gelişmiş seçeneği, panelin kendi klasörünüz ve adresiniz için yeniden yazılmış komutlarla çalıştırılabilen diğer tüm yolları içerir.",
+    "modes": {
+      "simple": "Basit",
+      "advanced": "Gelişmiş"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Kurulumu çalıştırın",
+            "body": "VPS'den Raspberry Pi 4 veya 5'e kadar 64 bit işletim sistemine sahip herhangi bir Linux makinesinde çalışır. Eksikse Docker'ı kurar, paneli /opt/msm içine ayarlar ve başlatır. Yükseltmek için daha sonra tekrar çalıştırın."
+          },
+          {
+            "title": "Paneli açın",
+            "body": "Kurulum programı adresi ve tek kullanımlık bir kurulum PIN'i yazdırır. Adresi tarayıcıda açın, PIN'i girin ve yönetici hesabınızı oluşturun."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Docker Desktop, Node.js, Git ve pnpm kurun",
+            "body": "PowerShell'de her biri tek satırda. Kurulum tamamlandıktan sonra Docker Desktop'ı başlatın ve çalışır durumda bırakın."
+          },
+          {
+            "title": "Paneli alın ve başlatın",
+            "body": "Az önce kurduğunuz araçları bulabilmesi için yeni bir terminal açın."
+          },
+          {
+            "title": "Paneli açın",
+            "body": "İlk çalıştırma, sistem kontrolü, saat diliminiz ve yönetici hesabı oluşturma adımlarında size yol gösterir."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Docker Desktop, Node.js, Git ve pnpm kurun",
+            "body": "Homebrew ile. Kurulum tamamlandıktan sonra Docker Desktop'ı başlatın ve çalışır durumda bırakın."
+          },
+          {
+            "title": "Paneli alın ve başlatın",
+            "body": "Kurulum adımı paneli de derler. Derlenecek yerel modül yoktur."
+          },
+          {
+            "title": "Paneli açın",
+            "body": "İlk çalıştırma, sistem kontrolü, saat diliminiz ve yönetici hesabı oluşturma adımlarında size yol gösterir."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "İki alanı doldurun ve aşağıdaki her komut makineniz için yeniden yazılır.",
+    "dataDir": "Ana makinedeki veri klasörü",
+    "dataDirHint": "Mutlak yol. Dünyalar, yedeklemeler, modlar ve veritabanı burada bulunur.",
+    "host": "Ana makine adı veya IP",
+    "hostHint": "Paneli bir tarayıcıdan açacağınız yer.",
+    "then": "Sonra paneli açın",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı!",
+    "firstRun": "İlk çalıştırma, sistem kontrolü, saat diliminiz ve yönetici hesabı oluşturma adımlarında size yol gösterir.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Veri klasörünü oluşturun",
+            "body": "Tek bir klasör, panelin sahip olduğu her şeyi barındırır."
+          },
+          {
+            "title": "Compose dosyasını indirin ve o klasörü işaret edin",
+            "body": "DATA_DIR_HOST, ana makinedeki mutlak yol olmalıdır, çünkü Docker bunu ana makinenin bakış açısından bağlar."
+          },
+          {
+            "title": "Paneli başlatın",
+            "body": "Görüntü çoklu mimarilidir (amd64 ve arm64) ve her sürümde güncellenir."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Ana makinede veri klasörünü oluşturun",
+            "body": "Aynı klasör kuralı: mutlak yol, Docker'ı çalıştıran makinede."
+          },
+          {
+            "title": "Compose dosyasından bir yığın ekleyin",
+            "body": "Compose dosyasının içeriğini yeni bir yığına yapıştırın. Ham dosya burada:"
+          },
+          {
+            "title": "Ortam değişkenini ayarlayın ve dağıtın",
+            "body": "Yığının ortam bölümüne ekleyin, sonra dağıtın."
+          }
+        ]
+      },
+      "source": {
+        "label": "Kaynak kodundan",
+        "steps": [
+          {
+            "title": "Gereksinimleri kontrol edin",
+            "body": "Node.js 24 veya daha yenisi, pnpm ve çalışan Docker (Windows ve macOS'ta Docker Desktop)."
+          },
+          {
+            "title": "Klonlayın ve kurun",
+            "body": "Kurulum adımı ayrıca panelin CSS'ini derler. Derlenecek yerel modül yoktur."
+          },
+          {
+            "title": "Paneli başlatın",
+            "body": "Varsayılan olarak yalnızca localhost'u dinler. Ağınızdaki diğer makinelerden erişmek için PANEL_HOST=0.0.0.0 olarak ayarlayın."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Kaynak kurulumundan başlatın",
+            "body": "Klonlanmış klasörden bunu çalıştırın. PM2, uygulamaları kendi daemon'unu başlatan Node sürümüyle başlatır, bu nedenle yorumlayıcıyı sabitleyin."
+          },
+          {
+            "title": "İşlem listesini kaydedin ve başlangıcı etkinleştirin",
+            "body": "pm2 startup, sudo ile çalıştırılacak tek bir komut yazdırır; bunu bir kez çalıştırın."
+          },
+          {
+            "title": "systemd'yi mi tercih ediyorsunuz?",
+            "body": "Klonlanmış klasörden node src/server.js çalıştıran bir birim, WorkingDirectory ayarlanmış olarak aynı şekilde çalışır. Panel ek bayrak gerektirmez."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Zaten kullandığınız her şeyle çalışır",
+    "registries": "Kayıt Defterleri",
+    "loaders": "Sunucu Türleri",
+    "packs": "Modpack'ler",
+    "runsOn": "Şunun üzerinde çalışır",
+    "formats": "İçe Aktarmalar",
+    "checksums": "Sağlama Toplamları",
+    "integrations": "Entegrasyonlar",
+    "keyless": "anahtarsız"
+  },
+  "landing": {
+    "breadcrumb": "İçerik Haritası",
+    "install": "Paneli Kurun",
+    "docs": "Belgelere Göz Atın",
+    "related": "Devamını Okuyun",
+    "open": "Aç",
+    "docsGuides": "Belgelerdeki Diğer Kılavuzlar",
+    "docsGuidesIntro": "Sunucu sahiplerinin en çok sorduğu sorulara kısa, pratik yanıtlar, belgelerin yanında tutulur."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Minecraft sunucu türleri: Paper, Fabric, Forge",
+      "description": "Tek bir kendi kendine barındırılan panelden Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla veya tam bir mod paketi çalıştırın. Sunucu türünü seçin ve ne elde ettiğinizi görün."
+    },
+    "eyebrow": "Her sunucu türü",
+    "title": "Her tür Minecraft sunucusu için tek panel",
+    "intro": "Eklentiler, modlar, değiştirilmemiş oyun veya bütün bir mod paketi. Çalıştırmak istediğinizi seçin, panel sizin için Java sürümünü, indirmeleri ve sabitlemeyi halleder.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Paper ve Purpur eklenti sunucuları, dört kayıt defterinden eklentilerle ve değiştirilmemiş bir istemciyle katılan oyuncular.",
+      "serverFabric": "Her Minecraft yükseltmesinden önce sürüm kontrolü ile hafif, hızlı güncellenen modlar için Fabric ve Quilt sunucuları.",
+      "serverForge": "Ağır modlar için Forge ve NeoForge, 1.7.10 klasiklerinden güncel paketlere kadar, sizin için doğru Java seçimiyle.",
+      "serverVanilla": "Anlık görüntülerden eski betalara kadar değiştirilmemiş oyun, etrafında dünya kontrolleri, yedeklemeler ve oyuncu istatistikleri ile.",
+      "serverModpacks": "CurseForge, Modrinth, FTB ve GT New Horizons paketleri tam bir sürüme sabitlenmiş, ayrıca kendi zip veya .mrpack dosyanız."
+    },
+    "sections": [
+      {
+        "title": "Hangisinden Emin Değil misiniz?",
+        "body": "En hızlı duyulanı değil, oyuncularınızın ne yüklemesi gerektiğini seçin. Kimsenin hiçbir şey yüklememesi gerekiyorsa, vanilla veya Paper çalıştırın. Yayınlanmış bir paket yüklüyorsanız, paket sizin için yükleyiciyi ve Minecraft sürümünü belirler. Kendi modlu sunucunuzu oluşturuyorsanız, Fabric ve NeoForge çoğu modern modu kapsar ve Forge eski dönemleri kapsar.",
+        "points": [
+          "Arkadaşlarla hayatta kalma, olağandışı bir şey yok: vanilla.",
+          "Rütbeler, talepler ve moderasyon içeren herkese açık bir sunucu: Paper.",
+          "CurseForge veya Modrinth'ten belirli bir paket: paketin söylediği her neyse.",
+          "Kendiniz bir araya getirdiğiniz modern bir paket: Fabric veya NeoForge.",
+          "1.7 ila 1.12 döneminden eski bir paket: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "İlk Sunucunuzu Başlatın",
+      "body": "Paneli kurun, oluşturma sihirbazını açın ve bir sunucu türü seçin. Her tür ücretsizdir ve kendi makinenizde çalışır."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Paper sunucu paneli: eklentiler, kendi kendine barındırılan",
+      "description": "Ücretsiz, kendi kendine barındırılan bir Paper ve Purpur sunucu paneli. Eklentiler için Hangar, SpigotMC ve Modrinth'te arama yapın, her indirmeyi doğrulayın ve güncel tutun."
+    },
+    "eyebrow": "Paper ve Purpur",
+    "title": "Gerçek bir eklenti tarayıcısına sahip, kendi kendine barındırılan bir Paper sunucu paneli",
+    "intro": "Paper veya Purpur'u kendi Docker kapsayıcısında çalıştırın, paneli terk etmeden dört kayıt defterinden eklentileri bulun ve oyuncuların zaten sahip oldukları oyunla katılmasına izin verin.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Neden Genel Bir Sunucu İçin Paper?",
+        "body": "Eklentiler yalnızca sunucuda çalışır, bu nedenle oyuncular sıradan, değiştirilmemiş bir istemciyle katılır ve hiçbir şey yüklemek zorunda kalmazlar. Kurallar, izinler, ekonomiler, arazi talepleri, mini oyunlar veya moderasyonla ilgili her şey bir eklentidir ve bu nedenle neredeyse her genel sunucu Paper çalıştırır. Arkasında yılların performans çalışması ve bir yöneticiyi rahatsız eden hemen hemen her davranış için bir ayar vardır. Purpur, daha da fazla anahtara sahip, oyun içi olanlar da dahil olmak üzere Paper'ın bir çatalıdır. Her ikisi de oluşturma sihirbazının Vanilla sekmesindedir.",
+        "points": [
+          "Oyuncular normal oyunla bağlanır. Mod yok, başlatıcı kurulumu yok.",
+          "Bukkit döneminden çoğu eklenti hala çalışır.",
+          "Yalnızca ekstra anahtarlarını istiyorsanız Purpur'u seçin; aksi takdirde Paper."
+        ]
+      },
+      {
+        "title": "Tek Aramada Dört Eklenti Kayıt Defteri",
+        "body": "Bir eklenti sunucusunun Modlar sekmesi, sunucunun Minecraft sürümüne göre filtrelenmiş Hangar'ı (PaperMC'nin kendi eklenti kayıt defteri), SpigotMC'yi, Modrinth'i ve CurseForge'u arar. Yalnızca CurseForge bir API anahtarı gerektirir. Ayrıca bir proje sayfasını, bir GitHub deposunu veya sürümünü veya doğrudan bir jar bağlantısını yapıştırabilirsiniz ve panel doğru yapıyı bulur. Her kayıt defteri indirmesi, sunucuya ulaşmadan önce kayıt defterinin yayınladığı en güçlü sağlama toplamına göre kontrol edilir, böylece bozuk veya kurcalanmış bir dosya asla inmez.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Sunucuda zaten bulunan sonuçlar Yüklü rozeti gösterir.",
+          "Bir SpigotMC kaynağı başka bir yerde barındırılıyorsa, panel bunu önceden belirtir ve sayfayı açmayı ve jar'ı bunun yerine bir yükleme olarak almayı teklif eder.",
+          "Yüklenen jar'lar tanımlanır, böylece gerçek adlarını korurlar ve güncellenebilir kalırlar."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Tahmin Yürütmeden Eklenti Güncellemeleri",
+        "body": "Eklediğiniz her eklenti, günlük bir programa göre ve isteğe bağlı olarak kaynağına göre kontrol edilir. Bir eklentiyi güncelleyin, istemediğiniz bir sürümü yoksayın veya tek bir yeniden başlatma ile her şeyi uygulamak için Tümünü Güncelle'ye basın. Bir güncelleme kötü giderse, paylaşılan kitaplıktan önceki yapıya geri dönün. Sunucunun güncelleme politikasında Beni Bilgilendir'i açın ve bekleyen güncellemeler bir rozet olarak ve Güncellemeler sayfasında görünür.",
+        "points": [
+          "Hangar, SpigotMC, Modrinth, CurseForge ve GitHub Sürümlerine karşı günlük kontroller.",
+          "Bir geri alma, önceki yapıyı kitaplıktan geri getirir.",
+          "Bir Paper yapısını sabitlerseniz, Güncellemeler sayfası size daha yeni bir sürüm çıktığında bilgi verir."
+        ]
+      },
+      {
+        "title": "Bir Topluluk Sunucusu Gibi Çalıştırın",
+        "body": "Paper sunucuları, paneldeki diğer tüm sunucularla aynı araçlara sahiptir: bir RCON komut çubuğu, beyaz liste, ops, yasaklar ve IP yasakları, ışınlanmalar ve bekleme süreleri olan özel sohbet komutları içeren canlı bir konsol. Personelinize sunucu başına izinlere sahip hesaplar verin, böylece bir moderatör yedeklere veya dosyalara dokunmadan konsolu çalıştırabilir. Tek tıklamayla bir BlueMap canlı haritası eklenir, yalnızca panelin kendi oturum açma sistemi aracılığıyla sunulur ve Discord uyarıları bir şeye ihtiyacınız olduğunda size bildirir.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Üç Adımda Bir Paper Sunucusu Başlatın",
+      "items": [
+        {
+          "title": "Sihirbazda Paper'ı Seçin",
+          "body": "Bir Sunucu Oluştur'u açın, Vanilla sekmesinde kalın, Paper veya Purpur'u seçin ve bir Minecraft sürümü seçin. Sizin için ücretsiz bir oyun bağlantı noktası ve makul bellek doldurulur."
+        },
+        {
+          "title": "Eklentilerinizi Ekleyin",
+          "body": "Sunucunun Modlar sekmesinde Hangar, SpigotMC, Modrinth veya CurseForge'da arama yapın veya bir bağlantı yapıştırın. Yüklemeler indirilirken doğrulanır."
+        },
+        {
+          "title": "Adresi Paylaşın",
+          "body": "Genel Bakış sekmesi, oyunculara verilecek adresi gösterir. Zaten sahip oldukları oyunla katılırlar."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Paper Sunucu Soruları",
+      "items": [
+        {
+          "q": "Paper sunucusuna mod ekleyebilir miyim?",
+          "a": "Hayır. Paper, yalnızca sunucuda çalışan eklentileri yükler. Modlar oyunun kendisini değiştirir ve hem sunucuda hem de her istemcide Fabric veya NeoForge gibi bir mod yükleyiciye ihtiyaç duyar. Her ikisini de istiyorsanız, tek bir hibrit yerine modlu bir sunucuyu ve bir eklenti sunucusunu yan yana çalıştırın."
+        },
+        {
+          "q": "Eklentileri yüklemek için bir SpigotMC hesabına veya bir API anahtarına ihtiyacım var mı?",
+          "a": "Hayır. SpigotMC, Hangar ve Modrinth hepsi anahtar olmadan çalışır. Yalnızca CurseForge, Ayarlar, API Anahtarları altında bir kez eklediğiniz bir API anahtarı ister."
+        },
+        {
+          "q": "Bir videodaki bir redstone çiftliği sunucumda çalışmıyor. Neden?",
+          "a": "Paper, performans adına bazı vanilla davranışlarını varsayılan olarak değiştirir. Genellikle nedeni budur ve genellikle sunucunun dosya yöneticisinde düzenleyebileceğiniz Paper'ın yapılandırmasındaki bir ayardır."
+        },
+        {
+          "q": "Eski Bukkit ve Spigot eklentilerim hala çalışacak mı?",
+          "a": "Çoğu, evet. Paper, Spigot'un bir çatalıdır ve eklenti API'sini korur, bu nedenle Bukkit ve Spigot için yazılan eklentiler çoğunlukla değişmeden çalışır. Desteklediği Minecraft sürümleri için her eklentinin sayfasını kontrol edin."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Paper Sunucunuzu Evde Çalıştırın",
+      "body": "Paneli Docker yüklü herhangi bir makineye kurun, ardından sihirbazdan bir Paper sunucusu oluşturun. Ücretsiz, açık kaynaklı ve sizin."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Kendi kendine barındırılan Fabric sunucusu, mod tarayıcısıyla",
+      "description": "Kendi kendine bir Fabric veya Quilt Minecraft sunucusu barındırın. Modrinth ve CurseForge'da arama yapın, yükleyici derlemesini sabitleyin ve yükseltmeden önce her modu kontrol edin."
+    },
+    "eyebrow": "Fabric ve Quilt",
+    "title": "Modlarınızın neyi desteklediğini bilen, kendi kendine barındırılan bir Fabric sunucusu",
+    "intro": "İstediğiniz modlardan bir Fabric veya Quilt sunucusu oluşturun, yükleyici derlemesini yerinde tutun ve her mod takip edebilene kadar yeni bir Minecraft sürümüne geçin.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Neden Fabric",
+        "body": "Fabric küçüktür, yeni Minecraft sürümlerini günler içinde takip eder ve modern performans modlarının çoğunu taşır. Amacınız az sayıda yaşam kalitesi moduyla hızlı bir sunucu kurmaksa, seçmeniz gereken yükleyici budur. Neredeyse her Fabric modu, ayrı bir indirme olarak eklediğiniz Fabric API'sini de gerektirir. Quilt, çoğu Fabric modunu çalıştıran bir Fabric çatallanmasıdır; özel bir nedeniniz varsa onu seçin, aksi takdirde Fabric'i seçin.",
+        "points": [
+          "Yeni Minecraft sürümlerini hızlıca takip eder.",
+          "Modern performans modlarının çoğuna ev sahipliği yapar.",
+          "Quilt sunucuları Fabric derlemelerini otomatik olarak görür, çünkü Quilt Fabric modlarını çalıştırır."
+        ]
+      },
+      {
+        "title": "İstediğiniz Modlardan Başlayın",
+        "body": "Sihirbazın Modlardan Sekmesi, yükleyiciyi, Minecraft sürümünü ve bir yükleyici derlemesini seçer: en sonuncusu veya sabitlediğiniz belirli bir tane. Bunu tersi yönde de yapabilirsiniz. Önce modları seçin, ardından çözümleyici hepsinin desteklediği en yeni yükleyiciyi ve Minecraft sürümünü önerir ve sunucu oluşturulduğunda seti yükler.",
+        "points": [
+          "En sonuncuyu takip etmek yerine bir Fabric veya Quilt yükleyici derlemesini sabitleyin.",
+          "Güncellemeler sayfası, sabitlenmiş bir yükleyici için daha yeni derlemeler sunar.",
+          "Mod tarayıcısı yükleyiciye göre filtreleme yapar, böylece bir Forge jar dosyası yanlışlıkla bir Fabric sunucusuna yerleşemez."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Her Yükseltmeden Önce Bir Sürüm Kontrolü",
+        "body": "Bir Fabric sunucusunun Modlar sekmesinde Sürümler alt sekmesi bulunur. Yüklü her modu Modrinth ve CurseForge'a karşı kontrol eder ve hepsinin bir derlemesi için en yüksek Minecraft sürümünü, ayrıca her yeni sürümün neleri geride bırakacağını gösteren bir döküm raporlar. Daha yeni bir Minecraft sürümü yalnızca o kontrol onu desteklediğinde ve bir jar dosyası tanımlanamazken asla sunulmaz.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Güvenilir ve Geri Alınabilir Modlar",
+        "body": "Her kayıt indirmesi, sunucuya ulaşmadan önce kayıtın yayınladığı en güçlü sağlama toplamına karşı doğrulanır. Eklediğiniz modlar, sha256 ile tekilleştirilmiş paylaşılan bir kitaplıkta yaşar, böylece aynı modu çalıştıran on sunucu onu bir kez depolar. Bir modu güncelleyin, bir sürümü yok sayın veya bir güncelleme ters giderse önceki derlemeye geri dönün. Bir Modrinth .mrpack veya bir jar dosyası zip'i içe aktarın ve her jar dosyası tanımlanır ve herhangi bir şey yüklenmeden önce sunucuya karşı kontrol edilir.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Üç Adımda Bir Fabric Sunucusu Başlatın",
+      "items": [
+        {
+          "title": "Modlardan Sekmesinde Fabric'i Seçin",
+          "body": "Fabric veya Quilt, bir Minecraft sürümü ve en son yükleyici derlemesini veya sabitlenmiş birini seçin."
+        },
+        {
+          "title": "Modları Arayın ve Ekleyin",
+          "body": "Modrinth veya CurseForge'da arama yapın, Fabric API'sini ekleyin ve geri kalanını ekleyin. Her indirme doğrulanır."
+        },
+        {
+          "title": "Oyuncularınızı Davet Edin",
+          "body": "Davetler sekmesi, eklediğiniz modların yapıştırmaya hazır bir davetini ve bir istemci .mrpack'ini oluşturur, sunucunuz zaten oyun içi sunucu listesinde bulunur."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Fabric Sunucusu Soruları",
+      "items": [
+        {
+          "q": "Oyuncuların aynı modları yüklemesi gerekiyor mu?",
+          "a": "Evet, içerik ekleyen herhangi bir mod için. Modlar oyunu değiştirir, bu nedenle istemcinin aynı modları yüklemesi gerekir. Davetler sekmesi, eklediğiniz modların bir istemci .mrpack'ini oluşturur, sunucunuz zaten oyun içi sunucu listesinde bulunur ve oyuncular bunu Prism veya Modrinth App gibi bir başlatıcıya aktarır."
+        },
+        {
+          "q": "Gerçekten Fabric API'sine ihtiyacım var mı?",
+          "a": "Neredeyse her zaman. Neredeyse her Fabric modu buna bağlıdır ve ayrı bir indirmedir. Mod tarayıcısından diğer modlar gibi ekleyin."
+        },
+        {
+          "q": "Modlarımın bir sonraki Minecraft sürümünde çalışacağını nasıl bileceğim?",
+          "a": "Sunucunun Modlar sekmesini ve ardından Sürümler'i açın. Yüklü her modun bir derlemesi için en yüksek Minecraft sürümünü ve daha yeni birinin neleri geride bırakacağını gösterir."
+        },
+        {
+          "q": "Bir mod güncellemesi sunucuyu bozdu. Geri dönebilir miyim?",
+          "a": "Evet. Modlar sekmesindeki satırından modu geri alın ve önceki derleme paylaşılan kitaplıktan geri gelir."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Fabric Sunucunuzu Kendi Kendinize Barındırın",
+      "body": "Paneli kurun, Modlardan sekmesini açın ve modlarınızı seçin. Abonelik yok ve çalıştırdığınız sunucu sayısında sınır yok."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Forge ve NeoForge modlu sunucu paneli",
+      "description": "Kendi Forge veya NeoForge modlu Minecraft sunucunuzu çalıştırın. Doğru Java sürümü sizin için seçilir, yükleyici sürümleri sabitlenebilir ve çökmeler şüphelilerini belirler."
+    },
+    "eyebrow": "Forge ve NeoForge",
+    "title": "Sizin için doğru Java'yı seçen bir Forge modlu sunucu paneli",
+    "intro": "1.7.10 klasiklerinden güncel NeoForge paketlerine kadar sunucunuzu oluşturun, belleğini ayarlayın ve yığın izini satır satır okumadan bir çökmenin arkasındaki modu bulun.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge mu yoksa NeoForge mu?",
+        "body": "NeoForge, eski Forge ekosisteminin güncel sürümler için çalışmalarını yürüttüğü yerdir. 1.20.1 sırasında Forge'dan ayrıldı ve 1.20.2 ve sonrası için oluşturulan çoğu büyük paket onu hedefliyor, bu nedenle NeoForge üzerinde yeni bir ağır hizmet sunucusu başlatın. Forge hala geçmişe sahip: 1.7.10, 1.12.2 ve 1.16.5 dönemlerinden her şey Forge'dur ve bu en sevilen paketlerin büyük bir kısmını oluşturur. Bir yükleyici için olan modlar diğerinde çalışmaz ve 1.20.1 NeoForge paketi 1.20.1 Forge'da çalışmaz.",
+        "points": [
+          "Yeni ağır hizmet sunucusu: NeoForge.",
+          "1.7.10, 1.12.2 veya 1.16.5 dönemi: Forge.",
+          "Yayınlanmış bir paket: paketin listelediği her şey, tam olarak."
+        ]
+      },
+      {
+        "title": "Her Zaman Doğru Java",
+        "body": "Minecraft'ın Java gereksinimi oyunla birlikte hareket eder ve yanlış sürüm size net bir mesaj yerine yararsız bir UnsupportedClassVersionError verir. Eski paketler gerçekten Java 8'e ihtiyaç duyar ve güncel sürümler 21 veya daha yenisine ihtiyaç duyar. Oluşturma sihirbazı seçtiğiniz Minecraft sürümünü okur ve çalışma zamanını kendi kendine seçer, böylece yanlış eşleşme asla kazara olmaz. Bir paketi yükseltmek, yeni sürüm farklı bir sürüm gerektiriyorsa Java'yı yeniden çözer.",
+        "points": ["1.16.5 ve öncesi: Java 8.", "1.18 - 1.20.4: Java 17.", "1.20.5 - 1.21: Java 21."]
+      },
+      {
+        "title": "Modlu İçin Ayarlanmış Bellek",
+        "body": "Her sunucunun iki sayısı vardır: Java yığını ve kapsayıcı bellek sınırı. Java'nın yığın dışında belleğe ihtiyacı vardır, büyük bir mod paketi üzerinde yaklaşık 1,5 ila 2 GB, ve yeterli boş alanı olmayan bir kapsayıcı, Java ona ulaştığı anda sonlandırılır. Sihirbaz, sınırı yığının %50 üzerine ayarlar ve panel, yığının üzerinde olmayan bir kapsayıcı sınırını reddeder. 150 ila 300 moddan oluşan bir 'mutfak lavabosu' paketi 6 ila 8 GB yığın ister.",
+        "points": [
+          "Belleği bittiği için durdurulan bir sunucu, geçmişinde tam olarak öyle kaydedilir.",
+          "Gerçek kullanımı takip eden belleği görmek için daha küçük bir başlangıç yığını ayarlayın."
+        ]
+      },
+      {
+        "title": "Şüphelilerini Belirleyen Çökmeler",
+        "body": "Çökme raporları otomatik olarak alınır ve istisna ve arkasındaki en olası modlarla tek satırlık bir özete ayrıştırılır. Dahili görüntüleyiciyi açın, yığın izini kopyalayın veya açık bir onaydan sonra mclo.gs'ye paylaşın ve otomatik içgörülerini alın: bilinen sorunlar ve önerilen düzeltmeler, doğrudan panelde gösterilir. Çökmede otomatik yeniden başlatma, artan beklemelerle tekrar dener ve önce düzeltme gerektiren çökmeleri atlar, örneğin yanlış Java veya bellek tükenmesi.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Üç Adımda Forge Sunucusu Başlatın",
+      "items": [
+        {
+          "title": "Yükleyiciyi ve Sürümü Seçin",
+          "body": "Sihirbazın 'Modlardan' sekmesinde Forge veya NeoForge'u, Minecraft sürümünü ve en son yükleyici sürümünü veya sabitlenmiş birini seçin."
+        },
+        {
+          "title": "Yeterli Bellek Verin",
+          "body": "Mod listenizin boyutuna göre Java yığınını ayarlayın. Kapsayıcı sınırı, onun %50 üzerinde olarak takip eder."
+        },
+        {
+          "title": "Mod Ekleyin veya Bir Zip İçe Aktarın",
+          "body": "CurseForge ve Modrinth'te arama yapın veya bir CurseForge dışa aktarma dosyasını veya jar dosyaları zip'ini içe aktarın. Her jar, sunucuyla ilk önce tanımlanır ve kontrol edilir."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Forge Sunucusu Soruları",
+      "items": [
+        {
+          "q": "Hala bir 1.12.2 veya 1.7.10 paketi çalıştırabilir miyim?",
+          "a": "Evet. Sihirbazda sürümü ve Forge'u seçin, panel onu bu sürümlerin gerektirdiği Java 8 üzerinde çalıştırır. 1.7.10 uzman paketi olan GT New Horizons, kendi Java seçimiyle Modpackler sayfasından yüklenir."
+        },
+        {
+          "q": "Bir Forge sunucusu ne kadar belleğe ihtiyaç duyar?",
+          "a": "40 ila 80 modluk hafif bir paket, 6 GB'lık bir kapsayıcıda 4 GB yığınla iyi çalışır. 150 ila 300 modluk bir paket, 6 ila 8 GB yığın ve kapsayıcı için yaklaşık 10 GB ister."
+        },
+        {
+          "q": "Belirli bir Forge sürümünü sabitleyebilir miyim?",
+          "a": "Evet. Sihirbazın yükleyici sürüm seçicisi en son veya belirli bir sürümü alır ve Güncellemeler sayfası, bunları kendi başına uygulamadan sabitlenmiş bir sürüm için daha yeni sürümler sunar."
+        },
+        {
+          "q": "Sunucum başlangıçta çöktü. Nereye bakmalıyım?",
+          "a": "İzleme'yi ve ardından Geçmiş'i açın. Çökme raporu kartı, istisnayı ve şüpheli modları listeler ve Analiz, bilinen sorunlar ve düzeltmeler için mclo.gs içgörülerini çalıştırır."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Modlu Sunucunuzu Kendiniz Çalıştırın",
+      "body": "Yeterli belleğe sahip bir makineye paneli kurun, ardından sihirbazdan bir Forge veya NeoForge sunucusu oluşturun."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Vanilla Minecraft sunucu paneli, kendi kendine barındırılan",
+      "description": "Kendi vanilla Minecraft sunucunuzu barındırın: eski betalardan en son anlık görüntülere kadar herhangi bir sürüm, dünya kontrolleri, günlük yedeklemeler ve oyuncu istatistikleri ile."
+    },
+    "eyebrow": "Değiştirilmemiş oyun",
+    "title": "Her şeyiyle halledilmiş bir vanilla Minecraft sunucusu",
+    "intro": "Oyunu Mojang'ın sunduğu gibi tutun ve eklentilerden ziyade panelden yedeklemeler, dünya araçları, moderasyon ve oyuncu istatistikleri alın.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "İstediğiniz Sürüm",
+        "body": "En son sürümü, anlık görüntüyü veya belirli bir sürümü, eski betaları ve alfaları dahil seçin. Panel, o sürümün ihtiyaç duyduğu Java çalışma zamanını seçer, görüntüyü çeker ve sunucuyu o formdan başlatır. Kimse katılmak için bir şey yüklemez: oyuncular zaten sahip oldukları oyunla bağlanır.",
+        "points": [
+          "En son sürüm, anlık görüntüler veya belirli bir sürüm.",
+          "Nostalji sunucusu için eski betalar ve alfalar.",
+          "Her sürüm için doğru Java seçildi."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Komut Yazmadan Dünya Kontrolleri",
+        "body": "Dünya Kontrolleri rayı, bir sunucunun her sekmesinde ilerler: oyun içi saat, hava durumu ve yaygın oyun kuralları geçiş çipleri olarak, diğer tüm kurallar bir tık uzağınızda. Dünyalar sekmesi, önce güvenlik yedeği sunarak aktif dünyayı yeni, tutulan veya özel bir tohumla sıfırlar. Bir dünyayı kopyalayın, bitmiş olanları dünya kütüphanesinde tutun veya zaten sahip olduğunuz bir dünyayı .zip veya .tar arşivi olarak yükleyin.",
+        "points": [
+          "Yeni bir tohumla, aynı tohumla veya yazdığınız bir tohumla sıfırlayın.",
+          "Her sunucu tarafından paylaşılan bir dünya kütüphanesi.",
+          "Tarayıcıda server.properties'i düzenleyin; diskteki değer geçerlidir."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "İlk Günden Yedeklemeler",
+        "body": "Her yeni sunucu otomatik olarak günlük bir yedekleme programı alır. Yedeklemeler güvenlidir: panel kaydetmeyi duraklatır, dünyayı boşaltır, zip'ler ve kaydetmeden önce arşivin açıldığını kontrol eder. Geri yükleme, sunucuyu olduğu gibi geri getirir ve önce mevcut verilerin bir güvenlik yedeğini alır.",
+        "shot": "backups"
+      },
+      {
+        "title": "Eklentisiz Moderasyon ve İstatistikler",
+        "body": "Vanilla'da izin sistemi yoktur, bu nedenle panel size bunun yerine moderasyon araçlarını sunar: beyaz liste, her seviyede operatörler, yasaklar ve IP yasakları ve ışınlanmalar, sunucu çalışırken canlı ve durdurulmuşken doğrudan dosyalara. Oyunun kendi istatistikleri zamanlanmış olarak oyuncu profillerine ve bir skor tablosuna okunur: oyun süresi, ölümler, öldürmeler, kazılan bloklar ve elmaslar ve kat edilen mesafe. Bir etkinlik zaman çizelgesi sohbeti, katılımları, ölümleri ve ilerlemeleri aranabilir tutar."
+      }
+    ],
+    "faq": {
+      "title": "Vanilla Sunucu Soruları",
+      "items": [
+        {
+          "q": "Anlık görüntü sunucusu çalıştırabilir miyim?",
+          "a": "Evet. Sihirbazda anlık görüntüyü Minecraft sürümü olarak seçin. Her yeni anlık görüntüden önce bir yedek alın, çünkü anlık görüntü dünyaları daha eski bir sürümde açılamaz."
+        },
+        {
+          "q": "Vanilla sunucusunun canlı haritası olabilir mi?",
+          "a": "Vanilla'da olmaz. BlueMap'in çalışması için bir eklenti veya mod yükleyici gerekir. Bir Paper sunucusu tek bir tıklamayla bir tane alır ve oyuncular hala değiştirilmemiş bir istemciyle bağlanır."
+        },
+        {
+          "q": "Dünyayı sıfırlayıp tohumu tutabilir miyim?",
+          "a": "Evet. Dünyalar sekmesinden aktif dünyayı sıfırlayın ve mevcut tohumu tutmayı seçin. Panel önce eski dünyanın bir güvenlik yedeğini sunar."
+        },
+        {
+          "q": "Bir vanilla sunucusu kaç oyuncuyu kaldırabilir?",
+          "a": "Vanilla, Paper'dan daha fazla oyuncuyla daha yavaştır. Bir arkadaş grubu için uygundur. Yoğun bir halka açık sunucu için Paper, yıllarca süren performans çalışmasıyla aynı oyunu çalıştırır."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Vanilla Sunucu Başlatın",
+      "body": "Paneli kurun, sihirbazda Vanilla'yı seçin ve adresi paylaşın. Ücretsiz ve açık kaynaklı."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Minecraft modpack sunucusu: tek tıkla kurulum",
+      "description": "CurseForge, Modrinth, FTB veya GT New Horizons'tan bir Minecraft modpack sunucusu çalıştırın. Paketler sabitlenir ve her güncelleme bir yedekleme ve geri alma ile birlikte gelir."
+    },
+    "eyebrow": "Modpack sunucuları",
+    "title": "Arka planda sizin bilginiz olmadan yükseltme yapmayan bir Minecraft modpack sunucusu",
+    "intro": "Bir paketi adıyla kurun, belirli bir sürüme sabitleyin ve yalnızca siz istediğinizde, önce yedekleme alarak ve yeni sürüm başlamazsa tek tıkla geri alarak yükseltin.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Tüm Büyük Paket Kaynakları",
+        "body": "Modpackler sayfası ve sihirbazın Modpack'ten sekmesi, CurseForge ve Modrinth'ten paketleri adlarını arayarak, FTB paketlerini paket ve sürüm kimlikleriyle ve GT New Horizons'ı kendi sürüm dizininden kurar. Yayınlanmış bir paket değil mi? Bir Modrinth .mrpack, bir CurseForge modpack dışa aktarma dosyası veya mod jar'larından oluşan herhangi bir zip dosyası yükleyin. Manifest dosyası veya belirlenen jar'lar arasındaki çoğunluk oyu, yükleyiciyi ve Minecraft sürümünü doldurur.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge, Ayarlar, API Anahtarları altına bir kez eklenen bir API anahtarı gerektirir.",
+          "Mod yazarlarının otomatik indirmelere izin vermediği modlar, kurulumu başarısız kılmak yerine bir bağlantı ve yükleme yuvası ile listelenir.",
+          "GT New Horizons için Java sürümü ve makul bellek ve disk minimumları sizin için ayarlanır."
+        ]
+      },
+      {
+        "title": "Belirli Bir Sürüme Sabitlenmiş",
+        "body": "Bir paket seçtiğinizde, panel tam sürümü çözer, kaydeder ve onu kurar. Bir yeniden başlatma asla sessizce paketi yükseltemez. Her sunucunun yeni sürümlerden nasıl haberdar olacağını siz seçersiniz: Yalnızca Manuel tamamen olduğu gibi bırakır, Bana Bildir bir rozet gösterir ve Güncellemeler sayfasında listeler ve Otomatik Güncelleme, günlük kontrol sonrasında aynı korumalı yol üzerinden paket güncellemelerini uygular. Bir dünyayı farklı bir Minecraft sürümüne taşıyacak güncellemeler her zaman atlanır, çünkü bir dünyayı dönüştürmek sizin kararınızdır.",
+        "points": [
+          "Yalnızca Manuel varsayılan ayardır.",
+          "Kararlı sürümleri takip eden sunuculara asla beta sürümü sunulmaz.",
+          "Otomatik Güncelleme asla bir Minecraft sürümünü geçmez."
+        ]
+      },
+      {
+        "title": "Geri Dönüş Yolu Olan Yükseltmeler",
+        "body": "Bir paketi yükseltmek tek bir işlemdir. Panel bir yedekleme alır, sunucuyu düzgün bir şekilde durdurur, sabitlenmiş sürümü değiştirir, sunucuyu doğru Java sürümüyle yeniden oluşturur ve ilk başlatmayı izler; büyük paketlerin ilk başlangıçta gigabaytlarca veri indirmesi için cömert bir pencere tanır. Yeni sürüm başlamazsa, tek tıkla geri alın.",
+        "shot": "yedeklemeler"
+      },
+      {
+        "title": "Üzerine Kendi Modlarınızı Ekleyin",
+        "body": "Bir paket sunucusuna eklediğiniz modlar paylaşılan bir kitaplıkta yaşar ve sunucuya bağlanır, böylece paket güncellemelerinden sağ çıkar. İstemediğiniz bir paket modunu devre dışı bırakın, paketin eksik olduğu bir performans modu ekleyin ve ikisini de bir sonraki yükseltme boyunca saklayın. Oyuncular aynı paketi aynı sürümde CurseForge veya Modrinth'ten yükler ve Davetler sekmesi, adres ve sürümle birlikte yapıştırmaya hazır bir davetiye sunar.",
+        "shot": "modlar"
+      }
+    ],
+    "steps": {
+      "title": "Üç Adımda Bir Modpack Sunucusu Başlatın",
+      "items": [
+        {
+          "title": "Paketi Bulun",
+          "body": "Modpackler sayfasında CurseForge veya Modrinth'te arama yapın veya bir .mrpack, CurseForge dışa aktarma dosyası veya jar dosyalarından oluşan bir zip yükleyin."
+        },
+        {
+          "title": "Sürümü ve Belleği Seçin",
+          "body": "Tam paket sürümünü seçin. Mod sayısına yetecek kadar Java yığını alanı verin; kapsayıcı sınırı buna uyar."
+        },
+        {
+          "title": "Oluşturun ve Başlamasını İzleyin",
+          "body": "Panel paketi kurar, sabitler ve sunucuyu başlatır. Büyük bir paketin ilk başlatılması biraz zaman alır; konsol her satırı gösterir."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack Sunucusu Soruları",
+      "items": [
+        {
+          "q": "Sunucuyu yeniden başlatmak modpack'imi günceller mi?",
+          "a": "Hayır. Paket, kurduğunuz tam sürüme sabitlenmiştir. Yalnızca siz yükselttiğinizde veya sunucuyu Otomatik Güncelleme olarak ayarladıysanız günlük kontrol sonrasında değişir."
+        },
+        {
+          "q": "Neden Modrinth yapmazken CurseForge bir API anahtarı gerektiriyor?",
+          "a": "CurseForge yalnızca bir anahtar taşıyan istekleri yanıtlar. Birini CurseForge konsolundan alıp Ayarlar, API Anahtarları altına bir kez ekleyebilirsiniz. Modrinth bir anahtar olmadan çalışır."
+        },
+        {
+          "q": "Paketimdeki bazı modlar indirilemedi. Ne yapmalıyım?",
+          "a": "Yazarları otomatik indirmelere izin vermiyor. Panel, her birini kendi sayfasının bağlantısı ve bir yükleme yuvası ile listeler, böylece jar'ı tarayıcınızda indirip bırakabilirsiniz."
+        },
+        {
+          "q": "Bir FTB paketi kurabilir miyim?",
+          "a": "Evet, FTB API aracılığıyla paketin sayısal kimliği ve açık bir sürüm kimliği ile. Panel henüz FTB paketlerini güncellemeler için kontrol etmiyor."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Modpack Sunucunuzu Evde Çalıştırın",
+      "body": "Paneli kurun, Modpackler sayfasını açın ve bir paket seçin. Siz aksini söyleyene kadar seçtiğiniz sürümde kalır."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Rehberler: Kendi Minecraft sunucunuzu barındırın",
+      "description": "Kendi Minecraft sunucunuzu barındırma rehberleri: arkadaşlar için mod paketi sunucusu, Raspberry Pi, ev bilgisayarı, ücretli barındırmadan ayrılma ve tek bir makinede birçok sunucu."
+    },
+    "eyebrow": "Rehberler",
+    "title": "Kendi Minecraft sunucunuzu barındırma rehberleri",
+    "intro": "Bir raftaki Raspberry Pi'den sunucularla dolu bir makineye kadar, insanların gerçekten çalıştırdığı kurulumlar için pratik adım adım kılavuzlar.",
+    "cards": {
+      "guideFriends": "Doğru bellek ve takip edebilecekleri bir davetiye ile arkadaşlarınız için bir CurseForge veya Modrinth mod paketi barındırın.",
+      "guidePi": "Bir Raspberry Pi 4 veya 5'i bir web paneliyle Minecraft sunucusuna dönüştürün ve onu dürüstçe boyutlandırın.",
+      "guideHome": "Evde Windows, macOS veya Linux üzerinde bir Minecraft sunucusu barındırın ve arkadaşlarınızın güvenle katılmasını sağlayın.",
+      "guideHosting": "Tek bir envanteri bile kaybetmeden dünyanızı, eklentilerinizi ve modlarınızı ücretli bir barındırıcıdan taşıyın.",
+      "guideMulti": "Bağlantı noktaları, bellek veya disk birbirine engel olmadan tek bir makinede birden fazla Minecraft sunucusu çalıştırın."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Burada Kapsanmayan Bir Şeye mi İhtiyacınız Var?",
+      "body": "Belgeler her özelliği daha derinlemesine ele alıyor ve Discord'da sunucu çalıştıran gerçek insanlar var."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Arkadaşlarınız İçin Modpack Sunucusu Barındırın",
+      "description": "Kendi makinenizde arkadaşlarınız için bir CurseForge veya Modrinth modpack sunucusu barındırın: paketi seçin, yeterli belleği atayın, arkadaşlarınızı davet edin ve yedeklemeleri saklayın."
+    },
+    "eyebrow": "Modpack sunucusu rehberi",
+    "title": "Arkadaşlarınız İçin Modpack Sunucusu Nasıl Barındırılır",
+    "intro": "Kendi makineniz, arkadaşlarınızla oynadığınız paketi barındırabilir. Paneli kurun, sunucuyu paketten oluşturun, gereken belleği atayın ve arkadaşlara takip edebilecekleri bir davetiye gönderin.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Sihirbazdan Paketi Seçin",
+        "body": "Modpackler sayfası ve oluşturma sihirbazının Modpackten sekmesi CurseForge ve Modrinth'i isme göre arar; sihirbaz ayrıca FTB paketlerini kimliğe göre veya zaten sahip olduğunuz bir paket dışa aktarmayı kabul eder. Arkadaşlarınızın oynayacağı sürümü seçin. Panel tam olarak bu sürümü kurar ve orada tutar: bir yeniden başlatma asla paketi arkanızdan yükseltmez. CurseForge, Ayarlar, API Anahtarları altında bir kez eklenen ücretsiz bir API anahtarı gerektirir; Modrinth ise hiçbirine ihtiyaç duymaz.",
+        "points": [
+          "CurseForge ve Modrinth'i arayın veya bir .mrpack, bir CurseForge dışa aktarma veya mod jar'larının bir zip'ini yükleyin.",
+          "Paket sürümü sabitlenmiştir, böylece herkes aynı sürümü oynar.",
+          "Java, paketin Minecraft sürümü için seçilir."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Yeterli Bellek Atayın",
+        "body": "Modpackler, vanilla bir sunucudan çok daha fazla bellek gerektirir ve bir sunucunun iki sayısı vardır: Java yığını ve etrafındaki kapsayıcı sınırı, Java yığınının ötesinde bellek kullandığı için daha büyük olmalıdır. 40 ila 80 moddan oluşan hafif bir paket 6 GB'lık bir kapsayıcıda 4 GB yığın ister; büyük bir mutfak lavabosu paketi 10 GB'da 6 ila 8 GB yığın ister. Panel, bellek yetersizliği nedeniyle durdurulan bir sunucuyu çökmeden ayırır, böylece hangi ayarı değiştirmeniz gerektiğini bilirsiniz.",
+        "points": [
+          "Belleği sihirbazda ayarlayın ve daha sonra sunucunun ayarlarında değiştirin.",
+          "İşletim sistemi ve panel için bellek bırakın.",
+          "İzleme sekmesi sunucunun gerçekte ne kullandığını gösterir."
+        ]
+      },
+      {
+        "title": "Arkadaşlara Takip Edebilecekleri Bir Davetiye Gönderin",
+        "body": "Arkadaşlar, kendi başlatıcılarında aynı paketi aynı sürümde kurarlar: CurseForge uygulaması, Modrinth Uygulaması veya Prism Launcher. Ayarlar altındaki Sunucunun Davetler sekmesi, paylaşılacak adresi ve Minecraft sürümünü içeren bir davetiye metnini kopyalar. Ağınızdaki arkadaşlar yerel adresi kullanır. Başka yerlerdeki arkadaşlar için, yönlendiricinizdeki oyun bağlantı noktasını iletin veya sağlayıcınız buna izin vermediğinde bir tünel kullanın.",
+        "points": [
+          "Davetler sekmesi yerel adresi, genel adresinizi ve özel bir adres sunar.",
+          "Eğer beyaz liste açıksa, önce Oyuncular sekmesinde her arkadaşı ekleyin.",
+          "Seçtiğiniz modlardan oluşturulmuş bir sunucu için, Davetler sekmesi ayrıca onları yükleyen ve sunucuyu çok oyunculu listeye ekleyen bir istemci .mrpack oluşturur."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Dünyayı Güvende Tutun",
+        "body": "Her yeni sunucu günlük bir yedekleme programı alır. Bir paket güncellemesinden önce panel başka bir yedekleme alır, sunucuyu yeni sürümde yeniden oluşturur ve ilk önyüklemeyi izler; eğer başlamazsa, tek bir tıklama geri alır. Paketin üzerine eklediğiniz modlar güncellemeler boyunca kalır.",
+        "points": [
+          "İlk günden itibaren günlük yedeklemeler.",
+          "Yedekleme ve geri alma ile paket güncellemeleri ve düşürmeleri.",
+          "Çökme raporları tespit edildi, açıklandı ve paylaşılabilir."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Modpack Sunucunuzu Barındırın",
+      "items": [
+        {
+          "title": "Paneli Kurun",
+          "body": "Linux'ta, tek satırlık yükleyici Docker ve paneli kurar. Windows ve macOS'ta, paneli Docker Desktop'ın yanında Node.js ile çalıştırın."
+        },
+        {
+          "title": "Bir CurseForge API Anahtarı Ekleyin",
+          "body": "Yalnızca CurseForge paketleri için: Ayarlar, API Anahtarları altında ücretsiz bir anahtar ekleyin."
+        },
+        {
+          "title": "Sunucuyu Paketten Oluşturun",
+          "body": "Sihirbazın Modpackten sekmesini açın, paketi bulun, sürümünü ve belleğini seçin ve sunucuyu oluşturun."
+        },
+        {
+          "title": "Arkadaşlarınızı Davet Edin",
+          "body": "Sunucuyu başlatın, Ayarlar, Davetler'i açın ve davetiye metnini gönderin. Arkadaşlar, kendi başlatıcılarında aynı paket sürümünü kurar ve katılır."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack Sunucusu Soruları",
+      "items": [
+        {
+          "q": "Bir modpack sunucusu ne kadar RAM'e ihtiyaç duyar?",
+          "a": "40 ila 80 moddan oluşan hafif bir paket için yaklaşık 6 GB ve 150 ila 300 moddan oluşan büyük bir paket için 10 GB, her biri içinde daha küçük bir Java yığını bulunur. GregTech New Horizons gibi uzman paketleri 16 GB ister. İşletim sistemi için de yer bırakın."
+        },
+        {
+          "q": "Arkadaşlarımın aynı modpack sürümüne ihtiyacı var mı?",
+          "a": "Evet. Sunucu sabitlenmiş tek bir paket sürümü çalıştırır ve farklı mod sürümlerine sahip bir istemci genellikle reddedilir veya çöker. Arkadaşlara sunucunun Genel Bakış sekmesinde gösterilen sürümü söyleyin."
+        },
+        {
+          "q": "Arkadaşlar port yönlendirme olmadan katılabilir mi?",
+          "a": "Evet, eğer ağınızdaysalar. Başka yerlerden, ya yönlendiricinizdeki oyun bağlantı noktasını yönlendirin ya da sağlayıcınız port yönlendirmeyi engellediğinde de çalışan bir tünel hizmeti kullanın."
+        },
+        {
+          "q": "Paket güncellendiğinde ne olur?",
+          "a": "Beni Bilgilendir politikası ile Güncellemeler sayfası bunu gösterir. Uygulamak bir yedekleme alır, sunucuyu yeniden oluşturur ve ilk önyüklemeyi izler ve geri alma tek bir tıklamadır. Arkadaşlarınız daha sonra kendi başlatıcılarında da paketi günceller."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Paketinizi Kendi Sunucunuzda Oynayın",
+      "body": "Ücretsiz, açık kaynaklı ve kimseye hesap vermez. Paneli kurun ve sihirbazdaki paketten sunucuyu oluşturun."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Raspberry Pi Minecraft sunucusu ve web paneli",
+      "description": "Ücretsiz, kendi kendine barındırılan bir web paneli ile Raspberry Pi Minecraft sunucusu kurun. Hangi donanıma ihtiyacınız var, tek komutla nasıl kurulur ve bellek boyutu nasıl ayarlanır."
+    },
+    "eyebrow": "Raspberry Pi rehberi",
+    "title": "Gerçek bir web paneli ile Raspberry Pi Minecraft sunucusu çalıştırın",
+    "intro": "Bir Raspberry Pi 4 veya 5, küçük bir Minecraft sunucusu için sessiz, düşük güç tüketen bir ev olabilir. İşte ne almanız gerektiği, paneli tek bir komutla nasıl kuracağınız ve ne kadar zorlayabileceğiniz.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "İhtiyacınız Olanlar",
+        "body": "Panel ve sunucu görüntüsü arm64 için yayınlanmıştır, bu nedenle 64 bit bir Raspberry Pi bunları diğer Linux makineleri gibi çalıştırır. Bellek en önemli sınırlamadır: on oyuncuya kadar olan standart veya Paper sunucusu, 4 GB'lık bir makinede 2 GB Java yığını ister ve hafif bir mod paketi, 6 GB'lık bir makinede 4 GB yığın ister. Bu, 4 GB'lık bir Pi'yi alt sınırda ve 8 GB'lık bir Pi'yi rahat bir orta seviyede tutar.",
+        "points": [
+          "4 GB veya daha fazla belleğe sahip bir Raspberry Pi 4 veya 5. Modlar istiyorsanız 8 GB.",
+          "64 bit Raspberry Pi OS gibi 64 bit bir işletim sistemi.",
+          "SD kart yerine USB üzerinden bir SSD. Dünyalar sürekli okunur ve yazılır ve yavaş depolama birimindeki bir dünya, parça yüklenirken takılır.",
+          "Mümkünse kablolu bir ağ bağlantısı."
+        ]
+      },
+      {
+        "title": "Pi'ye Uygun Bir Sunucu Türü Seçin",
+        "body": "Minecraft, çekirdek sayısından çok tek bir çekirdeğin ne kadar hızlı olduğuna önem verir ve bir Pi'nin çekirdekleri mütevazıdır. Paper, yıllarca süren performans çalışmasıyla standart oyunla aynı oyunu çalıştırır ve oyuncular hala değiştirilmemiş bir istemciyle bağlanır. Mod istiyorsanız, birkaç performans ve yaşam kalitesi modu içeren Fabric, büyük bir Forge paketinden daha iyi bir seçenektir. 200 modlu bir mutfak lavabosu paketi bir Pi işi değildir.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Küçük grup, değiştirilmemiş oyun: Paper.",
+          "Birkaç mod: Fabric.",
+          "Görüş mesafesini düşürün; 12'den 8 parçaya düşürmek çok fazla bellek tasarrufu sağlar ve oyunda zar zor fark edilir."
+        ]
+      },
+      {
+        "title": "Sunucuyu Gözünüzün Önünde Tutun",
+        "body": "Sunucunun İzleme sekmesi saniye başına düşüşleri ve saniye başına milisaniyeleri gösterir, böylece Pi'nin geride kalıp kalmadığını görebilirsiniz. Bellek ölçer, kapsayıcının gerçekte ne kadar kullandığını gösterir. Java, varsayılan olarak tüm yığınını önceden talep eder; belleğin gerçek kullanıma göre ayarlanmasını tercih ederseniz, sunucunun Kaynaklar kartında daha küçük bir başlangıç yığını ayarlayın. Günlük yedeklemeler ilk günden itibaren açıktır.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Raspberry Pi'ye Paneli Kurun",
+      "items": [
+        {
+          "title": "64 bit Bir İşletim Sistemi Yükleyin",
+          "body": "64 bit Raspberry Pi OS'yi (veya başka bir 64 bit Linux'u) yükleyin, mümkünse SSD'den başlatın ve sistemi güncelleyin."
+        },
+        {
+          "title": "Tek Satırlık Yükleyiciyi Çalıştırın",
+          "body": "Kurulum sayfasındaki yükleyici, eksikse Docker'ı kurar, paneli /opt/msm içine ayarlar, başlatır ve yanıt verene kadar bekler. arm64'ü kendi kendine algılar."
+        },
+        {
+          "title": "Tarayıcıda Kurulumu Tamamlayın",
+          "body": "Başka bir bilgisayardan Pi'nin adresini 25564 numaralı bağlantı noktası üzerinden açın. Panel ağınızdan erişilebilir olduğu için kurulum, yükleyicinin sizin için yazdırdığı 6 haneli bir PIN ister."
+        },
+        {
+          "title": "Küçük Bir Sunucu Oluşturun",
+          "body": "Sihirbazda Paper veya Fabric'i seçin. Varsayılan bellek, Pi'nin RAM'ine uyum sağlar; sistem ve diğer hizmetler için yer bırakın."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Raspberry Pi Soruları",
+      "items": [
+        {
+          "q": "Bir Raspberry Pi 3 çalışır mı?",
+          "a": "İyi bir seçenek değil. Bir Pi 3'ün 1 GB belleği varken, küçük bir standart veya Paper sunucusu bile 4 GB'lık bir makinede 2 GB yığın ister. 4 GB veya daha fazla belleğe sahip bir Pi 4 veya 5 kullanın."
+        },
+        {
+          "q": "64 bit bir işletim sistemine ihtiyacım var mı?",
+          "a": "Evet. Panel görüntüsü ve yükleyici arm64 ve amd64 için oluşturulmuştur ve yükleyici diğer mimarilerde durur."
+        },
+        {
+          "q": "Bir Pi'de büyük bir mod paketi çalıştırabilir miyim?",
+          "a": "Büyük paketler 6 ila 8 GB Java yığını ve toplamda yaklaşık 10 GB bellek ister, bu da herhangi bir Pi'nin sahip olduğundan fazladır. Paper veya hafif bir Fabric kurulumuyla yetinin."
+        },
+        {
+          "q": "Evim dışındaki oyuncular nasıl bağlanır?",
+          "a": "Oyun bağlantı noktasını (varsayılan olarak TCP ve UDP üzerinden 25565) yönlendiricinizden Pi'ye yönlendirin. Panel bağlantı noktasını veya RCON bağlantı noktalarını asla yönlendirmeyin; bunun yerine bir VPN veya ters proxy ile TLS üzerinden panele erişin."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Pi'nizi Bir Sunucuya Dönüştürün",
+      "body": "Tek bir komut her şeyi kurar. Panel ücretsiz, açık kaynaklıdır ve tamamen Pi üzerinde çalışır."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Evde Minecraft sunucusu barındırma, adım adım",
+      "description": "Ücretsiz bir web paneli ile Windows, macOS veya Linux üzerinde evde Minecraft sunucusu barındırın. Kurun, paneli gizli tutun ve arkadaşlarınızın güvenle katılmasını sağlayın."
+    },
+    "eyebrow": "Ev sunucusu rehberi",
+    "title": "Evde Windows, macOS veya Linux üzerinde Minecraft sunucusu barındırma",
+    "intro": "Docker çalıştırabilen herhangi bir bilgisayar sunucularınızı barındırabilir. Paneli kurun, gizli tutun, yalnızca oyun portunu açın ve arkadaşlarınız her yerden katılabilir.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Kurulum İçin İki Yol",
+        "body": "Linux makinesinde, tek satırlık yükleyici her şeyi yapar: eksikse Docker'ı yükler, paneli bir konteyner olarak çalıştırır ve yeniden başlatmadan sonra tekrar başlatır. Windows ve macOS'ta, paneli doğrudan Node.js 24 ile Docker Desktop'ın yanında çalıştırın. Panel, Node.js'nizin çok eski olması durumunda net bir mesaj yazdırır ve durur ve Docker henüz çalışmıyorsa yine de tam paneli alırsınız; Docker çalışmaya başladığında sunucular başlar.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: yükleyici veya Portainer veya Dockge'deki compose dosyası.",
+          "Windows: WSL2 arka uçlu Docker Desktop, ardından panel kaynak kodundan.",
+          "macOS: Docker Desktop, ardından panel kaynak kodundan.",
+          "PM2 veya systemd altında, panel yeniden başlatmalardan kurtulur."
+        ]
+      },
+      {
+        "title": "Paneli Gizli Tutun",
+        "body": "Oyuncular asla panelle konuşmaz. Oyun portuna bağlanırlar. Kaynak kodundan yeni bir kurulum, yalnızca çalıştığı makinede, localhost port 25564'te yanıt verir. Evinizdeki başka bir bilgisayardan erişmek için ağınızda dinlemesini sağlayın; kurulum daha sonra tek seferlik bir PIN ister, bu nedenle porta ilk ulaşan bir yabancı yönetici hesabını talep edemez. Panel portunu asla internete yönlendirmeyin. Evden uzaktayken sunucuları yönetmek için bir VPN, SSH tüneli veya TLS'li ters proxy kullanın.",
+        "points": [
+          "Kutu dışı yalnızca Localhost.",
+          "Panel ağdan erişilebilir olduğunda kurulum PIN'i.",
+          "Her hesap için iki faktörlü kimlik doğrulama."
+        ]
+      },
+      {
+        "title": "Arkadaşlarınızı Davet Edin",
+        "body": "Her sunucu, 25565'ten başlayıp yukarı doğru sayan bir oyun portu alır. Yönlendiricinizde, hem TCP hem de UDP üzerinden o portu sunucuları çalıştıran bilgisayara yönlendirin. Uzak konsol portlarını, her oyun portunun 1000 üstünde, kapalı bırakın: panel onlara konteynerin içinden erişir ve onlara asla ihtiyaç duymaz. Her oyuncuya bir mesaj olmaktan ziyade adres değişikliğinin bir DNS değişikliği olması için, ev adresiniz yerine kontrol ettiğiniz bir alan adı verin.",
+        "points": [
+          "Yalnızca oyun portlarını, TCP ve UDP'yi yönlendirin.",
+          "RCON ve panel portunu kapalı tutun.",
+          "Genel Bakış sekmesi paylaşılacak adresi gösterir."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Sunucu Gibi Davranmasını Sağlayın",
+        "body": "Uyku moduna geçen bir ev bilgisayarı sunucunuzu da beraberinde götürür, bu nedenle onu barındıran makinede uyku modunu kapatın. Bir sunucunun ayarlarında Panel Başlangıcında Başlat'ı işaretleyin ve panel ile birlikte geri gelir. Çökme durumunda otomatik yeniden başlatma, denemeler arasında artan beklemelerle çöken bir sunucuyu geri getirir. Her yeni sunucu için günlük yedeklemeler zamanlanır ve zamanlamalar sessiz saatlerde sunucuları yeniden başlatabilir.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "İlk Sunucunuzu Evde Barındırın",
+      "items": [
+        {
+          "title": "Docker'ı Kurun",
+          "body": "Linux'ta Docker Engine veya Windows ve macOS'ta Docker Desktop. Windows'ta, paneli barındıran sürücüyü Docker Desktop ile paylaşın."
+        },
+        {
+          "title": "Paneli Kurun ve Açın",
+          "body": "Sisteminiz için Kurulum sayfasını izleyin, ardından paneli tarayıcıda açın. Kurulum Docker'ı kontrol eder, yönetici hesabınızı oluşturur ve saat diliminizi sorar."
+        },
+        {
+          "title": "Sunucu Oluşturun",
+          "body": "Sihirbaz, makinenize uygun ücretsiz bir port ve bellek önerir. Bir sunucu türü seçin ve oluştur'a basın."
+        },
+        {
+          "title": "Oyun Portunu Yönlendirin",
+          "body": "Sunucunun oyun portunu yönlendiricinizde TCP ve UDP üzerinden yönlendirin ve arkadaşlara Genel Bakış sekmesinden adresi gönderin."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Evde Barındırma Soruları",
+      "items": [
+        {
+          "q": "Oynadığım aynı PC'de barındırabilir miyim?",
+          "a": "Evet, ikisi için de yeterli belleğe sahip olduğu sürece. Sunucuya Java için yığın artı boşluk verin ve oyun istemcisi için yeterli alan bırakın. Birkaç arkadaş için vanilla bir sunucu kendi başına yaklaşık 4 GB ister."
+        },
+        {
+          "q": "Neden Wi-Fi'ımdaki arkadaşlarım katılabilirken dışarıdaki arkadaşlarım katılamıyor?",
+          "a": "Oyun portu yönlendiricinizde yönlendirilmemiş veya bir güvenlik duvarı engelliyor. Sunucunun oyun portunu TCP ve UDP üzerinden barındırma makinesine yönlendirin ve makinenin güvenlik duvarında izin verin."
+        },
+        {
+          "q": "Panelin Docker imajını Windows veya macOS'ta çalıştırabilir miyim?",
+          "a": "Konteyner kurulumu Linux ana bilgisayarlarını hedefler. Windows ve macOS'ta, paneli Docker Desktop'ın yanında Node.js 24 ile kaynak kodundan çalıştırın, bu da çalıştıktan sonra aynı şekilde çalışır."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Evde Barındırmaya Başlayın",
+      "body": "Ücretsiz, açık kaynaklı ve kimseye hesap vermez. Sunucularınız kendi makinenizdeki tek bir klasörde yaşar."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Ücretli Minecraft barındırmayı bırakın: dünyanızı taşıyın",
+      "description": "Ücretli bir sunucudan Minecraft sunucusunu taşıyın: doğru dosyaları alın, dünyayı ve eklentileri kendi panelinize getirin, her envanteri saklayın ve adresi koruyun."
+    },
+    "eyebrow": "Taşıma rehberi",
+    "title": "Minecraft sunucunuzu ücretli barındırmadan taşıyın",
+    "intro": "Dünyanızı, eklentilerinizi ve modlarınızı her envanteri eksiksiz olarak evinize getirin. Önce durumu değerlendirin, tüm sunucu klasörünü kopyalayın, kendi panelinizde yeniden oluşturun ve ancak o zaman oyuncuları ona yönlendirin.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "İndirmeden Önce Durumu Değerlendirin",
+        "body": "Eski sunucu hala çalışırken bunları not alın. Varsayıldığı için değil, kontrol edildiği için her biri bir taşıma işlemini kötü sonlandırdı. Çevrimiçi mod en önemlisidir: eski sunucu kapalıyken çalıştıysa ve yenisi açıksa veya tam tersi ise, her oyuncu farklı bir kimlik ve yepyeni, boş bir envanter alır.",
+        "points": [
+          "Tam Minecraft sürümü ve yükleyicisi. 1.20.1 NeoForge, 1.20.1 Forge değildir.",
+          "Sürümleriyle birlikte mod veya eklenti listesi.",
+          "server.properties'den level-name. Dünya klasörünün adı genellikle world değildir.",
+          "Çevrimiçi mod, açık veya kapalı.",
+          "Sunucu klasörünün dışında yaşayan herhangi bir şey, örneğin bir eklentinin veritabanı."
+        ]
+      },
+      {
+        "title": "Sadece Dünyayı Değil, Tüm Klasörü Alın",
+        "body": "Barındırıcınızın dosya yöneticisini veya indirme seçeneğini kullanın ve tüm sunucu dizinini alın. Sadece isim listesini değil, eklenti ve mod jar dosyalarının kendilerini alın: sürümler önemlidir ve en son sürüm gelecek ay farklı bir dosya olacaktır. Yedeklerinizi de indirin. Ayrıldığınız panelin içinde bulunan bir yedek, size ait bir yedek değildir. Oyun dünyayı diske yazdırdığı için son indirmeden önce sunucuyu düzgün bir şekilde durdurun."
+      },
+      {
+        "title": "Kendi Panelinizde Yeniden Oluşturun",
+        "body": "Aynı türde ve aynı tam sürümde bir sunucu oluşturun. Sonra parçaları getirin. Worlds sayfası, dünyanızı .zip veya .tar arşivi olarak alır, içindeki dünyayı otomatik olarak bulur ve mevcut olanı önce yedekleyerek sunucuya yükler. Bir eklenti veya mod sunucusunda, jar dosyalarınızın bir zip'ini içe aktarın: her biri tanımlanır, sunucuyla karşılaştırılır ve uyuyorsa yüklenir. Yapılandırmalar ve diğerleri, tarayıcıda doğrudan düzenleyen ve yükleyen dosya yöneticisi aracılığıyla gider. Eski sunucu yayınlanmış bir paket çalıştırıyorsa, bunun yerine aynı sürümde aynı paketi yükleyin.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Dünya Yükle, arşivinizin içindeki dünyayı bulur.",
+          "Zip İçe Aktar, her jar'ı tanımlar ve sunucuyla kontrol eder.",
+          "Dosya yöneticisi yapılandırmaları, beyaz listeyi ve ops dosyalarını yönetir."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Adresi Koruyun, Oyuncuları Koruyun",
+        "body": "Oyuncular çıplak bir IP adresine bağlanırsa, her hareket onları sunucu listelerini düzenlemeye zorlar ve bazıları asla yapmaz. Kontrol ettiğiniz bir ana bilgisayar adı kullanın ve yeni makinenize yönlendirin. Taşıma o zaman bir DNS değişikliği haline gelir. Değişikliğin hızla yayılması için anahtardan bir gün önce kaydın yaşam süresini düşürün. Bir SRV kaydı, sunucu farklı bir bağlantı noktasında çalışsa bile oyuncuların çıplak bir alan adı yazmasına izin verir, barındırıcıların bir oyun adresi vermek için yaptığı şeyin aynısı."
+      }
+    ],
+    "steps": {
+      "title": "Geçiş Sırası",
+      "items": [
+        {
+          "title": "Özel Bir Bağlantı Noktasında Test Edin",
+          "body": "Yeni sunucuyu oyuncuların bilmediği bir bağlantı noktasında başlatın, kendiniz bağlanın ve bildiğiniz bir temeli, envanterinizi ve her eklenti veya modun yüklendiğini kontrol edin."
+        },
+        {
+          "title": "Son Kopyalama",
+          "body": "Bir yeniden başlatma duyurun, eski sunucuyu düzgün bir şekilde durdurun, dünyayı bir kez daha indirin ve en son değişikliklerin onunla birlikte gelmesi için bu kopyayı yükleyin."
+        },
+        {
+          "title": "Bağlantı Noktasını ve Adresi Değiştirin",
+          "body": "Sunucuyu Oyun Bağlantı Noktası kartıyla genel bağlantı noktasına taşıyın, ardından ana bilgisayar adınızı yeni makineye yönlendirin."
+        },
+        {
+          "title": "Eski Sunucuyu Bir Süre Saklayın",
+          "body": "Birkaç gün sonra eski planı iptal edin. Durdurulmuş halde tutun, böylece kimse terk edilmiş kopyaya inşa etmez."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Taşıma Soruları",
+      "items": [
+        {
+          "q": "Oyuncular envanterlerini koruyacak mı?",
+          "a": "Evet, çevrimiçi mod her iki sunucuda da aynı olduğu ve tüm dünya klasörünü taşıdığınız sürece. Oyuncu verileri, her oyuncunun kimliğine göre anahtarlanmış olarak dünyanın içinde yaşar ve çevrimiçi mod değişirse bu kimlik değişir."
+        },
+        {
+          "q": "Barındırıcım yalnızca dünyayı indirmeme izin veriyor. Bu yeterli mi?",
+          "a": "Vanilla için çoğunlukla. Eklenti veya mod sunucusu için, jar'ları tam sürümleriyle birlikte de ihtiyacınız var, çünkü dünya onları oluşturan modlar olmadan doğru şekilde yüklenmez. Tam sunucu dizini için barındırıcınıza sorun."
+        },
+        {
+          "q": "Panel, barındırıcımın kontrol panelinden neleri değiştiriyor?",
+          "a": "Konsol, dosya yöneticisi, yedeklemeler, zamanlamalar, oyuncu yönetimi, eklenti ve mod yüklemeleri ve mod paketi yüklemeleri, ayrıca barındırıcıların genellikle ek ücret aldığı şeyler, örneğin daha fazla sunucu veya daha fazla yedekleme yuvası. Sınır kendi donanımınızdır."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Sunucunuzu Eve Getirin",
+      "body": "Paneli yükleyin, eski sunucunuzla eşleşen bir sunucu oluşturun ve dünyanızı yükleyin. Ücretsiz, açık kaynaklı ve size ait."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Tek bir makinede birden fazla Minecraft sunucusu çalıştırın",
+      "description": "Tek bir makinede birden fazla Minecraft sunucusu çalıştırın: otomatik bağlantı noktaları, sunucu başına bellek, CPU ve disk sınırları, paylaşılan modlar ve tüm filo için tek bir kontrol paneli."
+    },
+    "eyebrow": "Çoklu sunucu rehberi",
+    "title": "Tek bir makinede birden fazla Minecraft sunucusunu temiz bir şekilde çalıştırın",
+    "intro": "Bir hayatta kalma dünyası, bir yaratıcı yapı sunucusu ve hafta sonu için bir mod paketi, hepsi aynı makinede. Her biri kendi konteynerini, kendi bağlantı noktasını ve kendi limitlerini alır ve hepsini tek bir kontrol panelinde görürsünüz.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Bağlantı Noktaları Sizin İçin Sıralandı",
+        "body": "Oyun bağlantı noktaları, 25565'ten başlayarak ilk boş olana verilir, uzaktan konsol ise her birinin 1000 üzerinde olur. On sunucu, 25565'ten 25574'e kadar oyun bağlantı noktalarını kullanır ve RCON'u kendi bloğunda tutar, böylece güvenlik duvarınızda RCON'u asla açığa çıkarmadan tek bir bitişik oyun aralığı açabilirsiniz. Başka bir sunucu kullanıyorsa, makinedeki herhangi bir Docker konteyneri yayınlıyorsa veya sistem meşgul olduğunu bildiriyorsa bir bağlantı noktası dolu sayılır. Bir sunucuyu daha sonra Oyun Bağlantı Noktası kartıyla taşıyın ve panel kaydetmeden önce yeni bağlantı noktasını kontrol eder.",
+        "points": [
+          "Sunucu başına otomatik olarak atanan bir oyun ve RCON çifti.",
+          "Sonraki Boş Bağlantı Noktasını Kullan en düşük boş olanı seçer.",
+          "Sadece oyun aralığını açın. RCON kapalı kalır."
+        ]
+      },
+      {
+        "title": "Bir Sunucunun Diğerlerini Aç Bırakmaması İçin Limitler",
+        "body": "Her sunucu, bir CPU limiti, bir Java yığını ve bunun üzerinde sabit bir bellek limiti olan kendi Docker konteyneridir. Docker bir klasörün disk kullanımını sınırlayamaz, bu yüzden panel bunu yapar: her sunucunun bir disk kotası vardır ve bir mod kurmak veya bir dünya yüklemek gibi bir sunucuyu kotasının üzerine çıkaracak bir eylem, yer açılana kadar engellenir. Kotayı Aştığında Sunucuyu Durdur'u açın ve kotasının yüzde 10'undan fazla büyüyen bir sunucu durdurulur ve geçmişine not edilir.",
+        "points": [
+          "Sunucu başına CPU, yığın ve bellek limiti.",
+          "Panel tarafından uygulanan disk kotaları.",
+          "Yeni sunucular için varsayılanlar makinenin belleğine uyum sağlar."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Paylaşılabilecekleri Paylaşın",
+        "body": "Eklediğiniz modlar, sha256 ile tekilleştirilerek paylaşılan bir kütüphanede bir kez depolanır ve bunları kullanan her sunucuya bağlanır, böylece aynı modu çalıştıran on sunucu onu on kez depolamaz. Dünyalar, herhangi bir sunucunun yükleyebileceği bir dünya kütüphanesine gider. Bir şablon, bir sunucunun tüm tarifini tek bir .mcserver.zip olarak yakalar ve Klon, taze bağlantı noktalarıyla aynı bir sunucuyu oluşturmak için bunu kullanır.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Filoya Tek Bir Bakış",
+        "body": "Kontrol paneli her sunucuyu bir bakışta gösterir: durum, bellek, çevrimiçi oyuncular, bekleyen güncellemeler ve son etkinlik. Etiketler sunucu listesini düzenler. Küresel zamanlamalar sunucular arasında yeniden başlatmalar, yedeklemeler veya komutlar çalıştırır ve Güncellemeler sayfası filo genelinde güncel olmayanları toplar. Sunucu başına izinler, bir arkadaşınızın sizinkileri görmeden panelde kendi sunucusunu çalıştırmasına olanak tanır.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Çoklu Sunucu Makinesi Planlayın",
+      "items": [
+        {
+          "title": "Belleği Toplayın",
+          "body": "Her sunucunun Java yığınını ve boş alanını toplayın, ardından sistem için yer bırakın. Durdurulan sunucular bellek kullanmaz, bu nedenle bir hafta sonu paketi hafta içi hiçbir maliyet getirmez."
+        },
+        {
+          "title": "Mantıklı Varsayılanlar Ayarlayın",
+          "body": "Bir yönetici, Ayarlar, Yeni Sunucular İçin Varsayılanlar altında her yeni sunucunun başlayacağı yığın, disk kotası ve CPU limitini ayarlar."
+        },
+        {
+          "title": "Tek Bir Bağlantı Noktası Aralığı Açın",
+          "body": "Çalıştırmayı planladığınız sunucular için boyutlandırılmış bir oyun bağlantı noktası aralığını TCP ve UDP üzerinden açın. RCON bloğunu kapalı bırakın."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Çoklu Sunucu Soruları",
+      "items": [
+        {
+          "q": "Bir makine kaç sunucu çalıştırabilir?",
+          "a": "Bellek önce karar verir. Her çalışan sunucunun yığınını ve boş alanını toplayın: küçük bir vanilya veya Paper sunucusu toplamda yaklaşık 4 GB ister, hafif bir mod paketi yaklaşık 6 GB. Durdurulan sunucular hiçbir maliyet getirmez."
+        },
+        {
+          "q": "Her sunucunun kendi yöneticileri olabilir mi?",
+          "a": "Evet. Sunucu başına izinler, her sunucu için ayrı ayrı görüntüleme, güç, konsol, oyuncular, içerik, yedeklemeler, dosyalar, ayarlar ve silme yetkisi verir ve bir sunucu bir kullanıcıdan tamamen gizlenebilir."
+        },
+        {
+          "q": "Oyuncular oyun içinde sunucularım arasında geçiş yapabilir mi?",
+          "a": "Panelin kendisi aracılığıyla değil. Her sunucunun kendi adresi ve bağlantı noktası vardır. Oyuncuların oyun içinde aralarında geçiş yapması için sunucuları bağlamak, yanlarında çalıştıracağınız bir proxy sunucusu gerektirir."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Tüm Filoyu Tek Bir Yerden Yönetin",
+      "body": "Paneli bir kez kurun ve ihtiyacınız oldukça sunucular ekleyin. Sunucu başına ücret yok ve örnek sınırlaması yok."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Minecraft Sunucu Paneli Karşılaştırması: Pterodactyl, AMP, Crafty",
+      "description": "Ücretsiz ve ücretli Minecraft sunucu panellerinin adil bir karşılaştırması: Pterodactyl, Crafty Controller, AMP, MCSManager ve PufferPanel, Minecraft Server Manager ile birlikte."
+    },
+    "eyebrow": "Panelleri karşılaştır",
+    "title": "Minecraft Sunucu Paneli Karşılaştırması",
+    "intro": "Bir Minecraft sunucusunu çalıştırmak için birkaç iyi panel mevcuttur. Minecraft Server Manager'ın bunlardan her biriyle nasıl farklılaştığını ve başka bir panelin daha iyi bir seçim olduğu durumları aşağıda bulabilirsiniz.",
+    "cards": {
+      "comparePtero": "Her makinede ayrı bir daemon ile barındırma şirketleri için tasarlanmış ücretsiz bir çoklu oyun paneli. Kurulum çabasını ve Minecraft özelliklerini karşılaştırın.",
+      "compareCrafty": "Sunucuları düz işlemler olarak çalıştıran Python ile yazılmış ücretsiz bir Minecraft paneli. Sunucuların nasıl izole edildiğini ve mod paketlerinin nasıl eklendiğini karşılaştırın.",
+      "compareAmp": "Lisans katmanlarında satılan yüzlerce oyun için ticari bir panel. Fiyatı, örnek sınırlarını ve Minecraft derinliğini karşılaştırın.",
+      "compareMcsm": "Minecraft ve Steam oyunları için ücretsiz, dağıtılmış bir panel. Mimariyi, Docker kullanımını ve mod paketi yönetimini karşılaştırın.",
+      "comparePuffer": "Sunucuları işlem veya kapsayıcı olarak çalıştıran, birçok oyun ve birçok makine için ücretsiz, hafif bir panel. İzolasyonu, düğümleri ve Minecraft derinliğini karşılaştırın."
+    },
+    "sections": [
+      {
+        "title": "Bu Karşılaştırmalar Nasıl Yazıldı",
+        "body": "Başka bir panel hakkındaki her gerçek, o projenin kendi web sitesinden, belgelerinden veya deposundan alınmıştır ve her sayfa ne zaman kontrol edildiğini belirtir. Bir şeyi doğrulayamadığımız yerlerde, tahmin etmek yerine dışarıda bıraktık. Bir gerçek değişirse, sayfayı düzeltebilmemiz için bize Discord veya GitHub üzerinden bildirin.",
+        "points": [
+          "Her sayfa, diğer panelin neleri daha iyi yaptığını listeler.",
+          "Fiyatlar ve sürümler, kontrol edildikleri tarihlerle birlikte belirtilir.",
+          "Minecraft Server Manager, bu projelerden herhangi biriyle bağlantılı değildir. İsimleri sahiplerine aittir."
+        ]
+      },
+      {
+        "title": "Minecraft Server Manager Neler İçin Tasarlandı",
+        "body": "Tek bir sahip veya küçük bir ekibin kendi makinelerinde Minecraft Java sunucuları çalıştırması için. Her sunucu, kaynak sınırları belirlenmiş bir Docker kapsayıcısıdır, tüm panel tek bir klasörde yaşar ve başka yerlerde karmaşık olan Minecraft parçaları yerleşiktir: geri alma özellikli sabitlenmiş mod paketleri, tek bir aramada beş mod kaydı, çökme adli tıp, tek tıklamayla canlı harita ve taşınabilir şablonlar.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Panel Seçimi Hakkında Sorular",
+      "items": [
+        {
+          "q": "Evde tek bir Minecraft sunucusu için hangi paneli seçmeliyim?",
+          "a": "Yalnızca Minecraft Java çalıştırıyorsanız ve mod paketleri, yedeklemeler ve canlı harita istiyorsanız, Minecraft Server Manager bunun için yapılmıştır. Ayrıca başka oyunlar barındırıyorsanız veya birçok makineyi yönetiyorsanız, Pterodactyl, MCSManager veya AMP gibi çok oyunlu bir panel daha uygun olacaktır."
+        },
+        {
+          "q": "Minecraft Server Manager gerçekten ücretsiz mi?",
+          "a": "Evet. MIT lisanslıdır, ücretli bir katmanı yoktur ve ücretli hizmetler kullanmaz. CurseForge indirmeleri, Ayarlar'da eklediğiniz bir CurseForge API anahtarı gerektirir."
+        },
+        {
+          "q": "Mevcut dünyamı Minecraft Server Manager'a taşıyabilir miyim?",
+          "a": "Evet. Dünyayı Dünyalar sayfasında yükleyin ve yeni bir sunucuya kurun veya sunucuyu oluştururken bir mod paketi dışa aktarımını veya mod jar'larının bir zip dosyasını içe aktarın."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Kendi Makinenizde Deneyin",
+      "body": "Paneli üç adımda kurun ve sihirbazdan ilk sunucunuzu oluşturun. Tüm paneliniz, istediğiniz yere kopyalayabileceğiniz tek bir klasörde kalır."
+    },
+    "table": {
+      "title": "Tüm Paneller Bir Bakışta",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Fiyat",
+          "values": ["Ücretsiz.", "Ücretsiz.", "Ücretsiz.", "Ücretli lisans katmanları.", "Ücretsiz.", "Ücretsiz."]
+        },
+        {
+          "label": "Lisans",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Ticari, kapalı kaynak.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Oyunlar",
+          "values": [
+            "Minecraft Java Edition.",
+            "Yumurtalar aracılığıyla birçok oyun.",
+            "Minecraft Java ve Bedrock.",
+            "200'den fazla.",
+            "Minecraft ve Steam oyunları.",
+            "Şablonlar aracılığıyla birçok oyun."
+          ]
+        },
+        {
+          "label": "Oyun sunucuları şu şekilde çalışır",
+          "values": [
+            "Docker kapsayıcıları.",
+            "Docker kapsayıcıları.",
+            "Ana makinede işlemler.",
+            "İşlemler veya etkinleştirildikten sonra Docker kapsayıcıları.",
+            "Kapsayıcılar veya işlemler.",
+            "İşlemler veya kapsayıcılar."
+          ]
+        },
+        {
+          "label": "Birden fazla makine",
+          "values": [
+            "Hayır. Makine başına bir panel.",
+            "Evet, Wings düğümleri ile.",
+            "Belgelerinde uzaktan düğüm yok.",
+            "Profesyonel lisans ve üzeri.",
+            "Evet, daemon'lar ile.",
+            "Evet, düğümler ile."
+          ]
+        },
+        {
+          "label": "Ana makine sistemleri",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Gerçekler, Ekim ve Kasım 2026'da her projenin kendi belgelerine karşı kontrol edilmiştir. Her karşılaştırma sayfasında ayrıntılar bulunmaktadır."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Minecraft Sunucuları İçin Pterodactyl Alternatifi",
+      "description": "Minecraft Server Manager, Pterodactyl ile karşılaştırıldı: panel, daemon, veritabanı ve Redis yerine tek işlem ve tek klasör, yerleşik Minecraft özellikleriyle."
+    },
+    "eyebrow": "Pterodactyl alternatifi",
+    "title": "Yalnızca Minecraft İçin Hazırlanmış Bir Pterodactyl Alternatifi",
+    "intro": "Pterodactyl, birçok makine için birçok oyunu çalıştıran ücretsiz, açık kaynaklı bir paneldir. Minecraft Server Manager, tek bir makinede tek bir oyun çalıştırır, bu nedenle kurulumu çok daha az gerektirir ve yerleşik Minecraft araçlarıyla birlikte gelir.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Yan Yana Karşılaştırma",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Fiyat ve lisans",
+          "values": ["Ücretsiz, MIT.", "Ücretsiz, MIT."]
+        },
+        {
+          "label": "Neler kuruyorsunuz",
+          "values": [
+            "Tek Node.js işlemi veya tek Docker kapsayıcısı.",
+            "Go ile yazılmış Wings daemon'u her düğümde bulunan, React ön yüze sahip bir PHP (Laravel) paneli."
+          ]
+        },
+        {
+          "label": "Veritabanı ve önbellek",
+          "values": [
+            "Veri klasörünün içinde yerleşik SQLite dosyası. Çalışacak başka bir şey yok.",
+            "MySQL 5.7.22+ veya MariaDB 10.2+, Redis, bir web sunucusu ve Composer."
+          ]
+        },
+        {
+          "label": "Oyun sunucuları nasıl çalışır",
+          "values": ["Kaynak limitli Docker kapsayıcıları.", "İzole Docker kapsayıcıları (Docker gereklidir)."]
+        },
+        {
+          "label": "Barındırma sistemleri",
+          "values": [
+            "Linux, Windows ve macOS. Görüntü amd64 ve arm64 için derlenmiştir.",
+            "Yalnızca Linux: Ubuntu, Debian ve RHEL ailesi sürümleri. Wings Windows'ta çalışmaz."
+          ]
+        },
+        {
+          "label": "Yönetilen makineler",
+          "values": [
+            "Tek. Panel ve Docker aynı ana makinede çalışır.",
+            "Çoklu. Tek panel, birçok makinedeki Wings düğümlerini kontrol eder."
+          ]
+        },
+        {
+          "label": "Oyunlar",
+          "values": [
+            "Minecraft Java Edition. Bedrock oyuncuları Geyser aracılığıyla katılabilir.",
+            "Minecraft, Rust, Terraria ve ARK dahil olmak üzere \"egg\"ler aracılığıyla birçok oyun."
+          ]
+        }
+      ],
+      "note": "Gerçekler Ekim 2026'da her projenin kendi belgelerine göre kontrol edilmiştir."
+    },
+    "sections": [
+      {
+        "title": "Birleştirilecek Yığın Olmadan Kurulum",
+        "body": "Pterodactyl'in kendi belgeleri, PHP, veritabanı sunucusu, Redis, web sunucusu, kuyruk işçisi ve her düğümde Wings gibi birden çok bağımlılığa sahip, oldukça karmaşık bir sistem olduğunu belirtiyor. Bu tasarım, barındırma şirketlerine hizmet etmesini sağlar. Minecraft Server Manager, Docker soketinizle konuşan ve veritabanı dahil her şeyi tek bir klasörde tutan tek bir işlemdir. Linux'ta tek bir yükleyici betiği kurulumu yapar ve eksikse Docker'ı kurar.",
+        "points": [
+          "Çalışır durumda tutulacak ayrı bir daemon, veritabanı sunucusu veya önbellek yok.",
+          "Tüm paneli yeni bir makineye taşımak için veri klasörünü kopyalayın.",
+          "Docker Desktop'ın yanında Windows ve macOS'ta yerel olarak çalışır."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Minecraft Server Manager'ın Minecraft İçin Daha Güçlü Olduğu Yerler",
+        "body": "Yalnızca Minecraft çalıştırdığı için, panel mod paketi, mod jar'ı ve çökme raporunun ne olduğunu bilir. Bir Minecraft sahibinin el attığı araçlar panelin bir parçasıdır, bulunup entegre edilmesi gereken şeyler değil.",
+        "points": [
+          "Mod paketleri tam bir sürüme sabitlenir ve yükseltmeler önce yedek alır ve tek tıklamayla geri yüklenir.",
+          "Sunucunun yükleyicisine ve Minecraft sürümüne göre filtrelenmiş beş kayıt defteri arasında tek bir arama.",
+          "Her indirme, sunucuya ulaşmadan önce sağlama toplamı doğrulaması yapılır.",
+          "Çökmeler algılanır, ayrıştırılır ve tek tıklamayla mclo.gs'ye paylaşılabilir.",
+          "Panelin kendi oturum açma ekranının arkasında, tek tıklamayla çalışan bir BlueMap canlı haritası.",
+          "itzg görüntüsünün her ayarı, sihirbazda açıkça açıklanmıştır."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Pterodactyl'in Daha İyi Bir Seçim Olduğu Durumlar",
+        "body": "Pterodactyl olgun, aktif olarak bakımı yapılan ve barındırma şirketleri tarafından desteklenen bir çözümdür. Bunlardan herhangi biri sizin için geçerliyse, daha güçlü bir seçenektir.",
+        "points": [
+          "Birden fazla makinede sunucu çalıştırıyorsunuz ve hepsi için tek bir panel istiyorsunuz.",
+          "Minecraft dışında başka oyunlar da barındırıyorsunuz.",
+          "Birçok ayrı müşteriyle barındırma satıyor veya paylaşıyorsunuz ve bu ölçeğe ihtiyacınız var.",
+          "Zaten Pterodactyl çalıştırıyorsunuz ve egg'leri ihtiyacınız olanı karşılıyor."
+        ]
+      },
+      {
+        "title": "Pelican Hakkında Bir Not",
+        "body": "Pelican Panel, Pterodactyl'in bir çatallanmasıdır, AGPL-3.0 lisanslıdır ve bu sayfa kontrol edildiğinde hala sürüm adayı aşamasındadır. Panel ve Wings tasarımını korur, veritabanı seçenekleri olarak SQLite ve PostgreSQL ekler ve üçüncü taraf bir eklentinin CurseForge ve Modrinth mod paketlerini taradığı bir eklenti merkezine sahiptir."
+      }
+    ],
+    "faq": {
+      "title": "Pterodactyl Soruları",
+      "items": [
+        {
+          "q": "Bir sunucuyu Pterodactyl'den Minecraft Server Manager'a taşıyabilir miyim?",
+          "a": "Evet. Sunucunun dünyasını Pterodactyl'den indirin, Minecraft Server Manager'da aynı tür ve Minecraft sürümünde bir sunucu oluşturun, ardından Dünyalar sayfasında dünyayı yükleyin ve o sunucuya kurun. Modlu sunucular için, oluştururken paketi veya mod jar'ları zip dosyanızı içe aktarın."
+        },
+        {
+          "q": "Minecraft Server Manager, MySQL gibi bir veritabanı sunucusuna ihtiyaç duyar mı?",
+          "a": "Hayır. Node.js 24'e yerleşik SQLite motorunu kullanır ve veritabanı dosyasını diğer her şeyle birlikte veri klasöründe saklar."
+        },
+        {
+          "q": "Minecraft Server Manager, Wings düğümleri gibi birden fazla makineyi yönetebilir mi?",
+          "a": "Hayır. Çalıştığı makinedeki Docker daemon'unu yönetir. Birden fazla makine için her birine bir panel çalıştırın veya çoklu düğüm panelini seçin."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Ek Yığın Olmadan Minecraft Çalıştırın",
+      "body": "Minecraft Server Manager'ı üç adımda kurun ve sihirbazda ilk sunucunuzu oluşturun."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller ve Minecraft Server Manager ücretsiz Minecraft panelleridir. Sunucuların nasıl izole edildiğini, mod paketlerinin nasıl kurulduğunu ve her birinin nereye uyduğunu karşılaştırın."
+    },
+    "eyebrow": "Crafty Controller alternatifi",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Her ikisi de Minecraft için tasarlanmış ücretsiz, kendi kendine barındırılan panellerdir. Crafty, her sunucuyu Python ile yazılmış ana makinede bir işlem olarak çalıştırır. Minecraft Server Manager ise her sunucuyu kendi Docker kapsayıcısında çalıştırır ve panelin içine mod paketi yükleme, mod arama ve çökme araçları ekler.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Yan Yana Karşılaştırma",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Fiyat ve lisans",
+          "values": ["Ücretsiz, MIT.", "Ücretsiz, GPL-3.0."]
+        },
+        {
+          "label": "Yazıldığı dil",
+          "values": ["Node.js 24.", "Python 3.10 - 3.12."]
+        },
+        {
+          "label": "Oyun sunucuları nasıl çalışır",
+          "values": [
+            "Kaynak sınırlandırılmış Docker kapsayıcıları.",
+            "Ana makinedeki işlemler. Panel de Docker'da çalışabilir."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Ana makinede gerekli.", "İsteğe bağlı."]
+        },
+        {
+          "label": "Ana makine sistemleri",
+          "values": [
+            "Linux, Windows ve macOS. Görüntü amd64 ve arm64 için derlenmiştir.",
+            "Linux, Windows, macOS ve Raspberry Pi OS, ayrıca Docker, UnRAID ve CasaOS kılavuzları. Görüntüsü amd64 ve arm64'ü kapsar."
+          ]
+        },
+        {
+          "label": "Sürümler",
+          "values": [
+            "Java Edition. Bedrock oyuncuları Geyser aracılığıyla bağlanabilir.",
+            "Java Edition 1.8'den en son sürüme ve Bedrock."
+          ]
+        },
+        {
+          "label": "Mod paketleri",
+          "values": [
+            "CurseForge, Modrinth, FTB ve GT New Horizons paketleri sihirbazdan, tam sürüme sabitlenmiş olarak.",
+            "SSS bölümü, bir paketi zip olarak içe aktarmayı veya mrpack-install aracılığıyla Modrinth paketlerini anlatıyor."
+          ]
+        },
+        {
+          "label": "Yedeklemeler, zamanlamalar, roller, 2FA",
+          "values": [
+            "Evet: sunucu başına saklama, cron zamanlamaları, sunucu başına izinlere sahip üç rol, TOTP.",
+            "Evet: yedekleme yöneticisi, görev zamanlayıcı, kullanıcı rolleri ve TOTP artı passkey."
+          ]
+        }
+      ],
+      "note": "Bilgiler Ekim 2026'da her projenin kendi belgelerine göre kontrol edilmiştir."
+    },
+    "sections": [
+      {
+        "title": "Ana Makine İşlemleri Yerine Kapsayıcılar",
+        "body": "Minecraft Server Manager'da her sunucu, bilinen itzg Minecraft görüntüsü üzerinde kendi Docker kapsayıcısında çalışır; bu kapsayıcının kendi bellek ve CPU sınırları ile panelin uyguladığı bir disk kotası vardır. Bir sunucu makinenin belleğini tüketemez veya diskini dolduramaz ve bir sunucuyu yeniden derlemek diğerlerini etkilemez. Bunun karşılığında Docker'ın ana makineye kurulması gerekir.",
+        "points": [
+          "Sunucu başına bellek, CPU ve disk sınırları.",
+          "Kapsayıcı durmadan önce RCON ile nazikçe durdurma ve geri bildirimle çökme tespiti.",
+          "Java, görüntü tarafından sunucu başına seçilir, bu nedenle karışık Minecraft sürümleri sorunsuz çalışır."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Minecraft Server Manager'ın Daha Güçlü Olduğu Alanlar",
+        "body": "Sihirbaz, mod paketlerini ve modları sizin için yükler ve sabitler, böylece bir yeniden başlatma asla sessizce bir paketi yükseltmez.",
+        "points": [
+          "Sihirbazdan CurseForge, Modrinth, FTB ve GT New Horizons paketlerini yükleyin.",
+          "Bir Modrinth .mrpack, bir CurseForge dışa aktarma veya kendi mod jar'larınızın zip'ini içe aktarın, her jar tanımlanır.",
+          "Sunucunun yükleyicisine ve sürümüne filtrelenmiş beş kayıt defterini aynı anda arayın.",
+          "Yükseltmeler önce yedekleme yapar ve tek tıklamayla geri alır.",
+          "Tek tıklamayla BlueMap canlı haritası ve mclo.gs çökme paylaşımı.",
+          "Taşınabilir şablonlar: bir sunucunun tarifini dışa aktarın ve aynı sunucuyu herhangi bir yerde elde edin."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Crafty Controller'ın Daha İyi Bir Seçim Olduğu Durumlar",
+        "body": "Crafty olgun, aktif olarak bakımı yapılan ve Docker olmadan daha fazla yerde çalışır.",
+        "points": [
+          "Docker kurmadan sunucu çalıştırmak istiyorsunuz, örneğin doğrudan Windows, macOS veya bir Raspberry Pi üzerinde.",
+          "Sadece Geyser ile Java değil, Bedrock Dedicated Server'ı kendiniz çalıştırıyorsunuz.",
+          "Passkey ile giriş yapmak istiyorsunuz."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Crafty Controller Soruları",
+      "items": [
+        {
+          "q": "Crafty sunucumu Minecraft Server Manager'a taşıyabilir miyim?",
+          "a": "Evet. Aynı türde ve Minecraft sürümünde bir sunucu oluşturun, ardından Dünyalar sayfasında dünyayı zip olarak yükleyin ve bu sunucuya kurun. Modlu bir sunucu için, oluştururken paketinizi veya mod jar'larının zip'ini içe aktarın."
+        },
+        {
+          "q": "Minecraft Server Manager Raspberry Pi üzerinde çalışır mı?",
+          "a": "Evet, 64-bit bir işletim sisteminde Docker ile. Panel görüntüsü, amd64'ün yanı sıra arm64 için de yayınlanmıştır."
+        },
+        {
+          "q": "Minecraft Server Manager neden Docker'a ihtiyaç duyar?",
+          "a": "Her sunucu kendi kapsayıcısında çalışır, bu sayede kaynak sınırları, temiz bir yeniden derleme ve her Minecraft sürümü için doğru Java sürümü elde edilir."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Kendi Sunucunuzla Görün",
+      "body": "Paneli üç adımda kurun, ardından sihirbazdan bir mod paketinden sunucu oluşturun."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Minecraft Sunucuları İçin Ücretsiz AMP Alternatifi",
+      "description": "CubeCoders'ın AMP'si ile karşılaştırılan Minecraft Server Manager: örnek sınırı olmayan, ücretsiz, MIT lisanslı bir Minecraft paneli, ticari bir çoklu oyun paneline rakip."
+    },
+    "eyebrow": "AMP alternatifi",
+    "title": "Minecraft İçin Ücretsiz Bir AMP Alternatifi",
+    "intro": "CubeCoders'ın AMP'si, lisans katmanları halinde satılan, çok uzun bir oyun listesi için ticari bir paneldir. Minecraft Server Manager ücretsiz ve açık kaynaklıdır, yalnızca Minecraft'ı çalıştırır ve oluşturabileceğiniz sunucu sayısında bir sınır yoktur.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Yan Yana Karşılaştırma",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Fiyat",
+          "values": [
+            "Ücretsiz. Katman yok.",
+            "Standart 7,50 £ / 10 $, Profesyonel 15 £ / 30 $, Gelişmiş 30 £ / 40 $, Kurumsal değişken abonelikle."
+          ]
+        },
+        {
+          "label": "Lisans ve kaynak kodu",
+          "values": [
+            "MIT, GitHub'da kaynak kodu mevcut.",
+            "Ticari ve kapalı kaynak. Genel GitHub deposu sorunları ve belgeleri içerir."
+          ]
+        },
+        {
+          "label": "Oluşturabileceğiniz sunucu sayısı",
+          "values": ["Donanımınızın ötesinde sınır yok.", "Standart'ta 5 örnek, Profesyonel'de 15, Gelişmiş'te 50."]
+        },
+        {
+          "label": "Panel kullanıcıları",
+          "values": [
+            "Yönetici, operatör ve görüntüleyici rolleriyle sınırsız.",
+            "Standart'ta 3, Profesyonel'den itibaren sınırsız."
+          ]
+        },
+        {
+          "label": "Ticari kullanım",
+          "values": ["MIT lisansı tarafından izin verilir.", "Yalnızca Kurumsal lisans."]
+        },
+        {
+          "label": "Birden fazla makine",
+          "values": ["Panel başına bir makine.", "Profesyonel ve üstü."]
+        },
+        {
+          "label": "Barındırma sistemleri",
+          "values": ["Linux, Windows ve macOS. Görüntü amd64 ve arm64 için oluşturulmuştur.", "Windows ve Linux."]
+        },
+        {
+          "label": "Oyunlar",
+          "values": [
+            "Minecraft Java Edition. Bedrock oyuncuları Geyser aracılığıyla katılabilir.",
+            "Uyumluluk listesinde Minecraft Java ve Bedrock dahil 200'den fazla oyun ve uygulama."
+          ]
+        }
+      ],
+      "note": "Bilgiler Ekim 2026'da her projenin kendi belgelerine göre kontrol edilmiştir. AMP fiyatları CubeCoders'ın sürümleri karşılaştırma sayfasından alınmıştır ve değişebilir."
+    },
+    "sections": [
+      {
+        "title": "Lisans Yok, Örnek Sayısı Yok",
+        "body": "AMP'nin katmanları kaç örnek ve panel kullanıcısı alacağınızı belirler ve yalnızca Kurumsal katmanı ticari kullanıma izin verir. Minecraft Server Manager'ın katmanları yoktur: her özellik, her sunucu ve her kullanıcı hesabı MIT lisansı altında ücretsizdir ve ücretli hizmet kullanmaz. CurseForge indirmeleri, Ayarlar'da eklediğiniz bir CurseForge API anahtarı gerektirir.",
+        "points": [
+          "Makinenizin kaldırabileceği kadar çok sunucu oluşturun.",
+          "Tüm ekibinizi sunucu başına izinler ve iki faktörlü giriş ile davet edin.",
+          "Kaynak kodu herkese açıktır, bu nedenle okuyabilir, çatallayabilir ve katkıda bulunabilirsiniz."
+        ]
+      },
+      {
+        "title": "Minecraft Server Manager'ın Minecraft İçin Daha Güçlü Olduğu Yerler",
+        "body": "Tek bir oyun için tasarlanmış bir panel, o oyunda derinleşebilir. itzg Minecraft görüntüsünün desteklediği her ayar, anlaşılır İngilizce yardımıyla sihirbazda bulunur ve Minecraft iş akışları yerleşiktir.",
+        "points": [
+          "CurseForge, Modrinth, FTB ve GT New Horizons mod paketleri, tek tıkla geri alma ile sabitlenmiş.",
+          "Beş kayıt defteri arasında tek mod arama, sağlama toplamı doğrulanmış indirmelerle.",
+          "Bir Minecraft yükseltmesi sunulmadan önce sürüm uyumluluk kontrolleri.",
+          "mclo.gs paylaşımı ile çökme adli tıp ve tek tıkla BlueMap canlı haritası.",
+          "Oyuncu analizi, envanter adli tıp ve disk kotaları ile depolama analizi."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "AMP'nin Daha İyi Bir Seçim Olduğu Durumlar",
+        "body": "AMP, yalnızca Minecraft'a özel bir panelden çok daha fazlasını kapsar ve ticari destekle birlikte gelir.",
+        "points": [
+          "Tek bir panelden birçok farklı oyun barındırırsınız.",
+          "OIDC aracılığıyla tek oturum açma, özel markalama veya dağıtım şablonları istersiniz; bunlar Gelişmiş katmanında bulunur.",
+          "Bir hosting işi yürütüyorsunuz ve satıcı desteğiyle ticari bir lisans istiyorsunuz.",
+          "Bedrock Dedicated Server'ı kendiniz çalıştırmak istiyorsunuz."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "AMP Soruları",
+      "items": [
+        {
+          "q": "Minecraft Server Manager ticari kullanım için ücretsiz mi?",
+          "a": "MIT lisansı ticari kullanıma izin verir. Panel, tek bir makinedeki sahipler ve küçük ekipler için tasarlanmıştır, bu nedenle müşteriler için barındırma şeklinize uyup uymadığını kontrol edin."
+        },
+        {
+          "q": "Minecraft Server Manager, Minecraft dışında oyunları destekliyor mu?",
+          "a": "Hayır. Yalnızca Minecraft Java Edition sunucularını çalıştırır, bu nedenle mod paketleri, modlar ve çökme raporları konusunda derinleşebilir."
+        },
+        {
+          "q": "Bir AMP Minecraft örneğini taşıyabilir miyim?",
+          "a": "Evet. Aynı tür ve Minecraft sürümüyle bir sunucu oluşturun, ardından örneğin dünyasını Dünyalar sayfasında bir zip olarak yükleyin ve o sunucuya kurun. Modlu sunucular bir mod paketi, bir paket dışa aktarma veya mod jar'ları zip'i ile başlayabilir."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Tüm Özellikler, Ücretsiz",
+      "body": "Minecraft Server Manager'ı üç adımda kurun. Satın alınacak veya kilidi açılacak hiçbir şey yok."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "MCSManager Alternatifi Minecraft Sunucuları İçin",
+      "description": "MCSManager ve Minecraft Server Manager karşılaştırması: Minecraft ve Steam oyunları için dağıtılmış bir panel ile mod paketleri yerleşik Minecraft odaklı bir panel."
+    },
+    "eyebrow": "MCSManager alternatifi",
+    "title": "Minecraft'a Odaklanmış Bir MCSManager Alternatifi",
+    "intro": "MCSManager, birden fazla makineyi yönetebilen ücretsiz, açık kaynaklı bir Minecraft ve Steam oyunları panelidir. Minecraft Server Manager ise yalnızca Minecraft'ı tek bir makinede, her sunucuyu bir Docker konteynerinde ve yerleşik Minecraft araçlarıyla çalıştırır.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Yan Yana Karşılaştırma",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Fiyat ve lisans",
+          "values": ["Ücretsiz, MIT.", "Ücretsiz, Apache-2.0."]
+        },
+        {
+          "label": "Yazıldığı dil",
+          "values": ["Node.js 24.", "TypeScript (Node.js üzerinde)."]
+        },
+        {
+          "label": "Kurulum",
+          "values": ["Tek işlem veya tek Docker konteyneri.", "İki servis: bir web paneli ve bir daemon."]
+        },
+        {
+          "label": "Veritabanı",
+          "values": ["Veri klasörü içinde yerleşik SQLite dosyası.", "Gerekli değil."]
+        },
+        {
+          "label": "Oyun sunucuları nasıl çalışır",
+          "values": [
+            "Kaynak limitli Docker konteynerleri.",
+            "Docker konteynerleri veya düz işlemler, tercihinize bağlı."
+          ]
+        },
+        {
+          "label": "Barındırma sistemleri",
+          "values": [
+            "Linux, Windows ve macOS. Görüntü amd64 ve arm64 için derlenmiştir.",
+            "Windows, Linux ve macOS, Linux için tek satırlık kurulum betiği ile."
+          ]
+        },
+        {
+          "label": "Yönetilen makineler",
+          "values": [
+            "Tek makine. Panel ve Docker aynı ana makinede çalışır.",
+            "Dağıtılmış daemon'lar aracılığıyla birden fazla makine."
+          ]
+        },
+        {
+          "label": "Oyunlar",
+          "values": [
+            "Minecraft Java Edition. Bedrock oyuncuları Geyser aracılığıyla bağlanabilir.",
+            "Yerleşik bir pazar yerinden Palworld ve Terraria gibi Minecraft ve Steam oyunları."
+          ]
+        }
+      ],
+      "note": "Bilgiler Ekim 2026'da her projenin kendi belgelerine göre kontrol edilmiştir."
+    },
+    "sections": [
+      {
+        "title": "Minecraft Server Manager'ın Minecraft İçin Güçlü Olduğu Yönler",
+        "body": "MCSManager birçok türde oyun sunucusu dağıtır. Minecraft Server Manager ise tek bir oyuna odaklanır, bu nedenle sihirbazı, mod araçları ve geçmişi tamamen Minecraft ile ilgilidir.",
+        "points": [
+          "itzg Minecraft görüntüsünün her ayarı, sihirbazda açıkça açıklanmıştır.",
+          "CurseForge, Modrinth, FTB ve GT New Horizons mod paketleri, tek tıklamayla geri alma özelliğiyle sabitlenmiştir.",
+          "Beş kayıt defterinde tek mod araması, sağlama toplamı doğrulamalı indirmeler.",
+          "Şüphelilerin adlandırıldığı çökme adli tıp ve tek tıklamayla mclo.gs paylaşımı.",
+          "Tek tıklamayla BlueMap canlı haritası, oyuncu analizi ve taşınabilir şemalar.",
+          "Veritabanı dahil tüm panel, taşıma için kopyalayabileceğiniz tek bir klasördür."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Varsayılan Olarak Konteynerler",
+        "body": "Minecraft Server Manager'daki her sunucu, kendi bellek ve CPU limitlerine sahip bir Docker konteyneridir, ayrıca panelin uyguladığı bir disk kotası vardır. Java sunucu başına seçilir, bu nedenle 1.12 mod paketi ve en son Paper sürümü, Java kurulumlarını karıştırmadan yan yana çalışır. MCSManager, Docker'ın seçenek olmadığı durumlarda daha esnek olduğu için konteynerler ve düz işlemler arasında seçim yapmanıza olanak tanır.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "MCSManager'ın Daha İyi Bir Seçim Olduğu Durumlar",
+        "body": "MCSManager çok aktif olarak geliştirilmektedir ve Minecraft'tan fazlasını kapsar.",
+        "points": [
+          "Birden fazla makinedeki sunucuları tek bir panelden yönetirsiniz.",
+          "Ayrıca Palworld veya Terraria gibi Steam oyunlarını da barındırırsınız.",
+          "Docker olmadan, sunucuları düz işlemler olarak çalıştırmak istersiniz.",
+          "Sürükle-bırak gösterge paneli ve hazır oyun dağıtımları pazar yeri istersiniz."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "MCSManager Soruları",
+      "items": [
+        {
+          "q": "Bir Minecraft sunucusunu MCSManager'dan taşıyabilir miyim?",
+          "a": "Evet. Minecraft Server Manager'da aynı tür ve Minecraft sürümüyle bir sunucu oluşturun, ardından Dünyalar sayfasında dünyayı bir zip olarak yükleyin ve o sunucuya kurun. Modlu sunucular bir mod paketi, bir paket dışa aktarma veya mod jar'ları zip'i ile başlayabilir."
+        },
+        {
+          "q": "Minecraft Server Manager için Docker'a ihtiyacım var mı?",
+          "a": "Evet. Docker her sunucuyu çalıştırır. Linux'ta yükleyici betiği, eksikse Docker'ı sizin için yükler."
+        },
+        {
+          "q": "Birden fazla kişi tek bir Minecraft Server Manager panelini paylaşabilir mi?",
+          "a": "Evet. Her hesap için yönetici, operatör ve görüntüleyici rolleri, sunucu başına izinler ve isteğe bağlı iki faktörlü oturum açma seçenekleri mevcuttur."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, Derinlemesine Ele Alındı",
+      "body": "Paneli üç adımda kurun ve sihirbazdan ilk sunucunuzu oluşturun."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "Minecraft Sunucuları İçin PufferPanel Alternatifi",
+      "description": "Minecraft Server Manager, PufferPanel ile karşılaştırıldı: her sunucu kendi Docker konteynerinde, yerleşik Minecraft araçlarıyla; hafif, çok oyunlu, çok düğümlü bir panelin karşısında."
+    },
+    "eyebrow": "PufferPanel alternatifi",
+    "title": "Sadece Minecraft İçin Yapılmış Bir PufferPanel Alternatifi",
+    "intro": "PufferPanel, tek veya birden fazla makinede birçok oyun için ücretsiz, açık kaynaklı bir paneldir. Minecraft Server Manager, yalnızca Minecraft'ı tek bir makinede, her zaman Docker içinde, yerleşik Minecraft araçlarıyla çalıştırır.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Yan Yana Karşılaştırma",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Fiyat ve lisans",
+          "values": ["Ücretsiz, MIT.", "Ücretsiz, Apache-2.0."]
+        },
+        {
+          "label": "Yazıldığı dil",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Kurulumu yapılanlar",
+          "values": [
+            "Tek işlem veya tek Docker konteyneri.",
+            "apt veya yum deposundan tek servis, veya Docker imajı. Başka bir makinedeki bir düğüm aynı paketi çalıştırır."
+          ]
+        },
+        {
+          "label": "Veritabanı",
+          "values": [
+            "Veri klasörü içinde yerleşik SQLite dosyası.",
+            "Temel kurulum için ayarlanması gereken bir şey yok. Harici bir veritabanı kullanımıyla ilgili bir kılavuz bulunur."
+          ]
+        },
+        {
+          "label": "Oyun sunucuları nasıl çalışır",
+          "values": [
+            "Her zaman kaynak limitli Docker konteynerleri.",
+            "Ana makinedeki işlemler (belgeleri bu ortamın güvenlik özelliği olmadığını belirtiyor) veya Docker konteynerleri."
+          ]
+        },
+        {
+          "label": "Ana makine sistemleri",
+          "values": [
+            "Linux, Windows ve macOS. İmaj amd64 ve arm64 için derlenmiştir.",
+            "Linux: amd64 ve arm64 üzerinde Ubuntu 22.04 ve 24.04 ile Debian 10 ve 11 için paketler, arm64 üzerinde Raspbian ve bir yum deposu. 32-bit desteklenmiyor."
+          ]
+        },
+        {
+          "label": "Yönetilen makineler",
+          "values": [
+            "Tek. Panel ve Docker aynı ana makinede çalışır.",
+            "Çoklu. Diğer makinelerdeki düğümler tek bir panel için sunucular çalıştırır."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, itzg imajının her sunucu türü ve CurseForge, Modrinth, FTB ve GT New Horizons paketleri. Bedrock oyuncuları Geyser aracılığıyla bağlanır.",
+            "Java ve Bedrock sunucuları, CurseForge ve FTB paketleri ve BungeeCord, Velocity ve Waterfall proxy'leri için şablonlar."
+          ]
+        }
+      ],
+      "note": "Bilgiler Kasım 2026'da PufferPanel'in belgeleri, deposu ve şablon deposu baz alınarak kontrol edilmiştir."
+    },
+    "sections": [
+      {
+        "title": "Unutulacak Bir Ayar Olmadan İzolasyon",
+        "body": "PufferPanel, sunucu başına bir ortam seçmenize olanak tanır. Standart olanı, sunucuyu ana makinede, panel ile aynı kullanıcı olarak bir işlem olarak çalıştırır ve kendi belgeleri güvenlik özelliği olmadığını belirtir; Docker olanı ise izole eder. Minecraft Server Manager yalnızca ikincisine sahiptir. Her sunucu, bellek ve CPU limiti, panelin zorunlu kıldığı disk kotası olan ve mod kütüphanesi dışında başka hiçbir şey paylaşmayan kendi konteyneridir.",
+        "points": [
+          "Sunucu başına bir konteyner, etiketlenmiş ve limitli.",
+          "Panel tarafından zorunlu kılınan disk kotaları.",
+          "Çöken veya belleği tükenen bir sunucu algılanır ve kaydedilir."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Minecraft Server Manager'ın Minecraft'ta Daha Derine İndiği Yer",
+        "body": "Bir şablon bir sunucuyu başlatır; asıl iş sonrasında gelir. Bulunup güncellenecek modlar, ilerleyen paketler, okunacak çökmeler, yedeklenecek dünyalar. Bunlar buradaki panele entegre edilmiştir.",
+        "points": [
+          "Mod paketleri tam bir sürüme sabitlenir. Yükseltmeler ve düşürmeler önce yedek alır ve tek tıklamayla geri yükler.",
+          "Beş kayıt defterinde tek arama, sunucunun yükleyicisine ve Minecraft sürümüne göre filtrelenir.",
+          "Her indirme, sunucuya ulaşmadan önce sağlama toplamı doğrulaması yapılır.",
+          "Sürüm kontrolü, kurulu her modun gelecekteki hangi Minecraft sürümlerini desteklediğini gösterir.",
+          "Çökme raporları algılanır, ayrıştırılır ve tek tıklamayla mclo.gs'ye paylaşılabilir.",
+          "Tek tıklamayla BlueMap canlı haritası, panelin kendi oturum açma ekranının arkasında."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "PufferPanel'in Daha İyi Bir Seçim Olduğu Durumlar",
+        "body": "PufferPanel hafiftir, ücretsizdir ve yıllardır ortadadır. Bunlardan herhangi biri sizi tanımlıyorsa, onu seçin.",
+        "points": [
+          "Minecraft dışında başka oyunlar barındırıyorsunuz.",
+          "Birden fazla makinede sunucu çalıştırıyorsunuz ve hepsi için tek bir panel istiyorsunuz.",
+          "Yerel bir Bedrock sunucusu veya bir BungeeCord, Velocity veya Waterfall proxy ağı istiyorsunuz.",
+          "Hiç Docker çalıştırmak istemiyorsunuz.",
+          "Sunucu dosyalarına SFTP erişimi istiyorsunuz."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "PufferPanel Soruları",
+      "items": [
+        {
+          "q": "Bir Minecraft sunucusunu PufferPanel'den Minecraft Server Manager'a taşıyabilir miyim?",
+          "a": "Evet. Sunucunun dünya klasörünü indirin, aynı türde ve Minecraft sürümünde bir sunucu oluşturun, ardından Dünyalar sayfasında dünyayı yükleyin ve o sunucuya kurun. Modlu bir sunucu için, oluştururken paketi veya mod jar'larının bir zip dosyasını içe aktarın."
+        },
+        {
+          "q": "Minecraft Server Manager Docker gerektiriyor mu?",
+          "a": "Evet. Her Minecraft sunucusu bir Docker konteyneri olarak çalışır, bu sayede sunucu başına bellek, CPU ve disk limitlerini belirler. Panel kendisi Docker içinde veya doğrudan Node.js'den çalışabilir."
+        },
+        {
+          "q": "İkinci bir makinede sunucu çalıştırabilir mi?",
+          "a": "Hayır. Çalıştığı makinedeki Docker daemon'unu yönetir. İki makine için, her birine bir panel kurun veya PufferPanel gibi düğümlere sahip bir panel seçin."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Her Sunucu Kendi Konteynerinde",
+      "body": "Paneli üç adımda kurun ve sihirbazda ilk sunucunuzu oluşturun."
+    }
+  }
+}

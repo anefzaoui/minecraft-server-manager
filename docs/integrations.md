@@ -2,7 +2,7 @@
 
 [← Back to docs index](README.md)
 
-Each server carries its integrations under the **Settings** group: **Discord**, a public **Status Page**, one-click **Invites**, and the optional **Chatbot** tab (admins only). This page covers Discord (the others have their own docs and setup helpers in the panel).
+Each server carries its integrations under the **Settings** group: **Discord**, a public **Status Page**, one-click **Invites**, and the optional **Chatbot** tab (admins only). This page covers Discord; [invites & status page](invites-and-status-page.md) covers those two, and [the chatbot](chatbot.md) has its own page.
 
 ## Discord notifications
 

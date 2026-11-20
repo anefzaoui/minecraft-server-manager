@@ -1,0 +1,2188 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Bảng điều khiển miễn phí, tự lưu trữ cho máy chủ Minecraft trên Docker.",
+    "description": "Chạy máy chủ Minecraft mod và vanilla từ trình duyệt của bạn. Các gói mod được ghim vào phiên bản chính xác, sao lưu một cú nhấp chuột, lịch trình, bản đồ trực tiếp, phân tích người chơi. Miễn phí, mã nguồn mở và toàn bộ bảng điều khiển của bạn nằm trong một thư mục."
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "features": "Tính năng",
+    "screenshots": "Ảnh chụp màn hình",
+    "servers": "Máy chủ",
+    "guides": "Hướng dẫn",
+    "install": "Cài đặt",
+    "docs": "Tài liệu",
+    "faq": "Hỏi đáp",
+    "compare": "So sánh",
+    "changelog": "Nhật ký thay đổi",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Ngôn ngữ",
+    "theme": "Chuyển đổi chủ đề sáng hoặc tối",
+    "skip": "Bỏ qua đến nội dung"
+  },
+  "hero": {
+    "eyebrow": "Miễn phí và mã nguồn mở. Chạy trên máy của bạn.",
+    "title": "Quản lý máy chủ Minecraft của bạn từ một bảng điều khiển thân thiện.",
+    "subtitle": "Minecraft Server Manager biến Docker thành một ngôi nhà ấm cúng cho các máy chủ của bạn: các gói mod được ghim, sao lưu chỉ bằng một cú nhấp chuột, lịch trình, bản đồ trực tiếp, số liệu thống kê người chơi và bảng điều khiển nói tiếng Anh thông thường. Không hóa đơn, không khóa, toàn bộ bảng điều khiển của bạn trong một thư mục.",
+    "primary": "Bắt đầu trong vài phút",
+    "secondary": "Khám phá các tính năng",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Xem hướng dẫn",
+    "shotCaption": "Bảng điều khiển thực tế: bảng điều khiển của nó với sáu máy chủ ví dụ, trong chủ đề tối."
+  },
+  "pillars": {
+    "title": "Dành cho người quản lý máy chủ, không phải người xử lý yêu cầu",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Một thư mục là toàn bộ bảng điều khiển của bạn",
+        "body": "Cơ sở dữ liệu, thế giới, bản sao lưu và thư viện mod dùng chung đều nằm trong một thư mục dữ liệu duy nhất. Sao chép nó là bạn đã di chuyển thành công."
+      },
+      {
+        "icon": "box",
+        "title": "Mỗi máy chủ là một container",
+        "body": "Mỗi máy chủ chạy trên ảnh itzg đã được kiểm chứng với giới hạn CPU và bộ nhớ riêng, dừng máy chủ một cách êm ái qua RCON và phát hiện sự cố.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpack được ghim cố định",
+        "body": "Các gói mod được khóa với một phiên bản chính xác. Nâng cấp là rõ ràng, được xem trước, sao lưu trước, kiểm tra sức khỏe và hoàn nguyên chỉ bằng một cú nhấp chuột.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Mọi thứ chủ máy chủ cần đến",
+    "intro": "Tổng quan tính năng đầy đủ, từ tạo máy chủ đến chia sẻ bản đồ trực tiếp.",
+    "cta": "Đọc tài liệu",
+    "groups": [
+      {
+        "title": "Máy chủ và vòng đời",
+        "items": [
+          {
+            "title": "Container giới hạn tài nguyên",
+            "body": "Tạo, khởi động, dừng, khởi động lại, xây dựng lại và xóa máy chủ với các lệnh dừng RCON mượt mà và phát hiện sự cố tự động.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Trình hướng dẫn tạo máy chủ",
+            "body": "Chế độ Đơn giản hoặc Nâng cao, với mọi cài đặt image được giải thích rõ ràng trước khi bạn chọn.",
+            "icon": "wand"
+          },
+          {
+            "title": "Bảng điều khiển trực tiếp",
+            "body": "Bảng điều khiển WebSocket với thanh lệnh RCON, bộ lọc log và hành động người chơi chỉ bằng một cú nhấp chuột.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Quản lý người chơi",
+            "body": "Danh sách trắng, quản trị viên, cấm, cấm IP và dịch chuyển, trực tuyến qua RCON và ngoại tuyến qua các tệp JSON.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mod và modpack",
+        "items": [
+          {
+            "title": "Năm kho lưu trữ trong một trình duyệt",
+            "body": "Tìm kiếm cả năm kho lưu trữ từ một nơi. Ba trong số đó không cần khóa API.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Thêm bằng liên kết",
+            "body": "Dán một trang dự án, kho lưu trữ GitHub, slug hoặc URL jar trực tiếp. Bảng điều khiển sẽ nhận diện nó.",
+            "icon": "link"
+          },
+          {
+            "title": "Nhập bất cứ thứ gì",
+            "body": "Mọi jar được nhận diện và kiểm tra tính tương thích khi nhập.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Tải xuống được xác minh checksum",
+            "body": "Được xác minh trước khi tệp đến máy chủ, với hàm băm mạnh nhất trước. Lỗi không bao giờ được gửi đi.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Thư viện mod chia sẻ",
+            "body": "Loại bỏ trùng lặp bằng sha256 và liên kết cứng vào các máy chủ, vì vậy các mod tùy chỉnh tồn tại sau các bản cập nhật gói.",
+            "icon": "library"
+          },
+          {
+            "title": "Trình giải quyết ưu tiên chọn mod",
+            "body": "Chọn các mod bạn muốn và nhận phiên bản loader và Minecraft mới nhất hoàn toàn tương thích.",
+            "icon": "sparkles"
+          },
+          {
+            "title": "Bất kỳ phiên bản modpack, bất kỳ bản dựng loader nào",
+            "body": "Di chuyển modpack sang bất kỳ phiên bản đã xuất bản nào, mới hơn hoặc cũ hơn, hoặc chuyển đổi bản dựng mod loader. Sao lưu sẽ được thực hiện trước, và khởi động lỗi sẽ hoàn nguyên.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Bảo vệ và tự động hóa",
+        "items": [
+          {
+            "title": "Sao lưu an toàn",
+            "body": "Ảnh chụp nhanh với các lớp lưu giữ, khôi phục tại chỗ và tùy chọn thu nhỏ thế giới để lấy lại dung lượng đĩa.",
+            "icon": "archive"
+          },
+          {
+            "title": "Lịch Cron",
+            "body": "Khởi động lại, sao lưu và lệnh RCON theo lịch, với lần chạy tiếp theo hiển thị rõ ràng.",
+            "icon": "clock"
+          },
+          {
+            "title": "Bản thiết kế",
+            "body": "Xuất một máy chủ dưới dạng công thức có thể mang đi, nhập nó ở bất kỳ đâu và nhận lại cùng một máy chủ.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Phân tích sự cố",
+            "body": "Các sự cố được phát hiện, phân tích cú pháp và nghi phạm được đặt tên, với chia sẻ bằng một cú nhấp chuột và thông tin chi tiết tự động.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Theo dõi cập nhật",
+            "body": "Các phiên bản máy chủ, gói, image và mod mới được theo dõi, với các bản sao lưu trước cập nhật và hoàn nguyên bằng một cú nhấp chuột.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Thông tin chi tiết và cộng đồng",
+        "items": [
+          {
+            "title": "Bản đồ trực tiếp",
+            "body": "Một cú nhấp chuột để truy cập bản đồ trực tiếp, được phục vụ thông qua proxy được xác thực của bảng điều khiển.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Phân tích và lưu trữ",
+            "body": "Bảng điểm thời gian chơi, số lần chết và điểm số khai thác, phân tích kho đồ, mức sử dụng đĩa trên mỗi máy chủ và hạn ngạch bắt buộc.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord và chatbot",
+            "body": "Webhook với các tùy chọn bật/tắt cho từng sự kiện, cộng với chatbot tùy chọn cho từng máy chủ với quyền hạn trong trò chơi bị giới hạn.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Trang trạng thái công khai và API",
+            "body": "Các trang trạng thái tùy chọn, khối mời, tệp .mrpack cho máy khách được tạo và API chỉ đọc được xác thực bằng token.",
+            "icon": "globe"
+          },
+          {
+            "title": "Mời bạn bè",
+            "body": "Sao chép một lời mời với địa chỉ và phiên bản. Đối với máy chủ được tạo từ các mod bạn đã chọn, hãy đưa cho bạn bè một tệp .mrpack cho máy khách để cài đặt chúng và thêm máy chủ vào danh sách của họ.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
+            "title": "Người dùng, vai trò và 2FA",
+            "body": "Các vai trò quản trị, người điều hành và người xem với xác thực hai yếu tố TOTP.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Một bảng điều khiển mang lại trải nghiệm thú vị",
+    "intro": "Máy tính để bàn và điện thoại. Bảng điều khiển được thiết kế ưu tiên cho màn hình hẹp, vì vậy mọi trang đều hoạt động tốt trên điện thoại.",
+    "desktop": "Máy tính để bàn",
+    "mobile": "Trên điện thoại",
+    "items": {
+      "dashboard": "Bảng điều khiển: hiển thị mọi máy chủ, số lượng người chơi và hoạt động gần đây trong nháy mắt.",
+      "wizard": "Trình hướng dẫn tạo máy chủ giải thích mọi cài đặt trước khi bạn chọn.",
+      "overview": "Tổng quan về máy chủ với các chỉ số tài nguyên và các hành động nhanh.",
+      "console": "Bảng điều khiển trực tiếp với thanh lệnh RCON và bộ lọc nhật ký.",
+      "mods": "Các bản mod từ năm kho lưu trữ, được lọc theo trình tải và phiên bản của máy chủ.",
+      "modpacks": "Các gói mod: tìm kiếm trên CurseForge và Modrinth, và mọi gói đều được cài đặt ghim vào một phiên bản chính xác.",
+      "worlds": "Trao đổi thế giới và quản lý tệp từ trình duyệt.",
+      "backups": "Sao lưu với các lớp lưu giữ và khôi phục tại chỗ.",
+      "schedules": "Lịch trình cron cho việc khởi động lại, sao lưu và lệnh.",
+      "blueprints": "Bản thiết kế: công thức máy chủ có thể di chuyển.",
+      "storage": "Phân tích lưu trữ và hạn ngạch được áp dụng."
+    }
+  },
+  "install": {
+    "title": "Cài đặt",
+    "intro": "Chọn tùy chọn phù hợp với máy chủ của bạn. Mọi cách đều cho bạn cùng một bảng điều khiển.",
+    "requirements": "Yêu cầu",
+    "reqItems": [
+      "Docker Engine (Linux) hoặc Docker Desktop (Windows, macOS).",
+      "Node.js 24 trở lên cho cài đặt từ mã nguồn. Hình ảnh Docker đã bao gồm sẵn.",
+      "Vài gigabyte dung lượng đĩa cho các hình ảnh máy chủ và thế giới."
+    ],
+    "docker": {
+      "title": "Tùy chọn 1: Docker",
+      "body": "Một hình ảnh đa kiến trúc được biên dịch sẵn được xuất bản lên GHCR mỗi khi có bản phát hành mới. Tải tệp compose, đặt một biến và khởi chạy.",
+      "after": "Sau đó, truy cập http://máy-chủ-của-bạn:25564. Trong Portainer hoặc Dockge, dán tệp compose dưới dạng một stack và đặt DATA_DIR_HOST trong môi trường của stack.",
+      "warning": "Bảng điều khiển điều khiển daemon Docker của máy chủ thông qua socket được gắn kết, tương đương với quyền root trên máy chủ. Hãy đối xử với thông tin đăng nhập quản trị viên tương ứng và không bao giờ để bảng điều khiển hiển thị trực tiếp trên internet."
+    },
+    "source": {
+      "title": "Tùy chọn 2: Từ mã nguồn",
+      "body": "Bất kỳ hệ điều hành nào, bao gồm Windows và macOS với Docker Desktop.",
+      "after": "Truy cập http://localhost:25564. Lần chạy đầu tiên sẽ hướng dẫn bạn kiểm tra hệ thống, múi giờ của bạn và tạo tài khoản quản trị viên."
+    },
+    "next": "Các bước tiếp theo",
+    "nextBody": "Hướng dẫn bắt đầu nhanh bao gồm thiết lập lần đầu, tạo máy chủ đầu tiên của bạn và mọi thứ nằm ở đâu.",
+    "nextCta": "Đọc hướng dẫn bắt đầu",
+    "compose": "Tải xuống docker-compose.yml",
+    "windows": "Lưu ý cho Windows",
+    "windowsItems": [
+      "Docker Desktop phải đang chạy trước khi bạn bắt đầu hoặc tạo máy chủ.",
+      "Chia sẻ ổ đĩa dự án của bạn với Docker Desktop (Cài đặt, Tài nguyên, Chia sẻ tệp) để các mount liên kết hoạt động.",
+      "Hình ảnh Docker nhắm mục tiêu máy chủ Linux; trên Windows và macOS, hãy chạy bảng điều khiển từ mã nguồn."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Tùy chọn cài đặt",
+      "intro": "Trình cài đặt Linux nhận các tùy chọn của nó sau bash -s --, vì vậy chúng cũng hoạt động qua pipe. Chạy lại với cùng các tùy chọn để nâng cấp; thư mục dữ liệu, các chỉnh sửa .env và compose của bạn sẽ được giữ nguyên.",
+      "items": {
+        "port": "Phục vụ bảng điều khiển trên một cổng khác.",
+        "proxy": "Chỉ lắng nghe trên 127.0.0.1, cho proxy ngược với TLS ở phía trước.",
+        "tag": "Ghim một bản phát hành thay vì theo dõi bản mới nhất.",
+        "dir": "Cài đặt ở một nơi khác ngoài /opt/msm.",
+        "uninstall": "Gỡ cài đặt bảng điều khiển và giữ lại dữ liệu của nó. Qua pipe không có bàn phím để trả lời câu hỏi, vì vậy hãy thêm --yes; thêm --purge để xóa thư mục dữ liệu.",
+        "help": "Mọi tùy chọn, cùng với giá trị mặc định của nó."
+      }
+    }
+  },
+  "faq": {
+    "title": "Câu hỏi thường gặp",
+    "items": [
+      {
+        "q": "Nó có thực sự miễn phí không?",
+        "a": "Có. Bảng điều khiển này có giấy phép MIT và không sử dụng bất kỳ dịch vụ trả phí nào. Mọi thứ đều chạy trên máy của bạn."
+      },
+      {
+        "q": "Nó có hoạt động trên Raspberry Pi hoặc máy ARM khác không?",
+        "a": "Có. Hình ảnh Docker được xuất bản cho cả hai kiến trúc, và cài đặt từ mã nguồn chạy ở bất kỳ đâu có Node.js 24 và Docker.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Những loại máy chủ nào được hỗ trợ?",
+        "a": "Mọi thứ mà hình ảnh itzg hỗ trợ, cộng với các modpack từ bốn nguồn lớn.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Làm cách nào để di chuyển bảng điều khiển sang máy mới?",
+        "a": "Sao chép thư mục dữ liệu. Thư mục này chứa cơ sở dữ liệu, thế giới của mọi máy chủ, các bản sao lưu và thư viện mod. Khởi chạy bảng điều khiển trên máy mới, trỏ đến thư mục đó."
+      },
+      {
+        "q": "Có thể có nhiều người quản lý máy chủ không?",
+        "a": "Có. Bảng điều khiển có các vai trò quản trị viên, người vận hành và người xem, và mỗi tài khoản có thể bật xác thực hai yếu tố."
+      },
+      {
+        "q": "Làm thế nào để bạn bè bên ngoài nhà tôi tham gia?",
+        "a": "Chuyển tiếp cổng game của máy chủ, từ 25565 trở lên, trên bộ định tuyến của bạn đến máy chạy nó, hoặc sử dụng đường hầm nếu nhà cung cấp internet của bạn không cho phép chuyển tiếp cổng. Tab Lời mời của máy chủ hiển thị địa chỉ để chia sẻ và ghi văn bản lời mời cho bạn. Giữ cho cổng của bảng điều khiển được đóng."
+      },
+      {
+        "q": "Nó có cần được hiển thị trên internet không?",
+        "a": "Không. Người chơi kết nối với các cổng game, không phải bảng điều khiển. Giữ bảng điều khiển trên mạng LAN của bạn hoặc phía sau VPN hoặc proxy ngược có xác thực."
+      },
+      {
+        "q": "Còn người chơi Bedrock thì sao?",
+        "a": "Cả hai đều có thể được cài đặt như bất kỳ plugin hoặc mod nào khác, và bảng điều khiển sẽ hiển thị các cài đặt mà họ cần.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Nó có được tạo bằng AI không?",
+        "a": "Một phần, và công khai. Hầu hết mã được viết bằng Claude Code, và người bảo trì thiết kế, xem xét và kiểm tra mọi tính năng. Tuyên bố về AI trong kho lưu trữ mô tả cách thức."
+      },
+      {
+        "q": "Tôi nhận trợ giúp ở đâu?",
+        "a": "Máy chủ Discord có diễn đàn hỗ trợ và những người thật. Lỗi và yêu cầu tính năng gửi đến các vấn đề trên GitHub."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Nhật ký thay đổi",
+    "intro": "Mỗi bản phát hành, mới nhất trước. Ghi chú phát hành được xuất bản bằng tiếng Anh.",
+    "releases": "Tất cả các bản phát hành trên GitHub",
+    "feed": "Luồng phát hành (Atom)"
+  },
+  "community": {
+    "title": "Hãy đến chào hỏi",
+    "body": "Báo cáo lỗi, đề xuất tính năng, nhận trợ giúp từ người thật và khoe máy chủ của bạn.",
+    "discord": "Tham gia Discord",
+    "github": "Đánh dấu sao trên GitHub"
+  },
+  "footer": {
+    "tagline": "Miễn phí và mã nguồn mở theo giấy phép MIT.",
+    "product": "Sản phẩm",
+    "community": "Cộng đồng",
+    "resources": "Tài nguyên",
+    "issues": "Các vấn đề",
+    "releases": "Các bản phát hành",
+    "contributing": "Đóng góp",
+    "license": "Giấy phép",
+    "notAffiliated": "Không phải là sản phẩm chính thức của Minecraft. Không được phê duyệt hoặc liên kết với Mojang hoặc Microsoft.",
+    "serverTypes": "Các loại máy chủ",
+    "guides": "Hướng dẫn",
+    "compare": "So sánh",
+    "roadmap": "Lộ trình",
+    "ai": "Cách AI được sử dụng",
+    "conduct": "Bộ quy tắc ứng xử"
+  },
+  "meta": {
+    "home": {
+      "title": "Bảng điều khiển máy chủ Minecraft tự lưu trữ miễn phí",
+      "description": "Chạy máy chủ Minecraft gốc và đã cài mod từ trình duyệt của bạn với bảng điều khiển Docker miễn phí, tự lưu trữ: gói mod đã ghim, sao lưu, lịch trình và bản đồ trực tiếp."
+    },
+    "features": {
+      "title": "Tính năng bảng điều khiển máy chủ Minecraft",
+      "description": "Mọi tính năng của Minecraft Server Manager: máy chủ Docker, năm kho mod, tải xuống đã xác minh, sao lưu, lịch trình, phân tích sự cố, bản đồ trực tiếp và 2FA."
+    },
+    "screenshots": {
+      "title": "Ảnh chụp màn hình bảng điều khiển máy chủ Minecraft",
+      "description": "Ảnh chụp màn hình bảng điều khiển Minecraft Server Manager trên máy tính để bàn và điện thoại: bảng điều khiển, trình hướng dẫn, bảng điều khiển, mod, thế giới, sao lưu, lịch trình và hơn thế nữa."
+    },
+    "install": {
+      "title": "Cài đặt bảng điều khiển máy chủ Minecraft với Docker",
+      "description": "Cài đặt Minecraft Server Manager với Docker bằng ba lệnh, hoặc từ mã nguồn trên Windows, macOS và Linux."
+    },
+    "faq": {
+      "title": "Câu hỏi thường gặp về bảng điều khiển máy chủ Minecraft",
+      "description": "Câu trả lời về chi phí, các loại máy chủ được hỗ trợ, Raspberry Pi và ARM, di chuyển sang máy mới, vai trò, người chơi Bedrock và hiển thị bảng điều khiển ra internet."
+    },
+    "changelog": {
+      "title": "Nhật ký thay đổi và ghi chú phát hành",
+      "description": "Ghi chú phát hành cho mọi phiên bản của Minecraft Server Manager, bảng điều khiển máy chủ Minecraft tự lưu trữ miễn phí."
+    },
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "description": "Trang này không tồn tại."
+    }
+  },
+  "notFound": {
+    "title": "Phần này chưa bao giờ được tạo.",
+    "body": "Trang bạn yêu cầu không tồn tại. Hãy thử trang chủ hoặc tài liệu.",
+    "home": "Về trang chủ"
+  },
+  "langNotice": "Trang này đang hiển thị bằng tiếng Anh cho đến khi bản dịch của nó sẵn sàng.",
+  "tutorial": {
+    "title": "Hoạt động trong vài phút",
+    "intro": "Chọn máy của bạn và dán các lệnh. Chế độ Nâng cao cung cấp mọi cách khác để chạy bảng điều khiển, với các lệnh được viết lại cho thư mục và địa chỉ của riêng bạn.",
+    "modes": {
+      "simple": "Đơn giản",
+      "advanced": "Nâng cao"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Chạy trình cài đặt",
+            "body": "Hoạt động trên mọi máy Linux có hệ điều hành 64-bit, từ VPS đến Raspberry Pi 4 hoặc 5. Trình cài đặt sẽ cài đặt Docker nếu thiếu, thiết lập bảng điều khiển trong /opt/msm và khởi động nó. Chạy lại sau để nâng cấp."
+          },
+          {
+            "title": "Mở bảng điều khiển",
+            "body": "Trình cài đặt sẽ hiển thị địa chỉ và mã PIN thiết lập dùng một lần. Mở địa chỉ trong trình duyệt, nhập mã PIN và tạo tài khoản quản trị viên của bạn."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Cài đặt Docker Desktop, Node.js, Git và pnpm",
+            "body": "Mỗi công cụ một dòng trong PowerShell. Khởi động Docker Desktop sau khi cài đặt và để nó chạy."
+          },
+          {
+            "title": "Tải bảng điều khiển và khởi động nó",
+            "body": "Mở một terminal mới để nó nhận diện các công cụ bạn vừa cài đặt."
+          },
+          {
+            "title": "Mở bảng điều khiển",
+            "body": "Lần chạy đầu tiên sẽ hướng dẫn bạn kiểm tra hệ thống, chọn múi giờ và tạo tài khoản quản trị viên."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Cài đặt Docker Desktop, Node.js, Git và pnpm",
+            "body": "Sử dụng Homebrew. Khởi động Docker Desktop sau khi cài đặt và để nó chạy."
+          },
+          {
+            "title": "Tải bảng điều khiển và khởi động nó",
+            "body": "Bước cài đặt cũng sẽ biên dịch bảng điều khiển. Không cần biên dịch thủ công."
+          },
+          {
+            "title": "Mở bảng điều khiển",
+            "body": "Lần chạy đầu tiên sẽ hướng dẫn bạn kiểm tra hệ thống, chọn múi giờ và tạo tài khoản quản trị viên."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Điền vào hai trường và mọi lệnh bên dưới sẽ tự động cập nhật cho máy của bạn.",
+    "dataDir": "Thư mục dữ liệu trên máy chủ",
+    "dataDirHint": "Đường dẫn tuyệt đối. Thế giới, bản sao lưu, mod và cơ sở dữ liệu đều nằm ở đây.",
+    "host": "Tên máy chủ hoặc IP",
+    "hostHint": "Nơi bạn sẽ mở bảng điều khiển từ trình duyệt.",
+    "then": "Sau đó mở bảng điều khiển",
+    "copy": "Sao chép",
+    "copied": "Đã sao chép!",
+    "firstRun": "Lần chạy đầu tiên sẽ hướng dẫn bạn kiểm tra hệ thống, chọn múi giờ và tạo tài khoản quản trị viên.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Tạo thư mục dữ liệu",
+            "body": "Một thư mục chứa mọi thứ mà bảng điều khiển sở hữu."
+          },
+          {
+            "title": "Tải tệp compose và trỏ nó vào thư mục đó",
+            "body": "DATA_DIR_HOST phải là đường dẫn tuyệt đối trên máy chủ, vì Docker sẽ gắn nó từ góc nhìn của máy chủ."
+          },
+          {
+            "title": "Khởi động bảng điều khiển",
+            "body": "Image hỗ trợ đa kiến trúc (amd64 và arm64) và cập nhật với mỗi bản phát hành."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Tạo thư mục dữ liệu trên máy chủ",
+            "body": "Quy tắc thư mục tương tự: đường dẫn tuyệt đối, trên máy chạy Docker."
+          },
+          {
+            "title": "Thêm một stack từ tệp compose",
+            "body": "Dán nội dung của tệp compose vào một stack mới. Tệp gốc ở đây:"
+          },
+          {
+            "title": "Đặt biến môi trường và triển khai",
+            "body": "Thêm nó vào phần môi trường của stack, sau đó triển khai."
+          }
+        ]
+      },
+      "source": {
+        "label": "Từ mã nguồn",
+        "steps": [
+          {
+            "title": "Kiểm tra yêu cầu",
+            "body": "Node.js 24 trở lên, pnpm và Docker đang chạy (Docker Desktop trên Windows và macOS)."
+          },
+          {
+            "title": "Clone và cài đặt",
+            "body": "Bước cài đặt cũng sẽ biên dịch CSS của bảng điều khiển. Không có module gốc nào để biên dịch."
+          },
+          {
+            "title": "Khởi động bảng điều khiển",
+            "body": "Theo mặc định, nó chỉ lắng nghe trên localhost. Đặt PANEL_HOST=0.0.0.0 để truy cập nó từ các máy khác trên mạng của bạn."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Khởi động từ cài đặt mã nguồn",
+            "body": "Chạy lệnh này từ thư mục đã clone. PM2 khởi chạy ứng dụng với phiên bản Node đã khởi động daemon của nó, vì vậy hãy ghim trình thông dịch."
+          },
+          {
+            "title": "Lưu danh sách tiến trình và kích hoạt khởi động",
+            "body": "pm2 startup sẽ hiển thị một lệnh để chạy với sudo; chạy lệnh đó một lần."
+          },
+          {
+            "title": "Ưu tiên systemd?",
+            "body": "Một unit chạy node src/server.js từ thư mục đã clone với WorkingDirectory được đặt sẽ hoạt động tương tự. Bảng điều khiển không cần thêm cờ nào."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Hoạt động với mọi thứ bạn đã sử dụng",
+    "registries": "Kho lưu trữ",
+    "loaders": "Loại máy chủ",
+    "packs": "Modpack",
+    "runsOn": "Chạy trên",
+    "formats": "Nhập",
+    "checksums": "Checksum",
+    "integrations": "Tích hợp",
+    "keyless": "không cần khóa"
+  },
+  "landing": {
+    "breadcrumb": "Breadcrumb",
+    "install": "Cài đặt Bảng điều khiển",
+    "docs": "Đọc Tài liệu",
+    "related": "Đọc thêm",
+    "open": "Mở",
+    "docsGuides": "Các Hướng dẫn Khác trong Tài liệu",
+    "docsGuidesIntro": "Các câu trả lời ngắn gọn, thực tế cho những câu hỏi mà chủ máy chủ thường hỏi nhất, được đặt cạnh tài liệu."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Các loại máy chủ Minecraft: Paper, Fabric, Forge",
+      "description": "Chạy Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla, hoặc một modpack đầy đủ từ một bảng điều khiển tự host. Chọn loại máy chủ và xem bạn nhận được gì."
+    },
+    "eyebrow": "Mọi loại máy chủ",
+    "title": "Một bảng điều khiển cho mọi loại máy chủ Minecraft",
+    "intro": "Plugins, mods, trò chơi gốc, hoặc một modpack hoàn chỉnh. Chọn những gì bạn muốn chạy và bảng điều khiển sẽ xử lý phiên bản Java, các bản tải xuống và ghim cho bạn.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Máy chủ plugin Paper và Purpur, với các plugin từ bốn kho lưu trữ và người chơi tham gia bằng một client không sửa đổi.",
+      "serverFabric": "Máy chủ Fabric và Quilt cho các mod nhẹ, cập nhật nhanh, với kiểm tra phiên bản trước mỗi lần nâng cấp Minecraft.",
+      "serverForge": "Forge và NeoForge cho các mod nặng, từ các bản kinh điển 1.7.10 đến các gói hiện tại, với phiên bản Java phù hợp được chọn cho bạn.",
+      "serverVanilla": "Trò chơi gốc, từ các bản snapshot đến các bản beta cũ, với các điều khiển thế giới, sao lưu và số liệu thống kê người chơi xung quanh.",
+      "serverModpacks": "Các gói CurseForge, Modrinth, FTB và GT New Horizons được ghim vào một phiên bản chính xác, cộng với zip hoặc .mrpack của riêng bạn."
+    },
+    "sections": [
+      {
+        "title": "Không chắc chắn chọn loại nào?",
+        "body": "Chọn dựa trên những gì người chơi của bạn nên cài đặt, không phải dựa trên những gì nghe có vẻ nhanh nhất. Nếu không ai nên cài đặt bất cứ thứ gì, hãy chạy vanilla hoặc Paper. Nếu bạn đang cài đặt một gói đã xuất bản, gói đó sẽ quyết định loader và phiên bản Minecraft cho bạn. Nếu bạn tự xây dựng một máy chủ modded, Fabric và NeoForge bao phủ hầu hết các mod hiện đại, và Forge bao phủ các kỷ nguyên cũ hơn.",
+        "points": [
+          "Sinh tồn cùng bạn bè, không có gì đặc biệt: vanilla.",
+          "Máy chủ công cộng với các cấp bậc, yêu cầu và kiểm duyệt: Paper.",
+          "Một gói cụ thể từ CurseForge hoặc Modrinth: bất cứ điều gì gói đó nói.",
+          "Một gói hiện đại bạn tự lắp ráp: Fabric hoặc NeoForge.",
+          "Một gói cũ từ kỷ nguyên 1.7 đến 1.12: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Bắt đầu Máy chủ Đầu tiên của Bạn",
+      "body": "Cài đặt bảng điều khiển, mở trình hướng dẫn tạo và chọn một loại máy chủ. Mọi loại đều miễn phí và chạy trên máy của riêng bạn."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Bảng điều khiển máy chủ Paper: plugin, tự lưu trữ",
+      "description": "Một bảng điều khiển máy chủ Paper và Purpur miễn phí, tự lưu trữ. Tìm kiếm plugin trên Hangar, SpigotMC và Modrinth, xác minh mọi lượt tải xuống và cập nhật chúng."
+    },
+    "eyebrow": "Paper và Purpur",
+    "title": "Bảng điều khiển máy chủ Paper tự lưu trữ với trình duyệt plugin thực tế",
+    "intro": "Chạy Paper hoặc Purpur trong container Docker riêng, tìm plugin từ bốn kho lưu trữ mà không cần rời khỏi bảng điều khiển và cho phép người chơi tham gia bằng phiên bản game họ đã có.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Tại sao chọn Paper cho Máy chủ Công cộng",
+        "body": "Plugin chỉ chạy trên máy chủ, vì vậy người chơi tham gia bằng một client thông thường, không sửa đổi và không bao giờ phải cài đặt bất cứ thứ gì. Bất cứ điều gì liên quan đến quy tắc, quyền hạn, kinh tế, yêu cầu đất đai, minigame hoặc kiểm duyệt đều là plugin, và đó là lý do tại sao gần như mọi máy chủ công cộng đều chạy Paper. Nó có nhiều năm làm việc về hiệu suất và một cài đặt cho hầu hết mọi hành vi từng làm phiền quản trị viên. Purpur là một nhánh của Paper với nhiều tùy chọn hơn, bao gồm cả các tùy chọn lối chơi. Cả hai đều nằm trong tab Vanilla của trình hướng dẫn tạo máy chủ.",
+        "points": [
+          "Người chơi kết nối bằng game thông thường. Không mod, không cần thiết lập launcher.",
+          "Hầu hết các plugin từ thời Bukkit vẫn chạy.",
+          "Chỉ chọn Purpur nếu bạn muốn các tùy chọn bổ sung của nó; nếu không thì chọn Paper."
+        ]
+      },
+      {
+        "title": "Bốn Kho Lưu Trữ Plugin trong Một Lần Tìm Kiếm",
+        "body": "Tab Mods của máy chủ plugin tìm kiếm trên Hangar (kho lưu trữ plugin của PaperMC), SpigotMC, Modrinth và CurseForge, được lọc theo phiên bản Minecraft của máy chủ. Chỉ CurseForge yêu cầu khóa API. Bạn cũng có thể dán một trang dự án, một kho lưu trữ hoặc bản phát hành GitHub, hoặc một liên kết jar trực tiếp, và bảng điều khiển sẽ tìm đúng bản dựng. Mọi lượt tải xuống từ kho lưu trữ đều được kiểm tra với checksum mạnh nhất mà kho lưu trữ công bố trước khi nó đến máy chủ, vì vậy một tệp bị hỏng hoặc bị giả mạo sẽ không bao giờ được tải lên.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Kết quả đã có trên máy chủ sẽ hiển thị huy hiệu Đã cài đặt.",
+          "Nếu một tài nguyên SpigotMC được lưu trữ ở nơi khác, bảng điều khiển sẽ cho biết trước và đề nghị mở trang đó và tải tệp jar lên thay thế.",
+          "Các tệp jar đã tải lên được nhận dạng, vì vậy chúng giữ nguyên tên thực và có thể kiểm tra cập nhật."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Cập nhật Plugin mà Không Cần Đoán Già Đoán Non",
+        "body": "Mọi plugin bạn thêm vào đều được kiểm tra với nguồn của nó theo lịch trình hàng ngày và theo yêu cầu. Cập nhật một plugin, bỏ qua một phiên bản bạn không muốn, hoặc nhấn Cập nhật Tất cả để áp dụng mọi thứ chỉ với một lần khởi động lại. Nếu một bản cập nhật gặp sự cố, hãy quay lại bản dựng trước đó từ thư viện dùng chung. Bật Thông báo cho tôi trong chính sách cập nhật của máy chủ và các bản cập nhật đang chờ xử lý sẽ hiển thị dưới dạng huy hiệu và trên trang Cập nhật.",
+        "points": [
+          "Kiểm tra hàng ngày với Hangar, SpigotMC, Modrinth, CurseForge và GitHub Releases.",
+          "Quay lại sẽ đưa bản dựng trước đó trở lại từ thư viện.",
+          "Nếu bạn ghim một bản dựng Paper, trang Cập nhật sẽ cho bạn biết khi nào có bản mới hơn."
+        ]
+      },
+      {
+        "title": "Chạy Như Máy Chủ Cộng Đồng",
+        "body": "Máy chủ Paper nhận được các công cụ giống như mọi máy chủ khác trong bảng điều khiển: bảng điều khiển trực tiếp với thanh lệnh RCON, danh sách trắng, quản trị viên, lệnh cấm và cấm IP, dịch chuyển tức thời và các lệnh trò chuyện tùy chỉnh có thời gian hồi chiêu. Cấp cho nhân viên của bạn tài khoản với quyền hạn theo từng máy chủ, để người kiểm duyệt có thể chạy bảng điều khiển mà không chạm vào các bản sao lưu hoặc tệp. Một cú nhấp chuột thêm bản đồ trực tiếp BlueMap, chỉ được phục vụ thông qua đăng nhập của bảng điều khiển, và các cảnh báo Discord cho bạn biết khi nào có điều gì đó cần bạn.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Khởi chạy Máy chủ Paper trong Ba Bước",
+      "items": [
+        {
+          "title": "Chọn Paper trong Trình hướng dẫn",
+          "body": "Mở Tạo Máy chủ, ở lại tab Vanilla, chọn Paper hoặc Purpur và chọn phiên bản Minecraft. Một cổng game miễn phí và bộ nhớ hợp lý sẽ được điền sẵn cho bạn."
+        },
+        {
+          "title": "Thêm Plugin của Bạn",
+          "body": "Trên tab Mods của máy chủ, tìm kiếm trên Hangar, SpigotMC, Modrinth hoặc CurseForge, hoặc dán một liên kết. Các cài đặt được xác minh khi chúng tải xuống."
+        },
+        {
+          "title": "Chia sẻ Địa chỉ",
+          "body": "Tab Tổng quan hiển thị địa chỉ để cung cấp cho người chơi. Họ tham gia bằng game mà họ đã có."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu hỏi về Máy chủ Paper",
+      "items": [
+        {
+          "q": "Tôi có thể thêm mod vào máy chủ Paper không?",
+          "a": "Không. Paper tải plugin, chỉ chạy trên máy chủ. Mod thay đổi chính trò chơi và cần một trình tải mod như Fabric hoặc NeoForge trên cả máy chủ và mọi client. Nếu bạn muốn cả hai, hãy chạy một máy chủ modded và một máy chủ plugin song song thay vì một máy chủ kết hợp."
+        },
+        {
+          "q": "Tôi có cần tài khoản SpigotMC hoặc khóa API để cài đặt plugin không?",
+          "a": "Không. SpigotMC, Hangar và Modrinth đều hoạt động mà không cần khóa. Chỉ CurseForge yêu cầu khóa API, bạn thêm một lần trong Cài đặt, Khóa API."
+        },
+        {
+          "q": "Một trang trại redstone từ một video không hoạt động trên máy chủ của tôi. Tại sao?",
+          "a": "Paper thay đổi một số hành vi vanilla theo mặc định vì hiệu suất. Đó thường là lý do, và nó thường là một cài đặt trong cấu hình của Paper, bạn có thể chỉnh sửa trong trình quản lý tệp của máy chủ."
+        },
+        {
+          "q": "Các plugin Bukkit và Spigot cũ của tôi có còn hoạt động không?",
+          "a": "Hầu hết là có. Paper là một nhánh của Spigot và giữ API plugin, vì vậy các plugin được viết cho Bukkit và Spigot chủ yếu chạy không thay đổi. Kiểm tra trang của mỗi plugin để biết các phiên bản Minecraft mà nó hỗ trợ."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Chạy Máy chủ Paper của Bạn tại Nhà",
+      "body": "Cài đặt bảng điều khiển trên bất kỳ máy nào có Docker, sau đó tạo máy chủ Paper từ trình hướng dẫn. Miễn phí, mã nguồn mở và thuộc về bạn."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Máy chủ Fabric tự host với trình duyệt mod",
+      "description": "Tự host máy chủ Minecraft Fabric hoặc Quilt. Tìm kiếm Modrinth và CurseForge, ghim bản dựng loader, và kiểm tra mọi mod trước khi nâng cấp."
+    },
+    "eyebrow": "Fabric và Quilt",
+    "title": "Máy chủ Fabric tự host hiểu rõ các mod của bạn hỗ trợ gì",
+    "intro": "Tạo máy chủ Fabric hoặc Quilt từ các mod bạn muốn, giữ nguyên bản dựng loader tại vị trí bạn đặt, và chỉ chuyển sang phiên bản Minecraft mới khi mọi mod đều có thể theo kịp.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Tại sao chọn Fabric",
+        "body": "Fabric nhỏ gọn, cập nhật theo các phiên bản Minecraft mới chỉ trong vài ngày và hỗ trợ hầu hết các mod hiệu suất hiện đại. Nếu mục tiêu của bạn là một máy chủ nhanh với một vài mod tiện ích, đây là loader bạn nên chọn. Hầu hết mọi mod Fabric đều cần Fabric API, đây là một bản tải xuống riêng biệt bạn thêm vào như bất kỳ mod nào khác. Quilt là một nhánh của Fabric chạy hầu hết các mod Fabric; chọn nó nếu bạn có lý do cụ thể, nếu không hãy chọn Fabric.",
+        "points": [
+          "Cập nhật nhanh chóng theo các bản phát hành Minecraft mới.",
+          "Nơi tập trung hầu hết các mod hiệu suất hiện đại.",
+          "Máy chủ Quilt tự động nhận diện các bản dựng Fabric, vì Quilt chạy các mod Fabric."
+        ]
+      },
+      {
+        "title": "Bắt đầu từ các Mod bạn muốn",
+        "body": "Tab \"From Mods\" (Từ các Mod) của trình hướng dẫn sẽ chọn loader, phiên bản Minecraft và bản dựng loader: mới nhất, hoặc một bản dựng cụ thể bạn ghim. Bạn cũng có thể làm ngược lại. Chọn các mod trước, và trình giải quyết sẽ đề xuất phiên bản loader và Minecraft mới nhất mà tất cả chúng đều hỗ trợ, sau đó cài đặt bộ này khi máy chủ được tạo.",
+        "points": [
+          "Ghim một bản dựng loader Fabric hoặc Quilt thay vì theo dõi bản mới nhất.",
+          "Trang \"Updates\" (Cập nhật) cung cấp các bản dựng mới hơn cho một loader đã được ghim.",
+          "Trình duyệt mod lọc theo loader, vì vậy một tệp jar Forge không thể bị đặt nhầm vào máy chủ Fabric."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Kiểm tra phiên bản trước mỗi lần nâng cấp",
+        "body": "Tab \"Mods\" (Các Mod) của máy chủ Fabric có một tab phụ \"Versions\" (Các phiên bản). Nó kiểm tra mọi mod đã cài đặt với Modrinth và CurseForge và báo cáo phiên bản Minecraft cao nhất mà tất cả chúng đều có bản dựng hỗ trợ, cộng với một bản phân tích chi tiết về những gì mỗi phiên bản mới hơn sẽ bỏ lại. Một phiên bản Minecraft mới hơn chỉ được cung cấp khi kiểm tra đó xác nhận, và không bao giờ khi một tệp jar không thể được xác định.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Các Mod bạn có thể tin cậy và hoàn tác",
+        "body": "Mọi bản tải xuống từ kho lưu trữ đều được xác minh bằng checksum mạnh nhất mà kho lưu trữ công bố trước khi đến máy chủ. Các mod bạn thêm nằm trong một thư viện dùng chung, được loại bỏ trùng lặp theo sha256, vì vậy mười máy chủ chạy cùng một mod sẽ lưu trữ nó một lần. Cập nhật một mod, bỏ qua một phiên bản, hoặc quay lại bản dựng trước đó khi một bản cập nhật gặp sự cố. Nhập một tệp .mrpack từ Modrinth hoặc một tệp zip chứa các tệp jar và mọi tệp jar sẽ được xác định và kiểm tra với máy chủ trước khi bất cứ điều gì được cài đặt.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Khởi chạy Máy chủ Fabric trong Ba Bước",
+      "items": [
+        {
+          "title": "Chọn Fabric trên tab \"From Mods\"",
+          "body": "Chọn Fabric hoặc Quilt, một phiên bản Minecraft và bản dựng loader mới nhất hoặc một bản đã được ghim."
+        },
+        {
+          "title": "Tìm kiếm và Thêm Mod",
+          "body": "Tìm kiếm trên Modrinth hoặc CurseForge, thêm Fabric API và thêm phần còn lại. Mỗi bản tải xuống đều được xác minh."
+        },
+        {
+          "title": "Mời Người chơi của bạn",
+          "body": "Tab \"Invites\" (Lời mời) tạo ra một lời mời sẵn sàng để dán và một tệp .mrpack cho client chứa các mod bạn đã thêm, với máy chủ của bạn đã có trong danh sách máy chủ trong trò chơi."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu hỏi về Máy chủ Fabric",
+      "items": [
+        {
+          "q": "Người chơi có cần cài đặt cùng các mod không?",
+          "a": "Có, đối với bất kỳ mod nào thêm nội dung. Các mod thay đổi chính trò chơi, vì vậy client phải tải các mod giống nhau. Tab \"Invites\" (Lời mời) tạo ra một tệp .mrpack cho client chứa các mod bạn đã thêm, với máy chủ của bạn đã có trong danh sách máy chủ trong trò chơi, mà người chơi nhập vào một trình khởi chạy như Prism hoặc Modrinth App."
+        },
+        {
+          "q": "Tôi có thực sự cần Fabric API không?",
+          "a": "Hầu như luôn luôn. Hầu hết mọi mod Fabric đều phụ thuộc vào nó, và nó là một bản tải xuống riêng biệt. Thêm nó từ trình duyệt mod như bất kỳ mod nào khác."
+        },
+        {
+          "q": "Làm thế nào để biết các mod của tôi sẽ hoạt động trên phiên bản Minecraft tiếp theo?",
+          "a": "Mở tab \"Mods\" (Các Mod) của máy chủ và sau đó là \"Versions\" (Các phiên bản). Nó hiển thị phiên bản Minecraft cao nhất mà mọi mod đã cài đặt đều có bản dựng hỗ trợ, và những gì một phiên bản mới hơn sẽ bỏ lại."
+        },
+        {
+          "q": "Một bản cập nhật mod đã làm hỏng máy chủ. Tôi có thể quay lại không?",
+          "a": "Có. Hoàn tác mod từ hàng của nó trên tab \"Mods\" (Các Mod) và bản dựng trước đó sẽ được khôi phục từ thư viện dùng chung."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Tự Host Máy chủ Fabric của Bạn",
+      "body": "Cài đặt bảng điều khiển, mở tab \"From Mods\" (Từ các Mod) và chọn các mod của bạn. Không có phí đăng ký và không giới hạn số lượng máy chủ bạn chạy."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Bảng điều khiển máy chủ modded Forge và NeoForge",
+      "description": "Tự chạy máy chủ Minecraft modded Forge hoặc NeoForge. Java phù hợp sẽ được chọn cho bạn, các bản dựng loader có thể được ghim, và các lỗi crash sẽ chỉ ra thủ phạm."
+    },
+    "eyebrow": "Forge và NeoForge",
+    "title": "Bảng điều khiển máy chủ modded Forge chọn đúng Java cho bạn",
+    "intro": "Từ các bản kinh điển 1.7.10 đến các gói NeoForge hiện tại, tạo máy chủ, điều chỉnh bộ nhớ và tìm ra mod gây ra lỗi mà không cần đọc từng dòng stack trace.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge hay NeoForge?",
+        "body": "NeoForge là nơi hệ sinh thái Forge cũ hoạt động cho các phiên bản hiện tại. Nó tách khỏi Forge trong phiên bản 1.20.1, và hầu hết các gói lớn được xây dựng cho 1.20.2 trở lên đều nhắm đến nó, vì vậy hãy bắt đầu một máy chủ hạng nặng mới trên NeoForge. Forge vẫn sở hữu quá khứ: bất cứ thứ gì từ kỷ nguyên 1.7.10, 1.12.2 và 1.16.5 đều là Forge, và đó là rất nhiều gói được yêu thích nhất. Mod cho loader này không chạy trên loader kia, và một gói NeoForge 1.20.1 không chạy trên Forge 1.20.1.",
+        "points": [
+          "Máy chủ hạng nặng mới: NeoForge.",
+          "Kỷ nguyên 1.7.10, 1.12.2 hoặc 1.16.5: Forge.",
+          "Một gói đã xuất bản: chính xác theo những gì gói liệt kê."
+        ]
+      },
+      {
+        "title": "Đúng Java, Mọi Lúc",
+        "body": "Yêu cầu Java của Minecraft thay đổi theo trò chơi, và phiên bản sai sẽ cho bạn lỗi UnsupportedClassVersionError không hữu ích thay vì một thông báo rõ ràng. Các gói cũ thực sự cần Java 8, và các phiên bản hiện tại cần 21 trở lên. Trình hướng dẫn tạo sẽ đọc phiên bản Minecraft bạn chọn và tự động chọn runtime, vì vậy sự không khớp sẽ không bao giờ xảy ra do vô tình. Nâng cấp gói sẽ phân giải lại Java nếu phiên bản mới cần một phiên bản khác.",
+        "points": ["1.16.5 trở về trước: Java 8.", "1.18 đến 1.20.4: Java 17.", "1.20.5 đến 1.21: Java 21."]
+      },
+      {
+        "title": "Bộ nhớ được điều chỉnh cho Modded",
+        "body": "Mỗi máy chủ có hai con số: heap Java và giới hạn bộ nhớ container. Java cần bộ nhớ ngoài heap, khoảng 1,5 đến 2 GB trên một modpack lớn, và một container không có khoảng trống sẽ bị dừng ngay khi Java cố gắng truy cập. Trình hướng dẫn đặt giới hạn cao hơn heap 50%, và bảng điều khiển từ chối giới hạn container không cao hơn heap. Một gói đầy đủ với 150 đến 300 mod cần heap 6 đến 8 GB.",
+        "points": [
+          "Máy chủ bị dừng do hết bộ nhớ sẽ được ghi lại chính xác như vậy trong lịch sử của nó.",
+          "Đặt heap ban đầu nhỏ hơn để xem bộ nhớ theo sát mức sử dụng thực tế."
+        ]
+      },
+      {
+        "title": "Lỗi Crash Chỉ Rõ Thủ Phạm",
+        "body": "Báo cáo lỗi crash được thu thập tự động và phân tích thành tóm tắt một dòng với ngoại lệ và các mod có khả năng gây ra nó nhất. Mở trình xem tích hợp sẵn, sao chép stack trace, hoặc sau khi xác nhận rõ ràng, chia sẻ nó lên mclo.gs và nhận thông tin chi tiết tự động: các vấn đề đã biết với các bản sửa lỗi được đề xuất, hiển thị ngay trên bảng điều khiển. Tự động khởi động lại khi gặp lỗi cố gắng lại với khoảng thời gian chờ tăng dần, và bỏ qua các lỗi crash cần sửa lỗi trước, như sai Java hoặc hết bộ nhớ.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Khởi chạy Máy chủ Forge trong Ba Bước",
+      "items": [
+        {
+          "title": "Chọn Loader và Phiên bản",
+          "body": "Trên tab From Mods của trình hướng dẫn, chọn Forge hoặc NeoForge, phiên bản Minecraft và bản dựng loader mới nhất hoặc một bản đã ghim."
+        },
+        {
+          "title": "Cấp Đủ Bộ Nhớ",
+          "body": "Đặt heap Java cho kích thước danh sách mod của bạn. Giới hạn container sẽ theo sau, cao hơn 50% so với heap."
+        },
+        {
+          "title": "Thêm Mod hoặc Nhập Zip",
+          "body": "Tìm kiếm trên CurseForge và Modrinth, hoặc nhập tệp xuất CurseForge hoặc một tệp zip chứa các jar. Mỗi jar được xác định và kiểm tra với máy chủ trước."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu hỏi về Máy chủ Forge",
+      "items": [
+        {
+          "q": "Tôi có thể chạy gói 1.12.2 hoặc 1.7.10 không?",
+          "a": "Có. Chọn phiên bản và Forge trong trình hướng dẫn và bảng điều khiển sẽ chạy nó trên Java 8, mà các phiên bản đó cần. GT New Horizons, gói chuyên sâu 1.7.10, cài đặt từ trang Modpacks với lựa chọn Java riêng."
+        },
+        {
+          "q": "Máy chủ Forge cần bao nhiêu bộ nhớ?",
+          "a": "Một gói nhẹ với 40 đến 80 mod chạy tốt trên heap 4 GB trong container 6 GB. Một gói với 150 đến 300 mod cần 6 đến 8 GB heap và khoảng 10 GB cho container."
+        },
+        {
+          "q": "Tôi có thể ghim một bản dựng Forge cụ thể không?",
+          "a": "Có. Bộ chọn bản dựng loader của trình hướng dẫn chấp nhận bản dựng mới nhất hoặc một bản dựng cụ thể, và trang Updates cung cấp các bản dựng mới hơn cho bản đã ghim mà không tự động áp dụng chúng."
+        },
+        {
+          "q": "Máy chủ của tôi bị lỗi khi khởi động. Tôi nên xem ở đâu?",
+          "a": "Mở Monitoring rồi History. Thẻ báo cáo lỗi crash liệt kê ngoại lệ và các mod bị nghi ngờ, và Analyze chạy thông tin chi tiết từ mclo.gs về các vấn đề và cách khắc phục đã biết."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Tự Chạy Máy chủ Modded Của Bạn",
+      "body": "Cài đặt bảng điều khiển trên một máy có đủ bộ nhớ, sau đó tạo máy chủ Forge hoặc NeoForge từ trình hướng dẫn."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Bảng điều khiển máy chủ Minecraft Vanilla, tự lưu trữ",
+      "description": "Tự mình lưu trữ máy chủ Minecraft vanilla: mọi phiên bản từ bản beta cũ đến bản snapshot mới nhất, với các điều khiển thế giới, sao lưu hàng ngày và số liệu thống kê người chơi."
+    },
+    "eyebrow": "Trò chơi không thay đổi",
+    "title": "Máy chủ Minecraft vanilla với mọi thứ xung quanh được xử lý",
+    "intro": "Giữ nguyên trò chơi như Mojang cung cấp, và nhận sao lưu, công cụ thế giới, quản trị và số liệu thống kê người chơi từ bảng điều khiển thay vì từ plugin.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Bất kỳ Phiên bản Nào Bạn Muốn",
+        "body": "Chọn bản phát hành mới nhất, bản snapshot hoặc một phiên bản cụ thể, bao gồm cả bản beta và alpha cũ. Bảng điều khiển chọn runtime Java mà phiên bản đó cần, tải xuống image và khởi động máy chủ từ đó. Không ai cần cài đặt gì để tham gia: người chơi kết nối bằng trò chơi mà họ đã có.",
+        "points": [
+          "Bản phát hành mới nhất, snapshot hoặc một phiên bản cụ thể.",
+          "Bản beta và alpha cũ cho máy chủ hoài cổ.",
+          "Java phù hợp được chọn cho mỗi phiên bản."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Điều khiển Thế giới mà Không cần Gõ Lệnh",
+        "body": "Thanh điều khiển Thế giới xuất hiện trên mọi tab của máy chủ: đồng hồ trong trò chơi, thời tiết và các gamerule phổ biến dưới dạng các nút chuyển đổi, với mọi quy tắc khác chỉ cách một cú nhấp chuột. Tab Thế giới đặt lại thế giới đang hoạt động với seed mới, đã giữ hoặc tùy chỉnh, trước tiên cung cấp một bản sao lưu an toàn. Nhân bản một thế giới, giữ lại những thế giới đã hoàn thành trong thư viện thế giới hoặc tải lên một thế giới bạn đã có dưới dạng tệp lưu trữ .zip hoặc .tar.",
+        "points": [
+          "Đặt lại với seed mới, cùng seed hoặc seed bạn nhập.",
+          "Một thư viện thế giới được chia sẻ bởi mọi máy chủ.",
+          "Chỉnh sửa server.properties trong trình duyệt; giá trị trên đĩa sẽ được áp dụng."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Sao lưu Từ Ngày Đầu Tiên",
+        "body": "Mỗi máy chủ mới đều tự động nhận lịch sao lưu hàng ngày. Sao lưu an toàn: bảng điều khiển tạm dừng lưu, làm sạch thế giới, nén nó và kiểm tra xem tệp lưu trữ có mở được không trước khi ghi lại. Khôi phục đưa máy chủ trở lại trạng thái chính xác như ban đầu và trước tiên tạo một bản sao lưu an toàn của dữ liệu hiện tại.",
+        "shot": "backups"
+      },
+      {
+        "title": "Quản trị và Số liệu Thống kê mà Không cần Plugin",
+        "body": "Vanilla không có hệ thống phân quyền, vì vậy bảng điều khiển cung cấp cho bạn các công cụ quản trị thay thế: danh sách trắng, ops ở mọi cấp độ, cấm và cấm IP, và dịch chuyển tức thời, trực tiếp khi máy chủ đang chạy và trực tiếp vào tệp khi nó đã dừng. Thống kê của trò chơi được đọc theo lịch trình vào hồ sơ người chơi và bảng điểm: thời gian chơi, số lần chết, số lần giết, số khối và kim cương đã khai thác, và khoảng cách đã di chuyển. Dòng thời gian hoạt động giữ cho trò chuyện, lượt tham gia, lượt chết và thành tích có thể tìm kiếm được."
+      }
+    ],
+    "faq": {
+      "title": "Câu hỏi về Máy chủ Vanilla",
+      "items": [
+        {
+          "q": "Tôi có thể chạy máy chủ snapshot không?",
+          "a": "Có. Chọn một snapshot làm phiên bản Minecraft trong trình hướng dẫn. Giữ một bản sao lưu trước mỗi snapshot mới, vì thế giới snapshot không thể được mở trong phiên bản cũ hơn."
+        },
+        {
+          "q": "Máy chủ vanilla có thể có bản đồ trực tiếp không?",
+          "a": "Không với vanilla. BlueMap cần một plugin hoặc trình tải mod để chạy. Máy chủ Paper nhận được một cái chỉ bằng một cú nhấp chuột, và người chơi vẫn tham gia bằng một client không sửa đổi."
+        },
+        {
+          "q": "Tôi có thể đặt lại thế giới nhưng giữ nguyên seed không?",
+          "a": "Có. Đặt lại thế giới đang hoạt động từ tab Thế giới và chọn giữ nguyên seed hiện tại. Bảng điều khiển trước tiên cung cấp một bản sao lưu an toàn của thế giới cũ."
+        },
+        {
+          "q": "Máy chủ vanilla có thể xử lý bao nhiêu người chơi?",
+          "a": "Vanilla chậm hơn Paper với nhiều người chơi. Đối với một nhóm bạn thì ổn. Đối với máy chủ công cộng bận rộn, Paper chạy cùng một trò chơi với nhiều năm tối ưu hóa hiệu suất."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Khởi chạy Máy chủ Vanilla",
+      "body": "Cài đặt bảng điều khiển, chọn Vanilla trong trình hướng dẫn và chia sẻ địa chỉ. Miễn phí và mã nguồn mở."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Máy chủ modpack Minecraft: cài đặt chỉ với một cú nhấp chuột",
+      "description": "Chạy máy chủ modpack Minecraft từ CurseForge, Modrinth, FTB hoặc GT New Horizons. Các gói được ghim và mỗi bản cập nhật đi kèm với bản sao lưu và khả năng hoàn nguyên."
+    },
+    "eyebrow": "Máy chủ Modpack",
+    "title": "Máy chủ modpack Minecraft không bao giờ tự nâng cấp",
+    "intro": "Cài đặt một gói theo tên, ghim nó vào một phiên bản chính xác và chỉ nâng cấp khi bạn chọn, với bản sao lưu trước và khả năng hoàn nguyên chỉ bằng một cú nhấp chuột nếu phiên bản mới không khởi động.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Mọi Nguồn Gói Lớn",
+        "body": "Trang Modpacks và tab From Modpack của trình hướng dẫn cài đặt các gói từ CurseForge và Modrinth bằng cách tìm kiếm tên của chúng, các gói FTB bằng ID gói và phiên bản của chúng, và GT New Horizons từ chỉ mục phát hành của riêng nó. Không có gói nào được xuất bản? Tải lên một tệp .mrpack của Modrinth, một bản xuất modpack của CurseForge hoặc bất kỳ tệp zip mod jar nào. Tệp kê khai, hoặc đa số phiếu bầu trên các jar đã xác định, sẽ điền vào trình tải và phiên bản Minecraft.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge yêu cầu khóa API, được thêm một lần trong Settings, API Keys.",
+          "Các mod mà tác giả không cho phép tải xuống tự động được liệt kê với một liên kết và một khe tải lên thay vì làm lỗi cài đặt.",
+          "GT New Horizons được đặt phiên bản Java và các yêu cầu tối thiểu về bộ nhớ và dung lượng đĩa hợp lý cho bạn."
+        ]
+      },
+      {
+        "title": "Ghim vào Phiên bản Chính xác",
+        "body": "Khi bạn chọn một gói, bảng điều khiển sẽ phân giải phiên bản chính xác, ghi lại nó và cài đặt phiên bản đó. Một lần khởi động lại không bao giờ có thể âm thầm nâng cấp gói. Bạn chọn cách mỗi máy chủ nhận thông báo về các phiên bản mới: Manual Only sẽ bỏ qua hoàn toàn, Notify Me hiển thị một huy hiệu và liệt kê nó trên trang Updates, và Auto-Update sẽ áp dụng các bản cập nhật gói sau kiểm tra hàng ngày thông qua cùng một đường dẫn được bảo vệ. Các bản cập nhật di chuyển thế giới sang phiên bản Minecraft khác luôn bị bỏ qua, vì chuyển đổi thế giới là quyết định của bạn.",
+        "points": [
+          "Manual Only là mặc định.",
+          "Các máy chủ theo dõi các bản phát hành ổn định không bao giờ được cung cấp bản beta.",
+          "Auto-Update không bao giờ vượt qua một phiên bản Minecraft."
+        ]
+      },
+      {
+        "title": "Nâng cấp với Khả năng Quay lại",
+        "body": "Nâng cấp một gói là một hành động. Bảng điều khiển tạo bản sao lưu, dừng máy chủ một cách duyên dáng, thay đổi phiên bản đã ghim, xây dựng lại máy chủ với Java phù hợp cho phiên bản mới và theo dõi lần khởi động đầu tiên, với một cửa sổ hào phóng cho các gói lớn tải xuống hàng gigabyte khi khởi động lần đầu. Nếu phiên bản mới không khởi động, hãy hoàn nguyên chỉ bằng một cú nhấp chuột.",
+        "shot": "backups"
+      },
+      {
+        "title": "Mod của Riêng Bạn Ở Trên Cùng",
+        "body": "Các mod bạn thêm vào máy chủ gói sẽ nằm trong thư viện dùng chung và được liên kết vào máy chủ, vì vậy chúng tồn tại qua các bản cập nhật gói. Vô hiệu hóa một mod gói bạn không muốn, thêm một mod hiệu suất mà gói thiếu và giữ cả hai qua lần nâng cấp tiếp theo. Người chơi cài đặt cùng một gói ở cùng một phiên bản từ CurseForge hoặc Modrinth, và tab Invites cung cấp cho bạn một lời mời sẵn sàng để dán với địa chỉ và phiên bản.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Khởi chạy Máy chủ Modpack trong Ba Bước",
+      "items": [
+        {
+          "title": "Tìm Gói",
+          "body": "Tìm kiếm CurseForge hoặc Modrinth trên trang Modpacks, hoặc tải lên tệp .mrpack, bản xuất CurseForge hoặc zip các jar."
+        },
+        {
+          "title": "Chọn Phiên bản và Bộ nhớ",
+          "body": "Chọn phiên bản gói chính xác. Cung cấp đủ dung lượng heap Java cho số lượng mod; giới hạn container sẽ theo sau."
+        },
+        {
+          "title": "Tạo và Theo dõi Khởi động",
+          "body": "Bảng điều khiển cài đặt gói, ghim nó và khởi động máy chủ. Lần khởi động đầu tiên của một gói lớn sẽ mất một lúc; bảng điều khiển hiển thị mọi dòng."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu hỏi về Máy chủ Modpack",
+      "items": [
+        {
+          "q": "Khởi động lại máy chủ có cập nhật modpack của tôi không?",
+          "a": "Không. Gói được ghim vào phiên bản chính xác bạn đã cài đặt. Nó chỉ thay đổi khi bạn nâng cấp nó, hoặc sau kiểm tra hàng ngày nếu bạn đặt máy chủ thành Auto-Update."
+        },
+        {
+          "q": "Tại sao CurseForge cần khóa API trong khi Modrinth thì không?",
+          "a": "CurseForge chỉ trả lời các yêu cầu có khóa. Bạn có thể lấy một khóa từ bảng điều khiển CurseForge và thêm nó một lần trong Settings, API Keys. Modrinth hoạt động mà không cần khóa."
+        },
+        {
+          "q": "Một số mod trong gói của tôi không thể tải xuống được. Bây giờ phải làm sao?",
+          "a": "Tác giả của chúng không cho phép tải xuống tự động. Bảng điều khiển liệt kê từng mod với liên kết đến trang của nó và một khe tải lên, vì vậy bạn tải xuống tệp jar trong trình duyệt của mình và thả nó vào đó."
+        },
+        {
+          "q": "Tôi có thể cài đặt gói FTB không?",
+          "a": "Có, thông qua API FTB với ID số của gói và ID phiên bản rõ ràng. Bảng điều khiển chưa kiểm tra các gói FTB để cập nhật."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Chạy Máy chủ Modpack của Bạn tại Nhà",
+      "body": "Cài đặt bảng điều khiển, mở trang Modpacks và chọn một gói. Nó sẽ giữ nguyên phiên bản bạn đã chọn cho đến khi bạn yêu cầu khác."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Hướng dẫn: Tự host máy chủ Minecraft",
+      "description": "Hướng dẫn tự host máy chủ Minecraft: máy chủ modpack cho bạn bè, Raspberry Pi, PC tại nhà, rời khỏi dịch vụ hosting trả phí và nhiều máy chủ trên một máy."
+    },
+    "eyebrow": "Hướng dẫn",
+    "title": "Hướng dẫn tự host máy chủ Minecraft",
+    "intro": "Các hướng dẫn thực tế cho các thiết lập mà mọi người thực sự sử dụng, từ Raspberry Pi trên kệ đến một máy tính đầy các máy chủ.",
+    "cards": {
+      "guideFriends": "Host một modpack CurseForge hoặc Modrinth cho bạn bè của bạn, với dung lượng RAM phù hợp và một lời mời mà họ có thể làm theo.",
+      "guidePi": "Biến Raspberry Pi 4 hoặc 5 thành máy chủ Minecraft với bảng điều khiển web và ước tính dung lượng hợp lý.",
+      "guideHome": "Host máy chủ Minecraft tại nhà trên Windows, macOS hoặc Linux và cho phép bạn bè tham gia an toàn.",
+      "guideHosting": "Di chuyển thế giới, plugin và mod của bạn khỏi dịch vụ hosting trả phí mà không làm mất bất kỳ vật phẩm nào trong kho đồ.",
+      "guideMulti": "Chạy nhiều máy chủ Minecraft trên cùng một máy mà không làm ảnh hưởng đến cổng, RAM hoặc dung lượng ổ đĩa."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Cần thứ gì đó không được đề cập ở đây?",
+      "body": "Tài liệu đi sâu vào mọi tính năng và Discord có những người thực sự đang chạy máy chủ."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Tạo Máy Chủ Modpack Cho Bạn Bè",
+      "description": "Tạo máy chủ modpack CurseForge hoặc Modrinth trên máy của bạn cho bạn bè: chọn gói, cấp đủ bộ nhớ, mời bạn bè và sao lưu."
+    },
+    "eyebrow": "Hướng dẫn máy chủ Modpack",
+    "title": "Cách Tạo Máy Chủ Modpack Cho Bạn Bè",
+    "intro": "Máy tính của bạn có thể chạy gói mod mà bạn chơi cùng bạn bè. Cài đặt bảng điều khiển, tạo máy chủ từ gói mod, cấp đủ bộ nhớ cần thiết và gửi lời mời cho bạn bè.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Chọn Gói Mod Từ Trình Phù Thủy",
+        "body": "Trang Modpacks và tab From Modpack của trình tạo máy chủ sẽ tìm kiếm trên CurseForge và Modrinth theo tên; trình tạo cũng chấp nhận gói FTB theo ID hoặc tệp xuất gói bạn đã có. Chọn phiên bản mà bạn bè của bạn sẽ chơi. Bảng điều khiển sẽ cài đặt chính xác phiên bản đó và giữ nguyên: khởi động lại sẽ không tự động nâng cấp gói mod. CurseForge yêu cầu khóa API miễn phí, thêm một lần trong Cài đặt, API Keys; Modrinth không cần.",
+        "points": [
+          "Tìm kiếm trên CurseForge và Modrinth, hoặc tải lên tệp .mrpack, tệp xuất CurseForge hoặc tệp zip chứa các tệp mod.",
+          "Phiên bản gói mod được ghim, vì vậy mọi người chơi cùng một phiên bản.",
+          "Java được chọn cho phiên bản Minecraft của gói mod."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Cấp Đủ Bộ Nhớ",
+        "body": "Các gói mod yêu cầu bộ nhớ nhiều hơn đáng kể so với máy chủ vanilla, và một máy chủ có hai thông số: heap của Java và giới hạn của container xung quanh nó, giới hạn này phải lớn hơn vì Java sử dụng bộ nhớ ngoài heap của nó. Một gói nhẹ với 40 đến 80 mod cần heap 4 GB trong container 6 GB; một gói lớn phức tạp cần 6 đến 8 GB heap trong container 10 GB. Bảng điều khiển sẽ thông báo cho máy chủ đã dừng do hết bộ nhớ khác với lỗi crash, vì vậy bạn biết cài đặt nào cần thay đổi.",
+        "points": [
+          "Đặt bộ nhớ trong trình tạo máy chủ và thay đổi sau đó trong cài đặt của máy chủ.",
+          "Để lại bộ nhớ cho hệ điều hành và bảng điều khiển.",
+          "Tab Giám sát hiển thị những gì máy chủ thực sự sử dụng."
+        ]
+      },
+      {
+        "title": "Gửi Lời Mời Cho Bạn Bè",
+        "body": "Bạn bè cài đặt cùng một gói mod với cùng một phiên bản trong trình khởi chạy của họ: ứng dụng CurseForge, ứng dụng Modrinth hoặc Prism Launcher. Tab Lời mời của máy chủ, trong Cài đặt, sao chép địa chỉ để chia sẻ và văn bản lời mời kèm theo phiên bản Minecraft. Bạn bè trong mạng của bạn sử dụng địa chỉ cục bộ. Đối với bạn bè ở xa, chuyển tiếp cổng game trên bộ định tuyến của bạn hoặc sử dụng đường hầm khi nhà cung cấp của bạn không cho phép.",
+        "points": [
+          "Tab Lời mời cung cấp địa chỉ cục bộ, địa chỉ công cộng của bạn và địa chỉ tùy chỉnh.",
+          "Nếu danh sách trắng được bật, hãy thêm từng người bạn vào tab Người chơi trước.",
+          "Đối với máy chủ được tạo từ các mod bạn đã chọn, tab Lời mời cũng tạo một tệp .mrpack cho máy khách để cài đặt chúng và thêm máy chủ vào danh sách nhiều người chơi."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Giữ Thế Giới An Toàn",
+        "body": "Mỗi máy chủ mới đều có lịch sao lưu hàng ngày. Trước khi cập nhật gói mod, bảng điều khiển sẽ thực hiện một bản sao lưu khác, xây dựng lại máy chủ trên phiên bản mới và theo dõi lần khởi động đầu tiên; nếu không khởi động được, chỉ cần một cú nhấp chuột để hoàn nguyên. Các mod bạn thêm vào gói sẽ được giữ nguyên sau khi cập nhật.",
+        "points": [
+          "Sao lưu hàng ngày ngay từ ngày đầu tiên.",
+          "Cập nhật và hạ cấp gói mod với bản sao lưu và khả năng hoàn nguyên.",
+          "Báo cáo lỗi được phát hiện, giải thích và có thể chia sẻ."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Tạo Máy Chủ Modpack Của Riêng Bạn",
+      "items": [
+        {
+          "title": "Cài Đặt Bảng Điều Khiển",
+          "body": "Trên Linux, trình cài đặt một dòng sẽ thiết lập Docker và bảng điều khiển. Trên Windows và macOS, chạy bảng điều khiển với Node.js bên cạnh Docker Desktop."
+        },
+        {
+          "title": "Thêm Khóa API CurseForge",
+          "body": "Chỉ dành cho các gói CurseForge: thêm khóa miễn phí trong Cài đặt, API Keys."
+        },
+        {
+          "title": "Tạo Máy Chủ Từ Gói Mod",
+          "body": "Mở tab From Modpack của trình tạo máy chủ, tìm gói mod, chọn phiên bản và bộ nhớ của nó, sau đó tạo máy chủ."
+        },
+        {
+          "title": "Mời Bạn Bè",
+          "body": "Khởi động máy chủ, mở Cài đặt, Lời mời và gửi văn bản lời mời. Bạn bè cài đặt cùng phiên bản gói mod trong trình khởi chạy của họ và tham gia."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu Hỏi Về Máy Chủ Modpack",
+      "items": [
+        {
+          "q": "Máy chủ modpack cần bao nhiêu RAM?",
+          "a": "Khoảng 6 GB cho gói nhẹ với 40 đến 80 mod và 10 GB cho gói lớn với 150 đến 300 mod, mỗi gói có heap Java nhỏ hơn bên trong. Các gói chuyên sâu như GregTech New Horizons cần 16 GB. Cũng cần để lại dung lượng cho hệ điều hành."
+        },
+        {
+          "q": "Bạn bè của tôi có cần cùng phiên bản modpack không?",
+          "a": "Có. Máy chủ chạy một phiên bản gói mod được ghim, và máy khách có các phiên bản mod khác nhau thường sẽ bị từ chối hoặc gặp lỗi. Hãy cho bạn bè biết phiên bản hiển thị trên tab Tổng quan của máy chủ."
+        },
+        {
+          "q": "Bạn bè có thể tham gia mà không cần chuyển tiếp cổng không?",
+          "a": "Có, nếu họ ở trong mạng của bạn. Từ nơi khác, hãy chuyển tiếp cổng game trên bộ định tuyến của bạn hoặc sử dụng dịch vụ đường hầm, dịch vụ này cũng hoạt động khi nhà cung cấp của bạn chặn chuyển tiếp cổng."
+        },
+        {
+          "q": "Điều gì xảy ra khi gói mod được cập nhật?",
+          "a": "Với chính sách Thông báo cho tôi, trang Cập nhật sẽ hiển thị. Áp dụng cập nhật sẽ sao lưu, xây dựng lại máy chủ và theo dõi lần khởi động đầu tiên, và việc hoàn nguyên chỉ cần một cú nhấp chuột. Bạn bè của bạn cũng sẽ cập nhật gói mod trong trình khởi chạy của họ."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Chơi Gói Mod Của Bạn Trên Máy Chủ Riêng",
+      "body": "Miễn phí, mã nguồn mở và không cần tài khoản với bất kỳ ai. Cài đặt bảng điều khiển và tạo máy chủ từ gói mod trong trình tạo máy chủ."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Máy chủ Minecraft trên Raspberry Pi với bảng điều khiển web",
+      "description": "Thiết lập máy chủ Minecraft trên Raspberry Pi với bảng điều khiển web miễn phí. Cần những phần cứng nào, cách cài đặt chỉ với một lệnh và cách phân bổ bộ nhớ."
+    },
+    "eyebrow": "Hướng dẫn Raspberry Pi",
+    "title": "Chạy máy chủ Minecraft trên Raspberry Pi với bảng điều khiển web thực thụ",
+    "intro": "Raspberry Pi 4 hoặc 5 là nơi hoạt động yên tĩnh, tiết kiệm điện cho một máy chủ Minecraft nhỏ. Đây là những gì bạn cần mua, cách cài đặt bảng điều khiển chỉ với một lệnh và giới hạn hiệu năng.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Những gì bạn cần",
+        "body": "Bảng điều khiển và hình ảnh máy chủ của nó được xuất bản cho arm64, vì vậy Raspberry Pi 64-bit chạy chúng như bất kỳ máy Linux nào khác. Bộ nhớ là giới hạn quan trọng nhất: một máy chủ vanilla hoặc Paper cho tối đa mười người chơi cần 2 GB Java heap trên máy 4 GB, và một modpack nhẹ cần 4 GB heap trên máy 6 GB. Điều này đặt Pi 4 GB ở mức thấp và Pi 8 GB ở mức trung bình thoải mái.",
+        "points": [
+          "Raspberry Pi 4 hoặc 5 với 4 GB bộ nhớ trở lên. 8 GB nếu bạn muốn mod.",
+          "Hệ điều hành 64-bit, chẳng hạn như Raspberry Pi OS 64-bit.",
+          "Ổ SSD qua USB thay vì thẻ SD. Thế giới game đọc và ghi liên tục, và thế giới trên bộ lưu trữ chậm sẽ bị giật khi tải chunk.",
+          "Kết nối mạng có dây nếu có thể."
+        ]
+      },
+      {
+        "title": "Chọn loại máy chủ phù hợp với Pi",
+        "body": "Minecraft quan tâm nhiều hơn đến tốc độ của một lõi hơn là số lượng lõi, và các lõi của Pi khá khiêm tốn. Paper chạy cùng một trò chơi như vanilla với nhiều năm tối ưu hóa hiệu suất, và người chơi vẫn tham gia bằng một client không sửa đổi. Nếu bạn muốn mod, Fabric với một vài mod hiệu suất và tiện ích cuộc sống là lựa chọn tốt hơn một gói Forge lớn. Một gói \"kitchen-sink\" với 200 mod không phải là công việc dành cho Pi.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Nhóm nhỏ, game không thay đổi: Paper.",
+          "Một vài mod: Fabric.",
+          "Giảm khoảng cách nhìn; giảm từ 12 xuống 8 chunk giúp tiết kiệm nhiều bộ nhớ và hầu như không nhận thấy khi chơi."
+        ]
+      },
+      {
+        "title": "Theo dõi nó",
+        "body": "Tab Giám sát của máy chủ hiển thị số tick mỗi giây và mili giây mỗi tick, vì vậy bạn có thể thấy khi Pi bị chậm. Đồng hồ đo bộ nhớ hiển thị những gì container thực sự sử dụng. Theo mặc định, Java yêu cầu toàn bộ heap của nó ngay lập tức; nếu bạn muốn thấy bộ nhớ theo mức sử dụng thực tế, hãy đặt một heap ban đầu nhỏ hơn trong thẻ Tài nguyên của máy chủ. Sao lưu hàng ngày được bật từ ngày đầu tiên.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Cài đặt Bảng điều khiển trên Raspberry Pi",
+      "items": [
+        {
+          "title": "Flash hệ điều hành 64-bit",
+          "body": "Cài đặt Raspberry Pi OS 64-bit (hoặc Linux 64-bit khác), khởi động từ SSD nếu có thể và cập nhật hệ thống."
+        },
+        {
+          "title": "Chạy Trình cài đặt Một dòng",
+          "body": "Trình cài đặt trên trang Cài đặt sẽ cài đặt Docker nếu thiếu, thiết lập bảng điều khiển trong /opt/msm, khởi động nó và chờ cho đến khi nó phản hồi. Nó tự động phát hiện arm64."
+        },
+        {
+          "title": "Hoàn tất Thiết lập trong Trình duyệt",
+          "body": "Mở địa chỉ IP của Pi trên cổng 25564 từ một máy tính khác. Vì bảng điều khiển có thể truy cập được từ mạng của bạn, thiết lập sẽ yêu cầu mã PIN 6 chữ số, mà trình cài đặt sẽ in ra cho bạn."
+        },
+        {
+          "title": "Tạo một Máy chủ Nhỏ",
+          "body": "Chọn Paper hoặc Fabric trong trình hướng dẫn. Bộ nhớ mặc định sẽ điều chỉnh theo RAM của Pi; hãy để lại dung lượng cho hệ thống và các dịch vụ khác."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu hỏi về Raspberry Pi",
+      "items": [
+        {
+          "q": "Raspberry Pi 3 có hoạt động không?",
+          "a": "Nó không phù hợp. Pi 3 có 1 GB bộ nhớ, trong khi ngay cả một máy chủ vanilla hoặc Paper nhỏ cũng cần 2 GB heap trên máy 4 GB. Hãy sử dụng Pi 4 hoặc 5 với 4 GB trở lên."
+        },
+        {
+          "q": "Tôi có cần hệ điều hành 64-bit không?",
+          "a": "Có. Hình ảnh bảng điều khiển và trình cài đặt được xây dựng cho arm64 và amd64, và trình cài đặt sẽ dừng trên bất kỳ kiến trúc nào khác."
+        },
+        {
+          "q": "Tôi có thể chạy một modpack lớn trên Pi không?",
+          "a": "Các gói lớn yêu cầu 6 đến 8 GB Java heap và khoảng 10 GB bộ nhớ tổng cộng, nhiều hơn bất kỳ Pi nào có. Hãy gắn bó với Paper hoặc một thiết lập Fabric nhẹ."
+        },
+        {
+          "q": "Làm thế nào để người chơi bên ngoài nhà tôi tham gia?",
+          "a": "Chuyển tiếp cổng game, mặc định là 25565 qua TCP và UDP, từ bộ định tuyến của bạn đến Pi. Không bao giờ chuyển tiếp cổng của bảng điều khiển hoặc cổng RCON; thay vào đó, hãy truy cập bảng điều khiển qua VPN hoặc proxy ngược có TLS."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Biến Pi của bạn thành một Máy chủ",
+      "body": "Một lệnh cài đặt mọi thứ. Bảng điều khiển miễn phí, mã nguồn mở và chạy hoàn toàn trên Pi."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Tự host máy chủ Minecraft tại nhà, từng bước",
+      "description": "Tự host máy chủ Minecraft tại nhà trên Windows, macOS hoặc Linux với bảng điều khiển web miễn phí. Cài đặt, giữ bảng điều khiển ở chế độ riêng tư và cho phép bạn bè tham gia an toàn."
+    },
+    "eyebrow": "Hướng dẫn máy chủ tại nhà",
+    "title": "Tự host máy chủ Minecraft tại nhà trên Windows, macOS hoặc Linux",
+    "intro": "Bất kỳ máy tính nào có thể chạy Docker đều có thể host máy chủ của bạn. Cài đặt bảng điều khiển, giữ nó ở chế độ riêng tư, chỉ mở cổng game và bạn bè của bạn có thể tham gia từ mọi nơi.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Hai cách cài đặt",
+        "body": "Trên máy Linux, trình cài đặt một dòng thực hiện mọi thứ: nó cài đặt Docker nếu thiếu, chạy bảng điều khiển dưới dạng một container và khởi động lại nó sau khi khởi động lại. Trên Windows và macOS, chạy bảng điều khiển trực tiếp với Node.js 24 bên cạnh Docker Desktop. Bảng điều khiển sẽ hiển thị thông báo rõ ràng và dừng nếu Node.js của bạn quá cũ, và nếu Docker chưa chạy, bạn vẫn nhận được bảng điều khiển đầy đủ; máy chủ sẽ khởi động ngay khi Docker hoạt động.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: trình cài đặt, hoặc tệp compose trong Portainer hoặc Dockge.",
+          "Windows: Docker Desktop với backend WSL2, sau đó là bảng điều khiển từ mã nguồn.",
+          "macOS: Docker Desktop, sau đó là bảng điều khiển từ mã nguồn.",
+          "Dưới PM2 hoặc systemd, bảng điều khiển sẽ tồn tại sau khi khởi động lại."
+        ]
+      },
+      {
+        "title": "Giữ bảng điều khiển ở chế độ riêng tư",
+        "body": "Người chơi không bao giờ tương tác với bảng điều khiển. Họ kết nối với cổng game. Một cài đặt mới từ mã nguồn chỉ phản hồi trên máy mà nó chạy, tại cổng localhost 25564. Để truy cập nó từ máy tính khác trong mạng nội bộ của bạn, hãy đặt nó lắng nghe trên mạng của bạn; quá trình thiết lập sau đó sẽ yêu cầu mã PIN dùng một lần, vì vậy kẻ lạ mặt nào truy cập cổng trước tiên sẽ không thể chiếm quyền tài khoản quản trị. Không bao giờ chuyển tiếp cổng của bảng điều khiển ra internet. Để quản lý máy chủ từ xa, hãy sử dụng VPN, đường hầm SSH hoặc proxy ngược với TLS.",
+        "points": [
+          "Chỉ Localhost khi cài đặt.",
+          "Mã PIN thiết lập khi bảng điều khiển có thể truy cập từ mạng.",
+          "Xác thực hai yếu tố cho mọi tài khoản."
+        ]
+      },
+      {
+        "title": "Cho phép bạn bè tham gia",
+        "body": "Mỗi máy chủ có một cổng game, bắt đầu từ 25565 và tăng dần. Trên bộ định tuyến của bạn, chuyển tiếp cổng đó, qua cả TCP và UDP, đến máy tính đang chạy máy chủ. Giữ các cổng điều khiển từ xa, cao hơn cổng game 1000, đóng: bảng điều khiển truy cập chúng từ bên trong container và không bao giờ cần chúng mở. Cung cấp cho người chơi một tên miền bạn kiểm soát thay vì địa chỉ nhà của bạn, vì vậy việc thay đổi địa chỉ sẽ là thay đổi DNS chứ không phải là tin nhắn cho mọi người chơi.",
+        "points": [
+          "Chỉ chuyển tiếp cổng game, TCP và UDP.",
+          "Giữ RCON và cổng bảng điều khiển đóng.",
+          "Tab Tổng quan hiển thị địa chỉ để chia sẻ."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Làm cho nó hoạt động như một máy chủ",
+        "body": "Một máy tính tại nhà đang ngủ sẽ đưa máy chủ của bạn vào trạng thái ngủ, vì vậy hãy tắt chế độ ngủ trên máy chủ đó. Chọn Bắt đầu khi khởi động bảng điều khiển trong cài đặt của máy chủ và nó sẽ khởi động lại cùng với bảng điều khiển. Tự động khởi động lại khi gặp sự cố sẽ đưa máy chủ gặp sự cố trở lại với khoảng thời gian chờ đợi tăng dần giữa các lần thử. Sao lưu hàng ngày được lên lịch cho mọi máy chủ mới, và lịch trình có thể khởi động lại máy chủ vào những giờ yên tĩnh.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Host Máy chủ đầu tiên của bạn tại nhà",
+      "items": [
+        {
+          "title": "Cài đặt Docker",
+          "body": "Docker Engine trên Linux, hoặc Docker Desktop trên Windows và macOS. Trên Windows, chia sẻ ổ đĩa chứa bảng điều khiển với Docker Desktop."
+        },
+        {
+          "title": "Cài đặt và Mở Bảng điều khiển",
+          "body": "Làm theo trang Cài đặt cho hệ thống của bạn, sau đó mở bảng điều khiển trong trình duyệt. Thiết lập sẽ kiểm tra Docker, tạo tài khoản quản trị của bạn và hỏi múi giờ của bạn."
+        },
+        {
+          "title": "Tạo Máy chủ",
+          "body": "Trình hướng dẫn đề xuất một cổng miễn phí và bộ nhớ phù hợp với máy của bạn. Chọn loại máy chủ và nhấn tạo."
+        },
+        {
+          "title": "Chuyển tiếp Cổng Game",
+          "body": "Chuyển tiếp cổng game của máy chủ trên bộ định tuyến của bạn, TCP và UDP, và gửi cho bạn bè địa chỉ từ tab Tổng quan."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu hỏi về Host tại nhà",
+      "items": [
+        {
+          "q": "Tôi có thể host trên cùng một PC mà tôi đang chơi không?",
+          "a": "Có, miễn là nó có đủ bộ nhớ cho cả hai. Cung cấp cho máy chủ heap của nó cộng với không gian dự phòng cho Java, và để lại đủ cho ứng dụng khách game. Một máy chủ vanilla cho một vài người bạn cần khoảng 4 GB cho riêng nó."
+        },
+        {
+          "q": "Tại sao bạn bè trên Wi-Fi của tôi có thể tham gia nhưng bạn bè bên ngoài thì không?",
+          "a": "Cổng game không được chuyển tiếp trên bộ định tuyến của bạn, hoặc tường lửa chặn nó. Chuyển tiếp cổng game của máy chủ qua TCP và UDP đến máy chủ host, và cho phép nó trong tường lửa của máy."
+        },
+        {
+          "q": "Tôi có thể chạy image Docker của bảng điều khiển trên Windows hoặc macOS không?",
+          "a": "Cài đặt container nhắm mục tiêu các host Linux. Trên Windows và macOS, chạy bảng điều khiển từ mã nguồn với Node.js 24 bên cạnh Docker Desktop, hoạt động tương tự sau khi nó đã chạy."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Bắt đầu Host tại nhà",
+      "body": "Miễn phí, mã nguồn mở và không cần tài khoản với bất kỳ ai. Máy chủ của bạn nằm trong một thư mục trên chính máy của bạn."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Bỏ hosting Minecraft trả phí: chuyển thế giới của bạn",
+      "description": "Chuyển máy chủ Minecraft khỏi dịch vụ hosting trả phí: lấy đúng tệp, mang thế giới và plugin vào bảng điều khiển của riêng bạn, giữ nguyên mọi vật phẩm, và giữ nguyên địa chỉ."
+    },
+    "eyebrow": "Hướng dẫn di chuyển",
+    "title": "Chuyển máy chủ Minecraft của bạn khỏi dịch vụ hosting trả phí",
+    "intro": "Mang thế giới, plugin và mod của bạn về nhà với mọi vật phẩm còn nguyên vẹn. Kiểm kê trước, sao chép toàn bộ thư mục máy chủ, xây dựng lại nó trong bảng điều khiển của riêng bạn, và chỉ sau đó mới hướng người chơi đến đó.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Kiểm kê trước khi tải xuống",
+        "body": "Ghi lại những điều này khi máy chủ cũ vẫn đang chạy. Mọi thứ trong số này đều đã khiến quá trình di chuyển thất bại khi nó được giả định thay vì kiểm tra. Chế độ trực tuyến (Online mode) quan trọng nhất: nếu máy chủ cũ chạy mà tắt chế độ này và máy chủ mới chạy mà bật, hoặc ngược lại, mọi người chơi sẽ có một danh tính khác và một kho đồ hoàn toàn mới, trống rỗng.",
+        "points": [
+          "Phiên bản Minecraft và trình tải (loader) chính xác. 1.20.1 NeoForge không phải là 1.20.1 Forge.",
+          "Danh sách mod hoặc plugin, kèm theo phiên bản.",
+          "Tên cấp độ (level-name) từ server.properties. Thư mục thế giới thường không được đặt tên là world.",
+          "Chế độ trực tuyến (Online mode), bật hay tắt.",
+          "Bất cứ thứ gì nằm ngoài thư mục máy chủ, chẳng hạn như cơ sở dữ liệu của plugin."
+        ]
+      },
+      {
+        "title": "Lấy toàn bộ thư mục, không chỉ thế giới",
+        "body": "Sử dụng trình quản lý tệp hoặc tùy chọn tải xuống của nhà cung cấp dịch vụ hosting và lấy toàn bộ thư mục máy chủ. Lấy các tệp jar của plugin và mod, không phải danh sách tên: phiên bản rất quan trọng, và phiên bản mới nhất sẽ là một tệp khác vào tháng tới. Tải xuống các bản sao lưu của bạn nữa. Một bản sao lưu chỉ tồn tại bên trong bảng điều khiển mà bạn đang rời đi không phải là bản sao lưu bạn sở hữu. Dừng máy chủ đúng cách trước khi tải xuống lần cuối để trò chơi ghi thế giới vào đĩa."
+      },
+      {
+        "title": "Xây dựng lại trong bảng điều khiển của riêng bạn",
+        "body": "Tạo một máy chủ cùng loại và cùng phiên bản chính xác. Sau đó, đưa các phần vào. Trang Thế giới (Worlds) nhận thế giới của bạn dưới dạng tệp lưu trữ .zip hoặc .tar, tự động tìm thấy thế giới bên trong nó và cài đặt nó vào máy chủ, sao lưu cái hiện tại trước. Trên máy chủ plugin hoặc mod, nhập một tệp zip các tệp jar của bạn: mỗi tệp sẽ được xác định, đánh giá so với máy chủ và cài đặt nếu nó phù hợp. Các tệp cấu hình và phần còn lại được đưa vào thông qua trình quản lý tệp, cho phép chỉnh sửa và tải lên ngay trong trình duyệt. Nếu máy chủ cũ chạy một gói đã xuất bản, hãy cài đặt cùng một gói ở cùng phiên bản thay thế.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Tải lên Thế giới (Upload World) tìm thấy thế giới bên trong tệp lưu trữ của bạn.",
+          "Nhập Zip (Import Zip) xác định mọi tệp jar và kiểm tra nó với máy chủ.",
+          "Trình quản lý tệp xử lý các tệp cấu hình, danh sách trắng (whitelist) và quản trị viên (ops)."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Giữ nguyên địa chỉ, giữ chân người chơi",
+        "body": "Nếu người chơi kết nối bằng địa chỉ IP trần, mọi lần di chuyển sẽ khiến họ phải chỉnh sửa danh sách máy chủ của mình, và một số người sẽ không bao giờ làm vậy. Sử dụng một tên miền bạn kiểm soát và trỏ nó vào máy mới của bạn. Việc di chuyển sau đó trở thành một thay đổi DNS. Giảm thời gian chờ (time to live) của bản ghi xuống một ngày trước khi chuyển đổi để thay đổi lan truyền nhanh chóng. Bản ghi SRV cho phép người chơi nhập một tên miền trần ngay cả khi máy chủ chạy trên một cổng khác, giống như cách các nhà cung cấp dịch vụ làm để cung cấp địa chỉ chơi."
+      }
+    ],
+    "steps": {
+      "title": "Quá trình chuyển đổi, theo thứ tự",
+      "items": [
+        {
+          "title": "Kiểm tra trên cổng riêng",
+          "body": "Khởi động máy chủ mới trên một cổng mà người chơi không biết, tự tham gia vào đó và kiểm tra một công trình bạn biết, kho đồ của bạn, và xem mọi plugin hoặc mod đã tải chưa."
+        },
+        {
+          "title": "Sao chép lần cuối",
+          "body": "Thông báo về việc khởi động lại, dừng máy chủ cũ đúng cách, tải xuống thế giới một lần nữa và cài đặt bản sao đó để các thay đổi mới nhất được đưa vào."
+        },
+        {
+          "title": "Chuyển đổi cổng và địa chỉ",
+          "body": "Di chuyển máy chủ đến cổng công cộng của nó bằng thẻ Cổng trò chơi (Game Port), sau đó trỏ tên miền của bạn vào máy mới."
+        },
+        {
+          "title": "Giữ máy chủ cũ trong một thời gian",
+          "body": "Chỉ hủy gói dịch vụ cũ sau vài ngày. Giữ nó ở trạng thái dừng, để không ai xây dựng trên bản sao bị bỏ rơi."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu hỏi di chuyển",
+      "items": [
+        {
+          "q": "Người chơi có giữ được kho đồ của họ không?",
+          "a": "Có, miễn là chế độ trực tuyến (online mode) giống nhau trên cả hai máy chủ và bạn đã di chuyển toàn bộ thư mục thế giới. Dữ liệu người chơi nằm bên trong thế giới, được khóa theo danh tính của mỗi người chơi, và danh tính đó sẽ thay đổi nếu chế độ trực tuyến thay đổi."
+        },
+        {
+          "q": "Nhà cung cấp dịch vụ của tôi chỉ cho phép tôi tải xuống thế giới. Như vậy có đủ không?",
+          "a": "Đối với máy chủ vanilla thì hầu hết là đủ. Đối với máy chủ plugin hoặc mod, bạn cũng cần các tệp jar ở phiên bản chính xác của chúng, vì thế giới sẽ không tải đúng nếu thiếu các mod đã tạo ra nó. Hãy yêu cầu nhà cung cấp dịch vụ của bạn cung cấp toàn bộ thư mục máy chủ."
+        },
+        {
+          "q": "Bảng điều khiển này thay thế những gì từ bảng điều khiển của nhà cung cấp dịch vụ của tôi?",
+          "a": "Bảng điều khiển thay thế bảng điều khiển, trình quản lý tệp, sao lưu, lịch trình, quản lý người chơi, cài đặt plugin và mod, cài đặt modpack, cộng với những thứ mà nhà cung cấp dịch vụ thường tính phí thêm, chẳng hạn như nhiều máy chủ hơn hoặc nhiều khe sao lưu hơn. Giới hạn là phần cứng của riêng bạn."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Mang máy chủ của bạn về nhà",
+      "body": "Cài đặt bảng điều khiển, tạo một máy chủ khớp với máy chủ cũ của bạn và tải lên thế giới của bạn. Miễn phí, mã nguồn mở và thuộc về bạn."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Chạy nhiều máy chủ Minecraft trên một máy",
+      "description": "Chạy nhiều máy chủ Minecraft trên một máy: cổng tự động, giới hạn bộ nhớ, CPU và ổ đĩa cho từng máy chủ, mod dùng chung và một bảng điều khiển cho toàn bộ hệ thống."
+    },
+    "eyebrow": "Hướng dẫn nhiều máy chủ",
+    "title": "Chạy nhiều máy chủ Minecraft trên một máy, một cách gọn gàng",
+    "intro": "Một thế giới sinh tồn, một máy chủ sáng tạo và một modpack cho cuối tuần, tất cả trên cùng một máy. Mỗi máy chủ có container riêng, cổng riêng và giới hạn riêng, và bạn có thể xem tất cả chúng trên một bảng điều khiển.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Cổng được sắp xếp cho bạn",
+        "body": "Các cổng game được cấp phát theo thứ tự trống đầu tiên, đếm tăng dần từ 25565, với cổng điều khiển từ xa cách cổng game 1000 bậc. Mười máy chủ sử dụng các cổng game từ 25565 đến 25574 và giữ RCON trong một khối riêng, vì vậy bạn có thể mở một dải cổng game liên tục trên tường lửa của mình mà không bao giờ để lộ RCON. Một cổng được coi là đã sử dụng nếu một máy chủ khác đang sử dụng nó, bất kỳ container Docker nào trên máy đang xuất bản nó, hoặc hệ thống báo cáo cổng đó bận. Di chuyển một máy chủ sau này bằng thẻ Cổng Game, và bảng điều khiển sẽ kiểm tra cổng mới trước khi lưu.",
+        "points": [
+          "Một cặp cổng game và RCON cho mỗi máy chủ, được gán tự động.",
+          "Chọn Cổng Trống Tiếp Theo để chọn cổng trống thấp nhất.",
+          "Chỉ mở dải cổng game. RCON vẫn đóng."
+        ]
+      },
+      {
+        "title": "Giới hạn để một máy chủ không thể làm cạn kiệt tài nguyên của các máy chủ khác",
+        "body": "Mỗi máy chủ là một container Docker riêng với giới hạn CPU, heap Java và giới hạn bộ nhớ cứng phía trên nó. Docker không thể giới hạn việc sử dụng ổ đĩa của một thư mục, vì vậy bảng điều khiển thực hiện điều đó: mỗi máy chủ có một hạn ngạch ổ đĩa, và một hành động có thể đẩy máy chủ vượt quá hạn ngạch đó, như cài đặt mod hoặc tải lên thế giới, sẽ bị chặn cho đến khi có thêm dung lượng. Bật Dừng Máy Chủ Khi Vượt Quá Hạn Ngạch và một máy chủ phát triển quá 10% so với hạn ngạch của nó sẽ bị dừng và ghi lại trong lịch sử của nó.",
+        "points": [
+          "Giới hạn CPU, heap và bộ nhớ cho từng máy chủ.",
+          "Hạn ngạch ổ đĩa được thực thi bởi bảng điều khiển.",
+          "Mặc định cho máy chủ mới sẽ thích ứng với bộ nhớ của máy."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Chia sẻ những gì có thể chia sẻ",
+        "body": "Các mod bạn thêm được lưu trữ một lần trong thư viện dùng chung, được loại bỏ trùng lặp bằng sha256 và được liên kết vào mọi máy chủ sử dụng chúng, vì vậy mười máy chủ chạy cùng một mod không lưu trữ nó mười lần. Thế giới được đưa vào thư viện thế giới mà bất kỳ máy chủ nào cũng có thể cài đặt từ đó. Một bản thiết kế ghi lại toàn bộ cấu hình của máy chủ dưới dạng một tệp .mcserver.zip duy nhất, và Bản sao sử dụng nó để tạo ra một máy chủ giống hệt với các cổng mới.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Một cái nhìn về toàn bộ hệ thống",
+        "body": "Bảng điều khiển hiển thị mọi máy chủ trong nháy mắt: trạng thái, bộ nhớ, người chơi trực tuyến, bản cập nhật đang chờ, và hoạt động gần đây. Thẻ tổ chức danh sách máy chủ. Lịch trình toàn cục chạy khởi động lại, sao lưu hoặc lệnh trên các máy chủ, và trang Cập nhật thu thập những gì đã lỗi thời trên toàn bộ hệ thống. Quyền riêng tư cho từng máy chủ cho phép bạn bè chạy máy chủ của riêng họ trong bảng điều khiển mà không nhìn thấy máy chủ của bạn.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Lập kế hoạch cho một Máy chủ Đa năng",
+      "items": [
+        {
+          "title": "Cộng tổng Bộ nhớ",
+          "body": "Cộng tổng heap Java của mỗi máy chủ và bộ nhớ dự phòng của nó, sau đó để lại dung lượng cho hệ thống. Các máy chủ đã dừng không sử dụng bộ nhớ, vì vậy gói cuối tuần không tốn chi phí vào các ngày trong tuần."
+        },
+        {
+          "title": "Đặt Mặc định Hợp lý",
+          "body": "Quản trị viên đặt heap, hạn ngạch ổ đĩa và giới hạn CPU mà mọi máy chủ mới bắt đầu với dưới Cài đặt, Mặc định cho Máy chủ Mới."
+        },
+        {
+          "title": "Mở một Dải Cổng",
+          "body": "Mở một dải cổng game có kích thước phù hợp với các máy chủ bạn dự định chạy, qua TCP và UDP. Giữ nguyên khối RCON đóng."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Câu hỏi về Nhiều Máy chủ",
+      "items": [
+        {
+          "q": "Một máy có thể chạy bao nhiêu máy chủ?",
+          "a": "Bộ nhớ quyết định điều đó trước tiên. Cộng tổng heap của mỗi máy chủ đang chạy và bộ nhớ dự phòng của nó: một máy chủ vanilla hoặc Paper nhỏ cần khoảng 4 GB tổng cộng, một modpack nhẹ khoảng 6 GB. Các máy chủ đã dừng không tốn chi phí."
+        },
+        {
+          "q": "Mỗi máy chủ có thể có quản trị viên riêng không?",
+          "a": "Có. Quyền riêng tư cho từng máy chủ cấp quyền xem, điều khiển, bảng điều khiển, người chơi, nội dung, sao lưu, tệp, cài đặt và xóa riêng cho từng máy chủ, và một máy chủ có thể bị ẩn hoàn toàn khỏi người dùng."
+        },
+        {
+          "q": "Người chơi có thể chuyển đổi giữa các máy chủ của tôi trong game không?",
+          "a": "Không phải thông qua chính bảng điều khiển. Mỗi máy chủ có địa chỉ và cổng riêng. Liên kết các máy chủ để người chơi di chuyển giữa chúng trong game cần một máy chủ proxy, mà bạn sẽ chạy cùng với chúng."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Chạy Toàn bộ Hệ thống của Bạn Từ Một Nơi",
+      "body": "Cài đặt bảng điều khiển một lần và thêm máy chủ khi bạn cần. Không có phí cho mỗi máy chủ và không giới hạn số lượng phiên bản."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "So sánh Bảng điều khiển Máy chủ Minecraft: Pterodactyl, AMP, Crafty",
+      "description": "So sánh công bằng các bảng điều khiển máy chủ Minecraft miễn phí và trả phí: Pterodactyl, Crafty Controller, AMP, MCSManager và PufferPanel, cùng với Minecraft Server Manager."
+    },
+    "eyebrow": "So sánh các bảng điều khiển",
+    "title": "So sánh Bảng điều khiển Máy chủ Minecraft",
+    "intro": "Có một số bảng điều khiển tốt có thể chạy máy chủ Minecraft. Đây là cách Minecraft Server Manager khác biệt với từng bảng điều khiển đó, với những trường hợp mà bảng điều khiển khác là lựa chọn tốt hơn.",
+    "cards": {
+      "comparePtero": "Một bảng điều khiển đa trò chơi miễn phí được xây dựng cho các công ty lưu trữ, với một daemon riêng trên mỗi máy. So sánh nỗ lực thiết lập và các tính năng của Minecraft.",
+      "compareCrafty": "Một bảng điều khiển Minecraft miễn phí được viết bằng Python, chạy các máy chủ dưới dạng các tiến trình thông thường. So sánh cách các máy chủ được cô lập và cách các gói mod được đưa vào.",
+      "compareAmp": "Một bảng điều khiển thương mại cho hàng trăm trò chơi, được bán theo các cấp giấy phép. So sánh giá cả, giới hạn phiên bản và độ sâu của Minecraft.",
+      "compareMcsm": "Một bảng điều khiển miễn phí, phân tán cho các trò chơi Minecraft và Steam. So sánh kiến trúc, việc sử dụng Docker và xử lý gói mod.",
+      "comparePuffer": "Một bảng điều khiển miễn phí, nhẹ cho nhiều trò chơi và nhiều máy, với các máy chủ dưới dạng tiến trình hoặc vùng chứa. So sánh sự cô lập, các nút và độ sâu của Minecraft."
+    },
+    "sections": [
+      {
+        "title": "Cách Viết Các So Sánh Này",
+        "body": "Mọi thông tin về một bảng điều khiển khác đều đến từ trang web, tài liệu hoặc kho lưu trữ của dự án đó, và mỗi trang sẽ cho biết thời điểm nó được kiểm tra. Nơi nào chúng tôi không thể xác nhận điều gì, chúng tôi sẽ bỏ qua thay vì đoán. Nếu một thông tin đã thay đổi, hãy cho chúng tôi biết trên Discord hoặc GitHub và chúng tôi sẽ sửa trang.",
+        "points": [
+          "Mỗi trang liệt kê những gì bảng điều khiển khác làm tốt hơn.",
+          "Giá cả và phiên bản được trích dẫn cùng với ngày chúng được kiểm tra.",
+          "Minecraft Server Manager không liên kết với bất kỳ dự án nào trong số này. Tên của chúng thuộc về chủ sở hữu của chúng."
+        ]
+      },
+      {
+        "title": "Minecraft Server Manager Được Xây Dựng Để Làm Gì",
+        "body": "Một chủ sở hữu, hoặc một nhóm nhỏ, chạy các máy chủ Minecraft Java trên máy của họ. Mỗi máy chủ là một vùng chứa Docker được giới hạn tài nguyên, toàn bộ bảng điều khiển nằm trong một thư mục và các phần Minecraft vốn phức tạp ở nơi khác đều được tích hợp sẵn: các gói mod được ghim với khả năng hoàn tác, năm kho mod trong một lần tìm kiếm, chẩn đoán sự cố, bản đồ trực tiếp một cú nhấp chuột và các bản thiết kế di động.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Câu Hỏi Về Việc Chọn Bảng Điều Khiển",
+      "items": [
+        {
+          "q": "Tôi nên chọn bảng điều khiển nào cho một máy chủ Minecraft duy nhất tại nhà?",
+          "a": "Nếu bạn chỉ chạy Minecraft Java và muốn có các gói mod, sao lưu và bản đồ trực tiếp mà không cần tự mình lắp ráp, Minecraft Server Manager được tạo ra cho việc đó. Nếu bạn cũng lưu trữ các trò chơi khác hoặc quản lý nhiều máy, một bảng điều khiển đa trò chơi như Pterodactyl, MCSManager hoặc AMP sẽ phù hợp hơn."
+        },
+        {
+          "q": "Minecraft Server Manager có thực sự miễn phí không?",
+          "a": "Có. Nó có giấy phép MIT, không có bậc trả phí và không sử dụng dịch vụ trả phí. Tải xuống CurseForge yêu cầu khóa API CurseForge, bạn thêm vào trong Cài đặt."
+        },
+        {
+          "q": "Tôi có thể di chuyển thế giới hiện có của mình vào Minecraft Server Manager không?",
+          "a": "Có. Tải lên thế giới trên trang Thế giới và cài đặt nó vào một máy chủ mới, hoặc nhập một bản xuất gói mod hoặc một tệp zip các tệp jar mod khi bạn tạo máy chủ."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Thử Nó Trên Máy Của Bạn",
+      "body": "Cài đặt bảng điều khiển trong ba bước và tạo máy chủ đầu tiên của bạn từ trình hướng dẫn. Toàn bộ bảng điều khiển của bạn nằm trong một thư mục bạn có thể sao chép đến bất kỳ đâu."
+    },
+    "table": {
+      "title": "Tất Cả Các Bảng Điều Khiển Tổng Quan",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Giá",
+          "values": ["Miễn phí.", "Miễn phí.", "Miễn phí.", "Các cấp giấy phép trả phí.", "Miễn phí.", "Miễn phí."]
+        },
+        {
+          "label": "Giấy phép",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Thương mại, mã nguồn đóng.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Trò chơi",
+          "values": [
+            "Minecraft Java Edition.",
+            "Nhiều, thông qua trứng (eggs).",
+            "Minecraft Java và Bedrock.",
+            "Hơn 200.",
+            "Trò chơi Minecraft và Steam.",
+            "Nhiều, thông qua mẫu (templates)."
+          ]
+        },
+        {
+          "label": "Máy chủ trò chơi chạy dưới dạng",
+          "values": [
+            "Vùng chứa Docker.",
+            "Vùng chứa Docker.",
+            "Tiến trình trên máy chủ.",
+            "Tiến trình, hoặc vùng chứa Docker khi được bật.",
+            "Vùng chứa hoặc tiến trình.",
+            "Tiến trình hoặc vùng chứa."
+          ]
+        },
+        {
+          "label": "Nhiều máy",
+          "values": [
+            "Không. Một bảng điều khiển mỗi máy.",
+            "Có, với các nút Wings.",
+            "Không có nút từ xa trong tài liệu của nó.",
+            "Giấy phép Chuyên nghiệp trở lên.",
+            "Có, với các daemon.",
+            "Có, với các nút."
+          ]
+        },
+        {
+          "label": "Hệ thống máy chủ",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Thông tin được kiểm tra dựa trên tài liệu của từng dự án, tháng 10 và tháng 11 năm 2026. Mỗi trang so sánh đều có chi tiết."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Giải pháp thay thế Pterodactyl cho Máy chủ Minecraft",
+      "description": "So sánh Minecraft Server Manager với Pterodactyl: một quy trình và một thư mục thay vì bảng điều khiển, daemon, cơ sở dữ liệu và Redis, với các tính năng Minecraft tích hợp sẵn."
+    },
+    "eyebrow": "Giải pháp thay thế Pterodactyl",
+    "title": "Giải pháp thay thế Pterodactyl chỉ dành cho Minecraft",
+    "intro": "Pterodactyl là một bảng điều khiển miễn phí, mã nguồn mở chạy nhiều trò chơi trên nhiều máy. Minecraft Server Manager chỉ chạy một trò chơi trên một máy, vì vậy nó cần ít tài nguyên hơn để thiết lập và tích hợp sẵn các công cụ Minecraft.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "So sánh trực tiếp",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Giá và giấy phép",
+          "values": ["Miễn phí, MIT.", "Miễn phí, MIT."]
+        },
+        {
+          "label": "Những gì bạn cài đặt",
+          "values": [
+            "Một quy trình Node.js hoặc một container Docker.",
+            "Một bảng điều khiển PHP (Laravel) với giao diện người dùng React, cộng với daemon Wings được viết bằng Go trên mỗi node."
+          ]
+        },
+        {
+          "label": "Cơ sở dữ liệu và bộ nhớ đệm",
+          "values": [
+            "Tệp SQLite tích hợp bên trong thư mục dữ liệu. Không cần chạy thêm gì khác.",
+            "MySQL 5.7.22+ hoặc MariaDB 10.2+, Redis, một máy chủ web và Composer."
+          ]
+        },
+        {
+          "label": "Máy chủ trò chơi chạy dưới dạng",
+          "values": ["Các container Docker bị giới hạn tài nguyên.", "Các container Docker biệt lập (yêu cầu Docker)."]
+        },
+        {
+          "label": "Hệ điều hành máy chủ",
+          "values": [
+            "Linux, Windows và macOS. Hình ảnh được xây dựng cho amd64 và arm64.",
+            "Chỉ Linux: các bản phát hành Ubuntu, Debian và họ RHEL. Wings không chạy trên Windows."
+          ]
+        },
+        {
+          "label": "Số lượng máy được quản lý",
+          "values": [
+            "Một. Bảng điều khiển và Docker chạy trên cùng một máy chủ.",
+            "Nhiều. Một bảng điều khiển điều khiển các node Wings trên nhiều máy."
+          ]
+        },
+        {
+          "label": "Trò chơi",
+          "values": [
+            "Minecraft Java Edition. Người chơi Bedrock có thể tham gia thông qua Geyser.",
+            "Nhiều trò chơi thông qua \"eggs\", bao gồm Minecraft, Rust, Terraria và ARK."
+          ]
+        }
+      ],
+      "note": "Dữ liệu được kiểm tra vào tháng 10 năm 2026 dựa trên tài liệu của từng dự án."
+    },
+    "sections": [
+      {
+        "title": "Thiết lập mà không cần lắp ráp nhiều thành phần",
+        "body": "Tài liệu của Pterodactyl mô tả đây là một hệ thống cực kỳ phức tạp với nhiều phụ thuộc: PHP, máy chủ cơ sở dữ liệu, Redis, máy chủ web, worker hàng đợi và Wings trên mỗi node. Thiết kế đó cho phép nó phục vụ các công ty lưu trữ. Minecraft Server Manager là một quy trình duy nhất giao tiếp với socket Docker của bạn và giữ mọi thứ, bao gồm cả cơ sở dữ liệu, trong một thư mục. Trên Linux, một tập lệnh cài đặt sẽ thiết lập nó và cài đặt Docker nếu bị thiếu.",
+        "points": [
+          "Không có daemon, máy chủ cơ sở dữ liệu hoặc bộ nhớ đệm riêng biệt để chạy.",
+          "Sao chép thư mục dữ liệu để di chuyển toàn bộ bảng điều khiển sang máy mới.",
+          "Chạy gốc trên Windows và macOS cùng với Docker Desktop."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Điểm mạnh của Minecraft Server Manager cho Minecraft",
+        "body": "Vì chỉ chạy Minecraft, bảng điều khiển biết modpack, tệp jar mod và báo cáo lỗi là gì. Các công cụ mà chủ sở hữu Minecraft cần đến đều là một phần của bảng điều khiển, không phải là thứ cần tìm và tích hợp.",
+        "points": [
+          "Modpack được ghim vào một phiên bản chính xác, và nâng cấp sẽ sao lưu trước và hoàn nguyên chỉ bằng một cú nhấp chuột.",
+          "Một tìm kiếm trên năm kho lưu trữ, được lọc theo trình tải máy chủ và phiên bản Minecraft.",
+          "Mọi lượt tải xuống đều được xác minh bằng mã kiểm tra trước khi đến máy chủ.",
+          "Các lỗi được phát hiện, phân tích cú pháp và có thể chia sẻ lên mclo.gs chỉ bằng một cú nhấp chuột.",
+          "Bản đồ trực tiếp BlueMap chỉ bằng một cú nhấp chuột, nằm sau chức năng đăng nhập của bảng điều khiển.",
+          "Mọi cài đặt của hình ảnh itzg đều được giải thích bằng ngôn ngữ đơn giản trong trình hướng dẫn."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Khi nào Pterodactyl là lựa chọn tốt hơn",
+        "body": "Pterodactyl đã trưởng thành, được bảo trì tích cực và được hỗ trợ bởi các công ty lưu trữ. Nếu bất kỳ điều nào sau đây mô tả bạn, thì đó là lựa chọn mạnh mẽ hơn.",
+        "points": [
+          "Bạn chạy máy chủ trên nhiều máy và muốn một bảng điều khiển cho tất cả chúng.",
+          "Bạn lưu trữ các trò chơi khác ngoài Minecraft.",
+          "Bạn bán hoặc chia sẻ dịch vụ lưu trữ với nhiều khách hàng riêng biệt và cần quy mô đó.",
+          "Bạn đã sử dụng Pterodactyl và các trứng của nó đáp ứng nhu cầu của bạn."
+        ]
+      },
+      {
+        "title": "Lưu ý về Pelican",
+        "body": "Pelican Panel là một nhánh của Pterodactyl, được cấp phép AGPL-3.0 và vẫn đang trong giai đoạn ứng cử viên phát hành khi trang này được kiểm tra. Nó giữ nguyên thiết kế bảng điều khiển cộng với Wings, bổ sung SQLite và PostgreSQL làm tùy chọn cơ sở dữ liệu, và có một trung tâm plugin nơi plugin của bên thứ ba duyệt các modpack từ CurseForge và Modrinth."
+      }
+    ],
+    "faq": {
+      "title": "Câu hỏi về Pterodactyl",
+      "items": [
+        {
+          "q": "Tôi có thể di chuyển máy chủ từ Pterodactyl sang Minecraft Server Manager không?",
+          "a": "Có. Tải xuống thế giới của máy chủ từ Pterodactyl, tạo một máy chủ cùng loại và phiên bản Minecraft trong Minecraft Server Manager, sau đó tải lên thế giới trên trang Worlds và cài đặt nó cho máy chủ đó. Đối với máy chủ đã cài đặt mod, hãy nhập gói mod hoặc tệp zip mod của bạn khi bạn tạo nó."
+        },
+        {
+          "q": "Minecraft Server Manager có cần máy chủ cơ sở dữ liệu như MySQL không?",
+          "a": "Không. Nó sử dụng công cụ SQLite được tích hợp sẵn trong Node.js 24 và lưu trữ tệp cơ sở dữ liệu trong thư mục dữ liệu cùng với mọi thứ khác."
+        },
+        {
+          "q": "Minecraft Server Manager có thể quản lý nhiều máy như các node Wings không?",
+          "a": "Không. Nó quản lý daemon Docker trên máy mà nó đang chạy. Đối với nhiều máy, hãy chạy một bảng điều khiển trên mỗi máy hoặc chọn một bảng điều khiển đa node."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Chạy Minecraft mà không cần thêm các thành phần phụ",
+      "body": "Cài đặt Minecraft Server Manager trong ba bước và tạo máy chủ đầu tiên của bạn trong trình hướng dẫn."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller và Minecraft Server Manager",
+      "description": "Crafty Controller và Minecraft Server Manager đều là các bảng điều khiển Minecraft miễn phí, tự lưu trữ. So sánh cách các máy chủ được cô lập, cách cài đặt modpack và vị trí của từng loại."
+    },
+    "eyebrow": "Giải pháp thay thế Crafty Controller",
+    "title": "Crafty Controller và Minecraft Server Manager",
+    "intro": "Cả hai đều là các bảng điều khiển miễn phí, tự lưu trữ dành cho Minecraft. Crafty chạy mỗi máy chủ dưới dạng một tiến trình trên máy chủ, được viết bằng Python. Minecraft Server Manager chạy mỗi máy chủ trong vùng chứa Docker riêng và tích hợp các công cụ modpack, tìm kiếm mod và xử lý lỗi vào bảng điều khiển.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "So sánh trực tiếp",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Giá và giấy phép",
+          "values": ["Miễn phí, MIT.", "Miễn phí, GPL-3.0."]
+        },
+        {
+          "label": "Được viết bằng",
+          "values": ["Node.js 24.", "Python 3.10 đến 3.12."]
+        },
+        {
+          "label": "Máy chủ trò chơi chạy dưới dạng",
+          "values": [
+            "Các vùng chứa Docker giới hạn tài nguyên.",
+            "Các tiến trình trên máy chủ. Bảng điều khiển cũng có thể chạy trong Docker."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Bắt buộc trên máy chủ.", "Tùy chọn."]
+        },
+        {
+          "label": "Hệ thống máy chủ",
+          "values": [
+            "Linux, Windows và macOS. Hình ảnh được xây dựng cho amd64 và arm64.",
+            "Linux, Windows, macOS và Raspberry Pi OS, cùng với hướng dẫn Docker, UnRAID và CasaOS. Hình ảnh của nó bao gồm amd64 và arm64."
+          ]
+        },
+        {
+          "label": "Phiên bản",
+          "values": [
+            "Java Edition. Người chơi Bedrock có thể tham gia thông qua Geyser.",
+            "Java Edition từ 1.8 đến phiên bản mới nhất và Bedrock."
+          ]
+        },
+        {
+          "label": "Modpack",
+          "values": [
+            "Các gói CurseForge, Modrinth, FTB và GT New Horizons từ trình hướng dẫn, được ghim vào một phiên bản chính xác.",
+            "FAQ của nó mô tả việc nhập gói dưới dạng zip hoặc các gói Modrinth thông qua mrpack-install."
+          ]
+        },
+        {
+          "label": "Sao lưu, lịch trình, vai trò, 2FA",
+          "values": [
+            "Có: lưu giữ theo từng máy chủ, lịch trình cron, ba vai trò với quyền theo từng máy chủ, TOTP.",
+            "Có: trình quản lý sao lưu, bộ lập lịch tác vụ, vai trò người dùng và TOTP cộng với passkeys."
+          ]
+        }
+      ],
+      "note": "Dữ liệu được kiểm tra vào tháng 10 năm 2026 dựa trên tài liệu của từng dự án."
+    },
+    "sections": [
+      {
+        "title": "Vùng chứa thay vì Tiến trình Máy chủ",
+        "body": "Trong Minecraft Server Manager, mỗi máy chủ là một vùng chứa Docker riêng trên hình ảnh Minecraft itzg quen thuộc, với giới hạn bộ nhớ và CPU riêng, cùng hạn ngạch đĩa mà bảng điều khiển thực thi. Một máy chủ không thể chiếm hết bộ nhớ của máy hoặc làm đầy đĩa của nó, và việc xây dựng lại một máy chủ không bao giờ ảnh hưởng đến các máy chủ khác. Đánh đổi là Docker phải được cài đặt trên máy chủ.",
+        "points": [
+          "Giới hạn bộ nhớ, CPU và đĩa cho mỗi máy chủ.",
+          "Dừng RCON một cách nhẹ nhàng trước khi vùng chứa dừng, và phát hiện lỗi với cơ chế lùi.",
+          "Java được chọn cho mỗi máy chủ bởi hình ảnh, vì vậy các phiên bản Minecraft hỗn hợp hoạt động tốt."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Nơi Minecraft Server Manager Vượt trội",
+        "body": "Trình hướng dẫn cài đặt modpack và mod cho bạn và giữ chúng được ghim, vì vậy việc khởi động lại không bao giờ nâng cấp gói một cách âm thầm.",
+        "points": [
+          "Cài đặt các gói CurseForge, Modrinth, FTB và GT New Horizons từ trình hướng dẫn.",
+          "Nhập một tệp .mrpack của Modrinth, một bản xuất của CurseForge hoặc tệp zip jar của riêng bạn, với mỗi jar được nhận dạng.",
+          "Tìm kiếm năm kho lưu trữ cùng lúc, lọc theo trình tải và phiên bản của máy chủ.",
+          "Nâng cấp sao lưu trước và hoàn nguyên chỉ bằng một cú nhấp chuột.",
+          "Chia sẻ bản đồ trực tiếp BlueMap và chia sẻ lỗi mclo.gs bằng một cú nhấp chuột.",
+          "Bản thiết kế di động: xuất công thức của máy chủ và nhận cùng một máy chủ ở bất kỳ đâu."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Khi nào Crafty Controller là Lựa chọn Tốt hơn",
+        "body": "Crafty trưởng thành, được bảo trì tích cực và chạy ở nhiều nơi hơn mà không cần Docker.",
+        "points": [
+          "Bạn muốn chạy máy chủ mà không cần cài đặt Docker, ví dụ: trực tiếp trên Windows, macOS hoặc Raspberry Pi.",
+          "Bạn chạy Bedrock Dedicated Server, không chỉ Java với Geyser.",
+          "Bạn muốn đăng nhập bằng passkey."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Câu hỏi về Crafty Controller",
+      "items": [
+        {
+          "q": "Tôi có thể di chuyển máy chủ Crafty của mình sang Minecraft Server Manager không?",
+          "a": "Có. Tạo một máy chủ với loại và phiên bản Minecraft giống nhau, sau đó tải lên thế giới dưới dạng zip trên trang Worlds và cài đặt nó cho máy chủ đó. Đối với máy chủ đã sửa đổi, hãy nhập gói của bạn hoặc một tệp zip các jar mod khi bạn tạo nó."
+        },
+        {
+          "q": "Minecraft Server Manager có chạy trên Raspberry Pi không?",
+          "a": "Có, trên hệ điều hành 64-bit có Docker. Hình ảnh bảng điều khiển được xuất bản cho arm64 cũng như amd64."
+        },
+        {
+          "q": "Tại sao Minecraft Server Manager cần Docker?",
+          "a": "Mỗi máy chủ chạy trong vùng chứa riêng, đây là cách nó nhận được giới hạn tài nguyên, khả năng xây dựng lại sạch sẽ và phiên bản Java phù hợp cho mọi phiên bản Minecraft."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Xem với Máy chủ của Riêng Bạn",
+      "body": "Cài đặt bảng điều khiển trong ba bước, sau đó tạo một máy chủ từ modpack trong trình hướng dẫn."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Giải pháp thay thế AMP miễn phí cho Máy chủ Minecraft",
+      "description": "So sánh Minecraft Server Manager với AMP của CubeCoders: bảng điều khiển Minecraft miễn phí, cấp phép MIT, không giới hạn số lượng máy chủ, đối lập với bảng điều khiển đa trò chơi thương mại."
+    },
+    "eyebrow": "Giải pháp thay thế AMP",
+    "title": "Giải pháp thay thế AMP miễn phí cho Minecraft",
+    "intro": "AMP của CubeCoders là một bảng điều khiển thương mại cho rất nhiều trò chơi, được bán theo các cấp giấy phép. Minecraft Server Manager miễn phí và mã nguồn mở, chỉ chạy Minecraft và không giới hạn số lượng máy chủ bạn tạo.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "So sánh trực tiếp",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Giá",
+          "values": [
+            "Miễn phí. Không có cấp bậc.",
+            "Standard £7.50 / $10, Professional £15 / $30, Advanced £30 / $40, Enterprise theo gói đăng ký biến đổi."
+          ]
+        },
+        {
+          "label": "Giấy phép và mã nguồn",
+          "values": [
+            "MIT, mã nguồn trên GitHub.",
+            "Thương mại và mã nguồn đóng. Kho lưu trữ GitHub công khai của nó chứa các vấn đề và tài liệu."
+          ]
+        },
+        {
+          "label": "Số lượng máy chủ có thể tạo",
+          "values": [
+            "Không giới hạn ngoài phần cứng của bạn.",
+            "5 máy chủ trên Standard, 15 trên Professional, 50 trên Advanced."
+          ]
+        },
+        {
+          "label": "Người dùng bảng điều khiển",
+          "values": [
+            "Không giới hạn, với các vai trò quản trị viên, người vận hành và người xem.",
+            "3 trên Standard, không giới hạn từ Professional trở lên."
+          ]
+        },
+        {
+          "label": "Sử dụng thương mại",
+          "values": ["Được phép theo giấy phép MIT.", "Chỉ giấy phép Enterprise."]
+        },
+        {
+          "label": "Nhiều máy",
+          "values": ["Một máy cho mỗi bảng điều khiển.", "Professional trở lên."]
+        },
+        {
+          "label": "Hệ điều hành máy chủ",
+          "values": ["Linux, Windows và macOS. Hình ảnh được xây dựng cho amd64 và arm64.", "Windows và Linux."]
+        },
+        {
+          "label": "Trò chơi",
+          "values": [
+            "Minecraft Java Edition. Người chơi Bedrock có thể tham gia thông qua Geyser.",
+            "Hơn 200 trò chơi và ứng dụng trong danh sách tương thích của nó, bao gồm Minecraft Java và Bedrock."
+          ]
+        }
+      ],
+      "note": "Thông tin được kiểm tra vào tháng 10 năm 2026 dựa trên tài liệu của từng dự án. Giá AMP lấy từ bảng so sánh các phiên bản của CubeCoders và có thể thay đổi."
+    },
+    "sections": [
+      {
+        "title": "Không giới hạn giấy phép, không giới hạn số lượng máy chủ",
+        "body": "Các cấp bậc của AMP quyết định số lượng máy chủ và người dùng bảng điều khiển bạn nhận được, và chỉ cấp bậc Enterprise mới cho phép sử dụng thương mại. Minecraft Server Manager không có cấp bậc: mọi tính năng, mọi máy chủ và mọi tài khoản người dùng đều miễn phí theo giấy phép MIT, và nó không sử dụng bất kỳ dịch vụ trả phí nào. Tải xuống CurseForge yêu cầu khóa API CurseForge, bạn thêm vào Cài đặt.",
+        "points": [
+          "Tạo bao nhiêu máy chủ tùy thích, miễn là phần cứng của bạn đáp ứng được.",
+          "Mời toàn bộ nhóm của bạn với quyền truy cập theo từng máy chủ và đăng nhập hai yếu tố.",
+          "Mã nguồn công khai, vì vậy bạn có thể đọc, phân nhánh và đóng góp vào đó."
+        ]
+      },
+      {
+        "title": "Nơi Minecraft Server Manager vượt trội hơn cho Minecraft",
+        "body": "Một bảng điều khiển cho một trò chơi có thể đi sâu vào nó. Mọi cài đặt mà hình ảnh Minecraft của itzg hỗ trợ đều có trong trình hướng dẫn với trợ giúp bằng ngôn ngữ đơn giản, và các quy trình làm việc của Minecraft được tích hợp sẵn.",
+        "points": [
+          "Các gói mod CurseForge, Modrinth, FTB và GT New Horizons, được ghim với khả năng hoàn tác chỉ bằng một cú nhấp chuột.",
+          "Một tìm kiếm mod trên năm kho lưu trữ, với các lượt tải xuống được xác minh bằng checksum.",
+          "Kiểm tra tính tương thích phiên bản trước khi nâng cấp Minecraft được đề xuất.",
+          "Phân tích lỗi sự cố với chia sẻ mclo.gs và bản đồ trực tiếp BlueMap chỉ bằng một cú nhấp chuột.",
+          "Phân tích người chơi, phân tích kho đồ và phân tích lưu trữ với hạn ngạch đĩa."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Khi nào AMP là lựa chọn tốt hơn",
+        "body": "AMP bao phủ phạm vi rộng hơn nhiều so với một bảng điều khiển chỉ dành cho Minecraft, và đi kèm với hỗ trợ thương mại.",
+        "points": [
+          "Bạn lưu trữ nhiều trò chơi khác nhau từ một bảng điều khiển.",
+          "Bạn cần đăng nhập một lần qua OIDC, thương hiệu tùy chỉnh hoặc mẫu triển khai, điều này được bao gồm trong cấp độ Advanced của nó.",
+          "Bạn điều hành một doanh nghiệp lưu trữ và muốn có giấy phép thương mại với hỗ trợ từ nhà cung cấp.",
+          "Bạn muốn tự chạy Bedrock Dedicated Server."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Câu hỏi về AMP",
+      "items": [
+        {
+          "q": "Minecraft Server Manager có miễn phí cho mục đích sử dụng thương mại không?",
+          "a": "Giấy phép MIT cho phép sử dụng thương mại. Bảng điều khiển được xây dựng cho chủ sở hữu và các nhóm nhỏ trên một máy, vì vậy hãy kiểm tra xem nó có phù hợp với cách bạn lưu trữ trước khi bạn dựa vào nó cho khách hàng hay không."
+        },
+        {
+          "q": "Minecraft Server Manager có hỗ trợ các trò chơi khác ngoài Minecraft không?",
+          "a": "Không. Nó chỉ chạy máy chủ Minecraft Java Edition, đó là lý do tại sao nó có thể đi sâu vào các gói mod, mod và báo cáo sự cố."
+        },
+        {
+          "q": "Tôi có thể chuyển một máy chủ Minecraft từ AMP sang không?",
+          "a": "Có. Tạo một máy chủ với loại và phiên bản Minecraft giống nhau, sau đó tải lên thế giới của máy chủ dưới dạng tệp zip trên trang Thế giới và cài đặt nó vào máy chủ đó. Máy chủ đã cài đặt mod có thể bắt đầu từ một gói mod, một bản xuất gói hoặc một tệp zip các tệp jar mod."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Mọi tính năng, miễn phí",
+      "body": "Cài đặt Minecraft Server Manager trong ba bước. Không có gì để mua và không có gì để mở khóa."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "Giải pháp thay thế MCSManager cho Máy chủ Minecraft",
+      "description": "So sánh MCSManager và Minecraft Server Manager: một bảng điều khiển phân tán cho các trò chơi Minecraft và Steam, bên cạnh một bảng điều khiển chỉ dành cho Minecraft với các modpack tích hợp sẵn."
+    },
+    "eyebrow": "Giải pháp thay thế MCSManager",
+    "title": "Giải pháp thay thế MCSManager tập trung vào Minecraft",
+    "intro": "MCSManager là một bảng điều khiển miễn phí, mã nguồn mở dành cho các trò chơi Minecraft và Steam có thể quản lý nhiều máy. Minecraft Server Manager chỉ chạy Minecraft trên một máy, với mỗi máy chủ trong một container Docker và các công cụ Minecraft được tích hợp sẵn.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "So sánh song song",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Giá và giấy phép",
+          "values": ["Miễn phí, MIT.", "Miễn phí, Apache-2.0."]
+        },
+        {
+          "label": "Viết bằng",
+          "values": ["Node.js 24.", "TypeScript trên Node.js."]
+        },
+        {
+          "label": "Bạn cài đặt gì",
+          "values": [
+            "Một tiến trình, hoặc một container Docker.",
+            "Hai dịch vụ: một bảng điều khiển web và một daemon."
+          ]
+        },
+        {
+          "label": "Cơ sở dữ liệu",
+          "values": ["Tệp SQLite tích hợp sẵn trong thư mục dữ liệu.", "Không cần thiết."]
+        },
+        {
+          "label": "Máy chủ trò chơi chạy dưới dạng",
+          "values": [
+            "Các container Docker giới hạn tài nguyên.",
+            "Các container Docker hoặc tiến trình thông thường, tùy bạn chọn."
+          ]
+        },
+        {
+          "label": "Hệ thống máy chủ",
+          "values": [
+            "Linux, Windows và macOS. Hình ảnh được xây dựng cho amd64 và arm64.",
+            "Windows, Linux và macOS, với một dòng lệnh cài đặt cho Linux."
+          ]
+        },
+        {
+          "label": "Các máy được quản lý",
+          "values": [
+            "Một. Bảng điều khiển và Docker chạy trên cùng một máy chủ.",
+            "Nhiều, thông qua các daemon phân tán."
+          ]
+        },
+        {
+          "label": "Trò chơi",
+          "values": [
+            "Minecraft Java Edition. Người chơi Bedrock có thể tham gia thông qua Geyser.",
+            "Các trò chơi Minecraft và Steam như Palworld và Terraria, từ một thị trường tích hợp sẵn."
+          ]
+        }
+      ],
+      "note": "Thông tin được kiểm tra vào tháng 10 năm 2026 dựa trên tài liệu của từng dự án."
+    },
+    "sections": [
+      {
+        "title": "Nơi Minecraft Server Manager mạnh hơn cho Minecraft",
+        "body": "MCSManager triển khai nhiều loại máy chủ trò chơi. Minecraft Server Manager chỉ tập trung vào một trò chơi, vì vậy trình hướng dẫn, công cụ mod và lịch sử đều nói về Minecraft.",
+        "points": [
+          "Mọi cài đặt của hình ảnh Minecraft itzg, được giải thích bằng ngôn ngữ đơn giản trong trình hướng dẫn.",
+          "Các modpack CurseForge, Modrinth, FTB và GT New Horizons, được ghim với khả năng hoàn tác chỉ bằng một cú nhấp chuột.",
+          "Một công cụ tìm kiếm mod trên năm kho lưu trữ, với tải xuống được xác minh checksum.",
+          "Phân tích lỗi sự cố với tên các nghi phạm và chia sẻ mclo.gs chỉ bằng một cú nhấp chuột.",
+          "Bản đồ trực tiếp BlueMap chỉ bằng một cú nhấp chuột, phân tích người chơi và các bản thiết kế di động.",
+          "Toàn bộ bảng điều khiển, bao gồm cả cơ sở dữ liệu, là một thư mục bạn có thể sao chép để di chuyển."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Container theo mặc định",
+        "body": "Mỗi máy chủ trong Minecraft Server Manager là một container Docker với giới hạn bộ nhớ và CPU riêng, cộng với một hạn ngạch đĩa mà bảng điều khiển thực thi. Java được chọn cho mỗi máy chủ, vì vậy một modpack 1.12 và bản phát hành Paper mới nhất chạy song song mà không cần phải quản lý nhiều cài đặt Java. MCSManager cho phép bạn chọn giữa container và tiến trình thông thường, điều này linh hoạt hơn khi Docker không phải là một lựa chọn.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Khi nào MCSManager là lựa chọn tốt hơn",
+        "body": "MCSManager được phát triển rất tích cực và bao phủ nhiều hơn Minecraft.",
+        "points": [
+          "Bạn quản lý các máy chủ trên nhiều máy từ một bảng điều khiển.",
+          "Bạn cũng lưu trữ các trò chơi Steam như Palworld hoặc Terraria.",
+          "Bạn muốn chạy máy chủ dưới dạng tiến trình thông thường, không cần Docker.",
+          "Bạn muốn một bảng điều khiển kéo và thả và một thị trường các triển khai trò chơi được tạo sẵn."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Câu hỏi về MCSManager",
+      "items": [
+        {
+          "q": "Tôi có thể di chuyển máy chủ Minecraft từ MCSManager không?",
+          "a": "Có. Tạo một máy chủ với loại và phiên bản Minecraft giống nhau trong Minecraft Server Manager, sau đó tải lên thế giới dưới dạng tệp zip trên trang Thế giới và cài đặt nó cho máy chủ đó. Máy chủ đã cài đặt mod có thể bắt đầu từ một modpack, một bản xuất gói hoặc một tệp zip các tệp jar mod."
+        },
+        {
+          "q": "Tôi có cần Docker cho Minecraft Server Manager không?",
+          "a": "Có. Docker chạy mọi máy chủ. Trên Linux, tập lệnh cài đặt sẽ cài đặt Docker cho bạn nếu nó bị thiếu."
+        },
+        {
+          "q": "Nhiều người có thể chia sẻ một bảng điều khiển Minecraft Server Manager không?",
+          "a": "Có. Có các vai trò quản trị viên, người vận hành và người xem, quyền theo từng máy chủ và tùy chọn đăng nhập hai yếu tố cho mọi tài khoản."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, được thực hiện chuyên sâu",
+      "body": "Cài đặt bảng điều khiển trong ba bước và tạo máy chủ đầu tiên của bạn từ trình hướng dẫn."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "Giải pháp thay thế PufferPanel cho Máy chủ Minecraft",
+      "description": "So sánh Minecraft Server Manager với PufferPanel: mỗi máy chủ trong một container Docker riêng biệt và các công cụ Minecraft tích hợp sẵn, so với một bảng điều khiển nhẹ đa trò chơi, đa nút."
+    },
+    "eyebrow": "Giải pháp thay thế PufferPanel",
+    "title": "Giải pháp thay thế PufferPanel chỉ dành cho Minecraft",
+    "intro": "PufferPanel là một bảng điều khiển miễn phí, mã nguồn mở cho nhiều trò chơi trên một hoặc nhiều máy. Minecraft Server Manager chỉ chạy Minecraft trên một máy, luôn trong Docker, với các công cụ Minecraft tích hợp sẵn.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "So sánh trực tiếp",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Giá và giấy phép",
+          "values": ["Miễn phí, MIT.", "Miễn phí, Apache-2.0."]
+        },
+        {
+          "label": "Viết bằng",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Bạn cài đặt gì",
+          "values": [
+            "Một tiến trình, hoặc một container Docker.",
+            "Một dịch vụ từ kho apt hoặc yum, hoặc hình ảnh Docker của nó. Một nút trên máy khác chạy cùng gói."
+          ]
+        },
+        {
+          "label": "Cơ sở dữ liệu",
+          "values": [
+            "Tệp SQLite tích hợp sẵn trong thư mục dữ liệu.",
+            "Không cần thiết lập cho cài đặt cơ bản. Một hướng dẫn bao gồm việc sử dụng cơ sở dữ liệu bên ngoài."
+          ]
+        },
+        {
+          "label": "Máy chủ trò chơi chạy dưới dạng",
+          "values": [
+            "Container Docker giới hạn tài nguyên, luôn luôn.",
+            "Các tiến trình trên máy chủ (tài liệu của nó nói rằng môi trường này không có tính năng bảo mật) hoặc container Docker."
+          ]
+        },
+        {
+          "label": "Hệ thống máy chủ",
+          "values": [
+            "Linux, Windows và macOS. Hình ảnh được xây dựng cho amd64 và arm64.",
+            "Linux: gói cho Ubuntu 22.04 và 24.04 và Debian 10 và 11 trên amd64 và arm64, Raspbian trên arm64, và kho lưu trữ yum. Không hỗ trợ 32-bit."
+          ]
+        },
+        {
+          "label": "Máy được quản lý",
+          "values": [
+            "Một. Bảng điều khiển và Docker chạy trên cùng một máy chủ.",
+            "Nhiều. Các nút trên các máy khác chạy máy chủ cho một bảng điều khiển."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, mọi loại máy chủ của hình ảnh itzg, và các gói CurseForge, Modrinth, FTB và GT New Horizons. Người chơi Bedrock tham gia qua Geyser.",
+            "Các mẫu cho máy chủ Java và Bedrock, các gói CurseForge và FTB, và các proxy BungeeCord, Velocity và Waterfall."
+          ]
+        }
+      ],
+      "note": "Các sự kiện được kiểm tra vào tháng 11 năm 2026 dựa trên tài liệu của PufferPanel, kho lưu trữ của nó và kho lưu trữ mẫu của nó."
+    },
+    "sections": [
+      {
+        "title": "Cô lập mà không cần cài đặt để ghi nhớ",
+        "body": "PufferPanel cho phép bạn chọn môi trường cho mỗi máy chủ. Môi trường tiêu chuẩn chạy máy chủ dưới dạng một tiến trình trên máy chủ, với cùng người dùng như bảng điều khiển, và tài liệu riêng của nó nói rằng nó không có tính năng bảo mật; môi trường Docker sẽ cô lập nó. Minecraft Server Manager chỉ có loại thứ hai. Mỗi máy chủ là một container riêng với giới hạn bộ nhớ và CPU, một hạn ngạch đĩa mà bảng điều khiển thực thi, và không có gì được chia sẻ với các máy chủ khác ngoài thư viện mod.",
+        "points": [
+          "Một container cho mỗi máy chủ, được gắn nhãn và giới hạn.",
+          "Hạn ngạch đĩa được thực thi bởi bảng điều khiển.",
+          "Một máy chủ bị lỗi hoặc hết bộ nhớ sẽ được phát hiện và ghi lại."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Nơi Minecraft Server Manager đi sâu hơn vào Minecraft",
+        "body": "Một mẫu bắt đầu một máy chủ; công việc đến sau đó. Mod để tìm và cập nhật, các gói được cập nhật, lỗi để đọc, thế giới để sao lưu. Những điều đó được tích hợp vào bảng điều khiển ở đây.",
+        "points": [
+          "Các modpack được ghim vào một phiên bản chính xác. Nâng cấp và hạ cấp thực hiện sao lưu trước và hoàn nguyên chỉ bằng một cú nhấp chuột.",
+          "Một tìm kiếm trên năm kho lưu trữ, được lọc theo trình tải của máy chủ và phiên bản Minecraft.",
+          "Mọi tải xuống đều được xác minh bằng checksum trước khi đến máy chủ.",
+          "Kiểm tra phiên bản cho thấy các phiên bản Minecraft trong tương lai nào mà mỗi mod đã cài đặt đã hỗ trợ.",
+          "Báo cáo lỗi được phát hiện, phân tích cú pháp và có thể chia sẻ lên mclo.gs chỉ bằng một cú nhấp chuột.",
+          "Bản đồ trực tiếp BlueMap một cú nhấp chuột, phía sau đăng nhập của bảng điều khiển."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Khi nào PufferPanel là lựa chọn tốt hơn",
+        "body": "PufferPanel nhẹ, miễn phí và đã có mặt trong nhiều năm. Nếu bất kỳ điều nào sau đây mô tả bạn, hãy chọn nó.",
+        "points": [
+          "Bạn lưu trữ các trò chơi khác ngoài Minecraft.",
+          "Bạn chạy máy chủ trên nhiều máy và muốn một bảng điều khiển cho tất cả chúng.",
+          "Bạn muốn một máy chủ Bedrock gốc, hoặc một mạng proxy BungeeCord, Velocity hoặc Waterfall.",
+          "Bạn không muốn chạy Docker chút nào.",
+          "Bạn muốn truy cập SFTP vào các tệp máy chủ."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Câu hỏi về PufferPanel",
+      "items": [
+        {
+          "q": "Tôi có thể di chuyển máy chủ Minecraft từ PufferPanel sang Minecraft Server Manager không?",
+          "a": "Có. Tải xuống thư mục thế giới của máy chủ, tạo một máy chủ cùng loại và phiên bản Minecraft, sau đó tải lên thế giới trên trang Thế giới và cài đặt nó vào máy chủ đó. Đối với máy chủ đã sửa đổi, nhập gói hoặc tệp zip của các mod jar của nó khi bạn tạo nó."
+        },
+        {
+          "q": "Minecraft Server Manager có cần Docker không?",
+          "a": "Có. Mọi máy chủ Minecraft đều chạy dưới dạng một container Docker, đây là cách nó giới hạn bộ nhớ, CPU và đĩa cho mỗi máy chủ. Bản thân bảng điều khiển có thể chạy trong Docker hoặc trực tiếp từ Node.js."
+        },
+        {
+          "q": "Nó có thể chạy máy chủ trên máy thứ hai không?",
+          "a": "Không. Nó quản lý daemon Docker trên máy mà nó chạy. Đối với hai máy, chạy một bảng điều khiển trên mỗi máy, hoặc chọn một bảng điều khiển có các nút như PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Mỗi Máy chủ trong Container Riêng",
+      "body": "Cài đặt bảng điều khiển trong ba bước và tạo máy chủ đầu tiên của bạn trong trình hướng dẫn."
+    }
+  }
+}

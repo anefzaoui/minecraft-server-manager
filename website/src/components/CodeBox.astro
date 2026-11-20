@@ -1,0 +1,50 @@
+---
+// A command or URL box with a copy button. `code` may contain {{dataDir}} and
+// {{host}} placeholders; InstallTutorial's script fills them from its inputs.
+interface Props {
+  code: string;
+  kind?: 'command' | 'url';
+  copy: string;
+  copied: string;
+  label?: string;
+  /** Wrap long lines instead of scrolling, so the end of a command stays visible. */
+  wrap?: boolean;
+}
+const { code, kind = 'command', copy, copied, label, wrap = false } = Astro.props;
+---
+
+<div class:list={['codebox', kind === 'url' && 'codebox-url', wrap && 'codebox-wrap']}>
+  <pre aria-label={label} tabindex="0"><code data-template={code}>{code}</code></pre>
+  <button type="button" class="copy" data-copy data-copy-label={copy} data-copied-label={copied} aria-label={copy}>
+    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8h12v12H8zM4 16V4h12"/></svg>
+    <span>{copy}</span>
+  </button>
+</div>
+
+<script>
+  // Every copy button on the page, wherever its box is (tutorial, installer
+  // options). Copies what the box shows now, after the tutorial filled in the
+  // placeholders.
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
+    btn.addEventListener('click', async () => {
+      const text = btn.parentElement?.querySelector('code')?.textContent || '';
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      const label = btn.querySelector('span')!;
+      label.textContent = btn.dataset.copiedLabel!;
+      btn.dataset.copied = 'true';
+      setTimeout(() => {
+        label.textContent = btn.dataset.copyLabel!;
+        delete btn.dataset.copied;
+      }, 1600);
+    });
+  }
+</script>

@@ -1,0 +1,17 @@
+---
+// Every landing page (servers/*, guides/*, compare/*) in every locale, from the
+// registry in src/lib/routes.js. The page itself is LandingPage.
+import LandingPage from '../../../components/LandingPage.astro';
+import { localePaths } from '../../../lib/paths.js';
+import { landingPages } from '../../../lib/routes.js';
+
+export function getStaticPaths() {
+  return localePaths().flatMap(({ params }) =>
+    landingPages().map((entry) => ({ params: { ...params, hub: entry.hub.id, page: entry.slug }, props: { entry } })),
+  );
+}
+const { entry } = Astro.props;
+const locale = Astro.params.locale || 'en';
+---
+
+<LandingPage locale={locale} entry={entry} />

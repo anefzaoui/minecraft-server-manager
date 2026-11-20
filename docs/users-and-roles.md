@@ -1,5 +1,7 @@
 # Users & roles
 
+<!-- description: Accounts, the admin, operator and viewer roles, and per-server permissions in Minecraft Server Manager. -->
+
 [← Back to docs index](README.md)
 
 The panel is multi-user. Manage accounts under **Settings → Users**.

@@ -1,5 +1,7 @@
 # Getting started
 
+<!-- description: Install Minecraft Server Manager and finish first-run setup: the system check, your time zone, and the admin account. -->
+
 [← Back to docs index](README.md)
 
 ## First-run setup
