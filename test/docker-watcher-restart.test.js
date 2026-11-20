@@ -29,6 +29,12 @@ const { LABEL } = containers;
 
 let started = 0;
 const serversService = require('../src/services/servers');
+// Cases that end by themselves (a success, a stop, a schedule turned off) get a
+// budget they can never run out of: a short wall-clock budget made them give up
+// early whenever a slow runner took longer than it over the first try. Only the
+// cases about giving up keep a small one, and those can't pass by luck.
+const NO_GIVE_UP_MS = 60_000;
+
 serversService.startServer = async () => {
   started++;
 };
@@ -86,10 +92,13 @@ test('an Action:"die" event actually restarts an auto_restart server (the end-to
   assert.ok(restarted, 'an auto-restarted event was recorded');
 });
 
-test('status:"die" and Action:"die" both reach the restart path identically', async () => {
+test('status:"die" and Action:"die" both reach the restart path identically', async (t) => {
   const viaStatus = seedServer('srv_watch_status', 1);
   const viaAction = seedServer('srv_watch_action', 1);
   started = 0;
+  // Fake timers: both crashes arm a real 5 s restart otherwise, and it fires into
+  // whichever later test is running then (a busy-retry test's startServer mock).
+  t.mock.timers.enable({ apis: ['setTimeout'] });
 
   await watcher.handleEvent(dieEvent(viaStatus, { viaAction: false }));
   await watcher.handleEvent(dieEvent(viaAction, { viaAction: true }));
@@ -104,6 +113,7 @@ test('status:"die" and Action:"die" both reach the restart path identically', as
   );
   assert.equal(JSON.parse(statusEv.details_json).armedRestart, true);
   assert.equal(JSON.parse(actionEv.details_json).armedRestart, true);
+  t.mock.timers.reset(); // drop the two armed restarts unfired
 });
 
 test('a clean exit the panel never asked for is a stop, not a crash, and is never auto-restarted', async () => {
@@ -146,7 +156,7 @@ test('a crash restart that finds the server busy retries instead of leaving it d
     }
   });
   seedServer('srv_busy1', 1);
-  const started = await watcher.restartAfterCrash('srv_busy1', 1, { retryMs: 1, maxWaitMs: 50 });
+  const started = await watcher.restartAfterCrash('srv_busy1', 1, { retryMs: 1, maxWaitMs: NO_GIVE_UP_MS });
   assert.equal(started, true);
   assert.equal(calls, 3);
 });
@@ -161,7 +171,7 @@ test('a crash restart stops retrying once someone else started the server', asyn
     });
   });
   seedServer('srv_busy2', 1);
-  assert.equal(await watcher.restartAfterCrash('srv_busy2', 1, { retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(await watcher.restartAfterCrash('srv_busy2', 1, { retryMs: 1, maxWaitMs: NO_GIVE_UP_MS }), false);
   assert.equal(spy.mock.callCount(), 1);
 });
 
@@ -175,7 +185,7 @@ test('a crash restart waiting on a busy server stops if auto-restart is turned o
       code: 'BUSY',
     });
   });
-  assert.equal(await watcher.restartAfterCrash('srv_busy3', 1, { retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(await watcher.restartAfterCrash('srv_busy3', 1, { retryMs: 1, maxWaitMs: NO_GIVE_UP_MS }), false);
   assert.equal(spy.mock.callCount(), 1);
 });
 
@@ -189,14 +199,14 @@ test('a crash restart waiting on a busy server stops if someone stops the server
       code: 'BUSY',
     });
   });
-  assert.equal(await watcher.restartAfterCrash('srv_busy4', 1, { retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(await watcher.restartAfterCrash('srv_busy4', 1, { retryMs: 1, maxWaitMs: NO_GIVE_UP_MS }), false);
   assert.equal(spy.mock.callCount(), 1);
 });
 
 test('a crash restart for a server deleted meanwhile does nothing', async (t) => {
   inspectResult = { exists: true, status: 'crashed' };
   const spy = t.mock.method(serversService, 'startServer', async () => {});
-  assert.equal(await watcher.restartAfterCrash('srv_gone', 1, { retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(await watcher.restartAfterCrash('srv_gone', 1, { retryMs: 1, maxWaitMs: NO_GIVE_UP_MS }), false);
   assert.equal(spy.mock.callCount(), 0);
 });
 
@@ -210,7 +220,10 @@ test('a Stop pressed during the crash-restart delay is respected', async (t) => 
     "INSERT INTO events (server_id, actor, type, summary, created_at) VALUES ('srv_delay', 'admin', 'stop-requested', 'Graceful stop requested.', datetime('now', '-2 seconds'))"
   );
   const spy = t.mock.method(serversService, 'startServer', async () => {});
-  assert.equal(await watcher.restartAfterCrash('srv_delay', 1, { since: armedAt, retryMs: 1, maxWaitMs: 50 }), false);
+  assert.equal(
+    await watcher.restartAfterCrash('srv_delay', 1, { since: armedAt, retryMs: 1, maxWaitMs: NO_GIVE_UP_MS }),
+    false
+  );
   assert.equal(spy.mock.callCount(), 0);
 });
 

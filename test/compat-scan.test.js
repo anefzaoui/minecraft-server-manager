@@ -445,7 +445,10 @@ test('a failed scan is never mistaken for an answer', async () => {
   assert.equal(compat.upgradeVerdict(id, '1.20.4').allowed, false);
 });
 
-async function waitForScan(serverId, timeoutMs = 5000) {
+// The scan runs in the background, so this polls its row. The ceiling only
+// turns a hang into a failure: the scan took 50 ms on an idle machine and over
+// 5 s on a loaded one, so a tighter budget failed runs that were fine.
+async function waitForScan(serverId, timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const state = compat.getReport(serverId);

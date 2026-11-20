@@ -16,6 +16,7 @@ import { friendlyError } from '../lib/errors.js';
 import { confirmDialog } from '../lib/confirm.js';
 import { runTask } from '../lib/progress.js';
 import { withBusy } from '../lib/loading.js';
+import { offerRollback } from '../lib/packVersion.js';
 
 document.getElementById('updates-check-all')?.addEventListener('click', async () => {
   try {
@@ -135,28 +136,6 @@ async function upgradePack(row, { serverId, serverName, subject, current, latest
   }
 }
 
-async function offerRollback(serverId, serverName, errorMessage) {
-  const ok = await confirmDialog({
-    title: 'Upgrade failed. Roll back?',
-    message: errorMessage || 'The server did not come back healthy after the upgrade.',
-    detail: 'Rolling back restores the automatic pre-update backup and pins the previous pack version.',
-    confirmLabel: 'Roll Back',
-    danger: true,
-  });
-  if (!ok) return;
-  try {
-    const result = await runTask({
-      title: `Rolling back ${serverName}…`,
-      start: async () => (await postJSON(`/api/servers/${serverId}/pack/rollback`, {})).taskId,
-    });
-    toast(`Rolled back to ${result && result.version ? result.version : 'the previous version'}.`);
-    setTimeout(() => location.reload(), 900);
-  } catch (err) {
-    if (err.dismissed) return; // progress hidden - the task tray takes over
-    toast(err.message || 'The rollback could not be completed. Please try again.', { kind: 'error', timeout: 12000 });
-  }
-}
-
 async function upgradeMod(row, btn, { serverId, subject, current, latest, contentId }) {
   const ok = await confirmDialog({
     title: `Update ${subject}?`,
@@ -210,11 +189,11 @@ async function upgradeImage(row, { serverId, serverName, current, latest }) {
 async function upgradeMcVersion(row, { serverId, serverName, current, latest, targetVersion, targetBuild, envKey }) {
   const message = targetVersion
     ? `${serverName} moves from Minecraft ${current} to ${latest}. A backup is taken first, but upgrading the world is permanent.`
-    : `${serverName} moves from ${current} to ${latest}. The panel rebuilds the container with the new build.`;
+    : `${serverName} moves from ${current} to ${latest}. A backup is taken first, then the server is rebuilt with the new build.`;
   const ok = await confirmDialog({
     title: targetVersion ? 'Update the Minecraft version?' : 'Update the loader build?',
     message,
-    detail: 'The server is briefly offline while the container is rebuilt.',
+    detail: 'If the server is running, it is briefly offline while it is rebuilt.',
     confirmLabel: 'Update Now',
   });
   if (!ok) return;
@@ -235,7 +214,12 @@ async function runMcUpgrade(row, { serverId, serverName, targetVersion, targetBu
           })
         ).taskId,
     });
-    toast(`Updated: ${result.from} → ${result.to}.`);
+    toast(
+      `Updated: ${result.from} → ${result.to}.` +
+        (result.clearedPin
+          ? ` The pinned loader build ${result.clearedPin} was cleared, because it was made for the old Minecraft version.`
+          : '')
+    );
     dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over

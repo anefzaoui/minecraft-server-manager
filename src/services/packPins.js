@@ -74,6 +74,43 @@ function unpinnedPackSelectors(type, env = {}) {
 }
 
 /**
+ * Which pack a server's env selects, for servers the panel has no server_packs
+ * row for (pre-0.9.7 installs the boot sweep could not pin, or env set by
+ * hand). Returns { platform, ref, versionId } (versionId null when unpinned),
+ * or null when the env selects no pack the version picker can list. FTB is
+ * left out on purpose: the panel has no FTB version listing.
+ */
+function inferPackIdentity(type, env = {}) {
+  if (has(env, 'CF_SLUG') || has(env, 'CF_PAGE_URL')) {
+    if (has(env, 'CF_MODPACK_ZIP')) return null; // a fixed local zip, nothing to list
+    const ref = has(env, 'CF_SLUG') ? String(env.CF_SLUG).trim() : String(env.CF_PAGE_URL).trim();
+    const pageFile = has(env, 'CF_PAGE_URL') ? String(env.CF_PAGE_URL).match(/\/files\/(\d+)/)?.[1] : null;
+    return {
+      platform: 'curseforge',
+      ref: ref.replace(/\/files\/\d+.*$/, ''),
+      versionId: has(env, 'CF_FILE_ID') ? String(env.CF_FILE_ID).trim() : pageFile || null,
+    };
+  }
+  if (has(env, 'MODRINTH_MODPACK')) {
+    const raw = String(env.MODRINTH_MODPACK).trim();
+    const urlVersion = raw.match(/\/version\/([^/?#]+)/)?.[1] || null;
+    return {
+      platform: 'modrinth',
+      ref: raw.replace(/\/version\/.*$/, ''),
+      versionId: has(env, 'MODRINTH_VERSION') ? String(env.MODRINTH_VERSION).trim() : urlVersion,
+    };
+  }
+  if (type === 'GTNH') {
+    return {
+      platform: 'gtnh',
+      ref: 'gtnh',
+      versionId: has(env, 'GTNH_PACK_VERSION') ? String(env.GTNH_PACK_VERSION).trim() : null,
+    };
+  }
+  return null;
+}
+
+/**
  * Reject an env write that would leave a pack selector unpinned. Every path
  * that persists server env (create, config update, blueprint import) calls
  * this; applyPack is pinned by construction and never trips it.
@@ -95,7 +132,7 @@ function assertPinnedPackEnv(type, env) {
  * The version pin to adopt for one unpinned selector, from best evidence:
  * 1. the server's own server_packs row (the panel's recorded intent), else
  * 2. the image's install manifest in the data dir - what is ACTUALLY installed
- *    (.curseforge-manifest.json / .modrinth-manifest.json, written by
+ *    (.curseforge-manifest.json / .modrinth-modpack-manifest.json, written by
  *    mc-image-helper; slug is cross-checked so a leftover manifest from a
  *    different pack can't mis-pin).
  * Never resolves "latest": no evidence → no pin (the settings UI shows an
@@ -136,7 +173,7 @@ function findPinEvidence(server, issue) {
     };
   }
   if (issue.platform === 'modrinth') {
-    const m = readManifest('.modrinth-manifest.json');
+    const m = readManifest('.modrinth-modpack-manifest.json');
     if (!m || !m.versionId) return null;
     const ref = String(server.env.MODRINTH_MODPACK || '').trim();
     const expected = ref && !ref.includes('/') ? ref.toLowerCase() : null;
@@ -181,7 +218,7 @@ function pinUnpinnedServers() {
 
     db.run('UPDATE servers SET env_json = ?, pending_recreate = 1 WHERE id = ?', JSON.stringify(env), server.id);
     for (const { issue, evidence } of applied) {
-      // A CF manifest carries enough to give a legacy server the server_packs
+      // A manifest carries enough to give a legacy server the server_packs
       // row the upgrade/update-check flows key off; never clobber an existing row.
       if (evidence.manifest && issue.platform === 'curseforge') {
         db.run(
@@ -194,11 +231,27 @@ function pinUnpinnedServers() {
           evidence.name
         );
       }
+      // The Modrinth manifest has no display names: the slug and version id stand in.
+      if (evidence.manifest && issue.platform === 'modrinth') {
+        const slug = evidence.manifest.projectSlug || String(server.env.MODRINTH_MODPACK || '').trim() || '?';
+        db.run(
+          `INSERT INTO server_packs (server_id, platform, project_ref, project_name, pinned_version_id, pinned_version_name)
+           VALUES (?, 'modrinth', ?, ?, ?, ?) ON CONFLICT(server_id) DO NOTHING`,
+          server.id,
+          slug,
+          slug,
+          evidence.pin,
+          evidence.name
+        );
+      }
+      const platform =
+        { curseforge: 'CurseForge', modrinth: 'Modrinth', ftb: 'FTB', gtnh: 'GT New Horizons' }[issue.platform] ||
+        issue.platform;
       recordEvent({
         serverId: server.id,
         actor: 'system',
         type: 'pack-pinned',
-        summary: `Locked the ${issue.platform} modpack to the installed version (${evidence.name}). It was set to auto-update on every start.`,
+        summary: `Locked the ${platform} modpack to the installed version (${evidence.name}). It was set to auto-update on every start.`,
         details: { pinKey: issue.pinKey, pin: evidence.pin, source: evidence.source },
       });
       pinned += 1;
@@ -212,4 +265,4 @@ function pinUnpinnedServers() {
   return { pinned, unresolved };
 }
 
-module.exports = { unpinnedPackSelectors, assertPinnedPackEnv, pinUnpinnedServers };
+module.exports = { unpinnedPackSelectors, inferPackIdentity, assertPinnedPackEnv, pinUnpinnedServers };
