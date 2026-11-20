@@ -23,6 +23,9 @@ if (early) {
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'msm-test-'));
 process.env.DATA_DIR = dir;
+// src/config refuses to load in a test process without this mark, so a test
+// file that skips this helper fails at once instead of using the real ./data.
+process.env.MSM_TEST_DATA_DIR = dir;
 if (!process.env.SESSION_SECRET) {
   process.env.SESSION_SECRET = 'test-session-secret-0123456789abcdef';
 }

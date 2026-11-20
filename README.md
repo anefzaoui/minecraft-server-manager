@@ -302,6 +302,10 @@ Not affiliated with any of them.
   mod against Modrinth and CurseForge and reports the highest Minecraft version they all have a
   build for, plus a per-version breakdown of what would be left behind. A newer Minecraft version is
   only offered once that check backs it, and never while a jar cannot be identified.
+- **Any mod loader build, on demand**: the same tab switches a Forge, NeoForge, Fabric or Quilt
+  server to any published loader build, or overrides the one a Forge or Fabric CurseForge pack
+  declares when a mod in it needs a newer one. The build is checked against the registry first, and the change is backed
+  up before the server is rebuilt.
 - **Custom-mod overlay**: mods you add yourself are downloaded into a shared, sha256-deduplicated
   library and hard-linked into the server; they survive pack updates. Disabling is class-aware
   (overlay mods rename to `.disabled`; pack-managed mods use the image's exclusion mechanism), and
@@ -706,7 +710,7 @@ The field catalog in `src/config/` is the single source of truth for server sett
 
 ## Status & areas that need work
 
-This is an early public release. The core lifecycle is solid, but several features are
+What's being worked on and what's been asked for is in [`ROADMAP.md`](ROADMAP.md). This is an early public release. The core lifecycle is solid, but several features are
 deliberately "good enough for now": honest contribution targets rather than finished work. If you
 want to help, start here.
 
@@ -758,6 +762,7 @@ rule, the two non-obvious conventions (path-guarded `./data` access and lazy-req
 breaking), and how to run the QA sweep.
 
 Stuck rather than contributing? [`SUPPORT.md`](SUPPORT.md) says where to ask and what to expect.
+Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 Found a security problem? [`SECURITY.md`](SECURITY.md) has a private reporting link, so please don't
 open a public issue for that one.
 

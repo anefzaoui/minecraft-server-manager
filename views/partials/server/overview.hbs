@@ -33,9 +33,15 @@
           <span class="badge badge-info">{{platformName server.pack.platform}}</span>
           <b>{{server.pack.name}}</b>
           <span class="chip">pinned @ {{server.pack.version}}</span>
-          {{#if server.updateAvailable}}
-            <a class="btn btn-sm ml-auto" href="/updates">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{server.pack.latest}} available</a>
-          {{/if}}
+          <div class="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto">
+            {{#if server.updateAvailable}}
+              <a class="btn btn-sm" href="/updates">{{{icon 'circle-arrow-up' 'size-3.5'}}} {{server.pack.latest}} available</a>
+            {{/if}}
+            {{! FTB has no version listing to pick from. }}
+            {{#if (and perms.content (ne server.pack.platform 'ftb'))}}
+              <button class="btn btn-sm" data-pack-change="{{server.id}}" data-server-name="{{server.name}}">{{{icon 'arrow-up-down' 'size-3.5'}}} Change Version…</button>
+            {{/if}}
+          </div>
         </div>
       </div>
     {{/if}}
