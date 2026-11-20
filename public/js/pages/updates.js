@@ -210,11 +210,11 @@ async function upgradeImage(row, { serverId, serverName, current, latest }) {
 async function upgradeMcVersion(row, { serverId, serverName, current, latest, targetVersion, targetBuild, envKey }) {
   const message = targetVersion
     ? `${serverName} moves from Minecraft ${current} to ${latest}. A backup is taken first, but upgrading the world is permanent.`
-    : `${serverName} moves from ${current} to ${latest}. The panel rebuilds the container with the new build.`;
+    : `${serverName} moves from ${current} to ${latest}. A backup is taken first, then the server is rebuilt with the new build.`;
   const ok = await confirmDialog({
     title: targetVersion ? 'Update the Minecraft version?' : 'Update the loader build?',
     message,
-    detail: 'The server is briefly offline while the container is rebuilt.',
+    detail: 'If the server is running, it is briefly offline while it is rebuilt.',
     confirmLabel: 'Update Now',
   });
   if (!ok) return;
@@ -235,7 +235,12 @@ async function runMcUpgrade(row, { serverId, serverName, targetVersion, targetBu
           })
         ).taskId,
     });
-    toast(`Updated: ${result.from} → ${result.to}.`);
+    toast(
+      `Updated: ${result.from} → ${result.to}.` +
+        (result.clearedPin
+          ? ` The pinned loader build ${result.clearedPin} was cleared, because it was made for the old Minecraft version.`
+          : '')
+    );
     dropUpdateRow(row);
   } catch (err) {
     if (err.dismissed) return; // progress hidden - the task tray takes over
