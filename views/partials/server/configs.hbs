@@ -14,7 +14,7 @@
                 <h3 class="truncate text-sm font-semibold">{{name}}</h3>
                 {{#if version}}<p class="mt-0.5 truncate text-xs text-ink-faint">{{version}}</p>{{/if}}
               </div>
-              <span class="badge shrink-0 px-1.5 py-0.5 text-[10px]">{{files.length}} files</span>
+              <span class="badge shrink-0 px-1.5 py-0.5 text-[10px]">{{files.length}} {{#if (eq files.length 1)}}file{{else}}files{{/if}}</span>
             </div>
             {{#if files.length}}
               <ul class="mt-2 space-y-1 border-t border-line pt-2">

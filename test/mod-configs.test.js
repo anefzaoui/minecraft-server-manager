@@ -17,6 +17,7 @@ const configFile = 'config/example-mod.toml';
 const lithiumConfig = 'config/lithium.properties';
 let adminCookie;
 let absoluteFile;
+let fixtureListContent;
 const originalListContent = mods.listContent;
 
 test.before(async () => {
@@ -42,10 +43,11 @@ test.before(async () => {
     })
   );
   fs.writeFileSync(path.join(config.dataDir, 'servers', SID, lithiumConfig), 'mixin.ai.pathing=false\n');
-  mods.listContent = async () => [
+  fixtureListContent = async () => [
     { kind: 'mod', file: 'example-mod.jar', name: 'Example Mod', enabled: true, version: '1.0' },
     { kind: 'mod', file: 'lithium.jar', name: 'Lithium', enabled: true, version: '0.15.4' },
   ];
+  mods.listContent = fixtureListContent;
 });
 
 test.after(async () => {
@@ -157,7 +159,7 @@ test('config API reads and writes only discovered text configs', async () => {
     });
     assert.equal(rejected.status, 404);
   } finally {
-    mods.listContent = originalListContent;
+    mods.listContent = fixtureListContent;
   }
 });
 
@@ -174,5 +176,23 @@ test('a symlinked config root is refused', async () => {
     fs.rmSync(configRoot, { recursive: true, force: true });
     fs.renameSync(savedRoot, configRoot);
     fs.rmSync(externalRoot, { recursive: true, force: true });
+  }
+});
+
+test('a symlink inside config is skipped without hiding the other configs', async () => {
+  const configRoot = path.join(config.dataDir, 'servers', SID, 'config');
+  const linkedRoot = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'mod-config-entry-link-'));
+  const linkedPath = path.join(configRoot, 'external');
+  fs.writeFileSync(path.join(linkedRoot, 'outside.toml'), 'enabled = true\n');
+  try {
+    fs.symlinkSync(linkedRoot, linkedPath, 'junction');
+    const listing = await modConfigs.list(SID);
+    const matchedPaths = listing.groups.flatMap((group) => group.files.map((file) => file.path));
+    assert.ok(matchedPaths.includes(configFile), `Expected ${configFile} to remain listed after skipping the symlink.`);
+    assert.ok(!matchedPaths.some((file) => file.startsWith('config/external/')));
+    assert.ok(!listing.unassigned.some((file) => file.path === 'config/external/outside.toml'));
+  } finally {
+    fs.rmSync(linkedPath, { recursive: true, force: true });
+    fs.rmSync(linkedRoot, { recursive: true, force: true });
   }
 });

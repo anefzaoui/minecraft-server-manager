@@ -182,8 +182,8 @@ async function scanConfigs(serverId) {
     for (const entry of entries) {
       if (entry.name.startsWith('.')) continue;
       const child = `${rel}/${entry.name}`;
-      const childAbs = safeJoin(dataPath('servers', serverId), child);
       if (entry.isSymbolicLink()) continue;
+      const childAbs = safeJoin(dataPath('servers', serverId), child);
       if (entry.isDirectory()) await walk(child, depth + 1);
       else if (entry.isFile() && CONFIG_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
         const stat = await fsp.stat(childAbs).catch(() => null);

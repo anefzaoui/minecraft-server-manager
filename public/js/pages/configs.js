@@ -214,7 +214,7 @@ function renderFields(parsed) {
     <details class="card overflow-hidden">
       <summary class="flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-sm font-semibold hover:bg-hover">
         <span class="min-w-0 truncate" title="${escapeHtml(group)}">${escapeHtml(group)}</span>
-        <span class="badge shrink-0">${fields.length} settings</span>
+        <span class="badge shrink-0">${fields.length} ${fields.length === 1 ? 'setting' : 'settings'}</span>
       </summary>
       <div class="border-t border-line px-3 pb-2">
         ${fields
