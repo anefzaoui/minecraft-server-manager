@@ -1,4 +1,4 @@
-/*! SiteKit 1.0.0 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
+/*! SiteKit 1.0.1 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
 // The lightbox: pictures (and videos) over the page, a group at a time. It opens by flying the
 // picture from its thumbnail (cropped thumbnails too) and closes back into it; goes through the
 // group by arrows, keys, swipes and the wheel; zooms by double-click or double-tap, pinch, wheel
@@ -67,6 +67,23 @@
     return cap ? cap.textContent.replace(/\s+/g, " ").trim() : img.alt || "";
   }
 
+  // A source taken from the page's markup, as an absolute address, and only over http or https
+  // (a relative path resolves to the page's own): anything else (javascript:, data:, blob:) is
+  // refused, and the caller falls back to the thumbnail's own picture.
+  function safe(u) {
+    if (!u) return "";
+    var a;
+    try { a = new URL(u, location.href); } catch (e) { return ""; }
+    return a.protocol === "http:" || a.protocol === "https:" ? a.href : "";
+  }
+  function safeSet(v) {
+    return String(v || "").split(",").map(function (c) {
+      var p = c.trim().split(/\s+/);
+      var u = safe(p[0]);
+      return u ? [u].concat(p.slice(1)).join(" ") : "";
+    }).filter(Boolean).join(", ");
+  }
+
   // What to show for a thumbnail: its source, its size in CSS pixels at 100%, whether that size
   // is known yet (else it comes from the picture once it loads), a picture or a video.
   function describe(img) {
@@ -77,8 +94,9 @@
     if (!full && a && IMAGE.test(href)) full = a.href;
     var it = {
       thumb: img, trigger: a || img,
-      type: video ? "video" : "image", src: video || full || img.currentSrc || img.src,
-      srcset: !video && !full ? img.getAttribute("srcset") || "" : "",
+      type: video && safe(video) ? "video" : "image",
+      src: safe(video) || safe(full) || safe(img.currentSrc) || safe(img.src),
+      srcset: !safe(video) && !safe(full) ? safeSet(img.getAttribute("srcset")) : "",
       alt: img.alt || "", cap: caption(img), w: 0, h: 0, known: false
     };
     var dw = +(img.getAttribute("data-width") || (a && a.getAttribute("data-width"))), dh = +(img.getAttribute("data-height") || (a && a.getAttribute("data-height")));
@@ -279,7 +297,8 @@
       m.controls = true;
       m.playsInline = true;
       m.preload = "metadata";
-      if (it.thumb.currentSrc) m.poster = it.thumb.currentSrc;
+      var poster = safe(it.thumb.currentSrc);
+      if (poster) m.poster = poster;
       m.src = it.src;
       m.addEventListener("loadedmetadata", function () { sized(it, m.videoWidth, m.videoHeight); });
     } else {
@@ -287,7 +306,7 @@
       m.alt = it.alt;
       m.decoding = "async";
       m.draggable = false;
-      var ph = it.thumb.complete && it.thumb.naturalWidth ? it.thumb.currentSrc || it.thumb.src : "";
+      var ph = it.thumb.complete && it.thumb.naturalWidth ? safe(it.thumb.currentSrc || it.thumb.src) : "";
       var loaded = function () { sl.el.classList.remove("kit-lb-loading"); sized(it, m.naturalWidth, m.naturalHeight); };
       m.addEventListener("load", loaded);
       m.addEventListener("error", function () { if (!ph) sl.el.classList.add("kit-lb-error"); sl.el.classList.remove("kit-lb-loading"); });
@@ -542,7 +561,7 @@
     var inMedia = e.target && e.target.tagName === "VIDEO";
     var k = e.key, f = rtl ? -1 : 1;
     if (k === "Escape") { e.preventDefault(); close(); return; }
-    if (inMedia && /^Arrow|Home|End/.test(k)) return;
+    if (inMedia && /^(Arrow|Home|End)/.test(k)) return;
     var map = { ArrowRight: function () { go(f); }, ArrowLeft: function () { go(-f); },
       Home: function () { if (at) jump(0); }, End: function () { if (at !== items.length - 1) jump(items.length - 1); },
       "+": function () { zoomTo(Math.max(z.s * 1.5, zoomed() ? 0 : target()), null, null, 200); }, "=": function () { map["+"](); },

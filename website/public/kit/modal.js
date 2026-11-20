@@ -1,4 +1,4 @@
-/*! SiteKit 1.0.0 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
+/*! SiteKit 1.0.1 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
 // Modals on the browser's own <dialog> (showModal: the page behind is inert, the focus stays
 // inside, the top layer stacks one over another). The kit adds what the element lacks: entry and
 // exit transitions, a click on the backdrop and Escape that close (each can be turned off), the
