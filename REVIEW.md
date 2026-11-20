@@ -129,9 +129,6 @@ a diff. Items that stop earning their place are removed.
   - [ ] It doesn't pass by luck: no wall-clock budgets of a few dozen milliseconds, no fixed sleeps,
         and it was run several times. A flaky test is fixed or removed with the reason, never rerun.
   - [ ] A test for a fix fails when the fix is taken out.
-- **Triggered by:** a red `test/docker-watcher-restart.test.js` on a PR.
-  - [ ] Its busy-retry cases give up early on a slow runner (a 50 ms budget on the wall clock), on
-        `main` too. That's a known bug, not bad luck: it gets fixed, not rerun until green.
 
 ## Build, CI and dependencies
 
