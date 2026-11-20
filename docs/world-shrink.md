@@ -1,5 +1,7 @@
 # Shrinking a world
 
+<!-- description: Shrink a Minecraft world by deleting rarely visited chunks, to reclaim disk space and speed up backups. -->
+
 [← Back to docs index](README.md)
 
 Over time a world spreads out: every place a player has ever walked, flown, or

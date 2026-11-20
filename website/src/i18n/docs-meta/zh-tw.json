@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "活動記錄",
+    "description": "活動頁面是完整的稽核記錄：一個可搜尋、按時間順序排列的記錄，包含面板中發生的所有事件。"
+  },
+  "architecture": {
+    "title": "架構",
+    "description": "Minecraft Server Manager 是一個單一處理序、伺服器渲染的 Node.js 應用程式。"
+  },
+  "backups": {
+    "title": "備份",
+    "description": "備份頁面顯示您所有伺服器中的快照，包含大小、原因和時間，可依伺服器和原因篩選。"
+  },
+  "blueprints": {
+    "title": "藍圖",
+    "description": "藍圖將 Minecraft 伺服器的完整設定儲存為可重複使用的配方，用於建立新伺服器。藍圖絕不包含密鑰。"
+  },
+  "chatbot": {
+    "title": "每台伺服器的 Minecraft 聊天機器人",
+    "description": "此面板為每個管理的 Minecraft 伺服器提供一個由管理員設定的聊天機器人，可在伺服器的「設定」→「聊天機器人」標籤頁中進行設定。"
+  },
+  "console-and-chat": {
+    "title": "主控台與聊天指令",
+    "description": "主控台分頁會即時串流伺服器日誌，並提供一個指令方塊，讓您輸入任何伺服器指令。"
+  },
+  "dashboard": {
+    "title": "儀表板",
+    "description": "儀表板是您的主控中心：顯示所有伺服器、其即時狀態以及正在發生的事件的動態資訊。"
+  },
+  "getting-started": {
+    "title": "開始使用",
+    "description": "安裝 Minecraft Server Manager 並完成首次執行設定：系統檢查、您的時區以及管理員帳戶。"
+  },
+  "index": {
+    "title": "文件",
+    "description": "為 itzg/docker-minecraft-server 提供完整、自行託管的控制面板。"
+  },
+  "integrations": {
+    "title": "整合",
+    "description": "每個伺服器在其「設定」群組下都包含其整合功能：Discord、公開狀態頁面、一鍵邀請，以及可選的聊天機器人分頁（僅限管理員）。"
+  },
+  "modpacks": {
+    "title": "模組包",
+    "description": "安裝 CurseForge、Modrinth、FTB 和 GT New Horizons 模組包作為伺服器，始終固定到確切的模組包版本。"
+  },
+  "public-api": {
+    "title": "公開 API",
+    "description": "一個小型、僅限讀取的 HTTP API，用於從面板外部擷取伺服器狀態：狀態儀表板、正常運行時間監視器、Discord 機器人、家庭自動化規則。"
+  },
+  "schedules": {
+    "title": "排程",
+    "description": "排程頁面使用 cron 表達式自動執行重複性任務。無需外部 cron 或腳本。"
+  },
+  "servers": {
+    "title": "建立與管理伺服器",
+    "description": "在面板中建立、啟動、停止、重建和設定 Minecraft 伺服器：建立精靈、設定、記憶體和遊戲連接埠。"
+  },
+  "storage": {
+    "title": "儲存空間",
+    "description": "查看磁碟空間的去向，為每個伺服器資料夾設定磁碟配額上限，並清理不再需要的項目。"
+  },
+  "two-factor-authentication": {
+    "title": "雙重驗證",
+    "description": "雙重驗證 (2FA) 在登入時增加了一個額外的步驟：在輸入密碼後，您需要輸入手機上驗證器應用程式產生的簡短驗證碼。"
+  },
+  "updates": {
+    "title": "更新",
+    "description": "追蹤並套用每個伺服器上 Minecraft 版本、模組包、模組和外掛程式的更新，並為每個伺服器設定政策。"
+  },
+  "users-and-roles": {
+    "title": "使用者與角色",
+    "description": "Minecraft Server Manager 中的帳戶、管理員、操作員和檢視者角色，以及伺服器特定權限。"
+  },
+  "world-shrink": {
+    "title": "縮小世界",
+    "description": "透過刪除少有造訪的區塊來縮小 Minecraft 世界，以回收磁碟空間並加速備份。"
+  },
+  "worlds-and-files": {
+    "title": "世界與檔案",
+    "description": "世界庫、世界上傳與替換、模組與外掛分頁，以及瀏覽器內建檔案管理器。"
+  },
+  "guide-backups": {
+    "title": "確實可還原的 Minecraft 伺服器備份",
+    "description": "如何製作確實可還原的 Minecraft 伺服器備份：一致性的副本、儲存在其他地方，並至少測試過一次。"
+  },
+  "guide-choosing-a-loader": {
+    "title": "原版、Paper、Fabric、Forge、NeoForge、Quilt：哪個好？",
+    "description": "原版、Paper、Fabric、Forge、NeoForge 或 Quilt：要運行哪種 Minecraft 伺服器類型，取決於您的玩家安裝了什麼。"
+  },
+  "guide-server-wont-start": {
+    "title": "您的 Minecraft 伺服器無法啟動",
+    "description": "Minecraft 伺服器無法啟動的疑難排解，依可能性高低排序：日誌、Java 版本、記憶體、EULA 與連接埠，以及模組。"
+  },
+  "guide-moving-a-server": {
+    "title": "將 Minecraft 伺服器遷移至另一台主機",
+    "description": "遷移世界地圖很容易。但要遷移一個玩家仍可登入、且其物品欄、家園和權限都完好無損的伺服器，這才是容易出錯的部分。"
+  },
+  "live-map": {
+    "title": "即時地圖",
+    "description": "一鍵啟用伺服器世界的 BlueMap 即時 3D 地圖，僅透過面板登入提供服務。"
+  },
+  "guide-server-memory": {
+    "title": "Minecraft 伺服器需要多少 RAM？",
+    "description": "對於原版、Paper、輕度模組和大型模組包，Minecraft 伺服器需要多少 RAM，以及需要為機器保留多少。"
+  },
+  "invites-and-status-page": {
+    "title": "邀請與狀態頁面",
+    "description": "透過伺服器位址、版本和客戶端模組包邀請朋友加入伺服器，並分享一個公開的狀態頁面，其中僅顯示您選擇的內容。"
+  }
+}

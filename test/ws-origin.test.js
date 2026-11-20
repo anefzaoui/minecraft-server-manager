@@ -5,6 +5,7 @@
 // handing the socket to `ws`. Guards against cross-site WebSocket hijacking of
 // the console log stream.
 
+require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { originAllowed } = require('../src/ws/index');

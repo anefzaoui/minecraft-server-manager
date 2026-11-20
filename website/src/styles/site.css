@@ -1,0 +1,867 @@
+/* Marketing-site stylesheet: the game's own UI language, drawn from scratch.
+   Hard pixel edges, bevelled stone buttons, inventory-slot panels, tiled block
+   textures (public/textures, original art), an XP-bar divider, item-tooltip
+   callouts, and a readable pixel typeface for headings. No gradients, no
+   rounded corners, no drop shadows. Light "overworld day" is the default;
+   <html data-theme="dark"> switches to night (same key as the docs shell). */
+@import 'tailwindcss';
+@import './fonts.css';
+
+@custom-variant dark (&:where(:root[data-theme='dark'] *));
+
+@theme {
+  --color-grass-100: #d5f5c9;
+  --color-grass-300: #7fd965;
+  --color-grass-400: #59c53e;
+  --color-grass-500: #4fae32;
+  --color-grass-600: #2f8520;
+  --color-grass-700: #27661d;
+  --color-grass-900: #1e461b;
+  --color-diamond-400: #3cc5c7;
+  --color-diamond-700: #1a6a6e;
+  --color-gold-400: #f0b42f;
+  --color-gold-700: #ab4f12;
+  --color-redstone-400: #f87171;
+  --color-redstone-700: #b02a2e;
+
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Jersey 15', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Semantic tokens, day values. */
+  --color-sky: #82d2fe; /* = the hero panorama sky, see scripts/hero-extend.js */
+  --color-canvas: #eeece4;
+  --color-panel: #d4d4d4;
+  --color-panel-hi: #ffffff;
+  --color-panel-lo: #6b6b6b;
+  --color-slot: #8b8b8b;
+  --color-slot-hi: #ffffff;
+  --color-slot-lo: #373737;
+  --color-outline: #1f1f1f;
+  --color-ink: #1b1f23;
+  --color-ink-soft: #3e444b;
+  --color-ink-faint: #5d656d;
+  --color-link: var(--color-diamond-700);
+  --color-ok: var(--color-grass-700);
+  --color-warn: var(--color-gold-700);
+  --color-danger: var(--color-redstone-700);
+  --color-on-sky: #10233a;
+  --color-btn: #7a7a7a;
+  --color-btn-hi: #b0b0b0;
+  --color-btn-lo: #3f3f3f;
+  --color-btn-hover: #8b8b8b;
+  --color-well: #2f3237;
+  --color-well-hi: #6b6f75;
+  --color-well-lo: #0e0f11;
+  --color-well-ink: #f4f5f6;
+  --color-sign: #e6d3a3;
+  --color-sign-hi: #f5e9c8;
+  --color-sign-edge: #7a5230;
+  --color-sign-ink: #3b2a14;
+}
+
+:root[data-theme='dark'] {
+  --color-sky: #122662;
+  --color-canvas: #1c1f24;
+  --color-panel: #3a3d42;
+  --color-panel-hi: #62666c;
+  --color-panel-lo: #141517;
+  --color-slot: #2a2d31;
+  --color-slot-hi: #62666c;
+  --color-slot-lo: #0e0f11;
+  --color-outline: #0a0b0c;
+  --color-ink: #f4f5f6;
+  --color-ink-soft: #cfd3d8;
+  --color-ink-faint: #a3aab2;
+  --color-link: var(--color-diamond-400);
+  --color-ok: var(--color-grass-400);
+  --color-warn: var(--color-gold-400);
+  --color-danger: var(--color-redstone-400);
+  --color-on-sky: #f4f5f6;
+  --color-btn: #5a5d62;
+  --color-btn-hi: #8a8e94;
+  --color-btn-lo: #26282b;
+  --color-btn-hover: #6a6e74;
+  --color-well: #17191c;
+  --color-well-hi: #4a4f56;
+  --color-well-lo: #050506;
+  --color-well-ink: #f4f5f6;
+  --color-sign: #c9b581;
+  --color-sign-hi: #dfcf9f;
+  --color-sign-edge: #5b3b21;
+  --color-sign-ink: #2a1c0c;
+}
+
+@layer base {
+  html {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-canvas);
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+  :where(.grid, .flex) > * {
+    min-width: 0;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  ::selection {
+    background: var(--color-grass-500);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 0;
+    box-shadow: 0 0 0 5px var(--color-outline);
+  }
+  h1,
+  h2,
+  h3,
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+  }
+  h1 {
+    font-size: 3rem;
+  }
+  h2 {
+    font-size: 2.125rem;
+  }
+  h3 {
+    font-size: 1.5rem;
+  }
+  @media (min-width: 64rem) {
+    h2 {
+      font-size: 2.375rem;
+    }
+  }
+  /* One motion vocabulary for the whole site: short, exponential ease-out,
+     from a state that is already visible. Hover and press answer in 140 ms;
+     the one entrance (the hero screenshot) takes 700 ms. */
+  :root {
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --dur-quick: 140ms;
+    --dur-calm: 240ms;
+  }
+  a {
+    transition:
+      color var(--dur-quick) var(--ease-out),
+      text-decoration-color var(--dur-quick) var(--ease-out);
+    text-underline-offset: 0.2em;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .lead {
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+    max-width: 62ch;
+  }
+  @media (min-width: 64rem) {
+    .lead {
+      font-size: 1.125rem;
+    }
+  }
+  .pixelated {
+    image-rendering: pixelated;
+  }
+
+  /* Tiled block textures (16px tiles drawn at 3x). */
+  .tex {
+    background-repeat: repeat;
+    background-size: 48px 48px;
+    image-rendering: pixelated;
+  }
+  .tex-dirt {
+    background-image: url('/textures/dirt.png');
+  }
+  .tex-dark-dirt {
+    background-image: url('/textures/dark-dirt.png');
+  }
+  .tex-stone {
+    background-image: url('/textures/stone.png');
+  }
+  .tex-deep-stone {
+    background-image: url('/textures/deep-stone.png');
+  }
+  .tex-planks {
+    background-image: url('/textures/planks.png');
+  }
+  .tex-grass-side {
+    background-image: url('/textures/grass-side.png');
+  }
+  /* The ground strip under sky areas: one row of grass-side blocks, then dirt. */
+  .ground {
+    height: 72px;
+    background-image: url('/textures/dirt.png'), url('/textures/grass-side.png');
+    background-repeat: repeat-x, repeat-x;
+    background-size:
+      48px 48px,
+      48px 48px;
+    background-position:
+      0 48px,
+      0 0;
+    image-rendering: pixelated;
+    border-bottom: 3px solid var(--color-outline);
+  }
+  .sky {
+    background: var(--color-sky);
+    color: var(--color-on-sky);
+  }
+
+  /* Bevelled GUI panel (the inventory / crafting window). */
+  .panel {
+    background: var(--color-panel);
+    border: 3px solid;
+    border-color: var(--color-panel-hi) var(--color-panel-lo) var(--color-panel-lo) var(--color-panel-hi);
+    box-shadow: 0 0 0 2px var(--color-outline);
+    padding: 1.25rem;
+    color: var(--color-ink);
+  }
+  .panel-tight {
+    padding: 0.75rem;
+  }
+  /* Inset slot: holds an icon, an image, or a code block. */
+  .slot {
+    background: var(--color-slot);
+    border: 2px solid;
+    border-color: var(--color-slot-lo) var(--color-slot-hi) var(--color-slot-hi) var(--color-slot-lo);
+  }
+  .slot-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: #ffffff;
+    flex-shrink: 0;
+  }
+  .slot-icon svg {
+    filter: drop-shadow(1px 1px 0 var(--color-slot-lo));
+  }
+
+  /* The game's button: stone body, light top-left, dark bottom-right, black outline,
+     white text with a hard shadow; the green variant is the "play" button. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.125rem;
+    border: 2px solid;
+    border-color: var(--color-btn-hi) var(--color-btn-lo) var(--color-btn-lo) var(--color-btn-hi);
+    box-shadow: 0 0 0 2px var(--color-outline);
+    background: var(--color-btn);
+    color: #ffffff;
+    text-shadow: 1px 1px 0 var(--color-btn-lo);
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.25rem;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color var(--dur-quick) var(--ease-out),
+      transform var(--dur-quick) var(--ease-out),
+      border-color var(--dur-quick) var(--ease-out);
+  }
+  .btn:hover {
+    background: var(--color-btn-hover);
+  }
+  .btn:active {
+    border-color: var(--color-btn-lo) var(--color-btn-hi) var(--color-btn-hi) var(--color-btn-lo);
+    transform: translateY(1px);
+  }
+  .btn-primary {
+    background: var(--color-grass-500);
+    border-color: var(--color-grass-300) var(--color-grass-700) var(--color-grass-700) var(--color-grass-300);
+    box-shadow: 0 0 0 2px var(--color-grass-900);
+    text-shadow: 1px 1px 0 var(--color-grass-700);
+  }
+  .btn-primary:hover {
+    background: var(--color-grass-400);
+  }
+  .btn-primary:active {
+    border-color: var(--color-grass-700) var(--color-grass-300) var(--color-grass-300) var(--color-grass-700);
+  }
+  .btn-sm {
+    min-height: 2.25rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 1.1rem;
+  }
+  .btn-icon {
+    padding-inline: 0.5rem;
+    min-width: 2.75rem;
+  }
+  .btn-lg {
+    min-height: 3.25rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 1.375rem;
+  }
+
+  /* Item tooltip: dark box, purple border. */
+  .tip {
+    background: #100a1c;
+    border: 2px solid #5a2bd6;
+    box-shadow: 0 0 0 2px #100a1c;
+    color: #f4f5f6;
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .tip-title {
+    font-family: var(--font-display);
+    color: #c9b3ff;
+    font-size: 1.05rem;
+  }
+
+  /* Card grid without orphans: 1 column, 2 from sm, 3 from lg. At lg the grid is
+     six tracks wide so a short last row can stretch: four cards become 2 + 2,
+     and a last row of one or two cards splits the full width. */
+  .cards {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 40rem) {
+    .cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .cards {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .cards > * {
+      grid-column: span 2;
+    }
+    .cards > :first-child:nth-last-child(4),
+    .cards > :first-child:nth-last-child(4) ~ *,
+    .cards > :nth-last-child(2):nth-child(3n + 1),
+    .cards > :last-child:nth-child(3n + 2) {
+      grid-column: span 3;
+    }
+    .cards > :last-child:nth-child(3n + 1):not(:first-child:nth-last-child(4) ~ *) {
+      grid-column: span 6;
+    }
+  }
+  /* Comparison table. Below sm each row becomes a card of "Label: value" lines
+     (label from the cell's data-th), so nothing scrolls sideways on a phone. */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  .data-table :is(th, td) {
+    padding: 0.75rem 0.875rem;
+    text-align: start;
+    vertical-align: top;
+    border-bottom: 2px solid var(--color-panel-lo);
+  }
+  .data-table thead th {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.3rem;
+    background: var(--color-well);
+    color: var(--color-well-ink);
+  }
+  .data-table tbody th {
+    font-weight: 600;
+    color: var(--color-ink);
+    width: 22%;
+  }
+  .data-table td {
+    color: var(--color-ink-soft);
+  }
+  .data-table td:nth-child(2) {
+    background: color-mix(in srgb, var(--color-grass-500) 12%, transparent);
+  }
+  @media (max-width: 39.99rem) {
+    .data-table thead {
+      display: none;
+    }
+    .data-table tr {
+      display: block;
+      border-bottom: 2px solid var(--color-panel-lo);
+      padding: 0.5rem 0;
+    }
+    .data-table :is(th, td) {
+      display: block;
+      width: auto;
+      border: 0;
+      padding: 0.25rem 0.5rem;
+    }
+    /* The desktop label column is 22% wide; a stacked card's label takes the full row. */
+    .data-table tbody th {
+      width: auto;
+      padding-block: 0.5rem 0.25rem;
+    }
+    .data-table td::before {
+      content: attr(data-th) ': ';
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+  }
+
+  /* Masonry columns for items of uneven height (screenshots, FAQ answers). */
+  .masonry {
+    column-gap: 1rem;
+  }
+  .masonry > * {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+
+  /* XP bar as a section divider. */
+  .xp {
+    height: 12px;
+    border: 2px solid var(--color-outline);
+    background: #2b2b2b;
+    background-image: repeating-linear-gradient(90deg, #7fd965 0 12px, #59c53e 12px 24px, #4fae32 24px 26px);
+    background-size: 100% 4px;
+    background-repeat: no-repeat;
+    background-position: 0 1px;
+    position: relative;
+  }
+  .xp::after {
+    content: '';
+    position: absolute;
+    inset: 5px 0 0 0;
+    background-image: repeating-linear-gradient(90deg, #4fae32 0 12px, #2f8520 12px 24px, #27661d 24px 26px);
+  }
+  /* Direct children only: a pill row nested inside an item must not get a heart. */
+  .hearts > li {
+    padding-inline-start: 1.5rem;
+    background: url('/textures/heart.png') no-repeat 0 0.35rem / 18px 16px;
+    image-rendering: pixelated;
+  }
+  [dir='rtl'] .hearts > li {
+    background-position: 100% 0.35rem;
+  }
+
+  .field {
+    width: 100%;
+    min-height: 2.75rem;
+    background: #1b1f23;
+    color: #f4f5f6;
+    border: 2px solid;
+    border-color: #0a0b0c #6b6f75 #6b6f75 #0a0b0c;
+    box-shadow: 0 0 0 2px var(--color-outline);
+    padding: 0.5rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    direction: ltr;
+    text-align: left;
+  }
+  .field:focus {
+    outline: 3px solid #ffffff;
+    outline-offset: -1px;
+  }
+
+  .codebox {
+    display: flex;
+    align-items: stretch;
+    background: #1b1f23;
+    color: #f4f5f6;
+    border: 2px solid;
+    border-color: #0a0b0c #6b6f75 #6b6f75 #0a0b0c;
+    box-shadow: 0 0 0 2px var(--color-outline);
+    direction: ltr;
+    text-align: left;
+  }
+  .codebox pre {
+    flex: 1;
+    margin: 0;
+    padding: 0.75rem 0.875rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .codebox-url pre {
+    color: #8fd0ff;
+    font-weight: 600;
+  }
+  /* Long commands wrap instead of scrolling, so the options at the end stay visible. */
+  .codebox-wrap pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  /* Icon-only on phones (the button still turns green when copied), labelled from sm. */
+  .codebox .copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-width: 2.75rem;
+    padding: 0 0.75rem;
+    border: 0;
+    border-inline-start: 2px solid #0a0b0c;
+    background: var(--color-btn);
+    color: #ffffff;
+    text-shadow: 1px 1px 0 var(--color-btn-lo);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .codebox .copy span {
+    display: none;
+  }
+  @media (min-width: 40rem) {
+    .codebox .copy {
+      min-width: 5.5rem;
+    }
+    .codebox .copy span {
+      display: inline;
+    }
+  }
+  .codebox .copy:hover {
+    background: var(--color-btn-hover);
+  }
+  .codebox .copy[data-copied='true'] {
+    background: var(--color-grass-600);
+    text-shadow: 1px 1px 0 var(--color-grass-900);
+  }
+
+  /* Hotbar tabs: radio-driven slots; the checked one gets the white selection frame.
+     Child combinators only, so a tab group nested in another one's panel (the
+     install tutorial's Simple and Advanced modes) is switched by its own radios. */
+  .tabs > input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .hotbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .tab-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--color-slot);
+    border: 2px solid;
+    border-color: var(--color-slot-lo) var(--color-slot-hi) var(--color-slot-hi) var(--color-slot-lo);
+    box-shadow: 0 0 0 2px var(--color-outline);
+    color: #ffffff;
+    text-shadow: 1px 1px 0 var(--color-slot-lo);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
+  /* A tab row inside another tab group's panel: smaller slots, so the two levels
+     read as a choice and a sub-choice. */
+  .hotbar-sm .tab-label {
+    min-height: 2.5rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 1.1rem;
+  }
+  .tab-label:hover {
+    filter: brightness(1.1);
+  }
+  .tab-panel {
+    display: none;
+  }
+  .tabs > input:nth-of-type(1):checked ~ .hotbar > [for$='-1'],
+  .tabs > input:nth-of-type(2):checked ~ .hotbar > [for$='-2'],
+  .tabs > input:nth-of-type(3):checked ~ .hotbar > [for$='-3'],
+  .tabs > input:nth-of-type(4):checked ~ .hotbar > [for$='-4'] {
+    box-shadow:
+      0 0 0 2px var(--color-outline),
+      0 0 0 5px #ffffff,
+      0 0 0 7px var(--color-outline);
+    background: var(--color-grass-600);
+  }
+  .tabs > input:nth-of-type(1):checked ~ .tab-panels > .tab-panel:nth-of-type(1),
+  .tabs > input:nth-of-type(2):checked ~ .tab-panels > .tab-panel:nth-of-type(2),
+  .tabs > input:nth-of-type(3):checked ~ .tab-panels > .tab-panel:nth-of-type(3),
+  .tabs > input:nth-of-type(4):checked ~ .tab-panels > .tab-panel:nth-of-type(4) {
+    display: block;
+  }
+  .tabs > input:focus-visible ~ .hotbar {
+    outline: 3px solid #ffffff;
+    outline-offset: 6px;
+  }
+  .step-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background: var(--color-grass-500);
+    border: 2px solid;
+    border-color: var(--color-grass-300) var(--color-grass-700) var(--color-grass-700) var(--color-grass-300);
+    box-shadow: 0 0 0 2px var(--color-grass-900);
+    color: #fff;
+    text-shadow: 1px 1px 0 var(--color-grass-700);
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  /* Drifting pixel clouds. */
+  .cloud {
+    position: absolute;
+    width: 96px;
+    height: 36px;
+    background: url('/textures/cloud.png') no-repeat 0 0 / 96px 36px;
+    image-rendering: pixelated;
+    opacity: 0.95;
+    animation: drift linear infinite;
+    pointer-events: none;
+  }
+  @keyframes drift {
+    from {
+      transform: translateX(-140px);
+    }
+    to {
+      transform: translateX(calc(100vw + 140px));
+    }
+  }
+  [dir='rtl'] .cloud {
+    animation-direction: reverse;
+  }
+
+  .prose-soft :where(p, li) {
+    color: var(--color-ink-soft);
+  }
+  .prose-soft :where(a) {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .prose-soft :where(code) {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--color-slot);
+    color: #fff;
+    padding: 0.05em 0.35em;
+  }
+  .prose-soft :where(pre) {
+    background: #1b1f23;
+    color: #f4f5f6;
+    border: 2px solid;
+    border-color: #0a0b0c #6b6f75 #6b6f75 #0a0b0c;
+    box-shadow: 0 0 0 2px var(--color-outline);
+    padding: 1rem;
+    overflow-x: auto;
+    direction: ltr;
+    text-align: left;
+  }
+  .prose-soft :where(pre code) {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* Brand pills: an item sitting in an inventory slot. Inset (pressed-in) bevel,
+     dark well, light label. Deliberately the opposite relief of a button. */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-well);
+    border: 2px solid;
+    border-color: var(--color-well-lo) var(--color-well-hi) var(--color-well-hi) var(--color-well-lo);
+    color: var(--color-well-ink);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0.375rem 0.625rem 0.375rem 0.5rem;
+    white-space: nowrap;
+  }
+  .pill-sm {
+    font-size: 1.05rem;
+    padding: 0.25rem 0.5rem 0.25rem 0.375rem;
+    gap: 0.375rem;
+  }
+  /* Large pills are medium on phones, so a band of them wraps two or three to a
+     row instead of one per line. */
+  .pill-lg {
+    font-size: 1.2rem;
+    padding: 0.375rem 0.625rem 0.375rem 0.5rem;
+    gap: 0.5rem;
+  }
+  .pill-lg :is(.pill-logo, .pill-icon) {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  @media (min-width: 40rem) {
+    .pill-lg {
+      font-size: 1.35rem;
+      padding: 0.5rem 0.875rem 0.5rem 0.625rem;
+      gap: 0.625rem;
+    }
+    .pill-lg :is(.pill-logo, .pill-icon) {
+      width: 40px !important;
+      height: 40px !important;
+    }
+  }
+  .pill-logo {
+    flex-shrink: 0;
+  }
+  .pill-icon {
+    flex-shrink: 0;
+    display: block;
+  }
+  .pill-dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    background: var(--color-grass-400);
+    box-shadow: 0 0 0 2px var(--color-grass-900);
+    flex-shrink: 0;
+  }
+  .pill-note {
+    background: var(--color-grass-600);
+    color: #fff;
+    font-size: 0.75em;
+    padding: 0.15rem 0.4rem;
+    margin-inline-start: 0.25rem;
+  }
+
+  /* Sign label: a small wooden sign with painted text, for hero tags and counts. */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: var(--color-sign);
+    border: 2px solid var(--color-sign-edge);
+    color: var(--color-sign-ink);
+    padding: 0.35rem 0.625rem 0.3rem;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  /* Header navigation: text on the planks bar. Not a button: nothing to press,
+     just a menu entry with a highlight. Active = green XP-style bar underneath. */
+  .nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 4rem;
+    padding: 0 0.75rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 0 #0e0805;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    line-height: 1;
+    text-decoration: none;
+  }
+  .nav-link:hover {
+    color: var(--color-gold-400);
+  }
+  .nav-link[aria-current='page'] {
+    color: var(--color-grass-300);
+  }
+  .nav-link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0.5rem;
+    bottom: 0;
+    height: 8px;
+    background: var(--color-grass-400);
+    border: 2px solid var(--color-outline);
+    border-bottom: 0;
+    box-shadow: inset 0 3px 0 0 var(--color-grass-300);
+  }
+  .nav-menu .nav-link {
+    height: auto;
+    padding: 0.625rem 0.75rem;
+    color: var(--color-ink);
+    text-shadow: none;
+  }
+  .nav-menu .nav-link[aria-current='page'] {
+    color: var(--color-ok);
+  }
+  .nav-menu .nav-link[aria-current='page']::after {
+    inset-inline: 0;
+    height: 4px;
+    border: 0;
+    box-shadow: none;
+  }
+  .header-bar {
+    background: #221910;
+    box-shadow: inset 0 -3px 0 0 #3a2a18;
+  }
+  .brand-lockup {
+    color: #ffffff;
+    text-shadow: 2px 2px 0 #0e0805;
+  }
+}
+
+@layer components {
+  /* A panel that is a link (cards, related pages, guides) rises a pixel on
+     hover and settles back when pressed, like a slot under the cursor. */
+  a.panel {
+    transition:
+      transform var(--dur-calm) var(--ease-out),
+      filter var(--dur-calm) var(--ease-out);
+  }
+  @media (hover: hover) {
+    a.panel:hover {
+      transform: translateY(-2px);
+    }
+  }
+  a.panel:active {
+    transform: translateY(0);
+    transition-duration: var(--dur-quick);
+  }
+
+  /* The page's one entrance: the panel screenshot in the hero settles into
+     place once. Text never animates in; it is there from the first paint. */
+  .hero-shot {
+    animation: hero-settle 700ms var(--ease-out) 80ms both;
+  }
+  @keyframes hero-settle {
+    from {
+      opacity: 0.001;
+      transform: translateY(14px);
+    }
+  }
+
+  /* Facts under the hero buttons: quiet text with a check, not a row of signs. */
+  .hero-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-on-sky);
+  }
+  .hero-facts li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+}

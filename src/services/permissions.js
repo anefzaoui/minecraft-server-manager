@@ -124,7 +124,7 @@ const CAPABILITY_INFO = {
     covers: [
       'Add, update, disable, and remove mods, plugins, and datapacks; import zips; check for updates.',
       'Put a mod back on the build it was updated from, and check which future Minecraft versions the installed mods support.',
-      'Install, upgrade, and roll back the managed modpack; export it as an .mrpack.',
+      'Install the managed modpack, change its version, and roll it back; export it as an .mrpack.',
       'Install, copy, download, delete, and shrink worlds on this server, and extract a world from it into the library.',
       'Edit player inventories and rebuild the item registry.',
     ],
@@ -141,6 +141,7 @@ const CAPABILITY_INFO = {
       'POST /api/servers/:id/mods/toggle',
       'DELETE /api/servers/:id/mods/:file',
       'POST /api/servers/:id/pack',
+      'GET /api/servers/:id/pack/versions',
       'POST /api/servers/:id/pack/upgrade',
       'POST /api/servers/:id/pack/rollback',
       'POST /api/servers/:id/updates/check',
@@ -206,7 +207,7 @@ const CAPABILITY_INFO = {
     covers: [
       'Save the Configuration tab: name, description, tags, memory, CPU, quota, update policy, environment, and server.properties.',
       'Change the game port players connect to.',
-      'Upgrade the Minecraft version or the container image, set the icon and the console label, turn the live map on or off.',
+      'Upgrade the Minecraft version or the container image, change the mod loader version, set the icon and the console label, turn the live map on or off.',
       'Configure Discord, the public status page, and invites.',
     ],
     excludes:
@@ -220,6 +221,7 @@ const CAPABILITY_INFO = {
       'POST /api/servers/:id/icon',
       'POST /api/servers/:id/image/upgrade',
       'POST /api/servers/:id/mcversion/upgrade',
+      'POST /api/servers/:id/loader-version',
       'POST /api/servers/:id/map/enable',
       'POST /api/servers/:id/map/disable',
       'WRITES /api/servers/:id/integrations/*',

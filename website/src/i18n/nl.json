@@ -1,0 +1,2179 @@
+{
+  "site": {
+    "name": "Minecraft Server Manager",
+    "tagline": "Gratis, zelf-gehost controlepaneel voor Minecraft servers op Docker.",
+    "description": "Draai gemodificeerde en vanilla Minecraft servers vanuit je browser. Modpacks vastgezet op exacte versies, back-ups met één klik, planningen, live kaart, spelersanalyse. Gratis, open source, en je hele paneel is één map."
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Functies",
+    "screenshots": "Screenshots",
+    "servers": "Servers",
+    "guides": "Gidsen",
+    "install": "Installeren",
+    "docs": "Documentatie",
+    "faq": "Veelgestelde vragen",
+    "compare": "Vergelijken",
+    "changelog": "Wijzigingslogboek",
+    "github": "GitHub",
+    "discord": "Discord",
+    "menu": "Menu",
+    "language": "Taal",
+    "theme": "Lichte of donkere thema wisselen",
+    "skip": "Overslaan naar inhoud"
+  },
+  "hero": {
+    "eyebrow": "Gratis en open source. Draait op je eigen machine.",
+    "title": "Beheer je Minecraft servers vanuit één gebruiksvriendelijk paneel.",
+    "subtitle": "Minecraft Server Manager verandert Docker in een knus thuis voor je servers: modpacks die vastgezet blijven, back-ups met één klik, planningen, een live kaart, spelersstatistieken en een console die duidelijke taal spreekt. Geen rekeningen, geen lock-in, je hele paneel in één map.",
+    "primary": "Begin binnen enkele minuten",
+    "secondary": "Ontdek de functies",
+    "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
+    "scroll": "Bekijk de tutorial",
+    "shotCaption": "Het echte paneel: het dashboard met zes voorbeeldservers, in het donkere thema."
+  },
+  "pillars": {
+    "title": "Gemaakt voor mensen die servers draaien, geen tickets",
+    "items": [
+      {
+        "icon": "folder",
+        "title": "Eén map is je hele paneel",
+        "body": "Database, werelden, back-ups en de gedeelde mod-bibliotheek bevinden zich allemaal onder één enkele gegevensmap. Kopieer deze en je bent gemigreerd."
+      },
+      {
+        "icon": "box",
+        "title": "Elke server is een container",
+        "body": "Elke server draait op de beproefde itzg-image met zijn eigen CPU- en geheugenlimieten, nette stops via RCON en crashdetectie.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "icon": "pin",
+        "title": "Modpacks blijven vastgezet",
+        "body": "Packs zijn vergrendeld op een exacte versie. Upgrades zijn expliciet, worden eerst bekeken, eerst geback-upt, gecontroleerd op gezondheid en met één klik teruggedraaid.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh"]
+      }
+    ]
+  },
+  "features": {
+    "title": "Alles wat een serverbeheerder nodig heeft",
+    "intro": "De complete functieweergave, van het maken van een server tot het delen van de live map.",
+    "cta": "Lees de documentatie",
+    "groups": [
+      {
+        "title": "Servers en levenscyclus",
+        "items": [
+          {
+            "title": "Containers met beperkte resources",
+            "body": "Maak, start, stop, herstart, herbouw en verwijder servers met nette RCON-stops en automatische crashdetectie.",
+            "icon": "server",
+            "pills": ["docker"]
+          },
+          {
+            "title": "Begeleide wizard voor aanmaken",
+            "body": "Eenvoudige of Geavanceerde modus, met elke afbeeldingsinstelling uitgelegd in duidelijke taal voordat je deze kiest.",
+            "icon": "wand"
+          },
+          {
+            "title": "Live console",
+            "body": "Een WebSocket-console met een RCON-commandobalk, logboekfilters en speleracties met één klik.",
+            "icon": "terminal"
+          },
+          {
+            "title": "Spelermoderatie",
+            "body": "Whitelist, ops, bans, IP-bans en teleports, online via RCON en offline via de JSON-bestanden.",
+            "icon": "users"
+          }
+        ]
+      },
+      {
+        "title": "Mods en modpacks",
+        "items": [
+          {
+            "title": "Vijf registers in één browser",
+            "body": "Doorzoek ze alle vijf vanaf één plek. Drie daarvan hebben geen API-sleutel nodig.",
+            "icon": "search",
+            "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"]
+          },
+          {
+            "title": "Toevoegen via link",
+            "body": "Plak een projectpagina, een GitHub-repository, een slug of een directe jar-URL. Het paneel identificeert het.",
+            "icon": "link"
+          },
+          {
+            "title": "Importeer alles",
+            "body": "Elke jar wordt geïdentificeerd en de compatibiliteit wordt gecontroleerd tijdens het importeren.",
+            "icon": "upload",
+            "pills": ["mrpack", "cf-export", "zip"]
+          },
+          {
+            "title": "Checksum-geverifieerde downloads",
+            "body": "Geverifieerd voordat een bestand de server bereikt, met de sterkste hash eerst. Een mismatch wordt nooit verzonden.",
+            "icon": "shield",
+            "pills": ["sha512", "sha256", "sha1", "md5"]
+          },
+          {
+            "title": "Gedeelde mod-bibliotheek",
+            "body": "Gedupliceerd met sha256 en hard-linked in servers, zodat aangepaste mods pakketupdates overleven.",
+            "icon": "library"
+          },
+          {
+            "title": "Solver 'Kies mods eerst'",
+            "body": "Kies de mods die je wilt en krijg de nieuwste volledig compatibele loader en Minecraft-versie.",
+            "icon": "sparkles"
+          },
+          {
+            "title": "Elke pakketversie, elke loader-build",
+            "body": "Verplaats een modpack naar elke gepubliceerde versie, nieuwer of ouder, of schakel de mod loader-build. Een back-up komt eerst, en een mislukte opstart rolt terug.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Beveiliging en automatisering",
+        "items": [
+          {
+            "title": "Veilige back-ups",
+            "body": "Snapshots met retentieklassen, herstel op locatie en optioneel krimpen van de wereld om schijfruimte terug te winnen.",
+            "icon": "archive"
+          },
+          {
+            "title": "Cron-schema's",
+            "body": "Herstarts, back-ups en RCON-commando's volgens een schema, met de volgende uitvoering vooraan getoond.",
+            "icon": "clock"
+          },
+          {
+            "title": "Blauwdrukken",
+            "body": "Exporteer een server als een draagbaar recept, importeer het overal en krijg dezelfde server terug.",
+            "icon": "blueprint"
+          },
+          {
+            "title": "Crash-forensisch onderzoek",
+            "body": "Crashes worden gedetecteerd, geparseerd en verdachten benoemd, met delen met één klik en geautomatiseerde inzichten.",
+            "icon": "flame",
+            "pills": ["mclogs"]
+          },
+          {
+            "title": "Update-tracking",
+            "body": "Nieuwe server-, pakket-, afbeeldings- en mod-versies worden gevolgd, met back-ups voor updates en terugdraaien met één klik.",
+            "icon": "refresh"
+          }
+        ]
+      },
+      {
+        "title": "Inzicht en community",
+        "items": [
+          {
+            "title": "Live map",
+            "body": "Eén klik naar een live map, geserveerd via de geauthenticeerde proxy van het paneel.",
+            "icon": "map",
+            "pills": ["bluemap"]
+          },
+          {
+            "title": "Analyses en opslag",
+            "body": "Speeltijd, sterfgevallen en scoreborden voor mijnbouw, inventaris-forensisch onderzoek, schijfgebruik per server en afgedwongen quota's.",
+            "icon": "chart"
+          },
+          {
+            "title": "Discord en chatbot",
+            "body": "Webhooks met per-gebeurtenis schakelaars, plus een optionele per-server chatbot met beperkte in-game-rechten.",
+            "icon": "message",
+            "pills": ["discord"]
+          },
+          {
+            "title": "Openbare statuspagina en API",
+            "body": "Opt-in statuspagina's, uitnodigingsblokken, een gegenereerd client .mrpack en een alleen-lezen token-geauthenticeerde API.",
+            "icon": "globe"
+          },
+          {
+            "title": "Nodig vrienden uit",
+            "body": "Kopieer een uitnodiging met het adres en de versie. Voor een server gebouwd met mods die je hebt gekozen, geef vrienden een client .mrpack die ze installeert en de server aan hun lijst toevoegt.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
+            "title": "Gebruikers, rollen en 2FA",
+            "body": "Admin-, operator- en viewer-rollen met TOTP tweefactorauthenticatie.",
+            "icon": "lock"
+          }
+        ]
+      }
+    ]
+  },
+  "screenshots": {
+    "title": "Een paneel waar je graag mee werkt",
+    "intro": "Desktop en telefoon. Het paneel is ontworpen met een focus op smalle schermen, dus elke pagina werkt ook op een telefoon.",
+    "desktop": "Desktop",
+    "mobile": "Op een telefoon",
+    "items": {
+      "dashboard": "Het dashboard: elke server, speler-aantal en recente activiteit in één oogopslag.",
+      "wizard": "De wizard legt elke instelling uit voordat je deze kiest.",
+      "overview": "Een serveroverzicht met bronnenmeters en snelle acties.",
+      "console": "De live console met een RCON-commandobalk en logboekfilters.",
+      "mods": "Mods van vijf registers, gefilterd op de loader en versie van de server.",
+      "modpacks": "Modpacks: zoek op CurseForge en Modrinth, en elk pack installeert vastgezet op een exacte versie.",
+      "worlds": "Wissel werelden en beheer bestanden vanuit de browser.",
+      "backups": "Back-ups met retentieklassen en herstel op locatie.",
+      "schedules": "Cron-schema's voor herstarts, back-ups en commando's.",
+      "blueprints": "Blueprints: draagbare serverrecepten.",
+      "storage": "Opslaganalyses en afgedwongen quota's."
+    }
+  },
+  "install": {
+    "title": "Installatie",
+    "intro": "Kies de optie die bij je host past. Elk pad geeft je hetzelfde paneel.",
+    "requirements": "Vereisten",
+    "reqItems": [
+      "Docker Engine (Linux) of Docker Desktop (Windows, macOS).",
+      "Node.js 24 of nieuwer voor de installatie vanuit broncode. De Docker-image bevat zijn eigen versie.",
+      "Enkele gigabytes schijfruimte voor serverimages en werelden."
+    ],
+    "docker": {
+      "title": "Optie 1: Docker",
+      "body": "Een vooraf gebouwde multi-arch image wordt bij elke release gepubliceerd naar GHCR. Pak het compose-bestand, stel één variabele in en start.",
+      "after": "Open vervolgens http://your-host:25564. Plak in Portainer of Dockge het compose-bestand als een stack en stel DATA_DIR_HOST in bij de omgeving van de stack.",
+      "warning": "Het paneel stuurt de Docker daemon van de host aan via de gemounte socket, wat op de host gelijk staat aan root-toegang. Behandel de admin-login dienovereenkomstig en stel het paneel nooit onbeveiligd bloot aan het internet."
+    },
+    "source": {
+      "title": "Optie 2: Vanuit broncode",
+      "body": "Elk besturingssysteem, inclusief Windows en macOS met Docker Desktop.",
+      "after": "Open http://localhost:25564. De eerste keer dat je het uitvoert, word je door een systeemcontrole, je tijdzone en het aanmaken van het admin-account geleid."
+    },
+    "next": "Volgende stappen",
+    "nextBody": "De startgids behandelt de eerste instellingen, het aanmaken van je eerste server en waar alles staat.",
+    "nextCta": "Lees de startgids",
+    "compose": "Download docker-compose.yml",
+    "windows": "Opmerkingen voor Windows",
+    "windowsItems": [
+      "Docker Desktop moet draaien voordat je servers start of aanmaakt.",
+      "Deel je projectschijf met Docker Desktop (Instellingen, Bronnen, Bestandsdeling) zodat bind mounts werken.",
+      "De Docker-image is gericht op Linux-hosts; op Windows en macOS draai je het paneel vanuit broncode."
+    ],
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Installer Opties",
+      "intro": "De Linux-installer neemt zijn opties na bash -s --, zodat ze ook via de pipe werken. Voer hem opnieuw uit met dezelfde opties om te upgraden; je data-map, .env en compose-aanpassingen blijven behouden.",
+      "items": {
+        "port": "Dien het paneel op een andere poort aan.",
+        "proxy": "Luister alleen op 127.0.0.1, voor een reverse proxy met TLS ervoor.",
+        "tag": "Pin een release in plaats van de nieuwste te volgen.",
+        "dir": "Installeer ergens anders dan /opt/msm.",
+        "uninstall": "Verwijder het paneel en behoud de data. Via een pipe is er geen toetsenbord om de vraag te beantwoorden, dus voeg --yes toe; voeg ook --purge toe om de data-map te verwijderen.",
+        "help": "Elke optie, met zijn standaardwaarde."
+      }
+    }
+  },
+  "faq": {
+    "title": "Veelgestelde vragen",
+    "items": [
+      {
+        "q": "Is het echt gratis?",
+        "a": "Ja. Het paneel heeft een MIT-licentie en maakt geen gebruik van betaalde services. Alles draait op uw machine."
+      },
+      {
+        "q": "Werkt het op een Raspberry Pi of een andere ARM-machine?",
+        "a": "Ja. De Docker-image is gepubliceerd voor beide architecturen, en de installatie vanuit broncode draait overal waar Node.js 24 en Docker werken.",
+        "pills": ["amd64", "arm64", "docker", "nodejs", "linux", "windows", "macos"]
+      },
+      {
+        "q": "Welke servertypen worden ondersteund?",
+        "a": "Alles wat de itzg-image ondersteunt, plus modpacks van de grote vier bronnen.",
+        "pills": [
+          "vanilla",
+          "paper",
+          "purpur",
+          "fabric",
+          "forge",
+          "neoforge",
+          "quilt",
+          "packs-curseforge",
+          "packs-modrinth",
+          "ftb",
+          "gtnh"
+        ]
+      },
+      {
+        "q": "Hoe verplaats ik mijn paneel naar een nieuwe machine?",
+        "a": "Kopieer de data-map. Deze bevat de database, de wereld van elke server, back-ups en de mod-bibliotheek. Start het paneel op de nieuwe machine en wijs naar die map."
+      },
+      {
+        "q": "Kunnen meerdere mensen servers beheren?",
+        "a": "Ja. Het paneel heeft rollen voor beheerder, operator en kijker, en elke account kan tweefactorauthenticatie inschakelen."
+      },
+      {
+        "q": "Hoe kunnen vrienden buiten mijn huis meedoen?",
+        "a": "Forward de gamepoort van de server, vanaf 25565 en hoger, op uw router naar de machine die deze draait, of gebruik een tunnel als uw internetprovider port forwarding niet toestaat. Het tabblad Invites van de server toont het adres om te delen en schrijft de invite-tekst voor u. Houd de eigen poort van het paneel gesloten."
+      },
+      {
+        "q": "Moet het worden blootgesteld aan het internet?",
+        "a": "Nee. Spelers verbinden met de gamepoorten, niet met het paneel. Houd het paneel op uw LAN of achter een VPN of reverse proxy met authenticatie."
+      },
+      {
+        "q": "Hoe zit het met Bedrock-spelers?",
+        "a": "Beide kunnen worden geïnstalleerd als elke andere plugin of mod, en het paneel stelt de instellingen bloot die ze nodig hebben.",
+        "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Is het gemaakt met AI?",
+        "a": "Gedeeltelijk, en openlijk. Het grootste deel van de code is geschreven met Claude Code, en de onderhouder ontwerpt, beoordeelt en test elke functie. De AI-verklaring in de repository beschrijft hoe."
+      },
+      {
+        "q": "Waar kan ik hulp krijgen?",
+        "a": "De Discord-server heeft een ondersteuningsforum en echte mensen. Bugs en functieaanvragen gaan naar GitHub issues."
+      }
+    ]
+  },
+  "changelog": {
+    "title": "Wijzigingslogboek",
+    "intro": "Elke release, de nieuwste eerst. Releaseopmerkingen worden in het Engels gepubliceerd.",
+    "releases": "Alle releases op GitHub",
+    "feed": "Releasefeed (Atom)"
+  },
+  "community": {
+    "title": "Kom hallo zeggen",
+    "body": "Meld bugs, stel functies voor, krijg hulp van echte mensen en pronk met je servers.",
+    "discord": "Word lid van de Discord",
+    "github": "Ster op GitHub"
+  },
+  "footer": {
+    "tagline": "Gratis en open source onder de MIT-licentie.",
+    "product": "Product",
+    "community": "Community",
+    "resources": "Bronnen",
+    "issues": "Problemen",
+    "releases": "Releases",
+    "contributing": "Bijdragen",
+    "license": "Licentie",
+    "notAffiliated": "Geen officieel Minecraft-product. Niet goedgekeurd door of geassocieerd met Mojang of Microsoft.",
+    "serverTypes": "Servertypes",
+    "guides": "Handleidingen",
+    "compare": "Vergelijken",
+    "roadmap": "Roadmap",
+    "ai": "Hoe AI Wordt Gebruikt",
+    "conduct": "Gedragscode"
+  },
+  "meta": {
+    "home": {
+      "title": "Gratis zelf-hostbaar Minecraft serverpaneel",
+      "description": "Draai vanilla en gemodificeerde Minecraft servers vanuit je browser met een gratis, zelf-hostbaar Docker paneel: vastgezette modpacks, back-ups, schema's en een live map."
+    },
+    "features": {
+      "title": "Functies van het Minecraft serverpaneel",
+      "description": "Alle functies van Minecraft Server Manager: Docker servers, vijf mod registraties, geverifieerde downloads, back-ups, schema's, crash analyse, een live map en 2FA."
+    },
+    "screenshots": {
+      "title": "Screenshots van het Minecraft serverpaneel",
+      "description": "Screenshots van het Minecraft Server Manager paneel op desktop en telefoon: dashboard, wizard, console, mods, werelden, back-ups, schema's en meer."
+    },
+    "install": {
+      "title": "Installeer een Minecraft serverpaneel met Docker",
+      "description": "Installeer Minecraft Server Manager met Docker in drie commando's, of vanuit de broncode op Windows, macOS en Linux."
+    },
+    "faq": {
+      "title": "Minecraft serverpaneel FAQ",
+      "description": "Antwoorden over kosten, ondersteunde servertypen, Raspberry Pi en ARM, verhuizen naar een nieuwe machine, rollen, Bedrock spelers en het blootstellen van het paneel aan het internet."
+    },
+    "changelog": {
+      "title": "Changelog en release notes",
+      "description": "Release notes voor elke versie van Minecraft Server Manager, het gratis zelf-hostbare Minecraft serverpaneel."
+    },
+    "notFound": {
+      "title": "Pagina niet gevonden",
+      "description": "Deze pagina bestaat niet."
+    }
+  },
+  "notFound": {
+    "title": "Deze sectie is nooit gegenereerd.",
+    "body": "De pagina die u heeft aangevraagd, bestaat niet. Probeer de startpagina of de documentatie.",
+    "home": "Ga naar startpagina"
+  },
+  "langNotice": "Deze pagina wordt in het Engels weergegeven totdat de vertaling ervan beschikbaar is.",
+  "tutorial": {
+    "title": "Binnen enkele minuten operationeel",
+    "intro": "Kies uw machine en plak de commando's. Geavanceerd biedt alle andere manieren om het paneel te draaien, met de commando's herschreven voor uw eigen map en adres.",
+    "modes": {
+      "simple": "Eenvoudig",
+      "advanced": "Geavanceerd"
+    },
+    "simple": {
+      "linux": {
+        "label": "Linux",
+        "steps": [
+          {
+            "title": "Voer de installer uit",
+            "body": "Werkt op elke Linux-machine met een 64-bits besturingssysteem, van een VPS tot een Raspberry Pi 4 of 5. Het installeert Docker indien ontbrekend, zet het paneel op in /opt/msm en start het. Voer het later opnieuw uit om te upgraden."
+          },
+          {
+            "title": "Open het paneel",
+            "body": "De installer toont het adres en een eenmalige setup-PIN. Open het adres in een browser, voer de PIN in en maak uw beheerdersaccount aan."
+          }
+        ]
+      },
+      "windows": {
+        "label": "Windows",
+        "steps": [
+          {
+            "title": "Installeer Docker Desktop, Node.js, Git en pnpm",
+            "body": "Eén regel per stuk in PowerShell. Start Docker Desktop zodra het is geïnstalleerd en laat het draaien."
+          },
+          {
+            "title": "Download het paneel en start het",
+            "body": "Open een nieuwe terminal zodat deze de zojuist geïnstalleerde tools vindt."
+          },
+          {
+            "title": "Open het paneel",
+            "body": "De eerste keer doorloopt u een systeemcontrole, uw tijdzone en het aanmaken van het beheerdersaccount."
+          }
+        ]
+      },
+      "macos": {
+        "label": "macOS",
+        "steps": [
+          {
+            "title": "Installeer Docker Desktop, Node.js, Git en pnpm",
+            "body": "Met Homebrew. Start Docker Desktop zodra het is geïnstalleerd en laat het draaien."
+          },
+          {
+            "title": "Download het paneel en start het",
+            "body": "De installatiestap bouwt ook het paneel. Er hoeft niets gecompileerd te worden."
+          },
+          {
+            "title": "Open het paneel",
+            "body": "De eerste keer doorloopt u een systeemcontrole, uw tijdzone en het aanmaken van het beheerdersaccount."
+          }
+        ]
+      }
+    },
+    "advancedIntro": "Vul de twee velden in en elk commando hieronder wordt herschreven voor uw machine.",
+    "dataDir": "Gegevensmap op de host",
+    "dataDirHint": "Absoluut pad. Werelden, back-ups, mods en de database bevinden zich hier allemaal.",
+    "host": "Hostnaam of IP",
+    "hostHint": "Vanwaar u het paneel vanuit een browser zult openen.",
+    "then": "Open vervolgens het paneel",
+    "copy": "Kopieer",
+    "copied": "Gekopieerd!",
+    "firstRun": "De eerste keer doorloopt u een systeemcontrole, uw tijdzone en het aanmaken van het beheerdersaccount.",
+    "tabs": {
+      "compose": {
+        "label": "Docker Compose",
+        "steps": [
+          {
+            "title": "Maak de gegevensmap aan",
+            "body": "Eén map bevat alles wat het paneel bezit."
+          },
+          {
+            "title": "Download het compose-bestand en wijs het naar die map",
+            "body": "DATA_DIR_HOST moet het absolute pad op de host zijn, omdat Docker het vanuit het perspectief van de host koppelt."
+          },
+          {
+            "title": "Start het paneel",
+            "body": "De image is multi-arch (amd64 en arm64) en wordt bij elke release bijgewerkt."
+          }
+        ]
+      },
+      "portainer": {
+        "label": "Portainer / Dockge",
+        "steps": [
+          {
+            "title": "Maak de gegevensmap aan op de host",
+            "body": "Hetzelfde mapregel: absoluut pad, op de machine die Docker draait."
+          },
+          {
+            "title": "Voeg een stack toe vanuit het compose-bestand",
+            "body": "Plak de inhoud van het compose-bestand in een nieuwe stack. Het ruwe bestand staat hier:"
+          },
+          {
+            "title": "Stel de omgevingsvariabele in en implementeer",
+            "body": "Voeg het toe in de omgevingssectie van de stack en implementeer vervolgens."
+          }
+        ]
+      },
+      "source": {
+        "label": "Vanuit broncode",
+        "steps": [
+          {
+            "title": "Controleer de vereisten",
+            "body": "Node.js 24 of nieuwer, pnpm en Docker draaiend (Docker Desktop op Windows en macOS)."
+          },
+          {
+            "title": "Kloon en installeer",
+            "body": "De installatiestap bouwt ook de CSS van het paneel. Geen native modules om te compileren."
+          },
+          {
+            "title": "Start het paneel",
+            "body": "Standaard luistert het alleen op localhost. Stel PANEL_HOST=0.0.0.0 in om het vanaf andere machines in uw netwerk te bereiken."
+          }
+        ]
+      },
+      "pm2": {
+        "label": "PM2 / systemd",
+        "steps": [
+          {
+            "title": "Start vanuit een broncode-installatie",
+            "body": "Voer dit uit vanuit de gekloonde map. PM2 start apps met de Node-versie die zijn daemon heeft gestart, dus pin de interpreter."
+          },
+          {
+            "title": "Sla de proceslijst op en schakel opstarten in",
+            "body": "pm2 startup toont één commando om met sudo uit te voeren; voer het één keer uit."
+          },
+          {
+            "title": "Geef de voorkeur aan systemd?",
+            "body": "Een unit die node src/server.js vanuit de gekloonde map uitvoert met WorkingDirectory ingesteld, werkt op dezelfde manier. Het paneel heeft geen extra vlaggen nodig."
+          }
+        ]
+      }
+    }
+  },
+  "brands": {
+    "worksWith": "Werkt met alles wat je al gebruikt",
+    "registries": "Registries",
+    "loaders": "Servertypes",
+    "packs": "Modpacks",
+    "runsOn": "Draait op",
+    "formats": "Importeert",
+    "checksums": "Checksums",
+    "integrations": "Integraties",
+    "keyless": "keyless"
+  },
+  "landing": {
+    "breadcrumb": "Broodkruimel",
+    "install": "Installeer het paneel",
+    "docs": "Lees de documentatie",
+    "related": "Blijf lezen",
+    "open": "Openen",
+    "docsGuides": "Meer handleidingen in de documentatie",
+    "docsGuidesIntro": "Korte, praktische antwoorden op de meestgestelde vragen van serverbeheerders, naast de documentatie."
+  },
+  "serversHub": {
+    "meta": {
+      "title": "Minecraft servertypes: Paper, Fabric, Forge",
+      "description": "Draai Paper, Purpur, Fabric, Quilt, Forge, NeoForge, vanilla, of een complete modpack vanuit één self-hosted paneel. Kies het servertype en zie wat je krijgt."
+    },
+    "eyebrow": "Elk servertype",
+    "title": "Eén paneel voor elk soort Minecraft server",
+    "intro": "Plugins, mods, het ongewijzigde spel, of een complete modpack. Kies wat je wilt draaien en het paneel regelt de Java-versie, de downloads en het vastzetten voor je.",
+    "pills": [
+      "vanilla",
+      "paper",
+      "purpur",
+      "fabric",
+      "quilt",
+      "forge",
+      "neoforge",
+      "packs-curseforge",
+      "packs-modrinth",
+      "ftb",
+      "gtnh"
+    ],
+    "cards": {
+      "serverPaper": "Paper en Purpur plugin servers, met plugins uit vier registers en spelers die verbinden met een ongewijzigde client.",
+      "serverFabric": "Fabric en Quilt servers voor lichtgewicht, snel-update mods, met een versiecontrole voor elke Minecraft upgrade.",
+      "serverForge": "Forge en NeoForge voor zware mods, van 1.7.10 klassiekers tot huidige packs, met de juiste Java voor jou geselecteerd.",
+      "serverVanilla": "Het ongewijzigde spel, van snapshots tot oude beta's, met wereldbeheer, backups en spelersstatistieken eromheen.",
+      "serverModpacks": "CurseForge, Modrinth, FTB en GT New Horizons packs vastgezet op een exacte versie, plus je eigen zip of .mrpack."
+    },
+    "sections": [
+      {
+        "title": "Weet je niet zeker welke?",
+        "body": "Kies op basis van wat je spelers moeten installeren, niet op wat het snelst klinkt. Als niemand iets hoeft te installeren, draai dan vanilla of Paper. Als je een gepubliceerde pack installeert, bepaalt de pack de loader en de Minecraft-versie voor je. Als je zelf een gemodificeerde server bouwt, dekken Fabric en NeoForge de meeste moderne mods, en Forge de oudere tijdperken.",
+        "points": [
+          "Survival met vrienden, niets bijzonders: vanilla.",
+          "Een openbare server met rangen, claims en moderatie: Paper.",
+          "Een specifieke pack van CurseForge of Modrinth: wat de pack zegt.",
+          "Een moderne pack die je zelf samenstelt: Fabric of NeoForge.",
+          "Een oude pack uit het 1.7 tot 1.12 tijdperk: Forge."
+        ]
+      }
+    ],
+    "related": ["guidesHub", "serverModpacks"],
+    "cta": {
+      "title": "Start je eerste server",
+      "body": "Installeer het paneel, open de wizard voor het aanmaken en kies een servertype. Elk type is gratis en draait op je eigen machine."
+    }
+  },
+  "serverPaper": {
+    "meta": {
+      "title": "Paper serverpaneel: plugins, self-hosted",
+      "description": "Een gratis, zelf-gehost paneel voor Paper en Purpur servers. Zoek naar plugins op Hangar, SpigotMC en Modrinth, verifieer elke download en houd ze up-to-date."
+    },
+    "eyebrow": "Paper en Purpur",
+    "title": "Een zelf-gehost Paper serverpaneel met een echte plugin-browser",
+    "intro": "Draai Paper of Purpur in zijn eigen Docker container, vind plugins uit vier registers zonder het paneel te verlaten, en laat spelers verbinden met de game die ze al hebben.",
+    "pills": ["paper", "purpur", "hangar", "spigotmc", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Waarom Paper voor een Openbare Server",
+        "body": "Plugins draaien alleen op de server, dus spelers verbinden met een gewone, ongewijzigde client en hoeven nooit iets te installeren. Alles wat te maken heeft met regels, permissies, economieën, landclaims, minigames of moderatie is een plugin, en daarom draait bijna elke openbare server Paper. Het heeft jaren aan prestatieverbeteringen achter de rug en een instelling voor bijna elk gedrag dat een beheerder ooit heeft geërgerd. Purpur is een fork van Paper met nog meer schakelaars, inclusief gameplay-gerelateerde. Beide staan op het Vanilla-tabblad van de aanmaakwizard.",
+        "points": [
+          "Spelers verbinden met het normale spel. Geen mods, geen launcher-configuratie.",
+          "De meeste plugins uit het Bukkit-tijdperk werken nog steeds.",
+          "Kies Purpur alleen als je de extra schakelaars wilt; anders Paper."
+        ]
+      },
+      {
+        "title": "Vier Plugin-registers in één Zoekopdracht",
+        "body": "Het tabblad Mods van een plugin-server doorzoekt Hangar (het eigen plugin-register van PaperMC), SpigotMC, Modrinth en CurseForge, gefilterd op de Minecraft-versie van de server. Alleen CurseForge heeft een API-sleutel nodig. Je kunt ook een projectpagina, een GitHub-repository of release, of een directe jar-link plakken, en het paneel vindt de juiste build. Elke registerdownload wordt gecontroleerd tegen de sterkste checksum die het register publiceert voordat deze de server bereikt, zodat een beschadigd of gemanipuleerd bestand nooit wordt geïnstalleerd.",
+        "pills": ["hangar", "spigotmc", "modrinth", "curseforge", "github-releases", "sha512", "sha256"],
+        "points": [
+          "Resultaten die al op de server staan, tonen een 'Geïnstalleerd'-badge.",
+          "Als een SpigotMC-resource ergens anders wordt gehost, geeft het paneel dit vooraf aan en biedt het aan de pagina te openen en de jar als upload te accepteren.",
+          "Geüploade jars worden geïdentificeerd, zodat ze hun echte naam behouden en controleerbaar blijven voor updates."
+        ],
+        "shot": "mods"
+      },
+      {
+        "title": "Plugin-updates zonder Gissen",
+        "body": "Elke plugin die je toevoegt, wordt dagelijks en op aanvraag gecontroleerd tegen de bron. Update één plugin, negeer een versie die je niet wilt, of druk op 'Alles updaten' om alles toe te passen met een enkele herstart. Als een update slecht uitpakt, ga dan terug naar de vorige build uit de gedeelde bibliotheek. Schakel 'Meld me aan' in het updatebeleid van de server in en updates die wachten, verschijnen als een badge en op de pagina Updates.",
+        "points": [
+          "Dagelijkse controles tegen Hangar, SpigotMC, Modrinth, CurseForge en GitHub Releases.",
+          "Een terugdraaiing plaatst de vorige build terug uit de bibliotheek.",
+          "Als je een Paper-build vastzet, vertelt de pagina Updates je wanneer er een nieuwere uitkomt."
+        ]
+      },
+      {
+        "title": "Draai het als een Community Server",
+        "body": "Paper-servers krijgen dezelfde tools als elke andere server in het paneel: een live console met een RCON-commandobalk, whitelist, ops, bans en IP-bans, teleports en aangepaste chatcommando's met cooldowns. Geef je personeel accounts met server-specifieke permissies, zodat een moderator de console kan bedienen zonder back-ups of bestanden aan te raken. Eén klik voegt een live BlueMap-kaart toe, die alleen wordt geserveerd via de eigen inlog van het paneel, en Discord-meldingen vertellen je wanneer iets je aandacht nodig heeft.",
+        "pills": ["bluemap", "discord"],
+        "shot": "console"
+      }
+    ],
+    "steps": {
+      "title": "Start een Paper Server in Drie Stappen",
+      "items": [
+        {
+          "title": "Kies Paper in de Wizard",
+          "body": "Open 'Maak een server aan', blijf op het tabblad Vanilla, kies Paper of Purpur en selecteer een Minecraft-versie. Een gratis gamepoort en een redelijke hoeveelheid geheugen worden voor je ingevuld."
+        },
+        {
+          "title": "Voeg je Plugins Toe",
+          "body": "Op het tabblad Mods van de server zoek je op Hangar, SpigotMC, Modrinth of CurseForge, of plak een link. Installaties worden geverifieerd tijdens het downloaden."
+        },
+        {
+          "title": "Deel het Adres",
+          "body": "Het tabblad Overzicht toont het adres dat je aan spelers kunt geven. Ze verbinden met de game die ze al hebben."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Vragen over Paper Servers",
+      "items": [
+        {
+          "q": "Kan ik mods toevoegen aan een Paper server?",
+          "a": "Nee. Paper laadt plugins, die alleen op de server draaien. Mods veranderen het spel zelf en vereisen een mod loader zoals Fabric of NeoForge op zowel de server als elke client. Als je beide wilt, draai dan een modded server en een plugin server naast elkaar in plaats van één hybride."
+        },
+        {
+          "q": "Heb ik een SpigotMC-account of API-sleutel nodig om plugins te installeren?",
+          "a": "Nee. SpigotMC, Hangar en Modrinth werken allemaal zonder sleutel. Alleen CurseForge vraagt om een API-sleutel, die je eenmalig toevoegt onder Instellingen, API-sleutels."
+        },
+        {
+          "q": "Een redstone-farm uit een video werkt niet op mijn server. Waarom?",
+          "a": "Paper verandert standaard bepaald vanilla-gedrag ten gunste van prestaties. Dat is meestal de reden, en het is meestal een instelling in de configuratie van Paper, die je kunt bewerken in de bestandsbeheerder van de server."
+        },
+        {
+          "q": "Werken mijn oude Bukkit- en Spigot-plugins nog steeds?",
+          "a": "De meeste wel. Paper is een fork van Spigot en behoudt de plugin API, dus plugins geschreven voor Bukkit en Spigot draaien grotendeels ongewijzigd. Controleer de pagina van elke plugin voor de Minecraft-versies die deze ondersteunt."
+        }
+      ]
+    },
+    "related": ["serverFabric", "serverVanilla", "guideMulti"],
+    "cta": {
+      "title": "Draai Je Paper Server Thuis",
+      "body": "Installeer het paneel op elke machine met Docker, maak vervolgens een Paper-server aan vanuit de wizard. Gratis, open source en van jou."
+    }
+  },
+  "serverFabric": {
+    "meta": {
+      "title": "Zelf-gehoste Fabric server met mod browser",
+      "description": "Host zelf een Fabric of Quilt Minecraft server. Zoek op Modrinth en CurseForge, pin de loader build, en controleer elke mod voordat je upgrade."
+    },
+    "eyebrow": "Fabric en Quilt",
+    "title": "Een zelf-gehoste Fabric server die weet wat je mods ondersteunen",
+    "intro": "Maak een Fabric of Quilt server van de mods die je wilt, houd de loader build waar je hem hebt gezet, en ga pas naar een nieuwe Minecraft versie als elke mod kan volgen.",
+    "pills": ["fabric", "quilt", "modrinth", "curseforge", "github-releases"],
+    "sections": [
+      {
+        "title": "Waarom Fabric",
+        "body": "Fabric is klein, volgt nieuwe Minecraft versies binnen enkele dagen, en bevat de meeste moderne performance mods. Als je doel een snelle server is met een handvol quality-of-life mods, is dit de loader om te kiezen. Bijna elke Fabric mod heeft ook de Fabric API nodig, wat een aparte download is die je toevoegt als elke andere mod. Quilt is een fork van Fabric die de meeste Fabric mods draait; kies het als je een specifieke reden hebt, anders kies Fabric.",
+        "points": [
+          "Snel nieuwe Minecraft releases volgen.",
+          "Thuisbasis van de meeste moderne performance mods.",
+          "Quilt servers zien automatisch Fabric builds, aangezien Quilt Fabric mods draait."
+        ]
+      },
+      {
+        "title": "Start met de Mods die je Wilt",
+        "body": "Het \"From Mods\" tabblad van de wizard kiest de loader, de Minecraft versie, en een loader build: de laatste, of een specifieke die je vastpint. Je kunt het ook andersom doen. Kies eerst de mods, en de solver stelt de nieuwste loader en Minecraft versie voor die elke mod ondersteunt, en installeert dan de set wanneer de server wordt aangemaakt.",
+        "points": [
+          "Pin een Fabric of Quilt loader build in plaats van de laatste te volgen.",
+          "De \"Updates\" pagina biedt nieuwere builds voor een gepinde loader.",
+          "De mod browser filtert op loader, dus een Forge jar kan niet per ongeluk in een Fabric server belanden."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Een Versiecontrole voor elke Upgrade",
+        "body": "Het Mods tabblad van een Fabric server heeft een \"Versions\" sub-tabblad. Het controleert elke geïnstalleerde mod tegen Modrinth en CurseForge en rapporteert de hoogste Minecraft versie waarvoor ze allemaal een build hebben, plus een overzicht van wat elke nieuwere versie zou achterlaten. Een nieuwere Minecraft versie wordt pas aangeboden zodra die controle het ondersteunt, en nooit terwijl een jar niet geïdentificeerd kan worden.",
+        "pills": ["modrinth", "curseforge"]
+      },
+      {
+        "title": "Mods die je Kunt Vertrouwen en Ongedaan Maken",
+        "body": "Elke registry download wordt geverifieerd tegen de sterkste checksum die de registry publiceert voordat deze de server bereikt. Mods die je toevoegt leven in een gedeelde bibliotheek, deduplicatie op sha256, dus tien servers die dezelfde mod draaien slaan deze één keer op. Upgrade een mod, negeer een versie, of keer terug naar de vorige build wanneer een update misgaat. Importeer een Modrinth .mrpack of een zip van jars en elke jar wordt geïdentificeerd en gecontroleerd tegen de server voordat er iets wordt geïnstalleerd.",
+        "pills": ["mrpack", "zip", "sha512", "sha256"],
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Start een Fabric Server in Drie Stappen",
+      "items": [
+        {
+          "title": "Kies Fabric op het \"From Mods\" Tabblad",
+          "body": "Kies Fabric of Quilt, een Minecraft versie, en de laatste loader build of een gepinde."
+        },
+        {
+          "title": "Zoek en Voeg Mods Toe",
+          "body": "Zoek op Modrinth of CurseForge, voeg de Fabric API toe, en voeg de rest toe. Elke download wordt geverifieerd."
+        },
+        {
+          "title": "Nodig je Spelers Uit",
+          "body": "Het \"Invites\" tabblad maakt een klaar-om-te-plakken uitnodiging en een client .mrpack van de toegevoegde mods, met je server al in de in-game serverlijst."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Veelgestelde Vragen over Fabric Servers",
+      "items": [
+        {
+          "q": "Moeten spelers dezelfde mods installeren?",
+          "a": "Ja, voor elke mod die content toevoegt. Mods veranderen het spel zelf, dus de client moet dezelfde laden. Het \"Invites\" tabblad bouwt een client .mrpack van de toegevoegde mods, met je server al in de in-game serverlijst, die spelers importeren in een launcher zoals Prism of de Modrinth App."
+        },
+        {
+          "q": "Heb ik echt de Fabric API nodig?",
+          "a": "Bijna altijd. Bijna elke Fabric mod is ervan afhankelijk, en het is een aparte download. Voeg het toe vanuit de mod browser zoals elke andere mod."
+        },
+        {
+          "q": "Hoe weet ik of mijn mods zullen werken op de volgende Minecraft versie?",
+          "a": "Open het Mods tabblad van de server en dan \"Versions\". Het toont de hoogste Minecraft versie waarvoor elke geïnstalleerde mod een build heeft, en wat een nieuwere versie zou achterlaten."
+        },
+        {
+          "q": "Een mod update brak de server. Kan ik terug?",
+          "a": "Ja. Keer terug naar de mod vanuit zijn rij op het Mods tabblad en de vorige build komt terug uit de gedeelde bibliotheek."
+        }
+      ]
+    },
+    "related": ["serverForge", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Host Je Fabric Server Zelf",
+      "body": "Installeer het paneel, open het \"From Mods\" tabblad, en kies je mods. Geen abonnement en geen limieten op het aantal servers dat je draait."
+    }
+  },
+  "serverForge": {
+    "meta": {
+      "title": "Paneel voor Forge en NeoForge modded servers",
+      "description": "Draai je eigen Forge of NeoForge modded Minecraft server. De juiste Java wordt voor je gekozen, loader builds kunnen worden vastgezet, en crashes benoemen hun verdachten."
+    },
+    "eyebrow": "Forge en NeoForge",
+    "title": "Een Forge serverpaneel dat de juiste Java voor je kiest",
+    "intro": "Van 1.7.10 klassiekers tot de nieuwste NeoForge packs, maak de server aan, bepaal het geheugen, en vind de mod achter een crash zonder de stack trace regel voor regel te lezen.",
+    "pills": ["forge", "neoforge", "curseforge", "modrinth"],
+    "sections": [
+      {
+        "title": "Forge of NeoForge?",
+        "body": "NeoForge is waar het oude Forge ecosysteem nu werkt voor de huidige versies. Het splitste zich af van Forge tijdens 1.20.1, en de meeste grote packs gebouwd voor 1.20.2 en later richten zich erop, dus start een nieuwe zware server op NeoForge. Forge beheert nog steeds het verleden: alles van de 1.7.10, 1.12.2 en 1.16.5 tijdperken is Forge, en dat is een groot deel van de meest geliefde packs. Mods voor de ene loader draaien niet op de andere, en een 1.20.1 NeoForge pack draait niet op 1.20.1 Forge.",
+        "points": [
+          "Nieuwe zware server: NeoForge.",
+          "Tijdperk 1.7.10, 1.12.2 of 1.16.5: Forge.",
+          "Een gepubliceerd pack: wat het pack ook vermeldt, exact."
+        ]
+      },
+      {
+        "title": "Elke Keer de Juiste Java",
+        "body": "De Java-vereiste van Minecraft beweegt mee met het spel, en de verkeerde geeft je een onbehulpzame UnsupportedClassVersionError in plaats van een duidelijke melding. Oude packs hebben echt Java 8 nodig, en huidige versies hebben 21 of nieuwer nodig. De wizard leest de Minecraft-versie die je kiest en kiest zelf de runtime, zodat de mismatch nooit per ongeluk gebeurt. Het upgraden van een pack heroplost Java als de nieuwe versie een andere nodig heeft.",
+        "points": ["1.16.5 en eerder: Java 8.", "1.18 tot 1.20.4: Java 17.", "1.20.5 tot 1.21: Java 21."]
+      },
+      {
+        "title": "Geheugen Gekalibreerd voor Modded",
+        "body": "Elke server heeft twee getallen: de Java heap en de container geheugenlimiet. Java heeft geheugen nodig buiten de heap, ongeveer 1,5 tot 2 GB bij een groot modpack, en een container zonder marge wordt gedood op het moment dat Java ernaar reikt. De wizard stelt de limiet 50 procent boven de heap in, en het paneel weigert een containerlimiet die niet boven de heap ligt. Een 'kitchen-sink' pack van 150 tot 300 mods wil een heap van 6 tot 8 GB.",
+        "points": [
+          "Een server die stopt wegens geheugentekort wordt precies zo geregistreerd in de geschiedenis.",
+          "Stel een kleinere initiële heap in om het geheugen het werkelijke gebruik te laten volgen."
+        ]
+      },
+      {
+        "title": "Crashes die hun Verdachten Benoemen",
+        "body": "Crashrapporten worden automatisch opgepikt en geparsed tot een samenvatting van één regel met de uitzondering en de mods die er het meest waarschijnlijk achter zitten. Open de ingebouwde viewer, kopieer de stack trace, of deel deze na expliciete bevestiging naar mclo.gs en krijg de geautomatiseerde inzichten: bekende problemen met voorgestelde oplossingen, direct getoond in het paneel. Automatisch herstarten bij een crash probeert het opnieuw met groeiende wachttijden, en slaat crashes over die eerst een oplossing nodig hebben, zoals de verkeerde Java of geheugentekort.",
+        "pills": ["mclogs"],
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Start een Forge Server in Drie Stappen",
+      "items": [
+        {
+          "title": "Kies de Loader en Versie",
+          "body": "Kies op het tabblad 'From Mods' van de wizard Forge of NeoForge, de Minecraft-versie, en de nieuwste loader build of een vastgezette build."
+        },
+        {
+          "title": "Geef het Genoeg Geheugen",
+          "body": "Stel de Java heap in voor de grootte van je modlijst. De containerlimiet volgt, 50 procent erboven."
+        },
+        {
+          "title": "Voeg Mods Toe of Importeer een Zip",
+          "body": "Zoek op CurseForge en Modrinth, of importeer een CurseForge export of een zip met jar-bestanden. Elke jar wordt geïdentificeerd en eerst gecontroleerd tegen de server."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Forge Server Vragen",
+      "items": [
+        {
+          "q": "Kan ik nog steeds een 1.12.2 of 1.7.10 pack draaien?",
+          "a": "Ja. Kies de versie en Forge in de wizard en het paneel draait het op Java 8, wat die versies nodig hebben. GT New Horizons, het 1.7.10 expert pack, installeert vanaf de Modpacks pagina met zijn eigen Java-keuze."
+        },
+        {
+          "q": "Hoeveel geheugen heeft een Forge server nodig?",
+          "a": "Een licht pack van 40 tot 80 mods draait goed op een 4 GB heap in een 6 GB container. Een pack van 150 tot 300 mods wil 6 tot 8 GB heap en ongeveer 10 GB voor de container."
+        },
+        {
+          "q": "Kan ik een specifieke Forge build vastzetten?",
+          "a": "Ja. De loader build picker van de wizard accepteert de nieuwste of een specifieke build, en de Updates pagina biedt nieuwere builds voor een vastgezette build zonder ze zelf toe te passen."
+        },
+        {
+          "q": "Mijn server crashte bij het opstarten. Waar moet ik kijken?",
+          "a": "Open Monitoring en dan History. De crashrapportkaart toont de uitzondering en de verdachte mods, en Analyze voert mclo.gs inzichten uit voor bekende problemen en oplossingen."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "serverFabric", "guideHome"],
+    "cta": {
+      "title": "Draai Je Eigen Modded Server",
+      "body": "Installeer het paneel op een machine met voldoende geheugen, maak vervolgens een Forge of NeoForge server aan vanuit de wizard."
+    }
+  },
+  "serverVanilla": {
+    "meta": {
+      "title": "Vanilla Minecraft serverpaneel, zelf gehost",
+      "description": "Host zelf een vanilla Minecraft server: elke versie van oude beta's tot de nieuwste snapshot, met wereldbeheer, dagelijkse back-ups en spelersstatistieken."
+    },
+    "eyebrow": "Het onveranderde spel",
+    "title": "Een vanilla Minecraft server met alles eromheen geregeld",
+    "intro": "Houd het spel precies zoals Mojang het uitbrengt, en krijg back-ups, wereldtools, moderatie en spelersstatistieken van het paneel in plaats van van plugins.",
+    "pills": ["vanilla", "docker"],
+    "sections": [
+      {
+        "title": "Elke Versie Die Je Wilt",
+        "body": "Kies de nieuwste release, een snapshot, of een specifieke versie, oude beta's en alpha's inbegrepen. Het paneel kiest de Java runtime die die versie nodig heeft, haalt de image binnen en start de server vanuit die vorm. Niemand hoeft iets te installeren om mee te doen: spelers verbinden met de game die ze al hebben.",
+        "points": [
+          "Nieuwste release, snapshots, of een specifieke versie.",
+          "Oude beta's en alpha's voor een nostalgie server.",
+          "De juiste Java gekozen voor elke versie."
+        ],
+        "shot": "wizard"
+      },
+      {
+        "title": "Wereldbeheer Zonder Commando's",
+        "body": "De Wereldbeheer-rail rijdt mee op elke tab van een server: de in-game klok, het weer, en de veelvoorkomende gamerules als schakelaars, met elke andere regel één klik verwijderd. De tab Werelden reset de actieve wereld met een nieuwe, behouden, of aangepaste seed, en biedt eerst een veiligheidsback-up. Dupliceer een wereld, bewaar voltooide werelden in de wereld bibliotheek, of upload een wereld die je al hebt als .zip of .tar archief.",
+        "points": [
+          "Reset met een nieuwe seed, dezelfde seed, of een die je intypt.",
+          "Een wereld bibliotheek gedeeld door elke server.",
+          "Bewerk server.properties in de browser; de waarde op schijf wint."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Back-ups Vanaf Dag Één",
+        "body": "Elke nieuwe server krijgt automatisch een dagelijks back-upschema. Back-ups zijn veilig: het paneel pauzeert het opslaan, flusht de wereld, zipt deze, en controleert of het archief opent voordat het wordt opgeslagen. Herstellen zet de server precies terug zoals hij was, en maakt eerst een veiligheidsback-up van de huidige gegevens.",
+        "shot": "backups"
+      },
+      {
+        "title": "Moderatie en Statistieken Zonder Plugins",
+        "body": "Vanilla heeft geen permissiesysteem, dus het paneel biedt in plaats daarvan de moderatietools: whitelist, ops op elk niveau, bans en IP-bans, en teleports, live terwijl de server draait en direct in de bestanden terwijl deze gestopt is. De eigen statistieken van het spel worden periodiek ingelezen in spelersprofielen en een scorebord: speeltijd, doden, kills, gedolven blokken en diamanten, en afgelegde afstand. Een activiteiten-tijdlijn houdt chat, joins, doden en prestaties doorzoekbaar."
+      }
+    ],
+    "faq": {
+      "title": "Vragen over Vanilla Servers",
+      "items": [
+        {
+          "q": "Kan ik een snapshot server draaien?",
+          "a": "Ja. Kies een snapshot als Minecraft-versie in de wizard. Maak een back-up voordat je elke nieuwe snapshot gebruikt, want snapshot-werelden kunnen niet in een oudere versie worden geopend."
+        },
+        {
+          "q": "Kan een vanilla server een live map hebben?",
+          "a": "Niet op vanilla. BlueMap heeft een plugin of mod loader nodig om te draaien. Een Paper server krijgt er een met één klik, en spelers verbinden nog steeds met een ongewijzigde client."
+        },
+        {
+          "q": "Kan ik de wereld resetten maar de seed behouden?",
+          "a": "Ja. Reset de actieve wereld vanuit de tab Werelden en kies ervoor om de huidige seed te behouden. Het paneel biedt eerst een veiligheidsback-up van de oude wereld."
+        },
+        {
+          "q": "Hoeveel spelers kan een vanilla server aan?",
+          "a": "Vanilla is langzamer met veel spelers dan Paper. Voor een groep vrienden is het prima. Voor een drukke publieke server draait Paper hetzelfde spel met jaren aan prestatieverbeteringen."
+        }
+      ]
+    },
+    "related": ["serverPaper", "guidePi", "guideHome"],
+    "cta": {
+      "title": "Start een Vanilla Server",
+      "body": "Installeer het paneel, kies Vanilla in de wizard, en deel het adres. Gratis en open source."
+    }
+  },
+  "serverModpacks": {
+    "meta": {
+      "title": "Minecraft modpack server: installatie met één klik",
+      "description": "Draai een Minecraft modpack server van CurseForge, Modrinth, FTB of GT New Horizons. Packs blijven vastgezet, en elke update komt met een back-up en een terugdraaimogelijkheid."
+    },
+    "eyebrow": "Modpack servers",
+    "title": "Een Minecraft modpack server die nooit achter uw rug om upgrade",
+    "intro": "Installeer een pack op naam, zet het vast op een exacte versie, en upgrade pas wanneer u dat wilt, eerst met een back-up en een terugdraaimogelijkheid met één klik als de nieuwe versie niet start.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"],
+    "sections": [
+      {
+        "title": "Elke Grote Pack Bron",
+        "body": "De Modpacks pagina en het tabblad 'Van Modpack' in de wizard installeren packs van CurseForge en Modrinth door op naam te zoeken, FTB packs via hun pack- en versie-ID's, en GT New Horizons uit zijn eigen release-index. Geen gepubliceerd pack? Upload een Modrinth .mrpack, een CurseForge modpack export, of elke zip met mod jars. Het manifest, of een meerderheid van de geïdentificeerde jars, vult de loader en de Minecraft versie in.",
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export", "zip"],
+        "points": [
+          "CurseForge heeft een API-sleutel nodig, die u eenmalig toevoegt onder Instellingen, API-sleutels.",
+          "Mods waarvan de auteurs geautomatiseerde downloads niet toestaan, worden weergegeven met een link en een uploadslot in plaats van de installatie te laten mislukken.",
+          "GT New Horizons krijgt zijn Java-versie en verstandige minimumvereisten voor geheugen en schijfruimte ingesteld."
+        ]
+      },
+      {
+        "title": "Vastgezet op een Exacte Versie",
+        "body": "Wanneer u een pack kiest, bepaalt het paneel de exacte versie, noteert deze en installeert die. Een herstart kan het pack nooit stilletjes upgraden. U kiest hoe elke server op de hoogte wordt gesteld van nieuwe versies: Alleen Handmatig laat het volledig met rust, Melding Tonen toont een badge en plaatst het op de Updates pagina, en Automatisch Updaten past pack-updates toe na de dagelijkse controle via hetzelfde beveiligde pad. Updates die een wereld naar een andere Minecraft-versie zouden verplaatsen, worden altijd overgeslagen, omdat het converteren van een wereld uw beslissing is.",
+        "points": [
+          "Alleen Handmatig is de standaard.",
+          "Servers die stabiele releases volgen, krijgen nooit een bèta aangeboden.",
+          "Automatisch Updaten gaat nooit over een Minecraft-versie heen."
+        ]
+      },
+      {
+        "title": "Upgrades met een Terugweg",
+        "body": "Het upgraden van een pack is één actie. Het paneel maakt een back-up, stopt de server netjes, wisselt de vastgezette versie, herbouwt de server met de juiste Java voor de nieuwe versie, en bewaakt de eerste opstart, met een ruime marge voor grote packs die bij de eerste start gigabytes downloaden. Als de nieuwe versie niet opstart, draait u met één klik terug.",
+        "shot": "backups"
+      },
+      {
+        "title": "Uw Eigen Mods Bovenop",
+        "body": "Mods die u toevoegt aan een pack server, leven in een gedeelde bibliotheek en worden in de server gelinkt, zodat ze pack-updates overleven. Schakel een pack-mod uit die u niet wilt, voeg een prestatie-mod toe die het pack mist, en behoud beide door de volgende upgrade. Spelers installeren hetzelfde pack in dezelfde versie van CurseForge of Modrinth, en het tabblad Uitnodigingen geeft u een kant-en-klare uitnodiging met het adres en de versie.",
+        "shot": "mods"
+      }
+    ],
+    "steps": {
+      "title": "Start een Modpack Server in Drie Stappen",
+      "items": [
+        {
+          "title": "Vind het Pack",
+          "body": "Zoek op CurseForge of Modrinth op de Modpacks pagina, of upload een .mrpack, een CurseForge export, of een zip met jars."
+        },
+        {
+          "title": "Kies de Versie en het Geheugen",
+          "body": "Kies de exacte pack-versie. Geef de Java heap ruimte voor het aantal mods; de containerlimiet volgt."
+        },
+        {
+          "title": "Creëer en Bekijk de Opstart",
+          "body": "Het paneel installeert het pack, zet het vast en start de server. De eerste opstart van een groot pack duurt even; de console toont elke regel."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Vragen over Modpack Servers",
+      "items": [
+        {
+          "q": "Zal het herstarten van de server mijn modpack updaten?",
+          "a": "Nee. Het pack is vastgezet op de exacte versie die u hebt geïnstalleerd. Het verandert alleen wanneer u het upgradet, of na de dagelijkse controle als u de server op Automatisch Updaten hebt ingesteld."
+        },
+        {
+          "q": "Waarom heeft CurseForge een API-sleutel nodig terwijl Modrinth dat niet heeft?",
+          "a": "CurseForge reageert alleen op verzoeken die een sleutel bevatten. U kunt er een krijgen van de CurseForge console en deze eenmalig toevoegen onder Instellingen, API-sleutels. Modrinth werkt zonder."
+        },
+        {
+          "q": "Sommige mods in mijn pack konden niet worden gedownload. Wat nu?",
+          "a": "Hun auteurs staan geautomatiseerde downloads niet toe. Het paneel toont elk met een link naar de pagina en een uploadslot, zodat u de jar in uw browser downloadt en erin sleept."
+        },
+        {
+          "q": "Kan ik een FTB pack installeren?",
+          "a": "Ja, via de FTB API met de numerieke ID van het pack en een expliciete versie-ID. Het paneel controleert nog geen FTB packs op updates."
+        }
+      ]
+    },
+    "related": ["guideFriends", "serverForge", "serverFabric"],
+    "cta": {
+      "title": "Draai Uw Modpack Server Thuis",
+      "body": "Installeer het paneel, open de Modpacks pagina, en kies een pack. Het blijft op de versie die u koos totdat u anders beslist."
+    }
+  },
+  "guidesHub": {
+    "meta": {
+      "title": "Handleidingen: host zelf een Minecraft-server",
+      "description": "Handleidingen voor het zelf hosten van Minecraft-servers: een modpack-server voor vrienden, een Raspberry Pi, een thuis-pc, weg van betaalde hosting, en vele servers op één machine."
+    },
+    "eyebrow": "Handleidingen",
+    "title": "Handleidingen voor het zelf hosten van Minecraft-servers",
+    "intro": "Praktische walkthroughs voor de setups die mensen daadwerkelijk draaien, van een Raspberry Pi op een plank tot een machine vol servers.",
+    "cards": {
+      "guideFriends": "Host een CurseForge- of Modrinth-modpack voor je vrienden, met het juiste geheugen en een uitnodiging die ze kunnen volgen.",
+      "guidePi": "Verander een Raspberry Pi 4 of 5 in een Minecraft-server met een webpaneel, en schaal deze eerlijk.",
+      "guideHome": "Host een Minecraft-server thuis op Windows, macOS of Linux, en laat vrienden veilig meedoen.",
+      "guideHosting": "Verhuis je wereld, plugins en mods van een betaalde host zonder ook maar één inventaris te verliezen.",
+      "guideMulti": "Draai meerdere Minecraft-servers op één machine zonder dat poorten, geheugen of schijf elkaar in de weg zitten."
+    },
+    "related": ["serversHub"],
+    "cta": {
+      "title": "Heb je iets nodig dat hier niet wordt behandeld?",
+      "body": "De documentatie gaat dieper in op elke functie, en op Discord zitten echte mensen die servers draaien."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Host een Modpack Server voor Vrienden",
+      "description": "Host een CurseForge of Modrinth modpack server voor je vrienden op je eigen machine: kies de pack, geef hem genoeg geheugen, nodig vrienden uit en maak back-ups."
+    },
+    "eyebrow": "Modpack server gids",
+    "title": "Hoe Host Je een Modpack Server voor Je Vrienden",
+    "intro": "Je eigen machine kan de pack hosten die je met vrienden speelt. Installeer het paneel, maak de server aan vanuit de pack, geef hem het benodigde geheugen en stuur vrienden een uitnodiging die ze kunnen volgen.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Kies de Pack Uit de Wizard",
+        "body": "De Modpacks pagina en het tabblad Van Modpack van de aanmaakwizard doorzoeken CurseForge en Modrinth op naam; de wizard accepteert ook FTB packs per ID, of een pack export die je al hebt. Kies de versie die je vrienden gaan spelen. Het paneel installeert precies die versie en houdt hem daar: een herstart upgrade de pack nooit achter je rug. CurseForge heeft een gratis API-sleutel nodig, eenmalig toegevoegd onder Instellingen, API-sleutels; Modrinth heeft geen sleutel nodig.",
+        "points": [
+          "Doorzoek CurseForge en Modrinth, of upload een .mrpack, een CurseForge export of een zip met mod jars.",
+          "De pack versie is vastgezet, dus iedereen speelt dezelfde.",
+          "Java wordt gekozen voor de Minecraft versie van de pack."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Geef Hem Genoeg Geheugen",
+        "body": "Modpacks hebben veel meer geheugen nodig dan een vanilla server, en een server heeft twee getallen: de Java heap, en de container limiet eromheen, die groter moet zijn omdat Java geheugen gebruikt buiten zijn heap. Een lichte pack van 40 tot 80 mods wil een 4 GB heap in een 6 GB container; een grote kitchen-sink pack 6 tot 8 GB heap in 10 GB. Het paneel vertelt een server die gestopt is wegens geheugentekort apart van een crash, zodat je weet welke instelling je moet aanpassen.",
+        "points": [
+          "Stel het geheugen in de wizard in, en pas het later aan in de serverinstellingen.",
+          "Laat geheugen over voor het besturingssysteem en het paneel.",
+          "Het tabblad Monitoring toont wat de server werkelijk gebruikt."
+        ]
+      },
+      {
+        "title": "Stuur Vrienden een Uitnodiging Die Ze Kunnen Volgen",
+        "body": "Vrienden installeren dezelfde pack met dezelfde versie in hun launcher: de CurseForge app, de Modrinth App of Prism Launcher. Het tabblad Uitnodigingen van de server, onder Instellingen, kopieert het adres om te delen en een uitnodigingstekst met de Minecraft versie. Vrienden op je netwerk gebruiken het lokale adres. Voor vrienden elders, forward de game poort op je router, of gebruik een tunnel als je provider dit niet toestaat.",
+        "points": [
+          "Het tabblad Uitnodigingen biedt het lokale adres, je publieke adres en een aangepast adres.",
+          "Als de whitelist aan staat, voeg dan eerst elke vriend toe op het tabblad Spelers.",
+          "Voor een server gebouwd uit mods die je zelf hebt gekozen, maakt het tabblad Uitnodigingen ook een client .mrpack die ze installeert en de server toevoegt aan de multiplayer lijst."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Houd de Wereld Veilig",
+        "body": "Elke nieuwe server krijgt een dagelijks back-upschema. Vóór een pack update maakt het paneel nog een back-up, herbouwt de server op de nieuwe versie en bewaakt de eerste opstart; als deze niet opkomt, rolt één klik hem terug. Mods die je bovenop de pack hebt toegevoegd, blijven behouden bij updates.",
+        "points": [
+          "Dagelijkse back-ups vanaf de eerste dag.",
+          "Pack updates en downgrades met een back-up en een rollback.",
+          "Crash reports gedetecteerd, uitgelegd en deelbaar."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Host Je Modpack Server",
+      "items": [
+        {
+          "title": "Installeer het Paneel",
+          "body": "Op Linux installeert de one-line installer Docker en het paneel. Op Windows en macOS, draai het paneel met Node.js naast Docker Desktop."
+        },
+        {
+          "title": "Voeg een CurseForge API Sleutel Toe",
+          "body": "Alleen voor CurseForge packs: voeg een gratis sleutel toe onder Instellingen, API-sleutels."
+        },
+        {
+          "title": "Maak de Server Aan Vanuit de Pack",
+          "body": "Open het tabblad Van Modpack van de wizard, zoek de pack, kies de versie en het geheugen, en maak de server aan."
+        },
+        {
+          "title": "Nodig Je Vrienden Uit",
+          "body": "Start de server, open Instellingen, Uitnodigingen, en stuur de uitnodigingstekst. Vrienden installeren dezelfde pack versie in hun launcher en joinen."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack Server Vragen",
+      "items": [
+        {
+          "q": "Hoeveel RAM heeft een modpack server nodig?",
+          "a": "Ongeveer 6 GB voor een lichte pack van 40 tot 80 mods en 10 GB voor een grote pack van 150 tot 300, elk met een kleinere Java heap erin. Expert packs zoals GregTech New Horizons willen 16 GB. Laat ook ruimte over voor het besturingssysteem."
+        },
+        {
+          "q": "Moeten mijn vrienden dezelfde modpack versie hebben?",
+          "a": "Ja. De server draait één vastgezette pack versie, en een client met verschillende versies van de mods wordt meestal geweigerd of crasht. Vertel vrienden de versie die op het tabblad Overzicht van de server wordt weergegeven."
+        },
+        {
+          "q": "Kunnen vrienden joinen zonder port forwarding?",
+          "a": "Ja, als ze op je netwerk zijn. Van elders, forward de game poort op je router of gebruik een tunnel service, wat ook werkt als je provider port forwarding blokkeert."
+        },
+        {
+          "q": "Wat gebeurt er als de pack een update krijgt?",
+          "a": "Met het 'Notify Me' beleid toont de Updates pagina het. Het toepassen ervan neemt een back-up, herbouwt de server en bewaakt de eerste opstart, en een rollback is één klik. Je vrienden updaten dan ook de pack in hun launcher."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Speel Je Pack op Je Eigen Server",
+      "body": "Gratis, open source, en geen account bij wie dan ook. Installeer het paneel en maak de server aan vanuit de pack in de wizard."
+    }
+  },
+  "guidePi": {
+    "meta": {
+      "title": "Minecraft server op Raspberry Pi met een webpaneel",
+      "description": "Zet een Minecraft server op een Raspberry Pi op met een gratis webpaneel. Welke hardware je nodig hebt, hoe je het installeert met één commando, en hoe je het geheugen afstemt."
+    },
+    "eyebrow": "Raspberry Pi gids",
+    "title": "Draai een Minecraft server op Raspberry Pi met een echt webpaneel",
+    "intro": "Een Raspberry Pi 4 of 5 is een stille, energiezuinige thuisbasis voor een kleine Minecraft server. Hier lees je wat je moet kopen, hoe je het paneel met één commando installeert, en hoe ver je kunt gaan.",
+    "pills": ["arm64", "linux", "docker", "paper", "fabric"],
+    "sections": [
+      {
+        "title": "Wat je nodig hebt",
+        "body": "Het paneel en de server-image zijn beschikbaar voor arm64, dus een 64-bit Raspberry Pi draait ze net als elke andere Linux-machine. Geheugen is de belangrijkste beperking: een vanilla of Paper server voor maximaal tien spelers heeft een Java heap van 2 GB nodig op een machine met 4 GB, en een lichte modpack vereist een heap van 4 GB op een machine met 6 GB. Dat plaatst een Pi met 4 GB aan de kleine kant en een Pi met 8 GB in het comfortabele middensegment.",
+        "points": [
+          "Een Raspberry Pi 4 of 5 met 4 GB geheugen of meer. 8 GB als je mods wilt.",
+          "Een 64-bit besturingssysteem, zoals 64-bit Raspberry Pi OS.",
+          "Een SSD via USB in plaats van de SD-kaart. Werelden worden constant gelezen en geschreven, en een wereld op trage opslag hapert tijdens het laden van chunks.",
+          "Een bekabelde netwerkverbinding indien mogelijk."
+        ]
+      },
+      {
+        "title": "Kies een servertype dat bij de Pi past",
+        "body": "Minecraft geeft veel meer om de snelheid van één core dan om het aantal cores, en de cores van een Pi zijn bescheiden. Paper draait hetzelfde spel als vanilla met jaren aan prestatieverbeteringen, en spelers verbinden nog steeds met een ongewijzigde client. Als je mods wilt, is Fabric met een handvol prestatie- en kwaliteitsverbeterende mods een betere keuze dan een grote Forge-pack. Een 'kitchen-sink'-pack met 200 mods is geen klus voor een Pi.",
+        "pills": ["paper", "purpur", "fabric"],
+        "points": [
+          "Kleine groep, ongewijzigd spel: Paper.",
+          "Een paar mods: Fabric.",
+          "Verlaag de view distance; zakken van 12 naar 8 chunks bespaart veel geheugen en is nauwelijks merkbaar tijdens het spelen."
+        ]
+      },
+      {
+        "title": "Houd het in de gaten",
+        "body": "Het tabblad Monitoring van de server toont ticks per seconde en milliseconden per tick, zodat je kunt zien wanneer de Pi achterblijft. De geheugenmeter toont wat de container daadwerkelijk gebruikt. Java claimt standaard zijn volledige heap vooraf; als je liever ziet dat het geheugen het werkelijke gebruik volgt, stel dan een kleinere initiële heap in op de Resources-kaart van de server. Dagelijkse back-ups zijn vanaf de eerste dag ingeschakeld.",
+        "shot": "overview"
+      }
+    ],
+    "steps": {
+      "title": "Installeer het paneel op een Raspberry Pi",
+      "items": [
+        {
+          "title": "Flash een 64-bit OS",
+          "body": "Installeer 64-bit Raspberry Pi OS (of een andere 64-bit Linux), start op vanaf de SSD indien mogelijk, en update het systeem."
+        },
+        {
+          "title": "Voer de one-liner installer uit",
+          "body": "De installer op de Installatiepagina installeert Docker indien het ontbreekt, zet het paneel op in /opt/msm, start het, en wacht tot het reageert. Het detecteert arm64 zelf."
+        },
+        {
+          "title": "Voltooi de installatie in de browser",
+          "body": "Open het adres van de Pi op poort 25564 vanaf een andere computer. Omdat het paneel bereikbaar is vanaf je netwerk, vraagt de installatie om een 6-cijferige PIN, die de installer voor je afdrukt."
+        },
+        {
+          "title": "Maak een kleine server aan",
+          "body": "Kies Paper of Fabric in de wizard. Het standaard geheugen past zich aan het RAM van de Pi aan; laat ruimte over voor het systeem en andere services."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Raspberry Pi Vragen",
+      "items": [
+        {
+          "q": "Werkt een Raspberry Pi 3?",
+          "a": "Het is geen goede keuze. Een Pi 3 heeft 1 GB geheugen, terwijl zelfs een kleine vanilla of Paper server een heap van 2 GB nodig heeft op een machine met 4 GB. Gebruik een Pi 4 of 5 met 4 GB of meer."
+        },
+        {
+          "q": "Heb ik een 64-bit besturingssysteem nodig?",
+          "a": "Ja. De paneel-image en de installer zijn gebouwd voor arm64 en amd64, en de installer stopt op elke andere architectuur."
+        },
+        {
+          "q": "Kan ik een grote modpack draaien op een Pi?",
+          "a": "Grote packs vereisen 6 tot 8 GB Java heap en ongeveer 10 GB geheugen in totaal, meer dan welke Pi dan ook heeft. Houd het bij Paper of een lichte Fabric-setup."
+        },
+        {
+          "q": "Hoe kunnen spelers buiten mijn huis verbinden?",
+          "a": "Forward de gamepoort, standaard 25565 over TCP en UDP, van je router naar de Pi. Forward nooit de poort van het paneel of de RCON-poorten; bereik het paneel via een VPN of een reverse proxy met TLS in plaats daarvan."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverPaper", "serverFabric"],
+    "cta": {
+      "title": "Verander je Pi in een Server",
+      "body": "Eén commando installeert alles. Het paneel is gratis, open source en draait volledig op de Pi."
+    }
+  },
+  "guideHome": {
+    "meta": {
+      "title": "Host een Minecraft-server thuis, stap voor stap",
+      "description": "Host een Minecraft-server thuis op Windows, macOS of Linux met een gratis web-paneel. Installeer het, houd het paneel privé en laat vrienden veilig meedoen."
+    },
+    "eyebrow": "Gids voor thuis-servers",
+    "title": "Host een Minecraft-server thuis op Windows, macOS of Linux",
+    "intro": "Elke computer die Docker kan draaien, kan je servers hosten. Installeer het paneel, houd het privé, open alleen de game-poort en je vrienden kunnen van overal meedoen.",
+    "pills": ["windows", "macos", "linux", "docker", "nodejs"],
+    "sections": [
+      {
+        "title": "Twee manieren om te installeren",
+        "body": "Op een Linux-machine doet de eenregelige installer alles: het installeert Docker als het ontbreekt, draait het paneel als een container en start het opnieuw na een herstart. Op Windows en macOS draai je het paneel direct met Node.js 24 naast Docker Desktop. Het paneel geeft een duidelijke melding en stopt als je Node.js te oud is, en als Docker nog niet draait, krijg je toch het volledige paneel; servers starten zodra Docker aan staat.",
+        "pills": ["linux", "docker", "windows", "macos", "nodejs"],
+        "points": [
+          "Linux: de installer, of het compose-bestand in Portainer of Dockge.",
+          "Windows: Docker Desktop met de WSL2-backend, dan het paneel vanaf de broncode.",
+          "macOS: Docker Desktop, dan het paneel vanaf de broncode.",
+          "Onder PM2 of systemd overleeft het paneel herstarts."
+        ]
+      },
+      {
+        "title": "Houd het paneel privé",
+        "body": "Spelers praten nooit met het paneel. Ze verbinden met de game-poort. Een verse installatie vanaf de broncode luistert alleen op de machine waarop het draait, op localhost poort 25564. Om het vanaf een andere computer in je huis te bereiken, stel je het in om op je netwerk te luisteren; de setup vraagt dan om een eenmalige PIN, zodat een vreemde die de poort als eerste bereikt, niet het admin-account kan claimen. Forward nooit de poort van het paneel naar het internet. Om servers weg van huis te beheren, gebruik een VPN, een SSH-tunnel of een reverse proxy met TLS.",
+        "points": [
+          "Out-of-the-box alleen localhost.",
+          "Een setup-PIN wanneer het paneel vanaf het netwerk bereikbaar is.",
+          "Twee-factor-authenticatie voor elk account."
+        ]
+      },
+      {
+        "title": "Laat vrienden meedoen",
+        "body": "Elke server krijgt een game-poort, beginnend bij 25565 en oplopend. Forward op je router die poort, over zowel TCP als UDP, naar de computer die de servers draait. Houd de remote console-poorten, 1000 boven elke game-poort, gesloten: het paneel bereikt ze vanuit de container en heeft ze nooit open nodig. Geef spelers een hostname die jij beheert in plaats van je thuisadres, zodat een adreswijziging een DNS-wijziging is en geen bericht aan elke speler.",
+        "points": [
+          "Forward alleen game-poorten, TCP en UDP.",
+          "Houd RCON en de paneel-poort gesloten.",
+          "Het tabblad Overzicht toont het te delen adres."
+        ],
+        "shot": "overview"
+      },
+      {
+        "title": "Laat het zich gedragen als een server",
+        "body": "Een thuiscomputer die slaapt, neemt je server mee, dus schakel slaap uit op de machine die hem host. Vink 'Starten bij paneel-opstarten' aan in de instellingen van een server en hij komt terug met het paneel. Automatisch herstarten bij vastlopen brengt een vastgelopen server terug met steeds langere wachttijden tussen pogingen. Dagelijkse back-ups worden gepland voor elke nieuwe server, en schema's kunnen servers herstarten tijdens rustige uren.",
+        "shot": "schedules"
+      }
+    ],
+    "steps": {
+      "title": "Host je eerste server thuis",
+      "items": [
+        {
+          "title": "Installeer Docker",
+          "body": "Docker Engine op Linux, of Docker Desktop op Windows en macOS. Op Windows, deel de schijf die het paneel bevat met Docker Desktop."
+        },
+        {
+          "title": "Installeer en open het paneel",
+          "body": "Volg de Installatiepagina voor jouw systeem, open dan het paneel in een browser. De setup controleert Docker, maakt je admin-account aan en vraagt naar je tijdzone."
+        },
+        {
+          "title": "Maak een server aan",
+          "body": "De wizard stelt een gratis poort en geheugen voor dat past bij je machine. Kies een servertype en druk op aanmaken."
+        },
+        {
+          "title": "Forward de game-poort",
+          "body": "Forward de game-poort van de server op je router, TCP en UDP, en stuur vrienden het adres uit het tabblad Overzicht."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Vragen over thuis-hosting",
+      "items": [
+        {
+          "q": "Kan ik hosten op dezelfde pc waarop ik speel?",
+          "a": "Ja, zolang deze het geheugen heeft voor beide. Geef de server zijn heap plus extra ruimte voor Java, en laat genoeg over voor de game-client. Een vanilla server voor een paar vrienden heeft ongeveer 4 GB nodig."
+        },
+        {
+          "q": "Waarom kunnen vrienden op mijn Wi-Fi meedoen, maar vrienden van buiten niet?",
+          "a": "De game-poort is niet geforward op je router, of een firewall blokkeert het. Forward de game-poort van de server over TCP en UDP naar de hosting-machine, en sta het toe in de firewall van de machine."
+        },
+        {
+          "q": "Kan ik de Docker-image van het paneel draaien op Windows of macOS?",
+          "a": "De container-installatie is gericht op Linux-hosts. Op Windows en macOS, draai het paneel vanaf de broncode met Node.js 24 naast Docker Desktop, wat hetzelfde werkt zodra het draait."
+        }
+      ]
+    },
+    "related": ["guidePi", "guideMulti", "serverVanilla"],
+    "cta": {
+      "title": "Begin met hosten thuis",
+      "body": "Gratis, open source en geen account bij wie dan ook. Je servers leven in één map op je eigen machine."
+    }
+  },
+  "guideHosting": {
+    "meta": {
+      "title": "Verlaat betaalde Minecraft hosting: verhuis je wereld",
+      "description": "Verhuis een Minecraft server van een betaalde host: neem de juiste bestanden mee, breng de wereld en plugins naar je eigen beheerpaneel, behoud elke inventaris en de het adres."
+    },
+    "eyebrow": "Migratiegids",
+    "title": "Verhuis je Minecraft server van betaalde hosting",
+    "intro": "Breng je wereld, plugins en mods naar huis met elke inventaris intact. Neem eerst de stand op, kopieer de hele servermap, bouw deze opnieuw op in je eigen beheerpaneel en wijs pas daarna spelers ernaar.",
+    "pills": ["docker", "paper", "fabric", "forge", "packs-curseforge", "packs-modrinth"],
+    "sections": [
+      {
+        "title": "Neem de Stand Op Voordat Je Downloadt",
+        "body": "Schrijf deze op terwijl de oude server nog draait. Elk van deze punten heeft een migratie slecht beëindigd omdat het werd aangenomen in plaats van gecontroleerd. Online modus is het belangrijkst: als de oude server met de modus uit draaide en de nieuwe met de modus aan, of andersom, krijgt elke speler een andere identiteit en een gloednieuwe, lege inventaris.",
+        "points": [
+          "De exacte Minecraft-versie en loader. 1.20.1 NeoForge is niet 1.20.1 Forge.",
+          "De lijst met mods of plugins, met versies.",
+          "De level-name uit server.properties. De wereldmap heet vaak niet world.",
+          "Online modus, aan of uit.",
+          "Alles dat buiten de servermap leeft, zoals de database van een plugin."
+        ]
+      },
+      {
+        "title": "Neem de Hele Map Mee, Niet Alleen de Wereld",
+        "body": "Gebruik de bestandsbeheerder of downloadoptie van de host en neem de volledige serverdirectory mee. Download de plugin- en mod-jars zelf, geen lijst met namen: de versies zijn belangrijk, en 'nieuwste' is volgende maand een ander bestand. Download ook je back-ups. Een back-up die alleen bestaat binnen het beheerpaneel dat je verlaat, is geen back-up die je bezit. Stop de server correct voordat je definitief downloadt, zodat het spel de wereld naar de schijf wegzet."
+      },
+      {
+        "title": "Bouw Het Opnieuw Op in Je Eigen Beheerpaneel",
+        "body": "Maak een server van hetzelfde type en exact dezelfde versie. Breng vervolgens de onderdelen binnen. De Werelden-pagina neemt je wereld als een .zip- of .tar-archief, vindt de wereld erin automatisch, en installeert deze op de server, waarbij de huidige eerst wordt geback-upt. Op een plugin- of mod-server importeer je een zip van je jars: elk wordt geïdentificeerd, beoordeeld tegen de server, en geïnstalleerd als het past. Configuraties en de rest gaan erin via de bestandsbeheerder, die direct in de browser bewerkt en uploadt. Als de oude server een gepubliceerde pack draaide, installeer dan in plaats daarvan dezelfde pack op dezelfde versie.",
+        "pills": ["zip", "mrpack", "cf-export"],
+        "points": [
+          "Upload Wereld vindt de wereld in je archief.",
+          "Importeer Zip identificeert elke jar en controleert deze tegen de server.",
+          "De bestandsbeheerder beheert configuraties, whitelist en ops-bestanden."
+        ],
+        "shot": "worlds"
+      },
+      {
+        "title": "Behoud het Adres, Behoud de Spelers",
+        "body": "Als spelers verbinding maken met een kaal IP-adres, maakt elke verhuizing dat ze hun serverlijst moeten bewerken, en sommigen doen dat nooit. Gebruik een hostnaam die je beheert en wijs deze naar je nieuwe machine. Verhuizen wordt dan een DNS-wijziging. Verlaag de time-to-live van de record een dag voor de wisseling, zodat de wijziging snel wordt verspreid. Een SRV-record laat spelers een kale domeinnaam typen, zelfs als de server op een andere poort draait, hetzelfde wat hosts doen om een speeladres uit te delen."
+      }
+    ],
+    "steps": {
+      "title": "De Wissel, in Volgorde",
+      "items": [
+        {
+          "title": "Test op een Privé Poort",
+          "body": "Start de nieuwe server op een poort die spelers niet kennen, ga er zelf naartoe en controleer een basis die je kent, je inventaris, en dat elke plugin of mod geladen is."
+        },
+        {
+          "title": "Laatste Kopie",
+          "body": "Kondig een herstart aan, stop de oude server correct, download de wereld nogmaals en installeer die kopie zodat de nieuwste wijzigingen mee komen."
+        },
+        {
+          "title": "Wissel de Poort en het Adres",
+          "body": "Verplaats de server naar zijn publieke poort met de Game Port-kaart, wijs vervolgens je hostnaam naar de nieuwe machine."
+        },
+        {
+          "title": "Behoud de Oude Nog Even",
+          "body": "Annuleer het oude abonnement pas na een paar dagen. Houd het gestopt, zodat niemand op de verlaten kopie bouwt."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Migratie Vragen",
+      "items": [
+        {
+          "q": "Behouden spelers hun inventarissen?",
+          "a": "Ja, zolang de online modus hetzelfde is op beide servers en je de hele wereldmap hebt verplaatst. Spelersgegevens leven binnen de wereld, gekoppeld aan de identiteit van elke speler, en die identiteit verandert als de online modus dat doet."
+        },
+        {
+          "q": "Mijn host laat me alleen de wereld downloaden. Is dat genoeg?",
+          "a": "Voor vanilla, meestal wel. Voor een plugin- of mod-server heb je ook de jars in hun exacte versies nodig, omdat de wereld niet correct zal laden zonder de mods die deze hebben gemaakt. Vraag je host om de volledige serverdirectory."
+        },
+        {
+          "q": "Wat vervangt het beheerpaneel van het controlepaneel van mijn host?",
+          "a": "De console, bestandsbeheerder, back-ups, planningen, spelersbeheer, plugin- en mod-installaties, en modpack-installaties, plus dingen waarvoor hosts vaak extra geld vragen, zoals meer servers of meer back-up slots. De limiet is je eigen hardware."
+        }
+      ]
+    },
+    "related": ["guideHome", "serverModpacks", "guideMulti"],
+    "cta": {
+      "title": "Haal Je Server in Huis",
+      "body": "Installeer het beheerpaneel, maak een server die overeenkomt met je oude, en upload je wereld. Gratis, open source, en van jou om te houden."
+    }
+  },
+  "guideMulti": {
+    "meta": {
+      "title": "Draai meerdere Minecraft-servers op één machine",
+      "description": "Draai meerdere Minecraft-servers op één machine: automatische poorten, geheugen-, CPU- en schijflimieten per server, gedeelde mods en één dashboard voor de hele vloot."
+    },
+    "eyebrow": "Handleiding voor meerdere servers",
+    "title": "Draai meerdere Minecraft-servers op één machine, overzichtelijk",
+    "intro": "Een survivalwereld, een creatieve bouwer-server en een modpack voor het weekend, allemaal op dezelfde machine. Elk krijgt zijn eigen container, zijn eigen poort en zijn eigen limieten, en je ziet ze allemaal op één dashboard.",
+    "pills": ["docker", "paper", "fabric", "forge", "vanilla"],
+    "sections": [
+      {
+        "title": "Poorten voor je Geregeld",
+        "body": "Gamepoorten worden toegewezen op basis van de eerstvolgende vrije poort, oplopend vanaf 25565, met de remote console 1000 boven elke gamepoort. Tien servers gebruiken gamepoorten 25565 tot 25574 en houden RCON in zijn eigen blok, zodat je één aaneengesloten gamebereik op je firewall kunt openen zonder ooit RCON bloot te stellen. Een poort telt als bezet als een andere server deze gebruikt, een Docker-container op de machine deze publiceert, of het systeem deze als bezig rapporteert. Verplaats een server later met de Game Port-kaart, en het paneel controleert de nieuwe poort voordat het opslaat.",
+        "points": [
+          "Eén game- en RCON-paar per server, automatisch toegewezen.",
+          "Gebruik 'Next Free Port' om de laagste vrije poort te kiezen.",
+          "Open alleen het gamebereik. RCON blijft gesloten."
+        ]
+      },
+      {
+        "title": "Limieten Zodat Eén Server de Rest Niet Uithongert",
+        "body": "Elke server is zijn eigen Docker-container met een CPU-limiet, een Java-heap en een harde geheugenlimiet daarboven. Docker kan het schijfgebruik van een map niet beperken, dus het paneel doet dat wel: elke server heeft een schijfquotum, en een actie die een server over zijn quotum heen zou duwen, zoals het installeren van een mod of het uploaden van een wereld, wordt geblokkeerd totdat er ruimte is vrijgemaakt. Schakel 'Stop de Server bij Overschrijding Quotum' in en een server die meer dan 10 procent over zijn quotum groeit, wordt gestopt en genoteerd in zijn geschiedenis.",
+        "points": [
+          "CPU-, heap- en geheugenlimiet per server.",
+          "Door het paneel afgedwongen schijfquota.",
+          "Standaardinstellingen voor nieuwe servers passen zich aan het geheugen van de machine aan."
+        ],
+        "shot": "storage"
+      },
+      {
+        "title": "Deel Wat Gedeeld Kan Worden",
+        "body": "Mods die je toevoegt, worden één keer opgeslagen in een gedeelde bibliotheek, gededupliceerd op sha256, en gekoppeld aan elke server die ze gebruikt, zodat tien servers die dezelfde mod draaien deze niet tien keer opslaan. Werelden gaan naar een wereldbibliotheek waar elke server vanuit kan installeren. Een blueprint legt het hele recept van een server vast als één enkele .mcserver.zip, en 'Clone' gebruikt deze om een identieke server te maken met nieuwe poorten.",
+        "shot": "blueprints"
+      },
+      {
+        "title": "Eén Overzicht van de Vloot",
+        "body": "Het dashboard toont elke server in één oogopslag: status, geheugen, spelers online, updates in wacht, en recente activiteit. Tags organiseren de serverlijst. Globale schema's voeren herstarts, back-ups of commando's uit op servers, en de pagina Updates verzamelt wat verouderd is in de hele vloot. Per-server-machtigingen laten een vriend zijn eigen server in het paneel draaien zonder de jouwe te zien.",
+        "shot": "dashboard"
+      }
+    ],
+    "steps": {
+      "title": "Plan een Machine voor Meerdere Servers",
+      "items": [
+        {
+          "title": "Tel het Geheugen Op",
+          "body": "Tel de Java-heap van elke server en zijn 'headroom' bij elkaar op, en laat dan ruimte over voor het systeem. Servers die gestopt zijn, gebruiken geen geheugen, dus een weekend-pack kost doordeweeks niets."
+        },
+        {
+          "title": "Stel Zinvolle Standaardinstellingen In",
+          "body": "Een beheerder stelt de heap, het schijfquotum en de CPU-limiet in waarmee elke nieuwe server begint onder 'Instellingen', 'Standaardinstellingen voor Nieuwe Servers'."
+        },
+        {
+          "title": "Open Eén Poortbereik",
+          "body": "Open een gamepoortbereik dat groot genoeg is voor de servers die je van plan bent te draaien, over TCP en UDP. Houd het RCON-blok gesloten."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Vragen over Meerdere Servers",
+      "items": [
+        {
+          "q": "Hoeveel servers kan één machine draaien?",
+          "a": "Geheugen bepaalt dat als eerste. Tel de heap van elke draaiende server en zijn 'headroom' bij elkaar op: een kleine vanilla- of Paper-server heeft ongeveer 4 GB in totaal nodig, een lichte modpack ongeveer 6 GB. Gestopte servers kosten niets."
+        },
+        {
+          "q": "Kan elke server zijn eigen beheerders hebben?",
+          "a": "Ja. Per-server-machtigingen verlenen afzonderlijk voor elke server weergave-, power-, console-, spelers-, content-, back-up-, bestands-, instellingen- en verwijderrechten, en een server kan volledig voor een gebruiker verborgen worden."
+        },
+        {
+          "q": "Kunnen spelers in-game wisselen tussen mijn servers?",
+          "a": "Niet via het paneel zelf. Elke server heeft zijn eigen adres en poort. Servers koppelen zodat spelers in-game tussen hen kunnen bewegen, vereist een proxy-server, die je naast hen zou draaien."
+        }
+      ]
+    },
+    "related": ["guideHome", "serversHub", "guideHosting"],
+    "cta": {
+      "title": "Beheer Je Hele Vloot Vanaf Eén Plek",
+      "body": "Installeer het paneel één keer en voeg servers toe wanneer je ze nodig hebt. Geen kosten per server en geen limieten op het aantal instanties."
+    }
+  },
+  "compareHub": {
+    "meta": {
+      "title": "Vergelijking Minecraft Server Panels: Pterodactyl, AMP, Crafty",
+      "description": "Een eerlijke vergelijking van gratis en betaalde Minecraft server panels: Pterodactyl, Crafty Controller, AMP, MCSManager en PufferPanel, naast Minecraft Server Manager."
+    },
+    "eyebrow": "Vergelijk panels",
+    "title": "Vergelijking Minecraft Server Panels",
+    "intro": "Verschillende goede panels kunnen een Minecraft server draaien. Hier leest u hoe Minecraft Server Manager verschilt van elk van hen, met de gevallen waarin een ander panel de betere keuze is.",
+    "cards": {
+      "comparePtero": "Een gratis multi-game panel gebouwd voor hostingbedrijven, met een aparte daemon op elke machine. Vergelijk de installatie-inspanning en Minecraft-functies.",
+      "compareCrafty": "Een gratis Minecraft panel geschreven in Python dat servers draait als gewone processen. Vergelijk hoe servers geïsoleerd zijn en hoe modpacks binnenkomen.",
+      "compareAmp": "Een commercieel panel voor honderden games, verkocht in licentietiers. Vergelijk prijs, instantielimieten en Minecraft-diepgang.",
+      "compareMcsm": "Een gratis, gedistribueerd panel voor Minecraft en Steam games. Vergelijk architectuur, Docker-gebruik en modpack-afhandeling.",
+      "comparePuffer": "Een gratis, lichtgewicht panel voor veel games en veel machines, met servers als processen of containers. Vergelijk isolatie, nodes en Minecraft-diepgang."
+    },
+    "sections": [
+      {
+        "title": "Hoe Deze Vergelijkingen Zijn Geschreven",
+        "body": "Elk feit over een ander panel komt van de eigen website, documentatie of repository van dat project, en elke pagina vermeldt wanneer deze is gecontroleerd. Waar we iets niet konden bevestigen, hebben we het weggelaten in plaats van te gokken. Als een feit is veranderd, laat het ons weten op Discord of GitHub en we zullen de pagina corrigeren.",
+        "points": [
+          "Elke pagina somt op wat het andere panel beter doet.",
+          "Prijzen en versies worden vermeld met de datum waarop ze zijn gecontroleerd.",
+          "Minecraft Server Manager is niet aangesloten bij een van deze projecten. Hun namen behoren toe aan hun eigenaren."
+        ]
+      },
+      {
+        "title": "Waar Minecraft Server Manager Voor Is Gebouwd",
+        "body": "Eén eigenaar, of een klein team, dat Minecraft Java servers draait op hun eigen machine. Elke server is een Docker container met beperkte resources, het hele panel staat in één map, en de Minecraft-onderdelen die elders lastig zijn, zijn ingebouwd: vastgezette modpacks met rollback, vijf mod-registries in één zoekopdracht, crash forensics, een live map met één klik en draagbare blauwdrukken.",
+        "pills": ["paper", "purpur", "fabric", "forge", "neoforge", "quilt", "vanilla"]
+      }
+    ],
+    "faq": {
+      "title": "Vragen Over Het Kiezen Van Een Panel",
+      "items": [
+        {
+          "q": "Welk panel moet ik kiezen voor één enkele Minecraft server thuis?",
+          "a": "Als je alleen Minecraft Java draait en modpacks, back-ups en een live map wilt zonder ze zelf samen te stellen, is Minecraft Server Manager daarvoor gemaakt. Als je ook andere games host of veel machines beheert, past een multi-game panel zoals Pterodactyl, MCSManager of AMP beter."
+        },
+        {
+          "q": "Is Minecraft Server Manager echt gratis?",
+          "a": "Ja. Het is MIT-gelicentieerd, heeft geen betaalde tier en maakt geen gebruik van betaalde services. CurseForge-downloads vereisen een CurseForge API-sleutel, die je toevoegt in Instellingen."
+        },
+        {
+          "q": "Kan ik mijn bestaande wereld verplaatsen naar Minecraft Server Manager?",
+          "a": "Ja. Upload de wereld op de Werelden-pagina en installeer deze op een nieuwe server, of importeer een modpack-export of een zip van mod-jars wanneer je de server aanmaakt."
+        }
+      ]
+    },
+    "related": ["serversHub", "guideHosting"],
+    "cta": {
+      "title": "Probeer Het Op Je Eigen Machine",
+      "body": "Installeer het panel in drie stappen en maak je eerste server aan vanuit de wizard. Je hele panel blijft in één map die je overal kunt kopiëren."
+    },
+    "table": {
+      "title": "Alle Panels In Een Oogopslag",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Prijs",
+          "values": ["Gratis.", "Gratis.", "Gratis.", "Betaalde licentietiers.", "Gratis.", "Gratis."]
+        },
+        {
+          "label": "Licentie",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Commercieel, closed source.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition.",
+            "Veel, via eggs.",
+            "Minecraft Java en Bedrock.",
+            "Meer dan 200.",
+            "Minecraft en Steam games.",
+            "Veel, via templates."
+          ]
+        },
+        {
+          "label": "Game servers draaien als",
+          "values": [
+            "Docker containers.",
+            "Docker containers.",
+            "Processen op de host.",
+            "Processen, of Docker containers na inschakeling.",
+            "Containers of processen.",
+            "Processen of containers."
+          ]
+        },
+        {
+          "label": "Meerdere machines",
+          "values": [
+            "Nee. Eén panel per machine.",
+            "Ja, met Wings nodes.",
+            "Geen remote nodes in de documentatie.",
+            "Professional licentie en hoger.",
+            "Ja, met daemons.",
+            "Ja, met nodes."
+          ]
+        },
+        {
+          "label": "Host systemen",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Feiten gecontroleerd tegen de eigen documentatie van elk project, oktober en november 2026. Elke vergelijkingspagina bevat de details."
+    }
+  },
+  "comparePtero": {
+    "meta": {
+      "title": "Pterodactyl Alternatief voor Minecraft Servers",
+      "description": "Minecraft Server Manager vergeleken met Pterodactyl: één proces en één map in plaats van een paneel, daemon, database en Redis, met ingebouwde Minecraft-functies."
+    },
+    "eyebrow": "Pterodactyl alternatief",
+    "title": "Een Pterodactyl Alternatief Alleen voor Minecraft",
+    "intro": "Pterodactyl is een gratis, open-source paneel dat veel games op veel machines draait. Minecraft Server Manager doet één game op één machine, dus het heeft veel minder nodig om op te zetten en bevat de ingebouwde Minecraft-tools.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Vergelijking",
+      "columns": ["", "Minecraft Server Manager", "Pterodactyl"],
+      "rows": [
+        {
+          "label": "Prijs en licentie",
+          "values": ["Gratis, MIT.", "Gratis, MIT."]
+        },
+        {
+          "label": "Wat je installeert",
+          "values": [
+            "Eén Node.js proces, of één Docker container.",
+            "Een PHP (Laravel) paneel met een React frontend, plus de Wings daemon geschreven in Go op elke node."
+          ]
+        },
+        {
+          "label": "Database en cache",
+          "values": [
+            "Ingebouwd SQLite-bestand in de data map. Niets anders om te draaien.",
+            "MySQL 5.7.22+ of MariaDB 10.2+, Redis, een webserver en Composer."
+          ]
+        },
+        {
+          "label": "Game servers draaien als",
+          "values": ["Resource-begrensde Docker containers.", "Geïsoleerde Docker containers (Docker is vereist)."]
+        },
+        {
+          "label": "Host systemen",
+          "values": [
+            "Linux, Windows en macOS. De image is gebouwd voor amd64 en arm64.",
+            "Alleen Linux: Ubuntu, Debian en RHEL familie releases. Wings draait niet op Windows."
+          ]
+        },
+        {
+          "label": "Beheerde machines",
+          "values": [
+            "Eén. Het paneel en Docker draaien op dezelfde host.",
+            "Vele. Eén paneel beheert Wings nodes op vele machines."
+          ]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition. Bedrock spelers kunnen meedoen via Geyser.",
+            "Veel games via \"eggs\", waaronder Minecraft, Rust, Terraria en ARK."
+          ]
+        }
+      ],
+      "note": "Feiten gecontroleerd in oktober 2026 tegen de eigen documentatie van elk project."
+    },
+    "sections": [
+      {
+        "title": "Installatie Zonder een Complex Systeem",
+        "body": "Pterodactyl's eigen documentatie noemt het een zeer complex systeem met meerdere afhankelijkheden: PHP, een databaseserver, Redis, een webserver, een queue worker en Wings op elke node. Dat ontwerp laat het hostingbedrijven bedienen. Minecraft Server Manager is één proces dat praat met je Docker socket en alles, inclusief de database, in één map houdt. Op Linux zet één installatiescript het op en installeert Docker als het ontbreekt.",
+        "points": [
+          "Geen aparte daemon, databaseserver of cache om draaiende te houden.",
+          "Kopieer de data map om het hele paneel naar een nieuwe machine te verplaatsen.",
+          "Draait native op Windows en macOS naast Docker Desktop."
+        ],
+        "pills": ["docker", "portainer", "dockge", "pm2"]
+      },
+      {
+        "title": "Waar Minecraft Server Manager Sterker is voor Minecraft",
+        "body": "Omdat het alleen Minecraft draait, weet het paneel wat een modpack, een mod jar en een crash report zijn. De tools die een Minecraft-eigenaar gebruikt, zijn onderdeel van het paneel, niet iets om te vinden en te integreren.",
+        "points": [
+          "Modpacks worden vastgezet op een exacte versie, en upgrades maken eerst een back-up en keren met één klik terug.",
+          "Eén zoekopdracht over vijf registries, gefilterd op de loader en Minecraft-versie van de server.",
+          "Elke download wordt gecontroleerd op checksum voordat deze de server bereikt.",
+          "Crashes worden gedetecteerd, geparsed en met één klik deelbaar naar mclo.gs.",
+          "Een BlueMap live map met één klik, achter de eigen login van het paneel.",
+          "Elke instelling van de itzg image wordt in duidelijke taal uitgelegd in de wizard."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Wanneer Pterodactyl de Betere Keuze is",
+        "body": "Pterodactyl is volwassen, actief onderhouden en ondersteund door hostingbedrijven. Als een van deze op u van toepassing is, is het de sterkere keuze.",
+        "points": [
+          "U draait servers op meerdere machines en wilt één paneel voor al die machines.",
+          "U host games anders dan Minecraft.",
+          "U verkoopt of deelt hosting met veel aparte klanten en heeft die schaal nodig.",
+          "U draait al Pterodactyl en de eggs dekken wat u nodig heeft."
+        ]
+      },
+      {
+        "title": "Een Opmerking over Pelican",
+        "body": "Pelican Panel is een fork van Pterodactyl, gelicentieerd onder AGPL-3.0 en nog in de release candidate fase toen deze pagina werd gecontroleerd. Het behoudt het paneel plus Wings ontwerp, voegt SQLite en PostgreSQL toe als database-opties, en heeft een plugin-hub waar een externe plugin CurseForge en Modrinth modpacks doorzoekt."
+      }
+    ],
+    "faq": {
+      "title": "Pterodactyl Vragen",
+      "items": [
+        {
+          "q": "Kan ik een server verplaatsen van Pterodactyl naar Minecraft Server Manager?",
+          "a": "Ja. Download de wereld van de server uit Pterodactyl, maak een server van hetzelfde type en dezelfde Minecraft-versie aan in Minecraft Server Manager, upload vervolgens de wereld op de Werelden pagina en installeer deze op die server. Voor gemodificeerde servers, importeer het pack of je zip met mod jars wanneer je het aanmaakt."
+        },
+        {
+          "q": "Heeft Minecraft Server Manager een databaseserver zoals MySQL nodig?",
+          "a": "Nee. Het gebruikt de SQLite-engine die is ingebouwd in Node.js 24 en slaat het databasebestand op in de data map met al het andere."
+        },
+        {
+          "q": "Kan Minecraft Server Manager meerdere machines beheren zoals Wings nodes?",
+          "a": "Nee. Het beheert de Docker daemon op de machine waarop het draait. Voor meerdere machines, draai één paneel op elke machine, of kies een multi-node paneel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareMcsm", "guideMulti"],
+    "cta": {
+      "title": "Draai Minecraft Zonder de Extra Stack",
+      "body": "Installeer Minecraft Server Manager in drie stappen en maak je eerste server aan in de wizard."
+    }
+  },
+  "compareCrafty": {
+    "meta": {
+      "title": "Crafty Controller vs Minecraft Server Manager",
+      "description": "Crafty Controller en Minecraft Server Manager zijn beide gratis Minecraft-panelen. Vergelijk hoe servers geïsoleerd zijn, hoe modpacks worden geïnstalleerd en waar elk paneel in past."
+    },
+    "eyebrow": "Alternatief voor Crafty Controller",
+    "title": "Crafty Controller vs Minecraft Server Manager",
+    "intro": "Beide zijn gratis, zelf gehoste panelen gemaakt voor Minecraft. Crafty draait elke server als een proces op de host, geschreven in Python. Minecraft Server Manager draait elke server in zijn eigen Docker-container en integreert modpack-installatie, mod-zoekfuncties en crash-tools in het paneel.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Vergelijking",
+      "columns": ["", "Minecraft Server Manager", "Crafty Controller"],
+      "rows": [
+        {
+          "label": "Prijs en licentie",
+          "values": ["Gratis, MIT.", "Gratis, GPL-3.0."]
+        },
+        {
+          "label": "Geschreven in",
+          "values": ["Node.js 24.", "Python 3.10 tot 3.12."]
+        },
+        {
+          "label": "Game servers draaien als",
+          "values": [
+            "Docker-containers met resource-beperkingen.",
+            "Processen op de host. Het paneel zelf kan ook in Docker draaien."
+          ]
+        },
+        {
+          "label": "Docker",
+          "values": ["Vereist op de host.", "Optioneel."]
+        },
+        {
+          "label": "Hostsystemen",
+          "values": [
+            "Linux, Windows en macOS. De image is gebouwd voor amd64 en arm64.",
+            "Linux, Windows, macOS en Raspberry Pi OS, plus handleidingen voor Docker, UnRAID en CasaOS. De image dekt amd64 en arm64."
+          ]
+        },
+        {
+          "label": "Edities",
+          "values": [
+            "Java Edition. Bedrock-spelers kunnen via Geyser meedoen.",
+            "Java Edition van 1.8 tot de nieuwste, en Bedrock."
+          ]
+        },
+        {
+          "label": "Modpacks",
+          "values": [
+            "CurseForge, Modrinth, FTB en GT New Horizons packs via de wizard, vastgezet op een exacte versie.",
+            "De FAQ beschrijft het importeren van een pack als zip, of Modrinth packs via mrpack-install."
+          ]
+        },
+        {
+          "label": "Backups, schema's, rollen, 2FA",
+          "values": [
+            "Ja: retentie per server, cron-schema's, drie rollen met per-server-permissies, TOTP.",
+            "Ja: een back-upmanager, een taakplanner, gebruikersrollen en TOTP plus passkeys."
+          ]
+        }
+      ],
+      "note": "Feiten gecontroleerd in oktober 2026 tegen de eigen documentatie van elk project."
+    },
+    "sections": [
+      {
+        "title": "Containers in plaats van Host Processen",
+        "body": "In Minecraft Server Manager is elke server zijn eigen Docker-container op de bekende itzg Minecraft-image, met eigen geheugen- en CPU-limieten en een schijfquotum dat het paneel afdwingt. Eén server kan niet het geheugen van de machine opslokken of de schijf vullen, en het herbouwen van een server raakt nooit de andere. Het nadeel is dat Docker op de host geïnstalleerd moet zijn.",
+        "points": [
+          "Geheugen-, CPU- en schijflimieten per server.",
+          "Graceful RCON-stop voordat de container stopt, en crashdetectie met backoff.",
+          "Java wordt per server gekozen door de image, dus gemengde Minecraft-versies werken gewoon."
+        ],
+        "pills": ["docker", "amd64", "arm64"],
+        "shot": "overview"
+      },
+      {
+        "title": "Waar Minecraft Server Manager Sterker Is",
+        "body": "De wizard installeert modpacks en mods voor je en houdt ze vast, zodat een herstart nooit een pack stilzwijgend upgrade.",
+        "points": [
+          "Installeer CurseForge, Modrinth, FTB en GT New Horizons packs vanuit de wizard.",
+          "Importeer een Modrinth .mrpack, een CurseForge export of je eigen zip met jars, waarbij elke jar wordt geïdentificeerd.",
+          "Zoek vijf registers tegelijk, gefilterd op de loader en versie van de server.",
+          "Upgrades maken eerst een back-up en rollen terug met één klik.",
+          "BlueMap live map en mclo.gs crashdeling met één klik.",
+          "Draagbare blauwdrukken: exporteer het recept van een server en krijg dezelfde server overal."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "mrpack", "cf-export"]
+      },
+      {
+        "title": "Wanneer Crafty Controller de Betere Keuze Is",
+        "body": "Crafty is volwassen, actief onderhouden en draait op meer plaatsen zonder Docker.",
+        "points": [
+          "Je wilt servers draaien zonder Docker te installeren, bijvoorbeeld direct op Windows, macOS of een Raspberry Pi.",
+          "Je draait Bedrock Dedicated Server zelf, niet alleen Java met Geyser.",
+          "Je wilt inloggen met passkeys."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Crafty Controller Vragen",
+      "items": [
+        {
+          "q": "Kan ik mijn Crafty-server verplaatsen naar Minecraft Server Manager?",
+          "a": "Ja. Maak een server aan met hetzelfde type en dezelfde Minecraft-versie, upload vervolgens de wereld als zip op de pagina Werelden en installeer deze op die server. Importeer voor een gemodificeerde server je pack of een zip met de mod jars wanneer je deze aanmaakt."
+        },
+        {
+          "q": "Draait Minecraft Server Manager op een Raspberry Pi?",
+          "a": "Ja, op een 64-bits besturingssysteem met Docker. De paneel-image wordt gepubliceerd voor arm64 en amd64."
+        },
+        {
+          "q": "Waarom heeft Minecraft Server Manager Docker nodig?",
+          "a": "Elke server draait in zijn eigen container, wat de manier is waarop het resource-limieten, een schone herbouw en de juiste Java-versie voor elke Minecraft-versie krijgt."
+        }
+      ]
+    },
+    "related": ["compareHub", "serverModpacks", "guidePi"],
+    "cta": {
+      "title": "Bekijk Het Met Je Eigen Server",
+      "body": "Installeer het paneel in drie stappen, maak vervolgens een server aan vanuit een modpack in de wizard."
+    }
+  },
+  "compareAmp": {
+    "meta": {
+      "title": "Gratis AMP-alternatief voor Minecraft Servers",
+      "description": "Minecraft Server Manager vergeleken met AMP van CubeCoders: een gratis, MIT-gelicentieerd Minecraft-paneel zonder instantielimieten, naast een commercieel multi-game paneel."
+    },
+    "eyebrow": "AMP-alternatief",
+    "title": "Een Gratis AMP-alternatief voor Minecraft",
+    "intro": "AMP van CubeCoders is een commercieel paneel voor een zeer lange lijst met games, verkocht in licentieniveaus. Minecraft Server Manager is gratis en open source, draait alleen Minecraft en heeft geen limiet op het aantal servers dat je aanmaakt.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Zij aan zij",
+      "columns": ["", "Minecraft Server Manager", "AMP"],
+      "rows": [
+        {
+          "label": "Prijs",
+          "values": [
+            "Gratis. Geen niveaus.",
+            "Standard £7.50 / $10, Professional £15 / $30, Advanced £30 / $40, Enterprise op basis van een variabel abonnement."
+          ]
+        },
+        {
+          "label": "Licentie en broncode",
+          "values": [
+            "MIT, broncode op GitHub.",
+            "Commercieel en gesloten broncode. De publieke GitHub-repository bevat issues en documentatie."
+          ]
+        },
+        {
+          "label": "Te maken servers",
+          "values": ["Geen limiet buiten je hardware.", "5 instanties op Standard, 15 op Professional, 50 op Advanced."]
+        },
+        {
+          "label": "Paneelgebruikers",
+          "values": [
+            "Onbeperkt, met rollen voor beheerder, operator en kijker.",
+            "3 op Standard, onbeperkt vanaf Professional."
+          ]
+        },
+        {
+          "label": "Commercieel gebruik",
+          "values": ["Toegestaan door de MIT-licentie.", "Alleen Enterprise-licentie."]
+        },
+        {
+          "label": "Meerdere machines",
+          "values": ["Eén machine per paneel.", "Professional en hoger."]
+        },
+        {
+          "label": "Hostsystemen",
+          "values": ["Linux, Windows en macOS. De image is gebouwd voor amd64 en arm64.", "Windows en Linux."]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition. Bedrock-spelers kunnen meedoen via Geyser.",
+            "Meer dan 200 games en applicaties op de compatibiliteitslijst, waaronder Minecraft Java en Bedrock."
+          ]
+        }
+      ],
+      "note": "Feiten gecontroleerd in oktober 2026 op basis van de eigen documentatie van elk project. AMP-prijzen zijn afkomstig van het vergelijkingsblad van CubeCoders-edities en kunnen wijzigen."
+    },
+    "sections": [
+      {
+        "title": "Geen Licentie, Geen Instantietelling",
+        "body": "AMP's niveaus bepalen hoeveel instanties en paneelgebruikers je krijgt, en alleen het Enterprise-niveau staat commercieel gebruik toe. Minecraft Server Manager heeft geen niveaus: elke functie, elke server en elk gebruikersaccount is gratis onder de MIT-licentie, en het maakt geen gebruik van betaalde services. CurseForge-downloads vereisen een CurseForge API-sleutel, die je toevoegt in Instellingen.",
+        "points": [
+          "Maak zoveel servers aan als je machine aankan.",
+          "Nodig je hele team uit met server-specifieke permissies en tweefactor-aanmelding.",
+          "De broncode is openbaar, dus je kunt deze lezen, forken en eraan bijdragen."
+        ]
+      },
+      {
+        "title": "Waar Minecraft Server Manager Sterker is voor Minecraft",
+        "body": "Een paneel voor één game kan er diep op ingaan. Elke instelling die de itzg Minecraft-image ondersteunt, is beschikbaar in de wizard met duidelijke uitleg, en de Minecraft-workflows zijn ingebouwd.",
+        "points": [
+          "CurseForge, Modrinth, FTB en GT New Horizons modpacks, vastgezet met één-klik rollback.",
+          "Eén mod-zoekopdracht over vijf registers, met checksum-geverifieerde downloads.",
+          "Compatibiliteitscontroles van versies voordat een Minecraft-upgrade wordt aangeboden.",
+          "Crashanalyse met mclo.gs-deling en een één-klik BlueMap live kaart.",
+          "Speleranalyses, inventarisanalyses en opslaganalyses met schijfquota."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "gtnh", "bluemap", "mclogs"],
+        "shot": "wizard"
+      },
+      {
+        "title": "Wanneer AMP de Betere Keuze is",
+        "body": "AMP dekt veel meer terrein dan een Minecraft-only paneel, en wordt geleverd met commerciële ondersteuning.",
+        "points": [
+          "Je host veel verschillende games vanuit één paneel.",
+          "Je hebt single sign-on via OIDC, aangepaste branding of implementatiesjablonen nodig, die in het Advanced-niveau zijn inbegrepen.",
+          "Je runt een hostingbedrijf en wilt een commerciële licentie met leveranciersondersteuning.",
+          "Je wilt Bedrock Dedicated Server zelf draaien."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "AMP Vragen",
+      "items": [
+        {
+          "q": "Is Minecraft Server Manager gratis voor commercieel gebruik?",
+          "a": "De MIT-licentie staat commercieel gebruik toe. Het paneel is gebouwd voor eigenaren en kleine teams op één machine, dus controleer of het past bij hoe je host voordat je het voor klanten gebruikt."
+        },
+        {
+          "q": "Ondersteunt Minecraft Server Manager andere games dan Minecraft?",
+          "a": "Nee. Het draait alleen Minecraft Java Edition servers, daarom kan het diep ingaan op modpacks, mods en crashrapporten."
+        },
+        {
+          "q": "Kan ik een AMP Minecraft-instantie overzetten?",
+          "a": "Ja. Maak een server aan met hetzelfde type en dezelfde Minecraft-versie, upload vervolgens de wereld van de instantie als zip op de Werelden-pagina en installeer deze op die server. Gemodificeerde servers kunnen starten vanaf een modpack, een pack-export of een zip van mod-jars."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideHosting"],
+    "cta": {
+      "title": "Elke Functie, Gratis",
+      "body": "Installeer Minecraft Server Manager in drie stappen. Er is niets te kopen en niets te ontgrendelen."
+    }
+  },
+  "compareMcsm": {
+    "meta": {
+      "title": "Alternatief voor MCSManager voor Minecraft Servers",
+      "description": "MCSManager en Minecraft Server Manager vergeleken: een gedistribueerd paneel voor Minecraft en Steam games, naast een Minecraft-only paneel met ingebouwde modpacks."
+    },
+    "eyebrow": "Alternatief voor MCSManager",
+    "title": "Een Alternatief voor MCSManager Gericht op Minecraft",
+    "intro": "MCSManager is een gratis, open-source paneel voor Minecraft en Steam games dat meerdere machines kan beheren. Minecraft Server Manager draait alleen Minecraft op één machine, met elke server in een Docker container en de Minecraft tools ingebouwd.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Vergelijking",
+      "columns": ["", "Minecraft Server Manager", "MCSManager"],
+      "rows": [
+        {
+          "label": "Prijs en licentie",
+          "values": ["Gratis, MIT.", "Gratis, Apache-2.0."]
+        },
+        {
+          "label": "Geschreven in",
+          "values": ["Node.js 24.", "TypeScript op Node.js."]
+        },
+        {
+          "label": "Wat je installeert",
+          "values": ["Eén proces, of één Docker container.", "Twee services: een webpaneel en een daemon."]
+        },
+        {
+          "label": "Database",
+          "values": ["Ingebouwd SQLite-bestand in de data-map.", "Niet nodig."]
+        },
+        {
+          "label": "Game servers draaien als",
+          "values": [
+            "Docker containers met resource-beperkingen.",
+            "Docker containers of gewone processen, jouw keuze."
+          ]
+        },
+        {
+          "label": "Host systemen",
+          "values": [
+            "Linux, Windows en macOS. De image is gebouwd voor amd64 en arm64.",
+            "Windows, Linux en macOS, met een installatiescript van één regel voor Linux."
+          ]
+        },
+        {
+          "label": "Beheerde machines",
+          "values": ["Eén. Het paneel en Docker draaien op dezelfde host.", "Vele, via gedistribueerde daemons."]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition. Bedrock spelers kunnen meedoen via Geyser.",
+            "Minecraft en Steam games zoals Palworld en Terraria, vanuit een ingebouwde marktplaats."
+          ]
+        }
+      ],
+      "note": "Feiten gecontroleerd in oktober 2026 tegen de documentatie van elk project."
+    },
+    "sections": [
+      {
+        "title": "Waar Minecraft Server Manager Sterker is voor Minecraft",
+        "body": "MCSManager implementeert vele soorten game servers. Minecraft Server Manager richt zich op één game, dus de wizard, de mod tools en de geschiedenis spreken allemaal Minecraft.",
+        "points": [
+          "Elke instelling van de itzg Minecraft image, uitgelegd in duidelijke taal in de wizard.",
+          "CurseForge, Modrinth, FTB en GT New Horizons modpacks, vastgezet met één-klik rollback.",
+          "Eén mod zoekfunctie over vijf registraties, met checksum-verifieerde downloads.",
+          "Crash forensisch onderzoek met benoemde verdachten, en één-klik mclo.gs delen.",
+          "Een één-klik BlueMap live map, spelersanalyse en draagbare blauwdrukken.",
+          "Het hele paneel, inclusief database, is één map die je kunt kopiëren om te migreren."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "console"
+      },
+      {
+        "title": "Containers Standaard",
+        "body": "Elke server in Minecraft Server Manager is een Docker container met zijn eigen geheugen- en CPU-limieten, plus een schijfquotum dat het paneel afdwingt. Java wordt per server gekozen, dus een 1.12 modpack en de nieuwste Paper release draaien naast elkaar zonder Java-installaties te hoeven beheren. MCSManager laat je kiezen tussen containers en gewone processen, wat flexibeler is als Docker geen optie is.",
+        "pills": ["docker", "amd64", "arm64"]
+      },
+      {
+        "title": "Wanneer MCSManager de Betere Keuze is",
+        "body": "MCSManager wordt zeer actief ontwikkeld en dekt meer dan alleen Minecraft.",
+        "points": [
+          "Je beheert servers op meerdere machines vanuit één paneel.",
+          "Je host ook Steam games zoals Palworld of Terraria.",
+          "Je wilt servers draaien als gewone processen, zonder Docker.",
+          "Je wilt een drag-and-drop dashboard en een marktplaats met kant-en-klare game implementaties."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "Veelgestelde Vragen over MCSManager",
+      "items": [
+        {
+          "q": "Kan ik een Minecraft server verplaatsen van MCSManager?",
+          "a": "Ja. Maak een server aan met hetzelfde type en Minecraft versie in Minecraft Server Manager, upload vervolgens de wereld als een zip op de Worlds pagina en installeer deze op die server. Gemodificeerde servers kunnen starten vanaf een modpack, een pack export of een zip van mod jars."
+        },
+        {
+          "q": "Heb ik Docker nodig voor Minecraft Server Manager?",
+          "a": "Ja. Docker draait elke server. Op Linux installeert het installatiescript Docker voor je als het ontbreekt."
+        },
+        {
+          "q": "Kunnen meerdere mensen één Minecraft Server Manager paneel delen?",
+          "a": "Ja. Er zijn admin, operator en viewer rollen, per-server permissies, en optionele two-factor aanmelding voor elk account."
+        }
+      ]
+    },
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
+    "cta": {
+      "title": "Minecraft, Diepgaand Behandeld",
+      "body": "Installeer het paneel in drie stappen en maak je eerste server aan vanuit de wizard."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "Alternatief voor PufferPanel voor Minecraft Servers",
+      "description": "Minecraft Server Manager vergeleken met PufferPanel: elke server in zijn eigen Docker-container en ingebouwde Minecraft-tools, tegenover een lichtgewicht multi-game, multi-node paneel."
+    },
+    "eyebrow": "Alternatief voor PufferPanel",
+    "title": "Een Alternatief voor PufferPanel, Alleen voor Minecraft",
+    "intro": "PufferPanel is een gratis, open-source paneel voor veel games op één of meerdere machines. Minecraft Server Manager draait alleen Minecraft op één machine, altijd in Docker, met de ingebouwde Minecraft-tools.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Vergelijking",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Prijs en licentie",
+          "values": ["Gratis, MIT.", "Gratis, Apache-2.0."]
+        },
+        {
+          "label": "Geschreven in",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "Wat je installeert",
+          "values": [
+            "Eén proces, of één Docker-container.",
+            "Eén service uit zijn apt- of yum-repository, of zijn Docker-image. Een node op een andere machine draait hetzelfde pakket."
+          ]
+        },
+        {
+          "label": "Database",
+          "values": [
+            "Ingebouwde SQLite-bestand in de data-map.",
+            "Geen installatie nodig voor een basisinstallatie. Een handleiding behandelt het gebruik van een externe database."
+          ]
+        },
+        {
+          "label": "Game servers draaien als",
+          "values": [
+            "Resource-begrensde Docker-containers, altijd.",
+            "Processen op de host (de documentatie zegt dat deze omgeving geen beveiligingsfuncties heeft) of Docker-containers."
+          ]
+        },
+        {
+          "label": "Host systemen",
+          "values": [
+            "Linux, Windows en macOS. De image is gebouwd voor amd64 en arm64.",
+            "Linux: pakketten voor Ubuntu 22.04 en 24.04 en Debian 10 en 11 op amd64 en arm64, Raspbian op arm64, en een yum-repository. 32-bit wordt niet ondersteund."
+          ]
+        },
+        {
+          "label": "Beheerde machines",
+          "values": [
+            "Eén. Het paneel en Docker draaien op dezelfde host.",
+            "Veel. Nodes op andere machines draaien servers voor één paneel."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, elk servertype van de itzg-image, en CurseForge, Modrinth, FTB en GT New Horizons packs. Bedrock-spelers verbinden via Geyser.",
+            "Templates voor Java- en Bedrock-servers, CurseForge- en FTB-packs, en BungeeCord-, Velocity- en Waterfall-proxies."
+          ]
+        }
+      ],
+      "note": "Feiten gecontroleerd in november 2026 tegenover de documentatie van PufferPanel, zijn repository en zijn templates repository."
+    },
+    "sections": [
+      {
+        "title": "Isolatie Zonder Instelling om te Onthouden",
+        "body": "PufferPanel laat je een omgeving per server kiezen. De standaard draait de server als een proces op de host, als dezelfde gebruiker als het paneel, en de eigen documentatie zegt dat het geen beveiligingsfuncties heeft; de Docker-versie isoleert het. Minecraft Server Manager heeft alleen het tweede type. Elke server is zijn eigen container met een geheugen- en CPU-limiet, een schijfquotum dat door het paneel wordt afgedwongen, en niets gedeeld met de anderen behalve de mod-bibliotheek.",
+        "points": [
+          "Eén container per server, gelabeld en begrensd.",
+          "Schijfquota afgedwongen door het paneel.",
+          "Een server die crasht of zonder geheugen komt te zitten, wordt gedetecteerd en geregistreerd."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Waar Minecraft Server Manager Dieper Ingaat op Minecraft",
+        "body": "Een template start een server; het werk komt daarna. Mods om te vinden en updaten, packs die verder gaan, crashes om te lezen, werelden om te back-uppen. Die zijn hier ingebouwd in het paneel.",
+        "points": [
+          "Modpacks zijn vastgezet op een exacte versie. Upgrades en downgrades maken eerst een back-up en rollen terug met één klik.",
+          "Eén zoekopdracht over vijf registers, gefilterd op de loader en Minecraft-versie van de server.",
+          "Elke download wordt gecontroleerd op checksum voordat deze de server bereikt.",
+          "Een versiecontrole toont voor welke toekomstige Minecraft-versies elke geïnstalleerde mod al ondersteuning biedt.",
+          "Crashrapporten worden gedetecteerd, geparsed en deelbaar naar mclo.gs met één klik.",
+          "Een BlueMap live map met één klik, achter de eigen inlog van het paneel."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "Wanneer PufferPanel de Betere Keuze Is",
+        "body": "PufferPanel is lichtgewicht, gratis en bestaat al jaren. Als een van deze op jou van toepassing is, kies het dan.",
+        "points": [
+          "Je host games anders dan Minecraft.",
+          "Je draait servers op meerdere machines en wilt één paneel voor al die machines.",
+          "Je wilt een native Bedrock-server, of een BungeeCord-, Velocity- of Waterfall-proxynetwerk.",
+          "Je wilt Docker helemaal niet draaien.",
+          "Je wilt SFTP-toegang tot serverbestanden."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "PufferPanel Vragen",
+      "items": [
+        {
+          "q": "Kan ik een Minecraft-server verplaatsen van PufferPanel naar Minecraft Server Manager?",
+          "a": "Ja. Download de wereldmap van de server, maak een server van hetzelfde type en dezelfde Minecraft-versie, upload vervolgens de wereld op de Werelden-pagina en installeer deze op die server. Voor een gemodificeerde server, importeer het pack of een zip van zijn mod jars wanneer je het aanmaakt."
+        },
+        {
+          "q": "Heeft Minecraft Server Manager Docker nodig?",
+          "a": "Ja. Elke Minecraft-server draait als een Docker-container, wat de manier is waarop het geheugen, CPU en schijf per server begrenst. Het paneel zelf kan in Docker draaien of direct vanuit Node.js."
+        },
+        {
+          "q": "Kan het servers op een tweede machine draaien?",
+          "a": "Nee. Het beheert de Docker-daemon op de machine waarop het draait. Voor twee machines, draai een paneel op elk, of kies een paneel met nodes zoals PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Elke Server in Zijn Eigen Container",
+      "body": "Installeer het paneel in drie stappen en maak je eerste server aan in de wizard."
+    }
+  }
+}

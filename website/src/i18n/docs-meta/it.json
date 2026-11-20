@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "Registro attività",
+    "description": "La pagina Attività è la traccia di controllo completa: un registro cronologico ricercabile di tutto ciò che è accaduto nel pannello."
+  },
+  "architecture": {
+    "title": "Architettura",
+    "description": "Minecraft Server Manager è un'applicazione Node.js renderizzata lato server, a processo singolo."
+  },
+  "backups": {
+    "title": "Backup",
+    "description": "La pagina Backup contiene ogni snapshot della tua flotta, con dimensioni, motivo e data, filtrabile per server e per motivo."
+  },
+  "blueprints": {
+    "title": "Blueprint",
+    "description": "I Blueprint salvano l'intera configurazione di un server Minecraft come una ricetta riutilizzabile per creare nuovi server. I segreti non sono mai inclusi."
+  },
+  "chatbot": {
+    "title": "Chatbot Minecraft per server",
+    "description": "Il pannello offre un chatbot configurabile dall'amministratore per ogni server Minecraft gestito, impostabile nella scheda Impostazioni → Chatbot del server."
+  },
+  "console-and-chat": {
+    "title": "Console e comandi chat",
+    "description": "La scheda Console trasmette il log del server in tempo reale e fornisce una casella di comando per inviare qualsiasi comando del server."
+  },
+  "dashboard": {
+    "title": "La dashboard",
+    "description": "La dashboard è la tua base operativa: ogni server, il suo stato in tempo reale e un feed degli eventi più recenti."
+  },
+  "getting-started": {
+    "title": "Iniziare",
+    "description": "Installa Minecraft Server Manager e completa la configurazione iniziale: il controllo del sistema, il tuo fuso orario e l'account amministratore."
+  },
+  "index": {
+    "title": "Documentazione",
+    "description": "Un pannello di controllo completo e self-hosted per itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrazioni",
+    "description": "Ogni server ha le sue integrazioni nel gruppo Impostazioni: Discord, una Pagina di Stato pubblica, Inviti in un clic e la scheda opzionale Chatbot (solo amministratori)."
+  },
+  "modpacks": {
+    "title": "Modpack",
+    "description": "Installa modpack CurseForge, Modrinth, FTB e GT New Horizons come server, sempre bloccati a una versione esatta del pacchetto."
+  },
+  "public-api": {
+    "title": "API Pubblica",
+    "description": "Una piccola API HTTP di sola lettura per recuperare lo stato del server dall'esterno del pannello: una dashboard di stato, un monitor di uptime, un bot Discord, una regola di automazione domestica."
+  },
+  "schedules": {
+    "title": "Pianificazioni",
+    "description": "La pagina Pianificazioni automatizza le attività ricorrenti con espressioni cron. Nessun cron esterno, nessun script."
+  },
+  "servers": {
+    "title": "Creazione e gestione dei server",
+    "description": "Crea, avvia, arresta, ricrea e configura server Minecraft nel pannello: la procedura guidata di creazione, le impostazioni, la memoria e la porta di gioco."
+  },
+  "storage": {
+    "title": "Archiviazione",
+    "description": "Visualizza dove viene utilizzato lo spazio su disco, imposta un limite di quota disco per ogni cartella del server e pulisci ciò che non ti serve più."
+  },
+  "two-factor-authentication": {
+    "title": "Autenticazione a due fattori",
+    "description": "L'autenticazione a due fattori (2FA) aggiunge un secondo passaggio all'accesso: dopo la password, inserisci un breve codice da un'app di autenticazione sul tuo telefono."
+  },
+  "updates": {
+    "title": "Aggiornamenti",
+    "description": "Tieni traccia e applica aggiornamenti a versioni di Minecraft, modpack, mod e plugin su ogni server, con una policy per server."
+  },
+  "users-and-roles": {
+    "title": "Utenti e ruoli",
+    "description": "Account, i ruoli di amministratore, operatore e visualizzatore, e permessi per server in Minecraft Server Manager."
+  },
+  "world-shrink": {
+    "title": "Rimpicciolire un mondo",
+    "description": "Rimpicciolisci un mondo di Minecraft eliminando i chunk visitati raramente, per recuperare spazio su disco e velocizzare i backup."
+  },
+  "worlds-and-files": {
+    "title": "Mondi e file",
+    "description": "La libreria dei mondi, caricamenti e scambi di mondi, la scheda mod e plugin e il file manager nel browser."
+  },
+  "guide-backups": {
+    "title": "Backup del server Minecraft che funzionano davvero",
+    "description": "Come creare backup del server Minecraft che funzionano davvero: copie consistenti, conservate altrove e testate almeno una volta."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: quale scegliere?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge o Quilt: quale tipo di server Minecraft eseguire, in base a ciò che i tuoi giocatori installano."
+  },
+  "guide-moving-a-server": {
+    "title": "Spostare un server Minecraft su un altro host",
+    "description": "Spostare un mondo è facile. Spostare un server a cui i giocatori possono ancora accedere, con i loro inventari, case e permessi intatti, è la parte che va storta."
+  },
+  "guide-server-memory": {
+    "title": "Quanta RAM necessita un server Minecraft?",
+    "description": "Quanta RAM necessita un server Minecraft per vanilla, Paper, mod leggere e modpack pesanti, e quanta lasciarne per la macchina."
+  },
+  "guide-server-wont-start": {
+    "title": "Il tuo server Minecraft non si avvia",
+    "description": "Un server Minecraft che non si avvia, risolto in ordine di probabilità: il log, la versione Java, la memoria, l'EULA e la porta, e le mod."
+  },
+  "invites-and-status-page": {
+    "title": "Inviti e pagina di stato",
+    "description": "Invita amici a un server con l'indirizzo, la versione e un modpack client, e condividi una pagina di stato pubblica che mostra solo ciò che scegli."
+  },
+  "live-map": {
+    "title": "Mappa live",
+    "description": "Attiva una mappa 3D live di BlueMap del mondo di un server con un clic, servita solo tramite l'accesso al pannello."
+  }
+}

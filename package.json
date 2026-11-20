@@ -40,7 +40,13 @@
     "seed:players": "node scripts/seed-players.js",
     "contributors": "node scripts/contributors-svg.js",
     "test:deploy": "docker run --rm -v \"$PWD:/repo\" -w /repo ubuntu:24.04 bash test/deploy/install-scenarios.sh",
-    "test:deploy:real": "bash test/deploy/e2e-real.sh"
+    "test:deploy:real": "bash test/deploy/e2e-real.sh",
+    "site:dev": "pnpm --filter minecraft-server-manager-website run dev",
+    "site:build": "pnpm --filter minecraft-server-manager-website run build",
+    "site:check": "pnpm --filter minecraft-server-manager-website run check",
+    "site:verify": "pnpm --filter minecraft-server-manager-website run verify",
+    "site:preview": "pnpm --filter minecraft-server-manager-website run preview",
+    "site:translate": "pnpm --filter minecraft-server-manager-website run translate"
   },
   "dependencies": {
     "archiver": "^7.0.1",

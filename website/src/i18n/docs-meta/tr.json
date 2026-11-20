@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "Etkinlik günlüğü",
+    "description": "Etkinlik sayfası tam denetim izidir: panelde olan her şeyin aranabilir, kronolojik kaydı."
+  },
+  "architecture": {
+    "title": "Mimari",
+    "description": "Minecraft Server Manager, tek süreçli, sunucu taraflı oluşturulan bir Node.js uygulamasıdır."
+  },
+  "backups": {
+    "title": "Yedeklemeler",
+    "description": "Yedeklemeler sayfası, sunucuya ve nedene göre filtrelenebilen, boyut, neden ve yaş bilgilerini içeren, filonuzdaki her anlık görüntüyü gösterir."
+  },
+  "blueprints": {
+    "title": "Şablonlar",
+    "description": "Şablonlar, yeni sunucular oluşturmak için yeniden kullanılabilir bir tarif olarak Minecraft sunucusunun tüm yapılandırmasını kaydeder. Sırlar asla dahil edilmez."
+  },
+  "chatbot": {
+    "title": "Sunucu başına Minecraft sohbet botu",
+    "description": "Panel, sunucunun Ayarlar → Sohbet Botu sekmesinde yapılandırılan, yönetilen her Minecraft sunucusu için yönetici tarafından yapılandırılmış bir sohbet botu sunar."
+  },
+  "console-and-chat": {
+    "title": "Konsol ve sohbet komutları",
+    "description": "Konsol sekmesi, sunucu günlüğünü gerçek zamanlı olarak yayınlar ve herhangi bir sunucu komutunu göndermeniz için bir komut kutusu sağlar."
+  },
+  "dashboard": {
+    "title": "Gösterge Paneli",
+    "description": "Gösterge paneli sizin ana üssünüzdür: her sunucu, canlı durumu ve neler olup bittiğine dair güncel bir akış."
+  },
+  "getting-started": {
+    "title": "Başlangıç",
+    "description": "Minecraft Server Manager'ı kurun ve ilk çalıştırma ayarlarını tamamlayın: sistem kontrolü, saat diliminiz ve yönetici hesabı."
+  },
+  "index": {
+    "title": "Belgeler",
+    "description": "itzg/docker-minecraft-server için eksiksiz, kendi kendine barındırılan kontrol paneli."
+  },
+  "integrations": {
+    "title": "Entegrasyonlar",
+    "description": "Her sunucu, Ayarlar grubu altında entegrasyonlarını barındırır: Discord, herkese açık bir Durum Sayfası, tek tıklamayla Davetler ve isteğe bağlı Sohbet Botu sekmesi (yalnızca yöneticiler için)."
+  },
+  "modpacks": {
+    "title": "Mod Paketleri",
+    "description": "CurseForge, Modrinth, FTB ve GT New Horizons mod paketlerini sunucular olarak kurun, her zaman tam bir paket sürümüne sabitlenmiş."
+  },
+  "public-api": {
+    "title": "Genel API",
+    "description": "Panel dışından sunucu durumunu almak için küçük, salt okunur bir HTTP API'si: durum panosu, çalışma süresi izleyicisi, Discord botu, ev otomasyonu kuralı."
+  },
+  "schedules": {
+    "title": "Zamanlamalar",
+    "description": "Zamanlamalar sayfası, cron ifadeleriyle tekrarlanan görevleri otomatikleştirir. Harici cron veya betik gerekmez."
+  },
+  "servers": {
+    "title": "Sunucu Oluşturma ve Yönetme",
+    "description": "Panelde Minecraft sunucuları oluşturun, başlatın, durdurun, yeniden oluşturun ve yapılandırın: oluşturma sihirbazı, ayarlar, bellek ve oyun portu."
+  },
+  "storage": {
+    "title": "Depolama",
+    "description": "Disk alanının nereye gittiğini görün, her sunucu klasörünü bir disk kotasıyla sınırlayın ve artık ihtiyacınız olmayanları temizleyin."
+  },
+  "two-factor-authentication": {
+    "title": "İki faktörlü kimlik doğrulama",
+    "description": "İki faktörlü kimlik doğrulama (2FA), oturum açmaya ikinci bir adım ekler: parolanızdan sonra telefonunuzdaki bir kimlik doğrulama uygulamasından kısa bir kod girersiniz."
+  },
+  "updates": {
+    "title": "Güncellemeler",
+    "description": "Her sunucudaki Minecraft sürümleri, mod paketleri, modlar ve eklentiler için güncellemeleri izleyin ve uygulayın; sunucu başına bir ilke ile."
+  },
+  "users-and-roles": {
+    "title": "Kullanıcılar ve roller",
+    "description": "Minecraft Server Manager'daki hesaplar, yönetici, operatör ve görüntüleyici rolleri ve sunucu başına izinler."
+  },
+  "world-shrink": {
+    "title": "Bir dünyayı küçültme",
+    "description": "Nadiren ziyaret edilen parçaları silerek bir Minecraft dünyasını küçültün, disk alanını geri kazanın ve yedeklemeleri hızlandırın."
+  },
+  "worlds-and-files": {
+    "title": "Dünyalar & dosyalar",
+    "description": "Dünya kütüphanesi, dünya yüklemeleri ve değişimleri, modlar ve eklentiler sekmesi ve tarayıcı içi dosya yöneticisi."
+  },
+  "guide-backups": {
+    "title": "Gerçekten geri yüklenebilen Minecraft sunucu yedeklemeleri",
+    "description": "Gerçekten geri yüklenebilen Minecraft sunucu yedeklemeleri nasıl yapılır: tutarlı kopyalar, başka bir yerde saklanan ve en az bir kez test edilen yedeklemeler."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: hangisi?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge veya Quilt: hangi Minecraft sunucu türünü çalıştırmalı, oyuncularınızın ne yüklediğine göre seçilir."
+  },
+  "guide-moving-a-server": {
+    "title": "Bir Minecraft sunucusunu başka bir barındırma ortamına taşıma",
+    "description": "Bir dünyayı taşımak kolaydır. Oyuncuların hala giriş yapabildiği, envanterleri, evleri ve izinleri bozulmadan kalan bir sunucuyu taşımak ise işlerin ters gittiği kısımdır."
+  },
+  "guide-server-memory": {
+    "title": "Bir Minecraft sunucusu ne kadar RAM'e ihtiyaç duyar?",
+    "description": "Vanilla, Paper, hafif modlar ve büyük mod paketleri için bir Minecraft sunucusunun ne kadar RAM'e ihtiyacı olduğu ve makine için ne kadar bırakılması gerektiği."
+  },
+  "guide-server-wont-start": {
+    "title": "Minecraft sunucunuz başlamıyor",
+    "description": "Başlamayan bir Minecraft sunucusunu en olası sıralamaya göre düzeltin: günlük dosyası, Java sürümü, bellek, EULA ve port, ve modlar."
+  },
+  "invites-and-status-page": {
+    "title": "Davetler ve Durum Sayfası",
+    "description": "Arkadaşlarınızı sunucu adresi, sürümü ve bir istemci mod paketi ile sunucuya davet edin ve yalnızca sizin seçtiğiniz bilgileri gösteren herkese açık bir durum sayfası paylaşın."
+  },
+  "live-map": {
+    "title": "Canlı harita",
+    "description": "Sunucunun dünyasının BlueMap canlı 3B haritasını tek tıkla etkinleştirin, yalnızca panelin oturum açma işlemi aracılığıyla sunulur."
+  }
+}

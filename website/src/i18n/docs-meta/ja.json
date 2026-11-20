@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "アクティビティログ",
+    "description": "アクティビティページは完全な監査証跡です。パネルで発生したすべての出来事を検索可能な時系列で記録します。"
+  },
+  "architecture": {
+    "title": "アーキテクチャ",
+    "description": "Minecraft Server Manager は、シングルプロセスでサーバーサイドレンダリングされる Node.js アプリケーションです。"
+  },
+  "backups": {
+    "title": "バックアップ",
+    "description": "バックアップページには、サーバーと理由でフィルタリング可能な、フリート全体のすべてのスナップショットが、サイズ、理由、経過時間とともに表示されます。"
+  },
+  "blueprints": {
+    "title": "ブループリント",
+    "description": "ブループリントは、Minecraftサーバーの構成全体を再利用可能なレシピとして保存し、新しいサーバーの作成に利用できます。シークレットは含まれません。"
+  },
+  "chatbot": {
+    "title": "サーバーごとのMinecraftチャットボット",
+    "description": "このパネルは、管理対象の各Minecraftサーバーに、サーバーの「設定」→「チャットボット」タブで設定できる、管理者設定済みのチャットボットを提供します。"
+  },
+  "console-and-chat": {
+    "title": "コンソールとチャットコマンド",
+    "description": "コンソールタブはサーバーログをリアルタイムでストリーミングし、任意のサーバーコマンドを送信するためのコマンドボックスを提供します。"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "description": "ダッシュボードはあなたのホームベースです。すべてのサーバー、そのライブステータス、そして何が起こっているかのライブフィードが表示されます。"
+  },
+  "getting-started": {
+    "title": "はじめに",
+    "description": "Minecraft Server Manager をインストールし、初回セットアップ（システムチェック、タイムゾーン、管理者アカウントの設定）を完了します。"
+  },
+  "index": {
+    "title": "ドキュメント",
+    "description": "itzg/docker-minecraft-server 用の完全なセルフホスト型コントロールパネル。"
+  },
+  "integrations": {
+    "title": "連携機能",
+    "description": "各サーバーの連携機能は、設定グループの下にまとめられています。Discord、公開ステータスページ、ワンクリック招待、そしてオプションのチャットボットタブ（管理者のみ）が含まれます。"
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "CurseForge、Modrinth、FTB、GT New HorizonsのModpackをサーバーとしてインストールし、常に正確なパックバージョンに固定します。"
+  },
+  "public-api": {
+    "title": "公開API",
+    "description": "パネル外からサーバーのステータスを取得するための、小さくて読み取り専用のHTTP APIです。ステータスダッシュボード、アップタイムモニター、Discordボット、ホームオートメーションルールなどに利用できます。"
+  },
+  "schedules": {
+    "title": "スケジュール",
+    "description": "スケジュールページは、cron式を使用して定期的なタスクを自動化します。外部のcronやスクリプトは不要です。"
+  },
+  "servers": {
+    "title": "サーバーの作成と管理",
+    "description": "パネル内でMinecraftサーバーを作成、起動、停止、再構築、設定します。作成ウィザード、設定、メモリ、ゲームポートなど。"
+  },
+  "storage": {
+    "title": "ストレージ",
+    "description": "ディスク容量の使用状況を確認し、各サーバーフォルダにディスククォータを設定して、不要なものをクリーンアップできます。"
+  },
+  "two-factor-authentication": {
+    "title": "二要素認証",
+    "description": "二要素認証（2FA）は、サインインに2番目のステップを追加します。パスワードの入力後、スマートフォン上の認証アプリから取得した短いコードを入力します。"
+  },
+  "updates": {
+    "title": "アップデート",
+    "description": "サーバーごとのポリシーに基づき、すべてのサーバーにわたるMinecraftバージョン、モッドパック、モッド、プラグインのアップデートを追跡し適用します。"
+  },
+  "users-and-roles": {
+    "title": "ユーザーとロール",
+    "description": "Minecraft Server Manager のアカウント、管理者、オペレーター、ビューアーのロール、およびサーバーごとの権限。"
+  },
+  "world-shrink": {
+    "title": "ワールドの縮小",
+    "description": "あまり訪問されないチャンクを削除してMinecraftワールドを縮小し、ディスク容量を回復してバックアップを高速化します。"
+  },
+  "worlds-and-files": {
+    "title": "ワールドとファイル",
+    "description": "ワールドライブラリ、ワールドのアップロードと切り替え、MODとプラグインのタブ、ブラウザ内ファイルマネージャー。"
+  },
+  "guide-backups": {
+    "title": "Minecraftサーバーのバックアップを確実に復元する",
+    "description": "Minecraftサーバーのバックアップを確実に復元する方法：整合性の取れたコピーを作成し、別の場所に保管し、少なくとも一度はテストすること。"
+  },
+  "guide-choosing-a-loader": {
+    "title": "バニラ、Paper、Fabric、Forge、NeoForge、Quilt：どれを選ぶ？",
+    "description": "バニラ、Paper、Fabric、Forge、NeoForge、Quilt：プレイヤーが導入するものによって選ぶべきMinecraftサーバーの種類。"
+  },
+  "guide-moving-a-server": {
+    "title": "Minecraftサーバーを別のホストに移行する",
+    "description": "ワールドの移行は簡単です。しかし、プレイヤーがインベントリ、ホーム、権限をそのままにログインできるサーバーの移行は、うまくいかないことが多い部分です。"
+  },
+  "guide-server-memory": {
+    "title": "MinecraftサーバーにはどれくらいのRAMが必要ですか？",
+    "description": "バニラ、Paper、軽量MOD、大規模MODパックに必要なRAMの量と、マシン用に確保すべきRAMの量について説明します。"
+  },
+  "guide-server-wont-start": {
+    "title": "Minecraftサーバーが起動しない",
+    "description": "Minecraftサーバーが起動しない問題を、可能性の高い順に解決します：ログ、Javaバージョン、メモリ、EULAとポート、そしてMOD。"
+  },
+  "invites-and-status-page": {
+    "title": "招待とステータスページ",
+    "description": "サーバーのアドレス、バージョン、クライアントのmodパックと共に友達を招待し、選択した情報のみを表示する公開ステータスページを共有できます。"
+  },
+  "live-map": {
+    "title": "ライブマップ",
+    "description": "サーバーの世界のBlueMapライブ3Dマップをワンクリックで有効化。パネルへのサインインを通じてのみ提供されます。"
+  }
+}

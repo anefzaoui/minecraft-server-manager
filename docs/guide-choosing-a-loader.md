@@ -1,5 +1,7 @@
 # Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: which one?
 
+<!-- description: Vanilla, Paper, Fabric, Forge, NeoForge or Quilt: which Minecraft server type to run, chosen by what your players install. -->
+
 [← Back to docs index](README.md)
 
 Pick by what you want players to install, not by what sounds fastest.

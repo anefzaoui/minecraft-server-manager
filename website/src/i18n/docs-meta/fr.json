@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "Journal d'activité",
+    "description": "La page d'activité est la piste d'audit complète : un enregistrement chronologique et consultable de tout ce qui s'est passé dans le panneau."
+  },
+  "architecture": {
+    "title": "Architecture",
+    "description": "Minecraft Server Manager est une application Node.js mono-processus, rendue côté serveur."
+  },
+  "backups": {
+    "title": "Sauvegardes",
+    "description": "La page Sauvegardes affiche chaque instantané de votre parc, avec sa taille, sa raison et son ancienneté, filtrable par serveur et par raison."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Les Blueprints sauvegardent la configuration complète d'un serveur Minecraft comme une recette réutilisable pour créer de nouveaux serveurs. Les secrets ne sont jamais inclus."
+  },
+  "chatbot": {
+    "title": "Chatbot Minecraft par serveur",
+    "description": "Le panneau propose un chatbot configuré par l'administrateur pour chaque serveur Minecraft géré, mis en place dans l'onglet Paramètres → Chatbot du serveur."
+  },
+  "console-and-chat": {
+    "title": "Console et commandes de chat",
+    "description": "L'onglet Console diffuse le journal du serveur en temps réel et vous fournit une boîte de commande pour envoyer n'importe quelle commande du serveur."
+  },
+  "dashboard": {
+    "title": "Le tableau de bord",
+    "description": "Le tableau de bord est votre base : chaque serveur, son état en direct et un flux continu de ce qui s'est passé."
+  },
+  "getting-started": {
+    "title": "Premiers pas",
+    "description": "Installez Minecraft Server Manager et terminez la configuration initiale : la vérification du système, votre fuseau horaire et le compte administrateur."
+  },
+  "index": {
+    "title": "Documentation",
+    "description": "Un panneau de contrôle complet et auto-hébergé pour itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Intégrations",
+    "description": "Chaque serveur possède ses intégrations dans le groupe Paramètres : Discord, une Page de Statut publique, des Invitations en un clic, et l'onglet optionnel Chatbot (réservé aux administrateurs)."
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "Installez des modpacks CurseForge, Modrinth, FTB et GT New Horizons en tant que serveurs, toujours épinglés à une version exacte du pack."
+  },
+  "public-api": {
+    "title": "API publique",
+    "description": "Une petite API HTTP en lecture seule pour récupérer l'état du serveur depuis l'extérieur du panneau : un tableau de bord de statut, un moniteur de disponibilité, un bot Discord, une règle d'automatisation domestique."
+  },
+  "schedules": {
+    "title": "Planifications",
+    "description": "La page Planifications automatise les tâches récurrentes avec des expressions cron. Pas de cron externe, pas de scripts."
+  },
+  "servers": {
+    "title": "Création et gestion de serveurs",
+    "description": "Créez, démarrez, arrêtez, reconstruisez et configurez des serveurs Minecraft dans le panneau : l'assistant de création, les paramètres, la mémoire et le port du jeu."
+  },
+  "storage": {
+    "title": "Stockage",
+    "description": "Voyez où va l'espace disque, limitez chaque dossier de serveur avec une quota disque, et nettoyez ce dont vous n'avez plus besoin."
+  },
+  "two-factor-authentication": {
+    "title": "Authentification à deux facteurs",
+    "description": "L'authentification à deux facteurs (2FA) ajoute une deuxième étape à la connexion : après votre mot de passe, vous saisissez un court code provenant d'une application d'authentification sur votre téléphone."
+  },
+  "updates": {
+    "title": "Mises à jour",
+    "description": "Suivez et appliquez les mises à jour des versions de Minecraft, des modpacks, des mods et des plugins sur chaque serveur, avec une politique par serveur."
+  },
+  "users-and-roles": {
+    "title": "Utilisateurs et rôles",
+    "description": "Comptes, les rôles administrateur, opérateur et spectateur, et permissions par serveur dans Minecraft Server Manager."
+  },
+  "world-shrink": {
+    "title": "Réduire la taille d'un monde",
+    "description": "Réduisez la taille d'un monde Minecraft en supprimant les chunks rarement visités, afin de récupérer de l'espace disque et d'accélérer les sauvegardes."
+  },
+  "worlds-and-files": {
+    "title": "Mondes et fichiers",
+    "description": "La bibliothèque de mondes, les téléchargements et échanges de mondes, l'onglet mods et plugins, et le gestionnaire de fichiers dans le navigateur."
+  },
+  "guide-backups": {
+    "title": "Sauvegardes de serveur Minecraft qui se restaurent réellement",
+    "description": "Comment réaliser des sauvegardes de serveur Minecraft qui se restaurent réellement : copies cohérentes, conservées ailleurs et testées au moins une fois."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt : lequel choisir ?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge ou Quilt : quel type de serveur Minecraft exécuter, en fonction de ce que vos joueurs installent."
+  },
+  "guide-moving-a-server": {
+    "title": "Déplacer un serveur Minecraft vers un autre hôte",
+    "description": "Déplacer un monde est facile. Déplacer un serveur auquel les joueurs peuvent toujours se connecter, avec leurs inventaires, leurs maisons et leurs permissions intacts, est la partie qui pose problème."
+  },
+  "guide-server-memory": {
+    "title": "Quelle quantité de RAM un serveur Minecraft nécessite-t-il ?",
+    "description": "Quelle quantité de RAM un serveur Minecraft nécessite pour du vanilla, Paper, des mods légers et de gros modpacks, et quelle quantité laisser pour la machine."
+  },
+  "guide-server-wont-start": {
+    "title": "Votre serveur Minecraft ne démarre pas",
+    "description": "Un serveur Minecraft qui ne démarre pas, résolu par ordre de probabilité : le journal, la version Java, la mémoire, l'EULA et le port, et les mods."
+  },
+  "invites-and-status-page": {
+    "title": "Invitations et page de statut",
+    "description": "Invitez des amis sur un serveur avec l'adresse, la version et un modpack client, et partagez une page de statut publique qui affiche uniquement ce que vous choisissez."
+  },
+  "live-map": {
+    "title": "Carte en direct",
+    "description": "Activez une carte 3D en direct BlueMap du monde d'un serveur en un clic, servie uniquement via la connexion du panneau."
+  }
+}

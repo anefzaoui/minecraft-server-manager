@@ -1,0 +1,52 @@
+---
+import Site from '../../layouts/Site.astro';
+import Section from '../../components/Section.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { localePaths, localeFromParams } from '../../lib/paths.js';
+import { getCopy } from '../../i18n/index.js';
+import { REPO_URL } from '../../lib/routes.js';
+import { Content as Changelog } from '../../generated/changelog.md';
+
+export function getStaticPaths() {
+  return localePaths();
+}
+const locale = localeFromParams(Astro.params);
+const copy = getCopy(locale);
+---
+
+<Site locale={locale} path="/changelog/" pageKey="changelog">
+  <PageHeader title={copy.changelog.title} intro={copy.changelog.intro} />
+  <Section>
+    <p class="flex flex-wrap gap-4">
+      <a class="btn" href={`${REPO_URL}/releases`} rel="noopener">{copy.changelog.releases}</a>
+      <a class="btn" href="/changelog.xml" type="application/atom+xml">{copy.changelog.feed}</a>
+    </p>
+    <article class="changelog prose-soft mt-8 max-w-3xl" lang="en" dir="ltr">
+      <Changelog />
+    </article>
+  </Section>
+</Site>
+
+<style is:global>
+  .changelog h2 {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 3px solid var(--color-outline);
+    color: var(--color-ink);
+  }
+  .changelog h3 {
+    margin-top: 1.25rem;
+    color: var(--color-ink);
+  }
+  .changelog p,
+  .changelog ul {
+    margin-top: 0.75rem;
+  }
+  .changelog ul {
+    list-style: square;
+    padding-inline-start: 1.5rem;
+  }
+  .changelog li + li {
+    margin-top: 0.4rem;
+  }
+</style>

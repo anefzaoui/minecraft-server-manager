@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "활동 기록",
+    "description": "활동 페이지는 전체 감사 추적으로, 패널에서 발생한 모든 일에 대한 검색 가능하고 연대순 기록입니다."
+  },
+  "architecture": {
+    "title": "아키텍처",
+    "description": "Minecraft Server Manager는 단일 프로세스, 서버 렌더링 Node.js 애플리케이션입니다."
+  },
+  "backups": {
+    "title": "백업",
+    "description": "백업 페이지에서는 서버별, 이유별로 필터링 가능한 모든 스냅샷을 크기, 이유, 생성 시점과 함께 확인할 수 있습니다."
+  },
+  "blueprints": {
+    "title": "블루프린트",
+    "description": "블루프린트는 Minecraft 서버의 전체 구성을 재사용 가능한 레시피로 저장하여 새 서버를 쉽게 만들 수 있게 합니다. 비밀 정보는 포함되지 않습니다."
+  },
+  "chatbot": {
+    "title": "서버별 Minecraft 챗봇",
+    "description": "이 패널은 관리되는 각 Minecraft 서버에 대해 관리자가 구성한 챗봇을 제공하며, 서버 설정 → 챗봇 탭에서 설정할 수 있습니다."
+  },
+  "console-and-chat": {
+    "title": "콘솔 및 채팅 명령",
+    "description": "콘솔 탭은 서버 로그를 실시간으로 스트리밍하고 모든 서버 명령을 보낼 수 있는 명령 상자를 제공합니다."
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "description": "대시보드는 여러분의 홈베이스입니다. 모든 서버, 실시간 상태, 그리고 발생한 이벤트 피드를 확인할 수 있습니다."
+  },
+  "getting-started": {
+    "title": "시작하기",
+    "description": "Minecraft Server Manager를 설치하고 첫 실행 설정(시스템 확인, 시간대, 관리자 계정)을 완료하세요."
+  },
+  "index": {
+    "title": "문서",
+    "description": "itzg/docker-minecraft-server를 위한 완전한 자체 호스팅 제어판입니다."
+  },
+  "integrations": {
+    "title": "통합 기능",
+    "description": "각 서버는 설정 그룹 아래에 Discord, 공개 상태 페이지, 원클릭 초대 기능 및 선택적 챗봇 탭(관리자 전용)과 같은 통합 기능을 가집니다."
+  },
+  "modpacks": {
+    "title": "모드팩",
+    "description": "CurseForge, Modrinth, FTB 및 GT New Horizons 모드팩을 서버로 설치하고 항상 정확한 팩 버전에 고정합니다."
+  },
+  "public-api": {
+    "title": "Public API",
+    "description": "패널 외부에서 서버 상태를 가져오기 위한 작고 읽기 전용 HTTP API: 상태 대시보드, 가동 시간 모니터, Discord 봇, 홈 자동화 규칙에 사용됩니다."
+  },
+  "schedules": {
+    "title": "예약",
+    "description": "예약 페이지는 cron 표현식을 사용하여 반복 작업을 자동화합니다. 외부 cron이나 스크립트가 필요 없습니다."
+  },
+  "servers": {
+    "title": "서버 생성 및 관리",
+    "description": "패널에서 Minecraft 서버를 생성, 시작, 중지, 재빌드 및 구성하세요: 생성 마법사, 설정, 메모리 및 게임 포트."
+  },
+  "storage": {
+    "title": "저장소",
+    "description": "디스크 공간 사용량을 확인하고, 각 서버 폴더에 디스크 할당량을 설정하고, 더 이상 필요하지 않은 파일을 정리하세요."
+  },
+  "two-factor-authentication": {
+    "title": "2단계 인증",
+    "description": "2단계 인증(2FA)은 로그인 시 비밀번호 입력 후 휴대전화의 인증 앱에서 생성된 짧은 코드를 입력하는 두 번째 단계를 추가합니다."
+  },
+  "updates": {
+    "title": "업데이트",
+    "description": "서버별 정책을 통해 모든 서버의 Minecraft 버전, 모드팩, 모드 및 플러그인 업데이트를 추적하고 적용합니다."
+  },
+  "users-and-roles": {
+    "title": "사용자 및 역할",
+    "description": "Minecraft Server Manager의 계정, 관리자, 운영자 및 뷰어 역할, 서버별 권한입니다."
+  },
+  "world-shrink": {
+    "title": "월드 크기 줄이기",
+    "description": "자주 방문하지 않는 청크를 삭제하여 Minecraft 월드 크기를 줄이고 디스크 공간을 확보하며 백업 속도를 높입니다."
+  },
+  "worlds-and-files": {
+    "title": "월드 및 파일",
+    "description": "월드 라이브러리, 월드 업로드 및 교체, 모드 및 플러그인 탭, 브라우저 내 파일 관리자입니다."
+  },
+  "guide-backups": {
+    "title": "실제로 복원되는 마인크래프트 서버 백업",
+    "description": "실제로 복원되는 마인크래프트 서버 백업을 만드는 방법: 일관된 복사본을 다른 곳에 보관하고 최소 한 번 테스트하세요."
+  },
+  "guide-choosing-a-loader": {
+    "title": "바닐라, 페이퍼, 패브릭, 포지, 네오포지, 퀼트: 어떤 것을 선택해야 할까요?",
+    "description": "바닐라, 페이퍼, 패브릭, 포지, 네오포지 또는 퀼트: 플레이어가 설치한 것을 기준으로 어떤 종류의 마인크래프트 서버를 실행해야 할까요."
+  },
+  "guide-moving-a-server": {
+    "title": "Minecraft 서버를 다른 호스트로 이전하기",
+    "description": "월드를 이전하는 것은 쉽습니다. 플레이어가 인벤토리, 집, 권한을 그대로 유지한 채 계속 로그인할 수 있는 서버를 이전하는 것은 문제가 발생하는 부분입니다."
+  },
+  "guide-server-memory": {
+    "title": "마인크래프트 서버에 필요한 RAM 용량은 얼마인가요?",
+    "description": "바닐라, Paper, 경량 모드 및 대형 모드팩에 필요한 RAM 용량과 시스템에 남겨둘 용량에 대해 설명합니다."
+  },
+  "guide-server-wont-start": {
+    "title": "Minecraft 서버가 시작되지 않음",
+    "description": "Minecraft 서버가 시작되지 않는 문제를 해결하는 방법: 로그, Java 버전, 메모리, EULA 및 포트, 모드 순서로 확인합니다."
+  },
+  "invites-and-status-page": {
+    "title": "초대 및 상태 페이지",
+    "description": "서버 주소, 버전 및 클라이언트 모드팩과 함께 친구를 초대하고, 원하는 정보만 표시하는 공개 상태 페이지를 공유하세요."
+  },
+  "live-map": {
+    "title": "실시간 지도",
+    "description": "서버 월드의 BlueMap 실시간 3D 지도를 클릭 한 번으로 활성화하고, 패널 로그인으로만 제공됩니다."
+  }
+}

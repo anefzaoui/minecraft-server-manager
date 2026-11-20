@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "Aktivitätsprotokoll",
+    "description": "Die Aktivitätsseite ist der vollständige Audit-Trail: ein durchsuchbarer, chronologischer Verlauf aller Ereignisse im Panel."
+  },
+  "architecture": {
+    "title": "Architektur",
+    "description": "Minecraft Server Manager ist eine Single-Process, serverseitig gerenderte Node.js-Anwendung."
+  },
+  "backups": {
+    "title": "Backups",
+    "description": "Die Seite „Backups“ zeigt jeden Schnappschuss Ihrer gesamten Flotte an, mit Größe, Grund und Alter, filterbar nach Server und Grund."
+  },
+  "blueprints": {
+    "title": "Blueprints",
+    "description": "Blueprints speichern die gesamte Konfiguration eines Minecraft-Servers als wiederverwendbare Vorlage für die Erstellung neuer Server. Geheimnisse werden niemals einbezogen."
+  },
+  "chatbot": {
+    "title": "Minecraft-Chatbot pro Server",
+    "description": "Das Panel bietet einen vom Administrator konfigurierten Chatbot für jeden verwalteten Minecraft-Server, der auf dem Tab Einstellungen → Chatbot des Servers eingerichtet wird."
+  },
+  "console-and-chat": {
+    "title": "Konsole & Chat-Befehle",
+    "description": "Der Reiter \"Konsole\" streamt das Serverprotokoll in Echtzeit und bietet eine Befehlszeile, um beliebige Serverbefehle zu senden."
+  },
+  "dashboard": {
+    "title": "Das Dashboard",
+    "description": "Das Dashboard ist deine Basis: jeder Server, sein Live-Status und ein laufender Feed dessen, was passiert ist."
+  },
+  "getting-started": {
+    "title": "Erste Schritte",
+    "description": "Installieren Sie Minecraft Server Manager und schließen Sie die Ersteinrichtung ab: Systemprüfung, Ihre Zeitzone und das Administratorkonto."
+  },
+  "index": {
+    "title": "Dokumentation",
+    "description": "Ein vollständiges, selbst gehostetes Control Panel für itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integrationen",
+    "description": "Jeder Server hat seine Integrationen unter der Gruppe Einstellungen: Discord, eine öffentliche Statusseite, Einladungen mit einem Klick und der optionale Chatbot-Tab (nur für Admins)."
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "Installiere CurseForge-, Modrinth-, FTB- und GT New Horizons-Modpacks als Server, immer angeheftet an eine exakte Pack-Version."
+  },
+  "public-api": {
+    "title": "Öffentliche API",
+    "description": "Eine kleine, schreibgeschützte HTTP-API zum Abrufen des Serverstatus von außerhalb des Panels: ein Status-Dashboard, ein Uptime-Monitor, ein Discord-Bot, eine Home-Automation-Regel."
+  },
+  "schedules": {
+    "title": "Zeitpläne",
+    "description": "Die Seite Zeitpläne automatisiert wiederkehrende Aufgaben mit Cron-Ausdrücken. Kein externer Cron, keine Skripte."
+  },
+  "servers": {
+    "title": "Server erstellen & verwalten",
+    "description": "Erstellen, starten, stoppen, neu erstellen und konfigurieren Sie Minecraft-Server im Panel: der Erstellungsassistent, Einstellungen, Arbeitsspeicher und der Spiel-Port."
+  },
+  "storage": {
+    "title": "Speicher",
+    "description": "Sehen Sie, wohin der Speicherplatz fließt, begrenzen Sie jeden Serverordner mit einer Festplattenquote und bereinigen Sie, was Sie nicht mehr benötigen."
+  },
+  "two-factor-authentication": {
+    "title": "Zwei-Faktor-Authentifizierung",
+    "description": "Die Zwei-Faktor-Authentifizierung (2FA) fügt einen zweiten Schritt zur Anmeldung hinzu: Nach Ihrem Passwort geben Sie einen kurzen Code von einer Authentifizierungs-App auf Ihrem Telefon ein."
+  },
+  "updates": {
+    "title": "Updates",
+    "description": "Verfolgen und installieren Sie Updates für Minecraft-Versionen, Modpacks, Mods und Plugins für jeden Server, mit einer Richtlinie pro Server."
+  },
+  "users-and-roles": {
+    "title": "Benutzer & Rollen",
+    "description": "Konten, die Rollen Administrator, Operator und Betrachter sowie serverseitige Berechtigungen in Minecraft Server Manager."
+  },
+  "world-shrink": {
+    "title": "Eine Welt verkleinern",
+    "description": "Verkleinern Sie eine Minecraft-Welt, indem Sie selten besuchte Chunks löschen, um Speicherplatz zurückzugewinnen und Backups zu beschleunigen."
+  },
+  "worlds-and-files": {
+    "title": "Welten & Dateien",
+    "description": "Die Weltbibliothek, Welt-Uploads und -Wechsel, der Mods- und Plugins-Tab sowie der In-Browser-Dateimanager."
+  },
+  "guide-backups": {
+    "title": "Minecraft-Server-Backups, die wirklich wiederhergestellt werden können",
+    "description": "So erstellen Sie Minecraft-Server-Backups, die wirklich wiederhergestellt werden können: konsistente Kopien, die woanders aufbewahrt und mindestens einmal getestet werden."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: Welches soll es sein?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge oder Quilt: Welcher Minecraft-Servertyp soll ausgeführt werden, abhängig davon, was deine Spieler installieren."
+  },
+  "guide-moving-a-server": {
+    "title": "Minecraft-Server auf einen anderen Host verschieben",
+    "description": "Eine Welt zu verschieben ist einfach. Einen Server zu verschieben, bei dem sich Spieler noch anmelden können, mit ihren Inventaren, Homes und Berechtigungen intakt, ist der Teil, der schiefgeht."
+  },
+  "guide-server-memory": {
+    "title": "Wie viel RAM benötigt ein Minecraft-Server?",
+    "description": "Wie viel RAM ein Minecraft-Server für Vanilla, Paper, leichte Mods und große Modpacks benötigt und wie viel für die Maschine übrig bleiben sollte."
+  },
+  "guide-server-wont-start": {
+    "title": "Dein Minecraft-Server startet nicht",
+    "description": "Ein Minecraft-Server, der nicht startet, behoben in der Reihenfolge der Wahrscheinlichkeit: das Log, die Java-Version, der Arbeitsspeicher, die EULA und der Port sowie Mods."
+  },
+  "invites-and-status-page": {
+    "title": "Einladungen & Statusseite",
+    "description": "Lade Freunde zu einem Server mit Adresse, Version und einem Client-Modpack ein und teile eine öffentliche Statusseite, die nur das anzeigt, was du möchtest."
+  },
+  "live-map": {
+    "title": "Live-Karte",
+    "description": "Schalte mit einem Klick eine Live-3D-Karte der Spielwelt deines Servers mit BlueMap frei, die nur über die Anmeldemaske des Panels bereitgestellt wird."
+  }
+}

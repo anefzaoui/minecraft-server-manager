@@ -1,0 +1,13 @@
+---
+// Item-tooltip callout: dark box with the purple frame, optional title line.
+interface Props {
+  title?: string;
+  class?: string;
+}
+const { title, class: cls } = Astro.props;
+---
+
+<div class:list={['tip', cls]}>
+  {title && <p class="tip-title">{title}</p>}
+  <div class:list={[title && 'mt-1']}><slot /></div>
+</div>

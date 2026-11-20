@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "Dziennik aktywności",
+    "description": "Strona Aktywność to pełny ślad audytu: przeszukiwalny, chronologiczny zapis wszystkiego, co wydarzyło się w panelu."
+  },
+  "architecture": {
+    "title": "Architektura",
+    "description": "Minecraft Server Manager to aplikacja Node.js renderowana po stronie serwera, działająca w jednym procesie."
+  },
+  "backups": {
+    "title": "Kopie zapasowe",
+    "description": "Strona Kopie zapasowe zawiera migawki ze wszystkich twoich serwerów, wraz z rozmiarem, przyczyną i wiekiem, z możliwością filtrowania według serwera i przyczyny."
+  },
+  "blueprints": {
+    "title": "Schematy",
+    "description": "Schematy zapisują całą konfigurację serwera Minecraft jako wielokrotnego użytku przepis na tworzenie nowych serwerów. Sekrety nigdy nie są uwzględniane."
+  },
+  "chatbot": {
+    "title": "Chatbot dla serwera Minecraft",
+    "description": "Panel oferuje skonfigurowanego przez administratora chatbota dla każdego zarządzanego serwera Minecraft, dostępnego w zakładce Ustawienia → Chatbot serwera."
+  },
+  "console-and-chat": {
+    "title": "Konsola i polecenia czatu",
+    "description": "Zakładka Konsola strumieniuje logi serwera w czasie rzeczywistym i udostępnia pole tekstowe do wysyłania dowolnych poleceń serwera."
+  },
+  "dashboard": {
+    "title": "Panel główny",
+    "description": "Panel główny to Twoja baza wypadowa: każdy serwer, jego status na żywo i bieżący strumień tego, co się dzieje."
+  },
+  "getting-started": {
+    "title": "Pierwsze kroki",
+    "description": "Zainstaluj Minecraft Server Manager i dokończ początkową konfigurację: sprawdzenie systemu, strefa czasowa i konto administratora."
+  },
+  "index": {
+    "title": "Dokumentacja",
+    "description": "Kompletny, samodzielnie hostowany panel sterowania dla itzg/docker-minecraft-server."
+  },
+  "integrations": {
+    "title": "Integracje",
+    "description": "Każdy serwer posiada swoje integracje w grupie Ustawienia: Discord, publiczna Strona Statusu, jednoklikowe Zaproszenia oraz opcjonalna zakładka Chatbot (tylko dla administratorów)."
+  },
+  "modpacks": {
+    "title": "Modpacki",
+    "description": "Instaluj modpacki CurseForge, Modrinth, FTB i GT New Horizons jako serwery, zawsze przypięte do dokładnej wersji paczki."
+  },
+  "public-api": {
+    "title": "Publiczne API",
+    "description": "Niewielkie, tylko do odczytu API HTTP do pobierania statusu serwera z zewnątrz panelu: panel statusu, monitor czasu pracy, bot Discord, reguła automatyki domowej."
+  },
+  "schedules": {
+    "title": "Harmonogramy",
+    "description": "Strona Harmonogramy automatyzuje powtarzalne zadania za pomocą wyrażeń cron. Bez zewnętrznego crona, bez skryptów."
+  },
+  "servers": {
+    "title": "Tworzenie i zarządzanie serwerami",
+    "description": "Twórz, uruchamiaj, zatrzymuj, przebudowuj i konfiguruj serwery Minecraft w panelu: kreator tworzenia, ustawienia, pamięć i port gry."
+  },
+  "storage": {
+    "title": "Przechowywanie",
+    "description": "Zobacz, na co schodzi miejsce na dysku, narzuć limit miejsca na każdy folder serwera za pomocą limitu dyskowego i usuń to, czego już nie potrzebujesz."
+  },
+  "two-factor-authentication": {
+    "title": "Uwierzytelnianie dwuskładnikowe",
+    "description": "Uwierzytelnianie dwuskładnikowe (2FA) dodaje drugi krok podczas logowania: po podaniu hasła wprowadzasz krótki kod z aplikacji uwierzytelniającej na swoim telefonie."
+  },
+  "updates": {
+    "title": "Aktualizacje",
+    "description": "Śledź i stosuj aktualizacje wersji Minecraft, modpacków, modów i wtyczek na każdym serwerze, z polityką dla każdego serwera."
+  },
+  "users-and-roles": {
+    "title": "Użytkownicy i role",
+    "description": "Konta, role administratora, operatora i widza oraz uprawnienia dla poszczególnych serwerów w Minecraft Server Manager."
+  },
+  "world-shrink": {
+    "title": "Zmniejszanie świata",
+    "description": "Zmniejsz świat Minecraft, usuwając rzadko odwiedzane fragmenty, aby odzyskać miejsce na dysku i przyspieszyć tworzenie kopii zapasowych."
+  },
+  "worlds-and-files": {
+    "title": "Światy i pliki",
+    "description": "Biblioteka światów, przesyłanie i zamiana światów, zakładka modów i wtyczek oraz menedżer plików w przeglądarce."
+  },
+  "guide-backups": {
+    "title": "Kopie zapasowe serwera Minecraft, które faktycznie się przywracają",
+    "description": "Jak tworzyć kopie zapasowe serwera Minecraft, które faktycznie się przywracają: spójne kopie, przechowywane gdzie indziej i przetestowane przynajmniej raz."
+  },
+  "guide-choosing-a-loader": {
+    "title": "Vanilla, Paper, Fabric, Forge, NeoForge, Quilt: który wybrać?",
+    "description": "Vanilla, Paper, Fabric, Forge, NeoForge czy Quilt: jaki typ serwera Minecraft uruchomić, zależnie od tego, co zainstalują twoi gracze."
+  },
+  "guide-moving-a-server": {
+    "title": "Przenoszenie serwera Minecraft na inny hosting",
+    "description": "Przeniesienie świata jest łatwe. Przeniesienie serwera, do którego gracze nadal mogą się logować, z zachowaniem ich ekwipunków, domów i uprawnień, to część, która często sprawia problemy."
+  },
+  "guide-server-memory": {
+    "title": "Ile RAM potrzebuje serwer Minecraft?",
+    "description": "Ile RAM potrzebuje serwer Minecraft dla wersji vanilla, Paper, z lekkimi modami i dużymi modpackami, oraz ile zostawić dla maszyny."
+  },
+  "guide-server-wont-start": {
+    "title": "Twój serwer Minecraft się nie uruchamia",
+    "description": "Serwer Minecraft, który się nie uruchamia, naprawiony w kolejności prawdopodobieństwa: logi, wersja Java, pamięć, EULA i port oraz mody."
+  },
+  "invites-and-status-page": {
+    "title": "Zaproszenia i strona statusu",
+    "description": "Zaproś znajomych na serwer, podając adres, wersję i paczkę modów klienta, oraz udostępnij publiczną stronę statusu, która wyświetla tylko to, co wybierzesz."
+  },
+  "live-map": {
+    "title": "Mapa na żywo",
+    "description": "Włącz interaktywną mapę 3D świata serwera za pomocą BlueMap jednym kliknięciem, dostępną tylko po zalogowaniu przez panel."
+  }
+}

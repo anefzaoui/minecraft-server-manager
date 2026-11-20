@@ -481,6 +481,8 @@ main() {
 }
 
 # Sourced by the test suite, executed by everyone else.
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+# Piped into bash (curl ... | sudo bash, as the README says) there is no script file, so
+# BASH_SOURCE is empty; under set -u reading it unguarded stopped the install right here.
+if [ "${BASH_SOURCE[0]:-$0}" = "$0" ]; then
   main "$@"
 fi

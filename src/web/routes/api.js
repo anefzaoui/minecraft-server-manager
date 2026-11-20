@@ -767,21 +767,35 @@ const UPGRADE_STEP_LABELS = {
   'backing-up': 'Creating pre-update backup…',
   stopping: 'Stopping server…',
   applying: 'Re-pinning pack version…',
-  recreating: 'Recreating container…',
+  recreating: 'Rebuilding the server…',
   // No fixed minutes in the label: the window is per-platform (30 min for
   // GTNH, 20 for CurseForge/Modrinth, 10 otherwise - see upgrade.js).
   monitoring: 'Starting & monitoring the new version…',
   overlay: 'Re-applying custom overlay mods…',
 };
 
+// The version picker's list: every listable version of the server's pack,
+// each tagged with how its Minecraft version relates to the world.
+router.get(
+  '/servers/:id/pack/versions',
+  requireCap('content'),
+  asyncHandler(async (req, res) => {
+    const server = requireServer(req.params.id);
+    res.json({ ok: true, ...(await packs.listPackVersions(server.id)) });
+  })
+);
+
 // Long operation - returns {ok, taskId}; poll /api/tasks/:id (client: runTask).
+// Serves both "upgrade to latest" and the version picker (any version id).
 // On failure with a rollback path, the task RESOLVES with
-// {ok:false, error, rollbackAvailable:true} so the client can offer rollback.
+// {ok:false, error, rollbackAvailable:true} so the client can offer rollback;
+// a newer-Minecraft target without allowVersionChange resolves with
+// {ok:false, requiresVersionConfirm, fromMcVersion, toMcVersion} to confirm.
 router.post(
   '/servers/:id/pack/upgrade',
   requireCap('content'),
   asyncHandler((req, res, next) => {
-    const { versionId, skipBackup } = z
+    const { versionId, skipBackup, allowVersionChange } = z
       .object({
         // Same shape constraint as the other pack versionId fields: this one
         // reaches the exact same GTNH_PACK_VERSION/CF_FILE_ID/etc. container
@@ -792,22 +806,36 @@ router.post(
           .regex(/^[\w.-]{1,64}$/)
           .optional(),
         skipBackup: z.coerce.boolean().optional(),
+        // A real boolean, not coerced: "false" must never read as consent to
+        // convert a world.
+        allowVersionChange: z.boolean().optional(),
       })
       .parse(req.body);
     const server = requireServer(req.params.id);
     const actor = req.user.username;
-    const taskId = tasks.run(`Upgrading pack on ${server.display_name}`, { serverId: server.id, actor }, async (t) => {
+    const title = `Changing pack version on ${server.display_name}`;
+    const taskId = tasks.run(title, { serverId: server.id, actor }, async (t) => {
       t.step(UPGRADE_STEP_LABELS.resolving);
       try {
         return await upgrade.upgradePack(server.id, {
           versionId,
           skipBackup,
+          allowVersionChange,
           actor,
           onStep: (s) => t.step(UPGRADE_STEP_LABELS[s] || s),
         });
       } catch (err) {
         if (err.rollbackAvailable) {
           return { ok: false, error: err.message, rollbackAvailable: true };
+        }
+        if (err.requiresVersionConfirm) {
+          return {
+            ok: false,
+            error: err.message,
+            requiresVersionConfirm: true,
+            fromMcVersion: err.fromMcVersion,
+            toMcVersion: err.toMcVersion,
+          };
         }
         throw err;
       }
@@ -974,6 +1002,8 @@ router.get(
         serverName: server.display_name,
         versionId: pin.pinned_version_id,
         versionName: pin.pinned_version_name,
+        // Gates the popup's "Switch to This Version" (the switch route needs Content).
+        canChangeVersion: permissions.can(req.user, server.id, 'content'),
       };
     }
 
@@ -1267,18 +1297,34 @@ router.post(
         });
       }
     }
+    const versionChanging = Boolean(targetVersion) && targetVersion !== server.mc_version;
+    const buildChanging = Boolean(targetLoaderBuild && envKey) && server.env[envKey] !== targetLoaderBuild;
+    // A stale row (applied elsewhere since the check) changes nothing: refuse
+    // it rather than rebuild without the backup the Updates page promises.
+    if (!versionChanging && !buildChanging) throw httpError(409, 'This server is already on that version.');
+    // A Forge or NeoForge build exists for one Minecraft version, so a pin
+    // left in place across a version change names a build the image can't
+    // install. It is cleared, unless this request pins the new build itself.
+    // Only a build number is: "latest"/"beta"/"recommended" follow the version.
+    const mcPinKey = { FORGE: 'FORGE_VERSION', NEOFORGE: 'NEOFORGE_VERSION' }[server.type];
+    const clearsPinKey = versionChanging && mcPinKey && !(targetLoaderBuild && envKey === mcPinKey) ? mcPinKey : null;
     const taskId = tasks.run(
-      `Updating Minecraft version on ${server.display_name}`,
+      versionChanging
+        ? `Updating Minecraft version on ${server.display_name}`
+        : `Updating the loader build on ${server.display_name}`,
       { serverId: server.id, actor },
       async (t) => {
-        const versionChanging = targetVersion && targetVersion !== server.mc_version;
+        // A loader build swap reinstalls the server jar just like a Minecraft
+        // version change does, so it gets the same backup first.
         let backupId = null;
-        if (versionChanging) {
+        if (versionChanging || buildChanging) {
           t.step('Creating pre-update backup…');
           const backup = await backups.createBackup(server.id, {
             reason: 'pre-update',
             actor,
-            note: `Before Minecraft ${server.mc_version} → ${targetVersion}`,
+            note: versionChanging
+              ? `Before Minecraft ${server.mc_version} → ${targetVersion}`
+              : `Before loader build ${server.env[envKey] || 'default'} → ${targetLoaderBuild}`,
             task: t,
           });
           backupId = backup.id;
@@ -1286,12 +1332,63 @@ router.post(
         t.step('Applying new version…');
         const changes = {};
         if (versionChanging) changes.mcVersion = targetVersion;
-        if (targetLoaderBuild && envKey) changes.env = { ...server.env, [envKey]: targetLoaderBuild };
+        // Re-read: a settings save made while the backup ran must survive.
+        const env = { ...requireServer(server.id).env };
+        let clearedPin = null;
+        if (clearsPinKey && /^\d/.test(env[clearsPinKey] || '')) {
+          clearedPin = env[clearsPinKey];
+          delete env[clearsPinKey];
+        }
+        if (targetLoaderBuild && envKey) env[envKey] = targetLoaderBuild;
+        if (clearedPin || (targetLoaderBuild && envKey)) changes.env = env;
         servers.updateServer(server.id, changes, { actor });
-        t.step('Recreating container…');
+        t.step('Rebuilding the server…');
         await servers.recreateServer(server.id, { actor });
-        return { ok: true, from: server.mc_version, to: targetVersion || server.mc_version, backupId };
+        // From/to name what actually moved: the Minecraft version, or the build.
+        return versionChanging
+          ? {
+              ok: true,
+              from: server.mc_version,
+              to: targetVersion,
+              clearedPin,
+              backupId,
+            }
+          : { ok: true, from: server.env[envKey] || 'default', to: targetLoaderBuild, backupId };
       }
+    );
+    res.status(202).json({ ok: true, taskId });
+  })
+);
+
+// Versions tab: pin any published loader build (or '' to go back to the
+// default), on a plain loader server or as a CurseForge pack override. The
+// build is checked against the registry before the task starts, so a typo is
+// a 400 here instead of a server that fails to install. `dryRun` runs only
+// that check: the page asks it before showing a "back up and rebuild?"
+// confirmation, so a build that can't be used is refused up front.
+const loaderPin = require('../../services/loaderPin');
+
+router.post(
+  '/servers/:id/loader-version',
+  requireCap('settings'),
+  asyncHandler(async (req, res) => {
+    const { version, dryRun } = z
+      .object({
+        version: z
+          .string()
+          .trim()
+          .regex(/^[\w.+-]{0,64}$/, 'That is not a valid loader version.'),
+        dryRun: z.boolean().optional().default(false),
+      })
+      .parse(req.body);
+    const server = requireServer(req.params.id);
+    const info = await loaderPin.assertChangeable(server, version);
+    if (dryRun) return res.json({ ok: true });
+    const actor = req.user.username;
+    const taskId = tasks.run(
+      `Changing the ${info.loaderName} version on ${server.display_name}`,
+      { serverId: server.id, actor },
+      (t) => loaderPin.applyLoaderVersion(server.id, version, { actor, task: t })
     );
     res.status(202).json({ ok: true, taskId });
   })

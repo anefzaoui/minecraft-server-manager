@@ -1,0 +1,118 @@
+---
+// Hub page for each landing group (/servers/, /guides/, /compare/): its intro,
+// one card per page, and on /guides/ the how-to guides from the docs too.
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Site from '../../../layouts/Site.astro';
+import Section from '../../../components/Section.astro';
+import PageHeader from '../../../components/PageHeader.astro';
+import XpDivider from '../../../components/XpDivider.astro';
+import Icon from '../../../components/Icon.astro';
+import Community from '../../../components/Community.astro';
+import ComparisonTable from '../../../components/ComparisonTable.astro';
+import { localePaths } from '../../../lib/paths.js';
+import { getCopy } from '../../../i18n/index.js';
+import { DEFAULT_LOCALE } from '../../../i18n/locales.js';
+import { HUBS, href, breadcrumbLd, faqLd, absolute } from '../../../lib/routes.js';
+import { art } from '../../../data/art.js';
+
+export function getStaticPaths() {
+  return localePaths().flatMap(({ params }) => HUBS.map((hub) => ({ params: { ...params, hub: hub.id }, props: { hub } })));
+}
+const { hub } = Astro.props;
+const locale = Astro.params.locale || DEFAULT_LOCALE;
+const copy = getCopy(locale);
+const page = copy[hub.hubKey];
+const path = `/${hub.id}/`;
+const trail: [string, string][] = [
+  [copy.nav.home, '/'],
+  [copy.nav[hub.id], path],
+];
+const itemList = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: page.title,
+  itemListElement: hub.pages.map((p, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: copy[p.key].title,
+    url: absolute(locale, `${path}${p.slug}/`),
+  })),
+};
+const jsonLd = [breadcrumbLd(locale, trail), itemList, ...(page.faq?.items?.length ? [faqLd(page.faq.items)] : [])];
+
+// The docs' own how-to guides, in this locale when translated.
+let docGuides: { id: string; title: string; description?: string }[] = [];
+if (hub.id === 'guides') {
+  const docs = await getCollection('docs');
+  const prefix = locale === DEFAULT_LOCALE ? '' : `${locale}/`;
+  const english = docs.filter((d) => /^docs\/guide-/.test(d.id));
+  docGuides = english.map((en) => {
+    const local = docs.find((d) => d.id === `${prefix}${en.id}`) || en;
+    return { id: en.id, title: local.data.title, description: local.data.description };
+  });
+}
+---
+
+<Site locale={locale} path={path} pageKey={hub.id} title={page.meta.title} description={page.meta.description} jsonLd={jsonLd} ogImage={`/og/${hub.id}.png`}>
+  <PageHeader title={page.title} intro={page.intro} sprite={art(hub.sprite)} pills={page.pills} crumbs={trail.map(([n, p]) => [n, href(locale, p)])} crumbsLabel={copy.landing.breadcrumb} />
+  <Section>
+    <ul class="cards" role="list">
+      {hub.pages.map((p) => {
+        const pc = copy[p.key];
+        const sprite = art(p.sprite);
+        return (
+          <li>
+            <a class="panel flex h-full flex-col gap-3 no-underline hover:brightness-105" href={href(locale, `${path}${p.slug}/`)}>
+              <span class="flex items-center gap-3">
+                {sprite && <span class="slot slot-icon"><Image src={sprite} alt="" width={64} class="pixelated" style="width:32px;height:32px" /></span>}
+                <span class="display text-[1.5rem] leading-none text-ink">{pc.eyebrow || pc.title}</span>
+              </span>
+              <span class="text-sm leading-relaxed text-ink-soft">{page.cards?.[p.key] || pc.intro}</span>
+              <span class="display mt-auto inline-flex items-center gap-2 text-[1.2rem] text-link">{copy.landing.open}<Icon name="arrow" size={16} /></span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </Section>
+  {page.table && (
+    <>
+      <XpDivider />
+      <ComparisonTable table={page.table} />
+    </>
+  )}
+  {docGuides.length > 0 && (
+    <>
+      <XpDivider />
+      <Section title={copy.landing.docsGuides} intro={copy.landing.docsGuidesIntro}>
+        <ul class="cards mt-5" role="list">
+          {docGuides.map((g) => (
+            <li>
+              <a class="panel flex h-full flex-col gap-2 no-underline hover:brightness-105" href={href(locale, `/${g.id}/`)}>
+                <span class="display text-[1.35rem] leading-tight text-ink">{g.title}</span>
+                {g.description && <span class="text-sm text-ink-soft">{g.description}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </Section>
+    </>
+  )}
+  {page.faq && (
+    <>
+      <XpDivider />
+      <Section title={page.faq.title}>
+        <dl class="masonry mt-5 md:columns-2">
+          {page.faq.items.map((f) => (
+            <div class="panel">
+              <dt class="display text-[1.4rem] text-ink">{f.q}</dt>
+              <dd class="mt-2 text-sm leading-relaxed text-ink-soft">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
+      </Section>
+    </>
+  )}
+  <Community copy={copy} />
+</Site>

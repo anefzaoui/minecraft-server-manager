@@ -1,0 +1,29 @@
+---
+// A comparison table from copy ({ title, columns, rows: [{ label, values }], note }).
+// The first column is the row label; on phones each row becomes a card whose
+// cells are labelled from data-th (site.css, .data-table).
+import Section from './Section.astro';
+interface Props {
+  table: { title: string; columns: string[]; rows: { label: string; values: string[] }[]; note?: string };
+}
+const { table } = Astro.props;
+---
+
+<Section title={table.title}>
+  <div class="panel panel-tight mt-5 overflow-x-auto">
+    <table class="data-table">
+      <thead>
+        <tr>{table.columns.map((c) => <th scope="col">{c}</th>)}</tr>
+      </thead>
+      <tbody>
+        {table.rows.map((r) => (
+          <tr>
+            <th scope="row">{r.label}</th>
+            {r.values.map((v, i) => <td data-th={table.columns[i + 1]}>{v}</td>)}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  {table.note && <p class="mt-3 text-sm text-ink-faint">{table.note}</p>}
+</Section>

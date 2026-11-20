@@ -1,5 +1,7 @@
 # Creating & managing servers
 
+<!-- description: Create, start, stop, rebuild and configure Minecraft servers in the panel: the creation wizard, settings, memory, and the game port. -->
+
 [← Back to docs index](README.md)
 
 ## Creating a server

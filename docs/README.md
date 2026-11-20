@@ -16,6 +16,8 @@ A complete, self-hosted control panel for [itzg/docker-minecraft-server](https:/
 - **[Modpacks](modpacks.md)** - install CurseForge, Modrinth, FTB, and GT New Horizons packs, always pinned to an exact version.
 - **[Worlds & files](worlds-and-files.md)** - swap worlds, manage mods, and edit files directly in the browser.
 - **[Shrinking a world](world-shrink.md)** - reclaim disk space by removing chunks nobody visits, on its own or as part of a backup.
+- **[Live map](live-map.md)** - a one-click BlueMap 3D map of the world, behind the panel's sign-in.
+- **[Invites & status page](invites-and-status-page.md)** - the address, invite text and client modpack for friends, and a public status page.
 
 ## Data & automation
 
@@ -47,6 +49,7 @@ Not specific to this panel: the questions every Minecraft server owner runs into
 ## Under the hood
 
 - **[Architecture](architecture.md)** - how the panel is put together.
+- **[The website](website.md)** - how minecraft-server-manager.com is built, translated, and deployed from this repo.
 
 ---
 

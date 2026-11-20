@@ -1,0 +1,110 @@
+{
+  "activity": {
+    "title": "活动日志",
+    "description": "活动页面是完整的审计跟踪：一个可搜索的、按时间顺序排列的记录，包含面板中发生的所有事件。"
+  },
+  "architecture": {
+    "title": "架构",
+    "description": "Minecraft Server Manager 是一个单进程、服务器渲染的 Node.js 应用程序。"
+  },
+  "backups": {
+    "title": "备份",
+    "description": "备份页面显示您所有服务器的快照，包含大小、原因和时间，可按服务器和原因筛选。"
+  },
+  "blueprints": {
+    "title": "蓝图",
+    "description": "蓝图将 Minecraft 服务器的整个配置保存为可重复使用的配方，用于创建新服务器。绝不包含敏感信息。"
+  },
+  "chatbot": {
+    "title": "每个服务器的 Minecraft 聊天机器人",
+    "description": "该面板为每个托管的 Minecraft 服务器提供了一个由管理员配置的聊天机器人，可在服务器的“设置”→“聊天机器人”选项卡中进行设置。"
+  },
+  "console-and-chat": {
+    "title": "控制台和聊天命令",
+    "description": "控制台选项卡实时流式传输服务器日志，并提供一个命令框，用于发送任何服务器命令。"
+  },
+  "dashboard": {
+    "title": "仪表盘",
+    "description": "仪表盘是您的主页：显示所有服务器、它们的实时状态以及正在发生的事件的实时动态。"
+  },
+  "getting-started": {
+    "title": "入门",
+    "description": "安装 Minecraft Server Manager 并完成首次运行设置：系统检查、您的时区以及管理员账户。"
+  },
+  "index": {
+    "title": "文档",
+    "description": "一个完整的、自托管的 itzg/docker-minecraft-server 控制面板。"
+  },
+  "integrations": {
+    "title": "集成",
+    "description": "每个服务器在其“设置”组下都包含其集成：Discord、公开状态页、一键邀请，以及可选的聊天机器人选项卡（仅限管理员）。"
+  },
+  "modpacks": {
+    "title": "Modpacks",
+    "description": "将 CurseForge、Modrinth、FTB 和 GT New Horizons 的 Modpacks 安装为服务器，并始终固定到确切的 Modpack 版本。"
+  },
+  "public-api": {
+    "title": "公共 API",
+    "description": "一个小型、只读的 HTTP API，用于从面板外部获取服务器状态：状态仪表板、正常运行时间监视器、Discord 机器人、家庭自动化规则。"
+  },
+  "schedules": {
+    "title": "计划任务",
+    "description": "计划任务页面使用 cron 表达式自动化重复性任务。无需外部 cron，无需脚本。"
+  },
+  "servers": {
+    "title": "创建和管理服务器",
+    "description": "在面板中创建、启动、停止、重建和配置 Minecraft 服务器：创建向导、设置、内存和游戏端口。"
+  },
+  "storage": {
+    "title": "存储",
+    "description": "查看磁盘空间去向，为每个服务器文件夹设置磁盘配额上限，并清理不再需要的内容。"
+  },
+  "two-factor-authentication": {
+    "title": "双重身份验证",
+    "description": "双重身份验证（2FA）为登录增加了第二步：在输入密码后，您需要输入手机上身份验证器应用生成的简短代码。"
+  },
+  "updates": {
+    "title": "更新",
+    "description": "跟踪并应用 Minecraft 版本、模组包、模组和插件在所有服务器上的更新，每个服务器可设置独立策略。"
+  },
+  "users-and-roles": {
+    "title": "用户和角色",
+    "description": "Minecraft Server Manager 中的账户、管理员、操作员和查看者角色，以及每个服务器的权限。"
+  },
+  "world-shrink": {
+    "title": "缩小世界",
+    "description": "通过删除很少访问的区块来缩小 Minecraft 世界，以回收磁盘空间并加快备份速度。"
+  },
+  "worlds-and-files": {
+    "title": "世界与文件",
+    "description": "世界库、世界上传与切换、模组与插件标签页，以及浏览器内文件管理器。"
+  },
+  "guide-backups": {
+    "title": "真正可恢复的 Minecraft 服务器备份",
+    "description": "如何制作真正可恢复的 Minecraft 服务器备份：一致性副本、异地存储并至少测试一次。"
+  },
+  "guide-choosing-a-loader": {
+    "title": "原版、Paper、Fabric、Forge、NeoForge、Quilt：如何选择？",
+    "description": "原版、Paper、Fabric、Forge、NeoForge 或 Quilt：选择哪种 Minecraft 服务器类型，取决于你的玩家安装了什么。"
+  },
+  "guide-moving-a-server": {
+    "title": "将 Minecraft 服务器迁移到另一台主机",
+    "description": "迁移世界存档很简单。但要迁移一个玩家仍可登录、保留其物品栏、家园和权限的服务器，这才是容易出错的部分。"
+  },
+  "guide-server-memory": {
+    "title": "Minecraft服务器需要多少内存？",
+    "description": "介绍原版、Paper、轻度模组和大型模组包所需的内存量，以及为机器预留多少内存。"
+  },
+  "guide-server-wont-start": {
+    "title": "您的 Minecraft 服务器无法启动",
+    "description": "无法启动的 Minecraft 服务器，按可能性排序的修复方法：日志、Java 版本、内存、EULA 和端口，以及 Mod。"
+  },
+  "invites-and-status-page": {
+    "title": "邀请与状态页面",
+    "description": "通过服务器地址、版本和客户端模组包邀请朋友加入服务器，并分享一个公开的状态页面，只显示您选择的内容。"
+  },
+  "live-map": {
+    "title": "实时地图",
+    "description": "一键开启服务器世界的 BlueMap 实时 3D 地图，仅通过面板登录提供服务。"
+  }
+}

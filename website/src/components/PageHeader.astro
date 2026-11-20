@@ -1,0 +1,50 @@
+---
+// The one page header: flat sky (the hero panorama's blue), optional
+// breadcrumb trail, title, one line of intro, optional brand pills, optional
+// sprite on the end side, then the ground strip. Same shape on every page. A
+// page's short label (its `eyebrow` in the copy) names it in the breadcrumb and
+// on hub cards; it is not repeated as a sign above the title.
+import { Image } from 'astro:assets';
+import Clouds from './Clouds.astro';
+import Pill from './Pill.astro';
+interface Props {
+  title: string;
+  intro?: string;
+  sprite?: ImageMetadata;
+  spriteAlt?: string;
+  pills?: string[];
+  /** [label, href] pairs, current page last (rendered without a link). */
+  crumbs?: [string, string][];
+  crumbsLabel?: string;
+}
+const { title, intro, sprite, spriteAlt = '', pills = [], crumbs = [], crumbsLabel = 'Breadcrumb' } = Astro.props;
+---
+
+<header class="sky relative overflow-hidden">
+  <Clouds count={2} band={22} />
+  <div class="relative mx-auto flex max-w-6xl items-end justify-between gap-6 px-4 pb-6 pt-8 sm:pt-10">
+    <div>
+      {crumbs.length > 0 && (
+        <nav aria-label={crumbsLabel} class="mb-3 text-sm font-semibold text-on-sky">
+          <ol class="flex flex-wrap items-center gap-x-2 gap-y-1" role="list">
+            {crumbs.map(([label, link], i) => (
+              <li class="flex items-center gap-2">
+                {i > 0 && <span aria-hidden="true" class="opacity-60">/</span>}
+                {i < crumbs.length - 1 ? <a class="underline underline-offset-4 hover:no-underline" href={link}>{label}</a> : <span aria-current="page">{label}</span>}
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
+      <h1>{title}</h1>
+      {intro && <p class="lead mt-3 text-on-sky">{intro}</p>}
+      {pills.length > 0 && (
+        <ul class="mt-4 flex flex-wrap gap-2" role="list">
+          {pills.map((id) => <Pill id={id} size="sm" />)}
+        </ul>
+      )}
+    </div>
+    {sprite && <Image src={sprite} alt={spriteAlt} width={280} class="pixelated hidden shrink-0 sm:block" style="width:140px;height:auto" />}
+  </div>
+  <div class="ground"></div>
+</header>

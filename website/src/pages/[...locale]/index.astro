@@ -1,0 +1,193 @@
+---
+import { Image } from 'astro:assets';
+import Site from '../../layouts/Site.astro';
+import Section from '../../components/Section.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import Community from '../../components/Community.astro';
+import InstallTutorial from '../../components/InstallTutorial.astro';
+import Clouds from '../../components/Clouds.astro';
+import XpDivider from '../../components/XpDivider.astro';
+import Icon from '../../components/Icon.astro';
+import WorksWith from '../../components/WorksWith.astro';
+import Pill from '../../components/Pill.astro';
+import { localePaths, localeFromParams } from '../../lib/paths.js';
+import { getCopy } from '../../i18n/index.js';
+import { href, HUBS } from '../../lib/routes.js';
+import { HERO, DESKTOP } from '../../data/screenshots.js';
+import { art, cardFor } from '../../data/art.js';
+const heroDay = art('hero-day-tall');
+const heroNight = art('hero-night-tall');
+
+export function getStaticPaths() {
+  return localePaths();
+}
+const locale = localeFromParams(Astro.params);
+const copy = getCopy(locale);
+const highlights = copy.features.groups.flatMap((g) => g.items).filter((f) => ['wand', 'search', 'shield', 'archive', 'map', 'flame'].includes(f.icon));
+const teaser = DESKTOP.slice(1, 4);
+const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')];
+const hub = (id) => HUBS.find((h) => h.id === id);
+const serverHub = hub('servers');
+const moreHubs = [hub('guides'), hub('compare')];
+---
+
+<Site locale={locale} path="/" pageKey="home">
+  <section class="hero relative overflow-hidden">
+    {heroDay && <Image src={heroDay} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-day" loading="eager" fetchpriority="high" />}
+    {heroNight && <Image src={heroNight} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-night" loading="lazy" />}
+    <Clouds count={4} band={30} />
+    <div class="relative mx-auto grid max-w-6xl items-start gap-10 px-4 pb-72 pt-12 sm:pb-80 lg:grid-cols-[6fr_7fr] lg:pt-16">
+      <div>
+        <h1 class="text-[3rem] leading-[1.02] sm:text-[3.75rem] lg:text-[3.5rem]">{copy.hero.title}</h1>
+        <p class="lead mt-5 text-on-sky">{copy.hero.subtitle}</p>
+        <ul class="hero-facts mt-5" role="list">
+          {copy.hero.pills.map((pill) => <li><Icon name="check" size={16} />{pill}</li>)}
+        </ul>
+        <div class="mt-7 flex flex-wrap gap-4">
+          <a class="btn btn-primary btn-lg" href="#tutorial"><Icon name="play" size={18} />{copy.hero.primary}</a>
+          <a class="btn btn-lg" href={href(locale, '/features/')}>{copy.hero.secondary}</a>
+        </div>
+      </div>
+      <figure class="hero-shot">
+        <a class="panel panel-tight block" href={href(locale, '/screenshots/')}>
+          <span class="slot block">
+            <Image src={HERO} alt={copy.screenshots.items.dashboard} widths={[640, 1000, 1400]} sizes="(min-width: 1152px) 660px, (min-width: 1024px) 58vw, 100vw" loading="eager" fetchpriority="high" class="block" />
+          </span>
+        </a>
+        <figcaption class="mt-3 text-sm font-semibold text-on-sky">{copy.hero.shotCaption}</figcaption>
+      </figure>
+    </div>
+    <div class="ground relative"></div>
+  </section>
+
+  <WorksWith copy={copy} />
+
+  <Section id="tutorial" title={copy.tutorial.title} intro={copy.tutorial.intro} class="scroll-mt-20" banner={art('banner-tutorial')}>
+    <div class="panel mt-6 sm:p-6">
+      <InstallTutorial copy={copy} id="home-tutorial" />
+    </div>
+  </Section>
+
+  <XpDivider />
+
+  <Section title={copy.serversHub.title} intro={copy.serversHub.intro}>
+    <ul class="cards mt-6" role="list">
+      {serverHub.pages.map((p) => {
+        const pc = copy[p.key];
+        const sprite = art(p.sprite);
+        return (
+          <li>
+            <a class="panel flex h-full gap-4 no-underline hover:brightness-105" href={href(locale, `/servers/${p.slug}/`)}>
+              {sprite && <span class="slot slot-icon"><Image src={sprite} alt="" width={64} class="pixelated" style="width:32px;height:32px" /></span>}
+              <span class="min-w-0">
+                <span class="display block text-[1.4rem] leading-tight text-ink">{pc.eyebrow}</span>
+                <span class="mt-1 block text-sm text-ink-soft">{copy.serversHub.cards[p.key]}</span>
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </Section>
+
+  <XpDivider />
+
+  <Section title={copy.pillars.title}>
+    <ul class="mt-6 grid gap-4 sm:grid-cols-3" role="list">
+      {copy.pillars.items.map((p, i) => (
+        <li class="panel">
+          {pillarArt[i] && (
+            <span class="slot mb-4 block"><Image src={pillarArt[i]} alt="" widths={[420, 840]} sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 100vw" class="block aspect-[16/9] w-full object-cover" /></span>
+          )}
+          <h3>{p.title}</h3>
+          <p class="mt-1 text-sm leading-relaxed text-ink-soft">{p.body}</p>
+          {p.pills && (
+            <ul class="mt-3 flex flex-wrap gap-2" role="list">
+              {p.pills.map((id) => <Pill id={id} size="sm" />)}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  <XpDivider />
+
+  <Section title={copy.features.title} intro={copy.features.intro}>
+    <ul class="cards mt-6" role="list">
+      {highlights.map((f) => <FeatureCard title={f.title} body={f.body} icon={f.icon} image={cardFor(f.icon)} pills={f.pills} />)}
+    </ul>
+    <p class="mt-6"><a class="btn" href={href(locale, '/features/')}>{copy.hero.secondary}<Icon name="arrow" size={18} /></a></p>
+  </Section>
+
+  <XpDivider />
+
+  <Section title={copy.screenshots.title} intro={copy.screenshots.intro}>
+    <ul class="mt-6 grid gap-4 sm:grid-cols-3" role="list">
+      {teaser.map((s) => (
+        <li>
+          <a href={href(locale, '/screenshots/')} class="panel panel-tight block">
+            <span class="slot block"><Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[400, 800]} sizes="(min-width: 640px) 33vw, 100vw" class="block aspect-[16/10] w-full object-cover object-top" /></span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </Section>
+
+  <XpDivider />
+
+  <section class="mx-auto grid max-w-6xl gap-4 px-4 py-12 lg:grid-cols-2">
+    {moreHubs.map((h) => (
+      <div class="panel">
+        <h2 class="text-[1.9rem]"><a class="hover:underline" href={href(locale, `/${h.id}/`)}>{copy[h.hubKey].title}</a></h2>
+        <p class="mt-2 text-sm text-ink-soft">{copy[h.hubKey].intro}</p>
+        <ul class="hearts mt-4 space-y-2" role="list">
+          {h.pages.map((p) => (
+            <li><a class="text-link underline underline-offset-4 hover:no-underline" href={href(locale, `/${h.id}/${p.slug}/`)}>{copy[p.key].title}</a></li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </section>
+
+  <Community copy={copy} />
+</Site>
+
+<style>
+  /* One tall image behind the whole hero: flat sky on top (extended from the
+     panorama's own colour), landscape pinned to the bottom. Content is padded so
+     it always sits in the sky part. */
+  .hero {
+    background: var(--color-sky);
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+    pointer-events: none;
+  }
+  .hero-night {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .hero-day {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .hero-night {
+    display: block;
+  }
+</style>
+
+<style is:global>
+  /* Night: white text over white clouds would vanish, so hero text gets a hard
+     shadow and the clouds go translucent. Global: the clouds live in a child component. */
+  :root[data-theme='dark'] .hero h1,
+  :root[data-theme='dark'] .hero .lead {
+    text-shadow: 2px 2px 0 #050a18;
+  }
+  :root[data-theme='dark'] .hero .cloud {
+    opacity: 0.3;
+  }
+</style>
