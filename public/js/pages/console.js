@@ -506,7 +506,9 @@ function init(serverId) {
     input.value = `${input.value.slice(0, replaceFrom)}${item.value}${separator}${suffix}`;
     input.setSelectionRange(input.value.length - suffix.length, input.value.length - suffix.length);
     input.focus();
+    clearTimeout(suggestionTimer);
     closeSuggestions();
+    void fetchSuggestions();
   }
 
   async function fetchSuggestions() {
