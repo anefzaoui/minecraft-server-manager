@@ -165,7 +165,9 @@ async function portChecker({ exceptServerId } = {}) {
     if (port < 1024 || port > 65535) return false;
     if (used.has(port)) return false;
     if (own.has(port)) return true;
-    return probe(port);
+    // Through the exports, so a test can stand in for the OS: what a real probe
+    // finds depends on whatever else the machine has open at that moment.
+    return module.exports.probe(port);
   };
 }
 

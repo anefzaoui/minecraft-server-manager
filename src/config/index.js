@@ -11,6 +11,16 @@ const crypto = require('node:crypto');
 
 const { normalizeLogLevel } = require('./logLevel');
 
+// A test process (node --test marks each file's process with NODE_TEST_CONTEXT)
+// must never bind to the real data folder: it would write secrets into it, run
+// migrations and DELETEs against a live panel's database. test/helpers/env
+// points DATA_DIR at a throwaway folder and leaves this mark.
+if (process.env.NODE_TEST_CONTEXT && !process.env.MSM_TEST_DATA_DIR) {
+  throw new Error(
+    "A test loaded src/config without test/helpers/env. Add `require('./helpers/env')` (or './helpers/app') at the top of the test file."
+  );
+}
+
 const root = path.resolve(__dirname, '..', '..');
 const dataDir = path.resolve(root, process.env.DATA_DIR || './data');
 

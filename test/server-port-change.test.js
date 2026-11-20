@@ -5,9 +5,13 @@
 // it, and a failure puts it back on the old port with the row untouched. Plus
 // the free-port rules it shares with create, and the Docker port listing.
 //
-// Ports come from a random high runway so the OS probe can't collide with
-// anything a developer machine happens to run. P(n) is that runway + n.
-const BASE = 41000 + Math.floor(Math.random() * 300) * 10;
+// The OS is a stand-in here (see `osHeld` below): a real probe answers for
+// whatever else the machine has open at that moment, and these runway ports sit
+// inside the range the OS hands out for outgoing connections (Linux 32768-60999),
+// so a CI runner's own traffic made "free" ports busy now and then. One test
+// at the end exercises the real probe on a port it holds itself. P(n) is the
+// runway start + n.
+const BASE = 41000;
 process.env.PORT_GAME_START = String(BASE);
 const P = (n) => BASE + n;
 const R = (n) => BASE + n + 1000; // the derived RCON port
@@ -54,10 +58,9 @@ const putPort = (id, port, who = cookie, extra = { restart: true }) =>
 const summaries = (id) =>
   db.all('SELECT summary FROM events WHERE server_id = ? ORDER BY id', id).map((e) => e.summary);
 
-function hold(port) {
-  const s = net.createServer();
-  return new Promise((resolve) => s.listen(port, '0.0.0.0', () => resolve(() => new Promise((r) => s.close(r)))));
-}
+// Ports "something outside the panel" holds, as the stand-in OS probe sees them.
+const osHeld = new Set();
+const realProbe = ports.probe;
 
 /**
  * A fake Docker for one server: tracks what each container was built on and
@@ -101,6 +104,8 @@ test.beforeEach((t) => {
   db.run('DELETE FROM servers');
   db.run('DELETE FROM events');
   ports.clearPortCache();
+  osHeld.clear();
+  t.mock.method(ports, 'probe', async (port) => !osHeld.has(port));
   t.mock.method(containers, 'inspectStatus', async () => ({ exists: true, status: 'stopped' }));
 });
 
@@ -299,17 +304,45 @@ test('a port another server holds, as game or as derived RCON, is refused', asyn
 test('a game port whose RCON port something outside the panel holds is refused', async (t) => {
   mockDocker(t);
   seed('srv_a', P(0));
-  const close = await hold(R(70));
+  osHeld.add(R(70));
+  const r = await putPort('srv_a', P(70));
+  assert.equal(r.status, 400);
+  assert.equal(
+    r.json.error,
+    `Port ${P(70)} or its RCON port ${R(70)} is already in use. Pick another, or use the next free port.`
+  );
+  assert.equal(row('srv_a').port_game, P(0));
+});
+
+test('the real OS probe finds a port another program listens on, and frees it once closed', async (t) => {
+  ports.probe.mock.restore(); // the real OS for this one test
+  mockDocker(t);
+  seed('srv_a', P(0));
+  // A port the OS picked for this test and that the test itself holds, so the
+  // answer can't depend on what else runs on the machine.
+  const outside = net.createServer();
+  await new Promise((r) => outside.listen(0, '0.0.0.0', r));
+  const held = /** @type {import('node:net').AddressInfo} */ (outside.address()).port;
+  let open = true;
   try {
-    const r = await putPort('srv_a', P(70));
-    assert.equal(r.status, 400);
+    assert.equal(await realProbe(held), false, 'a listening port is not free');
+    assert.equal(await ports.isPortFree(held), false);
+    // Through the route too: an admin may pick any game port, so put RCON on
+    // it (or the game port itself, where the OS hands out ports from 1024 up).
+    const game = held - 1000 >= 1024 ? held - 1000 : held;
+    const r = await putPort('srv_a', game);
+    assert.equal(r.status, 400, r.text);
     assert.equal(
       r.json.error,
-      `Port ${P(70)} or its RCON port ${R(70)} is already in use. Pick another, or use the next free port.`
+      `Port ${game} or its RCON port ${game + 1000} is already in use. Pick another, or use the next free port.`
     );
+    await new Promise((r) => outside.close(r));
+    open = false;
+    assert.equal(await realProbe(held), true, 'free again once it closed');
   } finally {
-    await close();
+    if (open) await new Promise((r) => outside.close(r));
   }
+  assert.equal(row('srv_a').port_game, P(0));
 });
 
 test('non-admins stay inside the game port range; admins may go below it', async (t) => {

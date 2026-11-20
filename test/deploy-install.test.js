@@ -46,7 +46,9 @@ function shStatus(snippet) {
 }
 
 test('the script is executable and passes a syntax check', () => {
-  assert.ok(fs.statSync(SCRIPT).mode & 0o111, 'has the executable bit');
+  // Windows has no executable bit: Node reports every file as 0o666 there, so
+  // the check only means something on Linux and macOS (where CI runs it).
+  if (process.platform !== 'win32') assert.ok(fs.statSync(SCRIPT).mode & 0o111, 'has the executable bit');
   execFileSync('bash', ['-n', SCRIPT]);
   const source = fs.readFileSync(SCRIPT, 'utf8');
   assert.match(source, /^#!\/usr\/bin\/env bash/, 'starts with a portable shebang');
