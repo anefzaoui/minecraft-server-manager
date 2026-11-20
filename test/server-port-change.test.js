@@ -643,7 +643,8 @@ test('retryWhileBusy waits out BUSY, gives up in time, and passes anything else 
   const busyErr = () => Object.assign(new Error('busy'), { code: 'BUSY', status: 409 });
   let n = 0;
   assert.equal(
-    await retryWhileBusy(async () => (++n < 3 ? Promise.reject(busyErr()) : 'done'), { retryMs: 1, maxWaitMs: 100 }),
+    // A budget it can't run out of: a slow first try must not turn this into a give-up.
+    await retryWhileBusy(async () => (++n < 3 ? Promise.reject(busyErr()) : 'done'), { retryMs: 1, maxWaitMs: 60_000 }),
     'done'
   );
   await assert.rejects(
