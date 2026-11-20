@@ -1,6 +1,6 @@
 # Podman deployment (rootless)
 
-This fork adds a rootless Podman deployment path for the panel. The panel is
+MSM supports a rootless Podman deployment path for the panel. The panel is
 unchanged as an appliance: it still drives a container daemon and creates each
 Minecraft server as a sibling container. Under Podman that daemon is the
 user's own Docker-compatible socket (`$XDG_RUNTIME_DIR/podman/podman.sock`),
@@ -20,6 +20,10 @@ code, `logs --follow`, events, stats, label-filtered listing, and resource caps
 - The user's Docker-compatible socket is mounted at `/var/run/docker.sock`
   inside the panel, so the panel talks to Podman through the same code path as
   Docker.
+- Socket auto-detection probes `/var/run/docker.sock` first, then the rootless
+  Docker and Podman per-user sockets (`$XDG_RUNTIME_DIR/podman/podman.sock`).
+  Set `PODMAN_HOST` (a `unix://` URL or a bare socket path) to point the panel
+  at a specific Podman socket explicitly; it wins over the default probes.
 - Container data (worlds, backups, the DB, `.secret-key`) lives in a host
   directory under your home, bind-mounted to `/data`.
 
@@ -36,7 +40,7 @@ own policy. Without it you'll see `EACCES` connecting to the daemon.
 # 1. data dir
 mkdir -p ~/msm/data
 
-# 2. build the image from this fork
+# 2. build the image from this repository
 podman build -t localhost/minecraft-server-manager:latest .
 
 # 3. install the unit (edit deploy/msm.container to taste first)
@@ -60,9 +64,9 @@ After=network-online.target
 Type=simple
 ExecStart=/usr/bin/podman run --name msm --rm \
   --security-opt label=disable \
-  -v /home/jason/msm/data:/data:Z \
+  -v %h/msm/data:/data:z \
   -v /run/user/%U/podman/podman.sock:/var/run/docker.sock \
-  -e DATA_DIR_HOST=/home/jason/msm/data \
+  -e DATA_DIR_HOST=%h/msm/data \
   -p 127.0.0.1:25564:25564 \
   localhost/minecraft-server-manager:latest
 ExecStop=/usr/bin/podman stop -t 30 msm
@@ -84,7 +88,7 @@ you serve it over HTTPS (see the README env table).
 ## Alternative: podman-compose
 
 ```bash
-echo "DATA_DIR_HOST=/home/jason/msm/data" > .env
+echo "DATA_DIR_HOST=$HOME/msm/data" > .env
 podman-compose -f deploy/podman-compose.yml up -d
 ```
 
@@ -96,16 +100,23 @@ podman-compose -f deploy/podman-compose.yml up -d
   root containers; if you ever touch those files by hand, prefer the panel's
   file manager to plain `rm`.
 - **SELinux bind labeling.** Under Podman + SELinux enforcing, the panel
-  auto-appends `:Z` to the data-dir bind mounts it creates for sibling server
-  containers (and its cleanup containers). Without this the server process fails
-  the first write to `/data` (`Permission denied` writing `eula.txt`).
-- **Force removal is slower than Docker.** `podman rm -f` of a *running*
+  auto-appends the shared `:z` label to the `/data` bind of each sibling server
+  container (and to the binds of its throwaway cleanup/chown containers).
+  Without a label the server process fails the first write to `/data`
+  (`Permission denied` writing `eula.txt`). The label is shared (`:z`), not
+  private (`:Z`), so the cleanup containers - and anything else sharing the
+  tree - keep access; a private label would relabel the directory for one
+  container only and lock the others out. **Extra binds are never relabeled**:
+  they are host paths you chose and may be used by other services, so if
+  SELinux denies access to one, label it yourself (for example
+  `chcon -R -t container_file_t <path>`) after considering what else uses it.
+- **Force removal is slower than Docker.** `podman rm -f` of a _running_
   container took ~15s here (Docker is near-instant). Deletes and rebuilds still
   complete; they're just not snappy on a live server.
 - **Port reachability.** The panel creates servers with host-published ports.
-  Rootless Podman publishes on the LAN as your user; a world reachable by your
-  daughter's friends still needs a router NAT rule (TCP 25565 → this machine)
+  Rootless Podman publishes on the LAN as your user; a world reachable by
+  players still needs a router NAT rule (TCP 25565 → this machine)
   or a Tailscale subnet route / funnel.
 - **Upgrading.** Rebuild the image and restart the unit: `podman build
-  -t localhost/minecraft-server-manager:latest . && systemctl --user restart
-  msm.service`. Your data dir is untouched.
+-t localhost/minecraft-server-manager:latest . && systemctl --user restart
+msm.service`. Your data dir is untouched.

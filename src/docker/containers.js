@@ -19,6 +19,34 @@ function containerName(serverId) {
 }
 
 /**
+ * One bind-mount string. Volume options are comma-joined (`ro,z`): Podman
+ * splits a bind on colons into path components first, so `host:ctr:ro:Z`
+ * parses as a malformed four-part bind, not "read-only plus relabel".
+ */
+function bindString(hostPath, containerPath, { ro = false, label = '' } = {}) {
+  const opts = [];
+  if (ro) opts.push('ro');
+  if (label) opts.push(label);
+  return `${hostPath}:${containerPath}${opts.length ? `:${opts.join(',')}` : ''}`;
+}
+
+/**
+ * Binds for a server container. Under Podman + SELinux enforcing the /data
+ * bind carries the SHARED `:z` label or the server process cannot write to the
+ * host data dir. Shared, not private `:Z`: the throwaway cleanup/chown
+ * containers mount the same tree, and a private label would relabel it for one
+ * container and lock the others out. Extra binds are admin-chosen host paths
+ * that may back anything else on the host - never relabel them; the admin
+ * applies their own labels when needed (see docs/podman.md).
+ */
+function serverBinds(hostDataDir, extraBinds, podman) {
+  return [
+    bindString(hostDataDir, '/data', { label: podman ? 'z' : '' }),
+    ...(extraBinds || []).map((b) => bindString(b.hostPath, b.containerPath, { ro: b.mode === 'ro' })),
+  ];
+}
+
+/**
  * Create (but do not start) a container for a server.
  * @param {object} spec
  * @param {string} spec.serverId
@@ -33,9 +61,7 @@ function containerName(serverId) {
  */
 async function createContainer(spec) {
   const docker = getDocker();
-  // Under Podman + SELinux enforcing, sibling containers need `:Z`-labeled bind
-  // mounts or the server process cannot write to the host data dir.
-  const bindLabel = (await isPodmanDaemon()) ? ':Z' : '';
+  const podman = await isPodmanDaemon();
   const exposed = {
     [`${GAME_PORT}/tcp`]: {},
     [`${GAME_PORT}/udp`]: {}, // query protocol shares the game port
@@ -63,12 +89,8 @@ async function createContainer(spec) {
   // location), unlike dataDir which is panel-local and must be re-rooted -
   // running them through toHostPath would reject anything outside DATA_DIR,
   // which is the entire point of this escape hatch.
-  const extraBindStrings = (spec.extraBinds || []).map(
-    (b) => `${b.hostPath}:${b.containerPath}${b.mode === 'ro' ? ':ro' : ''}${bindLabel}`
-  );
-
   const hostConfig = {
-    Binds: [`${toHostPath(spec.dataDir)}:/data${bindLabel}`, ...extraBindStrings],
+    Binds: serverBinds(toHostPath(spec.dataDir), spec.extraBinds, podman),
     PortBindings: bindings,
     Memory: memoryBytes,
     MemorySwap: swapBytes,
@@ -405,7 +427,14 @@ async function removeDataDir(dir, image) {
     Cmd: [],
     User: '0:0',
     Labels: { 'msm.managed': 'true', 'msm.role': 'cleanup' },
-    HostConfig: { Binds: [`${toHostPath(parent)}:/work${podman ? ':Z' : ''}`], AutoRemove: false, NetworkMode: 'none' },
+    // Shared `:z`, never private `:Z`: the parent holds EVERY server's data
+    // dir, and a private relabel would cut running servers off from their own
+    // worlds. The shared label is what the server containers already use.
+    HostConfig: {
+      Binds: [bindString(toHostPath(parent), '/work', { label: podman ? 'z' : '' })],
+      AutoRemove: false,
+      NetworkMode: 'none',
+    },
   });
   try {
     await container.start();
@@ -435,7 +464,13 @@ async function chownDataDir(dir, image, uid, gid) {
     Cmd: [],
     User: '0:0',
     Labels: { 'msm.managed': 'true', 'msm.role': 'chown' },
-    HostConfig: { Binds: [`${toHostPath(parent)}:/work${podman ? ':Z' : ''}`], AutoRemove: false, NetworkMode: 'none' },
+    // Shared `:z` for the same reason as removeDataDir: never privately
+    // relabel the shared servers/ tree out from under running servers.
+    HostConfig: {
+      Binds: [bindString(toHostPath(parent), '/work', { label: podman ? 'z' : '' })],
+      AutoRemove: false,
+      NetworkMode: 'none',
+    },
   });
   try {
     await container.start();
@@ -533,6 +568,8 @@ async function collectPublishedPorts(docker, { exceptServerId, deadline, abortSi
 
 module.exports = {
   LABEL,
+  bindString,
+  serverBinds,
   publishedHostPorts,
   containerName,
   containerRef,

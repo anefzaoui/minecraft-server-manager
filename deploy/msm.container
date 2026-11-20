@@ -7,18 +7,19 @@
 # Install (rootless, systemd user unit):
 #   1. Pick a host directory for panel data and set it in DATA_DIR_HOST below.
 #      It must be readable by your user (keep it under your home or ownership).
-#   2. Build the image from this fork, or pull a published image:
+#   2. Build the image from this repository, or pull a published image:
 #        podman build -t localhost/minecraft-server-manager:latest .
 #   3. Copy this file to ~/.config/containers/systemd/msm.container and edit
 #      the DATA_DIR_HOST, Image, and PublishPort lines to taste.
 #   4. systemctl --user daemon-reload
 #      systemctl --user enable --now msm.service
 #
-# SELinux note: the /data volume carries :Z so the container can read the host
-# data dir under enforcing policy. Host data dirs handed to SIBLING server
-# containers are re-rooted from DATA_DIR_HOST as host paths; if you hit
-# SELinux denials on those binds, re-run with `<container> --security-opt
-# label=disable` or relabel the source dir (see docs/podman.md).
+# SELinux note: the /data volume carries the shared :z label (the panel itself
+# runs with label=disable, so this is belt-and-braces). Shared, not private :Z:
+# the data dir also holds the SIBLING servers' worlds, and a private relabel on
+# every panel recreate would cut running servers off from them. Host data dirs
+# handed to sibling server containers are re-rooted from DATA_DIR_HOST as host
+# paths and labeled :z by the panel itself (see docs/podman.md).
 
 [Unit]
 Description=Minecraft Server Manager panel
@@ -26,7 +27,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-# Build from this fork, or use a published image tag.
+# Build from this repository, or use a published image tag.
 Image=localhost/minecraft-server-manager:latest
 # The panel drives the host container daemon through the mounted socket. Under
 # SELinux enforcing (Fedora/Aurora default), the container must be allowed to
@@ -38,10 +39,12 @@ SecurityLabelDisable=true
 # it exposed on the LAN.
 PublishPort=127.0.0.1:25564:25564
 # Panel data: worlds, mods, backups, the DB, and the .secret-key key.
-Volume=/home/jason/msm/data:/data:Z
+# %h expands to the user's home directory; adjust the path to taste. Shared :z,
+# never private :Z - the tree also holds sibling servers' worlds.
+Volume=%h/msm/data:/data:z
 # The Podman Docker-compatible socket (the panel drives the host daemon).
 Volume=%t/podman/podman.sock:/var/run/docker.sock
-Environment=DATA_DIR_HOST=/home/jason/msm/data
+Environment=DATA_DIR_HOST=%h/msm/data
 Environment=LOG_PRETTY=false
 
 [Install]

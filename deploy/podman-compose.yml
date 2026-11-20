@@ -2,7 +2,7 @@
 # the Docker compose file but mounts the user's Podman socket.
 #
 # Usage:
-#   echo "DATA_DIR_HOST=/home/jason/msm/data" > .env
+#   echo "DATA_DIR_HOST=$HOME/msm/data" > .env
 #   podman-compose -f podman-compose.yml up -d
 services:
   panel:
@@ -17,9 +17,10 @@ services:
     ports:
       - '127.0.0.1:25564:25564'
     environment:
-      DATA_DIR_HOST: ${DATA_DIR_HOST:?Set DATA_DIR_HOST to the absolute host path for panel data, e.g. /home/jason/msm/data}
-      LOG_PRETTY: "false"
+      DATA_DIR_HOST: ${DATA_DIR_HOST:?Set DATA_DIR_HOST to the absolute host path for panel data, e.g. /home/you/msm/data}
+      LOG_PRETTY: 'false'
     volumes:
-      - ${DATA_DIR_HOST}:/data:Z
+      # Shared :z, never private :Z - the tree also holds sibling servers' worlds.
+      - ${DATA_DIR_HOST}:/data:z
       # User's Podman Docker-compatible socket, mounted where dockerode looks.
       - /run/user/${UID}/podman/podman.sock:/var/run/docker.sock

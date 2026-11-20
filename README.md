@@ -138,11 +138,10 @@ Open **http://your-host:25564**. In Portainer/Dockge, paste the compose file as 
 
 ### 🐳 Option 2: Rootless Podman (Fedora/Aurora)
 
-No Docker installed? This fork ships a rootless Podman deployment (quadlet and
+No Docker installed? MSM ships a rootless Podman deployment (quadlet and
 podman-compose) that drives the user's Docker-compatible Podman socket instead of
 `/var/run/docker.sock`. Verified on Podman 6.1.3 with SELinux enforcing. See
 [docs/podman.md](docs/podman.md) for the build, install, and SELinux notes.
-
 
 > [!IMPORTANT]
 > The panel drives the **host's Docker daemon** through the mounted socket, and anything that holds
