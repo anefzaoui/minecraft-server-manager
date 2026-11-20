@@ -188,11 +188,15 @@ GitHub does not render the comment, and the site strips it from the page.
 ## Hosting checklist (one-time)
 
 1. Repository settings → Pages → Source: **GitHub Actions**.
-2. Cloudflare DNS for `minecraft-server-manager.com`: `CNAME` at the apex (Cloudflare flattens it)
-   and for `www`, both pointing at `anefzaoui.github.io`. Proxy off (DNS only) or SSL mode
-   **Full (strict)**; anything else causes redirect loops.
-3. After the first deploy, Pages → Custom domain shows the domain from `CNAME`; enable
-   **Enforce HTTPS** once the certificate is issued.
+2. Cloudflare DNS for `minecraft-server-manager.com`: the four GitHub Pages `A` records at the apex
+   (185.199.108.153, .109.153, .110.153, .111.153; or a `CNAME` to `anefzaoui.github.io`, which
+   Cloudflare flattens), and `www` as a `CNAME` to `anefzaoui.github.io`. Proxy off (DNS only) or
+   SSL mode **Full (strict)**; anything else causes redirect loops.
+3. Repository settings → Pages → Custom domain: enter `minecraft-server-manager.com` and save.
+   A site deployed by a workflow ignores the `CNAME` file (GitHub's docs say so); the file stays as
+   the record of the domain. Once the DNS check passes and the certificate is issued, enable
+   **Enforce HTTPS**.
+4. Merge to `main` (or run the workflow by hand): the `deploy` job publishes `website/dist`.
 
 Custom domains are per repository, so other projects on the same account can have their own
 domains pointing at the same `anefzaoui.github.io` host.
