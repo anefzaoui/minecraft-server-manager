@@ -14,6 +14,35 @@ const app = require('./helpers/app');
 const db = require('../src/db');
 const { dataPath } = require('../src/storage/pathGuard');
 
+// An accepted upgrade runs a backup and a rebuild in the background. Both are
+// stubbed: what these tests check is the gate in front of them, and a real
+// rebuild would create containers on a developer's running Docker.
+const backups = require('../src/services/backups');
+const servers = require('../src/services/servers');
+const realCreateBackup = backups.createBackup;
+const realRecreate = servers.recreateServer;
+// Calls are recorded per server, so each test can prove that a refusal
+// touched nothing and an accepted upgrade really went through the stubs.
+const stubCalls = [];
+backups.createBackup = async (serverId) => {
+  stubCalls.push(['backup', serverId]);
+  return { id: 'bkp_stub' };
+};
+servers.recreateServer = async (serverId) => {
+  stubCalls.push(['rebuild', serverId]);
+};
+const callsFor = (id) => stubCalls.filter(([, serverId]) => serverId === id).map(([kind]) => kind);
+
+async function settle(taskId) {
+  const tasks = require('../src/services/tasks');
+  for (let i = 0; i < 200; i++) {
+    const t = tasks.getTask(taskId);
+    if (t && t.state !== 'running') return t;
+    await new Promise((r) => setTimeout(r, 10));
+  }
+  throw new Error('task did not finish');
+}
+
 let cookie;
 let port = 26500;
 
@@ -99,6 +128,8 @@ test.before(async () => {
 });
 
 test.after(async () => {
+  backups.createBackup = realCreateBackup;
+  servers.recreateServer = realRecreate;
   await app.stop();
 });
 
@@ -191,8 +222,9 @@ test('a version update the mods cannot follow is refused, with the mods named', 
     ['Sodium']
   );
   assert.match(r.json.error, /1\.21\.1/);
-  // Refused before anything happened: the pin is untouched.
+  // Refused before anything happened: the pin is untouched, nothing ran.
   assert.equal(db.get('SELECT mc_version FROM servers WHERE id = ?', id).mc_version, '1.20.1');
+  assert.deepEqual(callsFor(id), []);
 });
 
 test('an unscanned modded server is refused too, and told what to do', async () => {
@@ -204,6 +236,7 @@ test('an unscanned modded server is refused too, and told what to do', async () 
   assert.equal(r.status, 409);
   assert.equal(r.json.compat.reason, 'no-scan');
   assert.match(r.json.error, /version check/i);
+  assert.deepEqual(callsFor(id), []);
 });
 
 test('force is the deliberate way past the gate', async () => {
@@ -213,10 +246,11 @@ test('force is the deliberate way past the gate', async () => {
     cookie,
     body: { targetVersion: '1.21.1', force: true },
   });
-  // Accepted as a task (it fails later without Docker - what matters is that
-  // the compatibility gate let it through).
+  // Accepted as a task (its backup and rebuild are stubbed above - what
+  // matters is that the compatibility gate let it through).
   assert.equal(r.status, 202);
-  assert.ok(r.json.taskId);
+  assert.equal((await settle(r.json.taskId)).state, 'done');
+  assert.deepEqual(callsFor(id), ['backup', 'rebuild']);
 });
 
 test('a version every mod supports passes the gate untouched', async () => {
@@ -227,6 +261,8 @@ test('a version every mod supports passes the gate untouched', async () => {
     body: { targetVersion: '1.20.4' },
   });
   assert.equal(r.status, 202);
+  assert.equal((await settle(r.json.taskId)).state, 'done');
+  assert.deepEqual(callsFor(id), ['backup', 'rebuild']);
 });
 
 test('a loader-build update is not a version change and is never gated', async () => {
@@ -236,6 +272,8 @@ test('a loader-build update is not a version change and is never gated', async (
     body: { targetLoaderBuild: '47.3.0', envKey: 'FORGE_VERSION' },
   });
   assert.equal(r.status, 202);
+  assert.equal((await settle(r.json.taskId)).state, 'done');
+  assert.ok(callsFor(id).includes('rebuild'), 'the rebuild went through the stub');
 });
 
 test('a scan cannot be started for a server that follows the newest version', async () => {
