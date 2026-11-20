@@ -45,6 +45,10 @@ pnpm run build         # Tailwind CSS + esbuild client-JS bundle
 test:smoke` is the separate live sweep against a running panel. While iterating on a change, `pnpm run
 test:watch` re-runs the suite on every save.
 
+Green gates aren't the whole check. [`REVIEW.md`](REVIEW.md) lists what a reviewer looks at, by what
+your diff touches, and the PR description ends with what you tried on a real panel (`Verified:`) and
+what you couldn't (`Not verified:`).
+
 `main` is protected: the CI status check `quality` is required. It is an aggregate job that is green
 only when the `checks` job (lint, format, typecheck, build), the `tests` job, and the PR-only
 `docker-build` job all pass. The PR branch must be up to date with `main`, and direct pushes, force
