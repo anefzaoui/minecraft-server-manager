@@ -22,6 +22,15 @@
     "theme": "Alternar tema claro o oscuro",
     "skip": "Saltar al contenido"
   },
+  "lightbox": {
+    "viewer": "Visor de capturas de pantalla",
+    "close": "Cerrar",
+    "prev": "Captura de pantalla anterior",
+    "next": "Captura de pantalla siguiente",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "counter": "{n} de {total}"
+  },
   "hero": {
     "eyebrow": "Gratuito y de código abierto. Se ejecuta en tu propia máquina.",
     "title": "Gestiona tus servidores de Minecraft desde un panel amigable.",

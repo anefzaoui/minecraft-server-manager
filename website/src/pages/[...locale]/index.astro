@@ -13,7 +13,7 @@ import Pill from '../../components/Pill.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { href, HUBS } from '../../lib/routes.js';
-import { HERO, DESKTOP } from '../../data/screenshots.js';
+import { HERO, DESKTOP, lightbox } from '../../data/screenshots.js';
 import { art, cardFor } from '../../data/art.js';
 const heroDay = art('hero-day-tall');
 const heroNight = art('hero-night-tall');
@@ -25,6 +25,10 @@ const locale = localeFromParams(Astro.params);
 const copy = getCopy(locale);
 const highlights = copy.features.groups.flatMap((g) => g.items).filter((f) => ['wand', 'search', 'shield', 'archive', 'map', 'flame'].includes(f.icon));
 const teaser = DESKTOP.slice(1, 4);
+// The hero's screenshot and the three under "Screenshots" open in the lightbox, one group; with no script
+// they stay links to the screenshots page.
+const heroBig = await lightbox(HERO);
+const teaserBig = await Promise.all(teaser.map((s) => lightbox(s.image)));
 const pillarArt = [art('card-folder'), art('card-container'), art('card-pinned')];
 const hub = (id) => HUBS.find((h) => h.id === id);
 const serverHub = hub('servers');
@@ -49,7 +53,7 @@ const moreHubs = [hub('guides'), hub('compare')];
         </div>
       </div>
       <figure class="hero-shot">
-        <a class="panel panel-tight block" href={href(locale, '/screenshots/')}>
+        <a class="panel panel-tight block" href={href(locale, '/screenshots/')} data-lightbox="home" {...heroBig}>
           <span class="slot block">
             <Image src={HERO} alt={copy.screenshots.items.dashboard} widths={[640, 1000, 1400]} sizes="(min-width: 1152px) 660px, (min-width: 1024px) 58vw, 100vw" loading="eager" fetchpriority="high" class="block" />
           </span>
@@ -124,9 +128,9 @@ const moreHubs = [hub('guides'), hub('compare')];
 
   <Section title={copy.screenshots.title} intro={copy.screenshots.intro}>
     <ul class="mt-6 grid gap-4 sm:grid-cols-3" role="list">
-      {teaser.map((s) => (
+      {teaser.map((s, i) => (
         <li>
-          <a href={href(locale, '/screenshots/')} class="panel panel-tight block">
+          <a href={href(locale, '/screenshots/')} class="panel panel-tight block" data-lightbox="home" {...teaserBig[i]}>
             <span class="slot block"><Image src={s.image} alt={copy.screenshots.items[s.key]} widths={[400, 800]} sizes="(min-width: 640px) 33vw, 100vw" class="block aspect-[16/10] w-full object-cover object-top" /></span>
           </a>
         </li>

@@ -1,0 +1,11 @@
+---
+// Starlight's own head, plus the lightbox (Lightbox.astro) in the page's language.
+import Default from '@astrojs/starlight/components/Head.astro';
+import Lightbox from '../Lightbox.astro';
+import { localeCode } from '../../i18n/locales.js';
+// Astro.currentLocale is the language tag here ('pt-BR'); the copy needs the code ('pt-br').
+const locale = localeCode(Astro.currentLocale);
+---
+
+<Default />
+<Lightbox locale={locale} />

@@ -22,6 +22,15 @@
     "theme": "Lichte of donkere thema wisselen",
     "skip": "Overslaan naar inhoud"
   },
+  "lightbox": {
+    "viewer": "Screenshot viewer",
+    "close": "Sluiten",
+    "prev": "Vorig screenshot",
+    "next": "Volgend screenshot",
+    "zoomIn": "Inzoomen",
+    "zoomOut": "Uitzoomen",
+    "counter": "{n} van {total}"
+  },
   "hero": {
     "eyebrow": "Gratis en open source. Draait op je eigen machine.",
     "title": "Beheer je Minecraft servers vanuit één gebruiksvriendelijk paneel.",

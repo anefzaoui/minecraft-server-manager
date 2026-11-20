@@ -26,3 +26,8 @@ website/src/generated
 
 # Astro components need prettier-plugin-astro to format; `astro check` gates them instead.
 website/**/*.astro
+
+# SiteKit (the lightbox), synced byte for byte from Mister Download Manager's website/kit/ and checked
+# by website/scripts/check-kit.mjs: formatting it here would make it a different file.
+website/public/kit
+website/scripts/check-kit.mjs

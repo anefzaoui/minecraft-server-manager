@@ -22,6 +22,15 @@
     "theme": "Přepnout světlé nebo tmavé téma",
     "skip": "Přeskočit na obsah"
   },
+  "lightbox": {
+    "viewer": "Prohlížeč snímků obrazovky",
+    "close": "Zavřít",
+    "prev": "Předchozí snímek obrazovky",
+    "next": "Další snímek obrazovky",
+    "zoomIn": "Přiblížit",
+    "zoomOut": "Oddálit",
+    "counter": "{n} z {total}"
+  },
   "hero": {
     "eyebrow": "Zdarma a s otevřeným zdrojovým kódem. Běží na vašem vlastním stroji.",
     "title": "Spravujte své Minecraft servery z jednoho přívětivého panelu.",

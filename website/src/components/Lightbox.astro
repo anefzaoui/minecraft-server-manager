@@ -1,0 +1,23 @@
+---
+// The lightbox on every page, marketing and docs alike: screenshots open big over the page, a group at a
+// time (SiteKit, synced from Mister Download Manager's website into public/kit/ and checked by
+// scripts/check-kit.mjs; its README is there). A picture with data-lightbox opens in its group, every
+// docs picture (.sl-markdown-content) by itself; a link to a picture still opens it with no script.
+// Words in the page's language (`lightbox` in the i18n copy); the look in src/styles/kit-theme.css.
+import { getCopy } from '../i18n/index.js';
+interface Props {
+  locale: string;
+}
+const strings = getCopy(Astro.props.locale).lightbox;
+---
+
+<link rel="stylesheet" href="/kit/kit.css" />
+<script is:inline src="/kit/core.js" defer></script>
+<script is:inline src="/kit/lightbox.js" defer></script>
+<script is:inline define:vars={{ strings }}>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!window.SiteKit || !window.SiteKit.lightbox) return;
+    window.SiteKit.setStrings(strings);
+    window.SiteKit.lightbox.init({ auto: '.sl-markdown-content', minWidth: 120 });
+  });
+</script>

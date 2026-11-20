@@ -14,7 +14,7 @@ import ComparisonTable from './ComparisonTable.astro';
 import { getCopy } from '../i18n/index.js';
 import { langTag } from '../i18n/locales.js';
 import { href, absolute, breadcrumbLd, faqLd, landingByKey, LANDING_PUBLISHED, SITE_URL } from '../lib/routes.js';
-import { DESKTOP } from '../data/screenshots.js';
+import { DESKTOP, lightbox } from '../data/screenshots.js';
 import { art } from '../data/art.js';
 
 interface Props {
@@ -27,6 +27,8 @@ const copy = getCopy(locale);
 const page = copy[entry.key];
 const ui = copy.landing;
 const shot = (key) => DESKTOP.find((s) => s.key === key);
+// A section's screenshot opens in the lightbox (components/Lightbox.astro), the page's shots one group.
+const big = Object.fromEntries(await Promise.all((page.sections || []).filter((s) => s.shot && shot(s.shot)).map(async (s) => [s.shot, await lightbox(shot(s.shot).image)])));
 const ogImage = `/og/${entry.hub.id}-${entry.slug}.png`;
 
 const trail: [string, string][] = [
@@ -88,7 +90,7 @@ const related = (page.related || []).map((k) => landingByKey(k)).filter(Boolean)
               )}
             </div>
             {pic && (
-              <a class="panel panel-tight block" href={pic.image.src} target="_blank" rel="noopener">
+              <a class="panel panel-tight block" href={pic.image.src} target="_blank" rel="noopener" data-lightbox="page" {...big[s.shot]}>
                 <span class="slot block"><Image src={pic.image} alt={copy.screenshots.items[pic.key]} widths={[480, 800, 1100]} sizes="(min-width: 1024px) 480px, 100vw" class="block" /></span>
               </a>
             )}

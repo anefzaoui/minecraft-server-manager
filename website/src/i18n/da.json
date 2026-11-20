@@ -22,6 +22,15 @@
     "theme": "Skift mellem lys og mørk tema",
     "skip": "Spring til indhold"
   },
+  "lightbox": {
+    "viewer": "Skærmbilledfremviser",
+    "close": "Luk",
+    "prev": "Forrige skærmbillede",
+    "next": "Næste skærmbillede",
+    "zoomIn": "Zoom ind",
+    "zoomOut": "Zoom ud",
+    "counter": "{n} af {total}"
+  },
   "hero": {
     "eyebrow": "Gratis og open source. Kører på din egen maskine.",
     "title": "Kør dine Minecraft-servere fra ét brugervenligt panel.",

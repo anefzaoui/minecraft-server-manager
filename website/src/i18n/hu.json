@@ -22,6 +22,15 @@
     "theme": "Világos vagy sötét téma váltása",
     "skip": "Ugrás a tartalomra"
   },
+  "lightbox": {
+    "viewer": "Képernyőkép-nézegető",
+    "close": "Bezárás",
+    "prev": "Előző képernyőkép",
+    "next": "Következő képernyőkép",
+    "zoomIn": "Nagyítás",
+    "zoomOut": "Kicsinyítés",
+    "counter": "{n} / {total}"
+  },
   "hero": {
     "eyebrow": "Ingyenes és nyílt forráskódú. A saját gépeden fut.",
     "title": "Kezeld Minecraft szervereidet egy barátságos felületen.",

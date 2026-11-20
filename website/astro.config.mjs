@@ -81,6 +81,7 @@ export default defineConfig({
       components: {
         SiteTitle: './src/components/starlight/SiteTitle.astro',
         SocialIcons: './src/components/starlight/SocialIcons.astro',
+        Head: './src/components/starlight/Head.astro',
       },
     }),
   ],

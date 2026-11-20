@@ -12,7 +12,8 @@
     "dev": "pnpm run sync-docs && astro dev",
     "build": "pnpm run sync-docs && astro build",
     "preview": "astro preview",
-    "check": "pnpm run sync-docs && astro check",
+    "check": "node scripts/check-kit.mjs public/kit && pnpm run sync-docs && astro check",
+    "check-kit": "node scripts/check-kit.mjs public/kit",
     "translate": "node scripts/translate.js",
     "verify": "node scripts/verify-dist.js"
   },

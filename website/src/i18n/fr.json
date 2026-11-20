@@ -22,6 +22,15 @@
     "theme": "Basculer entre le thème clair et le thème sombre",
     "skip": "Passer au contenu"
   },
+  "lightbox": {
+    "viewer": "Visionneuse d'images",
+    "close": "Fermer",
+    "prev": "Image précédente",
+    "next": "Image suivante",
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "counter": "{n} sur {total}"
+  },
   "hero": {
     "eyebrow": "Gratuit et open source. Fonctionne sur votre propre machine.",
     "title": "Gérez vos serveurs Minecraft depuis un panneau convivial.",

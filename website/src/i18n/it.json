@@ -22,6 +22,15 @@
     "theme": "Attiva o disattiva tema chiaro o scuro",
     "skip": "Salta al contenuto"
   },
+  "lightbox": {
+    "viewer": "Visualizzatore di screenshot",
+    "close": "Chiudi",
+    "prev": "Screenshot precedente",
+    "next": "Screenshot successivo",
+    "zoomIn": "Ingrandisci",
+    "zoomOut": "Rimpicciolisci",
+    "counter": "{n} di {total}"
+  },
   "hero": {
     "eyebrow": "Gratuito e open source. Funziona sulla tua macchina.",
     "title": "Gestisci i tuoi server Minecraft da un unico pannello intuitivo.",

@@ -22,6 +22,15 @@
     "theme": "Vaihda vaaleaan tai tummaan teemaan",
     "skip": "Siirry sisältöön"
   },
+  "lightbox": {
+    "viewer": "Kuvakatselin",
+    "close": "Sulje",
+    "prev": "Edellinen kuvakaappaus",
+    "next": "Seuraava kuvakaappaus",
+    "zoomIn": "Lähennä",
+    "zoomOut": "Loitonna",
+    "counter": "{n} / {total}"
+  },
   "hero": {
     "eyebrow": "Ilmainen ja avoin lähdekoodi. Toimii omalla koneellasi.",
     "title": "Hallitse Minecraft-palvelimiasi yhdestä helppokäyttöisestä paneelista.",

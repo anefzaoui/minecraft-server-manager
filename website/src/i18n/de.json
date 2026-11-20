@@ -22,6 +22,15 @@
     "theme": "Helles oder dunkles Theme umschalten",
     "skip": "Zum Inhalt springen"
   },
+  "lightbox": {
+    "viewer": "Screenshot-Betrachter",
+    "close": "Schließen",
+    "prev": "Vorheriges Screenshot",
+    "next": "Nächster Screenshot",
+    "zoomIn": "Zoomen",
+    "zoomOut": "Rauszoomen",
+    "counter": "{n} von {total}"
+  },
   "hero": {
     "eyebrow": "Kostenlos und Open Source. Läuft auf deiner eigenen Maschine.",
     "title": "Verwalte deine Minecraft-Server von einem einzigen, benutzerfreundlichen Panel aus.",

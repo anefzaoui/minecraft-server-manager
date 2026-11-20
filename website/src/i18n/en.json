@@ -23,6 +23,15 @@
     "theme": "Toggle light or dark theme",
     "skip": "Skip to content"
   },
+  "lightbox": {
+    "viewer": "Screenshot viewer",
+    "close": "Close",
+    "prev": "Previous screenshot",
+    "next": "Next screenshot",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "counter": "{n} of {total}"
+  },
   "hero": {
     "eyebrow": "Free and open source. Runs on your own machine.",
     "title": "Run your Minecraft servers from one friendly panel.",

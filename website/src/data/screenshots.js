@@ -1,6 +1,7 @@
 // Screenshot registry. Images are the repo's own docs screenshots (single-sourced),
 // pulled in through Astro's image pipeline so they ship resized and as WebP.
 // Caption keys map to `screenshots.items.*` in the i18n copy.
+import { getImage } from 'astro:assets';
 const desktopFiles = import.meta.glob('../../../docs/screenshots/*.png', { eager: true, import: 'default' });
 const mobileFiles = import.meta.glob('../../../docs/images/mobile/*.png', { eager: true, import: 'default' });
 const docImages = import.meta.glob('../../../docs/images/*.png', { eager: true, import: 'default' });
@@ -34,3 +35,18 @@ export const MOBILE = [
 ];
 
 export const HERO = pick(desktopFiles, '01-dashboard.png');
+
+/**
+ * What the lightbox (components/Lightbox.astro) needs to open a screenshot big: a WebP at most 2000 px
+ * wide, and the screenshot's size in CSS pixels (desktop shots are taken at 2x, phone shots at 3x), so it
+ * opens at the right size before the file arrives. Spread onto the thumbnail's link or image.
+ */
+export async function lightbox(image, density = 2) {
+  const width = Math.min(image.width, 2000);
+  const big = await getImage({ src: image, width, format: 'webp' });
+  return {
+    'data-full': big.src,
+    'data-width': Math.round(image.width / density),
+    'data-height': Math.round(image.height / density),
+  };
+}
