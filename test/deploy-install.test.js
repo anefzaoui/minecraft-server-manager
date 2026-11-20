@@ -55,6 +55,16 @@ test('the script is executable and passes a syntax check', () => {
   assert.match(source, /set -euo pipefail/, 'fails fast rather than limping on');
 });
 
+test('piped into bash, as the README says (curl ... | sudo bash), the script runs', () => {
+  // Read from stdin there is no script file, so BASH_SOURCE is empty; under
+  // `set -u` an unguarded read of it stopped every piped install before it began.
+  const out = execFileSync('bash', ['-s', '--', '--help'], {
+    input: fs.readFileSync(SCRIPT),
+    encoding: 'utf8',
+  });
+  assert.match(out, /Usage: install\.sh/);
+});
+
 test('sourcing the script runs nothing', () => {
   // The guard at the bottom is what lets this file test the pieces in isolation.
   const out = sh('printf "sourced-only"');
