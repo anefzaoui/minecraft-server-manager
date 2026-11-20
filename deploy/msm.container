@@ -5,13 +5,17 @@
 # that means mounting the *user's* Docker-compatible socket, not /var/run/docker.sock.
 #
 # Install (rootless, systemd user unit):
-#   1. Pick a host directory for panel data and set it in DATA_DIR_HOST below.
-#      It must be readable by your user (keep it under your home or ownership).
-#   2. Build the image from this repository, or pull a published image:
-#        podman build -t localhost/minecraft-server-manager:latest .
-#   3. Copy this file to ~/.config/containers/systemd/msm.container and edit
-#      the DATA_DIR_HOST, Image, and PublishPort lines to taste.
-#   4. systemctl --user daemon-reload
+#   1. Enable the socket and linger (without linger, logging out stops the
+#      panel and every Minecraft server):
+#        systemctl --user enable --now podman.socket
+#        loginctl enable-linger $USER
+#   2. Pick a host directory for panel data. The default below is ~/msm/data
+#      (%h expands to your home). It must be readable by your user.
+#   3. Pull the published image (or build your own; see docs/podman.md):
+#        podman pull ghcr.io/anefzaoui/minecraft-server-manager:latest
+#   4. Copy this file to ~/.config/containers/systemd/msm.container and edit
+#      the Volume, Image, and PublishPort lines to taste.
+#   5. systemctl --user daemon-reload
 #      systemctl --user enable --now msm.service
 #
 # SELinux note: the /data volume carries the shared :z label (the panel itself
@@ -27,8 +31,9 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-# Build from this repository, or use a published image tag.
-Image=localhost/minecraft-server-manager:latest
+# The published image, the same one Docker users get. To build your own from a
+# clone, see docs/podman.md and point Image at your local tag.
+Image=ghcr.io/anefzaoui/minecraft-server-manager:latest
 # The panel drives the host container daemon through the mounted socket. Under
 # SELinux enforcing (Fedora/Aurora default), the container must be allowed to
 # reach that socket and the data volume; label=disable scopes this to the
@@ -39,8 +44,8 @@ SecurityLabelDisable=true
 # it exposed on the LAN.
 PublishPort=127.0.0.1:25564:25564
 # Panel data: worlds, mods, backups, the DB, and the .secret-key key.
-# %h expands to the user's home directory; adjust the path to taste. Shared :z,
-# never private :Z - the tree also holds sibling servers' worlds.
+# %h expands to the user's home directory; adjust the path to taste. Shared :z
+# (never private :Z): the tree also holds sibling servers' worlds.
 Volume=%h/msm/data:/data:z
 # The Podman Docker-compatible socket (the panel drives the host daemon).
 Volume=%t/podman/podman.sock:/var/run/docker.sock

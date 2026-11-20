@@ -4,7 +4,7 @@
 import translations from './sidebar.translations.json' with { type: 'json' };
 
 const GROUPS = [
-  { id: 'start', label: 'Start here', items: ['docs', 'docs/getting-started', 'docs/dashboard'] },
+  { id: 'start', label: 'Start here', items: ['docs', 'docs/getting-started', 'docs/podman', 'docs/dashboard'] },
   {
     id: 'guides',
     label: 'Guides',

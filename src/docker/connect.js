@@ -12,6 +12,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const Docker = require('dockerode');
+const logger = require('../logger')('connect');
 
 let client = null;
 
@@ -45,7 +46,8 @@ function detectOptions() {
   ].filter(Boolean);
   const found = candidates.find((p) => {
     try {
-      return fs.existsSync(p);
+      // A stray file or folder at a candidate path is not a daemon socket.
+      return fs.statSync(p).isSocket();
     } catch {
       return false;
     }
@@ -76,13 +78,18 @@ let podmanCache = null;
 async function isPodmanDaemon() {
   if (podmanCache === null) {
     try {
-      podmanCache = versionIsPodman(await getDocker().version());
+      podmanCache = versionIsPodman(await module.exports.getDocker().version());
     } catch {
-      podmanCache = false;
+      // A failed lookup is not an answer: the socket may not be up yet at
+      // boot. Leave the cache null so the next call retries, instead of
+      // creating every later server without its SELinux label.
+      return false;
     }
   }
   return podmanCache;
 }
+
+let daemonLogged = false;
 
 /**
  * Probe the daemon. Never throws - returns a status object the setup wizard
@@ -101,7 +108,7 @@ async function checkDocker() {
     error: null,
   };
   try {
-    const docker = getDocker();
+    const docker = module.exports.getDocker();
     const [version, info] = await Promise.all([docker.version(), docker.info()]);
     status.available = true;
     status.installed = true;
@@ -111,6 +118,15 @@ async function checkDocker() {
     status.memTotal = info.MemTotal;
     status.isDockerDesktop = /docker desktop/i.test(status.os);
     status.isPodman = versionIsPodman(version);
+    if (!daemonLogged) {
+      daemonLogged = true;
+      const socket = process.env.DOCKER_HOST || detectOptions().socketPath || 'platform default';
+      logger.info('Container daemon detected.', {
+        socket,
+        daemon: status.isPodman ? 'Podman' : 'Docker',
+        version: status.version,
+      });
+    }
   } catch (err) {
     status.error = err.code || err.message;
     if (process.platform === 'win32') {
