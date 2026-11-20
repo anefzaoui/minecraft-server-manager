@@ -26,3 +26,8 @@ website/src/generated
 
 # Astro components need prettier-plugin-astro to format; `astro check` gates them instead.
 website/**/*.astro
+
+# Vitrine (the website's lightbox, GPL-3.0-or-later), vendored unmodified from anefzaoui/vitrine and
+# checked by website/scripts/vitrine-check.mjs: formatting it here would make it a different file.
+website/public/vitrine
+website/scripts/vitrine-check.mjs

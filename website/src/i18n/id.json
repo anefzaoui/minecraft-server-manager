@@ -22,6 +22,15 @@
     "theme": "Ubah tema terang atau gelap",
     "skip": "Lewati ke konten"
   },
+  "lightbox": {
+    "viewer": "Penampil tangkapan layar",
+    "close": "Tutup",
+    "prev": "Tangkapan layar sebelumnya",
+    "next": "Tangkapan layar berikutnya",
+    "zoomIn": "Perbesar",
+    "zoomOut": "Perkecil",
+    "counter": "{n} dari {total}"
+  },
   "hero": {
     "eyebrow": "Gratis dan sumber terbuka. Berjalan di mesin Anda sendiri.",
     "title": "Jalankan server Minecraft Anda dari satu panel yang ramah.",

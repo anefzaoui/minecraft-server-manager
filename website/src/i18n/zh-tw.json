@@ -22,6 +22,15 @@
     "theme": "切換淺色或深色主題",
     "skip": "跳至內容"
   },
+  "lightbox": {
+    "viewer": "螢幕截圖檢視器",
+    "close": "關閉",
+    "prev": "上一張螢幕截圖",
+    "next": "下一張螢幕截圖",
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "counter": "{n} / {total}"
+  },
   "hero": {
     "eyebrow": "免費開源。可在您自己的機器上運行。",
     "title": "透過一個友善的面板管理您的 Minecraft 伺服器。",

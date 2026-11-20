@@ -22,6 +22,15 @@
     "theme": "밝거나 어두운 테마로 전환",
     "skip": "콘텐츠로 건너뛰기"
   },
+  "lightbox": {
+    "viewer": "스크린샷 뷰어",
+    "close": "닫기",
+    "prev": "이전 스크린샷",
+    "next": "다음 스크린샷",
+    "zoomIn": "확대",
+    "zoomOut": "축소",
+    "counter": "{total} 중 {n}"
+  },
   "hero": {
     "eyebrow": "무료 오픈 소스. 직접 설치하여 실행하세요.",
     "title": "하나의 편리한 패널에서 Minecraft 서버를 관리하세요.",

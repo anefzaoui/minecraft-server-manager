@@ -22,6 +22,15 @@
     "theme": "Przełącz jasny lub ciemny motyw",
     "skip": "Przejdź do treści"
   },
+  "lightbox": {
+    "viewer": "Przeglądarka zrzutów ekranu",
+    "close": "Zamknij",
+    "prev": "Poprzedni zrzut ekranu",
+    "next": "Następny zrzut ekranu",
+    "zoomIn": "Powiększ",
+    "zoomOut": "Pomniejsz",
+    "counter": "{n} z {total}"
+  },
   "hero": {
     "eyebrow": "Darmowe i otwarte. Działa na Twojej maszynie.",
     "title": "Zarządzaj swoimi serwerami Minecraft z jednego, przyjaznego panelu.",

@@ -22,6 +22,15 @@
     "theme": "Chuyển đổi chủ đề sáng hoặc tối",
     "skip": "Bỏ qua đến nội dung"
   },
+  "lightbox": {
+    "viewer": "Trình xem ảnh chụp màn hình",
+    "close": "Đóng",
+    "prev": "Ảnh chụp màn hình trước",
+    "next": "Ảnh chụp màn hình tiếp theo",
+    "zoomIn": "Phóng to",
+    "zoomOut": "Thu nhỏ",
+    "counter": "{n} trên {total}"
+  },
   "hero": {
     "eyebrow": "Miễn phí và mã nguồn mở. Chạy trên máy của bạn.",
     "title": "Quản lý máy chủ Minecraft của bạn từ một bảng điều khiển thân thiện.",

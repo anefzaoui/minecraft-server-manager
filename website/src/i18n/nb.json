@@ -22,6 +22,15 @@
     "theme": "Veksle mellom lyst og mørkt tema",
     "skip": "Hopp til innhold"
   },
+  "lightbox": {
+    "viewer": "Visning av skjermbilder",
+    "close": "Lukk",
+    "prev": "Forrige skjermbilde",
+    "next": "Neste skjermbilde",
+    "zoomIn": "Zoom inn",
+    "zoomOut": "Zoom ut",
+    "counter": "{n} av {total}"
+  },
   "hero": {
     "eyebrow": "Gratis og åpen kildekode. Kjører på din egen maskin.",
     "title": "Kjør Minecraft-serverne dine fra ett brukervennlig panel.",

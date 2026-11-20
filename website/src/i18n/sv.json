@@ -22,6 +22,15 @@
     "theme": "Växla mellan ljust och mörkt tema",
     "skip": "Hoppa till innehåll"
   },
+  "lightbox": {
+    "viewer": "Skärmbildsvisare",
+    "close": "Stäng",
+    "prev": "Föregående skärmbild",
+    "next": "Nästa skärmbild",
+    "zoomIn": "Zooma in",
+    "zoomOut": "Zooma ut",
+    "counter": "{n} av {total}"
+  },
   "hero": {
     "eyebrow": "Gratis och öppen källkod. Körs på din egen maskin.",
     "title": "Hantera dina Minecraft-servrar från en enda, användarvänlig panel.",

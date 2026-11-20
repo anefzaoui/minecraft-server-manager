@@ -22,6 +22,15 @@
     "theme": "Alternar tema claro ou escuro",
     "skip": "Pular para o conteúdo"
   },
+  "lightbox": {
+    "viewer": "Visualizador de capturas de tela",
+    "close": "Fechar",
+    "prev": "Captura de tela anterior",
+    "next": "Próxima captura de tela",
+    "zoomIn": "Aumentar zoom",
+    "zoomOut": "Diminuir zoom",
+    "counter": "{n} de {total}"
+  },
   "hero": {
     "eyebrow": "Grátis e de código aberto. Roda na sua própria máquina.",
     "title": "Gerencie seus servidores Minecraft em um painel amigável.",

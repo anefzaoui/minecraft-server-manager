@@ -4,6 +4,7 @@
    button. Only Starlight's public custom properties and stable hooks
    (element + sl-* classes, aria-current) are touched. */
 @import './fonts.css';
+@import './vitrine-theme.css';
 
 :root {
   --sl-font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;

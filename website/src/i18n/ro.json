@@ -22,6 +22,15 @@
     "theme": "Comutare temă deschisă sau închisă",
     "skip": "Treci la conținut"
   },
+  "lightbox": {
+    "viewer": "Vizualizator capturi de ecran",
+    "close": "Închide",
+    "prev": "Captură de ecran anterioară",
+    "next": "Captură de ecran următoare",
+    "zoomIn": "Mărește",
+    "zoomOut": "Micșorează",
+    "counter": "{n} din {total}"
+  },
   "hero": {
     "eyebrow": "Gratuit și open source. Rulează pe propria ta mașină.",
     "title": "Rulează serverele tale de Minecraft dintr-un singur panou prietenos.",

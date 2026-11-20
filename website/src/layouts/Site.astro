@@ -3,6 +3,7 @@
 // locales, Open Graph, Twitter card, JSON-LD), lang/dir on <html>, theme init,
 // header and footer. Docs pages use Starlight's own shell instead.
 import '../styles/site.css';
+import Lightbox from '../components/Lightbox.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Banner from '../components/Banner.astro';
@@ -134,6 +135,8 @@ const baseJsonLd = [
     <link rel="preload" href="/fonts/Jersey15-latin.woff2" as="font" type="font/woff2" crossorigin />
 
     {baseJsonLd.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+
+    <Lightbox locale={locale} />
 
     <script is:inline>
       // Theme init before first paint. Shares Starlight's storage key so the docs

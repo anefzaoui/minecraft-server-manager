@@ -1,0 +1,118 @@
+/*! Vitrine v1.0.0 · https://github.com/anefzaoui/vitrine · GPL-3.0-or-later. Copies elsewhere are synced from that repository, unmodified. */
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Vitrine, the lightbox: its whole look comes from the custom properties below. Set your own on
+   :root (and again for a dark theme) in your stylesheet, after this file; never edit it. Physical
+   left/top for the pictures (their geometry is measured), logical properties for what mirrors. */
+:root {
+  --vitrine-dur: 320ms;
+  --vitrine-dur-out: 260ms;
+  --vitrine-dur-fast: 160ms;
+  --vitrine-ease: cubic-bezier(.16, 1, .3, 1);
+  --vitrine-font: inherit;
+  --vitrine-focus: #7fb0ff;
+  /* Lightbox */
+  /* The backdrop: the site's dark tone, nearly opaque, over a blur of the page where the browser
+     can blur (--vitrine-scrim), solid enough on its own where it can't or shouldn't
+     (--vitrine-scrim-solid: no backdrop-filter, reduced transparency or reduced motion). */
+  --vitrine-scrim: rgb(9 11 16 / .93);
+  --vitrine-scrim-solid: rgb(9 11 16 / .985);
+  --vitrine-blur: 20px;
+  --vitrine-fg: #f3f5f9;
+  --vitrine-fg-2: rgb(243 245 249 / .7);
+  --vitrine-btn: rgb(255 255 255 / .1);
+  --vitrine-btn-hover: rgb(255 255 255 / .2);
+  --vitrine-btn-fg: var(--vitrine-fg);
+  --vitrine-btn-size: 44px;
+  --vitrine-btn-radius: 999px;
+  --vitrine-media-radius: 4px;
+  --vitrine-media-shadow: none;
+  --vitrine-cap-size: 15px;
+}
+
+.vitrine-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* ---- Lightbox ---------------------------------------------------------------------------------- */
+.vitrine-zoomable { cursor: zoom-in; }
+.vitrine {
+  position: fixed; inset: 0 auto auto 0; width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none;
+  margin: 0; padding: 0; border: 0; background: transparent; color: var(--vitrine-fg); font-family: var(--vitrine-font);
+  overflow: hidden; overscroll-behavior: contain; touch-action: none; user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent; outline: none;
+}
+.vitrine::backdrop { background: transparent; }
+.vitrine:not([open]) { display: none; }
+.vitrine-bg, .vitrine-track, .vitrine-slide, .vitrine-ui { position: absolute; inset: 0; }
+.vitrine-bg { background: var(--vitrine-scrim-solid); }
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .vitrine-bg {
+    background: var(--vitrine-scrim);
+    -webkit-backdrop-filter: blur(var(--vitrine-blur)) saturate(.6);
+    backdrop-filter: blur(var(--vitrine-blur)) saturate(.6);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+  .vitrine-bg { background: var(--vitrine-scrim-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+.vitrine-media {
+  position: absolute; left: 0; top: 0; display: block; max-width: none; max-height: none; margin: 0;
+  transform-origin: 0 0; border-radius: var(--vitrine-media-radius); box-shadow: var(--vitrine-media-shadow); transition: none;
+  -webkit-user-drag: none; user-select: none; -webkit-touch-callout: none; backface-visibility: hidden;
+}
+.vitrine-click .vitrine-media { cursor: zoom-in; }
+.vitrine-zoomed .vitrine-media { cursor: grab; }
+.vitrine-dragging .vitrine-media { cursor: grabbing; }
+.vitrine-video .vitrine-media { cursor: auto; background: #000; }
+.vitrine-alt { display: none; }
+.vitrine-error .vitrine-media { visibility: hidden; }
+.vitrine-error .vitrine-alt {
+  display: block; position: absolute; inset: 50% 24px auto; transform: translateY(-50%);
+  text-align: center; color: var(--vitrine-fg-2);
+}
+.vitrine-loading::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px;
+  border: 3px solid var(--vitrine-fg-2); border-top-color: transparent; border-radius: 50%;
+  animation: vitrine-spin .8s linear infinite;
+}
+@keyframes vitrine-spin { to { transform: rotate(1turn); } }
+
+.vitrine-ui { pointer-events: none; transition: opacity var(--vitrine-dur-fast) ease; }
+.vitrine-quiet .vitrine-ui { opacity: 0; }
+.vitrine-quiet .vitrine-ui * { pointer-events: none !important; }
+.vitrine-top {
+  position: absolute; inset: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  box-sizing: border-box; min-height: 64px; padding: max(10px, env(safe-area-inset-top)) 12px 10px; padding-inline-start: 20px;
+}
+.vitrine-count { font-size: 14px; color: var(--vitrine-fg-2); font-variant-numeric: tabular-nums; letter-spacing: .02em; direction: ltr; unicode-bidi: isolate; }
+.vitrine-tools { display: flex; gap: 8px; margin-inline-start: auto; }
+.vitrine-btn {
+  display: inline-grid; place-items: center; width: var(--vitrine-btn-size); height: var(--vitrine-btn-size); padding: 0;
+  border: 0; border-radius: var(--vitrine-btn-radius); background: var(--vitrine-btn); color: var(--vitrine-btn-fg);
+  font: inherit; cursor: pointer; pointer-events: auto;
+  transition: background-color var(--vitrine-dur-fast) ease, opacity var(--vitrine-dur-fast) ease, transform var(--vitrine-dur-fast) ease;
+}
+.vitrine-btn:hover { background: var(--vitrine-btn-hover); }
+.vitrine-btn:active { transform: scale(.94); }
+.vitrine-btn:focus-visible { outline: 2px solid var(--vitrine-focus); outline-offset: 2px; }
+.vitrine-btn:disabled { opacity: .35; cursor: default; transform: none; }
+.vitrine-btn[hidden] { display: none; }
+.vitrine-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.vitrine-nav { position: absolute; top: 50%; margin-top: calc(var(--vitrine-btn-size) / -2); }
+.vitrine-prev { inset-inline-start: 16px; }
+.vitrine-next { inset-inline-end: 16px; }
+.vitrine[dir="rtl"] .vitrine-nav svg { transform: scaleX(-1); }
+.vitrine-foot {
+  position: absolute; inset: auto 0 0; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center;
+  gap: 4px 16px; box-sizing: border-box; padding: 12px 20px max(16px, env(safe-area-inset-bottom)); text-align: center;
+  pointer-events: auto; user-select: text; -webkit-user-select: text;
+}
+.vitrine-cap { margin: 0; max-width: 72ch; font-size: var(--vitrine-cap-size); line-height: 1.5; color: var(--vitrine-fg); text-wrap: pretty; }
+.vitrine-hint { font-size: 13px; color: var(--vitrine-fg-2); }
+.vitrine-cap:empty, .vitrine-hint:empty { display: none; }
+/* Touch screens swipe; the arrows and the mouse's hint would only cover the picture. */
+@media (hover: none) and (pointer: coarse) {
+  .vitrine-nav, .vitrine-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vitrine-loading::after { animation-duration: 2.4s; }
+}

@@ -6,6 +6,7 @@
    <html data-theme="dark"> switches to night (same key as the docs shell). */
 @import 'tailwindcss';
 @import './fonts.css';
+@import './vitrine-theme.css';
 
 @custom-variant dark (&:where(:root[data-theme='dark'] *));
 

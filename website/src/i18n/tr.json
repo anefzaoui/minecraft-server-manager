@@ -22,6 +22,15 @@
     "theme": "Açık veya koyu temayı değiştir",
     "skip": "İçeriğe atla"
   },
+  "lightbox": {
+    "viewer": "Ekran görüntüsü görüntüleyici",
+    "close": "Kapat",
+    "prev": "Önceki ekran görüntüsü",
+    "next": "Sonraki ekran görüntüsü",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "counter": "{n} / {total}"
+  },
   "hero": {
     "eyebrow": "Ücretsiz ve açık kaynaklı. Kendi makinenizde çalışır.",
     "title": "Minecraft sunucularınızı tek bir kullanıcı dostu panelden çalıştırın.",
