@@ -289,6 +289,11 @@ function commandDescription(name) {
   return COMMAND_HELP[name] || `Use the ${name} command.`;
 }
 
+function resourceName(name, field) {
+  if (field !== 'effects') return name;
+  return name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+}
+
 function valuesFor(data, parser, modifier) {
   const field =
     parser === 'minecraft:resource' ? RESOURCE_REGISTRIES[modifier && modifier.registry] : DATA_PARSERS[parser];
@@ -299,7 +304,7 @@ function valuesFor(data, parser, modifier) {
     values.set(
       field,
       Object.values(data[field] || {})
-        .map((entry) => `minecraft:${entry.name}`)
+        .map((entry) => `minecraft:${resourceName(entry.name, field)}`)
         .sort((a, b) => a.localeCompare(b))
     );
   }

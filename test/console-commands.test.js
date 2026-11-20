@@ -77,6 +77,10 @@ test('suggests enum values, child literals, and item IDs', () => {
 
   const items = consoleCommands.suggest('1.21.4', 'give Alex minecraft:dia');
   assert.ok(items.suggestions.some((item) => item.value === 'minecraft:diamond'));
+
+  const effects = consoleCommands.suggest('1.21.4', 'effect give @p minecraft:bad');
+  assert.ok(effects.suggestions.some((item) => item.value === 'minecraft:bad_omen'));
+  assert.ok(effects.suggestions.every((item) => !/[A-Z]/.test(item.value)));
 });
 
 test('preserves the completion offset after slash and whitespace', () => {

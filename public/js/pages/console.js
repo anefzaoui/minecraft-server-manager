@@ -460,12 +460,12 @@ function init(serverId) {
       option.setAttribute('role', 'option');
       option.setAttribute('aria-selected', 'false');
       option.className =
-        'flex w-full items-center justify-between gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-inset aria-selected:bg-inset';
+        'flex w-full min-w-0 flex-col items-start gap-1 rounded-sm px-3 py-2 text-left text-sm hover:bg-inset aria-selected:bg-inset sm:flex-row sm:items-center sm:justify-between sm:gap-3';
       const value = document.createElement('span');
-      value.className = 'font-mono text-ink';
+      value.className = 'max-w-full break-all font-mono text-ink';
       value.textContent = item.value;
       const detail = document.createElement('span');
-      detail.className = 'truncate text-xs text-ink-faint';
+      detail.className = 'w-full whitespace-normal break-words text-xs text-ink-faint sm:w-auto sm:truncate';
       detail.textContent = item.description;
       option.append(value, detail);
       option.addEventListener('mouseenter', () => setActiveSuggestion(index));
