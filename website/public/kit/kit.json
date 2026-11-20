@@ -1,11 +1,11 @@
 {
   "name": "SiteKit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "master": "https://github.com/anefzaoui/misterdownloadmanager/tree/main/website/kit",
   "files": {
-    "core.js": "ebb30da8cd21a5d7ed6c43369a544e2624b07421c01d7fc97b326a6e845ea790",
-    "modal.js": "519596c944a7562c0e923a8ee7f18b151724e7a1e1c438c98955a041eab0c4dc",
-    "lightbox.js": "1f63ba217ed21b390c0288cbd4c51440b8068fcea765a0df7721350137aebb3a",
-    "kit.css": "b68484fda1df470b6c2a14b95370e348fe9d9e8478aaaab1943aa67d97f7db10"
+    "core.js": "ee50539c2e3d59ec78a6df3798cc0ee5bc11eb7093dd2ee0006da23bae6478a6",
+    "modal.js": "4c1362dce3be06905090db87a9bf4800eab8217e2facb2917b62653b00f228fb",
+    "lightbox.js": "e805184706734b2ae50b944be76ea483c315f8440914d4a9fc92f96abb384d05",
+    "kit.css": "f5a21aeb739386b7e8e019b236946a5c323b8bfd23e2a06aa33387d6fc4da9a2"
   }
 }

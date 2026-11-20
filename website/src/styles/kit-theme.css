@@ -1,4 +1,4 @@
-/* The lightbox (SiteKit, public/kit/kit.css) in the game's look: the world dimmed behind an open screen,
+/* The lightbox (SiteKit, public/kit/kit.css) in the game's look: the world dimmed and blurred behind an open screen,
    bevelled stone buttons with their dark outline, the count in Jersey 15, square corners, a slot's outline
    around the picture. Day stone by default, night stone in the dark theme; the same on the docs, so it
    uses plain colours rather than the marketing pages' Tailwind tokens. `html:root` and `.kit-lb …` outrank
@@ -10,7 +10,9 @@ html:root {
   --kit-dur-out: 200ms;
   --kit-dur-fast: 140ms;
   --kit-focus: #f0b42f;
-  --kit-lb-scrim: rgb(16 17 19 / 0.94);
+  --kit-lb-scrim: rgb(16 17 19 / 0.93);
+  --kit-lb-scrim-solid: rgb(16 17 19 / 0.985);
+  --kit-lb-blur: 18px;
   --kit-lb-fg: #f4f5f6;
   --kit-lb-fg-2: #cfd3d8;
   --kit-lb-btn: #7a7a7a;
@@ -24,7 +26,8 @@ html:root {
   --msm-btn-lo: #3f3f3f;
 }
 html:root[data-theme='dark'] {
-  --kit-lb-scrim: rgb(10 11 12 / 0.95);
+  --kit-lb-scrim: rgb(10 11 12 / 0.94);
+  --kit-lb-scrim-solid: rgb(10 11 12 / 0.985);
   --kit-lb-btn: #5a5d62;
   --kit-lb-btn-hover: #6a6e74;
   --msm-btn-hi: #8a8e94;

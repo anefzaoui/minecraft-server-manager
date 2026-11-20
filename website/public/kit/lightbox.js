@@ -1,4 +1,4 @@
-/*! SiteKit 1.0.1 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
+/*! SiteKit 1.0.2 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
 // The lightbox: pictures (and videos) over the page, a group at a time. It opens by flying the
 // picture from its thumbnail (cropped thumbnails too) and closes back into it; goes through the
 // group by arrows, keys, swipes and the wheel; zooms by double-click or double-tap, pinch, wheel

@@ -1,4 +1,4 @@
-/*! SiteKit 1.0.1 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
+/*! SiteKit 1.0.2 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
 /* The kit's look, all of it from the custom properties below: a site sets its own on :root (and
    for its dark theme) after this file, never by editing it. Physical left/top for the pictures
    (their geometry is measured), logical properties for everything that mirrors. */
@@ -10,7 +10,12 @@
   --kit-font: inherit;
   --kit-focus: #7fb0ff;
   /* Lightbox */
-  --kit-lb-scrim: rgb(9 11 16 / .96);
+  /* The backdrop: the site's dark tone, nearly opaque, over a blur of the page where the browser
+     can blur (--kit-lb-scrim), solid enough on its own where it can't or shouldn't
+     (--kit-lb-scrim-solid: no backdrop-filter, reduced transparency or reduced motion). */
+  --kit-lb-scrim: rgb(9 11 16 / .93);
+  --kit-lb-scrim-solid: rgb(9 11 16 / .985);
+  --kit-lb-blur: 20px;
   --kit-lb-fg: #f3f5f9;
   --kit-lb-fg-2: rgb(243 245 249 / .7);
   --kit-lb-btn: rgb(255 255 255 / .1);
@@ -43,7 +48,17 @@
 .kit-lb::backdrop { background: transparent; }
 .kit-lb:not([open]) { display: none; }
 .kit-lb-bg, .kit-lb-track, .kit-lb-slide, .kit-lb-ui { position: absolute; inset: 0; }
-.kit-lb-bg { background: var(--kit-lb-scrim); }
+.kit-lb-bg { background: var(--kit-lb-scrim-solid); }
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .kit-lb-bg {
+    background: var(--kit-lb-scrim);
+    -webkit-backdrop-filter: blur(var(--kit-lb-blur)) saturate(.6);
+    backdrop-filter: blur(var(--kit-lb-blur)) saturate(.6);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+  .kit-lb-bg { background: var(--kit-lb-scrim-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
 .kit-lb-media {
   position: absolute; left: 0; top: 0; display: block; max-width: none; max-height: none; margin: 0;
   transform-origin: 0 0; border-radius: var(--kit-lb-media-radius); box-shadow: var(--kit-lb-media-shadow); transition: none;

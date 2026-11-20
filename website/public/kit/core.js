@@ -1,4 +1,4 @@
-/*! SiteKit 1.0.1 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
+/*! SiteKit 1.0.2 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
 // The kit's shared helpers: its words, motion, direction, the page's scroll lock, the Back
 // button, pointer gestures and focus. lightbox.js and modal.js use them; a site may too.
 // Plain script, no build step: it sets window.SiteKit. See README.md for the API.
@@ -6,7 +6,7 @@
   "use strict";
   var K = w.SiteKit = w.SiteKit || {};
   var root = d.documentElement;
-  K.version = "1.0.1";
+  K.version = "1.0.2";
 
   // ---- Words --------------------------------------------------------------------------------
   // English by default; a site hands its own language's words to setStrings() before or after
