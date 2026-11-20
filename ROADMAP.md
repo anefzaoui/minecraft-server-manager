@@ -37,7 +37,7 @@ request for it is reviewed, verified on a real panel and merged.
   live Docker daemon ([#99](https://github.com/anefzaoui/minecraft-server-manager/pull/99),
   [#101](https://github.com/anefzaoui/minecraft-server-manager/pull/101))
 
-- ✅ Website: screenshots open in a lightbox (the home page, the screenshots page, landing pages and every docs picture):
+- ✅ Website: screenshots open in a lightbox, [Vitrine](https://github.com/anefzaoui/vitrine) (the home page, the screenshots page, landing pages and every docs picture):
   they fly from their place and back, go through their group by keys and swipes, zoom and pan, close by Back too, in
   every language, right to left, day and night
 

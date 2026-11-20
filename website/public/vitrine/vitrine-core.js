@@ -1,12 +1,17 @@
-/*! SiteKit 1.0.2 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
-// The kit's shared helpers: its words, motion, direction, the page's scroll lock, the Back
-// button, pointer gestures and focus. lightbox.js and modal.js use them; a site may too.
-// Plain script, no build step: it sets window.SiteKit. See README.md for the API.
+/*! Vitrine core v1.0.0 · https://github.com/anefzaoui/vitrine · GPL-3.0-or-later. Copies elsewhere are synced from that repository, unmodified. */
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Ahmed Nefzaoui and the Vitrine contributors.
+// Vitrine's shared core: words, motion, direction, the page's scroll lock, the Back button,
+// pointer gestures and focus. vitrine.js (the lightbox) and vitrine-modal.js (the dialog) each
+// ship this same file; when both are on a page, the first one loaded defines Vitrine.core and
+// the second reuses it. Plain script, no build step.
 (function (w, d) {
   "use strict";
-  var K = w.SiteKit = w.SiteKit || {};
+  var V = w.Vitrine = w.Vitrine || {};
+  if (V.core) return; // already here (the other library loaded it): one scroll lock, one history
+  var K = V.core = {};
   var root = d.documentElement;
-  K.version = "1.0.2";
+  K.version = "1.0.0";
 
   // ---- Words --------------------------------------------------------------------------------
   // English by default; a site hands its own language's words to setStrings() before or after
@@ -21,7 +26,8 @@
     counter: "{n} of {total}",
     hint: ""
   };
-  K.setStrings = function (s) {
+  // Vitrine.setStrings(...) is the same function, for short.
+  V.setStrings = K.setStrings = function (s) {
     for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k) && s[k] != null && s[k] !== "") words[k] = String(s[k]);
   };
   K.text = function (key, vars) {
@@ -33,8 +39,8 @@
   // ---- Motion and direction ------------------------------------------------------------------
   var calm = w.matchMedia ? w.matchMedia("(prefers-reduced-motion: reduce)") : null;
   // Asked for less motion: fades only, nothing flies or slides.
-  K.reduced = function () { return !!(calm && calm.matches) || root.hasAttribute("data-kit-reduce"); };
-  // A motion token from CSS (--kit-dur: 320ms or .32s), in milliseconds.
+  K.reduced = function () { return !!(calm && calm.matches) || root.hasAttribute("data-vitrine-reduce"); };
+  // A motion token from CSS (--vitrine-dur: 320ms or .32s), in milliseconds.
   K.ms = function (name, fallback) {
     var v = getComputedStyle(root).getPropertyValue(name).trim();
     var n = parseFloat(v);
@@ -42,7 +48,7 @@
     return /ms$/.test(v) ? n : n * 1000;
   };
   K.ease = function () {
-    return getComputedStyle(root).getPropertyValue("--kit-ease").trim() || "cubic-bezier(.16, 1, .3, 1)";
+    return getComputedStyle(root).getPropertyValue("--vitrine-ease").trim() || "cubic-bezier(.16, 1, .3, 1)";
   };
   K.rtl = function (el) { return getComputedStyle(el || root).direction === "rtl"; };
 
@@ -78,9 +84,9 @@
         d.body.style.paddingInlineEnd = pad + bar + "px";
       }
     }
-    root.style.setProperty("--kit-scrollbar", bar + "px");
+    root.style.setProperty("--vitrine-scrollbar", bar + "px");
     root.style.overflow = "hidden";
-    root.classList.add("kit-locked");
+    root.classList.add("vitrine-locked");
   };
   K.unlock = function () {
     if (!locks || --locks) return;
@@ -88,8 +94,8 @@
     root.style.scrollbarGutter = saved.gutter;
     if (saved.body !== null) d.body.style.overflow = saved.body;
     d.body.style.paddingInlineEnd = saved.pad;
-    root.style.removeProperty("--kit-scrollbar");
-    root.classList.remove("kit-locked");
+    root.style.removeProperty("--vitrine-scrollbar");
+    root.classList.remove("vitrine-locked");
   };
 
   // ---- The Back button ------------------------------------------------------------------------
@@ -107,7 +113,7 @@
       var state = {};
       var cur = history.state;
       if (cur && typeof cur === "object") for (var k in cur) state[k] = cur[k];
-      state.kitLayer = h.id;
+      state.vitrineLayer = h.id;
       history.pushState(state, "");
     } catch (e) { return { release: function () {} }; }
     layers.push(h);
@@ -115,7 +121,7 @@
       var i = layers.indexOf(h);
       if (i < 0) return;
       layers.splice(i, 1);
-      if (history.state && history.state.kitLayer === h.id) { skip++; history.back(); }
+      if (history.state && history.state.vitrineLayer === h.id) { skip++; history.back(); }
     };
     return h;
   };

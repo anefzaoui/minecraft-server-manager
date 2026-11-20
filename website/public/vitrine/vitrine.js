@@ -1,4 +1,6 @@
-/*! SiteKit 1.0.2 | synced from anefzaoui/misterdownloadmanager website/kit/ | MIT License */
+/*! Vitrine v1.0.0 · https://github.com/anefzaoui/vitrine · GPL-3.0-or-later. Copies elsewhere are synced from that repository, unmodified. */
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Ahmed Nefzaoui and the Vitrine contributors.
 // The lightbox: pictures (and videos) over the page, a group at a time. It opens by flying the
 // picture from its thumbnail (cropped thumbnails too) and closes back into it; goes through the
 // group by arrows, keys, swipes and the wheel; zooms by double-click or double-tap, pinch, wheel
@@ -8,11 +10,11 @@
 // Markup: <img data-lightbox> or <a href="big.webp" data-lightbox="group"><img …></a> (a link
 // keeps working with no script), a container with data-lightbox (its pictures are one group), or
 // containers named by init({auto: ".prose"}). data-full, data-width/data-height, data-caption and
-// data-lightbox-skip refine it. See README.md.
+// data-lightbox-skip refine it. The API is in README.md.
 (function (w, d) {
   "use strict";
-  var K = w.SiteKit;
-  if (!K) return;
+  var V = w.Vitrine, K = V && V.core;
+  if (!K) return; // vitrine-core.js first
   var VIDEO = /\.(mp4|webm|ogv|mov|m4v)(?:[?#]|$)/i;
   var IMAGE = /\.(avif|webp|png|jpe?g|gif|svg|bmp)(?:[?#]|$)/i;
   var opt = {
@@ -126,7 +128,7 @@
   function button(cls, icon) {
     var b = d.createElement("button");
     b.type = "button";
-    b.className = "kit-lb-btn " + cls;
+    b.className = "vitrine-btn " + cls;
     b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + ICONS[icon] + "</svg>";
     return b;
   }
@@ -139,28 +141,28 @@
 
   function build() {
     if (dlg) return;
-    dlg = el("dialog", "kit-lb", d.body);
-    el("div", "kit-lb-bg", dlg);
-    track = el("div", "kit-lb-track", dlg);
-    for (var i = 0; i < 3; i++) slides.push({ el: el("div", "kit-lb-slide", track), m: null, i: -1 });
-    var ui = el("div", "kit-lb-ui", dlg);
-    var top = el("div", "kit-lb-top", ui);
-    countEl = el("span", "kit-lb-count", top);
+    dlg = el("dialog", "vitrine", d.body);
+    el("div", "vitrine-bg", dlg);
+    track = el("div", "vitrine-track", dlg);
+    for (var i = 0; i < 3; i++) slides.push({ el: el("div", "vitrine-slide", track), m: null, i: -1 });
+    var ui = el("div", "vitrine-ui", dlg);
+    var top = el("div", "vitrine-top", ui);
+    countEl = el("span", "vitrine-count", top);
     countEl.setAttribute("aria-hidden", "true");
-    var tools = el("div", "kit-lb-tools", top);
-    zoomB = button("kit-lb-zoom", "zoom");
-    closeB = button("kit-lb-close", "close");
+    var tools = el("div", "vitrine-tools", top);
+    zoomB = button("vitrine-zoom", "zoom");
+    closeB = button("vitrine-close", "close");
     closeB.autofocus = true;
     tools.appendChild(zoomB);
     tools.appendChild(closeB);
-    prevB = button("kit-lb-nav kit-lb-prev", "prev");
-    nextB = button("kit-lb-nav kit-lb-next", "next");
+    prevB = button("vitrine-nav vitrine-prev", "prev");
+    nextB = button("vitrine-nav vitrine-next", "next");
     ui.appendChild(prevB);
     ui.appendChild(nextB);
-    var foot = el("div", "kit-lb-foot", ui);
-    capEl = el("p", "kit-lb-cap", foot);
-    hintEl = el("span", "kit-lb-hint", foot);
-    live = el("p", "kit-sr", ui);
+    var foot = el("div", "vitrine-foot", ui);
+    capEl = el("p", "vitrine-cap", foot);
+    hintEl = el("span", "vitrine-hint", foot);
+    live = el("p", "vitrine-sr", ui);
     live.setAttribute("role", "status");
     closeB.addEventListener("click", function () { close(); });
     prevB.addEventListener("click", function () { go(-1); });
@@ -179,7 +181,7 @@
   function vh() { return dlg.clientHeight; }
   // The room a picture has at rest: under the top bar, over the captions, clear of the sides.
   function area() {
-    var pad = vw() < 640 ? 0 : 24, top = dlg.querySelector(".kit-lb-top").offsetHeight;
+    var pad = vw() < 640 ? 0 : 24, top = dlg.querySelector(".vitrine-top").offsetHeight;
     return { x: pad, y: top, w: vw() - pad * 2, h: Math.max(80, vh() - top - bottom) };
   }
   function fitOf(it) {
@@ -218,7 +220,7 @@
     var on = zoomed();
     if (on !== wasOn) {
       wasOn = on;
-      dlg.classList.toggle("kit-lb-zoomed", on);
+      dlg.classList.toggle("vitrine-zoomed", on);
       zoomB.setAttribute("aria-label", K.text(on ? "zoomOut" : "zoomIn"));
       zoomB.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + ICONS[on ? "unzoom" : "zoom"] + "</svg>";
     }
@@ -288,7 +290,7 @@
     if (sl.i === i && sl.m) return;
     sl.i = i;
     sl.el.textContent = "";
-    sl.el.className = "kit-lb-slide";
+    sl.el.className = "vitrine-slide";
     sl.m = null;
     if (i < 0) return;
     var it = items[i], m;
@@ -307,9 +309,9 @@
       m.decoding = "async";
       m.draggable = false;
       var ph = it.thumb.complete && it.thumb.naturalWidth ? safe(it.thumb.currentSrc || it.thumb.src) : "";
-      var loaded = function () { sl.el.classList.remove("kit-lb-loading"); sized(it, m.naturalWidth, m.naturalHeight); };
+      var loaded = function () { sl.el.classList.remove("vitrine-loading"); sized(it, m.naturalWidth, m.naturalHeight); };
       m.addEventListener("load", loaded);
-      m.addEventListener("error", function () { if (!ph) sl.el.classList.add("kit-lb-error"); sl.el.classList.remove("kit-lb-loading"); });
+      m.addEventListener("error", function () { if (!ph) sl.el.classList.add("vitrine-error"); sl.el.classList.remove("vitrine-loading"); });
       if (ph && (ph !== it.src || it.srcset)) {
         // The thumbnail at once (it's cached), the full picture once it has arrived and decoded.
         m.src = ph;
@@ -327,17 +329,17 @@
         if (it.srcset) { m.sizes = Math.ceil(area().w) + "px"; m.srcset = it.srcset; }
         m.src = it.src;
         if (!m.complete) {
-          setTimeout(function () { if (sl.m === m && !m.complete) sl.el.classList.add("kit-lb-loading"); }, 250);
+          setTimeout(function () { if (sl.m === m && !m.complete) sl.el.classList.add("vitrine-loading"); }, 250);
         }
       }
     }
-    m.className = "kit-lb-media";
+    m.className = "vitrine-media";
     m.style.width = it.w + "px";
     m.style.height = it.h + "px";
     sl.m = m;
     sl.el.appendChild(m);
     var t = d.createElement("span");
-    t.className = "kit-lb-alt";
+    t.className = "vitrine-alt";
     t.textContent = it.alt;
     sl.el.appendChild(t);
     place(m, fitOf(it));
@@ -391,7 +393,7 @@
     prevB.disabled = !opt.loop && at === 0;
     nextB.disabled = !opt.loop && at === n - 1;
     zoomB.hidden = it.type !== "image";
-    dlg.classList.toggle("kit-lb-video", it.type === "video");
+    dlg.classList.toggle("vitrine-video", it.type === "video");
     var say = n > 1 ? K.text("counter", { n: at + 1, total: n }) : "";
     live.textContent = say + (say && it.alt ? ". " : "") + it.alt;
     for (var k = 0; k < 3; k++) {
@@ -469,8 +471,8 @@
     closeB.setAttribute("aria-label", K.text("close"));
     prevB.setAttribute("aria-label", K.text("prev"));
     nextB.setAttribute("aria-label", K.text("next"));
-    dlg.classList.remove("kit-lb-quiet", "kit-lb-zoomed");
-    dlg.classList.toggle("kit-lb-click", opt.clickZoom);
+    dlg.classList.remove("vitrine-quiet", "vitrine-zoomed");
+    dlg.classList.toggle("vitrine-click", opt.clickZoom);
     dlg.showModal();
     for (var k = 0; k < 3; k++) slides[k].i = -2;
     measureCaptions();
@@ -482,10 +484,10 @@
     if (opt.history) back = K.backEntry(function () { back = null; close(); });
     if (opt.onOpen) opt.onOpen(img, at);
     // The flight: from the thumbnail to its place, the backdrop and the controls fading in.
-    var it = cur(), m = slides[1].m, ms = K.ms("--kit-dur", 320);
+    var it = cur(), m = slides[1].m, ms = K.ms("--vitrine-dur", 320);
     var box = !K.reduced() && shown(it.thumb) && boxOf(it.thumb, it);
-    fade(dlg.querySelector(".kit-lb-bg"), 0, 1, K.reduced() ? 160 : ms * 0.8);
-    fade(dlg.querySelector(".kit-lb-ui"), 0, 1, K.reduced() ? 160 : ms);
+    fade(dlg.querySelector(".vitrine-bg"), 0, 1, K.reduced() ? 160 : ms * 0.8);
+    fade(dlg.querySelector(".vitrine-ui"), 0, 1, K.reduced() ? 160 : ms);
     if (box) {
       hide(it.thumb, true);
       K.animate(m, [{ transform: tf(box.q), clipPath: box.clip }, { transform: tf(z), clipPath: wide(z.s) }],
@@ -499,8 +501,8 @@
   // keep: hold the end (closing); otherwise the element's own style takes over at the end.
   function fade(e, a, b, ms, keep) { return K.animate(e, [{ opacity: a }, { opacity: b }], { duration: ms, easing: "ease-out", fill: keep ? "forwards" : "none" }); }
   function hide(img, on) {
-    if (on) { if (!("_kitVis" in img)) img._kitVis = img.style.visibility; img.style.visibility = "hidden"; }
-    else if ("_kitVis" in img) { img.style.visibility = img._kitVis; delete img._kitVis; }
+    if (on) { if (!("_vitrineVis" in img)) img._vitrineVis = img.style.visibility; img.style.visibility = "hidden"; }
+    else if ("_vitrineVis" in img) { img.style.visibility = img._vitrineVis; delete img._vitrineVis; }
   }
 
   var closing = false;
@@ -509,12 +511,12 @@
     closing = true;
     settle();
     if (back) { var b = back; back = null; b.release(); }
-    var it = cur(), m = slides[1].m, ms = K.ms("--kit-dur-out", 260);
+    var it = cur(), m = slides[1].m, ms = K.ms("--vitrine-dur-out", 260);
     if (m && m.tagName === "VIDEO") m.pause();
     // From wherever the picture is now (zoomed, dragged down) back into its thumbnail.
     var now = m ? (getComputedStyle(m).transform) : "";
     var box = m && !K.reduced() && shown(it.thumb) && boxOf(it.thumb, it);
-    var bg = dlg.querySelector(".kit-lb-bg"), ui = dlg.querySelector(".kit-lb-ui");
+    var bg = dlg.querySelector(".vitrine-bg"), ui = dlg.querySelector(".vitrine-ui");
     var o = +getComputedStyle(bg).opacity;
     var anims = [fade(bg, o, 0, K.reduced() ? 140 : ms, true), fade(ui, +getComputedStyle(ui).opacity, 0, 120, true)];
     if (box) {
@@ -543,7 +545,7 @@
       slides[k].m = null;
       slides[k].i = -2;
     }
-    [".kit-lb-bg", ".kit-lb-ui"].forEach(function (s) {
+    [".vitrine-bg", ".vitrine-ui"].forEach(function (s) {
       var e = dlg.querySelector(s);
       e.style.opacity = "";
       if (e.getAnimations) e.getAnimations().forEach(function (a) { a.cancel(); });
@@ -570,7 +572,7 @@
   }
   var wheelAt = 0;
   function wheel(e) {
-    if (!isOpen || closing || (e.target.closest && e.target.closest(".kit-lb-foot"))) return;
+    if (!isOpen || closing || (e.target.closest && e.target.closest(".vitrine-foot"))) return;
     e.preventDefault();
     if (cur().type !== "image") return;
     if (opt.wheel === "zoom" || e.ctrlKey) {
@@ -589,7 +591,7 @@
     // A video keeps its own controls: a mouse leaves it alone, a finger is followed without being
     // caught (catching it would take the tap from the play button), so a swipe still goes on.
     var onVideo = t.tagName === "VIDEO";
-    if (t.closest("button, a, .kit-lb-foot") || (onVideo && e.pointerType === "mouse")) return false;
+    if (t.closest("button, a, .vitrine-foot") || (onVideo && e.pointerType === "mouse")) return false;
     settle();
     var m = slides[1].m;
     if (m) m.style.transition = "";
@@ -627,7 +629,7 @@
       if (zoomed()) g.mode = "pan";
       else if (Math.abs(dx) >= Math.abs(dy) || g.type === "mouse") g.mode = items.length > 1 ? "swipe" : "none";
       else g.mode = "drop";
-      dlg.classList.add("kit-lb-dragging");
+      dlg.classList.add("vitrine-dragging");
     }
     if (g.mode === "pan") setZ(clamp({ s: z.s, x: g.z0.x + dx, y: g.z0.y + dy }, true));
     else if (g.mode === "swipe") {
@@ -637,13 +639,13 @@
       var pull = Math.min(1, Math.abs(dy) / (vh() * 0.5));
       var s2 = g.z0.s * (1 - pull * 0.25), it = cur();
       place(slides[1].m, { s: s2, x: g.z0.x + dx + it.w * (g.z0.s - s2) / 2, y: g.z0.y + dy + it.h * (g.z0.s - s2) / 2 });
-      dlg.querySelector(".kit-lb-bg").style.opacity = String(1 - pull * 0.85);
-      dlg.querySelector(".kit-lb-ui").style.opacity = String(1 - pull * 2);
+      dlg.querySelector(".vitrine-bg").style.opacity = String(1 - pull * 0.85);
+      dlg.querySelector(".vitrine-ui").style.opacity = String(1 - pull * 2);
     }
   }
   function up(_e, list, p, cancelled) {
     if (!g) return;
-    dlg.classList.remove("kit-lb-dragging");
+    dlg.classList.remove("vitrine-dragging");
     var ms = K.reduced() ? 0 : 280;
     if (g.mode === "pinch") {
       // Back inside the limits, around where the fingers were; the finger left over pans.
@@ -671,7 +673,7 @@
       if (Math.abs(dy) > 90 || Math.abs(p.vy) > 0.5) close();
       else {
         place(slides[1].m, z, ms);
-        [".kit-lb-bg", ".kit-lb-ui"].forEach(function (s) {
+        [".vitrine-bg", ".vitrine-ui"].forEach(function (s) {
           var e = dlg.querySelector(s), o = Math.max(0, +e.style.opacity);
           e.style.opacity = "";
           fade(e, o, 1, ms || 1);
@@ -697,7 +699,7 @@
     if (dbl) { if (onMedia) toggleZoom(p.x, p.y); return; }
     tapTimer = setTimeout(function () {
       if (!isOpen) return;
-      if (onMedia) dlg.classList.toggle("kit-lb-quiet");
+      if (onMedia) dlg.classList.toggle("vitrine-quiet");
       else close();
     }, 260);
   }
@@ -714,7 +716,7 @@
     for (var i = 0; i < imgs.length; i++) {
       var img = imgs[i];
       if (!joins(img)) continue;
-      img.classList.add("kit-lb-zoomable");
+      img.classList.add("vitrine-zoomable");
       var a = linkOf(img);
       if (a) { a.setAttribute("aria-haspopup", "dialog"); continue; }
       if (!img.hasAttribute("tabindex")) img.tabIndex = 0;
@@ -750,7 +752,7 @@
     });
   }
 
-  K.lightbox = {
+  V.lightbox = {
     init: init,
     scan: scan,
     open: function (img) { if (joins(img)) open(img); },

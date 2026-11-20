@@ -1,0 +1,11 @@
+{
+  "anefzaoui/vitrine": {
+    "ref": "2457c6ea5e6c33359d583d1de03a4e91428829b4",
+    "version": "1.0.0",
+    "files": {
+      "vitrine-core.js": "cfc286016b6450ab347983a7bc0f48d2a1319ff11f206e9092b374f7928ca649",
+      "vitrine.js": "253e242538833f176d5e7918f6639916ac9c83e4f9dc19e84e034d080aa40e02",
+      "vitrine.css": "d5bb9915e9adcf611e72d515716b3d517c8cf85e701b5f4e7fd4582a6d529bf7"
+    }
+  }
+}

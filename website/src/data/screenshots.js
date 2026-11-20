@@ -37,7 +37,7 @@ export const MOBILE = [
 export const HERO = pick(desktopFiles, '01-dashboard.png');
 
 /**
- * What the lightbox (components/Lightbox.astro) needs to open a screenshot big: a WebP at most 2000 px
+ * What the lightbox (Vitrine, components/Lightbox.astro) needs to open a screenshot big: a WebP at most 2000 px
  * wide, and the screenshot's size in CSS pixels (desktop shots are taken at 2x, phone shots at 3x), so it
  * opens at the right size before the file arrives. Spread onto the thumbnail's link or image.
  */

@@ -1,0 +1,56 @@
+/* The lightbox (Vitrine, public/vitrine/vitrine.css) in the game's look: the world dimmed and blurred behind an open screen,
+   bevelled stone buttons with their dark outline, the count in Jersey 15, square corners, a slot's outline
+   around the picture. Day stone by default, night stone in the dark theme; the same on the docs, so it
+   uses plain colours rather than the marketing pages' Tailwind tokens. `html:root` and `.vitrine …` outrank
+   vitrine.css whatever order the two stylesheets load in. Not in a layer: Vitrine's own rules aren't either. */
+html:root {
+  --vitrine-font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --vitrine-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --vitrine-dur: 240ms;
+  --vitrine-dur-out: 200ms;
+  --vitrine-dur-fast: 140ms;
+  --vitrine-focus: #f0b42f;
+  --vitrine-scrim: rgb(16 17 19 / 0.93);
+  --vitrine-scrim-solid: rgb(16 17 19 / 0.985);
+  --vitrine-blur: 18px;
+  --vitrine-fg: #f4f5f6;
+  --vitrine-fg-2: #cfd3d8;
+  --vitrine-btn: #7a7a7a;
+  --vitrine-btn-hover: #8b8b8b;
+  --vitrine-btn-fg: #ffffff;
+  --vitrine-btn-radius: 0;
+  --vitrine-media-radius: 0;
+  --vitrine-media-shadow: 0 0 0 3px #0a0b0c;
+  --vitrine-cap-size: 0.95rem;
+  --msm-btn-hi: #b0b0b0;
+  --msm-btn-lo: #3f3f3f;
+}
+html:root[data-theme='dark'] {
+  --vitrine-scrim: rgb(10 11 12 / 0.94);
+  --vitrine-scrim-solid: rgb(10 11 12 / 0.985);
+  --vitrine-btn: #5a5d62;
+  --vitrine-btn-hover: #6a6e74;
+  --msm-btn-hi: #8a8e94;
+  --msm-btn-lo: #26282b;
+}
+.vitrine .vitrine-btn {
+  border: 2px solid;
+  border-color: var(--msm-btn-hi) var(--msm-btn-lo) var(--msm-btn-lo) var(--msm-btn-hi);
+  box-shadow: 0 0 0 2px #1f1f1f;
+}
+.vitrine .vitrine-btn:active {
+  border-color: var(--msm-btn-lo) var(--msm-btn-hi) var(--msm-btn-hi) var(--msm-btn-lo);
+  transform: translateY(1px);
+}
+.vitrine .vitrine-btn svg {
+  stroke-width: 2.5;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  filter: drop-shadow(1px 1px 0 var(--msm-btn-lo));
+}
+.vitrine .vitrine-count {
+  font-family: 'Jersey 15', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.35rem;
+  color: var(--vitrine-fg);
+  text-shadow: 1px 1px 0 #3f3f3f;
+}
