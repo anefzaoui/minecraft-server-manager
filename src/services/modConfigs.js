@@ -26,7 +26,16 @@ const MAX_CONFIG_BYTES = 2 * 1024 * 1024;
 const MAX_CONFIG_FILES = 1500;
 const MAX_SCAN_DEPTH = 12;
 const MAX_JAR_BYTES = 64 * 1024 * 1024;
+const MAX_CONCURRENT_JAR_READS = 4;
 const docCache = new Map();
+const modMetadataCache = new Map();
+const modMetadataInFlight = new Map();
+const discoveredFiles = new Map();
+
+function cacheSet(cache, key, value, max = 2000) {
+  if (cache.size >= max && !cache.has(key)) cache.delete(cache.keys().next().value);
+  cache.set(key, value);
+}
 
 function readJarEntry(filePath, wanted) {
   return new Promise((resolve) => {
@@ -78,8 +87,7 @@ async function descriptionsForJar(abs, modId, stat) {
   if (docCache.has(cacheKey)) return docCache.get(cacheKey);
   const markdown = await readJarEntry(abs, 'lithium-fabric-mixin-config.md');
   const descriptions = parseLithiumDescriptions(markdown);
-  docCache.set(cacheKey, descriptions);
-  if (docCache.size > 100) docCache.delete(docCache.keys().next().value);
+  cacheSet(docCache, cacheKey, descriptions, 100);
   return descriptions;
 }
 
@@ -105,36 +113,58 @@ function modTokens(mod, metadata) {
 
 async function metadataForMods(serverId) {
   const entries = await mods.listContent(serverId);
-  const detected = await Promise.all(
-    entries
-      .filter((entry) => entry.kind === 'mod')
-      .map(async (entry) => {
-        let metadata = null;
-        let descriptions = {};
-        if (entry.enabled && entry.file.toLowerCase().endsWith('.jar')) {
-          for (const folder of ['mods', 'plugins']) {
-            const abs = dataPath('servers', serverId, folder, entry.file);
+  const modEntries = entries.filter((item) => item.kind === 'mod');
+  const detected = new Array(modEntries.length);
+  let nextIndex = 0;
+  async function inspectNext() {
+    while (nextIndex < modEntries.length) {
+      const index = nextIndex++;
+      detected[index] = await metadataForMod(serverId, modEntries[index]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(MAX_CONCURRENT_JAR_READS, modEntries.length) }, inspectNext));
+  return detected;
+}
+
+async function metadataForMod(serverId, entry) {
+  let metadata = null;
+  let descriptions = {};
+  if (entry.enabled && entry.file.toLowerCase().endsWith('.jar')) {
+    for (const folder of ['mods', 'plugins']) {
+      const abs = dataPath('servers', serverId, folder, entry.file);
+      try {
+        const stat = await fsp.stat(abs);
+        if (!stat.isFile() || stat.size > MAX_JAR_BYTES) continue;
+        const cacheKey = `${abs}:${stat.size}:${stat.mtimeMs}`;
+        let pending = modMetadataInFlight.get(cacheKey);
+        if (!pending) {
+          const cached = modMetadataCache.get(abs);
+          if (cached?.cacheKey === cacheKey) metadata = cached.metadata;
+          else {
+            pending = fsp.readFile(abs).then(parseJarMeta);
+            modMetadataInFlight.set(cacheKey, pending);
             try {
-              const stat = await fsp.stat(abs);
-              if (!stat.isFile() || stat.size > MAX_JAR_BYTES) continue;
-              metadata = await parseJarMeta(await fsp.readFile(abs));
-              if (metadata?.modId) descriptions = await descriptionsForJar(abs, metadata.modId, stat);
-              if (metadata) break;
-            } catch {
-              /* another content folder may contain this jar */
+              metadata = await pending;
+              cacheSet(modMetadataCache, abs, { cacheKey, metadata });
+            } finally {
+              modMetadataInFlight.delete(cacheKey);
             }
           }
-        }
-        return {
-          id: metadata?.modId || entry.file,
-          name: metadata?.name || entry.name,
-          version: entry.version,
-          tokens: modTokens(entry, metadata),
-          descriptions,
-        };
-      })
-  );
-  return detected;
+        } else metadata = await pending;
+        if (metadata?.modId) descriptions = await descriptionsForJar(abs, metadata.modId, stat);
+        if (metadata) break;
+      } catch {
+        /* another content folder may contain this jar */
+      }
+    }
+  }
+  return {
+    id: metadata?.modId || entry.file,
+    name: metadata?.name || entry.name,
+    version: entry.version,
+    tokens: modTokens(entry, metadata),
+    descriptions,
+  };
 }
 
 async function scanConfigs(serverId) {
@@ -181,6 +211,7 @@ function matchesConfig(file, mod) {
 
 async function list(serverId) {
   const [detected, files] = await Promise.all([metadataForMods(serverId), scanConfigs(serverId)]);
+  const discovered = new Map();
   const groups = detected.map((mod) => ({
     id: mod.id,
     name: mod.name,
@@ -190,40 +221,56 @@ async function list(serverId) {
   }));
   const unassigned = [];
   for (const file of files) {
+    discovered.set(file.path, {});
     const matches = groups
       .map((group, index) => (matchesConfig(file, detected[index]) ? index : -1))
       .filter((i) => i >= 0);
-    if (matches.length === 1) groups[matches[0]].files.push(file);
-    else unassigned.push(file);
+    if (matches.length === 1) {
+      groups[matches[0]].files.push(file);
+      discovered.set(file.path, groups[matches[0]].descriptions);
+    } else unassigned.push(file);
   }
+  discoveredFiles.set(serverId, discovered);
   return { groups, unassigned };
 }
 
-async function read(serverId, relPath) {
-  const listing = await list(serverId);
-  const group = listing.groups.find((item) => item.files.some((entry) => entry.path === relPath));
-  const file = [...(group?.files || []), ...listing.unassigned].find((entry) => entry.path === relPath);
-  if (!file) throw httpError(404, 'Config file not found');
-  const abs = dataPath('servers', serverId, file.path);
+function configFilePath(serverId, relPath) {
+  const normalized = String(relPath || '').replace(/\\/g, '/');
+  if (!CONFIG_EXTENSIONS.has(path.posix.extname(normalized).toLowerCase())) return null;
+  if (!configRoots(serverId).some((root) => normalized.startsWith(`${root}/`))) return null;
+  const serverRoot = dataPath('servers', serverId);
+  return safeJoin(serverRoot, normalized);
+}
+
+async function existingConfig(serverId, relPath) {
+  const normalized = String(relPath || '').replace(/\\/g, '/');
+  if (!discoveredFiles.get(serverId)?.has(normalized)) throw httpError(404, 'Config file not found.');
+  const abs = configFilePath(serverId, normalized);
+  if (!abs) throw httpError(404, 'Config file not found.');
   const stat = await fsp.lstat(abs).catch(() => null);
-  if (!stat?.isFile() || stat.isSymbolicLink()) throw httpError(404, 'Config file not found');
+  if (!stat?.isFile() || stat.isSymbolicLink() || stat.size > MAX_CONFIG_BYTES) {
+    throw httpError(404, 'Config file not found.');
+  }
+  return abs;
+}
+
+async function read(serverId, relPath) {
+  const abs = await existingConfig(serverId, relPath);
   const content = await fsp.readFile(abs);
   if (content.includes(0)) throw httpError(415, 'This config is not a text file.');
-  return { path: file.path, content: content.toString('utf8'), descriptions: group?.descriptions || {} };
+  const normalized = String(relPath).replace(/\\/g, '/');
+  return {
+    path: normalized,
+    content: content.toString('utf8'),
+    descriptions: discoveredFiles.get(serverId)?.get(normalized) || {},
+  };
 }
 
 /** @param {string} serverId @param {string} relPath @param {string} content @param {{actor?: string}} [options] */
 async function write(serverId, relPath, content, { actor } = {}) {
-  const listing = await list(serverId);
-  const file = [...listing.groups.flatMap((group) => group.files), ...listing.unassigned].find(
-    (entry) => entry.path === relPath
-  );
-  if (!file) throw httpError(404, 'Config file not found');
-  const abs = dataPath('servers', serverId, file.path);
-  const stat = await fsp.lstat(abs).catch(() => null);
-  if (!stat?.isFile() || stat.isSymbolicLink()) throw httpError(404, 'Config file not found');
+  await existingConfig(serverId, relPath);
   const files = require('./files');
-  return files.writeText(serverId, file.path, content, { actor });
+  return files.writeText(serverId, String(relPath).replace(/\\/g, '/'), content, { actor });
 }
 
 module.exports = { list, read, write, CONFIG_EXTENSIONS };

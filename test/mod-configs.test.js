@@ -4,6 +4,7 @@ require('./helpers/env');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const fsp = require('node:fs/promises');
 const path = require('node:path');
 const app = require('./helpers/app');
 const config = require('../src/config');
@@ -75,6 +76,22 @@ test('Configs groups confidently matched files by detected mod and separates unm
   );
 });
 
+test('unchanged mod jars are not read again during later Configs listings', async () => {
+  await modConfigs.list(SID);
+  const originalReadFile = fsp.readFile;
+  let jarReads = 0;
+  fsp.readFile = async (...args) => {
+    if (String(args[0]).endsWith('.jar')) jarReads += 1;
+    return originalReadFile(...args);
+  };
+  try {
+    await modConfigs.list(SID);
+    assert.equal(jarReads, 0);
+  } finally {
+    fsp.readFile = originalReadFile;
+  }
+});
+
 test('the Configs tab shows mod groups and unassigned configs without a file explorer', async () => {
   const page = await app.req('GET', `/servers/${SID}/configs`, {
     cookie: adminCookie,
@@ -85,7 +102,8 @@ test('the Configs tab shows mod groups and unassigned configs without a file exp
   assert.match(page.text, /Example Mod/);
   assert.match(page.text, /Unassigned Configs/);
   assert.match(page.text, /data-open-mod-config/);
-  assert.match(page.text, /\/js\/pages\/configs\.js\?v=[a-z0-9]+/);
+  assert.match(page.text, /\/js\/pages\/configs\.js/);
+  assert.doesNotMatch(page.text, /assetVersion/);
   assert.doesNotMatch(page.text, /Open File Manager|data-files-server/);
 
   const modsPage = await app.req('GET', `/servers/${SID}/mods`, {
@@ -97,36 +115,64 @@ test('the Configs tab shows mod groups and unassigned configs without a file exp
 });
 
 test('config API reads and writes only discovered text configs', async () => {
-  const read = await app.req('GET', `/api/servers/${SID}/configs/file?path=${encodeURIComponent(configFile)}`, {
-    cookie: adminCookie,
-  });
-  assert.equal(read.status, 200);
-  assert.match(read.json.content, /enabled = true/);
+  await modConfigs.list(SID);
+  mods.listContent = async () => {
+    throw new Error('read and write must not rescan mod jars');
+  };
+  try {
+    const read = await app.req('GET', `/api/servers/${SID}/configs/file?path=${encodeURIComponent(configFile)}`, {
+      cookie: adminCookie,
+    });
+    assert.equal(read.status, 200);
+    assert.match(read.json.content, /enabled = true/);
 
-  const described = await app.req('GET', `/api/servers/${SID}/configs/file?path=${encodeURIComponent(lithiumConfig)}`, {
-    cookie: adminCookie,
-  });
-  assert.equal(described.status, 200);
-  assert.match(described.json.descriptions['mixin.ai.pathing'], /path-finding node checks/);
+    const described = await app.req(
+      'GET',
+      `/api/servers/${SID}/configs/file?path=${encodeURIComponent(lithiumConfig)}`,
+      {
+        cookie: adminCookie,
+      }
+    );
+    assert.equal(described.status, 200);
+    assert.match(described.json.descriptions['mixin.ai.pathing'], /path-finding node checks/);
 
-  const write = await app.req('PUT', `/api/servers/${SID}/configs/file`, {
-    cookie: adminCookie,
-    body: { path: configFile, content: '[general]\nenabled = false\n' },
-  });
-  assert.equal(write.status, 200);
-  assert.equal(fs.readFileSync(absoluteFile, 'utf8'), '[general]\nenabled = false\n');
+    const write = await app.req('PUT', `/api/servers/${SID}/configs/file`, {
+      cookie: adminCookie,
+      body: { path: configFile, content: '[general]\nenabled = false\n' },
+    });
+    assert.equal(write.status, 200);
+    assert.equal(fs.readFileSync(absoluteFile, 'utf8'), '[general]\nenabled = false\n');
 
-  const largerContent = `# Large config preview\n${'x'.repeat(300_000)}\n`;
-  const largerWrite = await app.req('PUT', `/api/servers/${SID}/configs/file`, {
-    cookie: adminCookie,
-    body: { path: configFile, content: largerContent },
-  });
-  assert.equal(largerWrite.status, 200);
-  assert.equal(fs.readFileSync(absoluteFile, 'utf8'), largerContent);
+    const largerContent = `# Large config preview\n${'x'.repeat(300_000)}\n`;
+    const largerWrite = await app.req('PUT', `/api/servers/${SID}/configs/file`, {
+      cookie: adminCookie,
+      body: { path: configFile, content: largerContent },
+    });
+    assert.equal(largerWrite.status, 200);
+    assert.equal(fs.readFileSync(absoluteFile, 'utf8'), largerContent);
 
-  const rejected = await app.req('PUT', `/api/servers/${SID}/configs/file`, {
-    cookie: adminCookie,
-    body: { path: 'server.properties', content: 'motd=wrong scope' },
-  });
-  assert.equal(rejected.status, 404);
+    const rejected = await app.req('PUT', `/api/servers/${SID}/configs/file`, {
+      cookie: adminCookie,
+      body: { path: 'server.properties', content: 'motd=wrong scope' },
+    });
+    assert.equal(rejected.status, 404);
+  } finally {
+    mods.listContent = originalListContent;
+  }
+});
+
+test('a symlinked config root is refused', async () => {
+  const serverRoot = path.join(config.dataDir, 'servers', SID);
+  const configRoot = path.join(serverRoot, 'config');
+  const savedRoot = path.join(serverRoot, 'config-test-backup');
+  const externalRoot = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'mod-config-link-'));
+  fs.renameSync(configRoot, savedRoot);
+  try {
+    fs.symlinkSync(externalRoot, configRoot, 'junction');
+    await assert.rejects(modConfigs.list(SID), /Path escapes the panel data directory/);
+  } finally {
+    fs.rmSync(configRoot, { recursive: true, force: true });
+    fs.renameSync(savedRoot, configRoot);
+    fs.rmSync(externalRoot, { recursive: true, force: true });
+  }
 });

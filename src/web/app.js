@@ -161,19 +161,6 @@ function createApp() {
         not: (a) => !a,
         jsonScript,
         jsonAttr,
-        // Source-backed browser modules are served for up to one hour. A file
-        // modification version in the URL makes each edit a fresh browser
-        // cache key, including the un-hashed /js/pages modules.
-        assetVersion: (filename) => {
-          const publicRoot = path.resolve(config.root, 'public');
-          const absolute = path.resolve(publicRoot, String(filename || ''));
-          if (absolute === publicRoot || !absolute.startsWith(publicRoot + path.sep)) return app.locals.appVersion;
-          try {
-            return Math.trunc(fs.statSync(absolute).mtimeMs).toString(36);
-          } catch {
-            return app.locals.appVersion;
-          }
-        },
         urlq: (s) => encodeURIComponent(s ?? ''),
         iconSrc,
         avatarSrc,
@@ -283,8 +270,8 @@ function createApp() {
     })
   );
   // Explicit body-size cap. 256 kb comfortably covers every JSON/form payload
-  // the panel sends; upload paths use multer, not these. Text-file editors skip
-  // this parser so their route-local 3 MB parser can read larger edits.
+  // the panel sends; upload paths use multer, not these. Text-file editor routes
+  // use their own parser so the global parser does not reject their larger body.
   app.use(express.urlencoded({ extended: true, limit: '256kb' }));
   const jsonParser = express.json({ limit: '256kb' });
   app.use((req, res, next) => {

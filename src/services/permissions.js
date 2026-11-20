@@ -176,9 +176,10 @@ const CAPABILITY_INFO = {
   },
   files: {
     label: 'Files',
-    help: 'View and edit server files and mod configs, download logs and log bundles, and export blueprints.',
+    help: 'Browse, edit, upload, and download server files, archived logs, and log bundles; export blueprints.',
     covers: [
-      'Open the Files tab to browse and edit server files, or the Configs tab to edit detected mod configs.',
+      'Open the Files tab: browse, read, edit, upload, rename, and delete anything in the server folder, server.properties included.',
+      'Open the Configs tab to edit detected mod configs.',
       'Download archived and game logs and the log bundle; export the history as a file.',
       'Share, delete, and mark crash reports.',
       'Export this server as a blueprint.',

@@ -149,7 +149,7 @@ function showEditor(filePath, original, descriptions) {
   openModal({
     title: filePath.split('/').pop(),
     content: dialog,
-    size: 'xl',
+    size: 'lg',
     actions: [
       { label: 'Close', kind: 'ghost' },
       {
