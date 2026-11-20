@@ -39,6 +39,15 @@ test('console suggestion API returns catalog help to console-authorized users', 
   assert.ok(response.json.help.usages.includes('/give <targets> <item>'));
 });
 
+test('console suggestions panel anchors to the full command row on phone widths', async () => {
+  const response = await req('GET', `/servers/${serverId}/console`, { cookie: admin });
+
+  assert.equal(response.status, 200);
+  assert.ok(response.text.includes('class="relative mt-3 flex gap-2'));
+  assert.ok(response.text.includes('absolute bottom-full -left-4 -right-4'));
+  assert.ok(response.text.includes('sm:left-1/2 sm:right-auto'));
+});
+
 test('console suggestion API rejects oversized and unauthenticated requests', async () => {
   const oversized = await req('GET', `/api/servers/${serverId}/console-suggestions?input=${'x'.repeat(501)}`, {
     cookie: admin,
