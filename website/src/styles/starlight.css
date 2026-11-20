@@ -177,3 +177,10 @@ nav.sidebar a[aria-current='page'] {
   font-family: var(--pixel-font);
   font-size: 1.4rem;
 }
+
+/* English anchors kept on translated docs (src/lib/doc-anchors.js) land where
+   the heading does, below the sticky header. */
+.anchor-alias {
+  display: block;
+  scroll-margin-top: calc(var(--sl-nav-height) + 2rem);
+}

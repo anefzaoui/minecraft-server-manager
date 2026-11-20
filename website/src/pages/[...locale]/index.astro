@@ -36,24 +36,26 @@ const moreHubs = [hub('guides'), hub('compare')];
     {heroDay && <Image src={heroDay} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-day" loading="eager" fetchpriority="high" />}
     {heroNight && <Image src={heroNight} alt="" widths={[800, 1584]} sizes="100vw" class="hero-bg hero-night" loading="lazy" />}
     <Clouds count={4} band={30} />
-    <div class="relative mx-auto grid max-w-6xl items-start gap-8 px-4 pb-72 pt-10 sm:pb-80 lg:grid-cols-[5fr_7fr] lg:pt-14">
+    <div class="relative mx-auto grid max-w-6xl items-start gap-10 px-4 pb-72 pt-12 sm:pb-80 lg:grid-cols-[6fr_7fr] lg:pt-16">
       <div>
-        <p class="tag"><Icon name="sparkles" size={16} />{copy.hero.eyebrow}</p>
-        <h1 class="mt-4 text-[3rem] leading-[1.02] sm:text-[3.75rem] lg:text-[3.5rem]">{copy.hero.title}</h1>
-        <p class="lead mt-4 max-w-xl text-on-sky">{copy.hero.subtitle}</p>
-        <div class="mt-6 flex flex-wrap gap-4">
+        <h1 class="text-[3rem] leading-[1.02] sm:text-[3.75rem] lg:text-[3.5rem]">{copy.hero.title}</h1>
+        <p class="lead mt-5 text-on-sky">{copy.hero.subtitle}</p>
+        <ul class="hero-facts mt-5" role="list">
+          {copy.hero.pills.map((pill) => <li><Icon name="check" size={16} />{pill}</li>)}
+        </ul>
+        <div class="mt-7 flex flex-wrap gap-4">
           <a class="btn btn-primary btn-lg" href="#tutorial"><Icon name="play" size={18} />{copy.hero.primary}</a>
           <a class="btn btn-lg" href={href(locale, '/features/')}>{copy.hero.secondary}</a>
         </div>
-        <ul class="mt-5 flex flex-wrap gap-2" role="list">
-          {copy.hero.pills.map((pill) => <li class="tag"><Icon name="check" size={14} />{pill}</li>)}
-        </ul>
       </div>
-      <a class="panel panel-tight block" href={href(locale, '/screenshots/')}>
-        <span class="slot block">
-          <Image src={HERO} alt={copy.screenshots.items.dashboard} widths={[640, 1000, 1400]} sizes="(min-width: 1152px) 660px, (min-width: 1024px) 58vw, 100vw" loading="eager" fetchpriority="high" class="block" />
-        </span>
-      </a>
+      <figure class="hero-shot">
+        <a class="panel panel-tight block" href={href(locale, '/screenshots/')}>
+          <span class="slot block">
+            <Image src={HERO} alt={copy.screenshots.items.dashboard} widths={[640, 1000, 1400]} sizes="(min-width: 1152px) 660px, (min-width: 1024px) 58vw, 100vw" loading="eager" fetchpriority="high" class="block" />
+          </span>
+        </a>
+        <figcaption class="mt-3 text-sm font-semibold text-on-sky">{copy.hero.shotCaption}</figcaption>
+      </figure>
     </div>
     <div class="ground relative"></div>
   </section>

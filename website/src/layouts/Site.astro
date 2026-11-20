@@ -107,6 +107,7 @@ const baseJsonLd = [
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/atom+xml" title={copy.changelog.feed} href="/changelog.xml" />
     <meta name="theme-color" content="#82d2fe" />
     <meta name="color-scheme" content="light dark" />
     <meta name="generator" content={Astro.generator} />
@@ -139,7 +140,11 @@ const baseJsonLd = [
       // and marketing pages agree. Dark is the default; light is opt-in.
       (function () {
         try {
-          if (localStorage.getItem('starlight-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+          if (localStorage.getItem('starlight-theme') === 'dark') {
+            document.documentElement.dataset.theme = 'dark';
+            // The browser bar follows the night sky too.
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#122662');
+          }
         } catch (e) {}
       })();
     </script>

@@ -1,15 +1,15 @@
 ---
 // The one page header: flat sky (the hero panorama's blue), optional
-// breadcrumb trail and eyebrow sign, title, one line of intro, optional brand
-// pills, optional sprite on the end side, then the ground strip. Same shape on
-// every page.
+// breadcrumb trail, title, one line of intro, optional brand pills, optional
+// sprite on the end side, then the ground strip. Same shape on every page. A
+// page's short label (its `eyebrow` in the copy) names it in the breadcrumb and
+// on hub cards; it is not repeated as a sign above the title.
 import { Image } from 'astro:assets';
 import Clouds from './Clouds.astro';
 import Pill from './Pill.astro';
 interface Props {
   title: string;
   intro?: string;
-  eyebrow?: string;
   sprite?: ImageMetadata;
   spriteAlt?: string;
   pills?: string[];
@@ -17,7 +17,7 @@ interface Props {
   crumbs?: [string, string][];
   crumbsLabel?: string;
 }
-const { title, intro, eyebrow, sprite, spriteAlt = '', pills = [], crumbs = [], crumbsLabel = 'Breadcrumb' } = Astro.props;
+const { title, intro, sprite, spriteAlt = '', pills = [], crumbs = [], crumbsLabel = 'Breadcrumb' } = Astro.props;
 ---
 
 <header class="sky relative overflow-hidden">
@@ -36,9 +36,8 @@ const { title, intro, eyebrow, sprite, spriteAlt = '', pills = [], crumbs = [], 
           </ol>
         </nav>
       )}
-      {eyebrow && <p class="tag mb-3">{eyebrow}</p>}
       <h1>{title}</h1>
-      {intro && <p class="lead mt-2 max-w-2xl text-on-sky">{intro}</p>}
+      {intro && <p class="lead mt-3 text-on-sky">{intro}</p>}
       {pills.length > 0 && (
         <ul class="mt-4 flex flex-wrap gap-2" role="list">
           {pills.map((id) => <Pill id={id} size="sm" />)}

@@ -9,6 +9,7 @@ import PageHeader from '../../../components/PageHeader.astro';
 import XpDivider from '../../../components/XpDivider.astro';
 import Icon from '../../../components/Icon.astro';
 import Community from '../../../components/Community.astro';
+import ComparisonTable from '../../../components/ComparisonTable.astro';
 import { localePaths } from '../../../lib/paths.js';
 import { getCopy } from '../../../i18n/index.js';
 import { DEFAULT_LOCALE } from '../../../i18n/locales.js';
@@ -54,7 +55,7 @@ if (hub.id === 'guides') {
 ---
 
 <Site locale={locale} path={path} pageKey={hub.id} title={page.meta.title} description={page.meta.description} jsonLd={jsonLd} ogImage={`/og/${hub.id}.png`}>
-  <PageHeader title={page.title} intro={page.intro} eyebrow={page.eyebrow} sprite={art(hub.sprite)} pills={page.pills} crumbs={trail.map(([n, p]) => [n, href(locale, p)])} crumbsLabel={copy.landing.breadcrumb} />
+  <PageHeader title={page.title} intro={page.intro} sprite={art(hub.sprite)} pills={page.pills} crumbs={trail.map(([n, p]) => [n, href(locale, p)])} crumbsLabel={copy.landing.breadcrumb} />
   <Section>
     <ul class="cards" role="list">
       {hub.pages.map((p) => {
@@ -75,6 +76,12 @@ if (hub.id === 'guides') {
       })}
     </ul>
   </Section>
+  {page.table && (
+    <>
+      <XpDivider />
+      <ComparisonTable table={page.table} />
+    </>
+  )}
   {docGuides.length > 0 && (
     <>
       <XpDivider />

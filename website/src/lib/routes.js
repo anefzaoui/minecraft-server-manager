@@ -1,6 +1,7 @@
 // Marketing page registry. Keys match `meta.*` in src/i18n/en.json and `nav.*`.
 // `header: true` puts a page in the top navigation; every page is in the footer.
 import { localePrefix } from '../i18n/locales.js';
+import { brands } from '../data/brands.js';
 
 export const PAGES = [
   { key: 'home', path: '/' },
@@ -17,7 +18,8 @@ export const PAGES = [
 
 // Landing pages, grouped under a hub. Each page's copy is the top-level
 // en.json key `key`; the hub's copy is `hubKey`. `sprite` is an art id from
-// src/assets/gen. `published` is the date the page first went live (JSON-LD).
+// src/assets/gen. `published` is the date the page first went live (JSON-LD);
+// pages without one went live with the site, on LANDING_PUBLISHED.
 export const HUBS = [
   {
     id: 'servers',
@@ -37,6 +39,7 @@ export const HUBS = [
     sprite: 'sprite-map',
     article: true,
     pages: [
+      { key: 'guideFriends', slug: 'modpack-server-for-friends', sprite: 'sprite-chest', published: '2026-11-20' },
       { key: 'guidePi', slug: 'raspberry-pi', sprite: 'sprite-server' },
       { key: 'guideHome', slug: 'home-server', sprite: 'icon-windows' },
       { key: 'guideHosting', slug: 'leave-paid-hosting', sprite: 'sprite-chest' },
@@ -53,6 +56,7 @@ export const HUBS = [
       { key: 'compareCrafty', slug: 'crafty-controller', sprite: 'sprite-shield' },
       { key: 'compareAmp', slug: 'amp', sprite: 'sprite-shield' },
       { key: 'compareMcsm', slug: 'mcsmanager', sprite: 'sprite-shield' },
+      { key: 'comparePuffer', slug: 'pufferpanel', sprite: 'sprite-shield', published: '2026-11-20' },
     ],
   },
 ];
@@ -97,7 +101,11 @@ export function breadcrumbLd(locale, trail) {
   };
 }
 
-/** FAQPage JSON-LD from [{ q, a }]. */
+/**
+ * FAQPage JSON-LD from [{ q, a, pills? }]. On the page an answer's brands are
+ * pills next to it rather than words in it ("boast, don't bury"), so the
+ * structured answer names them in words, or it would read "Both can be...".
+ */
 export function faqLd(items) {
   return {
     '@context': 'https://schema.org',
@@ -105,7 +113,14 @@ export function faqLd(items) {
     mainEntity: items.map((f) => ({
       '@type': 'Question',
       name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.pills?.length
+          ? `${f.a} (${brands(f.pills)
+              .map((b) => b.label)
+              .join(', ')})`
+          : f.a,
+      },
     })),
   };
 }

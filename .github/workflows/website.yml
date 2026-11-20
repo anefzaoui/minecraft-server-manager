@@ -4,13 +4,15 @@ name: Website
 # (custom domain minecraft-server-manager.com, via website/public/CNAME).
 # Pull requests only build and verify; pushes to main also deploy. The docs
 # pages are generated from docs/*.md and the changelog page from CHANGELOG.md,
-# so those paths trigger a rebuild too.
+# so those paths trigger a rebuild too, and package.json for the version the
+# structured data quotes.
 on:
   pull_request:
     paths:
       - 'website/**'
       - 'docs/**'
       - 'CHANGELOG.md'
+      - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/website.yml'
   push:
@@ -19,6 +21,7 @@ on:
       - 'website/**'
       - 'docs/**'
       - 'CHANGELOG.md'
+      - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/website.yml'
   workflow_dispatch:
@@ -35,7 +38,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # Full history: each docs page's "Last updated" date and the sitemap's
+      # lastmod come from git log, which a shallow clone would get wrong.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 

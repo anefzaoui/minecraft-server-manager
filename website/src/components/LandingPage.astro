@@ -10,6 +10,7 @@ import PageHeader from './PageHeader.astro';
 import XpDivider from './XpDivider.astro';
 import Icon from './Icon.astro';
 import Pill from './Pill.astro';
+import ComparisonTable from './ComparisonTable.astro';
 import { getCopy } from '../i18n/index.js';
 import { langTag } from '../i18n/locales.js';
 import { href, absolute, breadcrumbLd, faqLd, landingByKey, LANDING_PUBLISHED, SITE_URL } from '../lib/routes.js';
@@ -54,7 +55,7 @@ if (entry.hub.article) {
     inLanguage: langTag(locale),
     url: absolute(locale, entry.path),
     image: new URL(ogImage, SITE_URL).href,
-    datePublished: LANDING_PUBLISHED,
+    datePublished: entry.published || LANDING_PUBLISHED,
     author: { '@type': 'Organization', name: copy.site.name, url: SITE_URL },
     publisher: { '@type': 'Organization', name: copy.site.name, url: SITE_URL },
   });
@@ -63,7 +64,7 @@ const related = (page.related || []).map((k) => landingByKey(k)).filter(Boolean)
 ---
 
 <Site locale={locale} path={entry.path} pageKey={entry.key} title={page.meta.title} description={page.meta.description} jsonLd={jsonLd} ogImage={ogImage} ogType={entry.hub.article ? 'article' : 'website'}>
-  <PageHeader title={page.title} intro={page.intro} eyebrow={page.eyebrow} sprite={art(entry.sprite)} pills={page.pills} crumbs={crumbs} crumbsLabel={ui.breadcrumb} />
+  <PageHeader title={page.title} intro={page.intro} sprite={art(entry.sprite)} pills={page.pills} crumbs={crumbs} crumbsLabel={ui.breadcrumb} />
 
   {(page.sections || []).map((s, i) => {
     const pic = s.shot && shot(s.shot);
@@ -100,24 +101,7 @@ const related = (page.related || []).map((k) => landingByKey(k)).filter(Boolean)
   {page.table && (
     <>
       <XpDivider />
-      <Section title={page.table.title}>
-        <div class="panel panel-tight mt-5 overflow-x-auto">
-          <table class="data-table">
-            <thead>
-              <tr>{page.table.columns.map((c) => <th scope="col">{c}</th>)}</tr>
-            </thead>
-            <tbody>
-              {page.table.rows.map((r) => (
-                <tr>
-                  <th scope="row">{r.label}</th>
-                  {r.values.map((v, i) => <td data-th={page.table.columns[i + 1]}>{v}</td>)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {page.table.note && <p class="mt-3 text-sm text-ink-faint">{page.table.note}</p>}
-      </Section>
+      <ComparisonTable table={page.table} />
     </>
   )}
 

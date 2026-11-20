@@ -7,6 +7,7 @@ import Pill from '../../components/Pill.astro';
 import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { art } from '../../data/art.js';
+import { faqLd } from '../../lib/routes.js';
 const spriteShield = art('sprite-shield');
 
 export function getStaticPaths() {
@@ -14,18 +15,10 @@ export function getStaticPaths() {
 }
 const locale = localeFromParams(Astro.params);
 const copy = getCopy(locale);
-const faqLd = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: copy.faq.items.map((f) => ({
-    '@type': 'Question',
-    name: f.q,
-    acceptedAnswer: { '@type': 'Answer', text: f.a },
-  })),
-};
+const jsonLd = faqLd(copy.faq.items);
 ---
 
-<Site locale={locale} path="/faq/" pageKey="faq" jsonLd={[faqLd]}>
+<Site locale={locale} path="/faq/" pageKey="faq" jsonLd={[jsonLd]}>
   <PageHeader title={copy.faq.title} sprite={spriteShield} />
   <Section>
     <dl class="masonry md:columns-2">

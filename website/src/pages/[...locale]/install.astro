@@ -12,6 +12,9 @@ import { localePaths, localeFromParams } from '../../lib/paths.js';
 import { getCopy } from '../../i18n/index.js';
 import { href, REPO_URL, SITE_URL } from '../../lib/routes.js';
 import { art } from '../../data/art.js';
+import CodeBox from '../../components/CodeBox.astro';
+import { INSTALLER, INSTALLER_OPTIONS } from '../../data/install.js';
+import { langTag } from '../../i18n/locales.js';
 const spriteClock = art('sprite-clock');
 
 export function getStaticPaths() {
@@ -19,12 +22,21 @@ export function getStaticPaths() {
 }
 const locale = localeFromParams(Astro.params);
 const copy = getCopy(locale);
+// HowTo for the path most people take: the Linux installer. The command goes
+// into the step text, so the structured data says what to run, not only what
+// to do.
+const linux = copy.tutorial.simple.linux;
 const howTo = {
   '@context': 'https://schema.org',
   '@type': 'HowTo',
   name: `${copy.install.title}: ${copy.site.name}`,
-  description: copy.install.docker.body,
-  step: copy.tutorial.tabs.compose.steps.map((s) => ({ '@type': 'HowToStep', name: s.title, text: s.body })),
+  description: linux.steps[0].body,
+  inLanguage: langTag(locale),
+  tool: [{ '@type': 'HowToTool', name: 'Linux (64-bit)' }, { '@type': 'HowToTool', name: 'curl' }],
+  step: [
+    { '@type': 'HowToStep', position: 1, name: linux.steps[0].title, text: `${linux.steps[0].body} ${INSTALLER}`, url: `${new URL(href(locale, '/install/'), SITE_URL).href}#install-tutorial` },
+    { '@type': 'HowToStep', position: 2, name: linux.steps[1].title, text: linux.steps[1].body },
+  ],
 };
 const breadcrumb = {
   '@context': 'https://schema.org',
@@ -48,6 +60,22 @@ const breadcrumb = {
       <a class="btn" href={`${REPO_URL}/blob/main/docker-compose.yml`} rel="noopener"><Icon name="docker" size={18} />{copy.install.compose}</a>
       <a class="btn btn-primary" href={href(locale, '/docs/getting-started/')}>{copy.install.nextCta}<Icon name="arrow" size={18} /></a>
     </p>
+  </Section>
+
+  <XpDivider />
+
+  <Section title={copy.install.options.title} intro={copy.install.options.intro} id="installer-options">
+    <dl class="mt-6 max-w-4xl space-y-6">
+      {INSTALLER_OPTIONS.map((o) => (
+        <div class="min-w-0">
+          <dt class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <code class="font-mono text-[0.95rem] font-semibold text-ink" dir="ltr">{o.flags}</code>
+            <span class="text-ink-soft">{copy.install.options.items[o.key]}</span>
+          </dt>
+          <dd class="mt-2" dir="ltr"><CodeBox code={o.cmd} copy={copy.tutorial.copy} copied={copy.tutorial.copied} wrap /></dd>
+        </div>
+      ))}
+    </dl>
   </Section>
 
   <XpDivider />

@@ -7,6 +7,7 @@
 // remembering the inputs per browser.
 import { Image } from 'astro:assets';
 import CodeBox from './CodeBox.astro';
+import { INSTALLER, RAW_COMPOSE } from '../data/install.js';
 import Icon from './Icon.astro';
 import { brand, simpleIcon, pixelIcon } from '../data/brands.js';
 interface Props {
@@ -16,9 +17,7 @@ interface Props {
 const { copy, id = 'tutorial' } = Astro.props;
 const t = copy.tutorial;
 const REPO = 'https://github.com/anefzaoui/minecraft-server-manager';
-const RAW_COMPOSE = 'https://raw.githubusercontent.com/anefzaoui/minecraft-server-manager/main/docker-compose.yml';
 const PANEL_URL = 'http://{{host}}:25564';
-const INSTALLER = 'curl -fsSL https://raw.githubusercontent.com/anefzaoui/minecraft-server-manager/main/deploy/install.sh | sudo bash';
 const FROM_SOURCE = [`git clone ${REPO}.git`, 'cd minecraft-server-manager', 'pnpm install', 'pnpm start'];
 
 // Simple mode: one tab per platform, steps are [commands] in order; the last
@@ -205,8 +204,8 @@ const TABS = [
 </div>
 
 <script>
-  // Personalise commands from the two inputs, copy buttons, and remember the
-  // inputs per browser. Everything degrades: without JS the defaults show and
+  // Personalise commands from the two inputs and remember the
+  // inputs per browser (copy buttons are CodeBox's own). Everything degrades: without JS the defaults show and
   // the tabs still switch (they are radios).
   const roots = document.querySelectorAll<HTMLElement>('[data-tutorial]');
   const KEY = 'msm-tutorial-inputs';
@@ -236,28 +235,5 @@ const TABS = [
     for (const i of inputs) i.addEventListener('input', render);
     render();
 
-    for (const btn of root.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
-      btn.addEventListener('click', async () => {
-        const code = btn.parentElement?.querySelector('code');
-        const text = code?.textContent || '';
-        try {
-          await navigator.clipboard.writeText(text);
-        } catch {
-          const ta = document.createElement('textarea');
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          ta.remove();
-        }
-        const label = btn.querySelector('span')!;
-        label.textContent = btn.dataset.copiedLabel!;
-        btn.dataset.copied = 'true';
-        setTimeout(() => {
-          label.textContent = btn.dataset.copyLabel!;
-          delete btn.dataset.copied;
-        }, 1600);
-      });
-    }
   }
 </script>

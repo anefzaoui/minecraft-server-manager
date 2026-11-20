@@ -17,7 +17,10 @@ const copy = getCopy(locale);
 <Site locale={locale} path="/changelog/" pageKey="changelog">
   <PageHeader title={copy.changelog.title} intro={copy.changelog.intro} />
   <Section>
-    <p><a class="btn" href={`${REPO_URL}/releases`} rel="noopener">{copy.changelog.releases}</a></p>
+    <p class="flex flex-wrap gap-4">
+      <a class="btn" href={`${REPO_URL}/releases`} rel="noopener">{copy.changelog.releases}</a>
+      <a class="btn" href="/changelog.xml" type="application/atom+xml">{copy.changelog.feed}</a>
+    </p>
     <article class="changelog prose-soft mt-8 max-w-3xl" lang="en" dir="ltr">
       <Changelog />
     </article>

@@ -63,13 +63,25 @@ const writeJson = (p, v) => writeFileSync(p, `${JSON.stringify(v, null, 2)}\n`);
 
 // ---------- units ----------
 
+/**
+ * One front matter value: written as a JSON string by this script and by
+ * sync-docs.js, but Prettier (singleQuote) rewrites committed files to YAML
+ * single quotes, where '' stands for one quote. Plain scalars pass through.
+ */
+function yamlScalar(raw) {
+  const v = raw.trim();
+  if (v.startsWith('"')) return JSON.parse(v);
+  if (v.startsWith("'") && v.endsWith("'")) return v.slice(1, -1).replace(/''/g, "'");
+  return v;
+}
+
 function splitFrontMatter(md) {
   const m = md.match(/^---\n([\s\S]*?)\n---\n?/);
   if (!m) return { meta: {}, body: md, raw: '' };
   const meta = {};
   for (const line of m[1].split('\n')) {
     const kv = line.match(/^(\w+):\s*(.*)$/);
-    if (kv) meta[kv[1]] = JSON.parse(kv[2]);
+    if (kv) meta[kv[1]] = yamlScalar(kv[2]);
   }
   return { meta, body: md.slice(m[0].length), raw: m[1] };
 }

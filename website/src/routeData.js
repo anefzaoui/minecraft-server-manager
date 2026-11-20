@@ -6,6 +6,7 @@ import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
 import { getCopy } from './i18n/index.js';
 import { DEFAULT_LOCALE, langTag } from './i18n/locales.js';
 import { SITE_URL, breadcrumbLd } from './lib/routes.js';
+import { lastCommitDate, docSource } from './lib/gitDates.js';
 
 export const onRequest = defineRouteMiddleware((context) => {
   const route = context.locals.starlightRoute;
@@ -21,6 +22,10 @@ export const onRequest = defineRouteMiddleware((context) => {
     [copy.nav.docs, '/docs/'],
     ...(slug === 'index' ? [] : [[route.entry.data.title, path]]),
   ];
+  // "Last updated" and dateModified: when the English source in docs/ last
+  // changed (a translation follows its source), from git.
+  const modified = lastCommitDate(docSource(slug));
+  if (modified) route.lastUpdated = modified;
   const article = {
     '@context': 'https://schema.org',
     '@type': 'TechArticle',
@@ -29,6 +34,7 @@ export const onRequest = defineRouteMiddleware((context) => {
     inLanguage: langTag(locale),
     url: new URL(context.url.pathname, SITE_URL).href,
     image: card,
+    ...(modified ? { dateModified: modified.toISOString().slice(0, 10) } : {}),
     author: { '@type': 'Organization', name: copy.site.name, url: SITE_URL },
     publisher: { '@type': 'Organization', name: copy.site.name, url: SITE_URL },
     isPartOf: { '@type': 'WebSite', name: copy.site.name, url: SITE_URL },

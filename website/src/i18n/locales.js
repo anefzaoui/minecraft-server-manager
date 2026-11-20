@@ -47,6 +47,17 @@ export function getLocale(code) {
   return LOCALES.find((l) => l.code === code) || LOCALES[0];
 }
 
+/**
+ * The locale code (URL prefix) for what Astro.currentLocale returns, which is
+ * the BCP-47 tag on Starlight pages ('pt-BR' for the 'pt-br' locale).
+ * @param {string | undefined} current
+ */
+export function localeCode(current) {
+  if (!current) return DEFAULT_LOCALE;
+  const found = LOCALES.find((l) => l.code === current || (l.lang || l.code).toLowerCase() === current.toLowerCase());
+  return found ? found.code : DEFAULT_LOCALE;
+}
+
 /** BCP-47 tag for the `lang` attribute and hreflang. */
 export function langTag(code) {
   const l = getLocale(code);

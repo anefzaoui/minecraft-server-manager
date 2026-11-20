@@ -30,7 +30,8 @@
     "primary": "Get started in minutes",
     "secondary": "Explore the features",
     "pills": ["MIT licensed", "Zero paid services", "Self-hosted"],
-    "scroll": "See the tutorial"
+    "scroll": "See the tutorial",
+    "shotCaption": "The real panel: its dashboard with six example servers, in the dark theme."
   },
   "pillars": {
     "title": "Made for people who run servers, not tickets",
@@ -120,6 +121,11 @@
             "title": "Pick-mods-first solver",
             "body": "Choose the mods you want and get the newest fully compatible loader and Minecraft version.",
             "icon": "sparkles"
+          },
+          {
+            "title": "Any pack version, any loader build",
+            "body": "Move a modpack to any published version, newer or older, or switch the mod loader build. A backup comes first, and a failed boot rolls back.",
+            "icon": "refresh"
           }
         ]
       },
@@ -180,6 +186,12 @@
             "icon": "globe"
           },
           {
+            "title": "Invite friends",
+            "body": "Copy an invite with the address and version. For a server built from mods you picked, hand friends a client .mrpack that installs them and adds the server to their list.",
+            "icon": "users",
+            "pills": ["mrpack"]
+          },
+          {
             "title": "Users, roles, and 2FA",
             "body": "Admin, operator, and viewer roles with TOTP two-factor authentication.",
             "icon": "lock"
@@ -199,6 +211,7 @@
       "overview": "A server's overview with resource meters and quick actions.",
       "console": "The live console with an RCON command bar and log filters.",
       "mods": "Mods from five registries, filtered to the server's loader and version.",
+      "modpacks": "Modpacks: search CurseForge and Modrinth, and every pack installs pinned to an exact version.",
       "worlds": "Swap worlds and manage files from the browser.",
       "backups": "Backups with retention classes and in-place restore.",
       "schedules": "Cron schedules for restarts, backups, and commands.",
@@ -236,7 +249,19 @@
       "Share your project drive with Docker Desktop (Settings, Resources, File sharing) so bind mounts work.",
       "The Docker image targets Linux hosts; on Windows and macOS run the panel from source."
     ],
-    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []]
+    "reqPills": [["docker", "linux", "windows", "macos"], ["nodejs"], []],
+    "options": {
+      "title": "Installer Options",
+      "intro": "The Linux installer takes its options after bash -s --, so they work through the pipe as well. Run it again with the same options to upgrade; your data folder, .env and compose edits are kept.",
+      "items": {
+        "port": "Serve the panel on another port.",
+        "proxy": "Listen on 127.0.0.1 only, for a reverse proxy with TLS in front.",
+        "tag": "Pin a release instead of following the newest one.",
+        "dir": "Install somewhere other than /opt/msm.",
+        "uninstall": "Remove the panel and keep its data. Through a pipe there is no keyboard to answer the question, so add --yes; add --purge as well to delete the data folder.",
+        "help": "Every option, with its default."
+      }
+    }
   },
   "faq": {
     "title": "Frequently asked questions",
@@ -276,6 +301,10 @@
         "a": "Yes. The panel has admin, operator, and viewer roles, and each account can turn on two-factor authentication."
       },
       {
+        "q": "How do friends outside my home join?",
+        "a": "Forward the server's game port, from 25565 upward, on your router to the machine that runs it, or use a tunnel if your internet provider does not allow port forwarding. The server's Invites tab shows the address to share and writes the invite text for you. Keep the panel's own port closed."
+      },
+      {
         "q": "Does it need to be exposed to the internet?",
         "a": "No. Players connect to the game ports, not the panel. Keep the panel on your LAN or behind a VPN or reverse proxy with authentication."
       },
@@ -283,6 +312,10 @@
         "q": "What about Bedrock players?",
         "a": "Both can be installed like any other plugin or mod, and the panel exposes the settings they need.",
         "pills": ["geyser", "floodgate"]
+      },
+      {
+        "q": "Is it made with AI?",
+        "a": "Partly, and openly. Most of the code is written with Claude Code, and the maintainer designs, reviews and tests every feature. The AI declaration in the repository describes how."
       },
       {
         "q": "Where do I get help?",
@@ -293,7 +326,8 @@
   "changelog": {
     "title": "Changelog",
     "intro": "Every release, newest first. Release notes are published in English.",
-    "releases": "All releases on GitHub"
+    "releases": "All releases on GitHub",
+    "feed": "Release Feed (Atom)"
   },
   "community": {
     "title": "Come say hi",
@@ -313,7 +347,10 @@
     "notAffiliated": "Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.",
     "serverTypes": "Server Types",
     "guides": "Guides",
-    "compare": "Compare"
+    "compare": "Compare",
+    "roadmap": "Roadmap",
+    "ai": "How AI Is Used",
+    "conduct": "Code of Conduct"
   },
   "meta": {
     "home": {
@@ -957,7 +994,7 @@
         }
       ]
     },
-    "related": ["serverForge", "serverFabric", "guideHosting"],
+    "related": ["guideFriends", "serverForge", "serverFabric"],
     "cta": {
       "title": "Run Your Modpack Server at Home",
       "body": "Install the panel, open the Modpacks page, and pick a pack. It stays on the version you chose until you say otherwise."
@@ -966,12 +1003,13 @@
   "guidesHub": {
     "meta": {
       "title": "Guides: host a Minecraft server yourself",
-      "description": "Step-by-step guides for hosting Minecraft servers yourself: on a Raspberry Pi, on a home PC, after leaving paid hosting, and many servers on one machine."
+      "description": "Guides for hosting Minecraft servers yourself: a modpack server for friends, a Raspberry Pi, a home PC, leaving paid hosting, and many servers on one machine."
     },
     "eyebrow": "Guides",
     "title": "Guides for hosting Minecraft servers yourself",
     "intro": "Practical walkthroughs for the setups people actually run, from a Raspberry Pi on a shelf to a machine full of servers.",
     "cards": {
+      "guideFriends": "Host a CurseForge or Modrinth modpack for your friends, with the right memory and an invite they can follow.",
       "guidePi": "Turn a Raspberry Pi 4 or 5 into a Minecraft server with a web panel, and size it honestly.",
       "guideHome": "Host a Minecraft server at home on Windows, macOS, or Linux, and let friends join safely.",
       "guideHosting": "Move your world, plugins, and mods off a paid host without losing a single inventory.",
@@ -981,6 +1019,105 @@
     "cta": {
       "title": "Need Something Not Covered Here?",
       "body": "The documentation goes deeper on every feature, and the Discord has real humans who run servers."
+    }
+  },
+  "guideFriends": {
+    "meta": {
+      "title": "Host a Modpack Server for Friends",
+      "description": "Host a CurseForge or Modrinth modpack server for your friends on your own machine: pick the pack, give it enough memory, invite friends, and keep backups."
+    },
+    "eyebrow": "Modpack server guide",
+    "title": "How to Host a Modpack Server for Your Friends",
+    "intro": "Your own machine can host the pack you play with your friends. Install the panel, create the server from the pack, give it the memory it needs, and send friends an invite they can follow.",
+    "pills": ["packs-curseforge", "packs-modrinth", "ftb", "docker"],
+    "sections": [
+      {
+        "title": "Pick the Pack From the Wizard",
+        "body": "The Modpacks page and the From Modpack tab of the creation wizard search CurseForge and Modrinth by name; the wizard also takes FTB packs by ID, or a pack export you already have. Choose the version your friends will play. The panel installs exactly that version and keeps it there: a restart never upgrades the pack behind your back. CurseForge needs a free API key, added once under Settings, API Keys; Modrinth needs none.",
+        "points": [
+          "Search CurseForge and Modrinth, or upload a .mrpack, a CurseForge export or a zip of mod jars.",
+          "The pack version is pinned, so everyone plays the same one.",
+          "Java is picked for the pack's Minecraft version."
+        ],
+        "pills": ["packs-curseforge", "packs-modrinth", "ftb", "mrpack", "cf-export"],
+        "shot": "modpacks"
+      },
+      {
+        "title": "Give It Enough Memory",
+        "body": "Modpacks need far more memory than a vanilla server, and a server has two numbers: the Java heap, and the container limit around it, which must be larger because Java uses memory beyond its heap. A light pack of 40 to 80 mods wants a 4 GB heap in a 6 GB container; a big kitchen-sink pack 6 to 8 GB of heap in 10 GB. The panel tells a server stopped for running out of memory apart from a crash, so you know which setting to change.",
+        "points": [
+          "Set the memory in the wizard, and change it later in the server's settings.",
+          "Leave memory for the operating system and the panel.",
+          "The Monitoring tab shows what the server really uses."
+        ]
+      },
+      {
+        "title": "Send Friends an Invite They Can Follow",
+        "body": "Friends install the same pack at the same version in their launcher: the CurseForge app, the Modrinth App or Prism Launcher. The server's Invites tab, under Settings, copies the address to share and an invite text with the Minecraft version. Friends on your network use the local address. For friends elsewhere, forward the game port on your router, or use a tunnel when your provider does not allow it.",
+        "points": [
+          "The Invites tab offers the local address, your public address and a custom one.",
+          "If the whitelist is on, add each friend on the Players tab first.",
+          "For a server built from mods you picked, the Invites tab also makes a client .mrpack that installs them and adds the server to the multiplayer list."
+        ],
+        "pills": ["mrpack"]
+      },
+      {
+        "title": "Keep the World Safe",
+        "body": "Every new server gets a daily backup schedule. Before a pack update the panel takes another backup, rebuilds the server on the new version and watches the first boot; if it does not come up, one click rolls it back. Mods you added on top of the pack stay through updates.",
+        "points": [
+          "Daily backups from the first day.",
+          "Pack updates and downgrades with a backup and a rollback.",
+          "Crash reports detected, explained and shareable."
+        ],
+        "shot": "backups"
+      }
+    ],
+    "steps": {
+      "title": "Host Your Modpack Server",
+      "items": [
+        {
+          "title": "Install the Panel",
+          "body": "On Linux, the one-line installer sets up Docker and the panel. On Windows and macOS, run the panel with Node.js next to Docker Desktop."
+        },
+        {
+          "title": "Add a CurseForge API Key",
+          "body": "Only for CurseForge packs: add a free key under Settings, API Keys."
+        },
+        {
+          "title": "Create the Server From the Pack",
+          "body": "Open the From Modpack tab of the wizard, find the pack, pick its version and memory, and create the server."
+        },
+        {
+          "title": "Invite Your Friends",
+          "body": "Start the server, open Settings, Invites, and send the invite text. Friends install the same pack version in their launcher and join."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Modpack Server Questions",
+      "items": [
+        {
+          "q": "How much RAM does a modpack server need?",
+          "a": "About 6 GB for a light pack of 40 to 80 mods and 10 GB for a big pack of 150 to 300, each with a smaller Java heap inside. Expert packs such as GregTech New Horizons want 16 GB. Leave room for the operating system too."
+        },
+        {
+          "q": "Do my friends need the same modpack version?",
+          "a": "Yes. The server runs one pinned pack version, and a client with different versions of the mods is usually refused or crashes. Tell friends the version shown on the server's Overview tab."
+        },
+        {
+          "q": "Can friends join without port forwarding?",
+          "a": "Yes, if they are on your network. From elsewhere, either forward the game port on your router or use a tunnel service, which also works when your provider blocks port forwarding."
+        },
+        {
+          "q": "What happens when the pack gets an update?",
+          "a": "With the Notify Me policy the Updates page shows it. Applying it takes a backup, rebuilds the server and watches the first boot, and a rollback is one click. Your friends then update the pack in their launcher too."
+        }
+      ]
+    },
+    "related": ["serverModpacks", "guideHome", "guidePi"],
+    "cta": {
+      "title": "Play Your Pack on Your Own Server",
+      "body": "Free, open source, and no account with anyone. Install the panel and create the server from the pack in the wizard."
     }
   },
   "guidePi": {
@@ -1325,7 +1462,7 @@
   "compareHub": {
     "meta": {
       "title": "Minecraft Server Panel Comparison: Pterodactyl, AMP, Crafty",
-      "description": "A fair comparison of free and paid Minecraft server panels: Pterodactyl, Crafty Controller, AMP and MCSManager, next to Minecraft Server Manager."
+      "description": "A fair comparison of free and paid Minecraft server panels: Pterodactyl, Crafty Controller, AMP, MCSManager and PufferPanel, next to Minecraft Server Manager."
     },
     "eyebrow": "Compare panels",
     "title": "Minecraft Server Panel Comparison",
@@ -1334,7 +1471,8 @@
       "comparePtero": "A free multi-game panel built for hosting companies, with a separate daemon on every machine. Compare setup effort and Minecraft features.",
       "compareCrafty": "A free Minecraft panel written in Python that runs servers as plain processes. Compare how servers are isolated and how modpacks get in.",
       "compareAmp": "A commercial panel for hundreds of games, sold in licence tiers. Compare price, instance limits and Minecraft depth.",
-      "compareMcsm": "A free, distributed panel for Minecraft and Steam games. Compare architecture, Docker use and modpack handling."
+      "compareMcsm": "A free, distributed panel for Minecraft and Steam games. Compare architecture, Docker use and modpack handling.",
+      "comparePuffer": "A free, lightweight panel for many games and many machines, with servers as processes or containers. Compare isolation, nodes and Minecraft depth."
     },
     "sections": [
       {
@@ -1373,6 +1511,73 @@
     "cta": {
       "title": "Try It on Your Own Machine",
       "body": "Install the panel in three steps and create your first server from the wizard. Your whole panel stays in one folder you can copy anywhere."
+    },
+    "table": {
+      "title": "All Panels at a Glance",
+      "columns": [
+        "",
+        "Minecraft Server Manager",
+        "Pterodactyl",
+        "Crafty Controller",
+        "AMP",
+        "MCSManager",
+        "PufferPanel"
+      ],
+      "rows": [
+        {
+          "label": "Price",
+          "values": ["Free.", "Free.", "Free.", "Paid licence tiers.", "Free.", "Free."]
+        },
+        {
+          "label": "Licence",
+          "values": ["MIT.", "MIT.", "GPL-3.0.", "Commercial, closed source.", "Apache-2.0.", "Apache-2.0."]
+        },
+        {
+          "label": "Games",
+          "values": [
+            "Minecraft Java Edition.",
+            "Many, through eggs.",
+            "Minecraft Java and Bedrock.",
+            "More than 200.",
+            "Minecraft and Steam games.",
+            "Many, through templates."
+          ]
+        },
+        {
+          "label": "Game servers run as",
+          "values": [
+            "Docker containers.",
+            "Docker containers.",
+            "Processes on the host.",
+            "Processes, or Docker containers once turned on.",
+            "Containers or processes.",
+            "Processes or containers."
+          ]
+        },
+        {
+          "label": "Several machines",
+          "values": [
+            "No. One panel per machine.",
+            "Yes, with Wings nodes.",
+            "No remote nodes in its documentation.",
+            "Professional licence and above.",
+            "Yes, with daemons.",
+            "Yes, with nodes."
+          ]
+        },
+        {
+          "label": "Host systems",
+          "values": [
+            "Linux, Windows, macOS.",
+            "Linux.",
+            "Linux, Windows, macOS.",
+            "Linux, Windows.",
+            "Linux, Windows, macOS.",
+            "Linux."
+          ]
+        }
+      ],
+      "note": "Facts checked against each project's own documentation, October and November 2026. Each comparison page has the details."
     }
   },
   "comparePtero": {
@@ -1834,10 +2039,136 @@
         }
       ]
     },
-    "related": ["compareHub", "comparePtero", "guideMulti"],
+    "related": ["compareHub", "comparePtero", "guideMulti", "comparePuffer"],
     "cta": {
       "title": "Minecraft, Done in Depth",
       "body": "Install the panel in three steps and create your first server from the wizard."
+    }
+  },
+  "comparePuffer": {
+    "meta": {
+      "title": "PufferPanel Alternative for Minecraft Servers",
+      "description": "Minecraft Server Manager compared with PufferPanel: every server in its own Docker container and Minecraft tools built in, against a light multi-game, multi-node panel."
+    },
+    "eyebrow": "PufferPanel alternative",
+    "title": "A PufferPanel Alternative Made Only for Minecraft",
+    "intro": "PufferPanel is a free, open-source panel for many games on one or many machines. Minecraft Server Manager runs only Minecraft on one machine, always in Docker, with the Minecraft tools built in.",
+    "pills": ["docker", "linux", "windows", "macos", "arm64"],
+    "table": {
+      "title": "Side by Side",
+      "columns": ["", "Minecraft Server Manager", "PufferPanel"],
+      "rows": [
+        {
+          "label": "Price and licence",
+          "values": ["Free, MIT.", "Free, Apache-2.0."]
+        },
+        {
+          "label": "Written in",
+          "values": ["Node.js 24.", "Go."]
+        },
+        {
+          "label": "What you install",
+          "values": [
+            "One process, or one Docker container.",
+            "One service from its apt or yum repository, or its Docker image. A node on another machine runs the same package."
+          ]
+        },
+        {
+          "label": "Database",
+          "values": [
+            "Built-in SQLite file inside the data folder.",
+            "None to set up for a basic install. A guide covers using an external database."
+          ]
+        },
+        {
+          "label": "Game servers run as",
+          "values": [
+            "Resource-capped Docker containers, always.",
+            "Processes on the host (its docs say this environment has no security features) or Docker containers."
+          ]
+        },
+        {
+          "label": "Host systems",
+          "values": [
+            "Linux, Windows and macOS. The image is built for amd64 and arm64.",
+            "Linux: packages for Ubuntu 22.04 and 24.04 and Debian 10 and 11 on amd64 and arm64, Raspbian on arm64, and a yum repository. 32-bit is not supported."
+          ]
+        },
+        {
+          "label": "Machines managed",
+          "values": [
+            "One. The panel and Docker run on the same host.",
+            "Many. Nodes on other machines run servers for one panel."
+          ]
+        },
+        {
+          "label": "Minecraft",
+          "values": [
+            "Java Edition, every server type of the itzg image, and CurseForge, Modrinth, FTB and GT New Horizons packs. Bedrock players join through Geyser.",
+            "Templates for Java and Bedrock servers, CurseForge and FTB packs, and BungeeCord, Velocity and Waterfall proxies."
+          ]
+        }
+      ],
+      "note": "Facts checked November 2026 against PufferPanel's documentation, its repository and its templates repository."
+    },
+    "sections": [
+      {
+        "title": "Isolation Without a Setting to Remember",
+        "body": "PufferPanel lets you pick an environment per server. The standard one runs the server as a process on the host, as the same user as the panel, and its own documentation says it has no security features; the Docker one isolates it. Minecraft Server Manager has only the second kind. Every server is its own container with a memory and CPU cap, a disk quota the panel enforces, and nothing shared with the others but the mod library.",
+        "points": [
+          "One container per server, labelled and capped.",
+          "Disk quotas enforced by the panel.",
+          "A server that crashes or runs out of memory is detected and recorded."
+        ],
+        "pills": ["docker"]
+      },
+      {
+        "title": "Where Minecraft Server Manager Goes Deeper on Minecraft",
+        "body": "A template starts a server; the work comes after. Mods to find and update, packs that move on, crashes to read, worlds to back up. Those are built into the panel here.",
+        "points": [
+          "Modpacks are pinned to an exact version. Upgrades and downgrades take a backup first and roll back in one click.",
+          "One search across five registries, filtered to the server's loader and Minecraft version.",
+          "Every download is checksum-verified before it reaches the server.",
+          "A version check shows which future Minecraft versions every installed mod already supports.",
+          "Crash reports are detected, parsed and shareable to mclo.gs in one click.",
+          "A one-click BlueMap live map, behind the panel's own sign-in."
+        ],
+        "pills": ["modrinth", "curseforge", "hangar", "spigotmc", "github-releases"],
+        "shot": "mods"
+      },
+      {
+        "title": "When PufferPanel Is the Better Pick",
+        "body": "PufferPanel is light, free and has been around for years. If any of these describe you, pick it.",
+        "points": [
+          "You host games other than Minecraft.",
+          "You run servers on several machines and want one panel for all of them.",
+          "You want a native Bedrock server, or a BungeeCord, Velocity or Waterfall proxy network.",
+          "You would rather not run Docker at all.",
+          "You want SFTP access to server files."
+        ]
+      }
+    ],
+    "faq": {
+      "title": "PufferPanel Questions",
+      "items": [
+        {
+          "q": "Can I move a Minecraft server from PufferPanel to Minecraft Server Manager?",
+          "a": "Yes. Download the server's world folder, create a server of the same type and Minecraft version, then upload the world on the Worlds page and install it to that server. For a modded server, import the pack or a zip of its mod jars when you create it."
+        },
+        {
+          "q": "Does Minecraft Server Manager need Docker?",
+          "a": "Yes. Every Minecraft server runs as a Docker container, which is how it caps memory, CPU and disk per server. The panel itself can run in Docker or straight from Node.js."
+        },
+        {
+          "q": "Can it run servers on a second machine?",
+          "a": "No. It manages the Docker daemon on the machine it runs on. For two machines, run a panel on each, or pick a panel with nodes such as PufferPanel."
+        }
+      ]
+    },
+    "related": ["compareHub", "compareCrafty", "compareMcsm"],
+    "cta": {
+      "title": "Every Server in Its Own Container",
+      "body": "Install the panel in three steps and create your first server in the wizard."
     }
   }
 }

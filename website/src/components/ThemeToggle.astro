@@ -25,6 +25,7 @@ const { label } = Astro.props;
       const root = document.documentElement;
       const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
       root.dataset.theme = next;
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'dark' ? '#122662' : '#82d2fe');
       try {
         localStorage.setItem('starlight-theme', next);
       } catch {

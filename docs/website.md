@@ -15,7 +15,7 @@ languages, deployed as static files to GitHub Pages.
 | Locales               | `website/src/i18n/locales.js`                                           | The one list every other piece derives from (routing, sitemap hreflang, language menu, translation script).                                                                                                                                                                                                                                                                                              |
 | Docs pages            | generated from `docs/*.md`                                              | `website/scripts/sync-docs.js` copies them on every build, adds front matter, rewrites GitHub-relative links. Never edit the copies.                                                                                                                                                                                                                                                                     |
 | Changelog page        | generated from `CHANGELOG.md`                                           | Same script. English only.                                                                                                                                                                                                                                                                                                                                                                               |
-| Screenshots           | `docs/screenshots/*.png`, `docs/images/mobile/*.png`                    | Imported straight from the docs so there is one copy.                                                                                                                                                                                                                                                                                                                                                    |
+| Screenshots           | `docs/screenshots/*.png`, `docs/images/**/*.png`                        | Imported straight from the docs so there is one copy. Marketing pages take them through Astro's image pipeline. Docs pages get a WebP copy (made by `sync-docs.js`, at most 1600 px wide) with its width and height, set after the build by `website/src/lib/doc-images.js` in every language; the PNGs stay out of `dist/`.                                                                             |
 | Landing pages         | `website/src/components/LandingPage.astro`, `website/src/lib/routes.js` | Server types, guides and comparisons. One component renders every page from its `en.json` key; `HUBS` in `routes.js` lists them. See "Landing pages" below.                                                                                                                                                                                                                                              |
 | Social cards          | `website/src/lib/og.js`, `website/src/pages/og/[...card].png.js`        | A 1200x630 PNG per page, drawn at build time in the site's look (satori lays it out with the bundled OFL fonts in `src/assets/og-fonts/`, sharp rasterises). English copy; every locale of a page shares its card.                                                                                                                                                                                       |
 | Install tutorial      | `website/src/components/InstallTutorial.astro`                          | Four tabs (Compose, Portainer/Dockge, source, PM2/systemd), numbered steps, copy buttons. Two inputs (data folder, host) rewrite every command and the panel URL live; tabs are radios so they work without JavaScript. Commands live in the component, the prose in `en.json` under `tutorial`.                                                                                                         |
@@ -26,20 +26,39 @@ languages, deployed as static files to GitHub Pages.
 ## URL layout
 
 - `/` `/features/` `/screenshots/` `/install/` `/faq/` `/changelog/`: marketing pages.
-- `/servers/…` (Paper, Fabric, Forge, Vanilla, Modpacks), `/guides/…` (Raspberry Pi, home server, leaving
-  paid hosting, several servers), `/compare/…` (Pterodactyl, Crafty Controller, AMP, MCSManager): landing
-  pages, each group with a hub page at its root.
+- `/servers/…` (Paper, Fabric, Forge, Vanilla, Modpacks), `/guides/…` (a modpack server for friends,
+  Raspberry Pi, home server, leaving paid hosting, several servers), `/compare/…` (Pterodactyl, Crafty
+  Controller, AMP, MCSManager, PufferPanel): landing pages, each group with a hub page at its root. The
+  `/compare/` hub also has a table of every panel side by side.
 - `/docs/…`: one page per file in `docs/`, `docs/README.md` becomes `/docs/`.
 - Every locale except English is prefixed: `/ar/`, `/fr/docs/backups/`, … English has no prefix.
 - `/og/<page>.png`, `/og/<hub>-<slug>.png`, `/og/docs/<slug>.png`: social cards.
 - `/sitemap-index.xml`, `/robots.txt`, `/404.html`, `/site.webmanifest`, `/apple-touch-icon.png`, `/icon-512.png`.
+- `/changelog.xml`: an Atom feed of the releases in `CHANGELOG.md` (`website/src/pages/changelog.xml.js`),
+  linked from every page's head and from `/changelog/`.
+- `/llms.txt` and `/llms-full.txt` ([llmstxt.org](https://llmstxt.org)): what the panel is, its pages and
+  docs, and in the full file every doc, the FAQ and the latest release notes as Markdown. The key facts at
+  the top are `website/src/data/llms-head.md`; keep them true when a feature changes.
 
 Every page carries a canonical URL, `hreflang` alternates for all locales plus `x-default`, Open
 Graph and Twitter card tags with its own card image, and JSON-LD: `WebSite` and `Organization`
 everywhere, `SoftwareApplication` on the product pages, and `BreadcrumbList`, `FAQPage`, `HowTo`,
 `ItemList` and `TechArticle` where they apply. Docs pages get theirs from the Starlight route
-middleware in `website/src/routeData.js`. The sitemap repeats the alternates. Titles drop the
-" · Minecraft Server Manager" suffix when it would push them past 65 characters.
+middleware in `website/src/routeData.js`, which also sets each doc's "Last updated" date and its
+`dateModified` from the last commit to its source in `docs/` (`website/src/lib/gitDates.js`; the workflow
+checks out the full history for this). The sitemap repeats the alternates, with `<lastmod>` on docs pages
+and the changelog, where the date is real. FAQ answers name the brands their pills show, so the
+structured answer reads on its own. Titles drop the " · Minecraft Server Manager" suffix when it would
+push them past 65 characters.
+
+`site:verify` (`website/scripts/verify-dist.js`) fails the build when any of this is missing or wrong:
+a title or description (empty, duplicated within a language, or too long in English), a canonical that
+is not the page itself, Open Graph or Twitter tags, hreflang alternates that are missing, point at pages
+that were not built or do not link back, a sitemap entry or alternate out of step with the pages, JSON-LD
+that does not parse or lacks the fields its type needs, more or fewer than one `<h1>`, no `<main>`, an
+`<img>` without `alt`, `width` and `height`, an internal link or `#anchor` that leads nowhere (pages, the
+feed and llms.txt), or a social card that is not 1200x630. `VERIFY_ALL=1` lists every failure instead of
+the first 40.
 
 ## Commands (from the repo root)
 
@@ -79,7 +98,9 @@ needs an API key and every string can be reviewed in a pull request.
   and show a one-line notice; Starlight shows its own "not translated yet" notice on docs pages.
 
 Workflow after editing English copy or a doc: commit the English change, run
-`pnpm run site:translate`, review the diff, commit the translations.
+`pnpm run site:translate`, then `pnpm run format` (the script writes JSON-style quotes, Prettier
+wants single quotes in the front matter, and CI checks formatting), review the diff, commit the
+translations. The script reads either quoting back.
 
 ## Brands and pills (the "boast, don't bury" rule)
 

@@ -19,7 +19,15 @@ const GROUPS = [
   {
     id: 'running',
     label: 'Running servers',
-    items: ['docs/servers', 'docs/console-and-chat', 'docs/modpacks', 'docs/worlds-and-files', 'docs/world-shrink'],
+    items: [
+      'docs/servers',
+      'docs/console-and-chat',
+      'docs/modpacks',
+      'docs/worlds-and-files',
+      'docs/world-shrink',
+      'docs/live-map',
+      'docs/invites-and-status-page',
+    ],
   },
   {
     id: 'data',

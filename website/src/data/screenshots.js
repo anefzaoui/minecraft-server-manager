@@ -3,6 +3,7 @@
 // Caption keys map to `screenshots.items.*` in the i18n copy.
 const desktopFiles = import.meta.glob('../../../docs/screenshots/*.png', { eager: true, import: 'default' });
 const mobileFiles = import.meta.glob('../../../docs/images/mobile/*.png', { eager: true, import: 'default' });
+const docImages = import.meta.glob('../../../docs/images/*.png', { eager: true, import: 'default' });
 
 function pick(files, name) {
   const entry = Object.entries(files).find(([p]) => p.endsWith(`/${name}`));
@@ -16,6 +17,7 @@ export const DESKTOP = [
   { key: 'overview', image: pick(desktopFiles, '03-server-overview.png') },
   { key: 'console', image: pick(desktopFiles, '05-console.png') },
   { key: 'mods', image: pick(desktopFiles, '06-mods.png') },
+  { key: 'modpacks', image: pick(docImages, 'modpacks.png') },
   { key: 'worlds', image: pick(desktopFiles, '07-worlds.png') },
   { key: 'backups', image: pick(desktopFiles, '08-backups.png') },
   { key: 'schedules', image: pick(desktopFiles, '14-schedules.png') },

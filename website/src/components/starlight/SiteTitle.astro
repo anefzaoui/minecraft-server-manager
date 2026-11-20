@@ -3,8 +3,9 @@
 // to the marketing home page of the current locale.
 import { href } from '../../lib/routes.js';
 import { getCopy } from '../../i18n/index.js';
-import { DEFAULT_LOCALE } from '../../i18n/locales.js';
-const locale = Astro.currentLocale || DEFAULT_LOCALE;
+import { localeCode } from '../../i18n/locales.js';
+// Astro.currentLocale is the language tag here ('pt-BR'); links need the code ('pt-br').
+const locale = localeCode(Astro.currentLocale);
 const copy = getCopy(locale);
 ---
 

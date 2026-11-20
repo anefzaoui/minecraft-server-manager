@@ -5,10 +5,22 @@
 // never drift: it adds the frontmatter Starlight needs, drops the H1 (Starlight
 // renders the title itself), and rewrites GitHub-relative links into site URLs.
 // Output is gitignored (src/content/docs/docs/ + public/docs/{images,screenshots}/).
+// Screenshots are copied as PNG (for the dev server) and as WebP; after a build,
+// src/lib/doc-images.js points the pages at the WebP, gives every one its width
+// and height, and drops the PNGs from dist/.
 //
 // Translated docs are NOT produced here: scripts/translate.js writes those to
 // src/content/docs/<lang>/docs/ and they are committed.
-import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -117,8 +129,6 @@ export function sync() {
     writeFileSync(join(outDir, `${slug}.md`), toStarlight(md, { slug }));
     count++;
   }
-  rmSync(publicDocs, { recursive: true, force: true });
-  for (const dir of IMAGE_DIRS) cpSync(join(docsDir, dir), join(publicDocs, dir), { recursive: true });
   // CHANGELOG.md feeds the /changelog/ page. Drop its H1 (the page has its own)
   // and turn the version headings into anchors GitHub also understands.
   mkdirSync(generatedDir, { recursive: true });
@@ -127,7 +137,70 @@ export function sync() {
   return count;
 }
 
+/** Largest WebP edge: twice the docs column, and under WebP's 16383 px limit. */
+export const WEBP_MAX_WIDTH = 1600;
+const WEBP_MAX_HEIGHT = 16383;
+
+/** Size of the WebP a docs screenshot becomes, from its PNG's size. */
+export function webpSize(width, height) {
+  const scale = Math.min(1, WEBP_MAX_WIDTH / width, WEBP_MAX_HEIGHT / height);
+  return [Math.round(width * scale), Math.round(height * scale)];
+}
+
+/** PNG width and height from its IHDR chunk. */
+export function pngSize(file) {
+  const b = readFileSync(file);
+  return [b.readUInt32BE(16), b.readUInt32BE(20)];
+}
+
+function filesUnder(dir, out = []) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) filesUnder(p, out);
+    else out.push(p);
+  }
+  return out;
+}
+
+/**
+ * docs/images and docs/screenshots into public/docs, as is, plus a WebP of each
+ * PNG (quality 82, at most WEBP_MAX_WIDTH wide). A WebP newer than its
+ * PNG is kept, so a rebuild converts only what changed.
+ */
+export async function syncImages() {
+  const { default: sharp } = await import('sharp');
+  let converted = 0;
+  let kept = 0;
+  const wanted = new Set();
+  for (const dir of IMAGE_DIRS) {
+    for (const src of filesUnder(join(docsDir, dir))) {
+      const rel = src.slice(docsDir.length + 1);
+      const isPng = rel.endsWith('.png');
+      const copy = join(publicDocs, rel);
+      const out = isPng ? copy.replace(/\.png$/, '.webp') : copy;
+      wanted.add(copy);
+      wanted.add(out);
+      mkdirSync(dirname(out), { recursive: true });
+      if (!existsSync(copy) || statSync(copy).mtimeMs < statSync(src).mtimeMs) copyFileSync(src, copy);
+      if (!isPng) continue;
+      if (existsSync(out) && statSync(out).mtimeMs >= statSync(src).mtimeMs) {
+        kept++;
+        continue;
+      }
+      const [w, h] = webpSize(...pngSize(src));
+      await sharp(src, { limitInputPixels: false }).resize(w, h).webp({ quality: 82, effort: 5 }).toFile(out);
+      converted++;
+    }
+  }
+  // Drop what no longer has a source (a renamed or deleted screenshot).
+  if (existsSync(publicDocs)) for (const f of filesUnder(publicDocs)) if (!wanted.has(f)) rmSync(f);
+  return { converted, kept };
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const n = sync();
-  console.log(`sync-docs: ${n} docs copied to src/content/docs/docs/, images to public/docs/.`);
+  const { converted, kept } = await syncImages();
+  console.log(
+    `sync-docs: ${n} docs copied to src/content/docs/docs/; images to public/docs/ (${converted} converted to WebP, ${kept} unchanged).`
+  );
 }
