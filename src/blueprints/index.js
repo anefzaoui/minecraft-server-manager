@@ -476,7 +476,11 @@ async function installOverlayItem(entry, server, tmpDir, { actor }) {
       lib = await ingestLocalFile(embedded, entry, sha256);
     } else {
       const { url, meta } = await resolveOverlaySource(entry, server);
-      lib = await library.downloadToLibrary(url, { ...meta, category: entry.kind, name: entry.name }, { actor });
+      lib = await library.downloadToLibrary(
+        url,
+        { ...meta, category: entry.kind, name: entry.name },
+        { actor, serverId: server.id }
+      );
       if (entry.sha256 && lib.sha256 !== entry.sha256) {
         return {
           name: entry.name,
