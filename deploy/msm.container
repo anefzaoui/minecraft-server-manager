@@ -1,0 +1,56 @@
+# Container unit (podman quadlet) for running the panel under rootless Podman.
+#
+# As with the Docker compose path, the panel talks to the HOST's container
+# daemon and creates each Minecraft server as a SIBLING container. Under Podman
+# that means mounting the *user's* Docker-compatible socket, not /var/run/docker.sock.
+#
+# Install (rootless, systemd user unit):
+#   1. Enable the socket and linger (without linger, logging out stops the
+#      panel and every Minecraft server):
+#        systemctl --user enable --now podman.socket
+#        loginctl enable-linger $USER
+#   2. Pick a host directory for panel data. The default below is ~/msm/data
+#      (%h expands to your home). It must be readable by your user.
+#   3. Pull the published image (or build your own; see docs/podman.md):
+#        podman pull ghcr.io/anefzaoui/minecraft-server-manager:latest
+#   4. Copy this file to ~/.config/containers/systemd/msm.container and edit
+#      the Volume, Image, and PublishPort lines to taste.
+#   5. systemctl --user daemon-reload
+#      systemctl --user enable --now msm.service
+#
+# SELinux note: the /data volume carries the shared :z label (the panel itself
+# runs with label=disable, so this is belt-and-braces). Shared, not private :Z:
+# the data dir also holds the SIBLING servers' worlds, and a private relabel on
+# every panel recreate would cut running servers off from them. Host data dirs
+# handed to sibling server containers are re-rooted from DATA_DIR_HOST as host
+# paths and labeled :z by the panel itself (see docs/podman.md).
+
+[Unit]
+Description=Minecraft Server Manager panel
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+# The published image, the same one Docker users get. To build your own from a
+# clone, see docs/podman.md and point Image at your local tag.
+Image=ghcr.io/anefzaoui/minecraft-server-manager:latest
+# The panel drives the host container daemon through the mounted socket. Under
+# SELinux enforcing (Fedora/Aurora default), the container must be allowed to
+# reach that socket and the data volume; label=disable scopes this to the
+# panel container only and does not touch the SIBLING Minecraft servers it
+# creates, which get their own policy.
+SecurityLabelDisable=true
+# Web UI. Bind to 127.0.0.1 and put a reverse proxy in front if you don't want
+# it exposed on the LAN.
+PublishPort=127.0.0.1:25564:25564
+# Panel data: worlds, mods, backups, the DB, and the .secret-key key.
+# %h expands to the user's home directory; adjust the path to taste. Shared :z
+# (never private :Z): the tree also holds sibling servers' worlds.
+Volume=%h/msm/data:/data:z
+# The Podman Docker-compatible socket (the panel drives the host daemon).
+Volume=%t/podman/podman.sock:/var/run/docker.sock
+Environment=DATA_DIR_HOST=%h/msm/data
+Environment=LOG_PRETTY=false
+
+[Install]
+WantedBy=default.target

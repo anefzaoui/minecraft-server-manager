@@ -103,6 +103,7 @@ designed, reviewed and tested by a human. The details are in [AI-DECLARATION.md]
   - **Windows:** Docker Desktop (WSL2 backend). The panel talks to `\\.\pipe\docker_engine`.
   - **macOS:** Docker Desktop (`/var/run/docker.sock`).
   - **Linux:** Docker Engine (`/var/run/docker.sock`; add your user to the `docker` group).
+- **Rootless Podman 4.0+** (Linux, alternative to Docker): the quadlet deploy needs Podman 4.0+ with systemd user services. Verified on 6.1.3 (Fedora/Aurora, SELinux enforcing). Enable `podman.socket` and `loginctl enable-linger` first; see [docs/podman.md](docs/podman.md).
 - A few GB of disk for server images + worlds.
 
 The panel and the Docker daemon are expected to run on the **same host** (server data is bind-mounted
@@ -135,6 +136,14 @@ docker compose up -d
 
 Open **http://your-host:25564**. In Portainer/Dockge, paste the compose file as a stack and set
 `DATA_DIR_HOST` in the stack's environment.
+
+### 🦭 Option 2: Rootless Podman (Fedora/Aurora)
+
+No Docker installed? MSM ships a rootless Podman deployment (quadlet and
+podman-compose) using the same published image as Docker, driving the user's
+Docker-compatible Podman socket instead of `/var/run/docker.sock`. Verified on
+Podman 6.1.3 with SELinux enforcing. See [docs/podman.md](docs/podman.md) for
+the install, socket setup, and SELinux notes.
 
 > [!IMPORTANT]
 > The panel drives the **host's Docker daemon** through the mounted socket, and anything that holds
@@ -173,7 +182,7 @@ host.docker.internal:host-gateway` (Docker Engine 20.10+) for the fallback path;
 
 </details>
 
-### 🖥️ Option 2: From source (any OS, incl. Windows/macOS)
+### 🖥️ Option 3: From source (any OS, incl. Windows/macOS)
 
 ```bash
 git clone https://github.com/anefzaoui/minecraft-server-manager.git minecraft-server-manager
@@ -199,7 +208,7 @@ random cookie secret (`data/.session-secret`) and a separate at-rest encryption 
 across replicas); the at-rest key is always machine-local, so keep `data/.secret-key` with your
 backups.
 
-### ⚙️ Option 3: Under a process manager (PM2 / systemd)
+### ⚙️ Option 4: Under a process manager (PM2 / systemd)
 
 For a from-source install that should survive reboots. Gotcha with **PM2**: it launches apps
 with whatever Node version started the PM2 _daemon_, and later switching your shell with `nvm` does
@@ -515,6 +524,7 @@ Exposing the raw panel port on the internet means logins travel over **plain HTT
 | `RATE_LIMIT_API_PER_MIN` / `RATE_LIMIT_AUTH_PER_15MIN` / `RATE_LIMIT_PUBLIC_API_PER_MIN` | `1200` / `100` / `120`     | Per-client-IP request ceilings: all of `/api`, login / 2FA / setup POSTs, and per-token requests to the public `/api/v1`. `0` disables that limiter. A volume backstop on top of the per-account login lockout.                                                                                                                                                                                                                                                                                                                     |
 | `MSM_EXIT_ON_FATAL`                                                                      | -                          | `1`/`true`/`yes` makes the post-boot runtime guard hard-exit on an uncaught exception/rejection instead of logging and staying up - for supervised deployments (`systemd`, Docker `restart:`).                                                                                                                                                                                                                                                                                                                                      |
 | `DOCKER_HOST`                                                                            | auto-detected              | Docker endpoint override for rootless Docker, Podman, or a remote daemon (per-OS socket/pipe otherwise).                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `PODMAN_HOST`                                                                            | auto-detected              | Podman socket override: a `unix://` URL or a bare socket path. Wins over the default socket probes when it points at an existing socket; `DOCKER_HOST` still takes precedence.                                                                                                                                                                                                                                                                                                                                                      |
 | `CF_API_KEY`                                                                             | -                          | Optional [CurseForge API key](https://console.curseforge.com/) to seed on first run (also settable in the UI). Wrap in single quotes; CF keys often contain `$`.                                                                                                                                                                                                                                                                                                                                                                    |
 | `GITHUB_TOKEN`                                                                           | -                          | Optional GitHub token to raise the unauthenticated API quota for the GitHub Releases content source (ETag caching keeps usage minimal either way).                                                                                                                                                                                                                                                                                                                                                                                  |
 | `MC_IMAGE_REPO`                                                                          | `itzg/minecraft-server`    | Docker image repo for servers; override for a private mirror / air-gapped registry.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |

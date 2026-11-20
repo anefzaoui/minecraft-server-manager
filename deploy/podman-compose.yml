@@ -1,0 +1,28 @@
+# Podman compose alternative to deploy/msm.container (quadlet). Same model as
+# the Docker compose file but mounts the user's Podman socket.
+#
+# Usage (from the repository root, after enabling podman.socket and linger;
+# see docs/podman.md):
+#   echo "DATA_DIR_HOST=$HOME/msm/data" > .env
+#   podman-compose -f deploy/podman-compose.yml up -d
+services:
+  panel:
+    image: ghcr.io/anefzaoui/minecraft-server-manager:latest
+    container_name: minecraft-server-manager
+    restart: unless-stopped
+    # SELinux enforcing host: the panel must reach the mounted daemon socket and
+    # the /data volume. This scopes to the panel container only; sibling servers
+    # get their own policy.
+    security_opt:
+      - label=disable
+    ports:
+      - '127.0.0.1:25564:25564'
+    environment:
+      DATA_DIR_HOST: ${DATA_DIR_HOST:?Set DATA_DIR_HOST to the absolute host path for panel data, e.g. /home/you/msm/data}
+      LOG_PRETTY: 'false'
+    volumes:
+      # Shared :z (never private :Z): the tree also holds sibling servers' worlds.
+      - ${DATA_DIR_HOST}:/data:z
+      # User's Podman Docker-compatible socket, mounted where dockerode looks.
+      # XDG_RUNTIME_DIR is exported by a normal login session (bash's UID is not).
+      - ${XDG_RUNTIME_DIR:?Run from a login session so XDG_RUNTIME_DIR is set}/podman/podman.sock:/var/run/docker.sock
