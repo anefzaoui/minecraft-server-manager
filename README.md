@@ -710,7 +710,7 @@ The field catalog in `src/config/` is the single source of truth for server sett
 
 ## Status & areas that need work
 
-This is an early public release. The core lifecycle is solid, but several features are
+What's being worked on and what's been asked for is in [`ROADMAP.md`](ROADMAP.md). This is an early public release. The core lifecycle is solid, but several features are
 deliberately "good enough for now": honest contribution targets rather than finished work. If you
 want to help, start here.
 
@@ -762,6 +762,7 @@ rule, the two non-obvious conventions (path-guarded `./data` access and lazy-req
 breaking), and how to run the QA sweep.
 
 Stuck rather than contributing? [`SUPPORT.md`](SUPPORT.md) says where to ask and what to expect.
+Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 Found a security problem? [`SECURITY.md`](SECURITY.md) has a private reporting link, so please don't
 open a public issue for that one.
 
